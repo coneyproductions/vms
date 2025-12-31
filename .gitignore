@@ -1,0 +1,16 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+*.code-workspace
+
+# PHP / Composer (if we ever use it)
+vendor/
+composer.lock
+
+# Node (if we ever add build tools)
+node_modules/
+dist/
