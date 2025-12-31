@@ -416,6 +416,42 @@ function vms_save_vendor_availability_meta($post_id, $post)
 }
 
 /**
+ * Save the selected band vendor on the event.
+ * Adjust 'tribe_events' if your event post type is named differently.
+ */
+add_action( 'save_post_tribe_events', 'vms_save_event_band_vendor_meta', 20, 2 );
+function vms_save_event_band_vendor_meta( $post_id, $post ) {
+
+    // Autosave / revisions guard
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+        return;
+    }
+
+    // Make sure we're on the right post type
+    if ( $post->post_type !== 'tribe_events' ) {
+        return;
+    }
+
+    // Basic permission check
+    if ( ! current_user_can( 'edit_post', $post_id ) ) {
+        return;
+    }
+
+    // If the select field exists on the form, save it
+    if ( isset( $_POST['vms_band_vendor_id'] ) ) {
+        $band_id = absint( $_POST['vms_band_vendor_id'] );
+
+        if ( $band_id ) {
+            // ✅ store the selected band on the event
+            update_post_meta( $post_id, '_vms_band_vendor_id', $band_id );
+        } else {
+            // If they cleared it or chose the placeholder, remove the meta
+            delete_post_meta( $post_id, '_vms_band_vendor_id' );
+        }
+    }
+}
+
+/**
  * Get a vendor's availability status for a specific date.
  *
  * @param int    $vendor_id Vendor (vms_vendor) post ID.
@@ -438,4 +474,56 @@ function vms_get_vendor_availability_for_date($vendor_id, $date_str)
     }
 
     return 'unknown';
+}
+
+// =======================================
+// Soft Warning: band unavailable for date
+// =======================================
+
+add_action('save_post_vms_eventplan', 'vms_warn_unavailable_band_for_date', 50, 2);
+function vms_warn_unavailable_band_for_date($post_id, $post) {
+    // Avoid autosave noise
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+
+    // Ensure this is the right post type
+    if ($post->post_type !== 'vms_eventplan') return;
+
+    $event_date = get_post_meta($post_id, '_vms_event_date', true);
+    $band_id    = get_post_meta($post_id, '_vms_band_vendor_id', true);
+
+    if (!$event_date || !$band_id) return;
+
+    // Check availability
+    $status = vms_get_vendor_availability_for_date($band_id, $event_date);
+
+    if ($status === 'unavailable') {
+        // Store a flag so the notice can display after redirect
+        update_post_meta($post_id, '_vms_band_unavailable_notice', 1);
+    }
+}
+
+add_action('admin_notices', 'vms_show_unavailable_band_warning');
+function vms_show_unavailable_band_warning() {
+    global $post;
+
+    if (!isset($post) || $post->post_type !== 'vms_eventplan') return;
+
+    $notice_flag = get_post_meta($post->ID, '_vms_band_unavailable_notice', true);
+
+    if ($notice_flag) {
+        delete_post_meta($post->ID, '_vms_band_unavailable_notice');
+
+        $event_date = get_post_meta($post->ID, '_vms_event_date', true);
+        $band_id    = get_post_meta($post->ID, '_vms_band_vendor_id', true);
+        $band_title = get_the_title($band_id);
+
+        $nice_date  = $event_date ? date_i18n('M j, Y', strtotime($event_date)) : $event_date;
+
+        echo '<div class="notice notice-warning is-dismissible">';
+        echo '<p><strong>Heads up!</strong><br>';
+        echo 'You selected <strong>' . esc_html($band_title) . '</strong> for ';
+        echo esc_html($nice_date) . ', but they are marked <strong>Not Available</strong> on that date.';
+        echo '<br>You can still proceed — this is just a reminder.</p>';
+        echo '</div>';
+    }
 }
