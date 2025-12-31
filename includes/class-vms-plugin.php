@@ -8,6 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class VMS_Plugin {
 
+    /**
+     * Constructor.
+     */
     public function __construct() {
         // Basic hooks.
         add_action( 'init', array( $this, 'init' ) );
@@ -18,11 +21,19 @@ class VMS_Plugin {
         }
     }
 
+    /**
+     * Initialize plugin components.
+     *
+     * This is called on 'init' and also manually on activation.
+     */
     public function init() {
         // Register custom post types, taxonomies, etc.
         $this->load_post_types();
     }
 
+    /**
+     * Load and initialize custom post types.
+     */
     protected function load_post_types() {
         $post_types = new VMS_Post_Types();
         $post_types->register();
@@ -33,5 +44,6 @@ class VMS_Plugin {
      */
     protected function load_admin() {
         new VMS_Admin_Vendors();
+        new VMS_Admin_Event_Plans();
     }
 }
