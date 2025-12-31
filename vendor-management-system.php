@@ -414,3 +414,28 @@ function vms_save_vendor_availability_meta($post_id, $post)
 
     update_post_meta($post_id, '_vms_availability', $clean);
 }
+
+/**
+ * Get a vendor's availability status for a specific date.
+ *
+ * @param int    $vendor_id Vendor (vms_vendor) post ID.
+ * @param string $date_str  Date in "YYYY-MM-DD" format.
+ * @return string           'available', 'unavailable', or 'unknown'.
+ */
+function vms_get_vendor_availability_for_date($vendor_id, $date_str)
+{
+    if (!$vendor_id || !$date_str) {
+        return 'unknown';
+    }
+
+    $availability = get_post_meta($vendor_id, '_vms_availability', true);
+    if (!is_array($availability)) {
+        $availability = array();
+    }
+
+    if (isset($availability[$date_str])) {
+        return $availability[$date_str]; // 'available' or 'unavailable'
+    }
+
+    return 'unknown';
+}

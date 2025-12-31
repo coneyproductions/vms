@@ -114,18 +114,64 @@ class VMS_Admin_Event_Plans
         $selected_band_id = get_post_meta($post->ID, '_vms_band_vendor_id', true);
         ?>
 
-        <p>
-            <label for="vms_band_vendor_id"><strong><?php esc_html_e('Band / Headliner', 'vms'); ?></strong></label><br />
-            <select id="vms_band_vendor_id" name="vms_band_vendor_id" style="min-width: 260px;">
-                <option value=""><?php esc_html_e('-- Select a Band --', 'vms'); ?></option>
-                <?php foreach ($bands as $band) : ?>
-                    <option value="<?php echo esc_attr($band->ID); ?>" <?php selected($selected_band_id, $band->ID); ?>>
-                        <?php echo esc_html($band->post_title); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <br /><span class="description"><?php esc_html_e('Select the band playing this event.', 'vms'); ?></span>
-        </p>
+<?php
+// $event_date should already be loaded earlier in this function as _vms_event_date.
+$event_date = get_post_meta($post->ID, '_vms_event_date', true);
+?>
+
+<p>
+    <label for="vms_band_vendor_id"><strong><?php esc_html_e('Band / Headliner', 'vms'); ?></strong></label><br />
+
+    <select id="vms_band_vendor_id" name="vms_band_vendor_id" style="min-width:260px;">
+        <option value=""><?php esc_html_e('-- Select a Band --', 'vms'); ?></option>
+
+        <?php foreach ($bands as $band) : ?>
+            <?php
+            $label = $band->post_title;
+
+            // If we have an event date, decorate the label with availability.
+            if ($event_date) {
+                $status = vms_get_vendor_availability_for_date($band->ID, $event_date);
+
+                if ($status === 'available') {
+                    $label .= ' [✓]';
+                } elseif ($status === 'unavailable') {
+                    $label .= ' [✖]';
+                } else {
+                    $label .= ' [?]';
+                }
+            }
+
+            ?>
+            <option value="<?php echo esc_attr($band->ID); ?>"
+                <?php selected($selected_band_id, $band->ID); ?>>
+                <?php echo esc_html($label); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+
+    <?php if ($event_date) : ?>
+        <?php
+        $ts   = strtotime($event_date);
+        $nice = $ts ? date_i18n('M j, Y', $ts) : $event_date;
+        ?>
+        <br />
+        <span class="description">
+            <?php
+            printf(
+                /* translators: %s is the formatted date */
+                esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'vms'),
+                esc_html($nice)
+            );
+            ?>
+        </span>
+    <?php else : ?>
+        <br />
+        <span class="description">
+            <?php esc_html_e('Set the Event Date to see per-band availability hints here.', 'vms'); ?>
+        </span>
+    <?php endif; ?>
+</p>
 
         <p>
             <label for="vms_location_label"><strong><?php esc_html_e('Location / Resource', 'vms'); ?></strong></label><br />
