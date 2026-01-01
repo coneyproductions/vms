@@ -49,20 +49,21 @@ class VMS_Admin_Event_Plans
             $comp_structure = 'flat_fee'; // default.
         }
 
-        $flat_fee_amount     = get_post_meta($post->ID, '_vms_flat_fee_amount', true);
-        $door_split_percent  = get_post_meta($post->ID, '_vms_door_split_percent', true);
+        $flat_fee_amount    = get_post_meta($post->ID, '_vms_flat_fee_amount', true);
+        $door_split_percent = get_post_meta($post->ID, '_vms_door_split_percent', true);
 
         $allow_vendor_propose = get_post_meta($post->ID, '_vms_allow_vendor_propose', true);
         $proposal_min         = get_post_meta($post->ID, '_vms_proposal_min', true);
         $proposal_max         = get_post_meta($post->ID, '_vms_proposal_max', true);
         $proposal_cap         = get_post_meta($post->ID, '_vms_proposal_cap', true);
 
-
         // NEW: Event plan status (draft / ready / published).
-        $status = get_post_meta($post->ID, '_vms_event_plan_status', true);
-        if (empty($status)) {
-            $status = 'draft';
+        $plan_status = get_post_meta($post->ID, '_vms_event_plan_status', true);
+        if (empty($plan_status)) {
+            $plan_status = 'draft';
         }
+
+        $agenda_text = get_post_meta($post->ID, '_vms_agenda_text', true);
 ?>
 
         <?php
@@ -114,64 +115,64 @@ class VMS_Admin_Event_Plans
         $selected_band_id = get_post_meta($post->ID, '_vms_band_vendor_id', true);
         ?>
 
-<?php
-// $event_date should already be loaded earlier in this function as _vms_event_date.
-$event_date = get_post_meta($post->ID, '_vms_event_date', true);
-?>
-
-<p>
-    <label for="vms_band_vendor_id"><strong><?php esc_html_e('Band / Headliner', 'vms'); ?></strong></label><br />
-
-    <select id="vms_band_vendor_id" name="vms_band_vendor_id" style="min-width:260px;">
-        <option value=""><?php esc_html_e('-- Select a Band --', 'vms'); ?></option>
-
-        <?php foreach ($bands as $band) : ?>
-            <?php
-            $label = $band->post_title;
-
-            // If we have an event date, decorate the label with availability.
-            if ($event_date) {
-                $status = vms_get_vendor_availability_for_date($band->ID, $event_date);
-
-                if ($status === 'available') {
-                    $label .= ' [✓]';
-                } elseif ($status === 'unavailable') {
-                    $label .= ' [✖]';
-                } else {
-                    $label .= ' [?]';
-                }
-            }
-
-            ?>
-            <option value="<?php echo esc_attr($band->ID); ?>"
-                <?php selected($selected_band_id, $band->ID); ?>>
-                <?php echo esc_html($label); ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-
-    <?php if ($event_date) : ?>
         <?php
-        $ts   = strtotime($event_date);
-        $nice = $ts ? date_i18n('M j, Y', $ts) : $event_date;
+        // $event_date should already be loaded earlier in this function as _vms_event_date.
+        $event_date = get_post_meta($post->ID, '_vms_event_date', true);
         ?>
-        <br />
-        <span class="description">
-            <?php
-            printf(
-                /* translators: %s is the formatted date */
-                esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'vms'),
-                esc_html($nice)
-            );
-            ?>
-        </span>
-    <?php else : ?>
-        <br />
-        <span class="description">
-            <?php esc_html_e('Set the Event Date to see per-band availability hints here.', 'vms'); ?>
-        </span>
-    <?php endif; ?>
-</p>
+
+        <p>
+            <label for="vms_band_vendor_id"><strong><?php esc_html_e('Band / Headliner', 'vms'); ?></strong></label><br />
+
+            <select id="vms_band_vendor_id" name="vms_band_vendor_id" style="min-width:260px;">
+                <option value=""><?php esc_html_e('-- Select a Band --', 'vms'); ?></option>
+
+                <?php foreach ($bands as $band) : ?>
+                    <?php
+                    $label = $band->post_title;
+
+                    // If we have an event date, decorate the label with availability.
+                    if ($event_date) {
+                        $availability = vms_get_vendor_availability_for_date($band->ID, $event_date);
+
+                        if ($availability === 'available') {
+                            $label .= ' [✓]';
+                        } elseif ($availability === 'unavailable') {
+                            $label .= ' [✖]';
+                        } else {
+                            $label .= ' [?]';
+                        }
+                    }
+
+                    ?>
+                    <option value="<?php echo esc_attr($band->ID); ?>"
+                        <?php selected($selected_band_id, $band->ID); ?>>
+                        <?php echo esc_html($label); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <?php if ($event_date) : ?>
+                <?php
+                $ts   = strtotime($event_date);
+                $nice = $ts ? date_i18n('M j, Y', $ts) : $event_date;
+                ?>
+                <br />
+                <span class="description">
+                    <?php
+                    printf(
+                        /* translators: %s is the formatted date */
+                        esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'vms'),
+                        esc_html($nice)
+                    );
+                    ?>
+                </span>
+            <?php else : ?>
+                <br />
+                <span class="description">
+                    <?php esc_html_e('Set the Event Date to see per-band availability hints here.', 'vms'); ?>
+                </span>
+            <?php endif; ?>
+        </p>
 
         <p>
             <label for="vms_location_label"><strong><?php esc_html_e('Location / Resource', 'vms'); ?></strong></label><br />
@@ -254,10 +255,11 @@ $event_date = get_post_meta($post->ID, '_vms_event_date', true);
 
         <p>
             <strong><?php esc_html_e('Status:', 'vms'); ?></strong>
-            <?php echo esc_html(strtoupper($status)); ?>
+            <?php echo esc_html(strtoupper($plan_status)); ?>
         </p>
 
         <p>
+            <!-- Save Draft -->
             <button type="submit"
                 name="vms_event_plan_action"
                 value="save_draft"
@@ -265,37 +267,26 @@ $event_date = get_post_meta($post->ID, '_vms_event_date', true);
                 <?php esc_html_e('Save Draft', 'vms'); ?>
             </button>
 
+            <!-- Mark Ready -->
             <button type="submit"
                 name="vms_event_plan_action"
                 value="mark_ready"
-                class="button button-primary">
+                class="button button-secondary">
                 <?php esc_html_e('Mark Ready', 'vms'); ?>
             </button>
 
+            <!-- Publish Now (only enabled when READY or PUBLISHED) -->
             <button type="submit"
                 name="vms_event_plan_action"
                 value="publish_now"
                 class="button button-primary"
-                <?php echo ($status === 'ready' || $status === 'published') ? '' : 'disabled="disabled"'; ?>>
+                <?php echo ($plan_status === 'ready' || $plan_status === 'published') ? '' : ' disabled="disabled"'; ?>>
                 <?php esc_html_e('Publish Now', 'vms'); ?>
             </button>
         </p>
-        <?php
-        // If we have a linked TEC event, show a link to it.
-        $tec_url = get_post_meta($post->ID, '_vms_tec_event_url', true);
-        if ($tec_url) : ?>
-            <div class="vms-external-links" style="margin-top:12px;">
-                <p>
-                    <a href="<?php echo esc_url($tec_url); ?>" class="button button-secondary" target="_blank" rel="noopener">
-                        <?php esc_html_e('View Event in Calendar', 'vms'); ?> →
-                    </a>
-                </p>
-            </div>
-        <?php endif; ?>
-
 
         <p class="description">
-            <em><?php esc_html_e('“Publish Now” is only available once the plan is Ready.', 'vms'); ?></em>
+            <?php esc_html_e('“Publish Now” is only available once the plan is Ready.', 'vms'); ?>
         </p>
     <?php
     }
@@ -360,7 +351,6 @@ $event_date = get_post_meta($post->ID, '_vms_event_date', true);
             }
         }
 
-        // Handle workflow status (Save Draft / Mark Ready / Publish Now).
         // Handle workflow status (Save Draft / Mark Ready / Publish Now).
         if (isset($_POST['vms_event_plan_action'])) {
             $action = sanitize_text_field($_POST['vms_event_plan_action']);
@@ -521,9 +511,33 @@ function vms_validate_event_plan($post_id)
         }
     }
 
+    // ----------------------------------------
+    // Band selection + availability
+    // ----------------------------------------
     $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
+
+    // Must have a band to be Ready.
     if (!$band_id) {
         $errors[] = 'A band must be selected before marking this event Ready.';
+        return $errors;
+    }
+
+    // If we also have a date, enforce that the band is not explicitly "unavailable".
+    if ($event_date) {
+        $availability = vms_get_vendor_availability_for_date($band_id, $event_date); // uses main plugin helper
+
+        if ($availability === 'unavailable') {
+            $band_post = get_post($band_id);
+            $band_name = $band_post ? $band_post->post_title : 'Selected band';
+
+            $nice_date = date_i18n('M j, Y', strtotime($event_date));
+
+            $errors[] = sprintf(
+                '%s is marked Not Available on %s.',
+                $band_name,
+                $nice_date
+            );
+        }
     }
 
     return $errors;
@@ -923,4 +937,3 @@ function vms_event_plan_row_actions($actions, $post)
 
     return $actions;
 }
-
