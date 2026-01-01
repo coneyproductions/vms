@@ -418,6 +418,17 @@ class VMS_Admin_Event_Plans
                     break;
             }
 
+            // 1. Update VMS plan status
+            update_post_meta($post_id, '_vms_event_plan_status', $new_status);
+
+            // 2. Sync TEC status (VMS → TEC)
+            vms_sync_tec_status_from_plan($post_id);
+
+            // 3. If publishing, sync TEC content/title/etc
+            if ($new_status === 'published') {
+                vms_publish_event_to_calendar($post_id, $post);
+            }
+
             update_post_meta($post_id, '_vms_event_plan_status', $new_status);
             if (isset($_POST['vms_band_vendor_id'])) {
                 update_post_meta($post_id, '_vms_band_vendor_id', absint($_POST['vms_band_vendor_id']));
@@ -876,12 +887,15 @@ function vms_build_tec_event_args($post_id)
         }
     }
 
-    // Base args for TEC.
+    // Get VMS plan status
+    $plan_status = vms_get_event_plan_status($post_id);
+    $tec_status  = vms_map_plan_status_to_tec_post_status($plan_status);
+
     $args = array(
         'post_type'    => 'tribe_events',
         'post_title'   => $title,
         'post_content' => $agenda_text,
-        'post_status'  => 'publish',   // MVP: publish immediately
+        'post_status'  => $tec_status,
     );
 
     // Dates: TEC expects date-only here.

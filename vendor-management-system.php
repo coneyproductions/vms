@@ -419,34 +419,35 @@ function vms_save_vendor_availability_meta($post_id, $post)
  * Save the selected band vendor on the event.
  * Adjust 'tribe_events' if your event post type is named differently.
  */
-add_action( 'save_post_tribe_events', 'vms_save_event_band_vendor_meta', 20, 2 );
-function vms_save_event_band_vendor_meta( $post_id, $post ) {
+add_action('save_post_tribe_events', 'vms_save_event_band_vendor_meta', 20, 2);
+function vms_save_event_band_vendor_meta($post_id, $post)
+{
 
     // Autosave / revisions guard
-    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
 
     // Make sure we're on the right post type
-    if ( $post->post_type !== 'tribe_events' ) {
+    if ($post->post_type !== 'tribe_events') {
         return;
     }
 
     // Basic permission check
-    if ( ! current_user_can( 'edit_post', $post_id ) ) {
+    if (! current_user_can('edit_post', $post_id)) {
         return;
     }
 
     // If the select field exists on the form, save it
-    if ( isset( $_POST['vms_band_vendor_id'] ) ) {
-        $band_id = absint( $_POST['vms_band_vendor_id'] );
+    if (isset($_POST['vms_band_vendor_id'])) {
+        $band_id = absint($_POST['vms_band_vendor_id']);
 
-        if ( $band_id ) {
+        if ($band_id) {
             // ✅ store the selected band on the event
-            update_post_meta( $post_id, '_vms_band_vendor_id', $band_id );
+            update_post_meta($post_id, '_vms_band_vendor_id', $band_id);
         } else {
             // If they cleared it or chose the placeholder, remove the meta
-            delete_post_meta( $post_id, '_vms_band_vendor_id' );
+            delete_post_meta($post_id, '_vms_band_vendor_id');
         }
     }
 }
@@ -474,4 +475,138 @@ function vms_get_vendor_availability_for_date($vendor_id, $date_str)
     }
 
     return 'unknown';
+}
+
+/**
+ * Get the internal VMS Event Plan status.
+ *
+ * @param int $post_id
+ * @return string 'draft', 'ready', 'pending', 'published'
+ */
+function vms_get_event_plan_status($post_id)
+{
+    $status = get_post_meta($post_id, '_vms_event_plan_status', true);
+    if (!$status) {
+        $status = 'draft';
+    }
+    return $status;
+}
+
+/**
+ * Map VMS Event Plan status to The Events Calendar post_status.
+ *
+ * VMS is the source of truth. Direction: VMS → TEC.
+ *
+ * VMS Draft / Ready / Pending  → TEC unpublished (draft)
+ * VMS Published                → TEC published
+ *
+ * @param string $plan_status
+ * @return string TEC post_status value
+ */
+function vms_map_plan_status_to_tec_post_status($plan_status)
+{
+    switch ($plan_status) {
+        case 'published':
+            return 'publish'; // live & public
+
+        case 'pending':
+            // If you ever want "pending review" behavior in TEC, you could
+            // return 'pending' here. For now we keep it hidden from public:
+            return 'draft';
+
+        case 'ready':
+        case 'draft':
+        default:
+            return 'draft';  // not publicly visible
+    }
+}
+
+/**
+ * When an Event Plan is trashed, also trash the linked TEC event.
+ */
+add_action('trash_post', 'vms_trash_linked_tec_event');
+function vms_trash_linked_tec_event($post_id)
+{
+    $post = get_post($post_id);
+    if (!$post) {
+        return;
+    }
+
+    // Adjust this CPT slug if needed.
+    if ($post->post_type !== 'vms_event_plan') {
+        return;
+    }
+
+    $tec_id = (int) get_post_meta($post_id, '_vms_tec_event_id', true);
+    if ($tec_id && get_post($tec_id)) {
+        wp_trash_post($tec_id);
+    }
+}
+
+/**
+ * When an Event Plan is untrashed, optionally restore the TEC event.
+ * (Only if you want that behavior.)
+ */
+add_action('untrash_post', 'vms_untrash_linked_tec_event');
+function vms_untrash_linked_tec_event($post_id)
+{
+    $post = get_post($post_id);
+    if (!$post || $post->post_type !== 'vms_event_plan') {
+        return;
+    }
+
+    $tec_id = (int) get_post_meta($post_id, '_vms_tec_event_id', true);
+    if ($tec_id) {
+        // If the TEC event is in trash, restore it.
+        $tec_post = get_post($tec_id);
+        if ($tec_post && $tec_post->post_status === 'trash') {
+            wp_untrash_post($tec_id);
+        }
+    }
+}
+
+/**
+ * Sync TEC event post_status from VMS Event Plan status.
+ *
+ * Direction: VMS → TEC
+ * - VMS draft/ready/pending => TEC draft (unpublished)
+ * - VMS published           => TEC publish
+ */
+function vms_sync_tec_status_from_plan($post_id) {
+    // If there's no linked TEC event, nothing to do.
+    $tec_id = (int) get_post_meta($post_id, '_vms_tec_event_id', true);
+    if (!$tec_id || !get_post($tec_id)) {
+        return;
+    }
+
+    // Optional future lock setting.
+    $lock = get_option('vms_lock_tec_status'); // checkbox you can add later
+    if ($lock) {
+        return;
+    }
+
+    // Get VMS plan status and map to TEC post_status.
+    $plan_status = vms_get_event_plan_status($post_id);
+    $tec_status  = vms_map_plan_status_to_tec_post_status($plan_status);
+
+    // If TEC is already in the desired status, skip.
+    $current = get_post_status($tec_id);
+    if ($current === $tec_status) {
+        return;
+    }
+
+    // Build update args.
+    $update = array(
+        'ID'          => $tec_id,
+        'post_status' => $tec_status,
+    );
+
+    // Use TEC helper if available, otherwise plain wp_update_post.
+    if (function_exists('tribe_update_event')) {
+        // tribe_update_event expects a full args array including post_type.
+        $update['post_type'] = 'tribe_events';
+        tribe_update_event($tec_id, $update);
+    } else {
+        wp_update_post($update);
+    }
 }
