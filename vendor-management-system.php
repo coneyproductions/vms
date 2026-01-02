@@ -34,6 +34,10 @@ foreach ($includes as $file) {
     }
 }
 
+add_action('after_setup_theme', function () {
+    add_post_type_support('vms_vendor', 'thumbnail');
+});
+
 // Plugin constants.
 define('VMS_VERSION', '0.1.0');
 define('VMS_PLUGIN_FILE', __FILE__);
@@ -45,6 +49,15 @@ define('SR_EVENT_PLAN_STATUS_KEY', '_sr_event_plan_status'); // draft|ready|publ
 define('SR_EVENT_PLAN_BAND_KEY',   '_sr_event_plan_band_vendor_id');
 define('SR_EVENT_PLAN_START_KEY',  '_sr_event_plan_start_time');   // e.g. "19:00"
 define('SR_EVENT_PLAN_END_KEY',    '_sr_event_plan_end_time');     // e.g. "22:00"
+
+register_activation_hook(__FILE__, 'vms_add_vendor_role');
+function vms_add_vendor_role()
+{
+    add_role('vms_vendor', 'Vendor', array(
+        'read'         => true,
+        'upload_files' => true,
+    ));
+}
 
 // Autoload basic classes (simple manual loader for now).
 spl_autoload_register(function ($class) {
@@ -632,4 +645,3 @@ function vms_sync_tec_status_from_plan($post_id)
         wp_update_post($update);
     }
 }
-
