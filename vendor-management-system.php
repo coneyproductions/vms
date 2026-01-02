@@ -9,8 +9,29 @@
  * Domain Path: /languages
  */
 
-if (! defined('ABSPATH')) {
-    exit; // Exit if accessed directly.
+// Exit if accessed directly.
+if (!defined('ABSPATH')) exit;
+
+/**
+ * Load includes
+ */
+$includes = array(
+    'cpt-vendors.php',
+    'cpt-event-plans.php',
+    'cpt-ratings.php',
+    'tec-sync.php',
+    'helpers.php',
+    'attendance-woo.php',
+    'availability-engine.php',
+    'vendor-applications.php',
+    'vendor-portal.php'
+);
+
+foreach ($includes as $file) {
+    $path = plugin_dir_path(__FILE__) . 'includes/' . $file;
+    if (file_exists($path)) {
+        include_once $path;
+    }
 }
 
 // Plugin constants.
@@ -572,7 +593,8 @@ function vms_untrash_linked_tec_event($post_id)
  * - VMS draft/ready/pending => TEC draft (unpublished)
  * - VMS published           => TEC publish
  */
-function vms_sync_tec_status_from_plan($post_id) {
+function vms_sync_tec_status_from_plan($post_id)
+{
     // If there's no linked TEC event, nothing to do.
     $tec_id = (int) get_post_meta($post_id, '_vms_tec_event_id', true);
     if (!$tec_id || !get_post($tec_id)) {
@@ -610,3 +632,4 @@ function vms_sync_tec_status_from_plan($post_id) {
         wp_update_post($update);
     }
 }
+
