@@ -1,11 +1,26 @@
 <?php
- 
+
 /**
  * Find the Event Plan associated with a TEC event.
  *
  * @param int $tec_event_id tribe_events post ID
  * @return int|null Event Plan ID or null if none
  */
+
+function vms_label(string $key, string $default): string
+{
+    $opts = (array) get_option('vms_settings', array());
+    $val  = isset($opts["label_$key"]) ? trim((string)$opts["label_$key"]) : '';
+    return ($val !== '') ? $val : $default;
+}
+
+function vms_ui_text(string $key, string $default): string
+{
+    $opts = (array) get_option('vms_settings', array());
+    $val  = isset($opts["ui_$key"]) ? trim((string)$opts["ui_$key"]) : '';
+    return ($val !== '') ? $val : $default;
+}
+
 function vms_get_event_plan_for_tec_event($tec_event_id)
 {
     $tec_event_id = (int) $tec_event_id;
@@ -99,4 +114,22 @@ function vms_vendor_avatar_from_logo($url, $id_or_email, $args)
 
     $custom = wp_get_attachment_image_url($thumb_id, 'thumbnail');
     return $custom ? $custom : $url;
+}
+
+function vms_get_timezone_id(): string
+{
+    $opts = (array) get_option('vms_settings', array());
+    $tz = isset($opts['timezone']) ? trim((string)$opts['timezone']) : '';
+
+    if ($tz !== '') return $tz;
+
+    $wp_tz = (string) get_option('timezone_string');
+    if ($wp_tz !== '') return $wp_tz;
+
+    return 'UTC';
+}
+
+function vms_get_timezone(): DateTimeZone
+{
+    return new DateTimeZone(vms_get_timezone_id());
 }

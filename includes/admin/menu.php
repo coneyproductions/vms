@@ -62,6 +62,3 @@ function vms_render_dashboard_page()
     echo '<p>Select an item from the left menu to manage this venue.</p>';
     echo '</div>';
 }
-
-git add .
-git commit -m "Add multi-venue foundation with venue CPT and admin venue context"

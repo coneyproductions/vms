@@ -39,6 +39,7 @@ $includes = array(
     'admin/menu.php',
     'admin/venue-context.php',
     'admin/season-board.php',
+    'admin/settings-page.php',
 
 );
 
@@ -586,3 +587,7 @@ function vms_sync_tec_status_from_plan($post_id)
         wp_update_post($update);
     }
 }
+
+add_action('init', function () {
+    load_plugin_textdomain('vms', false, dirname(plugin_basename(__FILE__)) . '/languages');
+});
