@@ -38,3 +38,4 @@ class VMS_Admin_Settings {
         echo '</div>';
     }
 }
+ 

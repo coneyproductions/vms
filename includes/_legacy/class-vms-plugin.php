@@ -53,3 +53,4 @@ class VMS_Plugin
         new VMS_Admin_Settings(); // <-- Add this line
     }
 }
+ 

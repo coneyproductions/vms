@@ -15,22 +15,39 @@ if (!defined('ABSPATH')) exit;
 /**
  * Load includes
  */
+$base = plugin_dir_path(__FILE__) . 'includes/';
+
 $includes = array(
-    'cpt-vendors.php',
-    'cpt-event-plans.php',
-    'cpt-ratings.php',
-    'tec-sync.php',
     'helpers.php',
-    'attendance-woo.php',
-    'availability-engine.php',
+
+    // // CPT
+    'cpt/vendors.php',
+    'cpt/venues.php',
+    'cpt/event-plans.php',
+    'cpt/ratings.php',
+
+    // Integrations
+    'integrations/tec-sync.php',
+    'integrations/attendance-woo.php',
+    // 'integrations/availability-engine.php',
+
+    // Vendor system
     'vendor-applications.php',
-    'vendor-portal.php'
+    'portal/vendor-portal.php',
+
+    // Admin
+    'admin/menu.php',
+    'admin/venue-context.php',
+    'admin/season-board.php',
+
 );
 
 foreach ($includes as $file) {
-    $path = plugin_dir_path(__FILE__) . 'includes/' . $file;
+    $path = $base . $file;
     if (file_exists($path)) {
         include_once $path;
+    } else {
+        error_log('VMS missing include: ' . $path);
     }
 }
 
@@ -59,51 +76,10 @@ function vms_add_vendor_role()
     ));
 }
 
-// Autoload basic classes (simple manual loader for now).
-spl_autoload_register(function ($class) {
-    // Only load our own classes.
-    if (strpos($class, 'VMS_') !== 0) {
-        return;
-    }
-
-    $file = strtolower(str_replace('_', '-', $class));
-    $file = VMS_PLUGIN_DIR . 'includes/class-' . $file . '.php';
-
-    if (file_exists($file)) {
-        require_once $file;
-    }
-});
-
-// Boot the plugin.
-function vms_boot_plugin()
-{
-    // Ensure we only run after plugins_loaded.
-    if (! did_action('plugins_loaded')) {
-        add_action('plugins_loaded', 'vms_boot_plugin');
-        return;
-    }
-
-    // Create the main plugin instance.
-    $GLOBALS['vms_plugin'] = new VMS_Plugin();
-}
-vms_boot_plugin();
-
 // Activation / deactivation hooks.
 register_activation_hook(__FILE__, 'vms_activate_plugin');
 register_deactivation_hook(__FILE__, 'vms_deactivate_plugin');
 
-/**
- * Runs on plugin activation.
- */
-function vms_activate_plugin()
-{
-    // Initialize plugin once to register post types, etc.
-    $plugin = new VMS_Plugin();
-    $plugin->init();
-
-    // Flush rewrite rules so custom post types' permalinks work.
-    flush_rewrite_rules();
-}
 
 /**
  * Runs on plugin deactivation.
@@ -114,54 +90,6 @@ function vms_deactivate_plugin()
     flush_rewrite_rules();
 }
 
-add_action('init', 'vms_register_vendor_cpt');
-function vms_register_vendor_cpt()
-{
-
-    $labels = array(
-        'name'               => __('Vendors', 'vms'),
-        'singular_name'      => __('Vendor', 'vms'),
-        'menu_name'          => __('Vendors', 'vms'),
-        'name_admin_bar'     => __('Vendor', 'vms'),
-        'add_new'            => __('Add New', 'vms'),
-        'add_new_item'       => __('Add New Vendor', 'vms'),
-        'new_item'           => __('New Vendor', 'vms'),
-        'edit_item'          => __('Edit Vendor', 'vms'),
-        'view_item'          => __('View Vendor', 'vms'),
-        'all_items'          => __('All Vendors', 'vms'),
-        'search_items'       => __('Search Vendors', 'vms'),
-        'not_found'          => __('No vendors found.', 'vms'),
-        'not_found_in_trash' => __('No vendors found in Trash.', 'vms'),
-    );
-
-    $args = array(
-        'labels'             => $labels,
-        'public'             => false,            // not public-facing (for MVP)
-        'show_ui'            => true,             // visible in admin
-        'show_in_menu'       => true,
-        'menu_position'      => 25,
-        'menu_icon'          => 'dashicons-groups',
-        'supports'           => array('title', 'thumbnail'), // title = band name
-        'has_archive'        => false,
-        'capability_type'    => 'post',
-    );
-
-    register_post_type('vms_vendor', $args);
-}
-
-// Season Dates submenu under Vendors.
-add_action('admin_menu', 'vms_register_season_dates_page');
-function vms_register_season_dates_page()
-{
-    add_submenu_page(
-        'edit.php?post_type=vms_vendor',         // parent = Vendors menu
-        __('Season Dates', 'vms'),               // page title
-        __('Season Dates', 'vms'),               // menu title
-        'manage_options',                        // capability
-        'vms-season-dates',                      // slug
-        'vms_render_season_dates_page'           // callback function
-    );
-}
 
 function vms_render_season_dates_page()
 {
@@ -387,24 +315,37 @@ function vms_render_vendor_availability_metabox($post)
     echo '<table class="widefat striped" style="max-width:600px;">';
     echo '<thead><tr><th>Date</th><th>Day</th><th>Availability</th></tr></thead><tbody>';
 
-    foreach ($active_dates as $date_str) {
-        $ts   = strtotime($date_str);
-        $day  = $ts ? date_i18n('D', $ts) : '';
-        $nice = $ts ? date_i18n('M j, Y', $ts) : $date_str;
+    $current_month = '';
 
-        $value = isset($availability[$date_str]) ? $availability[$date_str] : '';
+    foreach ($active_dates as $date_str) {
+
+        $ts = strtotime($date_str);
+        if (!$ts) continue;
+
+        $month_label = date_i18n('F Y', $ts); // e.g. "March 2026"
+
+        // New month header row
+        if ($month_label !== $current_month) {
+            $current_month = $month_label;
+
+            echo '<tr class="vms-month-header">';
+            echo '<td colspan="3"><strong>' . esc_html($month_label) . '</strong></td>';
+            echo '</tr>';
+        }
+
+        $day  = date_i18n('D', $ts);
+        $nice = date_i18n('M j, Y', $ts);
+        $val  = isset($availability[$date_str]) ? $availability[$date_str] : '';
 
         echo '<tr>';
         echo '<td>' . esc_html($nice) . '</td>';
         echo '<td>' . esc_html($day) . '</td>';
         echo '<td>';
-
         echo '<select name="vms_availability[' . esc_attr($date_str) . ']">';
-        echo '<option value="">' . esc_html__('-- Unknown --', 'vms') . '</option>';
-        echo '<option value="available"' . selected($value, 'available', false) . '>' . esc_html__('Available', 'vms') . '</option>';
-        echo '<option value="unavailable"' . selected($value, 'unavailable', false) . '>' . esc_html__('Not Available', 'vms') . '</option>';
+        echo '<option value="" ' . selected($val, '', false) . '>—</option>';
+        echo '<option value="available" ' . selected($val, 'available', false) . '>Available</option>';
+        echo '<option value="unavailable" ' . selected($val, 'unavailable', false) . '>Not Available</option>';
         echo '</select>';
-
         echo '</td>';
         echo '</tr>';
     }

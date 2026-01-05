@@ -28,7 +28,7 @@ function vms_register_rating_cpt()
         'labels'             => $labels,
         'public'             => false,            // internal only
         'show_ui'            => true,             // visible in admin
-        'show_in_menu'       => true,
+        'show_in_menu'       => 'vms-dashboard',
         'menu_position'      => 26,
         'menu_icon'          => 'dashicons-star-half',
         'supports'           => array('title', 'editor'), // editor = comment body
@@ -571,3 +571,4 @@ function vms_has_attended_event($event_id, $email)
 
     return (bool) $has_attended;
 }
+ 

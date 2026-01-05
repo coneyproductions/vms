@@ -1,5 +1,5 @@
 <?php
-
+  
 add_action('init', 'vms_register_vendor_application_cpt');
 function vms_register_vendor_application_cpt()
 {
@@ -11,7 +11,7 @@ function vms_register_vendor_application_cpt()
         ),
         'public'        => false,
         'show_ui'       => true,
-        'show_in_menu'  => true,
+        'show_in_menu'  => 'vms',
         'menu_icon'     => 'dashicons-forms',
         'supports' => array('title', 'editor', 'thumbnail'),
         'capability_type' => 'post',

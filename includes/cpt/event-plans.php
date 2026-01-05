@@ -3,6 +3,27 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+add_action('init', 'vms_register_event_plan_cpt');
+
+function vms_register_event_plan_cpt()
+{
+    register_post_type('vms_event_plan', array(
+        'labels' => array(
+            'name'          => __('Event Plans', 'vms'),
+            'singular_name' => __('Event Plan', 'vms'),
+            'menu_name'     => __('Event Plans', 'vms'),
+        ),
+        'public'        => false,
+        'show_ui'       => true,
+        'show_in_menu'  => 'vms-dashboard',
+        'menu_icon'     => 'dashicons-calendar-alt',
+        'supports'      => array('title', 'editor', 'thumbnail'),
+        'capability_type' => 'post',
+        'has_archive'   => false,
+        'rewrite'       => false,
+    ));
+}
+
 /**
  * Admin functionality for VMS Event Plans.
  */
@@ -44,6 +65,15 @@ class VMS_Admin_Event_Plans
         $end_time            = get_post_meta($post->ID, '_vms_end_time', true);
         $location_label      = get_post_meta($post->ID, '_vms_location_label', true);
 
+        $venue_id            = (int) get_post_meta($post->ID, '_vms_venue_id', true);
+
+        $venues = get_posts(array(
+            'post_type'      => 'vms_venue',
+            'posts_per_page' => -1,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ));
+
         $comp_structure      = get_post_meta($post->ID, '_vms_comp_structure', true);
         if (empty($comp_structure)) {
             $comp_structure = 'flat_fee'; // default.
@@ -66,10 +96,6 @@ class VMS_Admin_Event_Plans
         $agenda_text = get_post_meta($post->ID, '_vms_agenda_text', true);
 ?>
 
-        <?php
-        $agenda_text = get_post_meta($post->ID, '_vms_agenda_text', true);
-        ?>
-
         <hr />
         <h4><?php esc_html_e('Agenda / Event Description', 'vms'); ?></h4>
 
@@ -87,6 +113,24 @@ class VMS_Admin_Event_Plans
             <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'vms'); ?></strong></label><br />
             <input type="date" id="vms_event_date" name="vms_event_date"
                 value="<?php echo esc_attr($event_date); ?>" />
+        </p>
+
+        <p>
+            <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'vms'); ?></strong></label><br />
+
+            <select id="vms_venue_id" name="vms_venue_id" style="min-width:260px;" required>
+                <option value=""><?php esc_html_e('-- Select a Venue --', 'vms'); ?></option>
+
+                <?php foreach ($venues as $venue) : ?>
+                    <option value="<?php echo esc_attr($venue->ID); ?>" <?php selected($venue_id, $venue->ID); ?>>
+                        <?php echo esc_html($venue->post_title); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <br /><span class="description">
+                <?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'vms'); ?>
+            </span>
         </p>
 
         <p>
@@ -320,6 +364,8 @@ class VMS_Admin_Event_Plans
         $end_time           = isset($_POST['vms_end_time']) ? sanitize_text_field($_POST['vms_end_time']) : '';
         $location_label     = isset($_POST['vms_location_label']) ? sanitize_text_field($_POST['vms_location_label']) : '';
 
+        $venue_id = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
+
         $comp_structure     = isset($_POST['vms_comp_structure']) ? sanitize_text_field($_POST['vms_comp_structure']) : 'flat_fee';
         $flat_fee_amount    = isset($_POST['vms_flat_fee_amount']) ? floatval($_POST['vms_flat_fee_amount']) : '';
         $door_split_percent = isset($_POST['vms_door_split_percent']) ? floatval($_POST['vms_door_split_percent']) : '';
@@ -334,6 +380,7 @@ class VMS_Admin_Event_Plans
             '_vms_start_time'         => $start_time,
             '_vms_end_time'           => $end_time,
             '_vms_location_label'     => $location_label,
+            '_vms_venue_id'           => $venue_id,
             '_vms_comp_structure'     => $comp_structure,
             '_vms_flat_fee_amount'    => $flat_fee_amount,
             '_vms_door_split_percent' => $door_split_percent,
@@ -950,4 +997,28 @@ function vms_event_plan_row_actions($actions, $post)
     }
 
     return $actions;
+}
+
+add_action('pre_get_posts', function ($query) {
+    if (!is_admin() || !$query->is_main_query()) return;
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->id !== 'edit-vms_event_plan') return;
+
+    $venue_id = vms_get_current_venue_id();
+    if ($venue_id <= 0) return;
+
+    $meta_query = (array) $query->get('meta_query');
+    $meta_query[] = array(
+        'key'   => '_vms_venue_id',
+        'value' => $venue_id,
+        'compare' => '=',
+        'type'  => 'NUMERIC',
+    );
+    $query->set('meta_query', $meta_query);
+});
+
+// Bootstrap admin hooks for Event Plans.
+if (is_admin()) {
+    new VMS_Admin_Event_Plans();
 }

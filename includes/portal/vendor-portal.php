@@ -1,15 +1,44 @@
 <?php
-
+ 
 add_shortcode('vms_vendor_portal', 'vms_vendor_portal_shortcode');
 
 function vms_vendor_portal_shortcode()
 {
     if (!is_user_logged_in()) {
-        // Use WP's login form and redirect back here
-        return wp_login_form(array(
-            'echo'     => false,
-            'redirect' => esc_url(get_permalink()),
-        ));
+
+        // Change this to your actual application page URL (where [vms_vendor_apply] lives)
+        $apply_url = site_url('/vendor-application/');
+
+        ob_start(); ?>
+        <div class="vms-portal-auth-wrap">
+            <div class="vms-portal-auth-col vms-portal-auth-login">
+                <h2>Vendor Portal Login</h2>
+                <?php
+                echo wp_login_form(array(
+                    'echo'     => false,
+                    'redirect' => esc_url(get_permalink()),
+                ));
+                ?>
+                <p style="margin-top:10px;">
+                    <a href="<?php echo esc_url(wp_lostpassword_url(get_permalink())); ?>">Forgot password?</a>
+                </p>
+            </div>
+
+            <div class="vms-portal-auth-col vms-portal-auth-apply">
+                <h2>Need an Account?</h2>
+                <p>Vendors must be approved before getting portal access.</p>
+                <p>
+                    <a class="button button-primary" href="<?php echo esc_url($apply_url); ?>">
+                        Apply for an Account
+                    </a>
+                </p>
+                <p style="margin-top:10px; opacity:0.85;">
+                    Already applied? We’ll email you once you’re approved.
+                </p>
+            </div>
+        </div>
+<?php
+        return ob_get_clean();
     }
 
     $user_id   = get_current_user_id();
@@ -102,10 +131,26 @@ function vms_vendor_portal_render_availability($vendor_id)
     echo '<table class="widefat striped" style="max-width:750px;">';
     echo '<thead><tr><th>Date</th><th>Day</th><th>Status</th></tr></thead><tbody>';
 
+    $current_month = '';
+
     foreach ($active_dates as $date_str) {
-        $ts   = strtotime($date_str);
-        $day  = $ts ? date_i18n('D', $ts) : '';
-        $nice = $ts ? date_i18n('M j, Y', $ts) : $date_str;
+
+        $ts = strtotime($date_str);
+        if (!$ts) continue;
+
+        $month_label = date_i18n('F Y', $ts); // e.g. "March 2026"
+
+        // New month header row
+        if ($month_label !== $current_month) {
+            $current_month = $month_label;
+
+            echo '<tr class="vms-month-header">';
+            echo '<td colspan="3"><strong>' . esc_html($month_label) . '</strong></td>';
+            echo '</tr>';
+        }
+
+        $day  = date_i18n('D', $ts);
+        $nice = date_i18n('M j, Y', $ts);
         $val  = isset($availability[$date_str]) ? $availability[$date_str] : '';
 
         echo '<tr>';
@@ -113,11 +158,12 @@ function vms_vendor_portal_render_availability($vendor_id)
         echo '<td>' . esc_html($day) . '</td>';
         echo '<td>';
         echo '<select name="vms_availability[' . esc_attr($date_str) . ']">';
-        echo '<option value="" ' . selected($val, '', false) . '>-- Unknown --</option>';
+        echo '<option value="" ' . selected($val, '', false) . '>—</option>';
         echo '<option value="available" ' . selected($val, 'available', false) . '>Available</option>';
         echo '<option value="unavailable" ' . selected($val, 'unavailable', false) . '>Not Available</option>';
         echo '</select>';
-        echo '</td></tr>';
+        echo '</td>';
+        echo '</tr>';
     }
 
     echo '</tbody></table>';
