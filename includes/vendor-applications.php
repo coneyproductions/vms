@@ -1,5 +1,5 @@
 <?php
-  
+
 add_action('init', 'vms_register_vendor_application_cpt');
 function vms_register_vendor_application_cpt()
 {
@@ -73,9 +73,16 @@ function vms_vendor_apply_shortcode()
         </p>
 
         <p>
-            <label><strong>Social Links (optional)</strong></label><br>
-            <textarea name="vms_app_social" rows="3" style="width:100%;max-width:520px;"
-                placeholder="Instagram, Facebook, Spotify, YouTube, etc."></textarea>
+            <label>
+                <strong><?php echo esc_html__('Social Links (optional)', 'vms'); ?></strong>
+            </label><br>
+
+            <textarea
+                name="vms_app_social"
+                rows="3"
+                style="width:100%;max-width:520px;"
+                placeholder="<?php echo esc_attr__('Instagram, Facebook, Spotify, YouTube, etc.', 'vms'); ?>">
+    </textarea>
         </p>
 
         <p>

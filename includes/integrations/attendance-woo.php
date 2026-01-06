@@ -1,4 +1,5 @@
 <?php
+if (!defined('ABSPATH')) exit;
 
 add_filter('vms_has_attended_event', 'vms_check_woo_tickets_for_attendance', 10, 3);
 function vms_check_woo_tickets_for_attendance($has_attended, $event_id, $email)

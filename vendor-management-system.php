@@ -29,6 +29,7 @@ $includes = array(
     // Integrations
     'integrations/tec-sync.php',
     'integrations/attendance-woo.php',
+    'integrations/vendor-ics-sync.php',
     // 'integrations/availability-engine.php',
 
     // Vendor system
