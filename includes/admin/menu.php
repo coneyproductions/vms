@@ -53,6 +53,8 @@ function vms_render_dashboard_stub()
 
 function vms_render_dashboard_page()
 {
+    echo '<p><small>Build: ' . esc_html(VMS_BUILD_ID) . '</small></p>';
+
     echo '<div class="wrap"><h1>VMS Dashboard</h1>';
 
     if (function_exists('vms_render_current_venue_selector')) {

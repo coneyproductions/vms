@@ -58,6 +58,7 @@ add_action('after_setup_theme', function () {
 
 // Plugin constants.
 define('VMS_VERSION', '0.1.0');
+define('VMS_BUILD_ID', '2026-01-05 15:48 CST');
 define('VMS_PLUGIN_FILE', __FILE__);
 define('VMS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('VMS_PLUGIN_URL', plugin_dir_url(__FILE__));

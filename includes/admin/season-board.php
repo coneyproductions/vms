@@ -18,13 +18,12 @@ function vms_render_season_board_page()
         wp_die('Insufficient permissions.');
     }
 
-    vms_render_current_venue_selector();
-
     $active_dates = get_option('vms_active_dates', array());
     if (!is_array($active_dates)) $active_dates = array();
 
     echo '<div class="wrap">';
     echo '<h1>Season Board</h1>';
+    vms_render_current_venue_selector();
     echo '<p>Broad season view of dates, booked vendors, and event plan status.</p>';
 
     if (empty($active_dates)) {
