@@ -139,36 +139,16 @@ function vms_vendor_portal_shortcode()
 function vms_vendor_portal_render_availability($vendor_id)
 {
     $active_dates = get_option('vms_active_dates', array());
-    $availability = get_post_meta($vendor_id, '_vms_availability', true);
+    // $availability = get_post_meta($vendor_id, '_vms_availability', true);
     $ics_url      = (string) get_post_meta($vendor_id, '_vms_ics_url', true);
     $ics_autosync = (int) get_post_meta($vendor_id, '_vms_ics_autosync', true);
     $ics_last     = (int) get_post_meta($vendor_id, '_vms_ics_last_sync', true);
 
-    if (!is_array($availability)) $availability = array();
+    $manual = get_post_meta($vendor_id, '_vms_availability_manual', true);
+    $ics    = get_post_meta($vendor_id, '_vms_availability_ics', true);
 
-    // Handle save
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_save_availability'])) {
-        if (!isset($_POST['vms_avail_nonce']) || !wp_verify_nonce($_POST['vms_avail_nonce'], 'vms_save_availability')) {
-            echo '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
-            return;
-        }
-
-        $incoming = isset($_POST['vms_availability']) && is_array($_POST['vms_availability']) ? $_POST['vms_availability'] : array();
-        $clean = array();
-
-        foreach ($incoming as $date => $state) {
-            $date  = sanitize_text_field($date);
-            $state = sanitize_text_field($state);
-            if ($state === 'available' || $state === 'unavailable') {
-                $clean[$date] = $state;
-            }
-        }
-
-        update_post_meta($vendor_id, '_vms_availability', $clean);
-        $availability = $clean;
-
-        echo '<div class="notice notice-success"><p>' . esc_html__('Availability saved.', 'vms') . '</p></div>';
-    }
+    if (!is_array($manual)) $manual = array();
+    if (!is_array($ics)) $ics = array();
 
     // Handle ICS settings + sync
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -194,6 +174,31 @@ function vms_vendor_portal_render_availability($vendor_id)
             echo '<div class="notice notice-success"><p>' . esc_html__('Calendar settings saved.', 'vms') . '</p></div>';
         }
 
+        // Handle save
+        if (isset($_POST['vms_save_availability'])) {
+            if (!isset($_POST['vms_avail_nonce']) || !wp_verify_nonce($_POST['vms_avail_nonce'], 'vms_save_availability')) {
+                echo '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
+                return;
+            }
+
+            $incoming = isset($_POST['vms_availability']) && is_array($_POST['vms_availability']) ? $_POST['vms_availability'] : array();
+            $clean = array();
+
+            foreach ($incoming as $date => $state) {
+                $date  = sanitize_text_field($date);
+                $state = sanitize_text_field($state);
+                if ($state === 'available' || $state === 'unavailable') {
+                    $clean[$date] = $state;
+                }
+            }
+
+            update_post_meta($vendor_id, '_vms_availability_manual', $clean);
+            $manual = $clean; // keep in-memory state in sync
+
+            echo '<div class="notice notice-success"><p>' . esc_html__('Availability saved.', 'vms') . '</p></div>';
+        }
+
+
         // Sync now
         if (isset($_POST['vms_sync_ics_now'])) {
             if (!isset($_POST['vms_ics_nonce']) || !wp_verify_nonce($_POST['vms_ics_nonce'], 'vms_ics_settings')) {
@@ -211,20 +216,20 @@ function vms_vendor_portal_render_availability($vendor_id)
                 $result = vms_vendor_ics_sync_now($vendor_id, $active_dates);
 
                 if (!empty($result['ok'])) {
-                    // Merge: sync marks unavailable; do not overwrite manual values that are already set
-                    $availability = get_post_meta($vendor_id, '_vms_availability', true);
-                    if (!is_array($availability)) $availability = array();
+
+                    $ics_unavailable = isset($result['ics_unavailable']) && is_array($result['ics_unavailable'])
+                        ? $result['ics_unavailable']
+                        : array();
+
+                    $ics = $ics_unavailable;
 
                     update_post_meta($vendor_id, '_vms_ics_last_sync', time());
                     $ics_last = time();
 
-                    $count = isset($result['marked']) ? (int) $result['marked'] : 0;
+                    $count = count($ics_unavailable);
 
                     echo '<div class="notice notice-success"><p>' .
-                        sprintf(
-                            esc_html__('Calendar synced. %d date(s) marked unavailable.', 'vms'),
-                            $count
-                        ) .
+                        sprintf(esc_html__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count) .
                         '</p></div>';
                 } else {
                     $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'vms');
@@ -234,54 +239,89 @@ function vms_vendor_portal_render_availability($vendor_id)
         }
     }
 
+
     if (empty($active_dates)) {
         echo '<p>' . esc_html__('No season dates have been configured yet.', 'vms') . '</p>';
         return;
     }
 
+    echo '<style>
+.vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;}
+.vms-panel > summary{list-style:none;}
+.vms-panel > summary::-webkit-details-marker{display:none;}
+.vms-panel-sync{border-left:6px solid #4f46e5;}   /* sync accent */
+.vms-panel-manual{border-left:6px solid #10b981;} /* manual accent */
+</style>';
+
     echo '<h3>' . esc_html(vms_ui_text('availability_heading', __('Availability', 'vms'))) . '</h3>';
+    echo '<p class="description" style="margin:-6px 0 14px;max-width:720px;">
+    ' . esc_html__(
+        'Choose one method below. You can either sync your calendar automatically or enter availability manually — you don’t need to do both.',
+        'vms'
+    ) . '
+</p>';
     echo '<form method="post" id="vms-availability-form">';
     wp_nonce_field('vms_save_availability', 'vms_avail_nonce');
     wp_nonce_field('vms_ics_settings', 'vms_ics_nonce');
     echo '<input type="hidden" name="vms_autosave_before_sync" value="0" id="vms-autosave-before-sync">';
 
-    echo '<div class="postbox" style="max-width:820px;padding:12px 14px;margin:12px 0 16px;">
-  <h4 style="margin:0 0 10px;">' . esc_html__('Calendar Sync (Optional)', 'vms') . '</h4>
+    echo '<details class="vms-panel vms-panel-sync" open style="margin:12px 0 16px;">';
+    echo '<summary style="cursor:pointer;font-weight:700;font-size:15px;padding:10px 12px;border-radius:14px;">
+  ' . esc_html__('Calendar Sync (Optional)', 'vms') . '
+  <span style="font-weight:400;opacity:.75;margin-left:8px;">' . esc_html__('Paste once, then sync anytime.', 'vms') . '</span>
+</summary>';
 
-  <p class="description" style="margin:0 0 10px;">
-    ' . esc_html__('Paste a private iCal/ICS feed link to automatically mark dates as unavailable when you have calendar conflicts.', 'vms') . '
-  </p>
+    echo '<div style="padding:12px 12px 14px;">';
 
-  <p style="margin:0 0 10px;">
-    <label><strong>' . esc_html__('Calendar Feed URL (ICS)', 'vms') . '</strong></label><br>
-    <input type="url" name="vms_ics_url" value="' . esc_attr($ics_url) . '" style="width:100%;max-width:720px;" placeholder="' . esc_attr__('https://… (secret iCal address)', 'vms') . '">
-  </p>
+    echo '<p class="description" style="margin:0 0 10px;">
+  ' . esc_html__('If you use Google Calendar (or any calendar with an iCal/ICS link), you can sync conflicts automatically. Otherwise, just use manual availability below.', 'vms') . '
+</p>';
 
-  <p style="margin:0 0 10px;">
-    <label>
-      <input type="checkbox" name="vms_ics_autosync" value="1" ' . checked($ics_autosync, 1, false) . '>
-      ' . esc_html__('Auto-sync nightly (recommended)', 'vms') . '
-    </label>
-  </p>';
+    echo '<p style="margin:0 0 10px;">
+  <label><strong>' . esc_html__('Calendar Feed URL (ICS)', 'vms') . '</strong></label><br>
+  <input type="url" name="vms_ics_url" value="' . esc_attr($ics_url) . '" style="width:100%;max-width:720px;" placeholder="' . esc_attr__('https://… (secret iCal address)', 'vms') . '">
+</p>';
+
+    echo '<p style="margin:0 0 10px;">
+  <label>
+    <input type="checkbox" name="vms_ics_autosync" value="1" ' . checked($ics_autosync, 1, false) . '>
+    ' . esc_html__('Auto-sync nightly (recommended)', 'vms') . '
+  </label>
+</p>';
 
     if (!empty($ics_last)) {
+        $tz_label = vms_get_timezone_id(); // e.g. America/Chicago
+        $tz = vms_get_timezone();
+        $dt = new DateTime('@' . $ics_last); // timestamp is UTC
+        $dt->setTimezone($tz);
+
         echo '<p class="description" style="margin:0 0 10px;">' .
             sprintf(
                 esc_html__('Last synced: %s', 'vms'),
-                esc_html(date_i18n('M j, Y g:ia', $ics_last))
+                esc_html($dt->format('M j, Y g:ia') . ' (' . $tz_label . ')')
             ) .
             '</p>';
     }
 
-    echo '<p style="margin:0;">
-    <button class="button" name="vms_save_ics_settings" value="1">' . esc_html__('Save Calendar Settings', 'vms') . '</button>
-    <button class="button button-secondary" id="vms-sync-ics-now" name="vms_sync_ics_now" value="1" style="margin-left:6px;">' . esc_html__('Sync Now', 'vms') . '</button>
-  </p>
 
-  <p class="description" style="margin:10px 0 0;">
-    ' . esc_html__('We only use this feed to detect busy/unavailable dates. Event details are not stored.', 'vms') . '
-  </p>
-</div>';
+    echo '<p style="margin:0;">
+  <button type="submit" class="button" name="vms_save_ics_settings" value="1">' . esc_html__('Save Calendar Settings', 'vms') . '</button>
+  <button type="submit" class="button button-secondary" id="vms-sync-ics-now" name="vms_sync_ics_now" value="1" style="margin-left:6px;">' . esc_html__('Sync Now', 'vms') . '</button>
+</p>';
+
+    echo '<p class="description" style="margin:10px 0 0;">
+  ' . esc_html__('We only detect busy/unavailable conflicts. Event details are not stored.', 'vms') . '
+</p>';
+
+    echo '</div></details>';
+
+    echo '<details class="vms-panel vms-panel-manual" open style="margin:12px 0 16px;">';
+    echo '<summary style="cursor:pointer;font-weight:700;font-size:15px;padding:10px 12px;border-radius:14px;">
+  ' . esc_html__('Manual Availability', 'vms') . '
+  <span style="font-weight:400;opacity:.75;margin-left:8px;">' . esc_html__('Use this if you prefer not to sync a calendar.', 'vms') . '</span>
+</summary>';
+    echo '<div style="padding:12px 12px 14px;">';
+
 
     echo '<p>
   <button class="button button-primary" name="vms_save_availability">' .
@@ -289,8 +329,13 @@ function vms_vendor_portal_render_availability($vendor_id)
         '</button>
 </p>';
 
+
     // Group dates by month first
     $dates_by_month = array();
+
+    $event_titles_by_date = function_exists('vms_get_event_titles_by_date')
+        ? vms_get_event_titles_by_date($active_dates)
+        : array();
 
     foreach ($active_dates as $date_str) {
         $ts = strtotime($date_str);
@@ -303,6 +348,11 @@ function vms_vendor_portal_render_availability($vendor_id)
         $dates_by_month[$month_label][] = $date_str;
     }
 
+    // Default open behavior: only open the current month (fallback: first month)
+    $current_month_label = date_i18n('F Y', current_time('timestamp'));
+    $has_current_month   = isset($dates_by_month[$current_month_label]);
+    $opened_first        = false;
+
     // Optional: Expand/Collapse all buttons (nice for long seasons)
     echo '<p style="margin:8px 0 14px;">
   <button type="button" class="button" onclick="document.querySelectorAll(\'.vms-portal-month\').forEach(d=>d.open=true);">' . esc_html__('Expand all', 'vms') . '</button>
@@ -311,14 +361,30 @@ function vms_vendor_portal_render_availability($vendor_id)
 
     foreach ($dates_by_month as $month_label => $month_dates) {
 
-        echo '<details class="vms-portal-month" open style="margin:0 0 14px;background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:10px 12px;">';
+        $open_attr = '';
+
+        if ($has_current_month) {
+            if ($month_label === $current_month_label) {
+                $open_attr = ' open';
+            }
+        } else {
+            // If current month isn't present in season, open the first month we render
+            if (!$opened_first) {
+                $open_attr = ' open';
+                $opened_first = true;
+            }
+        }
+
+        echo '<details class="vms-portal-month"' . $open_attr . ' style="margin:0 0 14px;background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:10px 12px;">';
+
         echo '<summary style="cursor:pointer;font-weight:700;font-size:15px;">' . esc_html($month_label) . '</summary>';
 
         echo '<table class="widefat striped" style="margin-top:10px;">';
         echo '<thead><tr>
-        <th>' . esc_html__('Date', 'vms') . '</th>
-        <th>' . esc_html__('Day', 'vms') . '</th>
-        <th>' . esc_html__('Status', 'vms') . '</th>
+    <th>' . esc_html__('Event', 'vms') . '</th>
+    <th>' . esc_html__('Date', 'vms') . '</th>
+    <th>' . esc_html__('Day', 'vms') . '</th>
+    <th>' . esc_html__('Status', 'vms') . '</th>
     </tr></thead><tbody>';
 
         foreach ($month_dates as $date_str) {
@@ -327,9 +393,17 @@ function vms_vendor_portal_render_availability($vendor_id)
 
             $day  = date_i18n('D', $ts);
             $nice = date_i18n('M j, Y', $ts);
-            $val  = isset($availability[$date_str]) ? $availability[$date_str] : '';
+            $val = '';
+            $event_title = isset($event_titles_by_date[$date_str]) ? $event_titles_by_date[$date_str] : '';
+
+            if (isset($manual[$date_str]) && ($manual[$date_str] === 'available' || $manual[$date_str] === 'unavailable')) {
+                $val = $manual[$date_str];
+            } elseif (isset($ics[$date_str]) && $ics[$date_str] === 'unavailable') {
+                $val = 'unavailable';
+            }
 
             echo '<tr>';
+            echo '<td style="max-width:260px;">' . ($event_title !== '' ? esc_html($event_title) : '—') . '</td>';
             echo '<td>' . esc_html($nice) . '</td>';
             echo '<td>' . esc_html($day) . '</td>';
             echo '<td>';
@@ -353,18 +427,25 @@ function vms_vendor_portal_render_availability($vendor_id)
   var autosaveFlag = document.getElementById("vms-autosave-before-sync");
   if (!form || !syncBtn || !autosaveFlag) return;
 
-  var dirty = false;
+  var dirty = false;     // availability changes
+  var icsDirty = false;  // ICS settings changes
 
-  // Mark dirty when any availability dropdown changes
+  // Mark dirty when availability dropdowns or ICS settings change
   form.addEventListener("change", function(e){
-    if (e.target && e.target.name && e.target.name.indexOf("vms_availability[") === 0) {
+    if (!e.target || !e.target.name) return;
+
+    if (e.target.name.indexOf("vms_availability[") === 0) {
       dirty = true;
+    }
+
+    if (e.target.name === "vms_ics_url" || e.target.name === "vms_ics_autosync") {
+      icsDirty = true;
     }
   });
 
   // If Sync Now clicked and dirty, auto-save first
   syncBtn.addEventListener("click", function(e){
-    if (!dirty) return;
+    if (!dirty && !icsDirty) return;
 
     e.preventDefault();
 
@@ -372,29 +453,50 @@ function vms_vendor_portal_render_availability($vendor_id)
     var msg = document.createElement("div");
     msg.className = "notice notice-warning";
     msg.style.margin = "10px 0";
-    msg.innerHTML = "<p><strong>' . esc_js(__('Heads up:', 'vms')) . '</strong> ' . esc_js(__('You have unsaved availability changes. Saving them first, then syncing your calendar…', 'vms')) . '</p>";
+    msg.innerHTML = "<p><strong>' . esc_js(__('Heads up:', 'vms')) . '</strong> ' . esc_js(__('You have unsaved changes. Saving them first, then syncing your calendar…', 'vms')) . '</p>";
     form.insertBefore(msg, form.firstChild);
 
     // Set flag so backend knows this was autosave+sync intent
     autosaveFlag.value = "1";
 
-    // Trigger availability save + sync by submitting the form with both intents:
-    // We do that by temporarily adding vms_save_availability as if user clicked it.
-    var hiddenSave = document.createElement("input");
-    hiddenSave.type = "hidden";
-    hiddenSave.name = "vms_save_availability";
-    hiddenSave.value = "1";
-    form.appendChild(hiddenSave);
+    // If availability changed, save it too
+    if (dirty) {
+      var hiddenSave = document.createElement("input");
+      hiddenSave.type = "hidden";
+      hiddenSave.name = "vms_save_availability";
+      hiddenSave.value = "1";
+      form.appendChild(hiddenSave);
+    }
 
-    // Submit the form normally; backend will save availability first, then run sync.
+    // Always save ICS settings before syncing (checkbox + URL) if they were changed
+    if (icsDirty) {
+      var hiddenIcsSave = document.createElement("input");
+      hiddenIcsSave.type = "hidden";
+      hiddenIcsSave.name = "vms_save_ics_settings";
+      hiddenIcsSave.value = "1";
+      form.appendChild(hiddenIcsSave);
+    }
+
+    // Submit the form normally; backend saves then syncs.
     form.submit();
   });
 })();
 </script>';
 
 
-    echo '<p style="margin-top:12px;"><button class="button button-primary" name="vms_save_availability">' . esc_html(vms_ui_text('availability_save_button', __('Save Availability', 'vms'))) . '</button></p>';
+    echo '<div class="vms-sticky-actions" style="position:sticky;bottom:0;z-index:20;margin-top:14px;padding:10px 12px;background:#fff;border:1px solid #e5e5e5;border-radius:14px;box-shadow:0 -6px 18px rgba(0,0,0,0.06);display:flex;gap:10px;align-items:center;flex-wrap:wrap;">';
+
+    echo '<button class="button button-primary" name="vms_save_availability" value="1">' .
+        esc_html(vms_ui_text('availability_save_button', __('Save Availability', 'vms'))) .
+        '</button>';
+
+    echo '<span class="description" style="margin:0;opacity:.85;">' .
+        esc_html__('Tip: after editing dates, click Save Availability.', 'vms') .
+        '</span>';
+
+    echo '</div>';
     echo '</form>';
+    echo '</div></details>';
 }
 
 function vms_vendor_portal_render_profile($vendor_id)

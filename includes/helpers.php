@@ -134,3 +134,42 @@ function vms_get_timezone(): DateTimeZone
 {
     return new DateTimeZone(vms_get_timezone_id());
 }
+
+function vms_get_event_titles_by_date(array $active_dates): array
+{
+    $active_dates = array_values(array_filter(array_map('trim', $active_dates)));
+    if (!$active_dates) return array();
+
+    $active_set = array_fill_keys($active_dates, true);
+    $map = array();
+    $tz  = vms_get_timezone();
+
+    $q = new WP_Query(array(
+        'post_type'      => 'tribe_events',
+        'post_status'    => array('publish', 'draft', 'pending'),
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+        'meta_query'     => array(
+            array('key' => '_EventStartDate', 'compare' => 'EXISTS'),
+        ),
+    ));
+
+    foreach ($q->posts as $event_id) {
+        $start = (string) get_post_meta($event_id, '_EventStartDate', true);
+        if ($start === '') continue;
+
+        try {
+            $dt = new DateTime($start, $tz);
+        } catch (Exception $e) {
+            continue;
+        }
+
+        $ymd = $dt->format('Y-m-d');
+        if (!isset($active_set[$ymd])) continue;
+
+        $map[$ymd] = get_the_title($event_id);
+    }
+
+    wp_reset_postdata();
+    return $map;
+}

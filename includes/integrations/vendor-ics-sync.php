@@ -23,9 +23,9 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
     }
 
     $response = wp_remote_get($ics_url, array(
-        'timeout' => 15,
+        'timeout'     => 15,
         'redirection' => 3,
-        'headers' => array(
+        'headers'     => array(
             'Accept' => 'text/calendar',
         ),
     ));
@@ -45,44 +45,35 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
     }
 
     $events = vms_vendor_ics_extract_events($raw);
-    // // DEBUG: log first 10 parsed events in local time
-    // $tz = vms_get_timezone();
-    // for ($i = 0; $i < min(10, count($events)); $i++) {
-    //     $s = (new DateTime('@' . $events[$i]['start']))->setTimezone($tz)->format('Y-m-d H:i:s T');
-    //     $e = (new DateTime('@' . $events[$i]['end']))->setTimezone($tz)->format('Y-m-d H:i:s T');
-    //     error_log("VMS ICS EVENT #$i start=$s end=$e");
-    // }
 
+    // If calendar is empty, clear ICS layer for active dates and return ok.
     if (!$events) {
-        // Not necessarily error; could be empty calendar
-        return array('ok' => true, 'marked' => 0);
+        update_post_meta($vendor_id, '_vms_availability_ics', array());
+        return array('ok' => true, 'ics_unavailable' => array(), 'marked' => 0);
     }
 
     // Build set of busy dates (YYYY-MM-DD) in VMS timezone.
     $busy_dates = vms_vendor_ics_busy_dates($events);
 
-    // Load current availability array
-    $availability = get_post_meta($vendor_id, '_vms_availability', true);
-    if (!is_array($availability)) $availability = array();
-
-    // Only mark dates that are in active_dates and currently blank/unset
+    // Only keep busy dates that are in active_dates
     $active_set = array_fill_keys($active_dates, true);
 
-    $marked = 0;
+    $ics_unavailable = array();
     foreach ($busy_dates as $ymd => $_true) {
         if (!isset($active_set[$ymd])) continue;
-
-        // manual wins: don't overwrite existing selection
-        if (isset($availability[$ymd]) && $availability[$ymd] !== '') continue;
-
-        $availability[$ymd] = 'unavailable';
-        $marked++;
+        $ics_unavailable[$ymd] = 'unavailable';
     }
 
-    update_post_meta($vendor_id, '_vms_availability', $availability);
+    // Rebuild ICS layer entirely on each sync (do NOT write into manual).
+    update_post_meta($vendor_id, '_vms_availability_ics', $ics_unavailable);
 
-    return array('ok' => true, 'marked' => $marked);
+    return array(
+        'ok'            => true,
+        'ics_unavailable'=> $ics_unavailable,
+        'marked'        => count($ics_unavailable),
+    );
 }
+
 
 /**
  * Extract VEVENT date ranges from raw ICS.

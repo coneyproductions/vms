@@ -35,8 +35,19 @@ function vms_vendor_apply_shortcode()
     }
 
 ?>
+
+
     <form method="post">
         <?php wp_nonce_field('vms_vendor_apply', 'vms_vendor_apply_nonce'); ?>
+
+        <p>
+            <label><strong><?php echo esc_html__('Vendor Type', 'vms'); ?></strong></label><br>
+            <select name="vms_app_vendor_type" id="vms-app-vendor-type" required>
+                <option value=""><?php echo esc_html__('Select…', 'vms'); ?></option>
+                <option value="band"><?php echo esc_html__('Band / Artist', 'vms'); ?></option>
+                <option value="food_truck"><?php echo esc_html__('Food Truck', 'vms'); ?></option>
+            </select>
+        </p>
 
         <p>
             <label><strong>Band / Vendor Name</strong></label><br>
@@ -49,28 +60,33 @@ function vms_vendor_apply_shortcode()
         </p>
 
         <p>
-            <label><strong>Vendor Type</strong></label><br>
-            <select name="vms_app_type" required>
-                <option value="">-- Select --</option>
-                <option value="band">Band</option>
-                <option value="food_truck">Food Truck</option>
-            </select>
-        </p>
-
-        <p>
             <label><strong>Home Base (City/State)</strong></label><br>
             <input type="text" name="vms_app_location" style="width:100%;max-width:520px;">
         </p>
+        <div class="vms-app-fields vms-app-band" style="display:none;">
 
-        <p>
-            <label><strong>Typical Rate (optional)</strong></label><br>
-            <input type="text" name="vms_app_rate" placeholder="e.g. $800 flat, or door split" style="width:100%;max-width:520px;">
-        </p>
+            <p>
+                <label><strong>Typical Rate (optional)</strong></label><br>
+                <input type="text" name="vms_app_rate" placeholder="e.g. $800 flat, or door split" style="width:100%;max-width:520px;">
+            </p>
 
-        <p>
-            <label><strong>EPK / Website Link</strong></label><br>
-            <input type="url" name="vms_app_epk" required style="width:100%;max-width:520px;">
-        </p>
+            <p>
+                <label><strong>EPK / Website Link</strong></label><br>
+                <input type="url" name="vms_app_epk" style="width:100%;max-width:520px;">
+            </p>
+        </div>
+
+        <div class="vms-app-fields vms-app-food" style="display:none;">
+            <p>
+                <label><strong><?php echo esc_html__('Cuisine / Food Type', 'vms'); ?></strong></label><br>
+                <input type="text" name="vms_app_cuisine" style="width:100%;max-width:520px;" placeholder="<?php echo esc_attr__('Tacos, BBQ, Burgers, Coffee, etc.', 'vms'); ?>">
+            </p>
+
+            <p>
+                <label><strong><?php echo esc_html__('Menu Link (optional)', 'vms'); ?></strong></label><br>
+                <input type="url" name="vms_app_menu" style="width:100%;max-width:520px;" placeholder="<?php echo esc_attr__('https://…', 'vms'); ?>">
+            </p>
+        </div>
 
         <p>
             <label>
@@ -81,8 +97,7 @@ function vms_vendor_apply_shortcode()
                 name="vms_app_social"
                 rows="3"
                 style="width:100%;max-width:520px;"
-                placeholder="<?php echo esc_attr__('Instagram, Facebook, Spotify, YouTube, etc.', 'vms'); ?>">
-    </textarea>
+                placeholder="<?php echo esc_attr__('Instagram, Facebook, Spotify, YouTube, etc.', 'vms'); ?>"></textarea>
         </p>
 
         <p>
@@ -95,6 +110,35 @@ function vms_vendor_apply_shortcode()
                 Submit Application
             </button>
         </p>
+
+        <script>
+            (function() {
+                var sel = document.getElementById('vms-app-vendor-type');
+                if (!sel) return;
+
+                function toggle() {
+                    var v = sel.value;
+
+                    document.querySelectorAll('.vms-app-fields').forEach(function(el) {
+                        el.style.display = 'none';
+                    });
+
+                    if (v === 'band') {
+                        document.querySelectorAll('.vms-app-band').forEach(function(el) {
+                            el.style.display = 'block';
+                        });
+                    } else if (v === 'food_truck') {
+                        document.querySelectorAll('.vms-app-food').forEach(function(el) {
+                            el.style.display = 'block';
+                        });
+                    }
+                }
+
+                sel.addEventListener('change', toggle);
+                toggle();
+            })();
+        </script>
+
     </form>
 <?php
 
@@ -110,17 +154,45 @@ function vms_handle_vendor_application_submit()
         return '<p>Security check failed. Please refresh and try again.</p>';
     }
 
-    $name     = isset($_POST['vms_app_name']) ? sanitize_text_field($_POST['vms_app_name']) : '';
-    $email    = isset($_POST['vms_app_email']) ? sanitize_email($_POST['vms_app_email']) : '';
-    $type     = isset($_POST['vms_app_type']) ? sanitize_key($_POST['vms_app_type']) : '';
-    $location = isset($_POST['vms_app_location']) ? sanitize_text_field($_POST['vms_app_location']) : '';
-    $rate     = isset($_POST['vms_app_rate']) ? sanitize_text_field($_POST['vms_app_rate']) : '';
-    $epk      = isset($_POST['vms_app_epk']) ? esc_url_raw($_POST['vms_app_epk']) : '';
-    $social   = isset($_POST['vms_app_social']) ? sanitize_textarea_field($_POST['vms_app_social']) : '';
-    $notes    = isset($_POST['vms_app_notes']) ? sanitize_textarea_field($_POST['vms_app_notes']) : '';
+    $vendor_type = isset($_POST['vms_app_vendor_type']) ? sanitize_key($_POST['vms_app_vendor_type']) : '';
+    $name        = isset($_POST['vms_app_name']) ? sanitize_text_field($_POST['vms_app_name']) : '';
+    $email       = isset($_POST['vms_app_email']) ? sanitize_email($_POST['vms_app_email']) : '';
+    $location    = isset($_POST['vms_app_location']) ? sanitize_text_field($_POST['vms_app_location']) : '';
 
-    if (!$name || !$email || !$type || !$epk) {
-        return '<p>Please fill in the required fields.</p>';
+    $rate   = isset($_POST['vms_app_rate']) ? sanitize_text_field($_POST['vms_app_rate']) : '';
+    $epk    = isset($_POST['vms_app_epk']) ? esc_url_raw(trim((string)$_POST['vms_app_epk'])) : '';
+    $social = isset($_POST['vms_app_social']) ? sanitize_textarea_field($_POST['vms_app_social']) : '';
+
+    $cuisine = isset($_POST['vms_app_cuisine']) ? sanitize_text_field($_POST['vms_app_cuisine']) : '';
+    $menu    = isset($_POST['vms_app_menu']) ? esc_url_raw(trim((string)$_POST['vms_app_menu'])) : '';
+
+    $notes = isset($_POST['vms_app_notes']) ? sanitize_textarea_field($_POST['vms_app_notes']) : '';
+
+    $errors = array();
+
+    if ($vendor_type !== 'band' && $vendor_type !== 'food_truck') {
+        $errors[] = __('Please select a vendor type.', 'vms');
+    }
+    if ($name === '') {
+        $errors[] = __('Please enter your name.', 'vms');
+    }
+    if ($email === '' || !is_email($email)) {
+        $errors[] = __('Please enter a valid email address.', 'vms');
+    }
+
+    // Conditional requirements
+    if ($vendor_type === 'band') {
+        if ($epk === '') {
+            $errors[] = __('Please provide an EPK / website link.', 'vms');
+        }
+    } elseif ($vendor_type === 'food_truck') {
+        if ($cuisine === '') {
+            $errors[] = __('Please enter your cuisine / food type.', 'vms');
+        }
+    }
+
+    if (!empty($errors)) {
+        return '<div class="notice notice-error"><p>' . esc_html(implode(' ', $errors)) . '</p></div>';
     }
 
     // Basic anti-duplicate: existing pending app with same email
@@ -148,21 +220,40 @@ function vms_handle_vendor_application_submit()
         return '<p>Sorry — something went wrong. Please try again later.</p>';
     }
 
+    update_post_meta($app_id, '_vms_app_vendor_type', $vendor_type);
+    update_post_meta($app_id, '_vms_app_name', $name);
     update_post_meta($app_id, '_vms_app_email', $email);
-    update_post_meta($app_id, '_vms_app_type', $type);
     update_post_meta($app_id, '_vms_app_location', $location);
-    update_post_meta($app_id, '_vms_app_rate', $rate);
-    update_post_meta($app_id, '_vms_app_epk', $epk);
-    update_post_meta($app_id, '_vms_app_social', $social);
     update_post_meta($app_id, '_vms_app_notes', $notes);
-    update_post_meta($app_id, '_vms_app_status', 'pending');
+
+    if ($vendor_type === 'band') {
+        update_post_meta($app_id, '_vms_app_rate', $rate);
+        update_post_meta($app_id, '_vms_app_epk', $epk);
+        update_post_meta($app_id, '_vms_app_social', $social);
+    } elseif ($vendor_type === 'food_truck') {
+        update_post_meta($app_id, '_vms_app_cuisine', $cuisine);
+        update_post_meta($app_id, '_vms_app_menu', $menu);
+    }
+
+    // update_post_meta($app_id, '_vms_app_email', $email);
+    // update_post_meta($app_id, '_vms_app_type', $type);
+    // update_post_meta($app_id, '_vms_app_location', $location);
+    // update_post_meta($app_id, '_vms_app_rate', $rate);
+    // update_post_meta($app_id, '_vms_app_epk', $epk);
+    // update_post_meta($app_id, '_vms_app_social', $social);
+    // update_post_meta($app_id, '_vms_app_notes', $notes);
+    // update_post_meta($app_id, '_vms_app_status', 'pending');
 
     // Optional: notify admin (simple email)
     $admin_email = get_option('admin_email');
+    $extra = ($vendor_type === 'band')
+        ? "EPK: {$epk}\n"
+        : "Cuisine: {$cuisine}\nMenu: {$menu}\n";
+
     wp_mail(
         $admin_email,
         'New Vendor Application: ' . $name,
-        "A new vendor application was submitted.\n\nName: {$name}\nEmail: {$email}\nEPK: {$epk}\n\nReview in WP Admin → Vendor Applications."
+        "A new vendor application was submitted.\n\nName: {$name}\nEmail: {$email}\nType: {$vendor_type}\n{$extra}\nReview in WP Admin → Vendor Applications."
     );
 
     return '<p><strong>Application received!</strong> We’ll review it and reach out if it’s a good fit.</p>';
@@ -182,10 +273,12 @@ add_action('add_meta_boxes', function () {
 function vms_render_vendor_app_details_metabox($post)
 {
     $email    = get_post_meta($post->ID, '_vms_app_email', true);
-    $type     = get_post_meta($post->ID, '_vms_app_type', true);
+    $vendor_type = get_post_meta($post->ID, '_vms_app_vendor_type', true);
     $location = get_post_meta($post->ID, '_vms_app_location', true);
     $rate     = get_post_meta($post->ID, '_vms_app_rate', true);
     $epk      = get_post_meta($post->ID, '_vms_app_epk', true);
+    $cuisine = get_post_meta($post->ID, '_vms_app_cuisine', true);
+    $menu    = get_post_meta($post->ID, '_vms_app_menu', true);
     $social   = get_post_meta($post->ID, '_vms_app_social', true);
     $notes    = get_post_meta($post->ID, '_vms_app_notes', true);
     $status   = get_post_meta($post->ID, '_vms_app_status', true);
@@ -198,14 +291,21 @@ function vms_render_vendor_app_details_metabox($post)
 
     echo '<table class="form-table">';
     echo '<tr><th>Email</th><td>' . esc_html($email) . '</td></tr>';
-    echo '<tr><th>Type</th><td>' . esc_html($type) . '</td></tr>';
+    echo '<tr><th>Vendor Type</th><td>' . esc_html($vendor_type ?: '—') . '</td></tr>';
     echo '<tr><th>Location</th><td>' . esc_html($location) . '</td></tr>';
-    echo '<tr><th>Typical Rate</th><td>' . esc_html($rate) . '</td></tr>';
-    echo '<tr><th>EPK / Website</th><td>';
-    if ($epk) {
-        echo '<a href="' . esc_url($epk) . '" target="_blank" rel="noopener">' . esc_html($epk) . '</a>';
-    } else {
-        echo '—';
+    if ($vendor_type === 'band') {
+        echo '<tr><th>Typical Rate</th><td>' . esc_html($rate) . '</td></tr>';
+        echo '<tr><th>EPK / Website</th><td>';
+        if ($epk) {
+            echo '<a href="' . esc_url($epk) . '" target="_blank" rel="noopener">' . esc_html($epk) . '</a>';
+        } else {
+            echo '—';
+        }
+    } elseif ($vendor_type === 'food_truck') {
+        echo '<tr><th>Cuisine</th><td>' . esc_html($cuisine ?: '—') . '</td></tr>';
+        echo '<tr><th>Menu</th><td>';
+        echo $menu ? '<a href="' . esc_url($menu) . '" target="_blank" rel="noopener">' . esc_html($menu) . '</a>' : '—';
+        echo '</td></tr>';
     }
     echo '</td></tr>';
 
@@ -272,10 +372,12 @@ function vms_handle_approve_vendor_app()
     // Pull fields
     $vendor_name = $app->post_title;
     $email       = sanitize_email(get_post_meta($app_id, '_vms_app_email', true));
-    $type        = sanitize_key(get_post_meta($app_id, '_vms_app_type', true));
+    $vendor_type = sanitize_key(get_post_meta($app_id, '_vms_app_vendor_type', true));
     $location    = sanitize_text_field(get_post_meta($app_id, '_vms_app_location', true));
     $rate        = sanitize_text_field(get_post_meta($app_id, '_vms_app_rate', true));
     $epk         = esc_url_raw(get_post_meta($app_id, '_vms_app_epk', true));
+    $cuisine = sanitize_text_field(get_post_meta($app_id, '_vms_app_cuisine', true));
+    $menu    = esc_url_raw(get_post_meta($app_id, '_vms_app_menu', true));
     $social      = sanitize_textarea_field(get_post_meta($app_id, '_vms_app_social', true));
     $notes       = sanitize_textarea_field(get_post_meta($app_id, '_vms_app_notes', true));
 
@@ -336,12 +438,20 @@ function vms_handle_approve_vendor_app()
 
     // 3) Copy fields into vendor meta
     // Adjust these meta keys to match your existing vendor schema.
-    update_post_meta($vendor_id, '_vms_vendor_type', $type);         // e.g. 'band' or 'food_truck'
+    update_post_meta($vendor_id, '_vms_vendor_type', $vendor_type);
     update_post_meta($vendor_id, '_vms_vendor_location', $location);
-    update_post_meta($vendor_id, '_vms_vendor_rate', $rate);
-    update_post_meta($vendor_id, '_vms_vendor_epk', $epk);
-    update_post_meta($vendor_id, '_vms_vendor_social', $social);
     update_post_meta($vendor_id, '_vms_vendor_notes', $notes);
+
+    // Only copy relevant fields
+    if ($vendor_type === 'band') {
+        update_post_meta($vendor_id, '_vms_vendor_rate', $rate);
+        update_post_meta($vendor_id, '_vms_vendor_epk', $epk);
+        update_post_meta($vendor_id, '_vms_vendor_social', $social);
+    } elseif ($vendor_type === 'food_truck') {
+        update_post_meta($vendor_id, '_vms_vendor_cuisine', $cuisine);
+        update_post_meta($vendor_id, '_vms_vendor_menu', $menu);
+    }
+
 
     // 4) Link user ↔ vendor
     update_user_meta($user_id, '_vms_vendor_id', (int) $vendor_id);
