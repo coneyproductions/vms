@@ -475,8 +475,6 @@ class VMS_Admin_Event_Plans
             if ($new_status === 'published') {
                 vms_publish_event_to_calendar($post_id, $post);
             }
-
-            update_post_meta($post_id, '_vms_event_plan_status', $new_status);
             if (isset($_POST['vms_band_vendor_id'])) {
                 update_post_meta($post_id, '_vms_band_vendor_id', absint($_POST['vms_band_vendor_id']));
             }
