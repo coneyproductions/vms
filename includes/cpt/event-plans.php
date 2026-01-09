@@ -63,9 +63,16 @@ class VMS_Admin_Event_Plans
         $event_date          = get_post_meta($post->ID, '_vms_event_date', true);
         $start_time          = get_post_meta($post->ID, '_vms_start_time', true);
         $end_time            = get_post_meta($post->ID, '_vms_end_time', true);
-        $location_label      = get_post_meta($post->ID, '_vms_location_label', true);
+        // Default display values (only when blank)
+        if ($start_time === '' || $start_time === null) $start_time = '19:00'; // default start time
+        if ($end_time === '' || $end_time === null)     $end_time   = '21:00'; // default end time
 
+        $location_label      = get_post_meta($post->ID, '_vms_location_label', true);
         $venue_id            = (int) get_post_meta($post->ID, '_vms_venue_id', true);
+        $auto_title          = get_post_meta($post->ID, '_vms_auto_title', true);
+        if ($auto_title === '') $auto_title = '1'; // default ON
+        $auto_comp = get_post_meta($post->ID, '_vms_auto_comp', true);
+        if ($auto_comp === '') $auto_comp = '1';
 
         $venues = get_posts(array(
             'post_type'      => 'vms_venue',
@@ -86,6 +93,45 @@ class VMS_Admin_Event_Plans
         $proposal_min         = get_post_meta($post->ID, '_vms_proposal_min', true);
         $proposal_max         = get_post_meta($post->ID, '_vms_proposal_max', true);
         $proposal_cap         = get_post_meta($post->ID, '_vms_proposal_cap', true);
+
+        // -------------------------------
+        // Tickets / Add-ons settings (Plan → Products)
+        // -------------------------------
+        $ga_price = get_post_meta($post->ID, '_vms_price_ga', true);
+        if ($ga_price === '' || $ga_price === null) $ga_price = '20';
+
+        $enable_tables   = get_post_meta($post->ID, '_vms_enable_tables', true);
+        if ($enable_tables === '') $enable_tables = '1';
+
+        $enable_firepits = get_post_meta($post->ID, '_vms_enable_firepits', true);
+        if ($enable_firepits === '') $enable_firepits = '1';
+
+        $enable_pools    = get_post_meta($post->ID, '_vms_enable_pools', true);
+        if ($enable_pools === '') $enable_pools = '0';
+
+        // counts
+        $table_count   = get_post_meta($post->ID, '_vms_table_count', true);
+        if ($table_count === '' || $table_count === null) $table_count = '6';
+
+        $firepit_count = get_post_meta($post->ID, '_vms_firepit_count', true);
+        if ($firepit_count === '' || $firepit_count === null) $firepit_count = '6';
+
+        // prices
+        $table_price   = get_post_meta($post->ID, '_vms_price_table', true);
+        if ($table_price === '' || $table_price === null) $table_price = '30';
+
+        $firepit_price = get_post_meta($post->ID, '_vms_price_firepit', true);
+        if ($firepit_price === '' || $firepit_price === null) $firepit_price = '30';
+
+        $pool_price    = get_post_meta($post->ID, '_vms_price_pool', true);
+        if ($pool_price === '' || $pool_price === null) $pool_price = '10';
+
+        // qualification rules
+        $firepit_min_tickets = get_post_meta($post->ID, '_vms_min_tickets_per_firepit', true);
+        if ($firepit_min_tickets === '' || $firepit_min_tickets === null) $firepit_min_tickets = '2';
+
+        $table_min_tickets = get_post_meta($post->ID, '_vms_min_tickets_per_table', true);
+        if ($table_min_tickets === '' || $table_min_tickets === null) $table_min_tickets = '2';
 
         // NEW: Event plan status (draft / ready / published).
         $plan_status = get_post_meta($post->ID, '_vms_event_plan_status', true);
@@ -219,6 +265,20 @@ class VMS_Admin_Event_Plans
         </p>
 
         <p>
+            <label>
+                <input type="checkbox" name="vms_auto_title" value="1" <?php checked($auto_title, '1'); ?> />
+                <?php esc_html_e('Auto-update title to Band — Date', 'vms'); ?>
+            </label>
+        </p>
+
+        <p id="vms_title_preview_wrap" style="margin-top:6px;">
+            <span class="description">
+                <strong><?php esc_html_e('Title preview:', 'vms'); ?></strong>
+                <span id="vms_title_preview_text"><?php echo esc_html(get_the_title($post->ID)); ?></span>
+            </span>
+        </p>
+
+        <p>
             <label for="vms_location_label"><strong><?php esc_html_e('Location / Resource', 'vms'); ?></strong></label><br />
             <input type="text" id="vms_location_label" name="vms_location_label" class="regular-text"
                 value="<?php echo esc_attr($location_label); ?>" />
@@ -230,6 +290,19 @@ class VMS_Admin_Event_Plans
         <hr />
 
         <h4><?php esc_html_e('Compensation Structure', 'vms'); ?></h4>
+
+        <p>
+            <label>
+                <input type="checkbox" name="vms_auto_comp" value="1" <?php checked($auto_comp, '1'); ?> />
+                <?php esc_html_e('Auto-fill compensation from band defaults (if set)', 'vms'); ?>
+            </label>
+        </p>
+
+        <p>
+            <button type="submit" name="vms_event_plan_action" value="apply_band_defaults" class="button">
+                <?php esc_html_e('Apply Band Defaults', 'vms'); ?>
+            </button>
+        </p>
 
         <p>
             <label for="vms_comp_structure"><strong><?php esc_html_e('Structure', 'vms'); ?></strong></label><br />
@@ -292,6 +365,84 @@ class VMS_Admin_Event_Plans
             <?php esc_html_e('Featured Image: use the standard WordPress featured image box for this event\'s banner/hero.', 'vms'); ?>
         </p>
 
+        <hr />
+        <h4><?php esc_html_e('Tickets & Add-ons (Woo Products)', 'vms'); ?></h4>
+
+        <p class="description">
+            <?php esc_html_e('These settings control which WooCommerce products are generated/updated when you Publish.', 'vms'); ?>
+        </p>
+
+        <p>
+            <label for="vms_price_ga"><strong><?php esc_html_e('GA Ticket Price', 'vms'); ?></strong></label><br />
+            <input type="number" step="0.01" min="0" id="vms_price_ga" name="vms_price_ga" style="width:140px;"
+                value="<?php echo esc_attr($ga_price); ?>" />
+        </p>
+
+        <p>
+            <label>
+                <input type="checkbox" name="vms_enable_tables" value="1" <?php checked($enable_tables, '1'); ?> />
+                <?php esc_html_e('Enable Tables', 'vms'); ?>
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <?php esc_html_e('Count', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_table_count" style="width:80px;"
+                    value="<?php echo esc_attr($table_count); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <?php esc_html_e('Price', 'vms'); ?>
+                <input type="number" step="0.01" min="0" name="vms_price_table" style="width:100px;"
+                    value="<?php echo esc_attr($table_price); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <?php esc_html_e('Min Tickets', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_min_tickets_per_table" style="width:80px;"
+                    value="<?php echo esc_attr($table_min_tickets); ?>" />
+            </label>
+        </p>
+
+        <p>
+            <label>
+                <input type="checkbox" name="vms_enable_firepits" value="1" <?php checked($enable_firepits, '1'); ?> />
+                <?php esc_html_e('Enable Fire Pits', 'vms'); ?>
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <?php esc_html_e('Count', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_firepit_count" style="width:80px;"
+                    value="<?php echo esc_attr($firepit_count); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <?php esc_html_e('Price', 'vms'); ?>
+                <input type="number" step="0.01" min="0" name="vms_price_firepit" style="width:100px;"
+                    value="<?php echo esc_attr($firepit_price); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <?php esc_html_e('Min Tickets', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_min_tickets_per_firepit" style="width:80px;"
+                    value="<?php echo esc_attr($firepit_min_tickets); ?>" />
+            </label>
+        </p>
+
+        <p>
+            <label>
+                <input type="checkbox" name="vms_enable_pools" value="1" <?php checked($enable_pools, '1'); ?> />
+                <?php esc_html_e('Enable Kiddie Pools', 'vms'); ?>
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <?php esc_html_e('Price', 'vms'); ?>
+                <input type="number" step="0.01" min="0" name="vms_price_pool" style="width:100px;"
+                    value="<?php echo esc_attr($pool_price); ?>" />
+            </label>
+            <br />
+            <span class="description"><?php esc_html_e('Pools have no ticket minimum (per your rules).', 'vms'); ?></span>
+        </p>
+
         <!-- NEW: Status + workflow buttons -->
         <hr />
 
@@ -332,6 +483,97 @@ class VMS_Admin_Event_Plans
         <p class="description">
             <?php esc_html_e('“Publish Now” is only available once the plan is Ready.', 'vms'); ?>
         </p>
+
+        <script>
+            (function() {
+                const bandSel = document.getElementById('vms_band_vendor_id');
+                const dateInput = document.getElementById('vms_event_date');
+                const autoTitle = document.querySelector('input[name="vms_auto_title"]');
+                const previewEl = document.getElementById('vms_title_preview_text');
+
+                // WP title input (classic editor + block editor usually still exposes this)
+                const wpTitleInput =
+                    document.getElementById('title') ||
+                    document.querySelector('textarea.editor-post-title__input') ||
+                    document.querySelector('h1.editor-post-title__input');
+
+                function formatDate(yyyy_mm_dd) {
+                    if (!yyyy_mm_dd) return '';
+                    // Build date in local time without timezone shifting
+                    const parts = yyyy_mm_dd.split('-');
+                    if (parts.length !== 3) return yyyy_mm_dd;
+                    const y = parseInt(parts[0], 10),
+                        m = parseInt(parts[1], 10) - 1,
+                        d = parseInt(parts[2], 10);
+                    const dt = new Date(y, m, d);
+                    if (isNaN(dt.getTime())) return yyyy_mm_dd;
+
+                    return dt.toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+
+                function getBandName() {
+                    if (!bandSel) return '';
+                    const opt = bandSel.options[bandSel.selectedIndex];
+                    if (!opt) return '';
+                    // Strip your availability hint like " [✓]"
+                    return (opt.text || '').replace(/\s*\[\s*[^\]]+\s*\]\s*$/, '').trim();
+                }
+
+                function buildTitle() {
+                    const band = getBandName();
+                    const date = formatDate(dateInput ? dateInput.value : '');
+                    if (!band || !date) return '';
+                    return `${band} — ${date}`;
+                }
+
+                function updatePreview() {
+                    if (!previewEl) return;
+
+                    const isAuto = autoTitle ? autoTitle.checked : true;
+                    if (!isAuto) {
+                        previewEl.textContent = '(auto-title disabled)';
+                        return;
+                    }
+
+                    const t = buildTitle();
+                    previewEl.textContent = t || '(select Band + Date to preview)';
+                }
+
+                function updateWpTitleBox() {
+                    const isAuto = autoTitle ? autoTitle.checked : true;
+                    if (!isAuto) return;
+
+                    const t = buildTitle();
+                    if (!t) return;
+
+                    // Only update the WP title field if it looks untouched / empty-ish.
+                    if (wpTitleInput) {
+                        const current = (wpTitleInput.value || wpTitleInput.textContent || '').trim();
+                        if (!current || current.toLowerCase() === 'auto draft') {
+                            if ('value' in wpTitleInput) wpTitleInput.value = t;
+                            else wpTitleInput.textContent = t;
+                        }
+                    }
+                }
+
+                function onChange() {
+                    updatePreview();
+                    updateWpTitleBox(); // optional: comment this out if you only want preview
+                }
+
+                if (bandSel) bandSel.addEventListener('change', onChange);
+                if (dateInput) dateInput.addEventListener('change', onChange);
+                if (autoTitle) autoTitle.addEventListener('change', onChange);
+
+                // initial
+                updatePreview();
+            })();
+        </script>
+
     <?php
     }
 
@@ -348,6 +590,13 @@ class VMS_Admin_Event_Plans
             return;
         }
 
+        if (isset($_POST['vms_band_vendor_id'])) {
+            update_post_meta($post_id, '_vms_band_vendor_id', absint($_POST['vms_band_vendor_id']));
+        }
+        if (isset($_POST['vms_agenda_text'])) {
+            update_post_meta($post_id, '_vms_agenda_text', wp_kses_post($_POST['vms_agenda_text']));
+        }
+
         // Avoid autosaves.
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
             return;
@@ -362,9 +611,28 @@ class VMS_Admin_Event_Plans
         $event_date         = isset($_POST['vms_event_date']) ? sanitize_text_field($_POST['vms_event_date']) : '';
         $start_time         = isset($_POST['vms_start_time']) ? sanitize_text_field($_POST['vms_start_time']) : '';
         $end_time           = isset($_POST['vms_end_time']) ? sanitize_text_field($_POST['vms_end_time']) : '';
+        if ($start_time === '') $start_time = '19:00'; // default start time
+        if ($end_time === '')   $end_time   = '21:00'; // default end time
         $location_label     = isset($_POST['vms_location_label']) ? sanitize_text_field($_POST['vms_location_label']) : '';
 
         $venue_id = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
+
+        // Tickets / Add-ons settings
+        $ga_price = isset($_POST['vms_price_ga']) ? floatval($_POST['vms_price_ga']) : 20;
+
+        $enable_tables   = isset($_POST['vms_enable_tables']) ? '1' : '0';
+        $enable_firepits = isset($_POST['vms_enable_firepits']) ? '1' : '0';
+        $enable_pools    = isset($_POST['vms_enable_pools']) ? '1' : '0';
+
+        $table_count   = isset($_POST['vms_table_count']) ? max(0, absint($_POST['vms_table_count'])) : 6;
+        $firepit_count = isset($_POST['vms_firepit_count']) ? max(0, absint($_POST['vms_firepit_count'])) : 6;
+
+        $table_price   = isset($_POST['vms_price_table']) ? floatval($_POST['vms_price_table']) : 30;
+        $firepit_price = isset($_POST['vms_price_firepit']) ? floatval($_POST['vms_price_firepit']) : 30;
+        $pool_price    = isset($_POST['vms_price_pool']) ? floatval($_POST['vms_price_pool']) : 10;
+
+        $table_min_tickets   = isset($_POST['vms_min_tickets_per_table']) ? max(0, absint($_POST['vms_min_tickets_per_table'])) : 2;
+        $firepit_min_tickets = isset($_POST['vms_min_tickets_per_firepit']) ? max(0, absint($_POST['vms_min_tickets_per_firepit'])) : 2;
 
         $comp_structure     = isset($_POST['vms_comp_structure']) ? sanitize_text_field($_POST['vms_comp_structure']) : 'flat_fee';
         $flat_fee_amount    = isset($_POST['vms_flat_fee_amount']) ? floatval($_POST['vms_flat_fee_amount']) : '';
@@ -375,12 +643,32 @@ class VMS_Admin_Event_Plans
         $proposal_max         = isset($_POST['vms_proposal_max']) ? floatval($_POST['vms_proposal_max']) : '';
         $proposal_cap         = isset($_POST['vms_proposal_cap']) ? floatval($_POST['vms_proposal_cap']) : '';
 
+        $auto_title = isset($_POST['vms_auto_title']) ? '1' : '0';
+        $auto_comp  = isset($_POST['vms_auto_comp']) ? '1' : '0';
+
         $fields = array(
             '_vms_event_date'         => $event_date,
             '_vms_start_time'         => $start_time,
             '_vms_end_time'           => $end_time,
             '_vms_location_label'     => $location_label,
             '_vms_venue_id'           => $venue_id,
+
+            '_vms_price_ga' => $ga_price,
+
+            '_vms_enable_tables' => $enable_tables,
+            '_vms_enable_firepits' => $enable_firepits,
+            '_vms_enable_pools' => $enable_pools,
+
+            '_vms_table_count' => $table_count,
+            '_vms_firepit_count' => $firepit_count,
+
+            '_vms_price_table' => $table_price,
+            '_vms_price_firepit' => $firepit_price,
+            '_vms_price_pool' => $pool_price,
+
+            '_vms_min_tickets_per_table' => $table_min_tickets,
+            '_vms_min_tickets_per_firepit' => $firepit_min_tickets,
+
             '_vms_comp_structure'     => $comp_structure,
             '_vms_flat_fee_amount'    => $flat_fee_amount,
             '_vms_door_split_percent' => $door_split_percent,
@@ -388,6 +676,8 @@ class VMS_Admin_Event_Plans
             '_vms_proposal_min'       => $proposal_min,
             '_vms_proposal_max'       => $proposal_max,
             '_vms_proposal_cap'       => $proposal_cap,
+            '_vms_auto_title'         => $auto_title,
+            '_vms_auto_comp'          => $auto_comp,
         );
 
         foreach ($fields as $meta_key => $value) {
@@ -396,6 +686,14 @@ class VMS_Admin_Event_Plans
             } else {
                 update_post_meta($post_id, $meta_key, $value);
             }
+        }
+
+        if ($auto_title === '1') {
+            vms_force_event_plan_title($post_id);
+        }
+
+        if ($auto_comp === '1') {
+            vms_maybe_apply_band_comp_defaults_to_plan($post_id);
         }
 
         // Handle workflow status (Save Draft / Mark Ready / Publish Now).
@@ -456,12 +754,32 @@ class VMS_Admin_Event_Plans
                     if ($published) {
                         $new_status = 'published';
                         vms_add_admin_notice('Event published successfully.', 'success');
+
+                        // After TEC publish success
+                        $result = vms_publish_products_from_plan($post_id);
+
+                        if (!empty($result['ok'])) {
+                            vms_add_admin_notice(
+                                sprintf('Woo products updated. %d created, %d updated.', (int)$result['created'], (int)$result['updated']),
+                                'success'
+                            );
+                        } else {
+                            vms_add_admin_notice(
+                                'Woo product publish failed: ' . (string)($result['error'] ?? 'unknown error'),
+                                'error'
+                            );
+                        }
                     } else {
                         vms_add_admin_notice(
                             'Failed to publish event to calendar. Please check settings.',
                             'error'
                         );
                     }
+                    break;
+
+                case 'apply_band_defaults':
+                    vms_apply_band_comp_defaults_to_plan($post_id);
+                    vms_add_admin_notice('Band defaults applied (where available).', 'success');
                     break;
             }
 
@@ -470,17 +788,6 @@ class VMS_Admin_Event_Plans
 
             // 2. Sync TEC status (VMS → TEC)
             vms_sync_tec_status_from_plan($post_id);
-
-            // 3. If publishing, sync TEC content/title/etc
-            if ($new_status === 'published') {
-                vms_publish_event_to_calendar($post_id, $post);
-            }
-            if (isset($_POST['vms_band_vendor_id'])) {
-                update_post_meta($post_id, '_vms_band_vendor_id', absint($_POST['vms_band_vendor_id']));
-            }
-            if (isset($_POST['vms_agenda_text'])) {
-                update_post_meta($post_id, '_vms_agenda_text', wp_kses_post($_POST['vms_agenda_text']));
-            }
         }
     }
 }
@@ -491,6 +798,7 @@ function vms_validate_event_plan($post_id)
 
     // Core fields
     $event_date = get_post_meta($post_id, '_vms_event_date', true);
+
     $start_time = get_post_meta($post_id, '_vms_start_time', true);
     $end_time   = get_post_meta($post_id, '_vms_end_time', true);
 
@@ -1019,4 +1327,335 @@ add_action('pre_get_posts', function ($query) {
 // Bootstrap admin hooks for Event Plans.
 if (is_admin()) {
     new VMS_Admin_Event_Plans();
+}
+
+/**
+ * Route B: Publish/Update Woo products from an Event Plan (idempotent via _vms_wc_product_map).
+ *
+ * Stores mapping on plan:
+ *   _vms_wc_product_map = [ 'ga' => 123, 'vip' => 124, 'firepit_01' => 130, ... ]
+ */
+function vms_publish_products_from_plan(int $plan_id): array
+{
+    if (!class_exists('WC_Product')) {
+        return array('ok' => false, 'error' => 'WooCommerce is not active.');
+    }
+
+    $event_date = (string) get_post_meta($plan_id, '_vms_event_date', true); // YYYY-MM-DD
+    if (!$event_date) {
+        return array('ok' => false, 'error' => 'Missing event date.');
+    }
+
+    $band_id   = (int) get_post_meta($plan_id, '_vms_band_vendor_id', true);
+    $band_name = $band_id ? get_the_title($band_id) : '';
+    if (!$band_name) {
+        $band_name = 'Event'; // fallback
+    }
+
+    // Format date for titles
+    $ts = strtotime($event_date);
+    $nice_date = $ts ? date_i18n('M j, Y', $ts) : $event_date;
+
+    // Link to TEC event if exists (nice for later)
+    $tec_event_id = (int) get_post_meta($plan_id, '_vms_tec_event_id', true);
+
+    // Load existing map
+    $map = get_post_meta($plan_id, '_vms_wc_product_map', true);
+    if (!is_array($map)) $map = array();
+
+    // Build blueprint of products to ensure exist.
+    // NOTE: Start simple (GA + Fire Pits + Pools), then we’ll extend to VIP/tiers easily.
+    $blueprint = vms_build_product_blueprint_for_plan($plan_id, $nice_date, $band_name);
+
+    $created = 0;
+    $updated = 0;
+
+    foreach ($blueprint as $key => $spec) {
+        $existing_id = isset($map[$key]) ? (int) $map[$key] : 0;
+
+        $product_id = vms_upsert_plan_product($plan_id, $existing_id, $spec, $tec_event_id);
+
+        if (!$product_id) {
+            // If one fails, keep going, but report it
+            continue;
+        }
+
+        if ($existing_id && $existing_id === $product_id) {
+            $updated++;
+        } else {
+            $created++;
+        }
+
+        $map[$key] = (int) $product_id;
+    }
+
+    // Optional: if something used to exist but no longer in blueprint, disable it
+    // (seasonal toggles)
+    foreach ($map as $key => $pid) {
+        if (!isset($blueprint[$key])) {
+            vms_disable_plan_product((int)$pid);
+        }
+    }
+
+    update_post_meta($plan_id, '_vms_wc_product_map', $map);
+
+    return array('ok' => true, 'created' => $created, 'updated' => $updated, 'map' => $map);
+}
+
+/**
+ * Build a product blueprint for the plan.
+ * Each item defines: name, price, type, tags, meta, stock rules, etc.
+ */
+function vms_build_product_blueprint_for_plan(int $plan_id, string $nice_date, string $band_name): array
+{
+
+    $ga_price = (float) get_post_meta($plan_id, '_vms_price_ga', true);
+    if ($ga_price <= 0) $ga_price = 20.00;
+
+    $enable_tables   = get_post_meta($plan_id, '_vms_enable_tables', true) === '1';
+    $enable_firepits = get_post_meta($plan_id, '_vms_enable_firepits', true) === '1';
+    $enable_pools    = get_post_meta($plan_id, '_vms_enable_pools', true) === '1';
+
+    $table_count   = (int) get_post_meta($plan_id, '_vms_table_count', true);
+    if ($table_count < 0) $table_count = 0;
+    if ($table_count === 0) $table_count = 6;
+
+    $firepit_count = (int) get_post_meta($plan_id, '_vms_firepit_count', true);
+    if ($firepit_count < 0) $firepit_count = 0;
+    if ($firepit_count === 0) $firepit_count = 6;
+
+    $table_price   = (float) get_post_meta($plan_id, '_vms_price_table', true);
+    if ($table_price <= 0) $table_price = 30.00;
+
+    $firepit_price = (float) get_post_meta($plan_id, '_vms_price_firepit', true);
+    if ($firepit_price <= 0) $firepit_price = 30.00;
+
+    $pool_price    = (float) get_post_meta($plan_id, '_vms_price_pool', true);
+    if ($pool_price <= 0) $pool_price = 10.00;
+
+    $table_min_tickets = (int) get_post_meta($plan_id, '_vms_min_tickets_per_table', true);
+    if ($table_min_tickets < 0) $table_min_tickets = 0;
+    if ($table_min_tickets === 0) $table_min_tickets = 2;
+
+    $firepit_min_tickets = (int) get_post_meta($plan_id, '_vms_min_tickets_per_firepit', true);
+    if ($firepit_min_tickets < 0) $firepit_min_tickets = 0;
+    if ($firepit_min_tickets === 0) $firepit_min_tickets = 2;
+
+    $items = array();
+
+    // --- GA Ticket ---
+    $items['ga'] = array(
+        'name'        => "{$nice_date} — {$band_name} — GA Ticket",
+        'price'       => $ga_price,
+        'is_ticket'   => true,
+        'sku_suffix'  => 'GA',
+        'meta'        => array(
+            '_sr_addon_qualifier' => 'yes',
+        ),
+        'tags'        => array('ticket'),
+    );
+
+    if ($enable_tables) {
+        for ($i = 1; $i <= $table_count; $i++) {
+            $num = str_pad((string)$i, 2, '0', STR_PAD_LEFT);
+            $items["table_{$num}"] = array(
+                'name'       => "{$nice_date} — {$band_name} — Table #{$num}",
+                'price'      => $table_price,
+                'is_ticket'  => false,
+                'sku_suffix' => "TB{$num}",
+                'meta'       => array(
+                    '_sr_required_qualifiers_per_unit' => $table_min_tickets,
+                    '_sr_addon_qualifier'              => 'no',
+                    '_sr_addon_type'                   => 'table',
+                    '_sr_addon_unit_label'             => "Table #{$num}",
+                ),
+                'tags'       => array(),
+                'stock_qty'  => 1,
+            );
+        }
+    }
+
+    // --- Fire Pits (unique per pit number, qty=1) ---
+    if ($enable_firepits) {
+        for ($i = 1; $i <= $firepit_count; $i++) {
+            $num = str_pad((string)$i, 2, '0', STR_PAD_LEFT);
+            $items["firepit_{$num}"] = array(
+                'name'       => "{$nice_date} — {$band_name} — Fire Pit #{$num}",
+                'price'      => $firepit_price,
+                'is_ticket'  => false,
+                'sku_suffix' => "FP{$num}",
+                'meta'       => array(
+                    '_sr_required_qualifiers_per_unit' => $firepit_min_tickets,
+                    '_sr_addon_qualifier'              => 'no',
+                    '_sr_addon_type'                   => 'fire_pit',
+                    '_sr_addon_unit_label'             => "Fire Pit #{$num}",
+                ),
+                'tags'       => array(),
+                'stock_qty'  => 1,
+            );
+        }
+    }
+
+    // --- Kiddie Pools (example add-on, no minimum tickets) ---
+    if ($enable_pools) {
+        $items['pool'] = array(
+            'name'       => "{$nice_date} — {$band_name} — Kiddie Pool Rental",
+            'price'      => $pool_price,
+            'is_ticket'  => false,
+            'sku_suffix' => 'POOL',
+            'meta'       => array(
+                '_sr_required_qualifiers_per_unit' => 0,
+                '_sr_addon_qualifier'              => 'no',
+                '_sr_addon_type'                   => 'pool',
+            ),
+            'tags'       => array(),
+        );
+    }
+
+    return $items;
+}
+
+/**
+ * Create/update a single product for a plan.
+ */
+function vms_upsert_plan_product(int $plan_id, int $existing_product_id, array $spec, int $tec_event_id = 0): int
+{
+    $name  = isset($spec['name']) ? (string) $spec['name'] : '';
+    $price = isset($spec['price']) ? (float) $spec['price'] : 0.0;
+
+    if ($name === '') return 0;
+
+    $product = null;
+    $is_update = false;
+
+    if ($existing_product_id > 0) {
+        $product = wc_get_product($existing_product_id);
+        if ($product) $is_update = true;
+    }
+
+    if (!$product) {
+        $product = new WC_Product_Simple();
+    }
+
+    // Core fields
+    $product->set_name($name);
+    $product->set_regular_price($price);
+    $product->set_status('publish'); // we can change to 'draft' until Ready if you prefer
+    $product->set_catalog_visibility('visible');
+
+    // Stock rules (optional)
+    if (isset($spec['stock_qty'])) {
+        $product->set_manage_stock(true);
+        $product->set_stock_quantity((int)$spec['stock_qty']);
+        $product->set_stock_status(((int)$spec['stock_qty'] > 0) ? 'instock' : 'outofstock');
+        $product->set_sold_individually(true); // important for fire pits
+    } else {
+        // Tickets often are unlimited; keep stock off unless you want caps
+        $product->set_manage_stock(false);
+    }
+
+    // Save to get an ID
+    $product_id = $product->save();
+    if (!$product_id) return 0;
+
+    // Link product back to plan + TEC (super helpful for searching later)
+    update_post_meta($product_id, '_vms_event_plan_id', $plan_id);
+    if ($tec_event_id > 0) {
+        update_post_meta($product_id, '_vms_tec_event_id', $tec_event_id);
+    }
+
+    // Tags (tickets get 'ticket' tag; add-ons do not)
+    $tags = isset($spec['tags']) && is_array($spec['tags']) ? $spec['tags'] : array();
+    if (!empty($tags)) {
+        wp_set_object_terms($product_id, $tags, 'product_tag', false);
+    } else {
+        // Ensure add-ons do NOT accidentally keep the ticket tag
+        wp_set_object_terms($product_id, array(), 'product_tag', false);
+    }
+
+    // Meta
+    if (isset($spec['meta']) && is_array($spec['meta'])) {
+        foreach ($spec['meta'] as $k => $v) {
+            update_post_meta($product_id, (string)$k, $v);
+        }
+    }
+
+    // Convenience meta to help order readability / searching
+    update_post_meta($product_id, '_vms_product_role', !empty($spec['is_ticket']) ? 'ticket' : 'addon');
+
+    return (int) $product_id;
+}
+
+/**
+ * Disable a product that is no longer in the blueprint (seasonal off, removed, etc.)
+ * You can choose 'draft', 'private', or stock out.
+ */
+function vms_disable_plan_product(int $product_id): void
+{
+    $p = wc_get_product($product_id);
+    if (!$p) return;
+
+    // safest: draft so it can't be purchased
+    $p->set_status('draft');
+    $p->save();
+}
+
+function vms_force_event_plan_title($post_id)
+{
+    static $running = false;
+    if ($running) return; // prevents recursion
+
+    $band_id    = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
+    $event_date = (string) get_post_meta($post_id, '_vms_event_date', true);
+
+    if (!$band_id || !$event_date) return;
+
+    $band_name = get_the_title($band_id);
+    if (!$band_name) return;
+
+    $ts = strtotime($event_date);
+    $formatted = $ts ? date_i18n('F j, Y', $ts) : $event_date;
+
+    $new_title = $band_name . ' — ' . $formatted;
+
+    // Don’t update if it’s already correct (saves time + avoids extra saves)
+    $current = get_post_field('post_title', $post_id);
+    if ((string)$current === (string)$new_title) return;
+
+    $running = true;
+
+    wp_update_post(array(
+        'ID'         => $post_id,
+        'post_title' => $new_title,
+        'post_name'  => sanitize_title($new_title),
+    ));
+
+    $running = false;
+}
+
+
+function vms_maybe_apply_band_comp_defaults_to_plan($plan_id)
+{
+    // Only fill blanks
+    $has_structure = get_post_meta($plan_id, '_vms_comp_structure', true);
+    $has_flat      = get_post_meta($plan_id, '_vms_flat_fee_amount', true);
+    $has_split     = get_post_meta($plan_id, '_vms_door_split_percent', true);
+
+    if ($has_structure || $has_flat || $has_split) return;
+
+    vms_apply_band_comp_defaults_to_plan($plan_id);
+}
+
+function vms_apply_band_comp_defaults_to_plan($plan_id)
+{
+    $band_id = (int) get_post_meta($plan_id, '_vms_band_vendor_id', true);
+    if (!$band_id) return;
+
+    $structure = get_post_meta($band_id, '_vms_default_comp_structure', true);
+    $flat      = get_post_meta($band_id, '_vms_default_flat_fee_amount', true);
+    $split     = get_post_meta($band_id, '_vms_default_door_split_percent', true);
+
+    if ($structure) update_post_meta($plan_id, '_vms_comp_structure', sanitize_text_field($structure));
+    if ($flat !== '' && $flat !== null) update_post_meta($plan_id, '_vms_flat_fee_amount', (float) $flat);
+    if ($split !== '' && $split !== null) update_post_meta($plan_id, '_vms_door_split_percent', (float) $split);
 }
