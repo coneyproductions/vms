@@ -216,7 +216,6 @@ class VMS_Admin_Event_Plans
         // $event_date should already be loaded earlier in this function as _vms_event_date.
         $event_date = get_post_meta($post->ID, '_vms_event_date', true);
         ?>
-
         <p>
             <label for="vms_band_vendor_id"><strong><?php esc_html_e('Band / Headliner', 'vms'); ?></strong></label><br />
 
@@ -227,27 +226,36 @@ class VMS_Admin_Event_Plans
                     <?php
                     $label = $band->post_title;
 
-                    // If we have an event date, decorate the label with availability.
+                    // Availability hint (you already have this)
                     if ($event_date) {
                         $availability = vms_get_vendor_availability_for_date($band->ID, $event_date);
-
-                        if ($availability === 'available') {
-                            $label .= ' [✓]';
-                        } elseif ($availability === 'unavailable') {
-                            $label .= ' [✖]';
-                        } else {
-                            $label .= ' [?]';
-                        }
+                        if ($availability === 'available') $label .= ' [✓]';
+                        elseif ($availability === 'unavailable') $label .= ' [✖]';
+                        else $label .= ' [?]';
                     }
 
+                    // Tax Profile hint + data attrs
+                    $missing = function_exists('vms_vendor_tax_profile_missing_items')
+                        ? vms_vendor_tax_profile_missing_items((int)$band->ID)
+                        : array();
+
+                    $tax_ok = empty($missing);
+
+                    // Optional: append a quick tax marker to the label
+                    $label .= $tax_ok ? ' [T✓]' : ' [T⚠]';
+
+                    // Store missing list for instant JS display
+                    $missing_str = $tax_ok ? '' : implode(' | ', $missing);
                     ?>
-                    <option value="<?php echo esc_attr($band->ID); ?>"
-                        <?php selected($selected_band_id, $band->ID); ?>>
+                    <option
+                        value="<?php echo esc_attr($band->ID); ?>"
+                        <?php selected($selected_band_id, $band->ID); ?>
+                        data-tax-ok="<?php echo $tax_ok ? '1' : '0'; ?>"
+                        data-tax-missing="<?php echo esc_attr($missing_str); ?>">
                         <?php echo esc_html($label); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
-
             <?php if ($event_date) : ?>
                 <?php
                 $ts   = strtotime($event_date);
@@ -263,395 +271,553 @@ class VMS_Admin_Event_Plans
                     );
                     ?>
                 </span>
-            <?php else : ?>
-                <br />
-                <span class="description">
-                    <?php esc_html_e('Set the Event Date to see per-band availability hints here.', 'vms'); ?>
-                </span>
-            <?php endif; ?>
-        </p>
+        <div id="vms-tax-status" style="margin-top:10px;"></div>
 
-        <p>
-            <label>
-                <input type="checkbox" name="vms_auto_title" value="1" <?php checked($auto_title, '1'); ?> />
-                <?php esc_html_e('Auto-update title to Band — Date', 'vms'); ?>
-            </label>
-        </p>
+    <?php else : ?>
+        <br />
+        <span class="description">
+            <?php esc_html_e('Set the Event Date to see per-band availability hints here.', 'vms'); ?>
+        </span>
+    <?php endif; ?>
+    </p>
 
-        <p id="vms_title_preview_wrap" style="margin-top:6px;">
-            <span class="description">
-                <strong><?php esc_html_e('Title preview:', 'vms'); ?></strong>
-                <span id="vms_title_preview_text"><?php echo esc_html(get_the_title($post->ID)); ?></span>
-            </span>
-        </p>
+    <p>
+        <label>
+            <input type="checkbox" name="vms_auto_title" value="1" <?php checked($auto_title, '1'); ?> />
+            <?php esc_html_e('Auto-update title to Band — Date', 'vms'); ?>
+        </label>
+    </p>
 
-        <p>
-            <label for="vms_location_label"><strong><?php esc_html_e('Location / Resource', 'vms'); ?></strong></label><br />
-            <input type="text" id="vms_location_label" name="vms_location_label" class="regular-text"
-                value="<?php echo esc_attr($location_label); ?>" />
-            <br /><span class="description">
-                <?php esc_html_e('Example: Main Stage, Patio, Food Truck Row, etc.', 'vms'); ?>
-            </span>
-        </p>
+    <p id="vms_title_preview_wrap" style="margin-top:6px;">
+        <span class="description">
+            <strong><?php esc_html_e('Title preview:', 'vms'); ?></strong>
+            <span id="vms_title_preview_text"><?php echo esc_html(get_the_title($post->ID)); ?></span>
+        </span>
+    </p>
 
-        <hr />
+    <p>
+        <label for="vms_location_label"><strong><?php esc_html_e('Location / Resource', 'vms'); ?></strong></label><br />
+        <input type="text" id="vms_location_label" name="vms_location_label" class="regular-text"
+            value="<?php echo esc_attr($location_label); ?>" />
+        <br /><span class="description">
+            <?php esc_html_e('Example: Main Stage, Patio, Food Truck Row, etc.', 'vms'); ?>
+        </span>
+    </p>
 
-        <?php
+    <hr />
+
+    <?php
         $venue_id       = (int) get_post_meta($post->ID, '_vms_venue_id', true);
         $current_pkg_id = (int) get_post_meta($post->ID, '_vms_comp_package_id', true);
         $packages       = ($venue_id > 0) ? vms_get_comp_packages_for_venue($venue_id, true) : array();
 
         $snapshot = get_post_meta($post->ID, '_vms_comp_snapshot', true);
         if (!is_array($snapshot)) $snapshot = array();
-        ?>
+    ?>
 
-        <hr />
-        <h4><?php esc_html_e('Compensation', 'vms'); ?></h4>
+    <hr />
+    <h4><?php esc_html_e('Compensation', 'vms'); ?></h4>
 
-        <p class="description">
-            <?php esc_html_e('Select a compensation package and click Apply to lock in the agreed terms for this plan.', 'vms'); ?>
-        </p>
+    <p class="description">
+        <?php esc_html_e('Select a compensation package and click Apply to lock in the agreed terms for this plan.', 'vms'); ?>
+    </p>
 
-        <?php if ($venue_id <= 0) : ?>
+    <?php if ($venue_id <= 0) : ?>
 
-            <p><em><?php esc_html_e('Select a Venue above, then click “Save Draft” (or Update) to load comp packages.', 'vms'); ?></em></p>
+        <p><em><?php esc_html_e('Select a Venue above, then click “Save Draft” (or Update) to load comp packages.', 'vms'); ?></em></p>
 
-        <?php else : ?>
-
-            <p>
-                <label for="vms_comp_package_id"><strong><?php esc_html_e('Comp Package', 'vms'); ?></strong></label><br />
-                <select id="vms_comp_package_id" name="vms_comp_package_id" style="min-width:320px;">
-                    <option value=""><?php esc_html_e('-- Select a Package --', 'vms'); ?></option>
-                    <?php foreach ($packages as $pkg) : ?>
-                        <option value="<?php echo esc_attr($pkg->ID); ?>" <?php selected($current_pkg_id, $pkg->ID); ?>>
-                            <?php echo esc_html($pkg->post_title); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </p>
-
-            <p>
-                <strong><?php esc_html_e('Quick Apply:', 'vms'); ?></strong><br />
-                <button type="submit" name="vms_event_plan_action" value="apply_band_defaults" class="button">
-                    <?php esc_html_e('Apply Band Defaults', 'vms'); ?>
-                </button>
-
-                <button type="submit" name="vms_event_plan_action" value="apply_comp_package" class="button button-secondary">
-                    <?php esc_html_e('Apply Comp Package', 'vms'); ?>
-                </button>
-            </p>
-
-            <p class="description">
-                <?php esc_html_e('Applying writes a snapshot so future package edits won’t change this plan unless you apply again.', 'vms'); ?>
-            </p>
-
-        <?php endif; ?>
-
-        <?php if (!empty($snapshot)) : ?>
-            <div style="padding:10px 12px; border:1px solid #dcdcde; border-radius:8px; background:#fff; max-width:720px;">
-                <strong><?php esc_html_e('Applied Snapshot', 'vms'); ?></strong><br />
-                <span class="description">
-                    <?php
-                    $pkg_title = $snapshot['package_title'] ?? '';
-                    $applied_at = $snapshot['applied_at'] ?? '';
-                    echo esc_html($pkg_title ? $pkg_title : '—');
-                    echo $applied_at ? ' • ' . esc_html($applied_at) : '';
-                    ?>
-                </span>
-                <div style="margin-top:6px;">
-                    <?php
-                    $line = array();
-                    if (!empty($snapshot['structure'])) $line[] = 'Structure: ' . strtoupper((string)$snapshot['structure']);
-                    if ($snapshot['flat_fee_amount'] !== null) $line[] = 'Flat: $' . number_format((float)$snapshot['flat_fee_amount'], 2);
-                    if ($snapshot['door_split_percent'] !== null) $line[] = 'Split: ' . rtrim(rtrim((string)$snapshot['door_split_percent'], '0'), '.') . '%';
-                    if ($snapshot['commission_percent'] !== null) {
-                        $mode = $snapshot['commission_mode'] ?? 'artist_fee';
-                        $line[] = 'Commission: ' . rtrim(rtrim((string)$snapshot['commission_percent'], '0'), '.') . '% (' . $mode . ')';
-                    }
-                    echo esc_html(implode(' | ', $line));
-                    ?>
-                </div>
-            </div>
-        <?php endif; ?>
+    <?php else : ?>
 
         <p>
-            <label>
-                <input type="checkbox" name="vms_auto_comp" value="1" <?php checked($auto_comp, '1'); ?> />
-                <?php esc_html_e('Auto-fill compensation from band defaults (if set)', 'vms'); ?>
-            </label>
-        </p>
-
-        <p>
-            <label for="vms_comp_structure"><strong><?php esc_html_e('Structure', 'vms'); ?></strong></label><br />
-            <select id="vms_comp_structure" name="vms_comp_structure">
-                <option value="flat_fee" <?php selected($comp_structure, 'flat_fee'); ?>>
-                    <?php esc_html_e('Flat Fee Only', 'vms'); ?>
-                </option>
-                <option value="flat_fee_door_split" <?php selected($comp_structure, 'flat_fee_door_split'); ?>>
-                    <?php esc_html_e('Flat Fee + Door Split', 'vms'); ?>
-                </option>
-                <option value="door_split" <?php selected($comp_structure, 'door_split'); ?>>
-                    <?php esc_html_e('Door Split Only', 'vms'); ?>
-                </option>
+            <label for="vms_comp_package_id"><strong><?php esc_html_e('Comp Package', 'vms'); ?></strong></label><br />
+            <select id="vms_comp_package_id" name="vms_comp_package_id" style="min-width:320px;">
+                <option value=""><?php esc_html_e('-- Select a Package --', 'vms'); ?></option>
+                <?php foreach ($packages as $pkg) : ?>
+                    <option value="<?php echo esc_attr($pkg->ID); ?>" <?php selected($current_pkg_id, $pkg->ID); ?>>
+                        <?php echo esc_html($pkg->post_title); ?>
+                    </option>
+                <?php endforeach; ?>
             </select>
         </p>
 
         <p>
-            <label for="vms_flat_fee_amount"><strong><?php esc_html_e('Flat Fee Amount', 'vms'); ?></strong></label><br />
-            <input type="number" id="vms_flat_fee_amount" name="vms_flat_fee_amount" style="width: 150px;"
-                value="<?php echo esc_attr($flat_fee_amount); ?>" />
+            <strong><?php esc_html_e('Quick Apply:', 'vms'); ?></strong><br />
+            <button type="submit" name="vms_event_plan_action" value="apply_band_defaults" class="button">
+                <?php esc_html_e('Apply Band Defaults', 'vms'); ?>
+            </button>
+
+            <button type="submit" name="vms_event_plan_action" value="apply_comp_package" class="button button-secondary">
+                <?php esc_html_e('Apply Comp Package', 'vms'); ?>
+            </button>
         </p>
 
-        <p>
-            <label for="vms_door_split_percent"><strong><?php esc_html_e('Door Split Percentage', 'vms'); ?></strong></label><br />
-            <input type="number" id="vms_door_split_percent" name="vms_door_split_percent" style="width: 150px;"
-                value="<?php echo esc_attr($door_split_percent); ?>" /> %
+        <p class="description">
+            <?php esc_html_e('Applying writes a snapshot so future package edits won’t change this plan unless you apply again.', 'vms'); ?>
         </p>
 
-        <p>
-            <label>
-                <input type="checkbox" name="vms_allow_vendor_propose" value="1"
-                    <?php checked($allow_vendor_propose, '1'); ?> />
-                <?php esc_html_e('Let vendor propose flat fee for this event instead of using the fixed amount above', 'vms'); ?>
-            </label>
-        </p>
+    <?php endif; ?>
 
-        <div style="margin-left: 18px;">
-            <p>
-                <label><strong><?php esc_html_e('Suggested Proposal Range (optional)', 'vms'); ?></strong></label><br />
-                <span><?php esc_html_e('Min', 'vms'); ?></span>
-                <input type="number" id="vms_proposal_min" name="vms_proposal_min" style="width: 120px;"
-                    value="<?php echo esc_attr($proposal_min); ?>" /> &nbsp;
-                <span><?php esc_html_e('Max', 'vms'); ?></span>
-                <input type="number" id="vms_proposal_max" name="vms_proposal_max" style="width: 120px;"
-                    value="<?php echo esc_attr($proposal_max); ?>" />
-            </p>
-
-            <p>
-                <label for="vms_proposal_cap"><strong><?php esc_html_e('Hard Proposal Cap (optional)', 'vms'); ?></strong></label><br />
-                <input type="number" id="vms_proposal_cap" name="vms_proposal_cap" style="width: 150px;"
-                    value="<?php echo esc_attr($proposal_cap); ?>" />
-                <br /><span class="description">
-                    <?php esc_html_e('If vendor proposes above this, it will be flagged for review.', 'vms'); ?>
-                </span>
-            </p>
+    <?php if (!empty($snapshot)) : ?>
+        <div style="padding:10px 12px; border:1px solid #dcdcde; border-radius:8px; background:#fff; max-width:720px;">
+            <strong><?php esc_html_e('Applied Snapshot', 'vms'); ?></strong><br />
+            <span class="description">
+                <?php
+                $pkg_title = $snapshot['package_title'] ?? '';
+                $applied_at = $snapshot['applied_at'] ?? '';
+                echo esc_html($pkg_title ? $pkg_title : '—');
+                echo $applied_at ? ' • ' . esc_html($applied_at) : '';
+                ?>
+            </span>
+            <div style="margin-top:6px;">
+                <?php
+                $line = array();
+                if (!empty($snapshot['structure'])) $line[] = 'Structure: ' . strtoupper((string)$snapshot['structure']);
+                if ($snapshot['flat_fee_amount'] !== null) $line[] = 'Flat: $' . number_format((float)$snapshot['flat_fee_amount'], 2);
+                if ($snapshot['door_split_percent'] !== null) $line[] = 'Split: ' . rtrim(rtrim((string)$snapshot['door_split_percent'], '0'), '.') . '%';
+                if ($snapshot['commission_percent'] !== null) {
+                    $mode = $snapshot['commission_mode'] ?? 'artist_fee';
+                    $line[] = 'Commission: ' . rtrim(rtrim((string)$snapshot['commission_percent'], '0'), '.') . '% (' . $mode . ')';
+                }
+                echo esc_html(implode(' | ', $line));
+                ?>
+            </div>
         </div>
+    <?php endif; ?>
 
-        <hr />
-        <p class="description">
-            <?php esc_html_e('Featured Image: use the standard WordPress featured image box for this event\'s banner/hero.', 'vms'); ?>
-        </p>
+    <p>
+        <label>
+            <input type="checkbox" name="vms_auto_comp" value="1" <?php checked($auto_comp, '1'); ?> />
+            <?php esc_html_e('Auto-fill compensation from band defaults (if set)', 'vms'); ?>
+        </label>
+    </p>
 
-        <hr />
-        <h4><?php esc_html_e('Tickets & Add-ons (Woo Products)', 'vms'); ?></h4>
+    <p>
+        <label for="vms_comp_structure"><strong><?php esc_html_e('Structure', 'vms'); ?></strong></label><br />
+        <select id="vms_comp_structure" name="vms_comp_structure">
+            <option value="flat_fee" <?php selected($comp_structure, 'flat_fee'); ?>>
+                <?php esc_html_e('Flat Fee Only', 'vms'); ?>
+            </option>
+            <option value="flat_fee_door_split" <?php selected($comp_structure, 'flat_fee_door_split'); ?>>
+                <?php esc_html_e('Flat Fee + Door Split', 'vms'); ?>
+            </option>
+            <option value="door_split" <?php selected($comp_structure, 'door_split'); ?>>
+                <?php esc_html_e('Door Split Only', 'vms'); ?>
+            </option>
+        </select>
+    </p>
 
-        <p class="description">
-            <?php esc_html_e('These settings control which WooCommerce products are generated/updated when you Publish.', 'vms'); ?>
+    <p>
+        <label for="vms_flat_fee_amount"><strong><?php esc_html_e('Flat Fee Amount', 'vms'); ?></strong></label><br />
+        <input type="number" id="vms_flat_fee_amount" name="vms_flat_fee_amount" style="width: 150px;"
+            value="<?php echo esc_attr($flat_fee_amount); ?>" />
+    </p>
+
+    <p>
+        <label for="vms_door_split_percent"><strong><?php esc_html_e('Door Split Percentage', 'vms'); ?></strong></label><br />
+        <input type="number" id="vms_door_split_percent" name="vms_door_split_percent" style="width: 150px;"
+            value="<?php echo esc_attr($door_split_percent); ?>" /> %
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="vms_allow_vendor_propose" value="1"
+                <?php checked($allow_vendor_propose, '1'); ?> />
+            <?php esc_html_e('Let vendor propose flat fee for this event instead of using the fixed amount above', 'vms'); ?>
+        </label>
+    </p>
+
+    <div style="margin-left: 18px;">
+        <p>
+            <label><strong><?php esc_html_e('Suggested Proposal Range (optional)', 'vms'); ?></strong></label><br />
+            <span><?php esc_html_e('Min', 'vms'); ?></span>
+            <input type="number" id="vms_proposal_min" name="vms_proposal_min" style="width: 120px;"
+                value="<?php echo esc_attr($proposal_min); ?>" /> &nbsp;
+            <span><?php esc_html_e('Max', 'vms'); ?></span>
+            <input type="number" id="vms_proposal_max" name="vms_proposal_max" style="width: 120px;"
+                value="<?php echo esc_attr($proposal_max); ?>" />
         </p>
 
         <p>
-            <label for="vms_price_ga"><strong><?php esc_html_e('GA Ticket Price', 'vms'); ?></strong></label><br />
-            <input type="number" step="0.01" min="0" id="vms_price_ga" name="vms_price_ga" style="width:140px;"
-                value="<?php echo esc_attr($ga_price); ?>" />
+            <label for="vms_proposal_cap"><strong><?php esc_html_e('Hard Proposal Cap (optional)', 'vms'); ?></strong></label><br />
+            <input type="number" id="vms_proposal_cap" name="vms_proposal_cap" style="width: 150px;"
+                value="<?php echo esc_attr($proposal_cap); ?>" />
+            <br /><span class="description">
+                <?php esc_html_e('If vendor proposes above this, it will be flagged for review.', 'vms'); ?>
+            </span>
         </p>
+    </div>
 
-        <p>
-            <label>
-                <input type="checkbox" name="vms_enable_tables" value="1" <?php checked($enable_tables, '1'); ?> />
-                <?php esc_html_e('Enable Tables', 'vms'); ?>
-            </label>
-            &nbsp;&nbsp;
-            <label>
-                <?php esc_html_e('Count', 'vms'); ?>
-                <input type="number" min="0" step="1" name="vms_table_count" style="width:80px;"
-                    value="<?php echo esc_attr($table_count); ?>" />
-            </label>
-            &nbsp;&nbsp;
-            <label>
-                <?php esc_html_e('Price', 'vms'); ?>
-                <input type="number" step="0.01" min="0" name="vms_price_table" style="width:100px;"
-                    value="<?php echo esc_attr($table_price); ?>" />
-            </label>
-            &nbsp;&nbsp;
-            <label>
-                <?php esc_html_e('Min Tickets', 'vms'); ?>
-                <input type="number" min="0" step="1" name="vms_min_tickets_per_table" style="width:80px;"
-                    value="<?php echo esc_attr($table_min_tickets); ?>" />
-            </label>
-        </p>
+    <hr />
+    <p class="description">
+        <?php esc_html_e('Featured Image: use the standard WordPress featured image box for this event\'s banner/hero.', 'vms'); ?>
+    </p>
 
-        <p>
-            <label>
-                <input type="checkbox" name="vms_enable_firepits" value="1" <?php checked($enable_firepits, '1'); ?> />
-                <?php esc_html_e('Enable Fire Pits', 'vms'); ?>
-            </label>
-            &nbsp;&nbsp;
-            <label>
-                <?php esc_html_e('Count', 'vms'); ?>
-                <input type="number" min="0" step="1" name="vms_firepit_count" style="width:80px;"
-                    value="<?php echo esc_attr($firepit_count); ?>" />
-            </label>
-            &nbsp;&nbsp;
-            <label>
-                <?php esc_html_e('Price', 'vms'); ?>
-                <input type="number" step="0.01" min="0" name="vms_price_firepit" style="width:100px;"
-                    value="<?php echo esc_attr($firepit_price); ?>" />
-            </label>
-            &nbsp;&nbsp;
-            <label>
-                <?php esc_html_e('Min Tickets', 'vms'); ?>
-                <input type="number" min="0" step="1" name="vms_min_tickets_per_firepit" style="width:80px;"
-                    value="<?php echo esc_attr($firepit_min_tickets); ?>" />
-            </label>
-        </p>
+    <hr />
+    <h4><?php esc_html_e('Tickets & Add-ons (Woo Products)', 'vms'); ?></h4>
 
-        <p>
-            <label>
-                <input type="checkbox" name="vms_enable_pools" value="1" <?php checked($enable_pools, '1'); ?> />
-                <?php esc_html_e('Enable Kiddie Pools', 'vms'); ?>
-            </label>
-            &nbsp;&nbsp;
-            <label>
-                <?php esc_html_e('Price', 'vms'); ?>
-                <input type="number" step="0.01" min="0" name="vms_price_pool" style="width:100px;"
-                    value="<?php echo esc_attr($pool_price); ?>" />
-            </label>
-            <br />
-            <span class="description"><?php esc_html_e('Pools have no ticket minimum (per your rules).', 'vms'); ?></span>
-        </p>
+    <p class="description">
+        <?php esc_html_e('These settings control which WooCommerce products are generated/updated when you Publish.', 'vms'); ?>
+    </p>
 
-        <!-- NEW: Status + workflow buttons -->
-        <hr />
+    <p>
+        <label for="vms_price_ga"><strong><?php esc_html_e('GA Ticket Price', 'vms'); ?></strong></label><br />
+        <input type="number" step="0.01" min="0" id="vms_price_ga" name="vms_price_ga" style="width:140px;"
+            value="<?php echo esc_attr($ga_price); ?>" />
+    </p>
 
-        <h4><?php esc_html_e('Event Plan Status & Workflow', 'vms'); ?></h4>
+    <p>
+        <label>
+            <input type="checkbox" name="vms_enable_tables" value="1" <?php checked($enable_tables, '1'); ?> />
+            <?php esc_html_e('Enable Tables', 'vms'); ?>
+        </label>
+        &nbsp;&nbsp;
+        <label>
+            <?php esc_html_e('Count', 'vms'); ?>
+            <input type="number" min="0" step="1" name="vms_table_count" style="width:80px;"
+                value="<?php echo esc_attr($table_count); ?>" />
+        </label>
+        &nbsp;&nbsp;
+        <label>
+            <?php esc_html_e('Price', 'vms'); ?>
+            <input type="number" step="0.01" min="0" name="vms_price_table" style="width:100px;"
+                value="<?php echo esc_attr($table_price); ?>" />
+        </label>
+        &nbsp;&nbsp;
+        <label>
+            <?php esc_html_e('Min Tickets', 'vms'); ?>
+            <input type="number" min="0" step="1" name="vms_min_tickets_per_table" style="width:80px;"
+                value="<?php echo esc_attr($table_min_tickets); ?>" />
+        </label>
+    </p>
 
-        <p>
-            <strong><?php esc_html_e('Status:', 'vms'); ?></strong>
-            <?php echo esc_html(strtoupper($plan_status)); ?>
-        </p>
+    <p>
+        <label>
+            <input type="checkbox" name="vms_enable_firepits" value="1" <?php checked($enable_firepits, '1'); ?> />
+            <?php esc_html_e('Enable Fire Pits', 'vms'); ?>
+        </label>
+        &nbsp;&nbsp;
+        <label>
+            <?php esc_html_e('Count', 'vms'); ?>
+            <input type="number" min="0" step="1" name="vms_firepit_count" style="width:80px;"
+                value="<?php echo esc_attr($firepit_count); ?>" />
+        </label>
+        &nbsp;&nbsp;
+        <label>
+            <?php esc_html_e('Price', 'vms'); ?>
+            <input type="number" step="0.01" min="0" name="vms_price_firepit" style="width:100px;"
+                value="<?php echo esc_attr($firepit_price); ?>" />
+        </label>
+        &nbsp;&nbsp;
+        <label>
+            <?php esc_html_e('Min Tickets', 'vms'); ?>
+            <input type="number" min="0" step="1" name="vms_min_tickets_per_firepit" style="width:80px;"
+                value="<?php echo esc_attr($firepit_min_tickets); ?>" />
+        </label>
+    </p>
 
-        <p>
-            <!-- Save Draft -->
-            <button type="submit"
-                name="vms_event_plan_action"
-                value="save_draft"
-                class="button">
-                <?php esc_html_e('Save Draft', 'vms'); ?>
-            </button>
-
-            <!-- Mark Ready -->
-            <button type="submit"
-                name="vms_event_plan_action"
-                value="mark_ready"
-                class="button button-secondary">
-                <?php esc_html_e('Mark Ready', 'vms'); ?>
-            </button>
-
-            <!-- Publish Now (only enabled when READY or PUBLISHED) -->
-            <button type="submit"
-                name="vms_event_plan_action"
-                value="publish_now"
-                class="button button-primary"
-                <?php echo ($plan_status === 'ready' || $plan_status === 'published') ? '' : ' disabled="disabled"'; ?>>
-                <?php esc_html_e('Publish Now', 'vms'); ?>
-            </button>
-        </p>
-
-        <p class="description">
-            <?php esc_html_e('“Publish Now” is only available once the plan is Ready.', 'vms'); ?>
-        </p>
-
-        <script>
-            (function() {
-                const bandSel = document.getElementById('vms_band_vendor_id');
-                const dateInput = document.getElementById('vms_event_date');
-                const autoTitle = document.querySelector('input[name="vms_auto_title"]');
-                const previewEl = document.getElementById('vms_title_preview_text');
-
-                // WP title input (classic editor + block editor usually still exposes this)
-                const wpTitleInput =
-                    document.getElementById('title') ||
-                    document.querySelector('textarea.editor-post-title__input') ||
-                    document.querySelector('h1.editor-post-title__input');
-
-                function formatDate(yyyy_mm_dd) {
-                    if (!yyyy_mm_dd) return '';
-                    // Build date in local time without timezone shifting
-                    const parts = yyyy_mm_dd.split('-');
-                    if (parts.length !== 3) return yyyy_mm_dd;
-                    const y = parseInt(parts[0], 10),
-                        m = parseInt(parts[1], 10) - 1,
-                        d = parseInt(parts[2], 10);
-                    const dt = new Date(y, m, d);
-                    if (isNaN(dt.getTime())) return yyyy_mm_dd;
-
-                    return dt.toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                }
-
-                function getBandName() {
-                    if (!bandSel) return '';
-                    const opt = bandSel.options[bandSel.selectedIndex];
-                    if (!opt) return '';
-                    // Strip your availability hint like " [✓]"
-                    return (opt.text || '').replace(/\s*\[\s*[^\]]+\s*\]\s*$/, '').trim();
-                }
-
-                function buildTitle() {
-                    const band = getBandName();
-                    const date = formatDate(dateInput ? dateInput.value : '');
-                    if (!band || !date) return '';
-                    return `${band} — ${date}`;
-                }
-
-                function updatePreview() {
-                    if (!previewEl) return;
-
-                    const isAuto = autoTitle ? autoTitle.checked : true;
-                    if (!isAuto) {
-                        previewEl.textContent = '(auto-title disabled)';
-                        return;
-                    }
-
-                    const t = buildTitle();
-                    previewEl.textContent = t || '(select Band + Date to preview)';
-                }
-
-                function updateWpTitleBox() {
-                    const isAuto = autoTitle ? autoTitle.checked : true;
-                    if (!isAuto) return;
-
-                    const t = buildTitle();
-                    if (!t) return;
-
-                    // Only update the WP title field if it looks untouched / empty-ish.
-                    if (wpTitleInput) {
-                        const current = (wpTitleInput.value || wpTitleInput.textContent || '').trim();
-                        if (!current || current.toLowerCase() === 'auto draft') {
-                            if ('value' in wpTitleInput) wpTitleInput.value = t;
-                            else wpTitleInput.textContent = t;
-                        }
-                    }
-                }
-
-                function onChange() {
-                    updatePreview();
-                    updateWpTitleBox(); // optional: comment this out if you only want preview
-                }
-
-                if (bandSel) bandSel.addEventListener('change', onChange);
-                if (dateInput) dateInput.addEventListener('change', onChange);
-                if (autoTitle) autoTitle.addEventListener('change', onChange);
-
-                // initial
-                updatePreview();
-            })();
-        </script>
+    <p>
+        <label>
+            <input type="checkbox" name="vms_enable_pools" value="1" <?php checked($enable_pools, '1'); ?> />
+            <?php esc_html_e('Enable Kiddie Pools', 'vms'); ?>
+        </label>
+        &nbsp;&nbsp;
+        <label>
+            <?php esc_html_e('Price', 'vms'); ?>
+            <input type="number" step="0.01" min="0" name="vms_price_pool" style="width:100px;"
+                value="<?php echo esc_attr($pool_price); ?>" />
+        </label>
+        <br />
+        <span class="description"><?php esc_html_e('Pools have no ticket minimum (per your rules).', 'vms'); ?></span>
+    </p>
 
     <?php
+        // Staff Roles (editable in UI)
+        $roles = get_terms(array(
+            'taxonomy'   => 'vms_staff_role',
+            'hide_empty' => false,
+        ));
+
+        // Existing saved assignments: term_id => [staff_ids...]
+        $assignments = get_post_meta($post->ID, '_vms_staff_assignments', true);
+        if (!is_array($assignments)) $assignments = array();
+
+        // Preload all staff (we’ll filter by role via term query per role)
+    ?>
+
+    <hr />
+    <h4><?php esc_html_e('Labor / Staff', 'vms'); ?></h4>
+    <p class="description"><?php esc_html_e('Assign staff contractors to this event by role. Tax Profile is required to mark Ready.', 'vms'); ?></p>
+
+    <?php if (empty($roles) || is_wp_error($roles)) : ?>
+        <p><em><?php esc_html_e('No staff roles exist yet. Add roles under Staff → Roles.', 'vms'); ?></em></p>
+    <?php else : ?>
+
+        <?php foreach ($roles as $role) : ?>
+            <?php
+                $role_id = (int) $role->term_id;
+                $saved_ids = isset($assignments[$role_id]) && is_array($assignments[$role_id])
+                    ? array_map('intval', $assignments[$role_id])
+                    : array();
+
+                $staff_in_role = get_posts(array(
+                    'post_type'      => 'vms_staff',
+                    'posts_per_page' => -1,
+                    'orderby'        => 'title',
+                    'order'          => 'ASC',
+                    'tax_query'      => array(
+                        array(
+                            'taxonomy' => 'vms_staff_role',
+                            'field'    => 'term_id',
+                            'terms'    => array($role_id),
+                        )
+                    ),
+                ));
+            ?>
+
+            <p style="margin:12px 0 6px;"><strong><?php echo esc_html($role->name); ?></strong></p>
+
+            <?php if (empty($staff_in_role)) : ?>
+                <p class="description" style="margin-top:0;">
+                    <?php esc_html_e('No staff found for this role yet.', 'vms'); ?>
+                </p>
+            <?php else : ?>
+                <select name="vms_staff_assignments[<?php echo esc_attr($role_id); ?>][]" multiple
+                    style="min-width:360px; min-height: 90px;">
+                    <?php foreach ($staff_in_role as $s) : ?>
+                        <?php
+                        $sid = (int) $s->ID;
+                        // Optional hint: tax complete?
+                        $missing = function_exists('vms_vendor_tax_profile_missing_items') ? vms_vendor_tax_profile_missing_items($sid) : array();
+                        $hint = empty($missing) ? ' ✓' : ' ⚠';
+                        ?>
+                        <option value="<?php echo esc_attr($sid); ?>" <?php echo in_array($sid, $saved_ids, true) ? 'selected' : ''; ?>>
+                            <?php echo esc_html($s->post_title . $hint); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <p class="description" style="margin-top:6px;">
+                    <?php esc_html_e('Tip: “✓” means Tax Profile complete. “⚠” means missing items.', 'vms'); ?>
+                </p>
+            <?php endif; ?>
+
+        <?php endforeach; ?>
+
+    <?php endif; ?>
+
+    <!-- NEW: Status + workflow buttons -->
+    <hr />
+
+    <h4><?php esc_html_e('Event Plan Status & Workflow', 'vms'); ?></h4>
+
+    <p>
+        <strong><?php esc_html_e('Status:', 'vms'); ?></strong>
+        <?php echo esc_html(strtoupper($plan_status)); ?>
+    </p>
+
+    <p>
+        <!-- Save Draft -->
+        <button type="submit"
+            name="vms_event_plan_action"
+            value="save_draft"
+            class="button">
+            <?php esc_html_e('Save Draft', 'vms'); ?>
+        </button>
+
+        <!-- Mark Ready -->
+        <button type="submit"
+            name="vms_event_plan_action"
+            value="mark_ready"
+            class="button button-secondary">
+            <?php esc_html_e('Mark Ready', 'vms'); ?>
+        </button>
+
+        <!-- Publish Now (only enabled when READY or PUBLISHED) -->
+        <button type="submit"
+            name="vms_event_plan_action"
+            value="publish_now"
+            class="button button-primary"
+            <?php echo ($plan_status === 'ready' || $plan_status === 'published') ? '' : ' disabled="disabled"'; ?>>
+            <?php esc_html_e('Publish Now', 'vms'); ?>
+        </button>
+    </p>
+
+    <p class="description">
+        <?php esc_html_e('“Publish Now” is only available once the plan is Ready.', 'vms'); ?>
+    </p>
+
+
+    <script>
+        (function() {
+            const bandSel = document.getElementById('vms_band_vendor_id');
+            const dateInput = document.getElementById('vms_event_date');
+            const autoTitle = document.querySelector('input[name="vms_auto_title"]');
+            const previewEl = document.getElementById('vms_title_preview_text');
+
+            // WP title input (classic editor + block editor usually still exposes this)
+            const wpTitleInput =
+                document.getElementById('title') ||
+                document.querySelector('textarea.editor-post-title__input') ||
+                document.querySelector('h1.editor-post-title__input');
+
+            function formatDate(yyyy_mm_dd) {
+                if (!yyyy_mm_dd) return '';
+                // Build date in local time without timezone shifting
+                const parts = yyyy_mm_dd.split('-');
+                if (parts.length !== 3) return yyyy_mm_dd;
+                const y = parseInt(parts[0], 10),
+                    m = parseInt(parts[1], 10) - 1,
+                    d = parseInt(parts[2], 10);
+                const dt = new Date(y, m, d);
+                if (isNaN(dt.getTime())) return yyyy_mm_dd;
+
+                return dt.toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+
+            function getBandName() {
+                if (!bandSel) return '';
+                const opt = bandSel.options[bandSel.selectedIndex];
+                if (!opt) return '';
+                // Strip your availability hint like " [✓]"
+                return (opt.text || '').replace(/\s*\[\s*[^\]]+\s*\]\s*$/, '').trim();
+            }
+
+            function buildTitle() {
+                const band = getBandName();
+                const date = formatDate(dateInput ? dateInput.value : '');
+                if (!band || !date) return '';
+                return `${band} — ${date}`;
+            }
+
+            function updatePreview() {
+                if (!previewEl) return;
+
+                const isAuto = autoTitle ? autoTitle.checked : true;
+                if (!isAuto) {
+                    previewEl.textContent = '(auto-title disabled)';
+                    return;
+                }
+
+                const t = buildTitle();
+                previewEl.textContent = t || '(select Band + Date to preview)';
+            }
+
+            function updateWpTitleBox() {
+                const isAuto = autoTitle ? autoTitle.checked : true;
+                if (!isAuto) return;
+
+                const t = buildTitle();
+                if (!t) return;
+
+                // Only update the WP title field if it looks untouched / empty-ish.
+                if (wpTitleInput) {
+                    const current = (wpTitleInput.value || wpTitleInput.textContent || '').trim();
+                    if (!current || current.toLowerCase() === 'auto draft') {
+                        if ('value' in wpTitleInput) wpTitleInput.value = t;
+                        else wpTitleInput.textContent = t;
+                    }
+                }
+            }
+
+            function onChange() {
+                updatePreview();
+                updateWpTitleBox(); // optional: comment this out if you only want preview
+            }
+
+            if (bandSel) bandSel.addEventListener('change', onChange);
+            if (dateInput) dateInput.addEventListener('change', onChange);
+            if (autoTitle) autoTitle.addEventListener('change', onChange);
+
+            // initial
+            updatePreview();
+        })();
+    </script>
+    <style>
+        #vms-tax-status .vms-tax-box {
+            border: 1px solid #dcdcde;
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #fff;
+            max-width: 720px;
+        }
+
+        #vms-tax-status .ok {
+            border-color: #a7f3d0;
+            background: #ecfdf5;
+        }
+
+        #vms-tax-status .bad {
+            border-color: #fed7aa;
+            background: #fffbeb;
+        }
+
+        #vms-tax-status .title {
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        #vms-tax-status .muted {
+            color: #646970;
+            font-size: 12px;
+        }
+    </style>
+
+    <script>
+        (function() {
+            const bandSel = document.getElementById('vms_band_vendor_id');
+            const wrap = document.getElementById('vms-tax-status');
+            if (!bandSel || !wrap) return;
+
+            function render() {
+                const opt = bandSel.options[bandSel.selectedIndex];
+                if (!opt || !opt.value) {
+                    wrap.innerHTML =
+                        '<div class="vms-tax-box">' +
+                        '<div class="title">Tax Profile</div>' +
+                        '<div class="muted">Select a band to see tax requirements.</div>' +
+                        '</div>';
+                    return;
+                }
+
+                const ok = opt.getAttribute('data-tax-ok') === '1';
+                const missing = (opt.getAttribute('data-tax-missing') || '').trim();
+
+                if (ok) {
+                    wrap.innerHTML =
+                        '<div class="vms-tax-box ok">' +
+                        '<div class="title">✅ Tax Profile Complete</div>' +
+                        '<div class="muted">This vendor is eligible for Ready/Publish (tax-wise).</div>' +
+                        '</div>';
+                } else {
+                    wrap.innerHTML =
+                        '<div class="vms-tax-box bad">' +
+                        '<div class="title">⚠️ Tax Profile Incomplete</div>' +
+                        '<div class="muted"><strong>Missing:</strong> ' + escapeHtml(missing || '—') + '</div>' +
+                        '<div class="muted" style="margin-top:6px;">This will block “Mark Ready” until resolved.</div>' +
+                        '</div>';
+                }
+            }
+
+            function escapeHtml(str) {
+                return String(str).replace(/[&<>"']/g, s => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                } [s]));
+            }
+
+            bandSel.addEventListener('change', render);
+            render();
+        })();
+    </script>
+
+<?php
     }
 
     /**
@@ -672,6 +838,30 @@ class VMS_Admin_Event_Plans
         }
         if (isset($_POST['vms_agenda_text'])) {
             update_post_meta($post_id, '_vms_agenda_text', wp_kses_post($_POST['vms_agenda_text']));
+        }
+
+        // Save staff assignments (term_id => [staff_ids])
+        if (isset($_POST['vms_staff_assignments']) && is_array($_POST['vms_staff_assignments'])) {
+            $raw = $_POST['vms_staff_assignments'];
+            $clean = array();
+
+            foreach ($raw as $term_id => $ids) {
+                $term_id = absint($term_id);
+                if ($term_id <= 0) continue;
+
+                if (!is_array($ids)) $ids = array();
+
+                $ids = array_map('absint', $ids);
+                $ids = array_values(array_filter($ids, fn($v) => $v > 0));
+
+                if (!empty($ids)) {
+                    $clean[$term_id] = $ids;
+                }
+            }
+
+            update_post_meta($post_id, '_vms_staff_assignments', $clean);
+        } else {
+            delete_post_meta($post_id, '_vms_staff_assignments');
         }
 
         // Avoid autosaves.
@@ -1034,6 +1224,32 @@ function vms_validate_event_plan($post_id)
         // If you already require a band to mark Ready, ignore this.
         // If not, you can decide whether band is required or not.
     }
+
+    // Staff tax profile completeness (required to mark READY)
+    $assignments = get_post_meta($post_id, '_vms_staff_assignments', true);
+    if (is_array($assignments)) {
+        foreach ($assignments as $role_id => $staff_ids) {
+            if (!is_array($staff_ids)) continue;
+
+            foreach ($staff_ids as $sid) {
+                $sid = (int) $sid;
+                if ($sid <= 0) continue;
+
+                $missing = function_exists('vms_vendor_tax_profile_missing_items')
+                    ? vms_vendor_tax_profile_missing_items($sid)
+                    : array();
+
+                if (!empty($missing)) {
+                    $staff_name = get_the_title($sid);
+                    $errors[] = sprintf(
+                        'Staff "%s" is missing required Tax Profile items: %s.',
+                        $staff_name ? $staff_name : '#' . $sid,
+                        implode(', ', $missing)
+                    );
+                }
+            }
+        }
+    }
     return $errors;
 }
 
@@ -1286,44 +1502,44 @@ function vms_event_plan_status_column_css()
     if (!$screen || $screen->post_type !== 'vms_event_plan') {
         return;
     }
-    ?>
-    <style>
-        .column-vms_plan_status {
-            width: 110px;
-        }
+?>
+<style>
+    .column-vms_plan_status {
+        width: 110px;
+    }
 
-        .vms-status-pill {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
-            line-height: 1.4;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
+    .vms-status-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.4;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
 
-        .vms-pill-grey {
-            background: #e5e7eb;
-            /* gray-200 */
-            color: #374151;
-            /* gray-700 */
-        }
+    .vms-pill-grey {
+        background: #e5e7eb;
+        /* gray-200 */
+        color: #374151;
+        /* gray-700 */
+    }
 
-        .vms-pill-yellow {
-            background: #fef3c7;
-            /* amber-100 */
-            color: #92400e;
-            /* amber-800 */
-        }
+    .vms-pill-yellow {
+        background: #fef3c7;
+        /* amber-100 */
+        color: #92400e;
+        /* amber-800 */
+    }
 
-        .vms-pill-green {
-            background: #d1fae5;
-            /* emerald-100 */
-            color: #065f46;
-            /* emerald-800 */
-        }
-    </style>
+    .vms-pill-green {
+        background: #d1fae5;
+        /* emerald-100 */
+        color: #065f46;
+        /* emerald-800 */
+    }
+</style>
 <?php
 }
 

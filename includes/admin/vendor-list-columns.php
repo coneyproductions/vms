@@ -93,6 +93,64 @@ add_action('pre_get_posts', function ($query) {
     }
 });
 
+/**
+ * Vendor list columns: add Tax Status
+ */
+
+add_filter('manage_vms_vendor_posts_columns', function ($cols) {
+    // Put Tax Status near the title
+    $new = [];
+
+    foreach ($cols as $k => $label) {
+        $new[$k] = $label;
+
+        if ($k === 'title') {
+            $new['vms_tax_status'] = __('Tax Status', 'vms');
+        }
+    }
+
+    // Fallback if title wasn't found for any reason
+    if (!isset($new['vms_tax_status'])) {
+        $new['vms_tax_status'] = __('Tax Status', 'vms');
+    }
+
+    return $new;
+}, 20);
+
+add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
+    if ($col !== 'vms_tax_status') return;
+
+    if (!function_exists('vms_vendor_tax_profile_is_complete')) {
+        echo '—';
+        return;
+    }
+
+    $complete = vms_vendor_tax_profile_is_complete((int)$post_id);
+
+    if ($complete) {
+        echo '<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46;font-weight:700;font-size:12px;">✅ ' .
+            esc_html__('Complete', 'vms') .
+        '</span>';
+    } else {
+        $missing = function_exists('vms_vendor_tax_profile_missing_items')
+            ? vms_vendor_tax_profile_missing_items((int)$post_id)
+            : [];
+
+        $title = !empty($missing)
+            ? esc_attr__('Missing: ', 'vms') . esc_attr(implode(', ', $missing))
+            : esc_attr__('Incomplete', 'vms');
+
+        echo '<span title="' . $title . '" style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;font-weight:700;font-size:12px;">⚠️ ' .
+            esc_html__('Incomplete', 'vms') .
+        '</span>';
+    }
+}, 20, 2);
+
+add_filter('manage_edit-vms_vendor_sortable_columns', function ($cols) {
+    // Optional: sortable column stub (we’d need a meta query to truly sort)
+    // Leaving it non-sortable is fine.
+    return $cols;
+});
 /** -----------------------------
  * Filters (dropdowns)
  * ----------------------------- */

@@ -36,6 +36,7 @@ $includes = array(
     'cpt/venues.php',
     'cpt/event-plans.php',
     'cpt/ratings.php',
+    'cpt/staff.php',
 
     // Integrations
     'integrations/tec-sync.php',
@@ -47,6 +48,7 @@ $includes = array(
     'vendor-applications.php',
     'portal/vendor-portal.php',
     'portal/vendor-tax-profile.php',
+    'portal/staff-portal.php',
 
     // Admin
     'admin/menu.php',
@@ -57,6 +59,9 @@ $includes = array(
     'admin/vendor-details.php',
     'admin/vendor-list-columns.php',
     'admin/vendor-tax-profile.php',
+    'admin/staff-list-columns.php',
+    'admin/staff-tax-sidebar.php',
+    'admin/tax-profile-admin-metabox.php',
 
 );
 

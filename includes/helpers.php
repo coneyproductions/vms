@@ -381,7 +381,8 @@ function vms_vendor_tax_profile_missing_items(int $vendor_id): array
     return $missing;
 }
 
-// function vms_vendor_tax_profile_is_complete(int $vendor_id): bool
-// {
-//     return empty(vms_vendor_tax_profile_missing_items($vendor_id));
-// }
+
+/**
+ * Validate vendor tax profile for an event plan.
+ * Returns an error string if invalid, or empty string if OK.
+ */
