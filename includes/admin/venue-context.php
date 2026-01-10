@@ -3,17 +3,31 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Get the current venue ID for the current admin user.
- * Falls back to first available venue.
+ * Fallback order:
+ *  1) user_meta _vms_current_venue_id
+ *  2) Settings: vms_settings[default_venue_id]
+ *  3) first available venue by title
  */
 function vms_get_current_venue_id(): int {
     $user_id = get_current_user_id();
-    $venue_id = (int) get_user_meta($user_id, '_vms_current_venue_id', true);
 
+    // 1) Current venue from user meta
+    $venue_id = (int) get_user_meta($user_id, '_vms_current_venue_id', true);
     if ($venue_id > 0 && get_post_type($venue_id) === 'vms_venue') {
         return $venue_id;
     }
 
-    // Fallback: first venue by title
+    // 2) Default venue from VMS Settings (site-wide fallback)
+    $opts = (array) get_option('vms_settings', array());
+    $default_id = isset($opts['default_venue_id']) ? (int) $opts['default_venue_id'] : 0;
+
+    if ($default_id > 0 && get_post_type($default_id) === 'vms_venue') {
+        // Save as the user's current venue so UI stays consistent
+        update_user_meta($user_id, '_vms_current_venue_id', $default_id);
+        return $default_id;
+    }
+
+    // 3) Last resort: first venue by title
     $venues = get_posts(array(
         'post_type'      => 'vms_venue',
         'posts_per_page' => 1,
@@ -30,6 +44,7 @@ function vms_get_current_venue_id(): int {
 
     return $fallback;
 }
+
 
 function vms_set_current_venue_id(int $venue_id): void {
     $user_id = get_current_user_id();

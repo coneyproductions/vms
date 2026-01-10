@@ -24,7 +24,7 @@ function vms_register_venue_cpt()
         'labels'             => $labels,
         'public'             => false,
         'show_ui'            => true,
-        'show_in_menu'       => 'vms-dashboard',
+        'show_in_menu'       => 'vms-season-board',
         'menu_position'      => 26,
         'menu_icon'          => 'dashicons-location-alt',
         'supports'           => array('title', 'editor', 'thumbnail'),

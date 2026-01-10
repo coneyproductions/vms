@@ -1,6 +1,11 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+$tax_file = plugin_dir_path(__FILE__) . 'vendor-tax-profile.php';
+if (file_exists($tax_file)) {
+    require_once $tax_file;
+}
+
 add_shortcode('vms_vendor_portal', 'vms_vendor_portal_shortcode');
 
 function vms_vendor_portal_shortcode()
@@ -10,6 +15,7 @@ function vms_vendor_portal_shortcode()
     $url_profile      = add_query_arg('tab', 'profile', $base_url);
     $url_availability = add_query_arg('tab', 'availability', $base_url);
     $url_tech         = add_query_arg('tab', 'tech', $base_url);
+    $url_tax_profile  = add_query_arg('tab', 'tax-profile', $base_url);
 
     if (!is_user_logged_in()) {
 
@@ -75,6 +81,7 @@ function vms_vendor_portal_shortcode()
         echo '<nav style="margin:12px 0;">';
         echo '<a style="margin-right:10px;" href="' . esc_url(add_query_arg('tab', 'dashboard')) . '">Dashboard</a>';
         echo '<a style="margin-right:10px;" href="' . esc_url(add_query_arg('tab', 'profile')) . '">Profile</a>';
+        echo '<a style="margin-right:10px;" href="' . esc_url(add_query_arg('tab', 'tax-profile')) . '">Tax Profile</a>';
         echo '<a style="margin-right:10px;" href="' . esc_url(add_query_arg('tab', 'availability')) . '">Availability</a>';
         echo '<a style="margin-right:10px;" href="' . esc_url(add_query_arg('tab', 'tech')) . '">Tech Docs</a>';
         echo '</nav>';
@@ -84,7 +91,7 @@ function vms_vendor_portal_shortcode()
     if ($tab === 'dashboard') {
         echo '<style>
 .vms-portal-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin:0 0 14px;}
-.vms-portal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.vms-portal-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
 @media (max-width:820px){.vms-portal-grid{grid-template-columns:1fr;}}
 .vms-muted{opacity:.8}
 </style>';
@@ -112,12 +119,19 @@ function vms_vendor_portal_shortcode()
   <p class="vms-muted">' . esc_html__('Manage your stage plot and input list.', 'vms') . '</p>
   <p><a class="button" href="' . esc_url($url_tech) . '">' . esc_html__('Manage Tech Docs', 'vms') . '</a></p>
 </div>';
+        echo '<div class="vms-portal-card">
+  <h3 style="margin-top:0;">' . esc_html__('Tax Profile', 'vms') . '</h3>
+  <p class="vms-muted">' . esc_html__('Complete your payee + mailing info and upload your signed W-9.', 'vms') . '</p>
+  <p><a class="button" href="' . esc_url($url_tax_profile) . '">' . esc_html__('Update Tax Profile', 'vms') . '</a></p>
+</div>';
     } elseif ($tab === 'profile') {
         if (function_exists('vms_vendor_portal_render_profile')) {
             vms_vendor_portal_render_profile($vendor_id);
         } else {
             echo '<p><strong>Profile module is not loaded.</strong> (Missing vms_vendor_portal_render_profile)</p>';
         }
+    } elseif ($tab === 'tax-profile') {
+        vms_vendor_portal_render_tax_profile($vendor_id);
     } elseif ($tab === 'availability') {
         vms_vendor_portal_render_availability($vendor_id);
     } elseif ($tab === 'tech') {
@@ -254,12 +268,7 @@ function vms_vendor_portal_render_availability($vendor_id)
 </style>';
 
     echo '<h3>' . esc_html(vms_ui_text('availability_heading', __('Availability', 'vms'))) . '</h3>';
-    echo '<p class="description" style="margin:-6px 0 14px;max-width:720px;">
-    ' . esc_html__(
-        'Choose one method below. You can either sync your calendar automatically or enter availability manually — you don’t need to do both.',
-        'vms'
-    ) . '
-</p>';
+    echo '<p class="description" style="margin:-6px 0 14px;max-width:720px;"><!-- DESCRIPTION --></p>';
     echo '<form method="post" id="vms-availability-form">';
     wp_nonce_field('vms_save_availability', 'vms_avail_nonce');
     wp_nonce_field('vms_ics_settings', 'vms_ics_nonce');

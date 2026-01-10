@@ -28,7 +28,7 @@ function vms_register_rating_cpt()
         'labels'             => $labels,
         'public'             => false,            // internal only
         'show_ui'            => true,             // visible in admin
-        'show_in_menu'       => 'vms-dashboard',
+        'show_in_menu'       => 'vms-season-board',
         'menu_position'      => 26,
         'menu_icon'          => 'dashicons-star-half',
         'supports'           => array('title', 'editor'), // editor = comment body

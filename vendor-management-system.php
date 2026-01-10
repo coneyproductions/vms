@@ -12,6 +12,17 @@
 // Exit if accessed directly.
 if (!defined('ABSPATH')) exit;
 
+add_action('admin_init', function () {
+    // TEC usually defines this class when active
+    $tec_active = class_exists('Tribe__Events__Main') || post_type_exists('tribe_events');
+
+    if (!$tec_active) {
+        add_action('admin_notices', function () {
+            echo '<div class="notice notice-error"><p><strong>VMS:</strong> The Events Calendar (TEC) is required. Please install/activate TEC.</p></div>';
+        });
+    }
+});
+
 /**
  * Load includes
  */
@@ -35,14 +46,20 @@ $includes = array(
     // Vendor system
     'vendor-applications.php',
     'portal/vendor-portal.php',
+    'portal/vendor-tax-profile.php',
 
     // Admin
     'admin/menu.php',
     'admin/venue-context.php',
     'admin/season-board.php',
     'admin/settings-page.php',
+    'admin/vendor-comp-packages.php',
+    'admin/vendor-details.php',
+    'admin/vendor-list-columns.php',
+    'admin/vendor-tax-profile.php',
 
 );
+
 
 foreach ($includes as $file) {
     $path = $base . $file;
@@ -309,52 +326,118 @@ function vms_render_vendor_availability_metabox($post)
     }
 
     if (empty($active_dates)) {
-        echo '<p>No season dates are defined yet. '
-            . 'Go to <strong>Vendors → Season Dates</strong> to configure your seasons.</p>';
+        echo '<p>No season dates are defined yet. Go to <strong>VMS → Season Dates</strong> to configure your seasons.</p>';
         return;
     }
 
-    echo '<p>Set availability for each active booking date. Leave blank if unknown.</p>';
-    echo '<table class="widefat striped" style="max-width:600px;">';
-    echo '<thead><tr><th>Date</th><th>Day</th><th>Availability</th></tr></thead><tbody>';
+    // --- Styles (portal-like, but admin-friendly) ---
+    echo '<style>
+        .vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;}
+        .vms-panel > summary{list-style:none;}
+        .vms-panel > summary::-webkit-details-marker{display:none;}
+        .vms-panel-month{border-left:6px solid #10b981;} /* green accent */
+        .vms-panel-summary{cursor:pointer;font-weight:700;font-size:14px;padding:10px 12px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;}
+        .vms-panel-summary small{font-weight:400;opacity:.75;margin-left:10px;}
+        .vms-panel-body{padding:12px 12px 14px;}
+        .vms-admin-availability-actions{margin:8px 0 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .vms-admin-availability-actions .description{margin:0;opacity:.85;}
+        .vms-availability-table td{vertical-align:middle;}
+        .vms-availability-table select{min-width:160px;}
+    </style>';
 
-    $current_month = '';
+    echo '<p class="description" style="margin-top:0;">
+        Set availability for each active booking date. Leave blank if unknown.
+    </p>';
 
+    // Group dates by month
+    $dates_by_month = array();
     foreach ($active_dates as $date_str) {
-
         $ts = strtotime($date_str);
         if (!$ts) continue;
 
         $month_label = date_i18n('F Y', $ts); // e.g. "March 2026"
+        if (!isset($dates_by_month[$month_label])) {
+            $dates_by_month[$month_label] = array();
+        }
+        $dates_by_month[$month_label][] = $date_str;
+    }
 
-        // New month header row
-        if ($month_label !== $current_month) {
-            $current_month = $month_label;
+    // Default open behavior: open current month (fallback: first month)
+    $current_month_label = date_i18n('F Y', current_time('timestamp'));
+    $has_current_month   = isset($dates_by_month[$current_month_label]);
+    $opened_first        = false;
 
-            echo '<tr class="vms-month-header">';
-            echo '<td colspan="3"><strong>' . esc_html($month_label) . '</strong></td>';
+    // Expand/collapse all
+    echo '<div class="vms-admin-availability-actions">';
+    echo '<button type="button" class="button" onclick="document.querySelectorAll(\'.vms-admin-month\').forEach(d=>d.open=true);">Expand all</button>';
+    echo '<button type="button" class="button" onclick="document.querySelectorAll(\'.vms-admin-month\').forEach(d=>d.open=false);">Collapse all</button>';
+    echo '<span class="description">Tip: scroll less by collapsing months you don’t need.</span>';
+    echo '</div>';
+
+    foreach ($dates_by_month as $month_label => $month_dates) {
+
+        $open_attr = '';
+        if ($has_current_month) {
+            if ($month_label === $current_month_label) {
+                $open_attr = ' open';
+            }
+        } else {
+            if (!$opened_first) {
+                $open_attr = ' open';
+                $opened_first = true;
+            }
+        }
+
+        // Count set values for a nice “progress” hint
+        $set_count = 0;
+        foreach ($month_dates as $d) {
+            if (!empty($availability[$d])) $set_count++;
+        }
+
+        echo '<details class="vms-panel vms-panel-month vms-admin-month"' . $open_attr . ' style="margin:12px 0 16px;">';
+        echo '<summary class="vms-panel-summary">';
+        echo '<span>' . esc_html($month_label) . '</span>';
+        echo '<small>' . esc_html(sprintf('%d/%d set', $set_count, count($month_dates))) . '</small>';
+        echo '</summary>';
+
+        echo '<div class="vms-panel-body">';
+
+        echo '<table class="widefat striped vms-availability-table" style="margin:0;">';
+        echo '<thead><tr>
+                <th style="width:140px;">Date</th>
+                <th style="width:70px;">Day</th>
+                <th>Availability</th>
+            </tr></thead><tbody>';
+
+        foreach ($month_dates as $date_str) {
+            $ts = strtotime($date_str);
+            if (!$ts) continue;
+
+            $day  = date_i18n('D', $ts);
+            $nice = date_i18n('M j, Y', $ts);
+
+            $val = isset($availability[$date_str]) ? (string)$availability[$date_str] : '';
+
+            echo '<tr>';
+            echo '<td>' . esc_html($nice) . '</td>';
+            echo '<td>' . esc_html($day) . '</td>';
+            echo '<td>';
+            echo '<select name="vms_availability[' . esc_attr($date_str) . ']">';
+            echo '<option value="" ' . selected($val, '', false) . '>—</option>';
+            echo '<option value="available" ' . selected($val, 'available', false) . '>Available</option>';
+            echo '<option value="unavailable" ' . selected($val, 'unavailable', false) . '>Not Available</option>';
+            echo '</select>';
+            echo '</td>';
             echo '</tr>';
         }
 
-        $day  = date_i18n('D', $ts);
-        $nice = date_i18n('M j, Y', $ts);
-        $val  = isset($availability[$date_str]) ? $availability[$date_str] : '';
+        echo '</tbody></table>';
 
-        echo '<tr>';
-        echo '<td>' . esc_html($nice) . '</td>';
-        echo '<td>' . esc_html($day) . '</td>';
-        echo '<td>';
-        echo '<select name="vms_availability[' . esc_attr($date_str) . ']">';
-        echo '<option value="" ' . selected($val, '', false) . '>—</option>';
-        echo '<option value="available" ' . selected($val, 'available', false) . '>Available</option>';
-        echo '<option value="unavailable" ' . selected($val, 'unavailable', false) . '>Not Available</option>';
-        echo '</select>';
-        echo '</td>';
-        echo '</tr>';
+        echo '</div></details>';
     }
-
-    echo '</tbody></table>';
 }
+
+
 
 add_action('save_post_vms_vendor', 'vms_save_vendor_availability_meta', 20, 2);
 function vms_save_vendor_availability_meta($post_id, $post)

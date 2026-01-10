@@ -3,20 +3,29 @@ if (!defined('ABSPATH')) exit;
 
 add_action('admin_menu', function () {
 
-    // Top-level menu now points to a real Dashboard page
+    // Make Season Board the top-level landing page
     add_menu_page(
         __('Vendor Management System', 'vms'),
         'VMS',
         'manage_options',
-        'vms-dashboard',
-        'vms_render_dashboard_page',
+        'vms-season-board',
+        'vms_render_season_board_page',
         'dashicons-calendar-alt',
         26
     );
 
-    // First submenu: Dashboard (so it appears and is clearly the landing page)
+    // First submenu must match the parent slug
     add_submenu_page(
-        'vms-dashboard',
+        'vms-season-board',
+        __('Season Board', 'vms'),
+        __('Season Board', 'vms'),
+        'manage_options',
+        'vms-season-board',
+        'vms_render_season_board_page'
+    );
+
+    add_submenu_page(
+        'vms-season-board',
         __('Dashboard', 'vms'),
         __('Dashboard', 'vms'),
         'manage_options',
@@ -24,9 +33,8 @@ add_action('admin_menu', function () {
         'vms_render_dashboard_page'
     );
 
-    // Other submenus under the same parent slug
     add_submenu_page(
-        'vms-dashboard',
+        'vms-season-board',
         __('Season Dates', 'vms'),
         __('Season Dates', 'vms'),
         'manage_options',
@@ -35,25 +43,18 @@ add_action('admin_menu', function () {
     );
 
     add_submenu_page(
-        'vms-dashboard',
-        __('Season Board', 'vms'),
-        __('Season Board', 'vms'),
-        'manage_options',
         'vms-season-board',
-        'vms_render_season_board_page'
+        __('Settings', 'vms'),
+        __('Settings', 'vms'),
+        'manage_options',
+        'vms-settings',
+        'vms_render_settings_page'
     );
 }, 5);
 
-function vms_render_dashboard_stub()
-{
-    echo '<div class="wrap"><h1>VMS</h1>';
-    vms_render_current_venue_selector();
-    echo '<p>Select an item from the menu.</p></div>';
-}
-
 function vms_render_dashboard_page()
 {
-    echo '<p><small>Build: ' . esc_html(VMS_BUILD_ID) . '</small></p>';
+    echo '<p><small>Build: ' . esc_html(defined('VMS_BUILD_ID') ? VMS_BUILD_ID : '') . '</small></p>';
 
     echo '<div class="wrap"><h1>VMS Dashboard</h1>';
 

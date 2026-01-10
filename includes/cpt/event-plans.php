@@ -15,7 +15,7 @@ function vms_register_event_plan_cpt()
         ),
         'public'        => false,
         'show_ui'       => true,
-        'show_in_menu'  => 'vms-dashboard',
+        'show_in_menu'  => 'vms-season-board',
         'menu_icon'     => 'dashicons-calendar-alt',
         'supports'      => array('title', 'editor', 'thumbnail'),
         'capability_type' => 'post',
@@ -69,6 +69,13 @@ class VMS_Admin_Event_Plans
 
         $location_label      = get_post_meta($post->ID, '_vms_location_label', true);
         $venue_id            = (int) get_post_meta($post->ID, '_vms_venue_id', true);
+        if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
+            $maybe = (int) vms_get_current_venue_id();
+            if ($maybe > 0) {
+                $venue_id = $maybe; // UI default only (meta not saved until Update)
+            }
+        }
+
         $auto_title          = get_post_meta($post->ID, '_vms_auto_title', true);
         if ($auto_title === '') $auto_title = '1'; // default ON
         $auto_comp = get_post_meta($post->ID, '_vms_auto_comp', true);
@@ -289,19 +296,89 @@ class VMS_Admin_Event_Plans
 
         <hr />
 
-        <h4><?php esc_html_e('Compensation Structure', 'vms'); ?></h4>
+        <?php
+        $venue_id       = (int) get_post_meta($post->ID, '_vms_venue_id', true);
+        $current_pkg_id = (int) get_post_meta($post->ID, '_vms_comp_package_id', true);
+        $packages       = ($venue_id > 0) ? vms_get_comp_packages_for_venue($venue_id, true) : array();
+
+        $snapshot = get_post_meta($post->ID, '_vms_comp_snapshot', true);
+        if (!is_array($snapshot)) $snapshot = array();
+        ?>
+
+        <hr />
+        <h4><?php esc_html_e('Compensation', 'vms'); ?></h4>
+
+        <p class="description">
+            <?php esc_html_e('Select a compensation package and click Apply to lock in the agreed terms for this plan.', 'vms'); ?>
+        </p>
+
+        <?php if ($venue_id <= 0) : ?>
+
+            <p><em><?php esc_html_e('Select a Venue above, then click “Save Draft” (or Update) to load comp packages.', 'vms'); ?></em></p>
+
+        <?php else : ?>
+
+            <p>
+                <label for="vms_comp_package_id"><strong><?php esc_html_e('Comp Package', 'vms'); ?></strong></label><br />
+                <select id="vms_comp_package_id" name="vms_comp_package_id" style="min-width:320px;">
+                    <option value=""><?php esc_html_e('-- Select a Package --', 'vms'); ?></option>
+                    <?php foreach ($packages as $pkg) : ?>
+                        <option value="<?php echo esc_attr($pkg->ID); ?>" <?php selected($current_pkg_id, $pkg->ID); ?>>
+                            <?php echo esc_html($pkg->post_title); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </p>
+
+            <p>
+                <strong><?php esc_html_e('Quick Apply:', 'vms'); ?></strong><br />
+                <button type="submit" name="vms_event_plan_action" value="apply_band_defaults" class="button">
+                    <?php esc_html_e('Apply Band Defaults', 'vms'); ?>
+                </button>
+
+                <button type="submit" name="vms_event_plan_action" value="apply_comp_package" class="button button-secondary">
+                    <?php esc_html_e('Apply Comp Package', 'vms'); ?>
+                </button>
+            </p>
+
+            <p class="description">
+                <?php esc_html_e('Applying writes a snapshot so future package edits won’t change this plan unless you apply again.', 'vms'); ?>
+            </p>
+
+        <?php endif; ?>
+
+        <?php if (!empty($snapshot)) : ?>
+            <div style="padding:10px 12px; border:1px solid #dcdcde; border-radius:8px; background:#fff; max-width:720px;">
+                <strong><?php esc_html_e('Applied Snapshot', 'vms'); ?></strong><br />
+                <span class="description">
+                    <?php
+                    $pkg_title = $snapshot['package_title'] ?? '';
+                    $applied_at = $snapshot['applied_at'] ?? '';
+                    echo esc_html($pkg_title ? $pkg_title : '—');
+                    echo $applied_at ? ' • ' . esc_html($applied_at) : '';
+                    ?>
+                </span>
+                <div style="margin-top:6px;">
+                    <?php
+                    $line = array();
+                    if (!empty($snapshot['structure'])) $line[] = 'Structure: ' . strtoupper((string)$snapshot['structure']);
+                    if ($snapshot['flat_fee_amount'] !== null) $line[] = 'Flat: $' . number_format((float)$snapshot['flat_fee_amount'], 2);
+                    if ($snapshot['door_split_percent'] !== null) $line[] = 'Split: ' . rtrim(rtrim((string)$snapshot['door_split_percent'], '0'), '.') . '%';
+                    if ($snapshot['commission_percent'] !== null) {
+                        $mode = $snapshot['commission_mode'] ?? 'artist_fee';
+                        $line[] = 'Commission: ' . rtrim(rtrim((string)$snapshot['commission_percent'], '0'), '.') . '% (' . $mode . ')';
+                    }
+                    echo esc_html(implode(' | ', $line));
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <p>
             <label>
                 <input type="checkbox" name="vms_auto_comp" value="1" <?php checked($auto_comp, '1'); ?> />
                 <?php esc_html_e('Auto-fill compensation from band defaults (if set)', 'vms'); ?>
             </label>
-        </p>
-
-        <p>
-            <button type="submit" name="vms_event_plan_action" value="apply_band_defaults" class="button">
-                <?php esc_html_e('Apply Band Defaults', 'vms'); ?>
-            </button>
         </p>
 
         <p>
@@ -637,6 +714,12 @@ class VMS_Admin_Event_Plans
         $comp_structure     = isset($_POST['vms_comp_structure']) ? sanitize_text_field($_POST['vms_comp_structure']) : 'flat_fee';
         $flat_fee_amount    = isset($_POST['vms_flat_fee_amount']) ? floatval($_POST['vms_flat_fee_amount']) : '';
         $door_split_percent = isset($_POST['vms_door_split_percent']) ? floatval($_POST['vms_door_split_percent']) : '';
+        $comp_package_id = isset($_POST['vms_comp_package_id']) ? absint($_POST['vms_comp_package_id']) : 0;
+        if ($comp_package_id > 0) {
+            update_post_meta($post_id, '_vms_comp_package_id', $comp_package_id);
+        } else {
+            delete_post_meta($post_id, '_vms_comp_package_id');
+        }
 
         $allow_vendor_propose = isset($_POST['vms_allow_vendor_propose']) ? '1' : '0';
         $proposal_min         = isset($_POST['vms_proposal_min']) ? floatval($_POST['vms_proposal_min']) : '';
@@ -694,6 +777,15 @@ class VMS_Admin_Event_Plans
 
         if ($auto_comp === '1') {
             vms_maybe_apply_band_comp_defaults_to_plan($post_id);
+        }
+
+        $comp_package_id = isset($_POST['vms_comp_package_id']) ? absint($_POST['vms_comp_package_id']) : 0;
+
+        // Always persist selection (so dropdown stays selected even if you don't click Apply)
+        if ($comp_package_id > 0) {
+            update_post_meta($post_id, '_vms_comp_package_id', $comp_package_id);
+        } else {
+            delete_post_meta($post_id, '_vms_comp_package_id');
         }
 
         // Handle workflow status (Save Draft / Mark Ready / Publish Now).
@@ -780,6 +872,25 @@ class VMS_Admin_Event_Plans
                 case 'apply_band_defaults':
                     vms_apply_band_comp_defaults_to_plan($post_id);
                     vms_add_admin_notice('Band defaults applied (where available).', 'success');
+                    break;
+
+                case 'apply_comp_package':
+                    if ($venue_id <= 0) {
+                        vms_add_admin_notice('Please select a Venue first, then apply the package.', 'error');
+                        break;
+                    }
+
+                    if ($comp_package_id <= 0) {
+                        vms_add_admin_notice('Please select a comp package first.', 'error');
+                        break;
+                    }
+
+                    $ok = vms_apply_comp_package_to_plan((int)$post_id, (int)$comp_package_id);
+                    if ($ok) {
+                        vms_add_admin_notice('Comp package applied and snapshotted for this event plan.', 'success');
+                    } else {
+                        vms_add_admin_notice('Failed to apply comp package. (Check package type/meta.)', 'error');
+                    }
                     break;
             }
 
@@ -904,6 +1015,25 @@ function vms_validate_event_plan($post_id)
         }
     }
 
+    // Require vendor tax profile completion before Ready/Publish
+    $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
+    if ($band_id > 0) {
+        $missing = function_exists('vms_vendor_tax_profile_missing_items')
+            ? vms_vendor_tax_profile_missing_items($band_id)
+            : [];
+
+        if (!empty($missing)) {
+            $vendor_name = get_the_title($band_id);
+            $errors[] = sprintf(
+                'Band "%s" is missing required Tax Profile items: %s.',
+                $vendor_name ? $vendor_name : '#' . $band_id,
+                implode(', ', $missing)
+            );
+        }
+    } else {
+        // If you already require a band to mark Ready, ignore this.
+        // If not, you can decide whether band is required or not.
+    }
     return $errors;
 }
 

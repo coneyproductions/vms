@@ -173,3 +173,215 @@ function vms_get_event_titles_by_date(array $active_dates): array
     wp_reset_postdata();
     return $map;
 }
+
+/** VENDOR COMP PACKAGES
+ * -------------------------------------------------
+ * Functions for vendor comp packages feature
+ * -------------------------------------------------
+ */
+
+/**
+ * Fetch comp packages for a venue (and optionally global packages).
+ */
+function vms_get_comp_packages_for_venue(int $venue_id, bool $include_global = true): array
+{
+    $meta_query = array();
+
+    if ($include_global) {
+        $meta_query[] = array(
+            'relation' => 'OR',
+            array(
+                'key'     => '_vms_venue_id',
+                'value'   => $venue_id,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
+            array(
+                'key'     => '_vms_venue_id',
+                'value'   => 0,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
+            array(
+                'key'     => '_vms_venue_id',
+                'compare' => 'NOT EXISTS',
+            ),
+        );
+    } else {
+        $meta_query[] = array(
+            'key'     => '_vms_venue_id',
+            'value'   => $venue_id,
+            'compare' => '=',
+            'type'    => 'NUMERIC',
+        );
+    }
+
+    return get_posts(array(
+        'post_type'      => 'vms_comp_package',
+        'post_status'    => array('publish', 'draft'),
+        'posts_per_page' => -1,
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+        'meta_query'     => $meta_query,
+    ));
+}
+
+/**
+ * Apply a comp package to an event plan AND write a snapshot (so packages can change later
+ * without altering already-agreed plans unless you re-apply).
+ */
+function vms_apply_comp_package_to_plan(int $plan_id, int $package_id): bool
+{
+    if ($package_id <= 0) return false;
+
+    $pkg = get_post($package_id);
+    if (!$pkg || $pkg->post_type !== 'vms_comp_package') return false;
+
+    // Package meta (define these keys in your packages UI)
+    $structure = (string) get_post_meta($package_id, '_vms_comp_structure', true);          // flat_fee | door_split | flat_fee_door_split
+    $flat      = get_post_meta($package_id, '_vms_flat_fee_amount', true);                 // numeric
+    $split     = get_post_meta($package_id, '_vms_door_split_percent', true);              // numeric
+    $commission_pct  = get_post_meta($package_id, '_vms_commission_percent', true);        // numeric (ex: 15)
+    $commission_mode = (string) get_post_meta($package_id, '_vms_commission_mode', true);  // artist_fee | gross (optional)
+
+    // Reasonable defaults
+    if ($structure === '') $structure = 'flat_fee';
+    if ($commission_mode === '') $commission_mode = 'artist_fee';
+
+    // Apply to plan (these are the editable fields you already have on the plan)
+    update_post_meta($plan_id, '_vms_comp_structure', sanitize_text_field($structure));
+
+    // Only write numeric meta if package has a value (lets you build sparse packages)
+    if ($flat !== '' && $flat !== null) {
+        update_post_meta($plan_id, '_vms_flat_fee_amount', (float) $flat);
+    }
+
+    if ($split !== '' && $split !== null) {
+        update_post_meta($plan_id, '_vms_door_split_percent', (float) $split);
+    }
+
+    if ($commission_pct !== '' && $commission_pct !== null) {
+        update_post_meta($plan_id, '_vms_commission_percent', (float) $commission_pct);
+    }
+
+    update_post_meta($plan_id, '_vms_commission_mode', sanitize_text_field($commission_mode));
+
+    // Store selected package id on the plan
+    update_post_meta($plan_id, '_vms_comp_package_id', $package_id);
+
+    // Snapshot (this is the “source of truth” for what was agreed when applied)
+    $snapshot = array(
+        'package_id'      => $package_id,
+        'package_title'   => (string) get_the_title($package_id),
+        'applied_at'      => current_time('mysql'),
+        'structure'       => $structure,
+        'flat_fee_amount' => ($flat !== '' && $flat !== null) ? (float)$flat : null,
+        'door_split_percent' => ($split !== '' && $split !== null) ? (float)$split : null,
+        'commission_percent' => ($commission_pct !== '' && $commission_pct !== null) ? (float)$commission_pct : null,
+        'commission_mode' => $commission_mode,
+    );
+
+    update_post_meta($plan_id, '_vms_comp_snapshot', $snapshot);
+
+    return true;
+}
+
+function vms_render_collapsible_panel(string $title, callable $render_cb, array $args = []): void
+{
+    $open    = !empty($args['open']);
+    $accent  = isset($args['accent']) ? (string)$args['accent'] : '#4f46e5';
+    $desc    = isset($args['desc']) ? (string)$args['desc'] : '';
+    $classes = isset($args['class']) ? (string)$args['class'] : '';
+
+    echo '<style>
+.vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;margin:12px 0;}
+.vms-panel>summary{list-style:none;cursor:pointer;font-weight:700;font-size:15px;padding:10px 12px;border-radius:14px;}
+.vms-panel>summary::-webkit-details-marker{display:none;}
+.vms-panel-body{padding:12px 12px 14px;}
+.vms-panel-accent{border-left:6px solid var(--vms-accent,#4f46e5);}
+</style>';
+
+    echo '<details class="vms-panel vms-panel-accent ' . esc_attr($classes) . '" style="--vms-accent:' . esc_attr($accent) . ';"' . ($open ? ' open' : '') . '>';
+    echo '<summary>' . esc_html($title);
+
+    if ($desc !== '') {
+        echo '<span style="font-weight:400;opacity:.75;margin-left:8px;">' . esc_html($desc) . '</span>';
+    }
+
+    echo '</summary>';
+    echo '<div class="vms-panel-body">';
+
+    $render_cb();
+
+    echo '</div></details>';
+}
+
+/**
+ * Check whether a vendor has completed required tax profile fields.
+ * NOTE: Does NOT include SSN/EIN on purpose.
+ */
+function vms_is_vendor_tax_profile_complete(int $vendor_id): bool
+{
+
+    $required_meta = array(
+        '_vms_w9_name',
+        '_vms_w9_address1',
+        '_vms_w9_city',
+        '_vms_w9_state',
+        '_vms_w9_zip',
+        '_vms_w9_email',
+    );
+
+    foreach ($required_meta as $key) {
+        $val = trim((string) get_post_meta($vendor_id, $key, true));
+        if ($val === '') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Return missing tax-profile requirements for a vendor.
+ * Empty array = complete.
+ *
+ * Uses your current portal keys (vendor-tax-profile.php):
+ *  - _vms_payee_legal_name
+ *  - _vms_entity_type
+ *  - _vms_addr1/_vms_city/_vms_state/_vms_zip
+ *  - _vms_w9_upload_id (uploaded W-9 file)
+ */
+function vms_vendor_tax_profile_missing_items(int $vendor_id): array
+{
+    $missing = [];
+
+    $legal = trim((string) get_post_meta($vendor_id, '_vms_payee_legal_name', true));
+    $entity = trim((string) get_post_meta($vendor_id, '_vms_entity_type', true));
+
+    $addr1 = trim((string) get_post_meta($vendor_id, '_vms_addr1', true));
+    $city  = trim((string) get_post_meta($vendor_id, '_vms_city', true));
+    $state = trim((string) get_post_meta($vendor_id, '_vms_state', true));
+    $zip   = trim((string) get_post_meta($vendor_id, '_vms_zip', true));
+
+    $w9_upload_id = (int) get_post_meta($vendor_id, '_vms_w9_upload_id', true);
+
+    if ($legal === '') $missing[] = 'Legal/Payee Name';
+    if ($entity === '') $missing[] = 'Entity Type';
+
+    // Address
+    if ($addr1 === '') $missing[] = 'Mailing Address (line 1)';
+    if ($city === '')  $missing[] = 'Mailing Address (city)';
+    if ($state === '') $missing[] = 'Mailing Address (state)';
+    if ($zip === '')   $missing[] = 'Mailing Address (ZIP)';
+
+    // W-9 upload required (per your “no SSN/EIN typed into site” rule)
+    if ($w9_upload_id <= 0) $missing[] = 'Signed W-9 Upload';
+
+    return $missing;
+}
+
+// function vms_vendor_tax_profile_is_complete(int $vendor_id): bool
+// {
+//     return empty(vms_vendor_tax_profile_missing_items($vendor_id));
+// }
