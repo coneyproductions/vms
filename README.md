@@ -66,6 +66,6 @@
 ```bash
 git status
 git add .
-git commit -m "Admin side compensation UI vastly improved"
+git commit -m "Included activation/deactivation function"
 git push origin main
  

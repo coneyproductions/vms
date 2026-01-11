@@ -12,17 +12,6 @@
 // Exit if accessed directly.
 if (!defined('ABSPATH')) exit;
 
-add_action('admin_init', function () {
-    // TEC usually defines this class when active
-    $tec_active = class_exists('Tribe__Events__Main') || post_type_exists('tribe_events');
-
-    if (!$tec_active) {
-        add_action('admin_notices', function () {
-            echo '<div class="notice notice-error"><p><strong>VMS:</strong> The Events Calendar (TEC) is required. Please install/activate TEC.</p></div>';
-        });
-    }
-});
-
 /**
  * Load includes
  */
@@ -30,6 +19,7 @@ $base = plugin_dir_path(__FILE__) . 'includes/';
 
 $includes = array(
     'helpers.php',
+    'activation.php',
 
     // // CPT
     'cpt/vendors.php',
@@ -77,6 +67,21 @@ foreach ($includes as $file) {
     }
 }
 
+// Activation / deactivation hooks.
+register_activation_hook(__FILE__, 'vms_activate_plugin');
+register_deactivation_hook(__FILE__, 'vms_deactivate_plugin');
+
+add_action('admin_init', function () {
+    // TEC usually defines this class when active
+    $tec_active = class_exists('Tribe__Events__Main') || post_type_exists('tribe_events');
+
+    if (!$tec_active) {
+        add_action('admin_notices', function () {
+            echo '<div class="notice notice-error"><p><strong>VMS:</strong> The Events Calendar (TEC) is required. Please install/activate TEC.</p></div>';
+        });
+    }
+});
+
 add_action('after_setup_theme', function () {
     add_post_type_support('vms_vendor', 'thumbnail');
 });
@@ -103,9 +108,6 @@ function vms_add_vendor_role()
     ));
 }
 
-// Activation / deactivation hooks.
-register_activation_hook(__FILE__, 'vms_activate_plugin');
-register_deactivation_hook(__FILE__, 'vms_deactivate_plugin');
 
 
 /**
