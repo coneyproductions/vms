@@ -1,10 +1,16 @@
 # vms
 
+## EMOJIS ##
+🙏 wishlist item
+❓ question
+🚧 in progress
+✅ complete
+
 ## Development Notes
 
 *** ADMIN MENU ***
-❓ Can we make the default event time UI editable? Each venue has different times & durations
-❓ Where are holidays entered?
+✅ Can we make the default event time UI editable? Each venue has different times & durations
+🚧 Where are holidays entered?
 
 ## EVENT PLAN ##
 - Add food trucks to UI
@@ -21,14 +27,9 @@
  - FIXED: marketing, labor, utilities, [expandable]  in compensation package
  - VARIABLE: insurance, ASCAP, BMI, SESAC [expandable]
 ✅ "Staff" menu currently is NOT under "VMS" heading
-🚧 Add general labor contractors to portal
-    - Bar
-    - Sound
-    - Cleanup
-    - Ticket checker
-    - can these titles be editible in the UI for later expansion?
+✅ Add general labor contractors to portal
 ❓ AVAILABILITY: when a vendor agrees to a date and they put it in their calendar, does the current logic recognize that booking as being at the selected venue? What about cross-venue checking? If we lock a vendor in on a date, but don't want to inadvertently double book them at one of our own other venues.
-🙏 Bypass w9 data option? If we have a verbal agreement/understanding that a W9 will be supplied imminently, bypass the requirement, maybe for an established period of time so that it doesn't get forgotten?
+✅ Should/can we have a bypass w9 data option? If we have a verbal agreement/understanding that a W9 will be supplied imminently, bypass the requirement, maybe for an established period of time so that it doesn't get forgotten?
 
 ## VENDOR PORTAL ##
 🙏 Small visual tweak: format telephone #
@@ -37,6 +38,9 @@
 
 ## STAFF PORTAL ##
 - 
+
+## VENUE ADMIN ##
+🚧 Default pay per day
 
 ## REPORTING - VENDORS ##
 - Events completed
@@ -47,15 +51,16 @@
 
 
 ### GENERAL QUESTIONS ###
-Q: Is this plugin "upload ready" to any wordpress website?
-A: Yes! With TEC as a requirement
-Q: Is it possible to disable tickets? Should I bother? Other venues aren't ticketed
-A: 
+❓: Is this plugin "upload ready" to any wordpress website?
+💬: Yes! With TEC as a requirement
+📝: I uploaded to booklivetalent.com and it wouldn't activate due to an error...
 
-Q: Do holidays show up somewhere in the event plan?
-A: 
+❓: Is it possible to disable tickets? Should I bother? Other venues aren't ticketed
+💬: 
 
-Q: 
+❓: What is the best way to integrate VMS with
+    Paying vendors/staff via square (square payroll or bill pay [if payroll, we can elimnate w9 storage])
+💬:
 
 ### Commit workflow
 ```bash

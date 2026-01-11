@@ -1,5 +1,5 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined(constant_name: 'ABSPATH')) exit;
 
 /**
  * Vendor Tax Profile (Admin Only)

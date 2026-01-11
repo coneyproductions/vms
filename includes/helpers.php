@@ -185,10 +185,8 @@ function vms_get_event_titles_by_date(array $active_dates): array
  */
 function vms_get_comp_packages_for_venue(int $venue_id, bool $include_global = true): array
 {
-    $meta_query = array();
-
     if ($include_global) {
-        $meta_query[] = array(
+        $meta_query = array(
             'relation' => 'OR',
             array(
                 'key'     => '_vms_venue_id',
@@ -208,11 +206,13 @@ function vms_get_comp_packages_for_venue(int $venue_id, bool $include_global = t
             ),
         );
     } else {
-        $meta_query[] = array(
-            'key'     => '_vms_venue_id',
-            'value'   => $venue_id,
-            'compare' => '=',
-            'type'    => 'NUMERIC',
+        $meta_query = array(
+            array(
+                'key'     => '_vms_venue_id',
+                'value'   => $venue_id,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
         );
     }
 
@@ -225,7 +225,6 @@ function vms_get_comp_packages_for_venue(int $venue_id, bool $include_global = t
         'meta_query'     => $meta_query,
     ));
 }
-
 /**
  * Apply a comp package to an event plan AND write a snapshot (so packages can change later
  * without altering already-agreed plans unless you re-apply).
@@ -271,19 +270,42 @@ function vms_apply_comp_package_to_plan(int $plan_id, int $package_id): bool
 
     // Snapshot (this is the “source of truth” for what was agreed when applied)
     $snapshot = array(
-        'package_id'      => $package_id,
-        'package_title'   => (string) get_the_title($package_id),
-        'applied_at'      => current_time('mysql'),
-        'structure'       => $structure,
-        'flat_fee_amount' => ($flat !== '' && $flat !== null) ? (float)$flat : null,
+        'package_id'         => $package_id,
+        'package_title'      => (string) get_the_title($package_id),
+        'applied_at'         => current_time('mysql'),
+        'structure'          => $structure,
+        'flat_fee_amount'    => ($flat !== '' && $flat !== null) ? (float)$flat : null,
         'door_split_percent' => ($split !== '' && $split !== null) ? (float)$split : null,
         'commission_percent' => ($commission_pct !== '' && $commission_pct !== null) ? (float)$commission_pct : null,
-        'commission_mode' => $commission_mode,
+        'commission_mode'    => $commission_mode,
+
+        // NEW:
+        'source'             => 'comp_package', // optional but nice
+        'comp_hash'          => function_exists('vms_comp_hash_for_plan') ? vms_comp_hash_for_plan((int)$plan_id) : '',
     );
 
     update_post_meta($plan_id, '_vms_comp_snapshot', $snapshot);
+    delete_post_meta($plan_id, '_vms_comp_needs_snapshot');
 
     return true;
+}
+
+function vms_comp_hash_for_plan(int $plan_id): string
+{
+    $structure = (string) get_post_meta($plan_id, '_vms_comp_structure', true);
+    $flat      = get_post_meta($plan_id, '_vms_flat_fee_amount', true);
+    $split     = get_post_meta($plan_id, '_vms_door_split_percent', true);
+
+    // normalize
+    $structure = $structure ?: 'flat_fee';
+    $flat = ($flat === '' || $flat === null) ? '' : number_format((float)$flat, 2, '.', '');
+    $split = ($split === '' || $split === null) ? '' : rtrim(rtrim((string)(float)$split, '0'), '.');
+
+    return hash('sha256', wp_json_encode([
+        'structure' => $structure,
+        'flat'      => $flat,
+        'split'     => $split,
+    ]));
 }
 
 function vms_render_collapsible_panel(string $title, callable $render_cb, array $args = []): void
@@ -381,8 +403,186 @@ function vms_vendor_tax_profile_missing_items(int $vendor_id): array
     return $missing;
 }
 
+/**
+ * Venue default time helpers
+ */
+
+function vms_get_venue_default_times(int $venue_id): array
+{
+    $start = trim((string) get_post_meta($venue_id, '_vms_default_start_time', true));
+    $end   = trim((string) get_post_meta($venue_id, '_vms_default_end_time', true));
+    $dur   = (int) get_post_meta($venue_id, '_vms_default_duration_min', true);
+
+    if ($start !== '' && !preg_match('/^\d{2}:\d{2}$/', $start)) $start = '';
+    if ($end !== '' && !preg_match('/^\d{2}:\d{2}$/', $end)) $end = '';
+
+    return [
+        'start' => $start,
+        'end'   => $end,
+        'dur'   => max(0, $dur),
+    ];
+}
 
 /**
- * Validate vendor tax profile for an event plan.
- * Returns an error string if invalid, or empty string if OK.
+ * Add minutes to HH:MM and return HH:MM (24h).
  */
+function vms_time_add_minutes(string $hhmm, int $minutes): string
+{
+    if (!preg_match('/^\d{2}:\d{2}$/', $hhmm)) return '';
+    $minutes = (int) $minutes;
+
+    [$h, $m] = array_map('intval', explode(':', $hhmm));
+    $total = ($h * 60) + $m + $minutes;
+
+    // Wrap around 24h (optional but safe)
+    $total = $total % (24 * 60);
+    if ($total < 0) $total += (24 * 60);
+
+    $nh = floor($total / 60);
+    $nm = $total % 60;
+
+    return sprintf('%02d:%02d', $nh, $nm);
+}
+
+
+
+// =======================================
+// Holidays (venue-scoped) helpers
+// =======================================
+
+/**
+ * Stored format (option: vms_holidays):
+ * [
+ *   123 => [ // venue_id
+ *     '2026-05-25' => [
+ *        'name' => 'Memorial Day',
+ *        'status' => 'open'|'closed',
+ *        'rules' => [ 'vendor' => [...], 'bar' => [...], ... ] // future
+ *     ],
+ *   ],
+ * ]
+ */
+function vms_get_holidays_option(): array
+{
+    $raw = get_option('vms_holidays', array());
+    return is_array($raw) ? $raw : array();
+}
+
+function vms_get_venue_holidays(int $venue_id): array
+{
+    if ($venue_id <= 0) return array();
+
+    $all = vms_get_holidays_option();
+    if (!isset($all[$venue_id]) || !is_array($all[$venue_id])) return array();
+
+    return $all[$venue_id];
+}
+
+/**
+ * Returns holiday array or null.
+ */
+function vms_get_venue_holiday_for_date(int $venue_id, string $date_yyyy_mm_dd): ?array
+{
+    if ($venue_id <= 0) return null;
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_yyyy_mm_dd)) return null;
+
+    $holidays = vms_get_venue_holidays($venue_id);
+    if (!isset($holidays[$date_yyyy_mm_dd]) || !is_array($holidays[$date_yyyy_mm_dd])) return null;
+
+    $h = $holidays[$date_yyyy_mm_dd];
+
+    $name   = isset($h['name']) ? (string) $h['name'] : '';
+    $status = isset($h['status']) ? (string) $h['status'] : '';
+
+    if ($status !== 'open' && $status !== 'closed') $status = 'open';
+
+    return array(
+        'date'   => $date_yyyy_mm_dd,
+        'name'   => $name,
+        'status' => $status,
+        'rules'  => (isset($h['rules']) && is_array($h['rules'])) ? $h['rules'] : array(),
+    );
+}
+
+function vms_is_venue_closed_on_date(int $venue_id, string $date_yyyy_mm_dd): bool
+{
+    $h = vms_get_venue_holiday_for_date($venue_id, $date_yyyy_mm_dd);
+    return ($h && $h['status'] === 'closed');
+}
+
+/**
+ * Flag the admin screen to scroll back to the Compensation section
+ * after the page reloads.
+ *
+ * Usage:
+ *   vms_admin_scroll_to_compensation( $post_id );
+ *
+ * The actual scrolling JS reads this meta and then deletes it
+ * so it only happens once.
+ */
+function vms_admin_scroll_to_compensation(int $post_id): void
+{
+    if ($post_id <= 0) {
+        return;
+    }
+
+    update_post_meta($post_id, '_vms_admin_scroll_to', 'vms-compensation');
+}
+
+/**
+ * Format a snapshot datetime (stored as "Y-m-d H:i:s") into a friendly admin string.
+ * Example output: "Sat Jan 10, 2026 8:27 PM"
+ */
+
+
+// Helper: build a readable snapshot summary line
+/**
+ * Build a human-readable snapshot summary of PAY TERMS only.
+ * IMPORTANT: This intentionally does NOT include package title or applied date.
+ * Those belong in the UI as separate lines to avoid duplication.
+ */
+
+function vms_snapshot_summary_line(array $snap): string
+{
+    $parts = [];
+
+    if (!empty($snap['structure'])) {
+        $parts[] = 'Structure: ' . vms_pretty_structure_label($snap['structure']);
+    }
+
+    if (array_key_exists('flat_fee_amount', $snap) && $snap['flat_fee_amount'] !== null && $snap['flat_fee_amount'] !== '') {
+        $parts[] = 'Flat: $' . number_format((float) $snap['flat_fee_amount'], 2);
+    }
+
+    if (array_key_exists('door_split_percent', $snap) && $snap['door_split_percent'] !== null && $snap['door_split_percent'] !== '') {
+        $pct = rtrim(rtrim((string) $snap['door_split_percent'], '0'), '.');
+        $parts[] = 'Split: ' . $pct . '%';
+    }
+
+    if (array_key_exists('commission_percent', $snap) && $snap['commission_percent'] !== null && $snap['commission_percent'] !== '') {
+        $pct  = rtrim(rtrim((string) $snap['commission_percent'], '0'), '.');
+        $mode = !empty($snap['commission_mode']) ? (string) $snap['commission_mode'] : 'artist_fee';
+        $parts[] = 'Commission: ' . $pct . '% (' . $mode . ')';
+    }
+
+    return implode(' | ', $parts);
+}
+
+function vms_format_snapshot_datetime($value): string
+{
+    $raw = is_string($value) ? trim($value) : '';
+    if ($raw === '') return '—';
+
+    // Stored format is typically "2026-01-10 20:27:09" (site timezone).
+    $ts = strtotime($raw);
+    if (!$ts) return $raw;
+
+    // Use WordPress timezone + localization
+    // D = day short (Sat), M = month short (Jan), j = day number, Y = year, g:i A = 12h time
+    if (function_exists('wp_date')) {
+        return wp_date('D M j, Y g:i A', $ts);
+    }
+
+    // Fallback for older installs
+    return date_i18n('D M j, Y g:i A', $ts);
+}

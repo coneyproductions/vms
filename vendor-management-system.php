@@ -62,6 +62,8 @@ $includes = array(
     'admin/staff-list-columns.php',
     'admin/staff-tax-sidebar.php',
     'admin/tax-profile-admin-metabox.php',
+    'admin/tax-bypass.php',
+    'admin/venue-comp-defaults.php',
 
 );
 
