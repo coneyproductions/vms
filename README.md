@@ -66,6 +66,6 @@
 ```bash
 git status
 git add .
-git commit -m "added staff portal with tax logic"
+git commit -m "Admin side compensation UI vastly improved"
 git push origin main
  
