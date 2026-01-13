@@ -19,43 +19,53 @@ $base = plugin_dir_path(__FILE__) . 'includes/';
 
 $includes = array(
     'helpers.php',
+    'calendar-queries.php',
     'activation.php',
 
-    // // CPT
+    // CPT
     'cpt/vendors.php',
     'cpt/venues.php',
     'cpt/event-plans.php',
     'cpt/ratings.php',
     'cpt/staff.php',
+    'vendor-applications.php',
 
     // Integrations
     'integrations/tec-sync.php',
     'integrations/attendance-woo.php',
     'integrations/vendor-ics-sync.php',
-    // 'integrations/availability-engine.php',
 
     // Vendor system
-    'vendor-applications.php',
     'portal/vendor-portal.php',
     'portal/vendor-tax-profile.php',
     'portal/staff-portal.php',
 
+    // Public
+    'public/venue-calendar-shortcode.php',
+
     // Admin
     'admin/menu.php',
+    'admin/admin-notices.php',
     'admin/venue-context.php',
     'admin/season-board.php',
     'admin/settings-page.php',
+
     'admin/vendor-comp-packages.php',
     'admin/vendor-details.php',
     'admin/vendor-list-columns.php',
     'admin/vendor-tax-profile.php',
+    
     'admin/staff-list-columns.php',
     'admin/staff-tax-sidebar.php',
     'admin/tax-profile-admin-metabox.php',
     'admin/tax-bypass.php',
     'admin/venue-comp-defaults.php',
-
-);
+    'admin/venue-duplicate.php',
+    // 'admin/venue-duplicate-templates.php', // This kind of went off of the rails. We'll try again later
+    'admin/venue-calendar.php',
+    'admin/pages-tools.php',
+    'admin/vendor-user-link.php'
+); 
 
 
 foreach ($includes as $file) {
@@ -107,18 +117,6 @@ function vms_add_vendor_role()
         'upload_files' => true,
     ));
 }
-
-
-
-/**
- * Runs on plugin deactivation.
- */
-function vms_deactivate_plugin()
-{
-    // Flush rewrite rules to clean up.
-    flush_rewrite_rules();
-}
-
 
 function vms_render_season_dates_page()
 {

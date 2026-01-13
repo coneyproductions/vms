@@ -150,9 +150,42 @@ function vms_vendor_portal_shortcode()
     return ob_get_clean();
 }
 
-function vms_vendor_portal_render_availability($vendor_id)
+/**
+ * Get the list of dates shown on the vendor availability screen.
+ * - If Season Dates exist: use them.
+ * - If not: generate a rolling window (default 12 months) so availability works year-round.
+ *
+ * @return string[] array of YYYY-MM-DD
+ */
+function vms_get_availability_dates_for_vendor(int $vendor_id): array
 {
     $active_dates = get_option('vms_active_dates', array());
+    if (is_array($active_dates) && !empty($active_dates)) {
+        return array_values(array_filter(array_map('sanitize_text_field', $active_dates)));
+    }
+
+    // No season dates configured — generate rolling dates
+    $opts = (array) get_option('vms_settings', array());
+    $months_ahead = isset($opts['availability_months_ahead']) ? (int) $opts['availability_months_ahead'] : 12;
+    if ($months_ahead < 1) $months_ahead = 12;
+    if ($months_ahead > 24) $months_ahead = 24; // safety cap
+
+    $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+    $start = new DateTime('today', $tz);
+    $end = (clone $start)->modify('+' . $months_ahead . ' months');
+
+    $dates = array();
+    $cur = clone $start;
+    while ($cur < $end) {
+        $dates[] = $cur->format('Y-m-d');
+        $cur->modify('+1 day');
+    }
+    return $dates;
+}
+
+function vms_vendor_portal_render_availability($vendor_id)
+{
+    $active_dates = vms_get_availability_dates_for_vendor((int)$vendor_id);
     // $availability = get_post_meta($vendor_id, '_vms_availability', true);
     $ics_url      = (string) get_post_meta($vendor_id, '_vms_ics_url', true);
     $ics_autosync = (int) get_post_meta($vendor_id, '_vms_ics_autosync', true);
@@ -160,6 +193,10 @@ function vms_vendor_portal_render_availability($vendor_id)
 
     $manual = get_post_meta($vendor_id, '_vms_availability_manual', true);
     $ics    = get_post_meta($vendor_id, '_vms_availability_ics', true);
+
+    // echo '<pre style="background:#fff;border:1px solid #ddd;padding:10px;max-width:900px;overflow:auto;">';
+    // echo esc_html(print_r($ics, true));
+    // echo '</pre>';
 
     if (!is_array($manual)) $manual = array();
     if (!is_array($ics)) $ics = array();
@@ -220,9 +257,11 @@ function vms_vendor_portal_render_availability($vendor_id)
                 return;
             }
 
-            if (empty($active_dates)) {
-                echo '<div class="notice notice-warning"><p>' . esc_html__('No season dates are configured yet, so there is nothing to sync.', 'vms') . '</p></div>';
-            } elseif (empty($ics_url)) {
+            // if (empty($active_dates)) {
+            //     echo '<div class="notice notice-warning"><p>' . esc_html__('No season dates are configured yet, so there is nothing to sync.', 'vms') . '</p></div>';
+            // } else
+
+            if (empty($ics_url)) {
                 echo '<div class="notice notice-warning"><p>' . esc_html__('Please paste your calendar feed (ICS) URL first.', 'vms') . '</p></div>';
             } elseif (!function_exists('vms_vendor_ics_sync_now')) {
                 echo '<div class="notice notice-error"><p>' . esc_html__('ICS sync module is not loaded.', 'vms') . '</p></div>';
@@ -254,10 +293,10 @@ function vms_vendor_portal_render_availability($vendor_id)
     }
 
 
-    if (empty($active_dates)) {
-        echo '<p>' . esc_html__('No season dates have been configured yet.', 'vms') . '</p>';
-        return;
-    }
+    // if (empty($active_dates)) {
+    //     echo '<p>' . esc_html__('No season dates have been configured yet.', 'vms') . '</p>';
+    //     return;
+    // }
 
     echo '<style>
 .vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;}

@@ -31,12 +31,16 @@ function vms_handle_create_event_plan()
   }
 
   // Optional: ensure the date is in active season dates (prevents random URL use)
-  $active_dates = get_option('vms_active_dates', array());
-  if (!is_array($active_dates))
-    $active_dates = array();
+  $venue_id = function_exists('vms_get_current_venue_id') ? (int) vms_get_current_venue_id() : 0;
 
-  if (!in_array($date, $active_dates, true)) {
-    wp_die('That date is not in the configured season dates.');
+  // If we have a venue context, enforce schedule window.
+  // If not, we won’t block creation (safer than false negatives).
+  if ($venue_id > 0 && function_exists('vms_get_active_dates_for_venue')) {
+    $active_dates = vms_get_active_dates_for_venue($venue_id);
+
+    if (!in_array($date, $active_dates, true)) {
+      wp_die('That date is outside this venue’s configured schedule window.');
+    }
   }
 
   // Optional venue scoping (only if your helper exists)
@@ -105,11 +109,10 @@ function vms_render_season_board_page()
     wp_die('Insufficient permissions.');
   }
 
-  $active_dates = get_option('vms_active_dates', array());
-  if (!is_array($active_dates))
-    $active_dates = array();
-
   $venue_id = function_exists('vms_get_current_venue_id') ? (int) vms_get_current_venue_id() : 0;
+  $active_dates = ($venue_id > 0 && function_exists('vms_get_active_dates_for_venue'))
+    ? vms_get_active_dates_for_venue($venue_id)
+    : array();
 
 
   echo '<div class="wrap">';
@@ -118,11 +121,11 @@ function vms_render_season_board_page()
   echo '<p>Broad season view of dates, booked vendors, and event plan status.</p>';
 
   if (empty($active_dates)) {
-    echo '<p><em>No season dates configured yet.</em></p>';
+    echo '<p><em>No schedule dates available for this venue yet.</em></p>';
+    echo '<p class="description">Tip: Set optional “Season Dates” on the venue, or we’ll default to the current year once configured.</p>';
     echo '</div>';
     return;
   }
-
   // Build a lookup: date => plan_id
   $venue_id = vms_get_current_venue_id(); // whatever helper you already have
 

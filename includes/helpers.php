@@ -586,3 +586,105 @@ function vms_format_snapshot_datetime($value): string
     // Fallback for older installs
     return date_i18n('D M j, Y g:i A', $ts);
 }
+
+function vms_required_public_pages(): array
+{
+    return [
+        'vendor_application' => [
+            'slug'    => 'vendor-application',
+            'title'   => 'Vendor Application',
+            'content' => "[vms_vendor_apply]\n",
+        ],
+        'vendor_portal' => [
+            'slug'    => 'vendor-portal',
+            'title'   => 'Vendor Portal',
+            'content' => "[vms_vendor_portal]\n",
+        ],
+        'staff_portal' => [
+            'slug'    => 'staff-portal',
+            'title'   => 'Staff Portal',
+            'content' => "[vms_staff_portal]\n",
+        ],
+    ];
+}
+
+add_filter('manage_users_columns', function ($cols) {
+    $cols['user_id'] = 'User ID';
+    return $cols;
+});
+
+add_filter('manage_users_custom_column', function ($value, $column, $user_id) {
+    if ($column === 'user_id') {
+        return (int) $user_id;
+    }
+    return $value;
+}, 10, 3);
+
+/**
+ * Get active schedule dates for a venue.
+ *
+ * Season is OPTIONAL:
+ * - If venue season start/end exist, use them.
+ * - If not, default to the current calendar year (Jan 1 → Dec 31).
+ *
+ * Returns array of YYYY-MM-DD strings.
+ */
+function vms_get_active_dates_for_venue(int $venue_id): array
+{
+    $tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
+
+    // These meta keys are the ones we *want* to standardize on.
+    $start = (string) get_post_meta($venue_id, '_vms_season_start', true);
+    $end   = (string) get_post_meta($venue_id, '_vms_season_end', true);
+
+    // Season optional → default to current year
+    if ($start === '' || $end === '') {
+        $year  = (int) (new DateTime('now', $tz))->format('Y');
+        $start = $year . '-01-01';
+        $end   = $year . '-12-31';
+    }
+
+    $start_dt = DateTime::createFromFormat('Y-m-d', $start, $tz);
+    $end_dt   = DateTime::createFromFormat('Y-m-d', $end, $tz);
+
+    if (!$start_dt || !$end_dt) {
+        return array();
+    }
+
+    // Ensure end >= start
+    if ($end_dt < $start_dt) {
+        $tmp = $start_dt;
+        $start_dt = $end_dt;
+        $end_dt = $tmp;
+    }
+
+    $dates = array();
+
+    $cur = clone $start_dt;
+    $cur->setTime(0, 0, 0);
+
+    $last = clone $end_dt;
+    $last->setTime(0, 0, 0);
+
+    while ($cur <= $last) {
+        $dates[] = $cur->format('Y-m-d');
+        $cur->modify('+1 day');
+    }
+
+    return $dates;
+}
+
+if (!function_exists('vms_pretty_structure_label')) {
+    function vms_pretty_structure_label($s): string
+    {
+        $s = (string) $s;
+
+        // If you ever change meta keys later, this keeps output decent.
+        return match ($s) {
+            'flat_fee'            => 'Flat Fee',
+            'door_split'          => 'Door Split',
+            'flat_fee_door_split' => 'Flat Fee + Door Split',
+            default               => ($s !== '' ? strtoupper($s) : '—'),
+        };
+    }
+}

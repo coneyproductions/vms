@@ -1,12 +1,19 @@
 # vms
 
 ## EMOJIS ##
+💡 idea
 🙏 wishlist item
 ❓ question
 🚧 in progress
 ✅ complete
 
+
 ## Development Notes
+
+## INITIAL SETUP ##
+🙏 Create all public pages
+    - Vendor Portal
+    - Staff Portal
 
 *** ADMIN MENU ***
 ✅ Can we make the default event time UI editable? Each venue has different times & durations
@@ -14,6 +21,7 @@
 
 ## EVENT PLAN ##
 - Add food trucks to UI
+🚧 Month/Calendar view with featured image icons/avatars (with name)
 
 ## VENDOR ADMIN ##
 ✅ Collapse months
@@ -30,17 +38,22 @@
 ✅ Add general labor contractors to portal
 ❓ AVAILABILITY: when a vendor agrees to a date and they put it in their calendar, does the current logic recognize that booking as being at the selected venue? What about cross-venue checking? If we lock a vendor in on a date, but don't want to inadvertently double book them at one of our own other venues.
 ✅ Should/can we have a bypass w9 data option? If we have a verbal agreement/understanding that a W9 will be supplied imminently, bypass the requirement, maybe for an established period of time so that it doesn't get forgotten?
+💡 Agency management (multiple bands)
 
 ## VENDOR PORTAL ##
 🙏 Small visual tweak: format telephone #
 🙏 Section for vendors/labor to see their events/terms
 🙏 Autofill contract (manually approved by admin before submitting to vendor)
+- Providing own sound tech
+- Deposit required
+- Weather delay 
+- Ticket sales bonus
 
 ## STAFF PORTAL ##
 - 
 
 ## VENUE ADMIN ##
-🚧 Default pay per day
+✅ Default pay per day
 
 ## REPORTING - VENDORS ##
 - Events completed
@@ -52,8 +65,7 @@
 
 ### GENERAL QUESTIONS ###
 ❓: Is this plugin "upload ready" to any wordpress website?
-💬: Yes! With TEC as a requirement
-📝: I uploaded to booklivetalent.com and it wouldn't activate due to an error...
+💬: ✅ Yes! With TEC as a requirement
 
 ❓: Is it possible to disable tickets? Should I bother? Other venues aren't ticketed
 💬: 
@@ -62,10 +74,14 @@
     Paying vendors/staff via square (square payroll or bill pay [if payroll, we can elimnate w9 storage])
 💬:
 
+cd public_html/booklivetalent.com/wp-content/plugins/vms
+cd public_html/serenaderange.com/wp-content/plugins/vms
+
+cd wp-content/plugins/vms
+
 ### Commit workflow
 ```bash
 git status
 git add .
-git commit -m "Included activation/deactivation function"
+git commit -m "fixed venodr application process"
 git push origin main
- 

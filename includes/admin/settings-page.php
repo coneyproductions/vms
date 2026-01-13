@@ -69,7 +69,8 @@ add_action('admin_init', function () {
     );
 });
 
-function vms_sanitize_settings($input) {
+function vms_sanitize_settings($input)
+{
     $out = array();
 
     // timezone
@@ -87,7 +88,8 @@ function vms_sanitize_settings($input) {
     return $out;
 }
 
-function vms_field_timezone() {
+function vms_field_timezone()
+{
     $opts  = (array) get_option('vms_settings', array());
     $saved = isset($opts['timezone']) ? (string) $opts['timezone'] : '';
 
@@ -116,7 +118,8 @@ function vms_field_timezone() {
     }
 }
 
-function vms_field_enable_woo() {
+function vms_field_enable_woo()
+{
     $opts = (array) get_option('vms_settings', array());
     $val  = !empty($opts['enable_woo']) ? 1 : 0;
 
@@ -126,7 +129,8 @@ function vms_field_enable_woo() {
     echo '</label>';
 }
 
-function vms_field_enable_tec_publish() {
+function vms_field_enable_tec_publish()
+{
     $opts = (array) get_option('vms_settings', array());
     $val  = array_key_exists('enable_tec_publish', $opts) ? (int) $opts['enable_tec_publish'] : 1;
 
@@ -136,7 +140,8 @@ function vms_field_enable_tec_publish() {
     echo '</label>';
 }
 
-function vms_field_default_venue() {
+function vms_field_default_venue()
+{
     $opts  = (array) get_option('vms_settings', array());
     $saved = isset($opts['default_venue_id']) ? (int) $opts['default_venue_id'] : 0;
 
@@ -161,7 +166,8 @@ function vms_field_default_venue() {
     echo '<p class="description">' . esc_html__('Used when no venue is selected in context.', 'vms') . '</p>';
 }
 
-function vms_field_season_dates_link() {
+function vms_field_season_dates_link()
+{
     $url = admin_url('admin.php?page=vms-season-dates');
 
     echo '<a class="button button-secondary" href="' . esc_url($url) . '">';
@@ -179,11 +185,71 @@ function vms_field_season_dates_link() {
     echo '</p>';
 }
 
-function vms_render_settings_page() {
+function vms_render_settings_page()
+{
     echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'vms') . '</h1>';
     echo '<form method="post" action="options.php">';
     settings_fields('vms_settings_group');
     do_settings_sections('vms-settings');
     submit_button();
     echo '</form></div>';
+
+    echo '<hr style="margin:18px 0;">';
+    echo '<h2>Public Pages</h2>';
+    echo '<p class="description">VMS uses these pages for vendors and staff. If any are missing, you can repair them here.</p>';
+
+    $pages = vms_required_public_pages();
+
+    echo '<div style="max-width:900px;padding:14px 16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;">';
+    echo '<table class="widefat striped" style="margin-top:10px;">';
+    echo '<thead><tr>';
+    echo '<th style="width:220px;">Page</th>';
+    echo '<th>Slug</th>';
+    echo '<th>Status</th>';
+    echo '<th>Link</th>';
+    echo '</tr></thead><tbody>';
+
+    foreach ($pages as $key => $spec) {
+        $page = get_page_by_path($spec['slug'], OBJECT, 'page');
+
+        $status = 'Missing';
+        $status_html = '<span style="color:#b45309;font-weight:600;">⚠️ Missing</span>';
+        $link_html = '—';
+
+        if ($page) {
+            if ($page->post_status === 'trash') {
+                $status = 'In Trash';
+                $status_html = '<span style="color:#b45309;font-weight:600;">🗑️ In Trash</span>';
+            } else {
+                $status = 'OK';
+                $status_html = '<span style="color:#166534;font-weight:600;">✅ OK</span>';
+            }
+
+            $url = get_permalink($page->ID);
+            if ($url) {
+                $link_html = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener">View</a>';
+            }
+        }
+
+        echo '<tr>';
+        echo '<td><strong>' . esc_html($spec['title']) . '</strong></td>';
+        echo '<td><code>' . esc_html($spec['slug']) . '</code></td>';
+        echo '<td>' . $status_html . '</td>';
+        echo '<td>' . $link_html . '</td>';
+        echo '</tr>';
+    }
+
+    echo '</tbody></table>';
+
+    $repair_url = wp_nonce_url(
+        admin_url('admin-post.php?action=vms_repair_pages'),
+        'vms_repair_pages'
+    );
+
+    echo '<p style="margin:14px 0 0;">';
+    echo '<a class="button button-primary" href="' . esc_url($repair_url) . '">Repair / Recreate Pages</a>';
+    echo '<span class="description" style="margin-left:10px;">Creates missing pages and restores any that are trashed.</span>';
+    echo '</p>';
+
+    echo '</div>';
 }

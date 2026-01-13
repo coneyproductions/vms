@@ -1,11 +1,21 @@
 <?php
-if (! defined('ABSPATH')) {
+/**
+ * VMS Event Plans — Admin + Publishing
+ *
+ * Notes:
+ * - This file intentionally contains ONLY Event Plan related logic.
+ * - It assumes some helper functions exist elsewhere in the plugin (ex: vms_get_current_venue_id()).
+ */
+
+if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Register CPT: vms_event_plan
+ */
 add_action('init', 'vms_register_event_plan_cpt');
-
-function vms_register_event_plan_cpt()
+function vms_register_event_plan_cpt(): void
 {
     register_post_type('vms_event_plan', array(
         'labels' => array(
@@ -13,14 +23,14 @@ function vms_register_event_plan_cpt()
             'singular_name' => __('Event Plan', 'vms'),
             'menu_name'     => __('Event Plans', 'vms'),
         ),
-        'public'        => false,
-        'show_ui'       => true,
-        'show_in_menu'  => 'vms-season-board',
-        'menu_icon'     => 'dashicons-calendar-alt',
-        'supports'      => array('title', 'editor', 'thumbnail'),
+        'public'          => false,
+        'show_ui'         => true,
+        'show_in_menu'    => 'vms-season-board',
+        'menu_icon'       => 'dashicons-calendar-alt',
+        'supports'        => array('title', 'editor', 'thumbnail'),
         'capability_type' => 'post',
-        'has_archive'   => false,
-        'rewrite'       => false,
+        'has_archive'     => false,
+        'rewrite'         => false,
     ));
 }
 
@@ -29,48 +39,16 @@ function vms_register_event_plan_cpt()
  */
 class VMS_Admin_Event_Plans
 {
-
-
     public function __construct()
     {
         add_action('add_meta_boxes', array($this, 'register_meta_boxes'));
         add_action('save_post_vms_event_plan', array($this, 'save_event_plan_meta'), 10, 2);
 
-        // ---------------------------------------------------------------------
-        // Venue Default Comp (by day) -> Event Plans: AJAX + helper
-        // ---------------------------------------------------------------------
-
-        add_action('wp_ajax_vms_get_venue_comp_defaults', function () {
-            if (!current_user_can('manage_options')) {
-                wp_send_json_error(['message' => 'Not allowed'], 403);
-            }
-
-            $venue_id   = isset($_POST['venue_id']) ? absint($_POST['venue_id']) : 0;
-            $event_date = isset($_POST['event_date']) ? sanitize_text_field(wp_unslash($_POST['event_date'])) : '';
-
-            if ($venue_id <= 0 || $event_date === '') {
-                wp_send_json_success(['row' => []]); // nothing to apply
-            }
-
-            if (!function_exists('vms_get_venue_default_comp_for_date')) {
-                wp_send_json_error(['message' => 'Venue default helper not loaded'], 500);
-            }
-
-            $row = vms_get_venue_default_comp_for_date($venue_id, $event_date);
-
-            // Normalize numeric values to strings (safe for JS)
-            foreach (['flat_fee_amount', 'door_split_percent', 'commission_percent'] as $k) {
-                if (isset($row[$k]) && $row[$k] !== '') $row[$k] = (string) $row[$k];
-            }
-
-            wp_send_json_success(['row' => $row]);
-        });
+        // AJAX: Venue default comp (by date)
+        add_action('wp_ajax_vms_get_venue_comp_defaults', array($this, 'ajax_get_venue_comp_defaults'));
     }
 
-    /**
-     * Register meta boxes for the Event Plan post type.
-     */
-    public function register_meta_boxes()
+    public function register_meta_boxes(): void
     {
         add_meta_box(
             'vms_event_plan_details',
@@ -82,57 +60,126 @@ class VMS_Admin_Event_Plans
         );
     }
 
-    /**
-     * Render the Event Plan Details meta box.
-     */
-    public function render_event_plan_details_meta_box($post)
+    public function ajax_get_venue_comp_defaults(): void
     {
-        // Security nonce.
-        wp_nonce_field('vms_save_event_plan_details', 'vms_event_plan_details_nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Not allowed'), 403);
+        }
 
-        // Existing meta values.
-        $event_date          = get_post_meta($post->ID, '_vms_event_date', true);
-        $start_time          = get_post_meta($post->ID, '_vms_start_time', true);
-        $end_time            = get_post_meta($post->ID, '_vms_end_time', true);
-        // Default display values (only when blank)
-        if ($start_time === '' || $start_time === null) $start_time = '19:00'; // default start time
-        if ($end_time === '' || $end_time === null)     $end_time   = '21:00'; // default end time
+        $venue_id   = isset($_POST['venue_id']) ? absint($_POST['venue_id']) : 0;
+        $event_date = isset($_POST['event_date']) ? sanitize_text_field(wp_unslash($_POST['event_date'])) : '';
 
-        $location_label      = get_post_meta($post->ID, '_vms_location_label', true);
-        $venue_id            = (int) get_post_meta($post->ID, '_vms_venue_id', true);
-        if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
-            $maybe = (int) vms_get_current_venue_id();
-            if ($maybe > 0) {
-                $venue_id = $maybe; // UI default only (meta not saved until Update)
+        if ($venue_id <= 0 || $event_date === '') {
+            wp_send_json_success(array('row' => array()));
+        }
+
+        if (!function_exists('vms_get_venue_default_comp_for_date')) {
+            wp_send_json_error(array('message' => 'Venue default helper not loaded'), 500);
+        }
+
+        $row = vms_get_venue_default_comp_for_date($venue_id, $event_date);
+
+        foreach (array('flat_fee_amount', 'door_split_percent', 'commission_percent') as $k) {
+            if (isset($row[$k]) && $row[$k] !== '') {
+                $row[$k] = (string) $row[$k];
             }
         }
 
-        // Autofill start/end time for new-ish plans when blank
-        $venue_id = (int) get_post_meta($post->ID, '_vms_venue_id', true);
-        $start_time = (string) get_post_meta($post->ID, '_vms_start_time', true);
-        $end_time   = (string) get_post_meta($post->ID, '_vms_end_time', true);
+        wp_send_json_success(array('row' => $row));
+    }
 
-        if ($venue_id > 0 && (empty($start_time) || empty($end_time)) && function_exists('vms_get_venue_default_times')) {
-            $defaults = vms_get_venue_default_times($venue_id);
+    /**
+     * Render meta box
+     */
+    public function render_event_plan_details_meta_box(WP_Post $post): void
+    {
+        wp_nonce_field('vms_save_event_plan_details', 'vms_event_plan_details_nonce');
+
+        // ----------------------------
+        // Load core meta
+        // ----------------------------
+        $event_date     = (string) get_post_meta($post->ID, '_vms_event_date', true);
+        $start_time     = (string) get_post_meta($post->ID, '_vms_start_time', true);
+        $end_time       = (string) get_post_meta($post->ID, '_vms_end_time', true);
+        $location_label = (string) get_post_meta($post->ID, '_vms_location_label', true);
+        $agenda_text    = (string) get_post_meta($post->ID, '_vms_agenda_text', true);
+
+        // Venue: saved vs UI default (important for "packages show on first load")
+        $venue_id_saved = (int) get_post_meta($post->ID, '_vms_venue_id', true);
+
+        $venue_id_ui = 0;
+        if ($venue_id_saved <= 0 && function_exists('vms_get_current_venue_id')) {
+            $venue_id_ui = (int) vms_get_current_venue_id();
+        }
+
+        // Effective venue for rendering: show packages immediately on new plan
+        $venue_id_effective = $venue_id_saved > 0 ? $venue_id_saved : $venue_id_ui;
+
+        // Default times (use effective venue)
+        if ($venue_id_effective > 0 && (empty($start_time) || empty($end_time)) && function_exists('vms_get_venue_default_times')) {
+            $defaults = (array) vms_get_venue_default_times($venue_id_effective);
 
             if (empty($start_time) && !empty($defaults['start'])) {
-                $start_time = $defaults['start'];
+                $start_time = (string) $defaults['start'];
             }
-
             if (empty($end_time)) {
                 if (!empty($defaults['end'])) {
-                    $end_time = $defaults['end'];
-                } elseif (!empty($start_time) && !empty($defaults['dur'])) {
-                    $end_time = vms_time_add_minutes($start_time, (int)$defaults['dur']);
+                    $end_time = (string) $defaults['end'];
+                } elseif (!empty($start_time) && !empty($defaults['dur']) && function_exists('vms_time_add_minutes')) {
+                    $end_time = (string) vms_time_add_minutes($start_time, (int) $defaults['dur']);
                 }
             }
         }
+        if (empty($start_time)) $start_time = '19:00';
+        if (empty($end_time))   $end_time   = '21:00';
 
-        $auto_title          = get_post_meta($post->ID, '_vms_auto_title', true);
-        if ($auto_title === '') $auto_title = '1'; // default ON
-        $auto_comp = get_post_meta($post->ID, '_vms_auto_comp', true);
+        $auto_title = (string) get_post_meta($post->ID, '_vms_auto_title', true);
+        if ($auto_title === '') $auto_title = '1';
+
+        $auto_comp = (string) get_post_meta($post->ID, '_vms_auto_comp', true);
         if ($auto_comp === '') $auto_comp = '1';
 
+        $auto_comp_venue = (string) get_post_meta($post->ID, '_vms_auto_comp_venue', true);
+        if ($auto_comp_venue === '') $auto_comp_venue = '0';
+
+        // Draft pay fields
+        $comp_structure      = (string) get_post_meta($post->ID, '_vms_comp_structure', true);
+        if ($comp_structure === '') $comp_structure = 'flat_fee';
+
+        $flat_fee_amount     = get_post_meta($post->ID, '_vms_flat_fee_amount', true);
+        $door_split_percent  = get_post_meta($post->ID, '_vms_door_split_percent', true);
+
+        // Current package selection
+        $current_pkg_id = (int) get_post_meta($post->ID, '_vms_comp_package_id', true);
+
+        // Snapshot (locked pay)
+        $snapshot = get_post_meta($post->ID, '_vms_comp_snapshot', true);
+        if (!is_array($snapshot)) $snapshot = array();
+
+        $needs_snapshot = (get_post_meta($post->ID, '_vms_comp_needs_snapshot', true) === '1');
+
+        $current_hash  = function_exists('vms_comp_hash_for_plan') ? (string) vms_comp_hash_for_plan((int)$post->ID) : '';
+        $snapshot_hash = isset($snapshot['comp_hash']) ? (string) $snapshot['comp_hash'] : '';
+
+        $out_of_sync = false;
+        if (!empty($snapshot)) {
+            if ($snapshot_hash !== '' && $current_hash !== '' && $snapshot_hash !== $current_hash) $out_of_sync = true;
+            if ($needs_snapshot) $out_of_sync = true;
+        }
+
+        // Load packages for effective venue (+ global)
+        $packages = array();
+        if ($venue_id_effective > 0 && function_exists('vms_get_comp_packages_for_venue')) {
+            $packages = (array) vms_get_comp_packages_for_venue($venue_id_effective, true);
+        }
+
+        // Plan status
+        $plan_status = (string) get_post_meta($post->ID, '_vms_event_plan_status', true);
+        if ($plan_status === '') $plan_status = 'draft';
+
+        // ----------------------------
+        // Data for dropdowns
+        // ----------------------------
         $venues = get_posts(array(
             'post_type'      => 'vms_venue',
             'posts_per_page' => -1,
@@ -140,45 +187,34 @@ class VMS_Admin_Event_Plans
             'order'          => 'ASC',
         ));
 
-        $auto_comp_venue = get_post_meta($post->ID, '_vms_auto_comp_venue', true);
-        $auto_comp_venue = ($auto_comp_venue === '1') ? '1' : '0';
+        $bands = get_posts(array(
+            'post_type'      => 'vms_vendor',
+            'posts_per_page' => -1,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ));
 
-        $comp_structure      = get_post_meta($post->ID, '_vms_comp_structure', true);
-        if (empty($comp_structure)) {
-            $comp_structure = 'flat_fee'; // default.
-        }
+        $selected_band_id = (int) get_post_meta($post->ID, '_vms_band_vendor_id', true);
 
-        $flat_fee_amount    = get_post_meta($post->ID, '_vms_flat_fee_amount', true);
-        $door_split_percent = get_post_meta($post->ID, '_vms_door_split_percent', true);
-
-        $allow_vendor_propose = get_post_meta($post->ID, '_vms_allow_vendor_propose', true);
-        $proposal_min         = get_post_meta($post->ID, '_vms_proposal_min', true);
-        $proposal_max         = get_post_meta($post->ID, '_vms_proposal_max', true);
-        $proposal_cap         = get_post_meta($post->ID, '_vms_proposal_cap', true);
-
-        // -------------------------------
-        // Tickets / Add-ons settings (Plan → Products)
-        // -------------------------------
+        // Tickets/addons
         $ga_price = get_post_meta($post->ID, '_vms_price_ga', true);
         if ($ga_price === '' || $ga_price === null) $ga_price = '20';
 
-        $enable_tables   = get_post_meta($post->ID, '_vms_enable_tables', true);
+        $enable_tables   = (string) get_post_meta($post->ID, '_vms_enable_tables', true);
         if ($enable_tables === '') $enable_tables = '1';
 
-        $enable_firepits = get_post_meta($post->ID, '_vms_enable_firepits', true);
+        $enable_firepits = (string) get_post_meta($post->ID, '_vms_enable_firepits', true);
         if ($enable_firepits === '') $enable_firepits = '1';
 
-        $enable_pools    = get_post_meta($post->ID, '_vms_enable_pools', true);
+        $enable_pools    = (string) get_post_meta($post->ID, '_vms_enable_pools', true);
         if ($enable_pools === '') $enable_pools = '0';
 
-        // counts
         $table_count   = get_post_meta($post->ID, '_vms_table_count', true);
         if ($table_count === '' || $table_count === null) $table_count = '6';
 
         $firepit_count = get_post_meta($post->ID, '_vms_firepit_count', true);
         if ($firepit_count === '' || $firepit_count === null) $firepit_count = '6';
 
-        // prices
         $table_price   = get_post_meta($post->ID, '_vms_price_table', true);
         if ($table_price === '' || $table_price === null) $table_price = '30';
 
@@ -188,101 +224,73 @@ class VMS_Admin_Event_Plans
         $pool_price    = get_post_meta($post->ID, '_vms_price_pool', true);
         if ($pool_price === '' || $pool_price === null) $pool_price = '10';
 
-        // qualification rules
         $firepit_min_tickets = get_post_meta($post->ID, '_vms_min_tickets_per_firepit', true);
         if ($firepit_min_tickets === '' || $firepit_min_tickets === null) $firepit_min_tickets = '2';
 
         $table_min_tickets = get_post_meta($post->ID, '_vms_min_tickets_per_table', true);
         if ($table_min_tickets === '' || $table_min_tickets === null) $table_min_tickets = '2';
 
-        // NEW: Event plan status (draft / ready / published).
-        $plan_status = get_post_meta($post->ID, '_vms_event_plan_status', true);
-        if (empty($plan_status)) {
-            $plan_status = 'draft';
-        }
+        // Staff UI
+        $roles = get_terms(array(
+            'taxonomy'   => 'vms_staff_role',
+            'hide_empty' => false,
+        ));
+        $assignments = get_post_meta($post->ID, '_vms_staff_assignments', true);
+        if (!is_array($assignments)) $assignments = array();
 
-        $agenda_text = get_post_meta($post->ID, '_vms_agenda_text', true);
-?>
-
+        // ----------------------------
+        // Render UI
+        // ----------------------------
+        ?>
         <hr />
         <h4><?php esc_html_e('Agenda / Event Description', 'vms'); ?></h4>
-
         <p>
-            <textarea name="vms_agenda_text" id="vms_agenda_text" rows="6" style="width:100%;"><?php
-                                                                                                echo esc_textarea($agenda_text);
-                                                                                                ?></textarea>
+            <textarea name="vms_agenda_text" id="vms_agenda_text" rows="6" style="width:100%;"><?php echo esc_textarea($agenda_text); ?></textarea>
         </p>
-
-        <p class="description">
-            This text will appear publicly on the event page in The Events Calendar.
-        </p>
+        <p class="description"><?php esc_html_e('This text will appear publicly on the event page in The Events Calendar.', 'vms'); ?></p>
 
         <p>
             <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'vms'); ?></strong></label><br />
-            <input type="date" id="vms_event_date" name="vms_event_date"
-                value="<?php echo esc_attr($event_date); ?>" />
+            <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>" />
         </p>
 
         <p>
             <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'vms'); ?></strong></label><br />
-
             <select id="vms_venue_id" name="vms_venue_id" style="min-width:260px;" required>
                 <option value=""><?php esc_html_e('-- Select a Venue --', 'vms'); ?></option>
-
-                <?php foreach ($venues as $venue) : ?>
-                    <option value="<?php echo esc_attr($venue->ID); ?>" <?php selected($venue_id, $venue->ID); ?>>
+                <?php foreach ($venues as $venue): ?>
+                    <option value="<?php echo esc_attr($venue->ID); ?>" <?php selected($venue_id_effective, $venue->ID); ?>>
                         <?php echo esc_html($venue->post_title); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
-
-            <br /><span class="description">
-                <?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'vms'); ?>
-            </span>
+            <br /><span class="description"><?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'vms'); ?></span>
         </p>
 
         <?php
-        // =======================================
-        // Holiday panel (venue + date scoped)
-        // Place right after Venue + Event Date UI
-        // =======================================
-
-        $venue_id  = (int) get_post_meta($post->ID, '_vms_venue_id', true);
-        $event_date = (string) get_post_meta($post->ID, '_vms_event_date', true);
-
+        // Holiday panel
         $holiday = null;
-        if ($venue_id > 0 && $event_date && function_exists('vms_get_venue_holiday_for_date')) {
-            $holiday = vms_get_venue_holiday_for_date($venue_id, $event_date);
+        if ($venue_id_effective > 0 && $event_date && function_exists('vms_get_venue_holiday_for_date')) {
+            $holiday = vms_get_venue_holiday_for_date($venue_id_effective, $event_date);
         }
 
         echo '<hr />';
         echo '<h4>' . esc_html__('Holiday', 'vms') . '</h4>';
-
         echo '<div style="max-width:720px;padding:12px 14px;border:1px solid #dcdcde;border-radius:12px;background:#fff;">';
 
-        if ($venue_id <= 0 || !$event_date) {
-            echo '<p class="description" style="margin:0;">' .
-                esc_html__('Select a Venue and Event Date to see holiday status.', 'vms') .
-                '</p>';
+        if ($venue_id_effective <= 0 || !$event_date) {
+            echo '<p class="description" style="margin:0;">' . esc_html__('Select a Venue and Event Date to see holiday status.', 'vms') . '</p>';
         } elseif (!$holiday) {
-            echo '<p class="description" style="margin:0;">' .
-                esc_html__('No holiday is configured for this venue on the selected date.', 'vms') .
-                '</p>';
-
-            echo '<p class="description" style="margin:8px 0 0;">' .
-                esc_html__('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'vms') .
-                '</p>';
+            echo '<p class="description" style="margin:0;">' . esc_html__('No holiday is configured for this venue on the selected date.', 'vms') . '</p>';
+            echo '<p class="description" style="margin:8px 0 0;">' . esc_html__('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'vms') . '</p>';
         } else {
-
-            $badge_style = ($holiday['status'] === 'closed')
+            $badge_style = (($holiday['status'] ?? '') === 'closed')
                 ? 'display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;'
                 : 'display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;';
 
             echo '<p style="margin:0 0 8px;">';
             echo '<span style="' . esc_attr($badge_style) . '">';
-            echo ($holiday['status'] === 'closed')
-                ? esc_html__('CLOSED', 'vms')
-                : esc_html__('OPEN', 'vms');
+            echo (($holiday['status'] ?? '') === 'closed') ? esc_html__('CLOSED', 'vms') : esc_html__('OPEN', 'vms');
             echo '</span>';
 
             $name = trim((string)($holiday['name'] ?? ''));
@@ -291,14 +299,10 @@ class VMS_Admin_Event_Plans
             }
             echo '</p>';
 
-            if ($holiday['status'] === 'closed') {
-                echo '<p class="description" style="margin:0;">' .
-                    esc_html__('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'vms') .
-                    '</p>';
+            if (($holiday['status'] ?? '') === 'closed') {
+                echo '<p class="description" style="margin:0;">' . esc_html__('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'vms') . '</p>';
             } else {
-                echo '<p class="description" style="margin:0;">' .
-                    esc_html__('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'vms') .
-                    '</p>';
+                echo '<p class="description" style="margin:0;">' . esc_html__('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'vms') . '</p>';
             }
         }
 
@@ -307,63 +311,36 @@ class VMS_Admin_Event_Plans
 
         <p>
             <label for="vms_start_time"><strong><?php esc_html_e('Start Time', 'vms'); ?></strong></label><br />
-            <input type="time" id="vms_start_time" name="vms_start_time"
-                value="<?php echo esc_attr($start_time); ?>" />
+            <input type="time" id="vms_start_time" name="vms_start_time" value="<?php echo esc_attr($start_time); ?>" />
         </p>
 
         <p>
             <label for="vms_end_time"><strong><?php esc_html_e('End Time', 'vms'); ?></strong></label><br />
-            <input type="time" id="vms_end_time" name="vms_end_time"
-                value="<?php echo esc_attr($end_time); ?>" />
+            <input type="time" id="vms_end_time" name="vms_end_time" value="<?php echo esc_attr($end_time); ?>" />
         </p>
 
-        <?php
-        // Load vendors (bands) to populate dropdown. 
-        // We’ll refine filtering later when food trucks get added.
-        $bands = get_posts(array(
-            'post_type'      => 'vms_vendor',
-            'posts_per_page' => -1,
-            'orderby'        => 'title',
-            'order'          => 'ASC',
-        ));
-
-        // Current selected band
-        $selected_band_id = get_post_meta($post->ID, '_vms_band_vendor_id', true);
-        ?>
-
-        <?php
-        // $event_date should already be loaded earlier in this function as _vms_event_date.
-        $event_date = get_post_meta($post->ID, '_vms_event_date', true);
-        ?>
         <p>
             <label for="vms_band_vendor_id"><strong><?php esc_html_e('Band / Headliner', 'vms'); ?></strong></label><br />
-
             <select id="vms_band_vendor_id" name="vms_band_vendor_id" style="min-width:260px;">
                 <option value=""><?php esc_html_e('-- Select a Band --', 'vms'); ?></option>
-
-                <?php foreach ($bands as $band) : ?>
+                <?php foreach ($bands as $band): ?>
                     <?php
-                    $label = $band->post_title;
+                    $label = (string) $band->post_title;
 
-                    // Availability hint (you already have this)
-                    if ($event_date) {
-                        $availability = vms_get_vendor_availability_for_date($band->ID, $event_date);
+                    if ($event_date && function_exists('vms_get_vendor_availability_for_date')) {
+                        $availability = vms_get_vendor_availability_for_date((int)$band->ID, $event_date);
                         if ($availability === 'available') $label .= ' [✓]';
                         elseif ($availability === 'unavailable') $label .= ' [✖]';
                         else $label .= ' [?]';
                     }
 
-                    // Tax Profile hint + data attrs
                     $missing = function_exists('vms_vendor_tax_profile_missing_items')
-                        ? vms_vendor_tax_profile_missing_items((int)$band->ID)
+                        ? (array) vms_vendor_tax_profile_missing_items((int)$band->ID)
                         : array();
 
                     $tax_ok = empty($missing);
-
-                    // Optional: append a quick tax marker to the label
                     $label .= $tax_ok ? ' [T✓]' : ' [T⚠]';
 
-                    // Store missing list for instant JS display
                     $missing_str = $tax_ok ? '' : implode(' | ', $missing);
                     ?>
                     <option
@@ -375,557 +352,271 @@ class VMS_Admin_Event_Plans
                     </option>
                 <?php endforeach; ?>
             </select>
-            <?php if ($event_date) : ?>
-                <?php
-                $ts   = strtotime($event_date);
-                $nice = $ts ? date_i18n('M j, Y', $ts) : $event_date;
-                ?>
+
+            <?php if ($event_date): ?>
+                <?php $ts = strtotime($event_date); $nice = $ts ? date_i18n('M j, Y', $ts) : $event_date; ?>
                 <br />
                 <span class="description">
                     <?php
                     printf(
-                        /* translators: %s is the formatted date */
                         esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'vms'),
                         esc_html($nice)
                     );
                     ?>
                 </span>
-        <div id="vms-tax-status" style="margin-top:10px;"></div>
-
-    <?php else : ?>
-        <br />
-        <span class="description">
-            <?php esc_html_e('Set the Event Date to see per-band availability hints here.', 'vms'); ?>
-        </span>
-    <?php endif; ?>
-    </p>
-
-    <p>
-        <label>
-            <input type="checkbox" name="vms_auto_title" value="1" <?php checked($auto_title, '1'); ?> />
-            <?php esc_html_e('Auto-update title to Band — Date', 'vms'); ?>
-        </label>
-    </p>
-
-    <p id="vms_title_preview_wrap" style="margin-top:6px;">
-        <span class="description">
-            <strong><?php esc_html_e('Title preview:', 'vms'); ?></strong>
-            <span id="vms_title_preview_text"><?php echo esc_html(get_the_title($post->ID)); ?></span>
-        </span>
-    </p>
-
-    <p>
-        <label for="vms_location_label"><strong><?php esc_html_e('Location / Resource', 'vms'); ?></strong></label><br />
-        <input type="text" id="vms_location_label" name="vms_location_label" class="regular-text"
-            value="<?php echo esc_attr($location_label); ?>" />
-        <br /><span class="description">
-            <?php esc_html_e('Example: Main Stage, Patio, Food Truck Row, etc.', 'vms'); ?>
-        </span>
-    </p>
-
-    <?php
-        // -----------------------------------------------------------------------------
-        // COMPENSATION UI (clean + user-friendly)
-        // -----------------------------------------------------------------------------
-        //
-        // Mental model:
-        // 1) Locked Snapshot = what was agreed (source of truth)
-        // 2) Draft Pay = editable working values
-        // 3) Apply buttons fill Draft Pay
-        // 4) Apply Package locks Draft Pay into Snapshot
-        //
-        // NOTE: We keep existing behavior:
-        // - Buttons still submit vms_event_plan_action = apply_venue_defaults / apply_band_defaults / apply_comp_package
-        // - Dropdown still uses vms_comp_package_id
-        // - Draft fields still use vms_comp_structure / vms_flat_fee_amount / vms_door_split_percent
-        //
-
-        $venue_id       = (int) get_post_meta($post->ID, '_vms_venue_id', true);
-        $current_pkg_id = (int) get_post_meta($post->ID, '_vms_comp_package_id', true);
-
-        // Load available packages for selected venue (plus global)
-        $packages = ($venue_id > 0 && function_exists('vms_get_comp_packages_for_venue'))
-            ? vms_get_comp_packages_for_venue($venue_id, true)
-            : array();
-
-        // Load snapshot (locked agreement)
-        $snapshot = get_post_meta($post->ID, '_vms_comp_snapshot', true);
-        if (!is_array($snapshot)) $snapshot = array();
-
-        // Determine snapshot health (shows warning if user changed pay after locking)
-        $current_hash   = function_exists('vms_comp_hash_for_plan') ? (string) vms_comp_hash_for_plan((int) $post->ID) : '';
-        $snapshot_hash  = isset($snapshot['comp_hash']) ? (string) $snapshot['comp_hash'] : '';
-        $needs_snapshot = get_post_meta($post->ID, '_vms_comp_needs_snapshot', true) === '1';
-
-        // Out-of-sync means: “Draft Pay no longer matches Locked Snapshot”
-        $out_of_sync = false;
-        if (!empty($snapshot)) {
-            // Only compare hashes if both exist (prevents false warnings on old snapshots)
-            if ($snapshot_hash !== '' && $current_hash !== '' && $snapshot_hash !== $current_hash) {
-                $out_of_sync = true;
-            }
-            // Manual flag when Venue/Band defaults overwrite Draft Pay
-            if ($needs_snapshot) {
-                $out_of_sync = true;
-            }
-        }
-
-        // Pretty line for snapshot details (human-readable)
-        $snapshot_line = '';
-        if (!empty($snapshot)) {
-            $parts = array();
-
-            if (!empty($snapshot['structure'])) {
-                $parts[] = 'Structure: ' . strtoupper((string) $snapshot['structure']);
-            }
-            if (array_key_exists('flat_fee_amount', $snapshot) && $snapshot['flat_fee_amount'] !== null) {
-                $parts[] = 'Flat: $' . number_format((float) $snapshot['flat_fee_amount'], 2);
-            }
-            if (array_key_exists('door_split_percent', $snapshot) && $snapshot['door_split_percent'] !== null) {
-                $parts[] = 'Split: ' . rtrim(rtrim((string) $snapshot['door_split_percent'], '0'), '.') . '%';
-            }
-            if (array_key_exists('commission_percent', $snapshot) && $snapshot['commission_percent'] !== null) {
-                $mode = $snapshot['commission_mode'] ?? 'artist_fee';
-                $parts[] = 'Commission: ' . rtrim(rtrim((string) $snapshot['commission_percent'], '0'), '.') . '% (' . $mode . ')';
-            }
-
-            $snapshot_line = implode(' | ', $parts);
-        }
-    ?>
-
-    <?php
-        /**
-         * ===============================
-         * COMPENSATION — GUIDED UI
-         * ===============================
-         * Mental model:
-         *  - Draft Pay = editable working values
-         *  - Snapshot = locked agreement for THIS event
-         *  - Defaults may change later; snapshot never changes unless re-locked
-         */
-
-        // Snapshot + sync state
-        $snapshot = get_post_meta($post->ID, '_vms_comp_snapshot', true);
-        if (!is_array($snapshot)) $snapshot = [];
-
-        $current_hash  = function_exists('vms_comp_hash_for_plan') ? vms_comp_hash_for_plan((int)$post->ID) : '';
-        $snapshot_hash = $snapshot['comp_hash'] ?? '';
-        $out_of_sync   = ($snapshot_hash && $current_hash && $snapshot_hash !== $current_hash);
-    ?>
-
-    <?php
-        /**
-         * ===============================
-         * COMPENSATION — CLEAN + COMPLETE UI
-         * ===============================
-         * What this UI shows:
-         *  - Locked Pay (Used for payout)  → what was agreed for THIS event plan
-         *  - Draft Pay (Editable)   → what you’re currently editing
-         *  - Starting Points        → buttons that fill Draft Pay from defaults/packages
-         *
-         * IMPORTANT:
-         *  - Snapshot only updates when you run an action that writes it (ex: Apply Package).
-         *  - Defaults may change later; snapshots should not.
-         */
-
-        // Venue context
-        $venue_id       = (int) get_post_meta($post->ID, '_vms_venue_id', true);
-        $current_pkg_id = (int) get_post_meta($post->ID, '_vms_comp_package_id', true);
-
-        // Load packages for this venue (+ global)
-        $packages = ($venue_id > 0 && function_exists('vms_get_comp_packages_for_venue'))
-            ? vms_get_comp_packages_for_venue($venue_id, true)
-            : [];
-
-        // Load snapshot (locked agreement)
-        $snapshot = get_post_meta($post->ID, '_vms_comp_snapshot', true);
-        if (!is_array($snapshot)) $snapshot = [];
-
-        // Hash sync (optional warning)
-        $current_hash  = function_exists('vms_comp_hash_for_plan') ? (string) vms_comp_hash_for_plan((int) $post->ID) : '';
-        $snapshot_hash = isset($snapshot['comp_hash']) ? (string) $snapshot['comp_hash'] : '';
-        $needs_snapshot = (get_post_meta($post->ID, '_vms_comp_needs_snapshot', true) === '1');
-
-        $out_of_sync = false;
-        if (!empty($snapshot)) {
-            // If snapshot hash exists and differs from current, warn.
-            if ($snapshot_hash !== '' && $current_hash !== '' && $snapshot_hash !== $current_hash) {
-                $out_of_sync = true;
-            }
-            // If a flag says “something changed that should be re-snapshotted”, warn.
-            if ($needs_snapshot) {
-                $out_of_sync = true;
-            }
-        }
-
-        // Helper: prettify structure labels
-        function vms_pretty_structure_label($s)
-        {
-            $s = (string) $s;
-            return match ($s) {
-                'flat_fee' => 'Flat Fee',
-                'door_split' => 'Door Split',
-                'flat_fee_door_split' => 'Flat Fee + Door Split',
-                default => strtoupper($s),
-            };
-        }
-
-    ?>
-
-    <hr />
-    <h4 id="vms-compensation"><?php esc_html_e('Compensation', 'vms'); ?></h4>
-
-    <!-- ============ QUICK GUIDE ============ -->
-    <div style="max-width:860px;margin:12px 0 16px;padding:14px 16px;border-radius:14px;background:#f5faff;border:1px solid #cce3ff;">
-        <strong>How this works:</strong>
-        <ol style="margin:8px 0 0 18px;">
-            <li><strong>Draft Pay</strong> is what you’re editing.</li>
-            <li><strong>Locked Pay (Used for payout)</strong> is what was agreed for THIS event.</li>
-            <li>Use the buttons below to fill <strong>Draft Pay</strong>, review/edit, then click <strong>Lock Draft Pay for This Event</strong> to save the agreed terms for THIS event.</li>
-        </ol>
-        <p class="description" style="margin-top:8px;">
-            Tip: If you change defaults later, existing event plans stay protected by their snapshots.
+                <div id="vms-tax-status" style="margin-top:10px;"></div>
+            <?php else: ?>
+                <br />
+                <span class="description"><?php esc_html_e('Set the Event Date to see per-band availability hints here.', 'vms'); ?></span>
+                <div id="vms-tax-status" style="margin-top:10px;"></div>
+            <?php endif; ?>
         </p>
-    </div>
 
-    <!-- ============ LOCKED SNAPSHOT ============ -->
-    <?php if (!empty($snapshot)) : ?>
-        <div style="max-width:860px;margin:0 0 14px;padding:14px 16px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;">
-            <strong>Locked Pay (Used for payout)</strong><br>
+        <p>
+            <label>
+                <input type="checkbox" name="vms_auto_title" value="1" <?php checked($auto_title, '1'); ?> />
+                <?php esc_html_e('Auto-update title to Band — Date', 'vms'); ?>
+            </label>
+        </p>
 
-            <div style="margin-top:6px;">
-                <?php
-                $summary = vms_snapshot_summary_line($snapshot);
-                echo esc_html($summary !== '' ? $summary : 'Pay structure locked, but no values recorded.');
-                ?>
-            </div>
-
-            <?php if (!empty($snapshot['package_title'])) : ?>
-                <div class="description" style="margin-top:6px;">
-                    <strong>Package:</strong>
-                    <?php echo esc_html($snapshot['package_title']); ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if (!empty($snapshot['applied_at'])) : ?>
-                <div class="description" style="margin-top:4px;">
-                    <strong>Applied:</strong>
-                    <?php echo esc_html(
-                        date_i18n('D M j, Y g:i A', strtotime($snapshot['applied_at']))
-                    ); ?>
-                </div>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
-
-    <!-- ============ OUT OF SYNC WARNING ============ -->
-    <?php if ($out_of_sync) : ?>
-        <div style="max-width:860px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:#fffbeb;border:1px solid #fed7aa;">
-            <strong style="color:#92400e;">⚠️ Draft Pay differs from Locked Snapshot</strong><br>
+        <p id="vms_title_preview_wrap" style="margin-top:6px;">
             <span class="description">
-                Something changed since the snapshot was saved. If the new values are correct, apply again to refresh the snapshot.
+                <strong><?php esc_html_e('Title preview:', 'vms'); ?></strong>
+                <span id="vms_title_preview_text"><?php echo esc_html(get_the_title($post->ID)); ?></span>
             </span>
-        </div>
-    <?php endif; ?>
-
-    <!-- ============ STARTING POINTS + PACKAGE SELECT ============ -->
-    <div style="max-width:860px;margin:0 0 14px;padding:14px 16px;border-radius:14px;background:#fefce8;border:1px solid #fde68a;">
-        <strong>Fill Draft Pay from Defaults or a Package</strong>
-
-        <p class="description" style="margin-top:6px;">
-            These buttons update the Draft Pay fields. Snapshot won’t change unless your action writes a snapshot.
         </p>
 
-        <?php if ($venue_id <= 0) : ?>
-            <p class="description" style="margin:10px 0 0;">
-                <em>Select a Venue above, then Save/Update once to load packages.</em>
-            </p>
-        <?php else : ?>
+        <p>
+            <label for="vms_location_label"><strong><?php esc_html_e('Location / Resource', 'vms'); ?></strong></label><br />
+            <input type="text" id="vms_location_label" name="vms_location_label" class="regular-text" value="<?php echo esc_attr($location_label); ?>" />
+            <br /><span class="description"><?php esc_html_e('Example: Main Stage, Patio, Food Truck Row, etc.', 'vms'); ?></span>
+        </p>
 
-            <p style="margin-top:10px;">
-                <label for="vms_comp_package_id"><strong>Comp Package</strong></label><br />
-                <select id="vms_comp_package_id" name="vms_comp_package_id" style="min-width:360px;">
-                    <option value=""><?php esc_html_e('-- Select a Package --', 'vms'); ?></option>
-                    <?php foreach ($packages as $pkg) : ?>
-                        <option value="<?php echo esc_attr($pkg->ID); ?>" <?php selected($current_pkg_id, $pkg->ID); ?>>
-                            <?php echo esc_html($pkg->post_title); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <br><span class="description">Pick a package, then click “Apply Package” below.</span>
-            </p>
+        <hr />
+        <h4 id="vms-compensation"><?php esc_html_e('Compensation', 'vms'); ?></h4>
 
-            <p style="margin-top:10px;">
-                <button type="submit" name="vms_event_plan_action" value="apply_venue_defaults" class="button">
-                    Apply Venue Defaults
-                </button>
+        <div style="max-width:860px;margin:12px 0 16px;padding:14px 16px;border-radius:14px;background:#f5faff;border:1px solid #cce3ff;">
+            <strong><?php esc_html_e('How this works:', 'vms'); ?></strong>
+            <ol style="margin:8px 0 0 18px;">
+                <li><strong><?php esc_html_e('Draft Pay', 'vms'); ?></strong> <?php esc_html_e('is what you’re editing.', 'vms'); ?></li>
+                <li><strong><?php esc_html_e('Locked Pay', 'vms'); ?></strong> <?php esc_html_e('(Used for payout) is the agreed terms for THIS event.', 'vms'); ?></li>
+                <li><?php esc_html_e('Use the buttons to fill Draft Pay, review/edit, then lock it to protect this event from future default changes.', 'vms'); ?></li>
+            </ol>
+        </div>
 
-                <button type="submit" name="vms_event_plan_action" value="apply_band_defaults" class="button">
-                    Apply Band Defaults
-                </button>
+        <?php if (!empty($snapshot)): ?>
+            <div style="max-width:860px;margin:0 0 14px;padding:14px 16px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;">
+                <strong><?php esc_html_e('Locked Pay (Used for payout)', 'vms'); ?></strong><br>
+                <div style="margin-top:6px;">
+                    <?php
+                    $summary = function_exists('vms_snapshot_summary_line') ? (string) vms_snapshot_summary_line($snapshot) : '';
+                    echo esc_html($summary !== '' ? $summary : __('Pay structure locked, but no values recorded.', 'vms'));
+                    ?>
+                </div>
 
-                <button type="submit" name="vms_event_plan_action" value="apply_comp_package" class="button button-primary">
-                    <?php esc_html_e('Apply Package', 'vms'); ?>
-                </button>
-            </p>
+                <?php if (!empty($snapshot['package_title'])): ?>
+                    <div class="description" style="margin-top:6px;">
+                        <strong><?php esc_html_e('Package:', 'vms'); ?></strong> <?php echo esc_html((string)$snapshot['package_title']); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($snapshot['applied_at'])): ?>
+                    <div class="description" style="margin-top:4px;">
+                        <strong><?php esc_html_e('Applied:', 'vms'); ?></strong>
+                        <?php echo esc_html(date_i18n('D M j, Y g:i A', strtotime((string)$snapshot['applied_at']))); ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($out_of_sync): ?>
+            <div style="max-width:860px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:#fffbeb;border:1px solid #fed7aa;">
+                <strong style="color:#92400e;">⚠️ <?php esc_html_e('Draft Pay differs from Locked Snapshot', 'vms'); ?></strong><br>
+                <span class="description"><?php esc_html_e('Something changed since the snapshot was saved. If the new values are correct, lock again to refresh the snapshot.', 'vms'); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <div style="max-width:860px;margin:0 0 14px;padding:14px 16px;border-radius:14px;background:#fefce8;border:1px solid #fde68a;">
+            <strong><?php esc_html_e('Fill Draft Pay from Defaults or a Package', 'vms'); ?></strong>
 
             <p class="description" style="margin-top:6px;">
-                Most common flow: <strong>Apply Venue Defaults → review → Apply Package</strong>
+                <?php esc_html_e('These buttons update Draft Pay fields. Locked Pay will not change unless you lock draft pay or apply a package that writes a snapshot.', 'vms'); ?>
             </p>
 
-        <?php endif; ?>
-    </div>
+            <p style="margin:10px 0 0;">
+                <label>
+                    <input type="checkbox" id="vms_auto_comp_venue" name="vms_auto_comp_venue" value="1" <?php checked($auto_comp_venue, '1'); ?> />
+                    <?php esc_html_e('Auto-fill Draft Pay from Venue Defaults when Venue + Date are set', 'vms'); ?>
+                </label>
+                <br />
+                <span id="vms-venue-defaults-hint" class="description"></span>
+            </p>
 
-    <!-- ============ DRAFT PAY (EDITABLE) ============ -->
-    <div style="max-width:860px;margin:0 0 14px;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid #e5e7eb;">
-        <strong>Draft Pay (Editable)</strong>
+            <?php if ($venue_id_effective <= 0): ?>
+                <p class="description" style="margin:10px 0 0;">
+                    <em><?php esc_html_e('Select a Venue above to load packages.', 'vms'); ?></em>
+                </p>
+            <?php else: ?>
+                <?php if (empty($packages)): ?>
+                    <div class="notice notice-info inline" style="margin:10px 0 12px;">
+                        <p>
+                            <strong><?php esc_html_e('No Comp Packages are available for the selected venue yet.', 'vms'); ?></strong><br>
+                            <?php
+                            if ($venue_id_saved <= 0) {
+                                // This is the key improvement: packages should usually still show now (because we query by effective venue),
+                                // but if they’re truly empty, we give an actionable message without requiring a "mystery save".
+                                esc_html_e('If you expected packages, confirm they exist for this venue (or are global).', 'vms');
+                            } else {
+                                esc_html_e('Create packages under Comp Packages, then come back here.', 'vms');
+                            }
+                            ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
 
-        <p class="description" style="margin-top:6px;">
-            These fields are what the buttons fill. You can still override manually.
+                <p style="margin-top:10px;">
+                    <label for="vms_comp_package_id"><strong><?php esc_html_e('Comp Package', 'vms'); ?></strong></label><br />
+                    <select id="vms_comp_package_id" name="vms_comp_package_id" style="min-width:360px;">
+                        <option value=""><?php esc_html_e('-- Select a Package --', 'vms'); ?></option>
+                        <?php foreach ($packages as $pkg): ?>
+                            <?php if (!is_object($pkg) || empty($pkg->ID)) continue; ?>
+                            <option value="<?php echo esc_attr($pkg->ID); ?>" <?php selected($current_pkg_id, $pkg->ID); ?>>
+                                <?php echo esc_html((string)$pkg->post_title); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <br>
+                    <span class="description"><?php esc_html_e('Pick a package, then click “Apply Package” below.', 'vms'); ?></span>
+                </p>
+
+                <p style="margin-top:10px;">
+                    <button type="submit" name="vms_event_plan_action" value="apply_venue_defaults" class="button">
+                        <?php esc_html_e('Apply Venue Defaults', 'vms'); ?>
+                    </button>
+
+                    <button type="submit" name="vms_event_plan_action" value="apply_band_defaults" class="button">
+                        <?php esc_html_e('Apply Band Defaults', 'vms'); ?>
+                    </button>
+
+                    <button type="submit" name="vms_event_plan_action" value="apply_comp_package" class="button button-primary">
+                        <?php esc_html_e('Apply Package', 'vms'); ?>
+                    </button>
+                </p>
+
+                <p class="description" style="margin-top:6px;">
+                    <?php esc_html_e('Most common flow:', 'vms'); ?> <strong><?php esc_html_e('Apply Venue Defaults → review → Apply Package', 'vms'); ?></strong>
+                </p>
+            <?php endif; ?>
+        </div>
+
+        <div style="max-width:860px;margin:0 0 14px;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid #e5e7eb;">
+            <strong><?php esc_html_e('Draft Pay (Editable)', 'vms'); ?></strong>
+            <p class="description" style="margin-top:6px;"><?php esc_html_e('These are the fields the buttons fill. You can override manually any time.', 'vms'); ?></p>
+
+            <p>
+                <label for="vms_comp_structure"><strong><?php esc_html_e('Structure', 'vms'); ?></strong></label><br />
+                <select id="vms_comp_structure" name="vms_comp_structure">
+                    <option value="flat_fee" <?php selected($comp_structure, 'flat_fee'); ?>><?php esc_html_e('Flat Fee', 'vms'); ?></option>
+                    <option value="door_split" <?php selected($comp_structure, 'door_split'); ?>><?php esc_html_e('Door Split', 'vms'); ?></option>
+                    <option value="flat_fee_door_split" <?php selected($comp_structure, 'flat_fee_door_split'); ?>><?php esc_html_e('Flat Fee + Door Split', 'vms'); ?></option>
+                </select>
+            </p>
+
+            <p>
+                <label for="vms_flat_fee_amount"><strong><?php esc_html_e('Flat Fee Amount', 'vms'); ?></strong></label><br />
+                <input type="number" id="vms_flat_fee_amount" name="vms_flat_fee_amount" style="width:180px;" value="<?php echo esc_attr($flat_fee_amount); ?>" />
+            </p>
+
+            <p>
+                <label for="vms_door_split_percent"><strong><?php esc_html_e('Door Split Percentage', 'vms'); ?></strong></label><br />
+                <input type="number" id="vms_door_split_percent" name="vms_door_split_percent" style="width:180px;" value="<?php echo esc_attr($door_split_percent); ?>" /> %
+            </p>
+
+            <p style="margin-top:10px;">
+                <button type="submit" name="vms_event_plan_action" value="lock_draft_pay" class="button button-primary">
+                    🔒 <?php esc_html_e('Lock Draft Pay for This Event', 'vms'); ?>
+                </button>
+            </p>
+            <p class="description" style="margin-top:-4px;">
+                <?php esc_html_e('Locks the current Draft Pay into the plan’s snapshot (Locked Pay) so this event is protected from future default changes.', 'vms'); ?>
+            </p>
+        </div>
+
+        <hr />
+        <p class="description"><?php esc_html_e('Featured Image: use the standard WordPress featured image box for this event’s banner/hero.', 'vms'); ?></p>
+
+        <hr />
+        <h4><?php esc_html_e('Tickets & Add-ons (Woo Products)', 'vms'); ?></h4>
+
+        <p class="description"><?php esc_html_e('These settings control which WooCommerce products are generated/updated when you Publish.', 'vms'); ?></p>
+
+        <p>
+            <label for="vms_price_ga"><strong><?php esc_html_e('GA Ticket Price', 'vms'); ?></strong></label><br />
+            <input type="number" step="0.01" min="0" id="vms_price_ga" name="vms_price_ga" style="width:140px;" value="<?php echo esc_attr($ga_price); ?>" />
         </p>
 
         <p>
-            <label for="vms_comp_structure"><strong><?php esc_html_e('Structure', 'vms'); ?></strong></label><br />
-            <select id="vms_comp_structure" name="vms_comp_structure">
-                <option value="flat_fee" <?php selected($comp_structure, 'flat_fee'); ?>><?php esc_html_e('Flat Fee', 'vms'); ?></option>
-                <option value="door_split" <?php selected($comp_structure, 'door_split'); ?>><?php esc_html_e('Door Split', 'vms'); ?></option>
-                <option value="flat_fee_door_split" <?php selected($comp_structure, 'flat_fee_door_split'); ?>><?php esc_html_e('Flat Fee + Door Split', 'vms'); ?></option>
-            </select>
+            <label>
+                <input type="checkbox" name="vms_enable_tables" value="1" <?php checked($enable_tables, '1'); ?> />
+                <?php esc_html_e('Enable Tables', 'vms'); ?>
+            </label>
+            &nbsp;&nbsp;
+            <label><?php esc_html_e('Count', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_table_count" style="width:80px;" value="<?php echo esc_attr($table_count); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label><?php esc_html_e('Price', 'vms'); ?>
+                <input type="number" step="0.01" min="0" name="vms_price_table" style="width:100px;" value="<?php echo esc_attr($table_price); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label><?php esc_html_e('Min Tickets', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_min_tickets_per_table" style="width:80px;" value="<?php echo esc_attr($table_min_tickets); ?>" />
+            </label>
         </p>
 
         <p>
-            <label for="vms_flat_fee_amount"><strong><?php esc_html_e('Flat Fee Amount', 'vms'); ?></strong></label><br />
-            <input type="number" id="vms_flat_fee_amount" name="vms_flat_fee_amount" style="width: 180px;"
-                value="<?php echo esc_attr($flat_fee_amount); ?>" />
+            <label>
+                <input type="checkbox" name="vms_enable_firepits" value="1" <?php checked($enable_firepits, '1'); ?> />
+                <?php esc_html_e('Enable Fire Pits', 'vms'); ?>
+            </label>
+            &nbsp;&nbsp;
+            <label><?php esc_html_e('Count', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_firepit_count" style="width:80px;" value="<?php echo esc_attr($firepit_count); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label><?php esc_html_e('Price', 'vms'); ?>
+                <input type="number" step="0.01" min="0" name="vms_price_firepit" style="width:100px;" value="<?php echo esc_attr($firepit_price); ?>" />
+            </label>
+            &nbsp;&nbsp;
+            <label><?php esc_html_e('Min Tickets', 'vms'); ?>
+                <input type="number" min="0" step="1" name="vms_min_tickets_per_firepit" style="width:80px;" value="<?php echo esc_attr($firepit_min_tickets); ?>" />
+            </label>
         </p>
 
         <p>
-            <label for="vms_door_split_percent"><strong><?php esc_html_e('Door Split Percentage', 'vms'); ?></strong></label><br />
-            <input type="number" id="vms_door_split_percent" name="vms_door_split_percent" style="width: 180px;"
-                value="<?php echo esc_attr($door_split_percent); ?>" /> %
+            <label>
+                <input type="checkbox" name="vms_enable_pools" value="1" <?php checked($enable_pools, '1'); ?> />
+                <?php esc_html_e('Enable Kiddie Pools', 'vms'); ?>
+            </label>
+            &nbsp;&nbsp;
+            <label><?php esc_html_e('Price', 'vms'); ?>
+                <input type="number" step="0.01" min="0" name="vms_price_pool" style="width:100px;" value="<?php echo esc_attr($pool_price); ?>" />
+            </label>
+            <br />
+            <span class="description"><?php esc_html_e('Pools have no ticket minimum (per your rules).', 'vms'); ?></span>
         </p>
 
-        <p style="margin-top:10px;">
-            <button type="submit"
-                name="vms_event_plan_action"
-                value="lock_draft_pay"
-                class="button button-primary">
-                🔒 Lock Draft Pay for This Event
-            </button>
-        </p>
+        <hr />
+        <h4><?php esc_html_e('Labor / Staff', 'vms'); ?></h4>
+        <p class="description"><?php esc_html_e('Assign staff contractors to this event by role. Tax Profile is required to mark Ready.', 'vms'); ?></p>
 
-        <p class="description" style="margin-top:-4px;">
-            Locks the current Draft Pay into the plan’s Locked Pay snapshot.
-            Once locked, this pay is protected from future default changes.
-        </p>
-    </div>
-
-    <script>
-        (function() {
-            const venueSel = document.getElementById('vms_venue_id');
-            const dateInp = document.getElementById('vms_event_date');
-            const autoChk = document.getElementById('vms_auto_comp_venue');
-            const hint = document.getElementById('vms-venue-defaults-hint');
-
-            const fStruct = document.getElementById('vms_comp_structure');
-            const fFlat = document.getElementById('vms_flat_fee_amount');
-            const fSplit = document.getElementById('vms_door_split_percent');
-
-            if (!venueSel || !dateInp || !autoChk || !fStruct) return;
-
-            let dirty = false;
-
-            [fStruct, fFlat, fSplit].forEach(el => {
-                if (!el) return;
-                el.addEventListener('change', () => {
-                    dirty = true;
-                });
-                el.addEventListener('input', () => {
-                    dirty = true;
-                });
-            });
-
-            function setHint(msg, type) {
-                if (!hint) return;
-                hint.textContent = msg || '';
-                hint.style.color = (type === 'warn') ? '#92400e' : (type === 'ok' ? '#065f46' : '');
-            }
-
-            function applyRow(row) {
-                if (!row || !row.structure) {
-                    setHint('No venue defaults found for that day.', 'warn');
-                    return;
-                }
-
-                // Don’t override manual edits unless user clicks Apply button
-                if (dirty) {
-                    setHint('Defaults available, but you have manual edits. Click “Apply Venue Defaults” to overwrite.', 'warn');
-                    return;
-                }
-
-                fStruct.value = row.structure || 'flat_fee';
-                if (fFlat && typeof row.flat_fee_amount !== 'undefined') fFlat.value = row.flat_fee_amount ?? '';
-                if (fSplit && typeof row.door_split_percent !== 'undefined') fSplit.value = row.door_split_percent ?? '';
-
-                setHint('Venue defaults applied for this date. (Override anytime.)', 'ok');
-            }
-
-            async function fetchDefaults() {
-                const venue_id = venueSel.value || '';
-                const event_date = dateInp.value || '';
-                if (!venue_id || !event_date) return null;
-
-                const form = new FormData();
-                form.append('action', 'vms_get_venue_comp_defaults');
-                form.append('venue_id', venue_id);
-                form.append('event_date', event_date);
-
-                const resp = await fetch(ajaxurl, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    body: form
-                });
-                const json = await resp.json();
-                if (!json || !json.success) return null;
-                return (json.data && json.data.row) ? json.data.row : null;
-            }
-
-            async function onVenueOrDateChange() {
-                if (!autoChk.checked) {
-                    setHint('Auto-fill is off. (Enable it to apply venue defaults automatically.)', '');
-                    return;
-                }
-
-                const row = await fetchDefaults();
-                if (!row) {
-                    setHint('Select Venue + Date to load defaults.', '');
-                    return;
-                }
-                applyRow(row);
-            }
-
-            venueSel.addEventListener('change', onVenueOrDateChange);
-            dateInp.addEventListener('change', onVenueOrDateChange);
-
-            autoChk.addEventListener('change', function() {
-                // reset dirty so enabling auto-fill can apply cleanly
-                if (autoChk.checked) dirty = false;
-                onVenueOrDateChange();
-            });
-
-            setHint('Select a Venue and Event Date to use venue defaults.', '');
-        })();
-    </script>
-
-    <hr />
-    <p class="description">
-        <?php esc_html_e('Featured Image: use the standard WordPress featured image box for this event\'s banner/hero.', 'vms'); ?>
-    </p>
-
-    <hr />
-    <h4><?php esc_html_e('Tickets & Add-ons (Woo Products)', 'vms'); ?></h4>
-
-    <p class="description">
-        <?php esc_html_e('These settings control which WooCommerce products are generated/updated when you Publish.', 'vms'); ?>
-    </p>
-
-    <p>
-        <label for="vms_price_ga"><strong><?php esc_html_e('GA Ticket Price', 'vms'); ?></strong></label><br />
-        <input type="number" step="0.01" min="0" id="vms_price_ga" name="vms_price_ga" style="width:140px;"
-            value="<?php echo esc_attr($ga_price); ?>" />
-    </p>
-
-    <p>
-        <label>
-            <input type="checkbox" name="vms_enable_tables" value="1" <?php checked($enable_tables, '1'); ?> />
-            <?php esc_html_e('Enable Tables', 'vms'); ?>
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Count', 'vms'); ?>
-            <input type="number" min="0" step="1" name="vms_table_count" style="width:80px;"
-                value="<?php echo esc_attr($table_count); ?>" />
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Price', 'vms'); ?>
-            <input type="number" step="0.01" min="0" name="vms_price_table" style="width:100px;"
-                value="<?php echo esc_attr($table_price); ?>" />
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Min Tickets', 'vms'); ?>
-            <input type="number" min="0" step="1" name="vms_min_tickets_per_table" style="width:80px;"
-                value="<?php echo esc_attr($table_min_tickets); ?>" />
-        </label>
-    </p>
-
-    <p>
-        <label>
-            <input type="checkbox" name="vms_enable_firepits" value="1" <?php checked($enable_firepits, '1'); ?> />
-            <?php esc_html_e('Enable Fire Pits', 'vms'); ?>
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Count', 'vms'); ?>
-            <input type="number" min="0" step="1" name="vms_firepit_count" style="width:80px;"
-                value="<?php echo esc_attr($firepit_count); ?>" />
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Price', 'vms'); ?>
-            <input type="number" step="0.01" min="0" name="vms_price_firepit" style="width:100px;"
-                value="<?php echo esc_attr($firepit_price); ?>" />
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Min Tickets', 'vms'); ?>
-            <input type="number" min="0" step="1" name="vms_min_tickets_per_firepit" style="width:80px;"
-                value="<?php echo esc_attr($firepit_min_tickets); ?>" />
-        </label>
-    </p>
-
-    <p>
-        <label>
-            <input type="checkbox" name="vms_enable_pools" value="1" <?php checked($enable_pools, '1'); ?> />
-            <?php esc_html_e('Enable Kiddie Pools', 'vms'); ?>
-        </label>
-        &nbsp;&nbsp;
-        <label>
-            <?php esc_html_e('Price', 'vms'); ?>
-            <input type="number" step="0.01" min="0" name="vms_price_pool" style="width:100px;"
-                value="<?php echo esc_attr($pool_price); ?>" />
-        </label>
-        <br />
-        <span class="description"><?php esc_html_e('Pools have no ticket minimum (per your rules).', 'vms'); ?></span>
-    </p>
-
-    <?php
-        // Staff Roles (editable in UI)
-        $roles = get_terms(array(
-            'taxonomy'   => 'vms_staff_role',
-            'hide_empty' => false,
-        ));
-
-        // Existing saved assignments: term_id => [staff_ids...]
-        $assignments = get_post_meta($post->ID, '_vms_staff_assignments', true);
-        if (!is_array($assignments)) $assignments = array();
-
-        // Preload all staff (we’ll filter by role via term query per role)
-    ?>
-
-    <hr />
-    <h4><?php esc_html_e('Labor / Staff', 'vms'); ?></h4>
-    <p class="description"><?php esc_html_e('Assign staff contractors to this event by role. Tax Profile is required to mark Ready.', 'vms'); ?></p>
-
-    <?php if (empty($roles) || is_wp_error($roles)) : ?>
-        <p><em><?php esc_html_e('No staff roles exist yet. Add roles under Staff → Roles.', 'vms'); ?></em></p>
-    <?php else : ?>
-
-        <?php foreach ($roles as $role) : ?>
-            <?php
-                $role_id = (int) $role->term_id;
-                $saved_ids = isset($assignments[$role_id]) && is_array($assignments[$role_id])
+        <?php if (empty($roles) || is_wp_error($roles)): ?>
+            <p><em><?php esc_html_e('No staff roles exist yet. Add roles under Staff → Roles.', 'vms'); ?></em></p>
+        <?php else: ?>
+            <?php foreach ($roles as $role): ?>
+                <?php
+                $role_id   = (int) $role->term_id;
+                $saved_ids = (isset($assignments[$role_id]) && is_array($assignments[$role_id]))
                     ? array_map('intval', $assignments[$role_id])
                     : array();
 
@@ -942,89 +633,120 @@ class VMS_Admin_Event_Plans
                         )
                     ),
                 ));
-            ?>
+                ?>
 
-            <p style="margin:12px 0 6px;"><strong><?php echo esc_html($role->name); ?></strong></p>
+                <p style="margin:12px 0 6px;"><strong><?php echo esc_html($role->name); ?></strong></p>
 
-            <?php if (empty($staff_in_role)) : ?>
-                <p class="description" style="margin-top:0;">
-                    <?php esc_html_e('No staff found for this role yet.', 'vms'); ?>
-                </p>
-            <?php else : ?>
-                <select name="vms_staff_assignments[<?php echo esc_attr($role_id); ?>][]" multiple
-                    style="min-width:360px; min-height: 90px;">
-                    <?php foreach ($staff_in_role as $s) : ?>
-                        <?php
-                        $sid = (int) $s->ID;
-                        // Optional hint: tax complete?
-                        $missing = function_exists('vms_vendor_tax_profile_missing_items') ? vms_vendor_tax_profile_missing_items($sid) : array();
-                        $hint = empty($missing) ? ' ✓' : ' ⚠';
-                        ?>
-                        <option value="<?php echo esc_attr($sid); ?>" <?php echo in_array($sid, $saved_ids, true) ? 'selected' : ''; ?>>
-                            <?php echo esc_html($s->post_title . $hint); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <?php if (empty($staff_in_role)): ?>
+                    <p class="description" style="margin-top:0;"><?php esc_html_e('No staff found for this role yet.', 'vms'); ?></p>
+                <?php else: ?>
+                    <select name="vms_staff_assignments[<?php echo esc_attr($role_id); ?>][]" multiple style="min-width:360px; min-height:90px;">
+                        <?php foreach ($staff_in_role as $s): ?>
+                            <?php
+                            $sid = (int) $s->ID;
+                            $missing = function_exists('vms_vendor_tax_profile_missing_items') ? (array) vms_vendor_tax_profile_missing_items($sid) : array();
+                            $hint = empty($missing) ? ' ✓' : ' ⚠';
+                            ?>
+                            <option value="<?php echo esc_attr($sid); ?>" <?php echo in_array($sid, $saved_ids, true) ? 'selected' : ''; ?>>
+                                <?php echo esc_html((string)$s->post_title . $hint); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
 
-                <p class="description" style="margin-top:6px;">
-                    <?php esc_html_e('Tip: “✓” means Tax Profile complete. “⚠” means missing items.', 'vms'); ?>
-                </p>
-            <?php endif; ?>
+                    <p class="description" style="margin-top:6px;">
+                        <?php esc_html_e('Tip: “✓” means Tax Profile complete. “⚠” means missing items.', 'vms'); ?>
+                    </p>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
 
-        <?php endforeach; ?>
+        <hr />
+        <h4><?php esc_html_e('Event Plan Status & Workflow', 'vms'); ?></h4>
 
-    <?php endif; ?>
+        <p>
+            <strong><?php esc_html_e('Status:', 'vms'); ?></strong>
+            <?php echo esc_html(strtoupper($plan_status)); ?>
+        </p>
 
-    <!-- NEW: Status + workflow buttons -->
-    <hr />
+        <p>
+            <button type="submit" name="vms_event_plan_action" value="save_draft" class="button">
+                <?php esc_html_e('Save Draft', 'vms'); ?>
+            </button>
 
-    <h4><?php esc_html_e('Event Plan Status & Workflow', 'vms'); ?></h4>
+            <button type="submit" name="vms_event_plan_action" value="mark_ready" class="button button-secondary">
+                <?php esc_html_e('Mark Ready', 'vms'); ?>
+            </button>
 
-    <p>
-        <strong><?php esc_html_e('Status:', 'vms'); ?></strong>
-        <?php echo esc_html(strtoupper($plan_status)); ?>
-    </p>
+            <button type="submit" name="vms_event_plan_action" value="publish_now" class="button button-primary"
+                <?php echo ($plan_status === 'ready' || $plan_status === 'published') ? '' : ' disabled="disabled"'; ?>>
+                <?php esc_html_e('Publish Now', 'vms'); ?>
+            </button>
+        </p>
 
-    <p>
-        <!-- Save Draft -->
-        <button type="submit"
-            name="vms_event_plan_action"
-            value="save_draft"
-            class="button">
-            <?php esc_html_e('Save Draft', 'vms'); ?>
-        </button>
+        <p class="description"><?php esc_html_e('“Publish Now” is only available once the plan is Ready.', 'vms'); ?></p>
 
-        <!-- Mark Ready -->
-        <button type="submit"
-            name="vms_event_plan_action"
-            value="mark_ready"
-            class="button button-secondary">
-            <?php esc_html_e('Mark Ready', 'vms'); ?>
-        </button>
+        <style>
+            #vms-tax-status .vms-tax-box{border:1px solid #dcdcde;border-radius:12px;padding:10px 12px;background:#fff;max-width:720px;}
+            #vms-tax-status .ok{border-color:#a7f3d0;background:#ecfdf5;}
+            #vms-tax-status .bad{border-color:#fed7aa;background:#fffbeb;}
+            #vms-tax-status .title{font-weight:800;margin-bottom:6px;}
+            #vms-tax-status .muted{color:#646970;font-size:12px;}
+        </style>
 
-        <!-- Publish Now (only enabled when READY or PUBLISHED) -->
-        <button type="submit"
-            name="vms_event_plan_action"
-            value="publish_now"
-            class="button button-primary"
-            <?php echo ($plan_status === 'ready' || $plan_status === 'published') ? '' : ' disabled="disabled"'; ?>>
-            <?php esc_html_e('Publish Now', 'vms'); ?>
-        </button>
-    </p>
+        <script>
+        (function(){
+            const bandSel = document.getElementById('vms_band_vendor_id');
+            const wrap = document.getElementById('vms-tax-status');
+            if (!bandSel || !wrap) return;
 
-    <p class="description">
-        <?php esc_html_e('“Publish Now” is only available once the plan is Ready.', 'vms'); ?>
-    </p>
+            function escapeHtml(str){
+                return String(str).replace(/[&<>"']/g, s => ({
+                    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+                }[s]));
+            }
 
+            function render(){
+                const opt = bandSel.options[bandSel.selectedIndex];
+                if (!opt || !opt.value){
+                    wrap.innerHTML =
+                        '<div class="vms-tax-box">' +
+                            '<div class="title">Tax Profile</div>' +
+                            '<div class="muted">Select a band to see tax requirements.</div>' +
+                        '</div>';
+                    return;
+                }
 
-    <script>
+                const ok = opt.getAttribute('data-tax-ok') === '1';
+                const missing = (opt.getAttribute('data-tax-missing') || '').trim();
+
+                if (ok){
+                    wrap.innerHTML =
+                        '<div class="vms-tax-box ok">' +
+                            '<div class="title">✅ Tax Profile Complete</div>' +
+                            '<div class="muted">This vendor is eligible for Ready/Publish (tax-wise).</div>' +
+                        '</div>';
+                } else {
+                    wrap.innerHTML =
+                        '<div class="vms-tax-box bad">' +
+                            '<div class="title">⚠️ Tax Profile Incomplete</div>' +
+                            '<div class="muted"><strong>Missing:</strong> ' + escapeHtml(missing || '—') + '</div>' +
+                            '<div class="muted" style="margin-top:6px;">This will block “Mark Ready” until resolved.</div>' +
+                        '</div>';
+                }
+            }
+
+            bandSel.addEventListener('change', render);
+            render();
+        })();
+        </script>
+
+        <script>
         (function() {
             const bandSel = document.getElementById('vms_band_vendor_id');
             const dateInput = document.getElementById('vms_event_date');
             const autoTitle = document.querySelector('input[name="vms_auto_title"]');
             const previewEl = document.getElementById('vms_title_preview_text');
 
-            // WP title input (classic editor + block editor usually still exposes this)
             const wpTitleInput =
                 document.getElementById('title') ||
                 document.querySelector('textarea.editor-post-title__input') ||
@@ -1032,27 +754,18 @@ class VMS_Admin_Event_Plans
 
             function formatDate(yyyy_mm_dd) {
                 if (!yyyy_mm_dd) return '';
-                // Build date in local time without timezone shifting
                 const parts = yyyy_mm_dd.split('-');
                 if (parts.length !== 3) return yyyy_mm_dd;
-                const y = parseInt(parts[0], 10),
-                    m = parseInt(parts[1], 10) - 1,
-                    d = parseInt(parts[2], 10);
+                const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, d = parseInt(parts[2], 10);
                 const dt = new Date(y, m, d);
                 if (isNaN(dt.getTime())) return yyyy_mm_dd;
-
-                return dt.toLocaleDateString(undefined, {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+                return dt.toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
             }
 
             function getBandName() {
                 if (!bandSel) return '';
                 const opt = bandSel.options[bandSel.selectedIndex];
                 if (!opt) return '';
-                // Strip your availability hint like " [✓]"
                 return (opt.text || '').replace(/\s*\[\s*[^\]]+\s*\]\s*$/, '').trim();
             }
 
@@ -1065,13 +778,8 @@ class VMS_Admin_Event_Plans
 
             function updatePreview() {
                 if (!previewEl) return;
-
                 const isAuto = autoTitle ? autoTitle.checked : true;
-                if (!isAuto) {
-                    previewEl.textContent = '(auto-title disabled)';
-                    return;
-                }
-
+                if (!isAuto) { previewEl.textContent = '(auto-title disabled)'; return; }
                 const t = buildTitle();
                 previewEl.textContent = t || '(select Band + Date to preview)';
             }
@@ -1079,11 +787,9 @@ class VMS_Admin_Event_Plans
             function updateWpTitleBox() {
                 const isAuto = autoTitle ? autoTitle.checked : true;
                 if (!isAuto) return;
-
                 const t = buildTitle();
                 if (!t) return;
 
-                // Only update the WP title field if it looks untouched / empty-ish.
                 if (wpTitleInput) {
                     const current = (wpTitleInput.value || wpTitleInput.textContent || '').trim();
                     if (!current || current.toLowerCase() === 'auto draft') {
@@ -1093,146 +799,132 @@ class VMS_Admin_Event_Plans
                 }
             }
 
-            function onChange() {
-                updatePreview();
-                updateWpTitleBox(); // optional: comment this out if you only want preview
-            }
+            function onChange() { updatePreview(); updateWpTitleBox(); }
 
             if (bandSel) bandSel.addEventListener('change', onChange);
             if (dateInput) dateInput.addEventListener('change', onChange);
             if (autoTitle) autoTitle.addEventListener('change', onChange);
 
-            // initial
             updatePreview();
         })();
-    </script>
-    <style>
-        #vms-tax-status .vms-tax-box {
-            border: 1px solid #dcdcde;
-            border-radius: 12px;
-            padding: 10px 12px;
-            background: #fff;
-            max-width: 720px;
-        }
+        </script>
 
-        #vms-tax-status .ok {
-            border-color: #a7f3d0;
-            background: #ecfdf5;
-        }
-
-        #vms-tax-status .bad {
-            border-color: #fed7aa;
-            background: #fffbeb;
-        }
-
-        #vms-tax-status .title {
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        #vms-tax-status .muted {
-            color: #646970;
-            font-size: 12px;
-        }
-    </style>
-
-    <script>
+        <script>
         (function() {
-            const bandSel = document.getElementById('vms_band_vendor_id');
-            const wrap = document.getElementById('vms-tax-status');
-            if (!bandSel || !wrap) return;
+            const venueSel = document.getElementById('vms_venue_id');
+            const dateInp  = document.getElementById('vms_event_date');
+            const autoChk  = document.getElementById('vms_auto_comp_venue');
+            const hint     = document.getElementById('vms-venue-defaults-hint');
 
-            function render() {
-                const opt = bandSel.options[bandSel.selectedIndex];
-                if (!opt || !opt.value) {
-                    wrap.innerHTML =
-                        '<div class="vms-tax-box">' +
-                        '<div class="title">Tax Profile</div>' +
-                        '<div class="muted">Select a band to see tax requirements.</div>' +
-                        '</div>';
+            const fStruct = document.getElementById('vms_comp_structure');
+            const fFlat   = document.getElementById('vms_flat_fee_amount');
+            const fSplit  = document.getElementById('vms_door_split_percent');
+
+            if (!venueSel || !dateInp || !autoChk || !fStruct) return;
+
+            let dirty = false;
+            [fStruct, fFlat, fSplit].forEach(el => {
+                if (!el) return;
+                el.addEventListener('change', () => dirty = true);
+                el.addEventListener('input',  () => dirty = true);
+            });
+
+            function setHint(msg, type) {
+                if (!hint) return;
+                hint.textContent = msg || '';
+                hint.style.color = (type === 'warn') ? '#92400e' : (type === 'ok' ? '#065f46' : '');
+            }
+
+            function applyRow(row) {
+                if (!row || !row.structure) {
+                    setHint('No venue defaults found for that day.', 'warn');
                     return;
                 }
-
-                const ok = opt.getAttribute('data-tax-ok') === '1';
-                const missing = (opt.getAttribute('data-tax-missing') || '').trim();
-
-                if (ok) {
-                    wrap.innerHTML =
-                        '<div class="vms-tax-box ok">' +
-                        '<div class="title">✅ Tax Profile Complete</div>' +
-                        '<div class="muted">This vendor is eligible for Ready/Publish (tax-wise).</div>' +
-                        '</div>';
-                } else {
-                    wrap.innerHTML =
-                        '<div class="vms-tax-box bad">' +
-                        '<div class="title">⚠️ Tax Profile Incomplete</div>' +
-                        '<div class="muted"><strong>Missing:</strong> ' + escapeHtml(missing || '—') + '</div>' +
-                        '<div class="muted" style="margin-top:6px;">This will block “Mark Ready” until resolved.</div>' +
-                        '</div>';
+                if (dirty) {
+                    setHint('Defaults available, but you have manual edits. Click “Apply Venue Defaults” to overwrite.', 'warn');
+                    return;
                 }
+                fStruct.value = row.structure || 'flat_fee';
+                if (fFlat && typeof row.flat_fee_amount !== 'undefined') fFlat.value = row.flat_fee_amount ?? '';
+                if (fSplit && typeof row.door_split_percent !== 'undefined') fSplit.value = row.door_split_percent ?? '';
+                setHint('Venue defaults applied for this date. (Override anytime.)', 'ok');
             }
 
-            function escapeHtml(str) {
-                return String(str).replace(/[&<>"']/g, s => ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                } [s]));
+            async function fetchDefaults() {
+                const venue_id = venueSel.value || '';
+                const event_date = dateInp.value || '';
+                if (!venue_id || !event_date) return null;
+
+                const form = new FormData();
+                form.append('action', 'vms_get_venue_comp_defaults');
+                form.append('venue_id', venue_id);
+                form.append('event_date', event_date);
+
+                const resp = await fetch(ajaxurl, { method:'POST', credentials:'same-origin', body: form });
+                const json = await resp.json();
+                if (!json || !json.success) return null;
+                return (json.data && json.data.row) ? json.data.row : null;
             }
 
-            bandSel.addEventListener('change', render);
-            render();
+            async function onVenueOrDateChange() {
+                if (!autoChk.checked) {
+                    setHint('Auto-fill is off. (Enable it to apply venue defaults automatically.)', '');
+                    return;
+                }
+                const row = await fetchDefaults();
+                if (!row) { setHint('Select Venue + Date to load defaults.', ''); return; }
+                applyRow(row);
+            }
+
+            venueSel.addEventListener('change', onVenueOrDateChange);
+            dateInp.addEventListener('change', onVenueOrDateChange);
+            autoChk.addEventListener('change', function() { if (autoChk.checked) dirty = false; onVenueOrDateChange(); });
+
+            setHint('Select a Venue and Event Date to use venue defaults.', '');
         })();
-    </script>
+        </script>
 
-    <?php
-        $scroll_to = get_post_meta($post->ID, '_vms_admin_scroll_to', true);
-        if ($scroll_to) :
-            // Clear it immediately so it only runs once
+        <?php
+        // Scroll helper (optional)
+        $scroll_to = (string) get_post_meta($post->ID, '_vms_admin_scroll_to', true);
+        if ($scroll_to) {
             delete_post_meta($post->ID, '_vms_admin_scroll_to');
-    ?>
-        <script>
+            ?>
+            <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const el = document.getElementById('<?php echo esc_js($scroll_to); ?>');
                 if (!el) return;
-
-                // Small delay lets WP finish layout before scrolling
-                setTimeout(() => {
-                    el.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }, 150);
+                setTimeout(() => el.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
             });
-        </script>
-    <?php endif; ?>
-
-<?php
+            </script>
+            <?php
+        }
+        ?>
+        <?php
     }
 
     /**
-     * Save Event Plan meta fields.
+     * Save Event Plan meta fields + handle actions
      */
-    public function save_event_plan_meta($post_id, $post)
+    public function save_event_plan_meta(int $post_id, WP_Post $post): void
     {
-        // Check nonce.
-        if (
-            ! isset($_POST['vms_event_plan_details_nonce']) ||
-            ! wp_verify_nonce($_POST['vms_event_plan_details_nonce'], 'vms_save_event_plan_details')
-        ) {
+        if (!isset($_POST['vms_event_plan_details_nonce']) || !wp_verify_nonce($_POST['vms_event_plan_details_nonce'], 'vms_save_event_plan_details')) {
             return;
         }
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+        if (!current_user_can('edit_post', $post_id)) return;
 
+        // Band
         if (isset($_POST['vms_band_vendor_id'])) {
             update_post_meta($post_id, '_vms_band_vendor_id', absint($_POST['vms_band_vendor_id']));
         }
+
+        // Agenda
         if (isset($_POST['vms_agenda_text'])) {
             update_post_meta($post_id, '_vms_agenda_text', wp_kses_post($_POST['vms_agenda_text']));
         }
 
-        // Save staff assignments (term_id => [staff_ids])
+        // Staff assignments
         if (isset($_POST['vms_staff_assignments']) && is_array($_POST['vms_staff_assignments'])) {
             $raw = $_POST['vms_staff_assignments'];
             $clean = array();
@@ -1242,42 +934,30 @@ class VMS_Admin_Event_Plans
                 if ($term_id <= 0) continue;
 
                 if (!is_array($ids)) $ids = array();
-
                 $ids = array_map('absint', $ids);
                 $ids = array_values(array_filter($ids, fn($v) => $v > 0));
 
-                if (!empty($ids)) {
-                    $clean[$term_id] = $ids;
-                }
+                if (!empty($ids)) $clean[$term_id] = $ids;
             }
 
-            update_post_meta($post_id, '_vms_staff_assignments', $clean);
+            if (!empty($clean)) update_post_meta($post_id, '_vms_staff_assignments', $clean);
+            else delete_post_meta($post_id, '_vms_staff_assignments');
         } else {
             delete_post_meta($post_id, '_vms_staff_assignments');
         }
 
-        // Avoid autosaves.
-        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-            return;
-        }
-
-        // Check user capability.
-        if (! current_user_can('edit_post', $post_id)) {
-            return;
-        }
-
-        // Sanitize fields.
-        $event_date         = isset($_POST['vms_event_date']) ? sanitize_text_field($_POST['vms_event_date']) : '';
-        $start_time         = isset($_POST['vms_start_time']) ? sanitize_text_field($_POST['vms_start_time']) : '';
-        $end_time           = isset($_POST['vms_end_time']) ? sanitize_text_field($_POST['vms_end_time']) : '';
-        if ($start_time === '') $start_time = '19:00'; // default start time
-        if ($end_time === '')   $end_time   = '21:00'; // default end time
-        $location_label     = isset($_POST['vms_location_label']) ? sanitize_text_field($_POST['vms_location_label']) : '';
+        // Core
+        $event_date     = isset($_POST['vms_event_date']) ? sanitize_text_field($_POST['vms_event_date']) : '';
+        $start_time     = isset($_POST['vms_start_time']) ? sanitize_text_field($_POST['vms_start_time']) : '';
+        $end_time       = isset($_POST['vms_end_time']) ? sanitize_text_field($_POST['vms_end_time']) : '';
+        $location_label = isset($_POST['vms_location_label']) ? sanitize_text_field($_POST['vms_location_label']) : '';
+        if ($start_time === '') $start_time = '19:00';
+        if ($end_time === '')   $end_time   = '21:00';
 
         $venue_id = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
 
-        // Tickets / Add-ons settings
-        $ga_price = isset($_POST['vms_price_ga']) ? floatval($_POST['vms_price_ga']) : 20;
+        // Ticket settings
+        $ga_price = isset($_POST['vms_price_ga']) ? (float) $_POST['vms_price_ga'] : 20.0;
 
         $enable_tables   = isset($_POST['vms_enable_tables']) ? '1' : '0';
         $enable_firepits = isset($_POST['vms_enable_firepits']) ? '1' : '0';
@@ -1286,482 +966,330 @@ class VMS_Admin_Event_Plans
         $table_count   = isset($_POST['vms_table_count']) ? max(0, absint($_POST['vms_table_count'])) : 6;
         $firepit_count = isset($_POST['vms_firepit_count']) ? max(0, absint($_POST['vms_firepit_count'])) : 6;
 
-        $table_price   = isset($_POST['vms_price_table']) ? floatval($_POST['vms_price_table']) : 30;
-        $firepit_price = isset($_POST['vms_price_firepit']) ? floatval($_POST['vms_price_firepit']) : 30;
-        $pool_price    = isset($_POST['vms_price_pool']) ? floatval($_POST['vms_price_pool']) : 10;
+        $table_price   = isset($_POST['vms_price_table']) ? (float) $_POST['vms_price_table'] : 30.0;
+        $firepit_price = isset($_POST['vms_price_firepit']) ? (float) $_POST['vms_price_firepit'] : 30.0;
+        $pool_price    = isset($_POST['vms_price_pool']) ? (float) $_POST['vms_price_pool'] : 10.0;
 
         $table_min_tickets   = isset($_POST['vms_min_tickets_per_table']) ? max(0, absint($_POST['vms_min_tickets_per_table'])) : 2;
         $firepit_min_tickets = isset($_POST['vms_min_tickets_per_firepit']) ? max(0, absint($_POST['vms_min_tickets_per_firepit'])) : 2;
 
-        $comp_structure     = isset($_POST['vms_comp_structure']) ? sanitize_text_field($_POST['vms_comp_structure']) : 'flat_fee';
-        $flat_fee_amount    = isset($_POST['vms_flat_fee_amount']) ? floatval($_POST['vms_flat_fee_amount']) : '';
-        $door_split_percent = isset($_POST['vms_door_split_percent']) ? floatval($_POST['vms_door_split_percent']) : '';
-        $comp_package_id = isset($_POST['vms_comp_package_id']) ? absint($_POST['vms_comp_package_id']) : 0;
-        if ($comp_package_id > 0) {
-            update_post_meta($post_id, '_vms_comp_package_id', $comp_package_id);
-        } else {
-            delete_post_meta($post_id, '_vms_comp_package_id');
-        }
+        // Draft pay
+        $comp_structure      = isset($_POST['vms_comp_structure']) ? sanitize_text_field($_POST['vms_comp_structure']) : 'flat_fee';
+        $flat_fee_amount     = isset($_POST['vms_flat_fee_amount']) ? $_POST['vms_flat_fee_amount'] : '';
+        $door_split_percent  = isset($_POST['vms_door_split_percent']) ? $_POST['vms_door_split_percent'] : '';
 
-        $allow_vendor_propose = isset($_POST['vms_allow_vendor_propose']) ? '1' : '0';
-        $proposal_min         = isset($_POST['vms_proposal_min']) ? floatval($_POST['vms_proposal_min']) : '';
-        $proposal_max         = isset($_POST['vms_proposal_max']) ? floatval($_POST['vms_proposal_max']) : '';
-        $proposal_cap         = isset($_POST['vms_proposal_cap']) ? floatval($_POST['vms_proposal_cap']) : '';
-
-        $auto_title = isset($_POST['vms_auto_title']) ? '1' : '0';
-        $auto_comp  = isset($_POST['vms_auto_comp']) ? '1' : '0';
+        // Auto toggles
+        $auto_title      = isset($_POST['vms_auto_title']) ? '1' : '0';
+        $auto_comp       = isset($_POST['vms_auto_comp']) ? '1' : '0';
         $auto_comp_venue = isset($_POST['vms_auto_comp_venue']) ? '1' : '0';
 
+        // Package selection (persist so dropdown sticks even without Apply)
+        $comp_package_id = isset($_POST['vms_comp_package_id']) ? absint($_POST['vms_comp_package_id']) : 0;
+
+        // Save core meta
         $fields = array(
-            '_vms_event_date'         => $event_date,
-            '_vms_start_time'         => $start_time,
-            '_vms_end_time'           => $end_time,
-            '_vms_location_label'     => $location_label,
-            '_vms_venue_id'           => $venue_id,
+            '_vms_event_date'     => $event_date,
+            '_vms_start_time'     => $start_time,
+            '_vms_end_time'       => $end_time,
+            '_vms_location_label' => $location_label,
+            '_vms_venue_id'       => $venue_id,
 
             '_vms_price_ga' => $ga_price,
 
-            '_vms_enable_tables' => $enable_tables,
+            '_vms_enable_tables'   => $enable_tables,
             '_vms_enable_firepits' => $enable_firepits,
-            '_vms_enable_pools' => $enable_pools,
+            '_vms_enable_pools'    => $enable_pools,
 
-            '_vms_table_count' => $table_count,
+            '_vms_table_count'   => $table_count,
             '_vms_firepit_count' => $firepit_count,
 
-            '_vms_price_table' => $table_price,
+            '_vms_price_table'   => $table_price,
             '_vms_price_firepit' => $firepit_price,
-            '_vms_price_pool' => $pool_price,
+            '_vms_price_pool'    => $pool_price,
 
-            '_vms_min_tickets_per_table' => $table_min_tickets,
+            '_vms_min_tickets_per_table'   => $table_min_tickets,
             '_vms_min_tickets_per_firepit' => $firepit_min_tickets,
 
             '_vms_comp_structure'     => $comp_structure,
-            '_vms_flat_fee_amount'    => $flat_fee_amount,
-            '_vms_door_split_percent' => $door_split_percent,
-            '_vms_allow_vendor_propose' => $allow_vendor_propose,
-            '_vms_proposal_min'       => $proposal_min,
-            '_vms_proposal_max'       => $proposal_max,
-            '_vms_proposal_cap'       => $proposal_cap,
-            '_vms_auto_title'         => $auto_title,
-            '_vms_auto_comp'          => $auto_comp,
+            '_vms_flat_fee_amount'    => ($flat_fee_amount === '' ? '' : (float)$flat_fee_amount),
+            '_vms_door_split_percent' => ($door_split_percent === '' ? '' : (float)$door_split_percent),
+
+            '_vms_auto_title'      => $auto_title,
+            '_vms_auto_comp'       => $auto_comp,
             '_vms_auto_comp_venue' => $auto_comp_venue,
         );
 
-        foreach ($fields as $meta_key => $value) {
-            if ($value === '' || $value === null) {
-                delete_post_meta($post_id, $meta_key);
-            } else {
-                update_post_meta($post_id, $meta_key, $value);
-            }
+        foreach ($fields as $k => $v) {
+            if ($v === '' || $v === null) delete_post_meta($post_id, $k);
+            else update_post_meta($post_id, $k, $v);
         }
 
-        if ($auto_title === '1') {
+        if ($comp_package_id > 0) update_post_meta($post_id, '_vms_comp_package_id', $comp_package_id);
+        else delete_post_meta($post_id, '_vms_comp_package_id');
+
+        // Auto behaviors
+        if ($auto_title === '1' && function_exists('vms_force_event_plan_title')) {
             vms_force_event_plan_title($post_id);
         }
-
-        if ($auto_comp === '1') {
+        if ($auto_comp === '1' && function_exists('vms_maybe_apply_band_comp_defaults_to_plan')) {
             vms_maybe_apply_band_comp_defaults_to_plan($post_id);
         }
 
-        $comp_package_id = isset($_POST['vms_comp_package_id']) ? absint($_POST['vms_comp_package_id']) : 0;
-
-        // Always persist selection (so dropdown stays selected even if you don't click Apply)
-        if ($comp_package_id > 0) {
-            update_post_meta($post_id, '_vms_comp_package_id', $comp_package_id);
-        } else {
-            delete_post_meta($post_id, '_vms_comp_package_id');
+        // Handle actions
+        if (!isset($_POST['vms_event_plan_action'])) {
+            return;
         }
 
-        // Handle workflow status (Save Draft / Mark Ready / Publish Now).
-        if (isset($_POST['vms_event_plan_action'])) {
-            $action = sanitize_text_field($_POST['vms_event_plan_action']);
+        $action = sanitize_text_field($_POST['vms_event_plan_action']);
+        $current_status = (string) get_post_meta($post_id, '_vms_event_plan_status', true);
+        if ($current_status === '') $current_status = 'draft';
+        $new_status = $current_status;
 
-            $current_status = get_post_meta($post_id, '_vms_event_plan_status', true);
-            if (empty($current_status)) {
-                $current_status = 'draft';
-            }
+        switch ($action) {
+            case 'save_draft':
+                $new_status = 'draft';
+                vms_add_admin_notice(__('Event plan saved as Draft.', 'vms'), 'success');
+                break;
 
-            $new_status = $current_status;
-
-            switch ($action) {
-                case 'save_draft':
-                    // Very permissive – just set draft.
+            case 'mark_ready':
+                $errors = vms_validate_event_plan($post_id);
+                if (empty($errors)) {
+                    vms_maybe_autoset_event_plan_title($post_id);
+                    $new_status = 'ready';
+                    vms_add_admin_notice(__('Event plan marked Ready.', 'vms'), 'success');
+                } else {
                     $new_status = 'draft';
-                    vms_add_admin_notice('Event plan saved as Draft.', 'success');
+                    vms_add_admin_notice(__('Cannot mark Ready:', 'vms') . ' ' . implode(' ', $errors), 'error');
+                }
+                break;
+
+            case 'publish_now':
+                if (!in_array($current_status, array('ready', 'published'), true)) {
+                    vms_add_admin_notice(__('Event must be Ready before publishing.', 'vms'), 'error');
                     break;
+                }
 
-                case 'mark_ready':
-                    $errors = vms_validate_event_plan($post_id);
+                $errors = vms_validate_event_plan($post_id);
+                if (!empty($errors)) {
+                    vms_add_admin_notice(__('Cannot publish:', 'vms') . ' ' . implode(' ', $errors), 'error');
+                    break;
+                }
 
-                    if (empty($errors)) {
-                        // Auto-set title if possible.
-                        vms_maybe_autoset_event_plan_title($post_id);
+                $published = vms_publish_event_to_calendar($post_id, $post);
+                if ($published) {
+                    $new_status = 'published';
+                    vms_add_admin_notice(__('Event published successfully.', 'vms'), 'success');
 
-                        $new_status = 'ready';
-                        vms_add_admin_notice('Event plan marked Ready.', 'success');
+                    $result = vms_publish_products_from_plan($post_id);
+                    if (!empty($result['ok'])) {
+                        vms_add_admin_notice(
+                            sprintf(__('Woo products updated. %d created, %d updated.', 'vms'), (int)$result['created'], (int)$result['updated']),
+                            'success'
+                        );
                     } else {
-                        $new_status = 'draft';
-                        vms_add_admin_notice(
-                            'Cannot mark Ready: ' . implode(' ', $errors),
-                            'error'
-                        );
+                        vms_add_admin_notice(__('Woo product publish failed:', 'vms') . ' ' . (string)($result['error'] ?? 'unknown error'), 'error');
                     }
-                    break;
+                } else {
+                    vms_add_admin_notice(__('Failed to publish event to calendar. Please check settings.', 'vms'), 'error');
+                }
+                break;
 
-                case 'publish_now':
-                    // Only allow publish if already ready or published.
-                    if (!in_array($current_status, array('ready', 'published'), true)) {
-                        vms_add_admin_notice('Event must be Ready before publishing.', 'error');
-                        break;
-                    }
-
-                    $errors = vms_validate_event_plan($post_id);
-                    if (!empty($errors)) {
-                        vms_add_admin_notice(
-                            'Cannot publish: ' . implode(' ', $errors),
-                            'error'
-                        );
-                        break;
-                    }
-
-                    // Stub publish to Events Calendar (replace later).
-                    $published = vms_publish_event_to_calendar($post_id, $post);
-
-                    if ($published) {
-                        $new_status = 'published';
-                        vms_add_admin_notice('Event published successfully.', 'success');
-
-                        // After TEC publish success
-                        $result = vms_publish_products_from_plan($post_id);
-
-                        if (!empty($result['ok'])) {
-                            vms_add_admin_notice(
-                                sprintf('Woo products updated. %d created, %d updated.', (int)$result['created'], (int)$result['updated']),
-                                'success'
-                            );
-                        } else {
-                            vms_add_admin_notice(
-                                'Woo product publish failed: ' . (string)($result['error'] ?? 'unknown error'),
-                                'error'
-                            );
-                        }
-                    } else {
-                        vms_add_admin_notice(
-                            'Failed to publish event to calendar. Please check settings.',
-                            'error'
-                        );
-                    }
-                    break;
-
-                case 'apply_band_defaults':
+            case 'apply_band_defaults':
+                if (function_exists('vms_apply_band_comp_defaults_to_plan')) {
                     vms_apply_band_comp_defaults_to_plan($post_id);
                     update_post_meta($post_id, '_vms_comp_needs_snapshot', '1');
-                    vms_add_admin_notice('Band defaults applied (where available).', 'success');
+                    vms_add_admin_notice(__('Band defaults applied (where available).', 'vms'), 'success');
                     vms_admin_scroll_to_compensation($post_id);
+                }
+                break;
+
+            case 'apply_venue_defaults':
+                $venue_id   = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
+                $event_date = isset($_POST['vms_event_date']) ? sanitize_text_field($_POST['vms_event_date']) : '';
+
+                if ($venue_id <= 0 || !$event_date) {
+                    vms_add_admin_notice(__('Select a Venue and Event Date first.', 'vms'), 'error');
                     break;
-
-                case 'apply_comp_package':
-                    if ($venue_id <= 0) {
-                        vms_add_admin_notice('Please select a Venue first, then apply the package.', 'error');
-                        break;
-                    }
-
-                    if ($comp_package_id <= 0) {
-                        vms_add_admin_notice('Please select a comp package first.', 'error');
-                        break;
-                    }
-
-                    $ok = vms_apply_comp_package_to_plan((int)$post_id, (int)$comp_package_id);
-                    vms_admin_scroll_to_compensation($post_id);
-
-                    if ($ok) {
-                        vms_add_admin_notice('Comp package applied and snapshotted for this event plan.', 'success');
-                    } else {
-                        vms_add_admin_notice('Failed to Apply Package. (Check package type/meta.)', 'error');
-                    }
+                }
+                if (!function_exists('vms_get_venue_default_comp_for_date')) {
+                    vms_add_admin_notice(__('Venue defaults helper is missing.', 'vms'), 'error');
                     break;
+                }
 
-                case 'lock_draft_pay':
-                    /**
-                     * Lock Draft Pay (no package required)
-                     *
-                     * Purpose:
-                     * - User edits Draft Pay fields (structure / flat / split / commission).
-                     * - Clicking "Lock Draft Pay" creates a snapshot on THIS plan so payout is frozen.
-                     * - This protects the event from future changes to venue defaults, band defaults, or packages.
-                     *
-                     * Notes:
-                     * - We store the snapshot in ONE meta key: _vms_comp_snapshot (array)
-                     * - We also store a hash so we can detect "out of sync" later.
-                     * - We clear _vms_comp_needs_snapshot because the plan is now locked to current values.
-                     */
-
-                    // Read current Draft Pay (these are the editable plan meta fields)
-                    $structure = (string) get_post_meta($post_id, '_vms_comp_structure', true);
-                    if ($structure === '') $structure = 'flat_fee';
-
-                    $flat  = get_post_meta($post_id, '_vms_flat_fee_amount', true);
-                    $split = get_post_meta($post_id, '_vms_door_split_percent', true);
-
-                    // Optional fields (only if your system supports them already)
-                    $commission_percent = get_post_meta($post_id, '_vms_commission_percent', true);
-                    $commission_mode    = (string) get_post_meta($post_id, '_vms_commission_mode', true);
-                    if ($commission_mode === '') $commission_mode = 'artist_fee';
-
-                    // Safety: normalize numbers
-                    $flat  = ($flat === '' || $flat === null) ? null : (float) $flat;
-                    $split = ($split === '' || $split === null) ? null : (float) $split;
-
-                    $commission_percent = ($commission_percent === '' || $commission_percent === null)
-                        ? null
-                        : (float) $commission_percent;
-
-                    // Basic validation so we don’t lock a nonsense snapshot
-                    // (Keeps UX friendly: "why did it lock nothing?")
-                    if (in_array($structure, array('flat_fee', 'flat_fee_door_split'), true) && ($flat === null || $flat <= 0)) {
-                        vms_add_admin_notice('Cannot lock Draft Pay: Flat Fee Amount is required for this structure.', 'error');
-                        break;
-                    }
-                    if (in_array($structure, array('door_split', 'flat_fee_door_split'), true) && ($split === null || $split <= 0 || $split > 100)) {
-                        vms_add_admin_notice('Cannot lock Draft Pay: Door Split % must be between 1 and 100 for this structure.', 'error');
-                        break;
-                    }
-
-                    // Determine what package (if any) is currently selected/saved
-                    $pkg_id    = (int) get_post_meta($post_id, '_vms_comp_package_id', true);
-                    $pkg_title = $pkg_id ? get_the_title($pkg_id) : '';
-
-                    // Build snapshot array (this is the "Locked Pay" record)
-                    $snapshot = array(
-                        'locked_via'        => 'manual_lock', // helps debugging: manual vs package vs defaults
-                        'package_id'        => $pkg_id ?: null,
-                        'package_title'     => $pkg_title ?: null,
-                        'applied_at'        => current_time('mysql'),
-
-                        'structure'         => $structure,
-                        'flat_fee_amount'   => $flat,
-                        'door_split_percent' => $split,
-
-                        'commission_percent' => $commission_percent,
-                        'commission_mode'   => $commission_mode,
-                    );
-
-                    /**
-                     * Hashing (optional but recommended)
-                     * Used to detect when Draft Pay changes after locking.
-                     * Your existing UI uses vms_comp_hash_for_plan(), so we try to use it if available.
-                     */
-                    $hash = function_exists('vms_comp_hash_for_plan')
-                        ? (string) vms_comp_hash_for_plan((int) $post_id)
-                        : md5(wp_json_encode(array(
-                            'structure' => $structure,
-                            'flat'      => $flat,
-                            'split'     => $split,
-                            'comm'      => $commission_percent,
-                            'mode'      => $commission_mode,
-                        )));
-
-                    $snapshot['comp_hash'] = $hash;
-
-                    // Save snapshot + clear "needs snapshot" flag
-                    update_post_meta($post_id, '_vms_comp_snapshot', $snapshot);
-                    delete_post_meta($post_id, '_vms_comp_needs_snapshot');
-
-                    // (Optional) remember where to scroll after reload (we’ll wire the JS next)
-                    vms_add_admin_notice('Draft Pay locked for this event (snapshot created).', 'success');
-                    vms_admin_scroll_to_compensation($post_id);
+                $row = vms_get_venue_default_comp_for_date($venue_id, $event_date);
+                if (empty($row) || empty($row['structure'])) {
+                    vms_add_admin_notice(__('No venue defaults found for that date/day.', 'vms'), 'error');
                     break;
+                }
 
-                case 'apply_venue_defaults':
-                    $venue_id   = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
-                    $event_date = isset($_POST['vms_event_date']) ? sanitize_text_field($_POST['vms_event_date']) : '';
+                update_post_meta($post_id, '_vms_comp_structure', sanitize_text_field($row['structure']));
 
-                    if ($venue_id <= 0 || !$event_date) {
-                        vms_add_admin_notice('Select a Venue and Event Date first.', 'error');
-                        break;
-                    }
+                if (array_key_exists('flat_fee_amount', $row)) {
+                    $val = $row['flat_fee_amount'];
+                    if ($val === '' || $val === null) delete_post_meta($post_id, '_vms_flat_fee_amount');
+                    else update_post_meta($post_id, '_vms_flat_fee_amount', (float) $val);
+                }
 
-                    if (!function_exists('vms_get_venue_default_comp_for_date')) {
-                        vms_add_admin_notice('Venue defaults helper is missing (vms_get_venue_default_comp_for_date).', 'error');
-                        break;
-                    }
+                if (array_key_exists('door_split_percent', $row)) {
+                    $val = $row['door_split_percent'];
+                    if ($val === '' || $val === null) delete_post_meta($post_id, '_vms_door_split_percent');
+                    else update_post_meta($post_id, '_vms_door_split_percent', (float) $val);
+                }
 
-                    $row = vms_get_venue_default_comp_for_date($venue_id, $event_date);
+                update_post_meta($post_id, '_vms_comp_needs_snapshot', '1');
+                vms_add_admin_notice(__('Venue defaults applied for this date.', 'vms'), 'success');
+                vms_admin_scroll_to_compensation($post_id);
+                break;
 
-                    if (empty($row) || empty($row['structure'])) {
-                        vms_add_admin_notice('No venue defaults found for that date/day.', 'error');
-                        break;
-                    }
-
-                    update_post_meta($post_id, '_vms_comp_structure', sanitize_text_field($row['structure']));
-
-                    if (array_key_exists('flat_fee_amount', $row)) {
-                        $val = $row['flat_fee_amount'];
-                        if ($val === '' || $val === null) delete_post_meta($post_id, '_vms_flat_fee_amount');
-                        else update_post_meta($post_id, '_vms_flat_fee_amount', (float) $val);
-                    }
-
-                    if (array_key_exists('door_split_percent', $row)) {
-                        $val = $row['door_split_percent'];
-                        if ($val === '' || $val === null) delete_post_meta($post_id, '_vms_door_split_percent');
-                        else update_post_meta($post_id, '_vms_door_split_percent', (float) $val);
-                    }
-
-                    update_post_meta($post_id, '_vms_comp_needs_snapshot', '1');
-
-                    // Optional: commission, only if you actually use these keys
-                    if (array_key_exists('commission_percent', $row)) {
-                        $val = $row['commission_percent'];
-                        if ($val === '' || $val === null) delete_post_meta($post_id, '_vms_commission_percent');
-                        else update_post_meta($post_id, '_vms_commission_percent', (float) $val);
-                    }
-                    if (array_key_exists('commission_mode', $row)) {
-                        $mode = ($row['commission_mode'] === 'gross') ? 'gross' : 'artist_fee';
-                        update_post_meta($post_id, '_vms_commission_mode', $mode);
-                    }
-
-                    update_post_meta($post_id, '_vms_comp_needs_snapshot', '1');
-                    vms_add_admin_notice('Venue defaults applied for this date.', 'success');
-                    vms_admin_scroll_to_compensation($post_id);
+            case 'apply_comp_package':
+                if ($venue_id <= 0) {
+                    vms_add_admin_notice(__('Please select a Venue first, then apply the package.', 'vms'), 'error');
                     break;
-            }
+                }
+                if ($comp_package_id <= 0) {
+                    vms_add_admin_notice(__('Please select a comp package first.', 'vms'), 'error');
+                    break;
+                }
+                if (!function_exists('vms_apply_comp_package_to_plan')) {
+                    vms_add_admin_notice(__('Package apply helper is missing (vms_apply_comp_package_to_plan).', 'vms'), 'error');
+                    break;
+                }
 
-            // 1. Update VMS plan status
-            update_post_meta($post_id, '_vms_event_plan_status', $new_status);
+                $ok = vms_apply_comp_package_to_plan($post_id, $comp_package_id);
+                vms_admin_scroll_to_compensation($post_id);
 
-            // 2. Sync TEC status (VMS → TEC)
+                if ($ok) vms_add_admin_notice(__('Comp package applied and snapshotted for this event plan.', 'vms'), 'success');
+                else vms_add_admin_notice(__('Failed to Apply Package. (Check package type/meta.)', 'vms'), 'error');
+                break;
+
+            case 'lock_draft_pay':
+                $structure = (string) get_post_meta($post_id, '_vms_comp_structure', true);
+                if ($structure === '') $structure = 'flat_fee';
+
+                $flat  = get_post_meta($post_id, '_vms_flat_fee_amount', true);
+                $split = get_post_meta($post_id, '_vms_door_split_percent', true);
+
+                $flat  = ($flat === '' || $flat === null) ? null : (float) $flat;
+                $split = ($split === '' || $split === null) ? null : (float) $split;
+
+                if (in_array($structure, array('flat_fee', 'flat_fee_door_split'), true) && ($flat === null || $flat <= 0)) {
+                    vms_add_admin_notice(__('Cannot lock Draft Pay: Flat Fee Amount is required for this structure.', 'vms'), 'error');
+                    break;
+                }
+                if (in_array($structure, array('door_split', 'flat_fee_door_split'), true) && ($split === null || $split <= 0 || $split > 100)) {
+                    vms_add_admin_notice(__('Cannot lock Draft Pay: Door Split % must be between 1 and 100 for this structure.', 'vms'), 'error');
+                    break;
+                }
+
+                $pkg_id    = (int) get_post_meta($post_id, '_vms_comp_package_id', true);
+                $pkg_title = $pkg_id ? (string) get_the_title($pkg_id) : '';
+
+                $snapshot = array(
+                    'locked_via'         => 'manual_lock',
+                    'package_id'         => $pkg_id ?: null,
+                    'package_title'      => $pkg_title ?: null,
+                    'applied_at'         => current_time('mysql'),
+                    'structure'          => $structure,
+                    'flat_fee_amount'    => $flat,
+                    'door_split_percent' => $split,
+                );
+
+                $hash = function_exists('vms_comp_hash_for_plan')
+                    ? (string) vms_comp_hash_for_plan($post_id)
+                    : md5(wp_json_encode(array('structure'=>$structure,'flat'=>$flat,'split'=>$split)));
+
+                $snapshot['comp_hash'] = $hash;
+
+                update_post_meta($post_id, '_vms_comp_snapshot', $snapshot);
+                delete_post_meta($post_id, '_vms_comp_needs_snapshot');
+
+                vms_add_admin_notice(__('Draft Pay locked for this event (snapshot created).', 'vms'), 'success');
+                vms_admin_scroll_to_compensation($post_id);
+                break;
+        }
+
+        update_post_meta($post_id, '_vms_event_plan_status', $new_status);
+
+        if (function_exists('vms_sync_tec_status_from_plan')) {
             vms_sync_tec_status_from_plan($post_id);
         }
     }
 }
 
-function vms_validate_event_plan($post_id)
+/**
+ * Bootstrap admin hooks for Event Plans.
+ */
+if (is_admin()) {
+    new VMS_Admin_Event_Plans();
+}
+
+/**
+ * Validation — used for READY and PUBLISH
+ */
+function vms_validate_event_plan(int $post_id): array
 {
     $errors = array();
 
-    // Core fields
-    $event_date = get_post_meta($post_id, '_vms_event_date', true);
+    $event_date = (string) get_post_meta($post_id, '_vms_event_date', true);
+    $start_time = (string) get_post_meta($post_id, '_vms_start_time', true);
+    $end_time   = (string) get_post_meta($post_id, '_vms_end_time', true);
 
-    $start_time = get_post_meta($post_id, '_vms_start_time', true);
-    $end_time   = get_post_meta($post_id, '_vms_end_time', true);
+    if ($event_date === '') $errors[] = __('Event date is required.', 'vms');
 
-    if (empty($event_date)) {
-        $errors[] = 'Event date is required.';
-    }
-
-    if (empty($start_time) || empty($end_time)) {
-        $errors[] = 'Start time and end time are required.';
+    if ($start_time === '' || $end_time === '') {
+        $errors[] = __('Start time and end time are required.', 'vms');
     } else {
         $start_ts = strtotime($event_date . ' ' . $start_time);
         $end_ts   = strtotime($event_date . ' ' . $end_time);
-
-        if (!$start_ts || !$end_ts) {
-            $errors[] = 'Start time or end time is not a valid time.';
-        } elseif ($end_ts <= $start_ts) {
-            $errors[] = 'End time must be after start time.';
-        }
+        if (!$start_ts || !$end_ts) $errors[] = __('Start time or end time is not a valid time.', 'vms');
+        elseif ($end_ts <= $start_ts) $errors[] = __('End time must be after start time.', 'vms');
     }
 
-    // Compensation structure sanity checks
-    $comp_structure     = get_post_meta($post_id, '_vms_comp_structure', true);
+    $comp_structure     = (string) get_post_meta($post_id, '_vms_comp_structure', true);
+    if ($comp_structure === '') $comp_structure = 'flat_fee';
+
     $flat_fee_amount    = get_post_meta($post_id, '_vms_flat_fee_amount', true);
     $door_split_percent = get_post_meta($post_id, '_vms_door_split_percent', true);
 
-    if (empty($comp_structure)) {
-        $comp_structure = 'flat_fee';
-    }
-
-    // If flat fee is involved, require a non-zero amount
     if (in_array($comp_structure, array('flat_fee', 'flat_fee_door_split'), true)) {
-        if ($flat_fee_amount === '' || $flat_fee_amount === null) {
-            $errors[] = 'Flat fee amount is required for this compensation structure.';
-        } elseif (!is_numeric($flat_fee_amount) || (float) $flat_fee_amount <= 0) {
-            $errors[] = 'Flat fee amount must be a positive number.';
-        }
+        if ($flat_fee_amount === '' || $flat_fee_amount === null) $errors[] = __('Flat fee amount is required for this compensation structure.', 'vms');
+        elseif (!is_numeric($flat_fee_amount) || (float)$flat_fee_amount <= 0) $errors[] = __('Flat fee amount must be a positive number.', 'vms');
     }
 
-    // If door split is involved, require a reasonable percentage
     if (in_array($comp_structure, array('door_split', 'flat_fee_door_split'), true)) {
-        if ($door_split_percent === '' || $door_split_percent === null) {
-            $errors[] = 'Door split percentage is required for this compensation structure.';
-        } elseif (!is_numeric($door_split_percent)) {
-            $errors[] = 'Door split percentage must be a number.';
-        } else {
+        if ($door_split_percent === '' || $door_split_percent === null) $errors[] = __('Door split percentage is required for this compensation structure.', 'vms');
+        elseif (!is_numeric($door_split_percent)) $errors[] = __('Door split percentage must be a number.', 'vms');
+        else {
             $pct = (float) $door_split_percent;
-            if ($pct <= 0 || $pct > 100) {
-                $errors[] = 'Door split percentage must be between 1 and 100.';
-            }
+            if ($pct <= 0 || $pct > 100) $errors[] = __('Door split percentage must be between 1 and 100.', 'vms');
         }
     }
 
-    // Optional: proposal sanity (only if you’re using those fields)
-    $allow_vendor_propose = get_post_meta($post_id, '_vms_allow_vendor_propose', true);
-    if ($allow_vendor_propose) {
-        $proposal_min = get_post_meta($post_id, '_vms_proposal_min', true);
-        $proposal_max = get_post_meta($post_id, '_vms_proposal_max', true);
-        $proposal_cap = get_post_meta($post_id, '_vms_proposal_cap', true);
-
-        // Only validate if values are provided
-        if ($proposal_min !== '' && $proposal_max !== '' && is_numeric($proposal_min) && is_numeric($proposal_max)) {
-            if ((float) $proposal_min > (float) $proposal_max) {
-                $errors[] = 'Proposal minimum cannot be greater than proposal maximum.';
-            }
-        }
-
-        if (
-            $proposal_cap !== '' && is_numeric($proposal_cap) &&
-            $proposal_max !== '' && is_numeric($proposal_max)
-        ) {
-            if ((float) $proposal_cap < (float) $proposal_max) {
-                $errors[] = 'Proposal cap should be greater than or equal to the proposal maximum.';
-            }
-        }
-    }
-
-    // ----------------------------------------
-    // Band selection + availability
-    // ----------------------------------------
+    // Band required
     $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
-
-    // Must have a band to be Ready.
     if (!$band_id) {
-        $errors[] = 'A band must be selected before marking this event Ready.';
+        $errors[] = __('A band must be selected before marking this event Ready.', 'vms');
         return $errors;
     }
 
-    // If we also have a date, enforce that the band is not explicitly "unavailable".
-    if ($event_date) {
-        $availability = vms_get_vendor_availability_for_date($band_id, $event_date); // uses main plugin helper
-
+    if ($event_date && function_exists('vms_get_vendor_availability_for_date')) {
+        $availability = vms_get_vendor_availability_for_date($band_id, $event_date);
         if ($availability === 'unavailable') {
-            $band_post = get_post($band_id);
-            $band_name = $band_post ? $band_post->post_title : 'Selected band';
-
+            $band_name = get_the_title($band_id) ?: __('Selected band', 'vms');
             $nice_date = date_i18n('M j, Y', strtotime($event_date));
-
-            $errors[] = sprintf(
-                '%s is marked Not Available on %s.',
-                $band_name,
-                $nice_date
-            );
+            $errors[] = sprintf(__('%s is marked Not Available on %s.', 'vms'), $band_name, $nice_date);
         }
     }
 
-    // Require vendor tax profile completion before Ready/Publish
-    $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
+    // Vendor tax profile required unless bypass is active
     if ($band_id > 0) {
-        $missing = function_exists('vms_vendor_tax_profile_missing_items')
-            ? vms_vendor_tax_profile_missing_items($band_id)
-            : [];
-
+        $missing = function_exists('vms_vendor_tax_profile_missing_items') ? (array) vms_vendor_tax_profile_missing_items($band_id) : array();
         if (!empty($missing)) {
-            // ✅ Allow bypass if active
             if (function_exists('vms_tax_bypass_is_active') && vms_tax_bypass_is_active($band_id)) {
-                // Optional: warn but do not block
                 if (function_exists('vms_add_admin_notice')) {
                     vms_add_admin_notice(
                         sprintf(
-                            'Tax profile bypass active for "%s" until %s. READY allowed, but W-9 is still required.',
+                            __('Tax profile bypass active for "%s" until %s. READY allowed, but W-9 is still required.', 'vms'),
                             get_the_title($band_id),
                             (string) get_post_meta($band_id, '_vms_tax_bypass_until', true)
                         ),
@@ -1771,35 +1299,28 @@ function vms_validate_event_plan($post_id)
             } else {
                 $vendor_name = get_the_title($band_id);
                 $errors[] = sprintf(
-                    'Band "%s" is missing required Tax Profile items: %s.',
+                    __('Band "%s" is missing required Tax Profile items: %s.', 'vms'),
                     $vendor_name ? $vendor_name : '#' . $band_id,
                     implode(', ', $missing)
                 );
             }
         }
-    } else {
-        // If you already require a band to mark Ready, ignore this.
-        // If not, you can decide whether band is required or not.
     }
 
-    // Staff tax profile completeness (required to mark READY)
+    // Staff tax completeness
     $assignments = get_post_meta($post_id, '_vms_staff_assignments', true);
     if (is_array($assignments)) {
         foreach ($assignments as $role_id => $staff_ids) {
             if (!is_array($staff_ids)) continue;
-
             foreach ($staff_ids as $sid) {
                 $sid = (int) $sid;
                 if ($sid <= 0) continue;
 
-                $missing = function_exists('vms_vendor_tax_profile_missing_items')
-                    ? vms_vendor_tax_profile_missing_items($sid)
-                    : array();
-
+                $missing = function_exists('vms_vendor_tax_profile_missing_items') ? (array) vms_vendor_tax_profile_missing_items($sid) : array();
                 if (!empty($missing)) {
                     $staff_name = get_the_title($sid);
                     $errors[] = sprintf(
-                        'Staff "%s" is missing required Tax Profile items: %s.',
+                        __('Staff "%s" is missing required Tax Profile items: %s.', 'vms'),
                         $staff_name ? $staff_name : '#' . $sid,
                         implode(', ', $missing)
                     );
@@ -1808,248 +1329,104 @@ function vms_validate_event_plan($post_id)
         }
     }
 
-    // Require venue open if the selected date is a CLOSED holiday
-    $venue_id   = (int) get_post_meta($post_id, '_vms_venue_id', true);
-    $event_date = (string) get_post_meta($post_id, '_vms_event_date', true);
-
+    // Venue closed holiday blocks Ready/Publish
+    $venue_id = (int) get_post_meta($post_id, '_vms_venue_id', true);
     if ($venue_id > 0 && $event_date && function_exists('vms_is_venue_closed_on_date') && vms_is_venue_closed_on_date($venue_id, $event_date)) {
-
-        $h = function_exists('vms_get_venue_holiday_for_date')
-            ? vms_get_venue_holiday_for_date($venue_id, $event_date)
-            : null;
-
-        $holiday_name = $h && !empty($h['name']) ? (string) $h['name'] : __('Holiday', 'vms');
-
-        $errors[] = sprintf(
-            'Venue is CLOSED for "%s" on %s.',
-            $holiday_name,
-            $event_date
-        );
+        $h = function_exists('vms_get_venue_holiday_for_date') ? vms_get_venue_holiday_for_date($venue_id, $event_date) : null;
+        $holiday_name = ($h && !empty($h['name'])) ? (string)$h['name'] : __('Holiday', 'vms');
+        $errors[] = sprintf(__('Venue is CLOSED for "%s" on %s.', 'vms'), $holiday_name, $event_date);
     }
 
     return $errors;
 }
 
 /**
- * Auto-generate an Event Plan title like "Band Name — May 9, 2026"
- * if the title is currently empty or still "Auto Draft".
+ * Auto-generate Event Plan title if empty/Auto Draft
  */
-function vms_maybe_autoset_event_plan_title($post_id)
+function vms_maybe_autoset_event_plan_title(int $post_id): void
 {
     $post = get_post($post_id);
-    if (! $post) {
-        return;
-    }
+    if (!$post) return;
 
-    $current_title = trim($post->post_title);
+    $current_title = trim((string)$post->post_title);
+    if ($current_title && strcasecmp($current_title, 'Auto Draft') !== 0) return;
 
-    // Only auto-set if title is empty or still the default "Auto Draft".
-    if ($current_title && strcasecmp($current_title, 'Auto Draft') !== 0) {
-        return;
-    }
+    $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
+    $band_name = $band_id ? (string) get_the_title($band_id) : '';
+    $event_date = (string) get_post_meta($post_id, '_vms_event_date', true);
 
-    // Get band name.
-    $band_id   = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
-    $band_post = $band_id ? get_post($band_id) : null;
-    $band_name = $band_post ? $band_post->post_title : '';
+    if ($band_name === '' || $event_date === '') return;
 
-    // Get event date.
-    $event_date = get_post_meta($post_id, '_vms_event_date', true); // "YYYY-MM-DD"
-    $formatted_date = '';
-
-    if ($event_date) {
-        $ts = strtotime($event_date);
-        if ($ts) {
-            // Example: "May 9, 2026"
-            $formatted_date = date_i18n('F j, Y', $ts);
-        } else {
-            $formatted_date = $event_date; // fallback raw
-        }
-    }
-
-    if (! $band_name || ! $formatted_date) {
-        // Not enough info to build a nice title.
-        return;
-    }
-
+    $ts = strtotime($event_date);
+    $formatted_date = $ts ? date_i18n('F j, Y', $ts) : $event_date;
     $new_title = $band_name . ' — ' . $formatted_date;
 
-    // Update post title + slug.
     wp_update_post(array(
         'ID'         => $post_id,
         'post_title' => $new_title,
         'post_name'  => sanitize_title($new_title),
     ));
 
-    // Optional: add a little notice so you see it happened.
-    vms_add_admin_notice(
-        sprintf('Event title set to "%s".', $new_title),
-        'success'
-    );
+    vms_add_admin_notice(sprintf(__('Event title set to "%s".', 'vms'), $new_title), 'success');
 }
 
-function vms_add_admin_notice($message, $type = 'success')
+/**
+ * Admin notices — transient-based
+ */
+function vms_add_admin_notice(string $message, string $type = 'success'): void
 {
     $user_id = get_current_user_id();
-    if (!$user_id) {
-        return;
-    }
+    if (!$user_id) return;
 
-    $notices = get_transient('vms_event_plan_notices_' . $user_id);
-    if (!is_array($notices)) {
-        $notices = array();
-    }
+    $key = 'vms_event_plan_notices_' . $user_id;
+    $notices = get_transient($key);
+    if (!is_array($notices)) $notices = array();
 
-    $notices[] = array(
-        'type'    => $type,  // 'success' or 'error'
-        'message' => $message,
-    );
-
-    // Keep for a minute – enough to survive the redirect.
-    set_transient('vms_event_plan_notices_' . $user_id, $notices, 60);
+    $notices[] = array('type' => $type, 'message' => $message);
+    set_transient($key, $notices, 60);
 }
 
-add_action('admin_notices', 'vms_render_admin_notices');
-function vms_render_admin_notices()
+add_action('admin_notices', 'vms_render_event_planadmin_notices');
+function vms_render_event_planadmin_notices(): void
 {
     $user_id = get_current_user_id();
-    if (!$user_id) {
-        return;
-    }
+    if (!$user_id) return;
 
-    $notices = get_transient('vms_event_plan_notices_' . $user_id);
-    if (!is_array($notices) || empty($notices)) {
-        return;
-    }
+    $key = 'vms_event_plan_notices_' . $user_id;
+    $notices = get_transient($key);
+    if (!is_array($notices) || empty($notices)) return;
 
-    delete_transient('vms_event_plan_notices_' . $user_id);
+    delete_transient($key);
 
     foreach ($notices as $notice) {
-        $class = ($notice['type'] === 'error') ? 'notice notice-error' : 'notice notice-success';
-        printf(
-            '<div class="%s"><p>%s</p></div>',
-            esc_attr($class),
-            esc_html($notice['message'])
-        );
+        $type = (string)($notice['type'] ?? 'success');
+        $class = ($type === 'error') ? 'notice notice-error' : (($type === 'warning') ? 'notice notice-warning' : 'notice notice-success');
+        printf('<div class="%s"><p>%s</p></div>', esc_attr($class), esc_html((string)($notice['message'] ?? '')));
     }
 }
 
 /**
- * Create or update a The Events Calendar event for this Event Plan.
- *
- * @param int   $post_id VMS Event Plan ID.
- * @param WP_Post $post  VMS Event Plan post object.
- * @return bool          True on success, false on failure.
- */
-function vms_publish_event_to_calendar($post_id, $post)
-{
-    // Make sure TEC functions exist.
-    if (! function_exists('tribe_create_event') || ! function_exists('tribe_update_event')) {
-        vms_add_admin_notice(
-            'The Events Calendar functions are not available. Is the plugin active?',
-            'error'
-        );
-        return false;
-    }
-
-    $args = vms_build_tec_event_args($post_id);
-    if (empty($args)) {
-        vms_add_admin_notice(
-            'Unable to build event data for The Events Calendar.',
-            'error'
-        );
-        return false;
-    }
-
-    // See if we already have a linked TEC event.
-    $existing_tec_id = (int) get_post_meta($post_id, '_vms_tec_event_id', true);
-    $tec_event_id    = 0;
-
-    if ($existing_tec_id > 0) {
-        // Update existing TEC event.
-        $updated_id = tribe_update_event($existing_tec_id, $args);
-
-        if ($updated_id && ! is_wp_error($updated_id)) {
-            $tec_event_id = $updated_id;
-        } else {
-            // If update fails, we could optionally try to create a fresh event.
-            vms_add_admin_notice(
-                'Failed to update existing Events Calendar event. Will attempt to create a new one.',
-                'error'
-            );
-        }
-    }
-
-    // If we don't have a valid TEC event ID yet, create a new event.
-    if (! $tec_event_id) {
-        $created_id = tribe_create_event($args);
-        if ($created_id && ! is_wp_error($created_id)) {
-            $tec_event_id = $created_id;
-            update_post_meta($post_id, '_vms_tec_event_id', $tec_event_id);
-        } else {
-            vms_add_admin_notice(
-                'Failed to create event in The Events Calendar.',
-                'error'
-            );
-            return false;
-        }
-    }
-
-    // Sync featured image from Event Plan to TEC event (optional but nice).
-    $thumb_id = get_post_thumbnail_id($post_id);
-    if ($thumb_id) {
-        set_post_thumbnail($tec_event_id, $thumb_id);
-    }
-
-    // You could also sync categories, tags, or venues here if desired.
-
-    // Save a link back for convenience (optional).
-    $tec_permalink = get_permalink($tec_event_id);
-    if ($tec_permalink) {
-        update_post_meta($post_id, '_vms_tec_event_url', esc_url_raw($tec_permalink));
-    }
-
-    return true;
-}
-
-/**
- * Add a "Plan Status" column to the Event Plans list table.
+ * List table: status pill column
  */
 add_filter('manage_vms_event_plan_posts_columns', 'vms_add_event_plan_status_column');
-function vms_add_event_plan_status_column($columns)
+function vms_add_event_plan_status_column(array $columns): array
 {
     $new = array();
-
     foreach ($columns as $key => $label) {
-        // Insert our column just before the Date column.
-        if ($key === 'date') {
-            $new['vms_plan_status'] = __('Plan Status', 'vms');
-        }
+        if ($key === 'date') $new['vms_plan_status'] = __('Plan Status', 'vms');
         $new[$key] = $label;
     }
-
-    // If for some reason "date" wasn't there, make sure we add ours.
-    if (!isset($new['vms_plan_status'])) {
-        $new['vms_plan_status'] = __('Plan Status', 'vms');
-    }
-
+    if (!isset($new['vms_plan_status'])) $new['vms_plan_status'] = __('Plan Status', 'vms');
     return $new;
 }
 
-/**
- * Render the "Plan Status" column cells.
- */
 add_action('manage_vms_event_plan_posts_custom_column', 'vms_render_event_plan_status_column', 10, 2);
-function vms_render_event_plan_status_column($column, $post_id)
+function vms_render_event_plan_status_column(string $column, int $post_id): void
 {
-    if ($column !== 'vms_plan_status') {
-        return;
-    }
+    if ($column !== 'vms_plan_status') return;
 
-    $status = get_post_meta($post_id, '_vms_event_plan_status', true);
-    if (!$status) {
-        $status = 'draft';
-    }
+    $status = (string) get_post_meta($post_id, '_vms_event_plan_status', true);
+    if ($status === '') $status = 'draft';
 
     $labels = array(
         'draft'     => __('Draft', 'vms'),
@@ -2063,109 +1440,102 @@ function vms_render_event_plan_status_column($column, $post_id)
         'published' => 'vms-pill-green',
     );
 
-    $label = isset($labels[$status]) ? $labels[$status] : ucfirst($status);
-    $class = isset($classes[$status]) ? $classes[$status] : 'vms-pill-grey';
+    $label = $labels[$status] ?? ucfirst($status);
+    $class = $classes[$status] ?? 'vms-pill-grey';
 
     echo '<span class="vms-status-pill ' . esc_attr($class) . '">' . esc_html($label) . '</span>';
 }
 
-/**
- * Add basic styling for the Plan Status pills on the Event Plan list screen.
- */
 add_action('admin_head-edit.php', 'vms_event_plan_status_column_css');
-function vms_event_plan_status_column_css()
+function vms_event_plan_status_column_css(): void
 {
-    $screen = get_current_screen();
-    if (!$screen || $screen->post_type !== 'vms_event_plan') {
-        return;
-    }
-?>
-<style>
-    .column-vms_plan_status {
-        width: 110px;
-    }
-
-    .vms-status-pill {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 600;
-        line-height: 1.4;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-    }
-
-    .vms-pill-grey {
-        background: #e5e7eb;
-        /* gray-200 */
-        color: #374151;
-        /* gray-700 */
-    }
-
-    .vms-pill-yellow {
-        background: #fef3c7;
-        /* amber-100 */
-        color: #92400e;
-        /* amber-800 */
-    }
-
-    .vms-pill-green {
-        background: #d1fae5;
-        /* emerald-100 */
-        color: #065f46;
-        /* emerald-800 */
-    }
-</style>
-<?php
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->post_type !== 'vms_event_plan') return;
+    ?>
+    <style>
+        .column-vms_plan_status{width:110px;}
+        .vms-status-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;line-height:1.4;text-transform:uppercase;letter-spacing:0.03em;}
+        .vms-pill-grey{background:#e5e7eb;color:#374151;}
+        .vms-pill-yellow{background:#fef3c7;color:#92400e;}
+        .vms-pill-green{background:#d1fae5;color:#065f46;}
+    </style>
+    <?php
 }
 
 /**
- * Build The Events Calendar event args array from a VMS Event Plan.
- *
- * @param int $post_id  The VMS Event Plan post ID.
- * @return array        Args suitable for tribe_create_event() / tribe_update_event().
+ * TEC Publish
  */
-function vms_build_tec_event_args($post_id)
+function vms_publish_event_to_calendar(int $post_id, WP_Post $post): bool
 {
-    $event_plan = get_post($post_id);
-    if (! $event_plan) {
-        return array();
+    if (!function_exists('tribe_create_event') || !function_exists('tribe_update_event')) {
+        vms_add_admin_notice(__('The Events Calendar functions are not available. Is the plugin active?', 'vms'), 'error');
+        return false;
     }
 
-    // Event date + times from VMS meta.
-    $event_date  = get_post_meta($post_id, '_vms_event_date', true);      // "YYYY-MM-DD"
-    $start_time  = get_post_meta($post_id, '_vms_start_time', true);      // "HH:MM" (24h)
-    $end_time    = get_post_meta($post_id, '_vms_end_time', true);        // "HH:MM" (24h)
-
-    // Band / headliner.
-    $band_id   = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
-    $band_post = $band_id ? get_post($band_id) : null;
-    $band_name = $band_post ? $band_post->post_title : '';
-
-    // Agenda / description (optional; use if you add an agenda meta field).
-    $agenda_text = get_post_meta($post_id, '_vms_agenda_text', true);
-
-    // Fallback to Event Plan content if no agenda meta is set.
-    if (empty($agenda_text)) {
-        $agenda_text = $event_plan->post_content;
+    $args = vms_build_tec_event_args($post_id);
+    if (empty($args)) {
+        vms_add_admin_notice(__('Unable to build event data for The Events Calendar.', 'vms'), 'error');
+        return false;
     }
 
-    // Build event title.
-    $title = trim($event_plan->post_title);
-    if ($band_name && $event_date) {
-        $ts             = strtotime($event_date);
-        $formatted_date = $ts ? date_i18n('F j, Y', $ts) : $event_date;
-        $default_title  = $band_name . ' — ' . $formatted_date;
+    $existing_tec_id = (int) get_post_meta($post_id, '_vms_tec_event_id', true);
+    $tec_event_id = 0;
 
-        if (! $title || strcasecmp($title, 'Auto Draft') === 0) {
-            $title = $default_title;
+    if ($existing_tec_id > 0) {
+        $updated_id = tribe_update_event($existing_tec_id, $args);
+        if ($updated_id && !is_wp_error($updated_id)) $tec_event_id = (int)$updated_id;
+        else vms_add_admin_notice(__('Failed to update existing Events Calendar event. Will attempt to create a new one.', 'vms'), 'error');
+    }
+
+    if (!$tec_event_id) {
+        $created_id = tribe_create_event($args);
+        if ($created_id && !is_wp_error($created_id)) {
+            $tec_event_id = (int)$created_id;
+            update_post_meta($post_id, '_vms_tec_event_id', $tec_event_id);
+        } else {
+            vms_add_admin_notice(__('Failed to create event in The Events Calendar.', 'vms'), 'error');
+            return false;
         }
     }
 
-    // Get VMS plan status
-    $plan_status = vms_get_event_plan_status($post_id);
-    $tec_status  = vms_map_plan_status_to_tec_post_status($plan_status);
+    $thumb_id = get_post_thumbnail_id($post_id);
+    if ($thumb_id) set_post_thumbnail($tec_event_id, $thumb_id);
+
+    $tec_permalink = get_permalink($tec_event_id);
+    if ($tec_permalink) update_post_meta($post_id, '_vms_tec_event_url', esc_url_raw($tec_permalink));
+
+    return true;
+}
+
+function vms_build_tec_event_args(int $post_id): array
+{
+    $event_plan = get_post($post_id);
+    if (!$event_plan) return array();
+
+    $event_date  = (string) get_post_meta($post_id, '_vms_event_date', true);
+    $start_time  = (string) get_post_meta($post_id, '_vms_start_time', true);
+    $end_time    = (string) get_post_meta($post_id, '_vms_end_time', true);
+
+    $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
+    $band_name = $band_id ? (string) get_the_title($band_id) : '';
+
+    $agenda_text = (string) get_post_meta($post_id, '_vms_agenda_text', true);
+    if ($agenda_text === '') $agenda_text = (string) $event_plan->post_content;
+
+    $title = trim((string)$event_plan->post_title);
+    if ($band_name && $event_date) {
+        $ts = strtotime($event_date);
+        $formatted_date = $ts ? date_i18n('F j, Y', $ts) : $event_date;
+        $default_title = $band_name . ' — ' . $formatted_date;
+        if (!$title || strcasecmp($title, 'Auto Draft') === 0) $title = $default_title;
+    }
+
+    $plan_status = function_exists('vms_get_event_plan_status') ? (string) vms_get_event_plan_status($post_id) : (string) get_post_meta($post_id, '_vms_event_plan_status', true);
+    if ($plan_status === '') $plan_status = 'draft';
+
+    $tec_status = function_exists('vms_map_plan_status_to_tec_post_status')
+        ? (string) vms_map_plan_status_to_tec_post_status($plan_status)
+        : (($plan_status === 'published') ? 'publish' : 'draft');
 
     $args = array(
         'post_type'    => 'tribe_events',
@@ -2174,89 +1544,67 @@ function vms_build_tec_event_args($post_id)
         'post_status'  => $tec_status,
     );
 
-    // Dates: TEC expects date-only here.
     if ($event_date) {
-        $args['EventStartDate'] = $event_date;  // "YYYY-MM-DD"
-        $args['EventEndDate']   = $event_date;  // same-day events for concerts
+        $args['EventStartDate'] = $event_date;
+        $args['EventEndDate']   = $event_date;
     }
 
-    // Times: TEC expects separate hour/minute fields, 00–23 if no meridian.
     if ($start_time) {
         $parts = explode(':', $start_time);
-        $hour  = isset($parts[0]) ? (int) $parts[0] : 0;
-        $min   = isset($parts[1]) ? (int) $parts[1] : 0;
-
-        $args['EventStartHour']   = sprintf('%02d', $hour); // "19"
-        $args['EventStartMinute'] = sprintf('%02d', $min);  // "00"
+        $args['EventStartHour']   = sprintf('%02d', (int)($parts[0] ?? 0));
+        $args['EventStartMinute'] = sprintf('%02d', (int)($parts[1] ?? 0));
     }
-
     if ($end_time) {
         $parts = explode(':', $end_time);
-        $hour  = isset($parts[0]) ? (int) $parts[0] : 0;
-        $min   = isset($parts[1]) ? (int) $parts[1] : 0;
-
-        $args['EventEndHour']   = sprintf('%02d', $hour);
-        $args['EventEndMinute'] = sprintf('%02d', $min);
+        $args['EventEndHour']   = sprintf('%02d', (int)($parts[0] ?? 0));
+        $args['EventEndMinute'] = sprintf('%02d', (int)($parts[1] ?? 0));
     }
-
-    // If we have times, explicitly mark as not all-day.
-    if ($start_time || $end_time) {
-        $args['EventAllDay'] = false;
-    }
+    if ($start_time || $end_time) $args['EventAllDay'] = false;
 
     return $args;
 }
 
-/**
- * Add "View in Calendar" row action link on the Event Plans list page.
- */
 add_filter('post_row_actions', 'vms_event_plan_row_actions', 10, 2);
-function vms_event_plan_row_actions($actions, $post)
+function vms_event_plan_row_actions(array $actions, WP_Post $post): array
 {
-    if ($post->post_type !== 'vms_event_plan') {
-        return $actions;
-    }
+    if ($post->post_type !== 'vms_event_plan') return $actions;
 
-    $tec_url = get_post_meta($post->ID, '_vms_tec_event_url', true);
+    $tec_url = (string) get_post_meta($post->ID, '_vms_tec_event_url', true);
     if ($tec_url) {
         $actions['vms_view_tec'] =
-            '<a href="' . esc_url($tec_url) . '" target="_blank" rel="noopener">'
-            . esc_html__('View in Calendar', 'vms')
-            . '</a>';
+            '<a href="' . esc_url($tec_url) . '" target="_blank" rel="noopener">' .
+            esc_html__('View in Calendar', 'vms') .
+            '</a>';
     }
-
     return $actions;
 }
 
+/**
+ * Filter list by current venue (admin)
+ */
 add_action('pre_get_posts', function ($query) {
     if (!is_admin() || !$query->is_main_query()) return;
 
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if (!$screen || $screen->id !== 'edit-vms_event_plan') return;
 
-    $venue_id = vms_get_current_venue_id();
+    if (!function_exists('vms_get_current_venue_id')) return;
+
+    $venue_id = (int) vms_get_current_venue_id();
     if ($venue_id <= 0) return;
 
     $meta_query = (array) $query->get('meta_query');
     $meta_query[] = array(
-        'key'   => '_vms_venue_id',
-        'value' => $venue_id,
+        'key'     => '_vms_venue_id',
+        'value'   => $venue_id,
         'compare' => '=',
-        'type'  => 'NUMERIC',
+        'type'    => 'NUMERIC',
     );
     $query->set('meta_query', $meta_query);
 });
 
-// Bootstrap admin hooks for Event Plans.
-if (is_admin()) {
-    new VMS_Admin_Event_Plans();
-}
-
 /**
- * Route B: Publish/Update Woo products from an Event Plan (idempotent via _vms_wc_product_map).
- *
- * Stores mapping on plan:
- *   _vms_wc_product_map = [ 'ga' => 123, 'vip' => 124, 'firepit_01' => 130, ... ]
+ * Woo publish pipeline
  */
 function vms_publish_products_from_plan(int $plan_id): array
 {
@@ -2264,56 +1612,37 @@ function vms_publish_products_from_plan(int $plan_id): array
         return array('ok' => false, 'error' => 'WooCommerce is not active.');
     }
 
-    $event_date = (string) get_post_meta($plan_id, '_vms_event_date', true); // YYYY-MM-DD
-    if (!$event_date) {
-        return array('ok' => false, 'error' => 'Missing event date.');
-    }
+    $event_date = (string) get_post_meta($plan_id, '_vms_event_date', true);
+    if (!$event_date) return array('ok' => false, 'error' => 'Missing event date.');
 
     $band_id   = (int) get_post_meta($plan_id, '_vms_band_vendor_id', true);
-    $band_name = $band_id ? get_the_title($band_id) : '';
-    if (!$band_name) {
-        $band_name = 'Event'; // fallback
-    }
+    $band_name = $band_id ? (string) get_the_title($band_id) : '';
+    if (!$band_name) $band_name = 'Event';
 
-    // Format date for titles
     $ts = strtotime($event_date);
     $nice_date = $ts ? date_i18n('M j, Y', $ts) : $event_date;
 
-    // Link to TEC event if exists (nice for later)
     $tec_event_id = (int) get_post_meta($plan_id, '_vms_tec_event_id', true);
 
-    // Load existing map
     $map = get_post_meta($plan_id, '_vms_wc_product_map', true);
     if (!is_array($map)) $map = array();
 
-    // Build blueprint of products to ensure exist.
-    // NOTE: Start simple (GA + Fire Pits + Pools), then we’ll extend to VIP/tiers easily.
     $blueprint = vms_build_product_blueprint_for_plan($plan_id, $nice_date, $band_name);
 
     $created = 0;
     $updated = 0;
 
     foreach ($blueprint as $key => $spec) {
-        $existing_id = isset($map[$key]) ? (int) $map[$key] : 0;
-
+        $existing_id = isset($map[$key]) ? (int)$map[$key] : 0;
         $product_id = vms_upsert_plan_product($plan_id, $existing_id, $spec, $tec_event_id);
+        if (!$product_id) continue;
 
-        if (!$product_id) {
-            // If one fails, keep going, but report it
-            continue;
-        }
+        if ($existing_id && $existing_id === $product_id) $updated++;
+        else $created++;
 
-        if ($existing_id && $existing_id === $product_id) {
-            $updated++;
-        } else {
-            $created++;
-        }
-
-        $map[$key] = (int) $product_id;
+        $map[$key] = $product_id;
     }
 
-    // Optional: if something used to exist but no longer in blueprint, disable it
-    // (seasonal toggles)
     foreach ($map as $key => $pid) {
         if (!isset($blueprint[$key])) {
             vms_disable_plan_product((int)$pid);
@@ -2325,57 +1654,45 @@ function vms_publish_products_from_plan(int $plan_id): array
     return array('ok' => true, 'created' => $created, 'updated' => $updated, 'map' => $map);
 }
 
-/**
- * Build a product blueprint for the plan.
- * Each item defines: name, price, type, tags, meta, stock rules, etc.
- */
 function vms_build_product_blueprint_for_plan(int $plan_id, string $nice_date, string $band_name): array
 {
-
     $ga_price = (float) get_post_meta($plan_id, '_vms_price_ga', true);
-    if ($ga_price <= 0) $ga_price = 20.00;
+    if ($ga_price <= 0) $ga_price = 20.0;
 
-    $enable_tables   = get_post_meta($plan_id, '_vms_enable_tables', true) === '1';
-    $enable_firepits = get_post_meta($plan_id, '_vms_enable_firepits', true) === '1';
-    $enable_pools    = get_post_meta($plan_id, '_vms_enable_pools', true) === '1';
+    $enable_tables   = (get_post_meta($plan_id, '_vms_enable_tables', true) === '1');
+    $enable_firepits = (get_post_meta($plan_id, '_vms_enable_firepits', true) === '1');
+    $enable_pools    = (get_post_meta($plan_id, '_vms_enable_pools', true) === '1');
 
     $table_count   = (int) get_post_meta($plan_id, '_vms_table_count', true);
-    if ($table_count < 0) $table_count = 0;
-    if ($table_count === 0) $table_count = 6;
+    if ($table_count <= 0) $table_count = 6;
 
     $firepit_count = (int) get_post_meta($plan_id, '_vms_firepit_count', true);
-    if ($firepit_count < 0) $firepit_count = 0;
-    if ($firepit_count === 0) $firepit_count = 6;
+    if ($firepit_count <= 0) $firepit_count = 6;
 
     $table_price   = (float) get_post_meta($plan_id, '_vms_price_table', true);
-    if ($table_price <= 0) $table_price = 30.00;
+    if ($table_price <= 0) $table_price = 30.0;
 
     $firepit_price = (float) get_post_meta($plan_id, '_vms_price_firepit', true);
-    if ($firepit_price <= 0) $firepit_price = 30.00;
+    if ($firepit_price <= 0) $firepit_price = 30.0;
 
     $pool_price    = (float) get_post_meta($plan_id, '_vms_price_pool', true);
-    if ($pool_price <= 0) $pool_price = 10.00;
+    if ($pool_price <= 0) $pool_price = 10.0;
 
     $table_min_tickets = (int) get_post_meta($plan_id, '_vms_min_tickets_per_table', true);
-    if ($table_min_tickets < 0) $table_min_tickets = 0;
-    if ($table_min_tickets === 0) $table_min_tickets = 2;
+    if ($table_min_tickets <= 0) $table_min_tickets = 2;
 
     $firepit_min_tickets = (int) get_post_meta($plan_id, '_vms_min_tickets_per_firepit', true);
-    if ($firepit_min_tickets < 0) $firepit_min_tickets = 0;
-    if ($firepit_min_tickets === 0) $firepit_min_tickets = 2;
+    if ($firepit_min_tickets <= 0) $firepit_min_tickets = 2;
 
     $items = array();
 
-    // --- GA Ticket ---
     $items['ga'] = array(
-        'name'        => "{$nice_date} — {$band_name} — GA Ticket",
-        'price'       => $ga_price,
-        'is_ticket'   => true,
-        'sku_suffix'  => 'GA',
-        'meta'        => array(
-            '_sr_addon_qualifier' => 'yes',
-        ),
-        'tags'        => array('ticket'),
+        'name'       => "{$nice_date} — {$band_name} — GA Ticket",
+        'price'      => $ga_price,
+        'is_ticket'  => true,
+        'sku_suffix' => 'GA',
+        'meta'       => array('_sr_addon_qualifier' => 'yes'),
+        'tags'       => array('ticket'),
     );
 
     if ($enable_tables) {
@@ -2392,13 +1709,12 @@ function vms_build_product_blueprint_for_plan(int $plan_id, string $nice_date, s
                     '_sr_addon_type'                   => 'table',
                     '_sr_addon_unit_label'             => "Table #{$num}",
                 ),
-                'tags'       => array(),
-                'stock_qty'  => 1,
+                'tags'      => array(),
+                'stock_qty' => 1,
             );
         }
     }
 
-    // --- Fire Pits (unique per pit number, qty=1) ---
     if ($enable_firepits) {
         for ($i = 1; $i <= $firepit_count; $i++) {
             $num = str_pad((string)$i, 2, '0', STR_PAD_LEFT);
@@ -2413,13 +1729,12 @@ function vms_build_product_blueprint_for_plan(int $plan_id, string $nice_date, s
                     '_sr_addon_type'                   => 'fire_pit',
                     '_sr_addon_unit_label'             => "Fire Pit #{$num}",
                 ),
-                'tags'       => array(),
-                'stock_qty'  => 1,
+                'tags'      => array(),
+                'stock_qty' => 1,
             );
         }
     }
 
-    // --- Kiddie Pools (example add-on, no minimum tickets) ---
     if ($enable_pools) {
         $items['pool'] = array(
             'name'       => "{$nice_date} — {$band_name} — Kiddie Pool Rental",
@@ -2438,147 +1753,59 @@ function vms_build_product_blueprint_for_plan(int $plan_id, string $nice_date, s
     return $items;
 }
 
-/**
- * Create/update a single product for a plan.
- */
 function vms_upsert_plan_product(int $plan_id, int $existing_product_id, array $spec, int $tec_event_id = 0): int
 {
-    $name  = isset($spec['name']) ? (string) $spec['name'] : '';
-    $price = isset($spec['price']) ? (float) $spec['price'] : 0.0;
+    if (!class_exists('WC_Product_Simple')) return 0;
 
+    $name  = (string)($spec['name'] ?? '');
+    $price = (float)($spec['price'] ?? 0.0);
     if ($name === '') return 0;
 
     $product = null;
-    $is_update = false;
-
     if ($existing_product_id > 0) {
         $product = wc_get_product($existing_product_id);
-        if ($product) $is_update = true;
     }
-
     if (!$product) {
         $product = new WC_Product_Simple();
     }
 
-    // Core fields
     $product->set_name($name);
     $product->set_regular_price($price);
-    $product->set_status('publish'); // we can change to 'draft' until Ready if you prefer
+    $product->set_status('publish');
     $product->set_catalog_visibility('visible');
 
-    // Stock rules (optional)
     if (isset($spec['stock_qty'])) {
         $product->set_manage_stock(true);
         $product->set_stock_quantity((int)$spec['stock_qty']);
         $product->set_stock_status(((int)$spec['stock_qty'] > 0) ? 'instock' : 'outofstock');
-        $product->set_sold_individually(true); // important for fire pits
+        $product->set_sold_individually(true);
     } else {
-        // Tickets often are unlimited; keep stock off unless you want caps
         $product->set_manage_stock(false);
     }
 
-    // Save to get an ID
-    $product_id = $product->save();
+    $product_id = (int) $product->save();
     if (!$product_id) return 0;
 
-    // Link product back to plan + TEC (super helpful for searching later)
     update_post_meta($product_id, '_vms_event_plan_id', $plan_id);
-    if ($tec_event_id > 0) {
-        update_post_meta($product_id, '_vms_tec_event_id', $tec_event_id);
+    if ($tec_event_id > 0) update_post_meta($product_id, '_vms_tec_event_id', $tec_event_id);
+
+    $tags = (isset($spec['tags']) && is_array($spec['tags'])) ? $spec['tags'] : array();
+    wp_set_object_terms($product_id, $tags, 'product_tag', false);
+
+    $meta = (isset($spec['meta']) && is_array($spec['meta'])) ? $spec['meta'] : array();
+    foreach ($meta as $k => $v) {
+        update_post_meta($product_id, (string)$k, $v);
     }
 
-    // Tags (tickets get 'ticket' tag; add-ons do not)
-    $tags = isset($spec['tags']) && is_array($spec['tags']) ? $spec['tags'] : array();
-    if (!empty($tags)) {
-        wp_set_object_terms($product_id, $tags, 'product_tag', false);
-    } else {
-        // Ensure add-ons do NOT accidentally keep the ticket tag
-        wp_set_object_terms($product_id, array(), 'product_tag', false);
-    }
-
-    // Meta
-    if (isset($spec['meta']) && is_array($spec['meta'])) {
-        foreach ($spec['meta'] as $k => $v) {
-            update_post_meta($product_id, (string)$k, $v);
-        }
-    }
-
-    // Convenience meta to help order readability / searching
     update_post_meta($product_id, '_vms_product_role', !empty($spec['is_ticket']) ? 'ticket' : 'addon');
 
-    return (int) $product_id;
+    return $product_id;
 }
 
-/**
- * Disable a product that is no longer in the blueprint (seasonal off, removed, etc.)
- * You can choose 'draft', 'private', or stock out.
- */
 function vms_disable_plan_product(int $product_id): void
 {
     $p = wc_get_product($product_id);
     if (!$p) return;
-
-    // safest: draft so it can't be purchased
     $p->set_status('draft');
     $p->save();
-}
-
-function vms_force_event_plan_title($post_id)
-{
-    static $running = false;
-    if ($running) return; // prevents recursion
-
-    $band_id    = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
-    $event_date = (string) get_post_meta($post_id, '_vms_event_date', true);
-
-    if (!$band_id || !$event_date) return;
-
-    $band_name = get_the_title($band_id);
-    if (!$band_name) return;
-
-    $ts = strtotime($event_date);
-    $formatted = $ts ? date_i18n('F j, Y', $ts) : $event_date;
-
-    $new_title = $band_name . ' — ' . $formatted;
-
-    // Don’t update if it’s already correct (saves time + avoids extra saves)
-    $current = get_post_field('post_title', $post_id);
-    if ((string)$current === (string)$new_title) return;
-
-    $running = true;
-
-    wp_update_post(array(
-        'ID'         => $post_id,
-        'post_title' => $new_title,
-        'post_name'  => sanitize_title($new_title),
-    ));
-
-    $running = false;
-}
-
-
-function vms_maybe_apply_band_comp_defaults_to_plan($plan_id)
-{
-    // Only fill blanks
-    $has_structure = get_post_meta($plan_id, '_vms_comp_structure', true);
-    $has_flat      = get_post_meta($plan_id, '_vms_flat_fee_amount', true);
-    $has_split     = get_post_meta($plan_id, '_vms_door_split_percent', true);
-
-    if ($has_structure || $has_flat || $has_split) return;
-
-    vms_apply_band_comp_defaults_to_plan($plan_id);
-}
-
-function vms_apply_band_comp_defaults_to_plan($plan_id)
-{
-    $band_id = (int) get_post_meta($plan_id, '_vms_band_vendor_id', true);
-    if (!$band_id) return;
-
-    $structure = get_post_meta($band_id, '_vms_default_comp_structure', true);
-    $flat      = get_post_meta($band_id, '_vms_default_flat_fee_amount', true);
-    $split     = get_post_meta($band_id, '_vms_default_door_split_percent', true);
-
-    if ($structure) update_post_meta($plan_id, '_vms_comp_structure', sanitize_text_field($structure));
-    if ($flat !== '' && $flat !== null) update_post_meta($plan_id, '_vms_flat_fee_amount', (float) $flat);
-    if ($split !== '' && $split !== null) update_post_meta($plan_id, '_vms_door_split_percent', (float) $split);
 }
