@@ -42,11 +42,10 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
         return array('ok' => false, 'error' => __('ICS feed returned empty content.', 'vms'));
     }
 
-    $events = vms_vendor_ics_extract_events($raw, $active_dates);
+    $events = vms_vendor_ics_extract_events($raw);
     if (!$events) {
         // Save an empty ICS layer (important so it can “clear” old unavailable marks)
         update_post_meta($vendor_id, '_vms_availability_ics', array());
-        update_post_meta($vendor_id, '_vms_ics_unavailable', array());
         return array('ok' => true, 'ics_unavailable' => array());
     }
 
@@ -63,22 +62,10 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
         }
     }
 
-    // Normalize for UI: list of YYYY-MM-DD (sorted)
-    $ics_unavailable_dates = array_keys($ics_unavailable);
-    sort($ics_unavailable_dates);
-
     // ✅ Write ICS layer ONLY (do not touch manual layer)
-    // Layer map: YYYY-MM-DD => unavailable (useful for future logic)
     update_post_meta($vendor_id, '_vms_availability_ics', $ics_unavailable);
 
-    // UI list: [YYYY-MM-DD, ...] (what the portal calendar expects)
-    update_post_meta($vendor_id, '_vms_ics_unavailable', $ics_unavailable_dates);
-
-    return array(
-        'ok' => true,
-        'ics_unavailable' => $ics_unavailable_dates,
-        'ics_layer' => $ics_unavailable,
-    );
+    return array('ok' => true, 'ics_unavailable' => $ics_unavailable);
 }
  
 

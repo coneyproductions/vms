@@ -132,7 +132,19 @@ function vms_get_timezone_id(): string
 
 function vms_get_timezone(): DateTimeZone
 {
-    return new DateTimeZone(vms_get_timezone_id());
+    $opts = (array) get_option('vms_settings', array());
+    $tz = isset($opts['timezone']) ? trim((string) $opts['timezone']) : '';
+
+    if ($tz !== '') {
+        return new DateTimeZone($tz);
+    }
+
+    // Always fall back to WP's timezone object (handles city tz and UTC offsets correctly)
+    if (function_exists('wp_timezone')) {
+        return wp_timezone();
+    }
+
+    return new DateTimeZone('UTC');
 }
 
 function vms_get_event_titles_by_date(array $active_dates): array
@@ -457,7 +469,7 @@ function vms_time_add_minutes(string $hhmm, int $minutes): string
  *     '2026-05-25' => [
  *        'name' => 'Memorial Day',
  *        'status' => 'open'|'closed',
- *        'rules' => [ 'vendor' => [...], 'bar' => [...], ... ] // future
+ *        'rules' => [ 'vendor' => [. . .], 'bar' => [. . .], . . . ] // future
  *     ],
  *   ],
  * ]
@@ -688,3 +700,266 @@ if (!function_exists('vms_pretty_structure_label')) {
         };
     }
 }
+
+/**
+ * ==========================================================
+ * Vendor Profile Change Tracking (No-Email “Option A”)
+ * ==========================================================
+ *
+ * Meta keys used on vendor posts (post_type: vms_vendor)
+ * - _vms_vendor_profile_last_updated_gmt   (string mysql GMT)
+ * - _vms_vendor_profile_last_updated_by    (int user ID)
+ * - _vms_vendor_profile_last_reviewed_gmt  (string mysql GMT)
+ * - _vms_vendor_profile_last_reviewed_by   (int user ID)
+ * - _vms_vendor_profile_needs_review       ('1' or '0')
+ */
+
+/**
+ * Mark vendor profile as updated and optionally record what changed.
+ *
+ * Stores:
+ *  - _vms_vendor_last_updated_at
+ *  - _vms_vendor_last_updated_by
+ *  - _vms_vendor_last_updated_fields (array)
+ */
+/**
+ * Mark vendor as updated (needs admin review).
+ * This is the ONLY function vendor-portal save handlers should call.
+ *
+ * Canonical meta schema used by admin UI:
+ * - _vms_vendor_profile_last_updated_gmt (mysql GMT)
+ * - _vms_vendor_profile_last_updated_by  (int)
+ * - _vms_vendor_profile_needs_review     ('1' or '0')
+ * Optional:
+ * - _vms_vendor_profile_last_updated_fields (array of field keys)
+ * - _vms_vendor_profile_last_update_context (string)
+ */
+function vms_vendor_mark_profile_updated($vendor_id, $user_id = 0, $changed_fields = array(), $context = '')
+{
+    $vendor_id = (int) $vendor_id;
+    if ($vendor_id <= 0) return;
+
+    $user_id = (int) $user_id;
+    if ($user_id <= 0 && is_user_logged_in()) {
+        $user_id = (int) get_current_user_id();
+    }
+
+    $now_gmt = current_time('mysql', true);
+
+    update_post_meta($vendor_id, '_vms_vendor_profile_last_updated_gmt', $now_gmt);
+
+    if ($user_id > 0) {
+        update_post_meta($vendor_id, '_vms_vendor_profile_last_updated_by', $user_id);
+    }
+
+    // ✅ This is the flag your admin column/metabox reads
+    update_post_meta($vendor_id, '_vms_vendor_profile_needs_review', '1');
+
+    // Optional extras (safe)
+    if (is_array($changed_fields) && !empty($changed_fields)) {
+        update_post_meta($vendor_id, '_vms_vendor_profile_last_updated_fields', array_values($changed_fields));
+    }
+
+    if ($context !== '') {
+        update_post_meta($vendor_id, '_vms_vendor_profile_last_update_context', sanitize_key($context));
+    }
+}
+
+/**
+ * Compare "before" vs "after" and return the meta keys that changed.
+ * Only compares keys you provide (so you can ignore noisy fields).
+ */
+function vms_vendor_diff_meta_keys($vendor_id, array $keys, array $new_values_by_key) {
+    $changed = array();
+
+    foreach ($keys as $k) {
+        $old = get_post_meta($vendor_id, $k, true);
+        $new = array_key_exists($k, $new_values_by_key) ? $new_values_by_key[$k] : null;
+
+        // normalize a bit
+        $old_norm = is_string($old) ? trim($old) : $old;
+        $new_norm = is_string($new) ? trim($new) : $new;
+
+        if ($old_norm != $new_norm) {
+            $changed[] = $k;
+        }
+    }
+
+    return $changed;
+}
+
+function vms_vendor_mark_profile_reviewed($vendor_id, $user_id = null)
+{
+    $vendor_id = (int) $vendor_id;
+    if ($vendor_id <= 0) return;
+
+    if ($user_id === null) {
+        $user_id = get_current_user_id();
+    }
+
+    $now_gmt = current_time('mysql', true);
+
+    update_post_meta($vendor_id, '_vms_vendor_profile_last_reviewed_gmt', $now_gmt);
+    update_post_meta($vendor_id, '_vms_vendor_profile_last_reviewed_by', (int) $user_id);
+
+    // Clear the flag
+    update_post_meta($vendor_id, '_vms_vendor_profile_needs_review', '0');
+}
+
+function vms_vendor_profile_needs_review($vendor_id)
+{
+    $flag = get_post_meta((int) $vendor_id, '_vms_vendor_profile_needs_review', true);
+    return ($flag === '1');
+}
+
+/**
+ * Admin: Add “Updates” column to Vendors list
+ */
+add_filter('manage_vms_vendor_posts_columns', 'vms_vendor_add_updates_column');
+function vms_vendor_add_updates_column($columns)
+{
+    $new = array();
+
+    foreach ($columns as $key => $label) {
+        // Put it before date if possible
+        if ($key === 'date') {
+            $new['vms_vendor_updates'] = __('Updates', 'vms');
+        }
+        $new[$key] = $label;
+    }
+
+    if (!isset($new['vms_vendor_updates'])) {
+        $new['vms_vendor_updates'] = __('Updates', 'vms');
+    }
+
+    return $new;
+}
+
+add_action('manage_vms_vendor_posts_custom_column', 'vms_vendor_render_updates_column', 10, 2);
+function vms_vendor_render_updates_column($column, $post_id)
+{
+    if ($column !== 'vms_vendor_updates') return;
+
+    $needs = vms_vendor_profile_needs_review($post_id);
+
+    $last_gmt = get_post_meta($post_id, '_vms_vendor_profile_last_updated_gmt', true);
+    $time_ago = '';
+
+    if ($last_gmt) {
+        $ts = strtotime($last_gmt . ' GMT');
+        if ($ts) {
+            $time_ago = human_time_diff($ts, time()) . ' ago';
+        }
+    }
+
+    if ($needs) {
+        echo '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:11px;letter-spacing:.02em;text-transform:uppercase;">Needs review</span>';
+        if ($time_ago) {
+            echo '<div style="margin-top:4px;font-size:12px;opacity:.85;">' . esc_html($time_ago) . '</div>';
+        }
+    } else {
+        echo '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#e5e7eb;color:#374151;font-weight:700;font-size:11px;letter-spacing:.02em;text-transform:uppercase;">OK</span>';
+        if ($time_ago) {
+            echo '<div style="margin-top:4px;font-size:12px;opacity:.85;">Last update: ' . esc_html($time_ago) . '</div>';
+        }
+    }
+}
+
+/**
+ * Admin: Metabox on vendor edit screen to show status + “Mark Reviewed”
+ */
+add_action('add_meta_boxes', 'vms_vendor_add_change_tracking_metabox');
+function vms_vendor_add_change_tracking_metabox()
+{
+    add_meta_box(
+        'vms_vendor_change_tracking',
+        __('Vendor Updates', 'vms'),
+        'vms_vendor_change_tracking_metabox_cb',
+        'vms_vendor',
+        'side',
+        'high'
+    );
+}
+
+function vms_vendor_change_tracking_metabox_cb($post)
+{
+    $vendor_id = (int) $post->ID;
+
+    $needs = vms_vendor_profile_needs_review($vendor_id);
+
+    $updated_gmt = get_post_meta($vendor_id, '_vms_vendor_profile_last_updated_gmt', true);
+    $updated_by  = (int) get_post_meta($vendor_id, '_vms_vendor_profile_last_updated_by', true);
+
+    $reviewed_gmt = get_post_meta($vendor_id, '_vms_vendor_profile_last_reviewed_gmt', true);
+    $reviewed_by  = (int) get_post_meta($vendor_id, '_vms_vendor_profile_last_reviewed_by', true);
+
+    echo '<div style="line-height:1.35;">';
+
+    if ($needs) {
+        echo '<div style="margin:0 0 8px 0;"><strong style="color:#991b1b;">Needs review</strong></div>';
+    } else {
+        echo '<div style="margin:0 0 8px 0;"><strong>All caught up</strong></div>';
+    }
+
+    if ($updated_gmt) {
+        $ts = strtotime($updated_gmt . ' GMT');
+        $when = $ts ? human_time_diff($ts, time()) . ' ago' : $updated_gmt;
+
+        $who = $updated_by ? get_user_by('id', $updated_by) : null;
+        $who_name = $who ? $who->display_name : '';
+
+        echo '<div style="margin:0 0 8px 0;">';
+        echo '<div><strong>Last vendor update:</strong></div>';
+        echo '<div>' . esc_html($when) . ($who_name ? ' <span style="opacity:.8;">(' . esc_html($who_name) . ')</span>' : '') . '</div>';
+        echo '</div>';
+    } else {
+        echo '<div style="margin:0 0 8px 0; opacity:.85;">No update history yet.</div>';
+    }
+
+    if ($reviewed_gmt) {
+        $ts = strtotime($reviewed_gmt . ' GMT');
+        $when = $ts ? human_time_diff($ts, time()) . ' ago' : $reviewed_gmt;
+
+        $who = $reviewed_by ? get_user_by('id', $reviewed_by) : null;
+        $who_name = $who ? $who->display_name : '';
+
+        echo '<div style="margin:0 0 10px 0;">';
+        echo '<div><strong>Last reviewed:</strong></div>';
+        echo '<div>' . esc_html($when) . ($who_name ? ' <span style="opacity:.8;">(' . esc_html($who_name) . ')</span>' : '') . '</div>';
+        echo '</div>';
+    }
+
+    if ($needs) {
+        $nonce = wp_create_nonce('vms_vendor_mark_reviewed_' . $vendor_id);
+        $url = admin_url('admin-post.php?action=vms_vendor_mark_reviewed&vendor_id=' . $vendor_id . '&_wpnonce=' . $nonce);
+
+        echo '<p style="margin:0;"><a class="button button-primary" href="' . esc_url($url) . '">Mark as Reviewed</a></p>';
+    }
+
+    echo '</div>';
+}
+
+/**
+ * Admin handler: mark reviewed
+ */
+add_action('admin_post_vms_vendor_mark_reviewed', 'vms_vendor_handle_mark_reviewed');
+function vms_vendor_handle_mark_reviewed()
+{
+    if (!current_user_can('edit_posts')) {
+        wp_die('Permission denied.');
+    }
+
+    $vendor_id = isset($_GET['vendor_id']) ? (int) $_GET['vendor_id'] : 0;
+    if ($vendor_id <= 0) {
+        wp_die('Invalid vendor.');
+    }
+
+    check_admin_referer('vms_vendor_mark_reviewed_' . $vendor_id);
+
+    vms_vendor_mark_profile_reviewed($vendor_id, get_current_user_id());
+
+    // Redirect back to vendor edit screen
+    wp_safe_redirect(admin_url('post.php?post=' . $vendor_id . '&action=edit'));
+    exit;
+} 
+

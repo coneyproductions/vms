@@ -11,9 +11,10 @@
 ## Development Notes
 
 ## INITIAL SETUP ##
-🙏 Create all public pages
+✅ Create all public pages
     - Vendor Portal
     - Staff Portal
+    - Vendor Application
 
 *** ADMIN MENU ***
 ✅ Can we make the default event time UI editable? Each venue has different times & durations
@@ -41,7 +42,7 @@
 💡 Agency management (multiple bands)
 
 ## VENDOR PORTAL ##
-🙏 Small visual tweak: format telephone #
+✅ Small visual tweak: format telephone #
 🙏 Section for vendors/labor to see their events/terms
 🙏 Autofill contract (manually approved by admin before submitting to vendor)
 - Providing own sound tech
@@ -83,5 +84,5 @@ cd wp-content/plugins/vms
 ```bash
 git status
 git add .
-git commit -m "fixed venodr application process"
+git commit -m "fixed availability calendar UI as well as ICS calendar sync"
 git push origin main

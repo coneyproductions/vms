@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
  *   _vms_default_comp_by_dow (array)
  *
  * Day-of-week keys:
- *   0 = Sunday ... 6 = Saturday  (matches PHP date('w'))
+ *   0 = Sunday . . . 6 = Saturday  (matches PHP date('w'))
  *
  * Each day stores:
  *   structure          flat_fee | flat_fee_door_split | door_split
@@ -222,13 +222,7 @@ function vms_get_venue_default_comp_by_dow(int $venue_id): array {
     return is_array($saved) ? $saved : array();
 }
 
-/**
- * Helper: get the venue default comp row for a specific date (YYYY-MM-DD).
- *
- * Returns an array:
- *   ['structure'=>..., 'flat_fee_amount'=>..., 'door_split_percent'=>..., 'commission_percent'=>..., 'commission_mode'=>...]
- * or empty array if venue/date is invalid or no defaults exist.
- */
+
 function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
     $event_date = trim($event_date);
     if ($venue_id <= 0 || $event_date === '') return array();

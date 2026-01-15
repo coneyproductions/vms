@@ -83,13 +83,7 @@ function vms_handle_duplicate_venue_action(): void
     exit;
 }
 
-/**
- * Duplicate a post (any CPT) and copy all meta + terms.
- *
- * @param int   $source_id
- * @param array $override_args e.g. ['post_status'=>'draft','post_title'=>'New...']
- * @return int New post ID (0 on failure)
- */
+
 function vms_duplicate_post_with_meta_and_terms(int $source_id, array $override_args = array()): int
 {
     $source = get_post($source_id);

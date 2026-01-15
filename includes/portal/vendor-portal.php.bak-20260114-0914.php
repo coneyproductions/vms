@@ -94,32 +94,33 @@ if (!function_exists('vms_vendor_flag_vendor_update')) {
  */
 function vms_vendor_get_active_dates_or_rolling_window(int $months_ahead = 12): array
 {
+    // 1) Use season dates if they exist
+    $active_dates = function_exists('vms_get_active_season_dates') ? (array) vms_get_active_season_dates() : array();
+    $active_dates = array_values(array_filter(array_map('sanitize_text_field', $active_dates)));
+
+    if (!empty($active_dates)) {
+        return $active_dates;
+    }
+
+    // 2) Otherwise generate rolling window
     $months_ahead = (int) $months_ahead;
     if ($months_ahead < 1) $months_ahead = 12;
     if ($months_ahead > 24) $months_ahead = 24;
 
-    // Season dates (if defined)
-    $season = function_exists('vms_get_active_season_dates') ? (array) vms_get_active_season_dates() : array();
-    $season = array_values(array_filter(array_map('sanitize_text_field', $season)));
-
-    // Rolling window dates (always include so ICS can evaluate what the UI shows)
     $tz = wp_timezone();
     $start = new DateTime('today', $tz);
     $end   = (clone $start)->modify('+' . $months_ahead . ' months');
 
-    $rolling = array();
+    $dates = array();
     $cur = clone $start;
+
     while ($cur < $end) {
-        $rolling[] = $cur->format('Y-m-d');
+        $dates[] = $cur->format('Y-m-d');
         $cur->modify('+1 day');
     }
 
-    // Union
-    $all = array_values(array_unique(array_merge($rolling, $season)));
-    sort($all);
-    return $all;
+    return $dates;
 }
-
 function vms_vendor_portal_shortcode()
 {
     $base_url = get_permalink(); // page where shortcode lives
@@ -159,7 +160,7 @@ function vms_vendor_portal_shortcode()
                 </p>
             </div>
         </div>
-    <?php
+<?php
         return ob_get_clean();
     }
 
@@ -206,107 +207,6 @@ function vms_vendor_portal_shortcode()
 .vms-field{margin:0 0 14px}
 .vms-field label{display:block;margin:0 0 6px;font-weight:800}
 .vms-field input,.vms-field textarea,.vms-field select{width:100%;max-width:520px}
-
-.vms-av-grid .vms-av-btn{position:relative}
-
-.vms-av-grid .vms-av-src{
-  position:absolute;
-  top:6px;
-  right:6px;
-  font-size:12px;
-  line-height:1;
-  opacity:.75;
-  pointer-events:none;
-}
-
-/* Booked should look distinct from “Not Available” */
-.vms-av-grid .vms-av-btn[data-src="booked"]{
-  border-color:#2563eb;
-  background:#eff6ff;
-  color:#1e3a8a;
-}
-
-.vms-av-grid .vms-av-btn[data-src="booked"] .vms-av-state{
-  letter-spacing:.02em;
-  text-transform:uppercase;
-  font-size:12px;
-}
-
-.vms-av-badge-booked{
-  font-size:10px;
-  font-weight:900;
-  padding:2px 6px;
-  border-radius:999px;
-  background:#eff6ff;
-  color:#1e3a8a;
-}
-
-.vms-av-grid .vms-av-btn[data-src="booked"]{
-  border-color:#2563eb;
-  background:#eff6ff;
-  color:#1e3a8a;
-}
-
-.vms-av-grid .vms-av-btn[data-src="booked"] .vms-av-state{
-  text-transform:uppercase;
-  font-size:12px;
-  letter-spacing:.02em;
-}
-
-/* Booked should always win visually */
-.vms-av-grid .vms-av-btn[data-src="booked"]{
-  border-color:#2563eb !important;
-  background:#eff6ff !important;
-  color:#1e3a8a !important;
-}
-
-/* =========================================================
-   Mobile polish (keep grid, make cells readable)
-   ========================================================= */
-@media (max-width:520px){
-
-  /* Hide the source icon inside the button (it’s useful on desktop, noisy on mobile) */
-  .vms-av-grid .vms-av-btn .vms-av-src{display:none !important;}
-
-  /* Slightly tighten cell padding for breathing room */
-  .vms-av-grid td{padding:8px !important;}
-
-  /* Make the button feel intentional on mobile */
-  .vms-av-grid .vms-av-btn{
-    border-radius:999px !important;
-    padding:6px 0 !important;
-    min-height:34px !important;
-  }
-
-  /* Keep the label large and single-line */
-  .vms-av-grid .vms-av-btn .vms-av-state{
-    font-size:15px !important;
-    line-height:1 !important;
-    white-space:nowrap !important;
-  }
-
-  /* Event title: 1-line clamp, no mid-word splitting */
-  .vms-av-event-title{
-    margin-top:4px !important;
-    font-size:10px !important;
-    line-height:1.15 !important;
-    display:block !important;
-    white-space:nowrap !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important; /* renders a single ellipsis glyph */
-    word-break:normal !important;
-    overflow-wrap:normal !important;
-  }
-
-  /* Blue booked state: make sure it stays distinct on mobile too */
-  .vms-av-grid .vms-av-btn[data-src="booked"]{
-    border-color:#2563eb !important;
-    background:#eff6ff !important;
-    color:#1e3a8a !important;
-  }
-}
-
-
 </style>';
 
     // Header + nav (shown on all tabs)
@@ -414,22 +314,8 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         // Optional: dates marked unavailable from ICS sync module
         $ics_unavailable = get_post_meta($vendor_id, '_vms_ics_unavailable', true);
         if (!is_array($ics_unavailable)) $ics_unavailable = array();
+        $ics_lookup = array_flip(array_values(array_filter($ics_unavailable)));
 
-        // Backward/alternate storage support:
-        // - if it's a map (date => 'unavailable'), use keys
-        // - if it's empty, fall back to the canonical ICS layer meta (also a map)
-        $is_list = (array_keys($ics_unavailable) === range(0, max(0, count($ics_unavailable) - 1)));
-        if (!$is_list && !empty($ics_unavailable)) {
-            $ics_unavailable = array_keys($ics_unavailable);
-        } elseif (empty($ics_unavailable)) {
-            $ics_layer = get_post_meta($vendor_id, '_vms_availability_ics', true);
-            if (is_array($ics_layer) && !empty($ics_layer)) {
-                $ics_unavailable = array_keys($ics_layer);
-            }
-        }
-
-        $ics_unavailable = array_values(array_unique(array_filter(array_map('sanitize_text_field', $ics_unavailable))));
-        $ics_lookup = array_fill_keys($ics_unavailable, true);
         $preferred = (string) get_post_meta($vendor_id, '_vms_availability_preferred_method', true);
         if ($preferred !== 'manual' && $preferred !== 'ics') $preferred = 'manual';
 
@@ -523,20 +409,11 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
                             // If your sync returns a list, persist it for UI/source labels.
                             if (isset($result['ics_unavailable']) && is_array($result['ics_unavailable'])) {
-                                $raw = $result['ics_unavailable'];
-
-                                // Accept either:
-                                // - list: ['YYYY-MM-DD', 'YYYY-MM-DD']
-                                // - map:  ['YYYY-MM-DD' => 'unavailable']
-                                $raw_is_list = (array_keys($raw) === range(0, max(0, count($raw) - 1)));
-                                if (!$raw_is_list && !empty($raw)) {
-                                    $raw = array_keys($raw);
-                                }
-
-                                $ics_unavailable = array_values(array_unique(array_filter(array_map('sanitize_text_field', $raw))));
+                                $ics_unavailable = array_values(array_unique(array_filter(array_map('sanitize_text_field', $result['ics_unavailable']))));
                                 update_post_meta($vendor_id, '_vms_ics_unavailable', $ics_unavailable);
-                                $ics_lookup = array_fill_keys($ics_unavailable, true);
+                                $ics_lookup = array_flip($ics_unavailable);
                             }
+
                             update_post_meta($vendor_id, '_vms_ics_last_sync', time());
                             $ics_last = time();
 
@@ -575,109 +452,69 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
         // CSS for calendar (mobile-first)
         echo '<style>
-/* =========================================================
-   VMS Vendor Portal – Availability (consolidated CSS)
-   ========================================================= */
-
 .vms-av-wrap{max-width:980px}
 .vms-av-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin:0 0 14px}
 .vms-av-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 .vms-av-row .field{min-width:260px;flex:1}
 .vms-av-actions{display:flex;gap:10px;flex-wrap:wrap}
 .vms-av-muted{opacity:.8}
-.vms-av-help{font-size:12px;opacity:.8;margin:10px 0 0}
 
 .vms-av-month details{border:1px solid #e5e5e5;border-radius:12px;background:#fff;margin:0 0 12px;overflow:hidden}
 .vms-av-month summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
 .vms-av-month summary::-webkit-details-marker{display:none}
 
-/* =========================================================
-   Calendar grid – true 7-column table, always
-   ========================================================= */
-.vms-av-grid{
-  width:100%;
-  table-layout:fixed;
-  border-collapse:separate;
-  border-spacing:0;
-  display:table;
-}
-
-.vms-av-grid thead{display:table-header-group}
-.vms-av-grid tbody{display:table-row-group}
-.vms-av-grid tr{display:table-row}
-
-.vms-av-grid th,
-.vms-av-grid td{
-  display:table-cell;
-  width:14.2857%;
-  max-width:14.2857%;
-  vertical-align:top;
-  min-width:0;
-  box-sizing:border-box;
-}
-
-.vms-av-grid th{
-  font-size:12px;
-  letter-spacing:.02em;
-  text-transform:uppercase;
-  opacity:.75;
-  padding:10px;
-  border-top:1px solid #eee;
-  text-align:left;
-}
-
-.vms-av-grid td{
-  border-top:1px solid #eee;
-  border-right:1px solid #eee;
-  padding:8px;
-  overflow:hidden; /* prevents bleed into neighbor cells */
-}
-
+.vms-av-grid{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+.vms-av-grid th{font-size:12px;letter-spacing:.02em;text-transform:uppercase;opacity:.75;padding:10px;border-top:1px solid #eee;text-align:left}
+.vms-av-grid td{vertical-align:top;border-top:1px solid #eee;border-right:1px solid #eee;min-height:92px;padding:8px}
 .vms-av-grid td:last-child{border-right:none}
-
 .vms-av-inactive{background:#fafafa;opacity:.55}
 .vms-av-day{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:0 0 8px}
 .vms-av-daynum{font-weight:900}
+.vms-av-chip{font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px;display:inline-block;line-height:1}
+.vms-av-chip.na{background:#fee2e2;color:#991b1b}
+.vms-av-chip.a{background:#dcfce7;color:#166534}
+.vms-av-src{display:inline-flex;gap:6px;align-items:center;font-size:11px;font-weight:800;opacity:.8;margin-top:8px}
+.vms-av-src span{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3f4f6}
+.vms-av-src .m{background:#eef2ff}
+.vms-av-src .c{background:#ecfeff}
 
-/* =========================================================
-   Tap-to-cycle button (manual state stored, visual state shown)
-   ========================================================= */
+/* Tap-to-toggle button */
+/* Keep day cells from letting content bleed into neighboring cells */
+.vms-av-grid td{overflow:hidden}
+
+/* Override theme button styles */
 .vms-av-grid .vms-av-btn{
   appearance:none;
   -webkit-appearance:none;
-  position:relative; /* needed for icon positioning */
   display:block;
   width:100%;
   max-width:100%;
   box-sizing:border-box;
   cursor:pointer;
   text-align:center;
-  border:1px solid #e5e5e5;
+  border:1px solid #e5e5e5 !important;
   border-radius:12px;
   padding:10px;
-  background:#fff;
-  color:#111827;
-  box-shadow:none;
+  background:#fff !important;
+  color:#111827 !important;
+  box-shadow:none !important;
   font:inherit;
   line-height:1.15;
 }
 
 .vms-av-grid .vms-av-btn:active{transform:scale(.99)}
 
-/* Prefer data-visual, fall back to data-state */
-.vms-av-grid .vms-av-btn[data-visual="available"],
 .vms-av-grid .vms-av-btn[data-state="available"]{
-  border-color:#16a34a;
-  background:#f0fdf4;
+  border-color:#16a34a !important;
+  background:#f0fdf4 !important;
 }
 
-.vms-av-grid .vms-av-btn[data-visual="unavailable"],
 .vms-av-grid .vms-av-btn[data-state="unavailable"]{
-  border-color:#ef4444;
-  background:#fef2f2;
+  border-color:#ef4444 !important;
+  background:#fef2f2 !important;
 }
 
-/* Label layout */
+/* Keep the button label compact and unbreakable in its own box */
 .vms-av-grid .vms-av-btn .row{
   display:flex;
   align-items:center;
@@ -688,49 +525,25 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 .vms-av-grid .vms-av-btn .vms-av-state{
   font-weight:900;
   font-size:13px;
-  display:block;
-  min-width:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
 }
 
-/* Desktop: prevent label from sitting under the source icon */
-@media (min-width:521px){
-  .vms-av-grid .vms-av-btn{padding-right:30px}
+/* Touch devices: make tap target comfy */
+@media (hover:none) and (pointer:coarse){
+  .vms-av-grid .vms-av-btn{min-height:44px}
+  .vms-av-grid .vms-av-btn .vms-av-state{font-size:14px}
+}
+.vms-av-help{font-size:12px;opacity:.8;margin:10px 0 0}
 
-  .vms-av-grid .vms-av-btn .vms-av-state{
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis; /* browser renders the single glyph automatically */
-  }
+/* Mobile: turn grid into stacked list */
+@media (max-width:820px){
+  .vms-av-grid, .vms-av-grid thead, .vms-av-grid tbody, .vms-av-grid th, .vms-av-grid tr{display:block}
+  .vms-av-grid thead{display:none}
+  .vms-av-grid tr{border-top:1px solid #eee}
+  .vms-av-grid td{border-right:none;border-top:none;padding:10px}
 }
 
-/* Source icon inside button (only shown when not manual) */
-.vms-av-grid .vms-av-btn .vms-av-src{
-  position:absolute;
-  top:50%;
-  right:10px;
-  transform:translateY(-50%);
-  font-size:11px;
-  line-height:1;
-  opacity:.65;
-  pointer-events:none;
-}
-
-/* Event label under the button (clamped) */
-.vms-av-event-title{
-  margin-top:6px;
-  font-size:11px;
-  line-height:1.2;
-  opacity:.9;
-  display:-webkit-box;
-  -webkit-box-orient:vertical;
-  -webkit-line-clamp:2;
-  overflow:hidden;
-  word-break:break-word;
-}
-
-.vms-av-event-title span{display:block}
-
-/* Autosave status line */
 .vms-av-autosave{
   font-size:12px;
   opacity:.85;
@@ -738,23 +551,19 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
   min-height:16px;
 }
 
-/* Touch devices: slightly bigger tap target */
-@media (hover:none) and (pointer:coarse){
-  .vms-av-grid .vms-av-btn{min-height:44px}
-  .vms-av-grid .vms-av-btn .vms-av-state{font-size:14px}
-}
-
-/* Small screens: tighter spacing, hide redundant chips if they exist */
 @media (max-width:520px){
-  .vms-av-grid td{padding:10px}
+  /* The button already communicates state; chips just add height */
+  .vms-av-chip{display:none}
+  .vms-av-src{display:none}
+
+  /* Keep tap targets uniform */
   .vms-av-grid .vms-av-btn{padding:8px}
   .vms-av-grid .vms-av-state{font-size:14px;font-weight:900}
 }
 
 </style>';
 
-        // echo '<div class="vms-av-wrap">'; // replaced 20260114 @ 9:17am
-        echo '<div class="vms-av-wrap" id="vms-av" data-today-ym="' . esc_attr(wp_date('Y-m')) . '">';
+        echo '<div class="vms-av-wrap">';
 
         // Collapsible: ICS
         $ics_open = ($preferred === 'ics') ? ' open' : '';
@@ -782,7 +591,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '</div>';
 
         if ($ics_last) {
-            echo '<div class="vms-av-muted" style="margin-top:8px;">' . esc_html__('Last sync:', 'vms') . ' ' . esc_html(wp_date('M j, Y g:ia', $ics_last, wp_timezone())) . '</div>';
+            echo '<div class="vms-av-muted" style="margin-top:8px;">' . esc_html__('Last sync:', 'vms') . ' ' . esc_html(date_i18n('M j, Y g:ia', $ics_last)) . '</div>';
         }
 
         echo '</div>'; // field
@@ -816,72 +625,6 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                 if (isset($manual[$d]) && $manual[$d] === 'available') $cnt_a++;
             }
 
-            // Preload this vendor’s Event Plans for this month (for cell titles)
-            // PATCH 20260114 @ 09:19am
-            $events_by_date  = array();
-            $booked_by_date  = array(); // dates where this vendor is booked on an event plan
-
-            $month_start = $ym . '-01';
-            $month_end   = gmdate('Y-m-d', strtotime('+1 month', strtotime($month_start))); // exclusive end
-
-            $plans = get_posts(array(
-                'post_type'      => 'vms_event_plan',
-                'post_status'    => array('publish', 'draft', 'pending', 'private'),
-                'posts_per_page' => -1,
-                'orderby'        => 'meta_value',
-                'meta_key'       => '_vms_event_date',
-                'order'          => 'ASC',
-                'meta_query'     => array(
-                    'relation' => 'AND',
-                    array(
-                        'key'     => '_vms_event_date',
-                        'value'   => $month_start,
-                        'compare' => '>=',
-                        'type'    => 'DATE',
-                    ),
-                    array(
-                        'key'     => '_vms_event_date',
-                        'value'   => $month_end,
-                        'compare' => '<',
-                        'type'    => 'DATE',
-                    ),
-                    array(
-                        'key'     => '_vms_band_vendor_id',
-                        'value'   => (int) $vendor_id,
-                        'compare' => '=',
-                        'type'    => 'NUMERIC',
-                    ),
-                ),
-            ));
-
-            foreach ($plans as $p) {
-                $d = (string) get_post_meta($p->ID, '_vms_event_date', true);
-                $booked_by_date[$d] = true;
-
-                if (!$d) continue;
-
-                $band_id   = (int) get_post_meta($p->ID, '_vms_band_vendor_id', true);
-                $headliner = $band_id ? get_the_title($band_id) : '';
-                if (!$headliner) $headliner = __('Booked', 'vms');
-
-                $time_label = '';
-                $start_time = (string) get_post_meta($p->ID, '_vms_start_time', true);
-
-                if ($start_time) {
-                    try {
-                        $dt = new DateTime($date . ' ' . $start_time, wp_timezone());
-                        $time_label = $dt->format('g:ia'); // 7:00pm
-                    } catch (Exception $e) {
-                        $time_label = '';
-                    }
-                }
-
-                $label = $headliner . ($time_label ? ' @ ' . $time_label : '');
-
-                if (!isset($events_by_date[$d])) $events_by_date[$d] = array();
-                $events_by_date[$d][] = $label;
-            }
-
             $open = ($ym === $default_open_ym) ? ' open' : '';
             echo '<div class="vms-av-month" data-ym="' . esc_attr($ym) . '">';
             echo '<details' . $open . '>';
@@ -890,21 +633,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             echo '<span class="vms-av-muted" style="font-weight:700;">' . esc_html(sprintf('%d active • %d NA • %d A', $cnt_active, $cnt_na, $cnt_a)) . '</span>';
             echo '</summary>';
 
-            echo '<table class="vms-av-grid">';
-            echo '<thead><tr class="vms-av-dow">';
-            $dow = array(
-                __('Sun', 'vms'),
-                __('Mon', 'vms'),
-                __('Tue', 'vms'),
-                __('Wed', 'vms'),
-                __('Thu', 'vms'),
-                __('Fri', 'vms'),
-                __('Sat', 'vms')
-            );
-            foreach ($dow as $lbl) {
-                echo '<th scope="col">' . esc_html($lbl) . '</th>';
-            }
-            echo '</tr></thead><tbody>';
+            echo '<table class="vms-av-grid"><tbody>';
 
             foreach ($matrix as $week) {
                 echo '<tr>';
@@ -921,36 +650,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
                     // Determine “effective” state + source
                     $manual_state = $is_active && isset($manual[$date]) ? (string) $manual[$date] : '';
-
-                    // Pattern layer (if you don’t have it wired yet, keep it blank for now)
-                    $pattern_state = ''; // 'unavailable' when pattern blocks this weekday
-
-                    $ics_state = ($is_active && isset($ics_lookup[$date])) ? 'unavailable' : '';
-
-                    // If you already compute “booked” for that date, keep using it
-                    $booked = isset($booked_lookup[$date]) && $booked_lookup[$date];
-
-                    $is_booked = !empty($booked_by_date[$date]);
-
-                    $base_state = '';
-                    $base_src   = '';
-
-                    if ($is_booked) {
-                        $base_state = 'unavailable';
-                        $base_src   = 'booked';
-                    } elseif ($pattern_state === 'unavailable') {
-                        $base_state = 'unavailable';
-                        $base_src   = 'pattern';
-                    } elseif (!empty($ics_lookup[$date])) {
-                        $base_state = 'unavailable';
-                        $base_src   = 'ics';
-                    }
-
-                    $visual_state = ($manual_state === '') ? $base_state : $manual_state;
-
-                    // Source shown in the UI: manual wins, otherwise baseline source
-                    $src = ($manual_state === '') ? $base_src : 'manual';
-
+                    $ics_state    = ($is_active && isset($ics_lookup[$date])) ? 'unavailable' : '';
 
                     $effective = '';
                     $source = '';
@@ -967,62 +667,27 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     elseif ($effective === 'available') $chip = '<span class="vms-av-chip a">' . esc_html__('Available', 'vms') . '</span>';
 
                     echo '<td' . ($is_active ? '' : ' class="vms-av-inactive"') . '>';
-                    if (!empty($booked)) {
-                        echo '<span class="vms-av-badge-booked">Booked!!</span>';
-                    }
 
-                    echo '<div class="vms-av-day"><span class="vms-av-daynum">' . esc_html((string) $daynum) . '</span></div>';
+                    echo '<div class="vms-av-day"><span class="vms-av-daynum">' . esc_html((string) $daynum) . '</span>' . $chip . '</div>';
 
                     if ($is_active) {
                         // Hidden input that actually gets saved (manual only)
                         $val = $manual_state;
-                        echo '<input type="hidden"
-  name="vms_availability[' . esc_attr($date) . ']"
-  value="' . esc_attr($manual_state) . '"
-  data-date="' . esc_attr($date) . '"
-  class="vms-av-hidden">';
+                        echo '<input type="hidden" name="vms_availability[' . esc_attr($date) . ']" value="' . esc_attr($val) . '" data-date="' . esc_attr($date) . '" class="vms-av-hidden">';
 
-                        echo '<button type="button"
-  class="vms-av-btn"
-  data-date="' . esc_attr($date) . '"
-  data-state="' . esc_attr($manual_state) . '"
-  data-base="' . esc_attr($base_state) . '"
-  data-base-src="' . esc_attr($base_src) . '"
-  data-visual="' . esc_attr($visual_state) . '"
-  data-src="' . esc_attr($src) . '"'
-                            . (!empty($booked) ? ' disabled aria-disabled="true"' : '')
-                            . '>';
-
+                        // Tap target
+                        echo '<button type="button" class="vms-av-btn" data-date="' . esc_attr($date) . '" data-state="' . esc_attr($val) . '">';
                         echo '<div class="row"><span class="vms-av-state" data-label="' . esc_attr($date) . '"></span></div>';
-
-                        // Show source icon only when NOT manual (and only when there is a source)
-                        if ($manual_state === '' && $base_src !== '') {
-                            // Easy find/replace later if you want different icons
-                            $icon = ($base_src === 'ics') ? '📅' : (($base_src === 'pattern') ? '🗓️' : '🎟️');
-                            echo '<span class="vms-av-src" aria-hidden="true" title="' . esc_attr($base_src) . '">' . esc_html($icon) . '</span>';
-                        }
-
                         echo '</button>';
+
+                        // Source label
+                        if ($source === 'manual') {
+                            echo '<div class="vms-av-src"><span class="m">' . esc_html__('Manual', 'vms') . '</span></div>';
+                        } elseif ($source === 'ics') {
+                            echo '<div class="vms-av-src"><span class="c">' . esc_html__('Calendar', 'vms') . '</span></div>';
+                        }
                     } else {
-                        // echo '<div class="vms-av-muted" style="font-size:12px;">' . esc_html__('Not in season', 'vms') . '</div>';
-                    }
-
-                    // PATCH 20260114 @ 09:25am
-                    if (isset($events_by_date[$date]) && !empty($events_by_date[$date])) {
-                        $items = $events_by_date[$date];
-                        $lines = array_slice($items, 0, 2);
-                        $more  = count($items) - count($lines);
-
-                        $title_attr = implode(' | ', $items);
-
-                        echo '<div class="vms-av-event-title" title="' . esc_attr($title_attr) . '">';
-                        foreach ($lines as $ln) {
-                            echo '<span>' . esc_html($ln) . '</span>';
-                        }
-                        if ($more > 0) {
-                            echo '<span>+' . (int) $more . '</span>';
-                        }
-                        echo '</div>';
+                        echo '<div class="vms-av-muted" style="font-size:12px;">' . esc_html__('Not in season', 'vms') . '</div>';
                     }
 
                     echo '</td>';
@@ -1052,304 +717,155 @@ window.VMS_AV.nonce   = ' . wp_json_encode($avail_ajax_nonce) . ';
         echo '</div></details>'; // /Manual
 
         // JS: tap-to-toggle
-    ?>
-        <script>
-            (function() {
-                document.documentElement.classList.add("vms-js");
+?>
+<script>
+(function () {
+  document.documentElement.classList.add("vms-js");
 
-                var cfg = window.VMS_AV || {};
-                var ajaxUrl = cfg.ajaxUrl || "";
-                var nonce = cfg.nonce || "";
+  var cfg = window.VMS_AV || {};
+  var ajaxUrl = cfg.ajaxUrl || "";
+  var nonce = cfg.nonce || "";
 
-                var statusEl = document.querySelector(".vms-av-autosave");
+  var statusEl = document.querySelector(".vms-av-autosave");
 
-                var pending = 0;
-                var failed = 0;
-                var dirtyDates = new Set();
+  var pending = 0;
+  var failed = 0;
+  var dirtyDates = new Set();
 
-                function labelFor(state, src) {
-                    if (src === "booked") return "Booked";
-                    if (state === "available") return "✓";
-                    if (state === "unavailable") return "🔒";
-                    return "—";
-                }
+  function fullLabel(state) {
+    if (state === "available") return "Available";
+    if (state === "unavailable") return "Not Available";
+    return "Unset";
+  }
 
-                function ariaFor(state, src) {
-                    if (src === "booked") return "Booked";
-                    if (state === "available") return "Available";
-                    if (state === "unavailable") return "Not Available";
-                    return "Unset";
-                }
+  function shortLabel(state) {
+    if (state === "available") return "A";
+    if (state === "unavailable") return "NA";
+    return "—";
+  }
 
-                function isCompact() {
-                    return window.matchMedia && window.matchMedia("(max-width:520px)").matches;
-                }
+  function isCompact() {
+    return window.matchMedia && window.matchMedia("(max-width:520px)").matches;
+  }
 
-                function setStatus(text) {
-                    if (!statusEl) return;
-                    statusEl.textContent = text;
-                }
+  function setStatus(text) {
+    if (!statusEl) return;
+    statusEl.textContent = text;
+  }
 
-                function updateMonthCounts(btn) {
-                    var month = btn.closest(".vms-av-month");
-                    if (!month) return;
+  function updateMonthCounts(btn) {
+    var month = btn.closest(".vms-av-month");
+    if (!month) return;
 
-                    var a = month.querySelectorAll('.vms-av-btn[data-state="available"]').length;
-                    var na = month.querySelectorAll('.vms-av-btn[data-state="unavailable"]').length;
+    var a = month.querySelectorAll('.vms-av-btn[data-state="available"]').length;
+    var na = month.querySelectorAll('.vms-av-btn[data-state="unavailable"]').length;
 
-                    var counts = month.querySelector(".vms-av-counts");
-                    if (!counts) return;
+    var counts = month.querySelector(".vms-av-counts");
+    if (!counts) return;
 
-                    var active = counts.getAttribute("data-active") || "";
-                    if (active) {
-                        counts.textContent = active + " active • " + na + " NA • " + a + " A";
-                    } else {
-                        counts.textContent = na + " NA • " + a + " A";
-                    }
-                }
+    var active = counts.getAttribute("data-active") || "";
+    if (active) {
+      counts.textContent = active + " active • " + na + " NA • " + a + " A";
+    } else {
+      counts.textContent = na + " NA • " + a + " A";
+    }
+  }
 
-                function iconFor(src) {
-                    if (src === "ics") return "📅";
-                    if (src === "pattern") return "🗓️";
-                    if (src === "booked") return "🎟️";
-                    return "";
-                }
+  function sync(btn) {
+    var date = btn.getAttribute("data-date");
+    var state = btn.getAttribute("data-state") || "";
 
-                function sync(btn) {
-                    var date = btn.getAttribute("data-date");
-                    var manual = btn.getAttribute("data-state") || "";
-                    var base = btn.getAttribute("data-base") || "";
-                    var baseSrc = btn.getAttribute("data-base-src") || "";
+    var hidden = btn.closest("td") ? btn.closest("td").querySelector('input.vms-av-hidden[data-date="' + date + '"]') : null;
+    if (hidden) hidden.value = state;
 
-                    var visual = manual || base || "";
-                    var src = manual ? "manual" : (baseSrc || "");
+    var lab = btn.querySelector('[data-label="' + date + '"]');
+    if (lab) lab.textContent = isCompact() ? shortLabel(state) : fullLabel(state);
 
-                    btn.setAttribute("data-visual", visual);
-                    btn.setAttribute("data-src", src);
+    btn.setAttribute("aria-label", date + ": " + fullLabel(state) + ". Tap to cycle.");
+  }
 
-                    var hidden = btn.closest("td") ?
-                        btn.closest("td").querySelector('input.vms-av-hidden[data-date="' + date + '"]') :
-                        null;
-                    if (hidden) hidden.value = manual;
+  function post(params) {
+    return fetch(ajaxUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+      body: new URLSearchParams(params).toString(),
+      credentials: "same-origin"
+    }).then(function (r) { return r.json(); });
+  }
 
-                    var lab = btn.querySelector('[data-label="' + date + '"]');
-                    if (lab) lab.textContent = labelFor(visual, src);
+  function saveDay(date, state, btn) {
+    if (!ajaxUrl || !nonce) {
+      failed += 1;
+      setStatus("Save failed. Please reload and try again.");
+      return;
+    }
 
-                    // Icon: only show when NOT manual
-                    var iconEl = btn.querySelector(".vms-av-src");
-                    if (!iconEl) {
-                        // If PHP didn’t render it, create it once so JS can manage it
-                        iconEl = document.createElement("span");
-                        iconEl.className = "vms-av-src";
-                        iconEl.setAttribute("aria-hidden", "true");
-                        btn.appendChild(iconEl);
-                    }
+    pending += 1;
+    dirtyDates.add(date);
+    setStatus("Saving…");
 
-                    if (src && src !== "manual") {
-                        iconEl.textContent = iconFor(src);
-                        iconEl.style.display = "";
-                        iconEl.setAttribute("title", src);
-                    } else {
-                        iconEl.textContent = "";
-                        iconEl.style.display = "none";
-                        iconEl.removeAttribute("title");
-                    }
+    btn.classList.remove("vms-av-save-failed");
 
-                    btn.setAttribute("aria-label", date + ": " + ariaFor(visual, src) + ". Tap to cycle.");
+    post({
+      action: "vms_save_manual_availability_day",
+      nonce: nonce,
+      date: date,
+      state: state
+    })
+      .then(function (json) {
+        pending -= 1;
 
-                }
+        if (!json || !json.success) {
+          failed += 1;
+          btn.classList.add("vms-av-save-failed");
+          setStatus("Save failed. Tap again or stay on this page and retry.");
+          return;
+        }
 
-                function post(params) {
-                    return fetch(ajaxUrl, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-                        },
-                        body: new URLSearchParams(params).toString(),
-                        credentials: "same-origin"
-                    }).then(function(r) {
-                        return r.json();
-                    });
-                }
+        dirtyDates.delete(date);
+        updateMonthCounts(btn);
 
-                function saveDay(date, state, btn) {
-                    if (!ajaxUrl || !nonce) {
-                        failed += 1;
-                        setStatus("Save failed. Please reload and try again.");
-                        return;
-                    }
+        if (pending === 0 && failed === 0) setStatus("Saved");
+        if (pending === 0 && failed > 0) setStatus("Some changes failed to save. Stay here and retry.");
+      })
+      .catch(function () {
+        pending -= 1;
+        failed += 1;
+        btn.classList.add("vms-av-save-failed");
+        setStatus("Save failed. Check connection and retry.");
+      });
+  }
 
-                    pending += 1;
-                    dirtyDates.add(date);
-                    setStatus("Saving…");
+  window.addEventListener("beforeunload", function (e) {
+    if (pending > 0 || failed > 0) {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    }
+  });
 
-                    btn.classList.remove("vms-av-save-failed");
+  function cycle(state) {
+    if (state === "") return "available";
+    if (state === "available") return "unavailable";
+    return "";
+  }
 
-                    post({
-                            action: "vms_save_manual_availability_day",
-                            nonce: nonce,
-                            date: date,
-                            state: state
-                        })
-                        .then(function(json) {
-                            pending -= 1;
+  document.querySelectorAll(".vms-av-btn").forEach(function (btn) {
+    sync(btn);
 
-                            if (!json || !json.success) {
-                                failed += 1;
-                                btn.classList.add("vms-av-save-failed");
-                                setStatus("Save failed. Tap again or stay on this page and retry.");
-                                return;
-                            }
+    btn.addEventListener("click", function () {
+      var cur = btn.getAttribute("data-state") || "";
+      var next = cycle(cur);
+      var date = btn.getAttribute("data-date");
 
-                            dirtyDates.delete(date);
-                            updateMonthCounts(btn);
+      btn.setAttribute("data-state", next);
+      sync(btn);
 
-                            if (pending === 0 && failed === 0) setStatus("Saved");
-                            if (pending === 0 && failed > 0) setStatus("Some changes failed to save. Stay here and retry.");
-                        })
-                        .catch(function() {
-                            pending -= 1;
-                            failed += 1;
-                            btn.classList.add("vms-av-save-failed");
-                            setStatus("Save failed. Check connection and retry.");
-                        });
-                }
-
-                window.addEventListener("beforeunload", function(e) {
-                    if (pending > 0 || failed > 0) {
-                        e.preventDefault();
-                        e.returnValue = "";
-                        return "";
-                    }
-                });
-
-                function cycle(state) {
-                    if (state === "") return "available";
-                    if (state === "available") return "unavailable";
-                    return "";
-                }
-
-                document.querySelectorAll(".vms-av-btn").forEach(function(btn) {
-                    sync(btn);
-
-                    btn.addEventListener("click", function() {
-                        var cur = btn.getAttribute("data-state") || "";
-                        var next = cycle(cur);
-                        var date = btn.getAttribute("data-date");
-
-                        btn.setAttribute("data-state", next);
-                        sync(btn);
-
-                        saveDay(date, next, btn);
-                    });
-                });
-
-                function isCompact() {
-                    return window.matchMedia("(max-width:520px)").matches;
-                }
-
-                function labelFor(state, src) {
-                    if (isCompact()) {
-                        if (src === "booked") return "✅";
-                        if (state === "available") return "✓";
-                        if (state === "unavailable") return "🔒";
-                        return "—";
-                    }
-
-                    // Desktop
-                    if (src === "booked") return "Booked";
-                    if (state === "available") return "✓";
-                    if (state === "unavailable") return "🔒";
-                    return "—";
-                }
-
-
-            })();
-        </script>
-
-        <script>
-            (function() {
-                var root = document.getElementById("vms-av");
-                if (!root) return;
-
-                var cookieName = "vms_av_open_ym";
-                var todayYm = root.getAttribute("data-today-ym") || "";
-
-                var monthEls = Array.prototype.slice.call(root.querySelectorAll(".vms-av-month[data-ym]"));
-                if (!monthEls.length) return;
-
-                function getCookie(name) {
-                    var parts = document.cookie.split(";").map(function(c) {
-                        return c.trim();
-                    });
-                    for (var i = 0; i < parts.length; i++) {
-                        if (parts[i].indexOf(name + "=") === 0) return decodeURIComponent(parts[i].slice(name.length + 1));
-                    }
-                    return "";
-                }
-
-                function setCookie(name, value, days) {
-                    var maxAge = (days || 30) * 24 * 60 * 60;
-                    document.cookie = name + "=" + encodeURIComponent(value) + "; path=/; max-age=" + maxAge + "; samesite=lax";
-                }
-
-                var byYm = new Map();
-                monthEls.forEach(function(m) {
-                    var ym = m.getAttribute("data-ym") || "";
-                    var details = m.querySelector("details");
-                    var summary = details ? details.querySelector("summary") : null;
-                    if (ym && details && summary) byYm.set(ym, {
-                        details: details,
-                        summary: summary
-                    });
-                });
-
-                function firstYm() {
-                    for (var k of byYm.keys()) return k;
-                    return "";
-                }
-
-                var preferredYm = getCookie(cookieName);
-                var openYm =
-                    (preferredYm && byYm.has(preferredYm)) ? preferredYm :
-                    (todayYm && byYm.has(todayYm)) ? todayYm :
-                    firstYm();
-
-                var currentOpenYm = "";
-
-                function openOnly(ym) {
-                    if (!ym || !byYm.has(ym)) return;
-
-                    currentOpenYm = ym;
-
-                    byYm.forEach(function(obj, key) {
-                        obj.details.open = (key === ym);
-                    });
-
-                    setCookie(cookieName, ym, 30);
-                }
-
-                // Initial state
-                openOnly(openYm);
-
-                // Switch months via summary click (prevents “twitch” from toggle loops)
-                byYm.forEach(function(obj, ym) {
-                    obj.summary.addEventListener("click", function(e) {
-                        e.preventDefault();
-                        if (currentOpenYm === ym) return;
-                        openOnly(ym);
-                        try {
-                            obj.summary.scrollIntoView({
-                                block: "start",
-                                behavior: "smooth"
-                            });
-                        } catch (err) {
-                            // no-op
-                        }
-                    });
-                });
-            })();
-        </script>
+      saveDay(date, next, btn);
+    });
+  });
+})();
+</script>
 
 <?php
         echo '</div>'; // wrap
