@@ -18,7 +18,7 @@ add_action('init', function () {
         ),
         'public'        => false,
         'show_ui'       => true,
-        'show_in_menu'  => 'vms-season-board',
+        'show_in_menu'  => 'vms',
         'menu_icon'     => 'dashicons-money-alt',
         'supports'      => array('title'),
         'has_archive'   => false,

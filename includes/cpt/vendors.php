@@ -43,7 +43,7 @@ function vms_register_vendor_cpt()
         'labels'          => $labels,
         'public'          => false,
         'show_ui'         => true,
-        'show_in_menu'    => 'vms-season-board',
+        'show_in_menu'    => 'vms',
         'menu_position'   => 26,
         'menu_icon'       => 'dashicons-groups',
         'supports'        => array('title', 'editor', 'thumbnail'), // add thumbnail for logo support

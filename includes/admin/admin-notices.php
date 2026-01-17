@@ -22,7 +22,7 @@ add_action('admin_notices', function () {
 
     // Only show if flagged by activation.
     if (get_option('vms_show_first_run_notice') !== '1') {
-        return;
+        return;   
     }
 
     $dismiss_url = wp_nonce_url(

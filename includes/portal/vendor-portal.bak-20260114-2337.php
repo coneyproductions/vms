@@ -86,405 +86,23 @@ if (!function_exists('vms_vendor_flag_vendor_update')) {
 }
 
 /**
- * Best-effort venue id lookup for vendor (supports future multi-venue behavior).
- *
- * @return int Venue post ID or 0 when unknown
- */
-function vms_vendor_guess_venue_id(int $vendor_id): int
-{
-    $vendor_id = (int) $vendor_id;
-    if ($vendor_id <= 0) return 0;
-
-    $keys = array(
-        '_vms_home_venue_id',
-        '_vms_primary_venue_id',
-        '_vms_venue_id',
-        'vms_venue_id',
-    );
-
-    foreach ($keys as $k) {
-        $val = (int) get_post_meta($vendor_id, $k, true);
-        if ($val > 0) return $val;
-    }
-
-    return 0;
-}
-
-/**
- * Season dates (global fallback plus optional per-venue override).
- *
- * If your core plugin already defines vms_get_active_season_dates(), that version wins.
- * This is only a safe fallback to prevent fatals and keep one source of truth.
- *
- * @return string[] YYYY-MM-DD
- */
-if (!function_exists('vms_get_active_season_dates')) {
-    
-    /**
-     * Normalize a day-of-week value into 0..6 (Sun..Sat). Accepts ints, "sun", "Sunday", etc.
-     */
-    function vms_norm_dow($v): ?int {
-        if ($v === null || $v === '') return null;
-        if (is_numeric($v)) {
-            $n = (int) $v;
-            // Accept 0..6 (Sun..Sat) or 1..7 (Mon..Sun) common formats.
-            if ($n >= 0 && $n <= 6) return $n;
-            if ($n >= 1 && $n <= 7) return ($n % 7); // 7 -> 0
-            return null;
-        }
-        $s = strtolower(trim((string) $v));
-        $s = preg_replace('/[^a-z]/', '', $s);
-        $map = array(
-            'sun' => 0, 'sunday' => 0,
-            'mon' => 1, 'monday' => 1,
-            'tue' => 2, 'tues' => 2, 'tuesday' => 2,
-            'wed' => 3, 'wednesday' => 3,
-            'thu' => 4, 'thur' => 4, 'thurs' => 4, 'thursday' => 4,
-            'fri' => 5, 'friday' => 5,
-            'sat' => 6, 'saturday' => 6,
-        );
-        return $map[$s] ?? null;
-    }
-
-    /**
-     * Parse a date string in common formats into DateTimeImmutable (site timezone).
-     */
-    function vms_parse_date_any($v): ?DateTimeImmutable {
-        if ($v === null || $v === '') return null;
-
-        $tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
-
-        // Timestamp
-        if (is_numeric($v)) {
-            try { return (new DateTimeImmutable('@' . (int) $v))->setTimezone($tz); } catch (Exception $e) { return null; }
-        }
-
-        $s = trim((string) $v);
-
-        $formats = array('Y-m-d', 'm/d/Y', 'n/j/Y', 'm-d-Y', 'n-j-Y');
-        foreach ($formats as $fmt) {
-            $dt = DateTimeImmutable::createFromFormat($fmt, $s, $tz);
-            if ($dt instanceof DateTimeImmutable) {
-                // createFromFormat can succeed with warnings; guard by re-format check
-                if ($dt->format($fmt) === $s) return $dt;
-            }
-        }
-
-        // Fallback: strtotime
-        $ts = strtotime($s);
-        if ($ts !== false) {
-            try { return (new DateTimeImmutable('@' . $ts))->setTimezone($tz); } catch (Exception $e) { return null; }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get a reasonable month-window (bounds) to generate active dates within.
-     * Uses the same month window as the availability grid when possible.
-     */
-    function vms_av_get_window_bounds(): array {
-        $tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
-
-        if (function_exists('vms_av_build_month_window')) {
-            $months = (array) vms_av_build_month_window();
-            $months = array_values(array_filter($months, function($m){ return is_string($m) && preg_match('/^\d{4}-\d{2}$/', $m); }));
-            if (!empty($months)) {
-                $first = $months[0] . '-01';
-                $last  = $months[count($months)-1] . '-01';
-                $start = new DateTimeImmutable($first, $tz);
-                $end   = (new DateTimeImmutable($last, $tz))->modify('last day of this month');
-                return array($start, $end);
-            }
-        }
-
-        $start = (new DateTimeImmutable('first day of this month', $tz))->setTime(0,0,0);
-        $end   = $start->modify('+18 months')->modify('last day of this month')->setTime(23,59,59);
-        return array($start, $end);
-    }
-
-    /**
-     * Normalize any supported "season rules" structure into a list of seasons:
-     *   [ ['start' => DateTimeImmutable, 'end' => DateTimeImmutable, 'dows' => [0..6]], ... ]
-     */
-    function vms_normalize_season_rules($raw): array {
-        $seasons = array();
-
-        if (!is_array($raw) || empty($raw)) return $seasons;
-
-        // If wrapped
-        if (isset($raw['seasons']) && is_array($raw['seasons'])) $raw = $raw['seasons'];
-
-        // Case: list of season arrays
-        foreach ($raw as $k => $season) {
-            if (!is_array($season)) continue;
-
-            $start_raw = $season['start'] ?? $season['start_date'] ?? $season['from'] ?? $season['begin'] ?? null;
-            $end_raw   = $season['end']   ?? $season['end_date']   ?? $season['to']   ?? $season['finish'] ?? null;
-
-            // Some UIs store as ['start' => ['y'=>..,'m'=>..,'d'=>..]]
-            if (is_array($start_raw) && isset($start_raw['y'],$start_raw['m'],$start_raw['d'])) $start_raw = sprintf('%04d-%02d-%02d', (int)$start_raw['y'], (int)$start_raw['m'], (int)$start_raw['d']);
-            if (is_array($end_raw)   && isset($end_raw['y'],$end_raw['m'],$end_raw['d']))     $end_raw   = sprintf('%04d-%02d-%02d', (int)$end_raw['y'],   (int)$end_raw['m'],   (int)$end_raw['d']);
-
-            $start = vms_parse_date_any($start_raw);
-            $end   = vms_parse_date_any($end_raw);
-            if (!$start || !$end) continue;
-
-            // Days of week
-            $days_raw = $season['days'] ?? $season['days_of_week'] ?? $season['dow'] ?? $season['dows'] ?? $season['weekdays'] ?? array();
-            if (!is_array($days_raw)) $days_raw = array($days_raw);
-
-            $dows = array();
-            foreach ($days_raw as $dv) {
-                $n = vms_norm_dow($dv);
-                if ($n === null) continue;
-                $dows[$n] = true;
-            }
-
-            // Require at least 1 day selected
-            if (empty($dows)) continue;
-
-            $seasons[] = array('start' => $start->setTime(0,0,0), 'end' => $end->setTime(23,59,59), 'dows' => array_keys($dows));
-        }
-
-        // Case: associative "season1_*" keys
-        if (empty($seasons)) {
-            for ($i=1; $i<=10; $i++) {
-                $start_raw = $raw["season{$i}_start"] ?? $raw["season{$i}_start_date"] ?? $raw["season_{$i}_start"] ?? $raw["season_{$i}_start_date"] ?? null;
-                $end_raw   = $raw["season{$i}_end"]   ?? $raw["season{$i}_end_date"]   ?? $raw["season_{$i}_end"]   ?? $raw["season_{$i}_end_date"]   ?? null;
-                $days_raw  = $raw["season{$i}_days"]  ?? $raw["season{$i}_dows"]       ?? $raw["season_{$i}_days"]  ?? $raw["season_{$i}_dows"]       ?? null;
-
-                if ($start_raw === null && $end_raw === null && $days_raw === null) continue;
-
-                $start = vms_parse_date_any($start_raw);
-                $end   = vms_parse_date_any($end_raw);
-                if (!$start || !$end) continue;
-
-                if (!is_array($days_raw)) $days_raw = $days_raw !== null ? array($days_raw) : array();
-
-                $dows = array();
-                foreach ($days_raw as $dv) {
-                    $n = vms_norm_dow($dv);
-                    if ($n === null) continue;
-                    $dows[$n] = true;
-                }
-                if (empty($dows)) continue;
-
-                $seasons[] = array('start' => $start->setTime(0,0,0), 'end' => $end->setTime(23,59,59), 'dows' => array_keys($dows));
-            }
-        }
-
-        // Single season object
-        if (empty($seasons) && (isset($raw['start']) || isset($raw['start_date']))) {
-            $single = array($raw);
-            return vms_normalize_season_rules($single);
-        }
-
-        return $seasons;
-    }
-
-    /**
-     * Generate active YYYY-MM-DD dates from season rules within the availability window.
-     */
-    function vms_generate_active_dates_from_rules($raw_rules): array {
-        $seasons = vms_normalize_season_rules($raw_rules);
-        if (empty($seasons)) return array();
-
-        list($win_start, $win_end) = vms_av_get_window_bounds();
-
-        $out = array();
-        foreach ($seasons as $s) {
-            /** @var DateTimeImmutable $s_start */
-            $s_start = $s['start'];
-            /** @var DateTimeImmutable $s_end */
-            $s_end   = $s['end'];
-            $dows    = $s['dows'];
-
-            if ($s_end < $win_start || $s_start > $win_end) continue;
-
-            $start = $s_start < $win_start ? $win_start : $s_start;
-            $end   = $s_end   > $win_end   ? $win_end   : $s_end;
-
-            $cur = $start->setTime(0,0,0);
-            $end_day = $end->setTime(0,0,0);
-
-            while ($cur <= $end_day) {
-                $dow = (int) $cur->format('w'); // 0..6 (Sun..Sat)
-                if (in_array($dow, $dows, true)) {
-                    $out[$cur->format('Y-m-d')] = true;
-                }
-                $cur = $cur->modify('+1 day');
-            }
-        }
-
-        $dates = array_keys($out);
-        sort($dates);
-        return $dates;
-    }
-
-function vms_get_active_season_dates(int $venue_id = 0): array
-    {
-        // 1) Venue override: if the venue stores precomputed active dates
-        if ($venue_id > 0) {
-            $venue_active = get_post_meta($venue_id, '_vms_active_dates', true);
-            if (is_array($venue_active) && !empty($venue_active)) {
-                $venue_active = array_values(array_filter(array_map('sanitize_text_field', $venue_active)));
-                if (!empty($venue_active)) return $venue_active;
-            }
-
-            $venue_active2 = get_post_meta($venue_id, '_vms_active_season_dates', true);
-            if (is_array($venue_active2) && !empty($venue_active2)) {
-                $venue_active2 = array_values(array_filter(array_map('sanitize_text_field', $venue_active2)));
-                if (!empty($venue_active2)) return $venue_active2;
-            }
-
-            // Venue-scoped options (if used)
-            $venue_opt_candidates = array(
-                'vms_active_season_dates_' . $venue_id,
-                'vms_season_active_dates_' . $venue_id,
-                'vms_season_dates_' . $venue_id,
-                'vms_active_booking_dates_' . $venue_id,
-            );
-            foreach ($venue_opt_candidates as $opt) {
-                $active = get_option($opt, array());
-                if (is_array($active) && !empty($active)) {
-                    $active = array_values(array_filter(array_map('sanitize_text_field', $active)));
-                    if (!empty($active)) return $active;
-                }
-            }
-        }
-
-        // 2) Global active dates (precomputed by the Season Dates UI)
-        $candidates = array(
-            'vms_active_season_dates',
-            'vms_active_booking_dates',
-            'vms_booking_active_dates',
-            'vms_season_active_dates',
-            'vms_season_dates',
-            'vms_active_dates',
-        );
-
-        foreach ($candidates as $opt) {
-            $active = get_option($opt, array());
-            if (is_array($active) && !empty($active)) {
-                $active = array_values(array_filter(array_map('sanitize_text_field', $active)));
-                if (!empty($active)) return $active;
-            }
-        }
-
-        // 3) No precomputed list found — try to generate from "season rules" (venue first, then global).
-        $rule_candidates = array();
-
-        if ($venue_id > 0) {
-            $venue_rules = get_post_meta($venue_id, '_vms_season_rules', true);
-            if (is_array($venue_rules) && !empty($venue_rules)) $rule_candidates[] = $venue_rules;
-
-            $venue_rules2 = get_post_meta($venue_id, '_vms_season_settings', true);
-            if (is_array($venue_rules2) && !empty($venue_rules2)) $rule_candidates[] = $venue_rules2;
-
-            $opt_rules = get_option('vms_season_rules_' . $venue_id, array());
-            if (is_array($opt_rules) && !empty($opt_rules)) $rule_candidates[] = $opt_rules;
-
-            $opt_rules2 = get_option('vms_season_settings_' . $venue_id, array());
-            if (is_array($opt_rules2) && !empty($opt_rules2)) $rule_candidates[] = $opt_rules2;
-        }
-
-        $global_rules_candidates = array(
-            'vms_season_rules',
-            'vms_season_settings',
-            'vms_season_date_settings',
-            'vms_seasons',
-            'vms_booking_seasons',
-        );
-
-        foreach ($global_rules_candidates as $opt) {
-            $rules = get_option($opt, array());
-            if (is_array($rules) && !empty($rules)) $rule_candidates[] = $rules;
-        }
-
-        foreach ($rule_candidates as $rules) {
-            // If the plugin already provides a generator, use it first.
-            if (function_exists('vms_generate_active_dates')) {
-                $gen = (array) vms_generate_active_dates($rules);
-                $gen = array_values(array_filter(array_map('sanitize_text_field', $gen)));
-                if (!empty($gen)) return $gen;
-            }
-
-            // Otherwise generate locally (supports multiple rule formats).
-            $gen2 = vms_generate_active_dates_from_rules($rules);
-            $gen2 = array_values(array_filter(array_map('sanitize_text_field', $gen2)));
-            if (!empty($gen2)) return $gen2;
-        }
-
-        return array();
-    }
-}
-
-/**
- * Call vms_get_active_season_dates safely, whether it expects (venue_id) or no arguments.
- *
- * @return string[] YYYY-MM-DD
- */
-function vms_vendor_try_get_active_season_dates(int $venue_id = 0): array
-{
-    if (!function_exists('vms_get_active_season_dates')) return array();
-
-    try {
-        $rf = new ReflectionFunction('vms_get_active_season_dates');
-        $n  = $rf->getNumberOfParameters();
-
-        $out = ($n >= 1) ? vms_get_active_season_dates($venue_id) : vms_get_active_season_dates();
-        if (!is_array($out)) $out = array();
-        $out = array_values(array_filter(array_map('sanitize_text_field', $out)));
-        return $out;
-    } catch (Throwable $e) {
-        return array();
-    }
-}
-
-/**
- * Build a list of months to render (always show months, even when out of season).
- *
- * @return array<string,bool> map of 'YYYY-MM' => true
- */
-if (!function_exists('vms_av_build_month_window')) {
-    function vms_av_build_month_window(int $months_ahead = 12): array
-    {
-        $months_ahead = (int) $months_ahead;
-        if ($months_ahead < 1) $months_ahead = 12;
-        if ($months_ahead > 24) $months_ahead = 24;
-
-        $tz = wp_timezone();
-        $cur = new DateTimeImmutable('first day of this month 00:00:00', $tz);
-
-        $months = array();
-        for ($i = 0; $i < $months_ahead; $i++) {
-            $ym = $cur->format('Y-m');
-            $months[$ym] = true;
-            $cur = $cur->modify('+1 month');
-        }
-
-        return $months;
-    }
-}
-
-/**
  * Year-round availability dates.
  * - Uses vms_get_active_season_dates() if configured
  * - Otherwise generates a rolling window of days (default 12 months, cap 24)
  *
  * @return string[] YYYY-MM-DD
  */
-function vms_vendor_get_active_dates_or_rolling_window(int $months_ahead = 12, int $venue_id = 0): array
+function vms_vendor_get_active_dates_or_rolling_window(int $months_ahead = 12): array
 {
     $months_ahead = (int) $months_ahead;
     if ($months_ahead < 1) $months_ahead = 12;
     if ($months_ahead > 24) $months_ahead = 24;
 
-    // Season dates (if configured via admin UI, with optional per-venue override)
-    $season = vms_vendor_try_get_active_season_dates((int) $venue_id);
+    // Season dates (if defined)
+    $season = function_exists('vms_get_active_season_dates') ? (array) vms_get_active_season_dates() : array();
+    $season = array_values(array_filter(array_map('sanitize_text_field', $season)));
 
-    // Rolling window dates (fallback when no season dates exist)
+    // Rolling window dates (always include so ICS can evaluate what the UI shows)
     $tz = wp_timezone();
     $start = new DateTime('today', $tz);
     $end   = (clone $start)->modify('+' . $months_ahead . ' months');
@@ -496,13 +114,10 @@ function vms_vendor_get_active_dates_or_rolling_window(int $months_ahead = 12, i
         $cur->modify('+1 day');
     }
 
-    // If season dates exist, they define what is toggleable (open); months still render separately.
-    if (!empty($season)) {
-        sort($season);
-        return $season;
-    }
-
-    return $rolling;
+    // Union
+    $all = array_values(array_unique(array_merge($rolling, $season)));
+    sort($all);
+    return $all;
 }
 
 function vms_vendor_portal_shortcode()
@@ -572,217 +187,216 @@ function vms_vendor_portal_shortcode()
 
     ob_start();
 
-    // MOVE TO CSS FILE
     // Base styles (minimal, mobile-friendly)
-//     echo '<style>
-// /* =========================================================
-//    Notices + Portal base
-//    ========================================================= */
-// .vms-notice{padding:10px 12px;border-radius:12px;margin:12px 0;border:1px solid transparent;font-weight:600}
-// .vms-notice-success{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
-// .vms-notice-warning{background:#fffbeb;border-color:#fcd34d;color:#92400e}
-// .vms-notice-error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+    echo '<style>
+/* =========================================================
+   Notices + Portal base
+   ========================================================= */
+.vms-notice{padding:10px 12px;border-radius:12px;margin:12px 0;border:1px solid transparent;font-weight:600}
+.vms-notice-success{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+.vms-notice-warning{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+.vms-notice-error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 
-// .vms-portal-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin:0 0 14px}
-// .vms-portal-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-// @media (max-width:820px){.vms-portal-grid{grid-template-columns:1fr}}
-// .vms-muted{opacity:.8}
+.vms-portal-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin:0 0 14px}
+.vms-portal-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.vms-portal-grid{grid-template-columns:1fr}}
+.vms-muted{opacity:.8}
 
-// .vms-portal-nav{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
-// .vms-portal-nav a{display:inline-block;padding:8px 10px;border:1px solid #e5e5e5;border-radius:12px;text-decoration:none}
-// .vms-portal-nav a.is-active{border-color:#111827;font-weight:800}
+.vms-portal-nav{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.vms-portal-nav a{display:inline-block;padding:8px 10px;border:1px solid #e5e5e5;border-radius:12px;text-decoration:none}
+.vms-portal-nav a.is-active{border-color:#111827;font-weight:800}
 
-// .vms-field{margin:0 0 14px}
-// .vms-field label{display:block;margin:0 0 6px;font-weight:800}
-// .vms-field input,.vms-field textarea,.vms-field select{width:100%;max-width:520px}
+.vms-field{margin:0 0 14px}
+.vms-field label{display:block;margin:0 0 6px;font-weight:800}
+.vms-field input,.vms-field textarea,.vms-field select{width:100%;max-width:520px}
 
-// /* =========================================================
-//    Availability grid: source icon + booked styling
-//    ========================================================= */
-// .vms-av-grid .vms-av-btn{position:relative}
+/* =========================================================
+   Availability grid: source icon + booked styling
+   ========================================================= */
+.vms-av-grid .vms-av-btn{position:relative}
 
-// .vms-av-grid .vms-av-src{
-//   position:absolute;
-//   top:6px;
-//   right:6px;
-//   font-size:12px;
-//   line-height:1;
-//   opacity:.75;
-//   pointer-events:none;
-// }
+.vms-av-grid .vms-av-src{
+  position:absolute;
+  top:6px;
+  right:6px;
+  font-size:12px;
+  line-height:1;
+  opacity:.75;
+  pointer-events:none;
+}
 
-// .vms-av-badge-booked{
-//   font-size:10px;
-//   font-weight:900;
-//   padding:2px 6px;
-//   border-radius:999px;
-//   background:#eff6ff;
-//   color:#1e3a8a;
-// }
+.vms-av-badge-booked{
+  font-size:10px;
+  font-weight:900;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#eff6ff;
+  color:#1e3a8a;
+}
 
-// /* Booked should always win visually */
-// .vms-av-grid .vms-av-btn[data-src="booked"]{
-//   border-color:#2563eb !important;
-//   background:#eff6ff !important;
-//   color:#1e3a8a !important;
-// }
-// .vms-av-grid .vms-av-btn[data-src="booked"] .vms-av-state{
-//   text-transform:uppercase;
-//   font-size:12px;
-//   letter-spacing:.02em;
-// }
+/* Booked should always win visually */
+.vms-av-grid .vms-av-btn[data-src="booked"]{
+  border-color:#2563eb !important;
+  background:#eff6ff !important;
+  color:#1e3a8a !important;
+}
+.vms-av-grid .vms-av-btn[data-src="booked"] .vms-av-state{
+  text-transform:uppercase;
+  font-size:12px;
+  letter-spacing:.02em;
+}
 
-// /* =========================================================
-//    Method accordions (ICS / Pattern / Manual)
-//    ========================================================= */
-// details.vms-av-method{
-//   border:1px solid #e5e5e5;
-//   border-radius:12px;
-//   background:#fff;
-//   margin:0 0 12px;
-//   overflow:hidden;
-// }
+/* =========================================================
+   Method accordions (ICS / Pattern / Manual)
+   ========================================================= */
+details.vms-av-method{
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  background:#fff;
+  margin:0 0 12px;
+  overflow:hidden;
+}
 
-// .vms-av-method summary{
-//   cursor:pointer;
-//   list-style:none;
-//   padding:12px 14px;
-//   font-weight:800;
-//   display:flex;
-//   justify-content:space-between;
-//   align-items:center;
-//   gap:12px;
-// }
-// .vms-av-method summary::-webkit-details-marker{display:none}
+.vms-av-method summary{
+  cursor:pointer;
+  list-style:none;
+  padding:12px 14px;
+  font-weight:800;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.vms-av-method summary::-webkit-details-marker{display:none}
 
-// /* Summary title clamps nicely */
-// .vms-av-method summary > span:first-child{
-//   flex:1 1 auto;
-//   min-width:0;
-//   white-space:nowrap;
-//   overflow:hidden;
-//   text-overflow:ellipsis; /* renders “…” */
-// }
+/* Summary title clamps nicely */
+.vms-av-method summary > span:first-child{
+  flex:1 1 auto;
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis; /* renders “…” */
+}
 
-// /* Meta always stays on one line */
-// .vms-av-summarymeta{
-//   font-weight:700;
-//   font-size:12px;
-//   opacity:.65;
-//   flex:0 0 auto;
-//   white-space:nowrap;
-//   margin-left:12px;
-// }
+/* Meta always stays on one line */
+.vms-av-summarymeta{
+  font-weight:700;
+  font-size:12px;
+  opacity:.65;
+  flex:0 0 auto;
+  white-space:nowrap;
+  margin-left:12px;
+}
 
-// /* Body padding */
-// details.vms-av-method > :not(summary){
-//   padding:14px;
-// }
+/* Body padding */
+details.vms-av-method > :not(summary){
+  padding:14px;
+}
 
-// /* If a method body contains a nested card, remove double padding */
-// details.vms-av-method > :not(summary) .vms-av-card{padding:0}
-// details.vms-av-method .vms-av-card{border:none;margin:0}
+/* If a method body contains a nested card, remove double padding */
+details.vms-av-method > :not(summary) .vms-av-card{padding:0}
+details.vms-av-method .vms-av-card{border:none;margin:0}
 
-// /* =========================================================
-//    ICS form tweaks (desktop + responsive)
-//    ========================================================= */
-// details.vms-av-method[data-method="ics"] .vms-field input{max-width:100% !important}
+/* =========================================================
+   ICS form tweaks (desktop + responsive)
+   ========================================================= */
+details.vms-av-method[data-method="ics"] .vms-field input{max-width:100% !important}
 
-// details.vms-av-method[data-method="ics"] .vms-av-actions{
-//   display:flex;
-//   gap:10px;
-//   flex-wrap:wrap;
-//   align-items:center;
-// }
-// details.vms-av-method[data-method="ics"] .vms-av-actions .button{
-//   flex:1 1 220px; /* allows 2-up on wider, stacked on small */
-//   min-width:0;
-// }
+details.vms-av-method[data-method="ics"] .vms-av-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+details.vms-av-method[data-method="ics"] .vms-av-actions .button{
+  flex:1 1 220px; /* allows 2-up on wider, stacked on small */
+  min-width:0;
+}
 
-// details.vms-av-method[data-method="ics"] .vms-av-last-sync{display:none}
+details.vms-av-method[data-method="ics"] .vms-av-last-sync{display:none}
 
-// details.vms-av-method[data-method="ics"] label{
-//   display:flex;
-//   gap:8px;
-//   align-items:flex-start;
-//   flex-wrap:wrap;
-// }
-// details.vms-av-method[data-method="ics"] label input[type="checkbox"]{margin-top:3px}
+details.vms-av-method[data-method="ics"] label{
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+details.vms-av-method[data-method="ics"] label input[type="checkbox"]{margin-top:3px}
 
-// /* ICS URL input sizing */
-// details.vms-av-method[data-method="ics"] .field input[type="url"]{
-//   width:100% !important;
-//   max-width:520px;
-//   font-size:12px;
-//   padding:8px 10px;
-// }
+/* ICS URL input sizing */
+details.vms-av-method[data-method="ics"] .field input[type="url"]{
+  width:100% !important;
+  max-width:520px;
+  font-size:12px;
+  padding:8px 10px;
+}
 
-// /* =========================================================
-//    Mobile polish
-//    ========================================================= */
-// @media (max-width:520px){
+/* =========================================================
+   Mobile polish
+   ========================================================= */
+@media (max-width:520px){
 
-//   /* Availability: hide source icon inside the button (noisy on mobile) */
-//   .vms-av-grid .vms-av-btn .vms-av-src{display:none !important;}
+  /* Availability: hide source icon inside the button (noisy on mobile) */
+  .vms-av-grid .vms-av-btn .vms-av-src{display:none !important;}
 
-//   .vms-av-grid td{padding:8px !important;}
+  .vms-av-grid td{padding:8px !important;}
 
-//   .vms-av-grid .vms-av-btn{
-//     border-radius:999px !important;
-//     padding:6px 0 !important;
-//     min-height:34px !important;
-//   }
+  .vms-av-grid .vms-av-btn{
+    border-radius:999px !important;
+    padding:6px 0 !important;
+    min-height:34px !important;
+  }
 
-//   .vms-av-grid .vms-av-btn .vms-av-state{
-//     font-size:15px !important;
-//     line-height:1 !important;
-//     white-space:nowrap !important;
-//   }
+  .vms-av-grid .vms-av-btn .vms-av-state{
+    font-size:15px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+  }
 
-//   .vms-av-event-title{
-//     margin-top:4px !important;
-//     font-size:10px !important;
-//     line-height:1.15 !important;
-//     display:block !important;
-//     white-space:nowrap !important;
-//     overflow:hidden !important;
-//     text-overflow:ellipsis !important; /* single ellipsis glyph */
-//     word-break:normal !important;
-//     overflow-wrap:normal !important;
-//   }
+  .vms-av-event-title{
+    margin-top:4px !important;
+    font-size:10px !important;
+    line-height:1.15 !important;
+    display:block !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important; /* single ellipsis glyph */
+    word-break:normal !important;
+    overflow-wrap:normal !important;
+  }
 
-//   /* ICS: stack cleanly */
-//   details.vms-av-method[data-method="ics"] .vms-av-row{
-//     flex-direction:column;
-//     align-items:stretch;
-//   }
-//   details.vms-av-method[data-method="ics"] .vms-av-row > .field{
-//     min-width:0 !important;
-//     flex:1 1 auto !important;
-//     width:100% !important;
-//   }
-//   details.vms-av-method[data-method="ics"] .vms-av-actions{width:100%}
-//   details.vms-av-method[data-method="ics"] .vms-av-actions .button{
-//     width:100% !important;
-//     display:block;
-//   }
-// }
+  /* ICS: stack cleanly */
+  details.vms-av-method[data-method="ics"] .vms-av-row{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  details.vms-av-method[data-method="ics"] .vms-av-row > .field{
+    min-width:0 !important;
+    flex:1 1 auto !important;
+    width:100% !important;
+  }
+  details.vms-av-method[data-method="ics"] .vms-av-actions{width:100%}
+  details.vms-av-method[data-method="ics"] .vms-av-actions .button{
+    width:100% !important;
+    display:block;
+  }
+}
 
-// /* Dashboard layout */
-// .vms-dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:12px}
-// @media (max-width:820px){.vms-dash-grid{grid-template-columns:1fr}}
+/* Dashboard layout */
+.vms-dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+@media (max-width:820px){.vms-dash-grid{grid-template-columns:1fr}}
 
-// .vms-dash-kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0}
-// .vms-dash-kpi{border:1px solid #eee;border-radius:12px;padding:10px 12px;min-width:160px;background:#fff}
-// .vms-dash-kpi b{display:block;font-size:12px;opacity:.7;margin:0 0 4px}
-// .vms-dash-kpi span{font-weight:900}
+.vms-dash-kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0}
+.vms-dash-kpi{border:1px solid #eee;border-radius:12px;padding:10px 12px;min-width:160px;background:#fff}
+.vms-dash-kpi b{display:block;font-size:12px;opacity:.7;margin:0 0 4px}
+.vms-dash-kpi span{font-weight:900}
 
-// .vms-dash-list{margin:10px 0 0;padding-left:18px}
-// .vms-dash-list li{margin:6px 0}
-// .vms-dash-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.vms-dash-list{margin:10px 0 0;padding-left:18px}
+.vms-dash-list li{margin:6px 0}
+.vms-dash-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 
 
-// </style>';
+</style>';
 
     // Header + nav (shown on all tabs)
     echo '<div class="vms-portal">';
@@ -1023,8 +637,7 @@ function vms_vendor_portal_shortcode()
             echo vms_portal_notice('error', __('Tax Profile module is not loaded.', 'vms'));
         }
     } elseif ($tab === 'availability') {
-        $venue_id = vms_vendor_guess_venue_id($vendor_id);
-        $active_dates = vms_vendor_get_active_dates_or_rolling_window(12, $venue_id); // season-aware; months still render year-round
+        $active_dates = vms_vendor_get_active_dates_or_rolling_window(12); // year-round fallback
         vms_vendor_portal_render_availability($vendor_id, $active_dates);
     } elseif ($tab === 'tech') {
         if (function_exists('vms_vendor_portal_render_tech_docs')) {
@@ -1058,9 +671,6 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             $d = trim((string) $d);
             return preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) ? $d : null;
         }, $active_dates)));
-
-        $active_lookup = array_flip($active_dates);
-
 
         // Load existing values
         $manual = get_post_meta($vendor_id, '_vms_availability_manual', true);
@@ -1266,13 +876,13 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             echo vms_portal_notice('warning', __('No season dates configured yet.', 'vms'));
             return;
         }
-        // Always render a fixed month window (prevents months from disappearing when out of season)
-        $months_ahead = 12;
-        $months = vms_av_build_month_window($months_ahead);
 
-        // Which month should be open by default? (current month)
+        // Group active dates by month
+        $months = vms_av_group_dates_by_month($active_dates);
+
+        // Which month should be open by default? (current month, else first active month)
         $today_ym = wp_date('Y-m');
-        $default_open_ym = $today_ym;
+        $default_open_ym = isset($months[$today_ym]) ? $today_ym : array_key_first($months);
 
         // CSS for calendar (mobile-first)
         echo '<style>
@@ -1583,25 +1193,13 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '<form method="post" id="vms-av-form">';
         wp_nonce_field('vms_save_availability', 'vms_avail_nonce');
 
-        foreach ($months as $ym => $_unused) {
+        foreach ($months as $ym => $dates_in_month) {
             $month_ts = strtotime($ym . '-01');
             $month_label = $month_ts ? date_i18n('F Y', $month_ts) : $ym;
 
             $matrix = vms_av_build_month_matrix($ym);
 
-            
-            // Build a list of active (toggleable) dates in this month (season-aware)
-            $dates_in_month = array();
-            $month_ts_for_days = strtotime($ym . '-01');
-            $days_in_this_month = $month_ts_for_days ? (int) date('t', $month_ts_for_days) : 0;
-
-            for ($day_i = 1; $day_i <= $days_in_this_month; $day_i++) {
-                $d = $ym . '-' . str_pad((string) $day_i, 2, '0', STR_PAD_LEFT);
-                if (isset($active_lookup[$d])) $dates_in_month[] = $d;
-            }
-
             // stats
-
             $cnt_na = 0;
             $cnt_a = 0;
             $cnt_active = 0;
@@ -1712,7 +1310,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         continue;
                     }
 
-                    $is_active = isset($active_lookup[$date]);
+                    $is_active = in_array($date, $dates_in_month, true);
 
                     // Determine “effective” state + source
                     $manual_state = $is_active && isset($manual[$date]) ? (string) $manual[$date] : '';

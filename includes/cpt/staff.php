@@ -26,7 +26,7 @@ add_action('init', function () {
         ),
         'public'              => false,
         'show_ui'             => true,
-        'show_in_menu'        => 'vms-season-board', // CPT menu item appears automatically under VMS parent via your menu setup
+        'show_in_menu'        => 'vms', // CPT menu item appears automatically under VMS parent via your menu setup
         'show_in_rest'        => false,
         'capability_type'     => 'post',
         'supports'            => array('title', 'thumbnail'),

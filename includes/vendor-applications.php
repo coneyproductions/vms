@@ -109,7 +109,8 @@ function vms_register_vendor_applications_cpt(): void
         'labels'             => $labels,
         'public'             => false,
         'show_ui'            => true,
-        'show_in_menu'       => VMS_ADMIN_PARENT_SLUG, // attach under VMS menu
+        'show_in_menu'       => 'vms', // attach under VMS menu
+        // 'show_in_menu'       => VMS_ADMIN_PARENT_SLUG, // attach under VMS menu
         'capability_type'    => 'post',
         'supports'           => array('title'),
         'menu_position'      => 25,

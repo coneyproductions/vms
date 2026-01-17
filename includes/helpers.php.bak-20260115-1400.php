@@ -327,47 +327,13 @@ function vms_render_collapsible_panel(string $title, callable $render_cb, array 
     $desc    = isset($args['desc']) ? (string)$args['desc'] : '';
     $classes = isset($args['class']) ? (string)$args['class'] : '';
 
-    // MOVED TO CSS FILE
-    //     echo '<style>
-    // .vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;margin:12px 0;}
-    // .vms-panel>summary{list-style:none;cursor:pointer;font-weight:700;font-size:15px;padding:10px 12px;border-radius:14px;}
-    // .vms-panel>summary::-webkit-details-marker{display:none;}
-    // .vms-panel-body{padding:12px 12px 14px;}
-    // .vms-panel-accent{border-left:6px solid var(--vms-accent,#4f46e5);}
-
-    // .vms-sch-cell{
-    //   border:1px solid #e5e5e5;
-    //   border-radius:12px;
-    //   padding:10px;
-    //   min-height:86px;
-    //   background:#fff;
-    // }
-    // .vms-sch-cell.is-outside{
-    //   opacity:.45;
-    // }
-    // .vms-sch-cell.is-closed{
-    //   background:#fafafa;
-    // }
-    // .vms-sch-daynum{
-    //   font-weight:900;
-    //   font-size:12px;
-    //   opacity:.75;
-    //   margin-bottom:6px;
-    // }
-    // .vms-sch-badge{
-    //   display:inline-block;
-    //   font-size:11px;
-    //   font-weight:800;
-    //   padding:2px 8px;
-    //   border-radius:999px;
-    //   border:1px solid #e5e5e5;
-    //   margin:0 0 8px;
-    // }
-    // .vms-sch-badge.is-open{ }
-    // .vms-sch-badge.is-closed{ }
-    // .vms-sch-month-body{ padding:14px; }
-
-    // </style>';
+    echo '<style>
+.vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;margin:12px 0;}
+.vms-panel>summary{list-style:none;cursor:pointer;font-weight:700;font-size:15px;padding:10px 12px;border-radius:14px;}
+.vms-panel>summary::-webkit-details-marker{display:none;}
+.vms-panel-body{padding:12px 12px 14px;}
+.vms-panel-accent{border-left:6px solid var(--vms-accent,#4f46e5);}
+</style>';
 
     echo '<details class="vms-panel vms-panel-accent ' . esc_attr($classes) . '" style="--vms-accent:' . esc_attr($accent) . ';"' . ($open ? ' open' : '') . '>';
     echo '<summary>' . esc_html($title);
@@ -675,171 +641,50 @@ add_filter('manage_users_custom_column', function ($value, $column, $user_id) {
  *
  * Returns array of YYYY-MM-DD strings.
  */
-function vms_normalize_int_array($value): array
+function vms_get_active_dates_for_venue(int $venue_id): array
 {
-    if (empty($value)) {
-        return array();
-    }
-    if (is_string($value)) {
-        $value = maybe_unserialize($value);
-    }
-    if (!is_array($value)) {
-        return array();
-    }
-    $out = array();
-    foreach ($value as $v) {
-        $v = intval($v);
-        if ($v < 0 || $v > 6) {
-            continue;
-        }
-        $out[$v] = $v;
-    }
-    ksort($out);
-    return array_values($out);
-}
+    $tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
 
-function vms_get_venue_schedule_config(int $venue_id): array
-{
-    $open_days = vms_normalize_int_array(get_post_meta($venue_id, '_vms_venue_open_days', true));
-    $open_year_round = get_post_meta($venue_id, '_vms_venue_open_year_round', true);
-    $open_year_round = !empty($open_year_round) && $open_year_round !== '0';
+    // These meta keys are the ones we *want* to standardize on.
+    $start = (string) get_post_meta($venue_id, '_vms_season_start', true);
+    $end   = (string) get_post_meta($venue_id, '_vms_season_end', true);
 
-    $seasons = get_post_meta($venue_id, '_vms_venue_seasons', true);
-    if (is_string($seasons)) {
-        $seasons = maybe_unserialize($seasons);
-    }
-    if (!is_array($seasons)) {
-        $seasons = array();
+    // Season optional → default to current year
+    if ($start === '' || $end === '') {
+        $year  = (int) (new DateTime('now', $tz))->format('Y');
+        $start = $year . '-01-01';
+        $end   = $year . '-12-31';
     }
 
-    $normalized_seasons = array();
-    foreach ($seasons as $s) {
-        if (!is_array($s)) {
-            continue;
-        }
-        $start = isset($s['start']) ? sanitize_text_field($s['start']) : '';
-        $end   = isset($s['end']) ? sanitize_text_field($s['end']) : '';
-        if (!$start || !$end) {
-            continue;
-        }
-        // Normalize to Y-m-d.
-        $start = date('Y-m-d', strtotime($start));
-        $end   = date('Y-m-d', strtotime($end));
-        if ($start > $end) {
-            continue;
-        }
-        $normalized_seasons[] = array('start' => $start, 'end' => $end);
-    }
+    $start_dt = DateTime::createFromFormat('Y-m-d', $start, $tz);
+    $end_dt   = DateTime::createFromFormat('Y-m-d', $end, $tz);
 
-    return array(
-        'open_days' => $open_days,
-        'open_year_round' => $open_year_round,
-        'seasons' => $normalized_seasons,
-    );
-}
-
-function vms_venue_is_in_season(int $venue_id, string $ymd): bool
-{
-    $cfg = vms_get_venue_schedule_config($venue_id);
-    if (!empty($cfg['open_year_round'])) {
-        return true;
-    }
-
-    // If venue has explicit seasons, use them.
-    if (!empty($cfg['seasons'])) {
-        foreach ($cfg['seasons'] as $s) {
-            if ($ymd >= $s['start'] && $ymd <= $s['end']) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Fallback to global season rules (if configured).
-    $global_active = vms_get_active_season_dates(0);
-    if (!empty($global_active)) {
-        return in_array($ymd, $global_active, true);
-    }
-
-    // No seasons configured anywhere → treat as closed until configured.
-    return false;
-}
-
-function vms_venue_is_open_on_date(int $venue_id, string $ymd): bool
-{
-    $cfg = vms_get_venue_schedule_config($venue_id);
-    $open_days = $cfg['open_days'];
-    if (empty($open_days)) {
-        return false; // closed until configured
-    }
-
-    $w = intval(date('w', strtotime($ymd))); // 0=Sun..6=Sat
-    if (!in_array($w, $open_days, true)) {
-        return false;
-    }
-
-    return vms_venue_is_in_season($venue_id, $ymd);
-}
-
-function vms_get_active_dates_for_venue(int $venue_id, int $months_ahead = 24): array
-{
-    if ($venue_id <= 0) {
+    if (!$start_dt || !$end_dt) {
         return array();
     }
 
-    $cfg = vms_get_venue_schedule_config($venue_id);
-    $open_days = $cfg['open_days'];
-    if (empty($open_days)) {
-        return array(); // closed until configured
+    // Ensure end >= start
+    if ($end_dt < $start_dt) {
+        $tmp = $start_dt;
+        $start_dt = $end_dt;
+        $end_dt = $tmp;
     }
-
-    $today = new DateTime('today');
-    $end = (new DateTime('today'))->modify('+' . intval($months_ahead) . ' months');
 
     $dates = array();
 
-    // Determine the date set we should consider "in season".
-    // - If venue is open year-round: all dates in window qualify.
-    // - Else if venue has explicit seasons: only dates inside seasons qualify.
-    // - Else: fall back to global season rules (if any).
-    $has_explicit_seasons = !empty($cfg['seasons']);
+    $cur = clone $start_dt;
+    $cur->setTime(0, 0, 0);
 
-    $global_active = array();
-    if (!$cfg['open_year_round'] && !$has_explicit_seasons) {
-        $global_active = vms_get_active_season_dates(0);
-    }
+    $last = clone $end_dt;
+    $last->setTime(0, 0, 0);
 
-    $cur = clone $today;
-    while ($cur <= $end) {
-        $ymd = $cur->format('Y-m-d');
-        $w = intval($cur->format('w'));
-
-        if (in_array($w, $open_days, true)) {
-            $in_season = false;
-            if ($cfg['open_year_round']) {
-                $in_season = true;
-            } elseif ($has_explicit_seasons) {
-                foreach ($cfg['seasons'] as $s) {
-                    if ($ymd >= $s['start'] && $ymd <= $s['end']) {
-                        $in_season = true;
-                        break;
-                    }
-                }
-            } else {
-                $in_season = !empty($global_active) && in_array($ymd, $global_active, true);
-            }
-
-            if ($in_season) {
-                $dates[] = $ymd;
-            }
-        }
-
+    while ($cur <= $last) {
+        $dates[] = $cur->format('Y-m-d');
         $cur->modify('+1 day');
     }
 
     return $dates;
 }
-
 
 if (!function_exists('vms_pretty_structure_label')) {
     function vms_pretty_structure_label($s): string
@@ -924,8 +769,7 @@ function vms_vendor_mark_profile_updated($vendor_id, $user_id = 0, $changed_fiel
  * Compare "before" vs "after" and return the meta keys that changed.
  * Only compares keys you provide (so you can ignore noisy fields).
  */
-function vms_vendor_diff_meta_keys($vendor_id, array $keys, array $new_values_by_key)
-{
+function vms_vendor_diff_meta_keys($vendor_id, array $keys, array $new_values_by_key) {
     $changed = array();
 
     foreach ($keys as $k) {
@@ -1117,7 +961,7 @@ function vms_vendor_handle_mark_reviewed()
     // Redirect back to vendor edit screen
     wp_safe_redirect(admin_url('post.php?post=' . $vendor_id . '&action=edit'));
     exit;
-}
+} 
 
 /**
  * Active season dates with venue override and global fallback.
@@ -1132,308 +976,95 @@ function vms_vendor_handle_mark_reviewed()
 if (!function_exists('vms_get_active_season_dates')) {
     function vms_get_active_season_dates(int $venue_id = 0): array
     {
-        // NOTE: Season Dates (admin UI) are GLOBAL. Venue-specific seasons are stored on the venue.
-        // This function returns the global set so it can act as a fallback.
+        // 1) Venue override if the venue has explicit season range configured
+        if ($venue_id > 0 && get_post_type($venue_id) === 'vms_venue') {
+            $start = (string) get_post_meta($venue_id, '_vms_season_start', true);
+            $end   = (string) get_post_meta($venue_id, '_vms_season_end', true);
 
+            if ($start !== '' && $end !== '' && function_exists('vms_get_active_dates_for_venue')) {
+                $dates = (array) vms_get_active_dates_for_venue($venue_id);
+                $dates = array_values(array_filter(array_map('sanitize_text_field', $dates)));
+                if (!empty($dates)) return $dates;
+            }
+        }
+
+        // 2) Global pre-generated active dates (from Season Dates admin UI)
         $active = get_option('vms_active_dates', array());
-        if (is_string($active)) {
-            $active = maybe_unserialize($active);
-        }
         if (is_array($active) && !empty($active)) {
-            return array_values(array_unique(array_map('sanitize_text_field', $active)));
+            $active = array_values(array_filter(array_map('sanitize_text_field', $active)));
+            if (!empty($active)) return $active;
         }
 
-        // If active dates haven't been generated yet, generate them from season rules.
+        // 3) Generate from global rules if active dates are missing
         $rules = get_option('vms_season_rules', array());
-        if (is_string($rules)) {
-            $rules = maybe_unserialize($rules);
-        }
-        if (!is_array($rules) || empty($rules)) {
-            return array();
+        if (function_exists('vms_generate_active_dates') && is_array($rules) && !empty($rules)) {
+            $gen = (array) vms_generate_active_dates($rules);
+            $gen = array_values(array_filter(array_map('sanitize_text_field', $gen)));
+            if (!empty($gen)) return $gen;
         }
 
-        $dates = array();
-        foreach ($rules as $rule) {
-            if (!is_array($rule)) {
-                continue;
+        return array();
+    }
+}
+
+function vms_is_in_season($ymd, $start_md, $end_md, DateTimeZone $tz) {
+    try {
+        $y = substr($ymd, 0, 4);
+        $start = new DateTimeImmutable($y . '-' . $start_md . ' 00:00:00', $tz);
+        $end   = new DateTimeImmutable($y . '-' . $end_md   . ' 23:59:59', $tz);
+        $dt    = new DateTimeImmutable($ymd . ' 12:00:00', $tz);
+        return ($dt >= $start && $dt <= $end);
+    } catch (Exception $e) {
+        return true;
+    }
+}
+
+function vms_venue_is_open_on_date(int $venue_id, string $ymd): bool {
+    $ymd = sanitize_text_field($ymd);
+    if (!$venue_id || !$ymd) return false;
+
+    // Date overrides win
+    $overrides = get_post_meta($venue_id, '_vms_venue_date_overrides', true);
+    if (!is_array($overrides)) $overrides = array();
+    if (isset($overrides[$ymd])) {
+        return ($overrides[$ymd] === 'open');
+    }
+
+    // Weekly open days
+    $open_days = get_post_meta($venue_id, '_vms_venue_open_days', true);
+    if (!is_array($open_days)) $open_days = array();
+    $open_days = array_values(array_unique(array_map('intval', $open_days)));
+
+    // If no open days are set, venue is closed by default
+    if (empty($open_days)) {
+        return false;
+    }
+
+    // Season gate (optional)
+    $year_round = (int) get_post_meta($venue_id, '_vms_venue_open_year_round', true);
+    if (!$year_round) {
+        $seasons = get_post_meta($venue_id, '_vms_venue_seasons', true);
+        if (!is_array($seasons)) $seasons = array();
+
+        $in_any_season = false;
+        foreach ($seasons as $s) {
+            $start = isset($s['start']) ? sanitize_text_field($s['start']) : '';
+            $end   = isset($s['end']) ? sanitize_text_field($s['end']) : '';
+            if (!$start || !$end) continue;
+
+            if ($ymd >= $start && $ymd <= $end) {
+                $in_any_season = true;
+                break;
             }
-            $start = isset($rule['start']) ? sanitize_text_field($rule['start']) : '';
-            $end   = isset($rule['end']) ? sanitize_text_field($rule['end']) : '';
-            $days  = isset($rule['days']) ? $rule['days'] : array();
-            $days  = vms_normalize_int_array($days);
-
-            if (!$start || !$end || empty($days)) {
-                continue;
-            }
-
-            $start_dt = new DateTime($start);
-            $end_dt   = new DateTime($end);
-
-            $cur = clone $start_dt;
-            while ($cur <= $end_dt) {
-                $w = intval($cur->format('w'));
-                if (in_array($w, $days, true)) {
-                    $dates[] = $cur->format('Y-m-d');
-                }
-                $cur->modify('+1 day');
-            }
         }
 
-        $dates = array_values(array_unique($dates));
-        sort($dates);
-        return $dates;
-    }
-}
-
-if (!function_exists('vms_get_schedule_window_bounds')) {
-    /**
-     * Returns schedule window bounds as DateTimeImmutable objects.
-     * Start: first day of this month
-     * End: later of (Dec 31 next year) or (start + 18 months - 1 day), capped at 24 months.
-     *
-     * @return array{start: DateTimeImmutable, end: DateTimeImmutable}
-     */
-    function vms_get_schedule_window_bounds(): array
-    {
-        $tz = wp_timezone();
-
-        $start = new DateTimeImmutable('first day of this month 00:00:00', $tz);
-
-        $end1 = (new DateTimeImmutable('now', $tz))
-            ->modify('last day of December next year')
-            ->setTime(23, 59, 59);
-
-        $end2 = $start
-            ->modify('+18 months')
-            ->modify('-1 day')
-            ->setTime(23, 59, 59);
-
-        $end = ($end2 > $end1) ? $end2 : $end1;
-
-        $cap = $start
-            ->modify('+24 months')
-            ->modify('-1 day')
-            ->setTime(23, 59, 59);
-
-        if ($end > $cap) $end = $cap;
-
-        return array('start' => $start, 'end' => $end);
-    }
-}
-
-/**
- * Schedule window (admin Schedule page)
- *
- * Returns an array:
- *  - start (Y-m-d)
- *  - end   (Y-m-d)
- *  - months
- */
-function vms_get_schedule_window_bounds($venue_id = 0)
-{
-    $months = (int) apply_filters('vms_schedule_window_months', 24, (int) $venue_id);
-    if ($months < 1) $months = 24;
-
-    $tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
-    $now = new DateTime('now', $tz);
-
-    // Window starts at the first day of the current month.
-    $start = (clone $now)->modify('first day of this month')->setTime(0, 0, 0);
-
-    // Window ends at the last day of the month (months-1 ahead).
-    $end = (clone $start)
-        ->modify('+' . ($months - 1) . ' months')
-        ->modify('last day of this month')
-        ->setTime(23, 59, 59);
-
-    return array(
-        'start'  => $start->format('Y-m-d'),
-        'end'    => $end->format('Y-m-d'),
-        'months' => $months,
-    );
-}
-
-/**
- * Aliases (in case older code checks a different helper name).
- */
-function vms_get_schedule_window($venue_id = 0)
-{
-    return vms_get_schedule_window_bounds($venue_id);
-}
-function vms_get_schedule_window_range($venue_id = 0)
-{
-    return vms_get_schedule_window_bounds($venue_id);
-}
-function vms_get_schedule_window_start_end($venue_id = 0)
-{
-    return vms_get_schedule_window_bounds($venue_id);
-}
-
-// function vms_render_schedule_calendar_view(int $venue_id, string $start_ymd, string $end_ymd): void
-// {
-//     $start_ts = strtotime($start_ymd);
-//     $end_ts   = strtotime($end_ymd);
-
-//     if (!$start_ts || !$end_ts || $end_ts < $start_ts) {
-//         echo '<div class="notice notice-error"><p>Invalid schedule window.</p></div>';
-//         return;
-//     }
-
-//     // Normalize to first day of start month
-//     $cursor = strtotime(date('Y-m-01', $start_ts));
-//     $end_month = strtotime(date('Y-m-01', $end_ts));
-
-//     while ($cursor <= $end_month) {
-//         $month_label = date_i18n('F Y', $cursor);
-//         $month_start = strtotime(date('Y-m-01', $cursor));
-//         $month_end   = strtotime(date('Y-m-t', $cursor));
-
-//         // Clamp month range to schedule window
-//         $range_start = max($month_start, $start_ts);
-//         $range_end   = min($month_end, $end_ts);
-
-//         echo '<details class="vms-av-method vms-sch-month" open>';
-//         echo '<summary><span>' . esc_html($month_label) . '</span></summary>';
-//         echo '<div class="vms-sch-month-body">';
-
-//         echo '<table class="widefat vms-av-grid" style="width:100%; border-collapse:separate; border-spacing:6px;">';
-//         echo '<thead><tr>';
-//         foreach (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $dow) {
-//             echo '<th style="text-align:center;">' . esc_html($dow) . '</th>';
-//         }
-//         echo '</tr></thead><tbody>';
-
-//         // Figure leading blanks
-//         $first_dow = (int) date('w', $month_start); // 0=Sun
-//         $day_ts = $month_start;
-
-//         echo '<tr>';
-//         for ($i = 0; $i < $first_dow; $i++) {
-//             echo '<td>&nbsp;</td>';
-//         }
-
-//         while ($day_ts <= $month_end) {
-//             $w = (int) date('w', $day_ts);
-//             $ymd = date('Y-m-d', $day_ts);
-
-//             // Start a new row on Sundays (except the first row which we already started)
-//             if ($w === 0 && $day_ts !== $month_start) {
-//                 echo '</tr><tr>';
-//             }
-
-//             // Outside schedule window for this month: show greyed cell but still visible
-//             $in_window = ($day_ts >= $range_start && $day_ts <= $range_end);
-
-//             echo '<td style="vertical-align:top;">';
-//             vms_render_schedule_day_cell($venue_id, $ymd, $in_window);
-//             echo '</td>';
-
-//             $day_ts = strtotime('+1 day', $day_ts);
-//         }
-
-//         // Trailing blanks to complete the last week
-//         $last_dow = (int) date('w', $month_end);
-//         for ($i = $last_dow; $i < 6; $i++) {
-//             echo '<td>&nbsp;</td>';
-//         }
-//         echo '</tr>';
-
-//         echo '</tbody></table>';
-
-//         echo '</div></details>';
-
-//         $cursor = strtotime('+1 month', $cursor);
-//     }
-// }
-
-function vms_render_schedule_day_cell(int $venue_id, string $ymd, bool $in_window): void
-{
-    $day_num = (int) substr($ymd, 8, 2);
-
-    // TODO: replace these with your real helpers:
-    $is_open = function_exists('vms_venue_is_open_on_date') ? (bool) vms_venue_is_open_on_date($venue_id, $ymd) : true;
-    $plan_id = function_exists('vms_get_event_plan_id_by_date') ? (int) vms_get_event_plan_id_by_date($venue_id, $ymd) : 0;
-
-    $classes = ['vms-sch-cell'];
-    if (!$in_window) $classes[] = 'is-outside';
-    if (!$is_open)   $classes[] = 'is-closed';
-    if ($plan_id)    $classes[] = 'has-plan';
-
-    echo '<div class="' . esc_attr(implode(' ', $classes)) . '">';
-    echo '<div class="vms-sch-daynum">' . esc_html((string)$day_num) . '</div>';
-
-    if (!$in_window) {
-        echo '<div class="vms-sch-muted">Outside window</div>';
-        echo '</div>';
-        return;
-    }
-
-    if ($plan_id > 0) {
-        $edit = get_edit_post_link($plan_id, ''); // assumes event plans are posts
-        echo '<div class="vms-sch-badge">Plan</div>';
-        if ($edit) {
-            echo '<a class="button button-small" href="' . esc_url($edit) . '">Open</a>';
+        // If seasons are defined and we're not in one, we're closed
+        if (!empty($seasons) && !$in_any_season) {
+            return false;
         }
-    } else {
-        // Even if closed, you can decide whether to allow "Create"
-        $url = wp_nonce_url(
-            admin_url('admin-post.php?action=vms_create_event_plan&date=' . rawurlencode($ymd)),
-            'vms_create_event_plan_' . $ymd
-        );
-        echo '<div class="vms-sch-badge ' . ($is_open ? 'is-open' : 'is-closed') . '">' . ($is_open ? 'Open' : 'Closed') . '</div>';
-        echo '<a class="button button-small" href="' . esc_url($url) . '">Create</a>';
     }
 
-    echo '</div>';
+    // Finally, day-of-week check
+    $dow = (int) gmdate('w', strtotime($ymd . ' 12:00:00')); // noon avoids DST edge
+    return in_array($dow, $open_days, true);
 }
-
-// Admin: load on VMS admin pages only.
-add_action('admin_enqueue_scripts', function () {
-
-    $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
-    if ($page === '' || strpos($page, 'vms') !== 0) {
-        return;
-    }
-
-    $shared_rel = 'assets/css/vms-shared.css';
-    $admin_rel  = 'assets/css/vms-admin.css';
-
-    wp_enqueue_style(
-        'vms-shared',
-        VMS_PLUGIN_URL . $shared_rel,
-        array(),
-        file_exists(VMS_PLUGIN_PATH . $shared_rel) ? filemtime(VMS_PLUGIN_PATH . $shared_rel) : null
-    );
-
-    wp_enqueue_style(
-        'vms-admin',
-        VMS_PLUGIN_URL . $admin_rel,
-        array('vms-shared'),
-        file_exists(VMS_PLUGIN_PATH . $admin_rel) ? filemtime(VMS_PLUGIN_PATH . $admin_rel) : null
-    );
-});
-
-// Front-end: load only on Vendor Portal page.
-add_action('wp_enqueue_scripts', function () {
-
-    if (!is_page('vendor-portal')) {
-        return;
-    }
-
-    $shared_rel = 'assets/css/vms-shared.css';
-    $portal_rel = 'assets/css/vms-portal.css';
-
-    wp_enqueue_style(
-        'vms-shared',
-        VMS_PLUGIN_URL . $shared_rel,
-        array(),
-        file_exists(VMS_PLUGIN_PATH . $shared_rel) ? filemtime(VMS_PLUGIN_PATH . $shared_rel) : null
-    );
-
-    wp_enqueue_style(
-        'vms-portal',
-        VMS_PLUGIN_URL . $portal_rel,
-        array('vms-shared'),
-        file_exists(VMS_PLUGIN_PATH . $portal_rel) ? filemtime(VMS_PLUGIN_PATH . $portal_rel) : null
-    );
-});

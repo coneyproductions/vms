@@ -1,0 +1,254 @@
+/* =====================================================================
+   VMS UI (Shared)
+   Single source of truth for the Schedule calendar UI.
+   NOTE: Replace (overwrite) this file. Do not append.
+   ===================================================================== */
+
+:root{
+  --vms-radius-lg: 16px;
+  --vms-radius-md: 12px;
+  --vms-border: rgba(0,0,0,.08);
+  --vms-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+
+  --vms-open-bg: rgba(34,197,94,.08);
+  --vms-open-border: rgba(34,197,94,.25);
+  --vms-closed-bg: rgba(100,116,139,.06);
+  --vms-closed-border: rgba(100,116,139,.22);
+
+  --vms-accent: #16a34a;
+  --vms-link: #2271b1;
+}
+
+/* Base */
+body.toplevel_page_vms .vms-panel-body{ padding: 16px 18px 26px; }
+body.toplevel_page_vms .vms-panel-body p{ margin: 0 0 12px; }
+
+/* Calendar / List tabs */
+body.toplevel_page_vms .vms-portal-nav{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  margin: 6px 0 16px;
+  flex-wrap: wrap;
+}
+body.toplevel_page_vms .vms-portal-nav a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 6px 12px;
+  border: 1px solid rgba(0,0,0,.18);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--vms-link);
+  text-decoration:none;
+  font-weight: 600;
+  line-height: 1;
+}
+body.toplevel_page_vms .vms-portal-nav a:hover{ background: rgba(34,113,177,.06); }
+body.toplevel_page_vms .vms-portal-nav a.is-active{
+  background: var(--vms-link);
+  border-color: var(--vms-link);
+  color: #fff;
+}
+
+/* Month card */
+body.toplevel_page_vms .vms-sch-month{
+  position: relative;
+  margin: 14px 0 18px;
+  padding: 14px 14px 18px;
+  background: #fff;
+  border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-lg);
+  box-shadow: var(--vms-shadow);
+}
+body.toplevel_page_vms .vms-sch-month::before{
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-top-left-radius: var(--vms-radius-lg);
+  border-bottom-left-radius: var(--vms-radius-lg);
+  background: var(--vms-accent);
+}
+
+/* Month title (sticky) */
+body.toplevel_page_vms .vms-sch-month-title{
+  margin: -14px -14px 12px;
+  padding: 12px 14px 10px 18px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  background: #fff;
+  border-top-left-radius: var(--vms-radius-lg);
+  border-top-right-radius: var(--vms-radius-lg);
+  position: sticky;
+  top: 32px; /* WP admin bar */
+  z-index: 20;
+}
+@media (max-width: 782px){
+  body.toplevel_page_vms .vms-sch-month-title{ top: 46px; }
+}
+@media (max-width: 600px){
+  body.toplevel_page_vms .vms-sch-month-title{ top: 0; }
+}
+
+/* Calendar table */
+body.toplevel_page_vms .vms-sch-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 10px;
+  table-layout: fixed;
+}
+body.toplevel_page_vms .vms-sch-table thead{ display: table-header-group; }
+body.toplevel_page_vms .vms-sch-table th{
+  text-align: center;
+  padding: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(15,23,42,.75);
+}
+body.toplevel_page_vms .vms-sch-table td{ vertical-align: top; padding: 0; }
+
+/* Day cell */
+body.toplevel_page_vms .vms-sch-cell{
+  border: 1px dashed rgba(100,116,139,.28);
+  border-radius: 14px;
+  background: #fff;
+  min-height: 122px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-auto-rows: min-content;
+  gap: 8px 10px;
+  align-content: start;
+}
+
+/* Date + status (top row) */
+body.toplevel_page_vms .vms-sch-daynum{
+  grid-column: 1;
+  grid-row: 1;
+  font-weight: 800;
+  color: rgba(15,23,42,.85);
+}
+body.toplevel_page_vms .vms-sch-badge{
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(100,116,139,.10);
+  color: rgba(15,23,42,.75);
+}
+body.toplevel_page_vms .vms-sch-badge.is-open{
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.12);
+  color: rgba(22,101,52,.95);
+}
+body.toplevel_page_vms .vms-sch-badge.is-closed{
+  border-color: rgba(239,68,68,.28);
+  background: rgba(239,68,68,.10);
+  color: rgba(127,29,29,.92);
+}
+
+/* Action area (Create/Add) above plan for continuity */
+body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top']{
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 0 !important;
+}
+body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top'] > a.button{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 999px;
+}
+
+/* Plans / events list (supports multiple items) */
+body.toplevel_page_vms .vms-sch-plan{
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+body.toplevel_page_vms .vms-sch-plan a{
+  display: block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(59,130,246,.18);
+  background: rgba(59,130,246,.08);
+  text-decoration: none;
+  font-weight: 700;
+  color: rgba(15,23,42,.92);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.toplevel_page_vms .vms-sch-plan a:hover{ background: rgba(59,130,246,.12); }
+
+/* Open / closed cell backgrounds */
+body.toplevel_page_vms .vms-sch-cell.is-open{
+  background: var(--vms-open-bg);
+  border-color: var(--vms-open-border);
+}
+body.toplevel_page_vms .vms-sch-cell.is-closed{
+  background: var(--vms-closed-bg);
+  border-color: var(--vms-closed-border);
+}
+/* Fallback if markup does not include .is-open on the cell */
+body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-open){
+  background: var(--vms-open-bg);
+  border-color: var(--vms-open-border);
+}
+body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-closed){
+  background: var(--vms-closed-bg);
+  border-color: var(--vms-closed-border);
+}
+
+/* Mobile: remove pills, shrink buttons and spacing */
+@media (max-width: 600px){
+  body.toplevel_page_vms .vms-panel-body{ padding: 12px 12px 20px; }
+  body.toplevel_page_vms .vms-sch-month{ padding: 12px 12px 14px; }
+  body.toplevel_page_vms .vms-sch-month-title{ margin: -12px -12px 10px; padding: 10px 12px 8px 16px; font-size: 16px; }
+
+  body.toplevel_page_vms .vms-sch-table{ border-spacing: 8px; }
+  body.toplevel_page_vms .vms-sch-table th{ font-size: 11px; padding-bottom: 4px; }
+
+  body.toplevel_page_vms .vms-sch-cell{ min-height: 112px; padding: 8px; gap: 6px 8px; }
+  body.toplevel_page_vms .vms-sch-badge{ display: none; }
+
+  /* Turn Create/Add into a compact '+' */
+  body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top'] > a.button.button-small{
+    width: 30px;
+    min-width: 30px;
+    padding: 0;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 999px;
+    font-size: 0; /* hide text */
+  }
+  body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top'] > a.button.button-small::after{
+    content: '+';
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  body.toplevel_page_vms .vms-sch-plan a{ padding: 7px 8px; font-size: 12px; }
+}
+
+@media (max-width: 420px){
+  body.toplevel_page_vms .vms-sch-table{ border-spacing: 6px; }
+  body.toplevel_page_vms .vms-sch-cell{ min-height: 106px; }
+  body.toplevel_page_vms .vms-sch-daynum{ font-size: 12px; }
+}

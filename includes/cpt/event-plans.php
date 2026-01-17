@@ -25,7 +25,7 @@ function vms_register_event_plan_cpt(): void
         ),
         'public'          => false,
         'show_ui'         => true,
-        'show_in_menu'    => 'vms-season-board',
+        'show_in_menu'    => 'vms',
         'menu_icon'       => 'dashicons-calendar-alt',
         'supports'        => array('title', 'editor', 'thumbnail'),
         'capability_type' => 'post',

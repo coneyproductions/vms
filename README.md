@@ -84,5 +84,5 @@ cd wp-content/plugins/vms
 ```bash
 git status
 git add .
-git commit -m "fixed availability calendar UI as well as ICS calendar sync"
+git commit -m "updated the admin schedule UI"
 git push origin main

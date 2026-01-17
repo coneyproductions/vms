@@ -1,40 +1,31 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-// Legacy admin slug redirect: keep old links working without showing the old name in the UI.
-add_action('admin_init', function () {
-    if (!is_admin()) return;
-    $page = isset($_GET['page']) ? (string) $_GET['page'] : '';
-    if ($page === 'vms-season-board') {
-        wp_safe_redirect(admin_url('admin.php?page=vms'));
-        exit;
-    }
-});
-
 add_action('admin_menu', function () {
 
-    // Make Schedule the top-level landing page
+    // Make Season Board the top-level landing page
     add_menu_page(
         __('Vendor Management System', 'vms'),
         'VMS',
         'manage_options',
-        'vms',
-        'vms_render_schedule_page',
+        'vms-season-board',
+        'vms_render_season_board_page',
         'dashicons-calendar-alt',
         26
     );
+
     // First submenu must match the parent slug
     add_submenu_page(
-        'vms',
-        __('Schedule', 'vms'),
-        __('Schedule', 'vms'),
+        'vms-season-board',
+        __('Season Board', 'vms'),
+        __('Season Board', 'vms'),
         'manage_options',
-        'vms',
-        'vms_render_schedule_page'
+        'vms-season-board',
+        'vms_render_season_board_page'
     );
 
     add_submenu_page(
-        'vms',
+        'vms-season-board',
         __('Dashboard', 'vms'),
         __('Dashboard', 'vms'),
         'manage_options',
@@ -43,7 +34,7 @@ add_action('admin_menu', function () {
     );
 
     add_submenu_page(
-        'vms',
+        'vms-season-board',
         __('Season Dates', 'vms'),
         __('Season Dates', 'vms'),
         'manage_options',
@@ -52,7 +43,7 @@ add_action('admin_menu', function () {
     );
 
     add_submenu_page(
-        'vms',
+        'vms-season-board',
         __('Settings', 'vms'),
         __('Settings', 'vms'),
         'manage_options',

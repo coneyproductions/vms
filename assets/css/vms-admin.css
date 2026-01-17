@@ -1,0 +1,196 @@
+/*
+  VMS Admin Styles
+  Scope: WordPress admin VMS pages only
+  Notes:
+  - Calendar styles target table.vms-sch-grid (rendered by schedule.php)
+  - Mobile keeps the 7-column calendar but reduces UI to prevent horizontal scroll
+  - On narrow screens, Create/Add buttons show as '+' and Open/Closed pill is hidden
+*/
+
+/* ---------- Panel header (month) sticky on scroll ---------- */
+body.toplevel_page_vms .vms-panel > summary{
+  position: sticky;
+  top: 32px;
+  z-index: 50;
+  background: #fff;
+  padding: 10px 12px;
+  margin: -12px -12px 12px;
+  border-bottom: 1px solid #e6e6e6;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* ---------- Calendar table ---------- */
+body.toplevel_page_vms table.vms-sch-grid{
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 10px;
+}
+
+body.toplevel_page_vms table.vms-sch-grid td{
+  padding: 0;
+  vertical-align: top;
+}
+
+/* Default cell sizing (desktop/tablet) */
+body.toplevel_page_vms .vms-sch-cell{
+  --vms-cell-h: 150px;
+  height: var(--vms-cell-h);
+  box-sizing: border-box;
+
+  border: 1px dashed #d7d7d7;
+  border-radius: 16px;
+  background: #fff;
+
+  padding: 10px;
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  column-gap: 10px;
+  row-gap: 8px;
+}
+
+/* Header row: day number (left) + open/closed badge (right) */
+body.toplevel_page_vms .vms-sch-daynum{
+  grid-column: 1;
+  grid-row: 1;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1;
+  color: #1f2937;
+}
+
+body.toplevel_page_vms .vms-sch-badge{
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(0,0,0,0.03);
+  color: #374151;
+  white-space: nowrap;
+}
+
+/* Action wrapper (Create/Add). Markup uses an inline style margin-top:8px */
+body.toplevel_page_vms .vms-sch-cell > div[style*="margin-top"]{
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 0 !important;
+}
+
+/* Plan link sits under the action row for continuity */
+body.toplevel_page_vms .vms-sch-plan{
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+}
+
+body.toplevel_page_vms .vms-sch-plan a{
+  display: block;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(34,113,177,0.18);
+  background: rgba(34,113,177,0.06);
+  color: #0b5aa6;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Open/Closed backgrounds */
+body.toplevel_page_vms .vms-sch-cell.is-open{
+  background: rgba(34,197,94,0.08);
+  border-color: rgba(34,197,94,0.25);
+}
+
+body.toplevel_page_vms .vms-sch-cell.is-closed{
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.10);
+}
+
+/* If markup misses .is-open/.is-closed, infer from badge presence */
+body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-open){
+  background: rgba(34,197,94,0.08);
+  border-color: rgba(34,197,94,0.25);
+}
+
+body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-closed){
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.10);
+}
+
+/* Do not allow horizontal page scrolling from the calendar */
+body.toplevel_page_vms .vms-panel-body{
+  overflow-x: hidden;
+}
+
+/* ---------- Mobile: keep 7 columns, shrink UI ---------- */
+@media (max-width: 782px){
+  body.toplevel_page_vms table.vms-sch-grid{
+    border-spacing: 4px;
+  }
+
+  body.toplevel_page_vms .vms-sch-cell{
+    --vms-cell-h: 96px;
+    border-radius: 12px;
+    padding: 6px;
+    column-gap: 6px;
+    row-gap: 6px;
+  }
+
+  /* Remove Open/Closed pill; rely on background color */
+  body.toplevel_page_vms .vms-sch-badge{
+    display: none;
+  }
+
+  body.toplevel_page_vms .vms-sch-daynum{
+    font-size: 12px;
+  }
+
+  /* Turn Create/Add buttons into '+' */
+  body.toplevel_page_vms .vms-sch-cell a.button.button-small{
+    font-size: 0 !important;
+    padding: 6px 8px !important;
+    min-width: 28px;
+    height: auto;
+    line-height: 1;
+    text-align: center;
+  }
+
+  body.toplevel_page_vms .vms-sch-cell a.button.button-small::before{
+    content: "+";
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  /* Keep the plan visible but short: show 'EP' */
+  body.toplevel_page_vms .vms-sch-plan a{
+    font-size: 0 !important;
+    padding: 6px 8px;
+  }
+
+  body.toplevel_page_vms .vms-sch-plan a::before{
+    content: "EP";
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+  }
+}
+

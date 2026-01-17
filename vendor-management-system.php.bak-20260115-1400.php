@@ -12,21 +12,10 @@
 // Exit if accessed directly.
 if (!defined('ABSPATH')) exit;
 
-// Constants (always reference paths/urls from the main plugin file).
-if (!defined('VMS_PLUGIN_FILE')) {
-    define('VMS_PLUGIN_FILE', __FILE__);
-}
-if (!defined('VMS_PLUGIN_PATH')) {
-    define('VMS_PLUGIN_PATH', plugin_dir_path(__FILE__));
-}
-if (!defined('VMS_PLUGIN_URL')) {
-    define('VMS_PLUGIN_URL', plugin_dir_url(__FILE__));
-}
-
 /**
  * Load includes
  */
-$base = VMS_PLUGIN_PATH . 'includes/';
+$base = plugin_dir_path(__FILE__) . 'includes/';
 
 $includes = array(
     'helpers.php',
@@ -56,11 +45,10 @@ $includes = array(
 
     // Admin
     'admin/menu.php',
-    'admin/schedule.php',
     'admin/admin-notices.php',
     'admin/venue-context.php',
     'admin/season-board.php',
-    'admin/settings-page.php', 
+    'admin/settings-page.php',
 
     'admin/vendor-comp-packages.php',
     'admin/vendor-details.php',
@@ -76,8 +64,7 @@ $includes = array(
     // 'admin/venue-duplicate-templates.php', // This kind of went off of the rails. We'll try again later
     'admin/venue-calendar.php',
     'admin/pages-tools.php',
-    'admin/vendor-user-link.php',
-
+    'admin/vendor-user-link.php'
 ); 
 
 
@@ -89,51 +76,6 @@ foreach ($includes as $file) {
         error_log('VMS missing include: ' . $path);
     }
 }
-
-add_action('admin_enqueue_scripts', 'vms_enqueue_admin_ui_css');
-function vms_enqueue_admin_ui_css($hook) {
-    error_log('VMS_PLUGIN_URL=' . VMS_PLUGIN_URL);
-    error_log('VMS_PLUGIN_PATH=' . VMS_PLUGIN_PATH);
-
-    // Load on VMS admin pages and VMS CPT editors.
-    $page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
-    $post_type = isset($_GET['post_type']) ? sanitize_key($_GET['post_type']) : '';
-    $is_vms_page = (strpos($page, 'vms') === 0) || (strpos($hook, 'vms') !== false);
-    $is_vms_cpt  = in_array($post_type, array('vms_venue','vms_event_plan','vms_vendor','vms_staff'), true);
-
-    // Also allow post.php/post-new.php when editing VMS CPTs.
-    if (!$is_vms_page && !$is_vms_cpt) {
-        if ($hook === 'post.php' || $hook === 'post-new.php') {
-            $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-            if (!$screen || empty($screen->post_type) || !in_array($screen->post_type, array('vms_venue','vms_event_plan','vms_vendor','vms_staff'), true)) {
-                return;
-            }
-        } else {
-            return;
-        }
-    }
-
-    $css_rel  = 'assets/css/vms-ui.css';
-    $css_path = VMS_PLUGIN_PATH . $css_rel;
-    $css_url  = VMS_PLUGIN_URL  . $css_rel;
-
-    $ver = file_exists($css_path) ? (string) filemtime($css_path) : null;
-
-    wp_enqueue_style('vms-ui', $css_url, array(), $ver);
-}
-
-add_action('wp_enqueue_scripts', 'vms_enqueue_public_ui_css');
-function vms_enqueue_public_ui_css() {
-    // If you want, you can restrict this later to only the vendor portal page.
-    $css_rel  = 'assets/css/vms-ui.css';
-    $css_path = VMS_PLUGIN_PATH . $css_rel;
-    $css_url  = VMS_PLUGIN_URL  . $css_rel;
-
-    $ver = file_exists($css_path) ? (string) filemtime($css_path) : null;
-
-    wp_enqueue_style('vms-ui', $css_url, array(), $ver);
-}
-
 
 // Activation / deactivation hooks.
 register_activation_hook(__FILE__, 'vms_activate_plugin');
@@ -157,9 +99,9 @@ add_action('after_setup_theme', function () {
 // Plugin constants.
 define('VMS_VERSION', '0.1.0');
 define('VMS_BUILD_ID', '2026-01-05 15:48 CST');
-// define('VMS_PLUGIN_FILE', __FILE__);
+define('VMS_PLUGIN_FILE', __FILE__);
 define('VMS_PLUGIN_DIR', plugin_dir_path(__FILE__));
-// define('VMS_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('VMS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SR_EVENT_PLAN_STATUS_KEY', '_sr_event_plan_status'); // draft|ready|published
 
 // Adjust these to match your existing meta keys:
@@ -190,25 +132,20 @@ function vms_render_season_dates_page()
 
         $rules = array();
 
-        // Note: We keep each season's weekday selection even if the date range is empty.
-        // This prevents the UI from "snapping back" and makes it easy to set weekdays first.
         for ($i = 1; $i <= 2; $i++) {
             $start = isset($_POST["season{$i}_start"]) ? sanitize_text_field($_POST["season{$i}_start"]) : '';
             $end   = isset($_POST["season{$i}_end"]) ? sanitize_text_field($_POST["season{$i}_end"]) : '';
             $days  = isset($_POST["season{$i}_days"]) && is_array($_POST["season{$i}_days"])
-                ? array_values(array_unique(array_map('intval', $_POST["season{$i}_days"])))
+                ? array_map('intval', $_POST["season{$i}_days"])
                 : array();
 
-            // If the entire season is blank, skip saving it.
-            if ($start === '' && $end === '' && empty($days)) {
-                continue;
+            if ($start && $end && !empty($days)) {
+                $rules[] = array(
+                    'start' => $start, // "YYYY-MM-DD"
+                    'end'   => $end,
+                    'days'  => $days,  // [5,6] for Fri/Sat, etc.
+                );
             }
-
-            $rules[] = array(
-                'start' => $start, // "YYYY-MM-DD" (may be blank)
-                'end'   => $end,   // (may be blank)
-                'days'  => $days,  // [5,6] for Fri/Sat, etc. (may be empty)
-            );
         }
 
         // Save rules.
@@ -329,60 +266,34 @@ function vms_generate_active_dates($rules)
 {
     $dates = array();
 
-    foreach ($rules as $rule) {
-        $start_raw = isset($rule['start']) ? trim($rule['start']) : '';
-        $end_raw   = isset($rule['end'])   ? trim($rule['end'])   : '';
-        $days      = isset($rule['days'])  ? (array) $rule['days'] : array();
+    $current_year = (int) date('Y');
+    $target_years = array($current_year, $current_year + 1);
 
-        if (!$start_raw || !$end_raw || empty($days)) {
-            continue;
-        }
+    foreach ($target_years as $year) {
+        foreach ($rules as $rule) {
+            $start_md = isset($rule['start']) ? $rule['start'] : '';
+            $end_md   = isset($rule['end'])   ? $rule['end']   : '';
+            $days     = isset($rule['days'])  ? (array) $rule['days'] : array();
 
-        // We support two rule formats:
-        // 1) Full dates: YYYY-MM-DD (recommended for the Schedule / venue seasons)
-        // 2) Month-day recurring: MM-DD (legacy)
-        $is_full_dates = preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_raw) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_raw);
-        $is_month_day  = preg_match('/^\d{2}-\d{2}$/', $start_raw) && preg_match('/^\d{2}-\d{2}$/', $end_raw);
-
-        if ($is_full_dates) {
-            $start_ts = strtotime($start_raw);
-            $end_ts   = strtotime($end_raw);
-
-            if (!$start_ts || !$end_ts || $end_ts < $start_ts) {
+            if (!$start_md || !$end_md || empty($days)) {
                 continue;
             }
 
-            for ($ts = $start_ts; $ts <= $end_ts; $ts = strtotime('+1 day', $ts)) {
-                $dow = (int) date('w', $ts); // 0=Sun, 6=Sat
-                if (in_array($dow, $days, true)) {
-                    $dates[] = date('Y-m-d', $ts);
-                }
-            }
-
-            continue;
-        }
-
-        if (!$is_month_day) {
-            // Unrecognized format.
-            continue;
-        }
-
-        $current_year = (int) date('Y');
-        $target_years = array($current_year, $current_year + 1);
-
-        foreach ($target_years as $year) {
-            $start_date_str = $year . '-' . $start_raw;
-            $end_date_str   = $year . '-' . $end_raw;
+            // Build YYYY-MM-DD strings
+            $start_date_str = $year . '-' . $start_md;
+            $end_date_str   = $year . '-' . $end_md;
 
             $start_ts = strtotime($start_date_str);
             $end_ts   = strtotime($end_date_str);
 
+            // Validate timestamps + ordering
             if (!$start_ts || !$end_ts || $end_ts < $start_ts) {
                 continue;
             }
 
+            // Walk every day in the range
             for ($ts = $start_ts; $ts <= $end_ts; $ts = strtotime('+1 day', $ts)) {
-                $dow = (int) date('w', $ts);
+                $dow = (int) date('w', $ts); // 0=Sun, 6=Sat
                 if (in_array($dow, $days, true)) {
                     $dates[] = date('Y-m-d', $ts);
                 }
@@ -390,12 +301,12 @@ function vms_generate_active_dates($rules)
         }
     }
 
+    // Deduplicate + sort
     $dates = array_values(array_unique($dates));
     sort($dates);
 
     return $dates;
 }
-
 
 
 add_action('add_meta_boxes', 'vms_add_vendor_availability_metabox');
@@ -427,20 +338,19 @@ function vms_render_vendor_availability_metabox($post)
     }
 
     // --- Styles (portal-like, but admin-friendly) ---
-    // Moved to CSS file
-    // echo '<style>
-    //     .vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;}
-    //     .vms-panel > summary{list-style:none;}
-    //     .vms-panel > summary::-webkit-details-marker{display:none;}
-    //     .vms-panel-month{border-left:6px solid #10b981;} /* green accent */
-    //     .vms-panel-summary{cursor:pointer;font-weight:700;font-size:14px;padding:10px 12px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;}
-    //     .vms-panel-summary small{font-weight:400;opacity:.75;margin-left:10px;}
-    //     .vms-panel-body{padding:12px 12px 14px;}
-    //     .vms-admin-availability-actions{margin:8px 0 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-    //     .vms-admin-availability-actions .description{margin:0;opacity:.85;}
-    //     .vms-availability-table td{vertical-align:middle;}
-    //     .vms-availability-table select{min-width:160px;}
-    // </style>';
+    echo '<style>
+        .vms-panel{border-radius:14px;border:1px solid #e5e5e5;background:#fff;}
+        .vms-panel > summary{list-style:none;}
+        .vms-panel > summary::-webkit-details-marker{display:none;}
+        .vms-panel-month{border-left:6px solid #10b981;} /* green accent */
+        .vms-panel-summary{cursor:pointer;font-weight:700;font-size:14px;padding:10px 12px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;}
+        .vms-panel-summary small{font-weight:400;opacity:.75;margin-left:10px;}
+        .vms-panel-body{padding:12px 12px 14px;}
+        .vms-admin-availability-actions{margin:8px 0 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .vms-admin-availability-actions .description{margin:0;opacity:.85;}
+        .vms-availability-table td{vertical-align:middle;}
+        .vms-availability-table select{min-width:160px;}
+    </style>';
 
     echo '<p class="description" style="margin-top:0;">
         Set availability for each active booking date. Leave blank if unknown.

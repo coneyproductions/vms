@@ -1,0 +1,55 @@
+:root{
+  --vms-border:#e5e5e5;
+  --vms-bg:#fff;
+  --vms-muted:rgba(17,24,39,.75);
+  --vms-accent:#10b981;
+  --vms-radius:14px;
+}
+
+/* Generic panel */
+.vms-panel{
+  border-radius:var(--vms-radius);
+  border:1px solid var(--vms-border);
+  background:var(--vms-bg);
+  margin:12px 0;
+  overflow:hidden;
+}
+.vms-panel>summary{
+  list-style:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:14px;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.vms-panel>summary::-webkit-details-marker{display:none;}
+.vms-panel-body{padding:12px 12px 14px;}
+.vms-panel-accent{border-left:6px solid var(--vms-accent);}
+
+/* Notices */
+.vms-notice{
+  padding:10px 12px;
+  border-radius:12px;
+  margin:12px 0;
+  border:1px solid transparent;
+  font-weight:700;
+}
+.vms-notice-success{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
+.vms-notice-warning{background:#fffbeb;border-color:#fcd34d;color:#92400e;}
+.vms-notice-error{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
+
+/* Small “badge” pill */
+.vms-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:900;
+  padding:2px 8px;
+  border-radius:999px;
+  line-height:1;
+  border:1px solid transparent;
+}
