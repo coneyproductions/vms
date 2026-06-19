@@ -1,0 +1,234 @@
+.vms-pass-public-page {
+  background: #f2f5fb;
+  color: #142033;
+  font-size: 16px;
+  line-height: 1.45;
+  padding: 28px 0;
+}
+
+.vms-pass-public-page .vms-pass-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 14px;
+}
+
+.vms-pass-public-page .vms-pass-card {
+  background: #fff;
+  border: 1px solid #d8e2f0;
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgba(16, 34, 64, .08);
+  padding: 18px;
+}
+
+.vms-pass-public-page h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0 0 12px;
+}
+
+.vms-pass-public-page h2 {
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+}
+
+.vms-pass-public-page .vms-pass-meta {
+  color: #49576f;
+  margin: 0 0 12px;
+}
+
+.vms-pass-public-page .vms-pass-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vms-pass-public-page .vms-pass-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.vms-pass-public-page .vms-pass-grid input,
+.vms-pass-public-page .vms-pass-grid select {
+  width: 100%;
+  font: inherit;
+  padding: 10px 11px;
+  border: 1px solid #b8c6da;
+  border-radius: 8px;
+}
+
+.vms-pass-public-page .vms-pass-span-2 {
+  grid-column: span 2;
+}
+
+.vms-pass-public-page .vms-pass-actions {
+  margin: 12px 0 0;
+}
+
+.vms-pass-public-page .vms-pass-actions button {
+  font: inherit;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #18498f;
+  background: #2267c7;
+  color: #fff;
+  cursor: pointer;
+}
+
+.vms-pass-public-page .vms-pass-note {
+  background: #f7fafc;
+  border: 1px solid #d6e3f2;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin: 12px 0;
+}
+
+.vms-pass-public-page .vms-pass-error {
+  background: #fff1f1;
+  border: 1px solid #eab2b2;
+  color: #7f1515;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin: 12px 0;
+}
+
+.vms-pass-public-page .vms-pass-success {
+  background: #ecfff2;
+  border: 1px solid #a7d7b5;
+  color: #13492b;
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin: 12px 0;
+}
+
+@media (max-width: 760px) {
+  .vms-pass-public-page .vms-pass-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-pass-public-page .vms-pass-span-2 {
+    grid-column: span 1;
+  }
+}
+
+
+.vms-pass-public-page .vms-pass-ticket {
+  border: 1px solid #d8e2f0;
+  border-radius: 14px;
+  background: #fbfdff;
+  padding: 16px;
+  margin: 14px 0;
+  text-align: left;
+}
+
+.vms-pass-public-page .vms-pass-ticket h2 {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.vms-pass-public-page .vms-pass-qr-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 16px;
+}
+
+.vms-pass-public-page .vms-pass-qr {
+  width: min(280px, 88vw);
+  height: auto;
+  border: 10px solid #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(16, 34, 64, .12);
+}
+
+.vms-pass-public-page .vms-pass-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: 1px solid #18498f;
+  background: #2267c7;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vms-pass-public-page .vms-pass-button:hover,
+.vms-pass-public-page .vms-pass-button:focus {
+  color: #fff;
+  text-decoration: none;
+}
+
+.vms-pass-public-page .vms-pass-hint {
+  color: #5c6d85;
+  font-size: 14px;
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+.vms-pass-public-page .vms-pass-checkbox {
+  align-items: center;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.vms-pass-public-page .vms-pass-checkbox input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.vms-pass-field-help{display:block;margin-top:6px;color:#526174;font-size:13px;font-weight:400}.vms-pass-public-page--print{background:#fff}.vms-pass-public-page--print .vms-pass-wrap{max-width:520px}.vms-pass-public-page--print .vms-pass-card{box-shadow:none;border:1px solid #d9e2ef}@media print{header,footer,#wpadminbar,.site-header,.site-footer,.kadence-sticky-header{display:none!important}.vms-pass-public-page{background:#fff!important}.vms-pass-wrap{max-width:520px!important;margin:0 auto!important;padding:0!important}.vms-pass-card{box-shadow:none!important;border:0!important}.vms-pass-actions,.vms-pass-hint{display:none!important}}
+
+.vms-pass-number-control {
+  display: flex;
+  align-items: stretch;
+  max-width: 260px;
+  border: 1px solid #c8d7ea;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.vms-pass-number-control input[type="number"] {
+  border: 0;
+  border-left: 1px solid #c8d7ea;
+  border-right: 1px solid #c8d7ea;
+  border-radius: 0;
+  text-align: center;
+  min-width: 80px;
+}
+
+.vms-pass-number-control__button {
+  width: 44px;
+  border: 0;
+  background: #eef5ff;
+  color: #0f2550;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.vms-pass-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 18px 0;
+}
+
+.vms-pass-qr-item {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #d9e2ef;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.vms-pass-qr-item span {
+  color: #526174;
+  font-size: 13px;
+}

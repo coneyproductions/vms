@@ -1,0 +1,287 @@
+<?php
+
+defined('ABSPATH') || exit;
+
+if (!class_exists('VMS_Tours_Admin')) {
+	class VMS_Tours_Admin
+	{
+		/**
+		 * @var VMS_Tours_Service
+		 */
+		private $service;
+
+		/**
+		 * @var VMS_Tours_Storage
+		 */
+		private $storage;
+
+		public function __construct(VMS_Tours_Service $service, VMS_Tours_Storage $storage)
+		{
+			$this->service = $service;
+			$this->storage = $storage;
+		}
+
+		public function init(): void
+		{
+			add_action('admin_menu', array($this, 'register_menu'), 40);
+			add_action('admin_init', array($this, 'register_settings'));
+			add_action('admin_post_vms_tours_reset_my_state', array($this, 'handle_reset_my_state'));
+		}
+
+		public function register_menu(): void
+		{
+			add_submenu_page(
+				'vms-dashboard',
+				__('Guided Tours', 'vms'),
+				__('Guided Tours', 'vms'),
+				'manage_options',
+				'vms-guided-tours',
+				array($this, 'render_page')
+			);
+		}
+
+		public function register_settings(): void
+		{
+			register_setting(
+				'vms_tours_settings_group',
+				VMS_Tours_Storage::OPTION_SETTINGS,
+				array($this, 'sanitize_settings_option')
+			);
+
+			add_settings_section(
+				'vms_tours_settings_section',
+				__('Guided Tours Settings', 'vms'),
+				array($this, 'render_settings_intro'),
+				'vms-guided-tours'
+			);
+
+			add_settings_field('global_enabled', __('Enable guided tours globally', 'vms'), array($this, 'render_checkbox_global_enabled'), 'vms-guided-tours', 'vms_tours_settings_section');
+			add_settings_field('default_level', __('Default level', 'vms'), array($this, 'render_select_default_level'), 'vms-guided-tours', 'vms_tours_settings_section');
+			add_settings_field('auto_run_default', __('Default auto-run enabled', 'vms'), array($this, 'render_checkbox_auto_run_default'), 'vms-guided-tours', 'vms_tours_settings_section');
+			add_settings_field('auto_run_delay_ms', __('Auto-run delay (ms)', 'vms'), array($this, 'render_number_auto_run_delay'), 'vms-guided-tours', 'vms_tours_settings_section');
+			add_settings_field('max_auto_run_per_page_load', __('Max auto-run tours per page load', 'vms'), array($this, 'render_number_max_auto_run'), 'vms-guided-tours', 'vms_tours_settings_section');
+			add_settings_field('help_button_enabled', __('Help button enabled', 'vms'), array($this, 'render_checkbox_help_button'), 'vms-guided-tours', 'vms_tours_settings_section');
+			add_settings_field('debug_log_enabled', __('Debug logging enabled', 'vms'), array($this, 'render_checkbox_debug_log'), 'vms-guided-tours', 'vms_tours_settings_section');
+		}
+
+		/**
+		 * @param mixed $value
+		 * @return array<string,mixed>
+		 */
+		public function sanitize_settings_option($value): array
+		{
+			$input = is_array($value) ? $value : array();
+			return $this->storage->save_site_settings($input);
+		}
+
+		public function render_settings_intro(): void
+		{
+			echo '<p>' . esc_html__('Use one consistent guided tour framework across VMS modules and screens.', 'vms') . '</p>';
+		}
+
+		public function render_page(): void
+		{
+			if (!current_user_can('manage_options')) {
+				wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			}
+
+			if (function_exists('vms_admin_ui_render_shell')) {
+				vms_admin_ui_render_shell(
+					array(
+						'title' => __('Guided Tours', 'vms'),
+						'subtitle' => __('Manage global tour defaults, reset your progress, and run tours by screen.', 'vms'),
+						'shell_id' => 'vms-guided-tours-wrap',
+					),
+					array($this, 'render_page_content')
+				);
+				return;
+			}
+
+			echo '<div class="wrap">';
+			echo '<h1>' . esc_html__('Guided Tours', 'vms') . '</h1>';
+			$this->render_page_content();
+			echo '</div>';
+		}
+
+		public function handle_reset_my_state(): void
+		{
+			if (!is_user_logged_in() || !current_user_can('read')) {
+				wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			}
+
+			check_admin_referer('vms_tours_reset_my_state');
+			$this->storage->reset_user_state(get_current_user_id());
+
+			$redirect = add_query_arg(
+				array(
+					'page' => 'vms-guided-tours',
+					'vms_tours_reset_my_state' => '1',
+				),
+				admin_url('admin.php')
+			);
+			wp_safe_redirect($redirect);
+			exit;
+		}
+
+		private function render_registry_table(): void
+		{
+			$tours = $this->service->get_registry();
+			if (empty($tours)) {
+				echo '<h2>' . esc_html__('Registered Tours', 'vms') . '</h2>';
+				echo '<p>' . esc_html__('No tours are registered yet.', 'vms') . '</p>';
+				return;
+			}
+
+			usort($tours, static function ($a, $b): int {
+				$a_screen = (string) ($a['screen'] ?? '');
+				$b_screen = (string) ($b['screen'] ?? '');
+				if ($a_screen !== $b_screen) {
+					return strcmp($a_screen, $b_screen);
+				}
+
+				$a_priority = (int) ($a['priority'] ?? 10);
+				$b_priority = (int) ($b['priority'] ?? 10);
+				return $a_priority <=> $b_priority;
+			});
+
+			$state = $this->storage->get_user_state(get_current_user_id());
+
+			echo '<h2>' . esc_html__('Registered Tours', 'vms') . '</h2>';
+			echo '<table class="widefat striped vms-tours-admin-table" data-vms-tour="guided-tours.registry-table">';
+			echo '<thead><tr>';
+			echo '<th>' . esc_html__('Tour ID', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Screen key', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Level', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Version', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Auto-run', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Priority', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Status for current user', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Run', 'vms') . '</th>';
+			echo '</tr></thead><tbody>';
+
+			foreach ($tours as $tour) {
+				$id = (string) ($tour['id'] ?? '');
+				$row_state = isset($state[$id]) && is_array($state[$id]) ? $state[$id] : array();
+				$completed_version = isset($row_state['completed_version']) ? (string) $row_state['completed_version'] : '';
+				$completed_at = isset($row_state['completed_at']) ? (string) $row_state['completed_at'] : '';
+				$tour_version = (string) ($tour['version'] ?? '');
+
+				$status_label = __('Not completed', 'vms');
+				if ($completed_version !== '') {
+					if ($completed_version === $tour_version) {
+						$status_label = sprintf(
+							/* translators: 1: version, 2: datetime */
+							__('Completed at version %1$s (%2$s)', 'vms'),
+							esc_html($completed_version),
+							esc_html($completed_at !== '' ? $completed_at : __('time unknown', 'vms'))
+						);
+					} else {
+						$status_label = sprintf(
+							/* translators: 1: completed version, 2: current version */
+							__('Completed older version %1$s (current %2$s)', 'vms'),
+							esc_html($completed_version),
+							esc_html($tour_version)
+						);
+					}
+				}
+
+				echo '<tr>';
+				echo '<td><code>' . esc_html($id) . '</code></td>';
+				echo '<td><code>' . esc_html((string) ($tour['screen'] ?? '')) . '</code></td>';
+				echo '<td>' . esc_html((string) ($tour['level'] ?? 'beginner')) . '</td>';
+				echo '<td><code>' . esc_html($tour_version) . '</code></td>';
+				echo '<td>' . (!empty($tour['auto_run']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+				echo '<td>' . esc_html((string) ((int) ($tour['priority'] ?? 10))) . '</td>';
+				echo '<td>' . wp_kses_post($status_label) . '</td>';
+				echo '<td><button type="button" class="button button-secondary" data-vms-tour-run="' . esc_attr($id) . '">' . esc_html__('Run', 'vms') . '</button></td>';
+				echo '</tr>';
+			}
+
+			echo '</tbody></table>';
+		}
+
+		public function render_page_content(): void
+		{
+			echo '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">';
+
+			if (!empty($_GET['vms_tours_reset_my_state'])) {
+				echo '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice"><p>' . esc_html__('Your tour progress has been reset.', 'vms') . '</p></div>';
+			}
+
+			echo '<form method="post" action="options.php" data-vms-tour="guided-tours.global-settings">';
+			settings_fields('vms_tours_settings_group');
+			do_settings_sections('vms-guided-tours');
+			submit_button(__('Save Guided Tours Settings', 'vms'));
+			echo '</form>';
+
+			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-tours-admin-reset-form" data-vms-tour="guided-tours.reset-progress">';
+			echo '<input type="hidden" name="action" value="vms_tours_reset_my_state" />';
+			wp_nonce_field('vms_tours_reset_my_state');
+			submit_button(__('Reset my tour progress', 'vms'), 'secondary', 'submit', false);
+			echo '</form>';
+
+			echo '<div data-vms-tour="guided-tours.registry">';
+			$this->render_registry_table();
+			echo '</div>';
+
+			echo '</div>';
+		}
+
+		private function get_settings_value(string $key)
+		{
+			$settings = $this->storage->get_site_settings();
+			return $settings[$key] ?? null;
+		}
+
+		public function render_checkbox_global_enabled(): void
+		{
+			$this->render_checkbox_field('global_enabled', !empty($this->get_settings_value('global_enabled')));
+		}
+
+		public function render_select_default_level(): void
+		{
+			$level = sanitize_key((string) $this->get_settings_value('default_level'));
+			if (!in_array($level, array('beginner', 'standard', 'advanced'), true)) {
+				$level = 'beginner';
+			}
+
+			echo '<select name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[default_level]">';
+			echo '<option value="beginner"' . selected($level, 'beginner', false) . '>' . esc_html__('Beginner', 'vms') . '</option>';
+			echo '<option value="standard"' . selected($level, 'standard', false) . '>' . esc_html__('Standard', 'vms') . '</option>';
+			echo '<option value="advanced"' . selected($level, 'advanced', false) . '>' . esc_html__('Advanced', 'vms') . '</option>';
+			echo '</select>';
+		}
+
+		public function render_checkbox_auto_run_default(): void
+		{
+			$this->render_checkbox_field('auto_run_default', !empty($this->get_settings_value('auto_run_default')));
+		}
+
+		public function render_number_auto_run_delay(): void
+		{
+			$value = (int) $this->get_settings_value('auto_run_delay_ms');
+			echo '<input type="number" min="0" step="10" name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[auto_run_delay_ms]" value="' . esc_attr((string) $value) . '" />';
+		}
+
+		public function render_number_max_auto_run(): void
+		{
+			$value = (int) $this->get_settings_value('max_auto_run_per_page_load');
+			echo '<input type="number" min="1" max="5" step="1" name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[max_auto_run_per_page_load]" value="' . esc_attr((string) $value) . '" />';
+		}
+
+		public function render_checkbox_help_button(): void
+		{
+			$this->render_checkbox_field('help_button_enabled', !empty($this->get_settings_value('help_button_enabled')));
+		}
+
+		public function render_checkbox_debug_log(): void
+		{
+			$this->render_checkbox_field('debug_log_enabled', !empty($this->get_settings_value('debug_log_enabled')));
+		}
+
+		private function render_checkbox_field(string $key, bool $checked): void
+		{
+			echo '<label><input type="checkbox" name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[' . esc_attr($key) . ']" value="1"' . checked($checked, true, false) . '> ' . esc_html__('Enabled', 'vms') . '</label>';
+		}
+	}
+}

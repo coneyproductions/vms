@@ -11,9 +11,15 @@ if (!defined('ABSPATH')) exit;
  *   0 = Sunday . . . 6 = Saturday  (matches PHP date('w'))
  *
  * Each day stores:
- *   structure          flat_fee | flat_fee_door_split | door_split
+ *   structure          flat_fee | flat_fee_door_split | door_split | attendance_bonus
  *   flat_fee_amount    float
  *   door_split_percent float
+ *   attendance_bonus_mode step | continuous
+ *   attendance_bonus_start_count int
+ *   attendance_bonus_step_size int
+ *   attendance_bonus_step_bonus float
+ *   attendance_bonus_per_ticket_rate float
+ *   attendance_bonus_max_bonus float
  *   commission_percent float   (optional; useful for agency venues)
  *   commission_mode    artist_fee | gross
  */
@@ -132,19 +138,6 @@ function vms_render_venue_comp_defaults_metabox($post) {
         0 => __('Sun', 'vms'),
     );
 
-    echo '<style>
-.vms-comp-table{width:100%;max-width:980px;border-collapse:separate;border-spacing:0;}
-.vms-comp-table th,.vms-comp-table td{padding:10px 10px;border-bottom:1px solid #dcdcde;vertical-align:top;}
-.vms-comp-table thead th{background:#f6f7f7;font-weight:700;}
-.vms-comp-table .vms-day{width:70px;font-weight:800;}
-.vms-comp-table select,.vms-comp-table input{width:100%;max-width:220px;}
-@media (max-width: 900px){
-  .vms-comp-table select,.vms-comp-table input{max-width:none;}
-}
-.vms-help{color:#646970;font-size:12px;margin:6px 0 0;}
-.vms-note{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:10px 12px;margin:0 0 12px;max-width:980px;}
-</style>';
-
     echo '<div class="vms-note">';
     echo '<strong>' . esc_html__('How this works:', 'vms') . '</strong> ';
     echo esc_html__('When you create/edit an Event Plan, we can auto-fill compensation based on Venue + Event Date. Event Plan values remain the final override.', 'vms');
@@ -192,8 +185,8 @@ function vms_render_venue_comp_defaults_metabox($post) {
 
         // Commission %
         echo '<td>';
-        echo '<input type="number" step="0.01" min="0" max="100" name="' . esc_attr($name . '[commission_percent]') . '" value="' . esc_attr($row['commission_percent']) . '" placeholder="15">';
-        echo '<div class="vms-help">' . esc_html__('Optional (agency venues typically use 15%).', 'vms') . '</div>';
+        echo '<input type="number" step="0.01" min="0" max="100" name="' . esc_attr($name . '[commission_percent]') . '" value="' . esc_attr($row['commission_percent']) . '" placeholder="">';
+        echo '<div class="vms-help">' . esc_html__('Optional. Leave blank for no default agent fee.', 'vms') . '</div>';
         echo '</td>';
 
         // Commission mode
@@ -209,7 +202,7 @@ function vms_render_venue_comp_defaults_metabox($post) {
 
     echo '</tbody></table>';
 
-    echo '<p class="vms-help" style="max-width:980px;margin-top:10px;">' .
+    echo '<p class="vms-help vms-venue-comp-help-bottom">' .
         esc_html__('Tip: Leaving a value blank means “no default” for that day; the Event Plan can still be set manually.', 'vms') .
         '</p>';
 }
@@ -217,12 +210,18 @@ function vms_render_venue_comp_defaults_metabox($post) {
 /**
  * Helper: get all per-day defaults for a venue.
  */
+
+if (!function_exists('vms_get_venue_default_comp_by_dow')) {
 function vms_get_venue_default_comp_by_dow(int $venue_id): array {
     $saved = get_post_meta($venue_id, '_vms_default_comp_by_dow', true);
     return is_array($saved) ? $saved : array();
 }
+}
 
 
+
+
+if (!function_exists('vms_get_venue_default_comp_for_date')) {
 function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
     $event_date = trim($event_date);
     if ($venue_id <= 0 || $event_date === '') return array();
@@ -251,15 +250,22 @@ function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date):
     // Normalize output keys
     $row = $all[$dow];
 
+    $normalized_terms = function_exists('vms_normalize_comp_terms') ? vms_normalize_comp_terms($row) : array();
     $out = array(
-        'structure'          => isset($row['structure']) ? (string) $row['structure'] : 'flat_fee',
-        'flat_fee_amount'    => $row['flat_fee_amount'] ?? '',
-        'door_split_percent' => $row['door_split_percent'] ?? '',
+        'structure'          => isset($normalized_terms['structure']) ? (string) $normalized_terms['structure'] : (isset($row['structure']) ? (string) $row['structure'] : 'flat_fee'),
+        'flat_fee_amount'    => $normalized_terms['flat_fee_amount'] ?? ($row['flat_fee_amount'] ?? ''),
+        'door_split_percent' => $normalized_terms['door_split_percent'] ?? ($row['door_split_percent'] ?? ''),
+        'attendance_bonus_mode' => $normalized_terms['attendance_bonus_mode'] ?? null,
+        'attendance_bonus_start_count' => $normalized_terms['attendance_bonus_start_count'] ?? null,
+        'attendance_bonus_step_size' => $normalized_terms['attendance_bonus_step_size'] ?? null,
+        'attendance_bonus_step_bonus' => $normalized_terms['attendance_bonus_step_bonus'] ?? null,
+        'attendance_bonus_per_ticket_rate' => $normalized_terms['attendance_bonus_per_ticket_rate'] ?? null,
+        'attendance_bonus_max_bonus' => $normalized_terms['attendance_bonus_max_bonus'] ?? null,
         'commission_percent' => $row['commission_percent'] ?? '',
         'commission_mode'    => isset($row['commission_mode']) ? (string) $row['commission_mode'] : 'artist_fee',
     );
 
-    if (!in_array($out['structure'], array('flat_fee', 'flat_fee_door_split', 'door_split'), true)) {
+    if (!in_array($out['structure'], array('flat_fee', 'flat_fee_door_split', 'door_split', 'attendance_bonus'), true)) {
         $out['structure'] = 'flat_fee';
     }
     if (!in_array($out['commission_mode'], array('artist_fee', 'gross'), true)) {
@@ -267,4 +273,5 @@ function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date):
     }
 
     return $out;
+}
 }

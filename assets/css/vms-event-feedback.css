@@ -1,0 +1,309 @@
+.vms-feedback-page {
+	max-width: 980px;
+	margin: 0 auto;
+	padding: 32px 16px 48px;
+}
+
+.vms-feedback-card,
+.vms-feedback-admin-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 16px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	padding: 24px;
+}
+
+.vms-feedback-header {
+	margin-bottom: 24px;
+}
+
+.vms-feedback-eyebrow {
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	margin: 0 0 8px;
+}
+
+.vms-feedback-header h1 {
+	font-size: clamp(2rem, 5vw, 3.25rem);
+	line-height: 1.05;
+	margin: 0 0 12px;
+}
+
+.vms-feedback-event-title,
+.vms-feedback-intro,
+.vms-feedback-section-note {
+	color: #4b5563;
+	font-size: 1rem;
+}
+
+.vms-feedback-success h1 {
+	margin-top: 0;
+}
+
+.vms-feedback-section {
+	border-top: 1px solid #e5e7eb;
+	padding-top: 24px;
+	margin-top: 24px;
+}
+
+.vms-feedback-section h2 {
+	margin-top: 0;
+}
+
+.vms-feedback-grid {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.vms-feedback-field {
+	margin-bottom: 16px;
+}
+
+.vms-feedback-field label,
+.vms-feedback-checkbox-group legend {
+	display: block;
+	font-weight: 700;
+	margin-bottom: 6px;
+}
+
+.vms-feedback-field input,
+.vms-feedback-field select,
+.vms-feedback-field textarea {
+	width: 100%;
+	max-width: 100%;
+	border: 1px solid #cbd5e1;
+	border-radius: 10px;
+	box-sizing: border-box;
+	font-size: 1rem;
+	padding: 10px 12px;
+}
+
+.vms-feedback-field textarea {
+	min-height: 96px;
+}
+
+.vms-feedback-details {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	margin-top: 12px;
+	padding: 12px 14px;
+}
+
+.vms-feedback-conditional-block {
+	border-left: 3px solid #e2e8f0;
+	margin-top: 16px;
+	padding-left: 16px;
+}
+
+.vms-feedback-conditional-block[hidden] {
+	display: none !important;
+}
+
+.vms-feedback-details summary {
+	cursor: pointer;
+	font-weight: 700;
+}
+
+.vms-feedback-checkbox-group {
+	border: 0;
+	margin: 14px 0;
+	padding: 0;
+}
+
+.vms-feedback-checkbox-grid {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.vms-feedback-checkbox-grid label {
+	font-weight: 400;
+}
+
+.vms-feedback-submit-row {
+	border-top: 1px solid #e5e7eb;
+	margin-top: 24px;
+	padding-top: 24px;
+}
+
+.vms-feedback-submit {
+	border: 0;
+	border-radius: 999px;
+	cursor: pointer;
+	font-size: 1rem;
+	font-weight: 800;
+	padding: 14px 22px;
+}
+
+.vms-feedback-hp {
+	clip: rect(1px, 1px, 1px, 1px);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+.vms-feedback-admin-selector {
+	align-items: end;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 14px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 18px;
+	padding: 16px;
+}
+
+.vms-feedback-admin-selector select {
+	min-width: min(520px, 100%);
+}
+
+.vms-feedback-admin-layout {
+	display: grid;
+	gap: 18px;
+	grid-template-columns: minmax(0, 1fr) 280px;
+	margin-bottom: 18px;
+}
+
+.vms-feedback-admin-card {
+	margin-bottom: 18px;
+}
+
+.vms-feedback-admin-card h2,
+.vms-feedback-admin-card h3 {
+	margin-top: 0;
+}
+
+.vms-feedback-link-row input {
+	font-size: 0.95rem;
+}
+
+.vms-feedback-metric-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.vms-feedback-metric {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 12px;
+}
+
+.vms-feedback-metric span {
+	display: block;
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	margin-bottom: 5px;
+	text-transform: uppercase;
+}
+
+.vms-feedback-metric strong {
+	display: block;
+	font-size: 1.1rem;
+}
+
+.vms-feedback-big-number {
+	font-size: 3rem;
+	font-weight: 800;
+	line-height: 1;
+	margin: 0 0 12px;
+}
+
+.vms-feedback-response {
+	border: 1px solid #dcdcde;
+	border-radius: 12px;
+	margin: 12px 0;
+	padding: 12px 14px;
+}
+
+.vms-feedback-response summary {
+	cursor: pointer;
+}
+
+.vms-feedback-response-body {
+	border-top: 1px solid #e5e7eb;
+	margin-top: 12px;
+	padding-top: 12px;
+}
+
+.vms-feedback-response-grid {
+	display: grid;
+	gap: 8px 18px;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.vms-feedback-response-grid p {
+	margin: 0 0 8px;
+}
+
+.vms-feedback-vendor-summary {
+	border-top: 1px solid #e5e7eb;
+	margin-top: 16px;
+	padding-top: 16px;
+}
+
+@media (max-width: 782px) {
+	.vms-feedback-admin-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.vms-feedback-card,
+	.vms-feedback-admin-card {
+		padding: 18px;
+	}
+}
+
+.vms-feedback-response[data-vms-duplicate="1"] {
+	border-style: dashed;
+	opacity: 0.82;
+}
+
+.vms-feedback-duplicate-badge {
+	background: #fef3c7;
+	border: 1px solid #f59e0b;
+	border-radius: 999px;
+	color: #78350f;
+	display: inline-block;
+	font-size: 0.75rem;
+	font-weight: 700;
+	line-height: 1;
+	margin-left: 8px;
+	padding: 4px 8px;
+}
+
+.vms-feedback-sidebar-divider {
+	border: 0;
+	border-top: 1px solid #e2e8f0;
+	margin: 18px 0;
+}
+
+.vms-feedback-settings-form textarea {
+	min-height: 70px;
+}
+
+.vms-feedback-checkbox-inline,
+.vms-feedback-settings-label {
+	display: block;
+	font-weight: 700;
+	margin: 10px 0 6px;
+}
+
+.vms-feedback-delete-form {
+	float: right;
+	margin: 0 0 10px 16px;
+}
+
+.vms-feedback-response-body::after {
+	clear: both;
+	content: "";
+	display: table;
+}

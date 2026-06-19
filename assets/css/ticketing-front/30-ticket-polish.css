@@ -1,0 +1,494 @@
+/* Module: Ticket Polish + Responsive Row Layout */
+/* Prevent theme/TEC flex stretching from turning the subtotal card into a tall empty box. */
+#vms-ticketing-subtotal{
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+/* === VMS Ticketing UX final polish (GA emphasis + alignment + subtotal width) === */
+
+/* Subtle highlight to keep the primary ticket (GA) from getting visually skipped. */
+.single-tribe_events .tribe-tickets__tickets-item,
+.tribe-events-single .tribe-tickets__tickets-item{
+  background: rgba(59, 130, 246, 0.06) !important;
+  border: 1px solid rgba(59, 130, 246, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 10px 10px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Make GA title a touch more prominent. */
+.single-tribe_events .tribe-tickets__tickets-item .tribe-tickets__tickets-item-content-title,
+.tribe-events-single .tribe-tickets__tickets-item .tribe-tickets__tickets-item-content-title{
+  font-size: 22px !important;
+}
+
+/* Make GA quantity controls match VMS add-on controls (size + look). */
+.single-tribe_events .tribe-tickets__tickets-item-quantity,
+.tribe-events-single .tribe-tickets__tickets-item-quantity{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  width: auto !important;
+  align-self: start !important;
+  padding: 0 !important;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-quantity button,
+.tribe-events-single .tribe-tickets__tickets-item-quantity button{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  line-height: 1 !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  background: #fff !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  vertical-align: top !important;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-quantity-number,
+.tribe-events-single .tribe-tickets__tickets-item-quantity-number{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-quantity-number-input,
+.tribe-events-single .tribe-tickets__tickets-item-quantity-number-input{
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  margin: 0 !important;
+  padding: 0 6px !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  vertical-align: top !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .vms-ticket-right-stack{
+  display: contents !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-price{
+  margin: 0 !important;
+  line-height: 1.1 !important;
+}
+
+/* Desktop column widths: keep GA price + qty aligned and tight. */
+@media (min-width: 760px){
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item{
+    grid-template-columns: 1fr 86px 110px !important;
+  }
+}
+
+/* Mobile ticket row layout: keep description under title and price/qty right-aligned. */
+@media (max-width: 759px){
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item{
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 110px !important;
+    grid-template-areas:
+      "title right" !important;
+    column-gap: 12px !important;
+    row-gap: 4px !important;
+    align-items: start !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container{
+    grid-area: title !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 2px !important;
+    padding: 0 !important;
+    align-self: start !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container h1,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container h2,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container h3,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container h4,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container h5,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container h6{
+    margin: 0 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container > .tribe-tickets__tickets-item-description,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container > .tribe-tickets__tickets-item-content-description,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container > .vms-ticket-desc{
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticket-right-stack{
+    grid-area: right !important;
+    width: 110px !important;
+    min-width: 110px !important;
+    justify-self: end !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    text-align: right !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra{
+    grid-area: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    text-align: right !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity{
+    grid-area: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    align-self: start !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin: 0 !important;
+  }
+}
+
+/* Brief highlight when we scroll the user to the ticket picker. */
+.vms-ticket-scroll-flash{
+  outline: 3px solid rgba(59, 130, 246, 0.55);
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.12);
+  border-radius: 12px;
+}
+
+/* Optional: hide remaining/available counts on ticket rows. */
+.vms-hide-ticket-availability .tribe-tickets__tickets-item-availability,
+.vms-hide-ticket-availability .tribe-tickets__tickets-item-extra-available,
+.vms-hide-ticket-availability .tribe-tickets__tickets-item-available{
+  display: none !important;
+}
+
+/* Subtotal card width: narrower (roughly half of prior). */
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-footer.vms-ticketing-footer-stack .vms-ticketing-action-stack > #vms-ticketing-subtotal{
+  width: min(100%, 280px) !important;
+}
+
+@media (min-width: 960px){
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticketing-action-stack{
+    width: min(100%, 280px) !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-footer.vms-ticketing-footer-stack .vms-ticketing-action-stack > #tribe-tickets__tickets-submit,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-footer.vms-ticketing-footer-stack .vms-ticketing-action-stack > .tribe-tickets__tickets-buy{
+    width: min(100%, 280px) !important;
+  }
+}
+
+
+/* Mobile ticket checklist pass: compact title/description/action flow. */
+.single-tribe_events .tribe-tickets__tickets-item-extra-price,
+.single-tribe_events .tribe-tickets__tickets-item-extra-price .tribe-currency-symbol,
+.single-tribe_events .tribe-tickets__tickets-item-extra-price .tribe-amount,
+.tribe-events-single .tribe-tickets__tickets-item-extra-price,
+.tribe-events-single .tribe-tickets__tickets-item-extra-price .tribe-currency-symbol,
+.tribe-events-single .tribe-tickets__tickets-item-extra-price .tribe-amount{
+  font-weight: 700 !important;
+}
+
+@media (max-width: 759px){
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item{
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "title"
+      "right" !important;
+    row-gap: 10px !important;
+    padding: 14px 16px !important;
+    align-items: start !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item.vms-ticket-row--simple{
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    min-height: 0 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title-container{
+    gap: 6px !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-title{
+    font-size: 18px !important;
+    line-height: 1.12 !important;
+    margin: 0 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-description,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-description,
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticket-desc,
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticket-lock-note,
+  :is(.single-tribe_events, .tribe-events-single) .vms-claim-seat-panel{
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticket-right-stack{
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-areas:
+      "qty price"
+      "avail ." !important;
+    column-gap: 10px !important;
+    row-gap: 3px !important;
+    justify-content: end !important;
+    justify-items: end !important;
+    align-items: flex-end !important;
+    text-align: right !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra{
+    display: contents !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-price{
+    grid-area: price !important;
+    justify-self: end !important;
+    align-self: center !important;
+    margin: 0 !important;
+    text-align: right !important;
+    line-height: 1.05 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-price,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-price .tribe-currency-symbol,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-price .tribe-amount{
+    font-size: 18px !important;
+    font-weight: 700 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity{
+    grid-area: qty !important;
+    width: auto !important;
+    min-width: 0 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 0 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity button{
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    font-size: 26px !important;
+    line-height: 1 !important;
+    border-radius: 12px !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number{
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number-input{
+    display: block !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    line-height: 38px !important;
+    text-align: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    background: #fff !important;
+    border: 1px solid rgba(15, 23, 42, 0.18) !important;
+    border-radius: 12px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    -webkit-text-fill-color: #111827 !important;
+    appearance: textfield !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-available{
+    grid-area: avail !important;
+    justify-self: center !important;
+    align-self: start !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+}
+
+
+@media (max-width: 759px){
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-description,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-description,
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticket-desc{
+    font-size: 15px !important;
+    line-height: 1.34 !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticket-desc p:last-child,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-description p:last-child,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-description p:last-child{
+    margin-bottom: 0 !important;
+  }
+}
+
+
+@media (max-width: 759px){
+  :is(.single-tribe_events, .tribe-events-single) #vms-ticketing-action-stack,
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticketing-action-stack{
+    position: sticky !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+    z-index: 40 !important;
+    background: transparent !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) #vms-ticketing-action-stack > #tribe-tickets__tickets-submit,
+  :is(.single-tribe_events, .tribe-events-single) #vms-ticketing-action-stack > .tribe-tickets__tickets-buy,
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticketing-action-stack > #tribe-tickets__tickets-submit,
+  :is(.single-tribe_events, .tribe-events-single) .vms-ticketing-action-stack > .tribe-tickets__tickets-buy{
+    position: sticky !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+    z-index: 41 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-shadow: 0 -8px 18px rgba(15, 23, 42, 0.16) !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-form,
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets{
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Ticket quantity selector mode: replace fragile - N + controls with a native dropdown. */
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number.vms-ticket-qty-select-mode{
+  gap: 0 !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode button,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode .tribe-tickets__tickets-item-quantity-number,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity [data-vms-ticket-qty-hidden-by-select="1"]{
+  display: none !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode .vms-ticket-qty-select-wrap,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number.vms-ticket-qty-select-mode .vms-ticket-qty-select-wrap{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode .vms-ticket-qty-select,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number.vms-ticket-qty-select-mode .vms-ticket-qty-select{
+  display: block !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 28px 0 12px !important;
+  border: 1px solid rgba(15, 23, 42, 0.16) !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3.25 5.25 7 9l3.75-3.75' stroke='%23475669' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 11px center !important;
+  background-size: 12px 12px !important;
+  color: #111827 !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-align-last: center !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode .vms-ticket-qty-select:disabled,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number.vms-ticket-qty-select-mode .vms-ticket-qty-select:disabled{
+  opacity: .65 !important;
+  cursor: not-allowed !important;
+}
+
+@media (max-width: 759px){
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number.vms-ticket-qty-select-mode{
+    width: auto !important;
+    justify-self: end !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity.vms-ticket-qty-select-mode .vms-ticket-qty-select,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity-number.vms-ticket-qty-select-mode .vms-ticket-qty-select{
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    font-size: 19px !important;
+    padding-right: 28px !important;
+  }
+
+  :is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-available{
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+  }
+}
+
+.vms-ticket-availability-force-hidden{
+  display:none!important;
+}

@@ -1,0 +1,753 @@
+.vms-ticket-integrity-page {
+	display: grid;
+	gap: 18px;
+}
+
+.vms-ticket-integrity__panel {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	padding: 18px;
+}
+
+.vms-ticket-integrity__cards {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.vms-ticket-integrity__card {
+	background: linear-gradient(180deg, #fff, #f6f7f7);
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	padding: 14px 16px;
+}
+
+.vms-ticket-integrity__card-label {
+	color: #50575e;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.vms-ticket-integrity__card-value {
+	font-size: 24px;
+	font-weight: 700;
+	margin-top: 6px;
+}
+
+.vms-ticket-integrity__card--red {
+	border-color: #d63638;
+}
+
+.vms-ticket-integrity__card--yellow {
+	border-color: #dba617;
+}
+
+.vms-ticket-integrity__card--green {
+	border-color: #00a32a;
+}
+
+.vms-ticket-integrity__card--informational {
+	border-color: #72aee6;
+}
+
+.vms-ticket-integrity__run-form,
+.vms-ticket-integrity__settings-form {
+	display: grid;
+	gap: 12px;
+}
+
+.vms-ticket-integrity__settings-form input[type="email"],
+.vms-ticket-integrity__settings-form input[type="number"],
+.vms-ticket-integrity__settings-form select {
+	display: block;
+	margin-top: 6px;
+	max-width: 320px;
+	width: 100%;
+}
+
+.vms-ticket-integrity__payment-health-header {
+	align-items: flex-start;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: space-between;
+}
+
+.vms-ticket-integrity__payment-health-status {
+	align-items: flex-end;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.vms-ticket-integrity__payment-health-meta,
+.vms-ticket-integrity__payment-card-meta {
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.vms-ticket-integrity__payment-health-summary {
+	font-size: 15px;
+	font-weight: 600;
+	margin: 14px 0 0;
+}
+
+.vms-ticket-integrity__payment-health-cards {
+	margin-top: 14px;
+}
+
+.vms-ticket-integrity__payment-health-columns {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	margin-top: 18px;
+}
+
+.vms-ticket-integrity__payment-health-column,
+.vms-ticket-integrity__payment-health-memory {
+	background: #fbfbfc;
+	border: 1px solid #e2e4e7;
+	border-radius: 10px;
+	padding: 14px 16px;
+}
+
+.vms-ticket-integrity__payment-health-column h3,
+.vms-ticket-integrity__payment-health-memory h3 {
+	margin-top: 0;
+}
+
+.vms-ticket-integrity__payment-health-memory {
+	margin-top: 16px;
+}
+
+.vms-ticket-integrity__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: flex-end;
+	min-width: 0;
+}
+
+.vms-ticket-integrity__inline-form {
+	display: inline-flex;
+	margin: 0;
+}
+
+.vms-ticket-integrity__results-table .vms-ticket-integrity__actions .button,
+.vms-ticket-integrity__results-table .vms-ticket-integrity__actions .button-secondary {
+	white-space: nowrap;
+}
+
+.vms-ticket-integrity__action-note {
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.vms-ticket-integrity__status {
+	border-radius: 999px;
+	display: inline-flex;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+	padding: 5px 9px;
+	text-transform: uppercase;
+}
+
+.vms-ticket-integrity__status--red {
+	background: #fbeaea;
+	color: #b32d2e;
+}
+
+.vms-ticket-integrity__status--yellow {
+	background: #fff4d6;
+	color: #8a6300;
+}
+
+.vms-ticket-integrity__status--green {
+	background: #e7f6ea;
+	color: #156a2c;
+}
+
+.vms-ticket-integrity__status--informational {
+	background: #eef6ff;
+	color: #0a4b78;
+}
+
+.vms-ticket-integrity__status--neutral,
+.vms-ticket-integrity__status--unknown {
+	background: #f0f0f1;
+	color: #50575e;
+}
+
+.vms-ticket-integrity__results-table-wrap,
+.vms-ticket-integrity__inventory-table-wrap {
+	overflow-x: auto;
+}
+
+.vms-ticket-integrity__details-row td {
+	background: #f8f9fa;
+	border-top: 0;
+	padding: 0 12px 12px;
+}
+
+.vms-ticket-integrity__details {
+	width: 100%;
+	background: #fbfbfc;
+	border: 1px solid #e2e4e7;
+	border-radius: 10px;
+	padding: 10px 12px;
+}
+
+.vms-ticket-integrity__details summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.vms-ticket-integrity__subdetails {
+	background: #fff;
+	border: 1px solid #e2e4e7;
+	border-radius: 10px;
+	margin-top: 14px;
+	overflow: hidden;
+}
+
+.vms-ticket-integrity__subdetails summary {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: 12px;
+	justify-content: space-between;
+	list-style: none;
+	padding: 12px 14px;
+}
+
+.vms-ticket-integrity__subdetails summary::-webkit-details-marker {
+	display: none;
+}
+
+.vms-ticket-integrity__subdetails-title {
+	font-weight: 600;
+}
+
+.vms-ticket-integrity__subdetails-meta {
+	color: #646970;
+	font-size: 12px;
+	font-weight: 600;
+	text-align: right;
+}
+
+.vms-ticket-integrity__subdetails-body {
+	border-top: 1px solid #e2e4e7;
+	padding: 12px 14px 14px;
+}
+
+.vms-ticket-integrity__subdetails--role {
+	margin-top: 0;
+}
+
+.vms-ticket-integrity__issue-list,
+.vms-ticket-integrity__product-list,
+.vms-ticket-integrity__audit-list,
+.vms-ticket-integrity-dashboard__list {
+	margin: 10px 0 0;
+	padding-left: 18px;
+}
+
+.vms-ticket-integrity__issue-list li,
+.vms-ticket-integrity__product-list li,
+.vms-ticket-integrity__audit-list li {
+	margin-bottom: 10px;
+}
+
+.vms-ticket-integrity__issue-detail {
+	color: #50575e;
+	margin-top: 4px;
+	word-break: break-word;
+}
+
+.vms-ticket-integrity__labels {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-left: 8px;
+}
+
+.vms-ticket-integrity__label {
+	background: #f0f0f1;
+	border-radius: 999px;
+	color: #50575e;
+	font-size: 11px;
+	padding: 2px 7px;
+}
+
+.vms-ticket-integrity__filter-note {
+	margin: 0;
+}
+
+.vms-ticket-integrity__focused-row td {
+	background: #fff8d8;
+}
+
+.vms-ticket-integrity__diagnostics {
+	border-top: 1px solid #dcdcde;
+	margin-top: 16px;
+	padding-top: 16px;
+}
+
+.vms-ticket-integrity__diagnostic-grid {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	margin-top: 12px;
+}
+
+.vms-ticket-integrity__diagnostic-meta {
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	padding: 12px;
+}
+
+.vms-ticket-integrity__diagnostic-meta--good {
+	border-color: #00a32a;
+}
+
+.vms-ticket-integrity__diagnostic-meta--warning {
+	border-color: #dba617;
+}
+
+.vms-ticket-integrity__diagnostic-label {
+	color: #50575e;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.vms-ticket-integrity__diagnostic-value {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.4;
+	margin-top: 6px;
+	word-break: break-word;
+}
+
+.vms-ticket-integrity__diagnostic-columns {
+	display: grid;
+	gap: 14px;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	margin-top: 14px;
+}
+
+.vms-ticket-integrity__diagnostic-section {
+	margin-top: 14px;
+}
+
+.vms-ticket-integrity__diagnostic-section h5 {
+	font-size: 13px;
+	margin: 0 0 8px;
+}
+
+.vms-ticket-integrity__diagnostic-note {
+	background: #f6f7f7;
+	border-left: 4px solid #2271b1;
+	margin: 14px 0 0;
+	padding: 10px 12px;
+}
+
+.vms-ticket-integrity__diagnostic-note--warning {
+	border-left-color: #dba617;
+}
+
+.vms-ticket-integrity__diagnostic-empty {
+	color: #646970;
+	margin: 0;
+}
+
+.vms-ticket-integrity__mutation-list {
+	margin: 8px 0 0;
+	padding-left: 18px;
+}
+
+.vms-ticket-integrity__mutation-list li {
+	margin-bottom: 10px;
+}
+
+.vms-ticket-integrity__diagnostics--inventory {
+	border-top-style: dashed;
+}
+
+.vms-ticket-integrity__inventory-table,
+.vms-ticket-integrity__results-table {
+	width: 100%;
+}
+
+.vms-ticket-integrity__results-table {
+	table-layout: auto;
+}
+
+.vms-ticket-integrity__inventory-table {
+	table-layout: fixed;
+}
+
+.vms-ticket-integrity__inventory-table {
+	min-width: 1280px;
+}
+
+.vms-ticket-integrity__inventory-table th,
+.vms-ticket-integrity__inventory-table td,
+.vms-ticket-integrity__results-table th,
+.vms-ticket-integrity__results-table td {
+	vertical-align: top;
+	word-break: break-word;
+}
+
+.vms-ticket-integrity__results-table th:nth-child(2),
+.vms-ticket-integrity__results-table td:nth-child(2) {
+	width: 18%;
+}
+
+.vms-ticket-integrity__results-table th:nth-child(4),
+.vms-ticket-integrity__results-table td:nth-child(4) {
+	width: 24%;
+}
+
+.vms-ticket-integrity__inventory-table td:first-child,
+.vms-ticket-integrity__inventory-table th:first-child {
+	min-width: 180px;
+}
+
+.vms-ticket-integrity__audit-list {
+	max-height: 240px;
+	overflow: auto;
+	padding-right: 8px;
+}
+
+@media (max-width: 782px) {
+	.vms-ticket-integrity__actions {
+		min-width: 0;
+	}
+
+	.vms-ticket-integrity__cards {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.vms-ticket-integrity__subdetails summary {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.vms-ticket-integrity__inventory-table th,
+	.vms-ticket-integrity__inventory-table td,
+	.vms-ticket-integrity__results-table th,
+	.vms-ticket-integrity__results-table td {
+		font-size: 12px;
+	}
+}
+
+
+.vms-ticket-integrity__results-table tr:not(.vms-ticket-integrity__details-row) td {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+.vms-ticket-integrity__results-table th:last-child,
+.vms-ticket-integrity__results-table td:last-child {
+	width: 1%;
+	white-space: nowrap;
+}
+
+.vms-ticket-integrity__results-table .vms-ticket-integrity__details summary {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.vms-ticket-integrity__results-table .vms-ticket-integrity__details summary::before {
+	content: '\25B8';
+	font-size: 11px;
+	transition: transform .15s ease;
+}
+
+.vms-ticket-integrity__results-table .vms-ticket-integrity__details[open] summary::before {
+	transform: rotate(90deg);
+}
+
+
+.vms-ticket-integrity__details {
+	background: #ffffff;
+	border-color: #d8dde3;
+}
+
+.vms-ticket-integrity__diagnostics {
+	background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+	border: 1px solid #e2e6ea;
+	border-radius: 10px;
+	padding: 14px;
+}
+
+.vms-ticket-integrity__diagnostics h4 {
+	background: #f0f6fc;
+	border: 1px solid #c8d7e6;
+	border-radius: 8px;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 12px;
+	padding: 8px 10px;
+}
+
+.vms-ticket-integrity__diagnostics--inventory {
+	background: linear-gradient(180deg, #fffdfa 0%, #fff8ee 100%);
+	border-color: #ead9b4;
+}
+
+.vms-ticket-integrity__diagnostics--inventory h4 {
+	background: #fff1cf;
+	border-color: #e2c97a;
+}
+
+.vms-ticket-integrity__subdetails {
+	background: #ffffff;
+	border-color: #dfe3e8;
+}
+
+.vms-ticket-integrity__subdetails summary {
+	background: #f6f8fa;
+}
+
+.vms-ticket-integrity__subdetails:nth-of-type(even) summary {
+	background: #eef4fa;
+}
+
+.vms-ticket-integrity__subdetails-body {
+	background: #ffffff;
+}
+
+.vms-ticket-integrity__inventory-table-wrap {
+	border: 1px solid #d8dde3;
+	border-radius: 8px;
+	max-width: 100%;
+}
+
+.vms-ticket-integrity__inventory-table,
+.vms-ticket-integrity__inventory-table th,
+.vms-ticket-integrity__inventory-table td {
+	font-size: 12px;
+}
+
+.vms-ticket-integrity__inventory-table {
+	table-layout: auto;
+	min-width: 1100px;
+}
+
+.vms-ticket-integrity__inventory-table th,
+.vms-ticket-integrity__inventory-table td {
+	padding: 7px 8px;
+}
+
+.vms-ticket-integrity__inventory-table thead th {
+	background: #eef4fa;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.vms-ticket-integrity__inventory-table tbody tr:nth-child(even) td {
+	background: #fcfdff;
+}
+
+.vms-ticket-integrity__results-table thead th {
+	background: #eef4fa;
+}
+
+.vms-ticket-integrity__results-table tbody tr:nth-child(even):not(.vms-ticket-integrity__details-row) td {
+	background: #fbfcfd;
+}
+
+
+.vms-ticket-integrity__inventory-table {
+	min-width: 980px;
+}
+
+.vms-ticket-integrity__inventory-table th,
+.vms-ticket-integrity__inventory-table td {
+	white-space: normal;
+}
+
+.vms-ticket-integrity__inventory-table th:nth-child(1),
+.vms-ticket-integrity__inventory-table td:nth-child(1) {
+	min-width: 170px;
+}
+
+.vms-ticket-integrity__inventory-table th:nth-child(4),
+.vms-ticket-integrity__inventory-table td:nth-child(4),
+.vms-ticket-integrity__inventory-table th:nth-child(5),
+.vms-ticket-integrity__inventory-table td:nth-child(5),
+.vms-ticket-integrity__inventory-table th:nth-child(6),
+.vms-ticket-integrity__inventory-table td:nth-child(6),
+.vms-ticket-integrity__inventory-table th:nth-child(7),
+.vms-ticket-integrity__inventory-table td:nth-child(7),
+.vms-ticket-integrity__inventory-table th:nth-child(8),
+.vms-ticket-integrity__inventory-table td:nth-child(8) {
+	min-width: 120px;
+}
+
+.vms-ticket-integrity__inventory-table th:nth-child(9),
+.vms-ticket-integrity__inventory-table td:nth-child(9),
+.vms-ticket-integrity__inventory-table th:nth-child(10),
+.vms-ticket-integrity__inventory-table td:nth-child(10),
+.vms-ticket-integrity__inventory-table th:nth-child(11),
+.vms-ticket-integrity__inventory-table td:nth-child(11) {
+	min-width: 140px;
+}
+
+.vms-ticket-integrity__stacked-cell {
+	display: grid;
+	gap: 6px;
+}
+
+.vms-ticket-integrity__stacked-line {
+	background: #ffffff;
+	border: 1px solid #e5e8eb;
+	border-radius: 6px;
+	padding: 6px 8px;
+}
+
+.vms-ticket-integrity__stacked-line:nth-child(even) {
+	background: #f8fafc;
+}
+
+.vms-ticket-integrity__stacked-label {
+	display: block;
+	color: #646970;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	margin-bottom: 2px;
+	text-transform: uppercase;
+}
+
+.vms-ticket-integrity__stacked-value {
+	display: block;
+	font-size: 12px;
+	line-height: 1.35;
+	word-break: break-word;
+}
+
+.vms-ticket-integrity__inventory-table td .vms-ticket-integrity__stacked-value code {
+	font-size: 11px;
+}
+
+@media (max-width: 1200px) {
+	.vms-ticket-integrity__diagnostic-grid {
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	}
+}
+
+
+.vms-ticket-integrity__results-table-wrap,
+.vms-ticket-integrity__inventory-table-wrap {
+	background: #fff;
+	border: 1px solid #d8dde3;
+	border-radius: 8px;
+	box-sizing: border-box;
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+.vms-ticket-integrity__results-table,
+.vms-ticket-integrity__inventory-table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+
+.vms-ticket-integrity__results-table thead th,
+.vms-ticket-integrity__inventory-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.vms-ticket-integrity__results-table thead th:first-child,
+.vms-ticket-integrity__inventory-table thead th:first-child {
+	border-top-left-radius: 8px;
+}
+
+.vms-ticket-integrity__results-table thead th:last-child,
+.vms-ticket-integrity__inventory-table thead th:last-child {
+	border-top-right-radius: 8px;
+}
+
+.vms-ticket-integrity__results-table tbody tr:last-child td:first-child,
+.vms-ticket-integrity__inventory-table tbody tr:last-child td:first-child {
+	border-bottom-left-radius: 8px;
+}
+
+.vms-ticket-integrity__results-table tbody tr:last-child td:last-child,
+.vms-ticket-integrity__inventory-table tbody tr:last-child td:last-child {
+	border-bottom-right-radius: 8px;
+}
+
+.vms-ticket-integrity__results-table th,
+.vms-ticket-integrity__results-table td,
+.vms-ticket-integrity__inventory-table th,
+.vms-ticket-integrity__inventory-table td,
+.vms-ticket-integrity__diagnostic-meta {
+	min-width: 0;
+}
+
+.vms-ticket-integrity__results-table td,
+.vms-ticket-integrity__inventory-table td {
+	background-clip: padding-box;
+}
+
+.vms-ticket-integrity__results-table tr:not(.vms-ticket-integrity__details-row) td {
+	border-bottom: 1px solid #eef1f4;
+}
+
+.vms-ticket-integrity__details-row td {
+	background: #ffffff;
+	border-bottom: 1px solid #eef1f4;
+	padding: 0 0 12px;
+}
+
+.vms-ticket-integrity__details-row td > .vms-ticket-integrity__details {
+	margin: 0 12px;
+}
+
+.vms-ticket-integrity__results-table th:last-child,
+.vms-ticket-integrity__results-table td:last-child {
+	width: 220px;
+}
+
+.vms-ticket-integrity__results-table .vms-ticket-integrity__actions {
+	align-items: flex-end;
+	flex-direction: column;
+}
+
+.vms-ticket-integrity__diagnostic-grid > * {
+	min-width: 0;
+}
+
+.vms-ticket-integrity__diagnostic-value,
+.vms-ticket-integrity__stacked-value,
+.vms-ticket-integrity__issue-detail,
+.vms-ticket-integrity__action-note {
+	overflow-wrap: anywhere;
+}
+
+.vms-ticket-integrity__inventory-table {
+	min-width: 900px;
+}
+
+@media (max-width: 1100px) {
+	.vms-ticket-integrity__results-table {
+		min-width: 900px;
+	}
+}

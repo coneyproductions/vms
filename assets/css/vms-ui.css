@@ -1,254 +1,1252 @@
 /* =====================================================================
-   VMS UI (Shared)
-   Single source of truth for the Schedule calendar UI.
-   NOTE: Replace (overwrite) this file. Do not append.
+   VMS UI (Shared Components)
+   - Components reused in BOTH admin + portal
+   - NO admin schedule grid rules here
+   - NO portal page layout rules here
    ===================================================================== */
 
-:root{
-  --vms-radius-lg: 16px;
-  --vms-radius-md: 12px;
-  --vms-border: rgba(0,0,0,.08);
-  --vms-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-
-  --vms-open-bg: rgba(34,197,94,.08);
-  --vms-open-border: rgba(34,197,94,.25);
-  --vms-closed-bg: rgba(100,116,139,.06);
-  --vms-closed-border: rgba(100,116,139,.22);
-
-  --vms-accent: #16a34a;
-  --vms-link: #2271b1;
-}
-
-/* Base */
-body.toplevel_page_vms .vms-panel-body{ padding: 16px 18px 26px; }
-body.toplevel_page_vms .vms-panel-body p{ margin: 0 0 12px; }
-
-/* Calendar / List tabs */
-body.toplevel_page_vms .vms-portal-nav{
-  display:flex;
+/* Navigation pills (used for view toggles, filters, etc.) */
+.vms-portal-nav {
+  display: flex;
   gap: 8px;
-  align-items:center;
+  align-items: center;
   margin: 6px 0 16px;
-  flex-wrap: wrap;
+
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Firefox */
 }
-body.toplevel_page_vms .vms-portal-nav a{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding: 6px 12px;
-  border: 1px solid rgba(0,0,0,.18);
+
+.vms-portal-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.vms-portal-nav a {
+  flex: 0 0 auto;
+  max-width: 78vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, .18);
   border-radius: 999px;
   background: #fff;
   color: var(--vms-link);
-  text-decoration:none;
-  font-weight: 600;
+  text-decoration: none;
+  font-weight: 700;
   line-height: 1;
 }
-body.toplevel_page_vms .vms-portal-nav a:hover{ background: rgba(34,113,177,.06); }
-body.toplevel_page_vms .vms-portal-nav a.is-active{
+
+.vms-portal-nav a:hover {
+  background: rgba(34, 113, 177, .06);
+}
+
+.vms-portal-nav a.is-active {
   background: var(--vms-link);
   border-color: var(--vms-link);
   color: #fff;
 }
+ 
+/* Shared 7-column calendar table base (used by All Venues grid) */
+.vms-av-grid {
+  width: 100%;
+  table-layout: fixed;
 
-/* Month card */
-body.toplevel_page_vms .vms-sch-month{
-  position: relative;
-  margin: 14px 0 18px;
-  padding: 14px 14px 18px;
+  /*
+    Markup historically included inline styles like:
+      border-collapse:separate; border-spacing:6px;
+    Inline styles override normal CSS.
+    These !important rules guarantee a stable grid.
+  */
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+}
+ 
+.vms-av-grid th,
+.vms-av-grid td {
+  vertical-align: top;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Number fields: hide browser spinner steppers (admin + public). */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Canonical notice system (shared admin + public) */
+:root {
+  --vms-notice-radius: 12px;
+  --vms-notice-pad-y: 10px;
+  --vms-notice-pad-x: 12px;
+  --vms-notice-border-left: 5px;
+
+  --vms-notice-info-text: #0a4b78;
+  --vms-notice-info-border: #72aee6;
+  --vms-notice-info-bg: #f0f6fc;
+
+  --vms-notice-success-text: #0f5132;
+  --vms-notice-success-border: #68b77b;
+  --vms-notice-success-bg: #edf7ed;
+
+  --vms-notice-warning-text: #5f370e;
+  --vms-notice-warning-border: #dba617;
+  --vms-notice-warning-bg: #fff8e5;
+
+  --vms-notice-critical-text: #8a2424;
+  --vms-notice-critical-border: #d63638;
+  --vms-notice-critical-bg: #fcf0f1;
+}
+
+.vms-notice {
+  margin: 10px 0 12px;
+  padding: var(--vms-notice-pad-y) var(--vms-notice-pad-x);
+  border: 1px solid #dcdcde;
+  border-left: var(--vms-notice-border-left) solid #8c8f94;
+  border-radius: var(--vms-notice-radius);
   background: #fff;
-  border: 1px solid var(--vms-border);
-  border-radius: var(--vms-radius-lg);
-  box-shadow: var(--vms-shadow);
-}
-body.toplevel_page_vms .vms-sch-month::before{
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  border-top-left-radius: var(--vms-radius-lg);
-  border-bottom-left-radius: var(--vms-radius-lg);
-  background: var(--vms-accent);
 }
 
-/* Month title (sticky) */
-body.toplevel_page_vms .vms-sch-month-title{
-  margin: -14px -14px 12px;
-  padding: 12px 14px 10px 18px;
-  border-bottom: 1px solid rgba(0,0,0,.06);
+.vms-notice > p:first-child {
+  margin-top: 0;
+}
+
+.vms-notice > p:last-child {
+  margin-bottom: 0;
+}
+
+.vms-notice--info {
+  color: var(--vms-notice-info-text);
+  border-color: #b7d5f3;
+  border-left-color: var(--vms-notice-info-border);
+  background: var(--vms-notice-info-bg);
+}
+
+.vms-notice--success {
+  color: var(--vms-notice-success-text);
+  border-color: #c6dfc3;
+  border-left-color: var(--vms-notice-success-border);
+  background: var(--vms-notice-success-bg);
+}
+
+.vms-notice--warning {
+  color: var(--vms-notice-warning-text);
+  border-color: #efd59a;
+  border-left-color: var(--vms-notice-warning-border);
+  background: var(--vms-notice-warning-bg);
+}
+
+.vms-notice--critical,
+.vms-notice--error {
+  color: var(--vms-notice-critical-text);
+  border-color: #efc9cd;
+  border-left-color: var(--vms-notice-critical-border);
+  background: var(--vms-notice-critical-bg);
+}
+
+/* Public venue calendar shortcode */
+.vms-public-cal .vms-public-cal-filters {
+  margin: 12px 0 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vms-public-cal .vms-public-cal-label {
+  font-weight: 700;
+}
+
+.vms-public-cal .vms-public-cal-label-month {
+  margin-left: 8px;
+}
+
+.vms-public-cal .vms-public-cal-venue {
+  min-width: 280px;
+}
+
+.vms-public-cal .vms-public-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 10px 0 12px;
+  gap: 8px;
+}
+
+.vms-public-cal .vms-public-cal-title {
+  font-weight: 800;
+}
+
+.vms-public-cal .vms-public-cal-nav-link {
+  text-decoration: none;
+}
+
+.vms-public-cal .vms-public-cal-compact-note {
+  margin: 0 0 10px;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.vms-public-cal .vms-cal-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vms-public-cal .vms-public-cal-compact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.vms-public-cal .vms-public-cal-compact-month {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+}
+
+.vms-public-cal .vms-public-cal-compact-month-head {
+  margin: 0 0 10px;
+}
+
+.vms-public-cal .vms-public-cal-compact-month-title {
+  margin: 0;
   font-size: 18px;
   font-weight: 800;
   line-height: 1.2;
-  background: #fff;
-  border-top-left-radius: var(--vms-radius-lg);
-  border-top-right-radius: var(--vms-radius-lg);
-  position: sticky;
-  top: 32px; /* WP admin bar */
-  z-index: 20;
-}
-@media (max-width: 782px){
-  body.toplevel_page_vms .vms-sch-month-title{ top: 46px; }
-}
-@media (max-width: 600px){
-  body.toplevel_page_vms .vms-sch-month-title{ top: 0; }
+  color: #111827;
 }
 
-/* Calendar table */
-body.toplevel_page_vms .vms-sch-table{
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 10px;
-  table-layout: fixed;
-}
-body.toplevel_page_vms .vms-sch-table thead{ display: table-header-group; }
-body.toplevel_page_vms .vms-sch-table th{
-  text-align: center;
-  padding: 0 0 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(15,23,42,.75);
-}
-body.toplevel_page_vms .vms-sch-table td{ vertical-align: top; padding: 0; }
-
-/* Day cell */
-body.toplevel_page_vms .vms-sch-cell{
-  border: 1px dashed rgba(100,116,139,.28);
-  border-radius: 14px;
-  background: #fff;
-  min-height: 122px;
-  padding: 10px;
+.vms-public-cal .vms-public-cal-compact-grid {
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-auto-rows: min-content;
-  gap: 8px 10px;
-  align-content: start;
+  grid-template-columns: repeat(var(--vms-compact-columns, 2), minmax(0, 1fr));
+  gap: 8px;
 }
 
-/* Date + status (top row) */
-body.toplevel_page_vms .vms-sch-daynum{
-  grid-column: 1;
-  grid-row: 1;
-  font-weight: 800;
-  color: rgba(15,23,42,.85);
-}
-body.toplevel_page_vms .vms-sch-badge{
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: end;
-  padding: 2px 8px;
-  border-radius: 999px;
+.vms-public-cal .vms-public-cal-compact-head {
+  padding: 0 4px 4px;
   font-size: 12px;
-  line-height: 1.2;
-  font-weight: 700;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(100,116,139,.10);
-  color: rgba(15,23,42,.75);
-}
-body.toplevel_page_vms .vms-sch-badge.is-open{
-  border-color: rgba(34,197,94,.35);
-  background: rgba(34,197,94,.12);
-  color: rgba(22,101,52,.95);
-}
-body.toplevel_page_vms .vms-sch-badge.is-closed{
-  border-color: rgba(239,68,68,.28);
-  background: rgba(239,68,68,.10);
-  color: rgba(127,29,29,.92);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #374151;
 }
 
-/* Action area (Create/Add) above plan for continuity */
-body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top']{
-  grid-column: 1 / -1;
-  grid-row: 2;
-  margin-top: 0 !important;
-}
-body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top'] > a.button{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px;
-  height: 28px;
-  line-height: 28px;
-  border-radius: 999px;
+.vms-public-cal .vms-public-cal-compact-cell {
+  min-height: 104px;
+  padding: 28px 8px 8px;
+  border-radius: 12px;
 }
 
-/* Plans / events list (supports multiple items) */
-body.toplevel_page_vms .vms-sch-plan{
-  grid-column: 1 / -1;
-  grid-row: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.vms-public-cal .vms-public-cal-compact-blank {
+  min-height: 104px;
+  border-radius: 12px;
 }
-body.toplevel_page_vms .vms-sch-plan a{
-  display: block;
-  padding: 8px 10px;
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-daynum {
+  top: 7px;
+  left: 8px;
+  font-size: 12px;
+}
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-entry {
+  margin-top: 6px;
+}
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-entry-image {
+  margin-bottom: 6px;
+  overflow: hidden;
   border-radius: 10px;
-  border: 1px solid rgba(59,130,246,.18);
-  background: rgba(59,130,246,.08);
-  text-decoration: none;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-entry-image img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-entry-vendor.is-primary {
+  font-size: 10px;
+}
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-entry-vendor.is-secondary {
+  font-size: 9px;
+}
+
+.vms-public-cal .vms-public-cal-compact-empty {
+  padding: 12px;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  background: rgba(249, 250, 251, 0.9);
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.vms-public-cal .vms-cal-head {
   font-weight: 700;
-  color: rgba(15,23,42,.92);
+  color: #374151;
+  padding: 4px 2px;
+}
+
+.vms-public-cal .vms-cal-cell {
+  min-height: 130px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 34px 10px 10px;
+  position: relative;
+  overflow: visible;
+}
+
+.vms-public-cal .vms-cal-cell.is-open {
+  background: var(--vms-open-bg);
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.vms-public-cal .vms-cal-cell.is-closed {
+  background: var(--vms-closed-bg);
+  border-color: rgba(148, 163, 184, 0.30);
+  border-style: dashed;
+}
+
+.vms-public-cal .vms-cal-cell.is-past {
+  box-shadow: inset 0 0 0 9999px rgba(15, 23, 42, 0.12);
+}
+
+.vms-public-cal .vms-cal-cell.is-today {
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.45);
+}
+
+.vms-public-cal .vms-cal-cell.is-past .vms-cal-daynum {
+  color: rgba(107, 114, 128, 0.92);
+}
+
+.vms-public-cal .vms-cal-empty {
+  background: transparent;
+  border-style: dashed;
+}
+
+.vms-public-cal .vms-cal-daynum {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-weight: 800;
+  color: #9ca3af;
+}
+
+.vms-public-cal .vms-cal-entry {
+  position: relative;
+  margin-top: 8px;
+  padding-top: 2px;
+}
+
+.vms-public-cal .vms-cal-entry::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 14px;
+}
+
+.vms-public-cal .vms-cal-entry-image {
+  display: block;
+  margin: 0 0 6px;
+  text-decoration: none;
+}
+
+.vms-public-cal .vms-cal-entry-image img {
+  display: block;
+  width: 100%;
+  max-height: 76px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+
+.vms-public-cal .vms-cancelled-thumb {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.vms-public-cal .vms-cancelled-thumb__label {
+  position: absolute;
+  top: 12%;
+  left: -18%;
+  z-index: 6;
+  width: 136%;
+  padding: 8px 14px;
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: clamp(0.58rem, 1vw, 0.84rem);
+  line-height: 1.1;
+  background: rgba(185, 28, 28, 0.94);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  transform: rotate(-18deg);
+  transform-origin: center;
+  pointer-events: none;
+  border-top: 2px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.vms-public-cal .vms-cancelled-thumb--rescheduled .vms-cancelled-thumb__label,
+.vms-public-cal .vms-cancelled-thumb__label--rescheduled {
+  background: rgba(180, 83, 9, 0.96);
+}
+
+.vms-public-cal .vms-cancelled-thumb--cancelled .vms-cancelled-thumb__label {
+  background: rgba(185, 28, 28, 0.94);
+}
+
+.vms-public-cal .vms-cal-entry.is-cancelled .vms-cal-entry-vendors,
+.vms-public-cal .vms-cal-entry.is-rescheduled .vms-cal-entry-vendors {
+  opacity: 0.96;
+}
+
+.vms-public-cal .vms-cal-entry-vendors {
+  display: grid;
+  gap: 3px;
+}
+
+.vms-public-cal .vms-cal-vendor-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-decoration: none;
+  color: #1f2937;
+  line-height: 1.25;
+}
+
+.vms-public-cal .vms-cal-vendor-row:hover {
+  text-decoration: underline;
+}
+
+.vms-public-cal .vms-cal-vendor-icon {
+  flex: 0 0 auto;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.vms-public-cal .vms-cal-vendor-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-body.toplevel_page_vms .vms-sch-plan a:hover{ background: rgba(59,130,246,.12); }
 
-/* Open / closed cell backgrounds */
-body.toplevel_page_vms .vms-sch-cell.is-open{
-  background: var(--vms-open-bg);
-  border-color: var(--vms-open-border);
-}
-body.toplevel_page_vms .vms-sch-cell.is-closed{
-  background: var(--vms-closed-bg);
-  border-color: var(--vms-closed-border);
-}
-/* Fallback if markup does not include .is-open on the cell */
-body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-open){
-  background: var(--vms-open-bg);
-  border-color: var(--vms-open-border);
-}
-body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-closed){
-  background: var(--vms-closed-bg);
-  border-color: var(--vms-closed-border);
+.vms-public-cal .vms-cal-entry-vendor.is-primary {
+  font-size: 11px;
+  font-weight: 700;
 }
 
-/* Mobile: remove pills, shrink buttons and spacing */
-@media (max-width: 600px){
-  body.toplevel_page_vms .vms-panel-body{ padding: 12px 12px 20px; }
-  body.toplevel_page_vms .vms-sch-month{ padding: 12px 12px 14px; }
-  body.toplevel_page_vms .vms-sch-month-title{ margin: -12px -12px 10px; padding: 10px 12px 8px 16px; font-size: 16px; }
+.vms-public-cal .vms-cal-entry-vendor.is-secondary {
+  font-size: 10px;
+  font-weight: 500;
+  color: #4b5563;
+}
 
-  body.toplevel_page_vms .vms-sch-table{ border-spacing: 8px; }
-  body.toplevel_page_vms .vms-sch-table th{ font-size: 11px; padding-bottom: 4px; }
+.vms-public-cal .vms-cal-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(360px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 18px 32px rgba(2, 6, 23, 0.18);
+  z-index: 40;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: top, left, transform, opacity;
+  transform: translateY(4px);
+  transition: opacity .14s ease, transform .14s ease, visibility 0s linear .16s;
+}
 
-  body.toplevel_page_vms .vms-sch-cell{ min-height: 112px; padding: 8px; gap: 6px 8px; }
-  body.toplevel_page_vms .vms-sch-badge{ display: none; }
+.vms-public-cal .vms-cal-pop.is-above {
+  transform: translateY(-4px);
+}
 
-  /* Turn Create/Add into a compact '+' */
-  body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top'] > a.button.button-small{
-    width: 30px;
-    min-width: 30px;
-    padding: 0;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 999px;
-    font-size: 0; /* hide text */
+.vms-public-cal .vms-cal-pop.is-right {
+  left: auto;
+  right: 0;
+}
+
+.vms-public-cal .vms-cal-pop::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: transparent;
+}
+
+.vms-public-cal .vms-cal-pop.is-below::before {
+  top: -14px;
+}
+
+.vms-public-cal .vms-cal-pop.is-above::before {
+  bottom: -14px;
+}
+
+.vms-public-cal .vms-cal-entry:hover,
+.vms-public-cal .vms-cal-entry:focus-within,
+.vms-public-cal .vms-cal-entry.is-pop-open {
+  z-index: 80;
+}
+
+.vms-public-cal .vms-cal-entry:hover .vms-cal-pop,
+.vms-public-cal .vms-cal-entry:focus-within .vms-cal-pop,
+.vms-public-cal .vms-cal-entry.is-pop-open .vms-cal-pop {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.vms-public-cal .vms-cal-pop-body {
+  padding: 12px;
+}
+
+.vms-public-cal .vms-cal-pop-media {
+  display: block;
+  margin: 0 0 10px;
+  text-decoration: none;
+}
+
+.vms-public-cal .vms-cal-pop-media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-pop-media {
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.vms-public-cal .vms-public-cal-compact .vms-cal-pop-media img {
+  height: auto;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.vms-public-cal .vms-cal-pop-vendors {
+  display: grid;
+  gap: 4px;
+}
+
+.vms-public-cal .vms-cal-pop-vendor.is-primary {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.vms-public-cal .vms-cal-pop-vendor.is-secondary {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.vms-public-cal .vms-cal-pop-date {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.vms-public-cal .vms-cal-pop-time {
+  margin-top: 2px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.vms-public-cal .vms-cal-pop-excerpt {
+  margin-top: 7px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #374151;
+}
+
+.vms-public-cal .vms-cal-pop-actions {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.vms-public-cal .vms-cal-pop-ticket {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vms-public-cal .vms-cal-pop-ticket:hover {
+  background: #1e40af;
+}
+
+
+.vms-public-cal .vms-public-cal-mobile-list-fallback {
+  display: none;
+}
+
+.vms-public-cal .vms-public-cal-list {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.vms-public-cal .vms-public-cal-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.vms-public-cal .vms-public-cal-item.vms-public-cal-rich {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.vms-public-cal .vms-public-cal-rich-media {
+  display: block;
+  background: #f3f4f6;
+  text-decoration: none;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.vms-public-cal .vms-public-cal-rich-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vms-public-cal .vms-public-cal-rich-body {
+  padding: 14px 14px 16px;
+}
+
+.vms-public-cal .vms-public-cal-rich-vendor.is-primary {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.vms-public-cal .vms-public-cal-rich-vendor.is-secondary {
+  margin-top: 3px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.vms-public-cal .vms-public-cal-rich-date {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.vms-public-cal .vms-public-cal-rich-time {
+  margin-top: 2px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.vms-public-cal .vms-public-cal-rich-excerpt {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #374151;
+}
+
+.vms-public-cal .vms-public-cal-rich-actions {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.vms-public-cal .vms-public-cal-rich-ticket {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vms-public-cal .vms-public-cal-rich-ticket:hover {
+  background: #1e40af;
+}
+
+@media (max-width: 1180px), (hover: none) and (pointer: coarse) {
+  .vms-public-cal .vms-public-cal-nav {
+    flex-wrap: wrap;
   }
-  body.toplevel_page_vms .vms-sch-cell > div[style*='margin-top'] > a.button.button-small::after{
-    content: '+';
-    font-size: 16px;
-    font-weight: 800;
-    line-height: 1;
+
+  .vms-public-cal .vms-public-cal-label-view,
+  .vms-public-cal .vms-public-cal-view {
+    display: none;
   }
 
-  body.toplevel_page_vms .vms-sch-plan a{ padding: 7px 8px; font-size: 12px; }
+  .vms-public-cal.vms-public-cal--view-month .vms-cal-grid {
+    display: none;
+  }
+
+  .vms-public-cal.vms-public-cal--view-month .vms-public-cal-mobile-list-fallback {
+    display: block;
+  }
+
+  .vms-public-cal .vms-cal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vms-public-cal .vms-public-cal-venue {
+    min-width: 220px;
+  }
+
+  .vms-public-cal .vms-public-cal-list {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-public-cal .vms-public-cal-rich-vendor.is-primary {
+    font-size: 20px;
+  }
+
+  .vms-public-cal .vms-public-cal-rich-vendor.is-secondary {
+    font-size: 15px;
+  }
 }
 
-@media (max-width: 420px){
-  body.toplevel_page_vms .vms-sch-table{ border-spacing: 6px; }
-  body.toplevel_page_vms .vms-sch-cell{ min-height: 106px; }
-  body.toplevel_page_vms .vms-sch-daynum{ font-size: 12px; }
+@media (max-width: 980px) {
+  .vms-public-cal .vms-public-cal-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .vms-public-cal .vms-cal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-public-cal .vms-public-cal-label-month {
+    margin-left: 0;
+  }
+
+  .vms-public-cal .vms-public-cal-venue {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .vms-public-cal .vms-cal-pop {
+    width: min(320px, calc(100vw - 18px));
+  }
+
+  .vms-public-cal .vms-public-cal-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-public-cal .vms-public-cal-compact-grid {
+    gap: 6px;
+  }
+
+  .vms-public-cal .vms-public-cal-compact-cell,
+  .vms-public-cal .vms-public-cal-compact-blank {
+    min-height: 92px;
+  }
+
+  .vms-public-cal .vms-public-cal-rich-vendor.is-primary {
+    font-size: 18px;
+  }
+
+  .vms-public-cal .vms-public-cal-rich-vendor.is-secondary {
+    font-size: 14px;
+  }
+}
+
+/* Ratings shortcode */
+.vms-rating-form-wrapper .vms-rating-comment {
+  width: 100%;
+}
+
+
+/* Vendor application: band booking context */
+.vms-app-input-standard {
+  width: 100%;
+  max-width: 520px;
+}
+
+.vms-app-band-intro {
+  max-width: 760px;
+  margin: 10px 0 14px;
+  padding: 18px;
+  border: 1px solid #dbe7f5;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.vms-app-band-intro__title {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.vms-app-band-intro__copy {
+  margin: 0 0 8px;
+  color: #1e293b;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.vms-app-band-intro__copy--muted {
+  margin-top: 12px;
+  color: #334155;
+}
+
+.vms-app-band-intro__list {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  color: #1e293b;
+}
+
+.vms-app-band-intro__list li {
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+
+.vms-app-band-intro__list li:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .vms-app-band-intro {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .vms-app-band-intro__title {
+    font-size: 18px;
+  }
+
+  .vms-app-band-intro__list {
+    margin-left: 16px;
+  }
+}
+
+.vms-events-photo .vms-cancelled-thumb {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.vms-events-photo .vms-cancelled-thumb__label {
+  position: absolute;
+  top: 12%;
+  left: -18%;
+  z-index: 6;
+  width: 136%;
+  padding: 8px 14px;
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: clamp(0.58rem, 1vw, 0.84rem);
+  line-height: 1.1;
+  background: rgba(185, 28, 28, 0.94);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  transform: rotate(-18deg);
+  transform-origin: center;
+  pointer-events: none;
+  border-top: 2px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.vms-events-photo .vms-cancelled-thumb--rescheduled .vms-cancelled-thumb__label,
+.vms-events-photo .vms-cancelled-thumb__label--rescheduled {
+  background: rgba(180, 83, 9, 0.96);
+}
+
+.vms-events-photo .vms-cancelled-thumb--cancelled .vms-cancelled-thumb__label {
+  background: rgba(185, 28, 28, 0.94);
+}
+
+/* VMS native public photo-grid shortcode */
+.vms-events-photo{
+  margin: 1.35rem 0 1.8rem;
+}
+
+
+.vms-events-photo__footer{
+  display: flex;
+  justify-content: center;
+  margin-top: 1.15rem;
+}
+
+.vms-events-photo__more-link,
+.vms-events-photo__more-link:visited{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  min-width: 14rem;
+  padding: .84rem 1.4rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c2962d 0%, #9a741d 100%);
+  border: 1px solid rgba(122, 85, 14, 0.32);
+  box-shadow: 0 6px 16px rgba(94, 68, 16, 0.18);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  transition: box-shadow .18s ease;
+}
+
+.vms-events-photo__more-link:hover,
+.vms-events-photo__more-link:focus-visible{
+  box-shadow: 0 8px 18px rgba(94, 68, 16, 0.22);
+  color: #fff;
+  text-decoration: none;
+}
+
+.vms-events-photo__empty{
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.vms-events-photo-grid{
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.vms-events-photo-grid--cols-1{
+  grid-template-columns: minmax(0,1fr);
+}
+
+.vms-events-photo-grid--cols-2{
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+
+.vms-events-photo-grid--cols-3{
+  grid-template-columns: repeat(3, minmax(0,1fr));
+}
+
+.vms-events-photo-grid--cols-4{
+  grid-template-columns: repeat(4, minmax(0,1fr));
+}
+
+.vms-events-photo-card{
+  overflow: hidden;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid rgba(20, 26, 37, 0.06);
+  box-shadow: 0 14px 32px rgba(20, 26, 37, 0.09);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.vms-events-photo-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(20, 26, 37, 0.14);
+}
+
+.vms-events-photo-card__media-wrap{
+  position: relative;
+}
+
+.vms-events-photo-card__media,
+.vms-events-photo-card__media:visited{
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.vms-events-photo-card__media img{
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  transition: transform .22s ease;
+}
+
+.vms-events-photo-card__media:hover img,
+.vms-events-photo-card__media:focus-visible img{
+  transform: scale(1.02);
+}
+
+.vms-events-photo-card__media--empty{
+  min-height: 12rem;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: linear-gradient(180deg, #2d3440 0%, #191e26 100%);
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+}
+
+.vms-events-photo-card__body{
+  display: grid;
+  justify-items: center;
+  gap: .82rem;
+  padding: 1rem 1rem 1.08rem;
+  text-align: center;
+}
+
+.vms-events-photo-card__title{
+  margin: 0;
+  width: 100%;
+  font-size: clamp(1.12rem, 1.5vw, 1.65rem);
+  line-height: 1.14;
+  font-weight: 800;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.vms-events-photo-card__title a,
+.vms-events-photo-card__title a:visited{
+  color: inherit;
+  text-decoration: none;
+}
+
+.vms-events-photo-card__title a:hover,
+.vms-events-photo-card__title a:focus-visible{
+  text-decoration: none;
+}
+
+.vms-events-photo-card__date-row{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.vms-events-photo-card__date-badge{
+  min-width: 4.25rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: .5rem .72rem .58rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f8f4ec 0%, #eee5d5 100%);
+  border: 1px solid rgba(167, 125, 53, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
+  color: #1e2430;
+  line-height: 1;
+}
+
+.vms-events-photo-card__month{
+  display: block;
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.vms-events-photo-card__day{
+  display: block;
+  margin-top: .22rem;
+  font-size: 1.82rem;
+  font-weight: 900;
+}
+
+.vms-events-photo-card__meta{
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .18rem;
+  color: #4a5260;
+  font-size: .92rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.vms-events-photo-card__cta,
+.vms-events-photo-card__cta:visited{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.8rem;
+  min-width: 9.5rem;
+  padding: .72rem 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c2962d 0%, #9a741d 100%);
+  border: 1px solid rgba(122, 85, 14, 0.32);
+  box-shadow: 0 6px 16px rgba(94, 68, 16, 0.18);
+  color: #fff;
+  font-size: .98rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: box-shadow .18s ease, background .18s ease;
+}
+
+.vms-events-photo-card__cta:hover,
+.vms-events-photo-card__cta:focus-visible{
+  background: linear-gradient(180deg, #c2962d 0%, #9a741d 100%);
+  box-shadow: 0 8px 18px rgba(94, 68, 16, 0.22);
+  color: #fff;
+  text-decoration: none;
+}
+
+.vms-events-photo-card__status-note{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: .42rem .72rem;
+  border-radius: 999px;
+  background: rgba(181, 98, 24, 0.12);
+  border: 1px solid rgba(181, 98, 24, 0.18);
+  color: #b56218;
+  font-size: .9rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.vms-events-photo-card.is-cancelled:not(.is-rescheduled) .vms-events-photo-card__status-note{
+  background: rgba(143, 35, 49, 0.10);
+  border-color: rgba(143, 35, 49, 0.18);
+  color: #8f2331;
+}
+
+.vms-events-photo-card__excerpt{
+  margin-top: -.15rem;
+  color: #4a5260;
+  font-size: .95rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px){
+  .vms-events-photo-grid--cols-4,
+  .vms-events-photo-grid--cols-3{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 640px){
+  .vms-events-photo{
+    margin: 1.1rem 0 1.5rem;
+  }
+
+  .vms-events-photo-grid,
+  .vms-events-photo-grid--cols-4,
+  .vms-events-photo-grid--cols-3,
+  .vms-events-photo-grid--cols-2{
+    grid-template-columns: minmax(0,1fr);
+    gap: 1rem;
+  }
+
+  .vms-events-photo-card__body{
+    padding: .9rem .9rem 1rem;
+    gap: .72rem;
+  }
+
+  .vms-events-photo-card__title{
+    font-size: 1.22rem;
+  }
+
+  .vms-events-photo-card__date-badge{
+    min-width: 3.8rem;
+  }
+
+  .vms-events-photo-card__day{
+    font-size: 1.58rem;
+  }
+
+  .vms-events-photo-card__cta,
+  .vms-events-photo-card__cta:visited{
+    min-height: 2.45rem;
+    min-width: 8.5rem;
+    padding: .58rem 1rem;
+    font-size: .9rem;
+  }
+
+  .vms-events-photo-card__status-note{
+    font-size: .86rem;
+  }
+
+  .vms-events-photo__more-link,
+  .vms-events-photo__more-link:visited{
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 767px){
+  .vms-events-photo-grid,
+  .vms-events-photo-grid--cols-4,
+  .vms-events-photo-grid--cols-3,
+  .vms-events-photo-grid--cols-2,
+  .vms-events-photo-grid--cols-1{
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .vms-events-photo-card__title{
+    font-size: 1.65rem;
+  }
 }

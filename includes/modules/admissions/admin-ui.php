@@ -1,0 +1,171 @@
+<?php
+defined('ABSPATH') || exit;
+
+if (!function_exists('vms_admission_admin_should_load')) {
+	function vms_admission_admin_should_load(): bool
+	{
+		if (!is_admin()) {
+			return false;
+		}
+		if (!function_exists('get_current_screen')) {
+			return false;
+		}
+		$screen = get_current_screen();
+		if (!is_object($screen)) {
+			return false;
+		}
+		return ($screen->post_type ?? '') === 'vms_event_plan';
+	}
+}
+
+if (!function_exists('vms_admission_admin_enqueue_assets')) {
+	function vms_admission_admin_enqueue_assets(): void
+	{
+		if (!vms_admission_admin_should_load()) {
+			return;
+		}
+
+		$post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+		if ($post_id <= 0 && isset($GLOBALS['post']) && $GLOBALS['post'] instanceof WP_Post) {
+			$post_id = (int) $GLOBALS['post']->ID;
+		}
+
+		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		wp_enqueue_style(
+			'vms-admissions-admin',
+			VMS_PLUGIN_URL . 'assets/css/vms-admissions-admin.css',
+			array('vms-admin'),
+			$ver
+		);
+		wp_enqueue_script(
+			'vms-admissions-admin',
+			VMS_PLUGIN_URL . 'assets/js/vms-admissions-admin.js',
+			array(),
+			$ver,
+			true
+		);
+
+		wp_localize_script('vms-admissions-admin', 'vmsAdmissionsAdmin', array(
+			'restUrl' => esc_url_raw(rest_url('vms/v1')),
+			'nonce' => wp_create_nonce('wp_rest'),
+			'eventPlanId' => $post_id,
+			'settings' => vms_admission_settings(),
+			'canManage' => current_user_can(vms_admission_manage_capability()) ? 1 : 0,
+			'canCheckin' => current_user_can(vms_admission_door_capability()) ? 1 : 0,
+			'allowUncheckin' => !empty(vms_admission_settings()['allow_uncheckin']) ? 1 : 0,
+			'exportCsvUrl' => wp_nonce_url(
+				admin_url('admin-post.php?action=vms_admissions_export_csv&event_plan_id=' . $post_id),
+				'vms_admissions_export_csv_' . $post_id
+			),
+		));
+	}
+}
+add_action('admin_enqueue_scripts', 'vms_admission_admin_enqueue_assets', 30);
+
+if (!function_exists('vms_admission_add_event_plan_metabox')) {
+	function vms_admission_add_event_plan_metabox(): void
+	{
+		add_meta_box(
+			'vms_guest_list_comp_admission',
+			__('Guest List / Comp Admission', 'vms'),
+			'vms_admission_render_event_plan_metabox',
+			'vms_event_plan',
+			'normal',
+			'default'
+		);
+	}
+}
+add_action('add_meta_boxes_vms_event_plan', 'vms_admission_add_event_plan_metabox', 20);
+
+if (!function_exists('vms_admission_render_event_plan_metabox')) {
+	function vms_admission_render_event_plan_metabox(WP_Post $post): void
+	{
+		if (!current_user_can(vms_admission_manage_capability())) {
+			echo '<p>' . esc_html__('You do not have permission to manage Guest List entries.', 'vms') . '</p>';
+			return;
+		}
+
+		echo '<div class="vms-adm-box" data-event-plan-id="' . esc_attr((string) $post->ID) . '">';
+		echo '<p class="vms-adm-row">' . esc_html__('Add and manage comp entries for this event plan.', 'vms') . '</p>';
+		echo '<div class="vms-adm-grid">';
+		// Important: do not use HTML5 required attributes inside the Event Plan edit form.
+		// Those can block saving the Event Plan even when the Guest List UI is unused.
+		echo '<label>' . esc_html__('Guest Name', 'vms') . '<input type="text" id="vms-adm-guest-name" autocomplete="off"></label>';
+		echo '<label>' . esc_html__('Guest Email', 'vms') . '<input type="text" id="vms-adm-guest-email" autocomplete="email"></label>';
+		echo '<label>' . esc_html__('Party Size', 'vms') . '<input type="text" id="vms-adm-party-size" inputmode="numeric" pattern="[0-9]*" value="1"></label>';
+		echo '<label>' . esc_html__('Phone', 'vms') . '<input type="text" id="vms-adm-phone"></label>';
+		echo '<label>' . esc_html__('Notes', 'vms') . '<input type="text" id="vms-adm-notes"></label>';
+		echo '</div>';
+		echo '<p class="vms-adm-actions">';
+		echo '<button type="button" class="button button-primary" id="vms-adm-add-entry">' . esc_html__('Add Comp Entry', 'vms') . '</button> ';
+		echo '<a class="button" id="vms-adm-export-csv" href="#">' . esc_html__('Export Door List CSV', 'vms') . '</a>';
+		echo '</p>';
+		echo '<p id="vms-adm-feedback" class="vms-adm-feedback" aria-live="polite"></p>';
+		echo '<div id="vms-adm-summary" class="vms-adm-summary"></div>';
+		echo '<div id="vms-adm-list" class="vms-adm-list"></div>';
+		if (function_exists('vms_admission_render_vendor_guest_config')) {
+			vms_admission_render_vendor_guest_config($post);
+		}
+		echo '</div>';
+	}
+}
+
+if (!function_exists('vms_admission_export_csv')) {
+	function vms_admission_export_csv(): void
+	{
+		$event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
+		if (!current_user_can(vms_admission_manage_capability())) {
+			wp_die(esc_html__('Access denied.', 'vms'));
+		}
+		if ($event_plan_id <= 0) {
+			wp_die(esc_html__('Missing event plan.', 'vms'));
+		}
+		if (!wp_verify_nonce((string) ($_GET['_wpnonce'] ?? ''), 'vms_admissions_export_csv_' . $event_plan_id)) {
+			wp_die(esc_html__('Invalid request.', 'vms'));
+		}
+
+		$plan = vms_admission_event_plan_context($event_plan_id);
+		if (!$plan) {
+			wp_die(esc_html__('Event plan not found.', 'vms'));
+		}
+
+		global $wpdb;
+		$table = vms_admission_table_entries();
+		$rows = $wpdb->get_results($wpdb->prepare(
+			"SELECT guest_name, guest_email, party_size, phone, notes, status, source, owner_vendor_id FROM {$table} WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC",
+			$event_plan_id
+		), ARRAY_A);
+
+		$filename = 'door-list-' . $event_plan_id . '-' . wp_date('Ymd-His', time(), wp_timezone()) . '.csv';
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename=' . $filename);
+
+		$fh = fopen('php://output', 'w');
+		if ($fh === false) {
+			wp_die(esc_html__('Could not export CSV.', 'vms'));
+		}
+
+		fputcsv($fh, array('Guest Name', 'Guest Email', 'Party Size', 'Phone', 'Notes', 'Status', 'Source', 'Owner Vendor'));
+		foreach ((array) $rows as $row) {
+			$owner_vendor_id = isset($row['owner_vendor_id']) ? (int) $row['owner_vendor_id'] : 0;
+			$owner_vendor_name = $owner_vendor_id > 0 ? (string) get_the_title($owner_vendor_id) : '';
+			fputcsv($fh, array(
+				(string) ($row['guest_name'] ?? ''),
+				(string) ($row['guest_email'] ?? ''),
+				(int) ($row['party_size'] ?? 0),
+				(string) ($row['phone'] ?? ''),
+				(string) ($row['notes'] ?? ''),
+				(string) ($row['status'] ?? ''),
+				(string) ($row['source'] ?? ''),
+				$owner_vendor_name,
+			));
+		}
+		fclose($fh);
+
+		vms_admission_audit_log($event_plan_id, null, 'export_csv', get_current_user_id(), 'admin', array(
+			'row_count' => is_array($rows) ? count($rows) : 0,
+		));
+		exit;
+	}
+}
+add_action('admin_post_vms_admissions_export_csv', 'vms_admission_export_csv');

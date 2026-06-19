@@ -1,0 +1,149 @@
+/* VMS public event details card: compact human details + Google-readable event facts. */
+.single-tribe_events .vms-event-details-card,
+.tribe-events-single .vms-event-details-card {
+  margin: 18px 0 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: none;
+  color: var(--vms-ui-ink, #0f172a);
+}
+
+.single-tribe_events .vms-event-details-card--sidebar,
+.tribe-events-single .vms-event-details-card--sidebar {
+  margin-top: 14px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.single-tribe_events .vms-event-details-card__title,
+.tribe-events-single .vms-event-details-card__title {
+  margin: 0 0 10px;
+  color: var(--vms-ui-ink, #0f172a);
+  font-size: 1.05rem;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.single-tribe_events .vms-event-details-card__list,
+.tribe-events-single .vms-event-details-card__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 18px;
+  margin: 0;
+}
+
+.single-tribe_events .vms-event-details-card--sidebar .vms-event-details-card__list,
+.tribe-events-single .vms-event-details-card--sidebar .vms-event-details-card__list {
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+.single-tribe_events .vms-event-details-card__row,
+.tribe-events-single .vms-event-details-card__row {
+  min-width: 0;
+  padding: 0 0 9px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.single-tribe_events .vms-event-details-card__row:nth-last-child(-n + 2),
+.tribe-events-single .vms-event-details-card__row:nth-last-child(-n + 2) {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.single-tribe_events .vms-event-details-card--sidebar .vms-event-details-card__row,
+.tribe-events-single .vms-event-details-card--sidebar .vms-event-details-card__row {
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.single-tribe_events .vms-event-details-card--sidebar .vms-event-details-card__row:last-child,
+.tribe-events-single .vms-event-details-card--sidebar .vms-event-details-card__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.single-tribe_events .vms-event-details-card__label,
+.tribe-events-single .vms-event-details-card__label {
+  margin: 0 0 3px;
+  color: var(--vms-ui-muted, #64748b);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.single-tribe_events .vms-event-details-card__value,
+.tribe-events-single .vms-event-details-card__value {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  color: var(--vms-ui-copy, #334155);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.single-tribe_events .vms-event-details-card__strong,
+.tribe-events-single .vms-event-details-card__strong {
+  color: var(--vms-ui-ink, #0f172a);
+  font-weight: 720;
+}
+
+.single-tribe_events .vms-event-details-card__inline-link,
+.tribe-events-single .vms-event-details-card__inline-link {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 4px;
+  color: var(--vms-ui-link, #1d4ed8);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.single-tribe_events .vms-event-details-card__inline-link:hover,
+.single-tribe_events .vms-event-details-card__inline-link:focus-visible,
+.tribe-events-single .vms-event-details-card__inline-link:hover,
+.tribe-events-single .vms-event-details-card__inline-link:focus-visible {
+  text-decoration: underline;
+}
+
+.single-tribe_events .vms-event-details-card--cancelled,
+.tribe-events-single .vms-event-details-card--cancelled {
+  border-color: rgba(185, 28, 28, 0.24);
+  background: rgba(254, 242, 242, 0.92);
+}
+
+@media (max-width: 760px) {
+  .single-tribe_events .vms-event-details-card,
+  .tribe-events-single .vms-event-details-card {
+    margin-top: 16px;
+    padding: 14px 15px;
+    border-radius: 12px;
+  }
+
+  .single-tribe_events .vms-event-details-card__list,
+  .tribe-events-single .vms-event-details-card__list {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .single-tribe_events .vms-event-details-card__row,
+  .tribe-events-single .vms-event-details-card__row,
+  .single-tribe_events .vms-event-details-card__row:nth-last-child(-n + 2),
+  .tribe-events-single .vms-event-details-card__row:nth-last-child(-n + 2) {
+    padding-bottom: 9px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  .single-tribe_events .vms-event-details-card__row:last-child,
+  .tribe-events-single .vms-event-details-card__row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}

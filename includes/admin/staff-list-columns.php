@@ -15,6 +15,66 @@ if (!defined('ABSPATH')) exit;
  *    vms_vendor_tax_profile_missing_items() / vms_vendor_tax_profile_is_complete()
  */
 
+if (!function_exists('vms_staff_admin_list_role_names')) {
+    function vms_staff_admin_list_role_names(int $post_id): array
+    {
+        $role_names = array();
+
+        if (taxonomy_exists('vms_staff_role')) {
+            $role_names = wp_get_post_terms($post_id, 'vms_staff_role', array('fields' => 'names'));
+            if (is_wp_error($role_names) || !is_array($role_names)) {
+                $role_names = array();
+            }
+        }
+
+        if (empty($role_names)) {
+            $legacy_role = trim((string) get_post_meta($post_id, '_vms_staff_role', true));
+            if ($legacy_role !== '') {
+                $role_names = preg_split('/\s*,\s*/', $legacy_role);
+            }
+        }
+
+        $role_names = array_values(array_unique(array_filter(array_map(static function ($name): string {
+            return trim((string) $name);
+        }, $role_names))));
+
+        if (!empty($role_names)) {
+            natcasesort($role_names);
+            $role_names = array_values($role_names);
+        }
+
+        return $role_names;
+    }
+}
+
+if (!function_exists('vms_staff_admin_list_linked_user_id')) {
+    function vms_staff_admin_list_linked_user_id(int $post_id): int
+    {
+        $user_id = (int) get_post_meta($post_id, '_vms_linked_user_id', true);
+        if ($user_id <= 0) {
+            $user_id = (int) get_post_meta($post_id, '_vms_user_id', true);
+        }
+        if ($user_id > 0) {
+            return $user_id;
+        }
+
+        $linked_users = get_users(array(
+            'fields' => array('ID'),
+            'number' => 1,
+            'meta_key' => '_vms_staff_id',
+            'meta_value' => $post_id,
+            'orderby' => 'ID',
+            'order' => 'ASC',
+        ));
+
+        if (is_array($linked_users) && !empty($linked_users)) {
+            return (int) ($linked_users[0]->ID ?? 0);
+        }
+
+        return 0;
+    }
+}
+
 add_filter('manage_edit-vms_staff_columns', function ($cols) {
 
     // Keep checkbox + title from WP, but insert our useful columns.
@@ -24,7 +84,9 @@ add_filter('manage_edit-vms_staff_columns', function ($cols) {
     $new['title'] = __('Staff', 'vms');
 
     $new['vms_staff_role']   = __('Role', 'vms');
+    $new['vms_dualhat']      = __('Dual-Hat', 'vms');
     $new['vms_tax']          = __('Tax Profile', 'vms');
+    $new['vms_certifications'] = __('Certifications', 'vms');
     $new['vms_contact']      = __('Contact', 'vms');
     $new['vms_linked_user']  = __('Portal User', 'vms');
     $new['date']             = __('Date', 'vms');
@@ -37,10 +99,42 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
     switch ($col) {
 
         case 'vms_staff_role': {
-            // If you store role as meta, read it here.
-            // Common meta key idea: _vms_staff_role
-            $role = (string) get_post_meta($post_id, '_vms_staff_role', true);
-            echo $role !== '' ? esc_html($role) : '—';
+            $role_names = vms_staff_admin_list_role_names((int) $post_id);
+            echo !empty($role_names) ? esc_html(implode(', ', $role_names)) : '—';
+            break;
+        }
+
+        case 'vms_dualhat': {
+            if (!function_exists('vms_staff_linked_vendor_meta_key')) {
+                echo '—';
+                break;
+            }
+
+            $vendor_id = (int) get_post_meta((int) $post_id, vms_staff_linked_vendor_meta_key(), true);
+            if ($vendor_id <= 0) {
+                echo '—';
+                break;
+            }
+
+            $vp = get_post($vendor_id);
+            if (!$vp || $vp->post_type !== 'vms_vendor') {
+                echo '—';
+                break;
+            }
+
+            $label = get_the_title($vendor_id);
+            if (!is_string($label) || $label === '') {
+                $label = 'Vendor #' . (string) $vendor_id;
+            }
+
+            $edit_url = get_edit_post_link($vendor_id, '');
+            echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'vms') . '</span>';
+            if (is_string($edit_url) && $edit_url !== '') {
+                echo ' <a href="' . esc_url($edit_url) . '">' . esc_html($label) . '</a>';
+            } else {
+                echo ' ' . esc_html($label);
+            }
+
             break;
         }
 
@@ -53,12 +147,45 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
                     echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>';
                 } else {
                     echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>';
-                    echo '<div class="description" style="margin-top:4px;">' .
+                    echo '<div class="description vms-staff-tax-missing">' .
                         esc_html(implode(', ', $missing)) .
                         '</div>';
                 }
             } else {
                 echo '—';
+            }
+            break;
+        }
+
+        case 'vms_certifications': {
+            if (!function_exists('vms_staffing_staff_qualification_status_counts')) {
+                echo '—';
+                break;
+            }
+
+            $counts = vms_staffing_staff_qualification_status_counts((int) $post_id);
+            $pending = (int) ($counts['pending_verification'] ?? 0);
+            $approved = (int) ($counts['active'] ?? 0);
+            $expired = (int) ($counts['expired'] ?? 0);
+            $rejected = (int) ($counts['rejected'] ?? 0);
+
+            if ($pending > 0) {
+                echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(vms_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'vms'), $pending)) . '</a>';
+            } elseif ($approved > 0) {
+                echo '<span class="vms-badge vms-badge-ok">' . esc_html(sprintf(_n('%d Approved', '%d Approved', $approved, 'vms'), $approved)) . '</span>';
+            } else {
+                echo '—';
+            }
+
+            $meta_bits = array();
+            if ($expired > 0) {
+                $meta_bits[] = sprintf(_n('%d expired', '%d expired', $expired, 'vms'), $expired);
+            }
+            if ($rejected > 0) {
+                $meta_bits[] = sprintf(_n('%d rejected', '%d rejected', $rejected, 'vms'), $rejected);
+            }
+            if (!empty($meta_bits)) {
+                echo '<div class="description">' . esc_html(implode(' · ', $meta_bits)) . '</div>';
             }
             break;
         }
@@ -87,9 +214,7 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
         }
 
         case 'vms_linked_user': {
-            // Meta key for the staff’s WP user account link.
-            // If yours differs, change it here.
-            $user_id = (int) get_post_meta($post_id, '_vms_user_id', true);
+            $user_id = vms_staff_admin_list_linked_user_id((int) $post_id);
 
             if ($user_id <= 0) {
                 echo '—';
@@ -131,9 +256,7 @@ add_action('pre_get_posts', function ($q) {
     $orderby = (string) $q->get('orderby');
 
     if ($orderby === 'vms_staff_role') {
-        $q->set('meta_key', '_vms_staff_role');
-        $q->set('orderby', 'meta_value');
-        $q->set('meta_type', 'CHAR');
+        $q->set('vms_staff_role_sort', 1);
     }
 
     // Tax sort: “Complete” first, then incomplete (simple heuristic).
@@ -146,6 +269,45 @@ add_action('pre_get_posts', function ($q) {
     }
 });
 
+add_filter('posts_clauses', function (array $clauses, WP_Query $q): array {
+    if (!is_admin() || !$q->is_main_query()) {
+        return $clauses;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->id !== 'edit-vms_staff') {
+        return $clauses;
+    }
+
+    if ((int) $q->get('vms_staff_role_sort') !== 1) {
+        return $clauses;
+    }
+
+    global $wpdb;
+
+    $join = $clauses['join'] ?? '';
+    $groupby = $clauses['groupby'] ?? '';
+    $order = strtoupper((string) $q->get('order')) === 'DESC' ? 'DESC' : 'ASC';
+
+    if (strpos($join, 'vms_staff_role_terms') === false) {
+        $join .= " LEFT JOIN {$wpdb->term_relationships} AS vms_staff_role_rel ON {$wpdb->posts}.ID = vms_staff_role_rel.object_id";
+        $join .= " LEFT JOIN {$wpdb->term_taxonomy} AS vms_staff_role_tax ON vms_staff_role_rel.term_taxonomy_id = vms_staff_role_tax.term_taxonomy_id AND vms_staff_role_tax.taxonomy = 'vms_staff_role'";
+        $join .= " LEFT JOIN {$wpdb->terms} AS vms_staff_role_terms ON vms_staff_role_tax.term_id = vms_staff_role_terms.term_id";
+    }
+
+    if ($groupby === '') {
+        $groupby = "{$wpdb->posts}.ID";
+    } elseif (strpos($groupby, "{$wpdb->posts}.ID") === false) {
+        $groupby .= ", {$wpdb->posts}.ID";
+    }
+
+    $clauses['join'] = $join;
+    $clauses['groupby'] = $groupby;
+    $clauses['orderby'] = "MIN(vms_staff_role_terms.name) {$order}, {$wpdb->posts}.post_title {$order}";
+
+    return $clauses;
+}, 10, 2);
+
 /**
  * Tiny badge styling (matches what we used elsewhere).
  * Loaded only on staff list screen.
@@ -154,9 +316,4 @@ add_action('admin_head', function () {
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if (!$screen || $screen->id !== 'edit-vms_staff') return;
 
-    echo '<style>
-.vms-badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;line-height:1.2;}
-.vms-badge-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;}
-.vms-badge-miss{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;}
-</style>';
 });

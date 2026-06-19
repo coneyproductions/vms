@@ -1,251 +1,379 @@
 <?php
-if (!defined('ABSPATH')) exit;
+defined('ABSPATH') || exit;
 
 /**
  * ==========================================================
  * VMS — Vendor ↔ WP User Linking (Admin)
  * ==========================================================
  *
- * Purpose:
- * - Allow an admin to link a WordPress user account to a Vendor profile (vms_vendor).
- * - This makes the Vendor Portal work immediately for that user.
+ * This UI manages the many-to-many vendor↔user relationship layer.
  *
- * Data model (MVP):
- * - Vendor post meta: _vms_vendor_user_id = (int) user_id
+ * Authoritative storage:
+ * - DB table: {$wpdb->prefix}vms_vendor_user_links
  *
- * Notes for future "agency managers":
- * - Later, we can evolve to _vms_vendor_user_ids (array of user IDs)
- *   while keeping _vms_vendor_user_id as the "primary" login link.
- * - The helper functions below are written to be easy to expand.
+ * Back-compat pointers (still maintained):
+ * - Vendor post_meta: _vms_vendor_user_id (primary contact user for vendor)
+ * - User meta:       _vms_vendor_id      (primary/default vendor for portal convenience)
  */
 
-/** Meta key for the "primary" linked user. */
-const VMS_VENDOR_USER_META_KEY = '_vms_vendor_user_id';
 
-/**
- * Add the metabox on Vendor edit screen.
- */
-add_action('add_meta_boxes', function () {
-    add_meta_box(
-        'vms_vendor_user_link',
-        __('Vendor Login User', 'vms'),
-        'vms_render_vendor_user_link_metabox',
-        'vms_vendor',
-        'side',
-        'high'
-    );
+if (!function_exists('vms_vendor_portal_admin_preview_url')) {
+	function vms_vendor_portal_admin_preview_url(int $vendor_id): string
+	{
+		$vendor_id = absint($vendor_id);
+		if ($vendor_id <= 0) {
+			return '';
+		}
+
+		$page_id = absint(get_option('vms_page_vendor_portal', 0));
+		if ($page_id <= 0) {
+			$page = get_page_by_path('vendor-portal');
+			if ($page instanceof WP_Post) {
+				$page_id = (int) $page->ID;
+			}
+		}
+
+		$base_url = $page_id > 0
+			? get_permalink($page_id)
+			: home_url('/vendor-portal/');
+
+		if (!is_string($base_url) || $base_url == '') {
+			$base_url = home_url('/vendor-portal/');
+		}
+
+		return add_query_arg(array(
+			'tab' => 'dashboard',
+			'vendor_id' => $vendor_id,
+			'vms_preview_vendor' => $vendor_id,
+			'vms_preview_nonce' => wp_create_nonce('vms_preview_vendor_portal_' . $vendor_id),
+		), $base_url);
+	}
+}
+
+
+add_action('add_meta_boxes', function (): void {
+	add_meta_box(
+		'vms_vendor_user_link',
+		'Vendor Portal Users',
+		'vms_vendor_user_links_metabox_render',
+		'vms_vendor',
+		'side',
+		'default'
+	);
 });
 
-/**
- * Render the metabox UI.
- */
-function vms_render_vendor_user_link_metabox(WP_Post $post): void
+function vms_vendor_user_links_metabox_render($post): void
 {
-    if (!current_user_can('edit_post', $post->ID)) {
-        return;
-    }
+	if (!($post instanceof WP_Post)) return;
 
-    wp_nonce_field('vms_vendor_user_link_save', 'vms_vendor_user_link_nonce');
+	wp_nonce_field('vms_vendor_user_links_save', 'vms_vendor_user_links_nonce');
 
-    $linked_user_id = (int) get_post_meta($post->ID, VMS_VENDOR_USER_META_KEY, true);
+	$vendor_id = (int) $post->ID;
 
-    echo '<p class="description" style="margin:0 0 10px;">';
-    echo 'Link a WordPress user to this vendor so they can access the Vendor Portal.';
-    echo '</p>';
+	$links = array();
+	if (function_exists('vms_vendor_user_links_get_by_vendor')) {
+		$links = vms_vendor_user_links_get_by_vendor($vendor_id, true);
+	}
 
-    if ($linked_user_id > 0) {
-        $u = get_user_by('id', $linked_user_id);
+	// Vendor's primary contact user (back-compat convenience)
+	$primary_user_id = (int) get_post_meta($vendor_id, (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
 
-        echo '<div style="padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;margin:0 0 10px;">';
-        echo '<strong>Currently linked:</strong><br>';
+	echo '<p class="description">';
+	echo 'Link one or more WordPress users who can manage this vendor in the Vendor Portal.';
+	echo '</p>';
 
-        if ($u) {
-            echo esc_html($u->display_name) . '<br>';
-            echo '<span class="description">' . esc_html($u->user_email) . '</span><br>';
-            echo '<a class="button" style="margin-top:8px;" href="' . esc_url(get_edit_user_link($u->ID)) . '">Edit User</a>';
-        } else {
-            // User got deleted but meta remains
-            echo '<span class="description">User ID #' . esc_html((string)$linked_user_id) . ' (user not found)</span>';
-        }
-        echo '</div>';
-    }
+	if (current_user_can('manage_options') && function_exists('vms_vendor_portal_admin_preview_url')) {
+		$preview_url = (string) vms_vendor_portal_admin_preview_url($vendor_id);
+		if ($preview_url !== '') {
+			echo '<p><a class="button button-secondary button-small" href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' . esc_html__('Preview Vendor Portal', 'vms') . '</a></p>';
+		}
+	}
 
-    /**
-     * Keep UI simple: a dropdown of users.
-     * If you want a search UI later, we can upgrade this to Select2/AJAX.
-     */
-    $users = get_users([
-        'orderby' => 'display_name',
-        'order'   => 'ASC',
-        'fields'  => ['ID', 'display_name', 'user_email'],
-        // Optional: limit to roles you want.
-        // 'role__in' => ['subscriber','vendor','administrator'],
-    ]);
+	echo '<div class="vms-vul-metabox">';
 
-    echo '<label for="vms_vendor_link_user_id"><strong>Link user account</strong></label><br>';
-    echo '<select name="vms_vendor_link_user_id" id="vms_vendor_link_user_id" style="width:100%;max-width:100%;">';
-    echo '<option value="0">— Not linked —</option>';
+	// Existing links
+	if (!empty($links)) {
+		echo '<div class="vms-vul-section-head">';
+		echo '<strong>Linked users</strong>';
+		echo '</div>';
 
-    foreach ($users as $u) {
-        $label = $u->display_name;
-        if (!empty($u->user_email)) $label .= ' — ' . $u->user_email;
+		foreach ($links as $row) {
+			$user_id = isset($row['user_id']) ? absint($row['user_id']) : 0;
+			if ($user_id <= 0) continue;
 
-        printf(
-            '<option value="%d" %s>%s</option>',
-            (int) $u->ID,
-            selected($linked_user_id, (int)$u->ID, false),
-            esc_html($label)
-        );
-    }
+			$user = get_user_by('id', $user_id);
 
-    echo '</select>';
+			$user_label = $user ? $user->display_name : ('User #' . (string) $user_id);
+			$user_email = ($user && !empty($user->user_email)) ? $user->user_email : '';
 
-    echo '<p class="description" style="margin-top:8px;">';
-    echo 'Tip: If this user is already linked to another vendor, saving will move the link here (one-to-one).';
-    echo '</p>';
+			$role = isset($row['user_role']) ? (string) $row['user_role'] : 'manager';
+			$status = isset($row['link_status']) ? (string) $row['link_status'] : 'active';
+
+			echo '<div class="vms-vul-user-card">';
+			echo '<div class="vms-vul-user-name"><strong>' . esc_html($user_label) . '</strong></div>';
+			if ($user_email !== '') {
+				echo '<div class="vms-vul-user-email">' . esc_html($user_email) . '</div>';
+			}
+
+			echo '<label class="vms-vul-field-label"><strong>Role</strong></label>';
+			echo '<select name="vms_vul[links][' . esc_attr((string) $user_id) . '][role]" class="vms-vul-select">';
+			echo vms_vendor_user_links_role_options($role);
+			echo '</select>';
+
+			echo '<label class="vms-vul-field-label vms-vul-field-label-gap"><strong>Status</strong></label>';
+			echo '<select name="vms_vul[links][' . esc_attr((string) $user_id) . '][status]" class="vms-vul-select">';
+			echo vms_vendor_user_links_status_options($status);
+			echo '</select>';
+
+			echo '<label class="vms-vul-check-label vms-vul-check-label-gap-lg">';
+			echo '<input type="checkbox" name="vms_vul[links][' . esc_attr((string) $user_id) . '][remove]" value="1"> ';
+			echo 'Remove link';
+			echo '</label>';
+
+			echo '<label class="vms-vul-check-label vms-vul-check-label-gap-sm">';
+			echo '<input type="checkbox" name="vms_vul[links][' . esc_attr((string) $user_id) . '][set_primary_for_user]" value="1"> ';
+			echo 'Make this vendor the primary portal vendor for this user';
+			echo '</label>';
+
+			echo '</div>';
+		}
+	} else {
+		echo '<p><em>No users are linked yet.</em></p>';
+	}
+
+	// Primary contact user selector (vendor-side pointer)
+	$linked_user_ids = array();
+	foreach ($links as $row) {
+		$linked_user_ids[] = isset($row['user_id']) ? absint($row['user_id']) : 0;
+	}
+	$linked_user_ids = array_values(array_filter(array_unique($linked_user_ids)));
+
+	echo '<div class="vms-vul-section-head vms-vul-section-head-compact">';
+	echo '<strong>Primary contact user (optional)</strong>';
+	echo '</div>';
+
+	if (!empty($linked_user_ids)) {
+		echo '<select name="vms_vul[primary_user_id]" class="vms-vul-select">';
+		echo '<option value="0">— Not set —</option>';
+
+		foreach ($linked_user_ids as $uid) {
+			$user = get_user_by('id', $uid);
+			$label = $user ? $user->display_name : ('User #' . (string) $uid);
+			printf(
+				'<option value="%d" %s>%s</option>',
+				(int) $uid,
+				selected($primary_user_id, (int) $uid, false),
+				esc_html($label)
+			);
+		}
+		echo '</select>';
+		echo '<p class="description vms-vul-help">Used as a vendor-facing “primary contact” pointer. It does not limit portal access for other linked users.</p>';
+	} else {
+		echo '<p class="description">Link at least one user above to choose a primary contact.</p>';
+	}
+
+	// Add new link
+	echo '<div class="vms-vul-section-head vms-vul-section-head-add">';
+	echo '<strong>Add another user</strong>';
+	echo '</div>';
+
+	$users = get_users(array(
+		'orderby' => 'display_name',
+		'order'   => 'ASC',
+		'fields'  => array('ID', 'display_name', 'user_email'),
+	));
+
+	echo '<label class="vms-vul-field-label"><strong>User</strong></label>';
+	echo '<select name="vms_vul[new_user_id]" class="vms-vul-select">';
+	echo '<option value="0">— Select a user —</option>';
+	foreach ($users as $u) {
+		$label = $u->display_name;
+		if (!empty($u->user_email)) $label .= ' — ' . $u->user_email;
+		printf('<option value="%d">%s</option>', (int) $u->ID, esc_html($label));
+	}
+	echo '</select>';
+
+	echo '<label class="vms-vul-field-label vms-vul-field-label-gap"><strong>Role</strong></label>';
+	echo '<select name="vms_vul[new_role]" class="vms-vul-select">';
+	echo vms_vendor_user_links_role_options('manager');
+	echo '</select>';
+
+	echo '<label class="vms-vul-field-label vms-vul-field-label-gap"><strong>Status</strong></label>';
+	echo '<select name="vms_vul[new_status]" class="vms-vul-select">';
+	echo vms_vendor_user_links_status_options('active');
+	echo '</select>';
+
+	echo '<label class="vms-vul-check-label vms-vul-check-label-gap-md">';
+	echo '<input type="checkbox" name="vms_vul[new_set_primary_for_user]" value="1"> ';
+	echo 'Make this vendor the primary portal vendor for this user';
+	echo '</label>';
+
+	echo '<p class="description vms-vul-help">Changes are saved when you click “Update” on this Vendor.</p>';
+	echo '</div>';
 }
 
-/**
- * Save handler for linking/unlinking.
- */
-add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post) {
+function vms_vendor_user_links_role_options(string $selected_role): string
+{
+	$selected_role = sanitize_key($selected_role);
 
-    // ==========================================================
-    // VMS — Vendor ↔ User Link (Admin Save)
-    // ----------------------------------------------------------
-    // We store the relationship in TWO places on purpose:
-    //
-    // 1) Vendor post meta:   VMS_VENDOR_USER_META_KEY => user_id
-    //    - Makes it easy to see on the vendor record.
-    //
-    // 2) User meta:          _vms_vendor_id => vendor_post_id
-    //    - This is what the Vendor Portal uses to determine access.
-    //
-    // Rule (for now): 1 user ↔ 1 vendor (until agency feature later).
-    // ==========================================================
+	$roles = array(
+		'owner'          => 'Owner',
+		'primary_contact'=> 'Primary contact',
+		'manager'        => 'Manager',
+		'agent'          => 'Agent',
+		'accountant'     => 'Accountant',
+		'viewer'         => 'Viewer (read-only)',
+	);
 
-    // Safety checks
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    if ($post->post_type !== 'vms_vendor') return;
-    if (!current_user_can('edit_post', $post_id)) return;
+	$out = '';
+	foreach ($roles as $key => $label) {
+		$out .= sprintf(
+			'<option value="%s" %s>%s</option>',
+			esc_attr($key),
+			selected($selected_role, $key, false),
+			esc_html($label)
+		);
+	}
+	return $out;
+}
 
-    // Nonce check
-    if (
-        !isset($_POST['vms_vendor_user_link_nonce']) ||
-        !wp_verify_nonce((string) $_POST['vms_vendor_user_link_nonce'], 'vms_vendor_user_link_save')
-    ) {
-        return;
-    }
+function vms_vendor_user_links_status_options(string $selected_status): string
+{
+	$selected_status = sanitize_key($selected_status);
 
-    // Incoming selection from the metabox dropdown
-    $new_user_id = isset($_POST['vms_vendor_link_user_id']) ? absint($_POST['vms_vendor_link_user_id']) : 0;
+	$statuses = array(
+		'active'   => 'Active',
+		'pending'  => 'Pending',
+		'disabled' => 'Disabled',
+	);
 
-    // Currently stored link on the vendor post
-    $old_user_id = (int) get_post_meta($post_id, VMS_VENDOR_USER_META_KEY, true);
+	$out = '';
+	foreach ($statuses as $key => $label) {
+		$out .= sprintf(
+			'<option value="%s" %s>%s</option>',
+			esc_attr($key),
+			selected($selected_status, $key, false),
+			esc_html($label)
+		);
+	}
+	return $out;
+}
 
-    // ----------------------------
-    // Helper: unlink old user from this vendor
-    // ----------------------------
-    $unlink_old_user = function (int $vendor_id, int $user_id): void {
-        if ($user_id <= 0) return;
+add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $update): void {
+	// Avoid autosaves / revisions
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+	if (wp_is_post_revision($post_id)) return;
 
-        // Remove vendor → user link
-        delete_post_meta($vendor_id, VMS_VENDOR_USER_META_KEY);
+	if (!current_user_can('edit_post', $post_id)) return;
 
-        // Remove user → vendor link ONLY if it points to this vendor
-        $current_vendor = (int) get_user_meta($user_id, '_vms_vendor_id', true);
-        if ($current_vendor === $vendor_id) {
-            delete_user_meta($user_id, '_vms_vendor_id');
-        }
-    };
+	if (!isset($_POST['vms_vendor_user_links_nonce']) || !wp_verify_nonce((string) $_POST['vms_vendor_user_links_nonce'], 'vms_vendor_user_links_save')) {
+		return;
+	}
 
-    // ----------------------------
-    // CASE 1: Unlink requested (dropdown set to "— none —")
-    // ----------------------------
-    if ($new_user_id <= 0) {
-        if ($old_user_id > 0) {
-            $unlink_old_user($post_id, $old_user_id);
-        }
-        return;
-    }
+	$actor_user_id = get_current_user_id();
 
-    // Validate user exists
-    $u = get_user_by('id', $new_user_id);
-    if (!$u) {
-        // Invalid user ID submitted: clear vendor-side link to avoid stale data
-        if ($old_user_id > 0) {
-            $unlink_old_user($post_id, $old_user_id);
-        } else {
-            delete_post_meta($post_id, VMS_VENDOR_USER_META_KEY);
-        }
-        return;
-    }
+	$data = isset($_POST['vms_vul']) && is_array($_POST['vms_vul']) ? $_POST['vms_vul'] : array();
 
-    // If the vendor already had a different user linked, cleanly detach that old user.
-    if ($old_user_id > 0 && $old_user_id !== $new_user_id) {
-        $unlink_old_user($post_id, $old_user_id);
-    }
+	// Update existing links
+	$posted_links = isset($data['links']) && is_array($data['links']) ? $data['links'] : array();
 
-    // ----------------------------
-    // Enforce 1:1 mapping (for now)
-    // If this user is already linked to another vendor, detach that vendor.
-    // ----------------------------
-    $previous_vendor_id = (int) get_user_meta($new_user_id, '_vms_vendor_id', true);
-    if ($previous_vendor_id > 0 && $previous_vendor_id !== $post_id) {
-        // Remove the other vendor's "linked user" pointer if it points to this user.
-        $prev_vendor_user = (int) get_post_meta($previous_vendor_id, VMS_VENDOR_USER_META_KEY, true);
-        if ($prev_vendor_user === $new_user_id) {
-            delete_post_meta($previous_vendor_id, VMS_VENDOR_USER_META_KEY);
-        }
+	foreach ($posted_links as $uid_raw => $row_raw) {
+		$user_id = absint((string) $uid_raw);
+		if ($user_id <= 0) continue;
 
-        // Clear user meta so we can set it to THIS vendor below.
-        delete_user_meta($new_user_id, '_vms_vendor_id');
-    }
+		$row = is_array($row_raw) ? $row_raw : array();
 
-    // ----------------------------
-    // Write BOTH directions (this is the missing piece)
-    // ----------------------------
-    update_post_meta($post_id, VMS_VENDOR_USER_META_KEY, (int) $new_user_id);
-    update_user_meta($new_user_id, '_vms_vendor_id', (int) $post_id);
+		$remove = !empty($row['remove']);
+		if ($remove) {
+			if (function_exists('vms_vendor_user_link_delete')) {
+				vms_vendor_user_link_delete($post_id, $user_id, $actor_user_id);
+			}
+			continue;
+		}
+
+		$role = isset($row['role']) ? sanitize_key((string) $row['role']) : 'manager';
+		$status = isset($row['status']) ? sanitize_key((string) $row['status']) : 'active';
+
+		if (function_exists('vms_vendor_user_link_update')) {
+			vms_vendor_user_link_update($post_id, $user_id, array(
+				'role'   => $role,
+				'status' => $status,
+			), $actor_user_id);
+		} elseif (function_exists('vms_vendor_user_link_upsert')) {
+			vms_vendor_user_link_upsert($post_id, $user_id, array(
+				'role'   => $role,
+				'status' => $status,
+				'source' => 'vendor_user_metabox',
+			), $actor_user_id);
+		}
+
+		if (!empty($row['set_primary_for_user']) && function_exists('vms_vendor_user_links_set_primary_for_user')) {
+			vms_vendor_user_links_set_primary_for_user($user_id, $post_id, $actor_user_id);
+		}
+	}
+
+	// Add new link
+	$new_user_id = isset($data['new_user_id']) ? absint((string) $data['new_user_id']) : 0;
+	if ($new_user_id > 0 && function_exists('vms_vendor_user_link_upsert')) {
+		$new_role = isset($data['new_role']) ? sanitize_key((string) $data['new_role']) : 'manager';
+		$new_status = isset($data['new_status']) ? sanitize_key((string) $data['new_status']) : 'active';
+		$set_primary = !empty($data['new_set_primary_for_user']);
+
+		vms_vendor_user_link_upsert($post_id, $new_user_id, array(
+			'role' => $new_role,
+			'status' => $new_status,
+			'set_primary_for_user' => $set_primary,
+			'source' => 'vendor_user_metabox',
+		), $actor_user_id);
+
+		if ($set_primary && function_exists('vms_vendor_user_links_set_primary_for_user')) {
+			vms_vendor_user_links_set_primary_for_user($new_user_id, $post_id, $actor_user_id);
+		}
+	}
+
+	// Update vendor's primary contact user pointer (optional convenience)
+	$primary_user_id = isset($data['primary_user_id']) ? absint((string) $data['primary_user_id']) : 0;
+	$key = (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id');
+
+	if ($primary_user_id > 0) {
+		// Only allow setting primary contact to a currently linked user.
+		$linked_ids = array();
+		if (function_exists('vms_vendor_user_links_get_by_vendor')) {
+			$rows = vms_vendor_user_links_get_by_vendor($post_id, true);
+			foreach ($rows as $r) {
+				$linked_ids[] = isset($r['user_id']) ? absint($r['user_id']) : 0;
+			}
+		}
+		$linked_ids = array_values(array_filter(array_unique($linked_ids)));
+
+		if (in_array($primary_user_id, $linked_ids, true)) {
+			update_post_meta($post_id, $key, $primary_user_id);
+		}
+	} else {
+		delete_post_meta($post_id, $key);
+	}
+}, 20, 3);
+
+add_filter('post_row_actions', function (array $actions, WP_Post $post): array {
+	if ($post->post_type !== 'vms_vendor') {
+		return $actions;
+	}
+	if (!current_user_can('manage_options')) {
+		return $actions;
+	}
+	if (!function_exists('vms_vendor_portal_admin_preview_url')) {
+		return $actions;
+	}
+
+	$preview_url = (string) vms_vendor_portal_admin_preview_url((int) $post->ID);
+	if ($preview_url === '') {
+		return $actions;
+	}
+
+	$actions['vms_vendor_portal_preview'] =
+		'<a href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' .
+		esc_html__('Preview Portal', 'vms') .
+		'</a>';
+
+	return $actions;
 }, 10, 2);
-
-/**
- * Helper: find vendor linked to a WP user (one-to-one).
- *
- * NOTE: This is intentionally written as a helper so later we can:
- * - return multiple vendors for agencies
- * - support an array meta key
- */
-function vms_get_vendor_id_for_user(int $user_id): int
-{
-    if ($user_id <= 0) return 0;
-
-    $q = new WP_Query([
-        'post_type'      => 'vms_vendor',
-        'post_status'    => ['publish', 'draft', 'private'],
-        'fields'         => 'ids',
-        'posts_per_page' => 1,
-        'meta_query'     => [
-            [
-                'key'   => VMS_VENDOR_USER_META_KEY,
-                'value' => (string) $user_id,
-            ],
-        ],
-        'no_found_rows'  => true,
-    ]);
-
-    if (!empty($q->posts[0])) {
-        return (int) $q->posts[0];
-    }
-    return 0;
-}
-
-/**
- * Helper: current user’s linked vendor ID.
- * Use this inside your portal shortcode.
- */
-function vms_get_vendor_id_for_current_user(): int
-{
-    $user_id = get_current_user_id();
-    return $user_id ? vms_get_vendor_id_for_user((int)$user_id) : 0;
-}

@@ -1,0 +1,286 @@
+<?php
+defined('ABSPATH') || exit;
+
+/**
+ * Admin UI for VMS Square Sync Protection.
+ */
+
+if (!function_exists('vms_square_sync_protection_report_key')) {
+    function vms_square_sync_protection_report_key(): string
+    {
+        return 'vms_square_sync_protection_report_' . max(1, get_current_user_id());
+    }
+}
+
+if (!function_exists('vms_square_sync_protection_store_report')) {
+    /**
+     * @param array<string,mixed> $report
+     */
+    function vms_square_sync_protection_store_report(array $report): void
+    {
+        set_transient(vms_square_sync_protection_report_key(), $report, 30 * MINUTE_IN_SECONDS);
+    }
+}
+
+if (!function_exists('vms_square_sync_protection_get_report')) {
+    /**
+     * @return array<string,mixed>
+     */
+    function vms_square_sync_protection_get_report(): array
+    {
+        $report = get_transient(vms_square_sync_protection_report_key());
+        return is_array($report) ? $report : array();
+    }
+}
+
+if (!function_exists('vms_square_sync_protection_redirect')) {
+    function vms_square_sync_protection_redirect(string $notice): void
+    {
+        wp_safe_redirect(add_query_arg(array(
+            'page' => 'vms-square-sync-protection',
+            'vms_square_notice' => sanitize_key($notice),
+        ), admin_url('admin.php')));
+        exit;
+    }
+}
+
+add_action('admin_menu', function (): void {
+    add_submenu_page(
+        'vms-dashboard',
+        __('Square Sync Protection', 'vms'),
+        __('Square Sync Protection', 'vms'),
+        'manage_options',
+        'vms-square-sync-protection',
+        'vms_render_square_sync_protection_page'
+    );
+}, 60);
+
+add_action('admin_post_vms_square_sync_protection_scan', function (): void {
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('Insufficient permissions.', 'vms'));
+    }
+    check_admin_referer('vms_square_sync_protection_scan');
+
+    if (!function_exists('vms_square_firewall_scan_products')) {
+        wp_die(esc_html__('Square Sync Firewall is not loaded.', 'vms'));
+    }
+
+    $report = vms_square_firewall_scan_products(false, 10000);
+    vms_square_sync_protection_store_report($report);
+    vms_square_sync_protection_redirect('scan_done');
+});
+
+add_action('admin_post_vms_square_sync_protection_repair', function (): void {
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('Insufficient permissions.', 'vms'));
+    }
+    check_admin_referer('vms_square_sync_protection_repair');
+
+    if (!function_exists('vms_square_firewall_scan_products')) {
+        wp_die(esc_html__('Square Sync Firewall is not loaded.', 'vms'));
+    }
+
+    $report = vms_square_firewall_scan_products(true, 10000);
+    vms_square_sync_protection_store_report($report);
+    vms_square_sync_protection_redirect('repair_done');
+});
+
+add_action('admin_post_vms_square_sync_protection_csv', function (): void {
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('Insufficient permissions.', 'vms'));
+    }
+    check_admin_referer('vms_square_sync_protection_csv');
+
+    $report = vms_square_sync_protection_get_report();
+    if (empty($report)) {
+        wp_die(esc_html__('No Square Sync Protection report is available. Run a scan first.', 'vms'));
+    }
+
+    $filename = 'vms-square-sync-protection-' . gmdate('Ymd-His') . '.csv';
+    nocache_headers();
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=' . $filename);
+
+    $out = fopen('php://output', 'w');
+    if ($out) {
+        fputcsv($out, array('Product ID', 'Name', 'SKU', 'Protection Reason', 'Sync with Square', 'Had Square Link', 'Square Meta Cleared'));
+        foreach ((array) ($report['rows'] ?? array()) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            fputcsv($out, array(
+                absint($row['product_id'] ?? 0),
+                (string) ($row['name'] ?? ''),
+                (string) ($row['sku'] ?? ''),
+                (string) ($row['reason'] ?? ''),
+                (string) ($row['sync_value'] ?? ''),
+                !empty($row['had_square_link']) ? 'yes' : 'no',
+                (int) ($row['meta_cleared'] ?? 0),
+            ));
+        }
+        fclose($out);
+    }
+    exit;
+});
+
+if (!function_exists('vms_render_square_sync_protection_summary_table')) {
+    /**
+     * @param array<string,mixed> $report
+     */
+    function vms_render_square_sync_protection_summary_table(array $report): void
+    {
+        $labels = array(
+            'mode' => __('Mode', 'vms'),
+            'checked' => __('Products checked', 'vms'),
+            'protected_candidates' => __('VMS/TEC products found', 'vms'),
+            'had_square_links' => __('Had Square links/metadata', 'vms'),
+            'sync_yes' => __('Marked Sync with Square = yes', 'vms'),
+            'already_safe' => __('Already safe', 'vms'),
+            'repaired' => __('Repaired', 'vms'),
+            'meta_cleared' => __('Square meta fields cleared', 'vms'),
+            'skipped' => __('Normal products skipped', 'vms'),
+        );
+
+        echo '<table class="widefat striped">';
+        echo '<tbody>';
+        foreach ($labels as $key => $label) {
+            $value = $report[$key] ?? '';
+            if ($key === 'ts') {
+                continue;
+            }
+            echo '<tr>';
+            echo '<th scope="row">' . esc_html($label) . '</th>';
+            echo '<td>' . esc_html(is_scalar($value) ? (string) $value : '') . '</td>';
+            echo '</tr>';
+        }
+        echo '</tbody>';
+        echo '</table>';
+    }
+}
+
+if (!function_exists('vms_render_square_sync_protection_rows')) {
+    /**
+     * @param array<string,mixed> $report
+     */
+    function vms_render_square_sync_protection_rows(array $report): void
+    {
+        $rows = (array) ($report['rows'] ?? array());
+        if (empty($rows)) {
+            echo '<p>' . esc_html__('No protected VMS/TEC products were found in the displayed report rows.', 'vms') . '</p>';
+            return;
+        }
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__('Product', 'vms') . '</th>';
+        echo '<th>' . esc_html__('SKU', 'vms') . '</th>';
+        echo '<th>' . esc_html__('Reason', 'vms') . '</th>';
+        echo '<th>' . esc_html__('Sync with Square', 'vms') . '</th>';
+        echo '<th>' . esc_html__('Square link', 'vms') . '</th>';
+        echo '<th>' . esc_html__('Meta cleared', 'vms') . '</th>';
+        echo '</tr></thead><tbody>';
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $product_id = absint($row['product_id'] ?? 0);
+            $title = (string) ($row['name'] ?? '');
+            if ($title === '') {
+                $title = '#' . $product_id;
+            }
+            $edit_link = $product_id > 0 ? get_edit_post_link($product_id, 'raw') : '';
+
+            echo '<tr>';
+            echo '<td>';
+            if ($edit_link) {
+                echo '<a href="' . esc_url($edit_link) . '">' . esc_html($title) . '</a>';
+            } else {
+                echo esc_html($title);
+            }
+            echo '</td>';
+            echo '<td><code>' . esc_html((string) ($row['sku'] ?? '')) . '</code></td>';
+            echo '<td><code>' . esc_html((string) ($row['reason'] ?? '')) . '</code></td>';
+            echo '<td>' . esc_html((string) ($row['sync_value'] ?? '')) . '</td>';
+            echo '<td>' . (!empty($row['had_square_link']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+            echo '<td>' . esc_html((string) (int) ($row['meta_cleared'] ?? 0)) . '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table>';
+    }
+}
+
+if (!function_exists('vms_render_square_sync_protection_page_content')) {
+    function vms_render_square_sync_protection_page_content(): void
+    {
+        $report = vms_square_sync_protection_get_report();
+        $notice = isset($_GET['vms_square_notice']) ? sanitize_key((string) $_GET['vms_square_notice']) : '';
+
+        echo '<p>' . esc_html__('Protect VMS/TEC tickets, admissions, passes, and event add-ons from Square catalog or inventory sync while leaving normal Square-owned items available for menus, merch, and inventory workflows.', 'vms') . '</p>';
+
+        if ($notice === 'scan_done') {
+            echo '<div class="notice notice-info"><p>' . esc_html__('Square Sync Protection scan complete.', 'vms') . '</p></div>';
+        } elseif ($notice === 'repair_done') {
+            echo '<div class="notice notice-success"><p>' . esc_html__('Square Sync Protection repair complete.', 'vms') . '</p></div>';
+        }
+
+        echo '<div class="card">';
+        echo '<h2>' . esc_html__('Run protection tools', 'vms') . '</h2>';
+        echo '<p>' . esc_html__('Scan shows what would be protected. Repair forces protected products to Sync with Square = no and removes stale Square item IDs from those products.', 'vms') . '</p>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        wp_nonce_field('vms_square_sync_protection_scan');
+        echo '<input type="hidden" name="action" value="vms_square_sync_protection_scan" />';
+        submit_button(__('Scan protected products', 'vms'), 'secondary', 'submit', false);
+        echo '</form>';
+
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        wp_nonce_field('vms_square_sync_protection_repair');
+        echo '<input type="hidden" name="action" value="vms_square_sync_protection_repair" />';
+        submit_button(__('Repair protected products', 'vms'), 'primary', 'submit', false);
+        echo '</form>';
+        echo '<p class="description">' . esc_html__('Normal Square catalog products such as bar/menu items, shirts, eggs, and merch are skipped unless they are explicitly marked as VMS/TEC ticketing products.', 'vms') . '</p>';
+        echo '</div>';
+
+        if (!empty($report)) {
+            $csv_url = wp_nonce_url(admin_url('admin-post.php?action=vms_square_sync_protection_csv'), 'vms_square_sync_protection_csv');
+            echo '<h2>' . esc_html__('Last report', 'vms') . '</h2>';
+            if (!empty($report['ts'])) {
+                $ts = (int) $report['ts'];
+                $readable = function_exists('wp_date') ? wp_date('Y-m-d H:i', $ts, wp_timezone()) : date('Y-m-d H:i', $ts);
+                echo '<p class="description">' . esc_html($readable) . '</p>';
+            }
+            vms_render_square_sync_protection_summary_table($report);
+            echo '<p><a class="button button-secondary" href="' . esc_url($csv_url) . '">' . esc_html__('Download report CSV', 'vms') . '</a></p>';
+            echo '<h3>' . esc_html__('Protected product details', 'vms') . '</h3>';
+            echo '<p class="description">' . esc_html__('Showing up to the first 200 protected products from the report.', 'vms') . '</p>';
+            vms_render_square_sync_protection_rows($report);
+        }
+    }
+}
+
+if (!function_exists('vms_render_square_sync_protection_page')) {
+    function vms_render_square_sync_protection_page(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('Insufficient permissions.', 'vms'));
+        }
+
+        if (function_exists('vms_admin_ui_render_shell')) {
+            vms_admin_ui_render_shell(
+                array(
+                    'title' => __('Square Sync Protection', 'vms'),
+                    'subtitle' => __('Protect VMS-owned products from accidental Square catalog and inventory sync.', 'vms'),
+                    'shell_id' => 'vms-square-sync-protection-wrap',
+                ),
+                'vms_render_square_sync_protection_page_content'
+            );
+            return;
+        }
+
+        echo '<div class="wrap" id="vms-square-sync-protection-wrap">';
+        echo '<h1>' . esc_html__('Square Sync Protection', 'vms') . '</h1>';
+        vms_render_square_sync_protection_page_content();
+        echo '</div>';
+    }
+}

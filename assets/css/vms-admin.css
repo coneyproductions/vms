@@ -1,177 +1,708 @@
 /*
-  VMS Admin Styles
-  Scope: WordPress admin VMS pages only
-  Notes:
-  - Calendar styles target table.vms-sch-grid (rendered by schedule.php)
-  - Mobile keeps the 7-column calendar but reduces UI to prevent horizontal scroll
-  - On narrow screens, Create/Add buttons show as '+' and Open/Closed pill is hidden
+  VMS ADMIN CSS — 2026-01-27 (CLEAN REWRITE)
+  Scope: WordPress admin VMS pages only.
+  Anchors supported:
+  - body.vms-admin (preferred if added via admin_body_class)
+  - body.toplevel_page_vms and body.vms_page_vms-* (WP-generated classes)
 */
 
-/* ---------- Panel header (month) sticky on scroll ---------- */
-body.toplevel_page_vms .vms-panel > summary{
-  position: sticky;
-  top: 32px;
-  z-index: 50;
-  background: #fff;
-  padding: 10px 12px;
-  margin: -12px -12px 12px;
-  border-bottom: 1px solid #e6e6e6;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+/* =====================================================================
+   00) Anchors (never style wp-admin globally)
+   ===================================================================== */
+
+body.vms-admin,
+body.toplevel_page_vms,
+body[class*="vms_page_vms-"] {}
+
+/* =====================================================================
+   Ticketing — Linked TEC Event info box
+   ===================================================================== */
+
+.vms-ticketing__evinfo {
+  margin: 10px 0 12px;
+  padding: 8px 10px;
 }
 
-/* ---------- Calendar table ---------- */
-body.toplevel_page_vms table.vms-sch-grid{
+.vms-ticketing__evinfo-links {
+  margin-left: 8px;
+}
+
+/* =====================================================================
+   01) Base panel spacing (general VMS admin pages)
+   NOTE: schedule month cards override this to avoid double-padding.
+   ===================================================================== */
+
+body.vms-admin .vms-panel-body,
+body.toplevel_page_vms .vms-panel-body,
+body[class*="vms_page_vms-"] .vms-panel-body {
+  overflow-x: hidden;
+  padding: 16px 18px 26px;
+}
+
+/*
+  Schedule page: allow sticky month headers.
+  Any ancestor with overflow other than visible can prevent position: sticky from working.
+*/
+body.vms_page_vms-schedule .vms-panel-body,
+body[class*="vms_page_vms-schedule"] .vms-panel-body {
+  overflow: visible;
+}
+ 
+@media (max-width: 600px) {
+
+  body.vms-admin .vms-panel-body,
+  body.toplevel_page_vms .vms-panel-body,
+  body[class*="vms_page_vms-"] .vms-panel-body {
+    padding: 12px 12px 20px;
+  }
+}
+
+.vms-dashboard-welcome {
+  margin: 0 0 24px;
+  font-size: 1.1rem;
+  color: #0b1f3a;
+}
+
+.vms-dashboard-quick-actions {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  margin-bottom: 24px;
+}
+
+.vms-dashboard-quick-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.vms-dashboard-health {
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  border: 1px dashed #b6c2cc;
+  background: #f7f9fb;
+}
+
+/* =====================================================================
+   02) Schedule calendar month cards (BOTH views)
+   All-venues months: details.vms-sch-month
+   Single-venue months: details.vms-panel-month
+   ===================================================================== */
+
+body.vms-admin details.vms-sch-month,
+body.toplevel_page_vms details.vms-sch-month,
+body[class*="vms_page_vms-"] details.vms-sch-month,
+body.vms-admin details.vms-panel-month,
+body.toplevel_page_vms details.vms-panel-month,
+body[class*="vms_page_vms-"] details.vms-panel-month {
+  position: relative;
+  margin: 14px 0 18px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  /* IMPORTANT:
+     Do NOT set overflow:hidden on the month card itself.
+     position: sticky stops working when an ancestor has overflow other than visible.
+     We keep the corner clipping on the BODY wrappers below instead.
+  */
+  overflow: visible;
+}
+
+/* Single-venue uses .vms-panel-body inside the month card; remove the inherited padding there */
+body.vms-admin details.vms-panel-month>.vms-panel-body.vms-sch-month-body,
+body.toplevel_page_vms details.vms-panel-month>.vms-panel-body.vms-sch-month-body,
+body[class*="vms_page_vms-"] details.vms-panel-month>.vms-panel-body.vms-sch-month-body {
+  padding: 0;
+  overflow: hidden;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+}
+
+/* All-venues month body wrapper */
+body.vms-admin details.vms-sch-month>.vms-sch-month-body,
+body.toplevel_page_vms details.vms-sch-month>.vms-sch-month-body,
+body[class*="vms_page_vms-"] details.vms-sch-month>.vms-sch-month-body {
+  padding: 0;
+  overflow: hidden;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+}
+
+/* =====================================================================
+   03) Month headers (summary) — tight, uniform, LEFT-aligned
+   ===================================================================== */
+
+/* Remove native summary marker so spacing is consistent across browsers */
+body.vms-admin details.vms-sch-month>summary::-webkit-details-marker,
+body.toplevel_page_vms details.vms-sch-month>summary::-webkit-details-marker,
+body[class*="vms_page_vms-"] details.vms-sch-month>summary::-webkit-details-marker,
+body.vms-admin details.vms-panel-month>summary::-webkit-details-marker,
+body.toplevel_page_vms details.vms-panel-month>summary::-webkit-details-marker,
+body[class*="vms_page_vms-"] details.vms-panel-month>summary::-webkit-details-marker {
+  display: none;
+}
+
+body.vms-admin details.vms-sch-month>summary,
+body.toplevel_page_vms details.vms-sch-month>summary,
+body[class*="vms_page_vms-"] details.vms-sch-month>summary,
+body.vms-admin details.vms-panel-month>summary,
+body.toplevel_page_vms details.vms-panel-month>summary,
+body[class*="vms_page_vms-"] details.vms-panel-month>summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* force left in BOTH views */
+  gap: 8px;
+
+  font-weight: 900;
+  line-height: 1.15;
+  margin: 0;
+
+  position: sticky;
+  top: 32px;
+  z-index: 30;
+
+  background: #fff;
+
+  /* Tight top/bottom; consistent left/right */
+  padding: 6px 14px;
+
+  /* Subtle divider (always) */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 782px) {
+
+  body.vms-admin details.vms-sch-month>summary,
+  body.toplevel_page_vms details.vms-sch-month>summary,
+  body[class*="vms_page_vms-"] details.vms-sch-month>summary,
+  body.vms-admin details.vms-panel-month>summary,
+  body.toplevel_page_vms details.vms-panel-month>summary,
+  body[class*="vms_page_vms-"] details.vms-panel-month>summary {
+    top: 46px;
+  }
+}
+
+/* Keep month headers sticky on mobile too (they were getting turned off at <= 600px). */
+
+/* Chevron indicator */
+body.vms-admin details.vms-sch-month>summary::before,
+body.toplevel_page_vms details.vms-sch-month>summary::before,
+body[class*="vms_page_vms-"] details.vms-sch-month>summary::before,
+body.vms-admin details.vms-panel-month>summary::before,
+body.toplevel_page_vms details.vms-panel-month>summary::before,
+body[class*="vms_page_vms-"] details.vms-panel-month>summary::before {
+  content: "▸";
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+  opacity: 0.75;
+}
+
+body.vms-admin details[open].vms-sch-month>summary::before,
+body.toplevel_page_vms details[open].vms-sch-month>summary::before,
+body[class*="vms_page_vms-"] details[open].vms-sch-month>summary::before,
+body.vms-admin details[open].vms-panel-month>summary::before,
+body.toplevel_page_vms details[open].vms-panel-month>summary::before,
+body[class*="vms_page_vms-"] details[open].vms-panel-month>summary::before {
+  transform: rotate(90deg);
+  opacity: 1;
+}
+
+/* Hover affordance */
+body.vms-admin details.vms-sch-month>summary:hover,
+body.toplevel_page_vms details.vms-sch-month>summary:hover,
+body[class*="vms_page_vms-"] details.vms-sch-month>summary:hover,
+body.vms-admin details.vms-panel-month>summary:hover,
+body.toplevel_page_vms details.vms-panel-month>summary:hover,
+body[class*="vms_page_vms-"] details.vms-panel-month>summary:hover {
+  text-decoration: underline;
+}
+
+/* Month body padding (this creates the uniform “inside the card” spacing) */
+body.vms-admin details.vms-sch-month>.vms-sch-month-body,
+body.toplevel_page_vms details.vms-sch-month>.vms-sch-month-body,
+body[class*="vms_page_vms-"] details.vms-sch-month>.vms-sch-month-body,
+body.vms-admin details.vms-panel-month>.vms-panel-body.vms-sch-month-body,
+body.toplevel_page_vms details.vms-panel-month>.vms-panel-body.vms-sch-month-body,
+body[class*="vms_page_vms-"] details.vms-panel-month>.vms-panel-body.vms-sch-month-body {
+  padding: 10px 14px 14px;
+  /* uniform interior padding, restores day card breathing room */
+}
+
+/* =====================================================================
+   04) Calendar grid (both vms-sch-grid and vms-av-grid)
+   - No table borders
+   - Day-card spacing via border-spacing
+   ===================================================================== */
+
+body.vms-admin table.vms-sch-grid,
+body.toplevel_page_vms table.vms-sch-grid,
+body[class*="vms_page_vms-"] table.vms-sch-grid,
+body.vms-admin table.vms-av-grid,
+body.toplevel_page_vms table.vms-av-grid,
+body[class*="vms_page_vms-"] table.vms-av-grid {
   width: 100%;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 10px;
+  /* KEY: spacing around day cards */
+  background: transparent;
 }
 
-body.toplevel_page_vms table.vms-sch-grid td{
+/* Remove all WP widefat/table chrome borders */
+body.vms-admin .vms-sch-grid,
+body.toplevel_page_vms .vms-sch-grid,
+body[class*="vms_page_vms-"] .vms-sch-grid,
+body.vms-admin .vms-av-grid,
+body.toplevel_page_vms .vms-av-grid,
+body[class*="vms_page_vms-"] .vms-av-grid,
+body.vms-admin .vms-sch-grid th,
+body.toplevel_page_vms .vms-sch-grid th,
+body[class*="vms_page_vms-"] .vms-sch-grid th,
+body.vms-admin .vms-sch-grid td,
+body.toplevel_page_vms .vms-sch-grid td,
+body[class*="vms_page_vms-"] .vms-sch-grid td,
+body.vms-admin .vms-av-grid th,
+body.toplevel_page_vms .vms-av-grid th,
+body[class*="vms_page_vms-"] .vms-av-grid th,
+body.vms-admin .vms-av-grid td,
+body.toplevel_page_vms .vms-av-grid td,
+body[class*="vms_page_vms-"] .vms-av-grid td {
+  border: none !important;
+}
+
+/* DOW header (sticky): rendered as a div (not <thead>) to avoid WP admin responsive table quirks. */
+body.vms_page_vms-schedule {
+  --vms-sch-month-sticky-top: 32px;
+  --vms-sch-month-summary-h: 40px;
+}
+
+@media (max-width: 782px) {
+  body.vms_page_vms-schedule {
+    --vms-sch-month-sticky-top: 46px;
+  }
+}
+
+/* Hide the table header row; we render a matching sticky bar above the table. */
+body.vms-admin table. body.vms_page_vms-schedule
+
+/* Cells: make rows equal height (card stretches) */
+body.vms-admin table.vms-sch-grid tr,
+body.toplevel_page_vms table.vms-sch-grid tr,
+body[class*="vms_page_vms-"] table.vms-sch-grid tr,
+body.vms-admin table.vms-av-grid tr,
+body.toplevel_page_vms table.vms-av-grid tr,
+body[class*="vms_page_vms-"] table.vms-av-grid tr {
+  height: 1px;
+}
+
+body.vms-admin table.vms-sch-grid td,
+body.toplevel_page_vms table.vms-sch-grid td,
+body[class*="vms_page_vms-"] table.vms-sch-grid td,
+body.vms-admin table.vms-av-grid td,
+body.toplevel_page_vms table.vms-av-grid td,
+body[class*="vms_page_vms-"] table.vms-av-grid td {
   padding: 0;
   vertical-align: top;
+  overflow: hidden;
+  height: 1px;
 }
 
-/* Default cell sizing (desktop/tablet) */
-body.toplevel_page_vms .vms-sch-cell{
-  --vms-cell-h: 150px;
-  height: var(--vms-cell-h);
-  box-sizing: border-box;
+/* Card stretches to full cell height */
+body.vms-admin table.vms-sch-grid td>.vms-sch-cell,
+body.toplevel_page_vms table.vms-sch-grid td>.vms-sch-cell,
+body[class*="vms_page_vms-"] table.vms-sch-grid td>.vms-sch-cell,
+body.vms-admin table.vms-av-grid td>.vms-sch-cell,
+body.toplevel_page_vms table.vms-av-grid td>.vms-sch-cell,
+body[class*="vms_page_vms-"] table.vms-av-grid td>.vms-sch-cell {
+  height: 100%;
+}
 
-  border: 1px dashed #d7d7d7;
-  border-radius: 16px;
+/* =====================================================================
+   05) Day card + content
+   ===================================================================== */
+
+body.vms-admin .vms-sch-cell,
+body.toplevel_page_vms .vms-sch-cell,
+body[class*="vms_page_vms-"] .vms-sch-cell {
+  --vms-cell-h: 132px;
+
+  min-height: var(--vms-cell-h);
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 18px;
   background: #fff;
 
-  padding: 10px;
+  padding: 8px 8px 10px;
   overflow: hidden;
+  min-width: 0;
 
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   grid-template-rows: auto auto 1fr;
-  align-content: start;
-  column-gap: 10px;
   row-gap: 8px;
 }
 
-/* Header row: day number (left) + open/closed badge (right) */
-body.toplevel_page_vms .vms-sch-daynum{
-  grid-column: 1;
+body.vms-admin .vms-sch-daynum,
+body.toplevel_page_vms .vms-sch-daynum,
+body[class*="vms_page_vms-"] .vms-sch-daynum {
   grid-row: 1;
   font-weight: 900;
   font-size: 13px;
   line-height: 1;
-  color: #1f2937;
+  color: rgba(15, 23, 42, 0.85);
 }
 
-body.toplevel_page_vms .vms-sch-badge{
-  grid-column: 2;
+/* Top row: day number on the left, holiday pill(s) on the right */
+body.vms-admin .vms-sch-top,
+body.toplevel_page_vms .vms-sch-top,
+body[class*="vms_page_vms-"] .vms-sch-top {
   grid-row: 1;
-  justify-self: end;
-  align-self: start;
-  font-size: 12px;
-  line-height: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+body.vms-admin .vms-sch-holidays,
+body.toplevel_page_vms .vms-sch-holidays,
+body[class*="vms_page_vms-"] .vms-sch-holidays {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+body.vms-admin .vms-sch-blackout-stack,
+body.toplevel_page_vms .vms-sch-blackout-stack,
+body[class*="vms_page_vms-"] .vms-sch-blackout-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+body.vms-admin .vms-sch-blackout,
+body.toplevel_page_vms .vms-sch-blackout,
+body[class*="vms_page_vms-"] .vms-sch-blackout {
+  display: inline-block;
+  font-size: 11px;
   font-weight: 800;
-  padding: 4px 10px;
+  line-height: 1.2;
+  padding: 2px 6px;
   border-radius: 999px;
-  border: 1px solid rgba(0,0,0,0.08);
-  background: rgba(0,0,0,0.03);
-  color: #374151;
+  background: rgba(15, 23, 42, 0.72);
+  color: rgba(255, 255, 255, 0.95);
   white-space: nowrap;
 }
 
-/* Action wrapper (Create/Add). Markup uses an inline style margin-top:8px */
-body.toplevel_page_vms .vms-sch-cell > div[style*="margin-top"]{
-  grid-column: 1 / -1;
+body.vms-admin .vms-sch-blackout-label,
+body.toplevel_page_vms .vms-sch-blackout-label,
+body[class*="vms_page_vms-"] .vms-sch-blackout-label {
+  color: rgba(15, 23, 42, 0.65);
+  font-weight: 700;
+}
+
+body.vms-admin .vms-sch-holiday,
+body.toplevel_page_vms .vms-sch-holiday,
+body[class*="vms_page_vms-"] .vms-sch-holiday {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.95);
+  white-space: nowrap;
+}
+
+body.vms-admin .vms-sch-holiday-stack,
+body.toplevel_page_vms .vms-sch-holiday-stack,
+body[class*="vms_page_vms-"] .vms-sch-holiday-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.vms-admin .vms-col-holidays,
+body.toplevel_page_vms .vms-col-holidays,
+body[class*="vms_page_vms-"] .vms-col-holidays {
+  width: 220px;
+}
+
+body.vms-admin .vms-sch-holiday-label,
+body.toplevel_page_vms .vms-sch-holiday-label,
+body[class*="vms_page_vms-"] .vms-sch-holiday-label {
+  color: rgba(15, 23, 42, 0.65);
+  font-weight: 700;
+}
+
+/* Hide open/closed/blackout pills in the grid (status is by background) */
+body.vms-admin table.vms-sch-grid .vms-sch-badge,
+body.toplevel_page_vms table.vms-sch-grid .vms-sch-badge,
+body[class*="vms_page_vms-"] table.vms-sch-grid .vms-sch-badge,
+body.vms-admin table.vms-av-grid .vms-sch-badge,
+body.toplevel_page_vms table.vms-av-grid .vms-sch-badge,
+body[class*="vms_page_vms-"] table.vms-av-grid .vms-sch-badge {
+  display: none !important;
+}
+
+/* Create/Add wrapper (markup uses inline margin-top) */
+body.vms-admin .vms-sch-cell>div[style*="margin-top"],
+body.toplevel_page_vms .vms-sch-cell>div[style*="margin-top"],
+body[class*="vms_page_vms-"] .vms-sch-cell>div[style*="margin-top"] {
   grid-row: 2;
   margin-top: 0 !important;
 }
 
-/* Plan link sits under the action row for continuity */
-body.toplevel_page_vms .vms-sch-plan{
-  grid-column: 1 / -1;
+/* Plans wrapper (single + all) */
+body.vms-admin .vms-sch-plans,
+body.toplevel_page_vms .vms-sch-plans,
+body[class*="vms_page_vms-"] .vms-sch-plans,
+body.vms-admin .vms-sch-planline,
+body.toplevel_page_vms .vms-sch-planline,
+body[class*="vms_page_vms-"] .vms-sch-planline {
   grid-row: 3;
+  min-width: 0;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/* Single venue plan row */
+body.vms-admin .vms-sch-plan,
+body.toplevel_page_vms .vms-sch-plan,
+body[class*="vms_page_vms-"] .vms-sch-plan {
+  width: 100%;
+  display: block;
   min-width: 0;
 }
 
-body.toplevel_page_vms .vms-sch-plan a{
+/* Plan links (single + all) */
+body.vms-admin .vms-sch-plan a,
+body.toplevel_page_vms .vms-sch-plan a,
+body[class*="vms_page_vms-"] .vms-sch-plan a,
+body.vms-admin a.vms-sch-planlink,
+body.toplevel_page_vms a.vms-sch-planlink,
+body[class*="vms_page_vms-"] a.vms-sch-planlink {
   display: block;
-  max-width: 100%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(34,113,177,0.18);
-  background: rgba(34,113,177,0.06);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  padding: 7px 8px;
+  border-radius: 12px;
+
+  border: 1px solid rgba(34, 113, 177, 0.16);
+  background: rgba(34, 113, 177, 0.06);
   color: #0b5aa6;
+
   text-decoration: none;
-  font-weight: 800;
-  font-size: 13px;
-  line-height: 1.1;
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 1.25;
+
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* All-venues pieces */
+body.vms-admin .vms-sch-planitem,
+body.toplevel_page_vms .vms-sch-planitem,
+body[class*="vms_page_vms-"] .vms-sch-planitem {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Venue tag */
+body.vms-admin .vms-sch-venue-tag,
+body.toplevel_page_vms .vms-sch-venue-tag,
+body[class*="vms_page_vms-"] .vms-sch-venue-tag {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 900;
+
+  padding: 3px 8px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.04);
+  color: rgba(15, 23, 42, 0.70);
+
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  border-left: 4px solid rgba(15, 23, 42, 0.45);
+  padding-left: 10px;
 }
 
-/* Open/Closed backgrounds */
-body.toplevel_page_vms .vms-sch-cell.is-open{
-  background: rgba(34,197,94,0.08);
-  border-color: rgba(34,197,94,0.25);
+/* =====================================================================
+   06) Time context + availability semantics
+   ===================================================================== */
+
+body.vms-admin .vms-sch-cell.is-today,
+body.toplevel_page_vms .vms-sch-cell.is-today,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-today {
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.45);
 }
 
-body.toplevel_page_vms .vms-sch-cell.is-closed{
-  background: rgba(0,0,0,0.03);
-  border-color: rgba(0,0,0,0.10);
+/* Restore "past day" shading WITHOUT killing open/closed/blackout backgrounds */
+body.vms-admin .vms-sch-cell.is-past,
+body.toplevel_page_vms .vms-sch-cell.is-past,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-past {
+  box-shadow: inset 0 0 0 9999px rgba(15, 23, 42, 0.06);
 }
 
-/* If markup misses .is-open/.is-closed, infer from badge presence */
-body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-open){
-  background: rgba(34,197,94,0.08);
-  border-color: rgba(34,197,94,0.25);
+/* Keep Today stronger than Past */
+body.vms-admin .vms-sch-cell.is-today,
+body.toplevel_page_vms .vms-sch-cell.is-today,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-today {
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.45);
 }
 
-body.toplevel_page_vms .vms-sch-cell:has(.vms-sch-badge.is-closed){
-  background: rgba(0,0,0,0.03);
-  border-color: rgba(0,0,0,0.10);
+body.vms-admin .vms-sch-cell.is-past .vms-sch-plan,
+body.toplevel_page_vms .vms-sch-cell.is-past .vms-sch-plan,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-past .vms-sch-plan,
+body.vms-admin .vms-sch-cell.is-past .vms-sch-planline,
+body.toplevel_page_vms .vms-sch-cell.is-past .vms-sch-planline,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-past .vms-sch-planline,
+body.vms-admin .vms-sch-cell.is-past .button,
+body.toplevel_page_vms .vms-sch-cell.is-past .button,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-past .button {
+  opacity: 0.55;
 }
 
-/* Do not allow horizontal page scrolling from the calendar */
-body.toplevel_page_vms .vms-panel-body{
-  overflow-x: hidden;
+/* Availability backgrounds */
+body.vms-admin .vms-sch-cell.is-open,
+body.toplevel_page_vms .vms-sch-cell.is-open,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-open {
+  background: var(--vms-open-bg);
+  border-color: rgba(34, 197, 94, 0.22);
 }
 
-/* ---------- Mobile: keep 7 columns, shrink UI ---------- */
-@media (max-width: 782px){
-  body.toplevel_page_vms table.vms-sch-grid{
+body.vms-admin .vms-sch-cell.is-closed,
+body.toplevel_page_vms .vms-sch-cell.is-closed,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-closed {
+  background: var(--vms-closed-bg);
+  border-color: rgba(148, 163, 184, 0.30);
+}
+
+body.vms-admin .vms-sch-cell.is-blackout,
+body.toplevel_page_vms .vms-sch-cell.is-blackout,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-blackout {
+  background: rgba(231, 76, 60, 0.10);
+  border-color: rgba(231, 76, 60, 0.40);
+}
+
+/* Outside-window cells: visually quiet */
+body.vms-admin .vms-sch-cell.is-outside,
+body.toplevel_page_vms .vms-sch-cell.is-outside,
+body[class*="vms_page_vms-"] .vms-sch-cell.is-outside {
+  opacity: 0.55;
+}
+
+/* =====================================================================
+   07) All-venues calendar layout helper (requires .vms-sch-scope-all wrapper)
+   ===================================================================== */
+
+body.wp-admin .vms-sch-scope-all .vms-sch-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+}
+
+body.wp-admin .vms-sch-scope-all .vms-sch-daynum {
+  flex: 0 0 auto !important;
+}
+
+body.wp-admin .vms-sch-scope-all .vms-sch-planline {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+
+  grid-row: auto !important;
+}
+
+body.wp-admin .vms-sch-scope-all .vms-sch-venue-tag,
+body.wp-admin .vms-sch-scope-all .vms-sch-planitem,
+body.wp-admin .vms-sch-scope-all a.vms-sch-planlink {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* =====================================================================
+   08) Mobile tweaks
+   ===================================================================== */
+
+@media (max-width: 782px) {
+
+  body.vms-admin table.vms-sch-grid,
+  body.toplevel_page_vms table.vms-sch-grid,
+  body[class*="vms_page_vms-"] table.vms-sch-grid,
+  body.vms-admin table.vms-av-grid,
+  body.toplevel_page_vms table.vms-av-grid,
+  body[class*="vms_page_vms-"] table.vms-av-grid {
     border-spacing: 4px;
   }
 
-  body.toplevel_page_vms .vms-sch-cell{
+  body.vms-admin .vms-sch-cell,
+  body.toplevel_page_vms .vms-sch-cell,
+  body[class*="vms_page_vms-"] .vms-sch-cell {
     --vms-cell-h: 96px;
-    border-radius: 12px;
-    padding: 6px;
-    column-gap: 6px;
-    row-gap: 6px;
+    border-radius: 14px;
+    padding: 7px;
+    row-gap: 7px;
   }
 
-  /* Remove Open/Closed pill; rely on background color */
-  body.toplevel_page_vms .vms-sch-badge{
-    display: none;
-  }
-
-  body.toplevel_page_vms .vms-sch-daynum{
+  body.vms-admin .vms-sch-daynum,
+  body.toplevel_page_vms .vms-sch-daynum,
+  body[class*="vms_page_vms-"] .vms-sch-daynum {
     font-size: 12px;
   }
 
-  /* Turn Create/Add buttons into '+' */
-  body.toplevel_page_vms .vms-sch-cell a.button.button-small{
+  /* Mobile: small Create/Add button becomes a + */
+  body.vms-admin .vms-sch-cell a.button.button-small,
+  body.toplevel_page_vms .vms-sch-cell a.button.button-small,
+  body[class*="vms_page_vms-"] .vms-sch-cell a.button.button-small {
     font-size: 0 !important;
     padding: 6px 8px !important;
     min-width: 28px;
-    height: auto;
     line-height: 1;
     text-align: center;
   }
 
-  body.toplevel_page_vms .vms-sch-cell a.button.button-small::before{
+  body.vms-admin .vms-sch-cell a.button.button-small::before,
+  body.toplevel_page_vms .vms-sch-cell a.button.button-small::before,
+  body[class*="vms_page_vms-"] .vms-sch-cell a.button.button-small::before {
     content: "+";
     display: inline-block;
     font-size: 16px;
@@ -179,18 +710,6607 @@ body.toplevel_page_vms .vms-panel-body{
     line-height: 1;
   }
 
-  /* Keep the plan visible but short: show 'EP' */
-  body.toplevel_page_vms .vms-sch-plan a{
-    font-size: 0 !important;
-    padding: 6px 8px;
-  }
-
-  body.toplevel_page_vms .vms-sch-plan a::before{
-    content: "EP";
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 900;
-    line-height: 1;
+  /* Mobile: keep plan titles readable */
+  body.vms-admin .vms-sch-plan a,
+  body.toplevel_page_vms .vms-sch-plan a,
+  body[class*="vms_page_vms-"] .vms-sch-plan a,
+  body.vms-admin a.vms-sch-planlink,
+  body.toplevel_page_vms a.vms-sch-planlink,
+  body[class*="vms_page_vms-"] a.vms-sch-planlink {
+    font-size: 11px !important;
+    padding: 6px 6px !important;
+    line-height: 1.2;
   }
 }
 
+/* =====================================================================
+   09) Schedule list view (tables)
+   ===================================================================== */
+
+:root {
+  --vms-status-confirmed: #2ecc71;
+  --vms-status-draft: #f1c40f;
+  --vms-status-cancelled: #e74c3c;
+  --vms-accent-width: 4px;
+}
+
+body.vms-admin table.vms-sch-table tbody tr td,
+body.toplevel_page_vms table.vms-sch-table tbody tr td,
+body[class*="vms_page_vms-"] table.vms-sch-table tbody tr td,
+body.vms-admin table.vms-sch-list tbody tr td,
+body.toplevel_page_vms table.vms-sch-list tbody tr td,
+body[class*='vms_page_vms-'] table.vms-sch-list tbody tr td,
+body.vms-admin table.vms-s
+
+/* Schedule: shared utility classes (no inline styles) */
+body.vms-admin .vms-mr-10,
+body.toplevel_page_vms .vms-mr-10,
+body[class*='vms_page_vms-'] .vms-mr-10 {
+  margin-right: 10px;
+}
+
+body.vms-admin .vms-mt-8,
+body.toplevel_page_vms .vms-mt-8,
+body[class*='vms_page_vms-'] .vms-mt-8 {
+  margin-top: 8px;
+}
+
+body.vms-admin .vms-text-center,
+body.toplevel_page_vms .vms-text-center,
+body[class*='vms_page_vms-'] .vms-text-center {
+  text-align: center;
+}
+
+/* Schedule: column widths */
+body.vms-admin th.vms-col-date,
+body.toplevel_page_vms th.vms-col-date,
+body[class*='vms_page_vms-'] th.vms-col-date {
+  width: 140px;
+}
+
+body.vms-admin th.vms-col-actions,
+body.toplevel_page_vms th.vms-col-actions,
+body[class*='vms_page_vms-'] th.vms-col-actions {
+  width: 140px;
+}
+
+body.vms-admin th.vms-col-venue,
+body.toplevel_page_vms th.vms-col-venue,
+body[class*='vms_page_vms-'] th.vms-col-venue {
+  width: 220px;
+}
+
+/* Schedule: top nav spacing */
+body.vms-admin .vms-portal-nav.vms-sch-nav,
+body.toplevel_page_vms .vms-portal-nav.vms-sch-nav,
+body[class*='vms_page_vms-'] .vms-portal-nav.vms-sch-nav {
+  margin: 12px 0;
+}
+
+/* Schedule: past dates toggle strip */
+body.vms-admin .vms-sch-past-toggle,
+body.toplevel_page_vms .vms-sch-past-toggle,
+body[class*='vms_page_vms-'] .vms-sch-past-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 12px;
+}
+
+/* Schedule: venue selector box */
+body.vms-admin form.vms-venue-selector,
+body.toplevel_page_vms form.vms-venue-selector,
+body[class*='vms_page_vms-'] form.vms-venue-selector {
+  margin: 12px 0 16px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+}
+
+body.vms-admin .vms-venue-selector__label,
+body.toplevel_page_vms .vms-venue-selector__label,
+body[class*='vms_page_vms-'] .vms-venue-selector__label {
+  font-weight: 700;
+  margin-right: 10px;
+}
+
+body.vms-admin .vms-venue-selector__select,
+body.toplevel_page_vms .vms-venue-selector__select,
+body[class*='vms_page_vms-'] .vms-venue-selector__select {
+  min-width: 220px;
+}
+
+ch-list-all tbody tr td,
+body.toplevel_page_vms table.vms-sch-list-all tbody tr td,
+body[class*='vms_page_vms-'] table.vms-sch-list-all tbody tr td {
+  vertical-align: top;
+}
+
+body.vms-admin table.vms-sch-table tbody tr.vms-venue-open,
+body.toplevel_page_vms table.vms-sch-table tbody tr.vms-venue-open,
+body[class*="vms_page_vms-"] table.vms-sch-table tbody tr.vms-venue-open,
+body.vms-admin table.vms-sch-list tbody tr.vms-venue-open,
+body.toplevel_page_vms table.vms-sch-list tbody tr.vms-venue-open,
+body[class*="vms_page_vms-"] table.vms-sch-list tbody tr.vms-venue-open {
+  background: var(--vms-open-bg);
+}
+
+body.vms-admin table.vms-sch-table tbody tr.vms-venue-closed,
+body.toplevel_page_vms table.vms-sch-table tbody tr.vms-venue-closed,
+body[class*="vms_page_vms-"] table.vms-sch-table tbody tr.vms-venue-closed,
+body.vms-admin table.vms-sch-list tbody tr.vms-venue-closed,
+body.toplevel_page_vms table.vms-sch-list tbody tr.vms-venue-closed,
+body[class*="vms_page_vms-"] table.vms-sch-list tbody tr.vms-venue-closed {
+  background: var(--vms-closed-bg);
+}
+
+body.vms-admin table.vms-sch-table tbody tr.vms-venue-blackout,
+body.toplevel_page_vms table.vms-sch-table tbody tr.vms-venue-blackout,
+body[class*="vms_page_vms-"] table.vms-sch-table tbody tr.vms-venue-blackout,
+body.vms-admin table.vms-sch-list tbody tr.vms-venue-blackout,
+body.toplevel_page_vms table.vms-sch-list tbody tr.vms-venue-blackout,
+body[class*="vms_page_vms-"] table.vms-sch-list tbody tr.vms-venue-blackout {
+  background: rgba(231, 76, 60, 0.10);
+}
+
+body.vms-admin table.vms-sch-table tbody tr.vms-status-confirmed,
+body.toplevel_page_vms table.vms-sch-table tbody tr.vms-status-confirmed,
+body[class*="vms_page_vms-"] table.vms-sch-table tbody tr.vms-status-confirmed,
+body.vms-admin table.vms-sch-list tbody tr.vms-status-confirmed,
+body.toplevel_page_vms table.vms-sch-list tbody tr.vms-status-confirmed,
+body[class*="vms_page_vms-"] table.vms-sch-list tbody tr.vms-status-confirmed {
+  box-shadow: inset var(--vms-accent-width) 0 0 0 var(--vms-status-confirmed);
+}
+
+body.vms-admin table.vms-sch-table tbody tr.vms-status-draft,
+body.toplevel_page_vms table.vms-sch-table tbody tr.vms-status-draft,
+body[class*="vms_page_vms-"] table.vms-sch-table tbody tr.vms-status-draft,
+body.vms-admin table.vms-sch-list tbody tr.vms-status-draft,
+body.toplevel_page_vms table.vms-sch-list tbody tr.vms-status-draft,
+body[class*="vms_page_vms-"] table.vms-sch-list tbody tr.vms-status-draft {
+  box-shadow: inset var(--vms-accent-width) 0 0 0 var(--vms-status-draft);
+}
+
+body.vms-admin table.vms-sch-table tbody tr.vms-status-cancelled,
+body.toplevel_page_vms table.vms-sch-table tbody tr.vms-status-cancelled,
+body[class*="vms_page_vms-"] table.vms-sch-table tbody tr.vms-status-cancelled,
+body.vms-admin table.vms-sch-list tbody tr.vms-status-cancelled,
+body.toplevel_page_vms table.vms-sch-list tbody tr.vms-status-cancelled,
+body[class*="vms_page_vms-"] table.vms-sch-list tbody tr.vms-status-cancelled {
+  box-shadow: inset var(--vms-accent-width) 0 0 0 var(--vms-status-cancelled);
+}
+
+body.vms-admin .vms-sch-list tr.vms-venue-past td,
+body.toplevel_page_vms .vms-sch-list tr.vms-venue-past td,
+body[class*="vms_page_vms-"] .vms-sch-list tr.vms-venue-past td,
+body.vms-admin .vms-sch-table tr.vms-venue-past td,
+body.toplevel_page_vms .vms-sch-table tr.vms-venue-past td,
+body[class*="vms_page_vms-"] .vms-sch-table tr.vms-venue-past td {
+  opacity: 0.75;
+}
+
+/* Schedule: inline lookback selector (calendar + list) */
+body.vms-admin .vms-sch-lookback,
+body.toplevel_page_vms .vms-sch-lookback,
+body[class*="vms_page_vms-"] .vms-sch-lookback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.02);
+}
+
+body.vms-admin .vms-sch-lookback label,
+body.toplevel_page_vms .vms-sch-lookback label,
+body[class*="vms_page_vms-"] .vms-sch-lookback label {
+  font-weight: 700;
+}
+
+body.vms-admin .vms-sch-lookback select,
+body.toplevel_page_vms .vms-sch-lookback select,
+body[class*="vms_page_vms-"] .vms-sch-lookback select {
+  min-width: 160px;
+}
+
+body.vms-admin .vms-sch-lookback .vms-sch-muted,
+body.toplevel_page_vms .vms-sch-lookback .vms-sch-muted,
+body[class*="vms_page_vms-"] .vms-sch-lookback .vms-sch-muted {
+  opacity: 0.75;
+}
+
+/* =====================================================================
+   90) Continuity Binder (admin)
+   - Mobile-first spacing
+   - Section navigation chips
+   ===================================================================== */
+
+body.vms-admin .vms-continuity-binder,
+body.toplevel_page_vms .vms-continuity-binder,
+body[class*="vms_page_vms-"] .vms-continuity-binder {
+  max-width: 980px;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-actions,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-actions,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 12px;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-nav,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-nav,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-nav {
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.02);
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-nav-title,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-nav-title,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-nav-title {
+  font-weight: 900;
+  margin: 0 0 8px;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-nav-list,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-nav-list,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-nav-link,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-nav-link,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-nav-link {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 999px;
+  background: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-nav-link:hover,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-nav-link:hover,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-nav-link:hover {
+  text-decoration: underline;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-nav-link.is-active,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-nav-link.is-active,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-nav-link.is-active {
+  background: rgba(37, 99, 235, 0.10);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+body.vms-admin .vms-continuity-binder .postbox.vms-cb-section,
+body.toplevel_page_vms .vms-continuity-binder .postbox.vms-cb-section,
+body[class*="vms_page_vms-"] .vms-continuity-binder .postbox.vms-cb-section {
+  margin: 0 0 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  scroll-margin-top: 80px;
+}
+
+body.vms-admin .vms-continuity-binder .postbox.vms-cb-section:target,
+body.toplevel_page_vms .vms-continuity-binder .postbox.vms-cb-section:target,
+body[class*="vms_page_vms-"] .vms-continuity-binder .postbox.vms-cb-section:target {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+body.vms-admin .vms-continuity-binder .postbox.vms-cb-section .hndle,
+body.toplevel_page_vms .vms-continuity-binder .postbox.vms-cb-section .hndle,
+body[class*="vms_page_vms-"] .vms-continuity-binder .postbox.vms-cb-section .hndle {
+  padding: 10px 12px;
+}
+
+body.vms-admin .vms-continuity-binder .postbox.vms-cb-section .inside,
+body.toplevel_page_vms .vms-continuity-binder .postbox.vms-cb-section .inside,
+body[class*="vms_page_vms-"] .vms-continuity-binder .postbox.vms-cb-section .inside {
+  margin: 0;
+  padding: 12px 12px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-section-content p,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-section-content p,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-section-content p {
+  margin: 0 0 10px;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-section-content ul,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-section-content ul,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-section-content ul,
+body.vms-admin .vms-continuity-binder .vms-cb-section-content ol,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-section-content ol,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-section-content ol {
+  margin: 0 0 10px 18px;
+}
+
+body.vms-admin .vms-continuity-binder .vms-cb-form-actions,
+body.toplevel_page_vms .vms-continuity-binder .vms-cb-form-actions,
+body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-form-actions {
+  margin: 12px 0 14px;
+}
+
+body.vms-admin .vms-continuity-binder textarea.large-text,
+body.toplevel_page_vms .vms-continuity-binder textarea.large-text,
+body[class*="vms_page_vms-"] .vms-continuity-binder textarea.large-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (max-width: 782px) {
+
+  body.vms-admin .vms-continuity-binder input.regular-text,
+  body.toplevel_page_vms .vms-continuity-binder input.regular-text,
+  body[class*="vms_page_vms-"] .vms-continuity-binder input.regular-text {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.vms-admin .vms-continuity-binder .vms-cb-nav,
+  body.toplevel_page_vms .vms-continuity-binder .vms-cb-nav,
+  body[class*="vms_page_vms-"] .vms-continuity-binder .vms-cb-nav {
+    position: sticky;
+    top: calc(var(--wp-admin--admin-bar--height, 32px) + 6px);
+    z-index: 20;
+    padding: 10px;
+    backdrop-filter: blur(6px);
+  }
+
+  body.vms-admin .vms-continuity-binder .postbox.vms-cb-section,
+  body.toplevel_page_vms .vms-continuity-binder .postbox.vms-cb-section,
+  body[class*="vms_page_vms-"] .vms-continuity-binder .postbox.vms-cb-section {
+    scroll-margin-top: calc(var(--wp-admin--admin-bar--height, 32px) + 92px);
+  }
+}
+
+
+/* =====================================================================
+   Dashboard
+   ===================================================================== */
+
+#vms-dashboard-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  margin: 10px 0 14px;
+}
+
+#vms-dashboard-filters .vms-dash-filter {
+  margin: 0;
+}
+
+#vms-dashboard-filters select {
+  max-width: 260px;
+}
+ 
+.vms-panel-range {
+  margin: 6px 0 10px;
+  padding: 0 16px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+@media (max-width: 782px) {
+  .vms-panel-range {
+    padding: 0 12px;
+  }
+}
+
+#vms-dashboard .vms-dashboard-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+#vms-dashboard .vms-dashboard-panels>section {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+}
+
+#vms-dashboard .vms-dashboard-panels>section>h2 {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 17px;
+  line-height: 1.25;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+}
+
+#vms-dashboard .vms-dashboard-panels>section>.vms-panel-body {
+  padding-top: 12px;
+}
+
+#vms-dashboard-financial {
+  grid-column: 1 / -1;
+}
+
+#vms-dashboard-financial>.vms-panel-body {
+  background: linear-gradient(180deg, #f9fff8 0%, #ffffff 100%);
+}
+
+#vms-dashboard-financial .vms-fin-alert-strip {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(153, 27, 27, 0.20);
+  background: #fef2f2;
+  color: #7f1d1d;
+  font-weight: 600;
+}
+
+#vms-dashboard-financial .vms-fin-alert-strip.vms-fin-alert-strip--ok {
+  border-color: rgba(21, 128, 61, 0.20);
+  background: #f0fdf4;
+  color: #14532d;
+}
+
+#vms-dashboard-financial .vms-fin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+#vms-dashboard-financial .vms-fin-card {
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+#vms-dashboard-financial .vms-fin-card.vms-fin-card--ok {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+  border-color: rgba(21, 128, 61, 0.18);
+}
+
+#vms-dashboard-financial .vms-fin-card.vms-fin-card--warn {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+  border-color: rgba(194, 65, 12, 0.20);
+}
+
+#vms-dashboard-financial .vms-fin-card.vms-fin-card--danger {
+  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%);
+  border-color: rgba(153, 27, 27, 0.24);
+}
+
+#vms-dashboard-financial .vms-fin-card__title {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.86;
+}
+
+#vms-dashboard-financial .vms-fin-card__value {
+  margin-top: 6px;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+#vms-dashboard-financial .vms-fin-card__meta {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.82;
+}
+
+#vms-dashboard-financial .vms-fin-card__action {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+#vms-dashboard-financial .vms-fin-card__action a {
+  text-decoration: none;
+}
+
+#vms-dashboard-financial .vms-fin-card__action a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 782px) {
+  #vms-dashboard .vms-dashboard-panels {
+    grid-template-columns: 1fr;
+  }
+
+  #vms-dashboard-financial .vms-fin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #vms-dashboard-financial .vms-fin-card__value {
+    font-size: 24px;
+  }
+}
+
+#vms-dashboard-bills .vms-bills-total {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+#vms-dashboard-bills .vms-bills-attn-summary {
+  font-weight: 600;
+  margin: -4px 0 10px;
+}
+
+#vms-dashboard-bills .vms-bill-item {
+  padding: 10px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+#vms-dashboard-bills .vms-bill-item:first-child {
+  border-top: none;
+}
+
+#vms-dashboard-bills .vms-bill-line {
+  font-weight: 600;
+}
+
+#vms-dashboard-bills .vms-bill-sub {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+#vms-dashboard-bills .vms-bill-actions {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+#vms-dashboard-bills .vms-bill-action {
+  text-decoration: none;
+}
+
+#vms-dashboard-bills .vms-bill-action:hover {
+  text-decoration: underline;
+}
+
+#vms-dashboard-bills .vms-bill-flag {
+  margin-right: 4px;
+}
+
+#vms-dashboard-bills .vms-bill-attn {
+  font-weight: 600;
+}
+
+#vms-dashboard-staffing .vms-staffing-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  padding: 10px 16px 0;
+}
+
+#vms-dashboard-staffing .vms-staffing-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.85);
+}
+
+#vms-dashboard-staffing .vms-staffing-summary {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: rgba(15, 23, 42, 0.80);
+}
+
+#vms-dashboard-staffing .vms-staffing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#vms-dashboard-staffing .vms-staffing-item {
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 10px;
+  background: #fff;
+}
+
+#vms-dashboard-staffing .vms-staffing-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+#vms-dashboard-staffing .vms-staffing-main-left {
+  min-width: 0;
+}
+
+#vms-dashboard-staffing .vms-staffing-title {
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+#vms-dashboard-staffing .vms-staffing-title a {
+  text-decoration: none;
+}
+
+#vms-dashboard-staffing .vms-staffing-title a:hover {
+  text-decoration: underline;
+}
+
+#vms-dashboard-staffing .vms-staffing-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.74);
+}
+
+#vms-dashboard-staffing .vms-staffing-main-right {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+#vms-dashboard-staffing .vms-staffing-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  background: #f8fafc;
+  color: #334155;
+}
+
+#vms-dashboard-staffing .vms-staffing-pill--ready {
+  border-color: rgba(21, 128, 61, 0.25);
+  background: #f0fdf4;
+  color: #166534;
+}
+
+#vms-dashboard-staffing .vms-staffing-pill--needs {
+  border-color: rgba(194, 65, 12, 0.24);
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+#vms-dashboard-staffing .vms-staffing-pill--red {
+  border-color: rgba(153, 27, 27, 0.26);
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+#vms-dashboard-staffing .vms-staffing-pill--na {
+  border-color: rgba(15, 23, 42, 0.16);
+  background: #f8fafc;
+  color: #475569;
+}
+
+#vms-dashboard-staffing .vms-staffing-stat {
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.82);
+  white-space: nowrap;
+}
+
+#vms-dashboard-staffing .vms-staffing-detail {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 8px 12px 10px;
+  background: #fcfdff;
+}
+
+#vms-dashboard-staffing .vms-staffing-mask {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+#vms-dashboard-staffing .vms-staffing-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+#vms-dashboard-staffing .vms-staffing-minihead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+#vms-dashboard-staffing .vms-staffing-detail-row {
+  font-size: 12px;
+  line-height: 1.35;
+  margin-bottom: 4px;
+  color: rgba(15, 23, 42, 0.86);
+}
+
+#vms-dashboard-staffing .vms-staffing-subtle {
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.66);
+}
+
+@media (max-width: 782px) {
+  #vms-dashboard-staffing .vms-staffing-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #vms-dashboard-staffing .vms-staffing-main-right {
+    justify-content: flex-start;
+  }
+
+  #vms-dashboard-staffing .vms-staffing-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.vms-input-narrow {
+  width: 90px;
+  max-width: 100%;
+}
+
+/* =====================================================================
+   Due Dates (Dashboard + Admin)
+   ===================================================================== */
+
+.vms-text-danger {
+  color: #b32d2e;
+}
+
+#vms-dashboard-due .vms-due-attn-summary {
+  font-weight: 600;
+  margin: -4px 0 8px;
+}
+
+#vms-dashboard-due .vms-due-summary {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+#vms-dashboard-due .vms-due-actions {
+  margin: -2px 0 10px;
+}
+
+#vms-dashboard-due .vms-due-row {
+  padding: 10px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+#vms-dashboard-due .vms-due-row:first-child {
+  border-top: none;
+}
+
+#vms-dashboard-due .vms-due-row.vms-needs-attn {
+  padding-left: 10px;
+  border-left: 3px solid rgba(179, 45, 46, 0.55);
+  background: rgba(179, 45, 46, 0.03);
+}
+
+#vms-dashboard-due .vms-due-title {
+  font-weight: 600;
+}
+
+#vms-dashboard-due .vms-due-sub {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+#vms-dashboard-due .vms-due-links {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 6px;
+}
+
+#vms-dashboard-due .vms-due-action {
+  text-decoration: none;
+}
+
+#vms-dashboard-due .vms-due-action:hover {
+  text-decoration: underline;
+}
+
+#vms-dashboard-due .vms-due-buttons {
+  margin-top: 6px;
+}
+
+/* Due Dates admin page (removes inline styles) */
+.vms-due-seed-form {
+  margin: 12px 0;
+}
+
+.vms-due-list {
+  margin-left: 16px;
+}
+
+.vms-due-li {
+  margin: 8px 0;
+}
+
+.vms-due-rule-desc {
+  margin-top: 6px;
+}
+
+.vms-due-onetime-label {
+  display: block;
+  margin-top: 8px;
+}
+
+
+/* =====================================================================
+   Admin utility classes
+   ===================================================================== */
+
+.vms-minw-320 {
+  min-width: 320px;
+  max-width: 100%;
+}
+
+.vms-text-danger {
+  color: #b32d2e;
+}
+
+.vms-mt-24 {
+  margin-top: 24px;
+}
+
+.vms-mt-10 {
+  margin-top: 10px;
+}
+
+.vms-ml-10 {
+  margin-left: 10px;
+}
+
+.vms-mt-14 {
+  margin: 14px 0 0;
+}
+
+.vms-hr-spaced {
+  margin: 18px 0;
+}
+
+.vms-card-wide {
+  max-width: 900px;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.vms-col-220 {
+  width: 220px;
+}
+
+.vms-status {
+  font-weight: 600;
+}
+
+.vms-status-missing {
+  color: #b45309;
+}
+
+.vms-status-ok {
+  color: #166534;
+}
+
+.vms-status-trash {
+  color: #b45309;
+}
+
+
+/* =====================================================================
+   95) Budget Calculator (v1)
+   ===================================================================== */
+
+body.vms-admin .vms-bcalc,
+body.toplevel_page_vms .vms-bcalc,
+body[class*="vms_page_vms-"] .vms-bcalc {}
+
+body.vms-admin .vms-bcalc-grid,
+body.toplevel_page_vms .vms-bcalc-grid,
+body[class*="vms_page_vms-"] .vms-bcalc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 1100px;
+}
+
+@media (max-width: 980px) {
+
+  body.vms-admin .vms-bcalc-grid,
+  body.toplevel_page_vms .vms-bcalc-grid,
+  body[class*="vms_page_vms-"] .vms-bcalc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.vms-admin .vms-bcalc-card,
+body.toplevel_page_vms .vms-bcalc-card,
+body[class*="vms_page_vms-"] .vms-bcalc-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  background: #fff;
+}
+
+body.vms-admin .vms-bcalc-card h2,
+body.toplevel_page_vms .vms-bcalc-card h2,
+body[class*="vms_page_vms-"] .vms-bcalc-card h2 {
+  margin: 0 0 12px;
+}
+
+body.vms-admin .vms-bcalc-section,
+body.toplevel_page_vms .vms-bcalc-section,
+body[class*="vms_page_vms-"] .vms-bcalc-section {
+  margin-top: 16px;
+}
+
+body.vms-admin .vms-bcalc-section h3,
+body.toplevel_page_vms .vms-bcalc-section h3,
+body[class*="vms_page_vms-"] .vms-bcalc-section h3 {
+  margin: 0 0 10px;
+}
+
+body.vms-admin .vms-bcalc-fields,
+body.toplevel_page_vms .vms-bcalc-fields,
+body[class*="vms_page_vms-"] .vms-bcalc-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+
+  body.vms-admin .vms-bcalc-fields,
+  body.toplevel_page_vms .vms-bcalc-fields,
+  body[class*="vms_page_vms-"] .vms-bcalc-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.vms-admin .vms-bcalc-field label,
+body.toplevel_page_vms .vms-bcalc-field label,
+body[class*="vms_page_vms-"] .vms-bcalc-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+body.vms-admin .vms-bcalc-field input,
+body.toplevel_page_vms .vms-bcalc-field input,
+body[class*="vms_page_vms-"] .vms-bcalc-field input {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.vms-admin .vms-bcalc-row,
+body.toplevel_page_vms .vms-bcalc-row,
+body[class*="vms_page_vms-"] .vms-bcalc-row {
+  margin: 8px 0;
+}
+
+body.vms-admin .vms-bcalc-row-inline,
+body.toplevel_page_vms .vms-bcalc-row-inline,
+body[class*="vms_page_vms-"] .vms-bcalc-row-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+body.vms-admin .vms-bcalc-inline,
+body.toplevel_page_vms .vms-bcalc-inline,
+body[class*="vms_page_vms-"] .vms-bcalc-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.vms-admin .vms-bcalc-inline-label,
+body.toplevel_page_vms .vms-bcalc-inline-label,
+body[class*="vms_page_vms-"] .vms-bcalc-inline-label {
+  font-weight: 600;
+}
+
+body.vms-admin .vms-bcalc-kpis,
+body.toplevel_page_vms .vms-bcalc-kpis,
+body[class*="vms_page_vms-"] .vms-bcalc-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+
+  body.vms-admin .vms-bcalc-kpis,
+  body.toplevel_page_vms .vms-bcalc-kpis,
+  body[class*="vms_page_vms-"] .vms-bcalc-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.vms-admin .vms-bcalc-kpi,
+body.toplevel_page_vms .vms-bcalc-kpi,
+body[class*="vms_page_vms-"] .vms-bcalc-kpi {
+  padding: 12px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.02);
+}
+
+body.vms-admin .vms-bcalc-kpi-label,
+body.toplevel_page_vms .vms-bcalc-kpi-label,
+body[class*="vms_page_vms-"] .vms-bcalc-kpi-label {
+  opacity: 0.8;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+body.vms-admin .vms-bcalc-kpi-value,
+body.toplevel_page_vms .vms-bcalc-kpi-value,
+body[class*="vms_page_vms-"] .vms-bcalc-kpi-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+body.vms-admin .vms-bcalc-subkpis,
+body.toplevel_page_vms .vms-bcalc-subkpis,
+body[class*="vms_page_vms-"] .vms-bcalc-subkpis {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+body.vms-admin .vms-bcalc-callouts,
+body.toplevel_page_vms .vms-bcalc-callouts,
+body[class*="vms_page_vms-"] .vms-bcalc-callouts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+
+  body.vms-admin .vms-bcalc-callouts,
+  body.toplevel_page_vms .vms-bcalc-callouts,
+  body[class*="vms_page_vms-"] .vms-bcalc-callouts {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.vms-admin .vms-bcalc-callout,
+body.toplevel_page_vms .vms-bcalc-callout,
+body[class*="vms_page_vms-"] .vms-bcalc-callout {
+  padding: 12px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 12px;
+  background: #fff;
+}
+
+body.vms-admin .vms-bcalc-callout-title,
+body.toplevel_page_vms .vms-bcalc-callout-title,
+body[class*="vms_page_vms-"] .vms-bcalc-callout-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+body.vms-admin .vms-bcalc-callout-value,
+body.toplevel_page_vms .vms-bcalc-callout-value,
+body[class*="vms_page_vms-"] .vms-bcalc-callout-value {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+body.vms-admin .vms-bcalc-breakdown,
+body.toplevel_page_vms .vms-bcalc-breakdown,
+body[class*="vms_page_vms-"] .vms-bcalc-breakdown {
+  margin-top: 10px;
+}
+
+body.vms-admin .vms-bcalc-breakdown-row,
+body.toplevel_page_vms .vms-bcalc-breakdown-row,
+body[class*="vms_page_vms-"] .vms-bcalc-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+body.vms-admin .vms-bcalc-breakdown-strong,
+body.toplevel_page_vms .vms-bcalc-breakdown-strong,
+body[class*="vms_page_vms-"] .vms-bcalc-breakdown-strong {
+  background: rgba(15, 23, 42, 0.03);
+  font-weight: 700;
+}
+
+body.vms-admin .vms-bcalc-breakdown-label,
+body.toplevel_page_vms .vms-bcalc-breakdown-label,
+body[class*="vms_page_vms-"] .vms-bcalc-breakdown-label {
+  opacity: 0.9;
+}
+
+body.vms-admin .vms-bcalc-breakdown-value,
+body.toplevel_page_vms .vms-bcalc-breakdown-value,
+body[class*="vms_page_vms-"] .vms-bcalc-breakdown-value {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+body.vms-admin .vms-bcalc-breakdown-spacer,
+body.toplevel_page_vms .vms-bcalc-breakdown-spacer,
+body[class*="vms_page_vms-"] .vms-bcalc-breakdown-spacer {
+  height: 10px;
+}
+
+body.vms-admin .vms-bcalc-progress-grid,
+body.toplevel_page_vms .vms-bcalc-progress-grid,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 8px 0 14px;
+}
+
+@media (max-width: 900px) {
+
+  body.vms-admin .vms-bcalc-progress-grid,
+  body.toplevel_page_vms .vms-bcalc-progress-grid,
+  body[class*="vms_page_vms-"] .vms-bcalc-progress-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.vms-admin .vms-bcalc-progress-card,
+body.toplevel_page_vms .vms-bcalc-progress-card,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-card {
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: #fff;
+}
+
+body.vms-admin .vms-bcalc-progress-card.is-good,
+body.toplevel_page_vms .vms-bcalc-progress-card.is-good,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-card.is-good {
+  border-color: rgba(22, 101, 52, 0.3);
+  background: rgba(22, 101, 52, 0.05);
+}
+
+body.vms-admin .vms-bcalc-progress-card.is-warning,
+body.toplevel_page_vms .vms-bcalc-progress-card.is-warning,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-card.is-warning {
+  border-color: rgba(180, 83, 9, 0.3);
+  background: rgba(180, 83, 9, 0.05);
+}
+
+body.vms-admin .vms-bcalc-progress-card.is-risk,
+body.toplevel_page_vms .vms-bcalc-progress-card.is-risk,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-card.is-risk {
+  border-color: rgba(179, 45, 46, 0.3);
+  background: rgba(179, 45, 46, 0.05);
+}
+
+body.vms-admin .vms-bcalc-progress-label,
+body.toplevel_page_vms .vms-bcalc-progress-label,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-label {
+  font-weight: 700;
+}
+
+body.vms-admin .vms-bcalc-progress-value,
+body.toplevel_page_vms .vms-bcalc-progress-value,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-value {
+  margin-top: 6px;
+}
+
+body.vms-admin .vms-bcalc-progress-bar,
+body.toplevel_page_vms .vms-bcalc-progress-bar,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-bar {
+  width: 100%;
+  height: 10px;
+  margin-top: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+body.vms-admin .vms-bcalc-progress-bar::-webkit-progress-bar,
+body.toplevel_page_vms .vms-bcalc-progress-bar::-webkit-progress-bar,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-bar::-webkit-progress-bar {
+  background: rgba(15, 23, 42, 0.10);
+  border-radius: 999px;
+}
+
+body.vms-admin .vms-bcalc-progress-bar::-webkit-progress-value,
+body.toplevel_page_vms .vms-bcalc-progress-bar::-webkit-progress-value,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-bar::-webkit-progress-value {
+  background: #1f4b99;
+  border-radius: 999px;
+}
+
+body.vms-admin .vms-bcalc-progress-bar::-moz-progress-bar,
+body.toplevel_page_vms .vms-bcalc-progress-bar::-moz-progress-bar,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-bar::-moz-progress-bar {
+  background: #1f4b99;
+  border-radius: 999px;
+}
+
+body.vms-admin .vms-bcalc-progress-meta,
+body.toplevel_page_vms .vms-bcalc-progress-meta,
+body[class*="vms_page_vms-"] .vms-bcalc-progress-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+body.vms-admin .vms-bcalc-source,
+body.toplevel_page_vms .vms-bcalc-source,
+body[class*="vms_page_vms-"] .vms-bcalc-source {
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1.25;
+  padding: 2px 7px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+
+
+/* Vendor admin utilities */
+.vms-field--w120 {
+  width: 120px;
+}
+
+.vms-field--w140 {
+  width: 140px;
+}
+
+
+/* Event Plan list: status pill column */
+.column-vms_plan_status {
+  width: 140px;
+}
+
+.column-vms_plan_tax {
+  width: 200px;
+}
+
+.vms-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.vms-pill-ready {
+  background: #e7f7ed;
+  color: #156c36;
+}
+
+.vms-pill-draft {
+  background: #fff2d8;
+  color: #7a4b00;
+}
+
+.vms-pill-cancelled {
+  background: #fff3f3;
+  color: #8a1f1f;
+  border-color: #f0b1b1;
+}
+
+.vms-pill-pay-blocked {
+  background: #fff3f3;
+  color: #8a1f1f;
+  border-color: #f0b1b1;
+}
+
+.vms-pill-bypass {
+  background: #f2f7ff;
+  color: #1d4ed8;
+  border-color: #b7cdf7;
+}
+
+.vms-status-pill.is-ready {
+  background: #e7f7ed;
+  color: #156c36;
+}
+
+.vms-status-pill.is-not-ready {
+  background: #ffe4e4;
+  color: #8a1f1f;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-panel {
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  background: #fafafb;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-panel h4 {
+  margin: 0 0 10px;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-summary>span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-state {
+  border-color: #d0d4d9;
+  background: #f4f5f6;
+  color: #1f2937;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-state--completed {
+  background: #e7f7ed;
+  border-color: #b7e4c7;
+  color: #156c36;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-state--completed_with_errors,
+body.post-type-vms_event_plan .vms-cancel-job-state--failed {
+  background: #fff3f3;
+  border-color: #f0b1b1;
+  color: #8a1f1f;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-state--running {
+  background: #e8f1ff;
+  border-color: #b7cff5;
+  color: #19498b;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-state--queued {
+  background: #fff7dd;
+  border-color: #efd59a;
+  color: #7a4b00;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-review {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #bdd8c2;
+  background: #eef9f0;
+  color: #20663a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-review.is-on {
+  border-color: #efd59a;
+  background: #fff7dd;
+  color: #7a4b00;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-steps {
+  display: grid;
+  gap: 8px;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step {
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step--done {
+  border-left: 4px solid #5aa469;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step--failed,
+body.post-type-vms_event_plan .vms-cancel-job-step--blocked {
+  border-left: 4px solid #cf4b4b;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step--pending,
+body.post-type-vms_event_plan .vms-cancel-job-step--running {
+  border-left: 4px solid #c29629;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step__message,
+body.post-type-vms_event_plan .vms-cancel-job-step__updated {
+  margin: 6px 0 0;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step__meta {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #4b5563;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-list li {
+  margin: 2px 0;
+}
+
+body.post-type-vms_event_plan .vms-cancel-job-step__actions {
+  margin: 8px 0 0;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline {
+  margin-top: 10px;
+  max-width: 980px;
+  padding: 12px 14px;
+  border: 1px solid #efd59a;
+  border-left: var(--vms-notice-border-left) solid var(--vms-notice-warning-border);
+  border-radius: var(--vms-notice-radius);
+  background: var(--vms-notice-warning-bg);
+  color: var(--vms-notice-warning-text);
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline.has-active-bypass {
+  color: var(--vms-notice-warning-text);
+  border-color: #efd59a;
+  border-left-color: var(--vms-notice-warning-border);
+  background: var(--vms-notice-warning-bg);
+  box-shadow: 0 1px 3px rgba(95, 55, 14, 0.08);
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline .description {
+  margin: 0;
+}
+
+body.post-type-vms_event_plan #vms-tax-status.vms-tax-has-bypass-inline .vms-tax-box {
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-width: 0;
+}
+
+body.post-type-vms_event_plan #vms-tax-status.vms-tax-has-bypass-inline+.vms-tax-bypass-inline {
+  margin-top: 0;
+  border-top-width: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline__controls>label {
+  font-weight: 700;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline__flag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #653300;
+  background: #fdf1c8;
+  border: 1px solid #f0cc77;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline__until {
+  min-width: 170px;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline__reason {
+  min-width: 280px;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline__reason.has-active-bypass {
+  border-color: #dba617;
+  box-shadow: 0 0 0 1px rgba(219, 166, 23, 0.22);
+}
+
+/* Venue edit: Health Check metabox */
+.vms-healthcheck__pillrow {
+  margin: 0 0 8px;
+}
+
+.vms-healthcheck__desc {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.vms-healthcheck__section {
+  margin-top: 10px;
+}
+
+.vms-healthcheck__heading {
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.vms-healthcheck__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.vms-healthcheck__list li {
+  margin: 0 0 6px;
+}
+
+/* Dashboard: venue/scope selector (no inline styles) */
+.vms-dash-selector {
+  margin: 12px 0 16px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+}
+
+.vms-dash-selector__row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.vms-dash-selector__label {
+  font-weight: 600;
+}
+
+.vms-dash-selector__scope {
+  min-width: 140px;
+}
+
+.vms-dash-selector__venue {
+  min-width: 260px;
+}
+
+.vms-dash-selector__desc {
+  margin: 8px 0 0;
+}
+
+/* ========================================================================
+   Vendor: Tax Status metabox (no inline styles)
+   ======================================================================== */
+
+.vms-tax-box {
+  line-height: 1.45;
+}
+
+.vms-tax-pill-wrap {
+  margin: 0 0 10px;
+}
+
+.vms-tax-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.vms-tax-pill--complete {
+  background: #d1fae5;
+}
+
+.vms-tax-pill--incomplete {
+  background: #fee2e2;
+}
+
+.vms-tax-row {
+  margin: 0 0 8px;
+}
+
+.vms-tax-row--file {
+  margin: 0 0 12px;
+}
+
+.vms-tax-subrow {
+  margin: 0 0 8px;
+}
+
+.vms-tax-actions {
+  margin: 0 0 8px;
+}
+
+.vms-tax-actions:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================================================
+   Event Plans: vendor shortcut link
+   ======================================================================== */
+
+.vms-ep-vendor-actions {
+  display: inline-block;
+  margin-top: 6px;
+}
+
+/* ========================================================================
+   Event Plans: Secondary vendors
+   ======================================================================== */
+
+.vms-secondary-vendor-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+}
+
+.vms-secondary-vendor-group__header {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(105px, 125px) minmax(86px, 96px) minmax(210px, 1fr) auto;
+  gap: 10px 14px;
+  align-items: flex-end;
+}
+
+.vms-secondary-vendor-group--market .vms-secondary-vendor-group__header {
+  grid-template-columns: minmax(150px, 200px) minmax(96px, 116px) minmax(80px, 90px) minmax(112px, 132px) minmax(152px, 178px) minmax(190px, 1fr) auto;
+}
+
+.vms-secondary-vendor-group__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+}
+
+.vms-secondary-vendor-group__field--type {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.vms-secondary-vendor-group__field--mode,
+.vms-secondary-vendor-group__field--capacity {
+  min-width: 0;
+}
+
+.vms-secondary-vendor-group__field--mode {
+  grid-column: 2;
+}
+
+.vms-secondary-vendor-group__field--capacity {
+  grid-column: 3;
+}
+
+.vms-secondary-vendor-group__field--market-target {
+  grid-column: 4;
+}
+
+.vms-secondary-vendor-group__field--market-dispatch {
+  grid-column: 5;
+}
+
+.vms-secondary-vendor-group__field--market-target[hidden],
+.vms-secondary-vendor-group__field--market-dispatch[hidden] {
+  display: none;
+}
+
+.vms-secondary-vendor-group__field--summary {
+  grid-column: 4;
+  grid-row: 1;
+  align-items: flex-start;
+}
+
+.vms-secondary-vendor-group--market .vms-secondary-vendor-group__field--summary {
+  grid-column: 6;
+}
+
+.vms-secondary-vendor-group__field--actions {
+  grid-column: 5;
+  grid-row: 1;
+  align-items: flex-end;
+  justify-self: end;
+  margin-left: 0;
+}
+
+.vms-secondary-vendor-group--market .vms-secondary-vendor-group__field--actions {
+  grid-column: 7;
+}
+
+.vms-secondary-vendor-group__field-label {
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.vms-secondary-vendor-group__field select,
+.vms-secondary-vendor-group__field input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.vms-secondary-vendor-group__checkbox-line {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  gap: 6px;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.vms-secondary-vendor-group__checkbox-line input[type="checkbox"] {
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+
+.vms-secondary-vendor-group__summary {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  height: 40px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.vms-secondary-vendor-row {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.7fr) minmax(220px, 1.1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vms-secondary-vendor-row__vendor {
+  min-width: 0;
+}
+
+.vms-secondary-vendor-row__action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.vms-secondary-vendor-row__indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.vms-secondary-vendor-select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vms-secondary-vendor-group__rows-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vms-secondary-vendor-group__rows-copy {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.vms-secondary-vendor-group__label {
+  margin: 0;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.vms-secondary-vendor-group__guidance {
+  margin: 0;
+}
+
+.vms-secondary-vendor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+}
+
+.vms-secondary-vendor-actions .button {
+  margin: 0;
+}
+
+.vms-secondary-vendor-rows-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vms-secondary-vendor-group__summary.is-warning {
+  color: #b45309;
+  font-weight: 600;
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.vms-secondary-vendor-group__override {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin: -4px 0 0;
+  padding: 8px 10px;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.vms-secondary-vendor-group__override[hidden] {
+  display: none;
+}
+
+.vms-secondary-vendor-group__override input[type="checkbox"] {
+  margin: 0;
+}
+
+.vms-secondary-vendor-rows__head {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.7fr) minmax(220px, 1.1fr) auto;
+  gap: 10px;
+  padding: 0 2px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vms-secondary-vendor-group--type-pending .vms-secondary-vendor-rows__head {
+  display: none;
+}
+
+.vms-secondary-vendor-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.vms-secondary-vendor-badge--market {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.vms-secondary-vendor-badge--available,
+.vms-secondary-vendor-badge--qualified {
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.vms-secondary-vendor-badge--unavailable,
+.vms-secondary-vendor-badge--missing,
+.vms-secondary-vendor-badge--mismatch {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.vms-secondary-vendor-badge--attention,
+.vms-secondary-vendor-badge--unknown,
+.vms-secondary-vendor-badge--pending {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+@media (max-width: 782px) {
+  .vms-secondary-vendor-group {
+    padding: 12px;
+  }
+
+  .vms-secondary-vendor-group__header {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .vms-secondary-vendor-group__field--type,
+  .vms-secondary-vendor-group__field--mode,
+  .vms-secondary-vendor-group__field--capacity,
+  .vms-secondary-vendor-group__field--market-target,
+  .vms-secondary-vendor-group__field--market-dispatch,
+  .vms-secondary-vendor-group__field--summary,
+  .vms-secondary-vendor-group__field--actions {
+    grid-column: 1;
+    grid-row: auto;
+    align-items: stretch;
+  }
+
+  .vms-secondary-vendor-row {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-secondary-vendor-rows__head {
+    display: none;
+  }
+
+  .vms-secondary-vendor-row__action {
+    justify-content: stretch;
+  }
+
+  .vms-secondary-vendor-row .button {
+    width: 100%;
+  }
+}
+
+
+/* ========================================================================
+   Event Plans: Needs attention
+   ======================================================================== */
+
+.vms-needs-attention {
+  color: #d63638 !important;
+  font-weight: 700 !important;
+}
+
+.vms-secondary-vendor-type-select {
+  min-width: 260px;
+  max-width: 100%;
+}
+
+.vms-secondary-vendor-legend {
+  margin-top: 2px;
+}
+
+
+/* ========================================================================
+   Event Plans: Advanced Controls (collapsible)
+   ======================================================================== */
+
+details.vms-advanced-controls {
+  margin-top: 10px;
+}
+
+details.vms-advanced-controls>summary {
+  cursor: pointer;
+}
+
+details.vms-advanced-controls .vms-advanced-controls__body {
+  margin-top: 10px;
+}
+
+#vms_event_plan_ticketing_v2 .inside,
+#vms_event_plan_advanced_controls .inside {
+  margin-top: 12px;
+}
+
+#vms_event_plan_advanced_controls details.vms-advanced-controls.is-promoted {
+  margin-top: 0;
+}
+
+#vms_event_plan_advanced_controls details.vms-advanced-controls.is-promoted > summary {
+  display: none;
+}
+
+#vms_event_plan_advanced_controls details.vms-advanced-controls.is-promoted .vms-advanced-controls__body {
+  margin-top: 0;
+}
+
+.vms-ticketing__managed-v2.is-promoted > h5 {
+  display: none;
+}
+
+.vms-ticketing__box-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+
+/* ========================================================================
+   Help Mode: lightweight tooltips
+   ======================================================================== */
+
+.vms-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 1px solid #8c8f94;
+  font-size: 12px;
+  line-height: 1;
+  margin-left: 6px;
+  cursor: pointer;
+  user-select: none;
+
+  /* Button reset */
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.vms-help-icon:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
+
+.vms-help-icon:hover {
+  background: #f0f0f1;
+}
+
+.vms-help-tooltip {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  z-index: 100000;
+  display: none;
+  max-width: 340px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #c3c4c7;
+  background: #fff;
+  color: #1d2327;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.vms-help-missing-list {
+  margin: 0 0 0 20px;
+}
+
+/* Schedule Calendar: ensure DoW header row shows normally */
+body.toplevel_page_vms table.vms-sch-grid thead,
+body[class*="vms_page_vms-"] table.vms-sch-grid thead {
+  display: table-header-group !important;
+}
+
+/* Event Plans: Ticketing integration (Phase A) */
+.vms-ticketing {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.vms-ticketing.is-guarded {
+  border-color: #dcb77a;
+  background: #fffaf0;
+}
+
+.vms-ticketing .button[data-vms-link-sensitive="1"].disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vms-ticketing h4 {
+  margin: 0 0 10px 0;
+}
+
+.vms-ticketing__linked {
+  margin: 0 0 10px 0;
+}
+
+.vms-ticketing__linked-title {
+  margin-left: 6px;
+  color: #646970;
+}
+
+.vms-ticketing__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 10px 0;
+}
+
+.vms-ticketing__stat {
+  min-width: 180px;
+}
+
+.vms-ticketing__list {
+  margin-top: 8px;
+}
+
+.vms-ticketing__item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f1;
+}
+
+.vms-ticketing__item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vms-ticketing__item-sub {
+  color: #646970;
+  font-size: 12px;
+}
+
+.vms-ticketing__item-link {
+  font-size: 12px;
+}
+
+.vms-ticketing__msg {
+  margin-top: 10px;
+  min-height: 20px;
+  font-weight: 600;
+}
+
+.vms-ticketing__msg.is-working:before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: -2px;
+  animation: vmsSpin 0.9s linear infinite;
+}
+
+@keyframes vmsSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vms-ticketing__msg.vms-notice {
+  padding: 10px 12px;
+}
+
+.vms-ticketing__msg.vms-notice:empty {
+  display: none;
+}
+
+.vms-ticketing__guardrail {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid #efd59a;
+  border-left: 4px solid var(--vms-notice-warning-border);
+  border-radius: 8px;
+  background: #fff8e1;
+  color: #5f3b00;
+}
+
+.vms-ticketing__guardrail.vms-hidden:empty,
+.vms-ticketing__guardrail.vms-hidden {
+  display: none;
+}
+
+.vms-ticketing__guardrail-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.vms-ticketing__guardrail-copy {
+  margin: 0;
+}
+
+.vms-ticketing__guardrail-list {
+  margin: 8px 0 0 18px;
+}
+
+.vms-ticketing__guardrail-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.vms-ticketing__msg.is-error {
+  color: var(--vms-notice-critical-text);
+  border-color: #efc9cd;
+  border-left-color: var(--vms-notice-critical-border);
+  background: var(--vms-notice-critical-bg);
+}
+
+.vms-ticketing__msg.is-info {
+  color: var(--vms-notice-info-text);
+  border-color: #b7d5f3;
+  border-left-color: var(--vms-notice-info-border);
+  background: var(--vms-notice-info-bg);
+}
+
+.vms-ticketing__msg.is-success {
+  color: var(--vms-notice-success-text);
+  border-color: #c6dfc3;
+  border-left-color: var(--vms-notice-success-border);
+  background: var(--vms-notice-success-bg);
+}
+
+.vms-ticketing__msg.is-warning {
+  color: var(--vms-notice-warning-text);
+  border-color: #efd59a;
+  border-left-color: var(--vms-notice-warning-border);
+  background: var(--vms-notice-warning-bg);
+}
+
+
+/* Ticketing: draw attention to required Mode selection when a commit is possible but blocked by mode */
+.vms-field-attn {
+  outline: 3px solid #d63638;
+  border-color: #d63638 !important;
+  box-shadow: 0 0 0 2px rgba(214, 54, 56, 0.15);
+}
+
+.vms-ticketing__tplbar,
+.vms-ticketing__tplsave {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.vms-ticketing__tplsave input[type="text"] {
+  max-width: 260px;
+}
+
+/* Event Plans: Ticketing integration (Phase B) */
+.vms-ticketing__sortable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vms-ticketing__tier,
+.vms-ent-admin-row {
+  display: block;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  margin: 0;
+  background: #fff;
+  overflow: hidden;
+}
+
+.vms-ticketing__row-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+}
+
+.vms-ticketing__row-summary-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vms-ticketing__row-title {
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.vms-ticketing__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vms-ticketing__row-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid #dcdcde;
+  border-radius: 999px;
+  background: #f6f7f7;
+  color: #50575e;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.vms-ticketing__row-stat.is-muted {
+  opacity: 0.75;
+}
+
+.vms-ticketing__row-stat-label {
+  font-weight: 600;
+}
+
+.vms-ticketing__drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-height: 32px;
+  border: 1px dashed #c3c4c7;
+  border-radius: 8px;
+  background: #f6f7f7;
+  color: #50575e;
+  font-size: 18px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+.vms-ticketing__drag-handle:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
+
+.vms-ticketing__drag-handle:active {
+  cursor: grabbing;
+}
+
+.vms-ticketing__tier.is-dragging,
+.vms-ent-admin-row.is-dragging {
+  opacity: 0.62;
+}
+
+.vms-ticketing__row-details {
+  display: none;
+  padding: 0 14px 14px;
+  border-top: 1px solid #f0f0f1;
+  background: #fcfcfd;
+}
+
+.vms-ticketing__tier.is-expanded .vms-ticketing__row-details,
+.vms-ent-admin-row.is-expanded .vms-ticketing__row-details {
+  display: grid;
+  gap: 10px;
+}
+
+.vms-ticketing__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.vms-ticketing__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.vms-ticketing__field--full {
+  grid-column: 1 / -1;
+}
+
+.vms-ticketing__field-label {
+  font-size: 11px;
+  color: #646970;
+  line-height: 1.2;
+}
+
+.vms-ticketing__tier input[type="text"],
+.vms-ticketing__tier input[type="number"],
+.vms-ticketing__tier input[type="datetime-local"] {
+  width: 100%;
+}
+
+.vms-ticketing__tier select {
+  width: 100%;
+}
+
+.vms-ticketing__pool-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.vms-ticketing__pool-wrap select {
+  flex: 1;
+}
+
+.vms-ticketing__tier-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #646970;
+  white-space: nowrap;
+}
+
+.vms-ticketing__more-toggle {
+  white-space: nowrap;
+}
+
+.vms-ticketing__field--more {
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
+.vms-ticketing-v2-ent-more {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+}
+
+.vms-ticketing__image-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.vms-ticketing__image-preview {
+  width: 54px;
+  height: 54px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.vms-ticketing__image-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vms-ticketing__image-empty {
+  font-size: 11px;
+  color: #646970;
+  text-align: center;
+  line-height: 1.2;
+  padding: 3px;
+}
+
+.vms-ticketing__image-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.vms-ticketing__image-source {
+  display: block;
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #646970;
+}
+
+.vms-ticketing__ga-image {
+  margin: 10px 0 0 0;
+}
+
+.vms-ticketing__ga-image-preview {
+  margin-top: 8px;
+}
+
+.vms-ticketing__ga-image-thumb {
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+@media (max-width: 1180px) {
+  .vms-ticketing__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 782px) {
+  .vms-ticketing__row-summary {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .vms-ticketing__row-toggle {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .vms-ticketing__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.vms-ticketing__sync-preview {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vms-ticketing__sync-list {
+  margin: 8px 0 10px 18px;
+}
+
+.vms-ticketing__sync-details {
+  margin-top: 10px;
+}
+
+.vms-ticketing__failure-panel {
+  border: 1px solid #efc9cd;
+  border-left: 4px solid var(--vms-notice-critical-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vms-ticketing__failure-summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-weight: 600;
+  list-style: none;
+}
+
+.vms-ticketing__failure-summary::-webkit-details-marker {
+  display: none;
+}
+
+.vms-ticketing__failure-summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.vms-ticketing__failure-panel[open] .vms-ticketing__failure-summary::before {
+  content: '▾';
+}
+
+.vms-ticketing__failure-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid #f0f0f1;
+}
+
+.vms-ticketing__failure-copy {
+  margin: 12px 0 0;
+}
+
+.vms-ticketing__failure-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 180px) minmax(0, 1fr);
+  gap: 6px 10px;
+  margin: 12px 0 0;
+}
+
+.vms-ticketing__failure-grid dt {
+  font-weight: 600;
+}
+
+.vms-ticketing__failure-grid dd {
+  margin: 0;
+}
+
+.vms-ticketing__failure-section {
+  margin-top: 12px;
+}
+
+.vms-ticketing__failure-section h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.vms-ticketing__failure-list {
+  margin: 0 0 0 18px;
+}
+
+.vms-ticketing__failure-raw {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #f6f7f7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 782px) {
+  .vms-ticketing__failure-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+/* Event Plan: Pay Override Check */
+#vms-pay-override-box {
+  max-width: 860px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+#vms-pay-override-box .description {
+  margin: 0 0 10px;
+}
+
+#vms-pay-override-summary {
+  margin: 0 0 10px;
+}
+
+#vms-pay-override-box label.vms-pay-override-ack {
+  display: block;
+  margin-top: 10px;
+}
+
+#vms-pay-override-box .vms-pay-override-note {
+  margin-top: 8px;
+}
+
+#vms-pay-override-box .vms-pay-override-last {
+  margin-top: 10px;
+}
+
+
+/* ========================================================================== */
+/* Event Plan Editor utilities (no inline styles)                              */
+/* ========================================================================== */
+
+body.post-type-vms_event_plan .vms-ep-field-full {
+  width: 100%;
+}
+
+body.post-type-vms_event_plan .vms-ep-select-md {
+  min-width: 260px;
+}
+
+body.post-type-vms_event_plan .vms-ep-select-lg {
+  min-width: 360px;
+}
+
+body.post-type-vms_event_plan .vms-ep-input-sm {
+  width: 180px;
+}
+
+body.post-type-vms_event_plan .vms-ep-holiday-card {
+  max-width: 720px;
+  padding: 12px 14px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: #fff;
+}
+
+body.post-type-vms_event_plan .vms-ep-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+body.post-type-vms_event_plan .vms-ep-badge--open {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+body.post-type-vms_event_plan .vms-ep-badge--closed {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+body.post-type-vms_event_plan .vms-ep-card {
+  max-width: 980px;
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--blue {
+  background: #f5faff;
+  border-color: #cce3ff;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--gray {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--amber {
+  background: #fffbeb;
+  border-color: #fed7aa;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--yellow {
+  background: #fefce8;
+  border-color: #fde68a;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--white {
+  background: #fff;
+  border-color: #e5e7eb;
+}
+
+body.post-type-vms_event_plan .vms-ep-ol {
+  margin: 8px 0 0 18px;
+}
+
+body.wp-admin .vms-hidden {
+  display: none !important;
+}
+
+body.post-type-vms_event_plan .vms-text-warn {
+  color: #92400e;
+}
+
+body.post-type-vms_event_plan .vms-notice-tight {
+  margin: 10px 0 12px;
+}
+
+body.post-type-vms_event_plan #vms-comp-ack-wrap {
+  max-width: 980px;
+  margin: 0 0 10px;
+}
+
+body.post-type-vms_event_plan #vms-comp-ack-wrap .vms-pay-override-ack {
+  display: block;
+  margin: 10px 0 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-lock-actions {
+  max-width: 980px;
+  margin: 0 0 14px;
+}
+
+body.post-type-vms_event_plan .vms-ep-lock-actions.is-disabled {
+  opacity: 0.96;
+}
+
+body.post-type-vms_event_plan .vms-ep-lock-actions__helper {
+  margin: -2px 0 10px;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* Compensation option tiles (Event Plan editor) */
+body.post-type-vms_event_plan #vms-comp-options {
+  margin-top: 10px;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-row {
+  margin-top: 12px;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-row__title {
+  margin: 0 0 8px;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-scale-legend {
+  margin: -2px 0 8px;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 782px) {
+  body.post-type-vms_event_plan .vms-comp-opt-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  body.post-type-vms_event_plan .vms-comp-opt-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile {
+  appearance: none;
+  border: 1px solid #dcdcde;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  min-height: 92px;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile.is-selected {
+  border-color: #3b82f6;
+  box-shadow: 0 10px 26px rgba(59, 130, 246, 0.18);
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile:disabled,
+body.post-type-vms_event_plan .vms-comp-opt-tile.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile__title {
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile__value {
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile__sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile__badge {
+  margin-top: auto;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  background: #dcfce7;
+}
+ 
+/* Reserve badge space even when hidden so tiles stay aligned across the row. */
+body.post-type-vms_event_plan .vms-comp-opt-tile__badge.vms-hidden {
+  display: inline-block !important;
+  visibility: hidden;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-1 {
+  background: linear-gradient(180deg, #fff7f7 0%, #ffeaea 100%);
+  border-color: #f6c7c7;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-2 {
+  background: linear-gradient(180deg, #fff9f0 0%, #ffeed8 100%);
+  border-color: #f3d2a5;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-3 {
+  background: linear-gradient(180deg, #fffdf0 0%, #fef6cf 100%);
+  border-color: #e7db92;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-4 {
+  background: linear-gradient(180deg, #f2fff8 0%, #ddf8e9 100%);
+  border-color: #9fdfbb;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-5 {
+  background: linear-gradient(180deg, #ecfdf5 0%, #ccf5de 100%);
+  border-color: #6fd59f;
+}
+
+body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-4 .vms-comp-opt-tile__value,
+body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-5 .vms-comp-opt-tile__value {
+  color: #166534;
+}
+
+body.post-type-vms_event_plan .vms-ep-draft-pay-title {
+  display: block;
+  margin-top: 10px;
+}
+
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 12px;
+  align-items: end;
+  margin-top: 8px;
+}
+
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-structure-select,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field {
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-structure-select select,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field input {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Simple spacing utilities used in Event Plan templates */
+body.post-type-vms_event_plan .vms-m0 {
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-mb-0 {
+  margin-bottom: 0;
+}
+
+body.post-type-vms_event_plan .vms-mb-8 {
+  margin-bottom: 8px;
+}
+
+body.post-type-vms_event_plan .vms-mt-4 {
+  margin-top: 4px;
+}
+
+body.post-type-vms_event_plan .vms-mt-6 {
+  margin-top: 6px;
+}
+
+body.post-type-vms_event_plan .vms-mt-8 {
+  margin-top: 8px;
+}
+
+body.post-type-vms_event_plan .vms-mt-10 {
+  margin-top: 10px;
+}
+
+/* Staff Tasks metabox: Add Task block (avoid nested forms on post edit screens) */
+body.post-type-vms_event_plan .vms-tasks-event-plan-addtask__notice {
+  display: none;
+  margin: 8px 0 0;
+}
+
+body.post-type-vms_event_plan .vms-tasks-event-plan-addtask__actions {
+  margin: 0 0 14px;
+}
+
+body.post-type-vms_event_plan .vms-mt-neg-4 {
+  margin-top: -4px;
+}
+
+body.post-type-vms_event_plan .vms-ml-6 {
+  margin-left: 6px;
+}
+
+body.post-type-vms_event_plan .vms-ml-8 {
+  margin-left: 8px;
+}
+
+body.post-type-vms_event_plan .vms-ml-10 {
+  margin-left: 10px;
+}
+
+/* Staff role assignment (mobile-friendly checkboxes) */
+body.post-type-vms_event_plan .vms-ep-staff-wrap {
+  max-width: 100%;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-headcount-summary {
+  margin: 0 0 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-headcount-summary.is-muted {
+  color: #667085;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role.is-waiting-threshold {
+  border-color: #d0d5dd;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role.is-required-now {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.16);
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role.has-required-gap {
+  border-color: #dc2626;
+  background: #fef2f2;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.14);
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__head {
+  margin: 0 0 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__head-copy {
+  min-width: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: end;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 0 150px;
+  max-width: 180px;
+  min-width: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__controls input[type="number"],
+body.post-type-vms_event_plan .vms-ep-staff-role__controls input[type="time"],
+body.post-type-vms_event_plan .vms-ep-staff-role__controls select {
+  width: 100%;
+  max-width: 100%;
+}
+
+
+.vms-staff-qualification-list {
+  display: grid;
+  gap: 14px;
+}
+
+.vms-staff-qualification-card {
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+}
+
+.vms-staff-qualification-card__grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.vms-staff-qualification-card__grid:last-child {
+  margin-bottom: 0;
+}
+
+.vms-staff-qualification-card__grid label,
+.vms-qualification-rule-row__fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vms-staff-qualification-card__grid--primary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vms-staff-qualification-card__grid--secondary {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(180px, 220px) minmax(0, 1.3fr);
+}
+
+.vms-staff-qualification-card__grid--notes {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.vms-staff-qualification-card__proof,
+.vms-staff-qualification-card__notes {
+  min-width: 0;
+}
+
+.vms-staff-qualification-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vms-qualification-rule-builder {
+  display: grid;
+  gap: 10px;
+}
+
+.vms-qualification-rule-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.vms-qualification-rule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.vms-qualification-rule-row__fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  gap: 10px;
+}
+
+.vms-qualification-rule-row__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 960px) {
+  .vms-staff-qualification-card__grid--primary,
+  .vms-staff-qualification-card__grid--secondary,
+  .vms-staff-qualification-card__grid--notes,
+  .vms-qualification-rule-row,
+  .vms-qualification-rule-row__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-staff-qualification-card__actions,
+  .vms-qualification-rule-row__actions {
+    justify-content: flex-start;
+  }
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #d0d5dd;
+  background: #f8fafc;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__state--is-inactive,
+body.post-type-vms_event_plan .vms-ep-staff-role__state--is-unwired {
+  border-color: #d0d5dd;
+  background: #f8fafc;
+  color: #475467;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__state--is-waiting {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__state--is-active {
+  border-color: #bbf7d0;
+  background: #dcfce7;
+  color: #166534;
+}
+
+body.post-type-vms_event_plan .vms-ep-staff-role__state--is-required {
+  border-color: #dc2626;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+body.post-type-vms_event_plan .vms-ep-inline-warning {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #fdba74;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.post-type-vms_event_plan .vms-ep-inline-warning--required {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+body.post-type-vms_event_plan .vms-ep-check-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body.post-type-vms_event_plan .vms-ep-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+}
+
+body.post-type-vms_event_plan .vms-ep-check:hover {
+  background: #f1f5f9;
+}
+
+body.post-type-vms_event_plan .vms-ep-check input[type="checkbox"] {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+}
+
+body.post-type-vms_event_plan .vms-ep-check__label {
+  font-weight: 600;
+}
+
+body.post-type-vms_event_plan .vms-ep-tax-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+body.post-type-vms_event_plan .vms-ep-tax-badge--ok {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+body.post-type-vms_event_plan .vms-ep-tax-badge--missing {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+body.post-type-vms_event_plan .vms-ep-tax-badge--bypass {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fed7aa;
+}
+
+body.post-type-vms_event_plan .vms-ep-tax-badge-note {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+@media (max-width: 782px) {
+  body.post-type-vms_event_plan .vms-ep-staff-role__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body.post-type-vms_event_plan .vms-ep-staff-role__state {
+    align-self: flex-start;
+  }
+
+  body.post-type-vms_event_plan .vms-ep-staff-role__controls label {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Vendor tax status box on the Event Plan editor */
+body.post-type-vms_event_plan #vms-tax-status {
+  margin-top: 8px;
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box {
+  max-width: 980px;
+  padding: 12px 14px;
+}
+
+body.post-type-vms_event_plan .vms-tax-box .title {
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.ok {
+  color: var(--vms-notice-success-text);
+  border-color: #c6dfc3;
+  border-left-color: var(--vms-notice-success-border);
+  background: var(--vms-notice-success-bg);
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.bad {
+  color: var(--vms-notice-warning-text);
+  border-color: #efd59a;
+  border-left-color: var(--vms-notice-warning-border);
+  background: var(--vms-notice-warning-bg);
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.warn {
+  color: var(--vms-notice-warning-text);
+  border-color: #efd59a;
+  border-left-color: var(--vms-notice-warning-border);
+  background: var(--vms-notice-warning-bg);
+  box-shadow: 0 1px 3px rgba(95, 55, 14, 0.08);
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.warn .title {
+  color: #653300;
+  font-weight: 700;
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.warn .muted {
+  color: #5b3b08;
+}
+
+/* List screen toggle label */
+body.post-type-vms_event_plan .vms-ep-list-toggle {
+  margin-left: 12px;
+  display: inline-block;
+}
+
+
+/* Bills: payment blocked / bypass badges */
+.vms-bill-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #f7f7f7;
+}
+
+.vms-bill-badge--blocked {
+  background: #fff3f3;
+  border-color: #f0b1b1;
+}
+
+.vms-bill-badge--bypass {
+  background: #f2f7ff;
+  border-color: #b7cdf7;
+}
+
+
+/* Ticketing: legacy link section (collapsed by default) */
+.vms-ticketing__legacy {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.vms-ticketing__legacy>summary {
+  cursor: pointer;
+}
+
+.vms-ticketing__legacy[open]>summary {
+  margin-bottom: 8px;
+}
+
+
+/* =========================================================
+   Event Plan — Compensation Tiles (Primary Vendor)
+   ========================================================= */
+
+html.vms-js body.post-type-vms_event_plan .vms-comp-structure-select {
+  display: none;
+}
+
+body.post-type-vms_event_plan .vms-comp-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile {
+  appearance: none;
+  border: 1px solid #dcdcde;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 12px 10px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+body.post-type-vms_event_plan .vms-comp-tile:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile.is-selected {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile__title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile__guarantee {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile__sub {
+  font-size: 12px;
+  opacity: 0.85;
+  line-height: 1.3;
+}
+ 
+body.post-type-vms_event_plan .vms-comp-tile.vms-comp-tile--scale-1 {
+  background: linear-gradient(180deg, #fff7f7 0%, #ffeaea 100%);
+  border-color: #f6c7c7;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile.vms-comp-tile--scale-2 {
+  background: linear-gradient(180deg, #fff9f0 0%, #ffeed8 100%);
+  border-color: #f3d2a5;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile.vms-comp-tile--scale-3 {
+  background: linear-gradient(180deg, #fffdf0 0%, #fef6cf 100%);
+  border-color: #e7db92;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile.vms-comp-tile--scale-4 {
+  background: linear-gradient(180deg, #f2fff8 0%, #ddf8e9 100%);
+  border-color: #9fdfbb;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile.vms-comp-tile--scale-5 {
+  background: linear-gradient(180deg, #ecfdf5 0%, #ccf5de 100%);
+  border-color: #6fd59f;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile.vms-comp-tile--scale-4 .vms-comp-tile__guarantee,
+body.post-type-vms_event_plan .vms-comp-tile.vms-comp-tile--scale-5 .vms-comp-tile__guarantee {
+  color: #166534;
+}
+
+body.post-type-vms_event_plan .vms-comp-structure-scale-legend {
+  margin: -2px 0 10px;
+}
+
+body.post-type-vms_event_plan .vms-comp-tile__badge {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+}
+
+body.post-type-vms_event_plan .vms-low-guarantee-box {
+  margin-top: 12px;
+}
+
+body.post-type-vms_event_plan .vms-low-guarantee-ack input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+body.post-type-vms_event_plan .vms-low-guarantee-note {
+  margin-top: 10px;
+  font-weight: 700;
+}
+
+body.post-type-vms_event_plan .vms-low-guarantee-last {
+  margin-top: 8px;
+}
+
+body.post-type-vms_event_plan .vms-attendance-preview {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #d6e4f0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fbff 0%, #edf6ff 100%);
+}
+
+body.post-type-vms_event_plan .vms-attendance-preview__title {
+  display: block;
+  color: #0f3b66;
+}
+
+body.post-type-vms_event_plan .vms-attendance-preview__table table {
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+body.post-type-vms_event_plan .vms-attendance-preview__table th,
+body.post-type-vms_event_plan .vms-attendance-preview__table td {
+  padding: 8px 10px;
+}
+
+/* Mobile-first: stack tiles */
+@media (max-width: 782px) {
+  body.post-type-vms_event_plan .vms-comp-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.post-type-vms_event_plan .vms-collapsible-section {
+  border-top: 1px solid #dcdcde;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-toggle {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+  width: 100%;
+  text-align: left;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #50575e;
+  border-bottom: 2px solid #50575e;
+  transform: rotate(45deg);
+  transition: transform .15s ease;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-label {
+  font-weight: 600;
+  color: #1d2327;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-section.is-collapsed .vms-collapsible-chevron {
+  transform: rotate(-45deg);
+}
+
+body.post-type-vms_event_plan .vms-collapsible-body {
+  padding-bottom: 6px;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-section.is-collapsed .vms-collapsible-body {
+  display: none;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-title--in-body {
+  display: none;
+}
+
+body.post-type-vms_event_plan [data-vms-collapsible-break] {
+  display: none;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-flag {
+  display: none;
+  margin-left: auto;
+  font-size: 11px;
+  line-height: 1;
+  color: #8a4b00;
+  background: #fff6e0;
+  border: 1px solid #f0b849;
+  border-radius: 999px;
+  padding: 3px 7px;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-flag.is-visible {
+  display: inline-block;
+}
+
+body.post-type-vms_event_plan .vms-ep-basic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 16px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-basic-item {
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-time-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.post-type-vms_event_plan .vms-ep-time-select {
+  min-width: 150px;
+  height: 42px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+body.post-type-vms_event_plan .vms-ep-time-sep {
+  font-size: 28px;
+  line-height: 1;
+  color: #3c434a;
+}
+
+body.post-type-vms_event_plan .vms-ep-basic-span {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-basic-grid h4 {
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-basic-grid .vms-ep-holiday-card {
+  margin-top: 8px;
+}
+
+body.post-type-vms_event_plan .vms-ep-status-current {
+  margin-bottom: 10px;
+}
+
+body.post-type-vms_event_plan .vms-button-danger {
+  background: #b42318;
+  border-color: #991b1b;
+  color: #fff;
+}
+
+body.post-type-vms_event_plan .vms-button-danger:hover,
+body.post-type-vms_event_plan .vms-button-danger:focus {
+  background: #991b1b;
+  border-color: #7f1d1d;
+  color: #fff;
+}
+
+body.post-type-vms_event_plan .vms-button-danger[disabled] {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+body.post-type-vms_event_plan .vms-secondary-vendor-row {
+  gap: 10px;
+}
+
+body.post-type-vms_event_plan .vms-secondary-vendor-row__vendor {
+  min-width: 0;
+}
+
+body.post-type-vms_event_plan .vms-secondary-vendor-select {
+  min-width: 220px;
+}
+
+body.post-type-vms_event_plan .vms-secondary-vendor-row__action,
+body.post-type-vms_event_plan .vms-secondary-vendor-row .button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 782px) {
+  body.post-type-vms_event_plan .vms-ep-basic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.post-type-vms_event_plan .vms-ep-time-select {
+    min-width: 130px;
+  }
+
+  body.post-type-vms_event_plan .vms-ep-basic-span {
+    grid-column: 1;
+  }
+
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.post-type-vms_event_plan .vms-secondary-vendor-select {
+    min-width: 0;
+  }
+
+  body.post-type-vms_event_plan .vms-secondary-vendor-row .button {
+    width: 100%;
+  }
+}
+
+/* =====================================================================
+   Venue Calendar admin page
+   ===================================================================== */
+
+body.vms-admin .vms-venue-calendar .vms-cal-filters,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-filters,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-filters {
+  margin: 12px 0 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-filter-label,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-filter-label,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-filter-label {
+  font-weight: 600;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-filter-label-month,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-filter-label-month,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-filter-label-month {
+  margin-left: 8px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-filter-venue,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-filter-venue,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-filter-venue {
+  min-width: 320px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-nav,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-nav,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1100px;
+  margin: 10px 0 12px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-title,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-title,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-title {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-grid,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-grid,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-grid {
+  max-width: 1100px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-head,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-head,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-head {
+  font-weight: 700;
+  color: #374151;
+  padding: 4px 2px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-cell,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-cell,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-cell {
+  min-height: 130px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 10px 10px 12px;
+  position: relative;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-empty,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-empty,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-empty {
+  background: transparent;
+  border-style: dashed;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-daynum,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-daynum,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-daynum {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-weight: 800;
+  color: #9ca3af;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-card,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-card,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+  border: 1px solid #f1f5f9;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 8px 10px;
+  margin-top: 10px;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-card:hover,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-card:hover,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-card:hover {
+  border-color: #cbd5e1;
+  background: #fff;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-avatar,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-avatar,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-avatar-fallback,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-avatar-fallback,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-avatar-fallback {
+  background: #e5e7eb;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-card-text,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-card-text,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-card-text {
+  min-width: 0;
+  flex: 1;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-name,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-name,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-name {
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.vms-admin .vms-venue-calendar .vms-cal-meta,
+body.toplevel_page_vms .vms-venue-calendar .vms-cal-meta,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+body.vms-admin .vms-venue-calendar .vms-badge,
+body.toplevel_page_vms .vms-venue-calendar .vms-badge,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+}
+
+body.vms-admin .vms-venue-calendar .vms-badge-grey,
+body.toplevel_page_vms .vms-venue-calendar .vms-badge-grey,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-badge-grey {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
+body.vms-admin .vms-venue-calendar .vms-badge-amber,
+body.toplevel_page_vms .vms-venue-calendar .vms-badge-amber,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-badge-amber {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fed7aa;
+}
+
+body.vms-admin .vms-venue-calendar .vms-badge-green,
+body.toplevel_page_vms .vms-venue-calendar .vms-badge-green,
+body[class*="vms_page_vms-"] .vms-venue-calendar .vms-badge-green {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+@media (max-width: 782px) {
+  body.vms-admin .vms-venue-calendar .vms-cal-nav,
+  body.toplevel_page_vms .vms-venue-calendar .vms-cal-nav,
+  body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-nav {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  body.vms-admin .vms-venue-calendar .vms-cal-grid,
+  body.toplevel_page_vms .vms-venue-calendar .vms-cal-grid,
+  body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.vms-admin .vms-venue-calendar .vms-cal-filter-venue,
+  body.toplevel_page_vms .vms-venue-calendar .vms-cal-filter-venue,
+  body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-filter-venue {
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 520px) {
+  body.vms-admin .vms-venue-calendar .vms-cal-grid,
+  body.toplevel_page_vms .vms-venue-calendar .vms-cal-grid,
+  body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.vms-admin .vms-venue-calendar .vms-cal-filter-label-month,
+  body.toplevel_page_vms .vms-venue-calendar .vms-cal-filter-label-month,
+  body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-filter-label-month {
+    margin-left: 0;
+  }
+
+  body.vms-admin .vms-venue-calendar .vms-cal-filter-venue,
+  body.toplevel_page_vms .vms-venue-calendar .vms-cal-filter-venue,
+  body[class*="vms_page_vms-"] .vms-venue-calendar .vms-cal-filter-venue {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* =====================================================================
+   Holidays admin page
+   ===================================================================== */
+
+.vms-holidays-admin .vms-holidays-venue-form {
+  margin: 12px 0 18px;
+}
+
+.vms-holidays-admin .vms-holidays-venue-select {
+  min-width: 320px;
+}
+
+.vms-holidays-admin .vms-holidays-editor-card {
+  max-width: 980px;
+  padding: 14px 16px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: #fff;
+  margin: 0 0 18px;
+}
+
+.vms-holidays-admin .vms-holidays-editor-title {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.vms-holidays-admin .vms-holidays-field {
+  margin: 10px 0 0;
+}
+
+.vms-holidays-admin .vms-holidays-name-input {
+  min-width: 420px;
+  max-width: 100%;
+}
+
+.vms-holidays-admin .vms-holidays-status-select {
+  min-width: 220px;
+}
+
+.vms-holidays-admin .vms-holidays-divider {
+  margin: 16px 0;
+}
+
+.vms-holidays-admin .vms-holidays-subtitle {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.vms-holidays-admin .vms-holidays-help {
+  margin: 0 0 10px;
+}
+
+.vms-holidays-admin .vms-holidays-structure-select {
+  min-width: 260px;
+}
+
+.vms-holidays-admin .vms-holidays-number-input {
+  width: 200px;
+}
+
+.vms-holidays-admin .vms-holidays-actions {
+  margin: 14px 0 0;
+}
+
+.vms-holidays-admin .vms-holidays-list-title {
+  margin-top: 0;
+}
+
+.vms-holidays-admin .vms-holidays-table-wrap {
+  max-width: 980px;
+}
+
+.vms-holidays-admin .vms-holidays-bulk-actions {
+  margin: 10px 0;
+}
+
+.vms-holidays-admin .vms-holidays-col-check {
+  width: 34px;
+}
+
+@media (max-width: 782px) {
+  .vms-holidays-admin .vms-holidays-venue-select,
+  .vms-holidays-admin .vms-holidays-name-input {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* Staff tax sidebar metabox */
+.vms-staff-tax-badge-row {
+  margin: 0 0 8px;
+}
+
+.vms-staff-tax-tip {
+  margin-top: 10px;
+}
+
+.vms-staff-tax-missing {
+  margin-top: 4px;
+}
+
+/* =====================================================================
+   CSS-02 grouped pass: admin inline-style migration
+   ===================================================================== */
+
+/* Season Dates admin */
+.vms-season-dates-admin .vms-sd-stats {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.vms-season-dates-admin .vms-sd-col-enabled {
+  width: 70px;
+}
+
+.vms-season-dates-admin .vms-sd-col-type {
+  width: 160px;
+}
+
+.vms-season-dates-admin .vms-sd-col-note {
+  width: 280px;
+}
+
+.vms-season-dates-admin .vms-sd-col-delete {
+  width: 110px;
+}
+
+.vms-season-dates-admin .vms-sd-mmdd-input {
+  max-width: 110px;
+}
+
+.vms-season-dates-admin .vms-sd-pattern-row {
+  margin-top: 8px;
+}
+
+.vms-season-dates-admin .vms-sd-pattern-row--tight {
+  margin-top: 2px;
+}
+
+.vms-season-dates-admin .vms-sd-pattern-label {
+  display: inline-block;
+  min-width: 92px;
+  font-weight: 600;
+}
+
+.vms-season-dates-admin .vms-sd-day-option {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.vms-season-dates-admin .vms-sd-pattern-help {
+  margin-top: 6px;
+}
+
+.vms-season-dates-admin .vms-sd-note-input {
+  width: 100%;
+}
+
+.vms-season-dates-admin .vms-sd-note-input--wide {
+  width: 380px;
+  max-width: 100%;
+}
+
+.vms-season-dates-admin .vms-sd-save-row {
+  margin-top: 10px;
+}
+
+.vms-season-dates-admin .vms-sd-subhead-gap {
+  margin-top: 18px;
+}
+
+.vms-season-dates-admin .vms-sd-subhead-gap-sm {
+  margin-top: 16px;
+}
+
+/* Vendor user link metabox */
+.vms-vul-metabox .vms-vul-section-head {
+  margin: 10px 0 12px;
+  padding: 8px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.vms-vul-metabox .vms-vul-section-head-compact {
+  margin: 10px 0 8px;
+}
+
+.vms-vul-metabox .vms-vul-section-head-add {
+  margin: 12px 0 8px;
+}
+
+.vms-vul-metabox .vms-vul-user-card {
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+  border-radius: 6px;
+}
+
+.vms-vul-metabox .vms-vul-user-name {
+  margin: 0 0 6px;
+}
+
+.vms-vul-metabox .vms-vul-user-email {
+  margin: 0 0 8px;
+  color: #50575e;
+}
+
+.vms-vul-metabox .vms-vul-field-label {
+  display: block;
+  margin: 0 0 4px;
+}
+
+.vms-vul-metabox .vms-vul-field-label-gap {
+  margin-top: 8px;
+}
+
+.vms-vul-metabox .vms-vul-select {
+  width: 100%;
+  max-width: 100%;
+}
+
+.vms-vul-metabox .vms-vul-check-label {
+  display: block;
+}
+
+.vms-vul-metabox .vms-vul-check-label-gap-lg {
+  margin-top: 10px;
+}
+
+.vms-vul-metabox .vms-vul-check-label-gap-md {
+  margin-top: 8px;
+}
+
+.vms-vul-metabox .vms-vul-check-label-gap-sm {
+  margin-top: 6px;
+}
+
+.vms-vul-metabox .vms-vul-help {
+  margin-top: 6px;
+}
+
+/* Tax bypass sidebar metabox */
+.vms-tax-bypass-badge-row {
+  margin: 0 0 10px;
+}
+
+.vms-tax-bypass-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid transparent;
+}
+
+.vms-tax-bypass-badge-active {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.vms-tax-bypass-badge-expired {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.vms-tax-bypass-badge-off {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #374151;
+}
+
+.vms-tax-bypass-desc-top {
+  margin-top: 0;
+}
+
+.vms-tax-bypass-field-row {
+  margin: 10px 0 8px;
+}
+
+.vms-tax-bypass-field-row-tight {
+  margin: 0 0 8px;
+}
+
+.vms-tax-bypass-strong-label {
+  font-weight: 700;
+}
+
+.vms-tax-bypass-strong-label-block {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.vms-tax-bypass-input-full {
+  width: 100%;
+}
+
+.vms-tax-bypass-audit {
+  margin: 8px 0 0;
+}
+
+.vms-tax-bypass-warn {
+  margin: 10px 0 0;
+}
+
+.vms-tax-bypass-warn-expired {
+  color: #b32d2e;
+}
+
+.vms-tax-bypass-warn-active {
+  color: #7c2d12;
+}
+
+.vms-tax-bypass-divider {
+  margin: 12px 0;
+}
+
+.vms-tax-bypass-save-note {
+  margin: 0;
+}
+
+/* Comp Package editor */
+.vms-comp-package-admin .vms-comp-package-help {
+  margin-top: 0;
+}
+
+.vms-comp-package-admin .vms-comp-package-select-wide {
+  min-width: 280px;
+  max-width: 100%;
+}
+
+.vms-comp-package-admin .vms-comp-package-input-money {
+  width: 160px;
+}
+
+.vms-comp-package-admin .vms-comp-package-subhead {
+  margin: 0 0 6px;
+}
+
+.vms-comp-package-admin .vms-comp-package-block {
+  margin: 0 0 10px;
+}
+
+.vms-comp-package-admin .vms-comp-package-attendance {
+  padding: 14px 16px;
+  border: 1px solid #d6e4f0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fbff 0%, #edf6ff 100%);
+}
+
+.vms-comp-package-admin .vms-comp-package-attendance hr {
+  display: none;
+}
+
+.vms-comp-package-admin .vms-comp-package-notes {
+  width: 100%;
+}
+
+/* Venue duplicate/template admin */
+.misc-pub-section.vms-venue-dup-submit-section {
+  padding-top: 10px;
+}
+
+.vms-venue-dup-submit-help {
+  margin: 6px 0 0;
+}
+
+.vms-venue-template-help {
+  margin: 0 0 10px;
+}
+
+.vms-venue-template-toggle {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.vms-venue-template-create {
+  padding: 14px 16px;
+}
+
+.vms-venue-template-create-inner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.vms-venue-template-create-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.vms-venue-template-create-body {
+  flex: 1;
+}
+
+.vms-venue-template-create-title {
+  margin: 0 0 8px;
+}
+
+.vms-venue-template-create-desc {
+  margin: 0 0 10px;
+}
+
+.vms-venue-template-select {
+  min-width: 320px;
+}
+
+.vms-venue-template-create-btn {
+  margin-left: 8px;
+}
+
+@media (max-width: 782px) {
+  .vms-venue-template-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .vms-venue-template-create-btn {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
+
+/* Tax Profile admin metabox */
+.vms-tax-profile-admin .vms-tax-profile-status {
+  margin-top: 0;
+}
+
+.vms-tax-profile-admin .vms-tax-profile-subhead {
+  margin: 16px 0 8px;
+}
+
+.vms-tax-profile-admin .vms-tax-profile-subhead-first {
+  margin-top: 12px;
+}
+
+.vms-tax-profile-admin .vms-tax-profile-field-full {
+  grid-column: 1 / -1;
+}
+
+.vms-tax-profile-admin .vms-tax-profile-upload-note {
+  margin: 0 0 10px;
+}
+
+.vms-tax-profile-admin .vms-tax-profile-upload-field {
+  margin: 0 0 10px;
+}
+
+/* Docs admin page */
+.vms-docs-admin .vms-docs-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.vms-docs-admin .vms-docs-sidebar {
+  min-width: 260px;
+  max-width: 320px;
+}
+
+.vms-docs-admin .vms-docs-no-top {
+  margin-top: 0;
+}
+
+.vms-docs-admin .vms-docs-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.vms-docs-admin .vms-docs-content {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #dcdcde;
+  padding: 16px;
+}
+
+.vms-docs-admin .vms-docs-since {
+  color: #646970;
+  margin-top: -8px;
+}
+
+@media (max-width: 960px) {
+  .vms-docs-admin .vms-docs-layout {
+    flex-direction: column;
+  }
+
+  .vms-docs-admin .vms-docs-sidebar {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* Vendor list columns + filters */
+.vms-vendor-col-muted {
+  color: #646970;
+}
+
+.vms-vendor-tax-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.vms-vendor-tax-pill-complete {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.vms-vendor-tax-pill-incomplete {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.vms-vendor-filter-w9-status {
+  max-width: 220px;
+}
+
+.vms-vendor-filter-1099 {
+  max-width: 160px;
+}
+
+.vms-vendor-mini-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.vms-vendor-mini-pill-not-requested,
+.vms-vendor-mini-pill-default {
+  background: #f0f0f1;
+  color: #1d2327;
+}
+
+.vms-vendor-mini-pill-requested {
+  background: #fff8e5;
+  color: #7a4d00;
+}
+
+.vms-vendor-mini-pill-received {
+  background: #e7f5ff;
+  color: #004b7a;
+}
+
+.vms-vendor-mini-pill-on-file {
+  background: #e6f6ea;
+  color: #0a5f2a;
+}
+
+.vms-vendor-mini-pill-exempt {
+  background: #f3e8ff;
+  color: #5b21b6;
+}
+
+/* Vendor list UI moved from inline <style> */
+body.edit-php.post-type-vms_vendor .wp-list-table .column-title {
+  width: 22%;
+}
+
+body.edit-php.post-type-vms_vendor .wp-list-table .column-vms_vendor_type {
+  width: 10%;
+}
+
+body.edit-php.post-type-vms_vendor .wp-list-table .column-vms_vendor_contact {
+  width: 26%;
+}
+
+body.edit-php.post-type-vms_vendor .wp-list-table .column-vms_vendor_portal {
+  width: 12%;
+}
+
+body.edit-php.post-type-vms_vendor .wp-list-table .column-vms_vendor_dualhat {
+  width: 12%;
+  min-width: 150px;
+}
+
+body.edit-php.post-type-vms_vendor .wp-list-table .column-vms_vendor_tax {
+  width: 20%;
+}
+
+body.edit-php.post-type-vms_vendor .wp-list-table th.column-vms_vendor_dualhat,
+body.edit-php.post-type-vms_vendor .wp-list-table td.column-vms_vendor_dualhat {
+  white-space: nowrap;
+}
+
+body.edit-php.post-type-vms_vendor .vms-vcol-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+  margin: 2px 0;
+}
+
+body.edit-php.post-type-vms_vendor .vms-vcol-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.edit-php.post-type-vms_vendor .vms-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.6;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  white-space: nowrap;
+}
+
+body.edit-php.post-type-vms_vendor .vms-pill .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+body.edit-php.post-type-vms_vendor .vms-pill-muted {
+  opacity: 0.85;
+}
+
+.vms-vendor-filter-tax,
+.vms-vendor-filter-w9 {
+  margin-right: 8px;
+}
+
+@media (max-width: 900px) {
+  body.edit-php.post-type-vms_vendor .wp-list-table .column-vms_vendor_type {
+    display: none;
+  }
+}
+
+@media (max-width: 782px) {
+  body.edit-php.post-type-vms_vendor .vms-vcol-wrap {
+    gap: 4px;
+  }
+
+  body.edit-php.post-type-vms_vendor .vms-pill {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
+
+/* Settings / vendor tax / integrity small UI helpers */
+.vms-settings-default-venue-alert {
+  margin: 12px 0;
+  padding: 12px;
+}
+
+.vms-vendor-tax-cols-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.vms-vendor-tax-cols-pill-complete {
+  background: #d1fae5;
+}
+
+.vms-vendor-tax-cols-pill-incomplete {
+  background: #fee2e2;
+}
+
+.vms-vendor-tax-export-btn {
+  margin-left: 8px;
+}
+
+.vms-settings-icon-grid {
+  display: grid;
+  gap: 8px;
+  max-width: 760px;
+}
+
+.vms-settings-icon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.vms-settings-icon-type {
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.vms-settings-icon-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vms-settings-icon-select {
+  min-width: 190px;
+}
+
+.vms-settings-icon-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.vms-settings-map-grid {
+  display: grid;
+  gap: 8px;
+  max-width: 980px;
+}
+
+.vms-settings-map-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(260px, 2fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.vms-settings-map-row-multi {
+  grid-template-columns: minmax(180px, 1fr) minmax(420px, 2fr);
+}
+
+.vms-settings-map-row-link {
+  grid-template-columns: minmax(180px, 1fr) minmax(520px, 3fr);
+}
+
+.vms-settings-map-type {
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.vms-settings-map-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.vms-settings-map-select {
+  min-width: 190px;
+}
+
+.vms-settings-map-number {
+  width: 120px;
+}
+
+.vms-settings-map-url {
+  min-width: 280px;
+  flex: 1;
+}
+
+@media (max-width: 960px) {
+  .vms-settings-map-row,
+  .vms-settings-map-row-multi,
+  .vms-settings-map-row-link {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vms-venue-comp-help-bottom {
+  max-width: 980px;
+  margin-top: 10px;
+}
+
+.vms-integrity-tec-id-input {
+  width: 180px;
+}
+
+/* CPT: Venues admin inline-style migration */
+.vms-venue-default-times-admin .vms-venue-times-desc {
+  margin-top: 0;
+}
+
+.vms-venue-default-times-admin .vms-venue-times-field {
+  margin: 0 0 10px;
+}
+
+.vms-venue-default-times-admin .vms-venue-times-input {
+  width: 100%;
+}
+
+.vms-venue-schedule-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+  max-width: 900px;
+}
+
+.vms-venue-schedule-subhead {
+  margin: 0 0 8px;
+}
+
+.vms-venue-schedule-help {
+  margin: 0 0 10px;
+}
+
+.vms-venue-open-days-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  max-width: 360px;
+}
+
+.vms-venue-day-label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vms-venue-year-round-wrap {
+  margin-top: 12px;
+}
+
+.vms-venue-year-round-label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.vms-venue-season-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 0 0 10px;
+  background: #fff;
+}
+
+.vms-venue-season-title {
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.vms-venue-season-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vms-venue-season-field {
+  min-width: 220px;
+  flex: 1;
+}
+
+.vms-venue-season-date {
+  width: 100%;
+  max-width: 260px;
+}
+
+.vms-venue-schedule-tip {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .vms-venue-schedule-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-venue-season-date {
+    max-width: none;
+  }
+}
+
+/* CPT: Ratings */
+body.post-type-vms_rating .vms-rating-select-wide {
+  min-width: 260px;
+}
+
+/* SOCIAL-01: social sharing foundation */
+.vms-social-panel {
+  margin-top: 14px;
+}
+
+.vms-social-provider-grid,
+.vms-social-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.vms-social-provider-card,
+.vms-social-platform-card {
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.vms-social-provider-card h3,
+.vms-social-platform-card h4 {
+  margin: 0 0 8px;
+}
+
+.vms-social-manual-tools,
+.vms-social-event-queue-ops,
+.vms-social-queue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.vms-social-copy-status {
+  font-size: 12px;
+  color: #2271b1;
+}
+
+.vms-social-event-queue-form {
+  display: grid;
+  gap: 8px;
+  max-width: 420px;
+}
+
+.vms-social-queue-filters {
+  margin: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Shared admin pill tones */
+.vms-pill-grey,
+.vms-pill-muted,
+.vms-pill-default,
+.vms-pill-yellow,
+.vms-pill-warn,
+.vms-pill-green,
+.vms-pill-ok,
+.vms-pill-red,
+.vms-pill-bad,
+.vms-pill-blue,
+.vms-vcc-pill--warning,
+.vms-vcc-pill--success,
+.vms-vcc-pill--danger,
+.vms-vcc-pill--info,
+.vms-vcc-pill--neutral {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.vms-pill-grey,
+.vms-pill-muted,
+.vms-pill-default {
+  background: #f0f0f1;
+  color: #1d2327;
+  border-color: #d0d4d9;
+}
+
+.vms-pill-yellow,
+.vms-pill-warn,
+.vms-vcc-pill--warning {
+  background: #fff4d6;
+  color: #8a5a00;
+  border-color: #f1cf7a;
+}
+
+.vms-pill-green,
+.vms-pill-ok,
+.vms-vcc-pill--success {
+  background: #e7f7ed;
+  color: #156c36;
+  border-color: #9fd0ad;
+}
+
+.vms-pill-red,
+.vms-pill-bad,
+.vms-vcc-pill--danger {
+  background: #fff3f3;
+  color: #8a1f1f;
+  border-color: #f0b1b1;
+}
+
+.vms-pill-blue,
+.vms-vcc-pill--info {
+  background: #eef5ff;
+  color: #1d4ed8;
+  border-color: #bfd5fb;
+}
+
+.vms-vcc-pill--neutral {
+  background: #f6f7f7;
+  color: #475467;
+  border-color: #d0d5dd;
+}
+
+/* Vendor Command Center */
+#vms-vendor-command-center {
+  --vms-accent: var(--vms-cluster-ink, #225734);
+  --vms-accent-strong: var(--vms-cluster-ink, #225734);
+  --vms-accent-soft: var(--vms-cluster-bg, #e8f5eb);
+  --vms-accent-subtle: #f4fbf5;
+}
+
+#vms-vendor-command-center .vms-admin-shell__actions {
+  align-items: center;
+}
+
+#vms-vendor-command-center .vms-vcc-intro {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--vms-cluster-bg, #e8f5eb);
+  border: 1px solid var(--vms-cluster-border, #bfdcc7);
+  border-radius: 16px;
+}
+
+#vms-vendor-command-center .vms-vcc-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+#vms-vendor-command-center .vms-vcc-summary-card {
+  background: #fff;
+  border: 1px solid var(--vms-cluster-border, #bfdcc7);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+#vms-vendor-command-center .vms-vcc-summary-card__value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+#vms-vendor-command-center .vms-vcc-summary-card__label {
+  margin-top: 6px;
+  color: #475467;
+}
+
+#vms-vendor-command-center .vms-vcc-compose {
+  margin-bottom: 18px;
+  background: #fff;
+  border: 1px solid var(--vms-cluster-border, #bfdcc7);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  overflow: hidden;
+}
+
+#vms-vendor-command-center .vms-vcc-panel__summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  cursor: pointer;
+  list-style: none;
+  background: #fff;
+  border-bottom: 1px solid var(--vms-cluster-border, #bfdcc7);
+}
+
+#vms-vendor-command-center .vms-vcc-panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+#vms-vendor-command-center .vms-vcc-panel__summary-text {
+  display: grid;
+  gap: 4px;
+}
+
+#vms-vendor-command-center .vms-vcc-panel__title {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--vms-cluster-ink, #225734);
+}
+
+#vms-vendor-command-center .vms-vcc-panel__description {
+  display: block;
+  color: #475467;
+}
+
+#vms-vendor-command-center .vms-vcc-panel__toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--vms-cluster-border-strong, #7eb38c);
+  background: #fff;
+}
+
+#vms-vendor-command-center .vms-vcc-panel__toggle::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--vms-cluster-ink, #225734);
+  border-bottom: 2px solid var(--vms-cluster-ink, #225734);
+  transform: rotate(45deg);
+  transition: transform 140ms ease;
+}
+
+#vms-vendor-command-center .vms-vcc-panel[open] .vms-vcc-panel__toggle::before {
+  transform: rotate(-135deg);
+  top: 11px;
+}
+
+#vms-vendor-command-center .vms-vcc-panel__body {
+  padding: 16px;
+}
+
+#vms-vendor-command-center .vms-vcc-compose__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+#vms-vendor-command-center .vms-vcc-compose input[type="email"],
+#vms-vendor-command-center .vms-vcc-compose input[type="text"],
+#vms-vendor-command-center .vms-vcc-compose select,
+#vms-vendor-command-center .vms-vcc-compose textarea {
+  width: 100%;
+}
+
+
+#vms-vendor-command-center .vms-vcc-compose__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+#vms-vendor-command-center .vms-vcc-compose__actions .button,
+#vms-vendor-command-center .vms-vcc-compose__actions .button-primary,
+#vms-vendor-command-center .vms-vcc-compose__actions .button-secondary {
+  margin: 0;
+}
+
+#vms-vendor-command-center .vms-vcc-compose__template-note,
+#vms-vendor-command-center .vms-vcc-template-scope-help {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #475569;
+}
+
+#vms-vendor-command-center .vms-vcc-token-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+#vms-vendor-command-center .vms-vcc-token-item {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--vms-cluster-border, #bfdcc7);
+  border-radius: 12px;
+  background: #f8fbf8;
+}
+
+#vms-vendor-command-center .vms-vcc-token-item code {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#vms-vendor-command-center .vms-vcc-token-item span {
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#vms-vendor-command-center .vms-vcc-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: end;
+}
+
+#vms-vendor-command-center .vms-vcc-filters input,
+#vms-vendor-command-center .vms-vcc-filters select {
+  width: 100%;
+}
+
+#vms-vendor-command-center .vms-vcc-table-wrap {
+  overflow-x: auto;
+}
+
+#vms-vendor-command-center .vms-vcc-table th,
+#vms-vendor-command-center .vms-vcc-table td {
+  vertical-align: top;
+}
+
+#vms-vendor-command-center .vms-vcc-table .vms-vcc-col-vendor {
+  min-width: 210px;
+}
+
+#vms-vendor-command-center .vms-vcc-vendor-name {
+  margin-bottom: 6px;
+}
+
+#vms-vendor-command-center .vms-vcc-vendor-meta,
+#vms-vendor-command-center .vms-vcc-subline {
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#vms-vendor-command-center .vms-vcc-subline {
+  margin-top: 6px;
+}
+
+#vms-vendor-command-center .vms-vcc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+}
+
+#vms-vendor-command-center .vms-vcc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 165px;
+}
+
+#vms-vendor-command-center .vms-vcc-actions .button,
+#vms-vendor-command-center .vms-vcc-actions .button-small {
+  margin: 0;
+}
+
+#vms-vendor-command-center .vms-vcc-inline-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+#vms-vendor-command-center .vms-vcc-action-link,
+#vms-vendor-command-center .vms-vcc-inline-form .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: none;
+  line-height: 1.2;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+#vms-vendor-command-center .vms-vcc-action-link--edit {
+  border-color: var(--vms-cluster-border, #bfdcc7);
+  background: #f8fbf8;
+  color: var(--vms-cluster-ink, #225734);
+}
+
+#vms-vendor-command-center .vms-vcc-action-link--contact {
+  border-color: var(--vms-cluster-border-strong, #7eb38c);
+  background: var(--vms-cluster-bg, #e8f5eb);
+  color: var(--vms-cluster-ink, #225734);
+}
+
+#vms-vendor-command-center .vms-vcc-action-link--link,
+#vms-vendor-command-center .vms-vcc-inline-form .button {
+  border-color: var(--vms-cluster-border-strong, #7eb38c);
+  background: #edf9f1;
+  color: #166534;
+}
+
+#vms-vendor-command-center .vms-vcc-action-link:hover,
+#vms-vendor-command-center .vms-vcc-inline-form .button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 782px) {
+  #vms-vendor-command-center .vms-vcc-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #vms-vendor-command-center .vms-vcc-panel__summary {
+    padding: 14px;
+  }
+
+  #vms-vendor-command-center .vms-vcc-panel__body {
+    padding: 14px;
+  }
+
+  #vms-vendor-command-center .vms-vcc-filters {
+    grid-template-columns: 1fr;
+  }
+
+  #vms-vendor-command-center .vms-vcc-actions {
+    min-width: 130px;
+  }
+}
+
+/* Event Plan review banner / list hints */
+.vms-review-banner-list{margin:0 0 8px 18px;list-style:disc;}
+.vms-review-status-note{margin-top:6px;}
+
+/* Vendor Availability Admin Board */
+#vms-vendor-availability .vms-va-intro,
+#vms-vendor-availability .vms-va-filters,
+#vms-vendor-availability .vms-va-month,
+#vms-vendor-availability .vms-va-list,
+#vms-vendor-availability .vms-va-summary-card {
+  background: #fff;
+  border: 1px solid #d9e2ef;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+#vms-vendor-availability .vms-va-intro,
+#vms-vendor-availability .vms-va-filters,
+#vms-vendor-availability .vms-va-month,
+#vms-vendor-availability .vms-va-list {
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+#vms-vendor-availability .vms-va-filter-grid,
+#vms-vendor-availability .vms-va-summary-grid {
+  display: grid;
+  gap: 14px;
+}
+
+#vms-vendor-availability .vms-va-filter-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: end;
+}
+
+#vms-vendor-availability .vms-va-filter-grid p,
+#vms-vendor-availability .vms-va-filter-actions,
+#vms-vendor-availability .vms-va-section-head,
+#vms-vendor-availability .vms-va-daylist {
+  margin: 0;
+}
+
+#vms-vendor-availability .vms-va-filter-grid input,
+#vms-vendor-availability .vms-va-filter-grid select {
+  width: 100%;
+}
+
+#vms-vendor-availability .vms-va-filter-actions {
+  margin-top: 14px;
+}
+
+#vms-vendor-availability .vms-va-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  margin-bottom: 18px;
+}
+
+#vms-vendor-availability .vms-va-summary-card {
+  padding: 14px 16px;
+}
+
+#vms-vendor-availability .vms-va-summary-card__value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+#vms-vendor-availability .vms-va-summary-card__label {
+  margin-top: 8px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#vms-vendor-availability .vms-va-summary-card__labeltext {
+  color: #475467;
+}
+
+#vms-vendor-availability .vms-va-summary-card__label .vms-vcc-pill {
+  font-size: 12px;
+}
+
+#vms-vendor-availability .vms-va-summary-card--success {
+  border-color: #b7dfc2;
+}
+
+#vms-vendor-availability .vms-va-summary-card--warning {
+  border-color: #f2d28b;
+}
+
+#vms-vendor-availability .vms-va-summary-card--danger {
+  border-color: #efb0ae;
+}
+
+#vms-vendor-availability .vms-va-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+}
+
+#vms-vendor-availability .vms-va-section-head h2 {
+  margin: 0;
+}
+
+#vms-vendor-availability .vms-va-month-grid {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+#vms-vendor-availability .vms-va-month-grid th {
+  text-align: center;
+  border-bottom: 1px solid #d9e2ef;
+  background: #f8fafc;
+}
+
+#vms-vendor-availability .vms-va-month-grid__empty {
+  background: #f8fafc;
+  border-right: 1px solid #e5edf7;
+  border-bottom: 1px solid #e5edf7;
+}
+
+#vms-vendor-availability .vms-va-month-grid__cell {
+  vertical-align: top;
+  min-height: 128px;
+  padding: 12px;
+  background: #fff;
+  border-right: 1px solid #e5edf7;
+  border-bottom: 1px solid #e5edf7;
+}
+
+#vms-vendor-availability .vms-va-month-grid__cell.is-past {
+  background: #f8fafc;
+}
+
+#vms-vendor-availability .vms-va-month-grid__cell.is-today {
+  box-shadow: inset 0 0 0 2px #7ea6ff;
+}
+
+#vms-vendor-availability .vms-va-month-grid__cell.is-selected {
+  background: #f3f7ff;
+}
+
+#vms-vendor-availability .vms-va-month-grid__cell.is-filtered-out {
+  background: #f8fafc;
+  color: #667085;
+}
+
+#vms-vendor-availability .vms-va-month-grid__cell.is-venue-closed {
+  box-shadow: inset 4px 0 0 #d0d5dd;
+}
+
+#vms-vendor-availability .vms-va-dayhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#vms-vendor-availability .vms-va-dayhead a {
+  font-size: 12px;
+  text-decoration: none;
+}
+
+#vms-vendor-availability .vms-va-daynotice {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: #475467;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#vms-vendor-availability .vms-va-daynotice--closed {
+  background: #fff7e8;
+  color: #8a5a00;
+}
+
+#vms-vendor-availability .vms-va-daycounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+#vms-vendor-availability .vms-va-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #d0d7de;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f8fafc;
+}
+
+#vms-vendor-availability .vms-va-count.is-active-filter {
+  box-shadow: inset 0 0 0 1px #1d4ed8;
+}
+
+#vms-vendor-availability .vms-va-count--success {
+  background: #edf9f1;
+  border-color: #b7dfc2;
+  color: #166534;
+}
+
+#vms-vendor-availability .vms-va-count--warning {
+  background: #fff7e8;
+  border-color: #f2d28b;
+  color: #8a5a00;
+}
+
+#vms-vendor-availability .vms-va-count--danger {
+  background: #fff1f1;
+  border-color: #efb0ae;
+  color: #9f1c1c;
+}
+
+#vms-vendor-availability .vms-va-dayfocus {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #d9e2ef;
+}
+
+#vms-vendor-availability .vms-va-dayfocus__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #344054;
+}
+
+#vms-vendor-availability .vms-va-daylist {
+  padding-left: 18px;
+  margin-top: 8px;
+}
+
+#vms-vendor-availability .vms-va-daylist li {
+  margin: 0 0 4px;
+}
+
+#vms-vendor-availability .vms-va-daylist__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#vms-vendor-availability .vms-va-daylist__name {
+  min-width: 0;
+}
+
+#vms-vendor-availability .vms-va-type-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+#vms-vendor-availability .vms-va-table-wrap .vms-va-type-badges {
+  display: flex;
+  margin: 4px 0 0;
+}
+
+#vms-vendor-availability .vms-va-daylist__name a,
+#vms-vendor-availability .vms-va-daygroup__list a {
+  text-decoration: none;
+}
+
+#vms-vendor-availability .vms-va-inline-book,
+.vms-va-profile .vms-va-inline-book {
+  flex: 0 0 auto;
+  min-height: 24px;
+  line-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+}
+
+#vms-vendor-availability .vms-va-dayexpand {
+  margin-top: 10px;
+}
+
+#vms-vendor-availability .vms-va-dayexpand summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+#vms-vendor-availability .vms-va-dayexpand__body {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e5edf7;
+  display: grid;
+  gap: 10px;
+}
+
+#vms-vendor-availability .vms-va-daygroup {
+  background: #f8fafc;
+  border: 1px solid #e5edf7;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+#vms-vendor-availability .vms-va-daygroup__head {
+  font-size: 12px;
+  font-weight: 700;
+  color: #344054;
+}
+
+#vms-vendor-availability .vms-va-daygroup__list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+#vms-vendor-availability .vms-va-daygroup__list li {
+  margin: 0 0 4px;
+}
+
+#vms-vendor-availability .vms-va-daydetail-link {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+#vms-vendor-availability .vms-va-list--secondary {
+  margin-top: 0;
+}
+
+#vms-vendor-availability .vms-va-table-wrap {
+  overflow-x: auto;
+}
+
+#vms-vendor-availability .vms-va-table-wrap .widefat th,
+#vms-vendor-availability .vms-va-table-wrap .widefat td {
+  border-bottom: 1px solid #e5edf7;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+#vms-vendor-availability .vms-va-table-wrap .widefat tbody tr:hover {
+  background: #f8fbff;
+}
+
+#vms-vendor-availability .vms-va-type-group-row th {
+  background: #eef6ff;
+  color: #18406b;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+#vms-vendor-availability .vms-va-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 180px;
+}
+
+#vms-vendor-availability .button,
+.vms-va-profile .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  line-height: 1.2;
+}
+
+#vms-vendor-availability .vms-va-subline,
+#vms-vendor-availability .vms-va-muted {
+  color: #667085;
+  font-size: 12px;
+}
+
+#vms-vendor-availability .vms-va-subline {
+  margin-top: 4px;
+}
+
+@media (max-width: 782px) {
+  #vms-vendor-availability .vms-va-intro,
+  #vms-vendor-availability .vms-va-filters,
+  #vms-vendor-availability .vms-va-month,
+  #vms-vendor-availability .vms-va-list {
+    padding: 14px;
+  }
+
+  #vms-vendor-availability .vms-va-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #vms-vendor-availability .vms-va-month-grid {
+    min-width: 780px;
+  }
+}
+
+
+/* Vendor Availability snapshot on vendor edit screen */
+.vms-va-profile {
+  display: grid;
+  gap: 14px;
+}
+
+.vms-va-profile__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 16px;
+  align-items: flex-start;
+}
+
+.vms-va-profile__meta {
+  margin-top: 8px;
+}
+
+.vms-va-profile__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vms-va-profile__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  color: #475467;
+}
+
+.vms-va-profile__table-wrap {
+  overflow-x: auto;
+}
+
+.vms-va-profile-grid {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.vms-va-profile-grid th {
+  text-align: center;
+  border-bottom: 1px solid #d9e2ef;
+  background: #f8fafc;
+}
+
+.vms-va-profile-grid__empty {
+  background: #f8fafc;
+  border-right: 1px solid #e5edf7;
+  border-bottom: 1px solid #e5edf7;
+  min-width: 104px;
+}
+
+.vms-va-profile-grid__cell {
+  vertical-align: top;
+  min-width: 104px;
+  min-height: 76px;
+  padding: 8px 8px 10px;
+  background: #fff;
+  border-right: 1px solid #e5edf7;
+  border-bottom: 1px solid #e5edf7;
+}
+
+.vms-va-profile-grid__cell.is-today {
+  box-shadow: inset 0 0 0 2px #7ea6ff;
+}
+
+.vms-va-profile-grid__day {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.vms-va-profile-grid__pill {
+  margin-bottom: 0;
+}
+
+.vms-va-profile-grid__actions {
+  margin-top: 6px;
+}
+
+.vms-va-profile__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 782px) {
+  .vms-va-profile-grid {
+    min-width: 780px;
+  }
+}
+
+
+body.post-type-vms_event_plan .vms-ep-pay-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: start;
+  max-width: 1100px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section {
+  padding: 14px 16px 16px;
+  border: 1px solid #dcdcde;
+  border-radius: 14px;
+  background: #fff;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section--agent {
+  background: #f8fafc;
+  border-color: #dbe4ee;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section__header {
+  margin: 0 0 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section__header h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section__header .description {
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-agent-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 12px 16px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-ep-draft-pay-grid,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-ep-agent-grid {
+  margin-top: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-field,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-structure-select {
+  margin-top: 0;
+}
+
+@media (max-width: 1180px) {
+  body.post-type-vms_event_plan .vms-ep-pay-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 782px) {
+  body.post-type-vms_event_plan .vms-ep-agent-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+body.post-type-vms_event_plan .vms-ep-review-stack {
+  max-width: 980px;
+  margin: 12px 0 14px;
+  display: grid;
+  gap: 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-review-card,
+body.post-type-vms_event_plan .vms-ep-review-stack #vms-pay-override-box,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-low-guarantee-box,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-lock-actions {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  margin: 0;
+  border-radius: 14px;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-review-card,
+body.post-type-vms_event_plan .vms-ep-review-stack #vms-pay-override-box,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-low-guarantee-box,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-lock-actions {
+  padding: 14px 16px;
+}
+
+body.post-type-vms_event_plan #vms-comp-ack-wrap {
+  max-width: none;
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack #vms-pay-override-box .description,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-low-guarantee-box .description,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-review-card .description {
+  margin: 0 0 8px;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-pay-override-ack {
+  padding-top: 2px;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-lock-actions {
+  background: #fff;
+  border: 1px solid #dcdcde;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-lock-actions p:last-child,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-review-card > :last-child,
+body.post-type-vms_event_plan .vms-ep-review-stack #vms-pay-override-box > :last-child,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-low-guarantee-box > :last-child {
+  margin-bottom: 0;
+}
+
+
+/* v0.2.24.387: Event Plan compensation layout polish */
+body.post-type-vms_event_plan .vms-ep-card--comp {
+  max-width: 980px;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--comp > .description,
+body.post-type-vms_event_plan .vms-ep-card--blue .description {
+  max-width: 70ch;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--blue {
+  max-width: 980px;
+  padding: 12px 14px;
+}
+
+body.post-type-vms_event_plan .vms-ep-card--blue .vms-ep-ol {
+  margin: 8px 0 0 18px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-sections {
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  gap: 14px;
+  max-width: 980px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section {
+  padding: 14px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section__header {
+  margin-bottom: 10px;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section__header h4 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f3b66;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section__header .description {
+  max-width: 34ch;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-structure-select,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: start;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-structure-select label,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-field label {
+  display: block;
+  margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-structure-select br,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-field br {
+  display: none;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-structure-select select,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-field input,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-field select {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-field .description,
+body.post-type-vms_event_plan .vms-ep-pay-section .vms-comp-structure-select .description {
+  margin: 0;
+  line-height: 1.4;
+}
+
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--structure,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--base,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-mode,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-start {
+  grid-column: span 3;
+}
+
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--door,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-step-size,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-step-bonus,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-rate,
+body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-max {
+  grid-column: span 3;
+}
+
+body.post-type-vms_event_plan .vms-ep-agent-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-agent-grid .vms-comp-field {
+  min-height: 88px;
+}
+
+body.post-type-vms_event_plan #vms-agent-fee-summary {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+body.post-type-vms_event_plan .vms-attendance-preview {
+  max-width: 980px;
+  margin-top: 10px;
+}
+
+body.post-type-vms_event_plan .vms-attendance-preview__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack {
+  max-width: 980px;
+  gap: 10px;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-review-card,
+body.post-type-vms_event_plan .vms-ep-review-stack #vms-pay-override-box,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-low-guarantee-box,
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-lock-actions {
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-ep-lock-actions .button {
+  margin-top: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-pay-override-ack strong {
+  font-weight: 600;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack .vms-low-guarantee-box {
+  border-left: 4px solid #dba617;
+}
+
+body.post-type-vms_event_plan .vms-ep-review-stack #vms-pay-override-box {
+  border-left: 4px solid #72aee6;
+}
+
+@media (max-width: 1080px) {
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--structure,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--base,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-mode,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-start,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--door,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-step-size,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-step-bonus,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-rate,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-max {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 782px) {
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid,
+  body.post-type-vms_event_plan .vms-ep-agent-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--structure,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--base,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-mode,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-start,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--door,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-step-size,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-step-bonus,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-rate,
+  body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-max {
+    grid-column: auto;
+  }
+
+  body.post-type-vms_event_plan .vms-ep-pay-section__header .description {
+    max-width: none;
+  }
+}
+
+/* Vendor defaults metabox cleanup + attendance preview */
+body.post-type-vms_vendor #vms_vendor_defaults .inside {
+  padding-top: 14px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-ui {
+  display: grid;
+  gap: 16px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-intro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f6f7f7 100%);
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-intro__title {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-intro__desc {
+  margin: 0;
+  max-width: 780px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-intro__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.post-type-vms_vendor .vms-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #d0d4d9;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  gap: 16px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-card {
+  border: 1px solid #dcdcde;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  overflow: hidden;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-card__header,
+body.post-type-vms_vendor .vms-vendor-defaults-details__body {
+  padding: 16px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-card__header h4,
+body.post-type-vms_vendor .vms-vendor-defaults-details__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-card__header .description {
+  margin: 0;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-grid {
+  display: grid;
+  gap: 12px 14px;
+  padding: 0 16px 16px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-grid--template,
+body.post-type-vms_vendor .vms-vendor-defaults-grid--booking,
+body.post-type-vms_vendor .vms-vendor-defaults-grid--bonus,
+body.post-type-vms_vendor .vms-vendor-defaults-grid--reference {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+body.post-type-vms_vendor .vms-field--full {
+  grid-column: 1 / -1;
+}
+
+body.post-type-vms_vendor .vms-field {
+  min-width: 0;
+}
+
+body.post-type-vms_vendor .vms-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+body.post-type-vms_vendor .vms-field input,
+body.post-type-vms_vendor .vms-field select,
+body.post-type-vms_vendor .vms-field textarea {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.post-type-vms_vendor .vms-help {
+  margin-top: 6px;
+  color: #50575e;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+body.post-type-vms_vendor .vms-template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-preview-card {
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-preview-card__title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #101828;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-preview-card__subtitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-preview-card__scope,
+body.post-type-vms_vendor .vms-vendor-defaults-preview-card__note {
+  margin: 6px 0 0;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-chip--blue {
+  background: #eef5ff;
+  border-color: #bfd5fb;
+  color: #1d4ed8;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-chip--amber {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  padding: 14px 16px;
+  list-style: none;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-details summary::-webkit-details-marker {
+  display: none;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-details summary::after {
+  content: '▾';
+  color: #667085;
+  font-size: 12px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-details[open] summary::after {
+  transform: rotate(180deg);
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-details__meta {
+  color: #667085;
+  font-size: 12px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-details__body {
+  border-top: 1px solid #eaecf0;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-details__body > .description:first-child {
+  margin-top: 0;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-bonus-block {
+  margin: 0 16px 16px;
+  border: 1px solid #dbe7f3;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-bonus-block__header {
+  padding: 14px 16px 0;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-bonus-block__header h5 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-bonus-block__header .description {
+  margin: 0;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-preview-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.2fr);
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-preview-grid > * {
+  min-width: 0;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-preview-grid .vms-vendor-defaults-preview-card {
+  margin: 0;
+  height: 100%;
+}
+
+body.post-type-vms_vendor .vms-vendor-attendance-preview {
+  border: 1px solid #dbe7f3;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 14px 16px;
+}
+
+body.post-type-vms_vendor .vms-vendor-attendance-preview .vms-attendance-preview__title {
+  font-size: 13px;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-table-wrap {
+  overflow-x: auto;
+}
+
+body.post-type-vms_vendor .vms-vendor-defaults-table-wrap table input,
+body.post-type-vms_vendor .vms-vendor-defaults-table-wrap table select {
+  width: 100%;
+  min-width: 140px;
+}
+
+body.post-type-vms_vendor .vms-vendor-dow-venue {
+  margin-top: 10px;
+  border: 1px solid #eaecf0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+body.post-type-vms_vendor .vms-vendor-dow-venue > summary {
+  cursor: pointer;
+  padding: 12px 14px;
+}
+
+body.post-type-vms_vendor .vms-vendor-dow-venue .vms-vendor-defaults-table-wrap {
+  padding: 0 14px 14px;
+}
+
+@media (max-width: 1100px) {
+  body.post-type-vms_vendor .vms-vendor-defaults-top-grid,
+  body.post-type-vms_vendor .vms-vendor-defaults-preview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 782px) {
+  body.post-type-vms_vendor .vms-vendor-defaults-grid--template,
+  body.post-type-vms_vendor .vms-vendor-defaults-grid--booking,
+  body.post-type-vms_vendor .vms-vendor-defaults-grid--bonus,
+  body.post-type-vms_vendor .vms-vendor-defaults-grid--reference {
+    grid-template-columns: 1fr;
+  }
+
+  body.post-type-vms_vendor .vms-vendor-defaults-intro,
+  body.post-type-vms_vendor .vms-vendor-defaults-details summary {
+    display: block;
+  }
+
+  body.post-type-vms_vendor .vms-vendor-defaults-details__meta {
+    display: block;
+    margin-top: 4px;
+  }
+}
+
+
+/* Venue location metabox */
+.vms-venue-location-admin__intro,
+.vms-venue-location-admin__tip {
+  max-width: 90ch;
+}
+
+.vms-venue-location-admin__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 16px;
+  margin-top: 12px;
+}
+
+.vms-venue-location-admin__field {
+  margin: 0;
+}
+
+.vms-venue-location-admin__field--full {
+  grid-column: 1 / -1;
+}
+
+.vms-venue-location-admin__field label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Event Credits (cancellation resolution) */
+.vms-event-credits-panel {
+	margin-top: 16px;
+}
+
+.vms-event-credits-table-wrap {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.vms-event-credits-table td,
+.vms-event-credits-table th {
+	vertical-align: top;
+}
+
+.vms-event-credits-table .button + .button {
+	margin-left: 6px;
+}
+
+.vms-event-credit-status {
+	display: inline-block;
+	margin-top: 4px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: #f0f0f1;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.vms-event-credit-status--redeemed {
+	background: #edfaef;
+}
+
+.vms-event-credit-status--voided,
+.vms-event-credit-status--expired {
+	background: #fcf0f1;
+}
+
+@media (max-width: 782px) {
+	.vms-event-credits-table .button + .button {
+		margin-top: 6px;
+		margin-left: 0;
+	}
+}
+
+.vms-staff-qualification-card__actions {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vms-staff-qualification-card__proof a {
+  margin-top: 4px;
+}
+
+/* Staff certification review queue */
+.vms-staff-certifications-summary {
+    margin: 0 0 16px;
+    padding: 16px 18px;
+}
+
+.vms-staff-certifications-count {
+    font-size: 1.05rem;
+    margin-bottom: 0;
+}
+
+.vms-staff-certifications-table th,
+.vms-staff-certifications-table td {
+    vertical-align: middle;
+}
+
+.vms-staff-qualification-review-notice {
+    margin: 12px 0;
+}

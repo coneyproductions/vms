@@ -18,7 +18,7 @@ add_action('init', function () {
         ),
         'public'        => false,
         'show_ui'       => true,
-        'show_in_menu'  => 'vms',
+        'show_in_menu'  => false,
         'menu_icon'     => 'dashicons-money-alt',
         'supports'      => array('title'),
         'has_archive'   => false,
@@ -69,6 +69,13 @@ function vms_render_comp_package_meta_box($post)
     $min_guarantee = get_post_meta($post->ID, '_vms_min_guarantee', true);
     $cap_amount    = get_post_meta($post->ID, '_vms_cap_amount', true);
 
+    $attendance_bonus_mode = (string) get_post_meta($post->ID, '_vms_attendance_bonus_mode', true);
+    $attendance_bonus_start_count = get_post_meta($post->ID, '_vms_attendance_bonus_start_count', true);
+    $attendance_bonus_step_size = get_post_meta($post->ID, '_vms_attendance_bonus_step_size', true);
+    $attendance_bonus_step_bonus = get_post_meta($post->ID, '_vms_attendance_bonus_step_bonus', true);
+    $attendance_bonus_per_ticket_rate = get_post_meta($post->ID, '_vms_attendance_bonus_per_ticket_rate', true);
+    $attendance_bonus_max_bonus = get_post_meta($post->ID, '_vms_attendance_bonus_max_bonus', true);
+
     $notes = (string) get_post_meta($post->ID, '_vms_notes', true);
 
     // Venue list
@@ -78,10 +85,25 @@ function vms_render_comp_package_meta_box($post)
         'orderby'        => 'title',
         'order'          => 'ASC',
     ));
+
+    $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.comp_package.editor.basics" data-vms-tour="comp-package.help-action">' . esc_html__('Start Guided Tour', 'vms') . '</button>';
+    if (function_exists('vms_render_help_button')) {
+        $tour_button = vms_render_help_button(array(
+            'tour_id' => 'vms.comp_package.editor.basics',
+            'anchor' => 'comp-package.help-action',
+            'label' => __('Start Guided Tour', 'vms'),
+        ));
+    }
     ?>
-    <p>
+    <div class="vms-comp-package-admin">
+    <p class="description vms-comp-package-help" data-vms-tour="comp-package.help">
+        <?php esc_html_e('Need a refresher on package setup?', 'vms'); ?>
+        <?php echo ' ' . $tour_button; ?>
+    </p>
+
+    <p data-vms-tour="comp-package.venue">
         <label for="vms_venue_id"><strong><?php esc_html_e('Venue Scope', 'vms'); ?></strong></label><br />
-        <select id="vms_venue_id" name="vms_venue_id" style="min-width:280px;">
+        <select id="vms_venue_id" name="vms_venue_id" class="vms-comp-package-select-wide">
             <option value="0" <?php selected($venue_id, 0); ?>>
                 <?php esc_html_e('— Global Template (optional) —', 'vms'); ?>
             </option>
@@ -98,9 +120,9 @@ function vms_render_comp_package_meta_box($post)
 
     <hr />
 
-    <p>
+    <p data-vms-tour="comp-package.type">
         <label for="vms_comp_type"><strong><?php esc_html_e('Comp Type', 'vms'); ?></strong></label><br />
-        <select id="vms_comp_type" name="vms_comp_type" style="min-width:280px;">
+        <select id="vms_comp_type" name="vms_comp_type" class="vms-comp-package-select-wide">
             <option value="flat" <?php selected($type, 'flat'); ?>>
                 <?php esc_html_e('Flat Fee', 'vms'); ?>
             </option>
@@ -110,48 +132,116 @@ function vms_render_comp_package_meta_box($post)
             <option value="door_split" <?php selected($type, 'door_split'); ?>>
                 <?php esc_html_e('Door Split Only', 'vms'); ?>
             </option>
+            <option value="attendance_bonus" <?php selected($type, 'attendance_bonus'); ?>>
+                <?php esc_html_e('Base + Attendance Bonus', 'vms'); ?>
+            </option>
         </select>
     </p>
 
-    <p>
-        <label for="vms_flat_fee"><strong><?php esc_html_e('Flat Fee Amount', 'vms'); ?></strong></label><br />
-        <input type="number" step="0.01" id="vms_flat_fee" name="vms_flat_fee" style="width:160px;"
+    <p data-vms-tour="comp-package.base-pay">
+        <label for="vms_flat_fee"><strong><span id="vms_flat_fee_label_text"><?php echo esc_html($type === 'attendance_bonus' ? __('Base Pay', 'vms') : __('Flat Fee Amount', 'vms')); ?></span></strong></label><br />
+        <input type="number" step="0.01" id="vms_flat_fee" name="vms_flat_fee" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($flat_fee); ?>" />
-    </p>
-
-    <hr />
-
-    <h4 style="margin:0 0 6px;"><?php esc_html_e('Door Split', 'vms'); ?></h4>
-
-    <p>
-        <label for="vms_split_basis"><strong><?php esc_html_e('Split Basis', 'vms'); ?></strong></label><br />
-        <select id="vms_split_basis" name="vms_split_basis" style="min-width:280px;">
-            <option value="gross" <?php selected($split_basis, 'gross'); ?>>
-                <?php esc_html_e('Gross (simpler)', 'vms'); ?>
-            </option>
-            <option value="net" <?php selected($split_basis, 'net'); ?>>
-                <?php esc_html_e('Net (more accurate)', 'vms'); ?>
-            </option>
-        </select>
-    </p>
-
-    <p>
-        <label for="vms_split_percent_artist"><strong><?php esc_html_e('Artist Split %', 'vms'); ?></strong></label><br />
-        <input type="number" step="0.01" min="0" max="100"
-               id="vms_split_percent_artist" name="vms_split_percent_artist" style="width:160px;"
-               value="<?php echo esc_attr($split_percent_artist); ?>" /> %
-        <br><span class="description">
-            <?php esc_html_e('Venue split is implicitly (100 - Artist%).', 'vms'); ?>
+        <br><span id="vms_flat_fee_help" class="description<?php echo ($type === 'attendance_bonus') ? '' : ' vms-hidden'; ?>">
+            <?php esc_html_e('The guaranteed amount paid before attendance bonuses are added.', 'vms'); ?>
         </span>
     </p>
 
+    <div class="vms-comp-package-block" data-show-when="flat_plus_split,door_split">
+        <hr />
+
+        <h4 class="vms-comp-package-subhead"><?php esc_html_e('Door Split', 'vms'); ?></h4>
+
+        <p>
+            <label for="vms_split_basis"><strong><?php esc_html_e('Split Basis', 'vms'); ?></strong></label><br />
+            <select id="vms_split_basis" name="vms_split_basis" class="vms-comp-package-select-wide">
+                <option value="gross" <?php selected($split_basis, 'gross'); ?>>
+                    <?php esc_html_e('Gross (simpler)', 'vms'); ?>
+                </option>
+                <option value="net" <?php selected($split_basis, 'net'); ?>>
+                    <?php esc_html_e('Net (more accurate)', 'vms'); ?>
+                </option>
+            </select>
+        </p>
+
+        <p>
+            <label for="vms_split_percent_artist"><strong><?php esc_html_e('Artist Split %', 'vms'); ?></strong></label><br />
+            <input type="number" step="0.01" min="0" max="100"
+                   id="vms_split_percent_artist" name="vms_split_percent_artist" class="vms-comp-package-input-money"
+                   value="<?php echo esc_attr($split_percent_artist); ?>" /> %
+            <br><span class="description">
+                <?php esc_html_e('Venue split is implicitly (100 - Artist%).', 'vms'); ?>
+            </span>
+        </p>
+    </div>
+
+    <div class="vms-comp-package-block vms-comp-package-attendance" data-show-when="attendance_bonus" data-vms-tour="comp-package.attendance">
+        <hr />
+
+        <h4 class="vms-comp-package-subhead"><?php esc_html_e('Attendance Bonus', 'vms'); ?></h4>
+
+        <p>
+            <label for="vms_attendance_bonus_mode"><strong><?php esc_html_e('Bonus Style', 'vms'); ?></strong></label><br />
+            <select id="vms_attendance_bonus_mode" name="vms_attendance_bonus_mode" class="vms-comp-package-select-wide">
+                <option value="" <?php selected($attendance_bonus_mode, ''); ?>><?php esc_html_e('Select bonus style', 'vms'); ?></option>
+                <option value="step" <?php selected($attendance_bonus_mode, 'step'); ?>><?php esc_html_e('Step', 'vms'); ?></option>
+                <option value="continuous" <?php selected($attendance_bonus_mode, 'continuous'); ?>><?php esc_html_e('Continuous', 'vms'); ?></option>
+            </select>
+        </p>
+
+        <p>
+            <label for="vms_attendance_bonus_start_count"><strong><?php esc_html_e('Bonus Starts After', 'vms'); ?></strong></label><br />
+            <input type="number" step="1" min="0" id="vms_attendance_bonus_start_count" name="vms_attendance_bonus_start_count" class="vms-comp-package-input-money"
+                   value="<?php echo esc_attr($attendance_bonus_start_count); ?>" />
+            <br><span class="description">
+                <?php esc_html_e('No attendance bonus is earned until attendance goes above this number.', 'vms'); ?>
+            </span>
+        </p>
+
+        <p class="vms-comp-package-mode-block" data-show-when-mode="step">
+            <label for="vms_attendance_bonus_step_size"><strong><?php esc_html_e('Step Size', 'vms'); ?></strong></label><br />
+            <input type="number" step="1" min="1" id="vms_attendance_bonus_step_size" name="vms_attendance_bonus_step_size" class="vms-comp-package-input-money"
+                   value="<?php echo esc_attr($attendance_bonus_step_size); ?>" />
+            <br><span class="description">
+                <?php esc_html_e('How many additional tickets are needed to earn each bonus step.', 'vms'); ?>
+            </span>
+        </p>
+
+        <p class="vms-comp-package-mode-block" data-show-when-mode="step">
+            <label for="vms_attendance_bonus_step_bonus"><strong><?php esc_html_e('Bonus Per Step', 'vms'); ?></strong></label><br />
+            <input type="number" step="0.01" min="0" id="vms_attendance_bonus_step_bonus" name="vms_attendance_bonus_step_bonus" class="vms-comp-package-input-money"
+                   value="<?php echo esc_attr($attendance_bonus_step_bonus); ?>" />
+            <br><span class="description">
+                <?php esc_html_e('The amount added each time a step is reached.', 'vms'); ?>
+            </span>
+        </p>
+
+        <p class="vms-comp-package-mode-block" data-show-when-mode="continuous">
+            <label for="vms_attendance_bonus_per_ticket_rate"><strong><?php esc_html_e('Bonus Per Ticket', 'vms'); ?></strong></label><br />
+            <input type="number" step="0.01" min="0" id="vms_attendance_bonus_per_ticket_rate" name="vms_attendance_bonus_per_ticket_rate" class="vms-comp-package-input-money"
+                   value="<?php echo esc_attr($attendance_bonus_per_ticket_rate); ?>" />
+            <br><span class="description">
+                <?php esc_html_e('The amount added for each ticket above the starting count.', 'vms'); ?>
+            </span>
+        </p>
+
+        <p>
+            <label for="vms_attendance_bonus_max_bonus"><strong><?php esc_html_e('Max Bonus', 'vms'); ?></strong></label><br />
+            <input type="number" step="0.01" min="0" id="vms_attendance_bonus_max_bonus" name="vms_attendance_bonus_max_bonus" class="vms-comp-package-input-money"
+                   value="<?php echo esc_attr($attendance_bonus_max_bonus); ?>" />
+            <br><span class="description">
+                <?php esc_html_e('Optional cap on the total attendance bonus. Leave blank for no cap.', 'vms'); ?>
+            </span>
+        </p>
+    </div>
+
     <hr />
 
-    <h4 style="margin:0 0 6px;"><?php esc_html_e('Agency Commission (Abstract)', 'vms'); ?></h4>
+    <h4 class="vms-comp-package-subhead"><?php esc_html_e('Agency Commission (Abstract)', 'vms'); ?></h4>
 
     <p>
         <label for="vms_commission_mode"><strong><?php esc_html_e('Commission Mode', 'vms'); ?></strong></label><br />
-        <select id="vms_commission_mode" name="vms_commission_mode" style="min-width:280px;">
+        <select id="vms_commission_mode" name="vms_commission_mode" class="vms-comp-package-select-wide">
             <option value="none" <?php selected($commission_mode, 'none'); ?>>
                 <?php esc_html_e('None', 'vms'); ?>
             </option>
@@ -167,13 +257,13 @@ function vms_render_comp_package_meta_box($post)
     <p>
         <label for="vms_commission_percent"><strong><?php esc_html_e('Commission %', 'vms'); ?></strong></label><br />
         <input type="number" step="0.01" min="0" max="100"
-               id="vms_commission_percent" name="vms_commission_percent" style="width:160px;"
+               id="vms_commission_percent" name="vms_commission_percent" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($commission_percent); ?>" /> %
     </p>
 
     <p>
         <label for="vms_commission_base"><strong><?php esc_html_e('Commission Base', 'vms'); ?></strong></label><br />
-        <select id="vms_commission_base" name="vms_commission_base" style="min-width:280px;">
+        <select id="vms_commission_base" name="vms_commission_base" class="vms-comp-package-select-wide">
             <option value="flat_fee" <?php selected($commission_base, 'flat_fee'); ?>>
                 <?php esc_html_e('Flat Fee', 'vms'); ?>
             </option>
@@ -188,44 +278,63 @@ function vms_render_comp_package_meta_box($post)
 
     <hr />
 
-    <h4 style="margin:0 0 6px;"><?php esc_html_e('Guardrails (Optional)', 'vms'); ?></h4>
+    <h4 class="vms-comp-package-subhead"><?php esc_html_e('Guardrails (Optional)', 'vms'); ?></h4>
 
     <p>
         <label for="vms_min_guarantee"><strong><?php esc_html_e('Minimum Guarantee', 'vms'); ?></strong></label><br />
-        <input type="number" step="0.01" id="vms_min_guarantee" name="vms_min_guarantee" style="width:160px;"
+        <input type="number" step="0.01" id="vms_min_guarantee" name="vms_min_guarantee" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($min_guarantee); ?>" />
     </p>
 
     <p>
         <label for="vms_cap_amount"><strong><?php esc_html_e('Cap Amount', 'vms'); ?></strong></label><br />
-        <input type="number" step="0.01" id="vms_cap_amount" name="vms_cap_amount" style="width:160px;"
+        <input type="number" step="0.01" id="vms_cap_amount" name="vms_cap_amount" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($cap_amount); ?>" />
     </p>
 
     <p>
         <label for="vms_notes"><strong><?php esc_html_e('Internal Notes', 'vms'); ?></strong></label><br />
-        <textarea id="vms_notes" name="vms_notes" rows="4" style="width:100%;"><?php echo esc_textarea($notes); ?></textarea>
+        <textarea id="vms_notes" name="vms_notes" rows="4" class="vms-comp-package-notes"><?php echo esc_textarea($notes); ?></textarea>
     </p>
+    </div>
 
     <script>
         // Tiny UI helper: show/hide relevant sections based on type (no backend dependency)
         (function(){
             const typeSel = document.getElementById('vms_comp_type');
             const flatFee = document.getElementById('vms_flat_fee')?.closest('p');
-            const splitBlocks = [
-                document.getElementById('vms_split_basis')?.closest('p'),
-                document.getElementById('vms_split_percent_artist')?.closest('p'),
-            ].filter(Boolean);
+            const flatLabelText = document.getElementById('vms_flat_fee_label_text');
+            const flatHelp = document.getElementById('vms_flat_fee_help');
+            const bonusModeSel = document.getElementById('vms_attendance_bonus_mode');
+            const typeBlocks = Array.from(document.querySelectorAll('.vms-comp-package-block[data-show-when]'));
+            const modeBlocks = Array.from(document.querySelectorAll('.vms-comp-package-mode-block[data-show-when-mode]'));
 
             function refresh(){
                 const t = typeSel.value;
+                const mode = String(bonusModeSel?.value || '').trim();
+
                 if (flatFee) flatFee.style.display = (t === 'door_split') ? 'none' : '';
-                splitBlocks.forEach(el => {
-                    el.style.display = (t === 'flat') ? 'none' : '';
+                if (flatLabelText) flatLabelText.textContent = (t === 'attendance_bonus') ? 'Base Pay' : 'Flat Fee Amount';
+                if (flatHelp) flatHelp.classList.toggle('vms-hidden', t !== 'attendance_bonus');
+
+                typeBlocks.forEach(el => {
+                    const allowed = String(el.getAttribute('data-show-when') || '')
+                        .split(',')
+                        .map((value) => value.trim())
+                        .filter(Boolean);
+                    el.style.display = allowed.includes(t) ? '' : 'none';
+                });
+
+                modeBlocks.forEach(el => {
+                    const allowedMode = String(el.getAttribute('data-show-when-mode') || '').trim();
+                    el.style.display = (t === 'attendance_bonus' && allowedMode === mode) ? '' : 'none';
                 });
             }
             if (typeSel) {
                 typeSel.addEventListener('change', refresh);
+            }
+            if (bonusModeSel) {
+                bonusModeSel.addEventListener('change', refresh);
                 refresh();
             }
         })();
@@ -243,42 +352,166 @@ add_action('save_post_vms_comp_package', function ($post_id, $post) {
 
     $venue_id = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
 
-    $type = isset($_POST['vms_comp_type']) ? sanitize_text_field($_POST['vms_comp_type']) : 'flat';
-    if (!in_array($type, array('flat', 'flat_plus_split', 'door_split'), true)) $type = 'flat';
+    $type = isset($_POST['vms_comp_type']) ? sanitize_key((string) wp_unslash($_POST['vms_comp_type'])) : 'flat';
+    if (!in_array($type, array('flat', 'flat_plus_split', 'door_split', 'attendance_bonus'), true)) $type = 'flat';
 
-    $flat_fee = isset($_POST['vms_flat_fee']) ? (float) $_POST['vms_flat_fee'] : '';
+    $parse_nonnegative_float = static function ($value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $value = preg_replace('/[^0-9.\-]/', '', $value);
+        if (!is_string($value) || $value === '' || !is_numeric($value)) {
+            return '';
+        }
+        return max(0, (float) $value);
+    };
 
-    $split_basis = isset($_POST['vms_split_basis']) ? sanitize_text_field($_POST['vms_split_basis']) : 'gross';
+    $parse_nonnegative_int = static function ($value, int $min = 0) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $value = preg_replace('/[^0-9.\-]/', '', $value);
+        if (!is_string($value) || $value === '' || !is_numeric($value)) {
+            return '';
+        }
+        return max($min, (int) floor((float) $value));
+    };
+
+    $flat_fee = isset($_POST['vms_flat_fee']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_flat_fee'])) : '';
+
+    $split_basis = isset($_POST['vms_split_basis']) ? sanitize_key((string) wp_unslash($_POST['vms_split_basis'])) : 'gross';
     if (!in_array($split_basis, array('gross', 'net'), true)) $split_basis = 'gross';
 
-    $split_pct_artist = isset($_POST['vms_split_percent_artist']) ? (float) $_POST['vms_split_percent_artist'] : '';
+    $split_pct_artist = isset($_POST['vms_split_percent_artist']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_split_percent_artist'])) : '';
+    if ($split_pct_artist !== '' && $split_pct_artist > 100) {
+        $split_pct_artist = 100.0;
+    }
 
-    $commission_mode = isset($_POST['vms_commission_mode']) ? sanitize_text_field($_POST['vms_commission_mode']) : 'none';
+    $commission_mode = isset($_POST['vms_commission_mode']) ? sanitize_key((string) wp_unslash($_POST['vms_commission_mode'])) : 'none';
     if (!in_array($commission_mode, array('none', 'add_on_top', 'deduct_from_artist'), true)) $commission_mode = 'none';
 
-    $commission_pct  = isset($_POST['vms_commission_percent']) ? (float) $_POST['vms_commission_percent'] : '';
-    $commission_base = isset($_POST['vms_commission_base']) ? sanitize_text_field($_POST['vms_commission_base']) : 'flat_fee';
+    $commission_pct  = isset($_POST['vms_commission_percent']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_commission_percent'])) : '';
+    if ($commission_pct !== '' && $commission_pct > 100) {
+        $commission_pct = 100.0;
+    }
+    $commission_base = isset($_POST['vms_commission_base']) ? sanitize_key((string) wp_unslash($_POST['vms_commission_base'])) : 'flat_fee';
     if (!in_array($commission_base, array('flat_fee', 'gross', 'net'), true)) $commission_base = 'flat_fee';
 
-    $min_guarantee = isset($_POST['vms_min_guarantee']) ? (float) $_POST['vms_min_guarantee'] : '';
-    $cap_amount    = isset($_POST['vms_cap_amount']) ? (float) $_POST['vms_cap_amount'] : '';
+    $min_guarantee = isset($_POST['vms_min_guarantee']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_min_guarantee'])) : '';
+    $cap_amount    = isset($_POST['vms_cap_amount']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_cap_amount'])) : '';
 
-    $notes = isset($_POST['vms_notes']) ? sanitize_textarea_field($_POST['vms_notes']) : '';
+    $attendance_bonus_mode = isset($_POST['vms_attendance_bonus_mode']) ? sanitize_key((string) wp_unslash($_POST['vms_attendance_bonus_mode'])) : '';
+    if (!in_array($attendance_bonus_mode, array('step', 'continuous'), true)) {
+        $attendance_bonus_mode = '';
+    }
+
+    $attendance_bonus_start_count = isset($_POST['vms_attendance_bonus_start_count']) ? $parse_nonnegative_int(wp_unslash($_POST['vms_attendance_bonus_start_count'])) : '';
+    $attendance_bonus_step_size = isset($_POST['vms_attendance_bonus_step_size']) ? $parse_nonnegative_int(wp_unslash($_POST['vms_attendance_bonus_step_size']), 1) : '';
+    $attendance_bonus_step_bonus = isset($_POST['vms_attendance_bonus_step_bonus']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_attendance_bonus_step_bonus'])) : '';
+    $attendance_bonus_per_ticket_rate = isset($_POST['vms_attendance_bonus_per_ticket_rate']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_attendance_bonus_per_ticket_rate'])) : '';
+    $attendance_bonus_max_bonus = isset($_POST['vms_attendance_bonus_max_bonus']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_attendance_bonus_max_bonus'])) : '';
+
+    $notes = isset($_POST['vms_notes']) ? sanitize_textarea_field(wp_unslash($_POST['vms_notes'])) : '';
 
     update_post_meta($post_id, '_vms_venue_id', $venue_id);
     update_post_meta($post_id, '_vms_comp_type', $type);
-    update_post_meta($post_id, '_vms_flat_fee', $flat_fee);
+    if ($flat_fee === '') {
+        delete_post_meta($post_id, '_vms_flat_fee');
+        delete_post_meta($post_id, '_vms_flat_fee_amount');
+    } else {
+        update_post_meta($post_id, '_vms_flat_fee', (float) $flat_fee);
+        update_post_meta($post_id, '_vms_flat_fee_amount', (float) $flat_fee);
+    }
 
     update_post_meta($post_id, '_vms_split_basis', $split_basis);
-    update_post_meta($post_id, '_vms_split_percent_artist', $split_pct_artist);
+    if ($split_pct_artist === '') {
+        delete_post_meta($post_id, '_vms_split_percent_artist');
+        delete_post_meta($post_id, '_vms_door_split_percent');
+    } else {
+        update_post_meta($post_id, '_vms_split_percent_artist', (float) $split_pct_artist);
+        update_post_meta($post_id, '_vms_door_split_percent', (float) $split_pct_artist);
+    }
 
     update_post_meta($post_id, '_vms_commission_mode', $commission_mode);
-    update_post_meta($post_id, '_vms_commission_percent', $commission_pct);
+    if ($commission_pct === '') {
+        delete_post_meta($post_id, '_vms_commission_percent');
+    } else {
+        update_post_meta($post_id, '_vms_commission_percent', (float) $commission_pct);
+    }
     update_post_meta($post_id, '_vms_commission_base', $commission_base);
 
-    update_post_meta($post_id, '_vms_min_guarantee', $min_guarantee);
-    update_post_meta($post_id, '_vms_cap_amount', $cap_amount);
+    if ($min_guarantee === '') {
+        delete_post_meta($post_id, '_vms_min_guarantee');
+    } else {
+        update_post_meta($post_id, '_vms_min_guarantee', (float) $min_guarantee);
+    }
+    if ($cap_amount === '') {
+        delete_post_meta($post_id, '_vms_cap_amount');
+    } else {
+        update_post_meta($post_id, '_vms_cap_amount', (float) $cap_amount);
+    }
 
     update_post_meta($post_id, '_vms_notes', $notes);
+
+    if ($type === 'attendance_bonus') {
+        if ($attendance_bonus_mode === '') {
+            delete_post_meta($post_id, '_vms_attendance_bonus_mode');
+        } else {
+            update_post_meta($post_id, '_vms_attendance_bonus_mode', $attendance_bonus_mode);
+        }
+
+        if ($attendance_bonus_start_count === '') {
+            delete_post_meta($post_id, '_vms_attendance_bonus_start_count');
+        } else {
+            update_post_meta($post_id, '_vms_attendance_bonus_start_count', (int) $attendance_bonus_start_count);
+        }
+
+        if ($attendance_bonus_max_bonus === '') {
+            delete_post_meta($post_id, '_vms_attendance_bonus_max_bonus');
+        } else {
+            update_post_meta($post_id, '_vms_attendance_bonus_max_bonus', (float) $attendance_bonus_max_bonus);
+        }
+
+        delete_post_meta($post_id, '_vms_split_percent_artist');
+        delete_post_meta($post_id, '_vms_door_split_percent');
+
+        if ($attendance_bonus_mode === 'step') {
+            if ($attendance_bonus_step_size === '') {
+                delete_post_meta($post_id, '_vms_attendance_bonus_step_size');
+            } else {
+                update_post_meta($post_id, '_vms_attendance_bonus_step_size', (int) $attendance_bonus_step_size);
+            }
+
+            if ($attendance_bonus_step_bonus === '') {
+                delete_post_meta($post_id, '_vms_attendance_bonus_step_bonus');
+            } else {
+                update_post_meta($post_id, '_vms_attendance_bonus_step_bonus', (float) $attendance_bonus_step_bonus);
+            }
+
+            delete_post_meta($post_id, '_vms_attendance_bonus_per_ticket_rate');
+        } elseif ($attendance_bonus_mode === 'continuous') {
+            if ($attendance_bonus_per_ticket_rate === '') {
+                delete_post_meta($post_id, '_vms_attendance_bonus_per_ticket_rate');
+            } else {
+                update_post_meta($post_id, '_vms_attendance_bonus_per_ticket_rate', (float) $attendance_bonus_per_ticket_rate);
+            }
+
+            delete_post_meta($post_id, '_vms_attendance_bonus_step_size');
+            delete_post_meta($post_id, '_vms_attendance_bonus_step_bonus');
+        } else {
+            delete_post_meta($post_id, '_vms_attendance_bonus_step_size');
+            delete_post_meta($post_id, '_vms_attendance_bonus_step_bonus');
+            delete_post_meta($post_id, '_vms_attendance_bonus_per_ticket_rate');
+        }
+    } else {
+        delete_post_meta($post_id, '_vms_attendance_bonus_mode');
+        delete_post_meta($post_id, '_vms_attendance_bonus_start_count');
+        delete_post_meta($post_id, '_vms_attendance_bonus_step_size');
+        delete_post_meta($post_id, '_vms_attendance_bonus_step_bonus');
+        delete_post_meta($post_id, '_vms_attendance_bonus_per_ticket_rate');
+        delete_post_meta($post_id, '_vms_attendance_bonus_max_bonus');
+    }
 
 }, 10, 2);

@@ -1,0 +1,100 @@
+#vms-pass-claims-wrap .vms-pass-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+
+#vms-pass-claims-wrap .vms-pass-tab {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #c6d5ea;
+  background: #f5f9ff;
+  text-decoration: none;
+  color: #17335f;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-tab.is-current {
+  background: #1c5fb8;
+  color: #fff;
+  border-color: #1c5fb8;
+}
+
+#vms-pass-claims-wrap .vms-pass-card {
+  background: #fff;
+  border: 1px solid #d8e2f0;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(15, 35, 66, 0.06);
+  margin-bottom: 12px;
+}
+
+#vms-pass-claims-wrap .vms-pass-card h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+#vms-pass-claims-wrap .vms-pass-form {
+  margin: 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#vms-pass-claims-wrap .vms-pass-grid > label,
+#vms-pass-claims-wrap .vms-pass-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#vms-pass-claims-wrap .vms-pass-grid input,
+#vms-pass-claims-wrap .vms-pass-grid select,
+#vms-pass-claims-wrap .vms-pass-grid textarea {
+  width: 100%;
+}
+
+#vms-pass-claims-wrap .vms-pass-span-2 {
+  grid-column: span 2;
+}
+
+#vms-pass-claims-wrap .vms-pass-actions {
+  margin: 12px 0 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-url-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+#vms-pass-claims-wrap .vms-pass-url-list li {
+  margin: 0 0 6px;
+}
+
+#vms-pass-claims-wrap .vms-pass-copy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+
+#vms-pass-claims-wrap .vms-pass-copy input {
+  width: 100%;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  #vms-pass-claims-wrap .vms-pass-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-span-2 {
+    grid-column: span 1;
+  }
+}

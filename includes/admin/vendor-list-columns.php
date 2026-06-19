@@ -37,7 +37,7 @@ add_filter('manage_vms_vendor_posts_columns', function ($columns) {
 add_action('manage_vms_vendor_posts_custom_column', function ($column, $post_id) {
     if ($column === 'vms_payee') {
         $payee = (string) get_post_meta($post_id, '_vms_payee_legal_name', true);
-        echo $payee ? esc_html($payee) : '<span style="color:#646970;">—</span>';
+        echo $payee ? esc_html($payee) : '<span class="vms-vendor-col-muted">—</span>';
         return;
     }
 
@@ -128,7 +128,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
     $complete = vms_vendor_tax_profile_is_complete((int)$post_id);
 
     if ($complete) {
-        echo '<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46;font-weight:700;font-size:12px;">✅ ' .
+        echo '<span class="vms-vendor-tax-pill vms-vendor-tax-pill-complete">✅ ' .
             esc_html__('Complete', 'vms') .
         '</span>';
     } else {
@@ -140,7 +140,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
             ? esc_attr__('Missing: ', 'vms') . esc_attr(implode(', ', $missing))
             : esc_attr__('Incomplete', 'vms');
 
-        echo '<span title="' . $title . '" style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;font-weight:700;font-size:12px;">⚠️ ' .
+        echo '<span title="' . $title . '" class="vms-vendor-tax-pill vms-vendor-tax-pill-incomplete">⚠️ ' .
             esc_html__('Incomplete', 'vms') .
         '</span>';
     }
@@ -170,7 +170,7 @@ add_action('restrict_manage_posts', function () {
         'exempt'        => __('W-9: Exempt', 'vms'),
     ];
 
-    echo '<select name="vms_w9_status" style="max-width:220px;">';
+    echo '<select name="vms_w9_status" class="vms-vendor-filter-w9-status">';
     foreach ($w9_opts as $val => $label) {
         printf(
             '<option value="%s"%s>%s</option>',
@@ -188,7 +188,7 @@ add_action('restrict_manage_posts', function () {
         'no'      => __('1099: No', 'vms'),
     ];
 
-    echo '&nbsp;<select name="vms_requires_1099" style="max-width:160px;">';
+    echo '&nbsp;<select name="vms_requires_1099" class="vms-vendor-filter-1099">';
     foreach ($r_opts as $val => $label) {
         printf(
             '<option value="%s"%s>%s</option>',
@@ -235,18 +235,17 @@ add_action('pre_get_posts', function ($query) {
 function vms_render_w9_pill(string $status): string
 {
     $map = [
-        'not_requested' => ['Not Requested', '#f0f0f1', '#1d2327'],
-        'requested'     => ['Requested',     '#fff8e5', '#7a4d00'],
-        'received'      => ['Received',      '#e7f5ff', '#004b7a'],
-        'on_file'       => ['On File',       '#e6f6ea', '#0a5f2a'],
-        'exempt'        => ['Exempt',        '#f3e8ff', '#5b21b6'],
+        'not_requested' => ['Not Requested', 'vms-vendor-mini-pill-not-requested'],
+        'requested'     => ['Requested',     'vms-vendor-mini-pill-requested'],
+        'received'      => ['Received',      'vms-vendor-mini-pill-received'],
+        'on_file'       => ['On File',       'vms-vendor-mini-pill-on-file'],
+        'exempt'        => ['Exempt',        'vms-vendor-mini-pill-exempt'],
     ];
-    $d = $map[$status] ?? [ucfirst($status), '#f0f0f1', '#1d2327'];
+    $d = $map[$status] ?? [ucfirst($status), 'vms-vendor-mini-pill-default'];
 
     return sprintf(
-        '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:%s;color:%s;">%s</span>',
+        '<span class="vms-vendor-mini-pill %s">%s</span>',
         esc_attr($d[1]),
-        esc_attr($d[2]),
         esc_html($d[0])
     );
 }
@@ -254,16 +253,15 @@ function vms_render_w9_pill(string $status): string
 function vms_render_1099_pill(string $req): string
 {
     $map = [
-        'unknown' => ['Unknown', '#f0f0f1', '#1d2327'],
-        'yes'     => ['Yes',     '#e6f6ea', '#0a5f2a'],
-        'no'      => ['No',      '#e7f5ff', '#004b7a'],
+        'unknown' => ['Unknown', 'vms-vendor-mini-pill-default'],
+        'yes'     => ['Yes',     'vms-vendor-mini-pill-on-file'],
+        'no'      => ['No',      'vms-vendor-mini-pill-received'],
     ];
-    $d = $map[$req] ?? [ucfirst($req), '#f0f0f1', '#1d2327'];
+    $d = $map[$req] ?? [ucfirst($req), 'vms-vendor-mini-pill-default'];
 
     return sprintf(
-        '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:%s;color:%s;">%s</span>',
+        '<span class="vms-vendor-mini-pill %s">%s</span>',
         esc_attr($d[1]),
-        esc_attr($d[2]),
         esc_html($d[0])
     );
 }

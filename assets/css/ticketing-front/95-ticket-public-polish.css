@@ -1,0 +1,137 @@
+/* 0.2.24.680: Public ticket sale, deadline, and ratio-rule polish. */
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-sale-badge,
+.vms-ticket-ui-progressive .vms-ticket-sale-badge,
+.single-tribe_events .tribe-tickets__tickets-item .vms-ticket-sale-badge,
+#tribe-tickets .tribe-tickets__tickets-item .vms-ticket-sale-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: fit-content !important;
+  margin: 0 8px 4px 0 !important;
+  padding: 3px 9px !important;
+  border-radius: 10px !important;
+  background: #eef2ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(37, 99, 235, 0.18) !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.025em !important;
+  text-transform: uppercase !important;
+  box-shadow: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-sale-deadline,
+.vms-ticket-ui-progressive .vms-ticket-sale-deadline,
+.single-tribe_events .tribe-tickets__tickets-item .vms-ticket-sale-deadline,
+#tribe-tickets .tribe-tickets__tickets-item .vms-ticket-sale-deadline {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: fit-content !important;
+  margin: 0 0 4px !important;
+  color: #475569 !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .tribe-tickets__tickets-item-extra-price del,
+.vms-ticket-ui-progressive .tribe-tickets__tickets-item-extra-price del,
+.single-tribe_events .tribe-tickets__tickets-item .tribe-tickets__tickets-item-extra-price del,
+#tribe-tickets .tribe-tickets__tickets-item .tribe-tickets__tickets-item-extra-price del {
+  display: block !important;
+  color: #475569 !important;
+  font-size: 0.82em !important;
+  font-weight: 800 !important;
+  opacity: 0.78 !important;
+  text-decoration-thickness: 2px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .tribe-tickets__tickets-item-extra-price ins,
+.vms-ticket-ui.vms-ticket-ui-v2 .tribe-tickets__tickets-item-extra-price ins *,
+.vms-ticket-ui-progressive .tribe-tickets__tickets-item-extra-price ins,
+.vms-ticket-ui-progressive .tribe-tickets__tickets-item-extra-price ins *,
+.single-tribe_events .tribe-tickets__tickets-item .tribe-tickets__tickets-item-extra-price ins,
+.single-tribe_events .tribe-tickets__tickets-item .tribe-tickets__tickets-item-extra-price ins *,
+#tribe-tickets .tribe-tickets__tickets-item .tribe-tickets__tickets-item-extra-price ins,
+#tribe-tickets .tribe-tickets__tickets-item .tribe-tickets__tickets-item-extra-price ins * {
+  color: #b91c1c !important;
+  font-size: 1.05em !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ratio-rule-note,
+.vms-ticket-ui-progressive .vms-ticket-ratio-rule-note,
+.single-tribe_events .tribe-tickets__tickets-item .vms-ticket-ratio-rule-note,
+#tribe-tickets .tribe-tickets__tickets-item .vms-ticket-ratio-rule-note {
+  margin: 7px 0 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 11px !important;
+  background: rgba(239, 246, 255, 0.95) !important;
+  border: 1px solid rgba(37, 99, 235, 0.20) !important;
+  color: #1e3a8a !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ratio-rule-note--blocked,
+.vms-ticket-ui-progressive .vms-ticket-ratio-rule-note--blocked,
+.single-tribe_events .tribe-tickets__tickets-item .vms-ticket-ratio-rule-note--blocked,
+#tribe-tickets .tribe-tickets__tickets-item .vms-ticket-ratio-rule-note--blocked {
+  background: rgba(254, 242, 242, 0.96) !important;
+  border-color: rgba(220, 38, 38, 0.25) !important;
+  color: #991b1b !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ratio-blocked .tribe-tickets__tickets-item-quantity-add,
+.vms-ticket-ui-progressive .vms-ticket-ratio-blocked .tribe-tickets__tickets-item-quantity-add {
+  opacity: 0.55 !important;
+}
+
+@media (max-width: 759px) {
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-sale-badge,
+  .vms-ticket-ui-progressive .vms-ticket-sale-badge {
+    font-size: 13px !important;
+    padding: 3px 8px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-sale-deadline,
+  .vms-ticket-ui-progressive .vms-ticket-sale-deadline,
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ratio-rule-note,
+  .vms-ticket-ui-progressive .vms-ticket-ratio-rule-note {
+    font-size: 13px !important;
+  }
+}
+
+/* 0.2.24.680: Hydrated TEC markup may render sale prices as sibling spans instead of del/ins. */
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-regular-price,
+.vms-ticket-ui-progressive .vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-regular-price,
+.single-tribe_events .tribe-tickets__tickets-item.vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-regular-price,
+#tribe-tickets .tribe-tickets__tickets-item.vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-regular-price {
+  display: block !important;
+  color: #64748b !important;
+  font-size: 0.82em !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  opacity: 0.82 !important;
+  text-decoration: line-through !important;
+  text-decoration-thickness: 2px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price *,
+.vms-ticket-ui-progressive .vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price,
+.vms-ticket-ui-progressive .vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price *,
+.single-tribe_events .tribe-tickets__tickets-item.vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price,
+.single-tribe_events .tribe-tickets__tickets-item.vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price *,
+#tribe-tickets .tribe-tickets__tickets-item.vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price,
+#tribe-tickets .tribe-tickets__tickets-item.vms-ticket-sale-active .vms-ticket-price-sale-active .vms-ticket-sale-price * {
+  color: #b91c1c !important;
+  font-size: 1.05em !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+}

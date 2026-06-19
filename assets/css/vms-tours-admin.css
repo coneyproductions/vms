@@ -1,0 +1,16 @@
+.vms-tours-admin-page .vms-tours-admin-reset-form {
+  margin: 0 0 18px;
+}
+
+.vms-tours-admin-page .vms-tours-admin-table code {
+  font-size: 12px;
+}
+
+.vms-tours-admin-page .vms-tours-admin-table td,
+.vms-tours-admin-page .vms-tours-admin-table th {
+  vertical-align: top;
+}
+
+.vms-tours-admin-page .vms-tours-admin-table .button {
+  min-height: 32px;
+}

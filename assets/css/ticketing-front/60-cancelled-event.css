@@ -1,0 +1,104 @@
+/* Module: Cancelled Event UX */
+/* ==============================
+   Cancelled Event UX (public)
+   ============================== */
+
+.vms-event-status-banner{
+  margin: 16px 0;
+  padding: 14px 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-left-width: 6px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.92);
+}
+
+.vms-event-status-banner--cancelled{
+  border-left-color: rgba(220, 38, 38, 0.75);
+  background: rgba(254, 242, 242, 0.86);
+}
+
+.vms-event-status-banner--rescheduled{
+  border-left-color: rgba(217, 119, 6, 0.78);
+  background: rgba(255, 247, 237, 0.92);
+}
+
+.vms-event-status-banner__title{
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.vms-event-status-banner__body{
+  margin-top: 6px;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.vms-event-status-banner__meta{
+  margin-top: 6px;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.vms-event-status-banner__actions{
+  margin-top: 10px;
+}
+
+.vms-event-status-banner__link{
+  display: inline-block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.vms-event-status-banner__link:hover,
+.vms-event-status-banner__link:focus-visible{
+  text-decoration: underline;
+}
+
+.vms-event-status-banner__link--primary{
+  border-color: rgba(0,0,0,0.18);
+  background: rgba(255,255,255,0.9);
+}
+
+.vms-cancelled-thumb{
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.vms-cancelled-thumb__label{
+  position: absolute;
+  top: 12%;
+  left: -18%;
+  z-index: 6;
+  width: 136%;
+  padding: 10px 18px;
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: clamp(0.72rem, 1.6vw, 1.15rem);
+  line-height: 1.1;
+  background: rgba(185, 28, 28, 0.94);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+  transform: rotate(-18deg);
+  transform-origin: center;
+  pointer-events: none;
+  border-top: 2px solid rgba(255,255,255,0.2);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.vms-cancelled-thumb--rescheduled .vms-cancelled-thumb__label,
+.vms-cancelled-thumb__label--rescheduled{
+  background: rgba(180, 83, 9, 0.96);
+}
+
+.vms-cancelled-thumb--cancelled .vms-cancelled-thumb__label{
+  background: rgba(185, 28, 28, 0.94);
+}
+
+

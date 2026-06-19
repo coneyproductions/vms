@@ -1,0 +1,244 @@
+/* Module: Ticket Core + Subtotal Base */
+.single-tribe_events .tribe-tickets__tickets,
+.single-tribe_events .tribe-tickets__tickets-form,
+.tribe-events-single .tribe-tickets__tickets,
+.tribe-events-single .tribe-tickets__tickets-form {
+  font-size: 16px;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-content-title,
+.tribe-events-single .tribe-tickets__tickets-item-content-title{
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-description,
+.single-tribe_events .tribe-tickets__tickets-item-content-description,
+.tribe-events-single .tribe-tickets__tickets-item-description,
+.tribe-events-single .tribe-tickets__tickets-item-content-description{
+  font-size: 18px !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-content-title-container,
+.tribe-events-single .tribe-tickets__tickets-item-content-title-container{
+  margin: 0 !important;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-content-title-container h1,
+.single-tribe_events .tribe-tickets__tickets-item-content-title-container h2,
+.single-tribe_events .tribe-tickets__tickets-item-content-title-container h3,
+.single-tribe_events .tribe-tickets__tickets-item-content-title-container h4,
+.single-tribe_events .tribe-tickets__tickets-item-content-title-container h5,
+.single-tribe_events .tribe-tickets__tickets-item-content-title-container h6,
+.tribe-events-single .tribe-tickets__tickets-item-content-title-container h1,
+.tribe-events-single .tribe-tickets__tickets-item-content-title-container h2,
+.tribe-events-single .tribe-tickets__tickets-item-content-title-container h3,
+.tribe-events-single .tribe-tickets__tickets-item-content-title-container h4,
+.tribe-events-single .tribe-tickets__tickets-item-content-title-container h5,
+.tribe-events-single .tribe-tickets__tickets-item-content-title-container h6,
+.single-tribe_events .tribe-tickets__tickets-item-description p,
+.single-tribe_events .tribe-tickets__tickets-item-content-description p,
+.tribe-events-single .tribe-tickets__tickets-item-description p,
+.tribe-events-single .tribe-tickets__tickets-item-content-description p{
+  margin: 0 !important;
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-extra-price,
+.tribe-events-single .tribe-tickets__tickets-item-extra-price{
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+
+@media (min-width: 760px){
+  .single-tribe_events .tribe-tickets__tickets-item,
+  .tribe-events-single .tribe-tickets__tickets-item{
+    display: grid !important;
+    grid-template-columns: 1fr 86px 120px !important;
+    column-gap: 16px !important;
+    align-items: start !important;
+  }
+
+  .single-tribe_events .tribe-tickets__tickets-item-content-title-container,
+  .tribe-events-single .tribe-tickets__tickets-item-content-title-container{
+    grid-column: 1 !important;
+  }
+
+  .single-tribe_events .tribe-tickets__tickets-item-extra,
+  .tribe-events-single .tribe-tickets__tickets-item-extra{
+    grid-column: 2 !important;
+    justify-self: end !important;
+    align-self: start !important;
+    text-align: right !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 4px !important;
+  }
+
+  .single-tribe_events .tribe-tickets__tickets-item-quantity,
+  .tribe-events-single .tribe-tickets__tickets-item-quantity{
+    grid-column: 3 !important;
+    justify-self: end !important;
+    align-self: start !important;
+    min-width: 150px !important;
+  }
+}
+
+.single-tribe_events .tribe-tickets__tickets-item-quantity-number-input,
+.tribe-events-single .tribe-tickets__tickets-item-quantity-number-input{
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 28px !important;
+  padding: 0 6px !important;
+  text-align: center !important;
+  line-height: 28px !important;
+  font-size: 15px !important;
+}
+
+@media (max-width: 480px){
+  .single-tribe_events .tribe-tickets__tickets-item-quantity-number-input,
+  .tribe-events-single .tribe-tickets__tickets-item-quantity-number-input{
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+  }
+}
+
+
+#vms-ticketing-subtotal {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.02);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.vms-ticketing-subtotal__primary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.vms-ticketing-subtotal__primary strong {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.vms-ticketing-subtotal__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.vms-ticketing-subtotal__line-label {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.vms-ticketing-subtotal__line-value {
+  min-width: 124px;
+  text-align: right;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.vms-ticketing-subtotal__line + .vms-ticketing-subtotal__line {
+  margin-top: 2px;
+}
+
+.vms-ticketing-subtotal__secondary {
+  font-size: 16px;
+  line-height: 1.35;
+  margin-top: 4px;
+}
+
+.vms-ticketing-subtotal__addons {
+  font-size: 15px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+.vms-ticketing-subtotal__addons-title {
+  font-weight: 600;
+}
+
+.vms-ticketing-subtotal__addon-list {
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vms-ticketing-subtotal__addon-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vms-ticketing-subtotal__addon-label {
+  min-width: 0;
+}
+
+/* Icon-only remove buttons (row + subtotal) */
+.vms-ent-remove,
+.vms-sub-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 18px;
+  opacity: 0.85;
+  color: #1f2937;
+}
+
+/* Hover intent: make it obvious this removes */
+.vms-ent-remove:hover,
+.vms-sub-remove:hover {
+  opacity: 1;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #dc2626;
+}
+
+/* Keyboard accessibility */
+.vms-ent-remove:focus-visible,
+.vms-sub-remove:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.65);
+  outline-offset: 2px;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #dc2626;
+}
+
+.vms-ticketing-subtotal__note {
+  margin-top: 7px;
+  font-size: 13px;
+  opacity: 0.8;
+}

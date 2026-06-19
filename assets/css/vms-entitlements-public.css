@@ -1,0 +1,1323 @@
+/* VMS Ticketing Entitlements (Public) */
+
+.vms-entitlements-block {
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 16px;
+  font-size: 16px;
+}
+
+.vms-entitlements-block.vms-entitlements--compact {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.tribe-tickets__tickets .vms-entitlements-block.vms-entitlements--compact,
+.tribe-tickets__tickets-form .vms-entitlements-block.vms-entitlements--compact,
+#tribe-tickets .vms-entitlements-block.vms-entitlements--compact {
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.vms-entitlements-block.vms-entitlements--compact h3 {
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+
+.vms-entitlements-note {
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.vms-entitlements-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+}
+
+.vms-ent-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto auto;
+  grid-template-areas: "image main price qty";
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.vms-ent-row--no-image {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "main price qty";
+}
+
+.vms-ent-row:first-child {
+  border-top: 0;
+}
+
+.vms-ent-row + .vms-ent-row {
+  margin-top: 8px;
+}
+
+.vms-ent--selected {
+  background: rgba(11, 102, 92, 0.08);
+  border-color: rgba(11, 102, 92, 0.28);
+}
+
+.vms-ent--pool-disabled {
+  opacity: 0.72;
+}
+
+.vms-ent-img {
+  grid-area: image;
+  width: 96px;
+  height: 96px;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.02);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.vms-ent-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vms-ent-main {
+  grid-area: main;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: start;
+  gap: 2px;
+}
+
+.vms-ent-title {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.vms-ent-descline {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.vms-ent-short {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.vms-ent-more {
+  display: inline;
+  margin-left: 6px;
+}
+
+.vms-ent-more summary {
+  display: inline;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.vms-ent-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.vms-ent-more summary::marker {
+  content: "";
+}
+
+.vms-ent-more[open] {
+  display: block;
+  margin: 7px 0 0;
+}
+
+.vms-ent-more-body {
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+
+.vms-ent-note {
+  margin-top: 0;
+  min-height: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.vms-ent-note:empty {
+  display: none;
+}
+
+.vms-ent-side {
+  display: contents;
+}
+
+.vms-ent-price {
+  grid-area: price;
+  align-self: start;
+  min-width: 0;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.vms-ent-qty {
+  grid-area: qty;
+  justify-self: end;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: start;
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+/* Icon-only subtotal remove buttons */
+.vms-sub-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 18px;
+  opacity: 0.85;
+  color: #1f2937;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hover intent: make it obvious this removes */
+.vms-sub-remove:hover {
+  opacity: 1;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #dc2626;
+}
+
+/* Keyboard accessibility */
+.vms-sub-remove:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.65);
+  outline-offset: 2px;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #dc2626;
+}
+
+.vms-entitlements-add {
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  color: #111827;
+  background: #ffffff;
+}
+
+.vms-entitlements-add:visited {
+  color: #111827;
+}
+
+.vms-entitlements-add:hover,
+.vms-entitlements-add:focus-visible {
+  color: #111827;
+  border-color: rgba(15, 23, 42, 0.35);
+  background: #f8fafc;
+  text-decoration: none;
+}
+
+.vms-ent-note a,
+.vms-ent-note a:visited {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+.vms-ent-note a:hover,
+.vms-ent-note a:focus-visible {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+.vms-ent-note-action {
+  display: inline;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #0f172a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.vms-ent-note-action:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.65);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* In the compact live-ticket flow, selected rows need a true surround and a clearer image cue. */
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+  border: 1px solid rgba(11, 102, 92, 0.18);
+  background: rgba(11, 102, 92, 0.06);
+  grid-template-columns: 96px minmax(0, 1fr) 110px;
+  grid-template-areas: "image main side";
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  margin: 0 0 10px;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-row--no-image {
+  grid-template-columns: minmax(0, 1fr) 110px;
+  grid-template-areas: "main side";
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-row:first-child {
+  border-top: 1px solid rgba(11, 102, 92, 0.18);
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-row:last-child {
+  margin-bottom: 0;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-descline,
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-short,
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-main > * {
+  max-width: 100%;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+  font-size: 18px;
+  font-weight: 600;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  text-align: right;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+  grid-area: side;
+  width: 110px;
+  min-width: 110px;
+  justify-self: end;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0;
+  text-align: right;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+  width: 100%;
+  min-width: 0;
+  justify-self: auto;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent--selected {
+  background: rgba(11, 102, 92, 0.08);
+  border-color: rgba(11, 102, 92, 0.26);
+  box-shadow: none;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent--selected .vms-ent-img {
+  border-color: rgba(11, 102, 92, 0.42);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: none;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent--selected .vms-ent-img::after {
+  content: none;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent--selected .vms-ent-title {
+  color: #074740;
+}
+
+.vms-entitlements-soldout {
+  opacity: 0.74;
+  white-space: nowrap;
+}
+
+.vms-entitlements-debug {
+  margin-top: 12px;
+}
+
+.vms-entitlements-debug-list {
+  margin: 10px 0 0;
+}
+
+@media (max-width: 782px) {
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-areas:
+      "image main"
+      "image side";
+    gap: 8px 10px;
+    padding: 8px;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-row--no-image {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "main"
+      "side";
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-row--no-image .vms-ent-main {
+    grid-column: auto;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+    grid-area: side;
+    width: 100%;
+    min-width: 0;
+    justify-self: stretch;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 0;
+    text-align: right;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+    width: auto;
+    min-width: 0;
+    justify-self: end;
+    align-self: start;
+    margin-top: 0;
+    margin-bottom: 0;
+    text-align: right;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+    width: auto;
+    min-width: 0;
+    justify-self: end;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    margin: 0;
+  }
+
+  .vms-sub-remove {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+}
+
+
+/* When embedded in the unified ticketing flow, keep add-ons as a simple section (not a separate card). */
+.vms-ticketing-flow .vms-entitlements-block.vms-entitlements--compact {
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+
+/* Mobile entitlement rows mirror ticket rows while preserving an image + text column when artwork exists. */
+@media (max-width: 782px) {
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+    grid-template-columns: 56px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "image main"
+      "image side" !important;
+    gap: 8px 10px !important;
+    padding: 12px 14px !important;
+    align-items: start !important;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-row--no-image {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "main"
+      "side" !important;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-title {
+    font-size: 18px;
+    line-height: 1.16;
+    margin-bottom: 4px;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-descline,
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-short,
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+    font-size: 14px;
+    line-height: 1.34;
+    margin: 0;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-areas:
+    "qty price"
+    "note note"
+    "status status" !important;
+    justify-content: end !important;
+    justify-items: end !important;
+    align-items: flex-end !important;
+    align-content: center !important;
+    column-gap: 10px !important;
+    row-gap: 3px !important;
+    text-align: right !important;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+    grid-area: price !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    align-self: center !important;
+    text-align: right !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1.05 !important;
+  }
+
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+    grid-area: qty !important;
+    width: auto !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    margin: 0 !important;
+  }
+}
+
+.vms-entitlements-block.vms-entitlements--compact > h3 {
+  margin: 0 0 10px;
+  line-height: 1.15;
+}
+
+@media (max-width: 782px) {
+  .vms-entitlements-block.vms-entitlements--compact .vms-entitlements-add,
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-plus,
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-minus,
+  .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-input:not(.vms-addon-input--checkbox) {
+    min-height: 38px;
+  }
+}
+
+/* VMS compact add-on selector mode: match ticket selectors and keep qty left / price right. */
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  grid-template-areas:
+    "qty price"
+    "note note"
+    "status status" !important;
+  justify-content: end !important;
+  justify-items: end !important;
+  align-items: flex-end !important;
+  align-content: center !important;
+  column-gap: 10px !important;
+  row-gap: 3px !important;
+  text-align: right !important;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+  grid-area: price !important;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+  grid-area: qty !important;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty.vms-addon-qty-select-mode,
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty[data-vms-addon-qty-select-mode="1"] {
+  gap: 0 !important;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty [data-vms-addon-qty-hidden-by-select="1"],
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty.vms-addon-qty-select-mode .vms-ent-remove,
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty[data-vms-addon-qty-select-mode="1"] .vms-ent-remove {
+  display: none !important;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty.vms-addon-qty-select-mode .vms-addon-qty-select-wrap,
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty[data-vms-addon-qty-select-mode="1"] .vms-addon-qty-select-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty.vms-addon-qty-select-mode .vms-addon-qty-select,
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty[data-vms-addon-qty-select-mode="1"] .vms-addon-qty-select {
+  display: block !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 28px 0 12px !important;
+  border: 1px solid rgba(15, 23, 42, 0.16) !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3.25 5.25 7 9l3.75-3.75' stroke='%23475669' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 11px center !important;
+  background-size: 12px 12px !important;
+  color: #111827 !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-align-last: center !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty.vms-addon-qty-select-mode .vms-addon-qty-select:disabled,
+.vms-entitlements-block.vms-entitlements--compact .vms-ent-qty[data-vms-addon-qty-select-mode="1"] .vms-addon-qty-select:disabled {
+  opacity: .65 !important;
+  cursor: not-allowed !important;
+}
+
+/* V2 visibility pass: make add-on rows mirror ticket cards more closely. */
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact > h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas:
+    "main"
+    "side" !important;
+  gap: 10px !important;
+  padding: 16px 18px !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.96) 100%) !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row:not(.vms-ent-row--no-image) {
+  grid-template-columns: 72px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "image main"
+    "image side" !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row--no-image {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas:
+    "main"
+    "side" !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-main {
+  gap: 6px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-descline,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-short,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+  color: rgba(15, 23, 42, 0.74);
+  font-size: 15px;
+  line-height: 1.42;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-left: auto !important;
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  grid-template-areas:
+    "qty price"
+    "note note"
+    "status status" !important;
+  justify-content: end !important;
+  justify-items: end !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  row-gap: 4px !important;
+  text-align: right !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+  grid-area: price !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.05 !important;
+  text-align: right !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+  grid-area: qty !important;
+  width: auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-entitlements-add,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-plus,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-minus,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-input:not(.vms-addon-input--checkbox),
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-qty-select {
+  min-height: 40px;
+  height: 40px;
+  border-radius: 12px !important;
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+    padding: 14px 16px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row:not(.vms-ent-row--no-image) {
+    grid-template-columns: 56px minmax(0, 1fr) !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-img {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Final add-on polish pass for the live ticket flow. */
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(15, 23, 42, 0.45) !important;
+  background: #ffffff !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact > h3 {
+  margin: 0 0 14px;
+  font-size: clamp(1.35rem, 1.2rem + 0.35vw, 1.65rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-note {
+  margin: 0 0 10px;
+  color: var(--vms-ui-muted, rgba(15, 23, 42, 0.64));
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+  gap: 14px !important;
+  padding: 16px 18px !important;
+  border: 1px solid var(--vms-ui-border, rgba(148, 163, 184, 0.26)) !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row--no-image {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas:
+    "main"
+    "side" !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row:not(.vms-ent-row--no-image) {
+  grid-template-columns: 72px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "image main"
+    "image side" !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-main {
+  gap: 6px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-title {
+  font-size: 18px;
+  line-height: 1.18;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-descline,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-short,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+  color: var(--vms-ui-copy, rgba(15, 23, 42, 0.78));
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-left: auto !important;
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  grid-template-areas:
+    "qty price"
+    "note note"
+    "status status" !important;
+  justify-content: end !important;
+  justify-items: end !important;
+  align-items: center !important;
+  column-gap: 14px !important;
+  row-gap: 6px !important;
+  text-align: right !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  font-size: 22px !important;
+  line-height: 1.05 !important;
+  min-height: var(--vms-ui-control-size, 42px) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+  gap: 8px;
+  align-self: center !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-controls {
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-plus,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-minus {
+  width: var(--vms-ui-control-size, 42px);
+  min-width: var(--vms-ui-control-size, 42px);
+  height: var(--vms-ui-control-size, 42px);
+  border-radius: var(--vms-ui-control-radius, 12px) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-input:not(.vms-addon-input--checkbox),
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-qty-select {
+  width: var(--vms-ui-input-width, 54px) !important;
+  min-width: var(--vms-ui-input-width, 54px) !important;
+  max-width: var(--vms-ui-input-width, 54px) !important;
+  height: var(--vms-ui-control-size, 42px) !important;
+  min-height: var(--vms-ui-control-size, 42px) !important;
+  border-radius: var(--vms-ui-control-radius, 12px) !important;
+  line-height: var(--vms-ui-control-size, 42px) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent--selected {
+  border-color: var(--vms-ui-border-strong, rgba(96, 165, 250, 0.34)) !important;
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.90) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+    padding: 14px 16px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row:not(.vms-ent-row--no-image) {
+    grid-template-columns: 56px minmax(0, 1fr) !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-entitlements-block.vms-entitlements--compact .vms-ent-img {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Mobile live-pass add-on rewrite for V2 server_controls only.
+   Title stays on top, image floats left inside the copy block, and controls sit on a clean bottom row. */
+.vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+  gap: 12px !important;
+  padding: 12px 14px !important;
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
+    display: block !important;
+    padding: 10px 12px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-main {
+    display: block !important;
+    min-width: 0 !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-title {
+    display: block !important;
+    margin: 0 0 8px !important;
+    font-size: 18px !important;
+    line-height: 1.12 !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-row--has-image .vms-ent-img {
+    float: left !important;
+    width: 74px !important;
+    height: 74px !important;
+    margin: 2px 12px 8px 0 !important;
+    border-radius: 14px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-descline,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-short,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+    font-size: 15px !important;
+    line-height: 1.42 !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-descline {
+    margin: 0 0 8px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-more {
+    display: block !important;
+    margin: 6px 0 10px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  /* v0.2.24.317 — compiled mobile add-on controls must match ticket-row order in the live V2 server-controls stylesheet:
+     qty picker first, price second, with the bundle pinned to the right edge and status below. */
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+    clear: both !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-areas:
+      "qty price"
+      "note note"
+      "status status" !important;
+    width: max-content !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 12px 0 0 auto !important;
+    justify-content: end !important;
+    justify-items: end !important;
+    align-items: center !important;
+    align-content: start !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+    text-align: right !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+    grid-area: qty !important;
+    order: initial !important;
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-controls,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-rw-stepper {
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    justify-content: flex-end !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+    grid-area: price !important;
+    order: initial !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    min-height: 0 !important;
+    font-size: 18px !important;
+    line-height: 1.08 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+    grid-area: note !important;
+    width: 100% !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    text-align: left !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-rw-addon__status:empty {
+    display: none !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-rw-addon__status,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-rw-addon__soldout {
+    grid-area: status !important;
+    order: initial !important;
+    width: 100% !important;
+    margin: 0 !important;
+    text-align: left !important;
+    max-width: none !important;
+  }
+}
+
+/* 0.2.24.621: Mobile progressive ticket UI flattening.
+   Keep the cleaner desktop card style, but remove redundant nested boxes on phone/tablet
+   so ticket/add-on cards can use the available width. */
+/* 0.2.24.622: Keep the short row-level qualified-ticket description visible.
+   Only the deeper approved-account/claim helper panels stay hidden until quantity > 0. */
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-ticket-qualified-description:not([hidden]),
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .tribe-tickets__tickets-item-description:not([hidden]),
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .tribe-tickets__tickets-item-content-description:not([hidden]),
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-ticket-desc:not([hidden]) {
+  display: block !important;
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui-progressive.vms-ticket-ui.vms-ticket-ui-v2 {
+    --vms-ui-control-size: 44px;
+    --vms-ui-input-width: 54px;
+  }
+
+  .vms-ticket-ui-progressive.vms-ticket-ui.vms-ticket-ui-v2.vms-ticketing-flow {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-header {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-toggle,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle {
+    min-height: 0 !important;
+    padding: 0 0 10px !important;
+    background: transparent !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-toggle:hover,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-toggle:focus-visible,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle:hover,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle:focus-visible {
+    background: transparent !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-title {
+    font-size: clamp(1.35rem, 6vw, 1.7rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-description {
+    margin-top: 2px !important;
+    font-size: 14px !important;
+    line-height: 1.32 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-content {
+    padding: 0 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item {
+    padding: 12px !important;
+    border-radius: 14px !important;
+    row-gap: 10px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-title,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-title {
+    font-size: clamp(1.25rem, 6vw, 1.55rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-description,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-description,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-desc {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-right-stack {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    column-gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity {
+  display: inline-flex !important;
+  align-items: center !important;
+    justify-self: start !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+    width: var(--vms-ui-control-size, 38px) !important;
+    min-width: var(--vms-ui-control-size, 38px) !important;
+    height: var(--vms-ui-control-size, 38px) !important;
+    min-height: var(--vms-ui-control-size, 38px) !important;
+    border-radius: 12px !important;
+    font-size: 20px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity .tribe-tickets__tickets-item-quantity-add,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity .tribe-tickets__tickets-item-quantity-remove,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity .tribe-tickets__item__quantity__add,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity .tribe-tickets__item__quantity__remove {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 22px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity-number,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity-number-input {
+  display: inline-flex !important;
+  align-items: center !important;
+    width: var(--vms-ui-input-width, 48px) !important;
+    min-width: var(--vms-ui-input-width, 48px) !important;
+    max-width: var(--vms-ui-input-width, 48px) !important;
+    height: var(--vms-ui-control-size, 38px) !important;
+    min-height: var(--vms-ui-control-size, 38px) !important;
+    line-height: var(--vms-ui-control-size, 38px) !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity-number-input {
+    height: 44px !important;
+    min-height: 44px !important;
+    line-height: 44px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price * {
+    font-size: 20px !important;
+    line-height: 1.05 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addons {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-row,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon {
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-title,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon__title {
+    font-size: clamp(1.2rem, 5.5vw, 1.45rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-descline,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-short,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-note,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon__main .vms-ent-descline,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon__note {
+    font-size: 14px !important;
+    line-height: 1.34 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 10px 0 0 !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+    justify-self: start !important;
+    justify-content: flex-start !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+    justify-self: end !important;
+    font-size: 20px !important;
+  }
+}
+
+/* 0.2.24.623: Mobile qualified-ticket claim copy/layout simplification. */
+@media (max-width: 759px) {
+  .vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row.vms-qualified-ticket-selected .vms-ticket-lock-note,
+  .vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row.vms-qualified-ticket-selected .vms-claim-seat-panel {
+    margin-top: 10px !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    max-width: 100% !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-lock-copy,
+  .vms-ticket-ui-progressive .vms-claim-seat-help,
+  .vms-ticket-ui-progressive .vms-claim-seat-status {
+    font-size: 14px !important;
+    line-height: 1.36 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-lock-actions {
+    gap: 8px !important;
+    margin-top: 8px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-lock-actions .vms-ticket-lock-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-align: center !important;
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 14px !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-claim-seat-title {
+    font-size: 18px !important;
+    line-height: 1.18 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-claim-seat-label {
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-claim-seat-input-wrap {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-claim-seat-input,
+  .vms-ticket-ui-progressive .vms-claim-seat-validate {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+  }
+}
+

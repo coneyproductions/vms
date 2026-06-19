@@ -1,0 +1,163 @@
+    <h4><?php esc_html_e('Event Plan Status & Workflow', 'vms'); ?></h4>
+    <?php
+        $vms_cancel_has_data = (
+            $plan_status === 'cancelled'
+            || $cancel_policy !== 'status_only'
+            || $cancel_reason_code !== ''
+            || $cancel_reason_note !== ''
+            || $cancel_vendor_message !== ''
+        );
+    ?>
+    <h4 id="vms-cancellation" class="vms-collapsible-title" data-section-key="cancellation" data-section-has-data="<?php echo $vms_cancel_has_data ? '1' : '0'; ?>"><?php esc_html_e('Cancellation', 'vms'); ?></h4>
+    <div data-vms-section-has-data="<?php echo $vms_cancel_has_data ? '1' : '0'; ?>">
+    <p>
+        <label for="vms_cancel_policy"><strong><?php esc_html_e('Cancellation policy', 'vms'); ?></strong></label><br>
+        <select name="vms_cancel_policy" id="vms_cancel_policy">
+            <?php foreach ($cancel_policy_options as $policy_key => $policy_label) : ?>
+                <option value="<?php echo esc_attr((string) $policy_key); ?>" <?php selected($cancel_policy, (string) $policy_key); ?>>
+                    <?php echo esc_html((string) $policy_label); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </p>
+
+    <p>
+        <label for="vms_cancel_reason_code"><strong><?php esc_html_e('Cancellation reason', 'vms'); ?></strong></label><br>
+        <select name="vms_cancel_reason_code" id="vms_cancel_reason_code">
+            <option value="" <?php selected($cancel_reason_code, ''); ?>><?php esc_html_e('Select reason (optional)', 'vms'); ?></option>
+            <?php foreach ($cancel_reason_options as $reason_key => $reason_label) : ?>
+                <option value="<?php echo esc_attr((string) $reason_key); ?>" <?php selected($cancel_reason_code, (string) $reason_key); ?>>
+                    <?php echo esc_html((string) $reason_label); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </p>
+
+    <p>
+        <label for="vms_cancel_reason_note"><strong><?php esc_html_e('Cancellation note', 'vms'); ?></strong></label><br>
+        <textarea
+            name="vms_cancel_reason_note"
+            id="vms_cancel_reason_note"
+            rows="3"
+            class="large-text"
+            placeholder="<?php esc_attr_e('Optional internal note for cancellation context. This is not included in vendor/staff emails.', 'vms'); ?>"
+        ><?php echo esc_textarea($cancel_reason_note); ?></textarea>
+    </p>
+
+    <p>
+        <label for="vms_cancel_vendor_message"><strong><?php esc_html_e('Primary vendor email message', 'vms'); ?></strong></label><br>
+        <textarea
+            name="vms_cancel_vendor_message"
+            id="vms_cancel_vendor_message"
+            rows="5"
+            class="large-text"
+            placeholder="<?php esc_attr_e('Optional message sent only to the primary vendor when this Event Plan is cancelled.', 'vms'); ?>"
+        ><?php echo esc_textarea($cancel_vendor_message); ?></textarea>
+        <span class="description"><?php esc_html_e('Staff, secondary vendors, and lineup/supporting vendors receive the standard cancellation notice. The internal cancellation note above stays internal.', 'vms'); ?></span>
+    </p>
+
+    <input type="hidden" name="vms_cancel_auto_refund_confirmed" id="vms_cancel_auto_refund_confirmed" value="0" />
+
+    <?php $this->render_cancellation_job_panel((int) $post->ID, (string) $plan_status); ?>
+
+    <?php if (function_exists('vms_event_credits_render_event_plan_panel')) { vms_event_credits_render_event_plan_panel((int) $post->ID, (string) $plan_status); } ?>
+
+    <?php
+        $k_rescheduled_from = function_exists('vms_meta_key')
+            ? (vms_meta_key('event_plan', 'rescheduled_from_plan_id') ?: '_vms_rescheduled_from_plan_id')
+            : '_vms_rescheduled_from_plan_id';
+        $k_rescheduled_to = function_exists('vms_meta_key')
+            ? (vms_meta_key('event_plan', 'rescheduled_to_plan_ids') ?: '_vms_rescheduled_to_plan_ids')
+            : '_vms_rescheduled_to_plan_ids';
+        $rescheduled_from_id = absint(get_post_meta($post->ID, $k_rescheduled_from, true));
+        $rescheduled_to_ids = function_exists('vms_event_plan_normalize_related_plan_ids')
+            ? vms_event_plan_normalize_related_plan_ids(get_post_meta($post->ID, $k_rescheduled_to, true))
+            : array();
+    ?>
+
+    <?php $reschedule_date_value = isset($_POST['vms_reschedule_event_date']) ? sanitize_text_field((string) wp_unslash($_POST['vms_reschedule_event_date'])) : ''; ?>
+
+    <hr />
+    <p>
+        <label for="vms_reschedule_event_date"><strong><?php esc_html_e('Replacement date', 'vms'); ?></strong></label><br>
+        <input type="date" id="vms_reschedule_event_date" name="vms_reschedule_event_date" value="<?php echo esc_attr($reschedule_date_value); ?>" />
+    </p>
+
+    <?php if ($plan_status !== 'cancelled') : ?>
+        <p class="description"><?php esc_html_e('Optional. If you enter a replacement date and click “Mark Cancelled,” VMS will cancel this plan and immediately create a linked Draft Event Plan for the new date.', 'vms'); ?></p>
+    <?php endif; ?>
+
+    <?php if ($plan_status === 'cancelled') : ?>
+        <?php if (!empty($rescheduled_to_ids)) : ?>
+            <p class="description">
+                <strong><?php esc_html_e('Existing rescheduled drafts:', 'vms'); ?></strong>
+                <?php
+                    $links = array();
+                    foreach ($rescheduled_to_ids as $linked_plan_id) {
+                        $linked_post = get_post($linked_plan_id);
+                        if (!$linked_post || $linked_post->post_type !== 'vms_event_plan') {
+                            continue;
+                        }
+                        $linked_date = (string) get_post_meta($linked_plan_id, '_vms_event_date', true);
+                        $linked_label = trim((string) get_the_title($linked_plan_id));
+                        if ($linked_label === '') {
+                            $linked_label = sprintf(__('Event Plan #%d', 'vms'), $linked_plan_id);
+                        }
+                        if ($linked_date !== '') {
+                            $linked_label .= ' — ' . $linked_date;
+                        }
+                        $links[] = '<a href="' . esc_url(vms_event_plan_admin_edit_url($linked_plan_id)) . '">' . esc_html($linked_label) . '</a>';
+                    }
+                    echo wp_kses_post(implode(' • ', $links));
+                ?>
+            </p>
+        <?php endif; ?>
+
+        <p>
+            <button type="submit" name="vms_event_plan_action" value="create_rescheduled_draft" class="button button-secondary" id="vms_create_rescheduled_draft_button">
+                <?php esc_html_e('Create Rescheduled Draft', 'vms'); ?>
+            </button>
+        </p>
+        <p class="description"><?php esc_html_e('Creates a new Draft Event Plan linked to this cancelled one. VMS copies the useful planning details, but clears live calendar, ticket, sales, and cancellation state so you can review safely before republishing.', 'vms'); ?></p>
+    <?php endif; ?>
+    </div>
+    <div data-vms-collapsible-break="1"></div>
+
+    <p class="vms-ep-status-current">
+        <strong><?php esc_html_e('Status:', 'vms'); ?></strong>
+        <?php
+            $plan_status_label = function_exists('vms_event_plan_status_label')
+                ? (string) vms_event_plan_status_label((string) $plan_status)
+                : ucwords(str_replace(array('_', '-'), ' ', (string) $plan_status));
+            echo esc_html($plan_status_label);
+        ?>
+    </p>
+ 
+    <p>
+        <button type="submit" name="vms_event_plan_action" value="save_draft" class="button">
+            <?php esc_html_e('Save Draft', 'vms'); ?>
+        </button>
+
+        <button type="submit" name="vms_event_plan_action" value="mark_ready" class="button button-secondary">
+            <?php esc_html_e('Mark Ready', 'vms'); ?>
+        </button>
+
+        <button type="submit" name="vms_event_plan_action" value="publish_now" class="button button-primary"
+            <?php echo ($plan_status === 'ready' || $plan_status === 'published') ? '' : ' disabled="disabled"'; ?>>
+            <?php esc_html_e('Publish Now', 'vms'); ?>
+        </button>
+
+        <button type="submit" name="vms_event_plan_action" value="mark_cancelled" class="button vms-button-danger"
+            <?php echo ($plan_status === 'cancelled') ? ' disabled="disabled"' : ''; ?>>
+            <?php esc_html_e('Mark Cancelled', 'vms'); ?>
+        </button>
+    </p>
+
+    <?php if ($rescheduled_from_id > 0 && get_post_type($rescheduled_from_id) === 'vms_event_plan') : ?>
+        <p class="description">
+            <strong><?php esc_html_e('Rescheduled from:', 'vms'); ?></strong>
+            <a href="<?php echo esc_url(vms_event_plan_admin_edit_url($rescheduled_from_id)); ?>"><?php echo esc_html(get_the_title($rescheduled_from_id) ?: sprintf(__('Event Plan #%d', 'vms'), $rescheduled_from_id)); ?></a>
+        </p>
+    <?php endif; ?>
+
+    <p class="description"><?php esc_html_e('“Publish Now” is only available once the plan is Ready. Use “Mark Cancelled” to explicitly cancel a plan.', 'vms'); ?></p>

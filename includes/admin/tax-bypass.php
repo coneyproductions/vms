@@ -1,6 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+require_once __DIR__ . '/../core/tax-bypass.php';
+
 /**
  * VMS – Temporary Tax/W-9 Compliance Bypass (Admin-only)
  *
@@ -18,11 +20,25 @@ if (!defined('ABSPATH')) exit;
  *  _vms_tax_bypass_set_at   (int timestamp)
  */
 
+if (!function_exists('vms_tax_bypass_supported_post_types')) {
 function vms_tax_bypass_supported_post_types(): array
 {
     // ✅ If your staff CPT slug differs, change it here.
     return array('vms_vendor', 'vms_staff');
 }
+}
+
+if (!function_exists('vms_vendor_tax_bypass_meta_key')) {
+function vms_vendor_tax_bypass_meta_key(string $field, string $fallback): string
+{
+    if (!function_exists('vms_meta_key')) {
+        return $fallback;
+    }
+    $mapped = (string) vms_meta_key('vendor', $field);
+    return $mapped !== '' ? $mapped : $fallback;
+}
+}
+
 
 /**
  * Returns array status:
@@ -32,11 +48,16 @@ function vms_tax_bypass_supported_post_types(): array
  *  - expired (bool)
  *  - days_left (int|null)
  */
+if (!function_exists('vms_get_tax_bypass_status')) {
 function vms_get_tax_bypass_status(int $post_id): array
 {
-    $enabled = (int) get_post_meta($post_id, '_vms_tax_bypass_enabled', true) === 1;
-    $until   = (string) get_post_meta($post_id, '_vms_tax_bypass_until', true);
-    $reason  = (string) get_post_meta($post_id, '_vms_tax_bypass_reason', true);
+    $k_enabled = vms_vendor_tax_bypass_meta_key('tax_bypass_enabled', '_vms_tax_bypass_enabled');
+    $k_until   = vms_vendor_tax_bypass_meta_key('tax_bypass_until', '_vms_tax_bypass_until');
+    $k_reason  = vms_vendor_tax_bypass_meta_key('tax_bypass_reason', '_vms_tax_bypass_reason');
+
+    $enabled = (int) get_post_meta($post_id, $k_enabled, true) === 1;
+    $until   = (string) get_post_meta($post_id, $k_until, true);
+    $reason  = (string) get_post_meta($post_id, $k_reason, true);
 
     $expired = false;
     $days_left = null;
@@ -67,19 +88,25 @@ function vms_get_tax_bypass_status(int $post_id): array
         'days_left' => $days_left,
     );
 }
+}
+
 
 /**
  * Bypass is ACTIVE only when enabled, has valid until date, and not expired.
  */
+if (!function_exists('vms_tax_bypass_is_active')) {
 function vms_tax_bypass_is_active(int $post_id): bool
 {
     $s = vms_get_tax_bypass_status($post_id);
     return $s['enabled'] && !$s['expired'] && preg_match('/^\d{4}-\d{2}-\d{2}$/', $s['until']);
 }
+}
+
 
 /**
  * Human warning label used in admin notices / validators.
  */
+if (!function_exists('vms_tax_bypass_warning_label')) {
 function vms_tax_bypass_warning_label(int $post_id): string
 {
     $s = vms_get_tax_bypass_status($post_id);
@@ -89,6 +116,8 @@ function vms_tax_bypass_warning_label(int $post_id): string
     $left = ($s['days_left'] === null) ? '' : (' (' . (int)$s['days_left'] . ' day(s) left)');
     return 'Tax bypass active until ' . $s['until'] . $left . '.';
 }
+}
+
 
 /**
  * Admin metabox (sidebar)
@@ -117,43 +146,45 @@ function vms_render_tax_bypass_box($post)
 
     $s = vms_get_tax_bypass_status((int)$post->ID);
 
-    $set_by = (int) get_post_meta($post->ID, '_vms_tax_bypass_set_by', true);
-    $set_at = (int) get_post_meta($post->ID, '_vms_tax_bypass_set_at', true);
+    $k_set_by = vms_vendor_tax_bypass_meta_key('tax_bypass_set_by', '_vms_tax_bypass_set_by');
+    $k_set_at = vms_vendor_tax_bypass_meta_key('tax_bypass_set_at', '_vms_tax_bypass_set_at');
+
+    $set_by = (int) get_post_meta($post->ID, $k_set_by, true);
+    $set_at = (int) get_post_meta($post->ID, $k_set_at, true);
 
     $badge = '';
-    $badge_style = 'padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px;display:inline-block;';
     if ($s['enabled'] && !$s['expired']) {
-        $badge = '<span style="' . esc_attr($badge_style) . 'background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;">ACTIVE</span>';
+        $badge = '<span class="vms-tax-bypass-badge vms-tax-bypass-badge-active">ACTIVE</span>';
     } elseif ($s['enabled'] && $s['expired']) {
-        $badge = '<span style="' . esc_attr($badge_style) . 'background:#fef2f2;border:1px solid #fecaca;color:#991b1b;">EXPIRED</span>';
+        $badge = '<span class="vms-tax-bypass-badge vms-tax-bypass-badge-expired">EXPIRED</span>';
     } else {
-        $badge = '<span style="' . esc_attr($badge_style) . 'background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;">OFF</span>';
+        $badge = '<span class="vms-tax-bypass-badge vms-tax-bypass-badge-off">OFF</span>';
     }
 
-    echo '<p style="margin:0 0 10px;">' . $badge . '</p>';
+    echo '<p class="vms-tax-bypass-badge-row">' . $badge . '</p>';
 
-    echo '<p class="description" style="margin-top:0;">' .
+    echo '<p class="description vms-tax-bypass-desc-top">' .
         esc_html__('Use only if a W-9 is verbally agreed and will be supplied soon. This bypass expires automatically.', 'vms') .
         '</p>';
 
     // Toggle
-    echo '<p style="margin:10px 0 8px;">';
-    echo '<label style="font-weight:700;">';
+    echo '<p class="vms-tax-bypass-field-row">';
+    echo '<label class="vms-tax-bypass-strong-label">';
     echo '<input type="checkbox" name="vms_tax_bypass_enabled" value="1" ' . checked($s['enabled'], true, false) . '> ';
     echo esc_html__('Allow temporary bypass', 'vms');
     echo '</label>';
     echo '</p>';
 
     // Expiration
-    echo '<p style="margin:0 0 8px;">';
-    echo '<label style="font-weight:700;display:block;margin-bottom:4px;">' . esc_html__('Bypass expires on (required)', 'vms') . '</label>';
-    echo '<input type="date" name="vms_tax_bypass_until" value="' . esc_attr($s['until']) . '" style="width:100%;">';
+    echo '<p class="vms-tax-bypass-field-row-tight">';
+    echo '<label class="vms-tax-bypass-strong-label vms-tax-bypass-strong-label-block">' . esc_html__('Bypass expires on (required)', 'vms') . '</label>';
+    echo '<input type="date" name="vms_tax_bypass_until" value="' . esc_attr($s['until']) . '" class="vms-tax-bypass-input-full">';
     echo '</p>';
 
     // Reason
-    echo '<p style="margin:0 0 8px;">';
-    echo '<label style="font-weight:700;display:block;margin-bottom:4px;">' . esc_html__('Reason (required)', 'vms') . '</label>';
-    echo '<textarea name="vms_tax_bypass_reason" rows="3" style="width:100%;">' . esc_textarea($s['reason']) . '</textarea>';
+    echo '<p class="vms-tax-bypass-field-row-tight">';
+    echo '<label class="vms-tax-bypass-strong-label vms-tax-bypass-strong-label-block">' . esc_html__('Reason (required)', 'vms') . '</label>';
+    echo '<textarea name="vms_tax_bypass_reason" rows="3" class="vms-tax-bypass-input-full">' . esc_textarea($s['reason']) . '</textarea>';
     echo '</p>';
 
     // Audit line
@@ -164,7 +195,7 @@ function vms_render_tax_bypass_box($post)
         $dt = new DateTime('@' . $set_at);
         $dt->setTimezone(wp_timezone());
 
-        echo '<p class="description" style="margin:8px 0 0;">';
+        echo '<p class="description vms-tax-bypass-audit">';
         echo esc_html__('Last set by:', 'vms') . ' <strong>' . esc_html($who_name) . '</strong><br>';
         echo esc_html__('At:', 'vms') . ' ' . esc_html($dt->format('M j, Y g:ia'));
         echo '</p>';
@@ -173,13 +204,14 @@ function vms_render_tax_bypass_box($post)
     // Warning if enabled but invalid/expired
     if ($s['enabled']) {
         $warn = vms_tax_bypass_warning_label((int)$post->ID);
-        echo '<p class="description" style="margin:10px 0 0;color:' . ($s['expired'] ? '#b32d2e' : '#7c2d12') . ';">' .
+        $warn_class = $s['expired'] ? 'vms-tax-bypass-warn-expired' : 'vms-tax-bypass-warn-active';
+        echo '<p class="description vms-tax-bypass-warn ' . esc_attr($warn_class) . '">' .
             esc_html($warn) .
             '</p>';
     }
 
-    echo '<hr style="margin:12px 0;">';
-    echo '<p class="description" style="margin:0;">' .
+    echo '<hr class="vms-tax-bypass-divider">';
+    echo '<p class="description vms-tax-bypass-save-note">' .
         esc_html__('Save/Update this post to apply changes.', 'vms') .
         '</p>';
 
@@ -246,17 +278,23 @@ add_action('save_post', function ($post_id, $post) {
     $until   = isset($_POST['vms_tax_bypass_until']) ? sanitize_text_field(wp_unslash($_POST['vms_tax_bypass_until'])) : '';
     $reason  = isset($_POST['vms_tax_bypass_reason']) ? sanitize_text_field(wp_unslash($_POST['vms_tax_bypass_reason'])) : '';
 
+    $k_enabled = vms_vendor_tax_bypass_meta_key('tax_bypass_enabled', '_vms_tax_bypass_enabled');
+    $k_until   = vms_vendor_tax_bypass_meta_key('tax_bypass_until', '_vms_tax_bypass_until');
+    $k_reason  = vms_vendor_tax_bypass_meta_key('tax_bypass_reason', '_vms_tax_bypass_reason');
+    $k_set_by  = vms_vendor_tax_bypass_meta_key('tax_bypass_set_by', '_vms_tax_bypass_set_by');
+    $k_set_at  = vms_vendor_tax_bypass_meta_key('tax_bypass_set_at', '_vms_tax_bypass_set_at');
+
     // Normalize
     $until = trim($until);
     $reason = trim($reason);
 
     // If turning OFF, clear everything (keeps things clean).
     if (!$enabled) {
-        update_post_meta($post_id, '_vms_tax_bypass_enabled', 0);
-        delete_post_meta($post_id, '_vms_tax_bypass_until');
-        delete_post_meta($post_id, '_vms_tax_bypass_reason');
-        delete_post_meta($post_id, '_vms_tax_bypass_set_by');
-        delete_post_meta($post_id, '_vms_tax_bypass_set_at');
+        update_post_meta($post_id, $k_enabled, 0);
+        delete_post_meta($post_id, $k_until);
+        delete_post_meta($post_id, $k_reason);
+        delete_post_meta($post_id, $k_set_by);
+        delete_post_meta($post_id, $k_set_at);
         return;
     }
 
@@ -265,15 +303,15 @@ add_action('save_post', function ($post_id, $post) {
     if (!$valid_date || $reason === '') {
         // Save as "enabled" but immediately expired/invalid forces attention;
         // Still store the attempted values.
-        update_post_meta($post_id, '_vms_tax_bypass_enabled', 1);
-        update_post_meta($post_id, '_vms_tax_bypass_until', $until);
-        update_post_meta($post_id, '_vms_tax_bypass_reason', $reason);
+        update_post_meta($post_id, $k_enabled, 1);
+        update_post_meta($post_id, $k_until, $until);
+        update_post_meta($post_id, $k_reason, $reason);
     } else {
-        update_post_meta($post_id, '_vms_tax_bypass_enabled', 1);
-        update_post_meta($post_id, '_vms_tax_bypass_until', $until);
-        update_post_meta($post_id, '_vms_tax_bypass_reason', $reason);
+        update_post_meta($post_id, $k_enabled, 1);
+        update_post_meta($post_id, $k_until, $until);
+        update_post_meta($post_id, $k_reason, $reason);
     }
 
-    update_post_meta($post_id, '_vms_tax_bypass_set_by', get_current_user_id());
-    update_post_meta($post_id, '_vms_tax_bypass_set_at', time());
+    update_post_meta($post_id, $k_set_by, get_current_user_id());
+    update_post_meta($post_id, $k_set_at, time());
 }, 20, 2);

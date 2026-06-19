@@ -1,0 +1,227 @@
+#vms-email-followups-admin .vms-email-followups-tabs {
+	margin: 0 0 18px;
+}
+
+#vms-email-followups-admin .vms-efu-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 16px;
+	margin: 18px 0;
+}
+
+#vms-email-followups-admin .vms-efu-card,
+#vms-email-followups-admin .vms-efu-settings-form,
+#vms-email-followups-admin .vms-efu-template-card,
+#vms-email-followups-admin .vms-efu-token-box,
+#vms-email-followups-admin .vms-efu-actions,
+#vms-email-followups-admin .vms-efu-recipient-list {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	padding: 16px;
+}
+
+#vms-email-followups-admin .vms-efu-card h2,
+#vms-email-followups-admin .vms-efu-settings-form h2,
+#vms-email-followups-admin .vms-efu-template-card h2,
+#vms-email-followups-admin .vms-efu-token-box h2 {
+	margin-top: 0;
+}
+
+#vms-email-followups-admin .vms-efu-form-grid,
+#vms-email-followups-admin .vms-efu-filter-form {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 14px;
+	align-items: end;
+}
+
+#vms-email-followups-admin label span {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 5px;
+}
+
+#vms-email-followups-admin input[type="text"],
+#vms-email-followups-admin input[type="email"],
+#vms-email-followups-admin input[type="number"],
+#vms-email-followups-admin select,
+#vms-email-followups-admin textarea {
+	max-width: 100%;
+	width: 100%;
+}
+
+#vms-email-followups-admin .vms-efu-check {
+	align-items: flex-start;
+	display: flex;
+	gap: 8px;
+}
+
+#vms-email-followups-admin .vms-efu-check span {
+	display: inline;
+	margin: 0;
+}
+
+#vms-email-followups-admin .vms-efu-check em {
+	color: #646970;
+	display: block;
+	font-size: 12px;
+	font-style: normal;
+	margin-top: 3px;
+}
+
+#vms-email-followups-admin .vms-efu-template-card,
+#vms-email-followups-admin .vms-efu-token-box,
+#vms-email-followups-admin .vms-efu-actions,
+#vms-email-followups-admin .vms-efu-recipient-list {
+	margin: 18px 0;
+}
+
+#vms-email-followups-admin .vms-efu-token-list {
+	display: grid;
+	gap: 8px 14px;
+	grid-template-columns: max-content 1fr;
+}
+
+#vms-email-followups-admin .vms-efu-token-list code {
+	white-space: nowrap;
+}
+
+#vms-email-followups-admin .vms-efu-email-preview {
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	padding: 14px;
+}
+
+#vms-email-followups-admin .vms-efu-warning {
+	color: #b32d2e;
+	font-weight: 600;
+}
+
+#vms-email-followups-admin .vms-efu-actions {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+#vms-email-followups-admin .vms-efu-manual-send-form {
+	border-left: 4px solid #dba617;
+	padding-left: 12px;
+}
+
+#vms-email-followups-admin .vms-efu-clear-logs {
+	margin-bottom: 12px;
+}
+
+@media (max-width: 782px) {
+	#vms-email-followups-admin .vms-efu-token-list {
+		grid-template-columns: 1fr;
+	}
+}
+
+#vms-email-followups-admin .vms-efu-schedule-grid {
+	align-items: start;
+	display: grid;
+	gap: 14px;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	margin: 12px 0;
+}
+
+#vms-email-followups-admin .vms-efu-schedule-grid em,
+#vms-email-followups-admin .vms-efu-signature-field em {
+	color: #646970;
+	display: block;
+	font-size: 12px;
+	font-style: normal;
+	margin-top: 4px;
+}
+
+#vms-email-followups-admin .vms-efu-template-heading {
+	align-items: flex-start;
+	display: flex;
+	gap: 16px;
+	justify-content: space-between;
+}
+
+#vms-email-followups-admin .vms-efu-template-heading .vms-efu-check {
+	min-width: 190px;
+}
+
+#vms-email-followups-admin .vms-efu-delete-template {
+	border-top: 1px solid #dcdcde;
+	margin-top: 14px;
+	padding-top: 12px;
+}
+
+#vms-email-followups-admin .vms-efu-new-template {
+	border-style: dashed;
+}
+
+#vms-email-followups-admin .vms-efu-signature-field {
+	display: block;
+	margin-top: 14px;
+}
+
+@media (max-width: 782px) {
+	#vms-email-followups-admin .vms-efu-template-heading {
+		display: block;
+	}
+
+	#vms-email-followups-admin .vms-efu-template-heading .vms-efu-check {
+		margin-top: 10px;
+		min-width: 0;
+	}
+}
+
+#vms-email-followups-admin .vms-efu-template-save {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 12px 0 0;
+}
+
+#vms-email-followups-admin .vms-efu-template-save .description {
+	color: #646970;
+}
+
+
+#vms-email-followups-admin .vms-efu-batch-card {
+	background: #fff8e5;
+	border: 1px solid #dba617;
+	border-radius: 10px;
+	margin: 18px 0;
+	padding: 16px;
+}
+
+#vms-email-followups-admin .vms-efu-recipient-tools {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 10px 0;
+}
+
+#vms-email-followups-admin .vms-efu-selected-count,
+#vms-email-followups-admin .vms-efu-send-note,
+#vms-email-followups-admin .vms-efu-send-progress {
+	color: #646970;
+}
+
+#vms-email-followups-admin .vms-efu-send-progress:not(:empty) {
+	background: #f0f6fc;
+	border-left: 4px solid #72aee6;
+	font-weight: 600;
+	margin: 10px 0;
+	padding: 8px 10px;
+}
+
+#vms-email-followups-admin .vms-efu-is-sending {
+	opacity: 0.76;
+}
+
+#vms-email-followups-admin .vms-efu-recipient-picker table {
+	margin-top: 10px;
+}

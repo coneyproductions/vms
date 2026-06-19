@@ -1,0 +1,397 @@
+/* --- 90-ticket-progressive-ui.css --- */
+.vms-ticket-ui-progressive {
+  gap: 14px;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-section {
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-section[hidden] {
+  display: none !important;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-header {
+  margin: 0;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-toggle {
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: center;
+  text-align: left;
+  padding: 14px 16px;
+  border: 0;
+  background: rgba(15, 23, 42, 0.035);
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-toggle:hover,
+.vms-ticket-ui-progressive .vms-ticket-progressive-toggle:focus-visible {
+  background: rgba(15, 23, 42, 0.065);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-title {
+  display: block;
+  font-weight: 900;
+  font-size: clamp(1.7rem, 1.45rem + 0.9vw, 2.35rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-description {
+  display: block;
+  grid-column: 1 / 2;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  opacity: 0.74;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-icon {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-section.is-open .vms-ticket-progressive-icon {
+  transform: rotate(45deg);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-content {
+  padding: 14px 16px 16px;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-content[hidden] {
+  display: none !important;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-tickets {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-ticket-lock-note[hidden],
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-claim-seat-panel[hidden],
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-ticket-status-stack[hidden] {
+  display: none !important;
+}
+
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row:not(.vms-qualified-ticket-selected) .vms-ticket-lock-note,
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row:not(.vms-qualified-ticket-selected) .vms-claim-seat-panel,
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row:not(.vms-qualified-ticket-selected) .vms-ticket-status-stack {
+  display: none !important;
+}
+
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-ticket-qualified-description p,
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .tribe-tickets__tickets-item-content-description p {
+  margin-bottom: 0;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons #vms-reserved-addons,
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block {
+  margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .vms-ticket-ui-progressive .vms-ticket-progressive-toggle {
+    padding: 13px 14px;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-content {
+    padding: 12px 12px 14px;
+  }
+}
+
+/* 0.2.24.620: Progressive ticket UI polish. Keep Tickets always visible, remove duplicate/verbose ticket headings, and avoid empty collapsed Amenities space. */
+.vms-ticket-ui-progressive .vms-ticket-progressive-description:empty,
+.vms-ticket-ui-progressive .vms-ticket-progressive-description[hidden] {
+  display: none !important;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle {
+  cursor: default;
+  min-height: 52px;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle:hover,
+.vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle:focus-visible {
+  background: rgba(15, 23, 42, 0.035);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-title {
+  grid-column: 1 / -1;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-icon {
+  display: none !important;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-progressive-content > .tribe-tickets__tickets-title,
+.vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-progressive-content > .vms-ticket-ui-section-title,
+.vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-progressive-content > h1:first-child,
+.vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-progressive-content > h2:first-child,
+.vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-progressive-content > h3:first-child {
+  display: none !important;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons.is-closed {
+  padding-bottom: 0 !important;
+}
+
+/* 0.2.24.621: Mobile progressive ticket UI flattening.
+   Keep the cleaner desktop card style, but remove redundant nested boxes on phone/tablet
+   so ticket/add-on cards can use the available width. */
+/* 0.2.24.622: Keep the short row-level qualified-ticket description visible.
+   Only the deeper approved-account/claim helper panels stay hidden until quantity > 0. */
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-ticket-qualified-description:not([hidden]),
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .tribe-tickets__tickets-item-description:not([hidden]),
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .tribe-tickets__tickets-item-content-description:not([hidden]),
+.vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row .vms-ticket-desc:not([hidden]) {
+  display: block !important;
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui-progressive.vms-ticket-ui.vms-ticket-ui-v2 {
+    --vms-ui-control-size: 38px;
+    --vms-ui-input-width: 48px;
+  }
+
+  .vms-ticket-ui-progressive.vms-ticket-ui.vms-ticket-ui-v2.vms-ticketing-flow {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-toggle,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle {
+    min-height: 0 !important;
+    padding: 0 0 10px !important;
+    background: transparent !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-toggle:hover,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-toggle:focus-visible,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle:hover,
+  .vms-ticket-ui-progressive .vms-ticket-progressive-section--always-open .vms-ticket-progressive-toggle:focus-visible {
+    background: transparent !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-title {
+    font-size: clamp(1.6rem, 8vw, 2.05rem) !important;
+    line-height: 1.06 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-description {
+    margin-top: 2px !important;
+    font-size: 14px !important;
+    line-height: 1.32 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-progressive-content {
+    padding: 0 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item {
+    padding: 12px !important;
+    border-radius: 14px !important;
+    row-gap: 10px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-title,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-title {
+    font-size: clamp(1.25rem, 6vw, 1.55rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-description,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-description,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-desc {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .vms-ticket-right-stack {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    column-gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity {
+  display: inline-flex !important;
+  align-items: center !important;
+    justify-self: start !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+    width: var(--vms-ui-control-size, 38px) !important;
+    min-width: var(--vms-ui-control-size, 38px) !important;
+    height: var(--vms-ui-control-size, 38px) !important;
+    font-size: 20px !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity-number,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity-number-input {
+  display: inline-flex !important;
+  align-items: center !important;
+    width: var(--vms-ui-input-width, 48px) !important;
+    min-width: var(--vms-ui-input-width, 48px) !important;
+    max-width: var(--vms-ui-input-width, 48px) !important;
+    height: var(--vms-ui-control-size, 38px) !important;
+    min-height: var(--vms-ui-control-size, 38px) !important;
+    line-height: var(--vms-ui-control-size, 38px) !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price,
+  .vms-ticket-ui-progressive .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price * {
+    font-size: 20px !important;
+    line-height: 1.05 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addons {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-row,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon {
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-title,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon__title {
+    font-size: clamp(1.2rem, 5.5vw, 1.45rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-descline,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-short,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-note,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon__main .vms-ent-descline,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-rw-addon__note {
+    font-size: 14px !important;
+    line-height: 1.34 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 10px 0 0 !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+    justify-self: start !important;
+    justify-content: flex-start !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+    justify-self: end !important;
+    font-size: 20px !important;
+  }
+}
+
+/* 0.2.24.623: Mobile qualified-ticket claim copy/layout simplification. */
+@media (max-width: 759px) {
+  .vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row.vms-qualified-ticket-selected .vms-ticket-lock-note,
+  .vms-ticket-ui-progressive .vms-progressive-qualified-ticket-row.vms-qualified-ticket-selected .vms-claim-seat-panel {
+    margin-top: 10px !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    max-width: 100% !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-lock-copy,
+  .vms-ticket-ui-progressive .vms-claim-seat-help,
+  .vms-ticket-ui-progressive .vms-claim-seat-status {
+    font-size: 14px !important;
+    line-height: 1.36 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-lock-actions {
+    gap: 8px !important;
+    margin-top: 8px !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-lock-actions .vms-ticket-lock-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-align: center !important;
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 14px !important;
+  
+}
+
+  .vms-ticket-ui-progressive .vms-claim-seat-title {
+    font-size: 18px !important;
+    line-height: 1.18 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-claim-seat-label {
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-claim-seat-input-wrap {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-claim-seat-input,
+  .vms-ticket-ui-progressive .vms-claim-seat-validate {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+  }
+}
+
+

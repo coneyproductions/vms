@@ -1,0 +1,238 @@
+/* Module: Add-ons + Modal Foundation */
+.vms-addon-header{
+  padding: 12px 0 6px;
+}
+
+.vms-addon-title{
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.vms-addon-subtitle{
+  font-size: 13px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+.vms-addon-mount{
+  margin-top: 14px;
+}
+
+.vms-addon-row{
+  position: relative;
+}
+
+.vms-addon-controls{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  flex-wrap: nowrap;
+}
+
+.vms-addon-name{
+  font-weight: 600;
+  flex: 1 1 auto;
+  min-width: 180px;
+}
+
+.vms-addon-price{
+  font-weight: 400;
+  opacity: 0.85;
+  margin-left: 6px;
+}
+
+.vms-addon-qty{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.vms-addon-input{
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 28px !important;
+  margin: 0 !important;
+  padding: 0 6px !important;
+  text-align: center !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  line-height: 28px !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  appearance: none !important;
+}
+
+@media (max-width: 480px){
+  .vms-addon-controls{
+    flex-wrap: nowrap;
+  }
+}
+
+.vms-addon-minus,
+.vms-addon-plus{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  background: #fff !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  cursor: pointer !important;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  color: #1f2937 !important;
+}
+
+.vms-addon-minus:disabled,
+.vms-addon-plus:disabled{
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vms-cart-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.88);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vms-cart-overlay-inner{
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px 16px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  border-radius: 12px;
+}
+
+.vms-addon-modal-summary{
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 0 0 14px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.vms-addon-modal-summary-title{
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.vms-addon-modal-list{
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.vms-addon-modal-list li{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.vms-addon-modal-note{
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0.92;
+}
+
+.vms-modal-checkout-hidden{
+  display: none !important;
+}
+
+/* Mobile bugfix (BUG-08): keep TEC modal action buttons reachable. */
+@media (max-width: 782px){
+  .vms-ticketing-modal-scroll{
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #tribe-tickets__modal-form.vms-ticketing-modal-form{
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  #tribe-tickets__modal-form.vms-ticketing-modal-form .vms-addon-modal-summary{
+    max-height: 34dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #tribe-tickets__modal-form.vms-ticketing-modal-form .tribe-tickets__tickets-footer,
+  #tribe-tickets__modal-form.vms-ticketing-modal-form .vms-ticketing-modal-footer{
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: #fff;
+    padding-top: 10px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  #tribe-tickets__modal-form.vms-ticketing-modal-form .tribe-tickets__tickets-footer > *,
+  #tribe-tickets__modal-form.vms-ticketing-modal-form .vms-ticketing-modal-footer > *{
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.vms-entitlements-qty {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 120px;
+}
+
+.vms-entitlements-qty .vms-addon-controls {
+  width: auto;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.vms-entitlements-qty .vms-addon-qty {
+  font-size: 16px;
+  justify-content: center;
+}
+
+.vms-addon-input {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.vms-addon-minus,
+.vms-addon-plus {
+  font-size: 18px;
+}
+

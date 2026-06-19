@@ -23,6 +23,10 @@ if (!defined('VMS_VENDOR_CPT')) {
     define('VMS_VENDOR_CPT', 'vms_vendor');
 }
 
+if (!defined('VMS_VENUE_CPT')) {
+    define('VMS_VENUE_CPT', 'vms_venue');
+}
+
 add_action('init', 'vms_register_venue_cpt');
 
 function vms_register_venue_cpt()
@@ -46,7 +50,7 @@ function vms_register_venue_cpt()
         'labels'             => $labels,
         'public'             => false,
         'show_ui'            => true,
-        'show_in_menu'       => 'vms',
+        'show_in_menu'       => false,
         'menu_position'      => 26,
         'menu_icon'          => 'dashicons-location-alt',
         'supports'           => array('title', 'editor', 'thumbnail'),
@@ -57,6 +61,264 @@ function vms_register_venue_cpt()
 
     register_post_type('vms_venue', $args);
 }
+
+
+if (!function_exists('vms_venue_meta_key')) {
+    function vms_venue_meta_key(string $field, string $fallback = ''): string
+    {
+        if (function_exists('vms_meta_key')) {
+            $key = (string) vms_meta_key('venue', $field);
+            if ($key !== '') {
+                return $key;
+            }
+        }
+
+        return $fallback;
+    }
+}
+
+if (!function_exists('vms_get_venue_location_data')) {
+    /**
+     * Return normalized venue location data used by Meta Ads, social tools, and TEC venue sync.
+     *
+     * @return array<string,string>
+     */
+    function vms_get_venue_location_data(int $venue_id): array
+    {
+        $venue_id = absint($venue_id);
+        if ($venue_id <= 0) {
+            return array(
+                'address' => '',
+                'address_2' => '',
+                'city' => '',
+                'state' => '',
+                'zip' => '',
+                'country' => '',
+                'latitude' => '',
+                'longitude' => '',
+            );
+        }
+
+        $data = array(
+            'address' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('address', '_vms_address'), true)),
+            'address_2' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('address_2', '_vms_address_2'), true)),
+            'city' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('city', '_vms_city'), true)),
+            'state' => strtoupper(trim((string) get_post_meta($venue_id, vms_venue_meta_key('state', '_vms_state'), true))),
+            'zip' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('zip', '_vms_zip'), true)),
+            'country' => strtoupper(trim((string) get_post_meta($venue_id, vms_venue_meta_key('country', '_vms_country'), true))),
+            'latitude' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('latitude', '_vms_latitude'), true)),
+            'longitude' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('longitude', '_vms_longitude'), true)),
+        );
+
+        if ($data['country'] === '') {
+            $data['country'] = 'US';
+        }
+
+        return $data;
+    }
+}
+
+if (!function_exists('vms_sync_tec_venue_from_vms_venue')) {
+    function vms_sync_tec_venue_from_vms_venue(int $vms_venue_id, int $tec_venue_id = 0): int
+    {
+        $vms_venue_id = absint($vms_venue_id);
+        $tec_venue_id = absint($tec_venue_id);
+
+        if ($vms_venue_id <= 0) {
+            return 0;
+        }
+
+        if ($tec_venue_id <= 0) {
+            $tec_venue_id = (int) get_post_meta($vms_venue_id, vms_venue_meta_key('tec_venue_id', '_vms_tec_venue_id'), true);
+        }
+
+        if ($tec_venue_id <= 0 || !get_post_status($tec_venue_id)) {
+            return 0;
+        }
+
+        $venue_name = trim((string) get_the_title($vms_venue_id));
+        if ($venue_name !== '') {
+            wp_update_post(array(
+                'ID' => $tec_venue_id,
+                'post_title' => $venue_name,
+            ));
+        }
+
+        $location = vms_get_venue_location_data($vms_venue_id);
+        $meta_map = array(
+            '_VenueAddress' => (string) ($location['address'] ?? ''),
+            '_VenueCity' => (string) ($location['city'] ?? ''),
+            '_VenueStateProvince' => (string) ($location['state'] ?? ''),
+            '_VenueState' => (string) ($location['state'] ?? ''),
+            '_VenueZip' => (string) ($location['zip'] ?? ''),
+            '_VenueCountry' => (string) ($location['country'] ?? ''),
+            '_VenueLat' => (string) ($location['latitude'] ?? ''),
+            '_VenueLng' => (string) ($location['longitude'] ?? ''),
+        );
+
+        foreach ($meta_map as $meta_key => $meta_value) {
+            $meta_value = trim((string) $meta_value);
+            if ($meta_value === '') {
+                delete_post_meta($tec_venue_id, $meta_key);
+            } else {
+                update_post_meta($tec_venue_id, $meta_key, $meta_value);
+            }
+        }
+
+        return $tec_venue_id;
+    }
+}
+
+/**
+ * Venue Location
+ * - Physical address fields for Meta Ads targeting, social/location context, and TEC sync.
+ */
+add_action('add_meta_boxes', function () {
+    add_meta_box(
+        'vms_venue_location',
+        __('Venue Location', 'vms'),
+        'vms_render_venue_location_box',
+        'vms_venue',
+        'normal',
+        'high'
+    );
+});
+
+function vms_render_venue_location_box($post)
+{
+    wp_nonce_field('vms_save_venue_location', 'vms_venue_location_nonce');
+
+    $location = function_exists('vms_get_venue_location_data')
+        ? vms_get_venue_location_data((int) $post->ID)
+        : array(
+            'address' => '',
+            'address_2' => '',
+            'city' => '',
+            'state' => '',
+            'zip' => '',
+            'country' => 'US',
+            'latitude' => '',
+            'longitude' => '',
+        );
+
+    echo '<div class="vms-venue-location-admin">';
+    echo '<p class="description vms-venue-location-admin__intro">' .
+        esc_html__('Store the real physical venue address here. Meta Ads uses this for radius targeting, and VMS can also sync it to the linked TEC venue record.', 'vms') .
+    '</p>';
+
+    echo '<div class="vms-venue-location-admin__grid">';
+
+    echo '<p class="vms-venue-location-admin__field vms-venue-location-admin__field--full">';
+    echo '<label for="vms_venue_address"><strong>' . esc_html__('Address Line 1', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_address" name="vms_venue_address" value="' . esc_attr((string) ($location['address'] ?? '')) . '" class="widefat" placeholder="4021 S State Hwy 161">';
+    echo '</p>';
+
+    echo '<p class="vms-venue-location-admin__field vms-venue-location-admin__field--full">';
+    echo '<label for="vms_venue_address_2"><strong>' . esc_html__('Address Line 2 (optional)', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_address_2" name="vms_venue_address_2" value="' . esc_attr((string) ($location['address_2'] ?? '')) . '" class="widefat" placeholder="Suite, gate, entrance note, etc.">';
+    echo '</p>';
+
+    echo '<p class="vms-venue-location-admin__field">';
+    echo '<label for="vms_venue_city"><strong>' . esc_html__('City', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_city" name="vms_venue_city" value="' . esc_attr((string) ($location['city'] ?? '')) . '" class="widefat" placeholder="Tyler">';
+    echo '</p>';
+
+    echo '<p class="vms-venue-location-admin__field">';
+    echo '<label for="vms_venue_state"><strong>' . esc_html__('State', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_state" name="vms_venue_state" value="' . esc_attr((string) ($location['state'] ?? '')) . '" class="widefat" maxlength="2" placeholder="TX">';
+    echo '</p>';
+
+    echo '<p class="vms-venue-location-admin__field">';
+    echo '<label for="vms_venue_zip"><strong>' . esc_html__('ZIP', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_zip" name="vms_venue_zip" value="' . esc_attr((string) ($location['zip'] ?? '')) . '" class="widefat" placeholder="75701">';
+    echo '</p>';
+
+    echo '<p class="vms-venue-location-admin__field">';
+    echo '<label for="vms_venue_country"><strong>' . esc_html__('Country', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_country" name="vms_venue_country" value="' . esc_attr((string) ($location['country'] ?? 'US')) . '" class="widefat" maxlength="2" placeholder="US">';
+    echo '</p>';
+
+    echo '<p class="vms-venue-location-admin__field">';
+    echo '<label for="vms_venue_latitude"><strong>' . esc_html__('Latitude (optional)', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_latitude" name="vms_venue_latitude" value="' . esc_attr((string) ($location['latitude'] ?? '')) . '" class="widefat" placeholder="32.123456">';
+    echo '</p>';
+
+    echo '<p class="vms-venue-location-admin__field">';
+    echo '<label for="vms_venue_longitude"><strong>' . esc_html__('Longitude (optional)', 'vms') . '</strong></label>';
+    echo '<input type="text" id="vms_venue_longitude" name="vms_venue_longitude" value="' . esc_attr((string) ($location['longitude'] ?? '')) . '" class="widefat" placeholder="-95.123456">';
+    echo '</p>';
+
+    echo '</div>';
+
+    echo '<p class="description vms-venue-location-admin__tip">' .
+        esc_html__('Use a real street address whenever possible. City/state alone is too weak for reliable Meta radius targeting.', 'vms') .
+    '</p>';
+    echo '</div>';
+}
+
+add_action('save_post_vms_venue', function ($post_id, $post) {
+    if ($post->post_type !== 'vms_venue') return;
+
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (wp_is_post_revision($post_id)) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    if (
+        empty($_POST['vms_venue_location_nonce']) ||
+        !wp_verify_nonce($_POST['vms_venue_location_nonce'], 'vms_save_venue_location')
+    ) {
+        return;
+    }
+
+    $read_text = static function (string $key): string {
+        return isset($_POST[$key]) ? sanitize_text_field(wp_unslash((string) $_POST[$key])) : '';
+    };
+
+    $address = $read_text('vms_venue_address');
+    $address_2 = $read_text('vms_venue_address_2');
+    $city = $read_text('vms_venue_city');
+    $state = strtoupper($read_text('vms_venue_state'));
+    $zip = $read_text('vms_venue_zip');
+    $country = strtoupper($read_text('vms_venue_country'));
+    $latitude = trim($read_text('vms_venue_latitude'));
+    $longitude = trim($read_text('vms_venue_longitude'));
+
+    if ($country === '') {
+        $country = 'US';
+    }
+    if ($state !== '') {
+        $state = substr($state, 0, 2);
+    }
+    if ($country !== '') {
+        $country = substr($country, 0, 2);
+    }
+
+    $latitude = preg_match('/^-?\d{1,3}(?:\.\d+)?$/', $latitude) ? $latitude : '';
+    $longitude = preg_match('/^-?\d{1,3}(?:\.\d+)?$/', $longitude) ? $longitude : '';
+
+    $updates = array(
+        vms_venue_meta_key('address', '_vms_address') => $address,
+        vms_venue_meta_key('address_2', '_vms_address_2') => $address_2,
+        vms_venue_meta_key('city', '_vms_city') => $city,
+        vms_venue_meta_key('state', '_vms_state') => $state,
+        vms_venue_meta_key('zip', '_vms_zip') => $zip,
+        vms_venue_meta_key('country', '_vms_country') => $country,
+        vms_venue_meta_key('latitude', '_vms_latitude') => $latitude,
+        vms_venue_meta_key('longitude', '_vms_longitude') => $longitude,
+    );
+
+    foreach ($updates as $meta_key => $meta_value) {
+        if ($meta_value === '') {
+            delete_post_meta($post_id, $meta_key);
+        } else {
+            update_post_meta($post_id, $meta_key, $meta_value);
+        }
+    }
+
+    if (function_exists('vms_sync_tec_venue_from_vms_venue')) {
+        vms_sync_tec_venue_from_vms_venue((int) $post_id);
+    }
+}, 18, 2);
 
 /**
  * Venue Default Event Times
@@ -83,25 +345,29 @@ function vms_render_venue_default_times_box($post) {
     $dur   = (string) get_post_meta($post->ID, '_vms_default_duration_min', true);
     $end   = (string) get_post_meta($post->ID, '_vms_default_end_time', true);
 
-    echo '<p class="description" style="margin-top:0;">' .
+    echo '<div class="vms-venue-default-times-admin">';
+
+    echo '<p class="description vms-venue-times-desc">' .
         esc_html__('Used to pre-fill Start/End time when creating a new Event Plan for this venue.', 'vms') .
     '</p>';
 
-    echo '<p style="margin:0 0 10px;">';
+    echo '<p class="vms-venue-times-field">';
     echo '<label for="vms_default_start_time"><strong>' . esc_html__('Default Start', 'vms') . '</strong></label><br>';
-    echo '<input type="time" id="vms_default_start_time" name="vms_default_start_time" value="' . esc_attr($start) . '" style="width:100%;">';
+    echo '<input type="time" id="vms_default_start_time" name="vms_default_start_time" value="' . esc_attr($start) . '" class="vms-venue-times-input">';
     echo '</p>';
 
-    echo '<p style="margin:0 0 10px;">';
+    echo '<p class="vms-venue-times-field">';
     echo '<label for="vms_default_duration_min"><strong>' . esc_html__('Default Duration (minutes)', 'vms') . '</strong></label><br>';
-    echo '<input type="number" min="0" step="1" id="vms_default_duration_min" name="vms_default_duration_min" value="' . esc_attr($dur) . '" style="width:100%;" placeholder="120">';
+    echo '<input type="number" min="0" step="1" id="vms_default_duration_min" name="vms_default_duration_min" value="' . esc_attr($dur) . '" class="vms-venue-times-input" placeholder="120">';
     echo '</p>';
 
-    echo '<p style="margin:0 0 10px;">';
+    echo '<p class="vms-venue-times-field">';
     echo '<label for="vms_default_end_time"><strong>' . esc_html__('Default End (optional)', 'vms') . '</strong></label><br>';
-    echo '<input type="time" id="vms_default_end_time" name="vms_default_end_time" value="' . esc_attr($end) . '" style="width:100%;">';
+    echo '<input type="time" id="vms_default_end_time" name="vms_default_end_time" value="' . esc_attr($end) . '" class="vms-venue-times-input">';
     echo '<span class="description">' . esc_html__('If set, this overrides duration-based end time defaults.', 'vms') . '</span>';
     echo '</p>';
+
+    echo '</div>';
 }
 
 add_action('save_post_vms_venue', function ($post_id, $post) {
@@ -190,27 +456,27 @@ function vms_render_venue_schedule_box($post)
         6 => __('Saturday', 'vms'),
     );
 
-    echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;max-width:900px;">';
+    echo '<div class="vms-venue-schedule-layout">';
 
     // Open Days
     echo '<div>';
-    echo '<h3 style="margin:0 0 8px;">' . esc_html__('Weekly Open Days', 'vms') . '</h3>';
-    echo '<p class="description" style="margin:0 0 10px;">' .
+    echo '<h3 class="vms-venue-schedule-subhead">' . esc_html__('Weekly Open Days', 'vms') . '</h3>';
+    echo '<p class="description vms-venue-schedule-help">' .
         esc_html__('Select the days this venue is normally open. If no days are selected, the venue is treated as closed until configured.', 'vms') .
     '</p>';
 
-    echo '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-width:360px;">';
+    echo '<div class="vms-venue-open-days-grid">';
     foreach ($days as $num => $label) {
         $checked = in_array((int) $num, $open_days, true) ? 'checked' : '';
-        echo '<label style="display:flex;gap:8px;align-items:center;">';
+        echo '<label class="vms-venue-day-label">';
         echo '<input type="checkbox" name="vms_venue_open_days[]" value="' . esc_attr((int) $num) . '" ' . $checked . '>';
         echo '<span>' . esc_html($label) . '</span>';
         echo '</label>';
     }
     echo '</div>';
 
-    echo '<div style="margin-top:12px;">';
-    echo '<label style="display:flex;gap:10px;align-items:flex-start;">';
+    echo '<div class="vms-venue-year-round-wrap">';
+    echo '<label class="vms-venue-year-round-label">';
     echo '<input type="checkbox" name="vms_venue_open_year_round" value="1" ' . checked(1, $year_round, false) . '>';
     echo '<span><strong>' . esc_html__('Open year-round', 'vms') . '</strong><br>';
     echo '<span class="description">' . esc_html__('If enabled, seasons are ignored.', 'vms') . '</span></span>';
@@ -221,8 +487,8 @@ function vms_render_venue_schedule_box($post)
 
     // Seasons
     echo '<div>';
-    echo '<h3 style="margin:0 0 8px;">' . esc_html__('Optional Seasons', 'vms') . '</h3>';
-    echo '<p class="description" style="margin:0 0 10px;">' .
+    echo '<h3 class="vms-venue-schedule-subhead">' . esc_html__('Optional Seasons', 'vms') . '</h3>';
+    echo '<p class="description vms-venue-schedule-help">' .
         esc_html__('If Open year-round is off, you can optionally limit booking to one or two date ranges. Leave blank for year-round scheduling (based on Open Days).', 'vms') .
     '</p>';
 
@@ -231,25 +497,25 @@ function vms_render_venue_schedule_box($post)
         $start = $slots[$i]['start'];
         $end   = $slots[$i]['end'];
 
-        echo '<div style="border:1px solid #e5e5e5;border-radius:12px;padding:12px;margin:0 0 10px;background:#fff;">';
-        echo '<div style="font-weight:800;margin:0 0 8px;">' . esc_html(sprintf(__('Season %d', 'vms'), $idx)) . '</div>';
-        echo '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+        echo '<div class="vms-venue-season-card">';
+        echo '<div class="vms-venue-season-title">' . esc_html(sprintf(__('Season %d', 'vms'), $idx)) . '</div>';
+        echo '<div class="vms-venue-season-row">';
 
-        echo '<div style="min-width:220px;flex:1;">';
+        echo '<div class="vms-venue-season-field">';
         echo '<label><strong>' . esc_html__('Start', 'vms') . '</strong></label><br>';
-        echo '<input type="date" name="vms_venue_season_start[' . esc_attr($i) . ']" value="' . esc_attr($start) . '" style="width:100%;max-width:260px;">';
+        echo '<input type="date" name="vms_venue_season_start[' . esc_attr($i) . ']" value="' . esc_attr($start) . '" class="vms-venue-season-date">';
         echo '</div>';
 
-        echo '<div style="min-width:220px;flex:1;">';
+        echo '<div class="vms-venue-season-field">';
         echo '<label><strong>' . esc_html__('End', 'vms') . '</strong></label><br>';
-        echo '<input type="date" name="vms_venue_season_end[' . esc_attr($i) . ']" value="' . esc_attr($end) . '" style="width:100%;max-width:260px;">';
+        echo '<input type="date" name="vms_venue_season_end[' . esc_attr($i) . ']" value="' . esc_attr($end) . '" class="vms-venue-season-date">';
         echo '</div>';
 
         echo '</div>';
         echo '</div>';
     }
 
-    echo '<p class="description" style="margin:0;">' .
+    echo '<p class="description vms-venue-schedule-tip">' .
         esc_html__('Tip: Use the Schedule page to mark individual exceptions (open/closed) once we add overrides.', 'vms') .
     '</p>';
 
@@ -320,9 +586,41 @@ add_filter('wp_insert_post_data', function ($data, $postarr) {
     $post_id = isset($postarr['ID']) ? (int) $postarr['ID'] : 0;
     if ($post_id <= 0) return $data;
 
-    $open_days = get_post_meta($post_id, '_vms_venue_open_days', true);
-    if (!is_array($open_days)) $open_days = array();
-    $open_days = array_values(array_filter(array_map('intval', $open_days)));
+    // Prefer the just-submitted value during a publish attempt.
+    // wp_insert_post_data runs before save_post_* updates post_meta, so relying only on saved meta can incorrectly block first-time publishes.
+    $open_days_raw = null;
+
+    if (isset($_POST['vms_venue_open_days'])) {
+        $open_days_raw = wp_unslash($_POST['vms_venue_open_days']);
+    } else {
+        $open_days_raw = get_post_meta($post_id, '_vms_venue_open_days', true);
+    }
+    $open_days = array();
+
+    if (is_array($open_days_raw)) {
+        $open_days = $open_days_raw;
+    } elseif (is_numeric($open_days_raw)) {
+        $open_days = array((int) $open_days_raw);
+    } elseif (is_string($open_days_raw)) {
+        // Older / inconsistent storage: sometimes this was saved as "6" or "1,3,5"
+        $parts = preg_split('/[^0-9]+/', $open_days_raw, -1, PREG_SPLIT_NO_EMPTY);
+        if (is_array($parts) && !empty($parts)) {
+            $open_days = $parts;
+        }
+    }
+
+    $open_days = array_values(array_filter(array_map('intval', (array) $open_days)));
+
+    $open_days_clean = array();
+    foreach ($open_days as $v) {
+        if ($v >= 0 && $v <= 6) $open_days_clean[] = $v;
+    }
+    $open_days = array_values(array_unique($open_days_clean));
+
+    // Persist normalized values so future reads behave consistently.
+    if (!empty($open_days) && (isset($_POST['vms_venue_open_days']) || !is_array($open_days_raw))) {
+        update_post_meta($post_id, '_vms_venue_open_days', $open_days);
+    }
 
     if (empty($open_days)) {
         $data['post_status'] = 'draft';
@@ -352,3 +650,223 @@ add_action('admin_notices', function () {
     echo '<p><strong>' . esc_html__('Venue not published.', 'vms') . '</strong> ' . esc_html__('Select at least one Weekly Open Day in Venue Schedule, then publish again.', 'vms') . '</p>';
     echo '</div>';
 });
+
+
+/**
+ * Venue Restore Failsafe:
+ * WordPress sometimes restores CPTs from Trash as Draft.
+ * We remember the pre-trash status and attempt to restore it on untrash.
+ */
+add_action('wp_trash_post', function ($post_id) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) return;
+    if (get_post_type($post_id) !== 'vms_venue') return;
+
+    $p = get_post($post_id);
+    if (!$p) return;
+
+    update_post_meta($post_id, '_vms_pretrash_post_status', (string) $p->post_status);
+}, 5);
+
+add_action('untrash_post', function ($post_id) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) return;
+    if (get_post_type($post_id) !== 'vms_venue') return;
+
+    $prev = (string) get_post_meta($post_id, '_vms_pretrash_post_status', true);
+    $prev = sanitize_key($prev);
+
+    // Always clear it so it does not stick around forever.
+    delete_post_meta($post_id, '_vms_pretrash_post_status');
+
+    if (!$prev) return;
+
+    $p = get_post($post_id);
+    if (!$p) return;
+
+    $current = sanitize_key((string) $p->post_status);
+
+    // If WP restored the venue to a different status (commonly Draft), try to restore the original.
+    if ($current !== $prev) {
+        wp_update_post(array(
+            'ID' => $post_id,
+            'post_status' => $prev,
+        ));
+
+        set_transient('vms_venue_restore_notice_' . $post_id, $prev, 30);
+    }
+}, 5);
+
+add_action('admin_notices', function () {
+    if (empty($_GET['post'])) return;
+    $post_id = (int) $_GET['post'];
+    if ($post_id <= 0) return;
+    if (get_post_type($post_id) !== 'vms_venue') return;
+
+    $key = 'vms_venue_restore_notice_' . $post_id;
+    $prev = get_transient($key);
+    if (!$prev) return;
+
+    delete_transient($key);
+
+    echo '<div class="notice notice-info is-dismissible">';
+    echo '<p><strong>' . esc_html__('Venue restored.', 'vms') . '</strong> ' . sprintf(
+        esc_html__('Status was restored to "%s" (pre-trash state).', 'vms'),
+        esc_html($prev)
+    ) . '</p>';
+    echo '</div>';
+});
+
+/**
+ * Venues — make Draft status impossible to miss.
+ *
+ * Goals:
+ * - If there are venues but NONE are Published/Private, warn loudly (Schedule will look empty).
+ * - Make Draft venues read as “NOT READY — Draft” in the Venues list.
+ * - Add a simple “Readiness” column with a red/green pill.
+ */
+
+// Replace the default subtle “Draft” post state with a loud label.
+add_filter('display_post_states', function (array $states, $post): array {
+
+    if (!is_object($post) || !isset($post->post_type) || (string) $post->post_type !== 'vms_venue') {
+        return $states;
+    }
+
+    $st = isset($post->post_status) ? (string) $post->post_status : '';
+
+    if ($st === 'draft' || $st === 'pending') {
+
+        // Remove any existing “Draft” state so we don’t show both.
+        foreach ($states as $k => $v) {
+            if (is_string($v) && strtolower($v) === 'draft') {
+                unset($states[$k]);
+            }
+        }
+
+        $states['vms_not_ready'] = __('NOT READY — Draft', 'vms');
+    }
+
+    return $states;
+}, 10, 2);
+
+// Add a “Readiness” column to the Venues list table.
+add_filter('manage_vms_venue_posts_columns', function (array $cols): array {
+
+    $out = array();
+    foreach ($cols as $k => $v) {
+        $out[$k] = $v;
+
+        if ($k === 'title') {
+            $out['vms_readiness'] = __('Readiness', 'vms');
+        }
+    }
+
+    // Fallback: if title column was missing (unexpected), append at end.
+    if (!isset($out['vms_readiness'])) {
+        $out['vms_readiness'] = __('Readiness', 'vms');
+    }
+
+    return $out;
+});
+
+// Render the “Readiness” column content.
+add_action('manage_vms_venue_posts_custom_column', function (string $column, int $post_id): void {
+
+    if ($column !== 'vms_readiness') {
+        return;
+    }
+
+    $st = (string) get_post_status($post_id);
+
+    $is_ready = ($st === 'publish' || $st === 'private');
+
+    $pill_class = $is_ready ? 'is-ready' : 'is-not-ready';
+
+    $status_label = ($st !== '') ? ucfirst($st) : 'Draft';
+
+    $text = $is_ready
+        ? ('Ready — ' . $status_label)
+        : ('NOT READY — ' . $status_label);
+
+    echo '<span class="vms-status-pill ' . esc_attr($pill_class) . '">' . esc_html($text) . '</span>';
+}, 10, 2);
+
+// Urgent warnings when there are venues, but none are Published/Private.
+add_action('admin_notices', function (): void {
+
+    if (!is_admin() || !current_user_can('manage_options')) {
+        return;
+    }
+
+    if (!function_exists('get_current_screen')) {
+        return;
+    }
+
+    $screen = get_current_screen();
+    if (!is_object($screen)) {
+        return;
+    }
+
+    $is_venue_list = (isset($screen->id) && (string) $screen->id === 'edit-vms_venue');
+    $is_venue_edit = (isset($screen->id) && (string) $screen->id === 'vms_venue');
+
+    if (!$is_venue_list && !$is_venue_edit) {
+        return;
+    }
+
+    // Do we have ANY venues at all (including Draft)?
+    $any_ids = get_posts(array(
+        'post_type'      => 'vms_venue',
+        'post_status'    => array('publish', 'private', 'draft', 'pending'),
+        'posts_per_page' => 2,
+        'fields'         => 'ids',
+        'no_found_rows'  => true,
+        'orderby'        => 'ID',
+        'order'          => 'ASC',
+    ));
+
+    if (empty($any_ids)) {
+        return;
+    }
+
+    // Do we have at least one “ready” venue?
+    $ready_ids = get_posts(array(
+        'post_type'      => 'vms_venue',
+        'post_status'    => array('publish', 'private'),
+        'posts_per_page' => 1,
+        'fields'         => 'ids',
+        'no_found_rows'  => true,
+    ));
+
+    if (!empty($ready_ids)) {
+        // We have a ready venue, so no global siren needed.
+        return;
+    }
+
+    $list_url = admin_url('edit.php?post_type=vms_venue');
+
+    $only_id = (count($any_ids) === 1) ? (int) $any_ids[0] : 0;
+    $only_status = ($only_id > 0) ? (string) get_post_status($only_id) : '';
+    $only_title = ($only_id > 0) ? (string) get_the_title($only_id) : '';
+    $only_edit = ($only_id > 0) ? get_edit_post_link($only_id, '') : '';
+
+    echo '<div class="notice notice-error">';
+    echo '<p><strong>VMS:</strong> Action required — no Published venues are available. Schedule will appear empty until at least one venue is Published.</p>';
+
+    if ($only_id > 0) {
+        $only_status_label = $only_status !== '' ? ucfirst($only_status) : 'Draft';
+        echo '<p><strong>Your only venue is currently ' . esc_html($only_status_label) . ':</strong> ' . esc_html($only_title) . '</p>';
+    }
+
+    echo '<p>';
+    if ($only_edit) {
+        echo '<a class="button button-primary" href="' . esc_url($only_edit) . '">Open venue</a> ';
+    }
+    echo '<a class="button" href="' . esc_url($list_url) . '">View venues</a>';
+    echo '</p>';
+
+    echo '<p class="description">If this is intentional (setup in progress), you can ignore this warning until you are ready to publish.</p>';
+    echo '</div>';
+
+}, 20);

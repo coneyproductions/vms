@@ -3,26 +3,142 @@ if (!defined('ABSPATH')) exit;
 
 add_action('init', 'vms_register_vendor_cpt');
 
-add_action('save_post_vms_vendor', function ($post_id) {
+// Integrity guard: if a vendor is deleted, any published/ready Event Plans pointing at that vendor
+// are reverted to Draft and flagged for review.
+add_action('before_delete_post', 'vms_vendor_delete_revert_event_plans', 10, 2);
+function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): void
+{
+    if ($vendor_id <= 0) return;
 
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    if (!current_user_can('edit_post', $post_id)) return;
+    if (!$post) $post = get_post($vendor_id);
+    if (!$post || $post->post_type !== 'vms_vendor') return;
 
-    if (
-        empty($_POST['vms_vendor_tax_nonce']) ||
-        !wp_verify_nonce($_POST['vms_vendor_tax_nonce'], 'vms_save_vendor_tax_profile')
-    ) {
-        return;
+    $vendor_title = (string) get_post_field('post_title', $vendor_id, 'raw');
+    $vendor_title = $vendor_title ? wp_strip_all_tags($vendor_title) : '';
+
+    $band_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+    $status_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+    $secondary_ids_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+    $secondary_idx_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+
+    $plan_ids = get_posts(array(
+        'post_type'              => 'vms_event_plan',
+        'post_status'            => 'any',
+        'fields'                 => 'ids',
+        'posts_per_page'         => -1,
+        'no_found_rows'          => true,
+        'update_post_term_cache' => false,
+        'update_post_meta_cache' => false,
+        'meta_query'             => array(
+            array(
+                'key'     => $band_key,
+                'value'   => $vendor_id,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
+        ),
+    ));
+
+    $sec_plan_ids = get_posts(array(
+        'post_type'              => 'vms_event_plan',
+        'post_status'            => 'any',
+        'fields'                 => 'ids',
+        'posts_per_page'         => -1,
+        'no_found_rows'          => true,
+        'update_post_term_cache' => false,
+        'update_post_meta_cache' => false,
+        'meta_query'             => array(
+            array(
+                'key'     => $secondary_idx_key,
+                'value'   => $vendor_id,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
+        ),
+    ));
+
+    $plan_ids = is_array($plan_ids) ? $plan_ids : array();
+    $sec_plan_ids = is_array($sec_plan_ids) ? $sec_plan_ids : array();
+    $all_plan_ids = array_values(array_unique(array_map('absint', array_merge($plan_ids, $sec_plan_ids))));
+    if (empty($all_plan_ids)) return;
+
+    $count = 0;
+    foreach ($all_plan_ids as $plan_id) {
+        $plan_id = (int) $plan_id;
+        if ($plan_id <= 0) continue;
+
+        $is_primary = ((int) get_post_meta($plan_id, $band_key, true) === (int) $vendor_id);
+
+        if (!$is_primary) {
+            // Remove from secondary vendor list and rebuild index.
+            $sec_ids = get_post_meta($plan_id, $secondary_ids_key, true);
+            if (!is_array($sec_ids)) $sec_ids = array();
+            $sec_ids = array_values(array_unique(array_filter(array_map('absint', $sec_ids), fn($v) => $v > 0)));
+            $sec_ids = array_values(array_diff($sec_ids, array((int) $vendor_id)));
+
+            if (!empty($sec_ids)) update_post_meta($plan_id, $secondary_ids_key, $sec_ids);
+            else delete_post_meta($plan_id, $secondary_ids_key);
+
+            delete_post_meta($plan_id, $secondary_idx_key);
+            foreach ($sec_ids as $vid) {
+                add_post_meta($plan_id, $secondary_idx_key, (int) $vid, false);
+            }
+
+            // Flag (don’t overwrite a more severe missing headliner flag)
+            $k_issue = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
+            $issue_now = (string) get_post_meta($plan_id, $k_issue, true);
+            if ($issue_now !== 'missing_vendor') {
+                if (function_exists('vms_event_plan_flag_missing_secondary_vendor')) {
+                    vms_event_plan_flag_missing_secondary_vendor($plan_id, $vendor_id, $vendor_title);
+                } else {
+                    update_post_meta($plan_id, '_vms_integrity_issue', 'missing_secondary_vendor');
+                    update_post_meta($plan_id, '_vms_integrity_vendor_id', $vendor_id);
+                    if ($vendor_title !== '') update_post_meta($plan_id, '_vms_integrity_vendor_title', $vendor_title);
+                    update_post_meta($plan_id, '_vms_integrity_ts', (string) wp_date('Y-m-d H:i:s'));
+                }
+            }
+
+            update_post_meta($plan_id, $status_key, 'draft');
+
+            $wp_post = get_post($plan_id);
+            if ($wp_post && $wp_post->post_status === 'publish') {
+                wp_update_post(array('ID' => $plan_id, 'post_status' => 'draft'));
+            }
+
+            $count++;
+            continue;
+        }
+
+        // Flag and clear broken pointer (non-destructive; does not touch TEC events automatically).
+        if (function_exists('vms_event_plan_flag_missing_vendor')) {
+            vms_event_plan_flag_missing_vendor($plan_id, $vendor_id, $vendor_title);
+        } else {
+            // Fallback: set minimal meta flags if helpers are unavailable.
+            update_post_meta($plan_id, '_vms_integrity_issue', 'missing_vendor');
+            update_post_meta($plan_id, '_vms_integrity_vendor_id', $vendor_id);
+            if ($vendor_title !== '') update_post_meta($plan_id, '_vms_integrity_vendor_title', $vendor_title);
+            update_post_meta($plan_id, '_vms_integrity_ts', (string) wp_date('Y-m-d H:i:s'));
+        }
+
+        update_post_meta($plan_id, $band_key, 0);
+        update_post_meta($plan_id, $status_key, 'draft');
+
+        $wp_post = get_post($plan_id);
+        if ($wp_post && $wp_post->post_status === 'publish') {
+            wp_update_post(array('ID' => $plan_id, 'post_status' => 'draft'));
+        }
+
+        $count++;
     }
 
-    update_post_meta($post_id, '_vms_tax_type', sanitize_text_field($_POST['vms_tax_type'] ?? ''));
-    update_post_meta($post_id, '_vms_tax_name', sanitize_text_field($_POST['vms_tax_name'] ?? ''));
-    update_post_meta($post_id, '_vms_tax_address1', sanitize_text_field($_POST['vms_tax_address1'] ?? ''));
-    update_post_meta($post_id, '_vms_tax_city', sanitize_text_field($_POST['vms_tax_city'] ?? ''));
-    update_post_meta($post_id, '_vms_tax_state', sanitize_text_field($_POST['vms_tax_state'] ?? ''));
-    update_post_meta($post_id, '_vms_tax_zip', sanitize_text_field($_POST['vms_tax_zip'] ?? ''));
+    if ($count > 0 && function_exists('vms_add_admin_notice')) {
+        vms_add_admin_notice(sprintf(__('🚩 Vendor deleted. %d event plan(s) were reverted to Draft and flagged for review.', 'vms'), $count), 'warning');
+    }
+}
 
-}, 20);
+
+
+
 function vms_register_vendor_cpt()
 {
     $labels = array(
@@ -43,7 +159,7 @@ function vms_register_vendor_cpt()
         'labels'          => $labels,
         'public'          => false,
         'show_ui'         => true,
-        'show_in_menu'    => 'vms',
+        'show_in_menu'    => false,
         'menu_position'   => 26,
         'menu_icon'       => 'dashicons-groups',
         'supports'        => array('title', 'editor', 'thumbnail'), // add thumbnail for logo support
@@ -83,17 +199,25 @@ class VMS_Admin_Vendors
             'default'
         );
 
-        add_action('add_meta_boxes', function () {
-            add_meta_box(
-                'vms_vendor_tax_profile',
-                __('Tax Profile', 'vms'),
-                'vms_render_vendor_tax_profile_metabox',
-                'vms_vendor',
-                'side',
-                'high'
-            );
-        });
-    }
+        add_meta_box(
+            'vms_vendor_public_profile',
+            __('Public Profile', 'vms'),
+            array($this, 'render_vendor_public_profile_meta_box'),
+            'vms_vendor',
+            'side',
+            'default'
+        );
+
+        add_meta_box(
+            'vms_vendor_availability_snapshot',
+            __('Availability Snapshot', 'vms'),
+            array($this, 'render_vendor_availability_snapshot_meta_box'),
+            'vms_vendor',
+            'normal',
+            'default'
+        );
+
+} 
 
     /**
      * Render the Vendor Details meta box.
@@ -103,94 +227,170 @@ class VMS_Admin_Vendors
         // Security nonce.
         wp_nonce_field('vms_save_vendor_details', 'vms_vendor_details_nonce');
 
-        $contact_name      = get_post_meta($post->ID, '_vms_contact_name', true);
-        $contact_email     = get_post_meta($post->ID, '_vms_contact_email', true);
-        $contact_phone     = get_post_meta($post->ID, '_vms_contact_phone', true);
-        $website_url       = get_post_meta($post->ID, '_vms_website_url', true);
-        $fee_min           = get_post_meta($post->ID, '_vms_fee_min', true);
-        $fee_max           = get_post_meta($post->ID, '_vms_fee_max', true);
-        $min_show_rate     = get_post_meta($post->ID, '_vms_min_show_rate', true);
-        // Vendor payment defaults
-        $default_comp_structure = get_post_meta($post->ID, '_vms_default_comp_structure', true);
-        $default_flat_fee       = get_post_meta($post->ID, '_vms_default_flat_fee_amount', true);
-        $default_door_split     = get_post_meta($post->ID, '_vms_default_door_split_percent', true);
+        $k_contact_name  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_name') : '_vms_contact_name';
+        $k_primary_email = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+        $k_primary_phone = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+        $k_website       = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'website') : '_vms_vendor_website';
 
-        if (!$default_comp_structure) $default_comp_structure = 'flat_fee';
+        $contact_name    = get_post_meta($post->ID, $k_contact_name, true);
+        $primary_email   = get_post_meta($post->ID, $k_primary_email, true);
+        $primary_phone   = get_post_meta($post->ID, $k_primary_phone, true);
+        $website_url     = get_post_meta($post->ID, $k_website, true);
+
+        // Legacy fallbacks (dev-only transitional support): pull existing values if canonical fields are empty.
+        $legacy_email = get_post_meta($post->ID, '_vms_contact_email', true);
+        $legacy_phone = get_post_meta($post->ID, '_vms_contact_phone', true);
+        $legacy_web   = get_post_meta($post->ID, '_vms_website_url', true);
+
+        if ($primary_email === '' && is_string($legacy_email) && $legacy_email !== '') {
+            $primary_email = $legacy_email;
+        }
+        if ($primary_phone === '' && is_string($legacy_phone) && $legacy_phone !== '') {
+            $primary_phone = $legacy_phone;
+        }
+        if ($website_url === '' && is_string($legacy_web) && $legacy_web !== '') {
+            $website_url = $legacy_web;
+        }
+
 ?>
 
-        <hr />
-        <h4><?php esc_html_e('Payment Defaults (used to auto-fill Event Plans)', 'vms'); ?></h4>
+        <p class="description">
+            <?php esc_html_e('Contact and website fields live here. Mailing city/state now live in the "Tax Profile (Admin)" box so there is only one source of truth for shared tax/profile location fields. Pay structure and Event Plan defaults are managed in the "Pay Structure + Event Plan Defaults" box.', 'vms'); ?>
+        </p>
 
-        <p>
-            <label for="vms_default_comp_structure"><strong><?php esc_html_e('Default Structure', 'vms'); ?></strong></label><br />
-            <select id="vms_default_comp_structure" name="vms_default_comp_structure">
-                <option value="flat_fee" <?php selected($default_comp_structure, 'flat_fee'); ?>>
-                    <?php esc_html_e('Flat Fee Only', 'vms'); ?>
-                </option>
-                <option value="flat_fee_door_split" <?php selected($default_comp_structure, 'flat_fee_door_split'); ?>>
-                    <?php esc_html_e('Flat Fee + Door Split', 'vms'); ?>
-                </option>
-                <option value="door_split" <?php selected($default_comp_structure, 'door_split'); ?>>
-                    <?php esc_html_e('Door Split Only', 'vms'); ?>
-                </option>
-            </select>
+        <p class="description">
+            <?php esc_html_e('Social links, featured video, and gallery photos are managed in the "Public Profile" box.', 'vms'); ?>
+        </p>
+
+        <p class="description">
+            <?php esc_html_e("Use the Vendor Categories box to store this vendor's categories, such as Genre or Cuisine. Those categories can sync to Event Plans and TEC event categories.", 'vms'); ?>
         </p>
 
         <p>
-            <label for="vms_default_flat_fee_amount"><strong><?php esc_html_e('Default Flat Fee Amount', 'vms'); ?></strong></label><br />
-            <input type="number" id="vms_default_flat_fee_amount" name="vms_default_flat_fee_amount" style="width: 140px;"
-                value="<?php echo esc_attr($default_flat_fee); ?>" step="0.01" min="0" />
-        </p>
-
-        <p>
-            <label for="vms_default_door_split_percent"><strong><?php esc_html_e('Default Door Split Percentage', 'vms'); ?></strong></label><br />
-            <input type="number" id="vms_default_door_split_percent" name="vms_default_door_split_percent" style="width: 140px;"
-                value="<?php echo esc_attr($default_door_split); ?>" step="0.01" min="0" max="100" /> %
-        </p>
-
-        <p>
-            <label for="vms_contact_name"><strong><?php esc_html_e('Contact Name', 'vms'); ?></strong></label><br />
+            <label for="vms_contact_name"><strong><?php esc_html_e('Primary Contact Name (optional)', 'vms'); ?></strong></label><br />
             <input type="text" id="vms_contact_name" name="vms_contact_name" class="regular-text"
                 value="<?php echo esc_attr($contact_name); ?>" />
         </p>
 
         <p>
-            <label for="vms_contact_email"><strong><?php esc_html_e('Contact Email', 'vms'); ?></strong></label><br />
-            <input type="email" id="vms_contact_email" name="vms_contact_email" class="regular-text"
-                value="<?php echo esc_attr($contact_email); ?>" />
+            <label for="vms_primary_email"><strong><?php esc_html_e('Primary Contact Email', 'vms'); ?></strong></label><br />
+            <input type="email" id="vms_primary_email" name="vms_primary_email" class="regular-text"
+                value="<?php echo esc_attr($primary_email); ?>" />
         </p>
 
         <p>
-            <label for="vms_contact_phone"><strong><?php esc_html_e('Contact Phone', 'vms'); ?></strong></label><br />
-            <input type="text" id="vms_contact_phone" name="vms_contact_phone" class="regular-text"
-                value="<?php echo esc_attr($contact_phone); ?>" />
+            <label for="vms_primary_phone"><strong><?php esc_html_e('Primary Contact Phone', 'vms'); ?></strong></label><br />
+            <input type="text" id="vms_primary_phone" name="vms_primary_phone" class="regular-text"
+                value="<?php echo esc_attr($primary_phone); ?>" />
         </p>
 
         <p>
-            <label for="vms_website_url"><strong><?php esc_html_e('Website / Social Link', 'vms'); ?></strong></label><br />
+            <label for="vms_website_url"><strong><?php esc_html_e('Website URL', 'vms'); ?></strong></label><br />
             <input type="url" id="vms_website_url" name="vms_website_url" class="regular-text"
                 value="<?php echo esc_attr($website_url); ?>" />
         </p>
 
-        <hr />
-
-        <p>
-            <label><strong><?php esc_html_e('Preferred Flat Fee Range', 'vms'); ?></strong></label><br />
-            <span><?php esc_html_e('Min', 'vms'); ?></span>
-            <input type="number" id="vms_fee_min" name="vms_fee_min" style="width: 120px;"
-                value="<?php echo esc_attr($fee_min); ?>" /> &nbsp;
-            <span><?php esc_html_e('Max', 'vms'); ?></span>
-            <input type="number" id="vms_fee_max" name="vms_fee_max" style="width: 120px;"
-                value="<?php echo esc_attr($fee_max); ?>" />
-        </p>
-
-        <p>
-            <label for="vms_min_show_rate"><strong><?php esc_html_e('Minimum Acceptable Show Rate', 'vms'); ?></strong></label><br />
-            <input type="number" id="vms_min_show_rate" name="vms_min_show_rate" style="width: 120px;"
-                value="<?php echo esc_attr($min_show_rate); ?>" />
-        </p>
 
 <?php
+    }
+
+    /**
+     * Render the Public Profile meta box (Vendor).
+     */
+    public function render_vendor_public_profile_meta_box($post)
+    {
+        // Security nonce for this meta box.
+        wp_nonce_field('vms_save_vendor_public_profile', 'vms_vendor_public_profile_nonce');
+
+        $post_id = (int) $post->ID;
+
+        $k_enabled  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
+        $k_show_e   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
+        $k_show_p   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
+        $k_show_w   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
+        $k_show_loc = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
+
+        $enabled  = get_post_meta($post_id, $k_enabled, true);
+        $show_e   = get_post_meta($post_id, $k_show_e, true);
+        $show_p   = get_post_meta($post_id, $k_show_p, true);
+        $show_w   = get_post_meta($post_id, $k_show_w, true);
+        $show_loc = get_post_meta($post_id, $k_show_loc, true);
+
+        $enabled_bool = ($enabled === '1' || $enabled === 1 || $enabled === true || $enabled === 'yes' || $enabled === 'on');
+
+        $profile_url = function_exists('vms_vendor_profile_url') ? vms_vendor_profile_url($post_id) : '';
+
+        echo '<p><label><input type="checkbox" name="vms_public_profile_enabled" value="1" ' . checked($enabled_bool, true, false) . ' /> ' . esc_html__('Enable public profile', 'vms') . '</label></p>';
+        echo '<p class="description">' . esc_html__('When disabled, the public profile returns a 404.', 'vms') . '</p>';
+
+        echo '<hr />';
+
+        $social_fields = array(
+            'facebook'  => array('label' => __('Facebook URL', 'vms'),  'key' => '_vms_vendor_social_facebook'),
+            'instagram' => array('label' => __('Instagram URL', 'vms'), 'key' => '_vms_vendor_social_instagram'),
+            'x'         => array('label' => __('X / Twitter URL', 'vms'),'key' => '_vms_vendor_social_x'),
+            'tiktok'    => array('label' => __('TikTok URL', 'vms'),    'key' => '_vms_vendor_social_tiktok'),
+            'youtube'   => array('label' => __('YouTube URL', 'vms'),   'key' => '_vms_vendor_social_youtube'),
+            'spotify'   => array('label' => __('Spotify URL', 'vms'),   'key' => '_vms_vendor_social_spotify'),
+        );
+        $featured_video_url = (string) get_post_meta($post_id, '_vms_vendor_featured_video_url', true);
+
+        echo '<p><strong>' . esc_html__('Visible fields', 'vms') . '</strong></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_location" value="1" ' . checked(($show_loc === '' || $show_loc === '1'), true, false) . ' /> ' . esc_html__('Location (City/State)', 'vms') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_phone" value="1" ' . checked(($show_p === '' || $show_p === '1'), true, false) . ' /> ' . esc_html__('Phone', 'vms') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_email" value="1" ' . checked(($show_e === '' || $show_e === '1'), true, false) . ' /> ' . esc_html__('Email', 'vms') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_website" value="1" ' . checked(($show_w === '' || $show_w === '1'), true, false) . ' /> ' . esc_html__('Website button', 'vms') . '</label></p>';
+
+        echo '<hr />';
+        echo '<p><strong>' . esc_html__('Social links (icon-only on public profile)', 'vms') . '</strong></p>';
+        foreach ($social_fields as $field) {
+            $value = (string) get_post_meta($post_id, $field['key'], true);
+            echo '<p><label><strong>' . esc_html($field['label']) . '</strong></label><br />';
+            echo '<input type="url" class="widefat" name="vms_vendor_social[' . esc_attr($field['key']) . ']" value="' . esc_attr($value) . '" placeholder="https://" /></p>';
+        }
+
+        echo '<hr />';
+        echo '<p><strong>' . esc_html__('Featured media', 'vms') . '</strong></p>';
+        echo '<p><label><strong>' . esc_html__('Featured video URL', 'vms') . '</strong></label><br />';
+        echo '<input type="url" class="widefat" name="vms_vendor_featured_video_url" value="' . esc_attr($featured_video_url) . '" placeholder="https://www.youtube.com/watch?v=..." />';
+        echo '<span class="description" style="display:block;margin-top:4px;">' . esc_html__('YouTube works best. Facebook video links may work when oEmbed is available in your setup.', 'vms') . '</span></p>';
+
+        echo '<p><strong>' . esc_html__('Gallery photos (up to 5)', 'vms') . '</strong></p>';
+        for ($i = 1; $i <= 5; $i++) {
+            $gallery_value = (string) get_post_meta($post_id, '_vms_vendor_gallery_image_' . $i, true);
+            echo '<p><label><strong>' . sprintf(esc_html__('Photo %d URL', 'vms'), $i) . '</strong></label><br />';
+            echo '<input type="url" class="widefat" name="vms_vendor_gallery_image_' . esc_attr((string) $i) . '" value="' . esc_attr($gallery_value) . '" placeholder="https://" /></p>';
+        }
+
+        echo '<p class="description">' . esc_html__('For now these are curated/admin-managed fields, which keeps the public profile moderated. Vendors do not edit these public profile media/social fields from their portal yet.', 'vms') . '</p>';
+
+        if ($profile_url) {
+            if ($enabled_bool) {
+                echo '<p><a class="button button-secondary" href="' . esc_url($profile_url) . '" target="_blank" rel="noopener">' . esc_html__('Open profile', 'vms') . '</a></p>';
+            } else {
+                echo '<p class="description">' . esc_html__('Enable the profile to activate the public URL.', 'vms') . '</p>';
+            }
+        }
+    }
+
+
+    /**
+     * Render a read-only availability snapshot that mirrors the vendor's resolved availability.
+     */
+    public function render_vendor_availability_snapshot_meta_box($post)
+    {
+        $post_id = (int) $post->ID;
+        $month = '';
+        if (isset($_GET['vms_vendor_month'])) {
+            $month = sanitize_text_field((string) wp_unslash($_GET['vms_vendor_month']));
+        }
+
+        if (function_exists('vms_render_vendor_availability_vendor_profile_calendar')) {
+            vms_render_vendor_availability_vendor_profile_calendar($post_id, $month);
+            return;
+        }
+
+        echo '<p>' . esc_html__('Availability snapshot is unavailable right now.', 'vms') . '</p>';
     }
 
     /**
@@ -198,11 +398,11 @@ class VMS_Admin_Vendors
      */
     public function save_vendor_meta($post_id, $post)
     {
-        // Check nonce.
-        if (
-            ! isset($_POST['vms_vendor_details_nonce']) ||
-            ! wp_verify_nonce($_POST['vms_vendor_details_nonce'], 'vms_save_vendor_details')
-        ) {
+        // Check nonce(s). Either meta box nonce should allow saving its own fields.
+        $details_ok = (isset($_POST['vms_vendor_details_nonce']) && wp_verify_nonce($_POST['vms_vendor_details_nonce'], 'vms_save_vendor_details'));
+        $profile_ok = (isset($_POST['vms_vendor_public_profile_nonce']) && wp_verify_nonce($_POST['vms_vendor_public_profile_nonce'], 'vms_save_vendor_public_profile'));
+
+        if (!$details_ok && !$profile_ok) {
             return;
         }
 
@@ -216,73 +416,95 @@ class VMS_Admin_Vendors
             return;
         }
 
-        // Sanitize and save fields.
-        $fields = array(
-            '_vms_contact_name'   => isset($_POST['vms_contact_name']) ? sanitize_text_field($_POST['vms_contact_name']) : '',
-            '_vms_contact_email'  => isset($_POST['vms_contact_email']) ? sanitize_email($_POST['vms_contact_email']) : '',
-            '_vms_contact_phone'  => isset($_POST['vms_contact_phone']) ? sanitize_text_field($_POST['vms_contact_phone']) : '',
-            '_vms_website_url'    => isset($_POST['vms_website_url']) ? esc_url_raw($_POST['vms_website_url']) : '',
-            '_vms_fee_min'        => isset($_POST['vms_fee_min']) ? floatval($_POST['vms_fee_min']) : '',
-            '_vms_fee_max'        => isset($_POST['vms_fee_max']) ? floatval($_POST['vms_fee_max']) : '',
-            '_vms_min_show_rate'  => isset($_POST['vms_min_show_rate']) ? floatval($_POST['vms_min_show_rate']) : '',
-            '_vms_default_comp_structure'       => isset($_POST['vms_default_comp_structure']) ? sanitize_text_field($_POST['vms_default_comp_structure']) : '',
-            '_vms_default_flat_fee_amount'      => isset($_POST['vms_default_flat_fee_amount']) ? floatval($_POST['vms_default_flat_fee_amount']) : '',
-            '_vms_default_door_split_percent'   => isset($_POST['vms_default_door_split_percent']) ? floatval($_POST['vms_default_door_split_percent']) : '',
-        );
+        if ($details_ok) {
 
-        foreach ($fields as $meta_key => $value) {
-            if ($value === '' || $value === null) {
-                delete_post_meta($post_id, $meta_key);
-            } else {
-                update_post_meta($post_id, $meta_key, $value);
+            $k_contact_name  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_name') : '_vms_contact_name';
+            $k_primary_email = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+            $k_primary_phone = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+            $k_website       = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'website') : '_vms_vendor_website';
+
+            // Sanitize and save Vendor Details-only fields.
+            // City/State intentionally live only in Tax Profile (Admin) to avoid duplicate shared inputs.
+            $fields = array(
+                $k_contact_name  => isset($_POST['vms_contact_name']) ? sanitize_text_field($_POST['vms_contact_name']) : '',
+                $k_primary_email => isset($_POST['vms_primary_email']) ? sanitize_email($_POST['vms_primary_email']) : '',
+                $k_primary_phone => isset($_POST['vms_primary_phone']) ? sanitize_text_field($_POST['vms_primary_phone']) : '',
+                $k_website       => isset($_POST['vms_website_url']) ? esc_url_raw($_POST['vms_website_url']) : '',
+            );
+
+            foreach ($fields as $meta_key => $value) {
+                if ($value === '' || $value === null) {
+                    delete_post_meta($post_id, $meta_key);
+                } else {
+                    update_post_meta($post_id, $meta_key, $value);
+                }
             }
         }
+
+        // Save Public Profile fields (if its nonce was present/valid).
+        if ($profile_ok) {
+            $k_enabled  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
+            $k_show_e   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
+            $k_show_p   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
+            $k_show_w   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
+            $k_show_loc = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
+
+            $enabled  = isset($_POST['vms_public_profile_enabled']) ? '1' : '0';
+            $show_e   = isset($_POST['vms_public_profile_show_email']) ? '1' : '0';
+            $show_p   = isset($_POST['vms_public_profile_show_phone']) ? '1' : '0';
+            $show_w   = isset($_POST['vms_public_profile_show_website']) ? '1' : '0';
+            $show_loc = isset($_POST['vms_public_profile_show_location']) ? '1' : '0';
+
+            update_post_meta($post_id, $k_enabled, $enabled);
+            update_post_meta($post_id, $k_show_e, $show_e);
+            update_post_meta($post_id, $k_show_p, $show_p);
+            update_post_meta($post_id, $k_show_w, $show_w);
+            update_post_meta($post_id, $k_show_loc, $show_loc);
+
+            $social_keys = array(
+                '_vms_vendor_social_facebook',
+                '_vms_vendor_social_instagram',
+                '_vms_vendor_social_x',
+                '_vms_vendor_social_tiktok',
+                '_vms_vendor_social_youtube',
+                '_vms_vendor_social_spotify',
+            );
+            $social_raw = isset($_POST['vms_vendor_social']) && is_array($_POST['vms_vendor_social']) ? (array) $_POST['vms_vendor_social'] : array();
+            foreach ($social_keys as $social_key) {
+                $value = isset($social_raw[$social_key]) ? esc_url_raw((string) wp_unslash($social_raw[$social_key])) : '';
+                if ($value === '') {
+                    delete_post_meta($post_id, $social_key);
+                } else {
+                    update_post_meta($post_id, $social_key, $value);
+                }
+            }
+
+            $featured_video_url = isset($_POST['vms_vendor_featured_video_url']) ? esc_url_raw((string) wp_unslash($_POST['vms_vendor_featured_video_url'])) : '';
+            if ($featured_video_url === '') {
+                delete_post_meta($post_id, '_vms_vendor_featured_video_url');
+            } else {
+                update_post_meta($post_id, '_vms_vendor_featured_video_url', $featured_video_url);
+            }
+
+            for ($i = 1; $i <= 5; $i++) {
+                $field = 'vms_vendor_gallery_image_' . $i;
+                $meta_key = '_vms_vendor_gallery_image_' . $i;
+                $value = isset($_POST[$field]) ? esc_url_raw((string) wp_unslash($_POST[$field])) : '';
+                if ($value === '') {
+                    delete_post_meta($post_id, $meta_key);
+                } else {
+                    update_post_meta($post_id, $meta_key, $value);
+                }
+            }
+        }
+
     }
 }
 
-// function vms_render_vendor_tax_profile_metabox($post) {
-
-//     $type   = get_post_meta($post->ID, '_vms_tax_type', true);
-//     $name   = get_post_meta($post->ID, '_vms_tax_name', true);
-//     $addr1  = get_post_meta($post->ID, '_vms_tax_address1', true);
-//     $city   = get_post_meta($post->ID, '_vms_tax_city', true);
-//     $state  = get_post_meta($post->ID, '_vms_tax_state', true);
-//     $zip    = get_post_meta($post->ID, '_vms_tax_zip', true);
-
-//     wp_nonce_field('vms_save_vendor_tax_profile', 'vms_vendor_tax_nonce');
-
-//     echo '<p><strong>' . esc_html__('Required for booking', 'vms') . '</strong></p>';
-
-//     echo '<p>
-//         <label>Tax Type</label><br>
-//         <select name="vms_tax_type">
-//             <option value="">— Select —</option>
-//             <option value="individual" ' . selected($type, 'individual', false) . '>Individual</option>
-//             <option value="llc" ' . selected($type, 'llc', false) . '>LLC</option>
-//             <option value="corporation" ' . selected($type, 'corporation', false) . '>Corporation</option>
-//         </select>
-//     </p>';
-
-//     echo '<p>
-//         <label>Legal Name</label><br>
-//         <input type="text" name="vms_tax_name" value="' . esc_attr($name) . '" style="width:100%;">
-//     </p>';
-
-//     echo '<p>
-//         <label>Address</label><br>
-//         <input type="text" name="vms_tax_address1" value="' . esc_attr($addr1) . '" style="width:100%;">
-//     </p>';
-
-//     echo '<p>
-//         <label>City / State / ZIP</label><br>
-//         <input type="text" name="vms_tax_city" value="' . esc_attr($city) . '" style="width:48%;"> 
-//         <input type="text" name="vms_tax_state" value="' . esc_attr($state) . '" style="width:18%;"> 
-//         <input type="text" name="vms_tax_zip" value="' . esc_attr($zip) . '" style="width:28%;">
-//     </p>';
-
-//     if (!vms_is_vendor_tax_profile_complete($post->ID)) {
-//         echo '<p style="color:#b32d2e;"><strong>Incomplete</strong></p>';
-//     } else {
-//         echo '<p style="color:#0f766e;"><strong>Complete ✓</strong></p>';
-//     }
-// }
+if (is_admin()) {
+    add_action('init', function () {
+        if (class_exists('VMS_Admin_Vendors')) {
+            new VMS_Admin_Vendors();
+        }
+    }, 20);
+}

@@ -1,0 +1,210 @@
+.vms-addons-wrap .vms-addons-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.vms-addons-wrap .vms-addons-toolbar input[type="search"] {
+  min-width: 220px;
+  flex: 1;
+}
+
+.vms-addons-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.vms-addons-summary-card {
+  border: 1px solid #dcdcde;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.vms-addons-summary-label {
+  font-size: 12px;
+  color: #50575e;
+}
+
+.vms-addons-summary-value {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.vms-addons-notice {
+  display: none;
+}
+
+.vms-addons-notice.is-visible {
+  display: block;
+  margin: 0 0 16px;
+}
+
+.vms-addons-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.vms-addons-card {
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+}
+
+.vms-addons-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.vms-addons-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.vms-addons-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.vms-addons-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+}
+
+.vms-addons-pill.is-good {
+  border-color: #0f6a2f;
+  color: #0f6a2f;
+  background: #edf7ee;
+}
+
+.vms-addons-pill.is-warn {
+  border-color: #b26200;
+  color: #7a4600;
+  background: #fff4e5;
+}
+
+.vms-addons-pill.is-bad {
+  border-color: #b32d2e;
+  color: #8a2424;
+  background: #fbeaea;
+}
+
+.vms-addons-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vms-addons-muted {
+  color: #646970;
+  font-size: 12px;
+}
+
+.vms-addons-license-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.vms-addons-license-row {
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.vms-addons-license-row input[type="text"] {
+  width: 100%;
+  max-width: 420px;
+}
+
+.vms-addons-log-list {
+  max-height: 340px;
+  overflow: auto;
+  border: 1px solid #dcdcde;
+  background: #fff;
+  padding: 10px;
+}
+
+.vms-addons-log-line {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.vms-addons-busy-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.vms-addons-busy-overlay.is-visible {
+  display: flex;
+}
+
+.vms-addons-busy-card {
+  width: min(460px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  border: 1px solid #dcdcde;
+  padding: 16px;
+}
+
+.vms-addons-busy-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.vms-addons-busy-msg {
+  margin: 0;
+  color: #50575e;
+}
+
+.vms-addons-busy-bar {
+  margin-top: 12px;
+  height: 6px;
+  background: #eef0f1;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.vms-addons-busy-bar > span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: #2271b1;
+  animation: vmsAddonsBusySlide 1s linear infinite;
+}
+
+@keyframes vmsAddonsBusySlide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+
+@media (max-width: 782px) {
+  .vms-addons-card-actions .button {
+    width: 100%;
+    text-align: center;
+  }
+}

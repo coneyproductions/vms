@@ -28,7 +28,7 @@ function vms_register_rating_cpt()
         'labels'             => $labels,
         'public'             => false,            // internal only
         'show_ui'            => true,             // visible in admin
-        'show_in_menu'       => 'vms',
+        'show_in_menu'    => false,
         'menu_position'      => 26,
         'menu_icon'          => 'dashicons-star-half',
         'supports'           => array('title', 'editor'), // editor = comment body
@@ -84,10 +84,10 @@ function vms_render_rating_details_metabox($post)
 ?>
     <table class="form-table">
         <tr>
-            <th scope="row"><label for="vms_band_id"><?php esc_html_e('Band / Vendor', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_band_id"><?php esc_html_e('Music Vendor / Vendor', 'vms'); ?></label></th>
             <td>
-                <select id="vms_band_id" name="vms_band_id" style="min-width:260px;">
-                    <option value=""><?php esc_html_e('-- Select Band --', 'vms'); ?></option>
+                <select id="vms_band_id" name="vms_band_id" class="vms-rating-select-wide">
+                    <option value=""><?php esc_html_e('-- Select Music Vendor --', 'vms'); ?></option>
                     <?php foreach ($bands as $band) : ?>
                         <option value="<?php echo esc_attr($band->ID); ?>"
                             <?php selected($band_id, $band->ID); ?>>
@@ -101,7 +101,7 @@ function vms_render_rating_details_metabox($post)
         <tr>
             <th scope="row"><label for="vms_event_id"><?php esc_html_e('Event', 'vms'); ?></label></th>
             <td>
-                <select id="vms_event_id" name="vms_event_id" style="min-width:260px;">
+                <select id="vms_event_id" name="vms_event_id" class="vms-rating-select-wide">
                     <option value=""><?php esc_html_e('-- Select Event --', 'vms'); ?></option>
                     <?php foreach ($events as $event) : ?>
                         <?php
@@ -372,7 +372,7 @@ function vms_rate_band_shortcode($atts) {
 
             <p>
                 <label for="vms_rating_comment"><strong>Comments (optional)</strong></label><br>
-                <textarea id="vms_rating_comment" name="vms_rating_comment" rows="4" style="width:100%;"><?php
+                <textarea id="vms_rating_comment" name="vms_rating_comment" rows="4" class="vms-rating-comment"><?php
                     echo isset($_POST['vms_rating_comment']) ? esc_textarea($_POST['vms_rating_comment']) : '';
                 ?></textarea>
             </p>

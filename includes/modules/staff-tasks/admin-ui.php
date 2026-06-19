@@ -1,0 +1,2591 @@
+<?php
+defined('ABSPATH') || exit;
+
+if (!function_exists('vms_tasks_admin_parent_slug')) {
+	function vms_tasks_admin_parent_slug(): string
+	{
+		return 'vms-dashboard';
+	}
+}
+
+if (!function_exists('vms_tasks_admin_page_url')) {
+	/**
+	 * @param array<string,mixed> $args
+	 */
+	function vms_tasks_admin_page_url(string $page_slug, array $args = array()): string
+	{
+		$base = admin_url('admin.php?page=' . urlencode($page_slug));
+		if (empty($args)) {
+			return $base;
+		}
+		return add_query_arg($args, $base);
+	}
+}
+
+if (!function_exists('vms_tasks_is_event_plan_edit_screen')) {
+	function vms_tasks_is_event_plan_edit_screen(): bool
+	{
+		if (!is_admin() || !function_exists('get_current_screen')) {
+			return false;
+		}
+		$screen = get_current_screen();
+		if (!is_object($screen)) {
+			return false;
+		}
+		return ($screen->base ?? '') === 'post' && ($screen->post_type ?? '') === 'vms_event_plan';
+	}
+}
+
+if (!function_exists('vms_tasks_event_plan_metabox_form_id')) {
+	function vms_tasks_event_plan_metabox_form_id(int $event_plan_id, string $suffix, int $instance_id = 0): string
+	{
+		$event_plan_id = absint($event_plan_id);
+		$instance_id = absint($instance_id);
+		$suffix = sanitize_key($suffix);
+		if ($suffix === '') {
+			$suffix = 'action';
+		}
+
+		$form_id = 'vms-tasks-ep-form-' . $event_plan_id . '-' . $suffix;
+		if ($instance_id > 0) {
+			$form_id .= '-' . $instance_id;
+		}
+		return $form_id;
+	}
+}
+
+if (!function_exists('vms_tasks_event_plan_metabox_register_form')) {
+	/**
+	 * Register a detached footer form for the Event Plan editor.
+	 *
+	 * @param array<string,mixed> $hidden_fields
+	 */
+	function vms_tasks_event_plan_metabox_register_form(string $form_id, string $method, string $action, array $hidden_fields = array()): void
+	{
+		global $vms_tasks_event_plan_metabox_forms;
+		if (!is_array($vms_tasks_event_plan_metabox_forms)) {
+			$vms_tasks_event_plan_metabox_forms = array();
+		}
+		$vms_tasks_event_plan_metabox_forms[$form_id] = array(
+			'method' => (strtolower($method) === 'get') ? 'get' : 'post',
+			'action' => esc_url_raw($action),
+			'hidden_fields' => $hidden_fields,
+		);
+	}
+}
+
+if (!function_exists('vms_tasks_render_event_plan_metabox_footer_forms')) {
+	function vms_tasks_render_event_plan_metabox_footer_forms(): void
+	{
+		if (!vms_tasks_is_event_plan_edit_screen()) {
+			return;
+		}
+
+		global $vms_tasks_event_plan_metabox_forms;
+		if (!is_array($vms_tasks_event_plan_metabox_forms) || empty($vms_tasks_event_plan_metabox_forms)) {
+			return;
+		}
+
+		foreach ($vms_tasks_event_plan_metabox_forms as $form_id => $form) {
+			$form_id = sanitize_html_class((string) $form_id);
+			$method = (($form['method'] ?? 'post') === 'get') ? 'get' : 'post';
+			$action = esc_url((string) ($form['action'] ?? ''));
+			$hidden_fields = is_array($form['hidden_fields'] ?? null) ? (array) $form['hidden_fields'] : array();
+			echo '<form id="' . esc_attr($form_id) . '" method="' . esc_attr($method) . '" action="' . $action . '" class="vms-tasks-detached-form" style="display:none;">';
+			foreach ($hidden_fields as $name => $value) {
+				if ($value === null) {
+					continue;
+				}
+				echo '<input type="hidden" name="' . esc_attr((string) $name) . '" value="' . esc_attr((string) $value) . '" />';
+			}
+			echo '</form>';
+		}
+	}
+}
+add_action('admin_footer', 'vms_tasks_render_event_plan_metabox_footer_forms', 45);
+
+if (!function_exists('vms_tasks_admin_render_notices')) {
+	function vms_tasks_admin_render_notices(): void
+	{
+		$notice = isset($_GET['vms_tasks_notice']) ? sanitize_key((string) wp_unslash($_GET['vms_tasks_notice'])) : '';
+		$message = isset($_GET['vms_tasks_message']) ? sanitize_text_field((string) wp_unslash($_GET['vms_tasks_message'])) : '';
+		if ($notice === '' && $message === '') {
+			return;
+		}
+
+		$type = 'info';
+		if ($notice === 'error') {
+			$type = 'error';
+		} elseif ($notice === 'success') {
+			$type = 'success';
+		}
+
+		echo '<div class="notice notice-' . esc_attr($type) . '"><p>';
+		echo esc_html($message !== '' ? $message : __('Staff Tasks action completed.', 'vms'));
+		echo '</p></div>';
+	}
+}
+
+if (!function_exists('vms_tasks_admin_get_venues')) {
+	/** @return array<int,string> */
+	function vms_tasks_admin_get_venues(): array
+	{
+		$ids = get_posts(array(
+			'post_type' => 'vms_venue',
+			'post_status' => array('publish', 'private', 'draft', 'pending', 'future'),
+			'posts_per_page' => -1,
+			'fields' => 'ids',
+			'orderby' => 'title',
+			'order' => 'ASC',
+			'no_found_rows' => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		));
+		if (!is_array($ids)) {
+			return array();
+		}
+
+		$out = array();
+		foreach ($ids as $id) {
+			$venue_id = absint($id);
+			if ($venue_id <= 0) {
+				continue;
+			}
+			$label = trim((string) get_the_title($venue_id));
+			if ($label === '') {
+				$label = sprintf(__('Venue #%d', 'vms'), $venue_id);
+			}
+			$out[$venue_id] = $label;
+		}
+		asort($out);
+		return $out;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_get_user_options')) {
+	/** @return array<int,string> */
+	function vms_tasks_admin_get_user_options(): array
+	{
+		$users = get_users(array(
+			'orderby' => 'display_name',
+			'order' => 'ASC',
+			'fields' => array('ID', 'display_name', 'user_email'),
+		));
+		$out = array();
+		foreach ((array) $users as $user) {
+			$uid = isset($user->ID) ? absint($user->ID) : 0;
+			if ($uid <= 0) {
+				continue;
+			}
+			$label = (string) ($user->display_name ?? '');
+			$email = (string) ($user->user_email ?? '');
+			if ($email !== '') {
+				$label .= ' (' . $email . ')';
+			}
+			$out[$uid] = $label;
+		}
+		return $out;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_get_role_options')) {
+	/** @return array<string,string> */
+	function vms_tasks_admin_get_role_options(bool $include_inactive = true): array
+	{
+		$out = array();
+
+		if (function_exists('vms_staffing_get_role_catalog')) {
+			$rows = vms_staffing_get_role_catalog($include_inactive);
+			foreach ((array) $rows as $row) {
+				$slug = sanitize_key((string) ($row['slug'] ?? ''));
+				if ($slug === '') {
+					continue;
+				}
+				$name = trim((string) ($row['name'] ?? $slug));
+				if ($name === '') {
+					$name = $slug;
+				}
+				$inactive = !empty($include_inactive) && empty($row['is_active']);
+				$out[$slug] = $inactive
+					? sprintf(
+						/* translators: %s is a role name. */
+						__('%s (inactive)', 'vms'),
+						$name
+					)
+					: $name;
+			}
+		} elseif (taxonomy_exists('vms_staff_role')) {
+			$terms = get_terms(array(
+				'taxonomy' => 'vms_staff_role',
+				'hide_empty' => false,
+				'orderby' => 'name',
+				'order' => 'ASC',
+			));
+			if (!is_wp_error($terms)) {
+				foreach ((array) $terms as $term) {
+					$slug = sanitize_key((string) ($term->slug ?? ''));
+					if ($slug === '') {
+						continue;
+					}
+					$out[$slug] = trim((string) ($term->name ?? $slug));
+				}
+			}
+		}
+
+		asort($out);
+		return $out;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_get_event_type_options')) {
+	/** @return array<string,string> */
+	function vms_tasks_admin_get_event_type_options(): array
+	{
+		global $wpdb;
+		$postmeta = $wpdb->postmeta;
+		$types = array();
+		$rows = $wpdb->get_col($wpdb->prepare(
+			"SELECT DISTINCT meta_value FROM {$postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY meta_value ASC",
+			'_vms_event_type'
+		));
+		if (is_array($rows)) {
+			foreach ($rows as $row) {
+				$key = sanitize_key((string) $row);
+				if ($key !== '') {
+					$types[$key] = $key;
+				}
+			}
+		}
+
+		return $types;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_get_checklist_options')) {
+	/** @return array<int,string> */
+	function vms_tasks_admin_get_checklist_options(bool $active_only = true, string $scope = ''): array
+	{
+		$filters = $active_only ? array('is_active' => 1) : array();
+		$scope = sanitize_key($scope);
+		if ($scope !== '') {
+			$scope = vms_tasks_sanitize_scope($scope);
+			$filters['scope'] = $scope;
+		}
+		$rows = vms_tasks_get_checklist_templates($filters);
+		$options = array();
+		foreach ($rows as $row) {
+			$checklist_id = absint($row['id'] ?? 0);
+			if ($checklist_id <= 0) {
+				continue;
+			}
+			$name = trim((string) ($row['name'] ?? ''));
+			if ($name === '') {
+				$name = sprintf(
+					/* translators: %d is a checklist template id. */
+					__('Checklist #%d', 'vms'),
+					$checklist_id
+				);
+			}
+			$apply_mode = vms_tasks_sanitize_apply_mode((string) ($row['apply_mode'] ?? 'default_all_events'));
+			$label = $name;
+			if ($apply_mode === 'by_venue') {
+				$label .= ' (' . __('By venue', 'vms') . ')';
+			} elseif ($apply_mode === 'by_event_type') {
+				$label .= ' (' . __('By event type', 'vms') . ')';
+			} else {
+				$label .= ' (' . __('Default', 'vms') . ')';
+			}
+			$label .= ' - ' . vms_tasks_admin_scope_label((string) ($row['scope'] ?? 'event'));
+			$options[$checklist_id] = $label;
+		}
+		return $options;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_assignment_mode_label')) {
+	function vms_tasks_admin_assignment_mode_label(string $mode): string
+	{
+		$mode = vms_tasks_sanitize_assignment_mode($mode);
+		if ($mode === 'person') {
+			return __('Person', 'vms');
+		}
+		if ($mode === 'scheduled_role') {
+			return __('Scheduled Role', 'vms');
+		}
+		return __('Role', 'vms');
+	}
+}
+
+if (!function_exists('vms_tasks_admin_assignment_summary')) {
+	/**
+	 * @param array<string,mixed> $row
+	 * @param array<int,string> $users
+	 * @param array<string,string> $role_options
+	 */
+	function vms_tasks_admin_assignment_summary(array $row, array $users, array $role_options): string
+	{
+		$mode = vms_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
+		$role_key = sanitize_key((string) ($row['role_key'] ?? ''));
+		$assignee_id = absint($row['assignee_user_id'] ?? 0);
+		$assignee_label = ($assignee_id > 0 && isset($users[$assignee_id]))
+			? $users[$assignee_id]
+			: __('Unassigned', 'vms');
+
+		if ($mode === 'person') {
+			return vms_tasks_admin_assignment_mode_label($mode) . ': ' . $assignee_label;
+		}
+
+		$role_label = ($role_key !== '' && isset($role_options[$role_key]))
+			? $role_options[$role_key]
+			: ($role_key !== '' ? $role_key : __('Unspecified role', 'vms'));
+
+		$summary = vms_tasks_admin_assignment_mode_label($mode) . ': ' . $role_label;
+		if ($assignee_id > 0) {
+			$summary .= '; ' . __('Assigned', 'vms') . ': ' . $assignee_label;
+		} else {
+			$summary .= '; ' . __('Unassigned', 'vms');
+		}
+
+		return $summary;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_scope_label')) {
+	function vms_tasks_admin_scope_label(string $scope): string
+	{
+		$scope = vms_tasks_sanitize_scope($scope);
+		if ($scope === 'general') {
+			return __('Not linked to an event', 'vms');
+		}
+		return __('Event-linked', 'vms');
+	}
+}
+
+if (!function_exists('vms_tasks_admin_sanitize_anchor_token')) {
+	function vms_tasks_admin_sanitize_anchor_token(string $anchor): string
+	{
+		if (function_exists('vms_tours_sanitize_anchor_token')) {
+			return vms_tours_sanitize_anchor_token($anchor);
+		}
+		$anchor = strtolower(trim($anchor));
+		if ($anchor === '') {
+			return '';
+		}
+		$sanitized = preg_replace('/[^a-z0-9._-]/', '', $anchor);
+		return is_string($sanitized) ? $sanitized : '';
+	}
+}
+
+if (!function_exists('vms_tasks_admin_hover_tip_map')) {
+	/**
+	 * @return array<string,string>
+	 */
+	function vms_tasks_admin_hover_tip_map(): array
+	{
+		$map = array();
+		if (!function_exists('vms_get_tour_registry')) {
+			return $map;
+		}
+
+		foreach ((array) vms_get_tour_registry() as $tour) {
+			if (!is_array($tour)) {
+				continue;
+			}
+			$tour_id = sanitize_key((string) ($tour['id'] ?? ''));
+			if (strpos($tour_id, 'vms_staff_tasks_') !== 0) {
+				continue;
+			}
+			foreach ((array) ($tour['steps'] ?? array()) as $step) {
+				if (!is_array($step)) {
+					continue;
+				}
+				$anchor = vms_tasks_admin_sanitize_anchor_token((string) ($step['anchor'] ?? ''));
+				if ($anchor === '' || isset($map[$anchor])) {
+					continue;
+				}
+				$content = wp_strip_all_tags((string) ($step['content'] ?? ''));
+				$content = trim(preg_replace('/\s+/', ' ', $content) ?? '');
+				if ($content === '') {
+					$content = sanitize_text_field((string) ($step['title'] ?? ''));
+				}
+				if ($content !== '') {
+					$map[$anchor] = $content;
+				}
+			}
+		}
+
+		return $map;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_render_hover_tip_assets')) {
+	function vms_tasks_admin_render_hover_tip_assets(): void
+	{
+		// Inline icon assets were replaced by the standardized tours runtime
+		// so all modules share one help icon style + behavior path.
+		return;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_help_button')) {
+	function vms_tasks_admin_help_button(string $tour_id, string $anchor = 'tasks.help'): string
+	{
+		$tour_id = sanitize_key($tour_id);
+		$anchor = vms_tasks_admin_sanitize_anchor_token($anchor);
+		if ($tour_id === '') {
+			return '';
+		}
+		if (function_exists('vms_render_help_button')) {
+			return vms_render_help_button(array(
+				'tour_id' => $tour_id,
+				'anchor' => $anchor,
+				'class' => 'vms-staff-tasks-help-menu',
+			));
+		}
+		$anchor_attr = $anchor !== '' ? ' data-vms-tour="' . esc_attr($anchor) . '"' : '';
+		return '<button type="button" class="button button-secondary" data-vms-tour-start="' . esc_attr($tour_id) . '"' . $anchor_attr . '>' . esc_html__('Help', 'vms') . '</button>';
+	}
+}
+
+if (!function_exists('vms_tasks_admin_get_event_options')) {
+	/** @return array<int,string> */
+	function vms_tasks_admin_get_event_options(int $horizon_days = 120): array
+	{
+		$horizon_days = max(1, min(365, $horizon_days));
+		$event_ids = function_exists('vms_tasks_collect_upcoming_event_ids')
+			? vms_tasks_collect_upcoming_event_ids($horizon_days)
+			: array();
+
+		if (empty($event_ids)) {
+			$k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+			if ($k_date === '') {
+				$k_date = '_vms_event_date';
+			}
+
+			$fallback_ids = get_posts(array(
+				'post_type' => 'vms_event_plan',
+				'post_status' => array('publish', 'private', 'draft', 'pending', 'future'),
+				'posts_per_page' => 200,
+				'fields' => 'ids',
+				'meta_key' => $k_date,
+				'orderby' => 'meta_value',
+				'order' => 'ASC',
+				'no_found_rows' => true,
+				'update_post_meta_cache' => true,
+				'update_post_term_cache' => false,
+			));
+			$event_ids = is_array($fallback_ids) ? $fallback_ids : array();
+		}
+
+		$venues = vms_tasks_admin_get_venues();
+		$options = array();
+		foreach ($event_ids as $raw_event_id) {
+			$event_id = absint($raw_event_id);
+			if ($event_id <= 0) {
+				continue;
+			}
+
+			$context = vms_tasks_get_event_context($event_id);
+			if (!is_array($context)) {
+				continue;
+			}
+
+			$title = trim((string) ($context['event_title'] ?? get_the_title($event_id)));
+			if ($title === '') {
+				$title = sprintf(__('Event #%d', 'vms'), $event_id);
+			}
+			$date_ymd = trim((string) ($context['date_ymd'] ?? ''));
+			if ($date_ymd === '' && !empty($context['event_start_local'])) {
+				$date_ymd = substr((string) $context['event_start_local'], 0, 10);
+			}
+
+			$label = $title;
+			if ($date_ymd !== '') {
+				$label .= ' - ' . $date_ymd;
+			}
+
+			$venue_id = absint($context['venue_id'] ?? 0);
+			if ($venue_id > 0 && isset($venues[$venue_id])) {
+				$label .= ' @ ' . $venues[$venue_id];
+			}
+
+			$options[$event_id] = $label;
+		}
+
+		return $options;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_register_menu')) {
+	if (!function_exists('vms_tasks_admin_menu_fallback_capability')) {
+		function vms_tasks_admin_menu_fallback_capability(): string
+		{
+			if (function_exists('vms_admin_ui_data_tools_capability')) {
+				$cap = sanitize_text_field((string) vms_admin_ui_data_tools_capability());
+				if ($cap !== '') {
+					return $cap;
+				}
+			}
+			if (function_exists('vms_admin_ui_ops_capability')) {
+				$cap = sanitize_text_field((string) vms_admin_ui_ops_capability());
+				if ($cap !== '') {
+					return $cap;
+				}
+			}
+			return 'manage_options';
+		}
+	}
+
+	if (!function_exists('vms_tasks_admin_menu_capability')) {
+		function vms_tasks_admin_menu_capability(string $preferred_cap): string
+		{
+			$preferred_cap = sanitize_text_field($preferred_cap);
+			if ($preferred_cap !== '' && current_user_can($preferred_cap)) {
+				return $preferred_cap;
+			}
+			$fallback_cap = vms_tasks_admin_menu_fallback_capability();
+			if ($fallback_cap !== '' && current_user_can($fallback_cap)) {
+				return $fallback_cap;
+			}
+			return 'manage_options';
+		}
+	}
+
+	function vms_tasks_admin_register_menu(): void
+	{
+		$parent = vms_tasks_admin_parent_slug();
+		$menu_cap = 'read';
+
+		if (vms_tasks_current_user_can_manage_all()) {
+			add_submenu_page(
+				$parent,
+				__('Tasks', 'vms'),
+				__('Tasks', 'vms'),
+				$menu_cap,
+				'vms-tasks',
+				'vms_tasks_render_tasks_page'
+			);
+
+			add_submenu_page(
+				$parent,
+				__('Task Templates', 'vms'),
+				__('Task Templates', 'vms'),
+				$menu_cap,
+				'vms-task-templates',
+				'vms_tasks_render_task_templates_page'
+			);
+
+			add_submenu_page(
+				$parent,
+				__('Checklist Templates', 'vms'),
+				__('Checklist Templates', 'vms'),
+				$menu_cap,
+				'vms-checklist-templates',
+				'vms_tasks_render_checklist_templates_page'
+			);
+
+			add_submenu_page(
+				$parent,
+				__('Task Settings', 'vms'),
+				__('Task Settings', 'vms'),
+				$menu_cap,
+				'vms-task-settings',
+				'vms_tasks_render_settings_page'
+			);
+		}
+
+		if (vms_tasks_current_user_can_view_self()) {
+			add_submenu_page(
+				$parent,
+				__('My Tasks', 'vms'),
+				__('My Tasks', 'vms'),
+				$menu_cap,
+				'vms-my-tasks',
+				'vms_tasks_render_my_tasks_page'
+			);
+		}
+	}
+}
+add_action('admin_menu', 'vms_tasks_admin_register_menu', 40);
+
+if (!function_exists('vms_tasks_admin_post_redirect')) {
+	/**
+	 * @param array<string,mixed> $query
+	 */
+	function vms_tasks_admin_post_redirect(string $page_slug, array $query = array()): void
+	{
+		wp_safe_redirect(vms_tasks_admin_page_url($page_slug, $query));
+		exit;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_notice_url')) {
+	function vms_tasks_admin_notice_url(string $url, string $notice, string $message): string
+	{
+		return add_query_arg(array(
+			'vms_tasks_notice' => sanitize_key($notice),
+			'vms_tasks_message' => sanitize_text_field($message),
+		), $url);
+	}
+}
+
+if (!function_exists('vms_tasks_admin_redirect_url_with_notice')) {
+	function vms_tasks_admin_redirect_url_with_notice(string $url, string $notice, string $message): void
+	{
+		wp_safe_redirect(vms_tasks_admin_notice_url($url, $notice, $message));
+		exit;
+	}
+}
+
+if (!function_exists('vms_tasks_admin_resolve_return_url')) {
+	function vms_tasks_admin_resolve_return_url(string $default_page = 'vms-tasks'): string
+	{
+		$return_page = sanitize_key((string) ($_REQUEST['return_page'] ?? ''));
+		if (in_array($return_page, array('vms-tasks', 'vms-my-tasks'), true)) {
+			return vms_tasks_admin_page_url($return_page);
+		}
+		if ($return_page === 'event-plan') {
+			$event_id = absint($_REQUEST['event_id'] ?? 0);
+			if ($event_id > 0) {
+				$edit_url = get_edit_post_link($event_id, 'url');
+				if (is_string($edit_url) && $edit_url !== '') {
+					return $edit_url;
+				}
+			}
+		}
+
+		return vms_tasks_admin_page_url($default_page);
+	}
+}
+
+if (!function_exists('vms_tasks_admin_parse_due_input')) {
+	function vms_tasks_admin_parse_due_input(string $raw): ?string
+	{
+		$raw = trim($raw);
+		if ($raw === '') {
+			return null;
+		}
+
+		$normalized = $raw;
+		if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $raw)) {
+			$normalized = str_replace('T', ' ', $raw) . ':00';
+		} elseif (preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}$/', $raw)) {
+			$normalized = $raw . ':00';
+		}
+
+		try {
+			$dt = new DateTimeImmutable($normalized, wp_timezone());
+			return $dt->format('Y-m-d H:i:s');
+		} catch (Exception $e) {
+			return null;
+		}
+	}
+}
+
+if (!function_exists('vms_tasks_admin_handle_transition')) {
+	function vms_tasks_admin_handle_transition(): void
+	{
+		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
+		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce((string) wp_unslash($_POST['_wpnonce']), 'vms_tasks_transition')) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'vms'));
+		}
+
+		$instance_id = absint($_POST['instance_id'] ?? 0);
+		$target_status = sanitize_key((string) ($_POST['target_status'] ?? 'open'));
+		$reason = isset($_POST['reason']) ? sanitize_text_field((string) wp_unslash($_POST['reason'])) : '';
+
+		$row = vms_tasks_get_instance($instance_id);
+		if (!is_array($row)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Task was not found.', 'vms'));
+		}
+
+		$current_user_id = absint(get_current_user_id());
+		$can_manage_all = vms_tasks_current_user_can_manage_all();
+		$can_self = vms_tasks_current_user_can_complete_self() && absint($row['assignee_user_id'] ?? 0) === $current_user_id;
+
+		if (!$can_manage_all && !$can_self) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('You do not have permission to update this task.', 'vms'));
+		}
+
+		if (!$can_manage_all && in_array($target_status, array('canceled', 'open'), true)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Only admins can cancel or reopen tasks.', 'vms'));
+		}
+
+		$updated = vms_tasks_transition_instance_status($instance_id, $target_status, $reason, $current_user_id);
+		if (is_wp_error($updated)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $updated->get_error_message());
+		}
+
+		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', __('Task updated.', 'vms'));
+	}
+}
+add_action('admin_post_vms_tasks_transition', 'vms_tasks_admin_handle_transition');
+
+if (!function_exists('vms_tasks_admin_handle_generate_event')) {
+	function vms_tasks_admin_handle_generate_event(): void
+	{
+		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
+		if (!vms_tasks_current_user_can_manage_all()) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'vms'));
+		}
+		$event_id = absint($_GET['event_id'] ?? 0);
+		$nonce = isset($_GET['_wpnonce']) ? (string) wp_unslash($_GET['_wpnonce']) : '';
+		if (!wp_verify_nonce($nonce, 'vms_tasks_generate_event_' . $event_id)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'vms'));
+		}
+
+		$result = vms_tasks_generate_for_event($event_id, array(
+			'allow_supersede' => true,
+			'actor_user_id' => get_current_user_id(),
+		));
+		if (is_wp_error($result)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $result->get_error_message());
+		}
+
+		$message = sprintf(
+			/* translators: 1: created tasks count, 2: superseded tasks count */
+			__('Task generation complete. Created %1$d task(s), superseded %2$d.', 'vms'),
+			absint($result['instances_created'] ?? 0),
+			absint($result['instances_superseded'] ?? 0)
+		);
+		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $message);
+	}
+}
+add_action('admin_post_vms_tasks_generate_event', 'vms_tasks_admin_handle_generate_event');
+
+if (!function_exists('vms_tasks_admin_handle_update_assignment')) {
+	function vms_tasks_admin_handle_update_assignment(): void
+	{
+		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
+		if (!vms_tasks_current_user_can_manage_all()) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'vms'));
+		}
+		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce((string) wp_unslash($_POST['_wpnonce']), 'vms_tasks_update_assignment')) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'vms'));
+		}
+
+		$instance_id = absint($_POST['instance_id'] ?? 0);
+		$event_id = absint($_POST['event_id'] ?? 0);
+		$assignment_mode = vms_tasks_sanitize_assignment_mode((string) wp_unslash($_POST['assignment_mode'] ?? 'person'));
+		$role_key = sanitize_key((string) wp_unslash($_POST['role_key'] ?? ''));
+		$assignee_user_id = absint($_POST['assignee_user_id'] ?? 0);
+		$resolution_message = '';
+
+		if ($assignee_user_id > 0 && $assignment_mode !== 'scheduled_role') {
+			$assignment_mode = 'person';
+			$role_key = '';
+		}
+
+		if (in_array($assignment_mode, array('role', 'scheduled_role'), true) && $role_key === '') {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Role key is required for role-based assignment modes.', 'vms'));
+		}
+
+		if ($assignment_mode === 'scheduled_role' && $assignee_user_id <= 0 && $event_id > 0 && function_exists('vms_tasks_resolve_scheduled_role_user_id')) {
+			$resolved = vms_tasks_resolve_scheduled_role_user_id($event_id, $role_key);
+			$status = (string) ($resolved['status'] ?? 'none');
+			if ($status === 'single') {
+				$assignee_user_id = absint($resolved['assignee_user_id'] ?? 0);
+				if ($assignee_user_id > 0) {
+					$resolution_message = __('Scheduled role resolved to the assigned staff member.', 'vms');
+				}
+			} elseif ($status === 'multiple') {
+				$resolution_message = __('Scheduled role has multiple staff assigned; task remains unassigned.', 'vms');
+			} else {
+				$resolution_message = __('No staff member is currently scheduled for that role.', 'vms');
+			}
+		}
+
+		$assignment_locked = !empty($_POST['assignment_locked']) && $assignee_user_id > 0;
+
+		$updated = vms_tasks_set_instance_assignment(
+			$instance_id,
+			$assignee_user_id,
+			$assignment_locked,
+			get_current_user_id(),
+			$assignment_mode,
+			$role_key
+		);
+		if (is_wp_error($updated)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $updated->get_error_message());
+		}
+
+		$message = __('Assignment updated.', 'vms');
+		if ($resolution_message !== '') {
+			$message .= ' ' . $resolution_message;
+		}
+		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $message);
+	}
+}
+add_action('admin_post_vms_tasks_update_assignment', 'vms_tasks_admin_handle_update_assignment');
+
+if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
+	function vms_tasks_admin_handle_create_one_off(): void
+	{
+		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
+		if (!vms_tasks_current_user_can_manage_all()) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'vms'));
+		}
+		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce((string) wp_unslash($_POST['_wpnonce']), 'vms_tasks_create_one_off')) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'vms'));
+		}
+		if (!vms_tasks_db_ready()) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Staff Tasks tables are unavailable.', 'vms'));
+		}
+
+		$event_id = absint($_POST['event_id'] ?? 0);
+		$venue_id_input = absint($_POST['venue_id'] ?? 0);
+		$event = null;
+		if ($event_id > 0) {
+			$event = vms_tasks_get_event_context($event_id);
+			if (!is_array($event)) {
+				vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Event context is unavailable for task creation.', 'vms'));
+			}
+		}
+
+		$title = sanitize_text_field((string) wp_unslash($_POST['title'] ?? ''));
+		if ($title === '') {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Task title is required.', 'vms'));
+		}
+		$instructions = wp_kses_post((string) wp_unslash($_POST['instructions'] ?? ''));
+		$priority = vms_tasks_sanitize_priority((string) wp_unslash($_POST['priority'] ?? 'normal'));
+		$is_required = !empty($_POST['is_required']) ? 1 : 0;
+		$due_raw = (string) wp_unslash($_POST['due_at_local'] ?? '');
+		$due_at_local = vms_tasks_admin_parse_due_input($due_raw);
+		$assignment_mode = vms_tasks_sanitize_assignment_mode((string) wp_unslash($_POST['assignment_mode'] ?? 'person'));
+		$role_key = sanitize_key((string) wp_unslash($_POST['role_key'] ?? ''));
+		$assignee_user_id = absint($_POST['assignee_user_id'] ?? 0);
+		$recurrence_pattern = vms_tasks_sanitize_recurrence_pattern((string) wp_unslash($_POST['recurrence_pattern'] ?? 'none'));
+		$recurrence_every_n_days = absint($_POST['recurrence_every_n_days'] ?? 0);
+		$assignment_locked = !empty($_POST['assignment_locked']) && $assignee_user_id > 0;
+		$make_repeatable_now = !empty($_POST['make_repeatable_now']);
+		$repeatable_checklist_id = absint($_POST['repeatable_checklist_id'] ?? 0);
+		if ($due_raw !== '' && $due_at_local === null) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Due date is invalid. Use date and time format from the picker.', 'vms'));
+		}
+
+		if ($assignee_user_id > 0) {
+			$assignment_mode = 'person';
+			$role_key = '';
+		}
+		if (in_array($assignment_mode, array('role', 'scheduled_role'), true) && $role_key === '') {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Role key is required for role-based assignment modes.', 'vms'));
+		}
+		if ($assignment_mode === 'person') {
+			$role_key = '';
+		}
+		if ($event_id <= 0 && $assignment_mode === 'scheduled_role') {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Scheduled role assignment requires an event-linked task.', 'vms'));
+		}
+		if ($event_id > 0) {
+			$recurrence_pattern = 'none';
+			$recurrence_every_n_days = 0;
+		}
+		if ($recurrence_pattern !== 'none' && $due_at_local === null) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Recurring tasks require a due date/time.', 'vms'));
+		}
+		if ($recurrence_pattern === 'every_n_days' && ($recurrence_every_n_days < 2 || $recurrence_every_n_days > 365)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Every N days recurrence must be between 2 and 365.', 'vms'));
+		}
+
+		$resolved_venue_id = 0;
+		$resolved_event_type = '';
+		if (is_array($event)) {
+			$resolved_venue_id = absint($event['venue_id'] ?? 0);
+			$resolved_event_type = (string) ($event['event_type'] ?? '');
+		} else {
+			$resolved_venue_id = $venue_id_input > 0 ? $venue_id_input : 0;
+		}
+
+		$created = vms_tasks_insert_instance(array(
+			'event_id' => $event_id > 0 ? $event_id : null,
+			'venue_id' => $resolved_venue_id > 0 ? $resolved_venue_id : null,
+			'event_type' => $resolved_event_type,
+			'title' => $title,
+			'instructions' => $instructions,
+			'priority' => $priority,
+			'is_required' => $is_required,
+			'due_at_local' => $due_at_local,
+			'status' => 'open',
+			'assignment_mode' => $assignment_mode,
+			'role_key' => $role_key,
+			'assignee_user_id' => $assignee_user_id,
+			'assignment_locked' => $assignment_locked ? 1 : 0,
+			'recurrence_pattern' => $recurrence_pattern,
+			'recurrence_every_n_days' => $recurrence_every_n_days,
+		));
+		if (is_wp_error($created)) {
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $created->get_error_message());
+		}
+
+		$instance_id = absint($created);
+		vms_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
+			'event_id' => $event_id,
+			'title' => $title,
+			'is_required' => $is_required ? 1 : 0,
+			'assignment_mode' => $assignment_mode,
+			'role_key' => $role_key,
+			'assignee_user_id' => $assignee_user_id,
+			'recurrence_pattern' => $recurrence_pattern,
+			'recurrence_every_n_days' => $recurrence_every_n_days,
+		)));
+		if ($assignee_user_id > 0 && function_exists('vms_tasks_emit_assignment_notification')) {
+			$latest = vms_tasks_get_instance($instance_id);
+			if (is_array($latest)) {
+				vms_tasks_emit_assignment_notification($latest);
+			}
+		}
+
+		if ($make_repeatable_now) {
+			$due_mode = 'none';
+			$due_time_local = '';
+			if (is_string($due_at_local) && preg_match('/^\d{4}-\d{2}-\d{2}\s(\d{2}:\d{2})/', $due_at_local, $matches)) {
+				$due_mode = 'fixed_datetime';
+				$due_time_local = (string) $matches[1];
+			}
+
+			$template_payload = array(
+				'title' => $title,
+				'instructions' => $instructions,
+				'is_active' => 1,
+				'priority' => $priority,
+				'required_default' => $is_required ? 1 : 0,
+				'scope' => ($event_id > 0 ? 'event' : 'general'),
+				'due_mode' => $due_mode,
+				'due_offset_minutes' => '',
+				'due_time_local' => $due_time_local,
+				'assignment_mode' => $assignment_mode,
+				'role_key' => $role_key,
+				'assignee_user_id' => $assignee_user_id,
+			);
+			$template_id = vms_tasks_upsert_task_template($template_payload, 0);
+			if (is_wp_error($template_id)) {
+				$message = sprintf(
+					/* translators: %s is an error string from template save. */
+					__('Task was created, but repeatable template save failed: %s', 'vms'),
+					$template_id->get_error_message()
+				);
+				vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
+			}
+
+			$template_id = absint($template_id);
+			if ($repeatable_checklist_id > 0) {
+				$target_checklist = vms_tasks_get_checklist_template($repeatable_checklist_id);
+				if (!is_array($target_checklist)) {
+					$message = __('Task and repeatable template were created, but selected checklist was not found.', 'vms');
+					vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
+				}
+
+				$items = vms_tasks_get_checklist_items($repeatable_checklist_id);
+				$sort = count($items) + 1;
+				$items[] = array(
+					'task_template_id' => $template_id,
+					'sort_order' => $sort,
+					'overrides' => array(),
+				);
+				$replace = vms_tasks_replace_checklist_items($repeatable_checklist_id, $items);
+				if (is_wp_error($replace)) {
+					$message = sprintf(
+						/* translators: %s is an error string from checklist update. */
+						__('Task and repeatable template were created, but checklist update failed: %s', 'vms'),
+						$replace->get_error_message()
+					);
+					vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
+				}
+
+				$success = __('Task created and saved as a repeatable template. It was added to the selected checklist.', 'vms');
+				vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
+			}
+
+			$success = __('Task created and saved as a repeatable template. Add it to a checklist template to activate automatic generation.', 'vms');
+			vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
+		}
+
+		if (!empty($_POST['open_repeatable_template'])) {
+			$template_url = vms_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
+			vms_tasks_admin_redirect_url_with_notice($template_url, 'success', __('Task created. Template draft loaded from this task. Save it and add it to a checklist to make it repeatable.', 'vms'));
+		}
+
+		$success_message = __('Task created.', 'vms');
+		if ($recurrence_pattern !== 'none') {
+			$success_message .= ' ' . sprintf(
+				/* translators: %s is the recurrence label. */
+				__('Recurring schedule: %s.', 'vms'),
+				vms_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)
+			);
+		}
+		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $success_message);
+	}
+}
+add_action('admin_post_vms_tasks_create_one_off', 'vms_tasks_admin_handle_create_one_off');
+
+if (!function_exists('vms_tasks_admin_enqueue_event_plan_metabox_assets')) {
+	/**
+	 * Enqueue Staff Tasks metabox JS on the Event Plan edit screen.
+	 */
+	function vms_tasks_admin_enqueue_event_plan_metabox_assets(): void
+	{
+		if (!vms_tasks_is_event_plan_edit_screen()) {
+			return;
+		}
+		if (!vms_tasks_current_user_can_manage_all()) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'vms-tasks-event-plan-metabox',
+			VMS_PLUGIN_URL . 'assets/js/vms-tasks-event-plan-metabox.js',
+			array(),
+			defined('VMS_VERSION') ? VMS_VERSION : null,
+			true
+		);
+	}
+}
+add_action('admin_enqueue_scripts', 'vms_tasks_admin_enqueue_event_plan_metabox_assets', 60);
+
+if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
+	/**
+	 * AJAX endpoint for the Event Plan Tasks metabox.
+	 *
+	 * Uses the same rules as admin_post_vms_tasks_create_one_off but returns JSON.
+	 */
+	function vms_tasks_admin_handle_create_one_off_ajax(): void
+	{
+		if (!vms_tasks_current_user_can_manage_all()) {
+			wp_send_json_error(array('message' => __('Insufficient permissions.', 'vms')), 403);
+		}
+		$nonce = isset($_POST['nonce']) ? sanitize_text_field((string) wp_unslash($_POST['nonce'])) : '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_create_one_off')) {
+			wp_send_json_error(array('message' => __('Security check failed.', 'vms')), 403);
+		}
+		if (!vms_tasks_db_ready()) {
+			wp_send_json_error(array('message' => __('Staff Tasks tables are unavailable.', 'vms')), 500);
+		}
+
+		$event_id = absint($_POST['event_id'] ?? 0);
+		if ($event_id <= 0) {
+			wp_send_json_error(array('message' => __('Event ID is required.', 'vms')), 400);
+		}
+		$event = vms_tasks_get_event_context($event_id);
+		if (!is_array($event)) {
+			wp_send_json_error(array('message' => __('Event context is unavailable for task creation.', 'vms')), 400);
+		}
+
+		$title = sanitize_text_field((string) wp_unslash($_POST['title'] ?? ''));
+		if ($title === '') {
+			wp_send_json_error(array('message' => __('Task title is required.', 'vms')), 400);
+		}
+		$instructions = wp_kses_post((string) wp_unslash($_POST['instructions'] ?? ''));
+		$priority = vms_tasks_sanitize_priority((string) wp_unslash($_POST['priority'] ?? 'normal'));
+		$is_required = !empty($_POST['is_required']) ? 1 : 0;
+		$due_raw = (string) wp_unslash($_POST['due_at_local'] ?? '');
+		$due_at_local = vms_tasks_admin_parse_due_input($due_raw);
+		if ($due_raw !== '' && $due_at_local === null) {
+			wp_send_json_error(array('message' => __('Due date is invalid. Use date and time format from the picker.', 'vms')), 400);
+		}
+		$assignment_mode = vms_tasks_sanitize_assignment_mode((string) wp_unslash($_POST['assignment_mode'] ?? 'person'));
+		$role_key = sanitize_key((string) wp_unslash($_POST['role_key'] ?? ''));
+		$assignee_user_id = absint($_POST['assignee_user_id'] ?? 0);
+		$assignment_locked = !empty($_POST['assignment_locked']) && $assignee_user_id > 0;
+		$make_repeatable_now = !empty($_POST['make_repeatable_now']);
+		$repeatable_checklist_id = absint($_POST['repeatable_checklist_id'] ?? 0);
+
+		if ($assignee_user_id > 0) {
+			$assignment_mode = 'person';
+			$role_key = '';
+		}
+		if (in_array($assignment_mode, array('role', 'scheduled_role'), true) && $role_key === '') {
+			wp_send_json_error(array('message' => __('Role key is required for role-based assignment modes.', 'vms')), 400);
+		}
+		if ($assignment_mode === 'person') {
+			$role_key = '';
+		}
+
+		$created = vms_tasks_insert_instance(array(
+			'event_id' => $event_id,
+			'venue_id' => absint($event['venue_id'] ?? 0) ?: null,
+			'event_type' => (string) ($event['event_type'] ?? ''),
+			'title' => $title,
+			'instructions' => $instructions,
+			'priority' => $priority,
+			'is_required' => $is_required,
+			'due_at_local' => $due_at_local,
+			'status' => 'open',
+			'assignment_mode' => $assignment_mode,
+			'role_key' => $role_key,
+			'assignee_user_id' => $assignee_user_id,
+			'assignment_locked' => $assignment_locked ? 1 : 0,
+			'recurrence_pattern' => 'none',
+			'recurrence_every_n_days' => 0,
+		));
+		if (is_wp_error($created)) {
+			wp_send_json_error(array('message' => $created->get_error_message()), 500);
+		}
+
+		$instance_id = absint($created);
+		vms_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
+			'event_id' => $event_id,
+			'title' => $title,
+			'is_required' => $is_required ? 1 : 0,
+			'assignment_mode' => $assignment_mode,
+			'role_key' => $role_key,
+			'assignee_user_id' => $assignee_user_id,
+		)));
+		if ($assignee_user_id > 0 && function_exists('vms_tasks_emit_assignment_notification')) {
+			$latest = vms_tasks_get_instance($instance_id);
+			if (is_array($latest)) {
+				vms_tasks_emit_assignment_notification($latest);
+			}
+		}
+
+		// Repeatable template save is optional from the metabox.
+		if ($make_repeatable_now) {
+			$due_mode = 'none';
+			$due_time_local = '';
+			if (is_string($due_at_local) && preg_match('/^\d{4}-\d{2}-\d{2}\s(\d{2}:\d{2})/', $due_at_local, $matches)) {
+				$due_mode = 'fixed_datetime';
+				$due_time_local = (string) $matches[1];
+			}
+
+			$template_payload = array(
+				'title' => $title,
+				'instructions' => $instructions,
+				'is_active' => 1,
+				'priority' => $priority,
+				'required_default' => $is_required ? 1 : 0,
+				'scope' => 'event',
+				'due_mode' => $due_mode,
+				'due_offset_minutes' => '',
+				'due_time_local' => $due_time_local,
+				'assignment_mode' => $assignment_mode,
+				'role_key' => $role_key,
+				'assignee_user_id' => $assignee_user_id,
+			);
+			$template_id = vms_tasks_upsert_task_template($template_payload, 0);
+			if (is_wp_error($template_id)) {
+				wp_send_json_error(array('message' => $template_id->get_error_message()), 500);
+			}
+
+			$template_id = absint($template_id);
+			if ($repeatable_checklist_id > 0) {
+				$target_checklist = vms_tasks_get_checklist_template($repeatable_checklist_id);
+				if (!is_array($target_checklist)) {
+					wp_send_json_error(array('message' => __('Selected checklist was not found.', 'vms')), 400);
+				}
+
+				$items = vms_tasks_get_checklist_items($repeatable_checklist_id);
+				$sort = count($items) + 1;
+				$items[] = array(
+					'task_template_id' => $template_id,
+					'sort_order' => $sort,
+					'overrides' => array(),
+				);
+				$replace = vms_tasks_replace_checklist_items($repeatable_checklist_id, $items);
+				if (is_wp_error($replace)) {
+					wp_send_json_error(array('message' => $replace->get_error_message()), 500);
+				}
+			}
+		}
+
+		$tasks_url = vms_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id));
+		wp_send_json_success(array(
+			'instance_id' => $instance_id,
+			'tasks_url' => $tasks_url,
+			'message' => __('Task created.', 'vms'),
+		));
+	}
+}
+add_action('wp_ajax_vms_tasks_create_one_off_ajax', 'vms_tasks_admin_handle_create_one_off_ajax');
+
+if (!function_exists('vms_tasks_render_tasks_page')) {
+	function vms_tasks_render_tasks_page(): void
+	{
+		if (!vms_tasks_current_user_can_manage_all()) {
+			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+		}
+		vms_tasks_admin_render_hover_tip_assets();
+
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html__('Tasks', 'vms') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_overview', 'tasks.help') . '</h1>';
+		vms_tasks_admin_render_notices();
+
+		if (!vms_tasks_db_ready()) {
+			echo '<div class="notice notice-error"><p>' . esc_html__('Staff Tasks tables are unavailable. Tasks are disabled until schema setup succeeds.', 'vms') . '</p></div>';
+			echo '</div>';
+			return;
+		}
+
+		$filters = array(
+			'task_instance_id' => isset($_GET['task_instance_id']) ? absint($_GET['task_instance_id']) : 0,
+			'status' => isset($_GET['status']) ? sanitize_key((string) wp_unslash($_GET['status'])) : '',
+			'event_id' => isset($_GET['event_id']) ? absint($_GET['event_id']) : 0,
+			'event_linkage' => isset($_GET['event_linkage']) ? sanitize_key((string) wp_unslash($_GET['event_linkage'])) : '',
+			'assignee_user_id' => isset($_GET['assignee_user_id']) ? absint($_GET['assignee_user_id']) : 0,
+			'role_key' => isset($_GET['role_key']) ? sanitize_key((string) wp_unslash($_GET['role_key'])) : '',
+			'venue_id' => isset($_GET['venue_id']) ? absint($_GET['venue_id']) : 0,
+			'required_only' => !empty($_GET['required_only']) ? 1 : 0,
+			'due_bucket' => isset($_GET['due_bucket']) ? sanitize_key((string) wp_unslash($_GET['due_bucket'])) : '',
+			'limit' => 500,
+		);
+		$now_local = vms_tasks_now_local_mysql();
+		if ($filters['due_bucket'] === 'overdue') {
+			$filters['due_before'] = $now_local;
+			$filters['exclude_status'] = 'superseded';
+		}
+
+		$rows = vms_tasks_get_instances($filters);
+		$users = vms_tasks_admin_get_user_options();
+		$role_options = vms_tasks_admin_get_role_options(true);
+		$checklist_options = vms_tasks_admin_get_checklist_options(true);
+		$checklist_rows = vms_tasks_get_checklist_templates(array('is_active' => 1));
+		$checklist_scope_by_id = array();
+		foreach ($checklist_rows as $checklist_row) {
+			$checklist_id = absint($checklist_row['id'] ?? 0);
+			if ($checklist_id <= 0) {
+				continue;
+			}
+			$checklist_scope_by_id[$checklist_id] = vms_tasks_sanitize_scope((string) ($checklist_row['scope'] ?? 'event'));
+		}
+		$venues = vms_tasks_admin_get_venues();
+		$settings = vms_tasks_get_settings();
+		$event_options = vms_tasks_admin_get_event_options((int) ($settings['horizon_days'] ?? 120));
+		$default_event_id = absint($filters['event_id']);
+		if ($default_event_id > 0 && !isset($event_options[$default_event_id])) {
+			$context = vms_tasks_get_event_context($default_event_id);
+			if (is_array($context)) {
+				$event_label = trim((string) ($context['event_title'] ?? get_the_title($default_event_id)));
+				$date_ymd = trim((string) ($context['date_ymd'] ?? ''));
+				if ($event_label === '') {
+					$event_label = sprintf(__('Event #%d', 'vms'), $default_event_id);
+				}
+				if ($date_ymd !== '') {
+					$event_label .= ' - ' . $date_ymd;
+				}
+				$venue_id = absint($context['venue_id'] ?? 0);
+				if ($venue_id > 0 && isset($venues[$venue_id])) {
+					$event_label .= ' @ ' . $venues[$venue_id];
+				}
+				$event_options[$default_event_id] = $event_label;
+			}
+		}
+
+		echo '<form method="get" style="margin:12px 0;" data-vms-tour="tasks.event-filter">';
+		echo '<input type="hidden" name="page" value="vms-tasks">';
+		if (!empty($filters['task_instance_id'])) {
+			echo '<input type="hidden" name="task_instance_id" value="' . esc_attr((string) absint($filters['task_instance_id'])) . '">';
+		}
+		echo '<label>' . esc_html__('Status', 'vms') . ' <select name="status">';
+		echo '<option value="">' . esc_html__('All', 'vms') . '</option>';
+		foreach (array('open', 'done', 'skipped', 'canceled', 'superseded') as $status) {
+			echo '<option value="' . esc_attr($status) . '" ' . selected($filters['status'], $status, false) . '>' . esc_html(ucfirst($status)) . '</option>';
+		}
+		echo '</select></label> ';
+		echo '<label>' . esc_html__('Due', 'vms') . ' <select name="due_bucket">';
+		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
+		echo '<option value="overdue" ' . selected($filters['due_bucket'], 'overdue', false) . '>' . esc_html__('Overdue', 'vms') . '</option>';
+		echo '</select></label> ';
+		echo '<label>' . esc_html__('Event Linkage', 'vms') . ' <select name="event_linkage">';
+		echo '<option value="">' . esc_html__('All', 'vms') . '</option>';
+		echo '<option value="event" ' . selected($filters['event_linkage'], 'event', false) . '>' . esc_html__('Event-linked', 'vms') . '</option>';
+		echo '<option value="non_event" ' . selected($filters['event_linkage'], 'non_event', false) . '>' . esc_html__('Not linked to an event', 'vms') . '</option>';
+		echo '</select></label> ';
+		echo '<label>' . esc_html__('Venue', 'vms') . ' <select name="venue_id">';
+		echo '<option value="0">' . esc_html__('All', 'vms') . '</option>';
+		foreach ($venues as $venue_id => $venue_name) {
+			echo '<option value="' . esc_attr((string) $venue_id) . '" ' . selected($filters['venue_id'], $venue_id, false) . '>' . esc_html($venue_name) . '</option>';
+		}
+		echo '</select></label> ';
+		echo '<label>' . esc_html__('Assignee', 'vms') . ' <select name="assignee_user_id">';
+		echo '<option value="0">' . esc_html__('All', 'vms') . '</option>';
+		foreach ($users as $uid => $label) {
+			echo '<option value="' . esc_attr((string) $uid) . '" ' . selected($filters['assignee_user_id'], $uid, false) . '>' . esc_html($label) . '</option>';
+		}
+		echo '</select></label> ';
+		echo '<label>' . esc_html__('Role', 'vms') . ' <select name="role_key">';
+		echo '<option value="">' . esc_html__('All', 'vms') . '</option>';
+		foreach ($role_options as $role_key => $role_label) {
+			echo '<option value="' . esc_attr($role_key) . '" ' . selected($filters['role_key'], $role_key, false) . '>' . esc_html($role_label) . '</option>';
+		}
+		echo '</select></label> ';
+		echo '<label><input type="checkbox" name="required_only" value="1" ' . checked($filters['required_only'], 1, false) . '> ' . esc_html__('Required only', 'vms') . '</label> ';
+		echo '<button class="button" type="submit">' . esc_html__('Filter', 'vms') . '</button>';
+		echo '</form>';
+		if (!empty($filters['task_instance_id'])) {
+			$clear_focus_url = vms_tasks_admin_page_url('vms-tasks');
+			echo '<p class="description">';
+			echo esc_html(sprintf(
+				/* translators: %d is a task instance id. */
+				__('Focused on task #%d from a notification link.', 'vms'),
+				absint($filters['task_instance_id'])
+			));
+			echo ' <a href="' . esc_url($clear_focus_url) . '">' . esc_html__('Clear focus', 'vms') . '</a>';
+			echo '</p>';
+		}
+
+		echo '<p class="description">' . esc_html__('Regenerate tasks from each Event Plan using the Tasks metabox action "Regenerate Tasks Now" (nonce-protected).', 'vms') . '</p>';
+		echo '<p style="margin:10px 0;padding:10px;border-left:4px solid #2271b1;background:#f0f6fc;" data-vms-tour="tasks.repeatable">';
+		echo '<strong>' . esc_html__('Repeatable Tasks Setup:', 'vms') . '</strong> ';
+		echo esc_html__('Create role-based task templates, then include them in checklist templates (default, venue, or event type) so events generate tasks automatically.', 'vms') . ' ';
+		echo '<a class="button button-small" href="' . esc_url(vms_tasks_admin_page_url('vms-task-templates')) . '">' . esc_html__('Task Templates', 'vms') . '</a> ';
+		echo '<a class="button button-small" href="' . esc_url(vms_tasks_admin_page_url('vms-checklist-templates')) . '">' . esc_html__('Checklist Templates', 'vms') . '</a>';
+		echo '</p>';
+		echo '<h2 style="margin-top:16px;">' . esc_html__('Add Task', 'vms') . '</h2>';
+			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:8px 0 16px 0;padding:12px;border:1px solid #ccd0d4;background:#fff;" data-vms-tour="tasks.add">';
+			wp_nonce_field('vms_tasks_create_one_off');
+			echo '<input type="hidden" name="action" value="vms_tasks_create_one_off">';
+			echo '<input type="hidden" name="return_page" value="vms-tasks">';
+			echo '<p>';
+			echo '<label for="vms_tasks_one_off_event"><strong>' . esc_html__('Event', 'vms') . '</strong></label><br>';
+			echo '<select id="vms_tasks_one_off_event" name="event_id" style="min-width:320px;max-width:100%;">';
+			echo '<option value="0">' . esc_html__('Not linked to an event', 'vms') . '</option>';
+			foreach ($event_options as $event_id => $event_label) {
+				echo '<option value="' . esc_attr((string) $event_id) . '" ' . selected($default_event_id, $event_id, false) . '>' . esc_html($event_label) . '</option>';
+			}
+			echo '</select>';
+			echo '</p>';
+			echo '<p id="vms_tasks_create_venue_row">';
+			echo '<label for="vms_tasks_one_off_venue"><strong>' . esc_html__('Venue (optional when not linked)', 'vms') . '</strong></label><br>';
+			echo '<select id="vms_tasks_one_off_venue" name="venue_id">';
+			echo '<option value="0">' . esc_html__('None', 'vms') . '</option>';
+			foreach ($venues as $venue_id => $venue_name) {
+				echo '<option value="' . esc_attr((string) $venue_id) . '">' . esc_html($venue_name) . '</option>';
+			}
+			echo '</select>';
+			echo '</p>';
+			echo '<p>';
+			echo '<label for="vms_tasks_one_off_title"><strong>' . esc_html__('Task title', 'vms') . '</strong></label><br>';
+			echo '<input id="vms_tasks_one_off_title" type="text" name="title" required class="regular-text" style="max-width:100%;">';
+			echo '</p>';
+			echo '<p>';
+			echo '<label for="vms_tasks_one_off_instructions"><strong>' . esc_html__('Instructions', 'vms') . '</strong></label><br>';
+			echo '<textarea id="vms_tasks_one_off_instructions" name="instructions" rows="2" class="large-text" placeholder="' . esc_attr__('Optional', 'vms') . '"></textarea>';
+			echo '</p>';
+			echo '<p>';
+			echo '<label for="vms_tasks_one_off_due"><strong>' . esc_html__('Due date/time', 'vms') . '</strong></label><br>';
+			echo '<input id="vms_tasks_one_off_due" type="datetime-local" name="due_at_local"> ';
+			echo '<label for="vms_tasks_one_off_priority"><strong>' . esc_html__('Priority', 'vms') . '</strong></label> ';
+			echo '<select id="vms_tasks_one_off_priority" name="priority">';
+			foreach (array('low', 'normal', 'high') as $priority) {
+				echo '<option value="' . esc_attr($priority) . '"' . selected($priority, 'normal', false) . '>' . esc_html(ucfirst($priority)) . '</option>';
+			}
+			echo '</select>';
+			echo ' <label for="vms_tasks_one_off_recurrence_pattern"><strong>' . esc_html__('Repeats', 'vms') . '</strong></label> ';
+			echo '<select id="vms_tasks_one_off_recurrence_pattern" name="recurrence_pattern">';
+			echo '<option value="none">' . esc_html__('Does not repeat', 'vms') . '</option>';
+			echo '<option value="daily">' . esc_html__('Daily', 'vms') . '</option>';
+			echo '<option value="every_n_days">' . esc_html__('Every N days', 'vms') . '</option>';
+			echo '<option value="weekly">' . esc_html__('Weekly', 'vms') . '</option>';
+			echo '<option value="monthly">' . esc_html__('Monthly', 'vms') . '</option>';
+			echo '<option value="quarterly">' . esc_html__('Quarterly', 'vms') . '</option>';
+			echo '<option value="semi_annual">' . esc_html__('Semi-annually', 'vms') . '</option>';
+			echo '<option value="annual">' . esc_html__('Annually', 'vms') . '</option>';
+			echo '</select> ';
+			echo '<input id="vms_tasks_one_off_recurrence_n_days" type="number" name="recurrence_every_n_days" min="2" max="365" value="7" style="width:90px;display:none;" placeholder="' . esc_attr__('N days', 'vms') . '"> ';
+			echo '<span class="description" id="vms_tasks_one_off_recurrence_note">' . esc_html__('Recurrence applies to tasks not linked to an event.', 'vms') . '</span>';
+			echo '</p>';
+			echo '<p>';
+			echo '<label for="vms_tasks_one_off_assignment_mode"><strong>' . esc_html__('Assignment mode', 'vms') . '</strong></label><br>';
+			echo '<select id="vms_tasks_one_off_assignment_mode" name="assignment_mode">';
+			echo '<option value="person">' . esc_html__('Person', 'vms') . '</option>';
+			echo '<option value="role">' . esc_html__('Role', 'vms') . '</option>';
+			echo '<option value="scheduled_role" id="vms_tasks_one_off_assignment_scheduled">' . esc_html__('Scheduled Role', 'vms') . '</option>';
+			echo '</select> ';
+			echo '<label for="vms_tasks_one_off_role_key"><strong>' . esc_html__('Role', 'vms') . '</strong></label> ';
+			echo '<select id="vms_tasks_one_off_role_key" name="role_key">';
+			echo '<option value="">' . esc_html__('Select role', 'vms') . '</option>';
+			foreach ($role_options as $role_key => $role_label) {
+				echo '<option value="' . esc_attr($role_key) . '">' . esc_html($role_label) . '</option>';
+			}
+			echo '</select>';
+			echo '</p>';
+			echo '<p>';
+			echo '<label for="vms_tasks_one_off_assignee"><strong>' . esc_html__('Assignee', 'vms') . '</strong></label><br>';
+			echo '<select id="vms_tasks_one_off_assignee" name="assignee_user_id">';
+			echo '<option value="0">' . esc_html__('Unassigned', 'vms') . '</option>';
+			foreach ($users as $uid => $label) {
+				echo '<option value="' . esc_attr((string) $uid) . '">' . esc_html($label) . '</option>';
+			}
+			echo '</select> ';
+			echo '<label><input type="checkbox" name="assignment_locked" value="1"> ' . esc_html__('Lock assignment', 'vms') . '</label> ';
+			echo '<label><input type="checkbox" name="is_required" value="1"> ' . esc_html__('Required', 'vms') . '</label> ';
+			echo '<label><input type="checkbox" name="make_repeatable_now" value="1"> ' . esc_html__('Also save as repeatable template now', 'vms') . '</label> ';
+			echo '<label>' . esc_html__('Add to checklist', 'vms') . ' <select id="vms_tasks_one_off_repeatable_checklist" name="repeatable_checklist_id">';
+			echo '<option value="0">' . esc_html__('None (template only)', 'vms') . '</option>';
+			foreach ($checklist_options as $checklist_id => $checklist_label) {
+				$checklist_scope = (string) ($checklist_scope_by_id[absint($checklist_id)] ?? 'event');
+				echo '<option value="' . esc_attr((string) $checklist_id) . '" data-scope="' . esc_attr($checklist_scope) . '">' . esc_html($checklist_label) . '</option>';
+			}
+			echo '</select></label>';
+			echo '</p>';
+			echo '<p><button class="button button-primary" type="submit">' . esc_html__('Create Task', 'vms') . '</button></p>';
+			echo '</form>';
+			echo '<script>
+			(function () {
+				var eventSelect = document.getElementById("vms_tasks_one_off_event");
+				var venueRow = document.getElementById("vms_tasks_create_venue_row");
+				var assignmentMode = document.getElementById("vms_tasks_one_off_assignment_mode");
+				var scheduledOption = document.getElementById("vms_tasks_one_off_assignment_scheduled");
+				var checklistSelect = document.getElementById("vms_tasks_one_off_repeatable_checklist");
+				var recurrencePattern = document.getElementById("vms_tasks_one_off_recurrence_pattern");
+				var recurrenceNDays = document.getElementById("vms_tasks_one_off_recurrence_n_days");
+				var recurrenceNote = document.getElementById("vms_tasks_one_off_recurrence_note");
+				if (!eventSelect || !venueRow || !assignmentMode || !scheduledOption || !checklistSelect || !recurrencePattern || !recurrenceNDays || !recurrenceNote) {
+					return;
+				}
+				var syncContext = function () {
+					var hasEvent = parseInt(eventSelect.value || "0", 10) > 0;
+					var scope = hasEvent ? "event" : "general";
+					venueRow.style.display = hasEvent ? "none" : "";
+					scheduledOption.hidden = !hasEvent;
+					if (!hasEvent && assignmentMode.value === "scheduled_role") {
+						assignmentMode.value = "role";
+					}
+					recurrencePattern.disabled = hasEvent;
+					recurrenceNDays.disabled = hasEvent;
+					recurrenceNote.style.display = hasEvent ? "none" : "";
+					if (hasEvent) {
+						recurrencePattern.value = "none";
+						recurrenceNDays.style.display = "none";
+					}
+					recurrenceNDays.style.display = recurrencePattern.value === "every_n_days" && !hasEvent ? "" : "none";
+					for (var i = 0; i < checklistSelect.options.length; i++) {
+						var option = checklistSelect.options[i];
+						var optionScope = option.getAttribute("data-scope");
+						if (!optionScope) {
+							option.hidden = false;
+							continue;
+						}
+						option.hidden = optionScope !== scope;
+						if (option.hidden && option.selected) {
+							checklistSelect.value = "0";
+						}
+					}
+				};
+				eventSelect.addEventListener("change", syncContext);
+				recurrencePattern.addEventListener("change", syncContext);
+				syncContext();
+			}());
+			</script>';
+
+		echo '<table class="widefat striped" data-vms-tour="tasks.list">';
+		echo '<thead><tr>';
+		echo '<th>' . esc_html__('Task', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Event', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Due', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Required', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Assignment', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Status', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+		echo '</tr></thead><tbody>';
+
+		if (empty($rows)) {
+			echo '<tr><td colspan="7">' . esc_html__('No tasks found for current filters.', 'vms') . '</td></tr>';
+		} else {
+			foreach ($rows as $row) {
+				$instance_id = absint($row['id'] ?? 0);
+				$event_id = absint($row['event_id'] ?? 0);
+				$due_at = (string) ($row['due_at_local'] ?? '');
+				$assignment_mode = vms_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
+				$current_role_key = sanitize_key((string) ($row['role_key'] ?? ''));
+				$assignee_id = absint($row['assignee_user_id'] ?? 0);
+				$assignment_summary = vms_tasks_admin_assignment_summary($row, $users, $role_options);
+				$status = vms_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
+				$clone_url = vms_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
+				$recurrence_pattern = vms_tasks_sanitize_recurrence_pattern((string) ($row['recurrence_pattern'] ?? 'none'));
+				$recurrence_every_n_days = absint($row['recurrence_every_n_days'] ?? 0);
+				$recurrence_label = vms_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days);
+
+				echo '<tr>';
+				echo '<td><strong>' . esc_html((string) ($row['title'] ?? '')) . '</strong><br><span class="description">' . esc_html((string) ($row['priority'] ?? 'normal')) . '</span>';
+				if ($recurrence_pattern !== 'none') {
+					echo '<br><span class="description">' . esc_html($recurrence_label) . '</span>';
+				}
+				echo '</td>';
+				echo '<td>';
+				if ($event_id > 0) {
+					echo '<a href="' . esc_url(get_edit_post_link($event_id)) . '">' . esc_html(get_the_title($event_id)) . '</a> <small>#' . esc_html((string) $event_id) . '</small>';
+				} else {
+					echo '<span class="description">' . esc_html__('Not linked to an event', 'vms') . '</span>';
+				}
+				echo '</td>';
+				echo '<td>' . esc_html($due_at !== '' ? $due_at : __('No due date', 'vms')) . '</td>';
+				echo '<td>' . (!empty($row['is_required']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+				echo '<td>' . esc_html($assignment_summary) . '</td>';
+				echo '<td>' . esc_html(strtoupper($status)) . '</td>';
+				echo '<td>';
+
+				if ($status === 'open') {
+					echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:0 0 6px 0;">';
+					wp_nonce_field('vms_tasks_transition');
+					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
+					echo '<input type="hidden" name="return_page" value="vms-tasks">';
+					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+					echo '<button class="button button-small" name="target_status" value="done" type="submit">' . esc_html__('Done', 'vms') . '</button> ';
+					echo '<button class="button button-small" name="target_status" value="skipped" type="submit">' . esc_html__('Skip', 'vms') . '</button> ';
+					echo '<input type="text" name="reason" placeholder="' . esc_attr__('Reason for skip/cancel', 'vms') . '" style="width:180px;"> ';
+					echo '<button class="button button-small" name="target_status" value="canceled" type="submit">' . esc_html__('Cancel', 'vms') . '</button>';
+					echo '</form>';
+				} else {
+					echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:0;">';
+					wp_nonce_field('vms_tasks_transition');
+					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
+					echo '<input type="hidden" name="return_page" value="vms-tasks">';
+					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+					echo '<input type="text" name="reason" placeholder="' . esc_attr__('Reason for reopen', 'vms') . '" style="width:180px;"> ';
+					echo '<button class="button button-small" name="target_status" value="open" type="submit">' . esc_html__('Reopen', 'vms') . '</button>';
+					echo '</form>';
+				}
+
+				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:6px 0 0;" data-vms-tour="tasks.assignment">';
+				wp_nonce_field('vms_tasks_update_assignment');
+				echo '<input type="hidden" name="action" value="vms_tasks_update_assignment">';
+				echo '<input type="hidden" name="return_page" value="vms-tasks">';
+				echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+				echo '<input type="hidden" name="event_id" value="' . esc_attr((string) $event_id) . '">';
+				echo '<select name="assignment_mode" style="max-width:150px;">';
+				echo '<option value="person" ' . selected($assignment_mode, 'person', false) . '>' . esc_html__('Person', 'vms') . '</option>';
+				echo '<option value="role" ' . selected($assignment_mode, 'role', false) . '>' . esc_html__('Role', 'vms') . '</option>';
+				echo '<option value="scheduled_role" ' . selected($assignment_mode, 'scheduled_role', false) . '>' . esc_html__('Scheduled Role', 'vms') . '</option>';
+				echo '</select> ';
+				echo '<select name="role_key" style="max-width:180px;">';
+				echo '<option value="">' . esc_html__('Select role', 'vms') . '</option>';
+				foreach ($role_options as $role_key => $role_label) {
+					echo '<option value="' . esc_attr($role_key) . '" ' . selected($current_role_key, $role_key, false) . '>' . esc_html($role_label) . '</option>';
+				}
+				if ($current_role_key !== '' && !isset($role_options[$current_role_key])) {
+					echo '<option value="' . esc_attr($current_role_key) . '" selected>' . esc_html($current_role_key) . '</option>';
+				}
+				echo '</select> ';
+				echo '<select name="assignee_user_id" style="max-width:220px;">';
+				echo '<option value="0">' . esc_html__('Unassigned', 'vms') . '</option>';
+				foreach ($users as $uid => $label) {
+					echo '<option value="' . esc_attr((string) $uid) . '" ' . selected($assignee_id, $uid, false) . '>' . esc_html($label) . '</option>';
+				}
+				echo '</select> ';
+				echo '<label><input type="checkbox" name="assignment_locked" value="1" ' . checked(!empty($row['assignment_locked']) && $assignee_id > 0, true, false) . '> ' . esc_html__('Lock', 'vms') . '</label> ';
+				echo '<button class="button button-small" type="submit">' . esc_html__('Save Assignment', 'vms') . '</button>';
+				echo '</form>';
+				echo '<p style="margin:6px 0 0;"><a class="button button-small" href="' . esc_url($clone_url) . '">' . esc_html__('Make Repeatable', 'vms') . '</a></p>';
+
+				echo '</td>';
+				echo '</tr>';
+			}
+		}
+
+		echo '</tbody></table>';
+		echo '</div>';
+	}
+}
+
+if (!function_exists('vms_tasks_render_task_templates_page')) {
+	function vms_tasks_render_task_templates_page(): void
+	{
+		if (!vms_tasks_current_user_can_manage_templates()) {
+			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+		}
+		vms_tasks_admin_render_hover_tip_assets();
+
+		$messages = array();
+		$errors = array();
+		$edit_id = isset($_GET['template_id']) ? absint($_GET['template_id']) : 0;
+		$clone_instance_id = isset($_GET['clone_instance_id']) ? absint($_GET['clone_instance_id']) : 0;
+
+		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tasks_template_action'])) {
+			check_admin_referer('vms_tasks_save_template');
+			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_template_action']));
+			$template_id = absint($_POST['template_id'] ?? 0);
+			if ($action === 'save') {
+				$payload = array(
+					'title' => sanitize_text_field((string) wp_unslash($_POST['title'] ?? '')),
+					'instructions' => wp_kses_post((string) wp_unslash($_POST['instructions'] ?? '')),
+					'is_active' => !empty($_POST['is_active']) ? 1 : 0,
+					'priority' => sanitize_key((string) wp_unslash($_POST['priority'] ?? 'normal')),
+					'required_default' => !empty($_POST['required_default']) ? 1 : 0,
+					'scope' => sanitize_key((string) wp_unslash($_POST['scope'] ?? 'event')),
+					'due_mode' => sanitize_key((string) wp_unslash($_POST['due_mode'] ?? 'none')),
+					'due_offset_minutes' => (string) wp_unslash($_POST['due_offset_minutes'] ?? ''),
+					'due_time_local' => sanitize_text_field((string) wp_unslash($_POST['due_time_local'] ?? '')),
+					'assignment_mode' => sanitize_key((string) wp_unslash($_POST['assignment_mode'] ?? 'role')),
+					'role_key' => sanitize_key((string) wp_unslash($_POST['role_key'] ?? '')),
+					'assignee_user_id' => absint($_POST['assignee_user_id'] ?? 0),
+				);
+				$saved = vms_tasks_upsert_task_template($payload, $template_id);
+				if (is_wp_error($saved)) {
+					$errors[] = $saved->get_error_message();
+				} else {
+					$messages[] = __('Task template saved.', 'vms');
+					$edit_id = absint($saved);
+				}
+			}
+		}
+
+		$current = $edit_id > 0 ? vms_tasks_get_task_template($edit_id) : null;
+		if (!is_array($current) && $clone_instance_id > 0) {
+			$source = vms_tasks_get_instance($clone_instance_id);
+			if (is_array($source)) {
+				$due_at_local = trim((string) ($source['due_at_local'] ?? ''));
+				$due_time_local = '';
+				if ($due_at_local !== '' && preg_match('/^\d{4}-\d{2}-\d{2}\s(\d{2}:\d{2})/', $due_at_local, $matches)) {
+					$due_time_local = (string) $matches[1];
+				}
+				$current = array(
+					'title' => sanitize_text_field((string) ($source['title'] ?? '')),
+					'instructions' => (string) ($source['instructions'] ?? ''),
+					'is_active' => 1,
+					'priority' => vms_tasks_sanitize_priority((string) ($source['priority'] ?? 'normal')),
+					'required_default' => !empty($source['is_required']) ? 1 : 0,
+					'scope' => (absint($source['event_id'] ?? 0) > 0 ? 'event' : 'general'),
+					'due_mode' => ($due_time_local !== '' ? 'fixed_datetime' : 'none'),
+					'due_offset_minutes' => '',
+					'due_time_local' => $due_time_local,
+					'assignment_mode' => vms_tasks_sanitize_assignment_mode((string) ($source['assignment_mode'] ?? 'person')),
+					'role_key' => sanitize_key((string) ($source['role_key'] ?? '')),
+					'assignee_user_id' => absint($source['assignee_user_id'] ?? 0),
+				);
+				$messages[] = __('Template draft loaded from selected task. Save it, then add it to a checklist template to make it repeatable.', 'vms');
+			} else {
+				$errors[] = __('Could not load the source task for template prefill.', 'vms');
+			}
+		}
+		$templates = vms_tasks_get_task_templates();
+		$users = vms_tasks_admin_get_user_options();
+		$role_options = vms_tasks_admin_get_role_options(true);
+
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html__('Task Templates', 'vms') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_templates', 'templates.help') . '</h1>';
+		echo '<p class="description" data-vms-tour="templates.repeatable">' . esc_html__('Repeatable flow: save a task template here, then include it in a checklist template so it auto-generates for matching events.', 'vms') . ' ';
+		echo '<a class="button button-small" href="' . esc_url(vms_tasks_admin_page_url('vms-checklist-templates')) . '">' . esc_html__('Open Checklist Templates', 'vms') . '</a></p>';
+		foreach ($errors as $error) {
+			echo '<div class="notice notice-error"><p>' . esc_html((string) $error) . '</p></div>';
+		}
+		foreach ($messages as $message) {
+			echo '<div class="notice notice-success"><p>' . esc_html((string) $message) . '</p></div>';
+		}
+
+		echo '<form method="post">';
+		wp_nonce_field('vms_tasks_save_template');
+		echo '<input type="hidden" name="vms_tasks_template_action" value="save">';
+		echo '<input type="hidden" name="template_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
+		echo '<table class="form-table" role="presentation"><tbody>';
+		echo '<tr><th><label for="vms_tasks_title">' . esc_html__('Title', 'vms') . '</label></th><td><input id="vms_tasks_title" class="regular-text" name="title" value="' . esc_attr((string) ($current['title'] ?? '')) . '" required></td></tr>';
+		echo '<tr><th><label for="vms_tasks_instructions">' . esc_html__('Instructions', 'vms') . '</label></th><td><textarea id="vms_tasks_instructions" class="large-text" rows="3" name="instructions">' . esc_textarea((string) ($current['instructions'] ?? '')) . '</textarea></td></tr>';
+		echo '<tr><th>' . esc_html__('Enabled', 'vms') . '</th><td><label><input type="checkbox" name="is_active" value="1" ' . checked(!empty($current['is_active']) || !$current, true, false) . '> ' . esc_html__('Active', 'vms') . '</label></td></tr>';
+		echo '<tr><th><label for="vms_tasks_priority">' . esc_html__('Priority', 'vms') . '</label></th><td><select id="vms_tasks_priority" name="priority">';
+		foreach (array('low', 'normal', 'high') as $p) {
+			echo '<option value="' . esc_attr($p) . '" ' . selected((string) ($current['priority'] ?? 'normal'), $p, false) . '>' . esc_html(ucfirst($p)) . '</option>';
+		}
+		echo '</select></td></tr>';
+		echo '<tr><th>' . esc_html__('Required by default', 'vms') . '</th><td><label><input type="checkbox" name="required_default" value="1" ' . checked(!empty($current['required_default']), true, false) . '> ' . esc_html__('Required', 'vms') . '</label></td></tr>';
+		echo '<tr data-vms-tour="templates.scope"><th><label for="vms_tasks_scope">' . esc_html__('Context', 'vms') . '</label></th><td><select id="vms_tasks_scope" name="scope">';
+		echo '<option value="event" ' . selected((string) ($current['scope'] ?? 'event'), 'event', false) . '>' . esc_html__('Event-linked', 'vms') . '</option>';
+		echo '<option value="general" ' . selected((string) ($current['scope'] ?? 'event'), 'general', false) . '>' . esc_html__('Not linked to an event', 'vms') . '</option>';
+		echo '</select></td></tr>';
+		echo '<tr data-vms-tour="templates.due"><th><label for="vms_tasks_due_mode">' . esc_html__('Due mode', 'vms') . '</label></th><td><select id="vms_tasks_due_mode" name="due_mode">';
+		echo '<option value="none" ' . selected((string) ($current['due_mode'] ?? 'none'), 'none', false) . '>' . esc_html__('None', 'vms') . '</option>';
+		echo '<option value="event_offset" ' . selected((string) ($current['due_mode'] ?? 'none'), 'event_offset', false) . '>' . esc_html__('Event offset (minutes)', 'vms') . '</option>';
+		echo '<option value="fixed_datetime" ' . selected((string) ($current['due_mode'] ?? 'none'), 'fixed_datetime', false) . '>' . esc_html__('Fixed time on event date', 'vms') . '</option>';
+		echo '</select> ';
+		echo '<input type="number" name="due_offset_minutes" value="' . esc_attr((string) ($current['due_offset_minutes'] ?? '')) . '" placeholder="' . esc_attr__('Offset minutes', 'vms') . '" style="width:140px;"> ';
+		echo '<input type="text" name="due_time_local" value="' . esc_attr((string) ($current['due_time_local'] ?? '')) . '" placeholder="HH:MM" style="width:90px;">';
+		echo '</td></tr>';
+		echo '<tr data-vms-tour="templates.assignment"><th><label for="vms_tasks_assignment_mode">' . esc_html__('Assignment mode', 'vms') . '</label></th><td><select id="vms_tasks_assignment_mode" name="assignment_mode">';
+		echo '<option value="role" ' . selected((string) ($current['assignment_mode'] ?? 'role'), 'role', false) . '>' . esc_html__('Role', 'vms') . '</option>';
+		echo '<option value="person" ' . selected((string) ($current['assignment_mode'] ?? 'role'), 'person', false) . '>' . esc_html__('Person', 'vms') . '</option>';
+		echo '<option value="scheduled_role" ' . selected((string) ($current['assignment_mode'] ?? 'role'), 'scheduled_role', false) . '>' . esc_html__('Scheduled Role', 'vms') . '</option>';
+		echo '</select> ';
+		$current_role_key = sanitize_key((string) ($current['role_key'] ?? ''));
+		echo '<select name="role_key">';
+		echo '<option value="">' . esc_html__('Select role', 'vms') . '</option>';
+		foreach ($role_options as $role_key => $role_label) {
+			echo '<option value="' . esc_attr($role_key) . '"' . selected($current_role_key, $role_key, false) . '>' . esc_html($role_label) . '</option>';
+		}
+		if ($current_role_key !== '' && !isset($role_options[$current_role_key])) {
+			echo '<option value="' . esc_attr($current_role_key) . '" selected>' . esc_html($current_role_key) . '</option>';
+		}
+		echo '</select> ';
+		echo '<select name="assignee_user_id"><option value="0">' . esc_html__('No specific person', 'vms') . '</option>';
+		foreach ($users as $uid => $label) {
+			echo '<option value="' . esc_attr((string) $uid) . '" ' . selected(absint($current['assignee_user_id'] ?? 0), $uid, false) . '>' . esc_html($label) . '</option>';
+		}
+		echo '</select></td></tr>';
+		echo '</tbody></table>';
+		submit_button(__('Save Task Template', 'vms'));
+		echo '</form>';
+
+		echo '<h2>' . esc_html__('Existing Templates', 'vms') . '</h2>';
+		echo '<table class="widefat striped" data-vms-tour="templates.table"><thead><tr><th>' . esc_html__('Title', 'vms') . '</th><th>' . esc_html__('Context', 'vms') . '</th><th>' . esc_html__('Mode', 'vms') . '</th><th>' . esc_html__('Required', 'vms') . '</th><th>' . esc_html__('Active', 'vms') . '</th></tr></thead><tbody>';
+		if (empty($templates)) {
+			echo '<tr><td colspan="5">' . esc_html__('No task templates yet.', 'vms') . '</td></tr>';
+		} else {
+			foreach ($templates as $template) {
+				$tid = absint($template['id'] ?? 0);
+				echo '<tr>';
+				echo '<td><a href="' . esc_url(vms_tasks_admin_page_url('vms-task-templates', array('template_id' => $tid))) . '">' . esc_html((string) ($template['title'] ?? '')) . '</a></td>';
+				echo '<td>' . esc_html(vms_tasks_admin_scope_label((string) ($template['scope'] ?? 'event'))) . '</td>';
+				echo '<td>' . esc_html((string) ($template['assignment_mode'] ?? 'role')) . '</td>';
+				echo '<td>' . (!empty($template['required_default']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+				echo '<td>' . (!empty($template['is_active']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+				echo '</tr>';
+			}
+		}
+		echo '</tbody></table>';
+		echo '</div>';
+	}
+}
+
+if (!function_exists('vms_tasks_render_checklist_templates_page')) {
+	function vms_tasks_render_checklist_templates_page(): void
+	{
+		if (!vms_tasks_current_user_can_manage_checklists()) {
+			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+		}
+		vms_tasks_admin_render_hover_tip_assets();
+
+		$messages = array();
+		$errors = array();
+		$edit_id = isset($_GET['checklist_id']) ? absint($_GET['checklist_id']) : 0;
+
+		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tasks_checklist_action'])) {
+			check_admin_referer('vms_tasks_save_checklist');
+			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_checklist_action']));
+			$checklist_id = absint($_POST['checklist_id'] ?? 0);
+			if ($action === 'save') {
+				$payload = array(
+					'name' => sanitize_text_field((string) wp_unslash($_POST['name'] ?? '')),
+					'is_active' => !empty($_POST['is_active']) ? 1 : 0,
+					'priority_order' => (int) ($_POST['priority_order'] ?? 100),
+					'scope' => sanitize_key((string) wp_unslash($_POST['scope'] ?? 'event')),
+					'apply_mode' => sanitize_key((string) wp_unslash($_POST['apply_mode'] ?? 'default_all_events')),
+					'venue_id' => absint($_POST['venue_id'] ?? 0),
+					'event_type' => sanitize_key((string) wp_unslash($_POST['event_type'] ?? '')),
+				);
+				$saved = vms_tasks_upsert_checklist_template($payload, $checklist_id);
+				if (is_wp_error($saved)) {
+					$errors[] = $saved->get_error_message();
+				} else {
+					$template_ids = isset($_POST['task_template_ids']) && is_array($_POST['task_template_ids'])
+						? array_map('absint', (array) wp_unslash($_POST['task_template_ids']))
+						: array();
+					$items = array();
+					$sort = 0;
+					foreach ($template_ids as $template_id) {
+						if ($template_id <= 0) {
+							continue;
+						}
+						$sort++;
+						$items[] = array(
+							'task_template_id' => $template_id,
+							'sort_order' => $sort,
+							'overrides' => array(),
+						);
+					}
+					$replace = vms_tasks_replace_checklist_items((int) $saved, $items);
+					if (is_wp_error($replace)) {
+						$errors[] = $replace->get_error_message();
+					} else {
+						$messages[] = __('Checklist template saved.', 'vms');
+						$edit_id = (int) $saved;
+					}
+				}
+			}
+		}
+
+		$current = $edit_id > 0 ? vms_tasks_get_checklist_template($edit_id) : null;
+		$current_items = $edit_id > 0 ? vms_tasks_get_checklist_items($edit_id) : array();
+		$selected_template_ids = array_values(array_unique(array_filter(array_map(static function ($item): int {
+			return absint($item['task_template_id'] ?? 0);
+		}, $current_items))));
+		$current_scope = vms_tasks_sanitize_scope((string) ($current['scope'] ?? 'event'));
+
+		$checklists = vms_tasks_get_checklist_templates();
+		$templates = vms_tasks_get_task_templates(array('is_active' => 1, 'scope' => $current_scope));
+		$venues = vms_tasks_admin_get_venues();
+		$event_type_options = vms_tasks_admin_get_event_type_options();
+
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html__('Checklist Templates', 'vms') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_checklists', 'checklists.help') . '</h1>';
+		foreach ($errors as $error) {
+			echo '<div class="notice notice-error"><p>' . esc_html((string) $error) . '</p></div>';
+		}
+		foreach ($messages as $message) {
+			echo '<div class="notice notice-success"><p>' . esc_html((string) $message) . '</p></div>';
+		}
+
+		echo '<form method="post">';
+		wp_nonce_field('vms_tasks_save_checklist');
+		echo '<input type="hidden" name="vms_tasks_checklist_action" value="save">';
+		echo '<input type="hidden" name="checklist_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
+		echo '<table class="form-table" role="presentation"><tbody>';
+		echo '<tr><th><label for="vms_tasks_checklist_name">' . esc_html__('Name', 'vms') . '</label></th><td><input id="vms_tasks_checklist_name" class="regular-text" name="name" value="' . esc_attr((string) ($current['name'] ?? '')) . '" required></td></tr>';
+		echo '<tr><th>' . esc_html__('Active', 'vms') . '</th><td><label><input type="checkbox" name="is_active" value="1" ' . checked(!empty($current['is_active']) || !$current, true, false) . '> ' . esc_html__('Enabled', 'vms') . '</label></td></tr>';
+		echo '<tr><th><label for="vms_tasks_checklist_priority">' . esc_html__('Priority order', 'vms') . '</label></th><td><input type="number" id="vms_tasks_checklist_priority" name="priority_order" value="' . esc_attr((string) ($current['priority_order'] ?? 100)) . '"></td></tr>';
+		echo '<tr data-vms-tour="checklists.scope"><th><label for="vms_tasks_checklist_scope">' . esc_html__('Context', 'vms') . '</label></th><td><select id="vms_tasks_checklist_scope" name="scope">';
+		echo '<option value="event" ' . selected($current_scope, 'event', false) . '>' . esc_html__('Event-linked', 'vms') . '</option>';
+		echo '<option value="general" ' . selected($current_scope, 'general', false) . '>' . esc_html__('Not linked to an event', 'vms') . '</option>';
+		echo '</select></td></tr>';
+		echo '<tr data-vms-tour="checklists.apply-mode" id="vms_tasks_checklist_apply_mode_row"><th><label for="vms_tasks_apply_mode">' . esc_html__('Apply mode', 'vms') . '</label></th><td><select id="vms_tasks_apply_mode" name="apply_mode">';
+		echo '<option value="default_all_events" ' . selected((string) ($current['apply_mode'] ?? 'default_all_events'), 'default_all_events', false) . '>' . esc_html__('Default for all events', 'vms') . '</option>';
+		echo '<option value="by_venue" ' . selected((string) ($current['apply_mode'] ?? ''), 'by_venue', false) . '>' . esc_html__('By venue', 'vms') . '</option>';
+		echo '<option value="by_event_type" ' . selected((string) ($current['apply_mode'] ?? ''), 'by_event_type', false) . '>' . esc_html__('By event type', 'vms') . '</option>';
+		echo '</select></td></tr>';
+		echo '<tr id="vms_tasks_checklist_venue_row"><th><label for="vms_tasks_checklist_venue">' . esc_html__('Venue', 'vms') . '</label></th><td><select id="vms_tasks_checklist_venue" name="venue_id"><option value="0">' . esc_html__('None', 'vms') . '</option>';
+		foreach ($venues as $venue_id => $venue_name) {
+			echo '<option value="' . esc_attr((string) $venue_id) . '" ' . selected(absint($current['venue_id'] ?? 0), $venue_id, false) . '>' . esc_html($venue_name) . '</option>';
+		}
+		echo '</select></td></tr>';
+		$current_event_type = sanitize_key((string) ($current['event_type'] ?? ''));
+		echo '<tr id="vms_tasks_checklist_event_type_row"><th><label for="vms_tasks_checklist_event_type">' . esc_html__('Event type key', 'vms') . '</label></th><td><select id="vms_tasks_checklist_event_type" name="event_type">';
+		echo '<option value="">' . esc_html__('Select event type', 'vms') . '</option>';
+		foreach ($event_type_options as $type_key => $type_label) {
+			echo '<option value="' . esc_attr($type_key) . '"' . selected($current_event_type, $type_key, false) . '>' . esc_html($type_label) . '</option>';
+		}
+		if ($current_event_type !== '' && !isset($event_type_options[$current_event_type])) {
+			echo '<option value="' . esc_attr($current_event_type) . '" selected>' . esc_html($current_event_type) . '</option>';
+		}
+		echo '</select><p class="description">' . esc_html__('Used only when Apply mode is "By event type".', 'vms') . '</p></td></tr>';
+		echo '<tr data-vms-tour="checklists.tasks"><th>' . esc_html__('Tasks in checklist', 'vms') . '</th><td>';
+		if (empty($templates)) {
+			echo '<p>' . esc_html__('No active task templates found.', 'vms') . '</p>';
+		} else {
+			foreach ($templates as $template) {
+				$tid = absint($template['id'] ?? 0);
+				if ($tid <= 0) {
+					continue;
+				}
+				$checked = in_array($tid, $selected_template_ids, true);
+				echo '<label style="display:block;margin:4px 0;"><input type="checkbox" name="task_template_ids[]" value="' . esc_attr((string) $tid) . '" ' . checked($checked, true, false) . '> ' . esc_html((string) ($template['title'] ?? '')) . '</label>';
+			}
+		}
+		echo '<p class="description" data-vms-tour="checklists.generated">' . esc_html__('Event-linked checklist templates generate task instances when event task generation runs.', 'vms') . '</p>';
+		echo '</td></tr>';
+		echo '</tbody></table>';
+		submit_button(__('Save Checklist Template', 'vms'));
+		echo '</form>';
+		echo '<script>
+		(function () {
+			var scopeSelect = document.getElementById("vms_tasks_checklist_scope");
+			var applyModeRow = document.getElementById("vms_tasks_checklist_apply_mode_row");
+			var venueRow = document.getElementById("vms_tasks_checklist_venue_row");
+			var eventTypeRow = document.getElementById("vms_tasks_checklist_event_type_row");
+			var applyModeSelect = document.getElementById("vms_tasks_apply_mode");
+			if (!scopeSelect || !applyModeRow || !venueRow || !eventTypeRow || !applyModeSelect) {
+				return;
+			}
+			var syncChecklistContext = function () {
+				var isGeneral = scopeSelect.value === "general";
+				applyModeRow.style.display = isGeneral ? "none" : "";
+				venueRow.style.display = isGeneral ? "none" : "";
+				eventTypeRow.style.display = isGeneral ? "none" : "";
+				if (isGeneral) {
+					applyModeSelect.value = "default_all_events";
+				}
+			};
+			scopeSelect.addEventListener("change", syncChecklistContext);
+			syncChecklistContext();
+		}());
+		</script>';
+
+		echo '<h2>' . esc_html__('Existing Checklists', 'vms') . '</h2>';
+		echo '<table class="widefat striped" data-vms-tour="checklists.table"><thead><tr><th>' . esc_html__('Name', 'vms') . '</th><th>' . esc_html__('Context', 'vms') . '</th><th>' . esc_html__('Apply mode', 'vms') . '</th><th>' . esc_html__('Priority', 'vms') . '</th><th>' . esc_html__('Active', 'vms') . '</th></tr></thead><tbody>';
+		if (empty($checklists)) {
+			echo '<tr><td colspan="5">' . esc_html__('No checklist templates yet.', 'vms') . '</td></tr>';
+		} else {
+			foreach ($checklists as $checklist) {
+				$cid = absint($checklist['id'] ?? 0);
+				echo '<tr>';
+				echo '<td><a href="' . esc_url(vms_tasks_admin_page_url('vms-checklist-templates', array('checklist_id' => $cid))) . '">' . esc_html((string) ($checklist['name'] ?? '')) . '</a></td>';
+				echo '<td>' . esc_html(vms_tasks_admin_scope_label((string) ($checklist['scope'] ?? 'event'))) . '</td>';
+				echo '<td>' . esc_html((string) ($checklist['apply_mode'] ?? 'default_all_events')) . '</td>';
+				echo '<td>' . esc_html((string) ($checklist['priority_order'] ?? '100')) . '</td>';
+				echo '<td>' . (!empty($checklist['is_active']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+				echo '</tr>';
+			}
+		}
+		echo '</tbody></table>';
+		echo '</div>';
+	}
+}
+
+if (!function_exists('vms_tasks_render_settings_page')) {
+	function vms_tasks_render_settings_page(): void
+	{
+		if (!vms_tasks_current_user_can_manage_all()) {
+			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+		}
+		vms_tasks_admin_render_hover_tip_assets();
+
+		$saved = false;
+		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tasks_settings_action'])) {
+			check_admin_referer('vms_tasks_save_settings');
+			$input = array(
+				'horizon_days' => absint($_POST['horizon_days'] ?? 60),
+				'regenerate_on_event_date_change' => !empty($_POST['regenerate_on_event_date_change']) ? 1 : 0,
+				'regenerate_on_venue_change' => !empty($_POST['regenerate_on_venue_change']) ? 1 : 0,
+				'regenerate_on_event_type_change' => !empty($_POST['regenerate_on_event_type_change']) ? 1 : 0,
+				'show_dashboard_cards' => !empty($_POST['show_dashboard_cards']) ? 1 : 0,
+				'dashboard_events_lookahead_days' => absint($_POST['dashboard_events_lookahead_days'] ?? 14),
+				'dashboard_max_events' => absint($_POST['dashboard_max_events'] ?? 10),
+				'notify_assignment_alerts' => !empty($_POST['notify_assignment_alerts']) ? 1 : 0,
+				'notify_due_soon_alerts' => !empty($_POST['notify_due_soon_alerts']) ? 1 : 0,
+				'notify_overdue_alerts' => !empty($_POST['notify_overdue_alerts']) ? 1 : 0,
+				'notify_daily_digest' => !empty($_POST['notify_daily_digest']) ? 1 : 0,
+				'notify_digest_time' => sanitize_text_field((string) ($_POST['notify_digest_time'] ?? '08:00')),
+				'notify_digest_window' => sanitize_key((string) ($_POST['notify_digest_window'] ?? 'next3')),
+			);
+			vms_tasks_update_settings($input);
+			$saved = true;
+		}
+
+		$settings = vms_tasks_get_settings();
+
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html__('Task Settings', 'vms') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_settings', 'task-settings.help') . '</h1>';
+		if ($saved) {
+			echo '<div class="notice notice-success"><p>' . esc_html__('Task settings saved.', 'vms') . '</p></div>';
+		}
+
+		echo '<form method="post">';
+		wp_nonce_field('vms_tasks_save_settings');
+		echo '<input type="hidden" name="vms_tasks_settings_action" value="save">';
+		echo '<table class="form-table" role="presentation"><tbody>';
+		echo '<tr data-vms-tour="task-settings.generation"><th><label for="vms_tasks_horizon_days">' . esc_html__('Horizon days', 'vms') . '</label></th><td><input type="number" id="vms_tasks_horizon_days" name="horizon_days" min="1" max="365" value="' . esc_attr((string) ($settings['horizon_days'] ?? 60)) . '"></td></tr>';
+		echo '<tr data-vms-tour="task-settings.generation"><th>' . esc_html__('Regeneration policy', 'vms') . '</th><td>';
+		echo '<label><input type="checkbox" name="regenerate_on_event_date_change" value="1" ' . checked(!empty($settings['regenerate_on_event_date_change']), true, false) . '> ' . esc_html__('Regenerate on event date change', 'vms') . '</label><br>';
+		echo '<label><input type="checkbox" name="regenerate_on_venue_change" value="1" ' . checked(!empty($settings['regenerate_on_venue_change']), true, false) . '> ' . esc_html__('Regenerate on venue change', 'vms') . '</label><br>';
+		echo '<label><input type="checkbox" name="regenerate_on_event_type_change" value="1" ' . checked(!empty($settings['regenerate_on_event_type_change']), true, false) . '> ' . esc_html__('Regenerate on event type change', 'vms') . '</label>';
+		echo '</td></tr>';
+		echo '<tr data-vms-tour="task-settings.notifications"><th>' . esc_html__('Notifications', 'vms') . '</th><td>';
+		echo '<label><input type="checkbox" name="notify_assignment_alerts" value="1" ' . checked(!empty($settings['notify_assignment_alerts']), true, false) . '> ' . esc_html__('Assignment alerts', 'vms') . '</label><br>';
+		echo '<label><input type="checkbox" name="notify_due_soon_alerts" value="1" ' . checked(!empty($settings['notify_due_soon_alerts']), true, false) . '> ' . esc_html__('Due soon alerts', 'vms') . '</label><br>';
+		echo '<label><input type="checkbox" name="notify_overdue_alerts" value="1" ' . checked(!empty($settings['notify_overdue_alerts']), true, false) . '> ' . esc_html__('Overdue alerts', 'vms') . '</label><br>';
+		echo '<label><input type="checkbox" name="notify_daily_digest" value="1" ' . checked(!empty($settings['notify_daily_digest']), true, false) . '> ' . esc_html__('Daily digest', 'vms') . '</label>';
+		echo '</td></tr>';
+		echo '<tr data-vms-tour="task-settings.digest"><th><label for="vms_tasks_notify_digest_time">' . esc_html__('Digest time', 'vms') . '</label></th><td>';
+		echo '<input type="time" id="vms_tasks_notify_digest_time" name="notify_digest_time" value="' . esc_attr((string) ($settings['notify_digest_time'] ?? '08:00')) . '"> ';
+		echo '<label for="vms_tasks_notify_digest_window">' . esc_html__('Window', 'vms') . '</label> ';
+		echo '<select id="vms_tasks_notify_digest_window" name="notify_digest_window">';
+		echo '<option value="today" ' . selected((string) ($settings['notify_digest_window'] ?? 'next3'), 'today', false) . '>' . esc_html__('Today', 'vms') . '</option>';
+		echo '<option value="next3" ' . selected((string) ($settings['notify_digest_window'] ?? 'next3'), 'next3', false) . '>' . esc_html__('Next 3 days', 'vms') . '</option>';
+		echo '<option value="next7" ' . selected((string) ($settings['notify_digest_window'] ?? 'next3'), 'next7', false) . '>' . esc_html__('Next 7 days', 'vms') . '</option>';
+		echo '</select>';
+		echo '</td></tr>';
+		echo '<tr data-vms-tour="task-settings.dashboard"><th>' . esc_html__('Dashboard cards', 'vms') . '</th><td><label><input type="checkbox" name="show_dashboard_cards" value="1" ' . checked(!empty($settings['show_dashboard_cards']), true, false) . '> ' . esc_html__('Show dashboard cards', 'vms') . '</label></td></tr>';
+		echo '<tr data-vms-tour="task-settings.dashboard"><th><label for="vms_tasks_dashboard_lookahead">' . esc_html__('Dashboard lookahead days', 'vms') . '</label></th><td><input type="number" id="vms_tasks_dashboard_lookahead" name="dashboard_events_lookahead_days" min="1" max="90" value="' . esc_attr((string) ($settings['dashboard_events_lookahead_days'] ?? 14)) . '"></td></tr>';
+		echo '<tr data-vms-tour="task-settings.dashboard"><th><label for="vms_tasks_dashboard_max">' . esc_html__('Dashboard max events', 'vms') . '</label></th><td><input type="number" id="vms_tasks_dashboard_max" name="dashboard_max_events" min="1" max="50" value="' . esc_attr((string) ($settings['dashboard_max_events'] ?? 10)) . '"></td></tr>';
+		echo '</tbody></table>';
+		echo '<div data-vms-tour="task-settings.save">';
+		submit_button(__('Save Task Settings', 'vms'));
+		echo '</div>';
+		echo '</form>';
+		echo '</div>';
+	}
+}
+
+if (!function_exists('vms_tasks_render_my_tasks_page')) {
+	function vms_tasks_render_my_tasks_page(): void
+	{
+		if (!vms_tasks_current_user_can_view_self()) {
+			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+		}
+		$user_id = absint(get_current_user_id());
+		$tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'today';
+		if (!in_array($tab, array('overdue', 'today', 'upcoming'), true)) {
+			$tab = 'today';
+		}
+
+		$filters = array(
+			'assignee_user_id' => $user_id,
+			'status' => 'open',
+			'limit' => 300,
+		);
+		$tz = wp_timezone();
+		$today = wp_date('Y-m-d', time(), $tz);
+		$today_start = $today . ' 00:00:00';
+		$today_end = $today . ' 23:59:59';
+		if ($tab === 'overdue') {
+			$filters['due_before'] = vms_tasks_now_local_mysql();
+		} elseif ($tab === 'today') {
+			$filters['due_after'] = $today_start;
+			$filters['due_before'] = $today_end;
+		} elseif ($tab === 'upcoming') {
+			$filters['due_after'] = $today_end;
+		}
+
+		$rows = vms_tasks_get_instances($filters);
+
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html__('My Tasks', 'vms') . '</h1>';
+		vms_tasks_admin_render_notices();
+		echo '<nav class="nav-tab-wrapper">';
+		foreach (array(
+			'overdue' => __('Overdue', 'vms'),
+			'today' => __('Today', 'vms'),
+			'upcoming' => __('Upcoming', 'vms'),
+		) as $slug => $label) {
+			echo '<a class="nav-tab ' . ($tab === $slug ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_tasks_admin_page_url('vms-my-tasks', array('tab' => $slug))) . '">' . esc_html($label) . '</a>';
+		}
+		echo '</nav>';
+
+		if (empty($rows)) {
+			echo '<p>' . esc_html__('No tasks in this tab.', 'vms') . '</p>';
+			echo '</div>';
+			return;
+		}
+
+		echo '<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">';
+		foreach ($rows as $row) {
+			$instance_id = absint($row['id'] ?? 0);
+			$event_id = absint($row['event_id'] ?? 0);
+			$recurrence_pattern = vms_tasks_sanitize_recurrence_pattern((string) ($row['recurrence_pattern'] ?? 'none'));
+			$recurrence_every_n_days = absint($row['recurrence_every_n_days'] ?? 0);
+			echo '<div class="postbox" style="padding:12px;">';
+			echo '<h2 style="margin:0 0 8px;">' . esc_html((string) ($row['title'] ?? '')) . '</h2>';
+			if ($event_id > 0) {
+				echo '<p><strong>' . esc_html__('Event:', 'vms') . '</strong> <a href="' . esc_url(get_edit_post_link($event_id)) . '">' . esc_html(get_the_title($event_id)) . '</a></p>';
+			}
+			echo '<p><strong>' . esc_html__('Due:', 'vms') . '</strong> ' . esc_html((string) ($row['due_at_local'] ?? __('No due date', 'vms'))) . '</p>';
+			if ($recurrence_pattern !== 'none') {
+				echo '<p><strong>' . esc_html__('Repeats:', 'vms') . '</strong> ' . esc_html(vms_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)) . '</p>';
+			}
+			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+			wp_nonce_field('vms_tasks_transition');
+			echo '<input type="hidden" name="action" value="vms_tasks_transition">';
+			echo '<input type="hidden" name="return_page" value="vms-my-tasks">';
+			echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+			echo '<button class="button button-primary button-small" type="submit" name="target_status" value="done">' . esc_html__('Done', 'vms') . '</button> ';
+			echo '<input type="text" name="reason" placeholder="' . esc_attr__('Skip reason', 'vms') . '" style="width:130px;"> ';
+			echo '<button class="button button-small" type="submit" name="target_status" value="skipped">' . esc_html__('Skip', 'vms') . '</button>';
+			echo '</form>';
+			echo '</div>';
+		}
+		echo '</div>';
+		echo '</div>';
+	}
+}
+
+if (!function_exists('vms_tasks_collect_dashboard_red_flags')) {
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	function vms_tasks_collect_dashboard_red_flags(int $lookahead_days, int $max_events): array
+	{
+		$lookahead_days = max(1, min(90, $lookahead_days));
+		$max_events = max(1, min(50, $max_events));
+		$event_ids = array_slice(vms_tasks_collect_upcoming_event_ids($lookahead_days), 0, $max_events);
+		if (empty($event_ids)) {
+			return array();
+		}
+
+		$flags = array();
+		$now_local = vms_tasks_now_local_mysql();
+		$tz = wp_timezone();
+		$soon_cutoff = (new DateTimeImmutable('now', $tz))->modify('+24 hours')->format('Y-m-d H:i:s');
+
+		foreach ($event_ids as $event_id) {
+			$event_id = absint($event_id);
+			if ($event_id <= 0) {
+				continue;
+			}
+
+			$required_open = vms_tasks_count_instances(array(
+				'event_id' => $event_id,
+				'status' => 'open',
+				'required_only' => 1,
+			));
+			if ($required_open <= 0) {
+				continue;
+			}
+
+			$required_overdue = vms_tasks_count_instances(array(
+				'event_id' => $event_id,
+				'status' => 'open',
+				'required_only' => 1,
+				'due_before' => $now_local,
+			));
+			if ($required_overdue > 0) {
+				$flags[] = array(
+					'event_id' => $event_id,
+					'label' => sprintf(
+						/* translators: %d is the count of overdue required tasks. */
+						_n('%d overdue required task', '%d overdue required tasks', $required_overdue, 'vms'),
+						$required_overdue
+					),
+				);
+				continue;
+			}
+
+			$event = vms_tasks_get_event_context($event_id);
+			$event_start_local = is_array($event) ? (string) ($event['event_start_local'] ?? '') : '';
+			if ($event_start_local !== '' && $event_start_local <= $soon_cutoff) {
+				$flags[] = array(
+					'event_id' => $event_id,
+					'label' => sprintf(
+						/* translators: %d is the count of open required tasks. */
+						_n('%d open required task within 24h of event start', '%d open required tasks within 24h of event start', $required_open, 'vms'),
+						$required_open
+					),
+				);
+			}
+		}
+
+		return $flags;
+	}
+}
+
+if (!function_exists('vms_tasks_render_dashboard_cards')) {
+	function vms_tasks_render_dashboard_cards(): void
+	{
+		if (!vms_tasks_current_user_can_manage_all()) {
+			return;
+		}
+
+		$settings = vms_tasks_get_settings();
+		if (empty($settings['show_dashboard_cards'])) {
+			return;
+		}
+
+		echo '<section id="vms-dashboard-staff-tasks" style="margin:16px 0;">';
+		echo '<h2>' . esc_html__('Staff Tasks', 'vms') . '</h2>';
+
+		if (!vms_tasks_db_ready()) {
+			echo '<p class="description">' . esc_html__('Staff Tasks tables are unavailable. Run schema setup before using task dashboards.', 'vms') . '</p>';
+			echo '</section>';
+			return;
+		}
+
+		$tz = wp_timezone();
+		$today = wp_date('Y-m-d', time(), $tz);
+		$today_start = $today . ' 00:00:00';
+		$today_end = $today . ' 23:59:59';
+		$now_local = vms_tasks_now_local_mysql();
+
+		$due_today = vms_tasks_count_instances(array(
+			'status' => 'open',
+			'due_after' => $today_start,
+			'due_before' => $today_end,
+		));
+		$overdue = vms_tasks_count_instances(array(
+			'status' => 'open',
+			'due_before' => $now_local,
+		));
+
+		$lookahead_days = max(1, min(90, absint($settings['dashboard_events_lookahead_days'] ?? 14)));
+		$max_events = max(1, min(50, absint($settings['dashboard_max_events'] ?? 10)));
+		$red_flags = vms_tasks_collect_dashboard_red_flags($lookahead_days, $max_events);
+		$red_flag_count = count($red_flags);
+
+		echo '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;max-width:760px;">';
+
+		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('status' => 'open'))) . '">';
+		echo '<strong style="display:block;">' . esc_html__('Tasks Due Today', 'vms') . '</strong>';
+		echo '<span style="font-size:24px;line-height:1.1;">' . esc_html((string) $due_today) . '</span>';
+		echo '</a>';
+
+		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('status' => 'open', 'due_bucket' => 'overdue'))) . '">';
+		echo '<strong style="display:block;">' . esc_html__('Overdue Tasks', 'vms') . '</strong>';
+		echo '<span style="font-size:24px;line-height:1.1;">' . esc_html((string) $overdue) . '</span>';
+		echo '</a>';
+
+		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('status' => 'open', 'required_only' => 1))) . '">';
+		echo '<strong style="display:block;">' . esc_html__('Upcoming Event Red Flags', 'vms') . '</strong>';
+		echo '<span style="font-size:24px;line-height:1.1;">' . esc_html((string) $red_flag_count) . '</span>';
+		echo '</a>';
+
+		echo '</div>';
+
+		if (!empty($red_flags)) {
+			echo '<ul style="margin:10px 0 0 20px;">';
+			foreach (array_slice($red_flags, 0, 5) as $flag) {
+				$event_id = absint($flag['event_id'] ?? 0);
+				if ($event_id <= 0) {
+					continue;
+				}
+				echo '<li>';
+				echo '<a href="' . esc_url(get_edit_post_link($event_id)) . '">' . esc_html(get_the_title($event_id)) . '</a>';
+				echo ' <small>#' . esc_html((string) $event_id) . ' · ' . esc_html((string) ($flag['label'] ?? '')) . '</small>';
+				echo '</li>';
+			}
+			echo '</ul>';
+		}
+
+		echo '</section>';
+	}
+}
+
+if (!function_exists('vms_tasks_register_event_plan_metabox')) {
+	function vms_tasks_register_event_plan_metabox(): void
+	{
+		add_meta_box(
+			'vms-event-plan-tasks',
+			__('Tasks', 'vms'),
+			'vms_tasks_render_event_plan_metabox',
+			'vms_event_plan',
+			'normal',
+			'default'
+		);
+	}
+}
+add_action('add_meta_boxes_vms_event_plan', 'vms_tasks_register_event_plan_metabox');
+
+if (!function_exists('vms_tasks_admin_event_plan_checklist_reason')) {
+	/**
+	 * @param array<string,mixed> $checklist
+	 * @param array<string,mixed> $event_context
+	 * @param array<int,string> $venues
+	 */
+	function vms_tasks_admin_event_plan_checklist_reason(array $checklist, array $event_context, array $venues): string
+	{
+		$apply_mode = vms_tasks_sanitize_apply_mode((string) ($checklist['apply_mode'] ?? 'default_all_events'));
+		if ($apply_mode === 'by_venue') {
+			$venue_id = absint($checklist['venue_id'] ?? 0);
+			if ($venue_id > 0 && isset($venues[$venue_id])) {
+				return sprintf(
+					/* translators: %s is the venue name. */
+					__('Venue = %s', 'vms'),
+					$venues[$venue_id]
+				);
+			}
+			return sprintf(
+				/* translators: %d is a venue id. */
+				__('Venue ID = %d', 'vms'),
+				$venue_id
+			);
+		}
+		if ($apply_mode === 'by_event_type') {
+			$type_key = sanitize_key((string) ($checklist['event_type'] ?? ''));
+			if ($type_key === '') {
+				$type_key = sanitize_key((string) ($event_context['event_type'] ?? ''));
+			}
+			if ($type_key !== '') {
+				return sprintf(
+					/* translators: %s is the event type key. */
+					__('Event type = %s', 'vms'),
+					$type_key
+				);
+			}
+			return __('Event type match', 'vms');
+		}
+
+		return __('All events', 'vms');
+	}
+}
+
+if (!function_exists('vms_tasks_admin_group_event_plan_rows')) {
+	/**
+	 * @param array<int,array<string,mixed>> $rows
+	 * @param array<string,mixed> $event_context
+	 * @return array<string,array<int,array<string,mixed>>>
+	 */
+	function vms_tasks_admin_group_event_plan_rows(array $rows, array $event_context): array
+	{
+		$groups = array(
+			'pre_event' => array(),
+			'day_of' => array(),
+			'post_event' => array(),
+			'no_due' => array(),
+		);
+
+		$event_start_local = trim((string) ($event_context['event_start_local'] ?? ''));
+		$event_date_ymd = trim((string) ($event_context['date_ymd'] ?? ''));
+		if ($event_date_ymd === '' && $event_start_local !== '') {
+			$event_date_ymd = substr($event_start_local, 0, 10);
+		}
+
+		foreach ($rows as $row) {
+			$due_raw = trim((string) ($row['due_at_local'] ?? ''));
+			if ($due_raw === '') {
+				$groups['no_due'][] = $row;
+				continue;
+			}
+			if ($event_start_local !== '' && $due_raw < $event_start_local) {
+				$groups['pre_event'][] = $row;
+				continue;
+			}
+			if ($event_date_ymd !== '' && strpos($due_raw, $event_date_ymd) === 0) {
+				$groups['day_of'][] = $row;
+				continue;
+			}
+			if ($event_start_local !== '' && $due_raw > $event_start_local) {
+				$groups['post_event'][] = $row;
+				continue;
+			}
+			$groups['day_of'][] = $row;
+		}
+
+		return $groups;
+	}
+}
+
+if (!function_exists('vms_tasks_render_event_plan_tasks_table')) {
+	/**
+	 * @param array<int,array<string,mixed>> $rows
+	 * @param array<int,string> $users
+	 * @param array<string,string> $role_options
+	 */
+	function vms_tasks_render_event_plan_tasks_table(array $rows, array $users, array $role_options, bool $can_manage_all, int $event_id): void
+	{
+		$form_action = admin_url('admin-post.php');
+		echo '<table class="widefat striped"><thead><tr>';
+		echo '<th>' . esc_html__('Task', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Due', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Assignment', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Status', 'vms') . '</th>';
+		if ($can_manage_all) {
+			echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+		}
+		echo '</tr></thead><tbody>';
+
+		foreach ($rows as $row) {
+			$instance_id = absint($row['id'] ?? 0);
+			$status = vms_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
+			$is_one_off = absint($row['task_template_id'] ?? 0) <= 0;
+			$assignment_mode = vms_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
+			$current_role_key = sanitize_key((string) ($row['role_key'] ?? ''));
+			$assignee_id = absint($row['assignee_user_id'] ?? 0);
+			$assignment_summary = vms_tasks_admin_assignment_summary($row, $users, $role_options);
+			$due_raw = (string) ($row['due_at_local'] ?? '');
+			$clone_url = vms_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
+			$done_form_id = '';
+			$remove_form_id = '';
+			$assignment_form_id = '';
+
+			echo '<tr>';
+			echo '<td>' . esc_html((string) ($row['title'] ?? ''));
+			if ($is_one_off) {
+				echo ' <small>(' . esc_html__('Manual', 'vms') . ')</small>';
+			}
+			echo '</td>';
+			echo '<td>' . esc_html($due_raw !== '' ? $due_raw : __('No due date', 'vms')) . '</td>';
+			echo '<td>' . esc_html($assignment_summary) . '</td>';
+			echo '<td>' . esc_html(strtoupper($status)) . '</td>';
+			if ($can_manage_all) {
+				if ($status === 'open') {
+					$done_form_id = vms_tasks_event_plan_metabox_form_id($event_id, 'transition-done', $instance_id);
+					vms_tasks_event_plan_metabox_register_form($done_form_id, 'post', $form_action, array(
+						'_wpnonce' => wp_create_nonce('vms_tasks_transition'),
+						'action' => 'vms_tasks_transition',
+						'return_page' => 'event-plan',
+						'event_id' => $event_id,
+						'instance_id' => $instance_id,
+						'target_status' => 'done',
+					));
+				}
+
+				if ($status === 'open' && $is_one_off) {
+					$remove_form_id = vms_tasks_event_plan_metabox_form_id($event_id, 'transition-canceled', $instance_id);
+					vms_tasks_event_plan_metabox_register_form($remove_form_id, 'post', $form_action, array(
+						'_wpnonce' => wp_create_nonce('vms_tasks_transition'),
+						'action' => 'vms_tasks_transition',
+						'return_page' => 'event-plan',
+						'event_id' => $event_id,
+						'instance_id' => $instance_id,
+						'target_status' => 'canceled',
+						'reason' => __('Removed manual task from Event Plan panel.', 'vms'),
+					));
+				}
+
+				$assignment_form_id = vms_tasks_event_plan_metabox_form_id($event_id, 'assignment', $instance_id);
+				vms_tasks_event_plan_metabox_register_form($assignment_form_id, 'post', $form_action, array(
+					'_wpnonce' => wp_create_nonce('vms_tasks_update_assignment'),
+					'action' => 'vms_tasks_update_assignment',
+					'return_page' => 'event-plan',
+					'event_id' => $event_id,
+					'instance_id' => $instance_id,
+				));
+
+				echo '<td>';
+
+				if ($done_form_id !== '') {
+					echo '<button class="button button-small" type="submit" form="' . esc_attr($done_form_id) . '" style="margin:0 6px 6px 0;">' . esc_html__('Done', 'vms') . '</button>';
+				}
+
+				if ($remove_form_id !== '') {
+					echo '<button class="button button-small" type="submit" form="' . esc_attr($remove_form_id) . '" style="margin:0 6px 6px 0;">' . esc_html__('Remove', 'vms') . '</button>';
+				}
+
+				echo '<select name="assignment_mode" form="' . esc_attr($assignment_form_id) . '">';
+				echo '<option value="person" ' . selected($assignment_mode, 'person', false) . '>' . esc_html__('Person', 'vms') . '</option>';
+				echo '<option value="role" ' . selected($assignment_mode, 'role', false) . '>' . esc_html__('Role', 'vms') . '</option>';
+				echo '<option value="scheduled_role" ' . selected($assignment_mode, 'scheduled_role', false) . '>' . esc_html__('Scheduled Role', 'vms') . '</option>';
+				echo '</select> ';
+				echo '<select name="role_key" form="' . esc_attr($assignment_form_id) . '">';
+				echo '<option value="">' . esc_html__('Select role', 'vms') . '</option>';
+				foreach ($role_options as $role_key => $role_label) {
+					echo '<option value="' . esc_attr($role_key) . '" ' . selected($current_role_key, $role_key, false) . '>' . esc_html($role_label) . '</option>';
+				}
+				if ($current_role_key !== '' && !isset($role_options[$current_role_key])) {
+					echo '<option value="' . esc_attr($current_role_key) . '" selected>' . esc_html($current_role_key) . '</option>';
+				}
+				echo '</select> ';
+				echo '<select name="assignee_user_id" form="' . esc_attr($assignment_form_id) . '">';
+				echo '<option value="0">' . esc_html__('Unassigned', 'vms') . '</option>';
+				foreach ($users as $uid => $label) {
+					echo '<option value="' . esc_attr((string) $uid) . '" ' . selected($assignee_id, $uid, false) . '>' . esc_html($label) . '</option>';
+				}
+				echo '</select> ';
+				echo '<label><input type="checkbox" name="assignment_locked" value="1" form="' . esc_attr($assignment_form_id) . '" ' . checked(!empty($row['assignment_locked']) && $assignee_id > 0, true, false) . '> ' . esc_html__('Lock', 'vms') . '</label> ';
+				echo '<button class="button button-small" type="submit" form="' . esc_attr($assignment_form_id) . '">' . esc_html__('Save Assignment', 'vms') . '</button>';
+				echo '<p style="margin:6px 0 0;"><a class="button button-small" href="' . esc_url($clone_url) . '">' . esc_html__('Make Repeatable', 'vms') . '</a></p>';
+				echo '</td>';
+			}
+			echo '</tr>';
+		}
+		echo '</tbody></table>';
+	}
+}
+
+if (!function_exists('vms_tasks_render_event_plan_metabox')) {
+	function vms_tasks_render_event_plan_metabox(WP_Post $post): void
+	{
+		$event_id = absint($post->ID);
+		if ($event_id <= 0) {
+			echo '<p>' . esc_html__('Event ID is missing.', 'vms') . '</p>';
+			return;
+		}
+
+		if (!vms_tasks_db_ready()) {
+			echo '<p>' . esc_html__('Staff Tasks tables are unavailable. Run schema setup first.', 'vms') . '</p>';
+			return;
+		}
+
+		$rows = vms_tasks_get_instances_for_event($event_id, true);
+		$event_context = vms_tasks_get_event_context($event_id);
+		$users = vms_tasks_admin_get_user_options();
+		$role_options = vms_tasks_admin_get_role_options(true);
+		$checklist_options = vms_tasks_admin_get_checklist_options(true, 'event');
+		$venues = vms_tasks_admin_get_venues();
+		$can_manage_all = vms_tasks_current_user_can_manage_all();
+		$generate_url = wp_nonce_url(
+			admin_url('admin-post.php?action=vms_tasks_generate_event&event_id=' . $event_id . '&return_page=event-plan'),
+			'vms_tasks_generate_event_' . $event_id
+		);
+		vms_tasks_admin_render_notices();
+
+		echo '<p><a class="button" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id))) . '">' . esc_html__('Open Tasks Page For This Event', 'vms') . '</a> ';
+		if ($can_manage_all) {
+			echo '<a class="button button-secondary" href="' . esc_url($generate_url) . '">' . esc_html__('Regenerate Tasks Now', 'vms') . '</a>';
+		}
+		echo '</p>';
+
+		echo '<h4>' . esc_html__('Applied Checklists', 'vms') . '</h4>';
+		if (!is_array($event_context)) {
+			echo '<p class="description">' . esc_html__('Checklist context is unavailable for this event.', 'vms') . '</p>';
+		} else {
+			$applied_checklists = vms_tasks_get_applicable_checklists(
+				absint($event_context['venue_id'] ?? 0),
+				(string) ($event_context['event_type'] ?? '')
+			);
+			if (empty($applied_checklists)) {
+				echo '<p class="description">' . esc_html__('No active checklist templates apply to this event right now.', 'vms') . '</p>';
+			} else {
+				echo '<ul style="margin:6px 0 14px 20px;">';
+				foreach ($applied_checklists as $checklist) {
+					$checklist_id = absint($checklist['id'] ?? 0);
+					if ($checklist_id <= 0) {
+						continue;
+					}
+					$checklist_name = trim((string) ($checklist['name'] ?? ''));
+					if ($checklist_name === '') {
+						$checklist_name = sprintf(
+							/* translators: %d is a checklist id. */
+							__('Checklist #%d', 'vms'),
+							$checklist_id
+						);
+					}
+					$reason = vms_tasks_admin_event_plan_checklist_reason($checklist, $event_context, $venues);
+					echo '<li><strong>' . esc_html($checklist_name) . '</strong> ';
+					echo '<span class="description">' . esc_html(sprintf(
+						/* translators: %s is the checklist applicability reason. */
+						__('applied because: %s', 'vms'),
+						$reason
+					)) . '</span></li>';
+				}
+				echo '</ul>';
+			}
+		}
+
+		if ($can_manage_all) {
+			echo '<h4>' . esc_html__('Add Task', 'vms') . '</h4>';
+			echo '<p class="description">' . esc_html__('Event-linked tasks repeat per event through checklist templates. Time-based recurrence is available from the main Tasks screen for tasks not linked to an event.', 'vms') . '</p>';
+
+			// This metabox renders inside the WordPress post edit form.
+			// Nested <form> tags can corrupt the DOM and block unrelated actions
+			// (including cancellation) via browser required-field validation.
+			// Use an AJAX submit button instead.
+			$nonce = wp_create_nonce('vms_tasks_create_one_off');
+			echo '<div class="vms-tasks-event-plan-addtask" data-vms-event-id="' . esc_attr((string) $event_id) . '" data-vms-nonce="' . esc_attr($nonce) . '">';
+			echo '<p><input type="text" class="widefat" data-vms-tasks-field="title" placeholder="' . esc_attr__('Task title', 'vms') . '"></p>';
+			echo '<p><textarea class="widefat" rows="2" data-vms-tasks-field="instructions" placeholder="' . esc_attr__('Instructions (optional)', 'vms') . '"></textarea></p>';
+			echo '<p>';
+			echo '<label>' . esc_html__('Priority', 'vms') . ' <select data-vms-tasks-field="priority">';
+			foreach (array('low', 'normal', 'high') as $priority) {
+				echo '<option value="' . esc_attr($priority) . '"' . selected($priority, 'normal', false) . '>' . esc_html(ucfirst($priority)) . '</option>';
+			}
+			echo '</select></label> ';
+			echo '<label><input type="checkbox" data-vms-tasks-field="is_required" value="1" checked> ' . esc_html__('Required', 'vms') . '</label> ';
+			echo '<label>' . esc_html__('Due', 'vms') . ' <input type="datetime-local" data-vms-tasks-field="due_at_local"></label>';
+			echo '</p>';
+			echo '<p>';
+			echo '<label>' . esc_html__('Assignment mode', 'vms') . ' <select data-vms-tasks-field="assignment_mode">';
+			echo '<option value="person">' . esc_html__('Person', 'vms') . '</option>';
+			echo '<option value="role">' . esc_html__('Role', 'vms') . '</option>';
+			echo '<option value="scheduled_role">' . esc_html__('Scheduled Role', 'vms') . '</option>';
+			echo '</select></label> ';
+			echo '<label>' . esc_html__('Role', 'vms') . ' <select data-vms-tasks-field="role_key">';
+			echo '<option value="">' . esc_html__('Select role', 'vms') . '</option>';
+			foreach ($role_options as $role_key => $role_label) {
+				echo '<option value="' . esc_attr($role_key) . '">' . esc_html($role_label) . '</option>';
+			}
+			echo '</select></label> ';
+			echo '<label>' . esc_html__('Assignee', 'vms') . ' <select data-vms-tasks-field="assignee_user_id">';
+			echo '<option value="0">' . esc_html__('Unassigned', 'vms') . '</option>';
+			foreach ($users as $uid => $label) {
+				echo '<option value="' . esc_attr((string) $uid) . '">' . esc_html($label) . '</option>';
+			}
+			echo '</select></label> ';
+			echo '<label><input type="checkbox" data-vms-tasks-field="assignment_locked" value="1" checked> ' . esc_html__('Lock assignment', 'vms') . '</label> ';
+			echo '<label><input type="checkbox" data-vms-tasks-field="make_repeatable_now" value="1"> ' . esc_html__('Also save as repeatable template now', 'vms') . '</label> ';
+			echo '<label>' . esc_html__('Add to checklist', 'vms') . ' <select data-vms-tasks-field="repeatable_checklist_id">';
+			echo '<option value="0">' . esc_html__('None (template only)', 'vms') . '</option>';
+			foreach ($checklist_options as $checklist_id => $checklist_label) {
+				echo '<option value="' . esc_attr((string) $checklist_id) . '">' . esc_html($checklist_label) . '</option>';
+			}
+			echo '</select></label>';
+			echo '</p>';
+			echo '<div class="notice inline vms-tasks-event-plan-addtask__notice" role="status" aria-live="polite"></div>';
+			echo '<p class="vms-tasks-event-plan-addtask__actions">';
+			echo '<button class="button button-primary" type="button" data-vms-tasks-action="create-one-off">' . esc_html__('Create Task', 'vms') . '</button> ';
+			echo '<span class="spinner"></span>';
+			echo '</p>';
+			echo '</div>';
+		}
+
+		if (empty($rows)) {
+			echo '<p>' . esc_html__('No task instances exist for this event yet.', 'vms') . '</p>';
+			return;
+		}
+
+		$grouped = is_array($event_context)
+			? vms_tasks_admin_group_event_plan_rows($rows, $event_context)
+			: array(
+				'pre_event' => array(),
+				'day_of' => $rows,
+				'post_event' => array(),
+				'no_due' => array(),
+			);
+
+		$sections = array(
+			'pre_event' => __('Pre-event', 'vms'),
+			'day_of' => __('Day-of', 'vms'),
+			'post_event' => __('Post-event', 'vms'),
+			'no_due' => __('No Due Date', 'vms'),
+		);
+		foreach ($sections as $key => $heading) {
+			$section_rows = isset($grouped[$key]) && is_array($grouped[$key]) ? $grouped[$key] : array();
+			if (empty($section_rows)) {
+				continue;
+			}
+			echo '<h4 style="margin-top:14px;">' . esc_html($heading) . '</h4>';
+			vms_tasks_render_event_plan_tasks_table($section_rows, $users, $role_options, $can_manage_all, $event_id);
+		}
+	}
+}

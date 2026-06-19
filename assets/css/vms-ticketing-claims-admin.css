@@ -1,0 +1,105 @@
+.vms-claims-admin hr {
+	margin: 16px 0;
+}
+
+.vms-claims-admin .vms-claims-meta {
+	color: #666;
+	font-size: 12px;
+}
+
+.vms-claims-admin .vms-claims-empty {
+	color: #666;
+	font-style: italic;
+}
+
+.vms-claims-admin .vms-claims-search-table th,
+.vms-claims-admin .vms-claims-search-table td,
+.vms-claims-admin .vms-claims-grants-table th,
+.vms-claims-admin .vms-claims-grants-table td {
+	vertical-align: top;
+}
+
+.vms-claims-admin .vms-claims-grant-form .form-table th {
+	width: 220px;
+}
+
+.vms-claims-admin .vms-claims-note-form {
+	display: grid;
+	gap: 6px;
+}
+
+.vms-claims-admin .vms-claims-note-form .regular-text {
+	max-width: 100%;
+}
+
+.vms-claims-admin .vms-claims-inline-filters,
+.vms-claims-global-filters {
+	margin: 10px 0 14px;
+}
+
+.vms-claims-admin .vms-claims-inline-filters label,
+.vms-claims-global-filters label {
+	display: inline-block;
+	margin-right: 10px;
+	margin-bottom: 8px;
+}
+
+.vms-claims-admin .vms-claims-action-form {
+	margin: 0;
+}
+
+.vms-claims-admin .vms-claims-status {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 12px;
+	line-height: 1.7;
+	border: 1px solid transparent;
+}
+
+.vms-claims-admin .vms-claims-status-active {
+	background: #edf9f1;
+	border-color: #8ac9a0;
+	color: #155724;
+}
+
+.vms-claims-admin .vms-claims-status-revoked,
+.vms-claims-admin .vms-claims-status-expired {
+	background: #fff4e5;
+	border-color: #f0c36d;
+	color: #7a4d00;
+}
+
+.vms-claims-admin .vms-claims-status-success,
+.vms-claims-admin .vms-claims-status-reserved {
+	background: #edf9f1;
+	border-color: #8ac9a0;
+	color: #155724;
+}
+
+.vms-claims-admin .vms-claims-status-used {
+	background: #eef2f7;
+	border-color: #b6c3d6;
+	color: #28384d;
+}
+
+.vms-claims-admin .vms-claims-status-failure,
+.vms-claims-admin .vms-claims-status-released,
+.vms-claims-admin .vms-claims-status-consumed {
+	background: #f8f0f0;
+	border-color: #d1a2a2;
+	color: #7a2f2f;
+}
+
+.vms-claims-reservations-table td,
+.vms-claims-logs-table td {
+	vertical-align: top;
+}
+
+.vms-claims-inspector-card {
+	margin: 10px 0 14px;
+	padding: 10px 12px;
+	border: 1px solid #dcdcde;
+	border-left: 4px solid #2271b1;
+	background: #fff;
+}

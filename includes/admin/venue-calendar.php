@@ -8,23 +8,17 @@ if (!defined('ABSPATH')) exit;
  * Menu: VMS → Calendar
  */
 
-add_action('admin_menu', function () {
-    add_submenu_page(
-        'vms-season-board',              // parent slug (your VMS menu)
-        __('Venue Calendar', 'vms'),
-        __('Calendar', 'vms'),
-        'manage_options',
-        'vms-venue-calendar',
-        'vms_render_admin_venue_calendar_page'
-    );
-});
-
-add_action('admin_enqueue_scripts', function ($hook) {
-    if ($hook !== 'vms-season-board_page_vms-venue-calendar') return;
-
-    // Minimal CSS (inline is fine for now)
-    wp_add_inline_style('wp-admin', vms_calendar_admin_css());
-});
+// function vms_calendar_register_admin_menu(string $parent_slug, string $capability): void
+// {
+// 	add_submenu_page(
+// 		$parent_slug,
+// 		__('Venue Calendar', 'vms'),
+// 		__('Calendar', 'vms'),
+// 		$capability,
+// 		'vms-venue-calendar',
+// 		'vms_render_admin_venue_calendar_page'
+// 	);
+// }
 
 function vms_render_admin_venue_calendar_page(): void
 {
@@ -48,15 +42,15 @@ function vms_render_admin_venue_calendar_page(): void
 
     $nav = vms_calendar_prev_next($ym);
 
-    echo '<div class="wrap">';
+    echo '<div class="wrap vms-venue-calendar">';
     echo '<h1>Venue Calendar</h1>';
 
     // Filter row
-    echo '<form method="get" style="margin: 12px 0 14px;">';
+    echo '<form method="get" class="vms-cal-filters">';
     echo '<input type="hidden" name="page" value="vms-venue-calendar" />';
 
-    echo '<label style="font-weight:600;margin-right:8px;">Venue</label>';
-    echo '<select name="venue_id" style="min-width:320px;">';
+    echo '<label class="vms-cal-filter-label">Venue</label>';
+    echo '<select name="venue_id" class="vms-cal-filter-venue">';
     foreach ($venues as $v) {
         printf(
             '<option value="%d"%s>%s</option>',
@@ -67,8 +61,8 @@ function vms_render_admin_venue_calendar_page(): void
     }
     echo '</select>';
 
-    echo '<label style="font-weight:600;margin:0 8px 0 16px;">Month</label>';
-    echo '<input type="month" name="ym" value="' . esc_attr($month['ym']) . '" /> ';
+    echo '<label class="vms-cal-filter-label vms-cal-filter-label-month">Month</label>';
+    echo '<input type="month" name="ym" class="vms-cal-filter-month" value="' . esc_attr($month['ym']) . '" /> ';
 
     echo '<button class="button button-primary">Go</button>';
     echo '</form>';
@@ -121,9 +115,12 @@ function vms_render_month_grid(array $month, array $days, bool $admin_mode = fal
                 $badge = vms_cal_status_badge((string)$ev['status']);
 
                 $inner = $img . '<div class="vms-cal-card-text"><div class="vms-cal-name">' . $name . '</div><div class="vms-cal-meta">' . $time . ' ' . $badge . '</div></div>';
+                $view_url = isset($ev['view_url']) ? esc_url((string) $ev['view_url']) : '';
 
                 if ($admin_mode && !empty($ev['edit_url'])) {
                     $out .= '<a class="vms-cal-card" href="' . esc_url($ev['edit_url']) . '">' . $inner . '</a>';
+                } elseif (!$admin_mode && $view_url !== '') {
+                    $out .= '<a class="vms-cal-card" href="' . $view_url . '">' . $inner . '</a>';
                 } else {
                     $out .= '<div class="vms-cal-card">' . $inner . '</div>';
                 }
@@ -147,28 +144,4 @@ function vms_cal_status_badge(string $status): string
     if ($status === 'published') $class = 'vms-badge vms-badge-green';
 
     return '<span class="' . esc_attr($class) . '">' . esc_html($label) . '</span>';
-}
-
-function vms_calendar_admin_css(): string
-{
-    return "
-    .vms-cal-nav{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:10px 0 12px;}
-    .vms-cal-title{font-weight:800;font-size:16px;}
-    .vms-cal-grid{max-width:1100px;display:grid;grid-template-columns:repeat(7,1fr);gap:10px;}
-    .vms-cal-head{font-weight:700;color:#374151;padding:4px 2px;}
-    .vms-cal-cell{min-height:130px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 10px 12px;position:relative;}
-    .vms-cal-empty{background:transparent;border:1px dashed #e5e7eb;}
-    .vms-cal-daynum{position:absolute;top:8px;right:10px;font-weight:800;color:#9ca3af;}
-    .vms-cal-card{display:flex;gap:10px;align-items:center;text-decoration:none;border:1px solid #f1f5f9;background:#f8fafc;border-radius:12px;padding:8px 10px;margin-top:10px;}
-    .vms-cal-card:hover{border-color:#cbd5e1;background:#fff;}
-    .vms-cal-avatar{width:34px;height:34px;border-radius:10px;object-fit:cover;flex:0 0 auto;}
-    .vms-cal-avatar-fallback{background:#e5e7eb;}
-    .vms-cal-card-text{min-width:0;flex:1;}
-    .vms-cal-name{font-weight:800;color:#111827;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .vms-cal-meta{margin-top:2px;font-size:12px;color:#6b7280;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-    .vms-badge{font-size:10px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:2px 8px;border:1px solid transparent;}
-    .vms-badge-grey{background:#f3f4f6;color:#374151;border-color:#e5e7eb;}
-    .vms-badge-amber{background:#fffbeb;color:#92400e;border-color:#fed7aa;}
-    .vms-badge-green{background:#ecfdf5;color:#065f46;border-color:#a7f3d0;}
-    ";
 }

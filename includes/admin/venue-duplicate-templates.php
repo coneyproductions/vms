@@ -145,9 +145,9 @@ function vms_add_duplicate_submitbox_button(): void
         'vms_duplicate_venue_' . (int)$post->ID
     );
 
-    echo '<div class="misc-pub-section" style="padding-top:10px;">';
+    echo '<div class="misc-pub-section vms-venue-dup-submit-section">';
     echo '<a class="button" href="' . esc_url($url) . '">Duplicate Venue</a>';
-    echo '<p class="description" style="margin:6px 0 0;">Creates a draft copy of this venue you can tweak and publish.</p>';
+    echo '<p class="description vms-venue-dup-submit-help">Creates a draft copy of this venue you can tweak and publish.</p>';
     echo '</div>';
 }
 
@@ -266,11 +266,11 @@ function vms_render_template_metabox(WP_Post $post): void
 
     $is_template = get_post_meta($post->ID, VMS_VENUE_TEMPLATE_META_KEY, true) === '1';
 
-    echo '<p style="margin:0 0 10px;" class="description">';
+    echo '<p class="description vms-venue-template-help">';
     echo 'Templates are used as starting points when creating new venues.';
     echo '</p>';
 
-    echo '<label style="display:flex;gap:10px;align-items:flex-start;">';
+    echo '<label class="vms-venue-template-toggle">';
     echo '<input type="checkbox" name="vms_is_template" value="1" ' . checked($is_template, true, false) . ' />';
     echo '<span><strong>Use this venue as a template</strong><br><span class="description">Exclude from normal venue pickers.</span></span>';
     echo '</label>';
@@ -329,24 +329,24 @@ function vms_render_create_from_template_panel(WP_Post $post): void
 
     $action_url = admin_url('admin-post.php');
 
-    echo '<div class="notice notice-info" style="padding:14px 16px;">';
-    echo '<div style="display:flex;gap:12px;align-items:flex-start;">';
-    echo '<div style="font-size:22px;line-height:1;">🧩</div>';
-    echo '<div style="flex:1;">';
-    echo '<p style="margin:0 0 8px;"><strong>Create Venue from Template</strong></p>';
-    echo '<p class="description" style="margin:0 0 10px;">Pick a template to copy its settings into a new draft venue.</p>';
+    echo '<div class="notice notice-info vms-venue-template-create">';
+    echo '<div class="vms-venue-template-create-inner">';
+    echo '<div class="vms-venue-template-create-icon">🧩</div>';
+    echo '<div class="vms-venue-template-create-body">';
+    echo '<p class="vms-venue-template-create-title"><strong>Create Venue from Template</strong></p>';
+    echo '<p class="description vms-venue-template-create-desc">Pick a template to copy its settings into a new draft venue.</p>';
 
     echo '<form method="post" action="' . esc_url($action_url) . '">';
     echo '<input type="hidden" name="action" value="vms_create_venue_from_template" />';
     wp_nonce_field('vms_create_venue_from_template', 'vms_create_venue_from_template_nonce');
 
     echo '<label><strong>Template:</strong> ';
-    echo '<select name="vms_template_id" style="min-width:320px;">';
+    echo '<select name="vms_template_id" class="vms-venue-template-select">';
     foreach ($templates as $t) {
         echo '<option value="' . esc_attr($t->ID) . '">' . esc_html($t->post_title) . '</option>';
     }
     echo '</select></label> ';
-    echo '<button type="submit" class="button button-primary" style="margin-left:8px;">Create from Template</button>';
+    echo '<button type="submit" class="button button-primary vms-venue-template-create-btn">Create from Template</button>';
     echo '</form>';
 
     echo '</div></div>';

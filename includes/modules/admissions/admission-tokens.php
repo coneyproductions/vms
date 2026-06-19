@@ -1,0 +1,446 @@
+<?php
+defined('ABSPATH') || exit;
+
+if (!function_exists('vms_admission_generate_public_token')) {
+	function vms_admission_generate_public_token(): string
+	{
+		try {
+			return strtolower(bin2hex(random_bytes(20)));
+		} catch (Exception $e) {
+			return strtolower(wp_generate_password(40, false, false));
+		}
+	}
+}
+
+if (!function_exists('vms_admission_token_hash')) {
+	function vms_admission_token_hash(string $token): string
+	{
+		return hash_hmac('sha256', trim($token), wp_salt('auth'));
+	}
+}
+
+if (!function_exists('vms_admission_scan_url')) {
+	function vms_admission_scan_url(string $token): string
+	{
+		$token = trim($token);
+		if ($token === '') {
+			return '';
+		}
+
+		// Query-var URLs work immediately after plugin updates without requiring
+		// a Permalinks save / rewrite flush.
+		return add_query_arg('vms_admission_scan_token', rawurlencode($token), home_url('/'));
+	}
+}
+
+if (!function_exists('vms_admission_public_pass_url')) {
+	function vms_admission_public_pass_url(string $token, bool $printable = true): string
+	{
+		$url = vms_admission_scan_url($token);
+		if ($url === '') {
+			return '';
+		}
+		return $printable ? add_query_arg('vms_print_pass', '1', $url) : $url;
+	}
+}
+
+
+
+if (!function_exists('vms_admission_group_entries')) {
+	function vms_admission_group_entries(array $row): array
+	{
+		global $wpdb;
+		$table = vms_admission_table_entries();
+		$entry_id = (int) ($row['id'] ?? 0);
+		$claim_id = (int) ($row['pass_claim_id'] ?? 0);
+		if ($claim_id <= 0) {
+			return $entry_id > 0 ? array($row) : array();
+		}
+		$rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE pass_claim_id = %d AND status <> 'canceled' ORDER BY id ASC", $claim_id), ARRAY_A);
+		if (!is_array($rows) || empty($rows)) {
+			return $entry_id > 0 ? array($row) : array();
+		}
+		return $rows;
+	}
+}
+
+if (!function_exists('vms_admission_format_public_date')) {
+	function vms_admission_format_public_date(string $date): string
+	{
+		$date = trim($date);
+		if ($date === '') {
+			return '';
+		}
+		try {
+			$dt = new DateTimeImmutable($date, wp_timezone());
+			return function_exists('wp_date') ? wp_date('F j, Y', $dt->getTimestamp(), wp_timezone()) : $dt->format('F j, Y');
+		} catch (Exception $e) {
+			return $date;
+		}
+	}
+}
+
+if (!function_exists('vms_admission_qr_image_url')) {
+	function vms_admission_qr_image_url(string $data): string
+	{
+		$data = trim($data);
+		if ($data === '') {
+			return '';
+		}
+		return 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=16&data=' . rawurlencode($data);
+	}
+}
+
+if (!function_exists('vms_admission_extract_scan_token')) {
+	function vms_admission_extract_scan_token(string $raw): string
+	{
+		$raw = trim($raw);
+		if ($raw === '') {
+			return '';
+		}
+		if (preg_match('~/(?:admission|admissions)/scan/([^/?#]+)~i', $raw, $m)) {
+			return sanitize_text_field(rawurldecode((string) $m[1]));
+		}
+		$parts = wp_parse_url($raw);
+		if (is_array($parts) && !empty($parts['query'])) {
+			parse_str((string) $parts['query'], $query);
+			if (!empty($query['vms_admission_scan_token'])) {
+				return sanitize_text_field(rawurldecode((string) $query['vms_admission_scan_token']));
+			}
+		}
+		if (stripos($raw, 'vms-admission:') === 0) {
+			return sanitize_text_field(substr($raw, strlen('vms-admission:')));
+		}
+		if (preg_match('/^[a-f0-9]{32,80}$/i', $raw)) {
+			return strtolower($raw);
+		}
+		return '';
+	}
+}
+
+if (!function_exists('vms_admission_ensure_entry_token')) {
+	function vms_admission_ensure_entry_token(int $entry_id): string
+	{
+		if ($entry_id <= 0) {
+			return '';
+		}
+		global $wpdb;
+		$table = vms_admission_table_entries();
+		$row = $wpdb->get_row($wpdb->prepare("SELECT id, admission_token FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		if (!is_array($row)) {
+			return '';
+		}
+		$existing = trim((string) ($row['admission_token'] ?? ''));
+		if ($existing !== '') {
+			return $existing;
+		}
+		for ($i = 0; $i < 5; $i += 1) {
+			$token = vms_admission_generate_public_token();
+			$updated = $wpdb->update(
+				$table,
+				array(
+					'admission_token' => $token,
+					'admission_token_hash' => vms_admission_token_hash($token),
+					'updated_at' => vms_admission_now_mysql(),
+				),
+				array('id' => $entry_id, 'admission_token' => ''),
+				array('%s', '%s', '%s'),
+				array('%d', '%s')
+			);
+			if ($updated !== false) {
+				$fresh = (string) $wpdb->get_var($wpdb->prepare("SELECT admission_token FROM {$table} WHERE id = %d", $entry_id));
+				if ($fresh !== '') {
+					return $fresh;
+				}
+			}
+		}
+		return '';
+	}
+}
+
+
+if (!function_exists('vms_admission_event_comp_headcount')) {
+	function vms_admission_event_comp_headcount(int $event_plan_id): int
+	{
+		$event_plan_id = absint($event_plan_id);
+		if ($event_plan_id <= 0 || !function_exists('vms_admission_table_entries')) {
+			return 0;
+		}
+		global $wpdb;
+		$table = vms_admission_table_entries();
+		return max(0, (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(party_size), 0) FROM {$table} WHERE event_plan_id = %d AND status <> 'canceled'", $event_plan_id)));
+	}
+}
+
+if (!function_exists('vms_admission_email_last_result')) {
+	function vms_admission_email_last_result(): array
+	{
+		$result = $GLOBALS['vms_admission_last_email_result'] ?? array();
+		return is_array($result) ? $result : array();
+	}
+}
+
+if (!function_exists('vms_admission_email_set_result')) {
+	function vms_admission_email_set_result(array $result): void
+	{
+		$GLOBALS['vms_admission_last_email_result'] = $result;
+	}
+}
+
+if (!function_exists('vms_admission_email_pass_result')) {
+	function vms_admission_email_pass_result(int $entry_id, string $context = 'guest_pass'): array
+	{
+		global $wpdb;
+		$table = vms_admission_table_entries();
+		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		if (!is_array($row)) {
+			$result = array('sent' => false, 'code' => 'entry_not_found', 'message' => __('Admission entry was not found.', 'vms'));
+			vms_admission_email_set_result($result);
+			return $result;
+		}
+		$email = sanitize_email((string) ($row['guest_email'] ?? ''));
+		if ($email === '') {
+			$result = array('sent' => false, 'code' => 'missing_email', 'message' => __('No email address is saved on this pass.', 'vms'));
+			vms_admission_email_set_result($result);
+			return $result;
+		}
+		$group_rows = function_exists('vms_admission_group_entries') ? vms_admission_group_entries($row) : array($row);
+		$event_plan_id = (int) ($row['event_plan_id'] ?? 0);
+		$title = $event_plan_id > 0 ? (string) get_the_title($event_plan_id) : __('Event', 'vms');
+		$date = $event_plan_id > 0 ? (string) get_post_meta($event_plan_id, '_vms_event_date', true) : '';
+		$venue_id = (int) ($row['venue_id'] ?? 0);
+		$venue = $venue_id > 0 ? (string) get_the_title($venue_id) : '';
+		$primary_token = vms_admission_ensure_entry_token($entry_id);
+		if ($primary_token === '') {
+			$result = array('sent' => false, 'code' => 'missing_token', 'message' => __('Could not generate a pass token for this admission.', 'vms'));
+			vms_admission_email_set_result($result);
+			return $result;
+		}
+		$url = vms_admission_public_pass_url($primary_token, true);
+		$subject = sprintf(__('Your admission pass for %s', 'vms'), $title);
+		$count = count($group_rows);
+		$body = '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#162033;max-width:720px;margin:0 auto;">';
+		$body .= '<h1 style="font-size:24px;margin:0 0 12px;">' . esc_html__('Your admission pass is confirmed', 'vms') . '</h1>';
+		$body .= '<p>' . esc_html($count > 1 ? __('Each person has their own QR code. Show the matching QR code at the gate for entry.', 'vms') : __('Show this QR code at the gate for entry.', 'vms')) . '</p>';
+		$body .= '<p><strong>' . esc_html__('Name:', 'vms') . '</strong> ' . esc_html((string) ($row['guest_name'] ?? '')) . '</p>';
+		$body .= '<p><strong>' . esc_html__('Event:', 'vms') . '</strong> ' . esc_html($title) . '</p>';
+		if ($date !== '') {
+			$body .= '<p><strong>' . esc_html__('Date:', 'vms') . '</strong> ' . esc_html(vms_admission_format_public_date($date)) . '</p>';
+		}
+		if ($venue !== '') {
+			$body .= '<p><strong>' . esc_html__('Venue:', 'vms') . '</strong> ' . esc_html($venue) . '</p>';
+		}
+		$body .= '<div style="display:flex;flex-wrap:wrap;gap:14px;margin:18px 0;">';
+		$slot = 1;
+		foreach ($group_rows as $group_row) {
+			$group_entry_id = (int) ($group_row['id'] ?? 0);
+			$group_token = $group_entry_id > 0 ? vms_admission_ensure_entry_token($group_entry_id) : '';
+			if ($group_token === '') {
+				continue;
+			}
+			$qr_url = vms_admission_qr_image_url('vms-admission:' . $group_token);
+			$label = $count > 1 ? sprintf(__('Pass %1$d of %2$d', 'vms'), $slot, $count) : __('Gate QR code', 'vms');
+			$body .= '<div style="border:1px solid #d9e2ef;border-radius:12px;padding:12px;background:#fff;text-align:center;min-width:190px;">';
+			$body .= '<strong style="display:block;margin-bottom:8px;">' . esc_html($label) . '</strong>';
+			if ($qr_url !== '') {
+				$body .= '<img src="' . esc_url($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'vms') . '" width="170" height="170" style="display:block;max-width:170px;height:auto;margin:0 auto;">';
+			}
+			$body .= '<span style="display:block;font-size:12px;color:#526174;margin-top:6px;">' . esc_html('GL-' . $group_entry_id) . '</span>';
+			$body .= '</div>';
+			$slot++;
+		}
+		$body .= '</div>';
+		$body .= '<p><a href="' . esc_url($url) . '" style="display:inline-block;background:#145dcc;color:#fff;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700;">' . esc_html__('View / Print Passes', 'vms') . '</a></p>';
+		$body .= '<p style="font-size:13px;color:#526174;">' . esc_html__('If a QR code will not scan, door staff can search your name or phone number.', 'vms') . '</p>';
+		$body .= '</div>';
+		$from_email = sanitize_email((string) get_option('admin_email'));
+		$site_name = wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES);
+		$headers = array('Content-Type: text/html; charset=UTF-8');
+		if ($from_email !== '') {
+			$headers[] = 'From: ' . $site_name . ' <' . $from_email . '>';
+			$headers[] = 'Reply-To: ' . $from_email;
+		}
+		$mail_error = '';
+		$mail_capture = static function ($wp_error) use (&$mail_error): void {
+			if (is_wp_error($wp_error)) {
+				$mail_error = $wp_error->get_error_message();
+			}
+		};
+		add_action('wp_mail_failed', $mail_capture, 10, 1);
+		$sent = wp_mail($email, $subject, $body, $headers);
+		remove_action('wp_mail_failed', $mail_capture, 10);
+		$now = vms_admission_now_mysql();
+		$result = array(
+			'sent' => (bool) $sent,
+			'code' => $sent ? 'sent' : 'wp_mail_failed',
+			'message' => $sent ? __('Pass email sent.', 'vms') : ($mail_error !== '' ? $mail_error : __('WordPress did not accept the pass email for delivery.', 'vms')),
+			'email' => $email,
+			'pass_count' => $count,
+			'checked_at' => $now,
+			'context' => $context,
+		);
+		foreach ($group_rows as $group_row) {
+			$gid = (int) ($group_row['id'] ?? 0);
+			if ($gid > 0) {
+				$current_meta = (string) ($group_row['claim_meta'] ?? '');
+				$meta = array();
+				if ($current_meta !== '') {
+					$decoded = json_decode($current_meta, true);
+					if (is_array($decoded)) {
+						$meta = $decoded;
+					}
+				}
+				$meta['last_email_status'] = $result;
+				$updates = array('claim_meta' => wp_json_encode($meta), 'updated_at' => $now);
+				$formats = array('%s', '%s');
+				if ($sent) {
+					$updates['admission_emailed_at'] = $now;
+					$formats[] = '%s';
+				}
+				$wpdb->update($table, $updates, array('id' => $gid), $formats, array('%d'));
+			}
+		}
+		if (function_exists('vms_admission_audit_log')) {
+			vms_admission_audit_log($event_plan_id, $entry_id, $sent ? 'admission_email_sent' : 'admission_email_failed', get_current_user_id(), $context, $result);
+		}
+		vms_admission_email_set_result($result);
+		return $result;
+	}
+}
+
+if (!function_exists('vms_admission_email_pass')) {
+	function vms_admission_email_pass(int $entry_id, string $context = 'guest_pass'): bool
+	{
+		$result = function_exists('vms_admission_email_pass_result') ? vms_admission_email_pass_result($entry_id, $context) : array('sent' => false);
+		return !empty($result['sent']);
+	}
+}
+
+if (!function_exists('vms_admission_scan_rewrite')) {
+	function vms_admission_scan_rewrite(): void
+	{
+		add_rewrite_tag('%vms_admission_scan_token%', '([^&]+)');
+		add_rewrite_rule('^admission/scan/([^/]+)/?$', 'index.php?vms_admission_scan_token=$matches[1]', 'top');
+	}
+}
+add_action('init', 'vms_admission_scan_rewrite', 31);
+
+if (!function_exists('vms_admission_scan_template_router')) {
+	function vms_admission_scan_template_router(): void
+	{
+		if (is_admin()) {
+			return;
+		}
+		$token = get_query_var('vms_admission_scan_token');
+		if (!is_string($token) || $token === '') {
+			$token = isset($_GET['vms_admission_scan_token']) ? (string) $_GET['vms_admission_scan_token'] : '';
+		}
+		$token = sanitize_text_field(rawurldecode($token));
+		if ($token === '') {
+			return;
+		}
+
+		global $wpdb;
+		$table = vms_admission_table_entries();
+		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE admission_token = %s LIMIT 1", $token), ARRAY_A);
+		$status = is_array($row) ? (string) ($row['status'] ?? '') : '';
+		$name = is_array($row) ? (string) ($row['guest_name'] ?? '') : '';
+		$event_plan_id = is_array($row) ? (int) ($row['event_plan_id'] ?? 0) : 0;
+		$title = $event_plan_id > 0 ? (string) get_the_title($event_plan_id) : '';
+		$date = $event_plan_id > 0 ? (string) get_post_meta($event_plan_id, '_vms_event_date', true) : '';
+		$event_status_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+		if ($event_status_key === '') {
+			$event_status_key = '_vms_event_plan_status';
+		}
+		$event_status = $event_plan_id > 0 ? sanitize_key((string) get_post_meta($event_plan_id, $event_status_key, true)) : '';
+		$event_is_cancelled = ($event_status === 'cancelled' || $event_status === 'canceled');
+		$venue_id = is_array($row) ? (int) ($row['venue_id'] ?? 0) : 0;
+		$venue = $venue_id > 0 ? (string) get_the_title($venue_id) : '';
+		$ref = is_array($row) ? 'gl:' . (int) ($row['id'] ?? 0) : '';
+
+		$status_label = $status !== '' ? ucfirst($status) : '';
+		$scan_url = vms_admission_scan_url($token);
+		$qr_url = vms_admission_qr_image_url('vms-admission:' . $token);
+		$ref = is_array($row) ? 'GL-' . (int) ($row['id'] ?? 0) : '';
+		$group_rows = is_array($row) && function_exists('vms_admission_group_entries') ? vms_admission_group_entries($row) : (is_array($row) ? array($row) : array());
+
+		status_header(is_array($row) ? 200 : 404);
+		nocache_headers();
+		add_filter('document_title_parts', static function (array $parts): array {
+			$parts['title'] = __('Admission Pass', 'vms');
+			return $parts;
+		}, 20);
+		if (function_exists('wp_enqueue_style') && defined('VMS_PLUGIN_URL')) {
+			wp_enqueue_style('vms-pass-claims-public', VMS_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('VMS_VERSION') ? VMS_VERSION : null);
+		}
+		if (function_exists('get_header')) {
+			get_header();
+		} else {
+			echo '<!doctype html><html><head><meta charset="' . esc_attr(get_bloginfo('charset')) . '"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>';
+		}
+		$print_class = !empty($_GET['vms_print_pass']) ? ' vms-pass-public-page--print' : '';
+		echo '<main id="primary" class="site-main vms-pass-public-page' . esc_attr($print_class) . '" role="main"><div class="vms-pass-wrap"><div class="vms-pass-card">';
+		if (!is_array($row)) {
+			echo '<h1>' . esc_html__('Pass Not Found', 'vms') . '</h1><p class="vms-pass-error">' . esc_html__('This admission pass was not found.', 'vms') . '</p>';
+		} else {
+			echo '<h1>' . esc_html__('Admission Pass', 'vms') . '</h1>';
+			if ($event_is_cancelled) {
+				echo '<div class="vms-pass-error">' . esc_html__('This event has been cancelled. Please see gate staff for assistance.', 'vms') . '</div>';
+			} else {
+				echo '<div class="vms-pass-success">' . esc_html__('Show this QR code at the gate for entry.', 'vms') . '</div>';
+			}
+			echo '<div class="vms-pass-ticket">';
+			$group_count = count($group_rows);
+			if ($group_count > 1) {
+				echo '<h2>' . esc_html__('Individual QR Codes', 'vms') . '</h2>';
+				echo '<p class="vms-pass-hint">' . esc_html__('Each person can arrive separately. Scan one QR code per person.', 'vms') . '</p>';
+				echo '<div class="vms-pass-qr-grid">';
+				$slot = 1;
+				foreach ($group_rows as $group_row) {
+					$group_entry_id = (int) ($group_row['id'] ?? 0);
+					$group_token = $group_entry_id > 0 ? vms_admission_ensure_entry_token($group_entry_id) : '';
+					$group_qr_url = $group_token !== '' ? vms_admission_qr_image_url('vms-admission:' . $group_token) : '';
+					if ($group_qr_url === '') {
+						continue;
+					}
+					echo '<div class="vms-pass-qr-item"><strong>' . esc_html(sprintf(__('Pass %1$d of %2$d', 'vms'), $slot, $group_count)) . '</strong><img class="vms-pass-qr" src="' . esc_url($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'vms') . '"><span>' . esc_html('GL-' . $group_entry_id) . '</span></div>';
+					$slot++;
+				}
+				echo '</div>';
+			} elseif ($qr_url !== '') {
+				echo '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_url($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'vms') . '"></div>';
+			}
+			echo '<p class="vms-pass-meta"><strong>' . esc_html__('Name:', 'vms') . '</strong> ' . esc_html($name) . '</p>';
+			if ($title !== '') {
+				echo '<p class="vms-pass-meta"><strong>' . esc_html__('Event:', 'vms') . '</strong> ' . esc_html($title) . '</p>';
+			}
+			if ($date !== '') {
+				echo '<p class="vms-pass-meta"><strong>' . esc_html__('Date:', 'vms') . '</strong> ' . esc_html(vms_admission_format_public_date($date)) . '</p>';
+			}
+			if ($venue !== '') {
+				echo '<p class="vms-pass-meta"><strong>' . esc_html__('Venue:', 'vms') . '</strong> ' . esc_html($venue) . '</p>';
+			}
+			$party_size = $group_count > 1 ? $group_count : (is_array($row) ? max(1, (int) ($row['party_size'] ?? 1)) : 1);
+			if ($party_size > 1) {
+				echo '<p class="vms-pass-meta"><strong>' . esc_html__('Admits:', 'vms') . '</strong> ' . esc_html(sprintf(_n('%d person', '%d people', $party_size, 'vms'), $party_size)) . '</p>';
+			}
+			if ($event_is_cancelled) {
+				echo '<p class="vms-pass-meta"><strong>' . esc_html__('Event Status:', 'vms') . '</strong> ' . esc_html__('Cancelled', 'vms') . '</p>';
+			}
+			if ($status_label !== '') {
+				echo '<p class="vms-pass-meta"><strong>' . esc_html__('Status:', 'vms') . '</strong> ' . esc_html($status_label) . '</p>';
+			}
+			echo '<p class="vms-pass-meta"><strong>' . esc_html__('Reference:', 'vms') . '</strong> ' . esc_html($ref) . '</p>';
+			echo '<p class="vms-pass-hint">' . esc_html__('Screenshot this page if cell service is weak. Door staff can also search your name or phone number.', 'vms') . '</p>';
+			echo '</div>';
+		}
+		echo '</div></div></main>';
+		if (function_exists('get_footer')) {
+			get_footer();
+		} else {
+			echo '</body></html>';
+		}
+		exit;
+	}
+}
+add_action('template_redirect', 'vms_admission_scan_template_router', 0);

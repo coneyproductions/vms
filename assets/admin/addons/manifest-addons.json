@@ -1,0 +1,59 @@
+[
+  {
+    "slug": "meta_ads_builder",
+    "name": "Meta Ads Builder",
+    "description_short": "Guided Meta ad builder with copy pack export and guarded API mode.",
+    "category": "Marketing",
+    "icon": "dashicons-megaphone",
+    "plugin_file": "vms-meta-ads/vms-meta-ads.php",
+    "settings_url": "admin.php?page=vms-ma-ads-settings",
+    "docs_url": "",
+    "requires": [],
+    "freemius": {
+      "product_id": 0
+    },
+    "install": {
+      "method": "zip_upload",
+      "notes": "Upload ZIP package exported from your build pipeline."
+    }
+  },
+  {
+    "slug": "social_sharing",
+    "name": "Social Sharing",
+    "description_short": "Cross-platform social queueing and promotion workflows.",
+    "category": "Marketing",
+    "icon": "dashicons-share",
+    "plugin_file": "vms/vendor-management-system.php",
+    "settings_url": "admin.php?page=vms-social-sharing",
+    "docs_url": "",
+    "requires": [],
+    "freemius": {
+      "product_id": 0
+    },
+    "install": {
+      "method": "zip_upload",
+      "notes": "Core-bundled in this environment; listed for license status tracking."
+    }
+  },
+  {
+    "slug": "vmsx-weather-risk",
+    "name": "Show Risk Advisor",
+    "description_short": "Cached weather + ticket context advisory for outdoor event decisions.",
+    "category": "Operations",
+    "icon": "dashicons-cloud",
+    "plugin_file": "vmsx-weather-risk/vmsx-weather-risk.php",
+    "settings_url": "admin.php?page=vmsx-weather-risk-settings",
+    "docs_url": "",
+    "requires": [
+      "vms"
+    ],
+    "freemius": {
+      "product_id": 0
+    },
+    "install": {
+      "method": "zip_upload",
+      "notes": "Upload the packaged vmsx-weather-risk zip to install or upgrade in place."
+    },
+    "safe_remove": false
+  }
+]

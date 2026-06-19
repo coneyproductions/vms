@@ -1,0 +1,271 @@
+.vms-status-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.vms-status-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.vms-status-template-links {
+  margin: 0 0 14px;
+}
+
+.vms-status-template-links a {
+  margin-right: 8px;
+}
+
+.vms-status-bulk-actions {
+  margin: 0 0 10px;
+}
+
+.vms-status-bulk-actions__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.vms-status-table td,
+.vms-status-table th {
+  vertical-align: top;
+}
+
+.vms-status-table-actions {
+  display: grid;
+  gap: 5px;
+}
+
+.vms-status-table-actions .is-danger {
+  color: #a42020;
+}
+
+.vms-status-notice-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vms-status-card {
+  background: #fff;
+  border: 1px solid #d8e2f0;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(15, 35, 66, 0.06);
+}
+
+.vms-status-card h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.vms-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vms-status-grid > label,
+.vms-status-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vms-status-grid input[type="text"],
+.vms-status-grid input[type="url"],
+.vms-status-grid input[type="number"],
+.vms-status-grid input[type="datetime-local"],
+.vms-status-grid select,
+.vms-status-grid textarea {
+  width: 100%;
+}
+
+.vms-status-span-2 {
+  grid-column: span 2;
+}
+
+.vms-status-label {
+  font-weight: 600;
+}
+
+.vms-status-grid-checks {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin-top: 4px;
+}
+
+.vms-status-grid-checks label {
+  font-weight: 400;
+}
+
+.vms-status-list-source--hidden {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vms-status-list-editor {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.vms-status-list-editor__rows {
+  display: grid;
+  gap: 6px;
+}
+
+.vms-status-list-editor__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vms-status-list-editor__row input {
+  flex: 1;
+}
+
+.vms-status-list-editor__remove {
+  color: #9d2b2b;
+  white-space: nowrap;
+}
+
+.vms-status-list-editor__add {
+  justify-self: start;
+}
+
+.vms-status-object-picker {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.vms-status-object-picker__search,
+.vms-status-object-picker__manual {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vms-status-object-picker__search input,
+.vms-status-object-picker__manual input {
+  flex: 1;
+}
+
+.vms-status-object-picker__results {
+  display: grid;
+  gap: 6px;
+  max-height: 150px;
+  overflow: auto;
+  border: 1px solid #d8e2f0;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f8fbff;
+}
+
+.vms-status-object-picker__result {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #d8e2f0;
+  border-radius: 6px;
+  background: #fff;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+
+.vms-status-object-picker__result:hover,
+.vms-status-object-picker__result:focus {
+  border-color: #4d7fb8;
+  outline: none;
+}
+
+.vms-status-object-picker__selected {
+  display: grid;
+  gap: 6px;
+}
+
+.vms-status-object-picker__chip {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #d8e2f0;
+  border-radius: 7px;
+  background: #fff;
+  padding: 7px 9px;
+}
+
+.vms-status-object-picker__chip-label {
+  flex: 1;
+}
+
+.vms-status-preview {
+  border: 1px dashed #bfd1e8;
+  border-radius: 10px;
+  background: #f6fbff;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.vms-notice--preview {
+  margin: 0;
+  box-shadow: none;
+}
+
+.vms-status-simulator {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+}
+
+.vms-status-simulator .vms-status-span-2 {
+  grid-column: 1 / -1;
+}
+
+.vms-status-sim-result {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-weight: 600;
+}
+
+.vms-status-sim-result.is-pass {
+  color: #1f7a39;
+}
+
+.vms-status-sim-result.is-fail {
+  color: #9d2b2b;
+}
+
+@media (max-width: 900px) {
+  .vms-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-status-span-2 {
+    grid-column: span 1;
+  }
+
+  .vms-status-bulk-actions__row {
+    align-items: stretch;
+  }
+
+  .vms-status-list-editor__row,
+  .vms-status-object-picker__search,
+  .vms-status-object-picker__manual {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

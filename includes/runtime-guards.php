@@ -1,0 +1,1416 @@
+<?php
+defined('ABSPATH') || exit;
+
+if (!function_exists('vms_is_public_frontend_request')) {
+	function vms_is_public_frontend_request(): bool
+	{
+		if (is_admin()) {
+			return false;
+		}
+		if (function_exists('wp_doing_ajax') && wp_doing_ajax()) {
+			return false;
+		}
+		if (function_exists('wp_doing_cron') && wp_doing_cron()) {
+			return false;
+		}
+		if (defined('REST_REQUEST') && REST_REQUEST) {
+			return false;
+		}
+		if (defined('WP_CLI') && WP_CLI) {
+			return false;
+		}
+
+		return true;
+	}
+}
+
+if (!function_exists('vms_should_run_runtime_maintenance')) {
+	function vms_should_run_runtime_maintenance(): bool
+	{
+		if (defined('WP_INSTALLING') && WP_INSTALLING) {
+			return false;
+		}
+
+		if (defined('WP_CLI') && WP_CLI) {
+			return true;
+		}
+		if (function_exists('wp_doing_cron') && wp_doing_cron()) {
+			return true;
+		}
+		if (is_admin()) {
+			return true;
+		}
+
+		return (bool) apply_filters('vms_should_run_runtime_maintenance', false);
+	}
+}
+
+if (!function_exists('vms_queue_admin_diagnostic')) {
+	function vms_queue_admin_diagnostic(string $code, string $message): void
+	{
+		$code = sanitize_key($code);
+		$message = trim($message);
+		if ($code === '' || $message === '') {
+			return;
+		}
+
+		$seen = get_option('vms_admin_diagnostic_seen', array());
+		$seen = is_array($seen) ? $seen : array();
+		if (!empty($seen[$code])) {
+			return;
+		}
+
+		$queue = get_transient('vms_admin_diagnostic_queue');
+		$queue = is_array($queue) ? $queue : array();
+		if (isset($queue[$code])) {
+			return;
+		}
+
+		$queue[$code] = array(
+			'message' => $message,
+			'queued_at' => time(),
+		);
+		set_transient('vms_admin_diagnostic_queue', $queue, WEEK_IN_SECONDS);
+	}
+}
+
+if (!function_exists('vms_render_admin_diagnostics')) {
+	function vms_render_admin_diagnostics(): void
+	{
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+
+		$queue = get_transient('vms_admin_diagnostic_queue');
+		if (!is_array($queue) || empty($queue)) {
+			return;
+		}
+
+		delete_transient('vms_admin_diagnostic_queue');
+
+		$seen = get_option('vms_admin_diagnostic_seen', array());
+		$seen = is_array($seen) ? $seen : array();
+
+		foreach ($queue as $code => $entry) {
+			$message = trim((string) ($entry['message'] ?? ''));
+			if ($message === '') {
+				continue;
+			}
+
+			error_log('[VMS] ' . $message);
+			echo '<div class="notice notice-warning"><p>' . esc_html($message) . '</p></div>';
+			$seen[sanitize_key((string) $code)] = time();
+		}
+
+		update_option('vms_admin_diagnostic_seen', $seen, false);
+	}
+}
+add_action('admin_notices', 'vms_render_admin_diagnostics');
+
+if (!function_exists('vms_require_internal_file')) {
+	function vms_require_internal_file(string $relative_path, string $diagnostic_code = '', string $feature_label = ''): bool
+	{
+		if (!defined('VMS_PLUGIN_PATH')) {
+			return false;
+		}
+
+		$relative_path = ltrim($relative_path, '/');
+		if ($relative_path === '') {
+			return false;
+		}
+
+		$absolute_path = VMS_PLUGIN_PATH . $relative_path;
+		if (is_readable($absolute_path)) {
+			require_once $absolute_path;
+			return true;
+		}
+
+		$feature_label = trim($feature_label);
+		if ($feature_label === '') {
+			$feature_label = 'The related VMS routine';
+		}
+
+		if ($diagnostic_code === '') {
+			$diagnostic_code = 'missing_' . md5($relative_path);
+		}
+
+		vms_queue_admin_diagnostic(
+			$diagnostic_code,
+			sprintf(
+				'Missing internal VMS file `%s`. %s has been disabled to avoid a public fatal.',
+				$relative_path,
+				$feature_label
+			)
+		);
+
+		return false;
+	}
+}
+
+if (!function_exists('vms_schedule_exists')) {
+	function vms_schedule_exists(string $schedule): bool
+	{
+		$schedule = trim($schedule);
+		if ($schedule === '') {
+			return false;
+		}
+
+		$schedules = wp_get_schedules();
+		return isset($schedules[$schedule]);
+	}
+}
+
+if (!function_exists('vms_is_owned_cron_hook')) {
+	function vms_is_owned_cron_hook(string $hook): bool
+	{
+		$hook = trim($hook);
+		return $hook !== '' && strpos($hook, 'vms_') === 0;
+	}
+}
+
+if (!function_exists('vms_unschedule_all_owned_cron_hooks')) {
+	function vms_unschedule_all_owned_cron_hooks(): void
+	{
+		if (!function_exists('_get_cron_array') || !function_exists('wp_clear_scheduled_hook')) {
+			return;
+		}
+
+		$cron = _get_cron_array();
+		if (!is_array($cron) || empty($cron)) {
+			return;
+		}
+
+		$seen = array();
+		foreach ($cron as $events) {
+			if (!is_array($events)) {
+				continue;
+			}
+
+			foreach ($events as $hook => $instances) {
+				if (!vms_is_owned_cron_hook((string) $hook) || !is_array($instances)) {
+					continue;
+				}
+
+				foreach ($instances as $instance) {
+					$args = isset($instance['args']) && is_array($instance['args']) ? array_values($instance['args']) : array();
+					$key = $hook . '|' . md5(serialize($args));
+					if (isset($seen[$key])) {
+						continue;
+					}
+
+					$seen[$key] = true;
+					if (!empty($args)) {
+						wp_clear_scheduled_hook($hook, $args);
+						continue;
+					}
+
+					wp_clear_scheduled_hook($hook);
+				}
+			}
+		}
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_option_key')) {
+	function vms_resource_fingerprint_option_key(): string
+	{
+		return 'vms_resource_fingerprint_log';
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_threshold_seconds')) {
+	function vms_resource_fingerprint_threshold_seconds(): float
+	{
+		$threshold = (float) apply_filters('vms_resource_fingerprint_threshold_seconds', 3.0);
+		return $threshold > 0 ? $threshold : 3.0;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_memory_threshold_bytes')) {
+	function vms_resource_fingerprint_memory_threshold_bytes(): int
+	{
+		$threshold = (int) apply_filters('vms_resource_fingerprint_memory_threshold_bytes', 128 * 1024 * 1024);
+		return $threshold > 0 ? $threshold : (128 * 1024 * 1024);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_log_limit')) {
+	function vms_resource_fingerprint_log_limit(): int
+	{
+		$limit = (int) apply_filters('vms_resource_fingerprint_log_limit', 60);
+		return max(10, $limit);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_max_markers')) {
+	function vms_resource_fingerprint_max_markers(): int
+	{
+		$limit = (int) apply_filters('vms_resource_fingerprint_marker_limit', 24);
+		return max(6, $limit);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_compact_value_with_limit')) {
+	function vms_resource_fingerprint_compact_value_with_limit($value, int $depth = 0, int $max_depth = 3)
+	{
+		if ($depth >= $max_depth) {
+			return '...';
+		}
+
+		if (is_null($value) || is_bool($value) || is_int($value) || is_float($value)) {
+			return $value;
+		}
+
+		if (is_string($value)) {
+			$value = trim(wp_strip_all_tags($value));
+			if ($value === '') {
+				return '';
+			}
+			return (strlen($value) > 180) ? (substr($value, 0, 177) . '...') : $value;
+		}
+
+		if (is_array($value)) {
+			$out = array();
+			$count = 0;
+			foreach ($value as $key => $item) {
+				if ($count >= 8) {
+					$out['...'] = 'truncated';
+					break;
+				}
+				$out[is_int($key) ? $key : sanitize_key((string) $key)] = vms_resource_fingerprint_compact_value_with_limit($item, $depth + 1, $max_depth);
+				$count++;
+			}
+			return $out;
+		}
+
+		if (is_object($value)) {
+			return 'object:' . get_class($value);
+		}
+
+		$value = trim((string) $value);
+		return (strlen($value) > 180) ? (substr($value, 0, 177) . '...') : $value;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_compact_value')) {
+	function vms_resource_fingerprint_compact_value($value, int $depth = 0)
+	{
+		return vms_resource_fingerprint_compact_value_with_limit($value, $depth, 3);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_compact_value_deep')) {
+	function vms_resource_fingerprint_compact_value_deep($value, int $depth = 0)
+	{
+		return vms_resource_fingerprint_compact_value_with_limit($value, $depth, 5);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_current_admin_page')) {
+	function vms_resource_fingerprint_current_admin_page(): string
+	{
+		$page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
+		if ($page !== '') {
+			return $page;
+		}
+
+		$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+		if ($post_type === '' && !empty($_GET['post'])) {
+			$post_type = sanitize_key((string) get_post_type(absint($_GET['post'])));
+		}
+		if ($post_type !== '') {
+			return $post_type;
+		}
+
+		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+		if (is_object($screen) && !empty($screen->id)) {
+			return sanitize_key((string) $screen->id);
+		}
+
+		return '';
+	}
+}
+
+if (!function_exists('vms_admin_guard_current_screen_id')) {
+	function vms_admin_guard_current_screen_id(): string
+	{
+		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+		if (is_object($screen) && !empty($screen->id)) {
+			return sanitize_key((string) $screen->id);
+		}
+
+		$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+		if ($post_type === '' && !empty($_GET['post'])) {
+			$post_type = sanitize_key((string) get_post_type(absint($_GET['post'])));
+		}
+		if ($post_type !== '') {
+			$pagenow = isset($GLOBALS['pagenow']) ? sanitize_key((string) $GLOBALS['pagenow']) : '';
+			if ($pagenow === 'edit.php') {
+				return 'edit-' . $post_type;
+			}
+		}
+
+		return '';
+	}
+}
+
+if (!function_exists('vms_admin_guard_request_uri')) {
+	function vms_admin_guard_request_uri(): string
+	{
+		return trim((string) ($_SERVER['REQUEST_URI'] ?? ''));
+	}
+}
+
+if (!function_exists('vms_admin_guard_request_method')) {
+	function vms_admin_guard_request_method(): string
+	{
+		return sanitize_key((string) ($_SERVER['REQUEST_METHOD'] ?? 'get'));
+	}
+}
+
+if (!function_exists('vms_admin_guard_request_value')) {
+	function vms_admin_guard_request_value(string $key): string
+	{
+		if (!isset($_REQUEST[$key]) || is_array($_REQUEST[$key])) {
+			return '';
+		}
+		return trim((string) wp_unslash($_REQUEST[$key]));
+	}
+}
+
+if (!function_exists('vms_admin_guard_heavy_hooks_disabled')) {
+	function vms_admin_guard_heavy_hooks_disabled(): bool
+	{
+		$disabled = defined('VMS_DISABLE_HEAVY_ADMIN_HOOKS') && VMS_DISABLE_HEAVY_ADMIN_HOOKS;
+		return (bool) apply_filters('vms_disable_heavy_admin_hooks', $disabled);
+	}
+}
+
+if (!function_exists('vms_admin_guard_is_tec_admin_request')) {
+	function vms_admin_guard_is_tec_admin_request(): bool
+	{
+		if (!is_admin()) {
+			return false;
+		}
+
+		$page = vms_resource_fingerprint_current_admin_page();
+		if ($page === 'tribe_events') {
+			return true;
+		}
+
+		$screen_id = vms_admin_guard_current_screen_id();
+		if ($screen_id !== '' && strpos($screen_id, 'tribe_events') !== false) {
+			return true;
+		}
+
+		$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+		if ($post_type === 'tribe_events') {
+			return true;
+		}
+
+		$post_id = !empty($_GET['post']) ? absint($_GET['post']) : 0;
+		return $post_id > 0 && get_post_type($post_id) === 'tribe_events';
+	}
+}
+
+if (!function_exists('vms_admin_guard_is_passive_admin_list_request')) {
+	function vms_admin_guard_is_passive_admin_list_request(): bool
+	{
+		if (!is_admin()) {
+			return false;
+		}
+		if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (defined('REST_REQUEST') && REST_REQUEST)) {
+			return false;
+		}
+		if (vms_admin_guard_request_method() !== 'get' || !empty($_POST)) {
+			return false;
+		}
+
+		$action = sanitize_key(vms_admin_guard_request_value('action'));
+		$action_2 = sanitize_key(vms_admin_guard_request_value('action2'));
+		if (($action !== '' && $action !== '-1') || ($action_2 !== '' && $action_2 !== '-1')) {
+			return false;
+		}
+
+		$pagenow = isset($GLOBALS['pagenow']) ? sanitize_key((string) $GLOBALS['pagenow']) : '';
+		if (in_array($pagenow, array('edit.php', 'upload.php'), true)) {
+			return true;
+		}
+
+		$screen_id = vms_admin_guard_current_screen_id();
+		return $screen_id !== '' && strpos($screen_id, 'edit-') === 0;
+	}
+}
+
+if (!function_exists('vms_admin_guard_is_vms_admin_page')) {
+	function vms_admin_guard_is_vms_admin_page(): bool
+	{
+		$page = vms_resource_fingerprint_current_admin_page();
+		if ($page === 'vms_event_plan') {
+			return true;
+		}
+
+		if ($page !== '' && (strpos($page, 'vms') === 0 || strpos($page, 'vms-') === 0)) {
+			return true;
+		}
+
+		$screen_id = vms_admin_guard_current_screen_id();
+		return $screen_id !== '' && strpos($screen_id, 'vms_') !== false;
+	}
+}
+
+if (!function_exists('vms_admin_guard_is_verified_action')) {
+	function vms_admin_guard_is_verified_action(string $expected_action = ''): bool
+	{
+		$request_action = sanitize_key(vms_admin_guard_request_value('vms_admin_heavy_action'));
+		if ($request_action === '') {
+			return false;
+		}
+
+		$expected_action = sanitize_key($expected_action);
+		if ($expected_action !== '' && $request_action !== $expected_action) {
+			return false;
+		}
+
+		$nonce = vms_admin_guard_request_value('vms_admin_heavy_nonce');
+		if ($nonce === '') {
+			$nonce = vms_admin_guard_request_value('_vms_admin_heavy_nonce');
+		}
+		if ($nonce === '') {
+			$nonce = vms_admin_guard_request_value('_wpnonce');
+		}
+
+		if ($nonce === '' || !function_exists('wp_verify_nonce')) {
+			return false;
+		}
+
+		if (!wp_verify_nonce($nonce, 'vms_admin_heavy:' . $request_action)) {
+			return false;
+		}
+
+		return current_user_can('manage_options');
+	}
+}
+
+if (!function_exists('vms_admin_guard_should_allow_heavy_block')) {
+	function vms_admin_guard_should_allow_heavy_block(string $hook_name, array $context = array()): array
+	{
+		$task = sanitize_key((string) ($context['task'] ?? $hook_name));
+		$allow_action = sanitize_key((string) ($context['allow_action'] ?? $task));
+		$verified_action = vms_admin_guard_is_verified_action($allow_action);
+		$result = array(
+			'allowed' => false,
+			'reason' => 'unknown',
+			'task' => $task,
+			'allow_action' => $allow_action,
+		);
+
+		if ((defined('WP_CLI') && WP_CLI) || (function_exists('wp_doing_cron') && wp_doing_cron())) {
+			$result['allowed'] = true;
+			$result['reason'] = 'non_admin_runtime';
+			return $result;
+		}
+
+		if (!is_admin()) {
+			$result['reason'] = 'not_admin';
+			return $result;
+		}
+
+		if (vms_admin_guard_heavy_hooks_disabled()) {
+			$result['reason'] = 'constant_disabled';
+			return $result;
+		}
+
+		if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (defined('REST_REQUEST') && REST_REQUEST)) {
+			$result['allowed'] = $verified_action;
+			$result['reason'] = $verified_action ? 'verified_async_action' : 'unverified_async_request';
+			return $result;
+		}
+
+		if (vms_admin_guard_is_tec_admin_request() && !$verified_action) {
+			$result['reason'] = 'passive_tec_admin';
+			return $result;
+		}
+
+		if (vms_admin_guard_is_passive_admin_list_request() && !$verified_action) {
+			$result['reason'] = 'passive_admin_list';
+			return $result;
+		}
+
+		if ($verified_action) {
+			$result['allowed'] = true;
+			$result['reason'] = 'verified_admin_action';
+			return $result;
+		}
+
+		$result['reason'] = vms_admin_guard_is_vms_admin_page() ? 'passive_vms_admin' : 'unscoped_admin';
+		return $result;
+	}
+}
+
+if (!function_exists('vms_admin_guard_trace')) {
+	function vms_admin_guard_trace(string $hook_name, string $decision, array $context = array(), float $started_at = 0.0): void
+	{
+		$hook_name = sanitize_key($hook_name);
+		if ($hook_name === '') {
+			$hook_name = 'heavy_admin_block';
+		}
+
+		$elapsed_ms = $started_at > 0 ? max(0.0, round((microtime(true) - $started_at) * 1000, 1)) : 0.0;
+		$payload = array(
+			'hook' => $hook_name,
+			'action' => sanitize_key((string) ($context['task'] ?? '')),
+			'decision' => sanitize_key($decision),
+			'reason' => sanitize_key((string) ($context['reason'] ?? '')),
+			'request_uri' => vms_resource_fingerprint_compact_value(vms_admin_guard_request_uri()),
+			'admin_page' => vms_resource_fingerprint_current_admin_page(),
+			'screen_id' => vms_admin_guard_current_screen_id(),
+			'elapsed_ms' => $elapsed_ms,
+			'memory_mb' => round(((int) memory_get_usage(true)) / 1048576, 1),
+		);
+
+		foreach ($context as $key => $value) {
+			if (in_array($key, array('task', 'reason'), true)) {
+				continue;
+			}
+			$payload[sanitize_key((string) $key)] = vms_resource_fingerprint_compact_value($value);
+		}
+
+		vms_resource_fingerprint_flag('heavy_admin_guard', $payload);
+		vms_resource_fingerprint_add_marker('heavy_admin_guard.' . $hook_name, $elapsed_ms, $payload);
+		error_log('[VMS TRACE] ' . wp_json_encode($payload));
+	}
+}
+
+if (!function_exists('vms_admin_guard_should_probe_passive_tec_request')) {
+	function vms_admin_guard_should_probe_passive_tec_request(): bool
+	{
+		if (!is_admin()) {
+			return false;
+		}
+		if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (defined('REST_REQUEST') && REST_REQUEST)) {
+			return false;
+		}
+		if (vms_admin_guard_request_method() !== 'get' || !empty($_POST)) {
+			return false;
+		}
+		if (!vms_admin_guard_is_tec_admin_request()) {
+			return false;
+		}
+
+		$action = sanitize_key(vms_admin_guard_request_value('action'));
+		$action_2 = sanitize_key(vms_admin_guard_request_value('action2'));
+		return (($action === '' || $action === '-1') && ($action_2 === '' || $action_2 === '-1'));
+	}
+}
+
+if (!function_exists('vms_admin_guard_hook_probe_top_hooks')) {
+	function vms_admin_guard_hook_probe_top_hooks(array $counts, int $limit = 12): array
+	{
+		if (empty($counts)) {
+			return array();
+		}
+
+		arsort($counts);
+		return array_slice($counts, 0, max(1, $limit), true);
+	}
+}
+
+if (!function_exists('vms_admin_guard_hook_probe_watch_hooks')) {
+	function vms_admin_guard_hook_probe_watch_hooks(): array
+	{
+		return array(
+			'admin_init',
+			'current_screen',
+			'load-edit.php',
+			'pre_get_posts',
+			'parse_query',
+			'wp',
+			'admin_head',
+			'admin_enqueue_scripts',
+			'wp_ajax_heartbeat',
+			'transition_post_status',
+			'add_post_metadata',
+			'update_post_metadata',
+			'delete_post_metadata',
+			'added_post_meta',
+			'updated_post_meta',
+			'deleted_post_meta',
+		);
+	}
+}
+
+if (!function_exists('vms_admin_guard_hook_probe_track')) {
+	function vms_admin_guard_hook_probe_track(): void
+	{
+		$state = $GLOBALS['vms_admin_guard_hook_probe'] ?? array();
+		if (empty($state['enabled']) || !is_array($state)) {
+			return;
+		}
+
+		$hook_name = sanitize_key((string) current_filter());
+		if ($hook_name === '') {
+			return;
+		}
+
+		$state['total_hooks'] = (int) ($state['total_hooks'] ?? 0) + 1;
+		if (($state['last_hook'] ?? '') === $hook_name) {
+			$state['same_hook_streak'] = (int) ($state['same_hook_streak'] ?? 0) + 1;
+		} else {
+			$state['same_hook_streak'] = 1;
+		}
+		$state['last_hook'] = $hook_name;
+		$state['max_same_hook_streak'] = max((int) ($state['max_same_hook_streak'] ?? 0), (int) ($state['same_hook_streak'] ?? 0));
+
+		if (isset($state['counts'][$hook_name])) {
+			$state['counts'][$hook_name]++;
+		} elseif (count((array) ($state['counts'] ?? array())) < 64) {
+			$state['counts'][$hook_name] = 1;
+		} else {
+			$state['overflow_hooks'] = (int) ($state['overflow_hooks'] ?? 0) + 1;
+		}
+
+		$state['recent_hooks'][] = $hook_name;
+		$state['recent_hooks'] = array_slice((array) $state['recent_hooks'], -16);
+
+		$current_memory_mb = round(((int) memory_get_usage(true)) / 1048576, 1);
+		if ($current_memory_mb > (float) ($state['peak_memory_mb'] ?? 0.0)) {
+			$state['peak_memory_mb'] = $current_memory_mb;
+			$state['high_water_hook'] = $hook_name;
+		}
+
+		$GLOBALS['vms_admin_guard_hook_probe'] = $state;
+	}
+}
+
+if (!function_exists('vms_admin_guard_hook_probe_shutdown')) {
+	function vms_admin_guard_hook_probe_shutdown(): void
+	{
+		$state = $GLOBALS['vms_admin_guard_hook_probe'] ?? array();
+		if (empty($state['enabled']) || !is_array($state) || !empty($state['finalized'])) {
+			return;
+		}
+
+		$state['finalized'] = true;
+		$GLOBALS['vms_admin_guard_hook_probe'] = $state;
+
+		$error = error_get_last();
+		$fatal = is_array($error) && in_array((int) ($error['type'] ?? 0), array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR), true);
+		$filter_stack = $GLOBALS['wp_current_filter'] ?? array();
+		$payload = array(
+			'task' => 'passive_tec_admin',
+			'reason' => $fatal ? 'passive_tec_admin_fatal' : 'passive_tec_admin_trace',
+			'total_hooks' => (int) ($state['total_hooks'] ?? 0),
+			'last_hook' => sanitize_key((string) ($state['last_hook'] ?? '')),
+			'max_same_hook_streak' => (int) ($state['max_same_hook_streak'] ?? 0),
+			'high_water_hook' => sanitize_key((string) ($state['high_water_hook'] ?? '')),
+			'peak_memory_mb' => round((float) ($state['peak_memory_mb'] ?? 0.0), 1),
+			'overflow_hooks' => (int) ($state['overflow_hooks'] ?? 0),
+			'top_hooks' => vms_admin_guard_hook_probe_top_hooks((array) ($state['counts'] ?? array())),
+			'recent_hooks' => array_values((array) ($state['recent_hooks'] ?? array())),
+			'filter_stack_tail' => array_values(array_slice(array_map('sanitize_key', is_array($filter_stack) ? $filter_stack : array()), -10)),
+		);
+
+		if ($fatal) {
+			$payload['fatal_type'] = (int) ($error['type'] ?? 0);
+			$payload['fatal_file'] = str_replace(ABSPATH, '', (string) ($error['file'] ?? ''));
+			$payload['fatal_line'] = (int) ($error['line'] ?? 0);
+			$payload['fatal_message'] = trim((string) ($error['message'] ?? ''));
+		}
+
+		vms_admin_guard_trace(
+			'tec_hook_probe',
+			$fatal ? 'fatal' : 'observed',
+			$payload,
+			(float) ($state['started_at'] ?? 0.0)
+		);
+	}
+}
+
+if (!function_exists('vms_admin_guard_hook_probe_bootstrap')) {
+	function vms_admin_guard_hook_probe_bootstrap(): void
+	{
+		if (!vms_admin_guard_should_probe_passive_tec_request()) {
+			return;
+		}
+		if (!empty($GLOBALS['vms_admin_guard_hook_probe']) && is_array($GLOBALS['vms_admin_guard_hook_probe'])) {
+			return;
+		}
+
+		$GLOBALS['vms_admin_guard_hook_probe'] = array(
+			'enabled' => true,
+			'started_at' => microtime(true),
+			'total_hooks' => 0,
+			'last_hook' => '',
+			'same_hook_streak' => 0,
+			'max_same_hook_streak' => 0,
+			'peak_memory_mb' => round(((int) memory_get_usage(true)) / 1048576, 1),
+			'high_water_hook' => '',
+			'overflow_hooks' => 0,
+			'counts' => array(),
+			'recent_hooks' => array(),
+			'finalized' => false,
+		);
+
+		foreach (vms_admin_guard_hook_probe_watch_hooks() as $hook_name) {
+			add_action($hook_name, 'vms_admin_guard_hook_probe_track', 999);
+		}
+		register_shutdown_function('vms_admin_guard_hook_probe_shutdown');
+	}
+}
+
+if (!function_exists('vms_admin_guard_acquire_lock')) {
+	function vms_admin_guard_acquire_lock(string $lock_name, int $ttl_seconds = 60): string
+	{
+		$lock_name = sanitize_key($lock_name);
+		if ($lock_name === '') {
+			return '';
+		}
+
+		$option_key = 'vms_admin_heavy_lock_' . $lock_name;
+		$now = time();
+		$expires_at = $now + max(5, $ttl_seconds);
+		if (add_option($option_key, $expires_at, '', false)) {
+			return $option_key;
+		}
+
+		$current = (int) get_option($option_key, 0);
+		if ($current > $now) {
+			return '';
+		}
+
+		update_option($option_key, $expires_at, false);
+		return $option_key;
+	}
+}
+
+if (!function_exists('vms_admin_guard_release_lock')) {
+	function vms_admin_guard_release_lock(string $option_key): void
+	{
+		$option_key = sanitize_key($option_key);
+		if ($option_key === '') {
+			return;
+		}
+		delete_option($option_key);
+	}
+}
+
+if (!function_exists('vms_admin_guard_begin')) {
+	function vms_admin_guard_begin(string $hook_name, array $context = array())
+	{
+		$decision = vms_admin_guard_should_allow_heavy_block($hook_name, $context);
+		$context = array_merge($context, $decision);
+		if (empty($decision['allowed'])) {
+			vms_admin_guard_trace($hook_name, 'skipped', $context);
+			return false;
+		}
+
+		$lock_key = '';
+		$lock_ttl = isset($context['lock_ttl']) ? max(0, (int) $context['lock_ttl']) : 0;
+		if ($lock_ttl > 0) {
+			$lock_key = vms_admin_guard_acquire_lock((string) ($context['lock_name'] ?? ($decision['task'] ?? $hook_name)), $lock_ttl);
+			if ($lock_key === '') {
+				$context['reason'] = 'lock_busy';
+				vms_admin_guard_trace($hook_name, 'skipped', $context);
+				return false;
+			}
+		}
+
+		$token = array(
+			'hook_name' => $hook_name,
+			'lock_key' => $lock_key,
+			'started_at' => microtime(true),
+			'context' => $context,
+		);
+		vms_admin_guard_trace($hook_name, 'allowed', $context);
+		return $token;
+	}
+}
+
+if (!function_exists('vms_admin_guard_finish')) {
+	function vms_admin_guard_finish($token, array $context = array()): void
+	{
+		if (!is_array($token)) {
+			return;
+		}
+
+		$lock_key = isset($token['lock_key']) ? (string) $token['lock_key'] : '';
+		if ($lock_key !== '') {
+			vms_admin_guard_release_lock($lock_key);
+		}
+
+		$base_context = isset($token['context']) && is_array($token['context']) ? $token['context'] : array();
+		vms_admin_guard_trace(
+			(string) ($token['hook_name'] ?? 'heavy_admin_block'),
+			'finished',
+			array_merge($base_context, $context),
+			(float) ($token['started_at'] ?? 0.0)
+		);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_sensitive_admin_scope')) {
+	function vms_resource_fingerprint_sensitive_admin_scope(): array
+	{
+		if (!is_admin()) {
+			return array();
+		}
+
+		$page = vms_resource_fingerprint_current_admin_page();
+		$scoped_pages = (array) apply_filters('vms_resource_fingerprint_sensitive_admin_pages', array(
+			'vms-event-command-center' => 'event_command_center',
+			'vms-data-tools' => 'data_tools_root',
+			'vms-dt-report-single-event' => 'data_tools_single_event',
+			'vms-dt-report-compare-events' => 'data_tools_compare_events',
+			'vms-dt-report-season-year' => 'data_tools_season_year',
+			'vms-dt-report-performer-payouts' => 'data_tools_performer_payouts',
+			'vms-dt-report-profitability' => 'data_tools_profitability',
+			'vms-dt-report-ticket-pace' => 'data_tools_ticket_pace',
+			'vms-dt-revenue-intelligence' => 'data_tools_revenue_intelligence',
+			'vms_event_plan' => 'event_plan_editor',
+		));
+
+		if ($page !== '' && isset($scoped_pages[$page])) {
+			return array(
+				'page' => $page,
+				'page_slug' => $page,
+				'scope_reason' => sanitize_key((string) $scoped_pages[$page]),
+			);
+		}
+
+		$post_id = !empty($_GET['post']) ? absint($_GET['post']) : 0;
+		if ($post_id > 0 && get_post_type($post_id) === 'vms_event_plan') {
+			return array(
+				'page' => ($page !== '') ? $page : 'vms_event_plan',
+				'page_slug' => ($page !== '') ? $page : 'vms_event_plan',
+				'scope_reason' => 'event_plan_editor',
+				'post_id' => $post_id,
+			);
+		}
+
+		if (function_exists('vms_admin_guard_is_tec_admin_request') && vms_admin_guard_is_tec_admin_request()) {
+			return array(
+				'page' => ($page !== '') ? $page : 'tribe_events',
+				'page_slug' => ($page !== '') ? $page : 'tribe_events',
+				'scope_reason' => 'tec_admin_request',
+				'screen_id' => vms_admin_guard_current_screen_id(),
+			);
+		}
+
+		return array();
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_is_sensitive_admin_request')) {
+	function vms_resource_fingerprint_is_sensitive_admin_request(): bool
+	{
+		return !empty(vms_resource_fingerprint_sensitive_admin_scope());
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_bootstrap')) {
+	function vms_resource_fingerprint_bootstrap(): void
+	{
+		if (!empty($GLOBALS['vms_resource_fingerprint']) && is_array($GLOBALS['vms_resource_fingerprint'])) {
+			return;
+		}
+
+		$started_at = isset($_SERVER['REQUEST_TIME_FLOAT']) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
+		$GLOBALS['vms_resource_fingerprint'] = array(
+			'started_at' => $started_at,
+			'flags' => array(),
+			'markers' => array(),
+			'open_spans' => array(),
+			'notes' => array(),
+			'finalized' => false,
+		);
+
+		register_shutdown_function('vms_resource_fingerprint_shutdown');
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_flag')) {
+	function vms_resource_fingerprint_flag(string $flag, $value = true): void
+	{
+		$flag = sanitize_key($flag);
+		if ($flag === '') {
+			return;
+		}
+
+		vms_resource_fingerprint_bootstrap();
+		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$clean_value = vms_resource_fingerprint_compact_value($value);
+		if (!isset($state['flags'][$flag])) {
+			$state['flags'][$flag] = array();
+		}
+		if (!is_array($state['flags'][$flag])) {
+			$state['flags'][$flag] = array($state['flags'][$flag]);
+		}
+		$state['flags'][$flag][] = $clean_value;
+		$state['flags'][$flag] = array_slice($state['flags'][$flag], -8);
+		$GLOBALS['vms_resource_fingerprint'] = $state;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_note')) {
+	function vms_resource_fingerprint_note(string $message): void
+	{
+		$message = trim(wp_strip_all_tags($message));
+		if ($message === '') {
+			return;
+		}
+
+		vms_resource_fingerprint_bootstrap();
+		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state['notes'][] = vms_resource_fingerprint_compact_value($message);
+		$state['notes'] = array_slice((array) $state['notes'], -8);
+		$GLOBALS['vms_resource_fingerprint'] = $state;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_add_marker')) {
+	function vms_resource_fingerprint_add_marker(string $label, float $elapsed_ms, array $context = array()): void
+	{
+		$label = trim($label);
+		if ($label === '') {
+			return;
+		}
+
+		vms_resource_fingerprint_bootstrap();
+		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state['markers'][] = array(
+			'label' => $label,
+			'elapsed_ms' => max(0.0, round($elapsed_ms, 1)),
+			'context' => vms_resource_fingerprint_compact_value($context),
+		);
+		$state['markers'] = array_slice((array) $state['markers'], -1 * vms_resource_fingerprint_max_markers());
+		$GLOBALS['vms_resource_fingerprint'] = $state;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_span_start')) {
+	function vms_resource_fingerprint_span_start(string $label, array $context = array()): void
+	{
+		$label = trim($label);
+		if ($label === '') {
+			return;
+		}
+
+		vms_resource_fingerprint_bootstrap();
+		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state['open_spans'][$label] = array(
+			'started_at' => microtime(true),
+			'context' => vms_resource_fingerprint_compact_value($context),
+		);
+		$GLOBALS['vms_resource_fingerprint'] = $state;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_span_finish')) {
+	function vms_resource_fingerprint_span_finish(string $label, array $context = array()): void
+	{
+		$label = trim($label);
+		if ($label === '') {
+			return;
+		}
+
+		vms_resource_fingerprint_bootstrap();
+		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$open = isset($state['open_spans'][$label]) && is_array($state['open_spans'][$label]) ? $state['open_spans'][$label] : null;
+		if (!is_array($open) || empty($open['started_at'])) {
+			return;
+		}
+
+		$merged = array();
+		if (!empty($open['context']) && is_array($open['context'])) {
+			$merged = $open['context'];
+		}
+		foreach ($context as $key => $value) {
+			$merged[sanitize_key((string) $key)] = vms_resource_fingerprint_compact_value($value);
+		}
+
+		unset($state['open_spans'][$label]);
+		$GLOBALS['vms_resource_fingerprint'] = $state;
+		vms_resource_fingerprint_add_marker($label, (microtime(true) - (float) $open['started_at']) * 1000, $merged);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_wp_cron_counts')) {
+	function vms_resource_fingerprint_wp_cron_counts(): array
+	{
+		if (!function_exists('_get_cron_array')) {
+			return array();
+		}
+
+		$cron = _get_cron_array();
+		if (!is_array($cron) || empty($cron)) {
+			return array(
+				'due_event_count' => 0,
+				'due_hook_count' => 0,
+				'due_vms_event_count' => 0,
+			);
+		}
+
+		$now = time();
+		$due_event_count = 0;
+		$due_hook_count = 0;
+		$due_vms_event_count = 0;
+		foreach ($cron as $timestamp => $events) {
+			if ((int) $timestamp > $now || !is_array($events)) {
+				continue;
+			}
+
+			foreach ($events as $hook => $instances) {
+				if (!is_array($instances)) {
+					continue;
+				}
+				$due_hook_count++;
+				$instance_count = count($instances);
+				$due_event_count += $instance_count;
+				if (vms_is_owned_cron_hook((string) $hook)) {
+					$due_vms_event_count += $instance_count;
+				}
+			}
+		}
+
+		return array(
+			'due_event_count' => $due_event_count,
+			'due_hook_count' => $due_hook_count,
+			'due_vms_event_count' => $due_vms_event_count,
+		);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_action_scheduler_counts')) {
+	function vms_resource_fingerprint_action_scheduler_counts(): array
+	{
+		if (!class_exists('ActionScheduler') || !class_exists('ActionScheduler_Store') || !method_exists('ActionScheduler', 'store')) {
+			return array();
+		}
+
+		try {
+			$store = ActionScheduler::store();
+			if (!is_object($store) || !method_exists($store, 'query_actions')) {
+				return array();
+			}
+
+			return array(
+				'pending_count' => (int) $store->query_actions(array(
+					'status' => ActionScheduler_Store::STATUS_PENDING,
+					'per_page' => 1,
+					'orderby' => 'none',
+				), 'count'),
+				'running_count' => (int) $store->query_actions(array(
+					'status' => ActionScheduler_Store::STATUS_RUNNING,
+					'per_page' => 1,
+					'orderby' => 'none',
+				), 'count'),
+			);
+		} catch (Throwable $e) {
+			return array(
+				'error' => vms_resource_fingerprint_compact_value($e->getMessage()),
+			);
+		}
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_store_entry')) {
+	function vms_resource_fingerprint_store_entry(array $entry): void
+	{
+		$entries = get_option(vms_resource_fingerprint_option_key(), array());
+		$entries = is_array($entries) ? $entries : array();
+		$entries[] = $entry;
+		$entries = array_slice($entries, -1 * vms_resource_fingerprint_log_limit());
+		update_option(vms_resource_fingerprint_option_key(), $entries, false);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_should_log')) {
+	function vms_resource_fingerprint_should_log(array $state, float $runtime_seconds, int $peak_memory_bytes): bool
+	{
+		if ($runtime_seconds >= vms_resource_fingerprint_threshold_seconds()) {
+			return true;
+		}
+
+		if ($peak_memory_bytes >= vms_resource_fingerprint_memory_threshold_bytes()) {
+			return true;
+		}
+
+		foreach (array('plugin_activation', 'plugin_deactivation', 'plugin_update', 'ecc_calculation', 'dt_report', 'vms_queue', 'action_scheduler_run', 'cron_run', 'action_scheduler_async_blocked', 'heavy_admin_guard', 'dt_admin_trace', 'tec_hook_probe') as $flag) {
+			if (!empty($state['flags'][$flag])) {
+				return true;
+			}
+		}
+
+		if ((defined('WP_CLI') && WP_CLI) || (function_exists('wp_doing_cron') && wp_doing_cron())) {
+			return true;
+		}
+
+		return false;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_shutdown')) {
+	function vms_resource_fingerprint_shutdown(): void
+	{
+		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		if (empty($state) || !empty($state['finalized'])) {
+			return;
+		}
+
+		foreach ((array) ($state['open_spans'] ?? array()) as $label => $open) {
+			if (!is_array($open) || empty($open['started_at'])) {
+				continue;
+			}
+			vms_resource_fingerprint_span_finish((string) $label, array('auto_closed' => true));
+		}
+
+		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state['finalized'] = true;
+		$GLOBALS['vms_resource_fingerprint'] = $state;
+
+		$runtime_seconds = max(0.0, microtime(true) - (float) ($state['started_at'] ?? microtime(true)));
+		$peak_memory_bytes = function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0;
+		if (!vms_resource_fingerprint_should_log($state, $runtime_seconds, $peak_memory_bytes)) {
+			return;
+		}
+
+		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+		$entry = array(
+			'captured_at_gmt' => gmdate('Y-m-d H:i:s'),
+			'runtime_ms' => (int) round($runtime_seconds * 1000),
+			'peak_memory_mb' => round($peak_memory_bytes / 1048576, 1),
+			'request_uri' => vms_resource_fingerprint_compact_value((string) ($_SERVER['REQUEST_URI'] ?? '')),
+			'request_method' => sanitize_key((string) ($_SERVER['REQUEST_METHOD'] ?? 'get')),
+			'admin_page' => vms_resource_fingerprint_current_admin_page(),
+			'screen_id' => (is_object($screen) && !empty($screen->id)) ? sanitize_key((string) $screen->id) : '',
+			'user_id' => function_exists('get_current_user_id') ? (int) get_current_user_id() : 0,
+			'context' => array(
+				'admin' => is_admin() ? 1 : 0,
+				'ajax' => (function_exists('wp_doing_ajax') && wp_doing_ajax()) ? 1 : 0,
+				'rest' => (defined('REST_REQUEST') && REST_REQUEST) ? 1 : 0,
+				'cron' => (function_exists('wp_doing_cron') && wp_doing_cron()) ? 1 : 0,
+				'wp_cli' => (defined('WP_CLI') && WP_CLI) ? 1 : 0,
+			),
+			'flags' => vms_resource_fingerprint_compact_value_deep((array) ($state['flags'] ?? array())),
+			'markers' => vms_resource_fingerprint_compact_value_deep((array) ($state['markers'] ?? array())),
+			'notes' => vms_resource_fingerprint_compact_value_deep((array) ($state['notes'] ?? array())),
+			'due_wp_cron' => vms_resource_fingerprint_wp_cron_counts(),
+			'action_scheduler' => vms_resource_fingerprint_action_scheduler_counts(),
+		);
+
+		vms_resource_fingerprint_store_entry($entry);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_recent_entries')) {
+	function vms_resource_fingerprint_recent_entries(int $limit = 25): array
+	{
+		$entries = get_option(vms_resource_fingerprint_option_key(), array());
+		$entries = is_array($entries) ? $entries : array();
+		return array_reverse(array_slice($entries, -1 * max(1, $limit)));
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_clear_entries')) {
+	function vms_resource_fingerprint_clear_entries(): void
+	{
+		update_option(vms_resource_fingerprint_option_key(), array(), false);
+	}
+}
+
+if (!function_exists('vms_render_resource_fingerprint_admin_screen')) {
+	function vms_render_resource_fingerprint_admin_screen(): void
+	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('You do not have permission to view this screen.', 'vms'));
+		}
+
+		$cleared = false;
+		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_clear_resource_fingerprints'])) {
+			check_admin_referer('vms_clear_resource_fingerprints');
+			vms_resource_fingerprint_clear_entries();
+			$cleared = true;
+		}
+
+		$entries = vms_resource_fingerprint_recent_entries(25);
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html__('VMS Resource Fingerprints', 'vms') . '</h1>';
+		echo '<p>' . esc_html__('Threshold-based request and task snapshots for slow/heavy admin, cron, Action Scheduler, ECC, and DT work.', 'vms') . '</p>';
+		if ($cleared) {
+			echo '<div class="notice notice-success"><p>' . esc_html__('Resource fingerprints cleared.', 'vms') . '</p></div>';
+		}
+		echo '<p>';
+		echo esc_html(sprintf(
+			__('Logging threshold: %1$ss or %2$s MB peak memory. Slow/heavy request context also records WP-Cron, Action Scheduler, and calculation markers.', 'vms'),
+			number_format(vms_resource_fingerprint_threshold_seconds(), 1),
+			number_format(vms_resource_fingerprint_memory_threshold_bytes() / 1048576, 0)
+		));
+		echo '</p>';
+		echo '<form method="post" action="">';
+		wp_nonce_field('vms_clear_resource_fingerprints');
+		echo '<p><button type="submit" class="button" name="vms_clear_resource_fingerprints" value="1">' . esc_html__('Clear Log', 'vms') . '</button></p>';
+		echo '</form>';
+
+		if (empty($entries)) {
+			echo '<p>' . esc_html__('No fingerprint entries recorded yet.', 'vms') . '</p>';
+			echo '</div>';
+			return;
+		}
+
+		echo '<table class="widefat striped">';
+		echo '<thead><tr>';
+		echo '<th>' . esc_html__('When', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Runtime', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Memory', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Context', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Request', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Queues / Markers', 'vms') . '</th>';
+		echo '</tr></thead><tbody>';
+
+		foreach ($entries as $entry) {
+			$when = trim((string) ($entry['captured_at_gmt'] ?? ''));
+			$context = is_array($entry['context'] ?? null) ? (array) $entry['context'] : array();
+			$flags = is_array($entry['flags'] ?? null) ? (array) $entry['flags'] : array();
+			$markers = is_array($entry['markers'] ?? null) ? (array) $entry['markers'] : array();
+			$cron_counts = is_array($entry['due_wp_cron'] ?? null) ? (array) $entry['due_wp_cron'] : array();
+			$as_counts = is_array($entry['action_scheduler'] ?? null) ? (array) $entry['action_scheduler'] : array();
+			$context_bits = array();
+			foreach (array('admin', 'ajax', 'rest', 'cron', 'wp_cli') as $key) {
+				if (!empty($context[$key])) {
+					$context_bits[] = $key;
+				}
+			}
+			if (empty($context_bits)) {
+				$context_bits[] = 'frontend';
+			}
+			echo '<tr>';
+			echo '<td>' . esc_html($when !== '' ? $when . ' GMT' : '—') . '<br /><span class="description">User ' . esc_html((string) absint($entry['user_id'] ?? 0)) . '</span></td>';
+			echo '<td>' . esc_html(number_format((int) ($entry['runtime_ms'] ?? 0) / 1000, 2)) . 's</td>';
+			echo '<td>' . esc_html(number_format((float) ($entry['peak_memory_mb'] ?? 0), 1)) . ' MB</td>';
+			echo '<td>' . esc_html(implode(', ', $context_bits)) . '</td>';
+			echo '<td><strong>' . esc_html((string) ($entry['admin_page'] ?? '')) . '</strong><br /><span class="description">' . esc_html((string) ($entry['request_uri'] ?? '')) . '</span></td>';
+			echo '<td>';
+			echo '<div><strong>' . esc_html__('WP-Cron due', 'vms') . ':</strong> ' . esc_html((string) absint($cron_counts['due_event_count'] ?? 0)) . '</div>';
+			if (!empty($as_counts)) {
+				echo '<div><strong>' . esc_html__('AS pending/running', 'vms') . ':</strong> ' . esc_html((string) absint($as_counts['pending_count'] ?? 0)) . ' / ' . esc_html((string) absint($as_counts['running_count'] ?? 0)) . '</div>';
+			}
+			if (!empty($flags)) {
+				echo '<details><summary>' . esc_html__('Flags', 'vms') . '</summary><pre style="white-space:pre-wrap;">' . esc_html(wp_json_encode($flags, JSON_PRETTY_PRINT)) . '</pre></details>';
+			}
+			if (!empty($markers)) {
+				echo '<details><summary>' . esc_html__('Markers', 'vms') . '</summary><pre style="white-space:pre-wrap;">' . esc_html(wp_json_encode($markers, JSON_PRETTY_PRINT)) . '</pre></details>';
+			}
+			echo '</td>';
+			echo '</tr>';
+		}
+
+		echo '</tbody></table>';
+		echo '</div>';
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_track_sensitive_admin_scope')) {
+	function vms_resource_fingerprint_track_sensitive_admin_scope(): void
+	{
+		$scope = vms_resource_fingerprint_sensitive_admin_scope();
+		if (empty($scope)) {
+			return;
+		}
+
+		$scope['mode'] = 'scope_active';
+		vms_resource_fingerprint_flag('action_scheduler_async_blocked', $scope);
+		vms_resource_fingerprint_add_marker('action_scheduler_async_blocked', 0.0, $scope);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_disable_action_scheduler_async_runner')) {
+	function vms_resource_fingerprint_disable_action_scheduler_async_runner(bool $allow): bool
+	{
+		if (!$allow) {
+			return false;
+		}
+
+		$scope = vms_resource_fingerprint_sensitive_admin_scope();
+		if (empty($scope)) {
+			return true;
+		}
+
+		$scope['mode'] = 'filter_blocked';
+		$scope['reason'] = 'sensitive_admin_request';
+		vms_resource_fingerprint_flag('action_scheduler_async_blocked', $scope);
+		vms_resource_fingerprint_add_marker('action_scheduler_async_blocked', 0.0, $scope);
+		return false;
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_track_plugin_lifecycle')) {
+	function vms_resource_fingerprint_track_plugin_lifecycle(string $flag, string $plugin_file): void
+	{
+		$plugin_file = trim($plugin_file);
+		if (!in_array($plugin_file, array('vms/vendor-management-system.php', 'vms-data-tools/vms-data-tools.php'), true)) {
+			return;
+		}
+
+		vms_resource_fingerprint_flag($flag, $plugin_file);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_track_plugin_activation')) {
+	function vms_resource_fingerprint_track_plugin_activation(string $plugin, ?bool $network_wide = null): void
+	{
+		vms_resource_fingerprint_track_plugin_lifecycle('plugin_activation', $plugin);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_track_plugin_deactivation')) {
+	function vms_resource_fingerprint_track_plugin_deactivation(string $plugin, ?bool $network_wide = null): void
+	{
+		vms_resource_fingerprint_track_plugin_lifecycle('plugin_deactivation', $plugin);
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_track_plugin_update')) {
+	function vms_resource_fingerprint_track_plugin_update($upgrader, array $hook_extra): void
+	{
+		if (($hook_extra['type'] ?? '') !== 'plugin') {
+			return;
+		}
+
+		foreach ((array) ($hook_extra['plugins'] ?? array()) as $plugin_file) {
+			vms_resource_fingerprint_track_plugin_lifecycle('plugin_update', (string) $plugin_file);
+		}
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_track_action_scheduler_context')) {
+	function vms_resource_fingerprint_track_action_scheduler_context(string $context = 'WP Cron'): void
+	{
+		vms_resource_fingerprint_flag('action_scheduler_run', array('context' => $context));
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_before_action_scheduler_queue')) {
+	function vms_resource_fingerprint_before_action_scheduler_queue(): void
+	{
+		vms_resource_fingerprint_span_start('action_scheduler.queue', array('page' => vms_resource_fingerprint_current_admin_page()));
+	}
+}
+
+if (!function_exists('vms_resource_fingerprint_after_action_scheduler_queue')) {
+	function vms_resource_fingerprint_after_action_scheduler_queue(): void
+	{
+		vms_resource_fingerprint_span_finish('action_scheduler.queue');
+	}
+}
+
+vms_resource_fingerprint_bootstrap();
+vms_admin_guard_hook_probe_bootstrap();
+add_action('admin_init', 'vms_resource_fingerprint_track_sensitive_admin_scope', 1);
+add_filter('action_scheduler_allow_async_request_runner', 'vms_resource_fingerprint_disable_action_scheduler_async_runner', 999);
+add_action('activated_plugin', 'vms_resource_fingerprint_track_plugin_activation', 10, 2);
+add_action('deactivated_plugin', 'vms_resource_fingerprint_track_plugin_deactivation', 10, 2);
+add_action('upgrader_process_complete', 'vms_resource_fingerprint_track_plugin_update', 10, 2);
+add_action('action_scheduler_run_queue', 'vms_resource_fingerprint_track_action_scheduler_context', 1, 1);
+add_action('action_scheduler_before_process_queue', 'vms_resource_fingerprint_before_action_scheduler_queue', 1);
+add_action('action_scheduler_after_process_queue', 'vms_resource_fingerprint_after_action_scheduler_queue', 999);

@@ -1,0 +1,34 @@
+/* VMS WordPress admin menu safety net.
+ *
+ * The compact-menu pass now runs after WordPress page-access checks and before
+ * the left admin menu is rendered. This tiny global stylesheet remains loaded
+ * across wp-admin as a defensive fallback for legacy/add-on items that carry
+ * the hidden class instead of being removed from the rendered rail.
+ */
+#adminmenu .wp-submenu li.vms-admin-ui-menu-hidden {
+  display: none !important;
+}
+
+/* Grouped VMS left flyout.
+ *
+ * This is intentionally minimal. WordPress only supports a flat submenu, so VMS
+ * uses lightweight section rows plus indented child rows. The menu content is
+ * generated from the VMS admin page registry, not from one-off visual patches.
+ */
+#adminmenu .wp-submenu li.vms-admin-ui-menu-section > a {
+  font-weight: 700;
+  opacity: 1;
+  padding-top: 8px;
+  margin-top: 5px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+#adminmenu .wp-submenu li.vms-admin-ui-menu-section:first-child > a {
+  margin-top: 0;
+  border-top: 0;
+}
+
+#adminmenu .wp-submenu li.vms-admin-ui-menu-subitem > a {
+  padding-left: 24px !important;
+  font-size: 12px;
+}

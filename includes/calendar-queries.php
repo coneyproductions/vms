@@ -52,73 +52,85 @@ function vms_get_event_plans_for_venue_month(int $venue_id, string $ym): array
 
     $m = vms_parse_month_ym($ym);
 
-    // Pull all plans for this venue where _vms_event_date is within [start, end)
-    $plans = get_posts([
-        'post_type'      => 'vms_event_plan',
-        'post_status'    => ['publish', 'draft'],
-        'posts_per_page' => -1,
-        'orderby'        => 'meta_value',
-        'order'          => 'ASC',
-        'meta_key'       => '_vms_event_date',
-        'meta_query'     => [
-            'relation' => 'AND',
-            [
-                'key'     => '_vms_venue_id',
-                'value'   => $venue_id,
-                'compare' => '=',
-                'type'    => 'NUMERIC',
-            ],
-            [
-                'key'     => '_vms_event_date',
-                'value'   => $m['start'],
-                'compare' => '>=',
-                'type'    => 'CHAR',
-            ],
-            [
-                'key'     => '_vms_event_date',
-                'value'   => $m['end'],
-                'compare' => '<',
-                'type'    => 'CHAR',
-            ],
-        ],
-    ]);
+    // Convert exclusive end to inclusive end for the canonical feed.
+    $month_end_inclusive = gmdate('Y-m-d', strtotime('-1 day', strtotime($m['end'])));
+    $events = function_exists('vms_get_calendar_events')
+        ? (array) vms_get_calendar_events([
+            'start_date' => $m['start'],
+            'end_date' => $month_end_inclusive,
+            'venue_ids' => [$venue_id],
+            'context' => 'admin',
+            'include_past' => true,
+            'include_statuses' => ['draft', 'ready', 'published', 'tentative', 'confirmed', 'cancelled', 'archived'],
+        ])
+        : [];
 
     // Group by day-of-month (1..31)
     $by_day = [];
 
-    foreach ($plans as $p) {
-        $date = (string) get_post_meta($p->ID, '_vms_event_date', true);
-        if (!$date) continue;
+    foreach ($events as $event) {
+        $date = isset($event['date_key']) ? (string) $event['date_key'] : '';
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            continue;
+        }
 
         $ts = strtotime($date . ' 00:00:00');
-        if (!$ts) continue;
-
+        if (!$ts) {
+            continue;
+        }
         $day = (int) gmdate('j', $ts);
 
-        $band_id   = (int) get_post_meta($p->ID, '_vms_band_vendor_id', true);
-        $band_name = $band_id ? get_the_title($band_id) : '';
-        if (!$band_name) $band_name = '(No band selected)';
+        $band_id = 0;
+        $band_name = '';
+        $groups = isset($event['vendor_groups']) && is_array($event['vendor_groups']) ? $event['vendor_groups'] : [];
+        if (!empty($groups['talent']['vendors'][0]) && is_array($groups['talent']['vendors'][0])) {
+            $band_id = (int) ($groups['talent']['vendors'][0]['vendor_id'] ?? 0);
+            $band_name = (string) ($groups['talent']['vendors'][0]['display_name'] ?? '');
+        }
+        if ($band_name === '') {
+            foreach ($groups as $group) {
+                if (!is_array($group) || empty($group['vendors'][0]) || !is_array($group['vendors'][0])) {
+                    continue;
+                }
+                $band_id = (int) ($group['vendors'][0]['vendor_id'] ?? 0);
+                $band_name = (string) ($group['vendors'][0]['display_name'] ?? '');
+                if ($band_name !== '') {
+                    break;
+                }
+            }
+        }
+        if ($band_name === '') {
+            $band_name = (string) ($event['title'] ?? '(Event)');
+        }
 
-        // Prefer band featured image, fallback to plan featured image
-        $img_id = $band_id ? get_post_thumbnail_id($band_id) : 0;
-        if (!$img_id) $img_id = get_post_thumbnail_id($p->ID);
+        $img_url = isset($event['image_url']) ? (string) $event['image_url'] : '';
 
-        $img_url = $img_id ? wp_get_attachment_image_url($img_id, 'thumbnail') : '';
+        $status = isset($event['plan_status']) ? sanitize_key((string) $event['plan_status']) : 'draft';
+        if ($status === '') {
+            $status = 'draft';
+        }
 
-        $status = (string) get_post_meta($p->ID, '_vms_event_plan_status', true);
-        if ($status === '') $status = 'draft';
+        $start_time = '';
+        $start_local = isset($event['start_local']) ? (string) $event['start_local'] : '';
+        if ($start_local !== '') {
+            try {
+                $dt = new DateTimeImmutable($start_local);
+                $start_time = $dt->format('H:i');
+            } catch (Exception $e) {
+                $start_time = '';
+            }
+        }
 
-        $start_time = (string) get_post_meta($p->ID, '_vms_start_time', true);
-
+        $plan_id = (int) ($event['event_plan_id'] ?? 0);
         $by_day[$day][] = [
-            'plan_id'    => (int) $p->ID,
+            'plan_id'    => $plan_id,
             'date'       => $date,
             'band_id'    => $band_id,
             'band_name'  => $band_name,
             'img_url'    => $img_url,
             'status'     => $status,
             'start_time' => $start_time,
-            'edit_url'   => get_edit_post_link($p->ID, ''),
+            'edit_url'   => ($plan_id > 0 ? get_edit_post_link($plan_id, '') : ''),
         ];
     }
 
