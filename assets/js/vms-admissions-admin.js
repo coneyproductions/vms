@@ -1,8 +1,168 @@
-(function () {
-  const cfg = window.vmsAdmissionsAdmin || null;
+(function (globalScope) {
+  const ADMISSIONS_SESSION_EXPIRED_MESSAGE = 'Your Admissions session expired. Refresh this page, then try again.';
+  const ADMISSIONS_NETWORK_FAILURE_MESSAGE = 'Could not reach Admissions. Refresh and try again.';
+  const ADMISSIONS_LOAD_FAILURE_MESSAGE = 'Could not load Admissions data. Refresh and try again.';
+  const ADMISSIONS_REQUEST_FAILURE_MESSAGE = 'Admissions request failed. Refresh and try again.';
+
+  const admissionsNormalizeText = (value) => String(value || '').trim();
+
+  const admissionsResolveStatus = (payload, responseMeta) => {
+    const explicitStatus = Number(responseMeta && responseMeta.status ? responseMeta.status : 0);
+    if (explicitStatus > 0) {
+      return explicitStatus;
+    }
+
+    const payloadStatus = Number(
+      payload && payload.data && payload.data.status
+        ? payload.data.status
+        : (payload && payload.error && payload.error.status ? payload.error.status : 0)
+    );
+
+    return payloadStatus > 0 ? payloadStatus : 0;
+  };
+
+  const admissionsExtractError = (payload) => {
+    const nestedError = payload && typeof payload === 'object' && payload.error && typeof payload.error === 'object'
+      ? payload.error
+      : null;
+
+    return {
+      code: admissionsNormalizeText(nestedError && nestedError.code ? nestedError.code : (payload && payload.code ? payload.code : '')),
+      message: admissionsNormalizeText(nestedError && nestedError.message ? nestedError.message : (payload && payload.message ? payload.message : '')),
+    };
+  };
+
+  const admissionsSessionExpired = ({ code, message, status, rawText }) => {
+    const normalizedCode = admissionsNormalizeText(code).toLowerCase();
+    if (normalizedCode === 'vms_admission_bad_nonce' || normalizedCode === 'rest_cookie_invalid_nonce') {
+      return true;
+    }
+
+    if (status !== 401 && status !== 403) {
+      return false;
+    }
+
+    const combined = [
+      admissionsNormalizeText(code),
+      admissionsNormalizeText(message),
+      admissionsNormalizeText(rawText),
+    ].join(' ').toLowerCase();
+
+    const patterns = [
+      /\bnonce\b/,
+      /session(?:\s+\w+){0,2}\s+expired/,
+      /cookie(?:\s|-)?check failed/,
+      /rest_cookie_invalid_nonce/,
+      /authentication(?:\s+\w+){0,2}\s+expired/,
+      /\bauth(?:entication)?\s+expired\b/,
+      /login(?:\s+\w+){0,2}\s+expired/,
+    ];
+
+    return patterns.some((pattern) => pattern.test(combined));
+  };
+
+  const normalizeAdmissionsErrorMessage = ({ code, message, status, rawText, fallbackMessage }) => {
+    if (admissionsSessionExpired({ code, message, status, rawText })) {
+      return ADMISSIONS_SESSION_EXPIRED_MESSAGE;
+    }
+
+    if (admissionsNormalizeText(message) !== '') {
+      return admissionsNormalizeText(message);
+    }
+
+    return fallbackMessage;
+  };
+
+  const normalizeAdmissionsRestPayload = (payload, responseMeta = {}, fallbackMessage = ADMISSIONS_REQUEST_FAILURE_MESSAGE) => {
+    if (payload && payload.ok === true) {
+      return payload;
+    }
+
+    const { code, message } = admissionsExtractError(payload);
+    const status = admissionsResolveStatus(payload, responseMeta);
+    const rawText = admissionsNormalizeText(responseMeta && responseMeta.rawText ? responseMeta.rawText : '');
+
+    return {
+      ok: false,
+      data: payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : null,
+      error: {
+        code,
+        message: normalizeAdmissionsErrorMessage({
+          code,
+          message,
+          status,
+          rawText,
+          fallbackMessage,
+        }),
+      },
+    };
+  };
+
+  const normalizeAdmissionsNetworkFailure = (message = ADMISSIONS_NETWORK_FAILURE_MESSAGE) => ({
+    ok: false,
+    data: null,
+    error: {
+      code: 'vms_admission_request_failed',
+      message,
+    },
+  });
+
+  const normalizeAdmissionsFetchResponse = async (response, fallbackMessage = ADMISSIONS_REQUEST_FAILURE_MESSAGE) => {
+    const status = response && typeof response.status === 'number' ? response.status : 0;
+    let rawText = '';
+
+    if (response && typeof response.text === 'function') {
+      try {
+        rawText = await response.text();
+      } catch (err) {
+        rawText = '';
+      }
+    }
+
+    let payload = null;
+    if (admissionsNormalizeText(rawText) !== '') {
+      try {
+        payload = JSON.parse(rawText);
+      } catch (err) {
+        payload = null;
+      }
+    }
+
+    return normalizeAdmissionsRestPayload(payload, { status, rawText }, fallbackMessage);
+  };
+
+  const performAdmissionsRequest = (fetchImpl, url, options, fallbackMessage, networkMessage = ADMISSIONS_NETWORK_FAILURE_MESSAGE) => {
+    if (typeof fetchImpl !== 'function') {
+      return Promise.resolve(normalizeAdmissionsNetworkFailure(networkMessage));
+    }
+
+    return Promise.resolve()
+      .then(() => fetchImpl(url, options))
+      .then((response) => normalizeAdmissionsFetchResponse(response, fallbackMessage))
+      .catch(() => normalizeAdmissionsNetworkFailure(networkMessage));
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      ADMISSIONS_SESSION_EXPIRED_MESSAGE,
+      ADMISSIONS_NETWORK_FAILURE_MESSAGE,
+      ADMISSIONS_LOAD_FAILURE_MESSAGE,
+      ADMISSIONS_REQUEST_FAILURE_MESSAGE,
+      normalizeAdmissionsRestPayload,
+      normalizeAdmissionsFetchResponse,
+      normalizeAdmissionsNetworkFailure,
+      performAdmissionsRequest,
+    };
+  }
+
+  if (!globalScope || !globalScope.document) {
+    return;
+  }
+
+  const cfg = globalScope.vmsAdmissionsAdmin || null;
   if (!cfg || !cfg.eventPlanId) return;
 
-  const root = document.querySelector('.vms-adm-box');
+  const root = globalScope.document.querySelector('.vms-adm-box');
   if (!root) return;
 
   const bindVendorGuestRules = () => {
@@ -22,57 +182,20 @@
   };
   bindVendorGuestRules();
 
-  const nameEl = document.getElementById('vms-adm-guest-name');
-  const emailEl = document.getElementById('vms-adm-guest-email');
-  const sizeEl = document.getElementById('vms-adm-party-size');
-  const phoneEl = document.getElementById('vms-adm-phone');
-  const notesEl = document.getElementById('vms-adm-notes');
-  const addBtn = document.getElementById('vms-adm-add-entry');
-  const listEl = document.getElementById('vms-adm-list');
-  const summaryEl = document.getElementById('vms-adm-summary');
-  const feedbackEl = document.getElementById('vms-adm-feedback');
-  const exportEl = document.getElementById('vms-adm-export-csv');
+  const nameEl = globalScope.document.getElementById('vms-adm-guest-name');
+  const emailEl = globalScope.document.getElementById('vms-adm-guest-email');
+  const sizeEl = globalScope.document.getElementById('vms-adm-party-size');
+  const phoneEl = globalScope.document.getElementById('vms-adm-phone');
+  const notesEl = globalScope.document.getElementById('vms-adm-notes');
+  const addBtn = globalScope.document.getElementById('vms-adm-add-entry');
+  const listEl = globalScope.document.getElementById('vms-adm-list');
+  const summaryEl = globalScope.document.getElementById('vms-adm-summary');
+  const feedbackEl = globalScope.document.getElementById('vms-adm-feedback');
+  const exportEl = globalScope.document.getElementById('vms-adm-export-csv');
 
   if (exportEl && cfg.exportCsvUrl) {
     exportEl.href = cfg.exportCsvUrl;
   }
-
-  const admissionsErrorMessage = (code, message, fallback) => {
-    const normalizedCode = String(code || '');
-    const normalizedMessage = String(message || '').trim();
-
-    if (normalizedCode === 'vms_admission_bad_nonce') {
-      return 'Your Admissions session expired. Refresh this page to continue.';
-    }
-
-    if (normalizedMessage) {
-      return normalizedMessage;
-    }
-
-    return fallback;
-  };
-
-  const normalizeRestPayload = (payload, fallback) => {
-    if (payload && payload.ok === true) {
-      return payload;
-    }
-
-    const errorCode = payload && payload.error && payload.error.code
-      ? payload.error.code
-      : (payload && payload.code ? payload.code : '');
-    const errorMessage = payload && payload.error && payload.error.message
-      ? payload.error.message
-      : (payload && payload.message ? payload.message : '');
-
-    return {
-      ok: false,
-      data: payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : null,
-      error: {
-        code: errorCode,
-        message: admissionsErrorMessage(errorCode, errorMessage, fallback),
-      },
-    };
-  };
 
   const rest = (path, options) => {
     const opts = options || {};
@@ -83,10 +206,11 @@
       requestPath += (requestPath.indexOf('?') === -1 ? '?' : '&') + stamp;
     }
     const fallbackMessage = method === 'GET'
-      ? 'Could not load Admissions data. Refresh and try again.'
-      : 'Admissions request failed. Refresh and try again.';
+      ? ADMISSIONS_LOAD_FAILURE_MESSAGE
+      : ADMISSIONS_REQUEST_FAILURE_MESSAGE;
+    const fetchImpl = typeof globalScope.fetch === 'function' ? globalScope.fetch.bind(globalScope) : null;
 
-    return fetch(cfg.restUrl.replace(/\/$/, '') + requestPath, {
+    return performAdmissionsRequest(fetchImpl, cfg.restUrl.replace(/\/$/, '') + requestPath, {
       credentials: 'include',
       cache: 'no-store',
       headers: {
@@ -96,23 +220,7 @@
         'X-WP-Nonce': cfg.nonce,
       },
       ...opts,
-    }).then(async (r) => {
-      let payload = null;
-      try {
-        payload = await r.json();
-      } catch (err) {
-        payload = null;
-      }
-
-      return normalizeRestPayload(payload, fallbackMessage);
-    }).catch(() => ({
-      ok: false,
-      data: null,
-      error: {
-        code: 'vms_admission_request_failed',
-        message: 'Could not reach Admissions. Refresh and try again.',
-      },
-    }));
+    }, fallbackMessage, ADMISSIONS_NETWORK_FAILURE_MESSAGE);
   };
 
   const setFeedback = (msg, isError) => {
@@ -242,6 +350,8 @@
       renderRows((listResp.data && listResp.data.items) || []);
       if (summaryResp && summaryResp.ok === true) {
         renderSummary(summaryResp.data || {});
+      } else if (summaryResp && summaryResp.error && summaryResp.error.message) {
+        setFeedback(summaryResp.error.message, true);
       }
     });
   };
@@ -380,7 +490,7 @@
         
 
     if (action === 'void') {
-      if (!window.confirm('Void this guest list entry? You can restore it later.')) return;
+      if (!globalScope.confirm('Void this guest list entry? You can restore it later.')) return;
 
       btn.disabled = true;
       setFeedback('Voiding entry…', false);
@@ -441,6 +551,7 @@
     if (action === 'edit_save') {
       const panel = item.querySelector('.vms-adm-edit');
       if (!panel) return;
+      const saveBtn = btn;
       const guestName = (panel.querySelector('input[data-field="guest_name"]')?.value || '').trim();
       const partySizeRaw = (panel.querySelector('input[data-field="party_size"]')?.value || '1').trim();
       const email = (panel.querySelector('input[data-field="guest_email"]')?.value || '').trim();
@@ -454,6 +565,9 @@
         return;
       }
 
+      saveBtn.disabled = true;
+      setFeedback('Saving entry…', false);
+
       rest('/admissions/' + id, {
         method: 'PATCH',
         body: JSON.stringify({ guest_name: guestName, guest_email: email, party_size: partySize, phone: phone, notes: notes }),
@@ -465,6 +579,8 @@
         setFeedback('Entry updated.', false);
         panel.hidden = true;
         load();
+      }).finally(() => {
+        saveBtn.disabled = false;
       });
       return;
     }
@@ -482,4 +598,4 @@
   if (addBtn) addBtn.addEventListener('click', addEntry);
   if (listEl) listEl.addEventListener('click', handleRowAction);
   load();
-})();
+})(typeof globalThis !== 'undefined' ? globalThis : this);
