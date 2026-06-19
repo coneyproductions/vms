@@ -7,11 +7,12 @@ function vms_public_release_build_usage(): string
 {
 	return <<<'TXT'
 Usage:
-  php scripts/build-public-release.php [--output-dir <dir>] [--force] [--allow-dirty] [--dev-build] [--provenance-manifest <file>]
+  php scripts/build-public-release.php [--output-dir <dir>] [--force] [--allow-dirty] [--dev-build] [--provenance-manifest <file>] [--skip-release-tests]
 
 Options:
   --output-dir <dir>         Write the ZIP and release reports to this directory. Defaults to ./dist
   --provenance-manifest <f>  Normalize staged file mtimes from a provenance manifest and verify the built ZIP against it.
+  --skip-release-tests       Skip standalone regression scripts that expect a local WordPress environment.
   --force                    Overwrite an existing ZIP or report with the same filename.
   --allow-dirty              Allow a final/public artifact from a dirty git worktree and mark it in the report.
   --dev-build                Allow a development artifact from a dirty git worktree and append -dev to the filename.
@@ -52,6 +53,10 @@ for ($index = 1; $index < $argc; $index++) {
 
 		case '--allow-dirty':
 			$config['allow_dirty'] = true;
+			break;
+
+		case '--skip-release-tests':
+			$config['release_tests'] = array();
 			break;
 
 		case '--dev-build':

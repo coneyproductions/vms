@@ -25,6 +25,7 @@ Common options:
 php scripts/build-public-release.php --output-dir ./dist
 php scripts/build-public-release.php --output-dir "/tmp/VMS Release Output"
 php scripts/build-public-release.php --provenance-manifest ./provenance/releases/0.2.24.747.json
+php scripts/build-public-release.php --provenance-manifest ./provenance/releases/0.2.24.747.json --skip-release-tests
 php scripts/build-public-release.php --force
 php scripts/build-public-release.php --dev-build
 php scripts/build-public-release.php --allow-dirty
@@ -37,6 +38,8 @@ When a provenance manifest is supplied, the builder also:
 - normalizes staged runtime mtimes from the manifest before zipping
 - verifies the staged package contents against the manifest file list and digests
 - verifies the finished ZIP filename and SHA-256 against the manifest
+
+`--skip-release-tests` is intended for standalone repository clones that are not sitting inside a WordPress install. It skips the regression scripts that expect `wp-load.php`, while still preserving the packaging, integrity, and provenance checks.
 
 ## Output
 
