@@ -1,0 +1,66 @@
+Status: PASS
+Artifact: vms-0.2.24.747-public-release.zip
+Artifact Created: yes
+Artifact Size: 1.85 MB
+SHA-256: 0683c78b4d1f300184430e38d08f7aa4f77d6e36f261bbc758aca9fe1c1d003d
+Build Timestamp (UTC): 2026-06-18T22:36:44+00:00
+Plugin Version: 0.2.24.747
+Plugin Slug: vms
+Git Commit: n/a
+Git State: unknown
+Exclude Manifest: release-public-excludes.txt
+
+Checks:
+- [PASS] Version marker consistency: Plugin header version, VMS_VERSION, and vms-build.txt are synchronized.
+- [PASS] Plugin slug and text domain assumptions: Plugin slug and text domain both resolve to `vms`.
+- [PASS] Vendor-core migration consistency: Activation bootstrap calls the latest vendor-core migration `vms_db_migrate_vendor_core_v7` without forcing schema versions to equal the plugin version.
+- [PASS] Versioned build notes present: Found BUILD-NOTES-0.2.24.747.md.
+- [SKIP] Readme stable tag consistency: No readme file is present, so there is no stable tag to verify.
+- [WARN] Minimum WordPress and PHP requirements declared: Plugin header is missing one or both minimum-requirement fields. Manual review is required before public release.
+- [WARN] Dirty worktree policy: Git metadata is unavailable in this workspace, so the report marks the tree state as unknown.
+- [PASS] Admissions REST permission regression: Admissions REST permissions OK.
+- [PASS] Qualified-ticket assignee validation regression: Ticket claims assignee validation OK.
+- [PASS] Ticket checkout safety regression: ticket-checkout-safety-hardening: OK
+- [PASS] Legacy ticketing smoke regression: event plan legacy/imported ticketing integration smoke: PASS
+- [PASS] Ticket UI isolation regression: Ticket UI override isolation test passed.
+- [PASS] Stage public-release source tree: Staged 367 files while honoring release-public-excludes.txt.
+- [PASS] PHP syntax lint on staged distributable files: PHP lint passed for 284 staged PHP files.
+- [PASS] JavaScript syntax lint on staged distributable files: Node syntax checks passed for 36 staged JavaScript files.
+- [PASS] Target exists and is readable: Validated target: vms
+- [PASS] Single top-level package root: Directory package root resolves to `vms/`.
+- [PASS] Plugin entry file and required runtime files are present: All required runtime files are present.
+- [PASS] Required runtime directories are present: Required runtime directories are present.
+- [PASS] release-public-excludes.txt rules are honored: No manifest-excluded paths were found in the package.
+- [PASS] Archive extraction cannot escape the destination directory: No path traversal patterns were found in the package.
+- [PASS] No developer-machine absolute paths appear in packaged text files: No obvious developer-machine absolute paths were found.
+- [PASS] No obvious local environment URLs appear in packaged text files: No obvious local environment URLs were found.
+- [PASS] No obvious credentials appear in packaged text files: No high-confidence credential markers were found.
+- [PASS] No zero-byte runtime PHP or JavaScript files exist: No zero-byte runtime PHP or JavaScript files were found.
+- [PASS] No nested release archive is included: No nested archive files were found.
+- [PASS] No symlinks are packaged: No symlink entries were found in the package.
+- [PASS] WP-CLI load smoke (baseline): Staged plugin loaded without an immediate fatal while skipping: vms
+- [PASS] WP-CLI load smoke (without WooCommerce): Staged plugin loaded without an immediate fatal while skipping: vms, woocommerce, woocommerce-square
+- [PASS] WP-CLI load smoke (without The Events Calendar stack): Staged plugin loaded without an immediate fatal while skipping: vms, the-events-calendar, event-tickets, event-tickets-plus
+- [PASS] WP-CLI load smoke (without optional ticketing add-ons): Staged plugin loaded without an immediate fatal while skipping: vms, woocommerce-square, event-tickets-plus
+- [WARN] Activation-hook portability review: The default pipeline does not execute activation hooks because that would mutate a WordPress site. Use a disposable site for any activation-hook smoke test.
+- [PASS] Target exists and is readable: Validated target: vms-0.2.24.747-public-release.zip
+- [PASS] ZIP exists and is readable: ZIP archive opened successfully.
+- [PASS] Single top-level ZIP directory: Package contents are rooted at `vms/` only.
+- [PASS] Plugin entry file and required runtime files are present: All required runtime files are present.
+- [PASS] Required runtime directories are present: Required runtime directories are present.
+- [PASS] release-public-excludes.txt rules are honored: No manifest-excluded paths were found in the package.
+- [PASS] Archive extraction cannot escape the destination directory: No path traversal patterns were found in the package.
+- [PASS] No developer-machine absolute paths appear in packaged text files: No obvious developer-machine absolute paths were found.
+- [PASS] No obvious local environment URLs appear in packaged text files: No obvious local environment URLs were found.
+- [PASS] No obvious credentials appear in packaged text files: No high-confidence credential markers were found.
+- [PASS] No zero-byte runtime PHP or JavaScript files exist: No zero-byte runtime PHP or JavaScript files were found.
+- [PASS] No nested release archive is included: No nested archive files were found.
+- [PASS] No symlinks are packaged: No symlink entries were found in the package.
+
+Warnings Requiring Manual Review:
+- Minimum WordPress and PHP requirements declared: Plugin header is missing one or both minimum-requirement fields. Manual review is required before public release.
+- Dirty worktree policy: Git metadata is unavailable in this workspace, so the report marks the tree state as unknown.
+- Activation-hook portability review: The default pipeline does not execute activation hooks because that would mutate a WordPress site. Use a disposable site for any activation-hook smoke test.
+
+Skipped Checks:
+- Readme stable tag consistency: No readme file is present, so there is no stable tag to verify.

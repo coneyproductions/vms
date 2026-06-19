@@ -1,0 +1,2223 @@
+{
+    "schema": 1,
+    "slug": "vms",
+    "version": "0.2.24.747",
+    "deployed_at": "2026-06-18",
+    "tag": "v0.2.24.747",
+    "branches": {
+        "archive": "archive/pre-provenance-reconcile-2026-06-18",
+        "release": "release/0.2.24.747",
+        "work": "work/unreleased-2026-06-18"
+    },
+    "artifact": {
+        "filename": "vms-0.2.24.747-public-release.zip",
+        "sha256": "0683c78b4d1f300184430e38d08f7aa4f77d6e36f261bbc758aca9fe1c1d003d",
+        "size_bytes": 1942884,
+        "entry_count": 368,
+        "root_mtime_unix": 1781822204
+    },
+    "files": [
+        {
+            "path": "admin/docs-page.php",
+            "size_bytes": 213,
+            "sha256": "41d0d5f43ec5d9a02f922736c082a8b71fc13dc0ac92369bae8b34d069973ed8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "admin/load.php",
+            "size_bytes": 368,
+            "sha256": "bb4fdb1a9bc84888635c94adfe783eff3a614103c0e742d28645b60e7ec7e719",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/admin-dashboard-prefs.js",
+            "size_bytes": 9016,
+            "sha256": "ecfab22e7222aedcc2b1d33a5af613cc41d3c716007294f0fb866615aab5232c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/admin-dashboard.js",
+            "size_bytes": 29760,
+            "sha256": "8e27be29df0b243eae2e142c49dd64faec5d86b2fe3e90c8c54942f9a624833c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/admin-help-tooltips.js",
+            "size_bytes": 4675,
+            "sha256": "ec4c88d155256c62d9a02d5d8a362bd2374edf310eae79f8b44f03488a54c971",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/admin-ticketing.js",
+            "size_bytes": 198814,
+            "sha256": "ea3127dba268c8ee73dabd1a4cf846ccfe0f6989f47006ea686e36b07634cdc2",
+            "mtime_unix": 1781766978
+        },
+        {
+            "path": "assets/admin/addons/addons.css",
+            "size_bytes": 3493,
+            "sha256": "7e10e185315ecbae816a016b8651264eb01c9e69e24ab41c8b0e5f2a51a250aa",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/admin/addons/addons.js",
+            "size_bytes": 15580,
+            "sha256": "2f4ac0c97c3fdb1b7260e63e2007ac0b2e8faabd82a4ed3609b6864109d0c602",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/admin/addons/manifest-addons.json",
+            "size_bytes": 1743,
+            "sha256": "6d91e02c085ab0a67c1606c35268dab35f44403a79da6aa85fa2ab786464b709",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/admin-ticket-integrity.css",
+            "size_bytes": 15827,
+            "sha256": "d4c9786d8c8a35e029474201ee4dc50f417a5b309ee733d5be3386b576d1e718",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/docs-public.css",
+            "size_bytes": 846,
+            "sha256": "7df90937ca28627d9bbbfc26141f1cf434ca474000ac93735000f2a4bc121374",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/00-addons-modal.css",
+            "size_bytes": 4812,
+            "sha256": "13c094dc746470b4915932c00b45d3386425a6951c1bdeecb2ad319a2211146f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/10-ticket-core.css",
+            "size_bytes": 6849,
+            "sha256": "d0287804d3bc8696a5b350f3e56c1931da3a4841bddb16798125afe6e420b8f7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/20-footer-cta.css",
+            "size_bytes": 6161,
+            "sha256": "0d1b162493e16068572891d9d762e81734d44e195e7e2eac1a3afd1c4a5f6a69",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/30-ticket-polish.css",
+            "size_bytes": 19777,
+            "sha256": "507d5b4eee4445c3e0c7233853d0c0c07c6cdf0d93d7109e312024ae1737a9f9",
+            "mtime_unix": 1781733462
+        },
+        {
+            "path": "assets/css/ticketing-front/40-ticket-locking.css",
+            "size_bytes": 8592,
+            "sha256": "9278c59193e4f6aaa81c08d132f9baf3c2be33668f9b6bf89f1d42c86bfd45c1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/50-verification-panel.css",
+            "size_bytes": 5812,
+            "sha256": "7235dde8f92cb169a69c2285d0d3e6e72bdd0b9ce6ff3dacb20bd70318e3039f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/60-cancelled-event.css",
+            "size_bytes": 2255,
+            "sha256": "84e240d0aeaf37bf35512a42fbc5b4ef2aa70f5c1f1d0a94e8877d70f1adf6b6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/70-ticket-ui-v2.css",
+            "size_bytes": 18482,
+            "sha256": "0ce8f42e781a98ed364a2005949048ffd16ade099b22bcb3c17b574ff072f32d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/80-ticket-ui-rewrite.css",
+            "size_bytes": 43969,
+            "sha256": "d55f117ea82f01cc8ff7b16677f529824ba3b20a6167dd86655b300360920c18",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/90-ticket-progressive-ui.css",
+            "size_bytes": 14494,
+            "sha256": "f7546af5b6db943cf78cb16ac94471e9fc5616889bf8648cbe807f3f8bbc5216",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/ticketing-front/95-ticket-public-polish.css",
+            "size_bytes": 6478,
+            "sha256": "77cffc0813bda964061ee8692b12050d5214817dac1390be0a3ad75ffe4f43a7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vendor-profile-public.css",
+            "size_bytes": 9313,
+            "sha256": "4dd14254391447a8cd99cd5971305f3ab2d5f574a12c15d07cf445dd633b5398",
+            "mtime_unix": 1781725294
+        },
+        {
+            "path": "assets/css/vms-add-dispatch-admin.css",
+            "size_bytes": 7190,
+            "sha256": "210c5715dff5dff82845c6b1a06b3052c09dc7cb2a60ff5ff6d347ff7d63667f",
+            "mtime_unix": 1781716346
+        },
+        {
+            "path": "assets/css/vms-admin-menu.css",
+            "size_bytes": 1113,
+            "sha256": "5454e01ed8881dc27e2eb2b8cf4cae9effd0686b36910ae0bc2340358d78403a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-admin-ui.css",
+            "size_bytes": 54929,
+            "sha256": "fa440d53ae13fd9a9b183e37b5cc9badefddf7dd0efb660585c0caafceb20881",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-admin.css",
+            "size_bytes": 169583,
+            "sha256": "36d018e2cc906d7bffd957b4964c1335056d62e3799c3becea7c90e464a7a6f4",
+            "mtime_unix": 1781716046
+        },
+        {
+            "path": "assets/css/vms-admissions-admin.css",
+            "size_bytes": 3004,
+            "sha256": "3451c03ec7f1fbc2608d803269ab7b3466772389b918f2b20f8337d5cbd6a358",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-door-checkin.css",
+            "size_bytes": 1975,
+            "sha256": "5ac1df5082dec142eaa806209867291c39d51e4c2712f84bf0e5e1e6ce0697a8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-email-followups-admin.css",
+            "size_bytes": 5010,
+            "sha256": "a702dfa08f8d3fdaeffe1b170ba6e882cc0fc44de2cadf367e55089b61b13b49",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-entitlements-public.css",
+            "size_bytes": 43007,
+            "sha256": "05669ded5bc4d627aa14da0c17c333b4513c2b664c83ee84c80ca79804d1484a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-event-command-center.css",
+            "size_bytes": 11583,
+            "sha256": "2c824863298bf5ab305155d854b2d294048cfc09ec32c137b59889866b1bf986",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-event-details.css",
+            "size_bytes": 4546,
+            "sha256": "67638ba09e71bca0c1899bf1ac447c2b4449d8007377c21882ecf4cb623f9c86",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-event-feedback.css",
+            "size_bytes": 5120,
+            "sha256": "72abf68a363794850a3770c3899b77f1d9a349d67d72f0c2304a6dd5536d1569",
+            "mtime_unix": 1781526530
+        },
+        {
+            "path": "assets/css/vms-event-profitability-admin.css",
+            "size_bytes": 5284,
+            "sha256": "4534a497f164e5ba9c3858b1e4f4189d9eb3d72ceef7a89d768af740a04da664",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-goals-forecast-admin.css",
+            "size_bytes": 1704,
+            "sha256": "7bd4bef0d637a9b9e8773b3f8b631287415152a549c9bdda904028d6360c886a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-notices-front.css",
+            "size_bytes": 3828,
+            "sha256": "3c0a730fb10085b9f48274fa8283f6c2a970ead26e802ab68c526fb80828808a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-pass-claims-admin.css",
+            "size_bytes": 1968,
+            "sha256": "a7165693f7382e6a2d09fb5fb07a28019f651ebf74a873168d5d7daa85a3cb6f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-pass-claims-public.css",
+            "size_bytes": 4995,
+            "sha256": "73ab4637066059e728c3b51dec9d7e3b9dcf3f1fc81e14ce0e2bcac0706e7a95",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-portal.css",
+            "size_bytes": 82001,
+            "sha256": "5b7fe253926527a2b2fcdf081b77bcbfc0d663823002f2cf3b854cd576adba6c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-safety-admin.css",
+            "size_bytes": 1577,
+            "sha256": "a76d8cfa16424abf1b8f24c99e37b21886c8d55ce28a8541d8ff6f34155ebf4c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-shared.css",
+            "size_bytes": 2535,
+            "sha256": "23315854034baba747bcc1bee048f9f9ff6ce731a4f124b15d0f8288c90c23af",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-status-notices-admin.css",
+            "size_bytes": 4413,
+            "sha256": "07101b10f7147853d7b26b9761504ca8bb2fbbcf7f514453268eee357daca8c7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-ticketing-claims-admin.css",
+            "size_bytes": 2112,
+            "sha256": "ecc8cf68cb5aa0399d459c93e8edbd181ab26599f422f81a41d58f0004000836",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-ticketing-front.css",
+            "size_bytes": 139623,
+            "sha256": "e0969c2ff889e334324071e1c110a06391d686cf7ee15d443e2eefbe46e4c593",
+            "mtime_unix": 1781733462
+        },
+        {
+            "path": "assets/css/vms-tours-admin.css",
+            "size_bytes": 351,
+            "sha256": "50bd67f98b4932c2a7aa818d5840cf49b84b4a1cf4a0fe2b2ce318b8c6feb932",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-tours.css",
+            "size_bytes": 4913,
+            "sha256": "fe076f23c5bfb745dbfcc969a434dd18466db62bad1efc3cb0b17df9834a1062",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/css/vms-ui.css",
+            "size_bytes": 26238,
+            "sha256": "c2b5c6bce54baa84b1e7281b7b9796bef5b5031d1614ff65a701ea8b2519db5c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/admin-ticket-integrity.js",
+            "size_bytes": 1672,
+            "sha256": "4b5300cc4107ff345482581852555aa29a5f74a03eb27296ea6c7faea082bd63",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-admin-ui.js",
+            "size_bytes": 26091,
+            "sha256": "3a2b77076ac7a061abf1f843abd30aefe4aa4c7dcb5fac3ab92953dc5ecdab92",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-admissions-admin.js",
+            "size_bytes": 16012,
+            "sha256": "c96e6f025286be811a95a293a92326d822de7768cd60947dce64560b3cd746ff",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-continuity-binder.js",
+            "size_bytes": 1757,
+            "sha256": "764c65422e600cea15d5b8913d85464570a170d7676dcd069bf3436628ba7d94",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-door-checkin.js",
+            "size_bytes": 7418,
+            "sha256": "3d5d5a9c3d5d53bf75428777319a084bc39561e48caf5c1075f2a0e298d24da7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-email-followups-admin.js",
+            "size_bytes": 2065,
+            "sha256": "ed19b1805975e9ac74df246f521943797d68b95d4925684f88f8b8c995329030",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-event-feedback.js",
+            "size_bytes": 3391,
+            "sha256": "d6168c5e7074cf6c535ec26b8d7b720bc5033522d3e7d10c002b7540b6e71048",
+            "mtime_unix": 1781526522
+        },
+        {
+            "path": "assets/js/vms-image-normalize.js",
+            "size_bytes": 4915,
+            "sha256": "6c32b8bda6551eb8f1dddb9b575629fbf3fbf5311d323c2aa1067e1fda2e82ba",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-lineup-schedule-admin.js",
+            "size_bytes": 36375,
+            "sha256": "3c938390f0e7675a1ccd28e4f3c036ea400574aa41d55d3f7d6d27a44771e118",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-notices-front.js",
+            "size_bytes": 21507,
+            "sha256": "cd26233c2f4360b0623d3aaa11ccb2979dcd244c9347e9ea30a44d5316a3c9f1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-pass-claims-admin.js",
+            "size_bytes": 1148,
+            "sha256": "a85d8460cc55b2e9e114c647428a33eee4273b19fc989bac94a31ea5f98ea214",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-pass-claims-public.js",
+            "size_bytes": 1516,
+            "sha256": "fc7dc311b366870344c7d8f34b67714c71b96ea7b708d40cb451cc40a15bd0fa",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-portal-calendar-modal.js",
+            "size_bytes": 4428,
+            "sha256": "4bd91ed6ff1b405e8cc297473de3df5c30c8e2c11f2ca8db05fa859564933295",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-public-calendar.js",
+            "size_bytes": 10531,
+            "sha256": "44131c259be7ceb35a009039832fca380d4daa4db8ac11a19a50501d199a9317",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-safety-admin.js",
+            "size_bytes": 629,
+            "sha256": "0b5d230a63df4f7010437f17aa6a847ab735bc8e4457942da5d76ff60d554f42",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-social-admin.js",
+            "size_bytes": 4734,
+            "sha256": "26d1a3d04ba95fc772f010557bd4c4d643f383e7fa1f4fa8b528e3873d4c4514",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-status-notices-admin.js",
+            "size_bytes": 20532,
+            "sha256": "e0e3fcba386b19132a9339d0b9ee627b978ca4f16b5ede7f4ebdaa1f025f6cf2",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-tasks-event-plan-metabox.js",
+            "size_bytes": 4930,
+            "sha256": "e5f2dc745e45d06180ebd48ed7a414eca9bb187fd0eddf0e85d4abcb19c8cecb",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-ticketing-front.js",
+            "size_bytes": 908,
+            "sha256": "58b0203a9146332680a6b1fee6b097cc10c12ac53190259e4864a6731508ba72",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-tours-admin.js",
+            "size_bytes": 464,
+            "sha256": "8995df8b926af7d88c0169b5696c0457f13a3b93e6e02d1d438d12abfd7cac49",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-tours-runtime.js",
+            "size_bytes": 31225,
+            "sha256": "877043c4d21fd3bbb2ddc1e7a1cf9cd1098eeb6d31d65c9464c438b716639280",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-tours.js",
+            "size_bytes": 24916,
+            "sha256": "de5174934fa9353e3df9404ffe216e6ecd9526a86ef1ee3053e04f5b7f69c4d6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-vendor-guest-portal.js",
+            "size_bytes": 3743,
+            "sha256": "d05a0cbf714b239ad476845112954abe6d18bbd6c21b502f0de4ea0111b9af3c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/js/vms-verification-upload.js",
+            "size_bytes": 11090,
+            "sha256": "4d23c373b97c3fab357c9ea105d49815f1fac271ba19fce96afa528b7936c4f6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vendor/driverjs/LICENSE.txt",
+            "size_bytes": 1074,
+            "sha256": "ca0b9b973b1ebdfcd5ba71b0e48cb53680f0f7fc7e06c465a07c8c951928e154",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vendor/driverjs/README.txt",
+            "size_bytes": 158,
+            "sha256": "7d3da8e45a2c4a927ebd4f0fdaf6427fd9d6c18cc4e440f9bf74cb8a950a6dbd",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vendor/driverjs/driver.css",
+            "size_bytes": 3938,
+            "sha256": "4b398481a7ce8375af4d9f58f39410c73a0b70726fe513686d3d51c10ad76cb5",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vendor/driverjs/driver.js",
+            "size_bytes": 21302,
+            "sha256": "c52b7d064ed31623e94ee144127c9751e4cb0b6e2c2de1e78ef99182ae11063d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vendor/driverjs/driver.min.css",
+            "size_bytes": 3938,
+            "sha256": "4b398481a7ce8375af4d9f58f39410c73a0b70726fe513686d3d51c10ad76cb5",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vendor/driverjs/driver.min.js",
+            "size_bytes": 21302,
+            "sha256": "c52b7d064ed31623e94ee144127c9751e4cb0b6e2c2de1e78ef99182ae11063d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vms-number-input-guard.js",
+            "size_bytes": 610,
+            "sha256": "6aab566c5774d3a6934dbea6cfa775b659c982f319a02aafc9c89d8be00261fe",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vms-ticketing-front-fallback.js",
+            "size_bytes": 21091,
+            "sha256": "c5eef6fc44a93714cdab8f64e4eddea12b26ed484b35ceb631162a654c40d4b2",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vms-ticketing-front-server-controls.js",
+            "size_bytes": 27681,
+            "sha256": "32ee1ab89a17338d79adf32da086ea89298f7ddf7ba936dab45034ce758a796f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "assets/vms-ticketing-front.js",
+            "size_bytes": 212245,
+            "sha256": "540653e0f16593c96a289a85c2523e1bfff35d522a2985e1d040d2ac9418cca7",
+            "mtime_unix": 1781751656
+        },
+        {
+            "path": "assets/vms-ticketing-progressive-ui.js",
+            "size_bytes": 23792,
+            "sha256": "d0cd064a419e27a6e1add535a9e9a0881594008d069d2538d5d978377837a5d1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/activation.php",
+            "size_bytes": 4490,
+            "sha256": "4e220d9f2f58efe4869720acf01dad09e58b3be3f371e6d214ee3826214b5f2d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin-ui/assets.php",
+            "size_bytes": 1539,
+            "sha256": "cacee40d8748775eab88c6a86d787a2e09ca1e0dd350e4ddee6d6c13fb96a1d1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin-ui/context.php",
+            "size_bytes": 7367,
+            "sha256": "0a01d9fc85cb131195cd0f4c6c9da1f7f00d0277224b9d49a2d625c8753f4a15",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin-ui/helpers.php",
+            "size_bytes": 901,
+            "sha256": "a6ebd35328694328e1bc2b441088778cddc89d189b71ee2e5f6e4a40be9cafc0",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin-ui/nav.php",
+            "size_bytes": 48342,
+            "sha256": "7737dcd7332edc5a78319660ab5a4c0a5b1dc3b8d8d3f05fbb2cd182c27441b9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin-ui/shell.php",
+            "size_bytes": 6065,
+            "sha256": "85468d555fbd46d1150f2cbb91ddd1a31ec3357c1185647607e82cad511f6307",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/addons/class-vms-addons-health.php",
+            "size_bytes": 1905,
+            "sha256": "ac7cfc001abb58ddf309c66eb0b3be3f197402c15e5b0db08a2ac41df68e42fd",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/addons/class-vms-addons-installer.php",
+            "size_bytes": 2245,
+            "sha256": "074d9852501f26060c1b213cccd9fd5a03a392d193842da317ad70a864c83127",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/addons/class-vms-addons-licensing.php",
+            "size_bytes": 6277,
+            "sha256": "6b48386db706e507da945cdb53ff65ccb0e0cd67686ae98c7ec90fb63e001e38",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/addons/class-vms-addons-logger.php",
+            "size_bytes": 1829,
+            "sha256": "a2d1a20c157c57587dd255159c199eb9e8caa49c896317084d51e001b2a9cd44",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/addons/class-vms-addons-manifest.php",
+            "size_bytes": 3127,
+            "sha256": "3930a7a490b569965d1a297f7f53fb363c2207e1d8cb4364a971a4ebdcf624df",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/addons/class-vms-admin-addons.php",
+            "size_bytes": 11870,
+            "sha256": "18ae3fd60ae45461d6f5e7e58e8a3b7c45408435b54d71f5dcb0ef50de59bfa7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/addons/views/page-addons.php",
+            "size_bytes": 2761,
+            "sha256": "02469d22bed2cc9bcafcfa5b28580318124ab566c47ccc618a918bd033a028d9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/admin-notices.php",
+            "size_bytes": 2817,
+            "sha256": "d8bb0385c53e9da9fb55a7f171531aa450c65f81f91a63506751670b652cff88",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/approvals-review-queue.php",
+            "size_bytes": 44506,
+            "sha256": "a771bfb824a93b87e64b485b16878c43e08a4761da7b5e6d3b9dd2b7a9de3ac0",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/budget-calculator.php",
+            "size_bytes": 70099,
+            "sha256": "07bfaf3612b7b66c1d85bc5b2c57bf4cb6102de9a9305c78368be7b81798c44c",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/admin/cancelled-event-cost-review.php",
+            "size_bytes": 4584,
+            "sha256": "f0dd57bd7cdb14daa29870dd9a24b87bf21a46cc78e8962fa1886efa5cba713a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/continuity-binder.php",
+            "size_bytes": 12248,
+            "sha256": "c3aacfb1c950d3aaf8d2e493deec39fe490ed7f3d4785e6af18ce7b03099a9f7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/dashboard.php",
+            "size_bytes": 4152,
+            "sha256": "be8322e964e002272d1e9b7e63a79c2600878b095bf60c96adf1a82d959afd6f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/data-tools/actions-event-plan-import.php",
+            "size_bytes": 11090,
+            "sha256": "aee2de28f207be951a6939b91c955ef6de140755b29938992d6587ba347329ff",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/data-tools/page-event-plan-import.php",
+            "size_bytes": 15678,
+            "sha256": "327c8303fd72cd6cc29053ece9eecbd0a8d78077b7cd80e3e60fd6649e447cfa",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/docs-page.php",
+            "size_bytes": 3408,
+            "sha256": "bcf15eaa0d924ec8d0904d6d6dfe7fd6bfaadb88b348733cc4693186f5b9cea9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/due-dates.php",
+            "size_bytes": 50359,
+            "sha256": "02378f47b4010811c3a1de4ad2ab80c70685903570dd53d4e3e45734646040d8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/event-command-center.php",
+            "size_bytes": 152241,
+            "sha256": "12ed1ebc98e50ab3610de6ffa374fa6cdc441288675d35a88aaffa15882423ae",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/event-feedback.php",
+            "size_bytes": 42447,
+            "sha256": "0abca474d538aeaf2028e10f3a6e4f406a233ca325d6ffcb0b4036c816880cb4",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/admin/event-profitability-report.php",
+            "size_bytes": 20172,
+            "sha256": "cd58fa19e36ddb56f000afcfc0ef95f62cce52a8175aa1c1b258a5d71a923794",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/express-bar.php",
+            "size_bytes": 14145,
+            "sha256": "36698b34c2bb5bbe71f881abb95f83c31c6e7d892efa36ffaf8fae3b1440e418",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/goals-forecast.php",
+            "size_bytes": 43329,
+            "sha256": "6e64911a78f21603e6c0c0df90ad3fa19ad2d0f52ac2578e4ff0c1d891262667",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/holidays.php",
+            "size_bytes": 24705,
+            "sha256": "1784e9207d1c6929b7c6659f4eff8f39130cc3146cadcfb95c917b1cdaae2ed4",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/integrity-calendar-reconcile.php",
+            "size_bytes": 19170,
+            "sha256": "d38ecf56f9c1a39d5cd5cdf3449be3af21a08672265c5b65ccef2f56ad9f7b2b",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/integrity-venue-reconcile.php",
+            "size_bytes": 9667,
+            "sha256": "4857f7750654b1e5067a7613b6e3a7a239742d9b22fc14b0e83ae7f23c869b6d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/load.php",
+            "size_bytes": 4016,
+            "sha256": "035512ab65c56dc2a3ef283c219e135bb2df5996baa9ed5e6e1a942d5e9661cb",
+            "mtime_unix": 1781592510
+        },
+        {
+            "path": "includes/admin/menu.php",
+            "size_bytes": 17062,
+            "sha256": "49e66eb9160647a6673801652f0590a3879a28e705a756c6ded65a022e75d84e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/pages-tools.php",
+            "size_bytes": 2179,
+            "sha256": "3938882e44db01054ed373b0c92138d5100910be783546297f08076926d8c72c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/reference/keys-map.php",
+            "size_bytes": 2311,
+            "sha256": "df5238b90a29736a7c109b708beba382f5609be29683b47219353f9c9a0495d0",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/schedule.php",
+            "size_bytes": 59261,
+            "sha256": "6459ed56440fdd14efc8ad4d0fe63525af8c46980ae218c85b496ccedfdc00fe",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/season-board.php",
+            "size_bytes": 869,
+            "sha256": "96ee09a94e231a2f0178dd43fcd2edbf57f43909cab2ba654f7bf760f89065b8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/season-dates.php",
+            "size_bytes": 36970,
+            "sha256": "5f48491a8a5cea62856acee778530bd77029d22b0854300236108f8f5377a5b2",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/settings-page.php",
+            "size_bytes": 114680,
+            "sha256": "2116fb4d6c07b4f09d1ed4760125a6cb02d2c87d7993a4fdf06cfbbd524fb4e3",
+            "mtime_unix": 1781733722
+        },
+        {
+            "path": "includes/admin/settings/class-vms-settings-notifications.php",
+            "size_bytes": 6484,
+            "sha256": "0c0507f68ee368c3035b8710353f2bbed6e541547b7847affcdb4d5812dcfa28",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/settings/class-vms-settings-tours.php",
+            "size_bytes": 5628,
+            "sha256": "6e50c5fbffbce8a6c226776b42cb9e9039777108e517f2a94d5c13aba5621882",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/settings/notifications-user-profile.php",
+            "size_bytes": 4122,
+            "sha256": "ab316fc50662d443eadd96d75696e69b215bf6136ab4eb1897291e375ad80d8c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/square-sync-protection.php",
+            "size_bytes": 12020,
+            "sha256": "03f97edaf5bafdd888af98d1fe9f5d76edd273754188024d0d997747803fab8b",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/square-ticket-mirror.php",
+            "size_bytes": 12402,
+            "sha256": "64cbc31e2ed7996f04665682fcd75b960a644d22665350a511ee297034de618a",
+            "mtime_unix": 1781592446
+        },
+        {
+            "path": "includes/admin/staff-certifications.php",
+            "size_bytes": 6196,
+            "sha256": "3415770e889b0e18dceae831b086bf6f11e1a38d66cdc5726cdeab4f5f5dc80a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/staff-list-columns.php",
+            "size_bytes": 11246,
+            "sha256": "29dbcde8eab27425b039153edfd9a3f81df3ce5f5b8e46fa6c40fbebdb5a2a74",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/staff-tax-sidebar.php",
+            "size_bytes": 18357,
+            "sha256": "ff78fa5bb8e68f01b54eac2405a6ed5330354971853941380b3fa2d60e1250fa",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/staff-user-link.php",
+            "size_bytes": 4972,
+            "sha256": "3874761856b13e188fb2aee7b2a2beecdcf53fe5507480c107c999771a344eb7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/staff-vendor-link.php",
+            "size_bytes": 5726,
+            "sha256": "3613387e8c2650b1ea18e98f5b0b1aa34dbe1d6b80387420d8b3f453f0667c99",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/staff-worker-type.php",
+            "size_bytes": 2930,
+            "sha256": "5d4655ad323406dd213e3c7fdda6118a989b9c261a8af1c33e9737f1ff8c9b56",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/staffing.php",
+            "size_bytes": 48690,
+            "sha256": "ebbd68a8e75e58bf35354b964d48c39b6bbfa0511fa01e572206be84c682d0d5",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/tax-bypass-ajax.php",
+            "size_bytes": 1810,
+            "sha256": "8018384cdc5f015b9780bf1adda7bae655272343cc5c995c31c85b2ba68d3167",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/tax-bypass.php",
+            "size_bytes": 11699,
+            "sha256": "5af69d735de51899cc8d91febc11acc911b3ea7a52a5dd0cdb73ba033068965e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/tax-profile-admin-metabox.php",
+            "size_bytes": 15238,
+            "sha256": "2b2ea7c0f0b6f09c72ad0f44499af23e2f82abd314201df34bc386611fcfa3c5",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/ticket-integrity-page.php",
+            "size_bytes": 115892,
+            "sha256": "7dc5cc2b84e2453039ec591a3b9c027d4573d94d269c34ccdfdca5eaeb39ae6a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendor-availability.php",
+            "size_bytes": 81647,
+            "sha256": "185c2904ca1e406df83a7cb1601b470223e1a491bc7f58d39e9e4e5e2542eaa5",
+            "mtime_unix": 1781711256
+        },
+        {
+            "path": "includes/admin/vendor-booking-onboarding.php",
+            "size_bytes": 11215,
+            "sha256": "991e56f648f51cb2b12eb680e4da2981fd7e49557b672eef241e8d3a7c466c04",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendor-command-center.php",
+            "size_bytes": 101356,
+            "sha256": "1bcc9bad1351320e21bbb552c46be4136ef9c70e883864c57976f601d0e92ebd",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/admin/vendor-comp-packages.php",
+            "size_bytes": 26158,
+            "sha256": "5d77f34de60bd1e82e685e77d66ef89130cb9bfa49b7470326171de04fb29e61",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendor-details.php",
+            "size_bytes": 76832,
+            "sha256": "55688a1612f436cc7918386746adb62e1bd27a2b4d03de60dc091c5b5620d51d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendor-list-columns.php",
+            "size_bytes": 8209,
+            "sha256": "9900352ee7f3e1fc5669a1147fc01126562068f60a71a8090d7843ae917fde50",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendor-list-ui.php",
+            "size_bytes": 18665,
+            "sha256": "b4a77dbc6c176d0ae14636a6f5a3db905d4931c94429cd4327b661e6e07bcd8f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendor-staff-link.php",
+            "size_bytes": 8879,
+            "sha256": "3039317316fcf35d71f8de8fec09b14bbdcdc0280ba47c81f57f296de2b99e32",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/admin/vendor-user-link.php",
+            "size_bytes": 12856,
+            "sha256": "9cc9527efbb88ac9b05b718d342f3f3ea5e2b43c4d4dd875b1185862924b4ff8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendors/tax-bulk-actions.php",
+            "size_bytes": 2533,
+            "sha256": "14341a57f91c1e98df532a554b3771977303175010ed7936491383692be08c69",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendors/tax-columns.php",
+            "size_bytes": 2649,
+            "sha256": "d26d3961da679e3d7e49e71eb10845c2b110acc0bec49a7b24720c5dc42d0a1d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendors/tax-export-csv.php",
+            "size_bytes": 3924,
+            "sha256": "4f79ccf914fc094c503d58ac9502f1f0d09b841dfe06131153ebc2bcd58f3baf",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendors/tax-filters.php",
+            "size_bytes": 1761,
+            "sha256": "eb2aa6447b50bb7eb12551dc8e727ace55fd0206fa2c4b224d1ddcccffd8bdbc",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/vendors/tax-metabox.php",
+            "size_bytes": 7303,
+            "sha256": "a6e9b9aa6666065d3a67a08eda1942323519f21ebf2f2148e25ffa21bcfbfd4a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/venue-calendar.php",
+            "size_bytes": 5439,
+            "sha256": "9c6429669fbc4243dcd4ee8bd1dcf99b53c02293c9213151c5aaca2e02c1ce7e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/venue-comp-defaults.php",
+            "size_bytes": 11021,
+            "sha256": "77ab01b5ea6a00854f3db29e479b1c469d312d6eba82832fdd928ab8e50cda12",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/venue-context.php",
+            "size_bytes": 11667,
+            "sha256": "9b17236b5771829be0fad27675e640b8ce71e64a7e33efd41c991b2221958497",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/venue-duplicate-templates.php",
+            "size_bytes": 15042,
+            "sha256": "1f8adb192e2c7e07fd0e112488e023e602283bbf8c3daa5728c615022f36a843",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/venue-duplicate.php",
+            "size_bytes": 4497,
+            "sha256": "5f76caf545c206043230de17be3d97251f5b7399087714a3c419ebd1935dac13",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/venue-health-check.php",
+            "size_bytes": 6969,
+            "sha256": "b3ccfbf76d67c16404a116fdf3a9ea4567c71b7e99740060d236823f9f258602",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/admin/woo-product-event-columns.php",
+            "size_bytes": 4071,
+            "sha256": "eb4cb31e13511dad5dabc360de5f604fe66f8bbb6fc72cb667ca3366fa0918ad",
+            "mtime_unix": 1781592460
+        },
+        {
+            "path": "includes/bootstrap.php",
+            "size_bytes": 2374,
+            "sha256": "2001763d81b1ad51a77622bce6be83b1b1094133b71507414193a50e5b0cb579",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/calendar-queries.php",
+            "size_bytes": 5184,
+            "sha256": "ce7f8d7b54a884379051afa3d3116c8e03767d459441dfe3b329b25819213fa5",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/bootstrap.php",
+            "size_bytes": 346,
+            "sha256": "fe1d01b161d861f594fac657fb0dbd57cefe321b3a9049c7ff27138c39c52bb9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/calendar-feed.php",
+            "size_bytes": 37865,
+            "sha256": "e8e131a4b56783f9368e111ec3f3a8982159192a9968320e0701fec6ab433cfb",
+            "mtime_unix": 1781647912
+        },
+        {
+            "path": "includes/core/calendar-ticket-counts.php",
+            "size_bytes": 9832,
+            "sha256": "fc483ca2a66386c1897fca5386ba800cd6e2e9b14672d9f5f49ff1050fc3b5e3",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/cancellation-adapters.php",
+            "size_bytes": 69592,
+            "sha256": "a2579918d7ec844e6af254f12de2a7974ce3dd88e6ed07b8ed0d8549698a31ed",
+            "mtime_unix": 1781758538
+        },
+        {
+            "path": "includes/core/cancellation.php",
+            "size_bytes": 67710,
+            "sha256": "d61859c3867694040a40be1f24639ed2071c2913f2f7ae62795423b3c9ded506",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/cli/square-ticket-mirror.php",
+            "size_bytes": 12270,
+            "sha256": "322823820b46e16ad2806a8c9d6259c514ee62437eb9922def489ee547334320",
+            "mtime_unix": 1781592586
+        },
+        {
+            "path": "includes/core/cli/stale-check.php",
+            "size_bytes": 56630,
+            "sha256": "a2a87825eea75a4c7b07f86d74c3b622736d58756a8913a6d7da4aab122854d4",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/cli/state-of-range.php",
+            "size_bytes": 8057,
+            "sha256": "a99cb8ffd44c3d148bf8d865a468906c5bbce859865e52c8704ce9f731b6b457",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/due-dates.php",
+            "size_bytes": 32940,
+            "sha256": "294d5c945c9ca2cc885f5920933cf4bedd5898b7be1ea9ee8c87b2d95a542484",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/event-credits.php",
+            "size_bytes": 44336,
+            "sha256": "3b8c4c5bad7b68deb74bf4e74ce5c9f52f7073ae35689e0010e35c76194b082f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/event-feedback.php",
+            "size_bytes": 31399,
+            "sha256": "679aea75409c9dd4d180821771e74821b2fd87c304942bd59095b3c6569e8366",
+            "mtime_unix": 1781528736
+        },
+        {
+            "path": "includes/core/event-plan-inclusion.php",
+            "size_bytes": 7155,
+            "sha256": "59233b1bd43e3e9833d7aeef5791d3fcd0699be117e574554feccaff2bf25019",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/event-plan-performance.php",
+            "size_bytes": 60392,
+            "sha256": "e8c390d9a58936c646a7b32a181c43d969c39660b846cb24728de24df20035fd",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/event-plan-review.php",
+            "size_bytes": 34720,
+            "sha256": "9a1a706e1fef46f683faf0f640de256e830d469f4d090722ee3146c9f47809c9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/event-plan-save-profiler.php",
+            "size_bytes": 65603,
+            "sha256": "211eaa25404191014646da81bc835b27852179614144fadec3c61f68f401bcc8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/goals-forecast.php",
+            "size_bytes": 43115,
+            "sha256": "7b498a03b16df2d5171810fa85b6d8e69300009fa8b99d92617147709cde3f27",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/lineup-schedule.php",
+            "size_bytes": 30956,
+            "sha256": "e87baba13a941519d5c92da090b601ef2dbd7f7ec8923e767d6ee48eb4cb2a78",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/load.php",
+            "size_bytes": 2328,
+            "sha256": "afd9042b76ac4274c5ebc5cd3688ba49acf586a0a3c401e1816310b0d5c95f1b",
+            "mtime_unix": 1781646626
+        },
+        {
+            "path": "includes/core/notifications.php",
+            "size_bytes": 25764,
+            "sha256": "6aa16de0910a12019ece17f1e3b021f0b9426b0a7ea4b7f10c1bad59603adb16",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/payables.php",
+            "size_bytes": 15083,
+            "sha256": "01dd66a526fc74c0997d4c3add08c58953749425280e8d25ecb9dc3cd55c2e89",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/plugin.php",
+            "size_bytes": 8273,
+            "sha256": "0c04fafae4c8348a74560af1578f8745afadf28cfa01526fc54a354412777027",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/admin-menu.php",
+            "size_bytes": 35781,
+            "sha256": "d8045d6066d8a3b4521d13bb44a771c5c6c12b741c6efcecb75805d79227f7f6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/admin-slugs.php",
+            "size_bytes": 1355,
+            "sha256": "35fcba6f2e235836f7e440917a46508592d7595e3190cdfbb9ed4096a6f41f8d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/class-vms-vendor-meta-registry.php",
+            "size_bytes": 2936,
+            "sha256": "f32f8d17d7562a43113e39570acae1c8a8de654a525aef785da90bfc862d7686",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/class-vms-vendor-schema-registry.php",
+            "size_bytes": 8914,
+            "sha256": "8df0f13575f59b4a21cf154656894ebb5647729affcc1ff003e3e2eb5359aa60",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/constants.php",
+            "size_bytes": 29046,
+            "sha256": "4b16743771a13f397b63cb051d30e367a6c946b928a269c1046e1275161b8e8a",
+            "mtime_unix": 1781822128
+        },
+        {
+            "path": "includes/core/registry/csv-contracts.php",
+            "size_bytes": 2184,
+            "sha256": "35810add4972b815235e228a9b0219cd2c9fa9d213cb8b85f87f08bd129e5ba0",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/meta-keys.php",
+            "size_bytes": 22389,
+            "sha256": "bafde2d1ebe1fe021c189332e3d37c7eced29cedad0acd5813509c988823a984",
+            "mtime_unix": 1781646632
+        },
+        {
+            "path": "includes/core/registry/normalizers.php",
+            "size_bytes": 1987,
+            "sha256": "72475a2541764a89031044d42e8b91b27216465226118ce07edaa7a95267ae46",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/statuses.php",
+            "size_bytes": 2231,
+            "sha256": "56c30e553d864b5c37ff5be6cd3b0a63a9a0e117a086f783e40c221b896477a2",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/tours.php",
+            "size_bytes": 2598,
+            "sha256": "f8effcc2a0e80d5feebe251048b49000d00a41b7e1f29e836c5ff08f2f9bb83e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/vendor-schema.php",
+            "size_bytes": 8005,
+            "sha256": "0a74dacc8f66f615727e3d282171596c3b8df00c7d21459034b2a320d9efbb03",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/registry/vms-keys-map.php",
+            "size_bytes": 27688,
+            "sha256": "c0207cd5c32a60204a1401bf0593fe27bd60a74c563dc404071a95f4c8e8c061",
+            "mtime_unix": 1781733852
+        },
+        {
+            "path": "includes/core/secondary-vendor-assignments.php",
+            "size_bytes": 43962,
+            "sha256": "60f03068c588c981897c77ddc3525150a418dfd631999b8584605ed34e4e28f5",
+            "mtime_unix": 1781672752
+        },
+        {
+            "path": "includes/core/slow-request-logger.php",
+            "size_bytes": 15764,
+            "sha256": "f2730e15545e63f7a04375cc66ef41527bd316c340c601c25e6f52c14637478e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/staffing.php",
+            "size_bytes": 170881,
+            "sha256": "8e309db6f259fe452b33d84822f19036cc3ce2c7eb5e51d9712bb725385a1c1e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/tax-bypass.php",
+            "size_bytes": 5629,
+            "sha256": "44597d37cd6802a3a856bdf1c06e96253b9027b25af1c425e84fb76bace691b1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/ticket-revenue.php",
+            "size_bytes": 49998,
+            "sha256": "e07e20acde6ce5b8fe785233e0d38f4b39fd2dc515406295229f0105e716cd19",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/ticket-sales-resolver.php",
+            "size_bytes": 34214,
+            "sha256": "7e6b314ac90ed66b35e8f83c86bb3739ae9cfe76e0ce89450277c02611bd8745",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/tours/class-vms-tours-maintenance.php",
+            "size_bytes": 1996,
+            "sha256": "a6b465026fd3899fdc42956f99b072f0047c404d702b3e6d6bbbbaab347d6ece",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/tours/class-vms-tours.php",
+            "size_bytes": 35453,
+            "sha256": "59ea00fddd2e373fad11bb82df54807705eb44c1cbc70e520cb0472872fb6dbc",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/validation/vendor.php",
+            "size_bytes": 1242,
+            "sha256": "8b7159c7c9d23aa70b833cbc41d16a841d1354208510262796da3013057f7697",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/vendor-application-confirmation.php",
+            "size_bytes": 79935,
+            "sha256": "39c3a748f0b571ae86fb48dc82ebcc917b111feacf3b62a963651cf7b9b98aba",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/vendor-booking-onboarding.php",
+            "size_bytes": 46461,
+            "sha256": "4408c6457f6a7ac94622587e38da5658c0e9fddc654cfc388ff41da626289628",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/core/vendor-document-alerts.php",
+            "size_bytes": 15057,
+            "sha256": "2ffb896b6a169fc7f41ceb966db5b0e3343378fc23b3914ab4e88617d7ace818",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/core/vendor-user-links.php",
+            "size_bytes": 39895,
+            "sha256": "84db450987aca77be91d33b99e538645da2105ef9a1c04a6d4138551daaf104d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans.php",
+            "size_bytes": 847995,
+            "sha256": "97b60eb711c8a7b695589504487edb1e0710b140a2a0831fe854d23be7bbf9bb",
+            "mtime_unix": 1781758002
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/advanced-controls.php",
+            "size_bytes": 31522,
+            "sha256": "0ae82eae601ff8055ca3308a5463264202510a2d322e03ee6942a68c429de5dc",
+            "mtime_unix": 1781305418
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/basic-details.php",
+            "size_bytes": 7914,
+            "sha256": "d44717d1958aea2793de7033ba333b7c95185e66e7f9b4ebb778fe762b92b17f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/comp-ack.php",
+            "size_bytes": 5978,
+            "sha256": "e0716d1ff9c2b3b69ad5c788ca22a36ca25c3bc90821bd916575dd37c6d1d8fe",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/compensation.php",
+            "size_bytes": 44348,
+            "sha256": "311bc7e00b407ac8516ab0c338dacad1f092b7a7b264a7ac299f77ea62512826",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/editor-scripts.php",
+            "size_bytes": 90404,
+            "sha256": "ef6b832253bb41df342379b5ce3db359d695f8405ee95e1fd29eae82b364ad61",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/legacy-imported-ticketing-integration.php",
+            "size_bytes": 9158,
+            "sha256": "5613dd2bbb776cbfb7fec4b8415b534535936b92ca49ecda20043db3c20f5236",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/readiness-details.php",
+            "size_bytes": 4362,
+            "sha256": "995d9d74a281a3c511ee200271a00f2175c417ecda6558a14ef369c995269a19",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/secondary-vendors-section.php",
+            "size_bytes": 1324,
+            "sha256": "d1b20d1608eccf9c5e4ef6cafd87b8db78ec0b7c7244b20ba83a01a6b8e83b8b",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/secondary-vendors.php",
+            "size_bytes": 35967,
+            "sha256": "020d7a52716529a2dbabfe14f9d33255fe1f861b16cf7a25035f769a52d83b79",
+            "mtime_unix": 1781672646
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/staff.php",
+            "size_bytes": 32000,
+            "sha256": "546938805bf731c9f8a29237a49c735c0073866373040d7b94ed84b097674bc1",
+            "mtime_unix": 1781658348
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/ticketing-v2.php",
+            "size_bytes": 29831,
+            "sha256": "aabd5885d25ed261e259fc3c3274495c8601c591d04b3613f45405e92e7cc501",
+            "mtime_unix": 1781733330
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/time-lineup.php",
+            "size_bytes": 54643,
+            "sha256": "222379b13ef3504ded2517ba7a2f9bc3f3bc9c17b951520ae8fa8d33a090c43b",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/title.php",
+            "size_bytes": 946,
+            "sha256": "d76f3177083f96cd2006e1aa1dd9b8c08f1c6b7b5cc52756a534683126dcf7b3",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/event-plans/partials/workflow-status.php",
+            "size_bytes": 9184,
+            "sha256": "00538d4829972e6c266e5d460979c6c7dcf0d09f7e4b19f23ac7531f614d154d",
+            "mtime_unix": 1781658352
+        },
+        {
+            "path": "includes/cpt/ratings.php",
+            "size_bytes": 21308,
+            "sha256": "d74ad99647bca93037fc9de2ca2c112e18b6c4125a127cd8712d8a72022ef725",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/cpt/staff.php",
+            "size_bytes": 20070,
+            "sha256": "4f1434ebaa3df9749f7385ae34eca91025e27a413efb05a977093182a6e4d151",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/vendors.php",
+            "size_bytes": 25379,
+            "sha256": "c4fcf842b804bfe712416a94c7f274af3398753dca856e838b7a1d913e02f778",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/cpt/venues.php",
+            "size_bytes": 33110,
+            "sha256": "b6c2af2418f28e3c28c93f9ca4dcbffa7f11afd757dbc95b63255a84b0c95473",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/data-tools/load.php",
+            "size_bytes": 295,
+            "sha256": "783487c5529e6acd6490ea916db73c3538487a92230b8a885885066896aa080c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/db/migrations.php",
+            "size_bytes": 22004,
+            "sha256": "85d48ecf0c99ef32890982607d4b48d1b192ddf2a6dd9af4c5de15fedd6d13ab",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/docs-public.php",
+            "size_bytes": 1905,
+            "sha256": "dbc3d6d950a942c7e455d8bc6abbdb2117697a80a22ae0d69542d36413bbc06c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/docs-registry.php",
+            "size_bytes": 4243,
+            "sha256": "b9f486fcc626f9e444b3c363043fe99cd16ed40c063ebf5f6b5c86999e067e53",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/docs-render.php",
+            "size_bytes": 3403,
+            "sha256": "0955538d07ce086497f5a5c8a652efe498e892d6b3101a9fa509dc44abf5afdb",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/docs/load.php",
+            "size_bytes": 386,
+            "sha256": "4aecdbaea5dd8b3d705e5bde31171c1f277a0c3fc8dacb9c076d640362a8b9a0",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/helpers.php",
+            "size_bytes": 180908,
+            "sha256": "5174d36b5d4ea91ea9afc891bca2dbbaabe48a02d221b27e98d92a24430e602d",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/helpers/checkin-close.php",
+            "size_bytes": 6931,
+            "sha256": "848b5502ad2acc2b8547d0121ff53c26e92833da9c37ab8914082b88057fc4c1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/helpers/image-normalization.php",
+            "size_bytes": 4712,
+            "sha256": "765de802faf18122a21eec65949956c0dbe321fb9029511d5da46a6b1f4b958f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/helpers/schedule-helpers.php",
+            "size_bytes": 5335,
+            "sha256": "3b1c235c6dfe3d0ac73e45180baaa0c27c215b7fd6307af021d697afa8bf27a2",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/attendance-woo.php",
+            "size_bytes": 1272,
+            "sha256": "0aa40a54c0e861e8b6949938078a545910153d96326daafda739b52b54c3c25b",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/availability-engine.php",
+            "size_bytes": 37,
+            "sha256": "803142f407baac7e36134596425936176e3b4815d651b3c5e9d88b944c712b72",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/load.php",
+            "size_bytes": 1627,
+            "sha256": "a95d26a4d98f0c5f432c354791218be1af898ab4e4fa409274e85aaa787fb18d",
+            "mtime_unix": 1781592510
+        },
+        {
+            "path": "includes/integrations/square-sync-firewall.php",
+            "size_bytes": 23389,
+            "sha256": "3be74b7d8cdf959fd6dbf7b2d383f46dc599e1a7f14eb46d3e5b41efd55157f8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/square-ticket-mirror.php",
+            "size_bytes": 100762,
+            "sha256": "960c206b48e24fca900c7e259f4f447ada1251681eefd81226d6efe4be364dbd",
+            "mtime_unix": 1781626542
+        },
+        {
+            "path": "includes/integrations/tec-sync.php",
+            "size_bytes": 37,
+            "sha256": "803142f407baac7e36134596425936176e3b4815d651b3c5e9d88b944c712b72",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/ticketing-claims-admin.php",
+            "size_bytes": 110253,
+            "sha256": "607f458faa64c9b8b9f2229199bbf500f2aef280000e17108f93f63f283e033a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/ticketing-claims-customer.php",
+            "size_bytes": 31432,
+            "sha256": "00a68e8ca73fceefe5d1455c8d477d6583e3d2d401f8de43d26480837d52cd51",
+            "mtime_unix": 1781795902
+        },
+        {
+            "path": "includes/integrations/ticketing-claims-framework.php",
+            "size_bytes": 42558,
+            "sha256": "eb148e4d3c1f616f7ef9c03d65f32cb55f3c66f141a32214aacb270e86c98748",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/ticketing-phase-b.php",
+            "size_bytes": 409667,
+            "sha256": "eeb1d1e937d31e04a06b8ec0a5ae4035fe731d42432cc31bcda3a9057a0baf26",
+            "mtime_unix": 1781766990
+        },
+        {
+            "path": "includes/integrations/ticketing-rules-v2.php",
+            "size_bytes": 412675,
+            "sha256": "9b43a949445eba5aca746ca313aca5ed46a24e59835d659ea663dccd389df572",
+            "mtime_unix": 1781767288
+        },
+        {
+            "path": "includes/integrations/ticketing-verifications.php",
+            "size_bytes": 143951,
+            "sha256": "f7c8a89e41969c996dec30c621105ec91a014e31d1ced5a40c1c8a7c794ad40d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/integrations/ticketing.php",
+            "size_bytes": 27182,
+            "sha256": "8f002b45d4e4ba5e4280e57b4b3c46707aa9401f50776eda9590f7a66c1aa69e",
+            "mtime_unix": 1781313170
+        },
+        {
+            "path": "includes/integrations/vendor-ics-sync.php",
+            "size_bytes": 26386,
+            "sha256": "4faa0cd0971dec38da353a34d696208aac0276f3db19eabdb2be9c7e343f75b1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/admin-ui.php",
+            "size_bytes": 6574,
+            "sha256": "e78084ee79ab6a647baf1d5189fc9d4b7995337bb357d5ad75590e3f38d4c1ce",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/admission-tokens.php",
+            "size_bytes": 19062,
+            "sha256": "7be92b0f2f2246d9fc1a6cb76f08439761d14e4992b33abc2535e38692ced39f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/admissions.php",
+            "size_bytes": 1005,
+            "sha256": "633621092558c330d5eb80ffa2f26f86e7a461236b7bbef1aec5aa8b4ce7ff57",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/audit.php",
+            "size_bytes": 1739,
+            "sha256": "a579dda8ac59ee53e6909dbbe2d27b6a75980d105b0dda22a7f4cacdff8197ed",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/caps.php",
+            "size_bytes": 2118,
+            "sha256": "ec1c8cef1c7c27178b718f09c4dc1077d99cf568717e0156c2475a160b7179a0",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/db.php",
+            "size_bytes": 9526,
+            "sha256": "b166ac556f9e8ebc8507ca91d3f9736ec6c3b8b6fb008dfb74ee756de1865d9f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/normalize.php",
+            "size_bytes": 1689,
+            "sha256": "26ba7abfe94c06d2b27acaa48aa0a6715867b291821cb766eef8020e78229a05",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/pass-claims.php",
+            "size_bytes": 123729,
+            "sha256": "9e537471ec76f226f6faaae834aee90ee88231e23b629b20e5122a48516136e4",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/rest.php",
+            "size_bytes": 31277,
+            "sha256": "6a513f44643b8dab8de8753cb5b0997cd366910b016e3598c7e6e7cf08218514",
+            "mtime_unix": 1781795886
+        },
+        {
+            "path": "includes/modules/admissions/shortcodes.php",
+            "size_bytes": 2455,
+            "sha256": "beb34f8fc103f59dee07ccaf11f621b06f7d6f0c05a7116f6ae4b8dd7279b19d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/admissions/vendor-guest-portal.php",
+            "size_bytes": 67690,
+            "sha256": "281728080ea52345ef05d03141806a6333ab873b32b6654c43d6ee0e6f4c9c0e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/availability-date-dispatch/admin-ui.php",
+            "size_bytes": 68192,
+            "sha256": "00d23e0463b4df22ced0217de2f7dc4f41c56108856e73432959a7204936af4e",
+            "mtime_unix": 1781716334
+        },
+        {
+            "path": "includes/modules/availability-date-dispatch/availability-date-dispatch.php",
+            "size_bytes": 931,
+            "sha256": "7dda7b95169a6de2067b7aeaadd32707287bf37fd181a8116a2172d845d49711",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/availability-date-dispatch/db.php",
+            "size_bytes": 4492,
+            "sha256": "6a29b20ef30a0029dc88ccddd472aa4e990aee47bbac17ba0001238c7210aaf9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/availability-date-dispatch/email.php",
+            "size_bytes": 16312,
+            "sha256": "48ea4f66794d18002100e32181f78f704f2266200ce66684e20212a37c92956d",
+            "mtime_unix": 1781705054
+        },
+        {
+            "path": "includes/modules/availability-date-dispatch/helpers.php",
+            "size_bytes": 96958,
+            "sha256": "77c9b0f57ede5863388b321cbb145f779dbc7af3bd19eecac46d06c27a72f618",
+            "mtime_unix": 1781716072
+        },
+        {
+            "path": "includes/modules/availability-date-dispatch/public.php",
+            "size_bytes": 7676,
+            "sha256": "5eb01825b31667805d01fb51ec08e70c532005d1f24d77bd199159c05b57fbe4",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/admin-ui.php",
+            "size_bytes": 38902,
+            "sha256": "3311b3629b1ce5225309caaa14ad3de64427af2047a7761e5582c150921643c1",
+            "mtime_unix": 1781531538
+        },
+        {
+            "path": "includes/modules/email-followups/email-followups.php",
+            "size_bytes": 878,
+            "sha256": "69ba67f26547fce1e8ee396831aa427c414afd4f7091a5697407b55a5b0b279f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/logs.php",
+            "size_bytes": 2559,
+            "sha256": "70aef29b34f864385f7d524e49547146de967bd1f5937bb0d243572b3d4c3df1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/mailpoet.php",
+            "size_bytes": 4076,
+            "sha256": "f1874826041ff28ecbb7ef48d8a1ac775b9fc0288973728a2330264be3a972bf",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/recipients.php",
+            "size_bytes": 10011,
+            "sha256": "84b703b3928b09f50a7e8bb5bdceff785b984a290bf8d7f5d5afdeaf182ea0d3",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/scheduler.php",
+            "size_bytes": 4026,
+            "sha256": "f60b72dacfd2150abf77524fde694928fe5961ba09db77cd410c718788b06973",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/sender.php",
+            "size_bytes": 12078,
+            "sha256": "8385712c69ed73561f093dd4ec20b46641ab07baaece1bd93ab726420b85a31c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/settings.php",
+            "size_bytes": 21944,
+            "sha256": "a70396679b00917fbc9811fb8a4692745fc29e7221eb7db4077e2b3ca29fcb44",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/email-followups/templates.php",
+            "size_bytes": 8093,
+            "sha256": "1522bcbeb2533c3e051d23ea8f4027594b2d8709cb967a655c8e3c3a0993a1ef",
+            "mtime_unix": 1781648284
+        },
+        {
+            "path": "includes/modules/load.php",
+            "size_bytes": 3912,
+            "sha256": "0a236cf05ea0be3048984c9f53fc72dd91e046a8bf6d0e72e2b4416cebcbc283",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/loader.php",
+            "size_bytes": 198,
+            "sha256": "a26c1f2be7fd90dd1278706865cad69c226f1de4ad2f285b4ad2115f46d026ee",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/admin-ui.php",
+            "size_bytes": 119178,
+            "sha256": "a8fc7af2784f581ea513a779dcf20f2192f87b13d38fc6829e9c000fee1a7935",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/caps.php",
+            "size_bytes": 3957,
+            "sha256": "24892fb3cbc49e583e43f3ab797ee9a849c6e8a8c0f94b2a08b8e95952c35951",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/db.php",
+            "size_bytes": 7433,
+            "sha256": "f59c295817beb860bce61d2999cec30a8937b0e7ec5a4a414c2859a4c95c7d82",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/generator.php",
+            "size_bytes": 33364,
+            "sha256": "9ce54994927e4b958099afce3bf8fc4a4576b7a2ad380cd63b872c078e7814a6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/notifications.php",
+            "size_bytes": 10061,
+            "sha256": "cc496c022362cd9c23f367a06e6e7bc425892f4b0497bb5ed7a35e07e9e085a1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/settings.php",
+            "size_bytes": 3584,
+            "sha256": "0dfd8499c81400b1e36c83a37cc86d55bf5f59b8163d532f2ae7dfe6fcd1dc5f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/staff-tasks.php",
+            "size_bytes": 977,
+            "sha256": "b9ab0317f67ba02c639daf73dcc96e81cdfbe4221c81443bee098015e131e9ae",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/store.php",
+            "size_bytes": 49608,
+            "sha256": "9286f19f04045c3ece8e599ac423151dacca5f2a977f153a7b6adce8e16dba17",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/staff-tasks/tours.php",
+            "size_bytes": 6653,
+            "sha256": "13a9a26a5dbf54a4cbd144b3dd91760b8b8fb68b88e4f868ded3e8ab55a3609d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/status-notices/admin-ui.php",
+            "size_bytes": 40425,
+            "sha256": "7426d9e29de7b7ff9d50f0e7c8f9ba02d0abc4d556fe127884189001abd6e6a9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/status-notices/cpt.php",
+            "size_bytes": 735,
+            "sha256": "ea8ef13139b9be1594827fdca17083bbbafd09c4dbd669cddf6f4b0d3e0bc90b",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/status-notices/defaults.php",
+            "size_bytes": 9220,
+            "sha256": "ee59ebca2850fa6829a28d55237877c16cacf8f5a264c6c9259db0b768a39ee7",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/status-notices/front.php",
+            "size_bytes": 7702,
+            "sha256": "a73d7047db993b82e38af7aa1bda29e78d41fb7038758ffb163a23124816cf0a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/status-notices/status-notices.php",
+            "size_bytes": 734,
+            "sha256": "31df1168069c5143edf6a86183cdef558e1d31cbd82f1ed5265e4b78c32d9525",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/modules/status-notices/store.php",
+            "size_bytes": 16370,
+            "sha256": "55097bd207268bd8aadbd8b3ff610af902e1d7530b10de67f7b04c62143b7a74",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/portal/load.php",
+            "size_bytes": 278,
+            "sha256": "5445f4318efb2f945613be4bbc516aa2da21cbcd3239bb0ac3584c2ede5fd09e",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/portal/staff-portal.php",
+            "size_bytes": 143064,
+            "sha256": "19093670d7074c91bce21c53fd97caca663e25a70de5be12966711022dd9c3fd",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/portal/vendor-portal.php",
+            "size_bytes": 333102,
+            "sha256": "3b091f5c8305d7e67cd5ff3f830838ac3762fcba73a4b0d5299e9c29fec80015",
+            "mtime_unix": 1781552042
+        },
+        {
+            "path": "includes/portal/vendor-profile.php",
+            "size_bytes": 315,
+            "sha256": "3be5f92b327f2105025de9d6111fbcdfe26aee5dde8993e1b5fc33c0734cce37",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/portal/vendor-tax-profile.php",
+            "size_bytes": 12157,
+            "sha256": "1a19ef558e63495990e28626b27c2a35e7b676e0e2fd98e1c06153c519456904",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/portal/vendor-tech-profile.php",
+            "size_bytes": 170,
+            "sha256": "3c06ca6b9996d242926a112b944792ab9a7bda890bfc2efbc02c993af15179a4",
+            "mtime_unix": 1781797860
+        },
+        {
+            "path": "includes/public/calendar-ics.php",
+            "size_bytes": 11987,
+            "sha256": "416f5ca7a57e96ad93fe6faca21904775d678204def72887d0a18fd1ab37a545",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/public/event-details.php",
+            "size_bytes": 40939,
+            "sha256": "c9247d335b191e982be6e06a84dafe814c4c7c9ad56830f28043d133ccfe1120",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/public/event-feedback.php",
+            "size_bytes": 31526,
+            "sha256": "5ce474ad0ce721bef4a80d7f181dabe2318878aa1cc42d8c5ff72a01a7598978",
+            "mtime_unix": 1781528750
+        },
+        {
+            "path": "includes/public/events-photo-shortcode.php",
+            "size_bytes": 16963,
+            "sha256": "d42a23319fbb7076aeeb07678ec5e572ad59741eec0048fa72e7132f15b0e064",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/public/express-bar.php",
+            "size_bytes": 12269,
+            "sha256": "3a5dbe21db8c039f6e085f6adc0305af62157f4416a0fe6937dc9abf9c649cc4",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/public/legacy-shortcodes.php",
+            "size_bytes": 725,
+            "sha256": "111df966b8938cefdd2c507f246fe72e2837c94ef876f8fb21b8ab2ac8ccd116",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/public/load.php",
+            "size_bytes": 440,
+            "sha256": "19d7fe3bfa75728cbf1973ee6dfd6b0c0c6686235f4626a6656c0d12eca67c7a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/public/templates/vendor-profile.php",
+            "size_bytes": 9341,
+            "sha256": "b34f0d5f988365e6db166560dcdbe985d9196975ce8d2221aaf988f1a750e4d4",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/public/vendor-profiles.php",
+            "size_bytes": 51177,
+            "sha256": "3f77900bda213e3b2815e14207acda811103fd7dcfa9c3d690bbe2eb8fb82730",
+            "mtime_unix": 1781728780
+        },
+        {
+            "path": "includes/public/venue-calendar-shortcode.php",
+            "size_bytes": 52697,
+            "sha256": "6cc01bda5f55ebff36c96e30e4749f492f41dc4f3a54d1e2e5cffd6efa894314",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/rest-dashboard.php",
+            "size_bytes": 43625,
+            "sha256": "af089fd83ec9262e8741185ef6cb2f4e9eebfc007853f3566fba1366828bf50a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/rest-due-dates.php",
+            "size_bytes": 5047,
+            "sha256": "46afc00a5ffde243a98680cf1fde137254f4906b93fa3d7bc56ee568265c05ee",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/rest/class-vms-rest-tours.php",
+            "size_bytes": 3635,
+            "sha256": "5bd2e3838399b2d1cbb3fffc5cf6867fa398abfc98f91983f65f53f0ccd681fc",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/rest/load.php",
+            "size_bytes": 133,
+            "sha256": "e670c5f809e46c2d1ae784d15ae1727523f59d46f921c90c1894e97142ccf137",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/runtime-guards.php",
+            "size_bytes": 46161,
+            "sha256": "088b4e98798274a34a0ed0c41ada68d60bbb00048a43593674f72b942d101221",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/safety/admin.php",
+            "size_bytes": 50660,
+            "sha256": "449ea0f645a40e0469d8b449b96b2ff3ecb54c4e80fb69a292f188406a331438",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/safety/audit.php",
+            "size_bytes": 1386,
+            "sha256": "b30434ba734461bcdcd4a63ece1bdd84574905c6f8667aabc56ea8baf502cf96",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/safety/caps.php",
+            "size_bytes": 3404,
+            "sha256": "24b14817dc3617ffc5dafdc25912cd67d7b8ea19badbbdb0e9df4dc60e1e34de",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/safety/cpt.php",
+            "size_bytes": 1293,
+            "sha256": "85c850585b76a565b26e69ee3239f685c5860484973921751a934e5adc220b60",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/safety/load.php",
+            "size_bytes": 263,
+            "sha256": "8e5ad8dde71649b45f65fc36b55052f81f6ef9f7624923ea0c858f9f2d23659b",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/safety/private-files.php",
+            "size_bytes": 8158,
+            "sha256": "11776bb1bfdb43cf6d5f79e1d3b69f90a9ad0fb8244f4d1bab2d5c25cfe5f9af",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/safety/tours.php",
+            "size_bytes": 2003,
+            "sha256": "6a455ae5cf14949d70368a9fade1ef68e5a09cb73312c187430ac89d65ef44ea",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/schedule/helpers.php",
+            "size_bytes": 8878,
+            "sha256": "dd6247ca35b6f81e12fb2aac25f0d49db9063ff97c0c8f2df004d7efbb7e16f8",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/schedule/schedule.php",
+            "size_bytes": 28418,
+            "sha256": "4c29b99c1754c1581d48c73ee94e8f8812bf1aa356ba700074dd6e2b627b7a89",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/schedule/season-dates.php",
+            "size_bytes": 23145,
+            "sha256": "b941307acce629b07f627b8bc84d6354e9047b100a8e7af8b2498c766b42774c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/services/event-plan-import/event-plan-import-engine.php",
+            "size_bytes": 78043,
+            "sha256": "ef3be21f6d0d0fd42711fa506eae6a192a9d396f28f1e553069e26177e325444",
+            "mtime_unix": 1781647912
+        },
+        {
+            "path": "includes/social-share/admin.php",
+            "size_bytes": 32372,
+            "sha256": "df55efc1d2d99e2e1ca8cfd750066b3f59cbe7376fde65701997cc254441a6f4",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/audit.php",
+            "size_bytes": 2881,
+            "sha256": "57c2cdc8bd76f438fbccb98985cef77167a9a19e6b791bd0b33b5f1852fd0ba9",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/context.php",
+            "size_bytes": 8141,
+            "sha256": "0bad19681e664e2c4f492bee7853c366fbdb1a092ed08e0fd83a5ec4e35fbcc6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/crypto.php",
+            "size_bytes": 3416,
+            "sha256": "39d2be07e739e4a08f856fd8005b08ada6ff827f687583e45af167367e4153b0",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/event-plan-panel.php",
+            "size_bytes": 24889,
+            "sha256": "1ae0f7d3af1f695e942c3ff30f6587d14022b03eb4127bf83672080613502715",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/installer.php",
+            "size_bytes": 9860,
+            "sha256": "d05b1c5d090956846f73fff5bb7ff95e11fe2abdfb99130e7049f858d2980f53",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/load.php",
+            "size_bytes": 870,
+            "sha256": "8331dcc101d0fa5561cb0a138678cf371018433479717498291aa21a6e236472",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/permissions.php",
+            "size_bytes": 1651,
+            "sha256": "1e8faf4cd39ca8f89c64d7856d7e1dc8fddab4b348f60025e18975bbbb7982f3",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/providers/class-provider-linkedin.php",
+            "size_bytes": 1805,
+            "sha256": "1b0940233a78c6f0a4ce417e1e97472dc2ae936070266924885b8245ecd481ee",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/providers/class-provider-meta.php",
+            "size_bytes": 1855,
+            "sha256": "37e539f5e31880b69c9f22a1657390225248353d18711c5517e487053dda51d1",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/providers/class-provider-mock.php",
+            "size_bytes": 1880,
+            "sha256": "776204bbef4244e8d068ce2d83da1b8f53a60239ced56168c6ab55a2dba8ae50",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/providers/class-provider-webhook.php",
+            "size_bytes": 4352,
+            "sha256": "5d16d03221308777db149890bdd43022712b254f5b8cffdee4dec8d5af774240",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/providers/interface-provider.php",
+            "size_bytes": 1261,
+            "sha256": "0e77847e0d1d87d01c3f90c869b64afbbc61026b41f73c3d1a4cf7faeb5a02a6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/providers/registry.php",
+            "size_bytes": 1736,
+            "sha256": "3a68808a28e82e4606a902b260ff55ff1b7bf02895ae6d0fb1beb2102016774a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/queue-repo.php",
+            "size_bytes": 16496,
+            "sha256": "c8acb20063e02772564b50f0f4da70a1df5cae31447d1b9056a0fe87e35e194d",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/queue-runner.php",
+            "size_bytes": 9573,
+            "sha256": "ec55763186de78d54fd21db3ae11ef8abf85d9fd7657476b091256f20056b4d6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/social-share/template-engine.php",
+            "size_bytes": 5441,
+            "sha256": "f7fbff6d98f1d9a50a97672c691fc8829a55bc7723ff972b9f81ead7ed3a1306",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/support/load.php",
+            "size_bytes": 336,
+            "sha256": "0739df76fc2f487a096772d4a3a6608c2ff4d341b0730e29ed37fda6b84460f6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/taxonomies/vendor-category.php",
+            "size_bytes": 12209,
+            "sha256": "b70d98596cd69ccbe11be34c62c5cc63870679e6a8ac35c612132ad6b2e8852a",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/taxonomies/vendor-type.php",
+            "size_bytes": 13884,
+            "sha256": "0eb4aff0c3ae4e91304cd4e8b4ab0d661078e2ae6d03423b08961d1d0872dc3c",
+            "mtime_unix": 1781646644
+        },
+        {
+            "path": "includes/ticketing/ticket-integrity-checks.php",
+            "size_bytes": 62668,
+            "sha256": "a31c6094d8f26b5b933adbd511618ab1b8ee9fc9cca0c2738405a03213cb1a04",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-integrity-cron.php",
+            "size_bytes": 26457,
+            "sha256": "3f86dfe1f57dff2d623c76ac0559e0414a494ff525c30a3aa14e64dcfd9ab836",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-integrity-daily-report.php",
+            "size_bytes": 47920,
+            "sha256": "7610a312b5e994ee139624332b0c6235b218e433ab04c3c0791bc4d79d39c05f",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-integrity-monitor.php",
+            "size_bytes": 45641,
+            "sha256": "1b5c31b238cc6dc0ddb8a03409d8fab69d070c4e447faf47705b30b7dbd41e7c",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-integrity-payment-gateway-health.php",
+            "size_bytes": 36484,
+            "sha256": "b9b184c4cb6d1ed78a949954a535b5c794d56b119920f1b5ed4f03a6038db0d2",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-integrity-tours.php",
+            "size_bytes": 3769,
+            "sha256": "22d94bad55fed1263ca6cce023eccaeff9b9e32b83447dc5175fc1aba28b1873",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-inventory-forensics.php",
+            "size_bytes": 122366,
+            "sha256": "930d8a966cc2f114f8809afb588acedc33bee26bcb7d3a1675c0feb2599b8b43",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-legacy-repair.php",
+            "size_bytes": 59870,
+            "sha256": "372f500aa1a58951f2ca2552bc67fb757956ab338531e76b6f53cfca31de22e6",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/ticketing/ticket-mutation-audit.php",
+            "size_bytes": 52707,
+            "sha256": "76ea09b44d4d4561f83aa296e326019abf958d1e9ce0e49e31bc7d968d7da9b2",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/tours/class-vms-tours-admin.php",
+            "size_bytes": 11051,
+            "sha256": "5cb05978e8661b04ddcd5d21f68b3be4fc34eba37d54508e43c5ebe02d4a6e51",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/tours/class-vms-tours-compat.php",
+            "size_bytes": 7944,
+            "sha256": "32fbcfb6be4e8bc23af71dd0afbbd75a2cd73d426c266a901ac20e4b5aebaa90",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/tours/class-vms-tours-registry.php",
+            "size_bytes": 15676,
+            "sha256": "de9adc0724d3335d2e412d4f6e16811065a32ae2a5d7e04be7877fe259cecd53",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/tours/class-vms-tours-screen.php",
+            "size_bytes": 2466,
+            "sha256": "0aeb22ff59166ec0de5916c3e864b892fc587b528f75646bec5b81ab3fdb5575",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/tours/class-vms-tours-service.php",
+            "size_bytes": 30505,
+            "sha256": "10fd5fc07bcf17aaa91ab05004bb956db6eb38303d5db94dd3277f6b9a073f24",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/tours/class-vms-tours-storage.php",
+            "size_bytes": 8865,
+            "sha256": "ca21245d827730c83c742d5dd6f80eb1e1974eac248fc9eb886384ad6e742630",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/tours/tours.php",
+            "size_bytes": 2457,
+            "sha256": "97772ac3e2d3f0bbd1ec014f50d0a5cfdf862a6ce8c7389b272f60a4b4f72519",
+            "mtime_unix": 1781301146
+        },
+        {
+            "path": "includes/vendor-applications.php",
+            "size_bytes": 141275,
+            "sha256": "dc99459abe7a8aae46d7b1fa569950afb2b275f3c3821e04e4182c294e3a21cb",
+            "mtime_unix": 1781646668
+        },
+        {
+            "path": "release-public-excludes.txt",
+            "size_bytes": 492,
+            "sha256": "90b578761765db015fa0f633d9d5ebbc83e7b2e2172c0622ac09465bf2d9ae37",
+            "mtime_unix": 1781797860
+        },
+        {
+            "path": "uninstall.php",
+            "size_bytes": 46,
+            "sha256": "5f73ffa261763b00d65db0d73773e96d3174b90c54e6614ea751b9a30fe69f1d",
+            "mtime_unix": 1781797860
+        },
+        {
+            "path": "vendor-management-system.php",
+            "size_bytes": 1049,
+            "sha256": "2d5768e0ecf140aac3336c8f32650617c2f8faf65cd27526fce6a4c66a63a6af",
+            "mtime_unix": 1781822128
+        },
+        {
+            "path": "vms-build.txt",
+            "size_bytes": 11,
+            "sha256": "6023f36aecedc12aea7fda130579d61009e40606276856ded7b93c0ecf67ff58",
+            "mtime_unix": 1781822128
+        },
+        {
+            "path": "vms.php",
+            "size_bytes": 329,
+            "sha256": "e83fc272c447fcda6150db6442b2a7d6dc0b5a7281f04c9a0c0a1571b087eb4d",
+            "mtime_unix": 1781301146
+        }
+    ]
+}

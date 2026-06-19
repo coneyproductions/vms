@@ -14,7 +14,6 @@ tests/
 test-results/
 docs/
 scripts/
-provenance/
 dist/
 _attic/
 BUILD-NOTES-*.md

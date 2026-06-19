@@ -1,0 +1,499 @@
+{
+    "status": "PASS",
+    "started_at_utc": "2026-06-18T22:36:25+00:00",
+    "finished_at_utc": "2026-06-18T22:36:44+00:00",
+    "metadata": {
+        "entry_file": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/vendor-management-system.php",
+        "constants_file": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/includes/core/registry/constants.php",
+        "build_file": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/vms-build.txt",
+        "migrations_file": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/includes/db/migrations.php",
+        "exclude_manifest": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/release-public-excludes.txt",
+        "slug": "vms",
+        "header_version": "0.2.24.747",
+        "header_text_domain": "vms",
+        "header_requires_php": "",
+        "header_requires_wp": "",
+        "version": "0.2.24.747",
+        "build_version": "0.2.24.747",
+        "build_notes_file": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/BUILD-NOTES-0.2.24.747.md",
+        "build_notes_exists": true,
+        "migration": {
+            "latest_function": "vms_db_migrate_vendor_core_v7",
+            "latest_schema_marker": "vendor_core_v7",
+            "activation_calls_latest": true
+        },
+        "wp_root": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public",
+        "readme_file": null
+    },
+    "git": {
+        "available": false,
+        "state": "unknown",
+        "commit": "",
+        "repo_root": "",
+        "message": "Source directory is not inside a git worktree."
+    },
+    "artifact": {
+        "created": true,
+        "filename": "vms-0.2.24.747-public-release.zip",
+        "zip_path": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/dist/vms-0.2.24.747-public-release.zip",
+        "report_json_path": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/dist/vms-0.2.24.747-public-release.report.json",
+        "report_text_path": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms/dist/vms-0.2.24.747-public-release.report.txt",
+        "size_bytes": 1942884,
+        "sha256": "0683c78b4d1f300184430e38d08f7aa4f77d6e36f261bbc758aca9fe1c1d003d"
+    },
+    "checks": [
+        {
+            "id": "version-consistency",
+            "status": "PASS",
+            "label": "Version marker consistency",
+            "message": "Plugin header version, VMS_VERSION, and vms-build.txt are synchronized.",
+            "required": true,
+            "details": {
+                "versions": {
+                    "plugin header": "0.2.24.747",
+                    "VMS_VERSION": "0.2.24.747",
+                    "vms-build.txt": "0.2.24.747"
+                }
+            }
+        },
+        {
+            "id": "slug-and-text-domain",
+            "status": "PASS",
+            "label": "Plugin slug and text domain assumptions",
+            "message": "Plugin slug and text domain both resolve to `vms`.",
+            "required": true,
+            "details": {
+                "slug": "vms",
+                "text_domain": "vms",
+                "package_root": "vms"
+            }
+        },
+        {
+            "id": "vendor-core-migration-consistency",
+            "status": "PASS",
+            "label": "Vendor-core migration consistency",
+            "message": "Activation bootstrap calls the latest vendor-core migration `vms_db_migrate_vendor_core_v7` without forcing schema versions to equal the plugin version.",
+            "required": true,
+            "details": {
+                "latest_function": "vms_db_migrate_vendor_core_v7",
+                "latest_schema_marker": "vendor_core_v7",
+                "activation_calls_latest": true
+            }
+        },
+        {
+            "id": "build-notes-for-version",
+            "status": "PASS",
+            "label": "Versioned build notes present",
+            "message": "Found BUILD-NOTES-0.2.24.747.md.",
+            "required": false,
+            "details": []
+        },
+        {
+            "id": "readme-stable-tag",
+            "status": "SKIP",
+            "label": "Readme stable tag consistency",
+            "message": "No readme file is present, so there is no stable tag to verify.",
+            "required": false,
+            "details": []
+        },
+        {
+            "id": "plugin-header-requirements",
+            "status": "WARN",
+            "label": "Minimum WordPress and PHP requirements declared",
+            "message": "Plugin header is missing one or both minimum-requirement fields. Manual review is required before public release.",
+            "required": false,
+            "details": {
+                "requires_php": "",
+                "requires_wp": ""
+            }
+        },
+        {
+            "id": "git-dirty-policy",
+            "status": "WARN",
+            "label": "Dirty worktree policy",
+            "message": "Git metadata is unavailable in this workspace, so the report marks the tree state as unknown.",
+            "required": false,
+            "details": []
+        },
+        {
+            "id": "test-admissions-rest-permissions",
+            "status": "PASS",
+            "label": "Admissions REST permission regression",
+            "message": "Admissions REST permissions OK.",
+            "required": true,
+            "details": {
+                "path": "tests/admissions-rest-permissions.php"
+            }
+        },
+        {
+            "id": "test-ticket-claims-assignee-validation",
+            "status": "PASS",
+            "label": "Qualified-ticket assignee validation regression",
+            "message": "Ticket claims assignee validation OK.",
+            "required": true,
+            "details": {
+                "path": "tests/ticket-claims-assignee-validation.php"
+            }
+        },
+        {
+            "id": "test-ticket-checkout-safety-hardening",
+            "status": "PASS",
+            "label": "Ticket checkout safety regression",
+            "message": "ticket-checkout-safety-hardening: OK",
+            "required": true,
+            "details": {
+                "path": "tests/ticket-checkout-safety-hardening.php"
+            }
+        },
+        {
+            "id": "test-event-plan-legacy-ticketing-integration-smoke",
+            "status": "PASS",
+            "label": "Legacy ticketing smoke regression",
+            "message": "event plan legacy/imported ticketing integration smoke: PASS",
+            "required": true,
+            "details": {
+                "path": "tests/event-plan-legacy-ticketing-integration-smoke.php"
+            }
+        },
+        {
+            "id": "test-event-plan-ticket-ui-overrides-isolated",
+            "status": "PASS",
+            "label": "Ticket UI isolation regression",
+            "message": "Ticket UI override isolation test passed.",
+            "required": true,
+            "details": {
+                "path": "tests/event-plan-ticket-ui-overrides-isolated.php"
+            }
+        },
+        {
+            "id": "stage-source-tree",
+            "status": "PASS",
+            "label": "Stage public-release source tree",
+            "message": "Staged 367 files while honoring release-public-excludes.txt.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "php-syntax-lint",
+            "status": "PASS",
+            "label": "PHP syntax lint on staged distributable files",
+            "message": "PHP lint passed for 284 staged PHP files.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "js-syntax-lint",
+            "status": "PASS",
+            "label": "JavaScript syntax lint on staged distributable files",
+            "message": "Node syntax checks passed for 36 staged JavaScript files.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "target-readable",
+            "status": "PASS",
+            "label": "Target exists and is readable",
+            "message": "Validated target: vms",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "single-top-level-root",
+            "status": "PASS",
+            "label": "Single top-level package root",
+            "message": "Directory package root resolves to `vms/`.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "entry-file-present",
+            "status": "PASS",
+            "label": "Plugin entry file and required runtime files are present",
+            "message": "All required runtime files are present.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "required-runtime-directories",
+            "status": "PASS",
+            "label": "Required runtime directories are present",
+            "message": "Required runtime directories are present.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "manifest-excludes-honored",
+            "status": "PASS",
+            "label": "release-public-excludes.txt rules are honored",
+            "message": "No manifest-excluded paths were found in the package.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "archive-path-safety",
+            "status": "PASS",
+            "label": "Archive extraction cannot escape the destination directory",
+            "message": "No path traversal patterns were found in the package.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "developer-machine-path-scan",
+            "status": "PASS",
+            "label": "No developer-machine absolute paths appear in packaged text files",
+            "message": "No obvious developer-machine absolute paths were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "local-environment-url-scan",
+            "status": "PASS",
+            "label": "No obvious local environment URLs appear in packaged text files",
+            "message": "No obvious local environment URLs were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "credential-pattern-scan",
+            "status": "PASS",
+            "label": "No obvious credentials appear in packaged text files",
+            "message": "No high-confidence credential markers were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "zero-byte-runtime-code",
+            "status": "PASS",
+            "label": "No zero-byte runtime PHP or JavaScript files exist",
+            "message": "No zero-byte runtime PHP or JavaScript files were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "nested-archives",
+            "status": "PASS",
+            "label": "No nested release archive is included",
+            "message": "No nested archive files were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "symlink-entries",
+            "status": "PASS",
+            "label": "No symlinks are packaged",
+            "message": "No symlink entries were found in the package.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "wp-load-smoke-baseline",
+            "status": "PASS",
+            "label": "WP-CLI load smoke (baseline)",
+            "message": "Staged plugin loaded without an immediate fatal while skipping: vms",
+            "required": true,
+            "details": {
+                "skip_plugins": [
+                    "vms"
+                ]
+            }
+        },
+        {
+            "id": "wp-load-smoke-without-woocommerce",
+            "status": "PASS",
+            "label": "WP-CLI load smoke (without WooCommerce)",
+            "message": "Staged plugin loaded without an immediate fatal while skipping: vms, woocommerce, woocommerce-square",
+            "required": true,
+            "details": {
+                "skip_plugins": [
+                    "vms",
+                    "woocommerce",
+                    "woocommerce-square"
+                ]
+            }
+        },
+        {
+            "id": "wp-load-smoke-without-tec",
+            "status": "PASS",
+            "label": "WP-CLI load smoke (without The Events Calendar stack)",
+            "message": "Staged plugin loaded without an immediate fatal while skipping: vms, the-events-calendar, event-tickets, event-tickets-plus",
+            "required": true,
+            "details": {
+                "skip_plugins": [
+                    "vms",
+                    "the-events-calendar",
+                    "event-tickets",
+                    "event-tickets-plus"
+                ]
+            }
+        },
+        {
+            "id": "wp-load-smoke-without-optional-ticketing",
+            "status": "PASS",
+            "label": "WP-CLI load smoke (without optional ticketing add-ons)",
+            "message": "Staged plugin loaded without an immediate fatal while skipping: vms, woocommerce-square, event-tickets-plus",
+            "required": true,
+            "details": {
+                "skip_plugins": [
+                    "vms",
+                    "woocommerce-square",
+                    "event-tickets-plus"
+                ]
+            }
+        },
+        {
+            "id": "activation-portability-review",
+            "status": "WARN",
+            "label": "Activation-hook portability review",
+            "message": "The default pipeline does not execute activation hooks because that would mutate a WordPress site. Use a disposable site for any activation-hook smoke test.",
+            "required": false,
+            "details": []
+        },
+        {
+            "id": "target-readable",
+            "status": "PASS",
+            "label": "Target exists and is readable",
+            "message": "Validated target: vms-0.2.24.747-public-release.zip",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "zip-readable",
+            "status": "PASS",
+            "label": "ZIP exists and is readable",
+            "message": "ZIP archive opened successfully.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "single-top-level-root",
+            "status": "PASS",
+            "label": "Single top-level ZIP directory",
+            "message": "Package contents are rooted at `vms/` only.",
+            "required": true,
+            "details": {
+                "top_level_roots": [
+                    "vms"
+                ]
+            }
+        },
+        {
+            "id": "entry-file-present",
+            "status": "PASS",
+            "label": "Plugin entry file and required runtime files are present",
+            "message": "All required runtime files are present.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "required-runtime-directories",
+            "status": "PASS",
+            "label": "Required runtime directories are present",
+            "message": "Required runtime directories are present.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "manifest-excludes-honored",
+            "status": "PASS",
+            "label": "release-public-excludes.txt rules are honored",
+            "message": "No manifest-excluded paths were found in the package.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "archive-path-safety",
+            "status": "PASS",
+            "label": "Archive extraction cannot escape the destination directory",
+            "message": "No path traversal patterns were found in the package.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "developer-machine-path-scan",
+            "status": "PASS",
+            "label": "No developer-machine absolute paths appear in packaged text files",
+            "message": "No obvious developer-machine absolute paths were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "local-environment-url-scan",
+            "status": "PASS",
+            "label": "No obvious local environment URLs appear in packaged text files",
+            "message": "No obvious local environment URLs were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "credential-pattern-scan",
+            "status": "PASS",
+            "label": "No obvious credentials appear in packaged text files",
+            "message": "No high-confidence credential markers were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "zero-byte-runtime-code",
+            "status": "PASS",
+            "label": "No zero-byte runtime PHP or JavaScript files exist",
+            "message": "No zero-byte runtime PHP or JavaScript files were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "nested-archives",
+            "status": "PASS",
+            "label": "No nested release archive is included",
+            "message": "No nested archive files were found.",
+            "required": true,
+            "details": []
+        },
+        {
+            "id": "symlink-entries",
+            "status": "PASS",
+            "label": "No symlinks are packaged",
+            "message": "No symlink entries were found in the package.",
+            "required": true,
+            "details": []
+        }
+    ],
+    "warnings": [
+        {
+            "id": "plugin-header-requirements",
+            "status": "WARN",
+            "label": "Minimum WordPress and PHP requirements declared",
+            "message": "Plugin header is missing one or both minimum-requirement fields. Manual review is required before public release.",
+            "required": false,
+            "details": {
+                "requires_php": "",
+                "requires_wp": ""
+            }
+        },
+        {
+            "id": "git-dirty-policy",
+            "status": "WARN",
+            "label": "Dirty worktree policy",
+            "message": "Git metadata is unavailable in this workspace, so the report marks the tree state as unknown.",
+            "required": false,
+            "details": []
+        },
+        {
+            "id": "activation-portability-review",
+            "status": "WARN",
+            "label": "Activation-hook portability review",
+            "message": "The default pipeline does not execute activation hooks because that would mutate a WordPress site. Use a disposable site for any activation-hook smoke test.",
+            "required": false,
+            "details": []
+        }
+    ],
+    "skipped_checks": [
+        {
+            "id": "readme-stable-tag",
+            "status": "SKIP",
+            "label": "Readme stable tag consistency",
+            "message": "No readme file is present, so there is no stable tag to verify.",
+            "required": false,
+            "details": []
+        }
+    ]
+}

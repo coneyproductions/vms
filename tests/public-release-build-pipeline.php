@@ -170,7 +170,6 @@ PHP,
 docs/
 tests/
 scripts/
-provenance/
 dist/
 BUILD-NOTES-*.md
 *.zip

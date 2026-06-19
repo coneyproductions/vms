@@ -8,7 +8,7 @@
   - stale pre-reconcile repository state is preserved on `archive/pre-provenance-reconcile-2026-06-18`
   - unreleased local runtime changes are isolated on `work/unreleased-2026-06-18`
 - Provenance inputs preserved with this reconcile:
-  - `provenance/releases/0.2.24.747.json`
-  - `provenance/reports/0.2.24.747/`
+  - `docs/provenance/releases/0.2.24.747.json`
+  - `docs/provenance/reports/0.2.24.747/`
   - `scripts/verify-public-release-provenance.php`
 - The working `wp-content/plugins/vms` tree was restored after the production packaging step and therefore does not itself represent the deployed release without this repo reconcile.

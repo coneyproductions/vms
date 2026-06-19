@@ -24,8 +24,8 @@ Common options:
 ```bash
 php scripts/build-public-release.php --output-dir ./dist
 php scripts/build-public-release.php --output-dir "/tmp/VMS Release Output"
-php scripts/build-public-release.php --provenance-manifest ./provenance/releases/0.2.24.747.json
-php scripts/build-public-release.php --provenance-manifest ./provenance/releases/0.2.24.747.json --skip-release-tests
+php scripts/build-public-release.php --provenance-manifest ./docs/provenance/releases/0.2.24.747.json
+php scripts/build-public-release.php --provenance-manifest ./docs/provenance/releases/0.2.24.747.json --skip-release-tests
 php scripts/build-public-release.php --force
 php scripts/build-public-release.php --dev-build
 php scripts/build-public-release.php --allow-dirty
@@ -68,7 +68,7 @@ These files are now authoritative for public customer ZIPs:
 - [`scripts/lib/public-release.php`](../scripts/lib/public-release.php)
 - [`tests/check-package-integrity.php`](../tests/check-package-integrity.php)
 - [`release-public-excludes.txt`](../release-public-excludes.txt)
-- `provenance/releases/*.json`
+- `docs/provenance/releases/*.json`
 
 Related audit/history references:
 
@@ -206,7 +206,7 @@ Verify a ZIP or extracted package against a recorded provenance manifest:
 ```bash
 php scripts/verify-public-release-provenance.php \
   --target dist/vms-0.2.24.747-public-release.zip \
-  --manifest provenance/releases/0.2.24.747.json
+  --manifest docs/provenance/releases/0.2.24.747.json
 ```
 
 That provenance check is stricter than the package-integrity scan. It proves that the artifact matches a specific recorded release, not merely that it is a structurally safe package.
