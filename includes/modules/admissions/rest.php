@@ -425,7 +425,24 @@ if (!function_exists('vms_admission_rest_patch')) {
 		if (!is_array($row)) {
 			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
 		}
-		if ((string) $row['status'] === 'canceled') {
+
+		$requested_status = null;
+		if (null !== $req->get_param('status')) {
+			$requested_status = sanitize_key((string) $req->get_param('status'));
+			if (!in_array($requested_status, array('active', 'partial', 'checked_in', 'canceled'), true)) {
+				return vms_admission_rest_error('invalid_status', __('Invalid status.', 'vms'), 400);
+			}
+		}
+
+		$is_canceled = ((string) ($row['status'] ?? '')) === 'canceled';
+		$is_restore_only = $is_canceled
+			&& $requested_status === 'active'
+			&& null === $req->get_param('guest_name')
+			&& null === $req->get_param('guest_email')
+			&& null === $req->get_param('party_size')
+			&& null === $req->get_param('phone')
+			&& null === $req->get_param('notes');
+		if ($is_canceled && !$is_restore_only) {
 			return vms_admission_rest_error('cannot_edit_canceled', __('Canceled entries cannot be edited.', 'vms'), 409);
 		}
 
@@ -481,11 +498,8 @@ if (!function_exists('vms_admission_rest_patch')) {
 		}
 
 		$status = null;
-		if (null !== $req->get_param('status')) {
-			$status = sanitize_key((string) $req->get_param('status'));
-			if (!in_array($status, array('active', 'partial', 'checked_in', 'canceled'), true)) {
-				return vms_admission_rest_error('invalid_status', __('Invalid status.', 'vms'), 400);
-			}
+		if (null !== $requested_status) {
+			$status = $requested_status;
 			$updates['status'] = $status;
 			$formats[] = '%s';
 			$details['status'] = $status;
