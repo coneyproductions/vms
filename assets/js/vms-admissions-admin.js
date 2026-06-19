@@ -37,6 +37,43 @@
     exportEl.href = cfg.exportCsvUrl;
   }
 
+  const admissionsErrorMessage = (code, message, fallback) => {
+    const normalizedCode = String(code || '');
+    const normalizedMessage = String(message || '').trim();
+
+    if (normalizedCode === 'vms_admission_bad_nonce') {
+      return 'Your Admissions session expired. Refresh this page to continue.';
+    }
+
+    if (normalizedMessage) {
+      return normalizedMessage;
+    }
+
+    return fallback;
+  };
+
+  const normalizeRestPayload = (payload, fallback) => {
+    if (payload && payload.ok === true) {
+      return payload;
+    }
+
+    const errorCode = payload && payload.error && payload.error.code
+      ? payload.error.code
+      : (payload && payload.code ? payload.code : '');
+    const errorMessage = payload && payload.error && payload.error.message
+      ? payload.error.message
+      : (payload && payload.message ? payload.message : '');
+
+    return {
+      ok: false,
+      data: payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : null,
+      error: {
+        code: errorCode,
+        message: admissionsErrorMessage(errorCode, errorMessage, fallback),
+      },
+    };
+  };
+
   const rest = (path, options) => {
     const opts = options || {};
     const method = String(opts.method || 'GET').toUpperCase();
@@ -45,6 +82,10 @@
       const stamp = 'vms_no_cache=' + String(Date.now());
       requestPath += (requestPath.indexOf('?') === -1 ? '?' : '&') + stamp;
     }
+    const fallbackMessage = method === 'GET'
+      ? 'Could not load Admissions data. Refresh and try again.'
+      : 'Admissions request failed. Refresh and try again.';
+
     return fetch(cfg.restUrl.replace(/\/$/, '') + requestPath, {
       credentials: 'include',
       cache: 'no-store',
@@ -55,7 +96,23 @@
         'X-WP-Nonce': cfg.nonce,
       },
       ...opts,
-    }).then((r) => r.json());
+    }).then(async (r) => {
+      let payload = null;
+      try {
+        payload = await r.json();
+      } catch (err) {
+        payload = null;
+      }
+
+      return normalizeRestPayload(payload, fallbackMessage);
+    }).catch(() => ({
+      ok: false,
+      data: null,
+      error: {
+        code: 'vms_admission_request_failed',
+        message: 'Could not reach Admissions. Refresh and try again.',
+      },
+    }));
   };
 
   const setFeedback = (msg, isError) => {

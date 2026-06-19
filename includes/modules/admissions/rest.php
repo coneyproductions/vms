@@ -33,6 +33,13 @@ if (!function_exists('vms_admission_rest_permission_error')) {
 	}
 }
 
+if (!function_exists('vms_admission_rest_expired_session_message')) {
+	function vms_admission_rest_expired_session_message(): string
+	{
+		return __('Your Admissions session expired. Refresh the page and try again.', 'vms');
+	}
+}
+
 if (!function_exists('vms_admission_rest_request_nonce')) {
 	function vms_admission_rest_request_nonce(WP_REST_Request $request): string
 	{
@@ -68,7 +75,7 @@ if (!function_exists('vms_admission_rest_can_checkin_request')) {
 			return vms_admission_rest_permission_error('vms_admission_forbidden', __('Access denied.', 'vms'));
 		}
 		if (!vms_admission_rest_request_has_valid_nonce($request)) {
-			return vms_admission_rest_permission_error('vms_admission_bad_nonce', __('Session expired. Please refresh and try again.', 'vms'));
+			return vms_admission_rest_permission_error('vms_admission_bad_nonce', vms_admission_rest_expired_session_message());
 		}
 		return true;
 	}
@@ -81,7 +88,7 @@ if (!function_exists('vms_admission_rest_can_manage_request')) {
 			return vms_admission_rest_permission_error('vms_admission_forbidden', __('Access denied.', 'vms'));
 		}
 		if (!vms_admission_rest_request_has_valid_nonce($request)) {
-			return vms_admission_rest_permission_error('vms_admission_bad_nonce', __('Session expired. Please refresh and try again.', 'vms'));
+			return vms_admission_rest_permission_error('vms_admission_bad_nonce', vms_admission_rest_expired_session_message());
 		}
 		return true;
 	}
