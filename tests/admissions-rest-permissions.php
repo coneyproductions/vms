@@ -171,6 +171,7 @@ $GLOBALS['vms_test_caps'] = array(vms_admission_door_capability() => true);
 $badNonce = call_user_func($listRoute['args']['permission_callback'], new WP_REST_Request(array('X-WP-Nonce' => 'expired')));
 $assert($badNonce instanceof WP_Error, 'Admissions list should reject invalid REST nonces.');
 $assert($badNonce->get_error_code() === 'vms_admission_bad_nonce', 'Admissions list should surface the hardened bad-nonce code.');
+$assert($badNonce->get_error_message() === 'Your Admissions session expired. Refresh the page and try again.', 'Admissions list should return the refreshed expired-session guidance.');
 
 $goodCheckin = call_user_func($listRoute['args']['permission_callback'], new WP_REST_Request(array('X-WP-Nonce' => 'good-rest-nonce')));
 $assert($goodCheckin === true, 'Admissions list should allow door users with a valid REST nonce.');

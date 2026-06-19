@@ -1,3 +1,8 @@
+## 0.2.24.748
+- Fixed the current-event Event Details sidebar guard so automatic sidebar injection only suppresses duplicates inside the real target sidebar, while manual `[vms_plan_your_visit layout="sidebar"]` placement still prevents a later auto duplicate when it renders first.
+- Enforced Vendor Type requirements at runtime for public vendor profiles so typeless vendors no longer expose public profile URLs or sidebar links just because older enablement meta was left behind.
+- Retired the orphaned legacy `vms_square_nightly_sync` schedule on activation/deactivation and once per site update, and surfaced explicit Admissions session-expired refresh guidance in the admin UI instead of generic request-failure messages.
+
 ## 0.2.24.746
 - Fixed cancellation notification recipient discovery so the notifications step reads current staffing slot assignments first, falls back to legacy `_vms_staff_assignments` only when needed, and resolves staff emails in this order: staff `_vms_linked_user_id` user email, any user with `_vms_staff_id` pointing at the staff post, then older staff post meta fallbacks.
 - Stopped silently dropping assigned staff without email by recording typed `missing_email` skips in the cancellation job data while keeping vendor and secondary vendor recipient behavior intact.
