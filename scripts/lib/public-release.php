@@ -1213,7 +1213,7 @@ PHP;
 		$slug = basename($stagedRoot);
 		$zip->addEmptyDir($slug);
 		if (method_exists($zip, 'setMtimeName') && is_int($rootMtimeUnix) && $rootMtimeUnix > 0) {
-			$zip->setMtimeName($slug, $rootMtimeUnix);
+			$zip->setMtimeName($slug . '/', $rootMtimeUnix);
 		}
 
 		$files = self::listAllFiles($stagedRoot);
