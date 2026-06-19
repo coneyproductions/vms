@@ -1,0 +1,22 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+*.code-workspace
+
+# Dependency and build output
+node_modules/
+dist/
+test-results/
+
+# Local packaging artifacts
+*.zip
+*.7z
+*.bz2
+*.gz
+*.rar
+*.tar
+*.tgz

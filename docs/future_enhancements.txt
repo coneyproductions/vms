@@ -1,0 +1,126 @@
+VMS IDEA PAD (CANONICAL) — NOT YET IMPLEMENTED
+LAST UPDATED: 2026-03-04  (America/Chicago)
+SCOPE NOTE: Future enhancements/idea pad only. Bugs/regressions must be tracked in `wp-content/plugins/vms/docs/bugs.txt`. Committed/planned implementation queue lives in `wp-content/plugins/vms/docs/backlog.txt`.
+
+SECTION 01 — CORE STABILITY, REFACTOR, GOVERNANCE
+- [ROUTED] Governance/process tracking lives in backlog IDs: `CSS-02`, `SCHED-03`, `VEND-01`, `PROC-01`.
+- [ROUTED] Event Plan CSV Import is tracked in backlog ID `EPCSV-01` (build spec: `DEBUGGING/vms-doc-archive/vms-build-specs/Event Plan CSV Import/VMS_BUILD_SPEC_Event_Plan_CSV_Import.md`); remaining follow-ups continue in `PUB-05` and `NOTICE-01`.
+- [FEATURE][ONBOARDING] First-run Welcome screen + Setup Wizard (minimum viable setup: venues, roles, defaults, integrations, first Event Plan) with “resume later” and completion gating.
+- [FEATURE][ONBOARDING] Page-level guided tours (tooltips/spotlight overlays + auto-scroll) with per-user show/hide toggle and progress tracking.
+- [FEATURE][ONBOARDING] Optional Auto Tour (“museum mode”) that navigates safe admin pages without writing data; stop/exit anytime.
+- [DEV][ONBOARDING] Stable tour targets via data attributes (for example `data-vms-tour="key"`) to reduce breakage from WP/theme layout changes.
+- [FEATURE][SECURITY] Roles + capabilities map for VMS areas (vendors, pay, tickets, exports, compliance) with least-privilege defaults.
+- [FEATURE][AUDIT] Global audit log / activity feed (append-only) for money-impacting and compliance-impacting actions (who, what, when, before/after).
+- [FEATURE][DIAGNOSTICS] Admin “System Health” screen: integrity checks, last scan time, error log viewer, and diagnostics bundle download for support.
+- [FEATURE][DIAGNOSTICS] Module test harness (“Test & Diagnostics” per add-on): run safe API tests (e.g., Meta Ads payload validation), capture request/response with redaction, and export a support bundle.
+- [FEATURE][SETTINGS] Settings export/import (safe JSON) for migrating VMS config between sites/staging/production.
+- [DEV][MIGRATION] Database/schema migration runner with versioned migrations and rollback-safe patterns.
+
+SECTION 02 — SCHEDULE & CALENDAR (ADMIN UX)
+- [UX] Show holidays in Schedule/Calendar views.
+- [UX] Visually indicate which table/list columns are editable.
+- [UX] Eliminate any need to type Venue IDs (use venue select boxes everywhere; if only one active venue, auto-select/hide the selector).
+- [ROUTED] Admin menu reorganization/consolidation tracking (including moving Season Dates under Settings) lives in backlog ID: `MENU-01`.
+
+SECTION 03 — VENUES
+- [FEATURE] Holidays should be global/multi-venue (a holiday can apply to multiple venues via venue selection).
+
+SECTION 04 — SEASON DATES + HOLIDAY RULES (DATA TOOLS)
+- [FEATURE][UI] Season Dates rules: add “pattern” / day-of-week constraint option (e.g., Fri–Sat only) and align with Season Dates V1 rule types.
+- [DATA TOOLS] Upload Holidays importer (CSV) to manage vms_holidays per venue/date with per-holiday pay overrides; include Preview → Commit, validation, safe overwrite/merge, and audit trail.
+
+SECTION 05 — EVENT PLANS (UI/UX + WORKFLOWS)
+- [FEATURE][AGREEMENTS] Core cancellation policy profiles and Event Plan booking-term snapshots for proposals, agreements, cancellation workflow, refunds/event credits, and audit trail. See `docs/12-agreement-contract-roadmap.md`.
+- [FEATURE][AGREEMENTS] Event viability thresholds with review deadlines so cancellation decisions can be based on documented facts rather than subjective pressure.
+- [UX] Simplify Event Plan editor overall (reduce text, compare-first layout, glanceable choices).
+- [UX] Compensation comparison tiles: show every available option (venue default for that day, vendor default, holiday amount, and other known options) instead of placeholder $0.00.
+- [UX] Compensation layout concept: “known” pay structures (Venue default, Vendor default, Holiday default) across the top; “variable” structures below for easy comparison.
+- [UX] Always show Holiday tile (disabled when none); reflect “no vendor pay override” cases clearly.
+- [PUBLIC] Public-facing event: include compensation package.
+- [FEATURE] Secondary vendors (food trucks and other non-performer vendors) in Event Plans.
+- [FEATURE] Multi-vendor (multiple performers) per Event Plan (festivals), in addition to multi-venue.
+- [FEATURE] Event cancellation workflow: support reschedule proposals linked to canceled event (notifications, acceptance, audit trail).
+- [UX] Event Plan UI cleanup pass: move Venue to top and Date below; show Holiday info below (collapsed when none); clarify Times; rename Band/Headliner to Talent/Performer; simplify Compensation with progressive disclosure; hide Tickets section when ticketing integration is unavailable; make Staff section collapsible/optional; fix post-save unsaved-changes warning.
+- [ROUTED] Remove number input spinner arrows where scroll causes accidental changes is tracked in backlog ID: `UX-12` (completed).
+- [FEATURE][APPROVAL] Event Plan change approvals/locks: require explicit confirm for edits that affect money after Published (or record edits as amendments).
+- [FEATURE][TEMPLATES] Event Plan templates beyond tickets (staffing defaults, compensation mode, times, venue-specific defaults).
+
+SECTION 06 — VENDORS & STAFF (SCHEDULING, PAY, RELIABILITY)
+- [FEATURE][AGREEMENTS] Proposal acknowledgement walkthrough with visible audit receipts: timestamp, signer/contact, IP, proposal version, and acknowledgement ID shown back to vendor.
+- [FEATURE][AGREEMENTS] No-show / nonperformance documentation workflow using documented direct costs and reasonable cover costs, not default flat penalties.
+- [FEATURE][AGREEMENTS] Technical Rider and Hospitality Rider uploads in vendor portal with review/approval/exception/superseded states and clear "request unless approved" language.
+- [FEATURE][PAY] Deposit support for primary/band vendor bookings, separate from base pay/guarantee/bonus/agent fee, with refundable/nonrefundable/creditable and cancellation/no-show treatment.
+- [FEATURE] Labor-per-event scheduling (bartender, sound tech, cleanup) as a separate vendor/staff category or equivalent role system.
+- [FEATURE][TASKS] Task system (role-based + individual): recurring tasks (daily/weekly/monthly/custom), due dates, completion log, and optional per-event linkage + dashboard “overdue/missing”.
+- [FEATURE][PAY] Staff role pay tiers similar to vendor pay: hourly and/or daily/per-event rates, optional per-venue + per-day-of-week defaults, and override support.
+- [FEATURE][FIN] Track vendor payroll/payment per event (paid status, amount, method) with future QuickBooks integration potential.
+- [FEATURE][AVAIL] Vendor availability calendar: show Tentative when Event Plan is Draft/Ready; show Booked only when Published.
+- [FEATURE][INTEGRITY] Vendor conflict detection: vendor unavailable overlapping assigned Event Plan → “Red Flag” status, daily integrity scan, optional vendor email, “Vendor verified” acknowledgment to suppress/resolve.
+- [UX] Vendor Edit screen cleanup and restructure:
+- [UX] Remove unused “Tax Profile” metabox.
+- [UX] Separate basic contact details from pay structure UI.
+- [FEATURE] Per-venue default rate (currently global only).
+- [FEATURE] Optional per-day-of-week default rates per venue.
+- [UX] Audit overlap between Event Plan Defaults and Vendor Details boxes (merge if same, or clarify distinct purpose).
+- [IDEA][STAFF] Staff responsibilities per staff type as repeatable event to-do list, auto-assigned for every event.
+- [IDEA][DATA] Import historical vendor/staff work logs (past hours/days/events worked) once hours tracking exists.
+- [FEATURE][DOCS] Vendor document vault (W-9, contracts) with strict access control, download logging, and retention rules.
+- [FEATURE][NOTIFY] Vendor/staff notification preferences (email now, SMS later) plus per-event notification log.
+
+SECTION 07 — TICKETING, WOO, TEC INTEGRATION
+- [UX][MOBILE] Sticky bottom action bar for “Save & Continue” and “Checkout” during ticket add flow so actions are always reachable.
+- [UX][ENTITLEMENTS] Detailed entitlement descriptions (short + “More info” expand), including what’s included + any restrictions.
+- [UX][ENTITLEMENTS] Widen entitlement area to full content width (remove unused whitespace on desktop).
+- [UX][ENTITLEMENTS][A11Y] Add entitlements into the subtotal summary near “Get Tickets”; increase legibility of “Quantity” + “Total” + action buttons (older-audience friendly, not oversized).
+- [FEATURE] Ticket templates: stable reusable templates and a default template behavior (ensure it is predictable).
+- [FEATURE][TEC] Ensure Event Plans can create a TEC event (not only link to an existing one).
+- [ROUTED] Discount verification/rework tracking lives in backlog ID: `INT-02`.
+- [PLUGIN] Convert related events sidebar code into a standalone plugin:
+- [PLUGIN] Show one related event at a time.
+- [PLUGIN] Motion effect (slide/scroll) to keep it lively.
+- [PLUGIN] Include “Get tickets” button.
+- [FEATURE][REFUNDS] Ticket refund/cancellation workflow hooks: when Event Plan cancels/reschedules, guide operator through ticket actions and customer communications.
+- [FEATURE][CHECKIN] Door check-in dashboard (ticketed + comp/guest list unified) with counts and scanning-ready UI.
+
+SECTION 08 — FINANCE, EXPORTS, INTEGRATIONS
+- [MODULE][PREMIUM] Agreement/contract packet add-on `vmsx-agreements`: render core booking-term snapshots into agreement PDFs, signed-copy upload metadata, agreement version history, and manual DocuSign handoff.
+- [FEATURE][EXPORT] Vendor data export with presets/formats (Tax1099.com, QuickBooks, other tools); include schema mapping templates, field validation, safe export options.
+- [IDEA][INTEGRATION] Tax1099 provider modes: add optional Tax1099 API integration alongside email-based no-API modes.
+- [IDEA][INTEGRATION] QuickBooks integration expansion for payouts later (vendor payments/payroll per event and deeper automation).
+- [FEATURE][RECON] Revenue/expense reconciliation view (Woo + Square + manual) per event with discrepancy flags.
+- [FEATURE][PAYOUTS] Payment run workflow (“pay vendors for date range”) with explicit confirmation, audit trail, and export artifacts.
+
+SECTION 09 — DASHBOARD, REPORTING, FORECASTING
+- [UX] Dashboard redesign with “QuickBooks-like” vibe: summary cards (Today/This Week/This Month) plus financial section (bills due/upcoming, projections).
+- [FEATURE][BUDGET] Enhance Budget Calculator: annual goals, progress indicator, past revenue, live forecast updating from Event Plan changes + upcoming calendar events.
+- [FEATURE][BUDGET] Event Plan budget snapshot (projected + actual): pull live ticket sales, vendor/staff overhead, configured per-customer estimates (drinks/merch/entitlements), and ad/marketing costs when available.
+- [FEATURE][COMPLIANCE] Due Dates / Compliance obligations tracker:
+- [FEATURE][COMPLIANCE] Dashboard card for upcoming obligations.
+- [FEATURE][COMPLIANCE] Support one-time, monthly, quarterly, annual schedules.
+- [FEATURE][COMPLIANCE] Completion tracking with append-only audit log and optional proof link.
+- [FEATURE][COMPLIANCE] Mobile-first urgency highlighting and “Mark complete”.
+- [IDEA][COMMS] Communication tracking system: log outreach (text/email/social) as tasks/notes per vendor/event with completion status (not a full messaging system).
+- [FEATURE][REPORTS] Standard reports pack: vendor cost by month, revenue by event, profit by venue, staffing cost, holiday premium totals.
+- [FEATURE][ALERTS] Threshold alerts (low event margin, missing W-9 near payout date, staffing shortfall, venue closed-day conflict).
+- [FEATURE][WEATHER] Weather Watch Phase 1 admin forecasting + nag system + optional dashboard modal is queued per build spec: `DEBUGGING/vms-doc-archive/vms-build-specs/Weather Watch/vms-buildspec-weather-watch-phase1.md`.
+
+SECTION 10 — PUBLIC-FACING FEATURES
+- [FEATURE][PUBLIC] Public Vendor Profiles system (bio, images, tags, request CTA, vendor self-edit with optional moderation, SEO-friendly URLs, global disable switch).
+- [IDEA][PUBLIC] Staff job board + applications (account-required applications; optional PDF-only resumes with strict guardrails).
+- [IDEA][PUBLIC] “Events Up for Bid” extension for vendors using unified Opportunity + Submission model.
+- [ROUTED] Guest List / Comp Admission + Pass Claims (Forecast-First, Claim-Only) tracking lives in backlog IDs: `PUB-04`, `PUB-05`.
+- [FEATURE][APPLICATIONS] Non-performer vendor application intake tied to future Market Events / food truck onboarding, usable before full Market module.
+
+SECTION 11 — MARKET EVENTS MODULE (FUTURE ADD-ON)
+- [MODULE][IDEA] Market Events add-on: many vendors per event, overall capacity, per-category caps, category-based application/approval/waitlist, related workflows.
+
+SECTION 12 — SITE / COMMERCE BACKLOG (NON-VMS CORE)
+- [IDEA][NON-VMS][WOO] Add customer referral/affiliate program on SerenadeRange.com (WooCommerce plugin-based); postponed due to cost, revisit soon.
+- [IDEA][NON-VMS][COMMERCE] Premium add-ons dashboard + licensing: customer portal, license key delivery/renewal, update entitlement checks (dedicated site or Woo store).
+
+Hand written ideas & enhancements (please work these in where appropriate and leave this line for me to add to again in the future)
+
+Add to pages automatically created
+ - vendor-portal
+
+Private post-event feedback module MVP shipped in 0.2.24.604 and Email Follow-Ups integration shipped in 0.2.24.605: post-event thank-you emails can include an event-specific private feedback link, feedback submissions are logged back into Email Follow-Ups, and Event Feedback admin links to the post-event email preview. Future enhancements: deeper attendee tokenization/status dashboards, long-term trend reports, curated anonymous vendor summaries, and season/vendor scorecards.

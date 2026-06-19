@@ -1,0 +1,442 @@
+THIS THREAD TASK TITLE - [FILL] - [FILL: YYYY-MM-DD HH:MM] (America/Chicago)
+
+================================================================================
+VMS MASTER HANDOFF TEMPLATE v3 (PLAIN TEXT, FORMAT-LOCKED)
+DO NOT REFORMAT. DO NOT RENAME HEADINGS. DO NOT DELETE SECTIONS.
+Only edit fields marked [FILL] or the “THIS THREAD DELTA” section.
+CANONICAL FILE LOCATION (recommended): vms/docs/VMS_MASTER_HANDOFF.txt
+================================================================================
+
+SECTION 00 — FORMAT RULES (LOCKED) [FILL]
+[ ] Only [FILL] fields are edited. Headings and dividers are unchanged.
+[ ] Plain text only. No tables. No rich text.
+[ ] In [FILL] fields, use flat bullets only (no nested bullets).
+[ ] Preserve exact layout: no line-wrapping, reflow, spacing changes, or indentation changes (edit only [FILL] fields and the “THIS THREAD DELTA” section).
+[ ] New threads paste the CURRENT FILLED SNAPSHOT only (the empty template is reference; do not paste it).
+[ ] Every future thread begins with minimum kickoff context: either paste this handoff in full OR provide canonical file paths and instruct assistant to read them.
+[ ] Every new/blank handoff template BEGINS with the required THREAD TASK TITLE & TIMESTAMP
+[ ] Partial updates are not allowed: if a section is touched, it must be fully reviewed for internal consistency.
+[ ] If a decision conflicts with an existing documented source of truth (Handoff, Bugs, Backlog, Idea Pad), the conflict MUST be explicitly called out and resolved before proceeding.
+[ ] This thread is scoped to the stated SECTION 12 TASK only. New, unrelated work must be deferred and logged.
+Use the marker [OUT-OF-SCOPE — LOGGED] for ideas acknowledged but deferred.
+[ ] Any assistant-applied code change intended to ship MUST include a same-thread version-marker bump in all canonical locations before final response unless the user explicitly waives versioning or the thread is docs-only/planning-only.
+[ ] Market Readiness Checklist Rule:
+- All task prioritization must be derived from the current “VMS – Market Readiness Checklist (CANONICAL)” document.
+- New threads must either:
+a) Paste the current checklist in full, OR
+b) Paste the CURRENT STATUS SNAPSHOT from the checklist.
+- If neither is provided, the assistant must request it before reprioritizing work.
+If SECTION 12 already names a committed task, proceed with SECTION 12 and request the checklist context before changing priorities.
+- The checklist governs WHAT we work on.
+The handoff governs HOW we work on it.
+
+SECTION 01 — CHANGE CONFIRMATION (REQUIRED, ALWAYS) [FILL]
+Code changes applied in THIS thread:
+[ ] No (analysis / planning only)
+[ ] Yes (implemented by user)
+[ ] Yes (implemented by assistant)
+[ ] Keys + Identifiers registry updated (if new identifiers were introduced)
+[ ] All assumptions made during analysis or design MUST be explicitly written. No implied or unstated assumptions.
+[ ] Any new idea, TODO, or deferred decision mentioned in the thread MUST be logged in either:
+- THIS THREAD DELTA, or
+- The appropriate bugs / backlog / idea section explicitly referenced.
+
+Verified current repo state: [FILL: branch name + short commit hash]
+Working copy status:
+[FILL: clean / uncommitted changes present]
+
+[ ] Verified by user via functional testing
+[ ] Verified by terminal/grep (file paths + include graph)
+[ ] Not verified
+
+EXPLICIT CONTINUITY STATEMENT (pick exactly one): [FILL]
+[ ] A) “No changes were made to files, schemas, keys, or assumptions in this thread.”
+[ ] B) “The following changes were made:”
+- [FILL: change 1]
+- [FILL: change 2]
+- [FILL: change 3]
+
+Change Risk Level (pick one):
+[ ] Low (UI / copy / non-destructive)
+[ ] Medium (logic changes, reversible data effects)
+[ ] High (money, payroll, reporting, destructive or irreversible actions)
+
+Verification method must be appropriate to the declared Risk Level.
+High-risk changes require functional testing or data validation.
+
+SECTION 02 — OPERATING PRINCIPLES (LOCKED)
+Priority order:
+1) Correctness + data integrity + reversibility
+2) Deterministic include graph + single source of truth
+3) UX polish last (unless UX blocks correctness/testing)
+4) All future constants, keys, or variable definitions must be maintained in a dedicated, centralized file (or file set) for ease of reference
+- vms/includes/core/registry/meta-keys.php
+- vms/includes/core/registry/constants.php
+
+Bombproof rules:
+- No silent failures (log + surface + explain)
+- Bulk/automated actions must be reversible or reconstructible
+- Require explicit confirmation before changes affecting money/legal exposure/irreversible data
+
+House style:
+- Avoid three-dot "..." in HTML/comments; use “…” or &hellip; or [snip] marker
+- When proposing code changes, provide a complete drop-in patch first (copy-paste safe), then optional incremental edits.
+- Instructions must be literal and explicit (assume user is not a programmer; no shorthand steps).
+
+SECTION 03 — PROJECT ORIENTATION (LOCKED BASELINE + UPDATES)
+Canonical project name: VMS (Venue Management System)
+User preference: mobile-first admin UX
+
+Canonical plugins:
+- Core plugin: vms
+- Tools plugin: vms-data-tools
+- Legacy importer (TEMP): vms-vendor-import-csv (target retirement)
+
+Local dev root (authoritative):
+- wp-content/plugins/
+
+Text domains:
+- Core: vms
+- Tools: vms-data-tools
+
+Minimum environment (if enforced):
+- WordPress: [FILL]
+- PHP: [FILL]
+
+SECTION 04 — ENTRY POINTS AND BOOT GRAPH (LOCKED BASELINE)
+VMS Core
+- WP header entry: vms/vendor-management-system.php
+- Canonical orchestrator: vms/includes/bootstrap.php
+- Note: vms.php exists but is NOT canonical/active
+
+VMS Data Tools
+- WP header entry: vms-data-tools/vms-data-tools.php
+- Bootstrap: vms-data-tools/includes/bootstrap.php
+
+Legacy Importer (TEMP)
+- WP header entry: vms-vendor-import-csv/vms-vendor-import-csv.php
+- Shim: vms-vendor-import-csv/vms-vendor-import-engine.php → requires DT engine
+
+SECTION 05 — LOADER RULES (LOCKED, NON-NEGOTIABLE)
+- Only bootstrap.php and area loaders include other files.
+- Feature files never include other feature files.
+- Admin code must NEVER be included from schedule/shared layers.
+- Shared schedule logic lives in: vms/includes/schedule/*
+- Admin UI/handlers live in: vms/includes/admin/*
+- REST must never depend on includes/admin/*
+
+Canonical admin loader:
+- vms/includes/admin/load.php is the source of truth for admin includes.
+
+Legacy risk note:
+- If /vms/admin/load.php exists, it must not be in the canonical boot graph.
+If referenced anywhere, it must be replaced with a shim that funnels to:
+vms/includes/admin/load.php
+
+SECTION 06 — MULTI-PLUGIN RESPONSIBILITY SPLIT (LOCKED)
+VMS Core (vms/) owns:
+- Canonical vendor schema, meta keys, CPTs
+- Validation rules + adapter contracts
+- Shared schedule logic in includes/schedule/* (REST-safe)
+
+VMS Data Tools (vms-data-tools/) owns:
+- Vendor Import admin UI (Preview → Commit)
+- Report rendering
+- Calls into VMS core schema/registries (no duplication)
+
+Legacy Importer (vms-vendor-import-csv/) owns:
+- TEMP only; retire after deterministic DT adapter verification
+
+SECTION 07 — CURATED FOLDER TREE (AUTHORITATIVE MAP, UPDATE IF CHANGED)
+vms/vendor-management-system.php
+vms/includes/bootstrap.php
+vms/includes/admin/load.php
+vms/includes/admin/menu.php
+vms/includes/admin/schedule.php
+vms/includes/admin/season-dates.php
+vms/includes/admin/season-board.php
+vms/includes/admin/settings-page.php
+vms/includes/admin/vendor-user-link.php
+vms/includes/admin/holidays.php
+vms/includes/admin/due-dates.php
+vms/includes/admin/dashboard.php
+vms/includes/admin/venue-context.php
+vms/includes/cpt/vendors.php
+vms/includes/cpt/venues.php
+vms/includes/cpt/event-plans.php
+vms/includes/db/migrations.php
+vms/includes/schedule/schedule.php
+vms/includes/schedule/helpers.php
+vms/includes/schedule/season-dates.php
+vms/includes/helpers.php
+vms/includes/integrations/load.php
+vms/includes/integrations/vendor-ics-sync.php
+vms/includes/portal/vendor-portal.php
+vms/includes/portal/vendor-tax-profile.php
+vms/includes/rest/load.php
+vms/includes/rest-dashboard.php
+vms/includes/rest-due-dates.php
+vms/includes/core/load.php
+vms/includes/core/due-dates.php
+vms/includes/core/event-plan-inclusion.php
+vms/includes/core/validation/vendor.php
+vms/includes/core/registry/constants.php
+vms/includes/core/registry/meta-keys.php
+vms/includes/core/registry/vendor-schema.php
+vms/includes/core/registry/vms-keys-map.php
+vms/includes/core/registry/class-vms-vendor-schema-registry.php
+vms/includes/core/registry/class-vms-vendor-meta-registry.php
+vms/assets/admin-dashboard.js
+vms/assets/admin-dashboard-prefs.js
+vms/assets/css/vms-admin.css
+vms-data-tools/vms-data-tools.php
+vms-data-tools/includes/bootstrap.php
+vms-data-tools/includes/admin/page-vendor-import.php
+vms-data-tools/includes/services/vendor-import/vendor-import-engine.php
+vms-vendor-import-csv/ (TEMP legacy shim)
+
+SECTION 08 — STORAGE + KEYS MAP (AUTHORITATIVE, CRITICAL KEYS ONLY)
+Authoritative reference for all canonical naming, keys, slugs, and identifiers:
+WP Admin → VMS → Reference: Keys + Identifiers
+
+Rules:
+- This page is the single source of truth for:
+- Canonical variable names (e.g., $venue_id)
+- CPT slugs and constants (e.g., VMS_VENUE_CPT)
+- Option keys, meta keys, and storage locations
+- Threads must NOT re-discover or re-derive identifiers that already exist on this page.
+- If a new canonical identifier (key, slug, variable name, option, meta key) is discovered during a task:
+- The task must branch to updating the Keys + Identifiers registry
+- Do NOT rely on “found it once” knowledge
+- The registry is documentation only (keys/names only; no runtime values).
+
+Do NOT duplicate full schemas here; point to registry files for full definitions.
+
+A) Vendor schema
+Storage: WordPress CPT vms_vendor (display_name stored in post_title; other fields stored in post_meta per vms_vendor_schema()).
+Authoritative registry file: vms/includes/core/registry/meta-keys.php
+Storage mapping source: vms/includes/core/registry/vendor-schema.php
+Critical keys (only):
+_vms_vendor_primary_email = “Primary Contact Email” (schema field: primary_email)
+_vms_vendor_primary_phone = “Primary Phone” (schema field: primary_phone)
+_vms_vendor_email = “Vendor Email” (schema field uses vms_meta_key('vendor','email'))
+_vms_vendor_phone = “Vendor Phone” (schema field uses vms_meta_key('vendor','phone'))
+_vms_vendor_user_id = “Linked WP user ID for portal access” (vendor post_meta; VMS_VENDOR_USER_META_KEY)
+_vms_vendor_id = “Linked vendor post ID on WP user record” (user_meta; one-to-one link)
+
+B) Season Dates (per venue)
+Rules storage location: wp_options option vms_season_rules_v1 (array keyed by venue_id → rules[]).
+Active payload storage location: wp_options option vms_season_active_dates_v1 (array keyed by venue_id → payload).
+Critical keys (only):
+vms_season_rules_v1 = “season rules array”
+vms_season_active_dates_v1 = “generated dates payload”
+Engine file: vms/includes/schedule/season-dates.php
+Admin file: vms/includes/admin/season-dates.php
+
+C) Event plans / schedule (if applicable)
+Storage: WordPress CPT vms_event_plan
+Critical keys/slugs (only):
+_vms_band_vendor_id = “Headliner vendor ID on event plan” (post_meta on vms_event_plan)
+_vms_event_plan_status = “Internal status: draft/ready/published” (post_meta on vms_event_plan)
+_vms_secondary_vendor_ids = “Secondary vendor IDs array” (post_meta on vms_event_plan)
+_vms_secondary_vendor_type = “Secondary vendor type” (post_meta on vms_event_plan)
+
+D) Settings
+Storage: wp_options
+Option keys (critical only):
+vms_db_schema_version = “DB schema/migration version marker”
+vms_settings = “Settings array (stored as option)”
+sch_hide_past_default = “Hide past dates by default (Schedule list view)” (key inside vms_settings)
+
+E) Holidays (per venue + date)
+Storage: wp_options
+Option key:
+vms_holidays = “Venue-scoped holiday map”
+
+F) Due Dates (Dashboard)
+Storage: wp_options
+Option keys (critical only):
+vms_due_payees_v1 = “Due Dates payees list”
+vms_due_obligations_v1 = “Due Dates obligations list”
+vms_due_log_v1 = “Completion log”
+
+G) Dashboard venue/scope prefs (per user)
+Storage: user_meta
+Critical keys (only):
+_vms_dash_scope = “dashboard scope: all|venue”
+_vms_dash_venue_id = “dashboard selected venue_id when scope=venue”
+
+SECTION 09 — CANONICAL FILE INDEX (“WHERE IS X?”) (AUTHORITATIVE)
+Holidays admin UI + handlers:
+- Admin UI + renderer: vms/includes/admin/holidays.php
+- Admin-post handler (shared): vms/includes/admin/holidays.php
+- Storage option: wp_options → vms_holidays
+
+Schedule admin UI:
+- Admin UI + renderer: vms/includes/admin/schedule.php
+- Shared engine/helpers: vms/includes/schedule/schedule.php
+- Shared Event Plan inclusion/status truth: vms/includes/core/event-plan-inclusion.php
+- Hide-past default setting: wp_options → vms_settings → sch_hide_past_default
+
+Season Dates:
+- Admin UI + renderer: vms/includes/admin/season-dates.php
+- Engine file: vms/includes/schedule/season-dates.php
+
+Event Plans:
+- CPT registration + meta: vms/includes/cpt/event-plans.php
+- Shared Event Plan inclusion/status truth: vms/includes/core/event-plan-inclusion.php
+- Secondary vendors UI + storage: vms/includes/cpt/event-plans.php (secondary vendor type + ids)
+
+Dashboard:
+- Admin renderer: vms/includes/admin/dashboard.php
+- Dashboard REST data: vms/includes/rest-dashboard.php
+- Dashboard scope prefs: user_meta keys _vms_dash_scope, _vms_dash_venue_id
+
+Due Dates (Dashboard panel + admin):
+- Admin UI + renderer: vms/includes/admin/due-dates.php
+- Core engine: vms/includes/core/due-dates.php
+- Dashboard REST range=due: vms/includes/rest-dashboard.php
+- REST action endpoint: vms/includes/rest-due-dates.php
+- Storage options: wp_options → vms_due_payees_v1, vms_due_obligations_v1, vms_due_log_v1
+
+Vendor Portal availability calendar:
+- Portal renderer: vms/includes/portal/vendor-portal.php
+
+SECTION 10 — CANONICAL SEMANTICS (UPDATE IF CHANGED)
+Date format:
+- Canonical date string format: YYYY-MM-DD (site timezone)
+
+Weekday mask (days_w):
+- Meaning: allowed weekdays for a rule (weekday include mask)
+- Type: array of ints (0-6)
+- Mapping: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+- Empty/null days_w means “no weekday constraint” (all days allowed)
+
+Venue identity:
+- $venue_id is a WordPress post ID (int) for CPT vms_venue
+
+Timezone:
+- All date generation and rendering must use WP timezone (wp_timezone / wp_date), not server UTC.
+
+SECTION 11 — KNOWN LANDMINES / GOTCHAS (LOCKED + ADD NEW)
+- REST must not depend on includes/admin/*
+- Shared schedule helpers must live in includes/schedule/*
+- Avoid duplicate function definitions (single source of truth)
+- Redirects must occur before output; warnings/notices can break redirects
+- Menu files must not include page implementation files (loader owns includes)
+- No nested <form> elements in admin UIs
+- vms.php is not canonical/active
+- Legacy file present: /vms/admin/load.php (must NOT be part of canonical boot graph)
+- Any function added to Schedule Calendar view MUST also be implemented in Schedule List view (and vice versa) to maintain feature parity.
+- Inline <style> causes style conflicts in output. All style must be applied EXCLUSIVELY in corresponding css.
+- Phone numbers in VMS UI must be tel: clickable by default (omit only if explicitly requested for a specific location). Preferred display format: (###) ###-#### when applicable.
+- WP post_status cannot represent Draft/Ready/Published on its own; internal event plan status must use _vms_event_plan_status.
+- Versioning: Use SemVer MAJOR.MINOR.PATCH for the plugin version starting now (including dev builds).
+- Versioning: Stay in 0.x until first external/operator release; first public release is 1.0.0.
+- Versioning: PATCH=bugfix/polish; MINOR=new backwards-compatible feature; MAJOR=breaking change (API/behavior/data).
+- Versioning: DB/schema version (vms_db_schema_version) is separate; bump only when a migration/upgrade routine is required.
+- Versioning: Use plugin version for WP asset cache-busting (enqueue version for VMS CSS/JS).
+
+SECTION 12 — COMMITTED NEXT TASK (ONLY ONE PRIMARY)
+Next task must be written so a new contributor could proceed without prior thread context.
+
+Primary next task (committed):
+[FILL: exactly one primary task + why]
+
+Secondary next tasks (optional):
+[FILL]
+[FILL]
+
+SECTION 13 — BACKLOG (NOT COMMITTED, PARKED)
+[FILL]
+
+SECTION 13.1 ICEBOX (TABLED — NOT FOR NEAR-TERM WORK; PROMOTE TO BACKLOG WHEN READY)
+[FILL]
+
+
+SECTION 14 — THIS THREAD DELTA (REQUIRED, WHAT CHANGED JUST NOW)
+[FILL]
+
+SECTION 15 — NEXT THREAD START PROTOCOL (LOCKED)
+1) Minimum kickoff allowed (preferred for context preservation): post short kickoff note + canonical file paths; full paste is optional when assistant has workspace file access.
+2) Kickoff must include both file paths:
+wp-content/plugins/vms/docs/VMS_MASTER_HANDOFF.txt
+wp-content/plugins/vms/docs/VMS — Market Readiness Checklist (CANONICAL).txt
+- For enhancement/idea/new-implementation tasks, assistant must check for a matching build-spec file in:
+wp-content/plugins/vms/docs/build_specs/
+- If the matching build-spec file does not exist, assistant must request that build-spec before implementing (unless user explicitly waives this requirement).
+3) If kickoff references a filled snapshot and user did not ask to “update/close” handoff, assistant must begin Section 12 immediately and must not reprint/update handoff.
+4) Market Readiness Context:
+- If the user pasted the Market Readiness Snapshot/Checklist, assistant must sanity-check it against known completed work and blockers.
+- If anything is stale or contradicted, assistant must propose exact text updates to the Snapshot/Checklist (no partial edits; update as a complete block).
+- If no Snapshot/Checklist was pasted, assistant must request it before reprioritizing work.
+- Confirm the checklist includes the PHASE 7 release gate item:
+[ ] Release version set to 1.0.0 and tagged
+- Before assigning or changing SECTION 12 in any thread wrap/new handoff, assistant MUST scan `wp-content/plugins/vms/docs/bugs.txt` for open critical regressions and `wp-content/plugins/vms/docs/backlog.txt` for highest-priority open non-bug items, then explicitly reconcile that scan with the chosen SECTION 12 task.
+- If SECTION 12 differs from the top bugs/backlog priority, assistant MUST call out the conflict and record why the selected SECTION 12 task is still the committed next task.
+5) State the goal in one sentence.
+6) Provide exact file path(s) you want changed (or ask assistant to identify exact path from Section 09).
+6.1) If you are updating the handoff instead of reposting it, append the “Next Thread Kickoff Summary” copy/paste block shown later so the assistant can start Section 12 without needing the full handoff again.
+6.2) Preferred kickoff must include the canonical docs plus active spec/backlog/bugs context; do not use a loose one-line recap for multi-thread implementation streams.
+7) Assistant must confirm/update Sections 01, 07, 09, 14 before proposing new work.
+8) Thread wrap final response protocol (mandatory order):
+- Include wrap completion status.
+- Include list of files changed in wrap step.
+- Include any protocol/checklist/bugs/backlog state updates.
+- For any thread with code changes (not docs-only/planning-only), assistant MUST update version markers in all canonical locations before final response; do not defer version sync to a later pass and do not update only `vms/vms-build.txt` (at minimum: `vms/vms-build.txt`, `vms/vendor-management-system.php` plugin header `Version`, and `vms/includes/core/registry/constants.php` `VMS_VERSION`; plus any additional canonical version markers found by scan).
+- If SECTION 12 was assigned/reassigned, include a short “Bug + Backlog Priority Scan Result” line naming the top bug/backlog candidate(s) considered and the final SECTION 12 choice.
+- Finish with a copy/paste “Next Thread Kickoff Summary” block (text snippet, not command output) using the template:
+THREAD TASK TITLE - [FILL]
+Goal: [one sentence]
+Read and use:
+- wp-content/plugins/vms/docs/VMS_MASTER_HANDOFF.txt
+- wp-content/plugins/vms/docs/VMS — Market Readiness Checklist (CANONICAL).txt
+- wp-content/plugins/vms/docs/backlog.txt
+- wp-content/plugins/vms/docs/bugs.txt
+- [primary build spec]
+- [secondary spec if needed]
+Constraints:
+- Preserve existing working behavior unless this spec explicitly changes it.
+- Do not reprioritize on your own.
+- If I redirect mid-thread, note the drift and ask whether to finish the current task or formally switch tasks.
+Proceed with SECTION 12 primary task unless I explicitly reprioritize.
+- For UI/frontend wraps, include an additional copy/paste “UI Polish Kickoff Summary” block immediately after the standard kickoff summary using the template:
+THREAD TASK TITLE - [FILL: UI polish stream name]
+Goal: Final UI polish pass for [FILL module/screen] with no behavior regressions.
+Read and use:
+- wp-content/plugins/vms/docs/VMS_MASTER_HANDOFF.txt
+- wp-content/plugins/vms/docs/VMS — Market Readiness Checklist (CANONICAL).txt
+- wp-content/plugins/vms/docs/build_specs/[FILL exact spec file(s)]
+Focus polish scope:
+- [FILL: visual hierarchy]
+- [FILL: spacing/alignment]
+- [FILL: component states/interaction feedback]
+- [FILL: mobile/tablet behavior]
+Files expected to change:
+- [FILL exact CSS/JS/PHP view file paths]
+Proceed with this UI polish scope only unless I explicitly reprioritize.
+
+SECTION 16 — HANDOFF VALIDATION CHECK (REQUIRED) [FILL]
+[ ] From this handoff alone, we can locate exact files for Season Dates UI + engine. YES
+[ ] From this handoff alone, we can name canonical entry points + loader graph. YES
+[ ] From this handoff alone, we can state canonical semantics for days_w. YES
+[ ] From this handoff alone, we can identify storage locations + key names for critical data. YES
+Work status (pick one):
+[ ] NOT SATISFIED (stop)
+[ ] SATISFIED (may proceed)
+
+SECTION 17 — MAKE ANY TEMPLATE ADJUSTMENTS INLINE AND LIST CHANGES HERE
+- [FILL: Build-spec protocol rule update(s)]
+- [FILL: Versioning protocol update(s)]
+- [FILL]
+
+SECTION 18 — HANDOFF TIMESTAMP (REQUIRED, LOCKED)
+Handoff last updated at:
+[FILL: YYYY-MM-DD HH:MM (America/Chicago)]
+```
+
+For additional context:
+`vms/docs/VMS — Market Readiness Checklist (CANONICAL).txt`
+`vms/docs/bugs.txt`
+`vms/docs/backlog.txt`
+`vms/docs/future_enhancements.txt`

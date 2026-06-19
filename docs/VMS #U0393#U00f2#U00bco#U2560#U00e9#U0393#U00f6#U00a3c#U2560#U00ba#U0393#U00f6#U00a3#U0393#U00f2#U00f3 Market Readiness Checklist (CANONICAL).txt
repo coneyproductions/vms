@@ -1,0 +1,283 @@
+VMS — Market Readiness Checklist (CANONICAL)
+Last updated: 2026-02-16
+
+This document is the single source of truth for:
+- Where the VMS project currently stands
+- What must be completed before market launch
+- What is explicitly prioritized next
+
+If something is not listed here, it is not considered complete or in scope.
+
+================================================================
+CURRENT STATUS SNAPSHOT
+================================================================
+
+Overall Status:
+VMS is in active development and stabilization.
+Core architecture exists, and Event Plan editor clarity improved in the latest pass, but continuity, financial visibility validation, and release readiness are still in progress.
+Social Sharing Phase 0/1 foundation is implemented in-source; operator click-through validation is in progress but currently blocked on environment parity where the Social admin/promotion UI is not yet exposed.
+
+Continuity Binder:
+IN PROGRESS
+(Foundational documentation, rules, and architectural truth are still being finalized.)
+
+Market Readiness:
+NOT READY
+(System is functional for internal use but not yet packaged for external operators.)
+
+================================================================
+TOP PRIORITIES (ORDERED)
+================================================================
+
+1) “Ticketing Integration: Event Plan ↔ TEC Event ↔ Woo Tickets (Single Source of Truth)”
+Purpose:
+Ensure VMS can safely link to legacy/imported TEC events and pull ticket performance into VMS.
+
+Phase A:
+- Event Plan can link to an existing TEC event (legacy imports).
+- VMS stores canonical IDs (tec_event_id + tec_event_url).
+- VMS can detect Woo ticket products for that TEC event and cache ticket stats (sold + revenue).
+- Refresh is explicit (no auto-money actions; no background recalcs).
+
+Status:
+PHASE A IMPLEMENTED (VALIDATED)
+
+Phase B:
+- Ticket creation/sync from VMS uses TEC + Event Tickets (Woo) APIs (not plain Woo products).
+- VMS stores canonical Woo ticket/product IDs and provider + sync status.
+- Ticket stats become reliable enough to feed dashboard panels consistently.
+- All money-impacting actions remain explicit + reversible (no auto actions on Draft/Ready).
+
+Status:
+PHASE B IMPLEMENTED (VALIDATED)
+Notes:
+Ticket creation/sync is explicit + reversible (no auto-money actions on Draft/Ready).
+
+
+2) Event Plan Publish/Status + Schedule Single Source of Truth
+Purpose:
+Ensure one consistent definition of “what exists” and “what appears” across:
+- Event Plans list
+- Schedule calendar
+- Due date lists / dashboard financial panels
+
+What this accomplishes:
+- Eliminates “multiple sources of truth”
+- Makes Upcoming Bills and Schedule views testable and trustworthy
+- Prevents fixing the wrong integration layer (e.g., TEC) before core truth is stable
+
+Status:
+COMPLETE (VALIDATED 2026-02-15)
+
+Notes:
+Event Plan UX cleanup pass (UX-07/08/09/10/11 scope) is complete.
+Cross-view status/inclusion parity was validated and enforced on 2026-02-15 across Event Plans list, Schedule calendar/list, Dashboard Today/Week, and Upcoming Bills.
+Canonical inclusion/status matrix (Include Draft/Ready OFF vs ON):
+- event_list: OFF = published,cancelled | ON = draft,ready,published,tentative,confirmed,cancelled
+- schedule_admin: OFF = published,cancelled | ON = draft,ready,published,tentative,confirmed,cancelled
+- dashboard: OFF = published | ON = draft,ready,published,tentative,confirmed
+- dashboard_bills: OFF = published | ON = draft,ready,published,tentative,confirmed
+Default when no user preference exists:
+- Schedule: Include Draft/Ready defaults ON
+- Event Plans list: Include Draft/Ready defaults ON
+- Dashboard: Include Draft/Ready defaults ON
+
+
+3) Upcoming Bills on Dashboard
+Purpose:
+Provide immediate financial awareness so the operator can see what money is owed and when, without digging.
+
+What this accomplishes:
+- Shows upcoming vendor payments at a glance
+- Reduces missed or late payments
+- Makes the system feel financially “alive” and trustworthy
+
+Status:
+IMPLEMENTED (VALIDATED 2026-02-15)
+
+Notes:
+This is a visibility feature, not automation.
+No payments are issued automatically.
+FIN-01 validation result (2026-02-15):
+- Include Draft/Ready OFF => Published-only behavior confirmed
+- Include Draft/Ready ON => Draft/Ready what-if inclusion confirmed (plus tentative/confirmed parity)
+- Cancelled remains excluded from Upcoming Bills feed
+
+
+4) Dashboard Due Dates (Compliance + Reporting Reminders)
+Purpose:
+Surface non-vendor obligations on the dashboard (tax filings, reporting, recurring compliance payments).
+
+What this accomplishes:
+- Reduces missed deadlines and penalties
+- Centralizes operational “adulting” in one place
+- Creates a reliable reminder spine for future automation
+
+Status:
+IMPLEMENTED (VALIDATED 2026-02-16)
+
+Notes:
+Entities here are not “Vendors” (separate record type recommended).
+Should support account numbers/IDs per entity and recurring schedules.
+Implementation progress:
+- FIN-02 complete: payee storage + admin CRUD validated (2026-02-16)
+- FIN-03 complete: obligation storage + recurring cadence generation validated (2026-02-16)
+- FIN-04 complete: dashboard due-soon + overdue highlighting validated (2026-02-16)
+- FIN-05 complete: append-only completion/uncomplete audit + proof/notes + guarded reopen validated (2026-02-16)
+- FIN-06 complete: obligations list filters + direct mark-complete actions validated (2026-02-16)
+
+
+5) Budget Forecast Calculator
+Purpose:
+Help make smarter decisions before booking acts or pricing tickets.
+
+What this accomplishes:
+- Estimates profitability before committing to expenses
+- Helps answer:
+  “How much can we pay?”
+  “How much do we need to charge?”
+- Supports yearly, monthly, weekly, or per-event planning
+
+Status:
+IMPLEMENTED (SOURCE-VALIDATED 2026-02-16)
+
+Notes:
+This is a decision-support tool.
+It does not replace accounting software.
+- FIN-08 complete: annual-goal inputs + progress tracking + past ticket-revenue context + Event Plan-driven live annual forecast.
+- Forecast inclusion now follows canonical financial inclusion semantics (Published-only by default; optional Draft/Ready/Tentative/Confirmed inclusion; Cancelled excluded).
+- No automatic payment or irreversible money actions are performed (forecasting only).
+- Manual operator click-through QA for FIN-08 mixed-status/mixed-ticket-stats scenarios remains deferred/backlogged for follow-up.
+
+
+6) Public-Facing Vendor Profiles
+Purpose:
+Create professional, shareable pages for performers and vendors.
+
+What this accomplishes:
+- Makes the platform more attractive to vendors
+- Reduces repeated “send me your info” requests
+- Lays groundwork for future marketplace or booking features
+
+Status:
+NOT STARTED
+
+Notes:
+Initial version is informational only.
+No booking logic or applications required for v1.
+
+================================================================
+PHASE 1 — CORE SYSTEM RELIABILITY
+================================================================
+
+Goal:
+The system works consistently and predictably across views and devices.
+
+[ ] Schedule calendar and list views show identical information
+[x] Schedule views and dashboards use consistent inclusion rules (draft/published/ready) everywhere
+[ ] Single-venue calendar layout issues resolved
+[ ] Holidays visible in all relevant schedule views
+[ ] Mobile admin usability confirmed
+[ ] Public and admin CSS loads consistently (no layout regressions)
+[x] Dashboard panels load reliably (no perpetual “Loading…” stalls)
+
+================================================================
+PHASE 2 — EVENT PLANS ARE CLEAR AND TRUSTWORTHY
+================================================================
+
+Goal:
+An operator understands exactly what is scheduled and what it costs.
+
+[x] Event status (“Draft”, “Ready”, etc.) reflects correctly everywhere
+[x] Event Plans list and Schedule reflect the same set of events (no hidden/phantom items)
+[x] Compensation UI simplified and decluttered
+[ ] Duplicate or redundant pay messaging removed
+[ ] Performer terminology standardized across the system
+[ ] Holiday logic hidden unless applicable
+
+================================================================
+PHASE 3 — VENDOR DATA IS SINGLE-SOURCE-OF-TRUTH
+================================================================
+
+Goal:
+Each vendor or performer is defined once, correctly, and reused everywhere.
+
+[x] Vendor contact info separated from pay structure
+[x] Per-venue default pay rates supported
+[x] Optional day-of-week default rates supported
+[ ] Unused or confusing vendor UI removed
+[ ] All modules reference the same vendor schema
+
+================================================================
+PHASE 4 — FINANCIAL TRACKING IS SAFE AND CLEAR
+================================================================
+
+Goal:
+Money can be tracked, reviewed, and exported without surprises.
+
+[ ] Per-event vendor payment tracking implemented
+[x] Upcoming obligations can be reviewed before they are due
+[x] Dashboard Due Dates reminders implemented (tax/reporting/compliance)
+[ ] Accounting export works end-to-end
+[ ] System is not locked to a single accounting provider
+[ ] Money-impacting actions require explicit confirmation
+
+================================================================
+PHASE 5 — TAX SEASON DOES NOT CAUSE PANIC
+================================================================
+
+Goal:
+Tax-related information is organized and exportable.
+
+[ ] Vendor tax information workflow defined
+[ ] Vendor payment eligibility clearly indicated
+[ ] Tax-ready export formats available
+[ ] VMS remains the operational source of truth
+
+================================================================
+PHASE 6 — DATA IMPORTS ARE SAFE AND HUMAN-FRIENDLY
+================================================================
+
+Goal:
+Existing data can be imported without technical knowledge.
+
+[ ] All imports use Preview → Confirm → Commit flow
+[ ] Human-readable identifiers included in imports
+[ ] Overwrite behavior is explicit and explained
+[ ] No raw system fields exposed to operators
+
+================================================================
+PHASE 7 — SOMEONE ELSE CAN USE THIS
+================================================================
+
+Goal:
+A new operator can use the system without direct guidance.
+
+[ ] Basic setup steps documented
+[ ] “Danger zones” (money, deletion, overrides) explained
+[ ] System limitations clearly stated
+[ ] Release version set to 1.0.0 and tagged
+
+================================================================
+DEFERRED / OUT-OF-SCOPE FOR INITIAL LAUNCH
+================================================================
+
+These items are intentionally postponed to avoid scope creep.
+
+- Staffing automation
+- Multi-user vendor accounts
+- Public calendars for ticket buyers
+- Live payment processing
+- Automated tax filing integrations
+- Per-event operational checklist system (customizable checklist + deadlines)
+
+================================================================
+RULES OF USE
+================================================================
+
+- This document is canonical.
+- Updates overwrite the entire document.
+- Partial edits are discouraged.
+- Checkbox convention: [ ] not complete, [x] complete
+- If something is complete, it must be checked here.
+- If something is not here, it is not “done.”

@@ -1,0 +1,107 @@
+VMS IDEA PAD (FEATURES ONLY) — NOT YET IMPLEMENTED (EXPANDED CONTEXT)
+LAST UPDATED: 2026-02-16  (America/Chicago)
+
+SECTION 01 — ONBOARDING (NEW OPERATORS)
+- [FEATURE][ONBOARDING] First-run Welcome screen + Setup Wizard (venues, defaults, integrations, first Event Plan) with “resume later”. Intent: guide a brand-new operator through the minimum required setup in the correct order so they can successfully create and publish their first event without hunting through menus or missing hidden prerequisites.
+- [FEATURE][ONBOARDING] Guided setup tour (popup walkthrough) across key screens with per-user progress and “don’t show again”. Intent: provide a training layer that highlights what each screen is for and exactly what the operator should do next, while remaining optional and non-blocking for experienced users.
+- [FEATURE][ONBOARDING] Page-level guided tours (spotlight overlays + auto-scroll) with per-user enable/disable and progress tracking. Intent: contextual help that “points at the button” and explains it in-place, with stable steps that operators can replay later when they forget how a workflow works.
+- [FEATURE][ONBOARDING] Optional auto tour (“museum mode”) that navigates safe admin pages without writing data. Intent: let someone see what VMS can do in a quick guided preview without risk of accidentally creating venues, vendors, or events.
+- [DEV][ONBOARDING] Stable tour targets via data attributes (data-vms-tour="key"). Intent: make tours durable across UI changes so a minor layout tweak does not break onboarding instructions for operators.
+
+SECTION 02 — SCHEDULE & CALENDAR (ADMIN UX)
+- [UX] Holidays visible in Schedule/Calendar views. Intent: operators can spot holiday dates instantly while scheduling, understand that pay rules might apply, and avoid scheduling surprises that show up only inside the Event Plan editor.
+- [UX] Visual indicators for editable columns/cells in list/table views. Intent: reduce trial-and-error clicks by clearly signaling what can be edited inline versus what requires opening a record, especially important for mobile-first usability.
+- [UX] Reorganize/reorder VMS admin menu for workflow-first navigation (move Season Dates under Settings; consolidate where sensible). Intent: make the left-nav match the operator’s mental model so onboarding and daily usage are faster, with fewer “where was that again” moments.
+- [UX] Primary tab quick-menu popups: each top-level tab can reveal a lightweight popup menu styled as a visual extension of that tab (matching color family, shared edge treatment, soft shadow, restrained motion). Intent: reduce click depth while preserving clear tab ownership and visual continuity.
+- [UX] Consolidate left VMS menu to match primary-tab IA. Intent: eliminate split-path navigation and ensure operators see one coherent structure whether they use the top tabs or left admin rail.
+
+SECTION 03 — VENUES, SEASON DATES, HOLIDAYS (CAPABILITIES)
+- [FEATURE] Holidays are global/multi-venue (single holiday can apply to multiple venues). Intent: define a holiday once, select which venues it applies to, and eliminate duplicated holiday entries and inconsistent holiday pay behavior across venues.
+- [FEATURE][UI] Season Dates day-of-week constraints/pattern rules (e.g., Fri–Sat only) aligned with Season Dates rule types. Intent: model real operating patterns (weekends-only seasons, special weekday series, etc.) so the system generates the right dates automatically instead of forcing manual date curation.
+- [DATA TOOLS] Upload Holidays importer (CSV) managing vms_holidays with Preview → Commit, validation, safe overwrite/merge, audit trail. Intent: allow bulk holiday setup from a spreadsheet with a clear preview of what will change, strong validation to prevent corrupt rules, and an audit trail so changes are explainable and reversible.
+
+SECTION 04 — EVENT PLANS (UI/UX + WORKFLOWS)
+- [UX] Event Plan editor simplification (compare-first, glanceable choices, reduced wording). Intent: operators should be able to open an Event Plan and immediately see the “big decisions” without reading paragraphs, resulting in faster creation and fewer missed settings.
+- [UX] Compensation comparison tiles show every available option (venue default for day, vendor default, holiday defaults, relevant variants). Intent: provide a single visual place to compare all known pay structures side-by-side so the operator can choose confidently without searching other screens or doing mental math.
+- [UX] Compensation layout hierarchy: “known defaults” across the top; “variable/override modes” below. Intent: establish a consistent scanning pattern that makes compensation decisions feel effortless and repeatable across events.
+- [UX] Holiday tile always visible (disabled when none) and clearly indicates when a holiday exists but has no vendor override. Intent: remove ambiguity when a holiday is present but does not change every rate, while still keeping the operator aware of holiday context.
+- [UX] Replace spinner-style number inputs with safer controls where appropriate (tap-friendly steppers or plain inputs). Intent: prevent accidental scroll-based value changes on desktop and mobile while keeping numeric entry fast for operators.
+- [FEATURE][APPROVAL] Published money-impacting edits require explicit confirmation and/or amendment trail (lock/approve model). Intent: once an Event Plan is Published, changes that affect pay, payouts, or other financial outcomes should be deliberate, clearly confirmed, and recorded so “what changed and why” is always answerable.
+- [FEATURE][TEMPLATES] Event Plan templates beyond tickets (times, staffing defaults, compensation mode, venue defaults). Intent: operators can create consistent events quickly by starting from a template rather than re-entering the same settings repeatedly.
+- [FEATURE] Secondary vendors in Event Plans (food trucks and other non-performer vendors). Intent: schedule the full reality of an event in one plan, including vendors that are not the headliner performer, with proper tracking and future billing/pay workflows.
+- [FEATURE] Multi-vendor per Event Plan (multiple performers for festivals), alongside multi-venue. Intent: support complex events without creating multiple disconnected Event Plans, while still keeping roles, pay, and communications organized per vendor.
+- [FEATURE] Cancellation workflow with reschedule proposals linked to canceled events (notifications, acceptance, audit trail). Intent: treat reschedules as first-class workflows so the original event history is preserved, the proposed new date is explicitly linked, and vendor/staff acceptance is trackable.
+- [PUBLIC][UX] Public event page “What’s included” package summary (customer-facing benefits only, not internal pay/budget). Intent: clearly communicate to customers what admission includes (seating type, perks, early entry, bundles) to increase conversion and reduce “what do I get” questions, without exposing internal financial details.
+
+SECTION 05 — VENDORS & STAFF (SCHEDULING, PAY, RELIABILITY)
+- [FEATURE] Labor-per-event role scheduling (bartender, sound tech, cleanup) as structured roles. Intent: plan event staffing needs in a consistent format so scheduling, payroll, and responsibility tracking can be standardized later.
+- [FEATURE][FIN] Track vendor payments per event (paid status, amount, method) with future accounting sync. Intent: eliminate ambiguity about who has been paid and for what, support payment runs, and make reconciliation and exports reliable.
+- [FEATURE][AVAIL] Vendor availability states reflect commitment level (Tentative for Draft/Ready; Booked for Published). Intent: align the calendar’s language with reality so vendors and operators can interpret conflicts correctly and reduce double-booking risk.
+- [FEATURE][INTEGRITY] Vendor conflict detection with Red Flag, daily integrity scan, optional vendor email, and “Vendor verified” acknowledgment. Intent: proactively detect scheduling contradictions, surface them clearly, allow documented resolution, and reduce last-minute operational surprises.
+- [UX] Vendor Edit screen restructure (contact details separated from pay UI; remove unused boxes; support per-venue defaults and optional day-of-week defaults; merge/clarify overlapping defaults surfaces). Intent: make vendor setup faster and less error-prone while enabling accurate auto-fill behavior when creating Event Plans.
+- [FEATURE][DOCS] Vendor document vault (W-9, contracts) with strict access control, download logging, retention rules. Intent: centralize compliance documents in one safe place, reduce the “where is that PDF” problem, and keep an audit trail of access.
+- [FEATURE][NOTIFY] Vendor/staff notification preferences plus per-event notification log. Intent: track what was sent, when it was sent, and by which channel preference so operators can prove communication and avoid duplicate outreach.
+- [IDEA][STAFF] Staff responsibilities as repeatable event to-do list auto-assigned by staff type. Intent: enforce consistent operations (setup checklist, cleanup checklist, etc.) without rewriting tasks for every event.
+- [IDEA][DATA] Import historical vendor/staff work logs once hours tracking exists. Intent: preserve prior history so reporting and performance context are meaningful from day one.
+
+SECTION 06 — COMMUNICATION TRACKING (OPERATOR WORKFLOW)
+- [IDEA][COMMS] Communication logging (texts/emails/social) as tasks/notes per vendor/event with “done” status, not a messaging platform. Intent: provide one operational truth source that answers “did I contact them” and “what did I promise” regardless of which external channel was used.
+
+SECTION 07 — TICKETING, WOO, TEC (CAPABILITIES + UX ENHANCEMENTS)
+- [FEATURE][CART] Cart dependency validation so ticket-required add-ons can be added even after tickets are already in cart, with guided resolution if requirements are missing. Intent: prevent dead-end carts and lost sales by making entitlement prerequisites enforceable but not fragile.
+- [UX][MOBILE] Sticky bottom action bar during ticket flows (“Save & Continue”, “Checkout”). Intent: keep primary actions reachable on phones so customers never get stuck due to scrolling limitations.
+- [UX] Tap-friendly entitlement quantity controls that behave consistently across devices. Intent: make add-ons frictionless so upsells work reliably without confusing input behavior.
+- [FEATURE] Ticket templates system with predictable default template behavior. Intent: enable repeatable ticket setups across events so operators do not rebuild ticket structures manually each time.
+- [FEATURE][TEC] Event Plans can create TEC events (not only link). Intent: provide a single, primary workflow for publishing events that does not require pre-creating TEC items elsewhere.
+- [FEATURE][TEC] Safe “link existing TEC event” workflow with guardrails and clearly defined sync behavior. Intent: support legacy events and migrations while preventing accidental overwrites or confusing state mismatches between VMS and TEC.
+- [FEATURE][PRICING] Pricing rules and discount logic registry verification and modernization path (ensure rules apply consistently across current flows). Intent: prevent silent revenue changes by making pricing rules explicit, testable, and consistently applied.
+- [PLUGIN] Related Events plugin (one event at a time, motion effect, “Get tickets” button). Intent: improve discovery and conversion by promoting a single relevant event without cluttering the sidebar.
+- [FEATURE][REFUNDS] Cancellation/reschedule hooks to guide customer ticket actions (refund/transfer) and comms. Intent: provide an operator-safe checklist and prompts so changes to events lead to correct customer outcomes and consistent messaging.
+- [FEATURE][CHECKIN] Door check-in dashboard (ticketed + guest/comp unified) with counts and scanning-ready UI. Intent: unify entry management so staff can check in all admission types in one place and operators get accurate attendance.
+
+SECTION 08 — FINANCE, EXPORTS, INTEGRATIONS
+- [FEATURE][EXPORT] Vendor data export with presets (Tax1099.com, QuickBooks, other tools) including schema mapping templates, validation, safe export options. Intent: produce clean, destination-ready exports that reduce manual cleanup and prevent compliance/accounting errors.
+- [IDEA][INTEGRATION] Tax1099 provider modes including optional API integration alongside email-based no-API modes. Intent: offer scalable automation for operators who want it while preserving a simpler fallback workflow.
+- [IDEA][INTEGRATION] QuickBooks integration expansion for payouts later (deeper automation). Intent: reduce manual bookkeeping by syncing payments and vendor payout records as the system matures.
+- [FEATURE][RECON] Per-event reconciliation view (Woo + Square + manual revenue/expenses) with discrepancy flags. Intent: show a clear financial picture per event and highlight mismatches early so issues can be resolved before closeout.
+- [FEATURE][PAYOUTS] Payment run workflow (“pay vendors for date range”) with explicit confirmations, audit trail, and export artifacts. Intent: make bulk payments operationally safe and traceable, with artifacts that can be referenced later.
+
+SECTION 09 — DASHBOARD, REPORTING, FORECASTING
+- [UX] Dashboard redesign with “QuickBooks-like” vibe (Today/Week/Month cards plus financial section). Intent: give operators instant situational awareness at login without digging through multiple menus.
+- [FEATURE][BUDGET] Budget Calculator upgrades (annual goals, progress, past revenue, live forecast from Event Plans + calendar). Intent: turn the calendar into a living forecast so operators can see whether they are on track and what must happen to hit targets.
+- [FEATURE][COMPLIANCE] Due Dates and Compliance tracker (one-time and recurring obligations, mark complete, audit log, proof links, mobile urgency). Intent: prevent missed filings and renewals by keeping obligations visible, actionable, and documented.
+- [FEATURE][REPORTS] Standard reports pack (vendor cost by month, revenue by event, profit by venue, staffing cost, holiday premium totals). Intent: provide decision-ready numbers for operations and planning without relying on external spreadsheets.
+- [FEATURE][ALERTS] Threshold alerts (low margin, missing W-9 near payout, staffing shortfall, venue closed-day conflicts). Intent: proactive warnings that help operators fix problems before they become expensive failures.
+
+SECTION 10 — PUBLIC-FACING FEATURES
+- [FEATURE][PUBLIC] Public Vendor Profiles (bio/images/tags/request CTA/self-edit with moderation/SEO URLs/global disable). Intent: improve marketing and discovery so customers and operators can find and book talent or vendors more easily, while still controlling quality and privacy.
+- [FEATURE][GUESTS] Guest List and Comp Admission system (named entries, performer allotments, auditable, check-inable, counts attendance, no SKU). Intent: handle real-world comps cleanly with limits and accountability, integrated into door operations.
+- [IDEA][PUBLIC] Staff job board + applications (account-required; optional PDF-only resumes with strict guardrails). Intent: local hiring pipeline that keeps applications structured and avoids inbox chaos.
+- [IDEA][PUBLIC] “Events Up for Bid” extension using unified Opportunity + Submission model. Intent: allow vendors to apply/quote for opportunities in a controlled workflow, creating a scalable sourcing pipeline.
+
+SECTION 11 — MARKET EVENTS MODULE (FUTURE ADD-ON)
+- [MODULE][IDEA] Market Events add-on (many vendors per event, overall capacity, per-category caps, applications/approval/waitlist, workflows). Intent: support vendor markets and fairs where many vendors participate, with controls that prevent overbooking and simplify approvals.
+- [FEATURE][APPLICATIONS] Vendor application intake for non-performers (food trucks and similar) even before full Market module. Intent: replace spreadsheet onboarding with a structured intake flow that can later expand into the Market Events module.
+
+SECTION 12 — SITE / COMMERCE (NON-VMS CORE)
+- [BACKLOG][WOO] Customer referral/affiliate program on SerenadeRange.com (WooCommerce plugin-based). Intent: add a growth lever that incentivizes repeat customers and word-of-mouth promotion when budget allows.
+
+---
+
+## Event Credit / Rain Check Direction
+
+Cancellation workflows should support an optional customer Event Credit path without replacing refunds. Preferred language is “Event Credit,” not “rain check.” Customers should always retain a refund path when they paid for an event they did not receive. Event Credits should be auditable, tied to the original event/order/customer, optionally emailed, redeemable toward eligible future events, and reportable as outstanding liability until redeemed/expired/voided.
+
+## Agreement / Contract / Proposal Planning — added 2026-04-25
+
+- Premium add-on direction: formal agreement/contract packet generation should live in `vmsx-agreements`, but the shared booking facts should live in core.
+- Core should expose cancellation policy profiles, Event Plan booking-term snapshots, event viability thresholds, clause status/bypass audit, deposits, rider upload/review state, and no-show/nonperformance review data.
+- Proposal should include the plain-English guided walkthrough and acknowledgements. Final agreement should stay clean/formal and link back to the accepted proposal version.
+- Acknowledgements should visibly show audit details to the vendor: acknowledged date/time, identity, IP address, proposal version, and acknowledgement ID.
+- Clause bypass is allowed for proven/high-draw vendors, but only with visibility, reason capture, permission guardrails, timestamp, approver, Event Plan snapshot, and version history.
+- No-show handling should avoid default flat penalties. Use documented direct costs, reasonable cover costs, payment withholding where applicable, future booking consequences, and formal notice workflow.
+- Add core deposit support separate from base pay/guarantee/bonus/agent fee, with refundable/nonrefundable/creditable and cancellation/no-show treatment.
+- Add Technical Rider and Hospitality Rider uploads in the vendor portal. Uploads are requests unless accepted by the venue in writing; approved riders may become agreement exhibits.
+- Canonical outline: `docs/12-agreement-contract-roadmap.md`.
+
+Private post-event feedback module MVP shipped in 0.2.24.604 and Email Follow-Ups integration shipped in 0.2.24.605: post-event thank-you emails can include an event-specific private feedback link, feedback submissions are logged back into Email Follow-Ups, and Event Feedback admin links to the post-event email preview. Future enhancements: deeper attendee tokenization/status dashboards, long-term trend reports, curated anonymous vendor summaries, and season/vendor scorecards.
