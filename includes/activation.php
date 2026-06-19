@@ -10,6 +10,10 @@ function vms_activate_plugin(): void
 		vms_resource_fingerprint_flag('plugin_activation', 'vms/vendor-management-system.php');
 	}
 
+	if (function_exists('vms_cleanup_legacy_square_nightly_sync_hook')) {
+		vms_cleanup_legacy_square_nightly_sync_hook();
+	}
+
 	if (function_exists('vms_require_internal_file') && vms_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_activation', 'Database migrations')) {
 		if (function_exists('vms_db_migrate_vendor_core_v7')) {
 			vms_db_migrate_vendor_core_v7();
@@ -63,11 +67,80 @@ function vms_deactivate_plugin(): void
 		vms_resource_fingerprint_flag('plugin_deactivation', 'vms/vendor-management-system.php');
 	}
 
+	if (function_exists('vms_cleanup_legacy_square_nightly_sync_hook')) {
+		vms_cleanup_legacy_square_nightly_sync_hook();
+	}
+
 	if (function_exists('vms_unschedule_all_owned_cron_hooks')) {
 		vms_unschedule_all_owned_cron_hooks();
 	}
 	flush_rewrite_rules();
 }
+
+if (!function_exists('vms_cleanup_legacy_square_nightly_sync_hook')) {
+	function vms_cleanup_legacy_square_nightly_sync_hook(): void
+	{
+		$hook = 'vms_square_nightly_sync';
+		if (function_exists('wp_clear_scheduled_hook')) {
+			wp_clear_scheduled_hook($hook);
+		}
+
+		if (function_exists('as_unschedule_all_actions')) {
+			as_unschedule_all_actions($hook);
+			return;
+		}
+
+		if (!class_exists('ActionScheduler') || !class_exists('ActionScheduler_Store') || !method_exists('ActionScheduler', 'store')) {
+			return;
+		}
+
+		try {
+			$store = ActionScheduler::store();
+			if (!is_object($store) || !method_exists($store, 'query_actions')) {
+				return;
+			}
+
+			$action_ids = (array) $store->query_actions(array(
+				'hook' => $hook,
+				'status' => ActionScheduler_Store::STATUS_PENDING,
+				'per_page' => 100,
+				'orderby' => 'none',
+			));
+			foreach ($action_ids as $action_id) {
+				$action_id = (int) $action_id;
+				if ($action_id <= 0) {
+					continue;
+				}
+
+				if (method_exists($store, 'cancel_action')) {
+					$store->cancel_action($action_id);
+				} elseif (method_exists($store, 'delete_action')) {
+					$store->delete_action($action_id);
+				}
+			}
+		} catch (Throwable $e) {
+			return;
+		}
+	}
+}
+
+if (!function_exists('vms_maybe_cleanup_legacy_square_nightly_sync_hook')) {
+	function vms_maybe_cleanup_legacy_square_nightly_sync_hook(): void
+	{
+		if (!function_exists('get_option') || !function_exists('update_option')) {
+			return;
+		}
+
+		$option_key = 'vms_cleanup_legacy_square_nightly_sync_0_2_24_748';
+		if (get_option($option_key, '') === '1') {
+			return;
+		}
+
+		vms_cleanup_legacy_square_nightly_sync_hook();
+		update_option($option_key, '1', false);
+	}
+}
+add_action('init', 'vms_maybe_cleanup_legacy_square_nightly_sync_hook', 5);
 
 /**
  * Ensure a WP Page exists by slug. Creates it if missing.
