@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VMS
  * Description: Venue Management System core.
- * Version: 0.2.24.747
+ * Version: 0.2.24.746
  * Author: Coney Productions
  * Text Domain: vms
  */

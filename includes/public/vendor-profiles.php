@@ -335,7 +335,7 @@ if (!function_exists('vms_vendor_profiles_group_key_for_type')) {
             return 'food_vendors';
         }
 
-        return $type_slug !== '' ? $type_slug : 'untyped';
+        return $type_slug !== '' ? $type_slug : 'vendor';
     }
 }
 
@@ -348,7 +348,7 @@ if (!function_exists('vms_vendor_profiles_group_sort_order')) {
             'food_vendors' => 20,
             'market_vendor' => 30,
             'photographer' => 40,
-            'untyped' => 90,
+            'vendor' => 90,
         );
 
         return (int) ($order[$group_key] ?? 50);
@@ -463,7 +463,7 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
             if (!isset($groups[$group_key])) {
                 $groups[$group_key] = array(
                     'group_key' => $group_key,
-                    'type_slug' => $type_slug !== '' ? $type_slug : 'untyped',
+                    'type_slug' => $type_slug,
                     'sort_order' => vms_vendor_profiles_group_sort_order($group_key),
                     'insert_order' => $group_index++,
                     'cards' => array(),

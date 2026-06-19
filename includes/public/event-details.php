@@ -14,6 +14,38 @@ add_shortcode('vms_plan_your_visit', 'vms_event_details_shortcode');
 add_filter('tribe_json_ld_event_object', 'vms_event_details_filter_tec_event_schema', 99, 3);
 add_filter('tribe_json_ld_markup', 'vms_event_details_filter_tec_json_ld_markup', 99);
 
+if (!function_exists('vms_event_details_sidebar_rendered')) {
+    function vms_event_details_sidebar_rendered(int $event_id): bool
+    {
+        $event_id = absint($event_id);
+        if ($event_id <= 0) {
+            return false;
+        }
+
+        $rendered = isset($GLOBALS['vms_event_details_sidebar_rendered']) && is_array($GLOBALS['vms_event_details_sidebar_rendered'])
+            ? $GLOBALS['vms_event_details_sidebar_rendered']
+            : array();
+
+        return !empty($rendered[$event_id]);
+    }
+}
+
+if (!function_exists('vms_event_details_mark_sidebar_rendered')) {
+    function vms_event_details_mark_sidebar_rendered(int $event_id): void
+    {
+        $event_id = absint($event_id);
+        if ($event_id <= 0) {
+            return;
+        }
+
+        if (!isset($GLOBALS['vms_event_details_sidebar_rendered']) || !is_array($GLOBALS['vms_event_details_sidebar_rendered'])) {
+            $GLOBALS['vms_event_details_sidebar_rendered'] = array();
+        }
+
+        $GLOBALS['vms_event_details_sidebar_rendered'][$event_id] = true;
+    }
+}
+
 if (!function_exists('vms_event_details_enqueue_assets')) {
     function vms_event_details_enqueue_assets(): void
     {
@@ -76,10 +108,23 @@ if (!function_exists('vms_event_details_shortcode')) {
 
         $heading = trim(wp_strip_all_tags((string) ($a['heading'] ?? '')));
         $layout = sanitize_key((string) ($a['layout'] ?? 'sidebar'));
+        $is_current_event_sidebar = (
+            $layout === 'sidebar'
+            && function_exists('is_singular')
+            && is_singular('tribe_events')
+            && $event_id === (int) get_queried_object_id()
+        );
 
-        // Shortcode output must be explicit. Do not let the automatic fallback's
-        // one-per-event guard suppress a deliberate sidebar/widget placement.
-        return vms_event_details_render_card($event_id, false, $heading, $layout);
+        if ($is_current_event_sidebar && vms_event_details_sidebar_rendered($event_id)) {
+            return '';
+        }
+
+        $markup = vms_event_details_render_card($event_id, $is_current_event_sidebar, $heading, $layout);
+        if ($markup !== '' && $is_current_event_sidebar) {
+            vms_event_details_mark_sidebar_rendered($event_id);
+        }
+
+        return $markup;
     }
 }
 

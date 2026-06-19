@@ -171,6 +171,23 @@ function vms_register_vendor_cpt()
     register_post_type('vms_vendor', $args);
 }
 
+if (!function_exists('vms_vendor_has_public_profile_type')) {
+    function vms_vendor_has_public_profile_type(int $vendor_id): bool
+    {
+        $vendor_id = absint($vendor_id);
+        if ($vendor_id <= 0) {
+            return false;
+        }
+
+        if (function_exists('vms_vendor_primary_type_slug')) {
+            return trim((string) vms_vendor_primary_type_slug($vendor_id)) !== '';
+        }
+
+        $terms = get_the_terms($vendor_id, 'vms_vendor_type');
+        return is_array($terms) && !is_wp_error($terms) && !empty($terms);
+    }
+}
+
 /**
  * Admin functionality for VMS Vendors.
  */
@@ -317,11 +334,16 @@ class VMS_Admin_Vendors
         $show_loc = get_post_meta($post_id, $k_show_loc, true);
 
         $enabled_bool = ($enabled === '1' || $enabled === 1 || $enabled === true || $enabled === 'yes' || $enabled === 'on');
+        $has_vendor_type = vms_vendor_has_public_profile_type($post_id);
 
         $profile_url = function_exists('vms_vendor_profile_url') ? vms_vendor_profile_url($post_id) : '';
 
         echo '<p><label><input type="checkbox" name="vms_public_profile_enabled" value="1" ' . checked($enabled_bool, true, false) . ' /> ' . esc_html__('Enable public profile', 'vms') . '</label></p>';
         echo '<p class="description">' . esc_html__('When disabled, the public profile returns a 404.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('Public profiles require at least one Vendor Type.', 'vms') . '</p>';
+        if (!$has_vendor_type) {
+            echo '<p class="description"><strong>' . esc_html__('Assign a Vendor Type before enabling this public profile.', 'vms') . '</strong></p>';
+        }
 
         echo '<hr />';
 
@@ -450,6 +472,12 @@ class VMS_Admin_Vendors
             $k_show_loc = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
 
             $enabled  = isset($_POST['vms_public_profile_enabled']) ? '1' : '0';
+            if ($enabled === '1' && !vms_vendor_has_public_profile_type($post_id)) {
+                $enabled = '0';
+                if (function_exists('vms_add_admin_notice')) {
+                    vms_add_admin_notice(__('Public profiles require a Vendor Type. Assign a Vendor Type before enabling this public profile.', 'vms'), 'error');
+                }
+            }
             $show_e   = isset($_POST['vms_public_profile_show_email']) ? '1' : '0';
             $show_p   = isset($_POST['vms_public_profile_show_phone']) ? '1' : '0';
             $show_w   = isset($_POST['vms_public_profile_show_website']) ? '1' : '0';

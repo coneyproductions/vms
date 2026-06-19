@@ -105,7 +105,7 @@ if (!defined('VMS_VERSION')) {
 			// v0.2.24.737: adds Market Vendor target/needed-slots controls in the compact Additional Vendors UI and preserves ADD visibility metadata through secondary-vendor update paths.
 			// v0.2.24.736: keeps grouped Additional Vendors compatibility meta aligned on ordinary Event Plan saves so flat/id-index readers still see Food, Dessert, and Market assignments after unrelated module saves.
 			// v0.2.24.735: adds canonical multi-type secondary vendor assignments, grouped Additional Vendor Event Plan UI, type-specific calendar/ADD slot handling, Market Vendor support, and Music Vendor/Food Vendor wording updates.
-			define('VMS_VERSION', '0.2.24.747');
+			define('VMS_VERSION', '0.2.24.746');
 	// ^ bump in sync with plugin header + vms-build.txt
 	// IMPORTANT: keep in sync with plugin header Version.
 	// PATCH: premium modules now fail closed until they register with VMS core.
