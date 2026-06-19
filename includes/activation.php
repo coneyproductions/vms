@@ -10,8 +10,8 @@ function vms_activate_plugin(): void
 		vms_resource_fingerprint_flag('plugin_activation', 'vms/vendor-management-system.php');
 	}
 
-	if (function_exists('vms_cleanup_legacy_square_nightly_sync_hook')) {
-		vms_cleanup_legacy_square_nightly_sync_hook();
+	if (function_exists('vms_run_legacy_square_nightly_sync_cleanup')) {
+		vms_run_legacy_square_nightly_sync_cleanup();
 	}
 
 	if (function_exists('vms_require_internal_file') && vms_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_activation', 'Database migrations')) {
@@ -67,8 +67,8 @@ function vms_deactivate_plugin(): void
 		vms_resource_fingerprint_flag('plugin_deactivation', 'vms/vendor-management-system.php');
 	}
 
-	if (function_exists('vms_cleanup_legacy_square_nightly_sync_hook')) {
-		vms_cleanup_legacy_square_nightly_sync_hook();
+	if (function_exists('vms_run_legacy_square_nightly_sync_cleanup')) {
+		vms_run_legacy_square_nightly_sync_cleanup();
 	}
 
 	if (function_exists('vms_unschedule_all_owned_cron_hooks')) {
@@ -77,70 +77,400 @@ function vms_deactivate_plugin(): void
 	flush_rewrite_rules();
 }
 
-if (!function_exists('vms_cleanup_legacy_square_nightly_sync_hook')) {
-	function vms_cleanup_legacy_square_nightly_sync_hook(): void
+if (!function_exists('vms_legacy_square_nightly_sync_hook_name')) {
+	function vms_legacy_square_nightly_sync_hook_name(): string
 	{
-		$hook = 'vms_square_nightly_sync';
-		if (function_exists('wp_clear_scheduled_hook')) {
-			wp_clear_scheduled_hook($hook);
+		return 'vms_square_nightly_sync';
+	}
+}
+
+if (!function_exists('vms_legacy_square_nightly_sync_cleanup_marker_key')) {
+	function vms_legacy_square_nightly_sync_cleanup_marker_key(): string
+	{
+		return 'vms_cleanup_legacy_square_nightly_sync_0_2_24_748';
+	}
+}
+
+if (!function_exists('vms_retired_square_nightly_sync_callback')) {
+	function vms_retired_square_nightly_sync_callback(): void
+	{
+		// Retired hook placeholder. Intentionally no-op.
+	}
+}
+
+if (function_exists('add_action')) {
+	add_action(vms_legacy_square_nightly_sync_hook_name(), 'vms_retired_square_nightly_sync_callback', 1, 0);
+}
+
+if (!function_exists('vms_is_safe_legacy_square_cleanup_context')) {
+	function vms_is_safe_legacy_square_cleanup_context(): bool
+	{
+		if (defined('WP_CLI') && WP_CLI) {
+			return true;
 		}
 
-		if (function_exists('as_unschedule_all_actions')) {
-			as_unschedule_all_actions($hook);
-			return;
+		if (function_exists('wp_doing_cron') && wp_doing_cron()) {
+			return true;
 		}
 
-		if (!class_exists('ActionScheduler') || !class_exists('ActionScheduler_Store') || !method_exists('ActionScheduler', 'store')) {
-			return;
+		if (defined('DOING_CRON') && DOING_CRON) {
+			return true;
 		}
 
-		try {
-			$store = ActionScheduler::store();
-			if (!is_object($store) || !method_exists($store, 'query_actions')) {
-				return;
+		return function_exists('is_admin') && is_admin();
+	}
+}
+
+if (!function_exists('vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback')) {
+	function vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback(string $hook): array
+	{
+		$result = array(
+			'available' => false,
+			'complete' => false,
+			'method' => 'fallback',
+			'found' => 0,
+			'cleared' => 0,
+		);
+
+		if (!function_exists('_get_cron_array') || !function_exists('wp_clear_scheduled_hook')) {
+			return $result;
+		}
+
+		$result['available'] = true;
+		$cron = _get_cron_array();
+		if (!is_array($cron) || empty($cron)) {
+			$result['complete'] = true;
+			return $result;
+		}
+
+		$variants = array();
+		foreach ($cron as $events) {
+			if (!is_array($events)) {
+				continue;
 			}
 
-			$action_ids = (array) $store->query_actions(array(
-				'hook' => $hook,
-				'status' => ActionScheduler_Store::STATUS_PENDING,
-				'per_page' => 100,
-				'orderby' => 'none',
-			));
-			foreach ($action_ids as $action_id) {
-				$action_id = (int) $action_id;
-				if ($action_id <= 0) {
+			foreach ($events as $scheduled_hook => $instances) {
+				if ((string) $scheduled_hook !== $hook || !is_array($instances)) {
 					continue;
 				}
 
-				if (method_exists($store, 'cancel_action')) {
-					$store->cancel_action($action_id);
-				} elseif (method_exists($store, 'delete_action')) {
-					$store->delete_action($action_id);
+				foreach ($instances as $instance) {
+					$result['found']++;
+					$args = isset($instance['args']) && is_array($instance['args']) ? array_values($instance['args']) : array();
+					$variants[md5(serialize($args))] = $args;
 				}
 			}
-		} catch (Throwable $e) {
-			return;
 		}
+
+		foreach ($variants as $args) {
+			if (!empty($args)) {
+				wp_clear_scheduled_hook($hook, $args);
+			} else {
+				wp_clear_scheduled_hook($hook);
+			}
+			$result['cleared']++;
+		}
+
+		$result['complete'] = true;
+		return $result;
+	}
+}
+
+if (!function_exists('vms_cleanup_legacy_square_nightly_sync_wp_cron')) {
+	function vms_cleanup_legacy_square_nightly_sync_wp_cron(string $hook): array
+	{
+		if (function_exists('wp_unschedule_hook')) {
+			$removed = (int) wp_unschedule_hook($hook);
+			return array(
+				'available' => true,
+				'complete' => true,
+				'method' => 'wp_unschedule_hook',
+				'found' => max(0, $removed),
+				'cleared' => max(0, $removed),
+			);
+		}
+
+		return vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback($hook);
+	}
+}
+
+if (!function_exists('vms_legacy_square_nightly_sync_action_scheduler_store')) {
+	function vms_legacy_square_nightly_sync_action_scheduler_store(array $options = array())
+	{
+		if (array_key_exists('action_scheduler_store', $options)) {
+			return $options['action_scheduler_store'];
+		}
+
+		if (!class_exists('ActionScheduler') || !method_exists('ActionScheduler', 'store')) {
+			return null;
+		}
+
+		try {
+			return ActionScheduler::store();
+		} catch (Throwable $e) {
+			return null;
+		}
+	}
+}
+
+if (!function_exists('vms_legacy_square_nightly_sync_action_scheduler_statuses')) {
+	function vms_legacy_square_nightly_sync_action_scheduler_statuses(string $type): array
+	{
+		if ($type === 'pending') {
+			if (defined('ActionScheduler_Store::STATUS_PENDING')) {
+				return array((string) constant('ActionScheduler_Store::STATUS_PENDING'));
+			}
+
+			return array('pending');
+		}
+
+		if ($type === 'failed') {
+			if (defined('ActionScheduler_Store::STATUS_FAILED')) {
+				return array((string) constant('ActionScheduler_Store::STATUS_FAILED'));
+			}
+
+			return array('failed');
+		}
+
+		$statuses = array();
+		if (defined('ActionScheduler_Store::STATUS_CANCELED')) {
+			$statuses[] = (string) constant('ActionScheduler_Store::STATUS_CANCELED');
+		}
+		if (defined('ActionScheduler_Store::STATUS_CANCELLED')) {
+			$statuses[] = (string) constant('ActionScheduler_Store::STATUS_CANCELLED');
+		}
+		$statuses[] = 'canceled';
+		$statuses[] = 'cancelled';
+
+		return array_values(array_unique(array_filter(array_map('strval', $statuses))));
+	}
+}
+
+if (!function_exists('vms_legacy_square_nightly_sync_query_action_ids')) {
+	function vms_legacy_square_nightly_sync_query_action_ids($store, string $hook, string $status, int $batch_size): ?array
+	{
+		if (!is_object($store) || !method_exists($store, 'query_actions')) {
+			return null;
+		}
+
+		try {
+			$ids = $store->query_actions(array(
+				'hook' => $hook,
+				'status' => $status,
+				'per_page' => $batch_size,
+				'orderby' => 'none',
+			));
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if (!is_array($ids)) {
+			return array();
+		}
+
+		return array_values(array_filter(array_map('intval', $ids), static function (int $action_id): bool {
+			return $action_id > 0;
+		}));
+	}
+}
+
+if (!function_exists('vms_legacy_square_nightly_sync_action_scheduler_phase')) {
+	function vms_legacy_square_nightly_sync_action_scheduler_phase($store, string $hook, array $statuses, string $operation, int $batch_size, int $max_batches): array
+	{
+		$result = array(
+			'complete' => true,
+			'found' => 0,
+			'processed' => 0,
+			'batch_limit_reached' => false,
+		);
+
+		$method = $operation === 'cancel' ? 'cancel_action' : 'delete_action';
+		$statuses = array_values(array_unique(array_filter(array_map('strval', $statuses))));
+		if (empty($statuses)) {
+			return $result;
+		}
+
+		foreach ($statuses as $status) {
+			for ($batch = 0; $batch < $max_batches; $batch++) {
+				$ids = vms_legacy_square_nightly_sync_query_action_ids($store, $hook, $status, $batch_size);
+				if ($ids === null) {
+					$result['complete'] = false;
+					return $result;
+				}
+				if (empty($ids)) {
+					break;
+				}
+
+				$result['found'] += count($ids);
+				if (!method_exists($store, $method)) {
+					$result['complete'] = false;
+					return $result;
+				}
+
+				foreach ($ids as $action_id) {
+					try {
+						$store->{$method}($action_id);
+						$result['processed']++;
+					} catch (Throwable $e) {
+						$result['complete'] = false;
+						return $result;
+					}
+				}
+
+				if (count($ids) < $batch_size) {
+					break;
+				}
+
+				if ($batch === $max_batches - 1) {
+					$result['complete'] = false;
+					$result['batch_limit_reached'] = true;
+				}
+			}
+
+			if ($result['batch_limit_reached']) {
+				break;
+			}
+		}
+
+		return $result;
+	}
+}
+
+if (!function_exists('vms_cleanup_legacy_square_nightly_sync_action_scheduler')) {
+	function vms_cleanup_legacy_square_nightly_sync_action_scheduler(string $hook, array $options = array()): array
+	{
+		$batch_size = max(1, (int) ($options['batch_size'] ?? 50));
+		$max_batches = max(1, (int) ($options['max_batches'] ?? 5));
+		$result = array(
+			'available' => false,
+			'store_ready' => false,
+			'complete' => false,
+			'batch_size' => $batch_size,
+			'max_batches' => $max_batches,
+			'batch_limit_reached' => false,
+			'pending_found' => 0,
+			'pending_canceled' => 0,
+			'failed_found' => 0,
+			'failed_deleted' => 0,
+			'canceled_found' => 0,
+			'canceled_deleted' => 0,
+			'post_cancel_canceled_deleted' => 0,
+		);
+
+		$store = vms_legacy_square_nightly_sync_action_scheduler_store($options);
+		if (!is_object($store) || !method_exists($store, 'query_actions')) {
+			return $result;
+		}
+
+		$result['available'] = true;
+		$result['store_ready'] = true;
+
+		$failed_phase = vms_legacy_square_nightly_sync_action_scheduler_phase(
+			$store,
+			$hook,
+			vms_legacy_square_nightly_sync_action_scheduler_statuses('failed'),
+			'delete',
+			$batch_size,
+			$max_batches
+		);
+		$result['failed_found'] = (int) $failed_phase['found'];
+		$result['failed_deleted'] = (int) $failed_phase['processed'];
+
+		$canceled_phase = vms_legacy_square_nightly_sync_action_scheduler_phase(
+			$store,
+			$hook,
+			vms_legacy_square_nightly_sync_action_scheduler_statuses('canceled'),
+			'delete',
+			$batch_size,
+			$max_batches
+		);
+		$result['canceled_found'] = (int) $canceled_phase['found'];
+		$result['canceled_deleted'] = (int) $canceled_phase['processed'];
+
+		$pending_phase = vms_legacy_square_nightly_sync_action_scheduler_phase(
+			$store,
+			$hook,
+			vms_legacy_square_nightly_sync_action_scheduler_statuses('pending'),
+			'cancel',
+			$batch_size,
+			$max_batches
+		);
+		$result['pending_found'] = (int) $pending_phase['found'];
+		$result['pending_canceled'] = (int) $pending_phase['processed'];
+
+		$post_cancel_phase = vms_legacy_square_nightly_sync_action_scheduler_phase(
+			$store,
+			$hook,
+			vms_legacy_square_nightly_sync_action_scheduler_statuses('canceled'),
+			'delete',
+			$batch_size,
+			$max_batches
+		);
+		$result['post_cancel_canceled_deleted'] = (int) $post_cancel_phase['processed'];
+
+		$result['batch_limit_reached'] = !empty($failed_phase['batch_limit_reached'])
+			|| !empty($canceled_phase['batch_limit_reached'])
+			|| !empty($pending_phase['batch_limit_reached'])
+			|| !empty($post_cancel_phase['batch_limit_reached']);
+		$result['complete'] = !$result['batch_limit_reached']
+			&& !empty($failed_phase['complete'])
+			&& !empty($canceled_phase['complete'])
+			&& !empty($pending_phase['complete'])
+			&& !empty($post_cancel_phase['complete']);
+
+		return $result;
+	}
+}
+
+if (!function_exists('vms_cleanup_legacy_square_nightly_sync_hook')) {
+	function vms_cleanup_legacy_square_nightly_sync_hook(array $options = array()): array
+	{
+		$hook = isset($options['hook']) ? (string) $options['hook'] : vms_legacy_square_nightly_sync_hook_name();
+		$result = array(
+			'hook' => $hook,
+			'cron' => vms_cleanup_legacy_square_nightly_sync_wp_cron($hook),
+			'action_scheduler' => vms_cleanup_legacy_square_nightly_sync_action_scheduler($hook, $options),
+			'complete' => false,
+		);
+
+		$result['complete'] = !empty($result['cron']['complete']) && !empty($result['action_scheduler']['complete']);
+		return $result;
+	}
+}
+
+if (!function_exists('vms_run_legacy_square_nightly_sync_cleanup')) {
+	function vms_run_legacy_square_nightly_sync_cleanup(array $options = array()): array
+	{
+		$result = vms_cleanup_legacy_square_nightly_sync_hook($options);
+		if (!empty($result['complete']) && function_exists('update_option')) {
+			update_option(vms_legacy_square_nightly_sync_cleanup_marker_key(), '1', false);
+		}
+
+		return $result;
 	}
 }
 
 if (!function_exists('vms_maybe_cleanup_legacy_square_nightly_sync_hook')) {
 	function vms_maybe_cleanup_legacy_square_nightly_sync_hook(): void
 	{
-		if (!function_exists('get_option') || !function_exists('update_option')) {
+		if (!function_exists('get_option')) {
 			return;
 		}
 
-		$option_key = 'vms_cleanup_legacy_square_nightly_sync_0_2_24_748';
-		if (get_option($option_key, '') === '1') {
+		if (get_option(vms_legacy_square_nightly_sync_cleanup_marker_key(), '') === '1') {
 			return;
 		}
 
-		vms_cleanup_legacy_square_nightly_sync_hook();
-		update_option($option_key, '1', false);
+		if (!vms_is_safe_legacy_square_cleanup_context()) {
+			return;
+		}
+
+		vms_run_legacy_square_nightly_sync_cleanup();
 	}
 }
-add_action('init', 'vms_maybe_cleanup_legacy_square_nightly_sync_hook', 5);
+if (function_exists('add_action')) {
+	add_action('init', 'vms_maybe_cleanup_legacy_square_nightly_sync_hook', 5);
+}
 
 /**
  * Ensure a WP Page exists by slug. Creates it if missing.
