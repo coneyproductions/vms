@@ -343,6 +343,9 @@ class VMS_Admin_Vendors
         echo '<p class="description">' . esc_html__('Public profiles require at least one Vendor Type.', 'vms') . '</p>';
         if (!$has_vendor_type) {
             echo '<p class="description"><strong>' . esc_html__('Assign a Vendor Type before enabling this public profile.', 'vms') . '</strong></p>';
+            if ($enabled_bool) {
+                echo '<p class="description">' . esc_html__('This profile is still blocked on the public site until a Vendor Type is assigned.', 'vms') . '</p>';
+            }
         }
 
         echo '<hr />';
@@ -387,7 +390,7 @@ class VMS_Admin_Vendors
         echo '<p class="description">' . esc_html__('For now these are curated/admin-managed fields, which keeps the public profile moderated. Vendors do not edit these public profile media/social fields from their portal yet.', 'vms') . '</p>';
 
         if ($profile_url) {
-            if ($enabled_bool) {
+            if ($enabled_bool && $has_vendor_type) {
                 echo '<p><a class="button button-secondary" href="' . esc_url($profile_url) . '" target="_blank" rel="noopener">' . esc_html__('Open profile', 'vms') . '</a></p>';
             } else {
                 echo '<p class="description">' . esc_html__('Enable the profile to activate the public URL.', 'vms') . '</p>';

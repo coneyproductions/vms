@@ -46,6 +46,38 @@ if (!function_exists('vms_event_details_mark_sidebar_rendered')) {
     }
 }
 
+if (!function_exists('vms_event_details_sidebar_manual_rendered')) {
+    function vms_event_details_sidebar_manual_rendered(int $event_id): bool
+    {
+        $event_id = absint($event_id);
+        if ($event_id <= 0) {
+            return false;
+        }
+
+        $rendered = isset($GLOBALS['vms_event_details_sidebar_manual_rendered']) && is_array($GLOBALS['vms_event_details_sidebar_manual_rendered'])
+            ? $GLOBALS['vms_event_details_sidebar_manual_rendered']
+            : array();
+
+        return !empty($rendered[$event_id]);
+    }
+}
+
+if (!function_exists('vms_event_details_mark_sidebar_manual_rendered')) {
+    function vms_event_details_mark_sidebar_manual_rendered(int $event_id): void
+    {
+        $event_id = absint($event_id);
+        if ($event_id <= 0) {
+            return;
+        }
+
+        if (!isset($GLOBALS['vms_event_details_sidebar_manual_rendered']) || !is_array($GLOBALS['vms_event_details_sidebar_manual_rendered'])) {
+            $GLOBALS['vms_event_details_sidebar_manual_rendered'] = array();
+        }
+
+        $GLOBALS['vms_event_details_sidebar_manual_rendered'][$event_id] = true;
+    }
+}
+
 if (!function_exists('vms_event_details_enqueue_assets')) {
     function vms_event_details_enqueue_assets(): void
     {
@@ -108,20 +140,29 @@ if (!function_exists('vms_event_details_shortcode')) {
 
         $heading = trim(wp_strip_all_tags((string) ($a['heading'] ?? '')));
         $layout = sanitize_key((string) ($a['layout'] ?? 'sidebar'));
+        $queried_event_id = function_exists('get_queried_object_id') ? (int) get_queried_object_id() : 0;
         $is_current_event_sidebar = (
             $layout === 'sidebar'
             && function_exists('is_singular')
             && is_singular('tribe_events')
-            && $event_id === (int) get_queried_object_id()
+            && $event_id === $queried_event_id
+        );
+        $is_target_sidebar_context = (
+            $is_current_event_sidebar
+            && function_exists('vms_public_event_sidebar_is_rendering_target')
+            && vms_public_event_sidebar_is_rendering_target($event_id)
         );
 
-        if ($is_current_event_sidebar && vms_event_details_sidebar_rendered($event_id)) {
+        if ($is_target_sidebar_context && vms_event_details_sidebar_rendered($event_id)) {
             return '';
         }
 
-        $markup = vms_event_details_render_card($event_id, $is_current_event_sidebar, $heading, $layout);
+        $markup = vms_event_details_render_card($event_id, $is_target_sidebar_context, $heading, $layout);
         if ($markup !== '' && $is_current_event_sidebar) {
-            vms_event_details_mark_sidebar_rendered($event_id);
+            vms_event_details_mark_sidebar_manual_rendered($event_id);
+            if ($is_target_sidebar_context) {
+                vms_event_details_mark_sidebar_rendered($event_id);
+            }
         }
 
         return $markup;

@@ -4369,7 +4369,16 @@ if (!function_exists('vms_vendor_profile_is_enabled')) {
         $key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
         $val = get_post_meta($vendor_id, $key, true);
 
-        return ($val === '1' || $val === 1 || $val === true || $val === 'yes' || $val === 'on');
+        $enabled = ($val === '1' || $val === 1 || $val === true || $val === 'yes' || $val === 'on');
+        if (!$enabled) {
+            return false;
+        }
+
+        if (function_exists('vms_vendor_has_public_profile_type') && !vms_vendor_has_public_profile_type($vendor_id)) {
+            return false;
+        }
+
+        return true;
     }
 }
 
