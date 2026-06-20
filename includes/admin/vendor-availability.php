@@ -231,6 +231,31 @@ if (!function_exists('vms_vendor_availability_type_terms')) {
     }
 }
 
+if (!function_exists('vms_vendor_availability_days_in_month')) {
+    function vms_vendor_availability_days_in_month(string $month): int
+    {
+        $month = vms_vendor_availability_normalize_month($month);
+        $dt = DateTimeImmutable::createFromFormat('Y-m-d', $month . '-01', wp_timezone());
+        if ($dt instanceof DateTimeImmutable) {
+            return max(28, (int) $dt->format('t'));
+        }
+
+        return 31;
+    }
+}
+
+if (!function_exists('vms_vendor_availability_day_of_week')) {
+    function vms_vendor_availability_day_of_week(string $date): int
+    {
+        $dt = DateTimeImmutable::createFromFormat('Y-m-d', $date, wp_timezone());
+        if ($dt instanceof DateTimeImmutable) {
+            return (int) $dt->format('w');
+        }
+
+        return 0;
+    }
+}
+
 if (!function_exists('vms_vendor_availability_type_options')) {
     function vms_vendor_availability_type_options(): array
     {
@@ -274,12 +299,15 @@ if (!function_exists('vms_vendor_availability_setup_summary')) {
 
         $parts = array();
         if (!empty($manual)) {
+            /* translators: %d: number of manual availability dates. */
             $parts[] = sprintf(_n('%d manual date', '%d manual dates', count($manual), 'vms'), count($manual));
         }
         if ($pattern_enabled && !empty($pattern_days)) {
+            /* translators: %d: number of recurring pattern days. */
             $parts[] = sprintf(_n('%d pattern day', '%d pattern days', count($pattern_days), 'vms'), count($pattern_days));
         }
         if (!empty($ics_unavailable)) {
+            /* translators: %d: number of ICS availability blocks. */
             $parts[] = sprintf(_n('%d ICS block', '%d ICS blocks', count($ics_unavailable), 'vms'), count($ics_unavailable));
         }
 
@@ -708,8 +736,7 @@ if (!function_exists('vms_vendor_availability_month_matrix_rows')) {
     function vms_vendor_availability_month_matrix_rows(array $vendors, string $month, array $busy_map, array $filters = array()): array
     {
         $month_start = $month . '-01';
-        $month_ts = strtotime($month_start);
-        $days_in_month = $month_ts ? (int) date('t', $month_ts) : 31;
+        $days_in_month = vms_vendor_availability_days_in_month($month);
         $out = array();
         for ($day = 1; $day <= $days_in_month; $day++) {
             $date = sprintf('%s-%02d', $month, $day);
@@ -816,8 +843,7 @@ if (!function_exists('vms_vendor_availability_vendor_month_rows')) {
         }
 
         $month_start = $month . '-01';
-        $month_ts = strtotime($month_start);
-        $days_in_month = $month_ts ? (int) date('t', $month_ts) : 31;
+        $days_in_month = vms_vendor_availability_days_in_month($month);
         $month_end = $month . '-' . str_pad((string) $days_in_month, 2, '0', STR_PAD_LEFT);
         $busy_map = vms_vendor_availability_busy_map($month_start, $month_end);
         $rows = array();
@@ -904,7 +930,7 @@ if (!function_exists('vms_vendor_availability_day_matches_filter')) {
             return true;
         }
 
-        $dow = (int) date('w', strtotime($date));
+        $dow = vms_vendor_availability_day_of_week($date);
         if ($filter === 'weekdays') {
             return $dow >= 1 && $dow <= 5;
         }
@@ -1104,7 +1130,7 @@ if (!function_exists('vms_render_vendor_availability_vendor_profile_calendar')) 
         echo '<div>';
         echo '<p class="description">' . esc_html__('Read-only snapshot of this vendor\'s resolved availability. It mirrors the availability board logic, including manual overrides, pattern rules, ICS blocks, and scheduled Event Plans.', 'vms') . '</p>';
         echo '<div class="vms-va-profile__meta">';
-        echo vms_vendor_availability_pill((string) ($setup['label'] ?? __('No availability setup yet', 'vms')), (string) ($setup['tone'] ?? 'warning'));
+        echo wp_kses_post(vms_vendor_availability_pill((string) ($setup['label'] ?? __('No availability setup yet', 'vms')), (string) ($setup['tone'] ?? 'warning')));
         echo '</div>';
         echo '</div>';
         echo '<div class="vms-va-profile__nav">';
@@ -1113,6 +1139,7 @@ if (!function_exists('vms_render_vendor_availability_vendor_profile_calendar')) 
         echo '<a class="button button-small" href="' . esc_url($next_url) . '">' . esc_html__('Next month', 'vms') . ' &rarr;</a>';
         echo '<a class="button button-secondary button-small" href="' . esc_url($board_url) . '">' . esc_html__('Open on availability board', 'vms') . '</a>';
         if (!empty($next_booking['url']) && !empty($next_booking['date'])) {
+            /* translators: %s: formatted next open booking date. */
             echo '<a class="button button-primary button-small" href="' . esc_url((string) $next_booking['url']) . '">' . esc_html(sprintf(__('Book next open date (%s)', 'vms'), date_i18n(get_option('date_format'), strtotime((string) $next_booking['date'])))) . '</a>';
         }
         echo '</div>';
@@ -1121,10 +1148,15 @@ if (!function_exists('vms_render_vendor_availability_vendor_profile_calendar')) 
         echo '<div class="vms-va-profile__summary">';
         echo '<strong>' . esc_html($month_label) . '</strong>';
         $summary_parts = array(
+            /* translators: %d: number of available dates in the current month summary. */
             sprintf(__('Available: %d', 'vms'), (int) ($summary['available'] ?? 0)),
+            /* translators: %d: number of no-response dates in the current month summary. */
             sprintf(__('No reply: %d', 'vms'), (int) ($summary['no-response'] ?? 0)),
+            /* translators: %d: number of tentative dates in the current month summary. */
             sprintf(__('Tentative: %d', 'vms'), (int) ($summary['tentative'] ?? 0)),
+            /* translators: %d: number of booked dates in the current month summary. */
             sprintf(__('Booked: %d', 'vms'), (int) ($summary['booked'] ?? 0)),
+            /* translators: %d: number of unavailable dates in the current month summary. */
             sprintf(__('Unavailable: %d', 'vms'), (int) ($summary['unavailable'] ?? 0))
         );
         echo '<span>' . esc_html(implode(' · ', $summary_parts)) . '</span>';
@@ -1172,7 +1204,7 @@ if (!function_exists('vms_render_vendor_availability_vendor_profile_calendar')) 
                     $source,
                     $detail,
                 ));
-                $title_attr = !empty($title_parts) ? ' title="' . esc_attr(implode(' — ', $title_parts)) . '"' : '';
+                $title_text = !empty($title_parts) ? implode(' — ', $title_parts) : '';
                 $profile_booking_row = array_merge($profile_booking_seed, array(
                     'state' => $state,
                     'assignable' => !empty($profile_booking_seed['type_slugs']) && $date >= $today,
@@ -1181,9 +1213,13 @@ if (!function_exists('vms_render_vendor_availability_vendor_profile_calendar')) 
                 $booking_url = (string) ($booking_links['url'] ?? '');
                 $override_booking_url = (string) ($booking_links['override_url'] ?? '');
 
-                echo '<td class="' . esc_attr(implode(' ', $classes)) . '"' . $title_attr . '>';
+                echo '<td class="' . esc_attr(implode(' ', $classes)) . '"';
+                if ($title_text !== '') {
+                    echo ' title="' . esc_attr($title_text) . '"';
+                }
+                echo '>';
                 echo '<div class="vms-va-profile-grid__day">' . esc_html((string) $day) . '</div>';
-                echo '<div class="vms-va-profile-grid__pill">' . vms_vendor_availability_pill($label, vms_vendor_availability_state_tone($state)) . '</div>';
+                echo '<div class="vms-va-profile-grid__pill">' . wp_kses_post(vms_vendor_availability_pill($label, vms_vendor_availability_state_tone($state))) . '</div>';
                 if ($booking_url !== '') {
                     echo '<div class="vms-va-profile-grid__actions"><a class="button button-small vms-va-inline-book" href="' . esc_url($booking_url) . '">' . esc_html__('Book', 'vms') . '</a></div>';
                 } elseif ($override_booking_url !== '') {
@@ -1198,7 +1234,7 @@ if (!function_exists('vms_render_vendor_availability_vendor_profile_calendar')) 
         echo '</div>';
         echo '<div class="vms-va-profile__legend">';
         foreach (array('available', 'no-response', 'tentative', 'booked', 'unavailable') as $state) {
-            echo vms_vendor_availability_pill(vms_vendor_availability_state_label($state), vms_vendor_availability_state_tone($state)) . ' ';
+            echo wp_kses_post(vms_vendor_availability_pill(vms_vendor_availability_state_label($state), vms_vendor_availability_state_tone($state))) . ' ';
         }
         echo '</div>';
         echo '</div>';
@@ -1251,7 +1287,7 @@ if (!function_exists('vms_render_vendor_availability_page_content')) {
         $type_options = vms_vendor_availability_type_options();
 
         $month_start = $filters['month'] . '-01';
-        $month_end = $filters['month'] . '-' . str_pad((string) ((int) date('t', strtotime($month_start))), 2, '0', STR_PAD_LEFT);
+        $month_end = $filters['month'] . '-' . str_pad((string) vms_vendor_availability_days_in_month((string) $filters['month']), 2, '0', STR_PAD_LEFT);
         $busy_start = ((string) $filters['date'] < $month_start) ? (string) $filters['date'] : $month_start;
         $busy_end = ((string) $filters['date'] > $month_end) ? (string) $filters['date'] : $month_end;
         $busy_map = vms_vendor_availability_busy_map($busy_start, $busy_end);
@@ -1357,7 +1393,7 @@ if (!function_exists('vms_render_vendor_availability_page_content')) {
             if ($label === __('Filtered vendors', 'vms')) {
                 echo '<span class="vms-va-summary-card__labeltext">' . esc_html($label) . '</span>';
             } else {
-                echo vms_vendor_availability_pill($label, $tone);
+                echo wp_kses_post(vms_vendor_availability_pill($label, $tone));
             }
             echo '</div>';
             echo '</div>';
@@ -1476,6 +1512,7 @@ if (!function_exists('vms_render_vendor_availability_month_view')) {
                 $focus_state = vms_vendor_availability_focus_state($filters);
                 $focus = vms_vendor_availability_focus_rows($all_day_rows, $focus_state, 3);
                 echo '<div class="vms-va-dayfocus">';
+                /* translators: %s: focused availability state label. */
                 echo '<div class="vms-va-dayfocus__label">' . esc_html(sprintf(__('%s at a glance', 'vms'), vms_vendor_availability_state_label($focus_state))) . '</div>';
                 if (!empty($focus['rows'])) {
                     echo '<ul class="vms-va-daylist">';
@@ -1502,11 +1539,13 @@ if (!function_exists('vms_render_vendor_availability_month_view')) {
                     }
                     echo '</ul>';
                 } else {
+                    /* translators: %s: focused availability state label in lowercase. */
                     echo '<div class="vms-va-muted">' . esc_html(sprintf(__('No %s vendors for this date.', 'vms'), strtolower(vms_vendor_availability_state_label($focus_state)))) . '</div>';
                 }
 
                 if (count($all_day_rows) > 0) {
                     echo '<div class="vms-va-daydetail-link">';
+                    /* translators: %d: number of vendors matching the current filters. */
                     echo '<span class="vms-va-muted">' . esc_html(sprintf(_n('%d vendor matches filters.', '%d vendors match filters.', count($all_day_rows), 'vms'), count($all_day_rows))) . '</span>';
                     echo ' <a href="' . esc_url(add_query_arg(array(
                         'page' => vms_vendor_availability_page_slug(),
@@ -1641,6 +1680,7 @@ if (!function_exists('vms_render_vendor_availability_list_view')) {
 
         echo '<div class="' . esc_attr($classes) . '" data-vms-tour="vendor-availability.list">';
         echo '<div class="vms-va-section-head">';
+        /* translators: %s: formatted selected date. */
         echo '<h2>' . esc_html(sprintf(__('Detail for %s', 'vms'), date_i18n(get_option('date_format'), strtotime($date)))) . '</h2>';
         echo '<p class="description">' . esc_html__('This view explains why each filtered vendor is free, blocked, tentative, or still unconfirmed on the selected date.', 'vms') . '</p>';
         echo '</div>';
@@ -1666,6 +1706,7 @@ if (!function_exists('vms_render_vendor_availability_list_view')) {
             if (empty($group_rows)) {
                 continue;
             }
+            /* translators: 1: vendor type group label, 2: number of vendors in the group. */
             echo '<tr class="vms-va-type-group-row"><th colspan="5">' . esc_html(sprintf(__('%1$s (%2$d)', 'vms'), (string) ($type_group['label'] ?? __('Vendor type', 'vms')), count($group_rows))) . '</th></tr>';
 
         foreach ($group_rows as $row) {
@@ -1696,16 +1737,17 @@ if (!function_exists('vms_render_vendor_availability_list_view')) {
             }
             $post_status = sanitize_key((string) ($row['post_status'] ?? ''));
             if ($post_status !== 'publish' && $post_status !== '') {
+                /* translators: %s: WordPress post status label. */
                 echo '<div class="vms-va-subline">' . esc_html(sprintf(__('Record status: %s', 'vms'), ucfirst($post_status))) . '</div>';
             }
             if (!empty($types)) {
                 echo '<div class="vms-va-type-badges">';
                 foreach ($types as $type) {
-                    echo vms_vendor_availability_pill((string) $type, 'neutral') . ' ';
+                    echo wp_kses_post(vms_vendor_availability_pill((string) $type, 'neutral')) . ' ';
                 }
                 echo '</div>';
             } else {
-                echo '<div class="vms-va-type-badges">' . vms_vendor_availability_pill(__('Uncategorized', 'vms'), 'neutral') . '</div>';
+                echo '<div class="vms-va-type-badges">' . wp_kses_post(vms_vendor_availability_pill(__('Uncategorized', 'vms'), 'neutral')) . '</div>';
             }
             echo '</td>';
 
@@ -1722,7 +1764,7 @@ if (!function_exists('vms_render_vendor_availability_list_view')) {
                     $compact_label = __('No response', 'vms');
                 }
             }
-            echo vms_vendor_availability_pill($compact_label, vms_vendor_availability_state_tone($state));
+            echo wp_kses_post(vms_vendor_availability_pill($compact_label, vms_vendor_availability_state_tone($state)));
             if ($source !== '' && !($state === 'no-response' && !$has_setup)) {
                 echo '<div class="vms-va-subline"><strong>' . esc_html($source) . '</strong></div>';
             }
@@ -1730,6 +1772,7 @@ if (!function_exists('vms_render_vendor_availability_list_view')) {
                 echo '<div class="vms-va-subline">' . esc_html($compact_detail) . '</div>';
             }
             if ($has_setup && $setup_label !== '' && stripos($compact_detail, $setup_label) === false) {
+                /* translators: %s: vendor availability setup summary label. */
                 echo '<div class="vms-va-subline">' . esc_html(sprintf(__('Setup: %s', 'vms'), $setup_label)) . '</div>';
             }
             echo '</td>';

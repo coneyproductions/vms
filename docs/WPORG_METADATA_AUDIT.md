@@ -5,14 +5,14 @@ Date: 2026-06-20
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD: `076099d4c76812049b0cc5afba9443c43067dc6a` (`076099d`)
+- HEAD: `71d7bbb6c302563a8812a7da85b45fb00fceb700` (`71d7bbb`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-04E` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-04G` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -73,3 +73,8 @@ Scope note:
   - current SHA-256 `ca120b97c574ccdd72bb124defc8e712ed7291f4f9730d334423b6b1176d34be`,
   - packaged Plugin Check reduction from `3692` to `3605` findings after the safe high-density `due-dates.php` plus `holidays.php` batch,
   - remaining isolated Event Plans regression scripts now aligned to the shared bootstrap resolver and passing from the nested repo workspace.
+- `WPORG-04G` adds:
+  - current rebuilt RC artifact `dist/wporg-04g/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `e2f4f6a45593b26c319dea37b4179f174e54558aa25acdc0a1131f6cbe553f6d`,
+  - packaged Plugin Check reduction from `3605` to `3554` findings after the safe error-heavy `vendor-command-center.php` plus `vendor-availability.php` batch,
+  - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now aligned to the shared bootstrap resolver.

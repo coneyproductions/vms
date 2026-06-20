@@ -4,7 +4,7 @@ Date: 2026-06-20
 
 ## Purpose
 
-Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, and the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`.
+Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, and the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`.
 
 ## Files Changed
 
@@ -16,6 +16,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - `scripts/lib/public-release.php`
 - `includes/admin/due-dates.php`
 - `includes/admin/holidays.php`
+- `includes/admin/vendor-command-center.php`
+- `includes/admin/vendor-availability.php`
 - `includes/admin/budget-calculator.php`
 - `includes/cpt/event-plans.php`
 - `includes/admin/goals-forecast.php`
@@ -31,6 +33,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - `tests/ticket-checkout-safety-hardening.php`
 - `tests/event-plan-legacy-ticketing-integration-smoke.php`
 - `tests/event-plan-ticket-ui-overrides-isolated.php`
+- `tests/add-dispatch-open-vendor-needs.php`
+- `tests/vendor-availability-ux.php`
 - `tests/compatibility/collect-state.php`
 - `tests/compatibility/seed-upgrade-fixtures.php`
 - `tests/public-release-build-pipeline.php`
@@ -57,7 +61,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - narrow admin/request-handling normalization in `WPORG-04A`,
   - admin-only request hardening in `budget-calculator.php` plus a nonce-gated Event Plans list-toggle micro-slice in `WPORG-04B`,
   - one additional protected Event Plans admin-list helper/output slice in `WPORG-04D`,
-  - safe admin-only request normalization in `due-dates.php` and `holidays.php`, plus shared bootstrap adoption in the remaining isolated Event Plans regressions, in `WPORG-04E`.
+  - safe admin-only request normalization in `due-dates.php` and `holidays.php`, plus shared bootstrap adoption in the remaining isolated Event Plans regressions, in `WPORG-04E`,
+  - safe admin-only render-surface cleanup in `vendor-command-center.php` and `vendor-availability.php`, plus shared bootstrap adoption in the two remaining packaged-validation regressions that still hardcoded `wp-load.php`, in `WPORG-04G`.
 - Functional code paths, database schemas, uninstall behavior, and add-on behavior were not intentionally changed beyond those narrow release-safety and request-safety adjustments.
 - The plugin header version and `VMS_VERSION` constant remain public `1.0.0`.
 
@@ -75,7 +80,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 ## Validation Commands Run
 
 - `git diff --check`
-  - PASS in `WPORG-02`, the final `WPORG-03` validation pass, and the final `WPORG-04E` validation pass
+  - PASS in `WPORG-02`, the final `WPORG-03` validation pass, the final `WPORG-04E` validation pass, and the final `WPORG-04G` validation pass
 - `php -l vendor-management-system.php`
   - PASS
 - `php -l includes/core/registry/constants.php`
@@ -99,6 +104,19 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - PASS
 - `php -l includes/admin/holidays.php`
   - PASS
+- `php -l includes/admin/vendor-command-center.php`
+  - PASS
+- `php -l includes/admin/vendor-availability.php`
+  - PASS
+- `php -l tests/add-dispatch-open-vendor-needs.php`
+  - PASS
+- `php -l tests/vendor-availability-ux.php`
+  - PASS
+- `php tests/vendor-availability-ux.php`
+  - PASS
+- `php tests/add-dispatch-open-vendor-needs.php`
+  - FAIL: `Future Event Plan with missing Primary Vendor should appear in ADD open needs.`
+  - NOTE: unchanged pre-existing failure outside the selected render-only `WPORG-04G` batch
 - `php tests/event-plan-ticket-ui-overrides-isolated.php`
   - PASS after making the vendor-type fixture helper reusable on an already-seeded local site
 - `php tests/event-plan-calendar-resync-isolated.php`
@@ -135,6 +153,9 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - current rebuilt RC after `WPORG-04E`
   - PASS: `dist/wporg-04e/vms-1.0.0-public-release.zip`
   - SHA-256: `ca120b97c574ccdd72bb124defc8e712ed7291f4f9730d334423b6b1176d34be`
+- current rebuilt RC after `WPORG-04G`
+  - PASS: `dist/wporg-04g/vms-1.0.0-public-release.zip`
+  - SHA-256: recorded in `dist/wporg-04g/vms-1.0.0-public-release.report.txt`
 - package integrity
   - PASS
 - official readme validator after metadata application
@@ -148,11 +169,13 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - packaged final run after `WPORG-04B`: `3695` findings
   - packaged final run after `WPORG-04D`: `3692` findings
   - packaged final run after `WPORG-04E`: `3605` findings
+  - packaged final run after `WPORG-04G`: `3554` findings
   - fixed category earlier in the release-prep sequence: `missing_direct_file_access_protection` reduced from `12` to `0`
   - `WPORG-04A` batch delta: `-80` total findings (`-1` errors / `-79` warnings)
   - `WPORG-04B` batch delta: `-113` total findings (`-12` errors / `-101` warnings)
   - `WPORG-04D` batch delta: `-3` total findings (`-1` errors / `-2` warnings)
   - `WPORG-04E` batch delta: `-87` total findings (`0` errors / `-87` warnings)
+  - `WPORG-04G` batch delta: `-51` total findings (`-50` errors / `-1` warnings)
 
 ## Minimum Version Decision
 
@@ -181,4 +204,4 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 
 ## Rollback Note
 
-If this RC pass is not kept, revert the metadata, builder/test bootstrap, direct-access guard, safe admin request-normalization, and documentation changes together before generating a different public artifact.
+If this RC pass is not kept, revert the metadata, builder/test bootstrap, direct-access guard, safe admin request-normalization, safe admin render-surface cleanup, and documentation changes together before generating a different public artifact.

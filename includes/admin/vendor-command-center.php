@@ -395,6 +395,7 @@ if (!function_exists('vms_vendor_command_center_active_template_scope_for_vendor
 
             return array(
                 'scope' => vms_vendor_command_center_type_scope_key($type_slug),
+                /* translators: %s: vendor type label. */
                 'label' => sprintf(__('%s template', 'vms'), (string) ($term['label'] ?? $type_slug)),
                 'type_slug' => $type_slug,
                 'type_label' => (string) ($term['label'] ?? $type_slug),
@@ -417,11 +418,13 @@ if (!function_exists('vms_vendor_command_center_active_template_note')) {
     {
         $active = vms_vendor_command_center_active_template_scope_for_vendor($vendor_id);
         if (!empty($active['is_type'])) {
+            /* translators: %s: active vendor template label. */
             return sprintf(__('Using the saved %s for this vendor.', 'vms'), (string) ($active['label'] ?? __('type template', 'vms')));
         }
 
         $type_label = vms_vendor_command_center_primary_type_label($vendor_id);
         if ($type_label !== __('vendor', 'vms')) {
+            /* translators: %s: vendor type label. */
             return sprintf(__('Using the General default template. Save a %s template if you want this vendor type to use different wording.', 'vms'), $type_label);
         }
 
@@ -1010,6 +1013,7 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
         if (!empty($summary['blocked'])) {
             $count = (int) $summary['blocked'];
             $snapshot['status'] = 'blocked';
+            /* translators: %d: number of blocked payable items. */
             $snapshot['label'] = sprintf(_n('Blocked (%d)', 'Blocked (%d)', $count, 'vms'), $count);
             $snapshot['tone'] = 'danger';
             $snapshot['title'] = __('Payment is blocked by tax-profile requirements on at least one bill item.', 'vms');
@@ -1019,6 +1023,7 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
         if (!empty($summary['missing_amount'])) {
             $count = (int) $summary['missing_amount'];
             $snapshot['status'] = 'missing_amount';
+            /* translators: %d: number of payable items missing an amount. */
             $snapshot['label'] = sprintf(_n('Needs amount (%d)', 'Needs amount (%d)', $count, 'vms'), $count);
             $snapshot['tone'] = 'warning';
             $snapshot['title'] = __('At least one payable item is missing a guaranteed amount.', 'vms');
@@ -1028,6 +1033,7 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
         if (!empty($summary['overdue'])) {
             $count = (int) $summary['overdue'];
             $snapshot['status'] = 'overdue';
+            /* translators: %d: number of overdue payable items. */
             $snapshot['label'] = sprintf(_n('Overdue (%d)', 'Overdue (%d)', $count, 'vms'), $count);
             $snapshot['tone'] = 'danger';
             $snapshot['title'] = __('At least one Event Plan payable is past due and still open in VMS.', 'vms');
@@ -1037,6 +1043,7 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
         if (!empty($summary['due_soon'])) {
             $count = (int) $summary['due_soon'];
             $snapshot['status'] = 'due_soon';
+            /* translators: %d: number of payable items due soon. */
             $snapshot['label'] = sprintf(_n('Due soon (%d)', 'Due soon (%d)', $count, 'vms'), $count);
             $snapshot['tone'] = 'warning';
             $snapshot['title'] = __('At least one Event Plan payable is due within the next 14 days.', 'vms');
@@ -1046,6 +1053,7 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
         if (!empty($summary['future'])) {
             $count = (int) $summary['future'];
             $snapshot['status'] = 'future';
+            /* translators: %d: number of upcoming payable items. */
             $snapshot['label'] = sprintf(_n('Upcoming (%d)', 'Upcoming (%d)', $count, 'vms'), $count);
             $snapshot['tone'] = 'info';
             $snapshot['title'] = __('This vendor has upcoming Event Plan payable items with no current overdue balance in VMS.', 'vms');
@@ -1254,6 +1262,7 @@ if (!function_exists('vms_vendor_command_center_template_scope_options')) {
             if ($slug === '') {
                 continue;
             }
+            /* translators: %s: vendor type label. */
             $options[vms_vendor_command_center_type_scope_key($slug)] = sprintf(__('%s template', 'vms'), (string) $label);
         }
 
@@ -1276,8 +1285,10 @@ if (!function_exists('vms_vendor_command_center_template_editor_payload')) {
                 $type_slug = (string) ($scope_meta['type_slug'] ?? '');
                 $type_label = isset($type_options[$type_slug]) ? (string) $type_options[$type_slug] : $type_slug;
                 if ($has_custom) {
+                    /* translators: %s: vendor type label. */
                     $description = sprintf(__('%s vendors currently use this saved type-specific template.', 'vms'), $type_label);
                 } else {
+                    /* translators: %s: vendor type label. */
                     $description = sprintf(__('%s vendors currently fall back to the General default until you save a type-specific template here.', 'vms'), $type_label);
                 }
             }
@@ -1686,15 +1697,15 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 echo '<td>';
                 if (!empty($row['types'])) {
                     foreach ((array) $row['types'] as $type_label) {
-                        echo vms_vendor_command_center_pill((string) $type_label, 'neutral') . ' ';
+                        echo wp_kses_post(vms_vendor_command_center_pill((string) $type_label, 'neutral')) . ' ';
                     }
                 } else {
-                    echo vms_vendor_command_center_pill(__('Uncategorized', 'vms'), 'neutral');
+                    echo wp_kses_post(vms_vendor_command_center_pill(__('Uncategorized', 'vms'), 'neutral'));
                 }
                 echo '</td>';
 
                 echo '<td>';
-                echo vms_vendor_command_center_pill((string) ($row['account_label'] ?? __('No account', 'vms')), (string) ($row['account_tone'] ?? 'neutral'), (string) ($row['account_title'] ?? ''));
+                echo wp_kses_post(vms_vendor_command_center_pill((string) ($row['account_label'] ?? __('No account', 'vms')), (string) ($row['account_tone'] ?? 'neutral'), (string) ($row['account_title'] ?? '')));
                 if ($linked_user_id > 0) {
                     $user = get_user_by('id', $linked_user_id);
                     $user_link = get_edit_user_link($linked_user_id);
@@ -1716,7 +1727,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 echo '</td>';
 
                 echo '<td>';
-                echo vms_vendor_command_center_pill((string) ($profile_link['label'] ?? __('No profile link', 'vms')), (string) ($profile_link['tone'] ?? 'neutral'), (string) ($profile_link['title'] ?? ''));
+                echo wp_kses_post(vms_vendor_command_center_pill((string) ($profile_link['label'] ?? __('No profile link', 'vms')), (string) ($profile_link['tone'] ?? 'neutral'), (string) ($profile_link['title'] ?? '')));
                 echo '</td>';
 
                 echo '<td>';
@@ -1729,15 +1740,16 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 } elseif ($app_status === 'rejected') {
                     $app_tone = 'danger';
                 }
-                echo vms_vendor_command_center_pill((string) ($application['label'] ?? __('No application', 'vms')), $app_tone);
+                echo wp_kses_post(vms_vendor_command_center_pill((string) ($application['label'] ?? __('No application', 'vms')), $app_tone));
                 if (!empty($application['edit_link'])) {
                     echo '<div class="vms-vcc-subline"><a href="' . esc_url((string) $application['edit_link']) . '">' . esc_html__('Open application', 'vms') . '</a></div>';
                 }
                 echo '</td>';
 
                 echo '<td>';
-                echo vms_vendor_command_center_pill((string) ($onboarding['label'] ?? __('Needs contact', 'vms')), (string) ($onboarding['tone'] ?? 'neutral'), (string) ($onboarding['title'] ?? ''));
+                echo wp_kses_post(vms_vendor_command_center_pill((string) ($onboarding['label'] ?? __('Needs contact', 'vms')), (string) ($onboarding['tone'] ?? 'neutral'), (string) ($onboarding['title'] ?? '')));
                 if (!empty($onboarding['last_contacted_at'])) {
+                    /* translators: %s: formatted onboarding email sent date and time. */
                     echo '<div class="vms-vcc-subline">' . esc_html(sprintf(__('Last sent %s', 'vms'), vms_vendor_command_center_format_datetime_from_timestamp((int) $onboarding['last_contacted_at']))) . '</div>';
                 }
                 echo '</td>';
@@ -1756,16 +1768,17 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                         echo '<div class="vms-vcc-subline">' . esc_html((string) $booking_status['role_label']) . '</div>';
                     }
                     if (!empty($booking_status['video_required'])) {
-                        echo '<div class="vms-vcc-subline">' . vms_vendor_command_center_pill((string) ($booking_status['video_label'] ?? __('Video needed', 'vms')), (string) ($booking_status['video_tone'] ?? 'warning')) . '</div>';
+                        echo '<div class="vms-vcc-subline">' . wp_kses_post(vms_vendor_command_center_pill((string) ($booking_status['video_label'] ?? __('Video needed', 'vms')), (string) ($booking_status['video_tone'] ?? 'warning'))) . '</div>';
                     }
                 } else {
-                    echo vms_vendor_command_center_pill(__('No future date', 'vms'), 'neutral');
+                    echo wp_kses_post(vms_vendor_command_center_pill(__('No future date', 'vms'), 'neutral'));
                 }
                 echo '</td>';
 
                 echo '<td>';
-                echo vms_vendor_command_center_pill((string) ($payables['label'] ?? __('No bill data', 'vms')), (string) ($payables['tone'] ?? 'neutral'), (string) ($payables['title'] ?? ''));
+                echo wp_kses_post(vms_vendor_command_center_pill((string) ($payables['label'] ?? __('No bill data', 'vms')), (string) ($payables['tone'] ?? 'neutral'), (string) ($payables['title'] ?? '')));
                 if (!empty($payables['next_due_date'])) {
+                    /* translators: %s: formatted next payable due date. */
                     echo '<div class="vms-vcc-subline">' . esc_html(sprintf(__('Next due %s', 'vms'), vms_vendor_command_center_format_date((string) $payables['next_due_date']))) . '</div>';
                 }
                 echo '</td>';
