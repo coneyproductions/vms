@@ -1,3 +1,4 @@
+<?php defined('ABSPATH') || exit; ?>
 <h4 class="vms-ep-basic-span"><?php esc_html_e('Title', 'vms'); ?></h4>
 
 <p class="vms-ep-basic-item vms-ep-basic-span">
@@ -19,4 +20,3 @@
     </div>
 
     </div>
-

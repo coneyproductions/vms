@@ -811,6 +811,13 @@ final class VMS_Public_Release_Tooling
 	private static function runReleaseRegressionChecks(string $pluginRoot, array $tests): array
 	{
 		$checks = array();
+		$extraEnv = array();
+		$wpRoot = self::detectWordPressRoot($pluginRoot);
+		if ($wpRoot !== null) {
+			$extraEnv['VMS_TEST_WORDPRESS_ROOT'] = $wpRoot;
+			$extraEnv['VMS_TEST_WP_LOAD'] = $wpRoot . DIRECTORY_SEPARATOR . 'wp-load.php';
+		}
+
 		foreach ($tests as $test) {
 			$relativePath = (string) ($test['path'] ?? '');
 			$label = (string) ($test['label'] ?? $relativePath);
@@ -833,7 +840,7 @@ final class VMS_Public_Release_Tooling
 				continue;
 			}
 
-			$result = self::runCommand(array(self::phpBinary(), $scriptPath), $pluginRoot);
+			$result = self::runCommand(array(self::phpBinary(), $scriptPath), $pluginRoot, $extraEnv);
 			$checks[] = self::check(
 				'test-' . (string) ($test['id'] ?? md5($relativePath)),
 				$result['exit_code'] === 0 ? 'PASS' : 'FAIL',

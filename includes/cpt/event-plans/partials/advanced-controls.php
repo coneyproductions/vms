@@ -1,4 +1,5 @@
     <?php
+        defined('ABSPATH') || exit;
         $lookup_trace = function_exists('vms_event_plan_perf_span_start')
             ? vms_event_plan_perf_span_start('event_plan_advanced_controls_lookup', (int) $post->ID, array('section' => 'advanced_controls_lookup'))
             : '';

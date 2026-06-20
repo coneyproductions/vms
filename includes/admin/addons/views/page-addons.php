@@ -1,4 +1,5 @@
 <?php
+defined('ABSPATH') || exit;
 /** @var string $tab */
 /** @var array $state */
 

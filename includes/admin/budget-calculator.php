@@ -190,6 +190,39 @@ function vms_budget_calculator_default_forecast_include_drafts(): int
   return !empty($pref) ? 1 : 0;
 }
 
+function vms_budget_post_value(string $key, $default = '')
+{
+  // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- The calculator POST is nonce-gated in the page handler; this helper keeps repopulation reads localized.
+  if (!isset($_POST[$key]) || is_array($_POST[$key])) {
+    return $default;
+  }
+
+  // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Helper centralizes the raw read; callers sanitize by expected type immediately.
+  return wp_unslash($_POST[$key]);
+}
+
+function vms_budget_post_array(string $key): array
+{
+  // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- The calculator POST is nonce-gated in the page handler; this helper keeps repopulation reads localized.
+  if (!isset($_POST[$key])) {
+    return array();
+  }
+
+  // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Helper centralizes the raw read; callers sanitize by expected type immediately.
+  $value = wp_unslash($_POST[$key]);
+
+  return is_array($value) ? $value : array();
+}
+
+function vms_budget_request_method(): string
+{
+  if (!isset($_SERVER['REQUEST_METHOD'])) {
+    return '';
+  }
+
+  return strtoupper(sanitize_key(wp_unslash($_SERVER['REQUEST_METHOD'])));
+}
+
 function vms_budget_calculator_is_valid_ymd(string $ymd): bool
 {
   return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd);
@@ -523,35 +556,35 @@ function vms_budget_calculator_read_input(array $defaults): array
 {
   $in = $defaults;
 
-  $in['mode'] = (isset($_POST['mode']) && $_POST['mode'] === 'period') ? 'period' : 'single';
+  $in['mode'] = ('period' === sanitize_key((string) vms_budget_post_value('mode', $defaults['mode']))) ? 'period' : 'single';
 
-  $in['events_count'] = (int) ($_POST['events_count'] ?? $defaults['events_count']);
+  $in['events_count'] = (int) vms_budget_post_value('events_count', $defaults['events_count']);
   if ($in['events_count'] < 1) $in['events_count'] = 1;
   if ($in['events_count'] > 365) $in['events_count'] = 365;
 
-  $in['tickets_sold']  = (int) ($_POST['tickets_sold'] ?? $defaults['tickets_sold']);
+  $in['tickets_sold']  = (int) vms_budget_post_value('tickets_sold', $defaults['tickets_sold']);
   if ($in['tickets_sold'] < 0) $in['tickets_sold'] = 0;
   if ($in['tickets_sold'] > 1000000) $in['tickets_sold'] = 1000000;
 
-  $in['ticket_price']  = vms_budget_parse_money($_POST['ticket_price'] ?? $defaults['ticket_price']);
-  $in['attendance_percent'] = vms_budget_parse_percent($_POST['attendance_percent'] ?? $defaults['attendance_percent'], 0.0, 200.0);
-  $in['bar_per_head']  = vms_budget_parse_money($_POST['bar_per_head'] ?? $defaults['bar_per_head']);
-  $in['other_revenue'] = vms_budget_parse_money($_POST['other_revenue'] ?? $defaults['other_revenue']);
+  $in['ticket_price']  = vms_budget_parse_money(vms_budget_post_value('ticket_price', $defaults['ticket_price']));
+  $in['attendance_percent'] = vms_budget_parse_percent(vms_budget_post_value('attendance_percent', $defaults['attendance_percent']), 0.0, 200.0);
+  $in['bar_per_head']  = vms_budget_parse_money(vms_budget_post_value('bar_per_head', $defaults['bar_per_head']));
+  $in['other_revenue'] = vms_budget_parse_money(vms_budget_post_value('other_revenue', $defaults['other_revenue']));
 
-  $in['band_pay']      = vms_budget_parse_money($_POST['band_pay'] ?? $defaults['band_pay']);
+  $in['band_pay']      = vms_budget_parse_money(vms_budget_post_value('band_pay', $defaults['band_pay']));
 
-  $in['fee_percent']   = vms_budget_parse_percent($_POST['fee_percent'] ?? $defaults['fee_percent'], 0.0, 100.0);
-  $in['fee_fixed']     = vms_budget_parse_money($_POST['fee_fixed'] ?? $defaults['fee_fixed']);
+  $in['fee_percent']   = vms_budget_parse_percent(vms_budget_post_value('fee_percent', $defaults['fee_percent']), 0.0, 100.0);
+  $in['fee_fixed']     = vms_budget_parse_money(vms_budget_post_value('fee_fixed', $defaults['fee_fixed']));
 
-  $in['target_profit'] = vms_budget_parse_money($_POST['target_profit'] ?? $defaults['target_profit']);
+  $in['target_profit'] = vms_budget_parse_money(vms_budget_post_value('target_profit', $defaults['target_profit']));
 
-  $in['forecast_year'] = (int) ($_POST['forecast_year'] ?? $defaults['forecast_year']);
+  $in['forecast_year'] = (int) vms_budget_post_value('forecast_year', $defaults['forecast_year']);
   if ($in['forecast_year'] < 2000) $in['forecast_year'] = 2000;
   if ($in['forecast_year'] > 2100) $in['forecast_year'] = 2100;
 
-  $in['annual_goal_revenue'] = vms_budget_parse_money($_POST['annual_goal_revenue'] ?? $defaults['annual_goal_revenue']);
-  $in['annual_goal_profit']  = vms_budget_parse_money($_POST['annual_goal_profit'] ?? $defaults['annual_goal_profit']);
-  $in['annual_include_drafts'] = !empty($_POST['annual_include_drafts']) ? 1 : 0;
+  $in['annual_goal_revenue'] = vms_budget_parse_money(vms_budget_post_value('annual_goal_revenue', $defaults['annual_goal_revenue']));
+  $in['annual_goal_profit']  = vms_budget_parse_money(vms_budget_post_value('annual_goal_profit', $defaults['annual_goal_profit']));
+  $in['annual_include_drafts'] = !empty(vms_budget_post_value('annual_include_drafts')) ? 1 : 0;
 
   // Clamp money values (avoid wild numbers from bad input)
   foreach (array('ticket_price','bar_per_head','other_revenue','band_pay','fee_fixed','target_profit','annual_goal_revenue','annual_goal_profit') as $k) {
@@ -561,16 +594,16 @@ function vms_budget_calculator_read_input(array $defaults): array
 
   $profiles = vms_budget_calculator_cost_profiles();
 
-  $in['cost_profile'] = isset($_POST['cost_profile']) ? sanitize_key((string) $_POST['cost_profile']) : $defaults['cost_profile'];
+  $in['cost_profile'] = sanitize_key((string) vms_budget_post_value('cost_profile', $defaults['cost_profile']));
   if (!isset($profiles[$in['cost_profile']])) $in['cost_profile'] = 'custom';
 
-  $action = isset($_POST['vms_budget_action']) ? sanitize_key((string) $_POST['vms_budget_action']) : '';
+  $action = sanitize_key((string) vms_budget_post_value('vms_budget_action', ''));
 
   // Read cost items from POST if present (regardless of profile), so changing one input does not wipe custom rows.
-  $enableds = isset($_POST['cost_enabled']) && is_array($_POST['cost_enabled']) ? $_POST['cost_enabled'] : array();
-  $labels   = isset($_POST['cost_label']) && is_array($_POST['cost_label']) ? $_POST['cost_label'] : array();
-  $amounts  = isset($_POST['cost_amount']) && is_array($_POST['cost_amount']) ? $_POST['cost_amount'] : array();
-  $types    = isset($_POST['cost_type']) && is_array($_POST['cost_type']) ? $_POST['cost_type'] : array();
+  $enableds = vms_budget_post_array('cost_enabled');
+  $labels   = vms_budget_post_array('cost_label');
+  $amounts  = vms_budget_post_array('cost_amount');
+  $types    = vms_budget_post_array('cost_type');
 
   $max_rows = max(count($labels), count($amounts), count($types), count($enableds));
   $max_rows = min($max_rows, 20); // hard cap for safety
@@ -591,12 +624,12 @@ function vms_budget_calculator_read_input(array $defaults): array
   }
 
   // Read auto-scaling items from POST (or default).
-  $a_enabled = isset($_POST['auto_enabled']) && is_array($_POST['auto_enabled']) ? $_POST['auto_enabled'] : array();
-  $a_label   = isset($_POST['auto_label']) && is_array($_POST['auto_label']) ? $_POST['auto_label'] : array();
-  $a_unit    = isset($_POST['auto_unit_cost']) && is_array($_POST['auto_unit_cost']) ? $_POST['auto_unit_cost'] : array();
-  $a_pern    = isset($_POST['auto_per_n']) && is_array($_POST['auto_per_n']) ? $_POST['auto_per_n'] : array();
-  $a_min     = isset($_POST['auto_min_units']) && is_array($_POST['auto_min_units']) ? $_POST['auto_min_units'] : array();
-  $a_max     = isset($_POST['auto_max_units']) && is_array($_POST['auto_max_units']) ? $_POST['auto_max_units'] : array();
+  $a_enabled = vms_budget_post_array('auto_enabled');
+  $a_label   = vms_budget_post_array('auto_label');
+  $a_unit    = vms_budget_post_array('auto_unit_cost');
+  $a_pern    = vms_budget_post_array('auto_per_n');
+  $a_min     = vms_budget_post_array('auto_min_units');
+  $a_max     = vms_budget_post_array('auto_max_units');
 
   $a_rows = max(count($a_label), count($a_unit), count($a_pern), count($a_min), count($a_max), count($a_enabled));
   $a_rows = min($a_rows, 12);
@@ -1073,8 +1106,12 @@ function vms_budget_calculator_field_select(string $name, string $label, string 
   echo '<label for="' . esc_attr($name) . '"><strong>' . esc_html($label) . '</strong></label><br>';
   echo '<select id="' . esc_attr($name) . '" name="' . esc_attr($name) . '">';
   foreach ($options as $k => $v) {
-    $sel = selected((string) $value, (string) $k, false);
-    echo '<option value="' . esc_attr((string) $k) . '"' . $sel . '>' . esc_html((string) $v) . '</option>';
+    if ((string) $value === (string) $k) {
+      echo '<option value="' . esc_attr((string) $k) . '" selected="selected">' . esc_html((string) $v) . '</option>';
+      continue;
+    }
+
+    echo '<option value="' . esc_attr((string) $k) . '">' . esc_html((string) $v) . '</option>';
   }
   echo '</select>';
   echo '</p>';
@@ -1168,7 +1205,7 @@ function vms_budget_calculator_render_autoscale_items(array $items): void
 function vms_render_budget_calculator_page(): void
 {
   if (!current_user_can('manage_options')) {
-    wp_die(__('You do not have permission to access this page.', 'vms'));
+    wp_die(esc_html__('You do not have permission to access this page.', 'vms'));
   }
 
   $defaults = vms_budget_calculator_defaults();
@@ -1177,12 +1214,12 @@ function vms_render_budget_calculator_page(): void
   $annual_results = null;
   $did_calc = false;
 
-  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if ('POST' === vms_budget_request_method()) {
     check_admin_referer('vms_budget_calc');
 
     $in = vms_budget_calculator_read_input($defaults);
 
-    $action = isset($_POST['vms_budget_action']) ? sanitize_key((string) $_POST['vms_budget_action']) : '';
+    $action = sanitize_key((string) vms_budget_post_value('vms_budget_action', ''));
     if ($action === 'calculate') {
       $results  = vms_budget_calculator_compute($in);
       $annual_results = vms_budget_calculator_compute_annual_forecast($in);
@@ -1329,7 +1366,9 @@ function vms_render_budget_calculator_page(): void
     // Period totals if enabled
     if ($in['mode'] === 'period' && $in['events_count'] > 1) {
       $k = (int) $in['events_count'];
-      echo '<h3>' . sprintf(esc_html__('Period totals (%d events)', 'vms'), $k) . '</h3>';
+      /* translators: %d: number of events in the period. */
+      $period_totals_label = sprintf(__('Period totals (%d events)', 'vms'), $k);
+      echo '<h3>' . esc_html($period_totals_label) . '</h3>';
       echo '<table class="widefat striped"><tbody>';
       echo '<tr><th>' . esc_html__('Gross revenue', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['gross_revenue'] * $k)) . '</td></tr>';
       echo '<tr><th>' . esc_html__('Fees (estimated)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money(($results['fee_percent_amt'] + $results['fee_fixed_amt']) * $k)) . '</td></tr>';
@@ -1437,19 +1476,25 @@ function vms_render_budget_calculator_page(): void
       $rev_gap_text = __('No goal set', 'vms');
       if ($rev_gap !== null) {
         $rev_gap_f = (float) $rev_gap;
+        /* translators: %s: currency amount remaining to hit the revenue goal. */
         if ($rev_gap_f > 0) $rev_gap_text = sprintf(__('Need %s more', 'vms'), vms_budget_fmt_money($rev_gap_f));
+        /* translators: %s: currency amount above the revenue goal. */
         else $rev_gap_text = sprintf(__('Goal met (+%s)', 'vms'), vms_budget_fmt_money(abs($rev_gap_f)));
       }
 
       $profit_gap_text = __('No goal set', 'vms');
       if ($profit_gap !== null) {
         $profit_gap_f = (float) $profit_gap;
+        /* translators: %s: currency amount remaining to hit the profit goal. */
         if ($profit_gap_f > 0) $profit_gap_text = sprintf(__('Need %s more', 'vms'), vms_budget_fmt_money($profit_gap_f));
+        /* translators: %s: currency amount above the profit goal. */
         else $profit_gap_text = sprintf(__('Goal met (+%s)', 'vms'), vms_budget_fmt_money(abs($profit_gap_f)));
       }
 
       echo '<h3>' . esc_html__('Annual goals + progress + forecast', 'vms') . '</h3>';
-      echo '<p class="description">' . esc_html(sprintf(__('Live forecast for %d from current Event Plan rows. Past ticket revenue uses explicit ticket-stats snapshots when available.', 'vms'), $year)) . '</p>';
+      /* translators: %d: forecast year. */
+      $live_forecast_description = sprintf(__('Live forecast for %d from current Event Plan rows. Past ticket revenue uses explicit ticket-stats snapshots when available.', 'vms'), $year);
+      echo '<p class="description">' . esc_html($live_forecast_description) . '</p>';
       echo '<p class="description">' . (!empty($annual_results['include_drafts']) ? esc_html__('Inclusion mode: includes Draft/Ready/Tentative/Confirmed + Published (Cancelled excluded).', 'vms') : esc_html__('Inclusion mode: Published-only (Cancelled excluded).', 'vms')) . '</p>';
 
       echo '<div class="vms-bcalc-progress-grid">';
@@ -1505,7 +1550,10 @@ function vms_render_budget_calculator_page(): void
 
         foreach ($forecast_rows as $row) {
           $plan_label = (string) ($row['title'] ?? '');
-          if ($plan_label === '') $plan_label = sprintf(__('Event Plan #%d', 'vms'), (int) ($row['plan_id'] ?? 0));
+          if ($plan_label === '') {
+            /* translators: %d: event plan post ID. */
+            $plan_label = sprintf(__('Event Plan #%d', 'vms'), (int) ($row['plan_id'] ?? 0));
+          }
           $date_label = (string) ($row['event_date'] ?? '');
           $edit_link = (string) ($row['edit_link'] ?? '');
 
@@ -1526,7 +1574,9 @@ function vms_render_budget_calculator_page(): void
         echo '</tbody></table>';
         $rows_hidden = (int) ($annual_results['rows_hidden'] ?? 0);
         if ($rows_hidden > 0) {
-          echo '<p class="description">' . esc_html(sprintf(__('Showing first %d plans. %d additional plans are included in totals.', 'vms'), count($forecast_rows), $rows_hidden)) . '</p>';
+          /* translators: 1: number of visible plans, 2: number of additional plans included in totals. */
+          $rows_hidden_text = sprintf(__('Showing first %1$d plans. %2$d additional plans are included in totals.', 'vms'), count($forecast_rows), $rows_hidden);
+          echo '<p class="description">' . esc_html($rows_hidden_text) . '</p>';
         }
       } else {
         echo '<div class="notice notice-info"><p>' . esc_html__('No Event Plans matched this annual forecast window and inclusion mode.', 'vms') . '</p></div>';

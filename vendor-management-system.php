@@ -1,10 +1,17 @@
 <?php
 /**
- * Plugin Name: VMS
- * Description: Venue Management System core.
- * Version: 0.2.24.748
+ * Plugin Name: VMS – Venue Management System
+ * Plugin URI: https://coneyproductions.booklivetalent.com/vms/
+ * Description: Manage venue operations, event plans, vendor records, and optional ticketing workflows from WordPress.
+ * Version: 1.0.0
+ * Requires at least: 6.8
+ * Requires PHP: 8.3
  * Author: Coney Productions
+ * Author URI: https://coneyproductions.booklivetalent.com/
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: vms
+ * Domain Path: /languages
  */
 
 defined('ABSPATH') || exit;

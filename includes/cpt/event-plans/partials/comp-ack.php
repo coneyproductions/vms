@@ -1,3 +1,4 @@
+<?php defined('ABSPATH') || exit; ?>
     <div id="vms-comp-ack-wrap" class="vms-comp-ack-wrap vms-hidden">
 
         <div id="vms-pay-override-box" class="vms-comp-ack-section">

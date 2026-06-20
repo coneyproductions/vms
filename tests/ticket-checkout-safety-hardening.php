@@ -1,14 +1,8 @@
 <?php
 declare(strict_types=1);
 
-$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-if (!defined('ABSPATH')) {
-    if (!file_exists($wpLoad)) {
-        fwrite(STDERR, "Could not locate wp-load.php.\n");
-        exit(1);
-    }
-    require_once $wpLoad;
-}
+require_once __DIR__ . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
 if (!class_exists('VMS_Admin_Event_Plans')) {
     require_once dirname(__DIR__) . '/vendor-management-system.php';

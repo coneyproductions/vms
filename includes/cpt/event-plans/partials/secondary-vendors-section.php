@@ -1,4 +1,5 @@
 <?php
+    defined('ABSPATH') || exit;
     $vms_secondary_has_data = ($secondary_vendor_type !== '' || !empty($secondary_vendor_ids));
 ?>
 <?php if (!empty($vms_secondary_vendors_html)): ?>

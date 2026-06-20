@@ -1,14 +1,8 @@
 <?php
 declare(strict_types=1);
 
-if (!defined('ABSPATH')) {
-	$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-	if (!file_exists($wpLoad)) {
-		fwrite(STDERR, "Could not locate wp-load.php.\n");
-		exit(1);
-	}
-	require_once $wpLoad;
-}
+require_once dirname(__DIR__) . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
 if (!function_exists('is_plugin_active')) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';

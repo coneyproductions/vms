@@ -1,4 +1,5 @@
         <?php
+            defined('ABSPATH') || exit;
             $lineup_summary_trace = function_exists('vms_event_plan_perf_span_start')
                 ? vms_event_plan_perf_span_start('event_plan_time_lineup_summary_render', (int) $post->ID, array('section' => 'time_lineup_summary'))
                 : '';

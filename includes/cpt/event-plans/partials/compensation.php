@@ -1,3 +1,4 @@
+<?php defined('ABSPATH') || exit; ?>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {

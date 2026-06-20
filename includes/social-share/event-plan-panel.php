@@ -32,6 +32,45 @@ if (!function_exists('vms_social_event_panel_meta_key')) {
 	}
 }
 
+if (!function_exists('vms_social_post_value')) {
+	function vms_social_post_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST values are sanitized or validated at the call site.
+		if (!isset($_POST[$key]) || is_array($_POST[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST values are sanitized or validated at the call site.
+		return (string) wp_unslash($_POST[$key]);
+	}
+}
+
+if (!function_exists('vms_social_post_array')) {
+	function vms_social_post_array(string $key): array
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST arrays are sanitized element-by-element at the call site.
+		if (!isset($_POST[$key]) || !is_array($_POST[$key])) {
+			return array();
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST arrays are sanitized element-by-element at the call site.
+		return wp_unslash($_POST[$key]);
+	}
+}
+
+if (!function_exists('vms_social_query_value')) {
+	function vms_social_query_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin query values are sanitized by the caller.
+		if (!isset($_GET[$key]) || is_array($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin query values are sanitized by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
 if (!function_exists('vms_social_event_meta_enabled_platforms')) {
 	/**
 	 * @return array<string,int>
@@ -425,7 +464,7 @@ if (!function_exists('vms_social_render_event_panel')) {
 if (!function_exists('vms_social_ajax_load_event_panel')) {
 	function vms_social_ajax_load_event_panel(): void
 	{
-		$event_plan_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+		$event_plan_id = absint(vms_social_post_value('post_id'));
 		if ($event_plan_id <= 0 || get_post_type($event_plan_id) !== 'vms_event_plan') {
 			wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);
 		}
@@ -460,14 +499,15 @@ if (!function_exists('vms_social_save_event_panel')) {
 			return;
 		}
 
-		if (empty($_POST['vms_social_event_panel_nonce']) || !wp_verify_nonce((string) $_POST['vms_social_event_panel_nonce'], 'vms_social_event_panel_save')) {
+		$panel_nonce = sanitize_text_field(vms_social_post_value('vms_social_event_panel_nonce'));
+		if ($panel_nonce === '' || !wp_verify_nonce($panel_nonce, 'vms_social_event_panel_save')) {
 			return;
 		}
 
-		$do_not_post = isset($_POST['vms_social_do_not_post']) ? 1 : 0;
+		$do_not_post = (vms_social_post_value('vms_social_do_not_post') !== '') ? 1 : 0;
 		vms_social_update_event_panel_meta_if_changed($post_id, vms_social_event_panel_meta_key('do_not_post'), $do_not_post, 0);
 
-		$enabled_raw = isset($_POST['vms_social_enabled']) && is_array($_POST['vms_social_enabled']) ? (array) $_POST['vms_social_enabled'] : array();
+		$enabled_raw = vms_social_post_array('vms_social_enabled');
 		$enabled = array();
 		$enabled_default = array();
 		foreach (vms_social_event_platforms() as $platform) {
@@ -476,7 +516,7 @@ if (!function_exists('vms_social_save_event_panel')) {
 		}
 		vms_social_update_event_panel_meta_if_changed($post_id, vms_social_event_panel_meta_key('platform_overrides'), $enabled, $enabled_default);
 
-		$tpl_raw = isset($_POST['vms_social_template']) && is_array($_POST['vms_social_template']) ? (array) $_POST['vms_social_template'] : array();
+		$tpl_raw = vms_social_post_array('vms_social_template');
 		$tpl = array();
 		$tpl_default = array();
 		foreach (vms_social_event_platforms() as $platform) {
@@ -518,7 +558,7 @@ if (!function_exists('vms_social_handle_event_queue')) {
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_event_queue');
 
-		$event_plan_id = absint($_POST['event_plan_id'] ?? 0);
+		$event_plan_id = absint(vms_social_post_value('event_plan_id'));
 		if ($event_plan_id <= 0) {
 			wp_die(esc_html__('Invalid event plan.', 'vms'));
 		}
@@ -528,13 +568,13 @@ if (!function_exists('vms_social_handle_event_queue')) {
 			vms_social_redirect_event_edit($event_plan_id, __('Queue blocked: this event is marked Do Not Post.', 'vms'), 'warning');
 		}
 
-		$platform = sanitize_key((string) ($_POST['platform'] ?? 'mock'));
+		$platform = sanitize_key(vms_social_post_value('platform'));
 		if ($platform === '') {
 			$platform = 'mock';
 		}
 
-		$template_id = absint($_POST['template_id'] ?? 0);
-		$destination_id = sanitize_text_field((string) ($_POST['destination_id'] ?? ''));
+		$template_id = absint(vms_social_post_value('template_id'));
+		$destination_id = sanitize_text_field(vms_social_post_value('destination_id'));
 		$context = vms_social_event_plan_context($event_plan_id);
 		$venue_id = (int) ($context['venue_id'] ?? 0);
 
@@ -553,7 +593,7 @@ if (!function_exists('vms_social_handle_event_queue')) {
 			$template_id = (int) ($template['id'] ?? 0);
 		}
 
-		$scheduled_local = sanitize_text_field((string) ($_POST['scheduled_at_local'] ?? ''));
+		$scheduled_local = sanitize_text_field(vms_social_post_value('scheduled_at_local'));
 		$scheduled_utc = vms_social_parse_local_datetime_to_utc($scheduled_local);
 
 		$queue_id = vms_social_queue_create(array(
@@ -581,6 +621,7 @@ if (!function_exists('vms_social_handle_event_queue')) {
 			'scheduled_at_utc' => $scheduled_utc,
 		), $queue_id, $platform, get_current_user_id());
 
+		/* translators: %d: queued social post ID. */
 		vms_social_redirect_event_edit($event_plan_id, sprintf(__('Queue item #%d created.', 'vms'), $queue_id), 'success');
 	}
 }
@@ -594,11 +635,14 @@ add_action('admin_notices', function (): void {
 	if (!is_object($screen) || (string) ($screen->post_type ?? '') !== 'vms_event_plan') {
 		return;
 	}
-	$notice = isset($_GET['vms_social_event_notice']) ? sanitize_text_field((string) $_GET['vms_social_event_notice']) : '';
+	$notice = sanitize_text_field(vms_social_query_value('vms_social_event_notice'));
 	if ($notice === '') {
 		return;
 	}
-	$type = isset($_GET['vms_social_event_notice_type']) ? sanitize_key((string) $_GET['vms_social_event_notice_type']) : 'success';
+	$type = sanitize_key(vms_social_query_value('vms_social_event_notice_type'));
+	if ($type === '') {
+		$type = 'success';
+	}
 	$class = in_array($type, array('success', 'error', 'warning', 'info'), true) ? $type : 'success';
 	echo '<div class="notice notice-' . esc_attr($class) . ' is-dismissible"><p>' . esc_html($notice) . '</p></div>';
 });

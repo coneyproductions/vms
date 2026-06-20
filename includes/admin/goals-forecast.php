@@ -16,6 +16,58 @@ if (!function_exists('vms_goals_admin_url')) {
 	}
 }
 
+if (!function_exists('vms_goals_post_value')) {
+	function vms_goals_post_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST values are sanitized or validated at the call site.
+		if (!isset($_POST[$key]) || is_array($_POST[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST values are sanitized or validated at the call site.
+		return (string) wp_unslash($_POST[$key]);
+	}
+}
+
+if (!function_exists('vms_goals_post_array')) {
+	function vms_goals_post_array(string $key): array
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST arrays are sanitized element-by-element at the call site.
+		if (!isset($_POST[$key]) || !is_array($_POST[$key])) {
+			return array();
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST arrays are sanitized element-by-element at the call site.
+		return wp_unslash($_POST[$key]);
+	}
+}
+
+if (!function_exists('vms_goals_query_value')) {
+	function vms_goals_query_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin query values are sanitized by the caller.
+		if (!isset($_GET[$key]) || is_array($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin query values are sanitized by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
+if (!function_exists('vms_goals_request_value')) {
+	function vms_goals_request_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Caller performs capability and nonce validation for this request.
+		if (!isset($_REQUEST[$key]) || is_array($_REQUEST[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Caller performs capability and nonce validation for this request.
+		return (string) wp_unslash($_REQUEST[$key]);
+	}
+}
+
 if (!function_exists('vms_goals_admin_redirect_with_notice')) {
 	function vms_goals_admin_redirect_with_notice(string $status, string $message, array $extra = array()): void
 	{
@@ -45,7 +97,7 @@ add_action('admin_enqueue_scripts', 'vms_goals_admin_enqueue_assets');
 function vms_goals_admin_enqueue_assets(string $hook): void
 {
 	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
-	$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+	$page = sanitize_key(vms_goals_query_value('page'));
 
 	$load = ($page === 'vms-goals-forecast');
 	if ($screen && isset($screen->post_type) && $screen->post_type === 'vms_event_plan') {
@@ -101,19 +153,25 @@ function vms_goals_admin_post_save_settings(): void
 	}
 	check_admin_referer('vms_goals_save_settings');
 
-	$tab = isset($_POST['tab']) ? sanitize_key((string) $_POST['tab']) : 'forecast-defaults';
+	$tab = sanitize_key(vms_goals_post_value('tab'));
+	if ($tab === '') {
+		$tab = 'forecast-defaults';
+	}
 	$update = array();
 
 	if ($tab === 'overhead-rules') {
 		$update['overhead_rules'] = array(
-			'mode' => isset($_POST['overhead_mode']) ? sanitize_key((string) $_POST['overhead_mode']) : 'flat_per_event',
-			'flat_per_event_cents' => vms_goals_parse_money_to_cents($_POST['overhead_flat_per_event'] ?? 0),
-			'per_attendee_cents' => vms_goals_parse_money_to_cents($_POST['overhead_per_attendee'] ?? 0),
-			'percent_of_gross_bps' => max(0, min(10000, (int) ($_POST['overhead_percent_bps'] ?? 0))),
+			'mode' => sanitize_key(vms_goals_post_value('overhead_mode')),
+			'flat_per_event_cents' => vms_goals_parse_money_to_cents(vms_goals_post_value('overhead_flat_per_event')),
+			'per_attendee_cents' => vms_goals_parse_money_to_cents(vms_goals_post_value('overhead_per_attendee')),
+			'percent_of_gross_bps' => max(0, min(10000, (int) vms_goals_post_value('overhead_percent_bps'))),
 		);
+		if ($update['overhead_rules']['mode'] === '') {
+			$update['overhead_rules']['mode'] = 'flat_per_event';
+		}
 	} else {
-		$map_keys = isset($_POST['bucket_map_key']) && is_array($_POST['bucket_map_key']) ? $_POST['bucket_map_key'] : array();
-		$map_components = isset($_POST['bucket_map_component']) && is_array($_POST['bucket_map_component']) ? $_POST['bucket_map_component'] : array();
+		$map_keys = vms_goals_post_array('bucket_map_key');
+		$map_components = vms_goals_post_array('bucket_map_component');
 		$bucket_map = array();
 		foreach ($map_keys as $i => $bucket_key) {
 			$key = sanitize_key((string) $bucket_key);
@@ -127,21 +185,48 @@ function vms_goals_admin_post_save_settings(): void
 			$bucket_map[$key] = $component;
 		}
 
+		$default_metric = sanitize_key(vms_goals_post_value('default_metric'));
+		if ($default_metric === '') {
+			$default_metric = 'true_profit';
+		}
+
+		$default_allocation_mode = sanitize_key(vms_goals_post_value('default_allocation_mode'));
+		if ($default_allocation_mode === '') {
+			$default_allocation_mode = 'even';
+		}
+
+		$default_trailing_window_events_raw = vms_goals_post_value('default_trailing_window_events');
+		$default_trailing_window_events = ($default_trailing_window_events_raw !== '') ? max(1, (int) $default_trailing_window_events_raw) : 6;
+
+		$headcount_default_door_mode = sanitize_key(vms_goals_post_value('headcount_default_door_mode'));
+		if ($headcount_default_door_mode === '') {
+			$headcount_default_door_mode = 'percent';
+		}
+
+		$headcount_default_door_percent_raw = vms_goals_post_value('headcount_default_door_percent');
+		$headcount_default_door_percent = ($headcount_default_door_percent_raw !== '') ? max(0, min(95, (int) $headcount_default_door_percent_raw)) : 15;
+
+		$headcount_default_door_count_raw = vms_goals_post_value('headcount_default_door_count');
+		$headcount_default_door_count = ($headcount_default_door_count_raw !== '') ? max(0, (int) $headcount_default_door_count_raw) : 0;
+
+		$concessions_buyer_rate_pct_raw = vms_goals_post_value('concessions_buyer_rate_pct');
+		$concessions_buyer_rate_pct = ($concessions_buyer_rate_pct_raw !== '') ? max(0, min(100, (int) $concessions_buyer_rate_pct_raw)) : 35;
+
 		$update = array(
-			'default_metric' => isset($_POST['default_metric']) ? sanitize_key((string) $_POST['default_metric']) : 'true_profit',
-			'default_overhead_mode' => !empty($_POST['include_overhead_by_default']) ? 'include_overhead' : 'exclude_overhead',
-			'default_allocation_mode' => isset($_POST['default_allocation_mode']) ? sanitize_key((string) $_POST['default_allocation_mode']) : 'even',
-			'default_trailing_window_events' => max(1, (int) ($_POST['default_trailing_window_events'] ?? 6)),
-			'headcount_default_door_mode' => isset($_POST['headcount_default_door_mode']) ? sanitize_key((string) $_POST['headcount_default_door_mode']) : 'percent',
-			'headcount_default_door_percent' => max(0, min(95, (int) ($_POST['headcount_default_door_percent'] ?? 15))),
-			'headcount_default_door_count' => max(0, (int) ($_POST['headcount_default_door_count'] ?? 0)),
-			'default_avg_ticket_price_cents' => vms_goals_parse_money_to_cents($_POST['default_avg_ticket_price'] ?? 0),
+			'default_metric' => $default_metric,
+			'default_overhead_mode' => (vms_goals_post_value('include_overhead_by_default') !== '') ? 'include_overhead' : 'exclude_overhead',
+			'default_allocation_mode' => $default_allocation_mode,
+			'default_trailing_window_events' => $default_trailing_window_events,
+			'headcount_default_door_mode' => $headcount_default_door_mode,
+			'headcount_default_door_percent' => $headcount_default_door_percent,
+			'headcount_default_door_count' => $headcount_default_door_count,
+			'default_avg_ticket_price_cents' => vms_goals_parse_money_to_cents(vms_goals_post_value('default_avg_ticket_price')),
 			'provider_bucket_component_map' => $bucket_map,
 			'concessions_model_defaults' => array(
-				'buyer_rate_pct' => max(0, min(100, (int) ($_POST['concessions_buyer_rate_pct'] ?? 35))),
-				'avg_spend_cents' => vms_goals_parse_money_to_cents($_POST['concessions_avg_spend'] ?? 0),
+				'buyer_rate_pct' => $concessions_buyer_rate_pct,
+				'avg_spend_cents' => vms_goals_parse_money_to_cents(vms_goals_post_value('concessions_avg_spend')),
 				'mode' => 'simple',
-				'use_bucket_keys' => array_values(array_filter(array_map('sanitize_key', isset($_POST['concessions_use_bucket_keys']) && is_array($_POST['concessions_use_bucket_keys']) ? $_POST['concessions_use_bucket_keys'] : array()))),
+				'use_bucket_keys' => array_values(array_filter(array_map('sanitize_key', vms_goals_post_array('concessions_use_bucket_keys')))),
 			),
 		);
 	}
@@ -158,19 +243,31 @@ function vms_goals_admin_post_save_goal(): void
 	}
 	check_admin_referer('vms_goals_save_goal');
 
-	$goal_id = isset($_POST['goal_id']) ? absint($_POST['goal_id']) : 0;
+	$goal_id = absint(vms_goals_post_value('goal_id'));
 	$payload = array(
-		'name' => sanitize_text_field((string) ($_POST['name'] ?? '')),
-		'metric' => sanitize_key((string) ($_POST['metric'] ?? 'true_profit')),
-		'period_type' => sanitize_key((string) ($_POST['period_type'] ?? 'month')),
-		'period_start_local' => sanitize_text_field((string) ($_POST['period_start_local'] ?? '')),
-		'period_end_local' => sanitize_text_field((string) ($_POST['period_end_local'] ?? '')),
-		'target_cents' => $_POST['target_amount'] ?? 0,
-		'allocation_mode' => sanitize_key((string) ($_POST['allocation_mode'] ?? 'even')),
-		'weight_mode' => sanitize_key((string) ($_POST['weight_mode'] ?? 'none')),
-		'venue_id' => absint($_POST['venue_id'] ?? 0),
-		'is_active' => !empty($_POST['is_active']) ? 1 : 0,
+		'name' => sanitize_text_field(vms_goals_post_value('name')),
+		'metric' => sanitize_key(vms_goals_post_value('metric')),
+		'period_type' => sanitize_key(vms_goals_post_value('period_type')),
+		'period_start_local' => sanitize_text_field(vms_goals_post_value('period_start_local')),
+		'period_end_local' => sanitize_text_field(vms_goals_post_value('period_end_local')),
+		'target_cents' => vms_goals_post_value('target_amount'),
+		'allocation_mode' => sanitize_key(vms_goals_post_value('allocation_mode')),
+		'weight_mode' => sanitize_key(vms_goals_post_value('weight_mode')),
+		'venue_id' => absint(vms_goals_post_value('venue_id')),
+		'is_active' => (vms_goals_post_value('is_active') !== '') ? 1 : 0,
 	);
+	if ($payload['metric'] === '') {
+		$payload['metric'] = 'true_profit';
+	}
+	if ($payload['period_type'] === '') {
+		$payload['period_type'] = 'month';
+	}
+	if ($payload['allocation_mode'] === '') {
+		$payload['allocation_mode'] = 'even';
+	}
+	if ($payload['weight_mode'] === '') {
+		$payload['weight_mode'] = 'none';
+	}
 
 	$result = vms_goals_save_goal($payload, $goal_id);
 	if (empty($result['ok'])) {
@@ -185,8 +282,8 @@ function vms_goals_admin_post_delete_goal(): void
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	$goal_id = isset($_GET['goal_id']) ? absint($_GET['goal_id']) : 0;
-	$nonce = isset($_GET['_wpnonce']) ? (string) wp_unslash($_GET['_wpnonce']) : '';
+	$goal_id = absint(vms_goals_query_value('goal_id'));
+	$nonce = sanitize_text_field(vms_goals_query_value('_wpnonce'));
 	if ($goal_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_delete_goal_' . $goal_id)) {
 		vms_goals_admin_redirect_with_notice('error', 'Delete request failed security checks.', array('tab' => 'goals'));
 	}
@@ -201,8 +298,8 @@ function vms_goals_admin_post_activate_goal(): void
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	$goal_id = isset($_GET['goal_id']) ? absint($_GET['goal_id']) : 0;
-	$nonce = isset($_GET['_wpnonce']) ? (string) wp_unslash($_GET['_wpnonce']) : '';
+	$goal_id = absint(vms_goals_query_value('goal_id'));
+	$nonce = sanitize_text_field(vms_goals_query_value('_wpnonce'));
 	if ($goal_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_activate_goal_' . $goal_id)) {
 		vms_goals_admin_redirect_with_notice('error', 'Activate request failed security checks.', array('tab' => 'goals'));
 	}
@@ -217,8 +314,8 @@ function vms_goals_admin_post_activate_goal(): void
 if (!function_exists('vms_goals_render_admin_notice')) {
 	function vms_goals_render_admin_notice(): void
 	{
-		$status = isset($_GET['vms_goals_status']) ? sanitize_key((string) $_GET['vms_goals_status']) : '';
-		$message = isset($_GET['vms_goals_message']) ? sanitize_text_field((string) wp_unslash($_GET['vms_goals_message'])) : '';
+		$status = sanitize_key(vms_goals_query_value('vms_goals_status'));
+		$message = sanitize_text_field(vms_goals_query_value('vms_goals_message'));
 		if ($status === '' || $message === '') {
 			return;
 		}
@@ -234,14 +331,17 @@ if (!function_exists('vms_goals_render_admin_page')) {
 			return;
 		}
 
-		$tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'goals';
+		$tab = sanitize_key(vms_goals_query_value('tab'));
+		if ($tab === '') {
+			$tab = 'goals';
+		}
 		if (!in_array($tab, array('goals', 'overhead-rules', 'forecast-defaults'), true)) {
 			$tab = 'goals';
 		}
 
 		$settings = vms_goals_get_settings();
 		$goals = vms_goals_list();
-		$edit_goal_id = isset($_GET['edit_goal_id']) ? absint($_GET['edit_goal_id']) : 0;
+		$edit_goal_id = absint(vms_goals_query_value('edit_goal_id'));
 		$edit_goal = ($edit_goal_id > 0) ? vms_goals_get_goal($edit_goal_id) : array();
 
 		echo '<div class="wrap vms-goals-admin">';
@@ -591,9 +691,9 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 		$pnl_true = vms_goals_get_event_pnl($post->ID, array('headcount_mode' => 'true', 'include_overhead' => true));
 		$break_even = vms_goals_break_even_headcount($post->ID, array('include_overhead' => true));
 
-		$notice_status = isset($_GET['vms_goals_actuals_status']) ? sanitize_key((string) $_GET['vms_goals_actuals_status']) : '';
-		$notice_event = isset($_GET['vms_goals_actuals_event']) ? absint($_GET['vms_goals_actuals_event']) : 0;
-		$notice_msg = isset($_GET['vms_goals_actuals_message']) ? sanitize_text_field((string) wp_unslash($_GET['vms_goals_actuals_message'])) : '';
+		$notice_status = sanitize_key(vms_goals_query_value('vms_goals_actuals_status'));
+		$notice_event = absint(vms_goals_query_value('vms_goals_actuals_event'));
+		$notice_msg = sanitize_text_field(vms_goals_query_value('vms_goals_actuals_message'));
 
 		wp_nonce_field('vms_goals_event_finance_save', 'vms_goals_event_finance_nonce');
 
@@ -703,23 +803,27 @@ function vms_goals_event_plan_save_meta(int $post_id, WP_Post $post): void
 	if (!current_user_can('edit_post', $post_id)) {
 		return;
 	}
-	if (!isset($_POST['vms_goals_event_finance_nonce']) || !wp_verify_nonce((string) $_POST['vms_goals_event_finance_nonce'], 'vms_goals_event_finance_save')) {
+	$nonce = sanitize_text_field(vms_goals_post_value('vms_goals_event_finance_nonce'));
+	if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_goals_event_finance_save')) {
 		return;
 	}
 
-	$forecast = max(0, (int) ($_POST['vms_forecast_headcount'] ?? 0));
-	$door_mode = isset($_POST['vms_door_sales_mode']) ? sanitize_key((string) $_POST['vms_door_sales_mode']) : 'percent';
+	$forecast = max(0, (int) vms_goals_post_value('vms_forecast_headcount'));
+	$door_mode = sanitize_key(vms_goals_post_value('vms_door_sales_mode'));
+	if ($door_mode === '') {
+		$door_mode = 'percent';
+	}
 	if (!in_array($door_mode, array('percent', 'count'), true)) {
 		$door_mode = 'percent';
 	}
-	$door_percent = max(0, min(95, (int) ($_POST['vms_door_sales_percent'] ?? 0)));
-	$door_count = max(0, (int) ($_POST['vms_door_sales_count'] ?? 0));
-	$comp_forecast = max(0, (int) ($_POST['vms_comp_headcount_forecast'] ?? 0));
-	$true_hc = max(0, (int) ($_POST['vms_true_headcount'] ?? 0));
-	$comp_true = max(0, (int) ($_POST['vms_comp_headcount_true'] ?? 0));
-	$concessions_cents = vms_goals_parse_money_to_cents($_POST['vms_concessions_actual'] ?? 0);
-	$direct_costs_cents = vms_goals_parse_money_to_cents($_POST['vms_event_direct_costs_actual'] ?? 0);
-	$processing_cents = vms_goals_parse_money_to_cents($_POST['vms_event_processing_fees_actual'] ?? 0);
+	$door_percent = max(0, min(95, (int) vms_goals_post_value('vms_door_sales_percent')));
+	$door_count = max(0, (int) vms_goals_post_value('vms_door_sales_count'));
+	$comp_forecast = max(0, (int) vms_goals_post_value('vms_comp_headcount_forecast'));
+	$true_hc = max(0, (int) vms_goals_post_value('vms_true_headcount'));
+	$comp_true = max(0, (int) vms_goals_post_value('vms_comp_headcount_true'));
+	$concessions_cents = vms_goals_parse_money_to_cents(vms_goals_post_value('vms_concessions_actual'));
+	$direct_costs_cents = vms_goals_parse_money_to_cents(vms_goals_post_value('vms_event_direct_costs_actual'));
+	$processing_cents = vms_goals_parse_money_to_cents(vms_goals_post_value('vms_event_processing_fees_actual'));
 
 	update_post_meta($post_id, '_vms_forecast_headcount', $forecast);
 	update_post_meta($post_id, '_vms_door_sales_mode', $door_mode);
@@ -751,13 +855,13 @@ function vms_goals_admin_post_refresh_event_actuals(): void
 		wp_die('Forbidden', 403);
 	}
 
-	$event_plan_id = isset($_REQUEST['event_plan_id']) ? absint($_REQUEST['event_plan_id']) : 0;
-	$redirect = isset($_REQUEST['redirect']) ? esc_url_raw((string) wp_unslash($_REQUEST['redirect'])) : '';
+	$event_plan_id = absint(vms_goals_request_value('event_plan_id'));
+	$redirect = esc_url_raw(vms_goals_request_value('redirect'));
 	if ($redirect === '') {
 		$redirect = admin_url('post.php?post=' . $event_plan_id . '&action=edit');
 	}
 	$redirect = wp_validate_redirect($redirect, admin_url('edit.php?post_type=vms_event_plan'));
-	$nonce = isset($_REQUEST['_wpnonce']) ? (string) wp_unslash($_REQUEST['_wpnonce']) : '';
+	$nonce = sanitize_text_field(vms_goals_request_value('_wpnonce'));
 
 	if ($event_plan_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_refresh_event_actuals_' . $event_plan_id)) {
 		$redirect = add_query_arg(array(

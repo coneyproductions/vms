@@ -11300,6 +11300,27 @@ if (function_exists('vms_add_admin_notice')) {
         // Published-only by default in admin list views; optional what-if toggle includes Draft/Ready.
         // Applies to: edit.php?post_type=vms_event_plan
         if (is_admin()) {
+
+            function vms_admin_event_plan_list_query_value(string $key): string
+            {
+                // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Read-only list-filter routing; persistence is nonce-gated separately.
+                if (!isset($_GET[$key]) || is_array($_GET[$key])) {
+                    return '';
+                }
+
+                // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Helper centralizes the raw list-filter read; callers sanitize by expected type.
+                return (string) wp_unslash($_GET[$key]);
+            }
+
+            function vms_admin_event_plan_list_has_valid_filter_nonce(): bool
+            {
+                $nonce = vms_admin_event_plan_list_query_value('_vms_ep_list_nonce');
+                if ($nonce === '') {
+                    return false;
+                }
+
+                return (bool) wp_verify_nonce($nonce, 'vms_event_plan_list_filters');
+            }
     
             function vms_admin_event_plan_list_include_drafts_requested(): bool
             {
@@ -11316,14 +11337,17 @@ if (function_exists('vms_add_admin_notice')) {
                     : true;
 
                 // If explicitly set in the querystring, treat it as an intentional update and persist it.
-                if (isset($_GET['include_drafts'])) {
-                    $raw = strtolower(trim((string) $_GET['include_drafts']));
+                $requested_include_drafts = vms_admin_event_plan_list_query_value('include_drafts');
+                if ($requested_include_drafts !== '') {
+                    $raw = strtolower(trim($requested_include_drafts));
                     $val = in_array($raw, array('1', 'true', 'yes', 'on'), true);
 
-                    if (function_exists('vms_user_pref_set_include_drafts')) {
-                        vms_user_pref_set_include_drafts((bool) $val, $user_id);
-                    } else {
-                        update_user_meta($user_id, '_vms_include_drafts', $val ? '1' : '0');
+                    if (vms_admin_event_plan_list_has_valid_filter_nonce()) {
+                        if (function_exists('vms_user_pref_set_include_drafts')) {
+                            vms_user_pref_set_include_drafts((bool) $val, $user_id);
+                        } else {
+                            update_user_meta($user_id, '_vms_include_drafts', $val ? '1' : '0');
+                        }
                     }
 
                     return (bool) $val;
@@ -11342,6 +11366,7 @@ if (function_exists('vms_add_admin_notice')) {
                 $checked = vms_admin_event_plan_list_include_drafts_requested();
 
                 echo '<input type="hidden" name="include_drafts" value="0">';
+                wp_nonce_field('vms_event_plan_list_filters', '_vms_ep_list_nonce', false);
 
                 echo '<label class="vms-ep-list-toggle" data-vms-tour="event-plans.include-drafts">';
                 echo '<input type="checkbox" name="include_drafts" value="1"' . checked(true, $checked, false) . '>';
@@ -11358,7 +11383,7 @@ if (function_exists('vms_add_admin_notice')) {
                     ));
                 }
 
-                echo ' <span class="vms-ep-list-help" data-vms-tour="event-plans.help-action">' . $tour_button . '</span>';
+                echo ' <span class="vms-ep-list-help" data-vms-tour="event-plans.help-action">' . wp_kses_post($tour_button) . '</span>';
             }
             add_action('restrict_manage_posts', 'vms_admin_event_plan_list_add_include_drafts_toggle');
 
@@ -11378,7 +11403,7 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 // Respect explicit WP status views (Draft, Trash, etc).
-                $ps_req = isset($_GET['post_status']) ? sanitize_key((string) $_GET['post_status']) : '';
+                $ps_req = sanitize_key(vms_admin_event_plan_list_query_value('post_status'));
                 if ($ps_req !== '' && $ps_req !== 'all') {
                     return;
                 }

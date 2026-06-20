@@ -1,3 +1,4 @@
+    <?php defined('ABSPATH') || exit; ?>
     <?php $vms_staff_include_heading = !isset($vms_staff_include_heading) || $vms_staff_include_heading; ?>
     <?php if ($vms_staff_include_heading) : ?>
     <h4 id="vms-staffing" class="vms-collapsible-title" data-section-key="staff" data-section-has-data="<?php echo $vms_staff_has_data ? '1' : '0'; ?>"><?php esc_html_e('Staff', 'vms'); ?></h4>

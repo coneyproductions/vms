@@ -1,3 +1,4 @@
+<?php defined('ABSPATH') || exit; ?>
     <h4><?php esc_html_e('Event Plan Status & Workflow', 'vms'); ?></h4>
     <?php
         $vms_cancel_has_data = (

@@ -8,14 +8,8 @@ if (!defined('WP_ADMIN')) {
     define('WP_ADMIN', true);
 }
 
-$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-if (!defined('ABSPATH')) {
-    if (!file_exists($wpLoad)) {
-        fwrite(STDERR, "Could not locate wp-load.php.\n");
-        exit(1);
-    }
-    require_once $wpLoad;
-}
+require_once __DIR__ . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
 if (!class_exists('VMS_Admin_Event_Plans')) {
     require_once dirname(__DIR__) . '/vendor-management-system.php';
@@ -88,13 +82,29 @@ try {
     add_filter('wp_die_ajax_handler', $dieHandlerFilter);
 
     $ensureVendorType = static function (string $slug, string $name) use ($registerTerm): string {
+        if (!taxonomy_exists('vms_vendor_type')) {
+            do_action('init');
+        }
+
+        $termExists = term_exists($slug, 'vms_vendor_type');
+        if ((is_array($termExists) && !empty($termExists['term_id'])) || is_numeric($termExists)) {
+            return $slug;
+        }
+
         $existing = get_term_by('slug', $slug, 'vms_vendor_type');
         if ($existing instanceof WP_Term) {
             return (string) $existing->slug;
         }
 
         $created = wp_insert_term($name, 'vms_vendor_type', array('slug' => $slug));
-        if (is_wp_error($created) || empty($created['term_id'])) {
+        if (is_wp_error($created)) {
+            if ($created->get_error_code() === 'term_exists') {
+                return $slug;
+            }
+
+            throw new RuntimeException('Failed to create test vendor type term: ' . $slug . ' (' . $created->get_error_message() . ')');
+        }
+        if (empty($created['term_id'])) {
             throw new RuntimeException('Failed to create test vendor type term: ' . $slug);
         }
 

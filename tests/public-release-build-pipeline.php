@@ -602,6 +602,33 @@ $tests['failed build cleanup'] = static function (): void {
 	}
 };
 
+$tests['wordpress bootstrap resolver finds nested wp-load'] = static function (): void {
+	$pluginRoot = vms_public_release_test_fixture();
+	$workspace = dirname($pluginRoot);
+	$nestedPluginRoot = $workspace . '/app/public/wp-content/plugins/packages/vms';
+	try {
+		if (!mkdir(dirname($nestedPluginRoot), 0775, true) && !is_dir(dirname($nestedPluginRoot))) {
+			throw new RuntimeException('Could not create nested plugin fixture path.');
+		}
+		vms_public_release_test_assert(rename($pluginRoot, $nestedPluginRoot), 'Could not move plugin fixture into nested path.');
+		vms_public_release_test_write_file(
+			$workspace . '/app/public/wp-load.php',
+			"<?php\ndefine('ABSPATH', __DIR__ . '/');\necho \"FAKE_WP_LOAD_OK\\n\";\n"
+		);
+		vms_public_release_test_write_file(
+			$nestedPluginRoot . '/tests/bootstrap-smoke.php',
+			"<?php\ndeclare(strict_types=1);\nrequire_once " . var_export(dirname(__FILE__) . '/bootstrap-wordpress.php', true) . ";\nvms_tests_require_wordpress(__DIR__);\necho defined('ABSPATH') ? \"BOOTSTRAP_OK\\n\" : \"BOOTSTRAP_FAIL\\n\";\n"
+		);
+
+		$result = vms_public_release_test_run(array(PHP_BINARY, $nestedPluginRoot . '/tests/bootstrap-smoke.php'));
+		vms_public_release_test_assert($result['exit_code'] === 0, 'Expected nested bootstrap smoke to succeed.');
+		vms_public_release_test_assert(strpos($result['stdout'], 'FAKE_WP_LOAD_OK') !== false, 'Expected fake wp-load.php to be loaded.');
+		vms_public_release_test_assert(strpos($result['stdout'], 'BOOTSTRAP_OK') !== false, 'Expected bootstrap helper to define ABSPATH.');
+	} finally {
+		vms_public_release_test_delete_path($workspace);
+	}
+};
+
 $passed = 0;
 
 foreach ($tests as $label => $callback) {
