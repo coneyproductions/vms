@@ -280,6 +280,15 @@ if (!function_exists('vms_staffing_admin_save_role_term_meta')) {
 		$term_id = absint($term_id);
 		if ($term_id <= 0) return;
 		if (!current_user_can('manage_options')) return;
+		if (isset($_POST['_wpnonce_add-tag'])) {
+			$add_nonce = sanitize_text_field((string) wp_unslash($_POST['_wpnonce_add-tag']));
+			if (!wp_verify_nonce($add_nonce, 'add-tag')) return;
+		} elseif (isset($_POST['_wpnonce'])) {
+			$edit_nonce = sanitize_text_field((string) wp_unslash($_POST['_wpnonce']));
+			if (!wp_verify_nonce($edit_nonce, 'update-tag_' . $term_id)) return;
+		} else {
+			return;
+		}
 
 		$raw = isset($_POST['vms_staffing_role_meta']) && is_array($_POST['vms_staffing_role_meta'])
 			? (array) wp_unslash($_POST['vms_staffing_role_meta'])
@@ -327,28 +336,46 @@ if (!function_exists('vms_staffing_admin_get_venues')) {
 	}
 }
 
+if (!function_exists('vms_staffing_admin_request_method')) {
+	function vms_staffing_admin_request_method(): string
+	{
+		if (!isset($_SERVER['REQUEST_METHOD'])) {
+			return '';
+		}
+
+		return strtoupper(sanitize_text_field((string) wp_unslash($_SERVER['REQUEST_METHOD'])));
+	}
+}
+
 if (!function_exists('vms_staffing_admin_build_template_payload_from_post')) {
-	function vms_staffing_admin_build_template_payload_from_post(): array
+	function vms_staffing_admin_build_template_payload_from_post(array $post_data): array
 	{
 		$payload = array(
-			'template_id'                 => isset($_POST['vms_tpl_template_id']) ? absint($_POST['vms_tpl_template_id']) : 0,
-			'name'                        => isset($_POST['vms_tpl_name']) ? sanitize_text_field((string) wp_unslash($_POST['vms_tpl_name'])) : '',
-			'scope_venue_id'              => isset($_POST['vms_tpl_scope_venue_id']) ? absint($_POST['vms_tpl_scope_venue_id']) : 0,
-			'scope_day_of_week'           => isset($_POST['vms_tpl_scope_day_of_week']) ? sanitize_text_field((string) wp_unslash($_POST['vms_tpl_scope_day_of_week'])) : '',
-			'scope_event_type'            => isset($_POST['vms_tpl_scope_event_type']) ? sanitize_key((string) wp_unslash($_POST['vms_tpl_scope_event_type'])) : '',
-			'priority'                    => isset($_POST['vms_tpl_priority']) ? (int) $_POST['vms_tpl_priority'] : 100,
-			'min_headcount'               => isset($_POST['vms_tpl_min_headcount']) ? sanitize_text_field((string) wp_unslash($_POST['vms_tpl_min_headcount'])) : '',
-			'max_headcount'               => isset($_POST['vms_tpl_max_headcount']) ? sanitize_text_field((string) wp_unslash($_POST['vms_tpl_max_headcount'])) : '',
-			'is_active'                   => !empty($_POST['vms_tpl_is_active']) ? 1 : 0,
-			'auto_apply_on_event_create'  => !empty($_POST['vms_tpl_auto_apply']) ? 1 : 0,
+			'template_id'                 => isset($post_data['vms_tpl_template_id']) ? absint($post_data['vms_tpl_template_id']) : 0,
+			'name'                        => isset($post_data['vms_tpl_name']) ? sanitize_text_field((string) $post_data['vms_tpl_name']) : '',
+			'scope_venue_id'              => isset($post_data['vms_tpl_scope_venue_id']) ? absint($post_data['vms_tpl_scope_venue_id']) : 0,
+			'scope_day_of_week'           => isset($post_data['vms_tpl_scope_day_of_week']) ? sanitize_text_field((string) $post_data['vms_tpl_scope_day_of_week']) : '',
+			'scope_event_type'            => isset($post_data['vms_tpl_scope_event_type']) ? sanitize_key((string) $post_data['vms_tpl_scope_event_type']) : '',
+			'priority'                    => isset($post_data['vms_tpl_priority']) ? (int) $post_data['vms_tpl_priority'] : 100,
+			'min_headcount'               => isset($post_data['vms_tpl_min_headcount']) ? sanitize_text_field((string) $post_data['vms_tpl_min_headcount']) : '',
+			'max_headcount'               => isset($post_data['vms_tpl_max_headcount']) ? sanitize_text_field((string) $post_data['vms_tpl_max_headcount']) : '',
+			'is_active'                   => !empty($post_data['vms_tpl_is_active']) ? 1 : 0,
+			'auto_apply_on_event_create'  => !empty($post_data['vms_tpl_auto_apply']) ? 1 : 0,
 			'slots'                       => array(),
 		);
 
-		$slot_rows = isset($_POST['vms_tpl_slots']) && is_array($_POST['vms_tpl_slots'])
-			? (array) wp_unslash($_POST['vms_tpl_slots'])
+		$slot_rows = isset($post_data['vms_tpl_slots']) && is_array($post_data['vms_tpl_slots'])
+			? (array) $post_data['vms_tpl_slots']
 			: array();
 		foreach ($slot_rows as $row) {
 			if (!is_array($row)) continue;
+			if (function_exists('vms_staffing_template_normalize_slot_row')) {
+				$normalized_row = vms_staffing_template_normalize_slot_row($row);
+				if (is_array($normalized_row)) {
+					$payload['slots'][] = $normalized_row;
+				}
+				continue;
+			}
 			$payload['slots'][] = $row;
 		}
 
@@ -391,7 +418,23 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 			'a3'          => __('Anchor 3', 'vms'),
 			'a4'          => __('Anchor 4', 'vms'),
 		);
-		$idx_attr = esc_attr((string) $idx);
+		$field_names = array(
+			'role_id'              => 'vms_tpl_slots[' . $idx . '][role_id]',
+			'base_headcount'       => 'vms_tpl_slots[' . $idx . '][base_headcount]',
+			'activation_threshold' => 'vms_tpl_slots[' . $idx . '][activation_threshold]',
+			'shift_time_mode'      => 'vms_tpl_slots[' . $idx . '][shift_time_mode]',
+			'shift_start_local'    => 'vms_tpl_slots[' . $idx . '][shift_start_local]',
+			'shift_end_local'      => 'vms_tpl_slots[' . $idx . '][shift_end_local]',
+			'start_anchor_key'     => 'vms_tpl_slots[' . $idx . '][start_anchor_key]',
+			'start_offset_minutes' => 'vms_tpl_slots[' . $idx . '][start_offset_minutes]',
+			'end_anchor_key'       => 'vms_tpl_slots[' . $idx . '][end_anchor_key]',
+			'end_offset_minutes'   => 'vms_tpl_slots[' . $idx . '][end_offset_minutes]',
+			'duration_minutes'     => 'vms_tpl_slots[' . $idx . '][duration_minutes]',
+			'pay_type'             => 'vms_tpl_slots[' . $idx . '][pay_type]',
+			'pay_rate'             => 'vms_tpl_slots[' . $idx . '][pay_rate]',
+			'is_optional'          => 'vms_tpl_slots[' . $idx . '][is_optional]',
+			'notes'                => 'vms_tpl_slots[' . $idx . '][notes]',
+		);
 		ob_start();
 		?>
 		<div class="vms-tpl-slot-row" data-vms-tpl-slot-row="1">
@@ -399,22 +442,32 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 				<div class="vms-tpl-slot-card__row vms-tpl-slot-card__row--identity">
 					<label>
 						<span><?php esc_html_e('Role', 'vms'); ?></span>
-						<select name="vms_tpl_slots[<?php echo $idx_attr; ?>][role_id]" data-vms-tpl-role-input="1">
+						<select name="<?php echo esc_attr($field_names['role_id']); ?>" data-vms-tpl-role-input="1">
 							<option value="0"><?php esc_html_e('Select role', 'vms'); ?></option>
-							<?php echo vms_staffing_admin_role_options_html($role_id); ?>
+							<?php
+							echo wp_kses(
+								vms_staffing_admin_role_options_html($role_id),
+								array(
+									'option' => array(
+										'value'    => true,
+										'selected' => true,
+									),
+								)
+							);
+							?>
 						</select>
 					</label>
 					<label>
 						<span><?php esc_html_e('Staff needed', 'vms'); ?></span>
-						<input type="number" min="1" step="1" name="vms_tpl_slots[<?php echo $idx_attr; ?>][base_headcount]" value="<?php echo esc_attr((string) $base_headcount); ?>" data-vms-tpl-headcount-input="1">
+						<input type="number" min="1" step="1" name="<?php echo esc_attr($field_names['base_headcount']); ?>" value="<?php echo esc_attr((string) $base_headcount); ?>" data-vms-tpl-headcount-input="1">
 					</label>
 					<label>
 						<span><?php esc_html_e('Activate at attendance', 'vms'); ?></span>
-						<input type="number" min="0" step="1" name="vms_tpl_slots[<?php echo $idx_attr; ?>][activation_threshold]" value="<?php echo esc_attr((string) $activation_threshold); ?>">
+						<input type="number" min="0" step="1" name="<?php echo esc_attr($field_names['activation_threshold']); ?>" value="<?php echo esc_attr((string) $activation_threshold); ?>">
 					</label>
 					<label>
 						<span><?php esc_html_e('Time mode', 'vms'); ?></span>
-						<select name="vms_tpl_slots[<?php echo $idx_attr; ?>][shift_time_mode]" data-vms-tpl-time-mode-input="1">
+						<select name="<?php echo esc_attr($field_names['shift_time_mode']); ?>" data-vms-tpl-time-mode-input="1">
 							<option value="absolute" <?php selected($mode, 'absolute'); ?>><?php esc_html_e('Absolute', 'vms'); ?></option>
 							<option value="relative" <?php selected($mode, 'relative'); ?>><?php esc_html_e('Relative', 'vms'); ?></option>
 						</select>
@@ -424,15 +477,15 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 				<div class="vms-tpl-slot-card__row vms-tpl-slot-card__row--timing">
 					<label data-vms-tpl-absolute-field="1">
 						<span><?php esc_html_e('Shift start', 'vms'); ?></span>
-						<input type="time" name="vms_tpl_slots[<?php echo $idx_attr; ?>][shift_start_local]" value="<?php echo esc_attr($start); ?>" data-vms-tpl-shift-start-input="1">
+						<input type="time" name="<?php echo esc_attr($field_names['shift_start_local']); ?>" value="<?php echo esc_attr($start); ?>" data-vms-tpl-shift-start-input="1">
 					</label>
 					<label data-vms-tpl-absolute-field="1" data-vms-tpl-end-field="1">
 						<span><?php esc_html_e('Shift end', 'vms'); ?></span>
-						<input type="time" name="vms_tpl_slots[<?php echo $idx_attr; ?>][shift_end_local]" value="<?php echo esc_attr($end); ?>" data-vms-tpl-shift-end-input="1">
+						<input type="time" name="<?php echo esc_attr($field_names['shift_end_local']); ?>" value="<?php echo esc_attr($end); ?>" data-vms-tpl-shift-end-input="1">
 					</label>
 					<label data-vms-tpl-relative-field="1">
 						<span><?php esc_html_e('Start anchor', 'vms'); ?></span>
-						<select name="vms_tpl_slots[<?php echo $idx_attr; ?>][start_anchor_key]" data-vms-tpl-start-anchor-input="1">
+						<select name="<?php echo esc_attr($field_names['start_anchor_key']); ?>" data-vms-tpl-start-anchor-input="1">
 							<?php foreach ($anchor_options as $anchor_key => $anchor_label) : ?>
 								<option value="<?php echo esc_attr($anchor_key); ?>" <?php selected($start_anchor_key, $anchor_key); ?>><?php echo esc_html($anchor_label); ?></option>
 							<?php endforeach; ?>
@@ -440,11 +493,11 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 					</label>
 					<label data-vms-tpl-relative-field="1">
 						<span><?php esc_html_e('Start offset (min)', 'vms'); ?></span>
-						<input type="number" step="1" name="vms_tpl_slots[<?php echo $idx_attr; ?>][start_offset_minutes]" value="<?php echo esc_attr((string) $start_offset_minutes); ?>" data-vms-tpl-start-offset-input="1">
+						<input type="number" step="1" name="<?php echo esc_attr($field_names['start_offset_minutes']); ?>" value="<?php echo esc_attr((string) $start_offset_minutes); ?>" data-vms-tpl-start-offset-input="1">
 					</label>
 					<label data-vms-tpl-relative-field="1" data-vms-tpl-end-field="1">
 						<span><?php esc_html_e('End anchor', 'vms'); ?></span>
-						<select name="vms_tpl_slots[<?php echo $idx_attr; ?>][end_anchor_key]" data-vms-tpl-end-anchor-input="1">
+						<select name="<?php echo esc_attr($field_names['end_anchor_key']); ?>" data-vms-tpl-end-anchor-input="1">
 							<?php foreach ($anchor_options as $anchor_key => $anchor_label) : ?>
 								<option value="<?php echo esc_attr($anchor_key); ?>" <?php selected($end_anchor_key, $anchor_key); ?>><?php echo esc_html($anchor_label); ?></option>
 							<?php endforeach; ?>
@@ -452,11 +505,11 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 					</label>
 					<label data-vms-tpl-relative-field="1" data-vms-tpl-end-field="1">
 						<span><?php esc_html_e('End offset (min)', 'vms'); ?></span>
-						<input type="number" step="1" name="vms_tpl_slots[<?php echo $idx_attr; ?>][end_offset_minutes]" value="<?php echo esc_attr((string) $end_offset_minutes); ?>" data-vms-tpl-end-offset-input="1">
+						<input type="number" step="1" name="<?php echo esc_attr($field_names['end_offset_minutes']); ?>" value="<?php echo esc_attr((string) $end_offset_minutes); ?>" data-vms-tpl-end-offset-input="1">
 					</label>
 					<label data-vms-tpl-duration-field="1">
 						<span><?php esc_html_e('Duration (min)', 'vms'); ?></span>
-						<input type="number" min="0" step="1" name="vms_tpl_slots[<?php echo $idx_attr; ?>][duration_minutes]" value="<?php echo esc_attr((string) $duration_minutes); ?>" data-vms-tpl-duration-input="1">
+						<input type="number" min="0" step="1" name="<?php echo esc_attr($field_names['duration_minutes']); ?>" value="<?php echo esc_attr((string) $duration_minutes); ?>" data-vms-tpl-duration-input="1">
 					</label>
 				</div>
 
@@ -468,7 +521,7 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 				<div class="vms-tpl-slot-card__row vms-tpl-slot-card__row--pay">
 					<label>
 						<span><?php esc_html_e('Pay type', 'vms'); ?></span>
-						<select name="vms_tpl_slots[<?php echo $idx_attr; ?>][pay_type]">
+						<select name="<?php echo esc_attr($field_names['pay_type']); ?>">
 							<option value="inherit_role" <?php selected($pay_type, 'inherit_role'); ?>><?php esc_html_e('Inherit role', 'vms'); ?></option>
 							<option value="hourly" <?php selected($pay_type, 'hourly'); ?>><?php esc_html_e('Hourly', 'vms'); ?></option>
 							<option value="flat" <?php selected($pay_type, 'flat'); ?>><?php esc_html_e('Flat', 'vms'); ?></option>
@@ -477,15 +530,15 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 					</label>
 					<label>
 						<span><?php esc_html_e('Rate', 'vms'); ?></span>
-						<input type="number" min="0" step="0.01" name="vms_tpl_slots[<?php echo $idx_attr; ?>][pay_rate]" value="<?php echo esc_attr($pay_rate); ?>">
+						<input type="number" min="0" step="0.01" name="<?php echo esc_attr($field_names['pay_rate']); ?>" value="<?php echo esc_attr($pay_rate); ?>">
 					</label>
 					<label class="vms-tpl-slot-card__optional">
 						<span><?php esc_html_e('Optional', 'vms'); ?></span>
-						<span class="vms-tpl-slot-card__optional-check"><input type="checkbox" name="vms_tpl_slots[<?php echo $idx_attr; ?>][is_optional]" value="1" <?php checked($is_optional); ?>> <?php esc_html_e('Optional slot', 'vms'); ?></span>
+						<span class="vms-tpl-slot-card__optional-check"><input type="checkbox" name="<?php echo esc_attr($field_names['is_optional']); ?>" value="1" <?php checked($is_optional); ?>> <?php esc_html_e('Optional slot', 'vms'); ?></span>
 					</label>
 					<label class="vms-tpl-slot-card__notes">
 						<span><?php esc_html_e('Notes', 'vms'); ?></span>
-						<input type="text" class="regular-text" name="vms_tpl_slots[<?php echo $idx_attr; ?>][notes]" value="<?php echo esc_attr($notes); ?>">
+						<input type="text" class="regular-text" name="<?php echo esc_attr($field_names['notes']); ?>" value="<?php echo esc_attr($notes); ?>">
 					</label>
 					<div class="vms-tpl-slot-card__actions">
 						<button type="button" class="button vms-tpl-remove-row"><?php esc_html_e('Remove', 'vms'); ?></button>
@@ -501,7 +554,55 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 if (!function_exists('vms_staffing_admin_render_template_row')) {
 	function vms_staffing_admin_render_template_row(int $idx, array $slot = array()): void
 	{
-		echo vms_staffing_admin_template_row_markup($idx, $slot);
+		echo wp_kses(
+			vms_staffing_admin_template_row_markup($idx, $slot),
+			array(
+				'div'    => array(
+					'class'                         => true,
+					'data-vms-tpl-slot-row'        => true,
+					'data-vms-tpl-absolute-warning' => true,
+				),
+				'label'  => array(
+					'class'                    => true,
+					'data-vms-tpl-absolute-field' => true,
+					'data-vms-tpl-relative-field' => true,
+					'data-vms-tpl-end-field'      => true,
+				),
+				'span'   => array('class' => true),
+				'p'      => array('class' => true),
+				'select' => array(
+					'name'                        => true,
+					'data-vms-tpl-role-input'     => true,
+					'data-vms-tpl-time-mode-input' => true,
+					'data-vms-tpl-start-anchor-input' => true,
+					'data-vms-tpl-end-anchor-input'   => true,
+				),
+				'option' => array(
+					'value'    => true,
+					'selected' => true,
+				),
+				'input'  => array(
+					'type'                          => true,
+					'class'                         => true,
+					'name'                          => true,
+					'value'                         => true,
+					'placeholder'                   => true,
+					'min'                           => true,
+					'step'                          => true,
+					'checked'                       => true,
+					'data-vms-tpl-headcount-input'  => true,
+					'data-vms-tpl-shift-start-input' => true,
+					'data-vms-tpl-shift-end-input'   => true,
+					'data-vms-tpl-start-offset-input' => true,
+					'data-vms-tpl-end-offset-input'   => true,
+					'data-vms-tpl-duration-input'     => true,
+				),
+				'button' => array(
+					'type'  => true,
+					'class' => true,
+				),
+			)
+		);
 	}
 }
 
@@ -512,9 +613,13 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 			wp_die(esc_html__('Insufficient permissions.', 'vms'));
 		}
 
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tpl_action']) && (string) $_POST['vms_tpl_action'] === 'save') {
+		$request_method = vms_staffing_admin_request_method();
+		$post_data = 'POST' === $request_method ? wp_unslash($_POST) : array();
+		$post_action = isset($post_data['vms_tpl_action']) ? sanitize_key((string) $post_data['vms_tpl_action']) : '';
+
+		if ('POST' === $request_method && 'save' === $post_action) {
 			check_admin_referer('vms_staffing_template_save');
-			$payload = vms_staffing_admin_build_template_payload_from_post();
+			$payload = vms_staffing_admin_build_template_payload_from_post($post_data);
 			$res = function_exists('vms_staffing_save_template') ? vms_staffing_save_template($payload, get_current_user_id()) : array('ok' => false, 'error' => 'core_missing');
 			$next = admin_url('admin.php?page=vms-staffing-templates');
 			if (!empty($res['ok'])) {
@@ -531,9 +636,9 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 			exit;
 		}
 
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tpl_action']) && (string) $_POST['vms_tpl_action'] === 'delete') {
+		if ('POST' === $request_method && 'delete' === $post_action) {
 			check_admin_referer('vms_staffing_template_delete');
-			$template_id = isset($_POST['vms_tpl_template_id']) ? absint($_POST['vms_tpl_template_id']) : 0;
+			$template_id = isset($post_data['vms_tpl_template_id']) ? absint($post_data['vms_tpl_template_id']) : 0;
 			$ok = $template_id > 0 && function_exists('vms_staffing_delete_template') ? vms_staffing_delete_template($template_id, get_current_user_id()) : false;
 			$next = admin_url('admin.php?page=vms-staffing-templates');
 			$next = add_query_arg(array('deleted' => $ok ? 1 : 0), $next);
@@ -595,7 +700,8 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 			}
 		}
 		if (!empty($_GET['error'])) {
-			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html(sprintf(__('Template save failed: %s', 'vms'), sanitize_text_field((string) $_GET['error']))) . '</p></div>';
+			/* translators: %s: sanitized template save error code. */
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html(sprintf(__('Template save failed: %s', 'vms'), sanitize_text_field((string) wp_unslash($_GET['error'])))) . '</p></div>';
 		}
 
 		echo '<h2>' . esc_html__('Existing Templates', 'vms') . '</h2>';
@@ -615,17 +721,24 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 				$name = isset($tpl['name']) ? (string) $tpl['name'] : ('#' . $tid);
 				$scope_parts = array();
 				$sv = isset($tpl['scope_venue_id']) ? absint($tpl['scope_venue_id']) : 0;
-				if ($sv > 0) $scope_parts[] = sprintf(__('Venue #%d', 'vms'), $sv);
+				if ($sv > 0) {
+					/* translators: %d: venue post ID assigned to the staffing template scope. */
+					$scope_parts[] = sprintf(__('Venue #%d', 'vms'), $sv);
+				}
 				$sd = isset($tpl['scope_day_of_week']) && $tpl['scope_day_of_week'] !== null ? (int) $tpl['scope_day_of_week'] : null;
 				if ($sd !== null && $sd >= 0 && $sd <= 6) {
 					$dow = array(__('Sun', 'vms'), __('Mon', 'vms'), __('Tue', 'vms'), __('Wed', 'vms'), __('Thu', 'vms'), __('Fri', 'vms'), __('Sat', 'vms'));
 					$scope_parts[] = $dow[$sd];
 				}
 				$st = isset($tpl['scope_event_type']) ? sanitize_key((string) $tpl['scope_event_type']) : '';
-				if ($st !== '') $scope_parts[] = sprintf(__('Type: %s', 'vms'), $st);
+				if ($st !== '') {
+					/* translators: %s: staffing template event type key. */
+					$scope_parts[] = sprintf(__('Type: %s', 'vms'), $st);
+				}
 				$min_headcount = (isset($tpl['min_headcount']) && $tpl['min_headcount'] !== null && $tpl['min_headcount'] !== '') ? max(0, (int) $tpl['min_headcount']) : null;
 				$max_headcount = (isset($tpl['max_headcount']) && $tpl['max_headcount'] !== null && $tpl['max_headcount'] !== '') ? max(0, (int) $tpl['max_headcount']) : null;
 				if ($min_headcount !== null || $max_headcount !== null) {
+					/* translators: %s: attendance range for the staffing template. */
 					$scope_parts[] = sprintf(__('Attendance: %s', 'vms'), ($min_headcount !== null ? (string) $min_headcount : '0') . '–' . ($max_headcount !== null ? (string) $max_headcount : '∞'));
 				}
 				if (empty($scope_parts)) $scope_parts[] = __('Any', 'vms');
@@ -813,16 +926,25 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 		$result = null;
 		$preview = true;
 		$filters = array(
-			'start_date'        => isset($_POST['vms_staffing_start_date']) ? sanitize_text_field((string) wp_unslash($_POST['vms_staffing_start_date'])) : '',
-			'end_date'          => isset($_POST['vms_staffing_end_date']) ? sanitize_text_field((string) wp_unslash($_POST['vms_staffing_end_date'])) : '',
-			'venue_id'          => isset($_POST['vms_staffing_venue_id']) ? absint($_POST['vms_staffing_venue_id']) : 0,
-			'include_drafts'    => !empty($_POST['vms_staffing_include_drafts']) ? 1 : 0,
-			'include_cancelled' => !empty($_POST['vms_staffing_include_cancelled']) ? 1 : 0,
+			'start_date'        => '',
+			'end_date'          => '',
+			'venue_id'          => 0,
+			'include_drafts'    => 0,
+			'include_cancelled' => 0,
 		);
 
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_staffing_rollup_action'])) {
+		$request_method = vms_staffing_admin_request_method();
+		if ('POST' === $request_method) {
 			check_admin_referer('vms_staffing_rollups_run');
-			$action = sanitize_key((string) wp_unslash($_POST['vms_staffing_rollup_action']));
+			$post_data = wp_unslash($_POST);
+			$filters = array(
+				'start_date'        => isset($post_data['vms_staffing_start_date']) ? sanitize_text_field((string) $post_data['vms_staffing_start_date']) : '',
+				'end_date'          => isset($post_data['vms_staffing_end_date']) ? sanitize_text_field((string) $post_data['vms_staffing_end_date']) : '',
+				'venue_id'          => isset($post_data['vms_staffing_venue_id']) ? absint($post_data['vms_staffing_venue_id']) : 0,
+				'include_drafts'    => !empty($post_data['vms_staffing_include_drafts']) ? 1 : 0,
+				'include_cancelled' => !empty($post_data['vms_staffing_include_cancelled']) ? 1 : 0,
+			);
+			$action = isset($post_data['vms_staffing_rollup_action']) ? sanitize_key((string) $post_data['vms_staffing_rollup_action']) : 'preview';
 			$preview = ($action !== 'run');
 			$result = function_exists('vms_staffing_rebuild_rollups')
 				? vms_staffing_rebuild_rollups($filters, $preview)
@@ -833,7 +955,9 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 		$t_roll = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('rollups') : '';
 		$dirty_count = 0;
 		if ($t_roll !== '') {
-			$dirty_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$t_roll} WHERE dirty = 1");
+			$dirty_count = (int) $wpdb->get_var(
+				$wpdb->prepare('SELECT COUNT(*) FROM %i WHERE dirty = %d', $t_roll, 1)
+			);
 		}
 
 		$venues = vms_staffing_admin_get_venues();
@@ -869,8 +993,11 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 			echo '<hr><h2>' . esc_html(!empty($result['preview']) ? __('Preview Result', 'vms') : __('Run Result', 'vms')) . '</h2>';
 			echo '<p><strong>' . esc_html__('Run ID:', 'vms') . '</strong> ' . esc_html((string) ($result['run_id'] ?? '')) . '</p>';
 			echo '<ul>';
+			/* translators: %d: number of event plans matched by the rollup filters. */
 			echo '<li>' . esc_html(sprintf(__('Matched events: %d', 'vms'), (int) ($result['matched_count'] ?? 0))) . '</li>';
+			/* translators: %d: number of staffing rollups rebuilt in this run. */
 			echo '<li>' . esc_html(sprintf(__('Rebuilt: %d', 'vms'), (int) ($result['rebuilt_count'] ?? 0))) . '</li>';
+			/* translators: %d: number of staffing rollup rebuild errors. */
 			echo '<li>' . esc_html(sprintf(__('Errors: %d', 'vms'), (int) ($result['error_count'] ?? 0))) . '</li>';
 			echo '</ul>';
 			$errors = isset($result['errors']) && is_array($result['errors']) ? $result['errors'] : array();
@@ -883,4 +1010,3 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 		echo '</div>';
 	}
 }
-
