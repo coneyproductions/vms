@@ -1,13 +1,13 @@
 # WordPress.org Event Plans Hardening Map 1.0.0
 
-Date: 2026-06-19
+Date: 2026-06-20
 
 ## Scope
 
 - Target file: `includes/cpt/event-plans.php`
 - Scan source: `docs/plugin-check-1.0.0-raw.txt`
-- Scan target: installed package built from `dist/wporg-04d/vms-1.0.0-public-release.zip`
-- Current artifact SHA-256: `7987b619acec510e397677074eba3f0442a8511b2a5492112583fc5f7ea9e6f3`
+- Scan target: installed package built from `dist/wporg-04e/vms-1.0.0-public-release.zip`
+- Current artifact SHA-256: `ca120b97c574ccdd72bb124defc8e712ed7291f4f9730d334423b6b1176d34be`
 
 ## Current Findings
 
@@ -76,6 +76,20 @@ Batch result:
 - `includes/cpt/event-plans.php`: `244` -> `241`
 - expected business surface touched: `A` only
 
+### Test bootstrap follow-up in `WPORG-04E`
+
+- no `includes/cpt/event-plans.php` runtime logic changed in this pass
+- the remaining nested-repo-sensitive regression scripts now use the shared `tests/bootstrap-wordpress.php` loader
+- confirmed PASS from the nested repo workspace for:
+  - `event-plan-calendar-resync-isolated`
+  - `event-plan-calendar-unpublished-suppress-save`
+  - `event-plan-editor-vendor-preservation`
+  - `event-plan-secondary-vendor-assignments`
+  - `event-plan-module-reopen-and-market-layout`
+  - `event-plan-staff-eligibility`
+  - `event-plan-secondary-vendor-capacity-and-add`
+- result: the next high-risk Event Plans pass can rely on a broader reusable regression set without hardcoded `wp-load.php` assumptions
+
 ### Still low-risk, but deferred in this task
 
 - `2084-2173` `build_event_plan_readiness_summary_context()`
@@ -116,12 +130,16 @@ Batch result:
   - unpublished-calendar suppress save
   - live refunds now
   - legacy ticket cleanup scheduling
-- Keep reusing the existing Event Plan regression set:
+- Keep reusing the expanded Event Plan regression set:
   - `event-plan-ticket-ui-overrides-isolated`
   - `event-plan-legacy-ticketing-integration-smoke`
+  - `event-plan-calendar-resync-isolated`
+  - `event-plan-calendar-unpublished-suppress-save`
   - `event-plan-editor-vendor-preservation`
   - `event-plan-secondary-vendor-assignments`
   - `event-plan-module-reopen-and-market-layout`
+  - `event-plan-staff-eligibility`
+  - `event-plan-secondary-vendor-capacity-and-add`
 
 ## Micro-Slice Chosen For This Task
 
@@ -143,4 +161,4 @@ Batch result:
 - `WPORG-04F`
 - Rationale:
   - the remaining Event Plans density is concentrated in `save_event_plan_meta()`, validation, cancellation/refund flows, and TEC/ticketing integrations
-  - another low-risk Event Plans slice is possible, but the remaining yield is small compared with the risk of moving deeper without dedicated regression coverage
+  - the bootstrap follow-up improved rerun reliability, but the remaining yield is still small compared with the risk of moving deeper without dedicated save/integration coverage

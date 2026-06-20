@@ -1,11 +1,11 @@
 # WordPress.org Compliance Report 1.0.0
 
-Date: 2026-06-19
+Date: 2026-06-20
 
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD: `ce576ba3569bffde65e94709b4112f455c4e0cba` (`ce576ba`)
+- HEAD: `076099d4c76812049b0cc5afba9443c43067dc6a` (`076099d`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
 - WPORG-01B and WPORG-02 state at the start of this task: uncommitted
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
@@ -16,10 +16,10 @@ Date: 2026-06-19
 - WordPress runtime evidence:
   - `6.8` disposable lifecycle matrix from `WPORG-02`
   - `7.0` disposable lifecycle matrix from `WPORG-02`
-  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, and `WPORG-04D`
+  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, and `WPORG-04E`
 - PHP runtime evidence:
   - `8.5.3` from `WPORG-02`
-  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, and `WPORG-04D`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, and `WPORG-04E`
 - MySQL: `8.0.35`
 - WP-CLI: `2.12.0`
 - Dependency versions used in lifecycle and smoke work:
@@ -51,13 +51,13 @@ Date: 2026-06-19
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-04d/vms-1.0.0-public-release.zip`
-- SHA-256: `7987b619acec510e397677074eba3f0442a8511b2a5492112583fc5f7ea9e6f3`
+- Artifact: `dist/wporg-04e/vms-1.0.0-public-release.zip`
+- SHA-256: `ca120b97c574ccdd72bb124defc8e712ed7291f4f9730d334423b6b1176d34be`
 - Package integrity: PASS
 
 ## Builder Status
 
-The repo-root builder path issue was fixed in this task.
+The repo-root builder path issue remains fixed in this task, and the remaining isolated Event Plans regressions were aligned to the shared bootstrap.
 
 - Root cause:
   - bundled release regression scripts assumed `dirname(__DIR__, 4) . '/wp-load.php'`
@@ -65,9 +65,11 @@ The repo-root builder path issue was fixed in this task.
   - added a shared test bootstrap resolver that accepts explicit `VMS_TEST_WP_LOAD` / `VMS_TEST_WORDPRESS_ROOT` inputs and otherwise searches upward safely
   - updated the release runner to pass the detected WordPress root into regression scripts
   - updated the non-destructive build-pipeline test harness
+  - updated the remaining isolated Event Plans regressions that still hardcoded `dirname(__DIR__, 4) . '/wp-load.php'` to use `tests/bootstrap-wordpress.php`
 - Result:
   - repo-root build now passes without `--skip-release-tests`
   - builder no longer depends on the repo living directly at `wp-content/plugins/vms`
+  - the seven remaining nested-repo-sensitive Event Plans tests now pass from this workspace
 
 ## PHP 8.3 Proof
 
@@ -90,7 +92,10 @@ Commands executed with the Local PHP `8.3.30` binary:
   - current artifact SHA-256: `f04938e13855920759e68307946dcf73de31e4b411245392675522373baee5ef`
 - `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04d --force`
   - PASS
-  - current artifact SHA-256: `7987b619acec510e397677074eba3f0442a8511b2a5492112583fc5f7ea9e6f3`
+  - artifact SHA-256: `7987b619acec510e397677074eba3f0442a8511b2a5492112583fc5f7ea9e6f3`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04e --force`
+  - PASS
+  - current artifact SHA-256: `ca120b97c574ccdd72bb124defc8e712ed7291f4f9730d334423b6b1176d34be`
 
 ## Readme Validator
 
@@ -109,9 +114,9 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3692` total findings
+- `3605` total findings
 - `1316` errors
-- `2376` warnings
+- `2289` warnings
 
 Comparison:
 
@@ -121,35 +126,39 @@ Comparison:
 - `WPORG-04A` packaged-plugin final: `3808` total / `1329` errors / `2479` warnings
 - `WPORG-04B` packaged-plugin final: `3695` total / `1317` errors / `2378` warnings
 - `WPORG-04D` packaged-plugin final: `3692` total / `1316` errors / `2376` warnings
+- `WPORG-04E` packaged-plugin final: `3605` total / `1316` errors / `2289` warnings
 
 Dominant remaining codes:
 
 - `WordPress.WP.I18n.MissingTranslatorsComment`: `767`
-- `WordPress.Security.NonceVerification.Recommended`: `643`
-- `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `273`
-- `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `268`
+- `WordPress.Security.NonceVerification.Recommended`: `614`
+- `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `260`
+- `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `233`
 - `WordPress.Security.EscapeOutput.OutputNotEscaped`: `313`
 - `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `293`
-- `WordPress.Security.NonceVerification.Missing`: `129`
+- `WordPress.Security.NonceVerification.Missing`: `119`
 - `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `163`
 
 High-level category counts:
 
-- nonce and input handling: `1335`
+- nonce and input handling: `1248`
 - database and SQL safety: `1119`
 - i18n placeholder comments / ordering: `783`
 - escaping and output safety: `313`
 - date/time API usage: `50`
 - development logging: `42`
 
-Fixed in this pass:
+Fixed across this release-prep sequence:
 
 - `missing_direct_file_access_protection`: `12` -> `0`
 - `includes/admin/goals-forecast.php`: `66` -> `0`
 - `includes/social-share/event-plan-panel.php`: `18` -> `4`
 - `includes/admin/budget-calculator.php`: `111` -> `2`
 - `includes/cpt/event-plans.php`: `244` -> `241` in this protected audit slice; `248` -> `241` across `WPORG-04B` plus `WPORG-04D`
-- packaged nonce/input blocker surface: `1517` -> `1335`
+- `includes/admin/due-dates.php`: `46` -> `0`
+- `includes/admin/holidays.php`: `41` -> `0`
+- remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
+- packaged nonce/input blocker surface: `1517` -> `1248`
 - packaged i18n placeholder/comment surface: `792` -> `783`
 - packaged output-escaping surface: `317` -> `313`
 
@@ -170,7 +179,7 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: nonce/input | `1335` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | The safe admin-heavy calculator pass is done. Event Plans now needs dedicated regression coverage before widening request hardening deeper into save and integration paths. | Partially |
+| Plugin Check: nonce/input | `1248` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | The safe non-Event-Plans admin request batch is done. Event Plans now needs dedicated regression coverage before widening request hardening deeper into save and integration paths. | Partially |
 | Plugin Check: escaping | `313` remaining output-escaping findings | BLOCKER | Audit helper-return HTML and echoed fragments in the highest-density files first | No |
 | Plugin Check: SQL safety | `1119` remaining DB/SQL findings, including `163` unescaped DB-parameter reports and `73` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings | No |
 
@@ -187,7 +196,7 @@ The `WPORG-02` audit conclusions still hold.
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
 | Minimum metadata | `Requires at least: 6.8` and `Requires PHP: 8.3` are now proven and applied | ACCEPT / DOCUMENT | Keep future metadata changes tied to real runtime evidence | Yes |
-| Repo-root builder | Nested-path release builder now passes without `--skip-release-tests`, including the local fixture-safe ticket UI isolation regression | ACCEPT / DOCUMENT | Keep the shared WordPress bootstrap resolver and reusable test fixtures in place | Yes |
+| Repo-root builder and isolated regressions | Nested-path release builder now passes without `--skip-release-tests`, and the remaining Event Plans isolated regressions now reuse the shared bootstrap resolver | ACCEPT / DOCUMENT | Keep the shared WordPress bootstrap resolver and reusable test fixtures in place | Yes |
 | Packaged metadata files | Root `readme.txt` and root `LICENSE.txt` remain present in the final ZIP | ACCEPT / DOCUMENT | Keep verifying this in release engineering | No |
 | Dependency-absence loading | Builder and prior lifecycle evidence still support fail-closed optional dependency behavior | ACCEPT / DOCUMENT | Keep readme disclosure aligned with runtime behavior | No |
 | Add-ons and external services | `WPORG-02` recommendation `A` remains valid | ACCEPT / DOCUMENT | Retain current disclosures unless those code paths change | No |
@@ -198,7 +207,7 @@ The `WPORG-02` audit conclusions still hold.
 | --- | --- | --- | --- | --- |
 | PHPCS / WPCS | Still not run locally | DEFER | Add a project-local PHPCS/WPCS toolchain in a separate task if coding-standard proof is needed | No |
 | PHP 8.2 or lower runtime proof | PHP `8.2` binary exists locally, but this task only proved `8.3` and did not lower the declared minimum further | DEFER | Only lower the minimum after equivalent build and boot evidence exists | No |
-| Browser QA | No manual browser/admin walkthrough was run in this pass | DEFER | Use `WPORG-04D` or final clean-site QA after the remaining Event Plan hardening pass | No |
+| Browser QA | No manual browser/admin walkthrough was run in this pass | DEFER | Use `WPORG-04E` or final clean-site QA after the remaining Event Plan hardening pass | No |
 
 ## Checks Not Run Or Limited
 
@@ -212,4 +221,4 @@ The `WPORG-02` audit conclusions still hold.
 - `WPORG-04F`
 - Scope:
   - take a dedicated high-risk Event Plans request/save hardening pass with new regression coverage around `save_event_plan_meta()`, validation, live refunds, and TEC/ticketing side effects,
-  - keep `WPORG-04E` available as an alternate low-risk packaged-count reduction task outside Event Plans if that is the higher-value submission strategy.
+  - use the now-aligned nested-repo-safe Event Plans regression set as the gate before widening those changes.

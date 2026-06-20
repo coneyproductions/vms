@@ -172,15 +172,25 @@ function vms_due_admin_render_instance_filter_hidden_inputs(array $filters): voi
   }
 }
 
+function vms_due_admin_query_arg(string $key): string {
+  // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Read-only admin routing/message parameters only affect page state.
+  if (!isset($_GET[$key])) {
+    return '';
+  }
+
+  // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin routing/message parameters only affect page state.
+  return (string) wp_unslash($_GET[$key]);
+}
+
 function vms_due_admin_post_add_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
   check_admin_referer('vms_due_add_payee');
 
-  $name = sanitize_text_field((string) ($_POST['payee_name'] ?? ''));
-  $account_number = sanitize_text_field((string) ($_POST['payee_account_number'] ?? ''));
-  $account_id = sanitize_text_field((string) ($_POST['payee_account_id'] ?? ''));
-  $notes = sanitize_textarea_field((string) ($_POST['payee_notes'] ?? ''));
-  $identifiers = vms_due_parse_identifiers((string) ($_POST['payee_identifiers'] ?? ''));
+  $name = sanitize_text_field(wp_unslash((string) ($_POST['payee_name'] ?? '')));
+  $account_number = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_number'] ?? '')));
+  $account_id = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_id'] ?? '')));
+  $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['payee_notes'] ?? '')));
+  $identifiers = vms_due_parse_identifiers(sanitize_textarea_field(wp_unslash((string) ($_POST['payee_identifiers'] ?? ''))));
 
   if ($name === '') {
     vms_due_admin_redirect('payee_missing_name');
@@ -207,16 +217,16 @@ function vms_due_admin_post_edit_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
   check_admin_referer('vms_due_edit_payee');
 
-  $id = sanitize_key((string) ($_POST['payee_id'] ?? ''));
+  $id = sanitize_key(wp_unslash((string) ($_POST['payee_id'] ?? '')));
   if ($id === '') {
     vms_due_admin_redirect('payee_missing_id');
   }
 
-  $name = sanitize_text_field((string) ($_POST['payee_name'] ?? ''));
-  $account_number = sanitize_text_field((string) ($_POST['payee_account_number'] ?? ''));
-  $account_id = sanitize_text_field((string) ($_POST['payee_account_id'] ?? ''));
-  $notes = sanitize_textarea_field((string) ($_POST['payee_notes'] ?? ''));
-  $identifiers = vms_due_parse_identifiers((string) ($_POST['payee_identifiers'] ?? ''));
+  $name = sanitize_text_field(wp_unslash((string) ($_POST['payee_name'] ?? '')));
+  $account_number = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_number'] ?? '')));
+  $account_id = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_id'] ?? '')));
+  $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['payee_notes'] ?? '')));
+  $identifiers = vms_due_parse_identifiers(sanitize_textarea_field(wp_unslash((string) ($_POST['payee_identifiers'] ?? ''))));
 
   if ($name === '') {
     vms_due_admin_redirect('payee_missing_name');
@@ -260,23 +270,23 @@ function vms_due_admin_post_add_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
   check_admin_referer('vms_due_add_obligation');
 
-  $title = sanitize_text_field((string) ($_POST['ob_title'] ?? ''));
-  $payee_id = sanitize_key((string) ($_POST['ob_payee_id'] ?? ''));
+  $title = sanitize_text_field(wp_unslash((string) ($_POST['ob_title'] ?? '')));
+  $payee_id = sanitize_key(wp_unslash((string) ($_POST['ob_payee_id'] ?? '')));
   // Payee is usually required, but some obligations are general reminders (e.g., filing 1099s).
   // When checked, a blank payee will not be treated as a configuration error on the dashboard.
   $payee_optional = !empty($_POST['ob_payee_optional']);
-  $cadence = sanitize_key((string) ($_POST['ob_cadence'] ?? 'monthly'));
+  $cadence = sanitize_key(wp_unslash((string) ($_POST['ob_cadence'] ?? 'monthly')));
 
-  $day = (int) ($_POST['ob_day'] ?? 1);
-  $month = (int) ($_POST['ob_month'] ?? 1);
-  $q_month = (int) ($_POST['ob_quarter_month'] ?? 1);
+  $day = absint(wp_unslash((string) ($_POST['ob_day'] ?? '1')));
+  $month = absint(wp_unslash((string) ($_POST['ob_month'] ?? '1')));
+  $q_month = absint(wp_unslash((string) ($_POST['ob_quarter_month'] ?? '1')));
   $eom = !empty($_POST['ob_eom']);
-  $one_time_date = sanitize_text_field((string) ($_POST['ob_due_date'] ?? ''));
+  $one_time_date = sanitize_text_field(wp_unslash((string) ($_POST['ob_due_date'] ?? '')));
 
-  $start_date = sanitize_text_field((string) ($_POST['ob_start_date'] ?? ''));
-  $end_date = sanitize_text_field((string) ($_POST['ob_end_date'] ?? ''));
+  $start_date = sanitize_text_field(wp_unslash((string) ($_POST['ob_start_date'] ?? '')));
+  $end_date = sanitize_text_field(wp_unslash((string) ($_POST['ob_end_date'] ?? '')));
 
-  $remind_days = (int) ($_POST['ob_remind_days'] ?? 14);
+  $remind_days = absint(wp_unslash((string) ($_POST['ob_remind_days'] ?? '14')));
   $remind_days = max(0, min(365, $remind_days));
 
   if ($title === '') {
@@ -354,26 +364,26 @@ function vms_due_admin_post_edit_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
   check_admin_referer('vms_due_edit_obligation');
 
-  $id = sanitize_key((string) ($_POST['ob_id'] ?? ''));
+  $id = sanitize_key(wp_unslash((string) ($_POST['ob_id'] ?? '')));
   if ($id === '') {
     vms_due_admin_redirect('ob_missing_id');
   }
 
-  $title = sanitize_text_field((string) ($_POST['ob_title'] ?? ''));
-  $payee_id = sanitize_key((string) ($_POST['ob_payee_id'] ?? ''));
+  $title = sanitize_text_field(wp_unslash((string) ($_POST['ob_title'] ?? '')));
+  $payee_id = sanitize_key(wp_unslash((string) ($_POST['ob_payee_id'] ?? '')));
   $payee_optional = !empty($_POST['ob_payee_optional']);
-  $cadence = sanitize_key((string) ($_POST['ob_cadence'] ?? 'monthly'));
+  $cadence = sanitize_key(wp_unslash((string) ($_POST['ob_cadence'] ?? 'monthly')));
 
-  $day = (int) ($_POST['ob_day'] ?? 1);
-  $month = (int) ($_POST['ob_month'] ?? 1);
-  $q_month = (int) ($_POST['ob_quarter_month'] ?? 1);
+  $day = absint(wp_unslash((string) ($_POST['ob_day'] ?? '1')));
+  $month = absint(wp_unslash((string) ($_POST['ob_month'] ?? '1')));
+  $q_month = absint(wp_unslash((string) ($_POST['ob_quarter_month'] ?? '1')));
   $eom = !empty($_POST['ob_eom']);
-  $one_time_date = sanitize_text_field((string) ($_POST['ob_due_date'] ?? ''));
+  $one_time_date = sanitize_text_field(wp_unslash((string) ($_POST['ob_due_date'] ?? '')));
 
-  $start_date = sanitize_text_field((string) ($_POST['ob_start_date'] ?? ''));
-  $end_date = sanitize_text_field((string) ($_POST['ob_end_date'] ?? ''));
+  $start_date = sanitize_text_field(wp_unslash((string) ($_POST['ob_start_date'] ?? '')));
+  $end_date = sanitize_text_field(wp_unslash((string) ($_POST['ob_end_date'] ?? '')));
 
-  $remind_days = (int) ($_POST['ob_remind_days'] ?? 14);
+  $remind_days = absint(wp_unslash((string) ($_POST['ob_remind_days'] ?? '14')));
   $remind_days = max(0, min(365, $remind_days));
 
   if ($title === '') {
@@ -464,10 +474,10 @@ function vms_due_admin_post_complete(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
   check_admin_referer('vms_due_complete');
 
-  $oid = sanitize_key((string) ($_POST['obligation_id'] ?? ''));
-  $due = sanitize_text_field((string) ($_POST['due_date'] ?? ''));
-  $notes = sanitize_textarea_field((string) ($_POST['notes'] ?? ''));
-  $proof = esc_url_raw((string) ($_POST['proof_url'] ?? ''));
+  $oid = sanitize_key(wp_unslash((string) ($_POST['obligation_id'] ?? '')));
+  $due = sanitize_text_field(wp_unslash((string) ($_POST['due_date'] ?? '')));
+  $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['notes'] ?? '')));
+  $proof = esc_url_raw(wp_unslash((string) ($_POST['proof_url'] ?? '')));
 
   $filters = vms_due_admin_collect_instance_filters((array) $_POST);
   $query = vms_due_admin_instance_filter_query_args($filters);
@@ -492,10 +502,10 @@ function vms_due_admin_post_uncomplete(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
   check_admin_referer('vms_due_uncomplete');
 
-  $oid = sanitize_key((string) ($_POST['obligation_id'] ?? ''));
-  $due = sanitize_text_field((string) ($_POST['due_date'] ?? ''));
-  $notes = sanitize_textarea_field((string) ($_POST['notes'] ?? ''));
-  $proof = esc_url_raw((string) ($_POST['proof_url'] ?? ''));
+  $oid = sanitize_key(wp_unslash((string) ($_POST['obligation_id'] ?? '')));
+  $due = sanitize_text_field(wp_unslash((string) ($_POST['due_date'] ?? '')));
+  $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['notes'] ?? '')));
+  $proof = esc_url_raw(wp_unslash((string) ($_POST['proof_url'] ?? '')));
 
   $filters = vms_due_admin_collect_instance_filters((array) $_POST);
   $query = vms_due_admin_instance_filter_query_args($filters);
@@ -596,14 +606,14 @@ function vms_render_due_dates_admin_page_content(): void {
     wp_die('Forbidden');
   }
 
-  $msg = sanitize_key((string) ($_GET['vms_due_msg'] ?? ''));
+  $msg = sanitize_key(vms_due_admin_query_arg('vms_due_msg'));
   $payees = vms_due_get_payees();
   $obs = vms_due_get_obligations();
   $log = vms_due_get_log();
   $log_idx = vms_due_log_index($log);
 
-  $edit_payee_id = sanitize_key((string) ($_GET['edit_payee'] ?? ''));
-  $edit_ob_id = sanitize_key((string) ($_GET['edit_ob'] ?? ''));
+  $edit_payee_id = sanitize_key(vms_due_admin_query_arg('edit_payee'));
+  $edit_ob_id = sanitize_key(vms_due_admin_query_arg('edit_ob'));
 
   // Build a simple map of payee names for display.
   $payeeNames = [];
@@ -625,7 +635,12 @@ function vms_render_due_dates_admin_page_content(): void {
     }
   }
 
-  $instance_filters = vms_due_admin_collect_instance_filters((array) $_GET);
+  $instance_filters = vms_due_admin_collect_instance_filters([
+    'due_status' => vms_due_admin_query_arg('due_status'),
+    'due_cadence' => vms_due_admin_query_arg('due_cadence'),
+    'due_payee' => vms_due_admin_query_arg('due_payee'),
+    'due_include_archived' => vms_due_admin_query_arg('due_include_archived'),
+  ]);
   $instance_resp = vms_due_build_obligations_list_response([
     'status' => $instance_filters['status'],
     'cadence' => $instance_filters['cadence'],

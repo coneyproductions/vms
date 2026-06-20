@@ -1,18 +1,18 @@
 # WordPress.org Metadata Audit
 
-Date: 2026-06-19
+Date: 2026-06-20
 
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD: `ce576ba3569bffde65e94709b4112f455c4e0cba` (`ce576ba`)
+- HEAD: `076099d4c76812049b0cc5afba9443c43067dc6a` (`076099d`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-04D` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-04E` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -64,7 +64,12 @@ Scope note:
   - SHA-256 `f04938e13855920759e68307946dcf73de31e4b411245392675522373baee5ef`,
   - packaged Plugin Check reduction from `3808` to `3695` findings after the budget-calculator batch and the limited Event Plans admin-list micro-slice.
 - `WPORG-04D` adds:
-  - current rebuilt RC artifact `dist/wporg-04d/vms-1.0.0-public-release.zip`,
-  - current SHA-256 `7987b619acec510e397677074eba3f0442a8511b2a5492112583fc5f7ea9e6f3`,
+  - rebuilt RC artifact `dist/wporg-04d/vms-1.0.0-public-release.zip`,
+  - SHA-256 `7987b619acec510e397677074eba3f0442a8511b2a5492112583fc5f7ea9e6f3`,
   - dedicated Event Plans blocker audit map `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`,
   - packaged Plugin Check reduction from `3695` to `3692` findings after one protected Event Plans admin-list helper/output slice.
+- `WPORG-04E` adds:
+  - current rebuilt RC artifact `dist/wporg-04e/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `ca120b97c574ccdd72bb124defc8e712ed7291f4f9730d334423b6b1176d34be`,
+  - packaged Plugin Check reduction from `3692` to `3605` findings after the safe high-density `due-dates.php` plus `holidays.php` batch,
+  - remaining isolated Event Plans regression scripts now aligned to the shared bootstrap resolver and passing from the nested repo workspace.
