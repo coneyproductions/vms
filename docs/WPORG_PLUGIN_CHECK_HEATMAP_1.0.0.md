@@ -4,66 +4,61 @@ Date: 2026-06-20
 
 ## Scope
 
-- Scan target: installed package built from `dist/wporg-04g/vms-1.0.0-public-release.zip`
-- Artifact SHA-256: `e2f4f6a45593b26c319dea37b4179f174e54558aa25acdc0a1131f6cbe553f6d`
+- Scan target: temporary packaged plugin slug extracted from `dist/wporg-04h/vms-1.0.0-public-release.zip`
+- Artifact SHA-256: `b66aded43d758b2d8bc5de66b57f8ceb8e69927d89eb91c6dadf1a26ed9a734c`
 - Raw output: `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp plugin check vms --mode=new --format=json`
 
 ## Current Result
 
-- `3554` total findings
-- `1266` errors
+- `3491` total findings
+- `1203` errors
 - `2288` warnings
 
-Comparison to the prior packaged RC from `WPORG-04E`:
+Comparison to the prior packaged RC from `WPORG-04G`:
 
-- `3605` -> `3554` total (`-51`)
-- `1316` -> `1266` errors (`-50`)
-- `2289` -> `2288` warnings (`-1`)
+- `3554` -> `3491` total (`-63`)
+- `1266` -> `1203` errors (`-63`)
+- `2288` -> `2288` warnings (`0`)
 
-## WPORG-04G Batch
+## WPORG-04H Batch
 
-- `includes/admin/vendor-command-center.php`
-  - `51` -> `29`
-  - `22` -> `0` errors
-  - wrapped pill helper output at final render sites with `wp_kses_post()`
+- `includes/admin/event-command-center.php`
+  - `79` -> `15`
+  - `63` -> `0` errors
+  - `16` -> `15` warnings
+  - wrapped final helper-generated HTML at the render boundary with `wp_kses()`
+  - normalized one `external_url` request read and the two `$_GET` reads already in this file
+  - replaced the remaining display-only `date()` sort normalization with `DateTimeImmutable`
   - added missing `translators:` comments on placeholder strings
-- `includes/admin/vendor-availability.php`
-  - `50` -> `22`
-  - `28` -> `0` errors
-  - wrapped remaining pill helper output at final render sites
-  - replaced the remaining display-only `date()` calls with `DateTimeImmutable` helpers
-  - added missing `translators:` comments on placeholder strings
-- focused packaged-validation regressions
-  - `tests/vendor-availability-ux.php`
-  - `tests/add-dispatch-open-vendor-needs.php`
-  - both now use `tests/bootstrap-wordpress.php` instead of hardcoded `dirname(__DIR__, 4) . '/wp-load.php'`
+- focused validation
+  - no dedicated Event Command Center regression exists in `tests/`
+  - the packaged rerun used a temporary extracted plugin slug under the local WordPress install, leaving the installed `vms/` copy untouched
 
 Files touched:
 
-- `includes/admin/vendor-command-center.php`
-- `includes/admin/vendor-availability.php`
-- `tests/vendor-availability-ux.php`
-- `tests/add-dispatch-open-vendor-needs.php`
+- `includes/admin/event-command-center.php`
 
 Findings intentionally deferred:
 
 - all remaining high-risk Event Plans runtime request/save hardening
-- all publish validation and live refund request flows
-- all TEC publish/resync, ticket cleanup, vendor assignment, staffing, and cancellation mutation paths
+- all publish validation, vendor assignment, staffing mutation, and live refund request flows
+- all TEC publish/resync and ticket cleanup paths
+- the remaining nonce-verification recommendations and the one `slow_db_query_meta_key` warning in `event-command-center.php`
 - all broad SQL and nonce/input follow-up outside this admin render-only batch
 
 Risk notes:
 
-- selected runtime files are low-risk admin-only reporting surfaces outside Event Plans
-- runtime changes stayed on final output escaping, `translators:` comments, and display-only date handling
+- selected runtime file is a low-risk admin-only reporting surface outside Event Plans
+- runtime changes stayed on final output escaping, request normalization already local to the file, `translators:` comments, and display-only date handling
 - Event Plans runtime logic and other mutation-heavy flows were intentionally untouched
 
 Net effect of the selected batch:
 
-- `WordPress.WP.I18n.MissingTranslatorsComment`: `767` -> `738` (`-29`)
-- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `313` -> `296` (`-17`)
-- `WordPress.DateTime.RestrictedFunctions.date_date`: `50` -> `46` (`-4`)
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `738` -> `692` (`-46`)
+- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `296` -> `284` (`-12`)
+- `WordPress.DateTime.RestrictedFunctions.date_date`: `46` -> `45` (`-1`)
+- packaged nonce/input grouping: `1248` -> `1247` (`-1`)
 
 ## Highest-Density Files
 
@@ -79,23 +74,22 @@ Net effect of the selected batch:
 | `includes/modules/staff-tasks/store.php` | `90` | `17` | `73` | DB/SQL |
 | `includes/vendor-applications.php` | `90` | `15` | `75` | nonce/input |
 | `includes/portal/staff-portal.php` | `86` | `46` | `40` | escaping + nonce/input |
-| `includes/admin/event-command-center.php` | `79` | `63` | `16` | i18n + escaping |
 | `includes/modules/admissions/vendor-guest-portal.php` | `75` | `36` | `39` | escaping + DB/SQL |
 
 ## Category Hotspots
 
 | Category | Current count | Highest-density files |
 | --- | ---: | --- |
-| Nonce and input handling | `1248` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` |
-| Database and SQL safety | `1118` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` |
-| Escaping and output safety | `300` `OutputNotEscaped` findings | `includes/portal/vendor-portal.php`, `includes/portal/staff-portal.php`, `includes/admin/staffing.php`, `includes/public/venue-calendar-shortcode.php` |
-| I18n placeholder comments and ordering | `760` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/admin/event-command-center.php`, `includes/integrations/ticketing-verifications.php` |
-| Date/time API usage | `46` | `includes/admin/schedule.php`, `includes/modules/staff-tasks/notifications.php`, `includes/admin/vendor-availability.php` |
+| Nonce and input handling | `1247` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` |
+| Database and SQL safety | `1119` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` |
+| Escaping and output safety | `284` `OutputNotEscaped` findings | `includes/portal/vendor-portal.php`, `includes/portal/staff-portal.php`, `includes/admin/staffing.php`, `includes/public/venue-calendar-shortcode.php` |
+| I18n placeholder comments and ordering | `692` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` |
+| Date/time API usage | `45` | `includes/admin/schedule.php`, `includes/modules/staff-tasks/notifications.php`, `includes/core/staffing.php` |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` |
 
 ## Next Recommended Batch
 
-- `WPORG-04H`
+- `WPORG-04I`
 - Scope:
-  - take the next safe admin-only error-heavy batch in `includes/admin/event-command-center.php`
-  - focus on `translators:` comments plus final render-surface escaping only, without widening into Event Plans runtime, ticketing mutations, or vendor assignment saves
+  - take the next safe admin-only render/i18n batch in `includes/admin/staffing.php`
+  - keep the pass out of Event Plans runtime, ticketing mutations, refund/cancellation flows, vendor-assignment saves, staffing mutations, and publish/TEC sync paths

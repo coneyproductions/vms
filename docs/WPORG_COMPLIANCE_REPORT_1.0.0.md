@@ -5,9 +5,9 @@ Date: 2026-06-20
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD: `71d7bbb6c302563a8812a7da85b45fb00fceb700` (`71d7bbb`)
+- HEAD: `80f031344296c700d449711e35f7b3148daf8fc1` (`80f0313`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- WPORG-04E checkpoint state at the start of this task: committed and pushed
+- WPORG-04G checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -16,10 +16,10 @@ Date: 2026-06-20
 - WordPress runtime evidence:
   - `6.8` disposable lifecycle matrix from `WPORG-02`
   - `7.0` disposable lifecycle matrix from `WPORG-02`
-  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, and `WPORG-04G`
+  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, and `WPORG-04H`
 - PHP runtime evidence:
   - `8.5.3` from `WPORG-02`
-  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, and `WPORG-04G`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, and `WPORG-04H`
 - MySQL: `8.0.35`
 - WP-CLI: `2.12.0`
 - Dependency versions used in lifecycle and smoke work:
@@ -51,8 +51,8 @@ Date: 2026-06-20
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-04g/vms-1.0.0-public-release.zip`
-- SHA-256: `e2f4f6a45593b26c319dea37b4179f174e54558aa25acdc0a1131f6cbe553f6d`
+- Artifact: `dist/wporg-04h/vms-1.0.0-public-release.zip`
+- SHA-256: `b66aded43d758b2d8bc5de66b57f8ceb8e69927d89eb91c6dadf1a26ed9a734c`
 - Package integrity: PASS
 
 ## Builder Status
@@ -102,6 +102,9 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04g --force`
   - PASS
   - current artifact SHA-256: `e2f4f6a45593b26c319dea37b4179f174e54558aa25acdc0a1131f6cbe553f6d`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04h --force`
+  - PASS
+  - current artifact SHA-256: `b66aded43d758b2d8bc5de66b57f8ceb8e69927d89eb91c6dadf1a26ed9a734c`
 
 ## Readme Validator
 
@@ -120,8 +123,8 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3554` total findings
-- `1266` errors
+- `3491` total findings
+- `1203` errors
 - `2288` warnings
 
 Comparison:
@@ -134,25 +137,26 @@ Comparison:
 - `WPORG-04D` packaged-plugin final: `3692` total / `1316` errors / `2376` warnings
 - `WPORG-04E` packaged-plugin final: `3605` total / `1316` errors / `2289` warnings
 - `WPORG-04G` packaged-plugin final: `3554` total / `1266` errors / `2288` warnings
+- `WPORG-04H` packaged-plugin final: `3491` total / `1203` errors / `2288` warnings
 
 Dominant remaining codes:
 
-- `WordPress.WP.I18n.MissingTranslatorsComment`: `738`
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `692`
 - `WordPress.Security.NonceVerification.Recommended`: `614`
 - `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `260`
 - `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `233`
-- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `296`
+- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `284`
 - `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `293`
 - `WordPress.Security.NonceVerification.Missing`: `119`
 - `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `163`
 
 High-level category counts:
 
-- nonce and input handling: `1248`
-- database and SQL safety: `1118`
-- i18n placeholder comments / ordering: `760`
-- escaping and output safety: `300`
-- date/time API usage: `46`
+- nonce and input handling: `1247`
+- database and SQL safety: `1119`
+- i18n placeholder comments / ordering: `692`
+- escaping and output safety: `284`
+- date/time API usage: `45`
 - development logging: `43`
 
 Fixed across this release-prep sequence:
@@ -166,11 +170,12 @@ Fixed across this release-prep sequence:
 - `includes/admin/holidays.php`: `41` -> `0`
 - `includes/admin/vendor-command-center.php`: `51` -> `29`, with `22` -> `0` errors
 - `includes/admin/vendor-availability.php`: `50` -> `22`, with `28` -> `0` errors
+- `includes/admin/event-command-center.php`: `79` -> `15`, with `63` -> `0` errors
 - remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
-- packaged nonce/input blocker surface: `1517` -> `1248`
-- packaged i18n placeholder/comment surface: `792` -> `760`
-- packaged output-escaping surface: `317` -> `300`
+- packaged nonce/input blocker surface: `1517` -> `1247`
+- packaged i18n placeholder/comment surface: `792` -> `692`
+- packaged output-escaping surface: `317` -> `284`
 
 Detailed grouping and recommendations:
 
@@ -189,16 +194,16 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: nonce/input | `1248` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | The safe non-Event-Plans admin request batch is done. Event Plans now needs dedicated regression coverage before widening request hardening deeper into save and integration paths. | Partially |
-| Plugin Check: escaping | `300` remaining output-escaping findings | BLOCKER | Audit helper-return HTML and echoed fragments in the highest-density files first | Partially |
-| Plugin Check: SQL safety | `1118` remaining DB/SQL findings, including `163` unescaped DB-parameter reports and `73` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings | No |
+| Plugin Check: nonce/input | `1247` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | The safe non-Event-Plans admin request batch is done. Event Plans now needs dedicated regression coverage before widening request hardening deeper into save and integration paths. | Partially |
+| Plugin Check: escaping | `284` remaining output-escaping findings | BLOCKER | Audit helper-return HTML and echoed fragments in the highest-density files first | Partially |
+| Plugin Check: SQL safety | `1119` remaining DB/SQL findings, including `163` unescaped DB-parameter reports and `73` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings | No |
 
 ## Should Fix Before Submission
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: i18n | `760` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Add `translators:` comments and ordered placeholders in batches after security blockers | Partially |
-| Plugin Check: date/time APIs | `46` `date()` findings remain | SHOULD FIX BEFORE SUBMISSION | Review each case and convert UTC-safe display paths to explicit timezone-safe helpers where appropriate | Partially |
+| Plugin Check: i18n | `692` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Add `translators:` comments and ordered placeholders in batches after security blockers | Partially |
+| Plugin Check: date/time APIs | `45` `date()` findings remain | SHOULD FIX BEFORE SUBMISSION | Review each case and convert UTC-safe display paths to explicit timezone-safe helpers where appropriate | Partially |
 | Plugin Check: development logging | `43` remaining development-logging findings (`42` `error_log()` + `1` `debug_backtrace()`) | SHOULD FIX BEFORE SUBMISSION | Remove or hard-gate residual development logging in packaged code | No |
 
 ## Accept / Document
@@ -217,7 +222,7 @@ The `WPORG-02` audit conclusions still hold.
 | --- | --- | --- | --- | --- |
 | PHPCS / WPCS | Still not run locally | DEFER | Add a project-local PHPCS/WPCS toolchain in a separate task if coding-standard proof is needed | No |
 | PHP 8.2 or lower runtime proof | PHP `8.2` binary exists locally, but this task only proved `8.3` and did not lower the declared minimum further | DEFER | Only lower the minimum after equivalent build and boot evidence exists | No |
-| Browser QA | No manual browser/admin walkthrough was run in this pass | DEFER | Use `WPORG-04G` or final clean-site QA after the remaining blocker-reduction pass | No |
+| Browser QA | No manual browser/admin walkthrough was run in this pass | DEFER | Use `WPORG-04H` or final clean-site QA after the remaining blocker-reduction pass | No |
 
 ## Checks Not Run Or Limited
 
@@ -228,7 +233,7 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- `WPORG-04H`
+- `WPORG-04I`
 - Scope:
-  - take the next safe admin-only error-heavy batch in `includes/admin/event-command-center.php`,
-  - limit the pass to `translators:` comments plus final render-surface escaping, using the same narrow packaged-validation loop as `WPORG-04G`.
+  - take the next safe admin-only render/i18n batch in `includes/admin/staffing.php`,
+  - keep the pass out of Event Plans runtime, ticketing/payment/refund/cancellation flows, vendor-assignment saves, staffing mutations, and publish/TEC sync paths.

@@ -153,6 +153,7 @@ if (!function_exists('vms_event_command_center_handle_promo_video_action')) {
             }
             $result = vms_event_command_center_promo_video_upload_file($plan_id, 'vms_cc_headliner_promo_video');
             if (is_wp_error($result)) {
+                /* translators: %s: upload error message. */
                 vms_event_command_center_redirect_with_notice('error', sprintf(__('Upload failed: %s', 'vms'), $result->get_error_message()), $plan_id);
             }
             update_post_meta($plan_id, $attachment_key, (int) $result);
@@ -168,7 +169,7 @@ if (!function_exists('vms_event_command_center_handle_promo_video_action')) {
         }
 
         if ($promo_action === 'use_external') {
-            $raw_url = isset($_POST['external_url']) ? (string) wp_unslash($_POST['external_url']) : '';
+            $raw_url = isset($_POST['external_url']) ? esc_url_raw((string) wp_unslash($_POST['external_url']), array('http', 'https')) : '';
             $url = function_exists('vms_vendor_portal_normalize_promo_video_external_url') ? vms_vendor_portal_normalize_promo_video_external_url($raw_url) : esc_url_raw($raw_url, array('http', 'https'));
             if ($url === '') {
                 vms_event_command_center_redirect_with_notice('error', __('Please enter a valid YouTube, Vimeo, Facebook, or Instagram video URL.', 'vms'), $plan_id);
@@ -259,6 +260,7 @@ if (!function_exists('vms_event_command_center_time_ago_label')) {
         }
 
         return sprintf(
+            /* translators: 1: formatted timestamp, 2: human-readable elapsed time. */
             __('%1$s (%2$s ago)', 'vms'),
             $dt->format('M j, Y g:i A'),
             human_time_diff($dt->getTimestamp(), time())
@@ -301,10 +303,12 @@ if (!function_exists('vms_event_command_center_days_until_label')) {
             return __('Yesterday', 'vms');
         }
         if ($days > 1) {
+            /* translators: %d: number of days until the event. */
             return sprintf(_n('%d day out', '%d days out', $days, 'vms'), $days);
         }
 
         $past = abs($days);
+        /* translators: %d: number of days since the event. */
         return sprintf(_n('%d day ago', '%d days ago', $past, 'vms'), $past);
     }
 }
@@ -358,6 +362,56 @@ if (!function_exists('vms_event_command_center_render_chip')) {
     {
         $tone = sanitize_html_class($tone ?: 'muted');
         return '<span class="vms-cc-chip is-' . esc_attr($tone) . '">' . esc_html($label) . '</span>';
+    }
+}
+
+if (!function_exists('vms_event_command_center_allowed_markup')) {
+    function vms_event_command_center_allowed_markup(): array
+    {
+        $allowed = wp_kses_allowed_html('post');
+        $allowed['blockquote'] = array(
+            'cite' => true,
+            'class' => true,
+            'data-instgrm-captioned' => true,
+            'data-instgrm-permalink' => true,
+            'data-instgrm-version' => true,
+        );
+        $allowed['iframe'] = array(
+            'allow' => true,
+            'allowfullscreen' => true,
+            'class' => true,
+            'frameborder' => true,
+            'height' => true,
+            'loading' => true,
+            'referrerpolicy' => true,
+            'scrolling' => true,
+            'src' => true,
+            'title' => true,
+            'width' => true,
+        );
+        $allowed['script'] = array(
+            'async' => true,
+            'charset' => true,
+            'crossorigin' => true,
+            'defer' => true,
+            'src' => true,
+        );
+        $allowed['section'] = array(
+            'class' => true,
+            'id' => true,
+        );
+        $allowed['source'] = array(
+            'src' => true,
+            'type' => true,
+        );
+        $allowed['video'] = array(
+            'class' => true,
+            'controls' => true,
+            'playsinline' => true,
+            'preload' => true,
+        );
+
+        return $allowed;
     }
 }
 
@@ -621,6 +675,7 @@ if (!function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
                             );
                         }
                     } catch (Throwable $e) {
+                        /* translators: %s: exception message from Data Tools reporting lookup. */
                         $empty['warnings'][] = sprintf(__('Data Tools ticket model could not be read: %s', 'vms'), $e->getMessage());
                     }
                 }
@@ -681,6 +736,7 @@ if (!function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
                             );
                         }
                     } catch (Throwable $e) {
+                        /* translators: %s: exception message from ticket revenue reporting lookup. */
                         $empty['warnings'][] = sprintf(__('Ticket revenue rows could not be read: %s', 'vms'), $e->getMessage());
                     }
                 }
@@ -1138,15 +1194,16 @@ if (!function_exists('vms_event_command_center_render_promo_video_manager')) {
         echo '<div class="vms-cc-promo-column">';
         echo '<h4>' . esc_html__('Current public source', 'vms') . '</h4>';
         if (!empty($current['source_type']) && (string) $current['source_type'] !== 'none' && function_exists('vms_vendor_portal_render_headliner_promo_video_markup_from_data')) {
-            echo vms_vendor_portal_render_headliner_promo_video_markup_from_data($current, array(
+            echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($current, array(
                 'context' => 'portal',
                 'heading' => __('Live now', 'vms'),
                 'wrap_class' => 'vms-cc-promo-preview',
-            ));
+            )), vms_event_command_center_allowed_markup());
         } else {
             echo '<p class="vms-cc-empty vms-cc-empty--inline">' . esc_html__('No public promo video is live yet for this event.', 'vms') . '</p>';
         }
         if (!empty($marketing['promo_video_uploaded_label'])) {
+            /* translators: %s: formatted last-updated timestamp label. */
             echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Last updated: %s', 'vms'), (string) $marketing['promo_video_uploaded_label'])) . '</p>';
         }
         echo '<form class="vms-cc-promo-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -1161,12 +1218,13 @@ if (!function_exists('vms_event_command_center_render_promo_video_manager')) {
         echo '<div class="vms-cc-promo-column">';
         echo '<h4>' . esc_html__('Vendor submission', 'vms') . '</h4>';
         if (!empty($submitted['attachment_id']) && function_exists('vms_vendor_portal_render_headliner_promo_video_markup_from_data')) {
-            echo vms_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
+            echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
                 'context' => 'portal',
                 'heading' => __('Waiting for review', 'vms'),
                 'wrap_class' => 'vms-cc-promo-preview',
-            ));
+            )), vms_event_command_center_allowed_markup());
             if (!empty($marketing['promo_submission_uploaded_label'])) {
+                /* translators: %s: formatted submission timestamp label. */
                 echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Submitted: %s', 'vms'), (string) $marketing['promo_submission_uploaded_label'])) . '</p>';
             }
             echo '<div class="vms-cc-inline-actions">';
@@ -1354,6 +1412,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
             $summary = vms_event_plan_review_compact_summary((array) ($changes['changes'] ?? array()));
             $detail = $summary !== ''
                 ? $summary
+                /* translators: %d: number of unpublished tracked changes. */
                 : sprintf(_n('%d tracked change is waiting for review.', '%d tracked changes are waiting for review.', $count, 'vms'), $count);
             $alerts[] = array(
                 'severity' => 'yellow',
@@ -1407,6 +1466,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
             $alerts[] = array(
                 'severity' => 'red',
                 'title' => __('Critical staffing gap', 'vms'),
+                /* translators: %d: number of critical staffing seats still open. */
                 'detail' => sprintf(_n('%d critical staffing seat is still open.', '%d critical staffing seats are still open.', (int) $staffing['critical_open_headcount'], 'vms'), (int) $staffing['critical_open_headcount']),
                 'action_label' => __('Open Event Plan', 'vms'),
                 'action_url' => (string) ($header['edit_url'] ?? ''),
@@ -1415,6 +1475,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
             $alerts[] = array(
                 'severity' => 'yellow',
                 'title' => __('Staffing incomplete', 'vms'),
+                /* translators: %d: number of staffing seats still open. */
                 'detail' => sprintf(_n('%d staffing seat is still open.', '%d staffing seats are still open.', (int) $staffing['open_headcount_total'], 'vms'), (int) $staffing['open_headcount_total']),
                 'action_label' => __('Open Event Plan', 'vms'),
                 'action_url' => (string) ($header['edit_url'] ?? ''),
@@ -1425,6 +1486,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
             $alerts[] = array(
                 'severity' => 'yellow',
                 'title' => __('Staffing conflict detected', 'vms'),
+                /* translators: %d: number of staffing assignment conflicts. */
                 'detail' => sprintf(_n('%d assignment conflict is flagged in staffing.', '%d assignment conflicts are flagged in staffing.', (int) $staffing['conflict_count'], 'vms'), (int) $staffing['conflict_count']),
                 'action_label' => __('Open Event Plan', 'vms'),
                 'action_url' => (string) ($header['edit_url'] ?? ''),
@@ -1516,6 +1578,7 @@ if (!function_exists('vms_event_command_center_get_health')) {
             return array(
                 'status' => 'critical',
                 'label' => __('Critical', 'vms'),
+                /* translators: %d: number of critical alert items. */
                 'summary' => sprintf(_n('%d critical item needs attention now.', '%d critical items need attention now.', $red, 'vms'), $red),
             );
         }
@@ -1524,6 +1587,7 @@ if (!function_exists('vms_event_command_center_get_health')) {
             return array(
                 'status' => 'at-risk',
                 'label' => __('At Risk', 'vms'),
+                /* translators: %d: number of warning-level review items. */
                 'summary' => sprintf(_n('%d review item is stacking up.', '%d review items are stacking up.', $yellow, 'vms'), $yellow),
             );
         }
@@ -1532,6 +1596,7 @@ if (!function_exists('vms_event_command_center_get_health')) {
             return array(
                 'status' => 'needs-review',
                 'label' => __('Needs Review', 'vms'),
+                /* translators: %d: number of items that should be reviewed. */
                 'summary' => sprintf(_n('%d item should be reviewed.', '%d items should be reviewed.', $yellow, 'vms'), $yellow),
             );
         }
@@ -1576,8 +1641,10 @@ if (!function_exists('vms_event_command_center_get_timeline_rows')) {
             $role = sanitize_key((string) ($entry['role'] ?? 'supporting'));
             $detail = $role === 'primary' ? __('Primary lineup slot', 'vms') : __('Supporting lineup slot', 'vms');
             if ($start !== '' && $end !== '') {
+                /* translators: 1: lineup start time, 2: lineup end time. */
                 $detail = sprintf(__('Runs %1$s–%2$s', 'vms'), $start, $end);
             } elseif ($end !== '') {
+                /* translators: %s: lineup end time. */
                 $detail = sprintf(__('Scheduled through %s', 'vms'), $end);
             }
 
@@ -1605,7 +1672,12 @@ if (!function_exists('vms_event_command_center_get_timeline_rows')) {
                     return 99999;
                 }
                 $ts = strtotime($value);
-                return $ts === false ? 99998 : (int) date('Hi', $ts);
+                if ($ts === false) {
+                    return 99998;
+                }
+
+                $dt = (new DateTimeImmutable('@' . $ts))->setTimezone(wp_timezone());
+                return (int) $dt->format('Hi');
             };
             return $normalize($left_time) <=> $normalize($right_time);
         });
@@ -1713,14 +1785,13 @@ if (!function_exists('vms_event_command_center_render_picker')) {
         echo '<label class="screen-reader-text" for="vms-cc-plan-id">' . esc_html__('Event Plan', 'vms') . '</label>';
         echo '<select id="vms-cc-plan-id" name="plan_id">';
         foreach ($ids as $plan_id) {
-            $selected = selected($current_plan_id, $plan_id, false);
             $date = (string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date', true);
             $title = (string) get_the_title($plan_id);
             $label = $title;
             if ($date !== '') {
                 $label .= ' — ' . $date;
             }
-            echo '<option value="' . esc_attr((string) $plan_id) . '" ' . $selected . '>' . esc_html($label) . '</option>';
+            echo '<option value="' . esc_attr((string) $plan_id) . '"' . ((int) $current_plan_id === (int) $plan_id ? ' selected="selected"' : '') . '>' . esc_html($label) . '</option>';
         }
         echo '</select>';
         echo '<button type="submit" class="button button-primary">' . esc_html__('Open Command Center', 'vms') . '</button>';
@@ -1764,6 +1835,7 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
         $activity = (array) $payload['activity'];
 
         $status_chip = vms_event_command_center_render_chip((string) ($header['status_label'] ?? __('Unknown', 'vms')), (string) ($header['status_tone'] ?? 'muted'));
+        /* translators: %s: current command center health label. */
         $health_chip = vms_event_command_center_render_chip(sprintf(__('Health: %s', 'vms'), (string) ($health['label'] ?? __('Needs Review', 'vms'))), vms_event_command_center_health_tone((string) ($health['status'] ?? 'needs-review')));
         $highlight_chips = vms_event_command_center_get_highlight_chips($alerts);
 
@@ -1783,7 +1855,7 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
         echo '<span>•</span>';
         echo '<span>' . esc_html((string) ($header['days_until_label'] ?? '')) . '</span>';
         echo '</div>';
-        echo '<div class="vms-cc-overview__chips">' . $status_chip . $health_chip . implode('', $highlight_chips) . '</div>';
+        echo '<div class="vms-cc-overview__chips">' . wp_kses($status_chip . $health_chip . implode('', $highlight_chips), vms_event_command_center_allowed_markup()) . '</div>';
         echo '</div>';
         echo '<div class="vms-cc-overview__actions">';
         if (!empty($header['edit_url'])) {
@@ -1808,7 +1880,7 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
 
         echo '<section class="vms-cc-card vms-cc-card--weather-top">';
         echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Weather / Venue Conditions', 'vms') . '</h3></div>';
-        echo '<div class="vms-cc-overview__chips">' . vms_event_command_center_render_chip((string) ($weather['label'] ?? __('Unavailable', 'vms')), !empty($weather['active']) ? 'good' : 'warning') . '</div>';
+        echo '<div class="vms-cc-overview__chips">' . wp_kses(vms_event_command_center_render_chip((string) ($weather['label'] ?? __('Unavailable', 'vms')), !empty($weather['active']) ? 'good' : 'warning'), vms_event_command_center_allowed_markup()) . '</div>';
         echo '<p class="vms-cc-card__note">' . esc_html((string) ($weather['summary'] ?? '')) . '</p>';
         if (!empty($weather['active']) && !empty($weather['url'])) {
             echo '<div class="vms-cc-inline-actions"><a class="button button-small" href="' . esc_url((string) $weather['url']) . '">' . esc_html__('Open Weather Workspace', 'vms') . '</a></div>';
@@ -1817,7 +1889,7 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
 
         echo '<section class="vms-cc-card">';
         echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Show Health', 'vms') . '</h3></div>';
-        echo '<div class="vms-cc-health__headline">' . $health_chip . '</div>';
+        echo '<div class="vms-cc-health__headline">' . wp_kses($health_chip, vms_event_command_center_allowed_markup()) . '</div>';
         echo '<p class="vms-cc-health__summary">' . esc_html((string) ($health['summary'] ?? '')) . '</p>';
         echo '<div class="vms-cc-metrics">';
         vms_event_command_center_render_metric(__('Action items', 'vms'), (string) count($actions));
@@ -1833,17 +1905,20 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
         vms_event_command_center_render_metric(__('Paid tickets', 'vms'), (string) ($ticket['sold'] ?? 0));
         vms_event_command_center_render_metric(__('Gross sales', 'vms'), vms_event_command_center_money((int) ($ticket['revenue_cents'] ?? 0)));
         vms_event_command_center_render_metric(__('Guest list / comps', 'vms'), (string) ($ticket['comp_count'] ?? 0));
+        /* translators: %d: ticket capacity count. */
         vms_event_command_center_render_metric(__('Remaining', 'vms'), $ticket['remaining'] !== null ? (string) $ticket['remaining'] : '—', $ticket['capacity'] !== null ? sprintf(__('of %d', 'vms'), (int) $ticket['capacity']) : '');
         echo '</div>';
         if ($ticket['sell_through'] !== null) {
             $sell_through = (float) $ticket['sell_through'];
             echo '<div class="vms-cc-progress">';
             echo '<progress class="vms-cc-progress__bar" max="100" value="' . esc_attr((string) round($sell_through, 1)) . '"></progress>';
+            /* translators: %s: sell-through percentage value. */
             echo '<div class="vms-cc-progress__label">' . esc_html(sprintf(__('Sell-through: %s%%', 'vms'), number_format_i18n($sell_through, 1))) . '</div>';
             echo '</div>';
         }
         $total_count = isset($ticket['total_ticket_count']) ? max(0, (int) $ticket['total_ticket_count']) : ((int) ($ticket['sold'] ?? 0) + (int) ($ticket['comp_count'] ?? 0));
         if ((int) ($ticket['comp_count'] ?? 0) > 0 || $total_count > (int) ($ticket['sold'] ?? 0)) {
+            /* translators: 1: total admitted or ticketed count, 2: paid count, 3: complimentary or free count. */
             echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Total admitted/ticketed: %1$d (%2$d paid + %3$d comp/free).', 'vms'), $total_count, (int) ($ticket['sold'] ?? 0), (int) ($ticket['comp_count'] ?? 0))) . '</p>';
         }
         if (!empty($ticket['issue_summary'])) {
@@ -1905,15 +1980,15 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
         echo '<ul class="vms-cc-participant-list">';
         if (!empty($lineup['primary'])) {
             $primary = (array) $lineup['primary'];
-            echo '<li><strong>' . esc_html((string) ($primary['display_name'] ?? $primary['vendor_title'] ?? __('Primary vendor', 'vms'))) . '</strong><span>' . esc_html__('Primary', 'vms') . '</span>' . vms_event_command_center_render_chip(__('Booked', 'vms'), 'good') . '</li>';
+            echo '<li><strong>' . esc_html((string) ($primary['display_name'] ?? $primary['vendor_title'] ?? __('Primary vendor', 'vms'))) . '</strong><span>' . esc_html__('Primary', 'vms') . '</span>' . wp_kses(vms_event_command_center_render_chip(__('Booked', 'vms'), 'good'), vms_event_command_center_allowed_markup()) . '</li>';
         } else {
-            echo '<li><strong>' . esc_html__('Primary vendor', 'vms') . '</strong><span>' . esc_html__('Missing', 'vms') . '</span>' . vms_event_command_center_render_chip(__('Missing', 'vms'), 'critical') . '</li>';
+            echo '<li><strong>' . esc_html__('Primary vendor', 'vms') . '</strong><span>' . esc_html__('Missing', 'vms') . '</span>' . wp_kses(vms_event_command_center_render_chip(__('Missing', 'vms'), 'critical'), vms_event_command_center_allowed_markup()) . '</li>';
         }
         foreach ((array) ($lineup['supporting'] ?? array()) as $entry) {
             if (!is_array($entry)) {
                 continue;
             }
-            echo '<li><strong>' . esc_html((string) ($entry['display_name'] ?? $entry['vendor_title'] ?? __('Supporting act', 'vms'))) . '</strong><span>' . esc_html__('Supporting', 'vms') . '</span>' . vms_event_command_center_render_chip(__('Booked', 'vms'), 'good') . '</li>';
+            echo '<li><strong>' . esc_html((string) ($entry['display_name'] ?? $entry['vendor_title'] ?? __('Supporting act', 'vms'))) . '</strong><span>' . esc_html__('Supporting', 'vms') . '</span>' . wp_kses(vms_event_command_center_render_chip(__('Booked', 'vms'), 'good'), vms_event_command_center_allowed_markup()) . '</li>';
         }
         echo '</ul>';
         echo '</div>';
@@ -1928,7 +2003,7 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
                 if (!is_array($row)) {
                     continue;
                 }
-                echo '<li><strong>' . esc_html((string) ($row['display_name'] ?? __('Secondary vendor', 'vms'))) . '</strong><span>' . esc_html((string) ($row['role_label'] ?? '')) . '</span>' . vms_event_command_center_render_chip((string) ($row['status_label'] ?? __('Booked', 'vms')), (string) ($row['status_tone'] ?? 'good')) . '</li>';
+                echo '<li><strong>' . esc_html((string) ($row['display_name'] ?? __('Secondary vendor', 'vms'))) . '</strong><span>' . esc_html((string) ($row['role_label'] ?? '')) . '</span>' . wp_kses(vms_event_command_center_render_chip((string) ($row['status_label'] ?? __('Booked', 'vms')), (string) ($row['status_tone'] ?? 'good')), vms_event_command_center_allowed_markup()) . '</li>';
             }
             echo '</ul>';
         }
@@ -1947,7 +2022,8 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
                 $needed = max(0, (int) ($role['needed'] ?? 0));
                 $filled = max(0, (int) ($role['filled'] ?? 0));
                 $tone = ($filled >= $needed && $needed > 0) ? 'good' : (($filled > 0) ? 'warning' : 'critical');
-                echo '<li><strong>' . esc_html((string) ($role['role_name'] ?? __('Role', 'vms'))) . '</strong><span>' . esc_html(sprintf(__('%1$d of %2$d filled', 'vms'), $filled, $needed)) . '</span>' . vms_event_command_center_render_chip(sprintf('%1$d/%2$d', $filled, $needed), $tone) . '</li>';
+                /* translators: 1: filled staffing count, 2: required staffing count. */
+                echo '<li><strong>' . esc_html((string) ($role['role_name'] ?? __('Role', 'vms'))) . '</strong><span>' . esc_html(sprintf(__('%1$d of %2$d filled', 'vms'), $filled, $needed)) . '</span>' . wp_kses(vms_event_command_center_render_chip(sprintf('%1$d/%2$d', $filled, $needed), $tone), vms_event_command_center_allowed_markup()) . '</li>';
             }
             echo '</ul>';
         }
@@ -1986,10 +2062,12 @@ if (!function_exists('vms_event_command_center_render_page_content')) {
         echo '</div>';
         if (!empty($marketing['promo_submission_pending'])) {
             $submitted_note = !empty($marketing['promo_submission_uploaded_label'])
+                /* translators: %s: formatted vendor promo submission timestamp label. */
                 ? sprintf(__('Vendor clip submitted %s and still waiting for review.', 'vms'), (string) ($marketing['promo_submission_uploaded_label'] ?? ''))
                 : __('A vendor clip is waiting for review before it goes live.', 'vms');
             echo '<p class="vms-cc-card__note">' . esc_html($submitted_note) . '</p>';
         } elseif (!empty($marketing['promo_video_uploaded_label'])) {
+            /* translators: %s: formatted promo video update timestamp label. */
             echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Promo video update: %s', 'vms'), (string) $marketing['promo_video_uploaded_label'])) . '</p>';
         } elseif (!empty($marketing['meta_ads_registered'])) {
             echo '<p class="vms-cc-card__note">' . esc_html__('Event-level ad campaign status is not wired into this card yet, but the ads workspace is available.', 'vms') . '</p>';
@@ -2350,6 +2428,7 @@ if (!function_exists('vms_event_command_center_ticket_summary_snapshot')) {
         $stats_age_label = '';
         if ($computed_at_gmt > 0) {
             $stats_age_label = sprintf(
+                /* translators: %s: human-readable age since the cached ticket summary refresh. */
                 __('Refreshed %s ago', 'vms'),
                 human_time_diff($computed_at_gmt, time())
             );
@@ -2563,7 +2642,7 @@ if (!function_exists('vms_event_command_center_module_hub_card')) {
         echo '<section class="vms-ep-module-card">';
         echo '<div class="vms-ep-module-card__header">';
         echo '<h4>' . esc_html($title) . '</h4>';
-        echo vms_event_command_center_render_chip($status, $tone);
+        echo wp_kses(vms_event_command_center_render_chip($status, $tone), vms_event_command_center_allowed_markup());
         echo '</div>';
 
         if (!empty($summary)) {
@@ -2674,7 +2753,9 @@ if (!function_exists('vms_event_command_center_build_module_hub_cards')) {
                 'tone' => $core_tone,
                 'summary' => array(
                     (string) ($header['date_label'] ?? __('Date not set', 'vms')) . ' • ' . (string) ($header['time_label'] ?? __('Time not set', 'vms')),
+                    /* translators: %s: venue label for the event. */
                     sprintf(__('Venue: %s', 'vms'), (string) ($header['venue_label'] ?? __('Unassigned venue', 'vms'))),
+                    /* translators: %s: formatted last-updated label for the event plan. */
                     sprintf(__('Last updated: %s', 'vms'), (string) ($header['modified_label'] ?? __('Unknown', 'vms'))),
                 ),
                 'warning' => $core_warning,
@@ -2686,9 +2767,13 @@ if (!function_exists('vms_event_command_center_build_module_hub_cards')) {
                 'status' => (string) ($ticket['status_label'] ?? __('Unknown', 'vms')),
                 'tone' => $ticket_tone,
                 'summary' => array(
+                    /* translators: %d: number of configured tickets. */
                     sprintf(__('Configured tickets: %d', 'vms'), $ticket_configured_count),
+                    /* translators: %d: number of configured add-ons. */
                     sprintf(__('Configured add-ons: %d', 'vms'), $ticket_add_on_count),
+                    /* translators: %s: linked calendar status label. */
                     sprintf(__('Linked calendar status: %s', 'vms'), $ticket_linked_status_label),
+                    /* translators: 1: paid ticket count, 2: formatted gross sales amount. */
                     sprintf(__('Cached sales: %1$d paid / %2$s', 'vms'), (int) ($ticket['sold'] ?? 0), vms_event_command_center_money((int) ($ticket['revenue_cents'] ?? 0))),
                     $ticket_stats_age_label,
                 ),
@@ -2703,10 +2788,14 @@ if (!function_exists('vms_event_command_center_build_module_hub_cards')) {
                 'status' => empty($lineup['primary']) ? __('Missing primary', 'vms') : __('Assigned', 'vms'),
                 'tone' => $lineup_tone,
                 'summary' => array(
+                    /* translators: %s: primary lineup participant label. */
                     !empty($lineup['primary']) ? sprintf(__('Primary: %s', 'vms'), (string) (($lineup['primary']['display_name'] ?? $lineup['primary']['vendor_title'] ?? __('Assigned', 'vms')))) : __('Primary: missing', 'vms'),
+                    /* translators: %d: number of supporting lineup entries. */
                     sprintf(__('Supporting: %d', 'vms'), $supporting_count),
+                    /* translators: %d: number of secondary vendors. */
                     sprintf(__('Secondary vendors: %d', 'vms'), $secondary_count),
                 ),
+                /* translators: %d: number of lineup warnings. */
                 'warning' => $lineup_warnings > 0 ? sprintf(_n('%d lineup warning needs review.', '%d lineup warnings need review.', $lineup_warnings, 'vms'), $lineup_warnings) : '',
                 'action_label' => __('Edit Lineup', 'vms'),
                 'action_url' => vms_event_command_center_edit_fragment_url($plan_id, 'vms-lineup-schedule-section'),
@@ -2716,10 +2805,14 @@ if (!function_exists('vms_event_command_center_build_module_hub_cards')) {
                 'status' => (string) ($staffing['readiness_label'] ?? __('N/A', 'vms')),
                 'tone' => $staff_tone,
                 'summary' => array(
+                    /* translators: 1: filled staffing count, 2: required staffing count. */
                     sprintf(__('Coverage: %1$d/%2$d filled', 'vms'), (int) ($staffing['headcount_filled_total'] ?? 0), (int) ($staffing['headcount_needed_total'] ?? 0)),
+                    /* translators: %d: number of open staffing roles. */
                     sprintf(__('Open roles: %d', 'vms'), $staff_open),
+                    /* translators: %d: number of staffing conflicts. */
                     sprintf(__('Conflicts: %d', 'vms'), $staff_conflicts),
                 ),
+                /* translators: %d: number of staffing slots still open. */
                 'warning' => $staff_open > 0 ? sprintf(_n('%d staffing slot remains open.', '%d staffing slots remain open.', $staff_open, 'vms'), $staff_open) : '',
                 'action_label' => __('Manage Staffing', 'vms'),
                 'action_url' => vms_event_command_center_edit_fragment_url($plan_id, 'vms-ep-staff-headcount-summary'),
@@ -2729,8 +2822,11 @@ if (!function_exists('vms_event_command_center_build_module_hub_cards')) {
                 'status' => ((int) ($financial['vendor_cost_cents'] ?? 0) > 0) ? __('Comp loaded', 'vms') : __('Needs review', 'vms'),
                 'tone' => ((int) ($financial['vendor_cost_cents'] ?? 0) > 0) ? 'good' : 'warning',
                 'summary' => array(
+                    /* translators: %s: formatted vendor pay amount. */
                     sprintf(__('Vendor pay: %s', 'vms'), vms_event_command_center_money((int) ($financial['vendor_cost_cents'] ?? 0))),
+                    /* translators: %s: formatted labor amount. */
                     sprintf(__('Labor: %s', 'vms'), vms_event_command_center_money((int) ($financial['labor_cost_cents'] ?? 0))),
+                    /* translators: %s: formatted projected margin amount. */
                     sprintf(__('Projected margin: %s', 'vms'), vms_event_command_center_money_signed((int) ($financial['margin_cents'] ?? 0))),
                 ),
                 'warning' => '',
@@ -2742,8 +2838,11 @@ if (!function_exists('vms_event_command_center_build_module_hub_cards')) {
                 'status' => (string) ($marketing['meta_ads_label'] ?? __('Marketing', 'vms')),
                 'tone' => !empty($marketing['event_page_public']) ? 'good' : 'warning',
                 'summary' => array(
+                    /* translators: %s: public event page status label. */
                     sprintf(__('Event page: %s', 'vms'), (string) ($marketing['event_page_label'] ?? __('Unknown', 'vms'))),
+                    /* translators: %s: social-sharing status label. */
                     sprintf(__('Social: %s', 'vms'), (string) ($marketing['social_label'] ?? __('Unknown', 'vms'))),
+                    /* translators: %s: promo video status label. */
                     sprintf(__('Promo video: %s', 'vms'), (string) ($marketing['promo_video_label'] ?? __('Unknown', 'vms'))),
                 ),
                 'warning' => !empty($marketing['promo_submission_pending']) ? __('A vendor promo clip is waiting for review.', 'vms') : '',
@@ -2782,7 +2881,8 @@ if (!function_exists('vms_event_command_center_render_event_plan_module_hub_meta
         echo '<p>' . esc_html__('At-a-glance module summaries stay visible here while each heavy workspace can be managed without turning every Event Plan update into a full rebuild.', 'vms') . '</p>';
         echo '</div>';
         echo '<div class="vms-ep-module-hub__intro-actions">';
-        echo vms_event_command_center_render_chip(sprintf(__('Health: %s', 'vms'), (string) ($health['label'] ?? __('Needs Review', 'vms'))), vms_event_command_center_health_tone((string) ($health['status'] ?? 'needs-review')));
+        /* translators: %s: current command center health label. */
+        echo wp_kses(vms_event_command_center_render_chip(sprintf(__('Health: %s', 'vms'), (string) ($health['label'] ?? __('Needs Review', 'vms'))), vms_event_command_center_health_tone((string) ($health['status'] ?? 'needs-review'))), vms_event_command_center_allowed_markup());
         echo '<a class="button" href="' . esc_url(vms_event_command_center_admin_url(array('plan_id' => $plan_id))) . '">' . esc_html__('Open Full Command Center', 'vms') . '</a>';
         if (!empty($header['public_event_url'])) {
             echo '<a class="button" href="' . esc_url((string) $header['public_event_url']) . '" target="_blank" rel="noopener">' . esc_html__('View Public Event', 'vms') . '</a>';
@@ -2794,7 +2894,7 @@ if (!function_exists('vms_event_command_center_render_event_plan_module_hub_meta
         }
         echo '<div class="vms-ep-module-hub__grid">';
         foreach ($cards as $card) {
-            echo vms_event_command_center_module_hub_card((array) $card);
+            echo wp_kses(vms_event_command_center_module_hub_card((array) $card), vms_event_command_center_allowed_markup());
         }
         echo '</div>';
         echo '</div>';
@@ -2879,7 +2979,7 @@ add_filter('vms_admin_ui_shell_pages', 'vms_event_command_center_add_shell_page'
 if (!function_exists('vms_event_command_center_enqueue_assets')) {
     function vms_event_command_center_enqueue_assets(): void
     {
-        $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+        $page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
         $is_event_plan_editor = $screen
             && in_array((string) ($screen->base ?? ''), array('post', 'post-new'), true)
@@ -2919,7 +3019,7 @@ if (!function_exists('vms_event_command_center_submitbox_link')) {
             return;
         }
 
-        $post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+        $post_id = isset($_GET['post']) ? absint(wp_unslash($_GET['post'])) : 0;
         if ($post_id <= 0) {
             return;
         }
