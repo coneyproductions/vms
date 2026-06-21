@@ -6,8 +6,8 @@ Date: 2026-06-21
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
-- Scan target for current counts: extracted packaged directory from `dist/wporg-04w/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
-- Current artifact SHA-256: `e77856b986a347babea86fb1b4c381e2714d6d31674d2eb72c1193016d324902`
+- Scan target for current counts: extracted packaged directory from `dist/wporg-04x/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
+- Current artifact SHA-256: `b3eaf4abe3129cc1bf9f8185d3db27d545b7afea06d3248236d100d116fbf004`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -39,48 +39,50 @@ Date: 2026-06-21
 | `WPORG-04U` packaged RC, final | extracted packaged directory outside local site tree | `3170` | `945` | `2225` | Cleared the safe staff-list-columns render/i18n hotspot batch in `includes/admin/staff-list-columns.php`; the rerun preserved the pre-existing `plugin_header_nonexistent_domain_path` warning outside the selected file scope without introducing any new Plugin Check code categories. |
 | `WPORG-04V` packaged RC, final | extracted packaged directory outside local site tree | `3163` | `938` | `2225` | Cleared the medium-risk approvals-review-queue render/i18n hotspot batch in `includes/admin/approvals-review-queue.php`; the rerun preserved the pre-existing `plugin_header_nonexistent_domain_path` warning outside the selected file scope without introducing any new Plugin Check code categories. |
 | `WPORG-04W` packaged RC, final | extracted packaged directory outside local site tree | `3158` | `933` | `2225` | Cleared the admin UI dashboard render/i18n hotspot batch in `includes/admin/menu.php`; the rerun preserved the pre-existing `plugin_header_nonexistent_domain_path` warning outside the selected file scope without introducing any new Plugin Check code categories. |
+| `WPORG-04X` packaged RC, final | extracted packaged directory outside local site tree | `3150` | `925` | `2225` | Cleared the vendor alert translator-comment hotspot batch in `includes/core/vendor-document-alerts.php`; the rerun preserved the pre-existing `plugin_header_nonexistent_domain_path` and `load_plugin_textdomainFound` warnings outside the selected file scope without introducing any new Plugin Check code categories. |
 
 Net reduction from the `WPORG-02` source-tree baseline to the current packaged RC:
 
-- `-1409` total findings
-- `-713` errors
+- `-1417` total findings
+- `-721` errors
 - `-696` warnings
 
-Net reduction from `WPORG-04V`:
+Net reduction from `WPORG-04W`:
 
-- `-5` total findings
-- `-5` errors
+- `-8` total findings
+- `-8` errors
 - `0` warnings
 
 ## Fixed In This Pass
 
-- 04W candidate scan summary
-  - `includes/admin/menu.php` - `8` total / `5` errors / `3` warnings - dominant `EscapeOutput` (`4`) plus `MissingTranslatorsComment` (`1`) - isolated to dashboard filter attr rendering, checkbox attr output, guided-tour helper HTML, and one settings-link translator comment - risk `medium` - selected
+- 04X candidate scan summary
+  - `includes/core/vendor-document-alerts.php` - `8` total / `8` errors / `0` warnings - dominant `MissingTranslatorsComment` (`8`) - isolated to vendor fallback text plus notification subject/body payload strings, so the cleanup is runtime no-op comment-only i18n work - risk `medium` - selected
   - `includes/admin-ui/shell.php` - `4` total / `4` errors / `0` warnings - dominant `EscapeOutput` (`4`) - isolated shared admin-shell output, but every fix would define shared HTML policy for callback-provided fragments across multiple screens - risk `medium` - skipped
-  - `includes/public/calendar-ics.php` - `8` total / `5` errors / `3` warnings - dominant `MissingTranslatorsComment` (`4`) plus `EscapeOutput` (`1`) - mixed with read-only request parsing and raw ICS response output - risk `medium` - skipped
-  - `includes/helpers.php` - `15` total / `6` errors / `9` warnings - dominant `date()` (`3`), `MissingTranslatorsComment` (`2`), and `EscapeOutput` (`1`) - findings are mixed through shared helper/date utilities, query helpers, and dashboard form output - risk `high` - skipped
-  - `includes/core/vendor-document-alerts.php` - `8` total / `8` errors / `0` warnings - dominant `MissingTranslatorsComment` (`8`) - isolated i18n only, but notification-behavior-adjacent - risk `high` - skipped
-  - `includes/modules/staff-tasks/notifications.php` - `5` total / `5` errors / `0` warnings - dominant `date()` (`5`) - technically isolated, but directly in notification scheduling logic - risk `high` - skipped
-- `includes/admin/menu.php`
-  - `8` findings -> `3`
-  - `5` errors -> `0`
-  - `3` warnings -> `3`
-  - cleared the file's translator-comment and final-output escaping errors while leaving the existing debug logging warning and nonce warnings untouched
+  - `includes/admin/settings/class-vms-settings-notifications.php` - `2` total / `2` errors / `0` warnings - dominant `MissingTranslatorsComment` (`2`) - isolated admin settings placeholder strings - risk `low` - skipped because the vendor-alert file offered higher isolated yield
+  - `includes/admin/cancelled-event-cost-review.php` - `3` total / `3` errors / `0` warnings - dominant `MissingTranslatorsComment` (`3`) - isolated admin metabox placeholder strings - risk `low` - skipped because the vendor-alert file offered higher isolated yield
+  - `includes/public/event-details.php` - `2` total / `2` errors / `0` warnings - dominant `MissingTranslatorsComment` (`2`) - isolated public-facing placeholder strings - risk `medium` - skipped because this batch stayed on admin/ops-adjacent strings first
+  - `includes/modules/email-followups/templates.php` - `3` total / `3` errors / `0` warnings - dominant `MissingTranslatorsComment` (`3`) - isolated template-copy placeholder strings, but directly in follow-up notification templates - risk `medium` - skipped
+  - `includes/admin/staff-certifications.php` - `1` total / `1` errors / `0` warnings - dominant `MissingTranslatorsComment` (`1`) - isolated admin count string - risk `low` - skipped because the vendor-alert file offered higher isolated yield
+- `includes/core/vendor-document-alerts.php`
+  - `8` findings -> `0`
+  - `8` errors -> `0`
+  - `0` warnings -> `0`
+  - cleared the file's translator-comment errors by adding `translators:` comments only to the existing vendor fallback label plus the notification subject/body payload lines
 - Focused validation for this batch
-  - no focused menu/dashboard regression exists in `tests/`
-  - `php -l includes/admin/menu.php` passed
+  - no focused vendor-alert regression exists in `tests/`
+  - `php -l includes/core/vendor-document-alerts.php` passed
   - `git diff --check` passed
   - validation stayed on PHP lint, whitespace safety, public-release build, package integrity, and a rerun of packaged Plugin Check against an extracted packaged directory outside the local site tree
-  - Plugin Check stdout and stderr both carried the known WP-CLI phar deprecation line; the cleaned raw findings stayed in `docs/plugin-check-1.0.0-raw.txt`, and the deprecation noise was mirrored in `test-results/wporg-04w-plugin-check.stderr.txt`
+  - Plugin Check stdout and stderr both carried the known WP-CLI phar deprecation line; the cleaned raw findings stayed in `docs/plugin-check-1.0.0-raw.txt`, and the deprecation noise was mirrored in `test-results/wporg-04x-plugin-check.stderr.txt`
 
 Code-level deltas visible in the packaged scan:
 
-- `WordPress.WP.I18n.MissingTranslatorsComment`: `564` -> `563`
-- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `165` -> `161`
-- `includes/admin/menu.php`: `8` -> `3`
-- observed rerun-only steady state outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `563` -> `555`
+- `I18n placeholder comments and ordering`: `579` -> `571`
+- `includes/core/vendor-document-alerts.php`: `8` -> `0`
+- observed rerun-only root-file steady state outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
 
-No previously unseen Plugin Check codes appeared in this pass, and the prior domain-path warning remained unchanged outside the selected file scope.
+No previously unseen Plugin Check codes appeared in this pass, and the standing root-file warnings remained unchanged outside the selected file scope.
 
 ## Current Category Triage
 
@@ -89,15 +91,15 @@ No previously unseen Plugin Check codes appeared in this pass, and the prior dom
 | Nonce and input handling | `1198` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | This pass stayed deliberately outside portal mutation and Event Plans save logic. The remaining high-density nonce/input work is still concentrated in `save_event_plan_meta()` and adjacent high-risk portal and integration flows. |
 | Database and SQL safety | `1101` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Prioritize `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL findings before generic direct-query/no-caching warnings. |
 | Escaping and output safety | `161` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | The highest-yield remaining escape work is now concentrated in the Staff Portal, shared admin shell boundaries, and other render paths rather than the cleared dashboard menu slice. |
-| I18n placeholder comments and ordering | `579` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Continue adding `translators:` comments and ordered placeholders after the remaining blocker categories are materially reduced. |
+| I18n placeholder comments and ordering | `571` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Continue adding `translators:` comments and ordered placeholders after the remaining blocker categories are materially reduced. |
 | Date/time API usage | `27` | `includes/modules/staff-tasks/notifications.php`, `includes/helpers.php`, `includes/ticketing/ticket-integrity-monitor.php` | SHOULD FIX BEFORE SUBMISSION | Review each remaining `date()` use. Convert display-only paths to explicit timezone-safe helpers and leave local-time-sensitive cases for deliberate follow-up review. |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` | SHOULD FIX BEFORE SUBMISSION | Remove or hard-gate residual development logging that is still reachable in packaged code. |
 
 ## Event Plans Conclusions
 
 - The Event Plans file remains the highest-density packaged file at `241` findings.
-- No Event Plans runtime findings were changed in `WPORG-04W`.
-- The selected `menu.php` pass stayed completely outside Event Plans runtime and mutation logic.
+- No Event Plans runtime findings were changed in `WPORG-04X`.
+- The selected `vendor-document-alerts.php` pass stayed completely outside Event Plans runtime and mutation logic.
 - The low-risk admin-only list/helper surface is effectively exhausted.
 - Remaining Event Plans findings are dominated by:
   - `save_event_plan_meta()` and adjacent request/save logic
@@ -106,8 +108,8 @@ No previously unseen Plugin Check codes appeared in this pass, and the prior dom
 
 ## Recommended Next Task
 
-- `WPORG-04X`
+- `WPORG-04Y`
 - Scope:
-  - repeat the deliberate hotspot scan from the `WPORG-04W` packaged baseline and prefer another isolated admin-only render or final-escaping slice before widening into request, auth, refund, ticketing, or availability-save flows
-  - `includes/admin-ui/shell.php` is the next logical render candidate only if a clearly local shared HTML allowlist can be defined without changing callback semantics; otherwise prefer the metadata micro-batch for `plugin_header_nonexistent_domain_path`
-  - keep avoiding notification/date logic, shared helpers, and raw ICS output unless a later pass can prove they are display-only
+  - repeat the deliberate hotspot scan from the `WPORG-04X` packaged baseline and prefer another isolated translator-comment or final-output slice before widening into request, auth, refund, ticketing, or availability-save flows
+  - `includes/admin/settings/class-vms-settings-notifications.php` and `includes/admin/cancelled-event-cost-review.php` are the next low-risk i18n-only admin candidates; reach for `includes/admin-ui/shell.php` only if a clearly local shared HTML allowlist can be defined without changing callback semantics
+  - keep avoiding notification/date logic beyond comment-only changes, shared helpers, and raw ICS output unless a later pass can prove they are display-only

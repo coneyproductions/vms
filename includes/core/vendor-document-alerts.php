@@ -195,6 +195,7 @@ if (!function_exists('vms_vendor_submission_build_notification_payload')) {
         $context = sanitize_key($context);
         $vendor_name = get_the_title($vendor_id);
         if ($vendor_name === '') {
+            /* translators: %d: Vendor post ID. */
             $vendor_name = sprintf(__('Vendor #%d', 'vms'), $vendor_id);
         }
 
@@ -289,21 +290,28 @@ if (!function_exists('vms_vendor_submission_dispatch_alert')) {
         }
 
         $site_name = wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES);
+        /* translators: 1: Site name. 2: Vendor name. */
         $subject = sprintf(__('[%1$s] Vendor document submitted: %2$s', 'vms'), $site_name !== '' ? $site_name : 'VMS', (string) $payload['vendor_name']);
 
         $lines = array(
             __('A vendor submitted a document in VMS.', 'vms'),
             '',
+            /* translators: %s: Vendor name. */
             sprintf(__('Vendor: %s', 'vms'), (string) $payload['vendor_name']),
+            /* translators: %s: Submission context label. */
             sprintf(__('Submission: %s', 'vms'), (string) $payload['context_label']),
         );
         if (!empty($payload['event_title'])) {
+            /* translators: %s: Event title. */
             $lines[] = sprintf(__('Event: %s', 'vms'), (string) $payload['event_title']);
         }
+        /* translators: %s: User display name or fallback label. */
         $lines[] = sprintf(__('Submitted by: %s', 'vms'), (string) $payload['submitted_by_label']);
+        /* translators: %s: Localized submission timestamp. */
         $lines[] = sprintf(__('Submitted: %s', 'vms'), (string) $payload['submitted_at']);
         $lines[] = '';
         $lines[] = __('The vendor is already flagged as Needs review in the Vendors list.', 'vms');
+        /* translators: %s: Vendor edit admin URL. */
         $lines[] = sprintf(__('Review: %s', 'vms'), (string) $payload['vendor_edit_url']);
         $body_text = implode("\n", $lines);
         $body_html = '';

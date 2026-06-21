@@ -250,17 +250,6 @@ line	column	type	code	message	docs
 950	77	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;vms_event_credit_nonce&#039;]
 1043	138	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
 
-FILE: includes/core/vendor-document-alerts.php
-line	column	type	code	message	docs
-198	36	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-292	28	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-297	21	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-298	21	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-301	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-303	28	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-304	28	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-307	28	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-
 FILE: includes/core/vendor-application-confirmation.php
 line	column	type	code	message	docs
 176	22	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
@@ -2814,7 +2803,7 @@ line	column	type	code	message	docs
 218	77	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 250	101	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
 
-FILE: includes/safety/private-files.php
+FILE: includes/safety-files.php
 line	column	type	code	message	docs
 113	16	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
 113	16	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
