@@ -170,8 +170,10 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
             $rejected = (int) ($counts['rejected'] ?? 0);
 
             if ($pending > 0) {
+                /* translators: %d: number of staff certifications pending verification. */
                 echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(vms_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'vms'), $pending)) . '</a>';
             } elseif ($approved > 0) {
+                /* translators: %d: number of approved staff certifications. */
                 echo '<span class="vms-badge vms-badge-ok">' . esc_html(sprintf(_n('%d Approved', '%d Approved', $approved, 'vms'), $approved)) . '</span>';
             } else {
                 echo '—';
@@ -179,9 +181,11 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
 
             $meta_bits = array();
             if ($expired > 0) {
+                /* translators: %d: number of expired staff certifications. */
                 $meta_bits[] = sprintf(_n('%d expired', '%d expired', $expired, 'vms'), $expired);
             }
             if ($rejected > 0) {
+                /* translators: %d: number of rejected staff certifications. */
                 $meta_bits[] = sprintf(_n('%d rejected', '%d rejected', $rejected, 'vms'), $rejected);
             }
             if (!empty($meta_bits)) {
@@ -209,7 +213,17 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
                 $lines[] = '<a href="tel:' . esc_attr($phone) . '">' . esc_html($phone) . '</a>';
             }
 
-            echo !empty($lines) ? implode('<br>', $lines) : '—';
+            if (!empty($lines)) {
+                echo wp_kses(implode('<br>', $lines), array(
+                    'a' => array(
+                        'href' => true,
+                    ),
+                    'br' => array(),
+                    'strong' => array(),
+                ));
+            } else {
+                echo '—';
+            }
             break;
         }
 
