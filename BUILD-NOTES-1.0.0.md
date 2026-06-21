@@ -4,7 +4,7 @@ Date: 2026-06-20
 
 ## Purpose
 
-Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, and the staffing admin Plugin Check batch from `WPORG-04I`.
+Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, the staffing admin Plugin Check batch from `WPORG-04I`, and the Staff Portal Plugin Check batch from `WPORG-04J`.
 
 ## Files Changed
 
@@ -20,6 +20,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - `includes/admin/event-command-center.php`
 - `includes/admin/vendor-command-center.php`
 - `includes/admin/vendor-availability.php`
+- `includes/portal/staff-portal.php`
 - `includes/admin/budget-calculator.php`
 - `includes/cpt/event-plans.php`
 - `includes/admin/goals-forecast.php`
@@ -66,7 +67,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - safe admin-only request normalization in `due-dates.php` and `holidays.php`, plus shared bootstrap adoption in the remaining isolated Event Plans regressions, in `WPORG-04E`,
   - safe admin-only render-surface cleanup in `vendor-command-center.php` and `vendor-availability.php`, plus shared bootstrap adoption in the two remaining packaged-validation regressions that still hardcoded `wp-load.php`, in `WPORG-04G`,
   - safe admin-only render/request/i18n cleanup in `event-command-center.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04H`,
-  - safe admin-only escaping/request/i18n cleanup plus one behavior-preserving rollup count query preparation in `staffing.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04I`.
+  - safe admin-only escaping/request/i18n cleanup plus one behavior-preserving rollup count query preparation in `staffing.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04I`,
+  - safe Staff Portal final-output escaping, `translators:` comments, read-only tab normalization, and read-only reporting-query preparation in `staff-portal.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04J`.
 - Functional code paths, database schemas, uninstall behavior, and add-on behavior were not intentionally changed beyond those narrow release-safety and request-safety adjustments.
 - The plugin header version and `VMS_VERSION` constant remain public `1.0.0`.
 
@@ -112,10 +114,14 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - PASS
 - `php -l includes/admin/staffing.php`
   - PASS
+- `php -l includes/portal/staff-portal.php`
+  - PASS
 - `php -l includes/admin/vendor-command-center.php`
   - PASS
 - `php -l includes/admin/vendor-availability.php`
   - PASS
+- focused Staff Portal regression
+  - no dedicated test exists in `tests/`
 - focused Event Command Center regression
   - no dedicated test exists in `tests/`
 - focused staffing admin regression
@@ -174,6 +180,9 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - current rebuilt RC after `WPORG-04I`
   - PASS: `dist/wporg-04i/vms-1.0.0-public-release.zip`
   - SHA-256: `aceda39376ec454c49106a1a41ec88a96ec5ff49acfb97ae730308c93120aaa8`
+- current rebuilt RC after `WPORG-04J`
+  - PASS: `dist/wporg-04j/vms-1.0.0-public-release.zip`
+  - SHA-256: `06905c9a2c62788056adf9d99857dce37df82e4f7f87a6e7fbb57df5c0d498c5`
 - package integrity
   - PASS
 - official readme validator after metadata application
@@ -190,6 +199,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - packaged final run after `WPORG-04G`: `3554` findings
   - packaged final run after `WPORG-04H`: `3491` findings
   - packaged final run after `WPORG-04I`: `3435` findings
+  - packaged final run after `WPORG-04J`: `3408` findings
   - fixed category earlier in the release-prep sequence: `missing_direct_file_access_protection` reduced from `12` to `0`
   - `WPORG-04A` batch delta: `-80` total findings (`-1` errors / `-79` warnings)
   - `WPORG-04B` batch delta: `-113` total findings (`-12` errors / `-101` warnings)
@@ -198,6 +208,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - `WPORG-04G` batch delta: `-51` total findings (`-50` errors / `-1` warnings)
   - `WPORG-04H` batch delta: `-63` total findings (`-63` errors / `0` warnings)
   - `WPORG-04I` batch delta: `-56` total findings (`-24` errors / `-32` warnings)
+  - `WPORG-04J` batch delta: `-27` total findings (`-21` errors / `-6` warnings)
 
 ## Minimum Version Decision
 

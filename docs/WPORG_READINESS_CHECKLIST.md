@@ -1,12 +1,12 @@
 # WordPress.org Readiness Checklist
 
 Date: 2026-06-20
-Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` blocker cleanup, `WPORG-04A` first packaged blocker-density pass, `WPORG-04B` budget-calculator plus limited Event Plans micro-slice, `WPORG-04D` Event Plans blocker audit plus one protected micro-slice, `WPORG-04E` safe non-Event-Plans request-normalization plus Event Plans bootstrap follow-up, `WPORG-04G` safe error-heavy admin render cleanup outside Event Plans, `WPORG-04H` safe Event Command Center Plugin Check cleanup, and `WPORG-04I` staffing admin Plugin Check cleanup.
+Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` blocker cleanup, `WPORG-04A` first packaged blocker-density pass, `WPORG-04B` budget-calculator plus limited Event Plans micro-slice, `WPORG-04D` Event Plans blocker audit plus one protected micro-slice, `WPORG-04E` safe non-Event-Plans request-normalization plus Event Plans bootstrap follow-up, `WPORG-04G` safe error-heavy admin render cleanup outside Event Plans, `WPORG-04H` safe Event Command Center Plugin Check cleanup, `WPORG-04I` staffing admin Plugin Check cleanup, and `WPORG-04J` Staff Portal Plugin Check cleanup.
 
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD: `523327340dc8e079217cdbaf75c67361d20e3912` (`5233273`)
+- HEAD: `cd85dbfb13999a19ef3bfa89cc8a2ac9607fe6d0` (`cd85dbf`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
 - Proven baseline artifact before this release-candidate push: `0.2.24.747`
 - Current public RC markers: `1.0.0`
@@ -39,9 +39,10 @@ Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` b
 - [x] Safe error-heavy admin render batch applied in `includes/admin/vendor-command-center.php` and `includes/admin/vendor-availability.php`.
 - [x] Safe Event Command Center render/i18n/date batch applied in `includes/admin/event-command-center.php`.
 - [x] Safe staffing admin render/request/i18n/rollup-count batch applied in `includes/admin/staffing.php`.
+- [x] Safe Staff Portal render/i18n/read-only-query batch applied in `includes/portal/staff-portal.php`.
 - [x] Seven remaining Event Plans regression scripts now pass from the nested repo workspace.
 - [x] Two focused packaged-validation regressions now use the shared WordPress bootstrap resolver.
-- [x] Current RC built: `dist/wporg-04i/vms-1.0.0-public-release.zip`
+- [x] Current RC built: `dist/wporg-04j/vms-1.0.0-public-release.zip`
 - [x] Compliance report updated: `docs/WPORG_COMPLIANCE_REPORT_1.0.0.md`
 
 ## Open Blockers
@@ -80,7 +81,7 @@ Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` b
 - WordPress `6.8` and `7.0` both booted through the disposable lifecycle matrix without VMS fatals.
 - PHP `8.3.30` now has direct lint, build, and WordPress boot evidence.
 - The readme validator no longer reports missing or invalid minimum fields.
-- Plugin Check was reduced from the `4567`-finding source-tree baseline to `3435` findings on the current packaged RC.
+- Plugin Check was reduced from the `4567`-finding source-tree baseline to `3408` findings on the current packaged RC.
 - `WPORG-04A` reduced the packaged RC from `3888` findings to `3808`, with `includes/admin/goals-forecast.php` cleared fully and `includes/social-share/event-plan-panel.php` reduced to four DB-only warnings.
 - `WPORG-04B` reduced the packaged RC from `3808` findings to `3695`, with `includes/admin/budget-calculator.php` reduced from `111` findings to `2` and `includes/cpt/event-plans.php` reduced from `248` to `244` without touching Event Plan save or publish logic.
 - `WPORG-04D` reduced the packaged RC from `3695` findings to `3692`, with `includes/cpt/event-plans.php` reduced from `244` to `241` while keeping save, publish, ticketing, cancellation, vendor, staffing, TEC, and Woo mutation paths untouched.
@@ -88,6 +89,7 @@ Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` b
 - `WPORG-04G` reduced the packaged RC from `3605` findings to `3554`, with `includes/admin/vendor-command-center.php` reduced from `51` to `29` and `includes/admin/vendor-availability.php` reduced from `50` to `22` while clearing both files to `0` Plugin Check errors.
 - `WPORG-04H` reduced the packaged RC from `3554` findings to `3491`, with `includes/admin/event-command-center.php` reduced from `79` to `15` and cleared to `0` Plugin Check errors while leaving only nonce recommendations plus one slow-query warning in that file.
 - `WPORG-04I` reduced the packaged RC from `3491` findings to `3435`, with `includes/admin/staffing.php` reduced from `59` to `3` and cleared to `0` Plugin Check errors while leaving one role-meta input warning plus the direct-query/no-caching pair in that file.
+- `WPORG-04J` reduced the packaged RC from `3435` findings to `3408`, with `includes/portal/staff-portal.php` reduced from `86` to `59` while clearing its `MissingTranslatorsComment` findings and removing the read-only interpolated reporting-query findings without widening into auth, profile-save, upload, or availability-save logic.
 - The remaining Event Plans regression scripts that still hardcoded `wp-load.php` now use the shared bootstrap and pass from the nested repo workspace.
 - `tests/vendor-availability-ux.php` now passes from the nested repo workspace; `tests/add-dispatch-open-vendor-needs.php` still fails on a pre-existing visibility assertion outside the selected render-only batch.
 - The remaining submission risk is concentrated in real runtime code quality categories, not packaging metadata or repo-only files.
@@ -100,4 +102,4 @@ The current WordPress.org preparation stack is in a good handoff state when the 
 - a repo-root release builder that passes from the git-backed workspace,
 - packaged Plugin Check raw output plus triage,
 - a rebuilt `1.0.0` RC with updated reports,
-- and a narrowed blocker list for `WPORG-04J`.
+- and a narrowed blocker list for `WPORG-04K`.

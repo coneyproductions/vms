@@ -129,6 +129,51 @@ if (!function_exists('vms_staff_portal_format_ts')) {
     }
 }
 
+if (!function_exists('vms_staff_portal_safe_html')) {
+    function vms_staff_portal_safe_html(string $html): string
+    {
+        return wp_kses(
+            $html,
+            array(
+                'a' => array(
+                    'class' => true,
+                    'href' => true,
+                    'loading' => true,
+                    'rel' => true,
+                    'target' => true,
+                ),
+                'div' => array(
+                    'class' => true,
+                    'tabindex' => true,
+                ),
+                'img' => array(
+                    'alt' => true,
+                    'class' => true,
+                    'loading' => true,
+                    'src' => true,
+                ),
+                'p' => array(
+                    'class' => true,
+                ),
+                'span' => array(
+                    'aria-hidden' => true,
+                    'class' => true,
+                ),
+            )
+        );
+    }
+}
+
+if (!function_exists('vms_staff_portal_notice_html')) {
+    function vms_staff_portal_notice_html(string $type, string $message): string
+    {
+        if (function_exists('vms_portal_notice')) {
+            return vms_staff_portal_safe_html(vms_portal_notice($type, $message));
+        }
+
+        return '<p>' . esc_html($message) . '</p>';
+    }
+}
 
 if (!function_exists('vms_staff_portal_certification_status_badge')) {
     function vms_staff_portal_certification_status_badge(string $status): string
@@ -157,22 +202,16 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             return '';
         }
         if (empty($_POST['vms_staff_certification_nonce']) || !wp_verify_nonce((string) wp_unslash($_POST['vms_staff_certification_nonce']), 'vms_staff_certification_submit')) {
-            return function_exists('vms_portal_notice')
-                ? vms_portal_notice('error', __('Could not verify the certification upload. Please refresh and try again.', 'vms'))
-                : '<p>' . esc_html__('Could not verify the certification upload. Please refresh and try again.', 'vms') . '</p>';
+            return vms_staff_portal_notice_html('error', __('Could not verify the certification upload. Please refresh and try again.', 'vms'));
         }
 
         $name = isset($_POST['vms_certification_name']) ? vms_staffing_normalize_qualification_name((string) wp_unslash($_POST['vms_certification_name'])) : '';
         if ($name === '') {
-            return function_exists('vms_portal_notice')
-                ? vms_portal_notice('error', __('Please choose or enter the certification type before uploading.', 'vms'))
-                : '<p>' . esc_html__('Please choose or enter the certification type before uploading.', 'vms') . '</p>';
+            return vms_staff_portal_notice_html('error', __('Please choose or enter the certification type before uploading.', 'vms'));
         }
 
         if (empty($_FILES['vms_staff_certification_file']['name'])) {
-            return function_exists('vms_portal_notice')
-                ? vms_portal_notice('error', __('Please choose a certificate file to upload.', 'vms'))
-                : '<p>' . esc_html__('Please choose a certificate file to upload.', 'vms') . '</p>';
+            return vms_staff_portal_notice_html('error', __('Please choose a certificate file to upload.', 'vms'));
         }
 
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -181,9 +220,8 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
 
         $attachment_id = media_handle_upload('vms_staff_certification_file', $staff_id);
         if (is_wp_error($attachment_id)) {
-            return function_exists('vms_portal_notice')
-                ? vms_portal_notice('error', sprintf(__('Upload failed: %s', 'vms'), $attachment_id->get_error_message()))
-                : '<p>' . esc_html(sprintf(__('Upload failed: %s', 'vms'), $attachment_id->get_error_message())) . '</p>';
+            /* translators: %s: upload error message from WordPress media handling. */
+            return vms_staff_portal_notice_html('error', sprintf(__('Upload failed: %s', 'vms'), $attachment_id->get_error_message()));
         }
 
         $authority = isset($_POST['vms_certification_authority']) ? sanitize_text_field((string) wp_unslash($_POST['vms_certification_authority'])) : '';
@@ -206,14 +244,10 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             : array('ok' => false, 'message' => __('Certification upload saved, but the qualification workflow is unavailable.', 'vms'));
 
         if (empty($result['ok'])) {
-            return function_exists('vms_portal_notice')
-                ? vms_portal_notice('error', (string) ($result['message'] ?? __('Could not save the certification submission.', 'vms')))
-                : '<p>' . esc_html((string) ($result['message'] ?? __('Could not save the certification submission.', 'vms'))) . '</p>';
+            return vms_staff_portal_notice_html('error', (string) ($result['message'] ?? __('Could not save the certification submission.', 'vms')));
         }
 
-        return function_exists('vms_portal_notice')
-            ? vms_portal_notice('success', __('Certificate uploaded. It is pending review, and you will receive an email when it is approved or if it needs correction.', 'vms'))
-            : '<p>' . esc_html__('Certificate uploaded. It is pending review, and you will receive an email when it is approved or if it needs correction.', 'vms') . '</p>';
+        return vms_staff_portal_notice_html('success', __('Certificate uploaded. It is pending review, and you will receive an email when it is approved or if it needs correction.', 'vms'));
     }
 }
 
@@ -227,7 +261,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             return;
         }
 
-        echo vms_staff_portal_handle_certification_submission($staff_id);
+        echo vms_staff_portal_safe_html(vms_staff_portal_handle_certification_submission($staff_id));
 
         $rows = function_exists('vms_staffing_get_staff_qualifications')
             ? (array) vms_staffing_get_staff_qualifications($staff_id)
@@ -290,25 +324,31 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
 
             echo '<div class="vms-staff-certification-row">';
             echo '<div class="vms-staff-certification-main">';
-            echo '<strong>' . esc_html($name) . '</strong> ' . vms_staff_portal_certification_status_badge($status);
+            echo '<strong>' . esc_html($name) . '</strong> ' . vms_staff_portal_safe_html(vms_staff_portal_certification_status_badge($status));
             echo '<p class="vms-muted">';
             $details = array();
             if ($authority !== '') {
+                /* translators: %s: certification issuing organization. */
                 $details[] = sprintf(__('Issued by %s', 'vms'), $authority);
             }
             if ($credential_number !== '') {
+                /* translators: %s: certification or license number. */
                 $details[] = sprintf(__('Credential #%s', 'vms'), $credential_number);
             }
             if ($issue_date !== '') {
+                /* translators: %s: certification issue date. */
                 $details[] = sprintf(__('Issued %s', 'vms'), $issue_date);
             }
             if ($expiration_date !== '') {
+                /* translators: %s: certification expiration date. */
                 $details[] = sprintf(__('Expires %s', 'vms'), $expiration_date);
             }
             if ($submitted_at > 0) {
+                /* translators: %s: localized certification submission timestamp. */
                 $details[] = sprintf(__('Submitted %s', 'vms'), vms_staff_portal_format_ts($submitted_at));
             }
             if ($reviewed_at > 0) {
+                /* translators: %s: localized certification review timestamp. */
                 $details[] = sprintf(__('Reviewed %s', 'vms'), vms_staff_portal_format_ts($reviewed_at));
             }
             echo esc_html(!empty($details) ? implode(' · ', $details) : __('Details pending review.', 'vms'));
@@ -696,14 +736,16 @@ if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
         }
 
         $sql = $wpdb->prepare(
-            "SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
+            'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
                     s.slot_id, s.role_id, s.display_label_override, s.shift_start_local, s.shift_end_local
-             FROM {$t_assignments} a
-             INNER JOIN {$t_slots} s ON s.slot_id = a.slot_id
+             FROM %i a
+             INNER JOIN %i s ON s.slot_id = a.slot_id
              WHERE s.event_plan_id = %d
-               AND s.status = 'active'
-               AND a.status IN ('proposed','confirmed')
-             ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.slot_id ASC, a.assignment_id ASC",
+               AND s.status = \'active\'
+               AND a.status IN (\'proposed\',\'confirmed\')
+             ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.slot_id ASC, a.assignment_id ASC',
+            $t_assignments,
+            $t_slots,
             $plan_id
         );
 
@@ -728,6 +770,7 @@ if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
 
             $name = trim((string) get_the_title($staff_id));
             if ($name === '') {
+                /* translators: %d: staff post ID. */
                 $name = sprintf(__('Staff #%d', 'vms'), $staff_id);
             }
 
@@ -996,7 +1039,11 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
             $image_url = trim((string) ($event['image_url'] ?? ''));
             $ticket_summary = ($ticket_qty === null)
                 ? __('Tickets sold: —', 'vms')
-                : sprintf(__('Tickets sold: %d', 'vms'), (int) $ticket_qty);
+                : sprintf(
+                    /* translators: %d: total tickets sold for the event. */
+                    __('Tickets sold: %d', 'vms'),
+                    (int) $ticket_qty
+                );
             $event_status = sanitize_key((string) ($group['event_status'] ?? ($primary_assignment['event_status'] ?? '')));
             $event_status_label = function_exists('vms_event_plan_status_label')
                 ? (string) vms_event_plan_status_label($event_status)
@@ -1039,6 +1086,7 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
                 $body_meta[] = $venue_name;
             }
             if ($event_status_label !== '') {
+                /* translators: %s: event status label. */
                 $body_meta[] = sprintf(__('Status: %s', 'vms'), $event_status_label);
             }
             if (!empty($body_meta)) {
@@ -1153,17 +1201,19 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
         }
 
         $sql = $wpdb->prepare(
-            "SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
+            'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
                     s.slot_id, s.event_plan_id, s.role_id, s.display_label_override, s.shift_time_mode,
                     s.shift_start_local, s.shift_end_local, s.start_anchor_key, s.start_offset_minutes,
                     s.end_anchor_key, s.end_offset_minutes, s.duration_minutes, s.notes AS slot_notes
-             FROM {$t_assignments} a
-             INNER JOIN {$t_slots} s ON s.slot_id = a.slot_id
+             FROM %i a
+             INNER JOIN %i s ON s.slot_id = a.slot_id
              WHERE a.staff_id = %d
-               AND a.status IN ('proposed','confirmed')
-               AND s.status = 'active'
+               AND a.status IN (\'proposed\',\'confirmed\')
+               AND s.status = \'active\'
              ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.event_plan_id ASC, s.slot_id ASC
-             LIMIT %d",
+             LIMIT %d',
+            $t_assignments,
+            $t_slots,
             $staff_id,
             $limit
         );
@@ -1702,7 +1752,11 @@ function vms_staff_portal_shortcode()
     $tax_tab_label = ($worker_type === 'employee') ? __('Employee Packet', 'vms') : __('Tax Profile', 'vms');
     $url_tax_tab   = add_query_arg('tab', $tax_tab_slug, $base_url);
 
-    $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'dashboard';
+    $tab = filter_input(INPUT_GET, 'tab', FILTER_UNSAFE_RAW);
+    $tab = is_string($tab) ? sanitize_key($tab) : 'dashboard';
+    if (!in_array($tab, array('dashboard', 'tax-profile', 'employee-packet', 'certifications', 'availability'), true)) {
+        $tab = 'dashboard';
+    }
 
     ob_start();
 
@@ -1833,7 +1887,7 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
         echo '<div>';
         echo '<div class="vms-portal-card">';
         echo '<h3>' . esc_html($tax_tab_label) . '</h3>';
-        echo '<p class="vms-tax-profile-status">' . vms_staff_portal_badge_html($tax_stage) . '</p>';
+        echo '<p class="vms-tax-profile-status">' . vms_staff_portal_safe_html(vms_staff_portal_badge_html($tax_stage)) . '</p>';
         echo '<div class="vms-dash-kpis">';
         echo '<div class="vms-dash-kpi"><b>' . esc_html__('Workflow', 'vms') . '</b><span>' . esc_html($tax_provider_label) . '</span></div>';
         if ($worker_type !== 'employee' && !empty($tax_status['attested_at']) && empty($tax_status['is_complete'])) {
@@ -1898,9 +1952,7 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_employee_packet_ack'])) {
         if (empty($_POST['vms_employee_packet_nonce']) || !wp_verify_nonce($_POST['vms_employee_packet_nonce'], 'vms_employee_packet_ack')) {
-            echo function_exists('vms_portal_notice')
-                ? vms_portal_notice('error', __('Security check failed.', 'vms'))
-                : '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
+            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
         } else {
             $now = time();
             $ack_w4 = isset($_POST['vms_ack_w4']) ? 1 : 0;
@@ -1913,9 +1965,7 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
 
             update_post_meta($staff_id, '_vms_employee_packet_attested_at', $now);
 
-            echo function_exists('vms_portal_notice')
-                ? vms_portal_notice('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'vms'))
-                : '<p>' . esc_html__('Thanks! Your submission was recorded.', 'vms') . '</p>';
+            echo vms_staff_portal_notice_html('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'vms'));
         }
     }
 
@@ -1979,9 +2029,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_staff_tax_save'])) {
         if (empty($_POST['vms_staff_tax_nonce']) || !wp_verify_nonce($_POST['vms_staff_tax_nonce'], 'vms_staff_tax_save')) {
-            echo function_exists('vms_portal_notice')
-                ? vms_portal_notice('error', __('Security check failed.', 'vms'))
-                : '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
+            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
         } else {
             $t = static function ($key) {
                 return isset($_POST[$key]) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
@@ -2014,15 +2062,11 @@ function vms_staff_portal_render_tax_profile($staff_id)
                     $allowed = array('application/pdf', 'image/jpeg', 'image/png', 'image/webp');
                     $type = isset($_FILES['vms_w9_upload']['type']) ? (string) $_FILES['vms_w9_upload']['type'] : '';
                     if ($type && !in_array($type, $allowed, true)) {
-                        echo function_exists('vms_portal_notice')
-                            ? vms_portal_notice('error', __('Upload must be a PDF or image (JPG/PNG/WEBP).', 'vms'))
-                            : '<p>' . esc_html__('Upload must be a PDF or image.', 'vms') . '</p>';
+                        echo vms_staff_portal_notice_html('error', __('Upload must be a PDF or image (JPG/PNG/WEBP).', 'vms'));
                     } else {
                         $attach_id = media_handle_upload('vms_w9_upload', 0);
                         if (is_wp_error($attach_id)) {
-                            echo function_exists('vms_portal_notice')
-                                ? vms_portal_notice('error', __('W-9 upload failed: ', 'vms') . $attach_id->get_error_message())
-                                : '<p>' . esc_html__('W-9 upload failed.', 'vms') . '</p>';
+                            echo vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'vms') . $attach_id->get_error_message());
                         } else {
                             update_post_meta($staff_id, '_vms_w9_upload_id', (int) $attach_id);
                             update_post_meta($staff_id, '_vms_w9_received_date', wp_date('Y-m-d', time(), wp_timezone()));
@@ -2053,9 +2097,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
                 }
             }
 
-            echo function_exists('vms_portal_notice')
-                ? vms_portal_notice('success', __('Tax Profile saved.', 'vms'))
-                : '<p>' . esc_html__('Tax Profile saved.', 'vms') . '</p>';
+            echo vms_staff_portal_notice_html('success', __('Tax Profile saved.', 'vms'));
         }
     }
 
@@ -2096,7 +2138,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
 
     echo '<div class="vms-portal-card">';
     echo '<h3 class="vms-mt-0">' . esc_html__('Tax Profile', 'vms') . '</h3>';
-    echo '<p class="vms-tax-profile-status">' . vms_staff_portal_badge_html((string) ($tax_status['stage'] ?? 'incomplete')) . '</p>';
+    echo '<p class="vms-tax-profile-status">' . vms_staff_portal_safe_html(vms_staff_portal_badge_html((string) ($tax_status['stage'] ?? 'incomplete'))) . '</p>';
     echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'vms') . '</strong> ' . esc_html($provider_label) . '</div>';
     if ($provider !== 'upload') {
         echo '<p class="vms-muted vms-mt-10">' . esc_html__('Complete your W-9/tax step through the secure off-site workflow, then return here to confirm you completed it. The venue will review and mark it complete after verification.', 'vms') . '</p>';
@@ -2267,9 +2309,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['vms_save_staff_ics_settings'])) {
             if (empty($_POST['vms_staff_ics_nonce']) || !wp_verify_nonce($_POST['vms_staff_ics_nonce'], 'vms_staff_ics_settings')) {
-                echo function_exists('vms_portal_notice')
-                    ? vms_portal_notice('error', __('Security check failed.', 'vms'))
-                    : '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
             } else {
                 $new_url = isset($_POST['vms_staff_ics_url']) ? esc_url_raw(trim((string) $_POST['vms_staff_ics_url'])) : '';
                 $new_autosync = !empty($_POST['vms_staff_ics_autosync']) ? 1 : 0;
@@ -2283,28 +2323,20 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 if ($ics_url !== '' && $ics_autosync) {
                     $ics_meta .= ' | ' . __('Auto-sync on', 'vms');
                 }
-                echo function_exists('vms_portal_notice')
-                    ? vms_portal_notice('success', __('Calendar settings saved.', 'vms'))
-                    : '<p>' . esc_html__('Calendar settings saved.', 'vms') . '</p>';
+                echo vms_staff_portal_notice_html('success', __('Calendar settings saved.', 'vms'));
             }
         }
 
         if (isset($_POST['vms_sync_staff_ics_now'])) {
             if (empty($_POST['vms_staff_ics_nonce']) || !wp_verify_nonce($_POST['vms_staff_ics_nonce'], 'vms_staff_ics_settings')) {
-                echo function_exists('vms_portal_notice')
-                    ? vms_portal_notice('error', __('Security check failed.', 'vms'))
-                    : '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
             } else {
                 update_post_meta($staff_id, '_vms_availability_preferred_method', 'ics');
                 $preferred = 'ics';
                 if ($ics_url === '') {
-                    echo function_exists('vms_portal_notice')
-                        ? vms_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'vms'))
-                        : '<p>' . esc_html__('Please paste your calendar feed (ICS) URL first.', 'vms') . '</p>';
+                    echo vms_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'vms'));
                 } elseif (!function_exists('vms_vendor_ics_sync_now')) {
-                    echo function_exists('vms_portal_notice')
-                        ? vms_portal_notice('error', __('ICS sync module is not loaded.', 'vms'))
-                        : '<p>' . esc_html__('ICS sync module is not loaded.', 'vms') . '</p>';
+                    echo vms_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'vms'));
                 } else {
                     $result = (array) vms_vendor_ics_sync_now($staff_id, $active_dates);
                     if (!empty($result['ok'])) {
@@ -2317,14 +2349,11 @@ function vms_staff_portal_render_availability_manual($staff_id)
                         }
                         $ics_meta .= ' | ' . wp_date('M j', $ics_last, wp_timezone());
                         $count = count($ics_unavailable);
-                        echo function_exists('vms_portal_notice')
-                            ? vms_portal_notice('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count))
-                            : '<p>' . esc_html(sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count)) . '</p>';
+                        /* translators: %d: number of unavailable dates imported from the ICS feed. */
+                        echo vms_staff_portal_notice_html('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count));
                     } else {
                         $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'vms');
-                        echo function_exists('vms_portal_notice')
-                            ? vms_portal_notice('error', $msg)
-                            : '<p>' . esc_html($msg) . '</p>';
+                        echo vms_staff_portal_notice_html('error', $msg);
                     }
                 }
             }
@@ -2332,9 +2361,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
         if (isset($_POST['vms_save_staff_pattern'])) {
             if (empty($_POST['vms_staff_pattern_nonce']) || !wp_verify_nonce($_POST['vms_staff_pattern_nonce'], 'vms_staff_pattern_settings')) {
-                echo function_exists('vms_portal_notice')
-                    ? vms_portal_notice('error', __('Security check failed.', 'vms'))
-                    : '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
             } else {
                 $days = array();
                 if (isset($_POST['vms_staff_pattern_days']) && is_array($_POST['vms_staff_pattern_days'])) {
@@ -2370,9 +2397,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                     }
                     $pattern_meta = __('Enabled', 'vms') . ' | ' . implode(', ', $picked);
                 }
-                echo function_exists('vms_portal_notice')
-                    ? vms_portal_notice('success', __('Pattern availability saved.', 'vms'))
-                    : '<p>' . esc_html__('Pattern availability saved.', 'vms') . '</p>';
+                echo vms_staff_portal_notice_html('success', __('Pattern availability saved.', 'vms'));
             }
         }
 
@@ -2382,9 +2407,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
         if ($has_manual_submission) {
             if (empty($_POST['vms_staff_avail_nonce']) || !wp_verify_nonce($_POST['vms_staff_avail_nonce'], 'vms_staff_save_availability')) {
-                echo function_exists('vms_portal_notice')
-                    ? vms_portal_notice('error', __('Security check failed.', 'vms'))
-                    : '<p>' . esc_html__('Security check failed.', 'vms') . '</p>';
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
             } else {
                 $incoming = isset($_POST['vms_availability']) && is_array($_POST['vms_availability']) ? $_POST['vms_availability'] : array();
                 $clean = array();
@@ -2404,9 +2427,8 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 $manual = vms_staff_portal_normalize_manual_availability($staff_id);
                 $preferred = 'manual';
 
-                echo function_exists('vms_portal_notice')
-                    ? vms_portal_notice('success', sprintf(__('Availability saved. %d manual date(s) active.', 'vms'), count($manual)))
-                    : '<p>' . esc_html(sprintf(__('Availability saved. %d manual date(s) active.', 'vms'), count($manual))) . '</p>';
+                /* translators: %d: number of manual availability dates saved. */
+                echo vms_staff_portal_notice_html('success', sprintf(__('Availability saved. %d manual date(s) active.', 'vms'), count($manual)));
             }
         }
     }
@@ -2445,8 +2467,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
     echo '<div class="vms-av-wrap" id="vms-av" data-today-ym="' . esc_attr(wp_date('Y-m')) . '">';
 
-    $ics_open = ($preferred === 'ics') ? ' open' : '';
-    echo '<details class="vms-av-method" data-method="ics"' . $ics_open . '>';
+    echo '<details class="vms-av-method" data-method="ics"' . ($preferred === 'ics' ? ' open' : '') . '>';
     echo '<summary>';
     echo '<span>' . esc_html__('Calendar Sync (ICS)', 'vms') . '</span>';
     echo '<span class="vms-av-summarymeta" data-summarymeta="ics">' . esc_html($ics_meta) . '</span>';
@@ -2471,14 +2492,14 @@ function vms_staff_portal_render_availability_manual($staff_id)
         echo '<div class="vms-av-muted vms-mt-8">' . esc_html__('Last sync:', 'vms') . ' ' . esc_html(wp_date('M j, Y g:ia', $ics_last, wp_timezone())) . '</div>';
     }
     if (!empty($ics_unavailable)) {
+        /* translators: %d: number of dates currently blocked by the connected ICS feed. */
         echo '<div class="vms-av-muted vms-mt-8">' . esc_html(sprintf(_n('%d date currently blocked by ICS.', '%d dates currently blocked by ICS.', count($ics_unavailable), 'vms'), count($ics_unavailable))) . '</div>';
     }
     echo '</div>';
     echo '</form>';
     echo '</div></details>';
 
-    $pattern_open = ($preferred === 'pattern') ? ' open' : '';
-    echo '<details class="vms-av-method" data-method="pattern"' . $pattern_open . '>';
+    echo '<details class="vms-av-method" data-method="pattern"' . ($preferred === 'pattern' ? ' open' : '') . '>';
     echo '<summary>';
     echo '<span>' . esc_html__('Pattern Availability', 'vms') . '</span>';
     echo '<span class="vms-av-summarymeta" data-summarymeta="pattern">' . esc_html($pattern_meta) . '</span>';
@@ -2517,8 +2538,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
     echo '</form>';
     echo '</div></details>';
 
-    $manual_open = ($preferred === 'manual') ? ' open' : '';
-    echo '<details class="vms-av-method" data-method="manual"' . $manual_open . '>';
+    echo '<details class="vms-av-method" data-method="manual"' . ($preferred === 'manual' ? ' open' : '') . '>';
     echo '<summary>';
     echo '<span>' . esc_html__('Manual Availability', 'vms') . '</span>';
     echo '<span class="vms-av-summarymeta" data-summarymeta="manual"></span>';
@@ -2533,9 +2553,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
     echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-conflict"></span>' . esc_html__('Conflict', 'vms') . '</span>';
     echo '</div>';
     if (!vms_staff_portal_has_availability_setup($staff_id)) {
-        echo function_exists('vms_portal_notice')
-            ? vms_portal_notice('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'vms'))
-            : '<p>' . esc_html__('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'vms') . '</p>';
+        echo vms_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'vms'));
     }
     echo '<form method="post" class="vms-staff-av-form">';
     wp_nonce_field('vms_staff_save_availability', 'vms_staff_avail_nonce');
@@ -2738,7 +2756,7 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
                         echo '<span class="vms-av-chip">' . esc_html($status_label) . '</span>';
                     }
                     if ($assignment_markup !== '') {
-                        echo $assignment_markup;
+                        echo vms_staff_portal_safe_html($assignment_markup);
                     }
                     echo '</div>';
                 }
