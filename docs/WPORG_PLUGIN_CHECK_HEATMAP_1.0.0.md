@@ -4,60 +4,59 @@ Date: 2026-06-20
 
 ## Scope
 
-- Scan target: temporary packaged plugin slug extracted from `dist/wporg-04l/vms-1.0.0-public-release.zip`
-- Artifact SHA-256: `2814fe4b4867cfb67a03cef47c135dacf785963e0e46cf47af5282a40c80d03b`
+- Scan target: temporary packaged plugin slug extracted from `dist/wporg-04m/vms-1.0.0-public-release.zip`
+- Artifact SHA-256: `08bbe1f22254facca50dfabb096ed06b45b06126efe1111d872ac5c3202ca1e3`
 - Raw output: `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp plugin check vms --mode=new --format=json`
 
 ## Current Result
 
-- `3290` total findings
-- `1061` errors
+- `3278` total findings
+- `1049` errors
 - `2229` warnings
 
-Comparison to the prior packaged RC from `WPORG-04K`:
+Comparison to the prior packaged RC from `WPORG-04L`:
 
-- `3319` -> `3290` total (`-29`)
-- `1078` -> `1061` errors (`-17`)
-- `2241` -> `2229` warnings (`-12`)
+- `3290` -> `3278` total (`-12`)
+- `1061` -> `1049` errors (`-12`)
+- `2229` -> `2229` warnings (`0`)
 
-## WPORG-04L Batch
+## WPORG-04M Batch
 
-- `includes/public/venue-calendar-shortcode.php`
-  - `29` -> `0`
-  - `17` -> `0` errors
-  - `12` -> `0` warnings
-  - selected because the heatmap still nominated it as the safest remaining public render hotspot outside portal mutation paths and Event Plans runtime
-  - wrapped returned markup at final output boundaries with direct `wp_kses()` calls using a narrow allowlist
-  - replaced raw media wrapper concatenation with direct escaped `<a>` / `<div>` output branches
-  - normalized read-only `ym`, `venue_id`, `venue`, `view`, `show_past`, and user-agent reads through helper sanitizers using `wp_unslash()` plus narrow sanitization
+- `includes/public/vendor-profiles.php`
+  - `14` -> `2`
+  - `12` -> `0` errors
+  - `2` -> `2` warnings
+  - selected because it was the highest-value remaining safe public render/i18n file already nominated in the 04L heatmap handoff and could be reduced to near-zero without query logic changes
+  - added the missing `translators:` comments for the profile teaser and promo-video placeholder strings
+  - wrapped inline social SVG output with a narrow local allowlist
+  - wrapped the public promo-video player fragments with a narrow final-output allowlist while leaving the existing read-only upcoming-event query unchanged
 - focused validation
-  - no focused public calendar regression exists in `tests/`
+  - no focused vendor profiles regression exists in `tests/`
   - the packaged rerun used a temporary extracted plugin slug under the local WordPress install, leaving the installed `vms/` copy untouched
 
 Files touched:
 
-- `includes/public/venue-calendar-shortcode.php`
+- `includes/public/vendor-profiles.php`
 
 Findings intentionally deferred:
 
 - all remaining high-risk Event Plans runtime request/save hardening
 - all publish validation, vendor assignment, staffing mutation, and live refund request flows
 - all TEC publish/resync and ticket cleanup paths
-- all portal/profile-save, upload, availability-save, and link-request input hardening outside this public render/read-only-filter batch
-- all broad SQL follow-up and the `includes/public/vendor-profiles.php` slow-query warnings
+- all portal/profile-save, upload, availability-save, and link-request input hardening outside this public render/i18n batch
+- the file's two existing slow-query warnings and all broader SQL follow-up
 
 Risk notes:
 
-- selected runtime file is a front-end public calendar surface, but the chosen changes stayed on final output escaping, escaped media wrapper markup, and read-only filter parsing
+- selected runtime file is a front-end public vendor profile surface, but the chosen changes stayed on placeholder comments and final output escaping of existing markup fragments
 - Event Plans runtime logic and other mutation-heavy flows were intentionally untouched
 
 Net effect of the selected batch:
 
-- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `208` -> `191` (`-17`)
-- `WordPress.Security.NonceVerification.Recommended`: `607` -> `597` (`-10`)
-- `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `258` -> `256` (`-2`)
-- packaged nonce/input grouping: `1210` -> `1198` (`-12`)
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `642` -> `634` (`-8`)
+- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `191` -> `187` (`-4`)
+- packaged i18n placeholder-comment and ordering surface: `658` -> `650` (`-8`)
 - no new Plugin Check code categories appeared
 
 ## Highest-Density Files
@@ -86,16 +85,16 @@ Net effect of the selected batch:
 | --- | ---: | --- |
 | Nonce and input handling | `1198` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` |
 | Database and SQL safety | `1107` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` |
-| Escaping and output safety | `191` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/public/vendor-profiles.php` |
-| I18n placeholder comments and ordering | `658` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` |
+| Escaping and output safety | `187` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/public/templates/vendor-profile.php` |
+| I18n placeholder comments and ordering | `650` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` |
 | Date/time API usage | `44` | `includes/admin/schedule.php`, `includes/modules/staff-tasks/notifications.php`, `includes/core/staffing.php` |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` |
 
 ## Next Recommended Batch
 
-- `WPORG-04M`
+- `WPORG-04N`
 - Scope:
-  - shift the next safe public render/i18n batch to `includes/public/vendor-profiles.php`
-  - keep the pass limited to placeholder comments and final output escaping only
-  - leave the file's two slow-query warnings untouched
+  - shift the next safe public render batch to `includes/public/templates/vendor-profile.php`
+  - keep the pass limited to final output escaping only
+  - leave broader vendor profile content behavior untouched
   - keep the pass out of Event Plans runtime, portal/profile-save flows, availability mutations, ticketing mutations, refund/cancellation flows, vendor-assignment saves, staffing mutations, and publish/TEC sync paths
