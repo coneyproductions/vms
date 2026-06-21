@@ -3261,38 +3261,6 @@ line	column	type	code	message	docs
 1209	23	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
 1224	24	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$promo_markup'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
 
-FILE: includes/public/venue-calendar-shortcode.php
-line	column	type	code	message	docs
-721	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_vendor_link'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-728	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_vendor_link'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-995	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$media_open'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-995	100	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$media_close'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-998	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_vendor_link'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1005	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_vendor_link'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1019	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$pop_media_open'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1019	104	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$pop_media_close'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1022	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_vendor_link'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1029	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_vendor_link'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1206	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_day_entries'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1293	13	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1294	41	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1316	13	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1317	57	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1319	13	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1320	57	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1357	13	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1358	67	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1358	67	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_GET[&#039;view&#039;]
-1361	85	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_SERVER[&#039;HTTP_USER_AGENT&#039;]
-1385	13	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1386	27	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1487	24	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$nav_markup'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1492	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$list_markup'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1495	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_compact_view'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1502	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_public_calendar_render_month_grid'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1503	146	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$list_markup'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1505	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$nav_markup'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-
 FILE: includes/runtime-guards.php
 line	column	type	code	message	docs
 100	4	WARNING	WordPress.PHP.DevelopmentFunctions.error_log_error_log	error_log() found. Debug code should not normally be used in production.

@@ -87,6 +87,51 @@ if (!function_exists('vms_public_calendar_nav_label')) {
 	}
 }
 
+if (!function_exists('vms_public_calendar_allowed_html')) {
+	/**
+	 * @return array<string,array<string,bool>>
+	 */
+	function vms_public_calendar_allowed_html(): array
+	{
+		return array(
+			'a' => array(
+				'class' => true,
+				'href' => true,
+				'aria-hidden' => true,
+			),
+			'article' => array(
+				'class' => true,
+			),
+			'div' => array(
+				'class' => true,
+				'aria-label' => true,
+				'style' => true,
+			),
+			'header' => array(
+				'class' => true,
+			),
+			'h3' => array(
+				'class' => true,
+			),
+			'img' => array(
+				'src' => true,
+				'alt' => true,
+				'loading' => true,
+			),
+			'p' => array(
+				'class' => true,
+			),
+			'section' => array(
+				'class' => true,
+			),
+			'span' => array(
+				'class' => true,
+				'aria-hidden' => true,
+			),
+		);
+	}
+}
+
 if (!function_exists('vms_public_calendar_render_nav')) {
 	function vms_public_calendar_render_nav(array $nav, string $base, array $month): string
 	{
@@ -106,6 +151,75 @@ if (!function_exists('vms_public_calendar_render_nav')) {
 		</div>
 		<?php
 		return (string) ob_get_clean();
+	}
+}
+
+if (!function_exists('vms_public_calendar_get_requested_month')) {
+	function vms_public_calendar_get_requested_month(): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		if (!isset($_GET['ym'])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		return sanitize_text_field(wp_unslash((string) $_GET['ym']));
+	}
+}
+
+if (!function_exists('vms_public_calendar_get_requested_venue')) {
+	function vms_public_calendar_get_requested_venue(): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		if (isset($_GET['venue_id'])) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+			return sanitize_text_field(wp_unslash((string) $_GET['venue_id']));
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		if (isset($_GET['venue'])) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+			return sanitize_text_field(wp_unslash((string) $_GET['venue']));
+		}
+
+		return '';
+	}
+}
+
+if (!function_exists('vms_public_calendar_get_requested_view')) {
+	function vms_public_calendar_get_requested_view(): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		if (!isset($_GET['view'])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		return sanitize_key(wp_unslash((string) $_GET['view']));
+	}
+}
+
+if (!function_exists('vms_public_calendar_get_requested_show_past')) {
+	function vms_public_calendar_get_requested_show_past(): ?int
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		if (!isset($_GET['show_past'])) {
+			return null;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
+		return absint(wp_unslash((string) $_GET['show_past']));
+	}
+}
+
+if (!function_exists('vms_public_calendar_get_request_user_agent')) {
+	function vms_public_calendar_get_request_user_agent(): string
+	{
+		if (!isset($_SERVER['HTTP_USER_AGENT'])) {
+			return '';
+		}
+
+		return strtolower(sanitize_text_field(wp_unslash((string) $_SERVER['HTTP_USER_AGENT'])));
 	}
 }
 
@@ -717,21 +831,21 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 				}
 			}
 
-			echo '<div class="vms-public-cal-rich-body">';
-			echo vms_public_calendar_render_vendor_link(
-				(string) ($primary['name'] ?? $title),
-				(string) ($primary['icon'] ?? ''),
-				'vms-cal-vendor-row vms-public-cal-rich-vendor is-primary',
-				$event_url
-			);
-			if (is_array($secondary)) {
-				echo vms_public_calendar_render_vendor_link(
-					(string) ($secondary['name'] ?? ''),
-					(string) ($secondary['icon'] ?? ''),
-					'vms-cal-vendor-row vms-public-cal-rich-vendor is-secondary',
+				echo '<div class="vms-public-cal-rich-body">';
+				echo wp_kses(vms_public_calendar_render_vendor_link(
+					(string) ($primary['name'] ?? $title),
+					(string) ($primary['icon'] ?? ''),
+					'vms-cal-vendor-row vms-public-cal-rich-vendor is-primary',
 					$event_url
-				);
-			}
+				), vms_public_calendar_allowed_html());
+				if (is_array($secondary)) {
+					echo wp_kses(vms_public_calendar_render_vendor_link(
+						(string) ($secondary['name'] ?? ''),
+						(string) ($secondary['icon'] ?? ''),
+						'vms-cal-vendor-row vms-public-cal-rich-vendor is-secondary',
+						$event_url
+					), vms_public_calendar_allowed_html());
+				}
 
 			if ($date_label !== '') {
 				echo '<div class="vms-public-cal-rich-date">' . esc_html($date_label) . '</div>';
@@ -988,51 +1102,55 @@ if (!function_exists('vms_public_calendar_render_day_entries')) {
 				$entry_classes[] = 'is-rescheduled';
 			}
 
-			echo '<div class="' . esc_attr(implode(' ', $entry_classes)) . '">';
-			if ($img_url !== '') {
-				$media_open = $view_url !== '' ? '<a class="vms-cal-entry-image" href="' . esc_url($view_url) . '">' : '<div class="vms-cal-entry-image">';
-				$media_close = $view_url !== '' ? '</a>' : '</div>';
-				echo $media_open . '<img src="' . esc_url($img_url) . '" alt="" loading="lazy">' . $media_close;
-			}
-			echo '<div class="vms-cal-entry-vendors">';
-			echo vms_public_calendar_render_vendor_link(
-				trim((string) ($primary_vendor['name'] ?? $title)),
-				trim((string) ($primary_vendor['icon'] ?? '')),
-				'vms-cal-vendor-row vms-cal-entry-vendor is-primary',
-				$view_url
-			);
-			if (is_array($secondary_vendor)) {
-				echo vms_public_calendar_render_vendor_link(
-					trim((string) ($secondary_vendor['name'] ?? '')),
-					trim((string) ($secondary_vendor['icon'] ?? '')),
-					'vms-cal-vendor-row vms-cal-entry-vendor is-secondary',
+				echo '<div class="' . esc_attr(implode(' ', $entry_classes)) . '">';
+				if ($img_url !== '') {
+					if ($view_url !== '') {
+						echo '<a class="vms-cal-entry-image" href="' . esc_url($view_url) . '"><img src="' . esc_url($img_url) . '" alt="" loading="lazy"></a>';
+					} else {
+						echo '<div class="vms-cal-entry-image"><img src="' . esc_url($img_url) . '" alt="" loading="lazy"></div>';
+					}
+				}
+				echo '<div class="vms-cal-entry-vendors">';
+				echo wp_kses(vms_public_calendar_render_vendor_link(
+					trim((string) ($primary_vendor['name'] ?? $title)),
+					trim((string) ($primary_vendor['icon'] ?? '')),
+					'vms-cal-vendor-row vms-cal-entry-vendor is-primary',
 					$view_url
-				);
-			}
-			echo '</div>';
+				), vms_public_calendar_allowed_html());
+				if (is_array($secondary_vendor)) {
+					echo wp_kses(vms_public_calendar_render_vendor_link(
+						trim((string) ($secondary_vendor['name'] ?? '')),
+						trim((string) ($secondary_vendor['icon'] ?? '')),
+						'vms-cal-vendor-row vms-cal-entry-vendor is-secondary',
+						$view_url
+					), vms_public_calendar_allowed_html());
+				}
+				echo '</div>';
 
-			echo '<div class="vms-cal-pop' . esc_attr($popover_align_class) . '">';
-			echo '<div class="vms-cal-pop-body">';
-			if ($img_url !== '') {
-				$pop_media_open = $view_url !== '' ? '<a class="vms-cal-pop-media" href="' . esc_url($view_url) . '">' : '<div class="vms-cal-pop-media">';
-				$pop_media_close = $view_url !== '' ? '</a>' : '</div>';
-				echo $pop_media_open . '<img src="' . esc_url($img_url) . '" alt="" loading="lazy">' . $pop_media_close;
-			}
-			echo '<div class="vms-cal-pop-vendors">';
-			echo vms_public_calendar_render_vendor_link(
-				trim((string) ($primary_vendor['name'] ?? $title)),
-				trim((string) ($primary_vendor['icon'] ?? '')),
-				'vms-cal-vendor-row vms-cal-pop-vendor is-primary',
-				$view_url
-			);
-			if (is_array($secondary_vendor)) {
-				echo vms_public_calendar_render_vendor_link(
-					trim((string) ($secondary_vendor['name'] ?? '')),
-					trim((string) ($secondary_vendor['icon'] ?? '')),
-					'vms-cal-vendor-row vms-cal-pop-vendor is-secondary',
+				echo '<div class="vms-cal-pop' . esc_attr($popover_align_class) . '">';
+				echo '<div class="vms-cal-pop-body">';
+				if ($img_url !== '') {
+					if ($view_url !== '') {
+						echo '<a class="vms-cal-pop-media" href="' . esc_url($view_url) . '"><img src="' . esc_url($img_url) . '" alt="" loading="lazy"></a>';
+					} else {
+						echo '<div class="vms-cal-pop-media"><img src="' . esc_url($img_url) . '" alt="" loading="lazy"></div>';
+					}
+				}
+				echo '<div class="vms-cal-pop-vendors">';
+				echo wp_kses(vms_public_calendar_render_vendor_link(
+					trim((string) ($primary_vendor['name'] ?? $title)),
+					trim((string) ($primary_vendor['icon'] ?? '')),
+					'vms-cal-vendor-row vms-cal-pop-vendor is-primary',
 					$view_url
-				);
-			}
+				), vms_public_calendar_allowed_html());
+				if (is_array($secondary_vendor)) {
+					echo wp_kses(vms_public_calendar_render_vendor_link(
+						trim((string) ($secondary_vendor['name'] ?? '')),
+						trim((string) ($secondary_vendor['icon'] ?? '')),
+						'vms-cal-vendor-row vms-cal-pop-vendor is-secondary',
+						$view_url
+					), vms_public_calendar_allowed_html());
+				}
 			echo '</div>';
 			if ($date_label !== '') {
 				echo '<div class="vms-cal-pop-date">' . esc_html($date_label) . '</div>';
@@ -1201,13 +1319,13 @@ if (!function_exists('vms_public_calendar_render_compact_view')) {
 					$state = isset($cell['state']) && is_array($cell['state']) ? $cell['state'] : array();
 					$cell_classes = vms_public_calendar_day_cell_classes($state, array('vms-public-cal-compact-cell'));
 					$popover_align_class = ($column_index === count($active_weekdays) - 1) ? ' is-right' : '';
-					echo '<div class="' . esc_attr(implode(' ', $cell_classes)) . '">';
-					echo '<div class="vms-cal-daynum">' . esc_html((string) ($cell['day'] ?? '')) . '</div>';
-					echo vms_public_calendar_render_day_entries(
-						isset($cell['events']) && is_array($cell['events']) ? $cell['events'] : array(),
-						$popover_align_class
-					);
-					echo '</div>';
+						echo '<div class="' . esc_attr(implode(' ', $cell_classes)) . '">';
+						echo '<div class="vms-cal-daynum">' . esc_html((string) ($cell['day'] ?? '')) . '</div>';
+						echo wp_kses(vms_public_calendar_render_day_entries(
+							isset($cell['events']) && is_array($cell['events']) ? $cell['events'] : array(),
+							$popover_align_class
+						), vms_public_calendar_allowed_html());
+						echo '</div>';
 				}
 			}
 
@@ -1285,17 +1403,18 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			'show_images' => '0',
 			'show_open_closed' => '1',
 		);
-		$atts = shortcode_atts($defaults, (array) $atts, $tag);
+			$atts = shortcode_atts($defaults, (array) $atts, $tag);
 
-		$current_ym = wp_date('Y-m', time(), function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone());
+			$current_ym = wp_date('Y-m', time(), function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone());
 
-		$ym = $atts['month'] !== '' ? sanitize_text_field((string) $atts['month']) : '';
-		if (isset($_GET['ym'])) {
-			$ym = sanitize_text_field(wp_unslash($_GET['ym']));
-		}
-		if ($ym === '') {
-			$ym = $current_ym;
-		}
+			$ym = $atts['month'] !== '' ? sanitize_text_field((string) $atts['month']) : '';
+			$requested_ym = vms_public_calendar_get_requested_month();
+			if ($requested_ym !== '') {
+				$ym = $requested_ym;
+			}
+			if ($ym === '') {
+				$ym = $current_ym;
+			}
 		$month = vms_parse_month_ym($ym);
 		$month_end_inclusive = gmdate('Y-m-d', strtotime('-1 day', strtotime($month['end'])));
 		$nav = vms_calendar_prev_next($month['ym']);
@@ -1309,16 +1428,14 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			'posts_per_page' => -1,
 			'orderby' => 'title',
 			'order' => 'ASC',
-		));
-		$venues = is_array($venues) ? $venues : array();
+			));
+			$venues = is_array($venues) ? $venues : array();
 
-		$venue_raw = sanitize_text_field((string) $atts['venue']);
-		if (isset($_GET['venue_id'])) {
-			$venue_raw = sanitize_text_field(wp_unslash((string) $_GET['venue_id']));
-		}
-		if (isset($_GET['venue'])) {
-			$venue_raw = sanitize_text_field(wp_unslash((string) $_GET['venue']));
-		}
+			$venue_raw = sanitize_text_field((string) $atts['venue']);
+			$requested_venue = vms_public_calendar_get_requested_venue();
+			if ($requested_venue !== '') {
+				$venue_raw = $requested_venue;
+			}
 
 		$venue_ids = 'all';
 		$selected_venue = 'all';
@@ -1348,20 +1465,21 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		if (!$is_legacy && array_key_exists('calendar_public_shortcode_enabled', $settings) && empty($settings['calendar_public_shortcode_enabled'])) {
 			return '';
 		}
-		$default_view = $is_legacy
-			? 'month'
-			: vms_public_calendar_normalize_view((string) ($settings['calendar_public_default_view'] ?? 'auto'));
-		$view = trim((string) $atts['view']) !== ''
-			? vms_public_calendar_normalize_view((string) $atts['view'])
-			: $default_view;
-		if (isset($_GET['view'])) {
-			$view = vms_public_calendar_normalize_view((string) wp_unslash($_GET['view']));
-		}
+			$default_view = $is_legacy
+				? 'month'
+				: vms_public_calendar_normalize_view((string) ($settings['calendar_public_default_view'] ?? 'auto'));
+			$view = trim((string) $atts['view']) !== ''
+				? vms_public_calendar_normalize_view((string) $atts['view'])
+				: $default_view;
+			$requested_view = vms_public_calendar_get_requested_view();
+			if ($requested_view !== '') {
+				$view = vms_public_calendar_normalize_view($requested_view);
+			}
 
-		$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower((string) wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
-		$is_tablet_calendar_request = !$is_legacy && (
-			wp_is_mobile()
-			|| strpos($user_agent, 'ipad') !== false
+			$user_agent = vms_public_calendar_get_request_user_agent();
+			$is_tablet_calendar_request = !$is_legacy && (
+				wp_is_mobile()
+				|| strpos($user_agent, 'ipad') !== false
 			|| strpos($user_agent, 'tablet') !== false
 			|| strpos($user_agent, 'kindle') !== false
 			|| strpos($user_agent, 'silk/') !== false
@@ -1378,13 +1496,14 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		$hide_past_default = array_key_exists('calendar_public_hide_past_default', $settings)
 			? !empty($settings['calendar_public_hide_past_default'])
 			: true;
-		$include_past = !$hide_past_default;
-		if ($month['ym'] <= $current_ym) {
-			$include_past = true;
-		}
-		if (isset($_GET['show_past'])) {
-			$include_past = ((int) $_GET['show_past'] === 1);
-		}
+			$include_past = !$hide_past_default;
+			if ($month['ym'] <= $current_ym) {
+				$include_past = true;
+			}
+			$requested_show_past = vms_public_calendar_get_requested_show_past();
+			if ($requested_show_past !== null) {
+				$include_past = ($requested_show_past === 1);
+			}
 
 		$calendar_feed_args = array(
 			'venue_ids' => $venue_ids,
@@ -1484,26 +1603,26 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 				<p class="vms-public-cal-compact-note"><?php echo esc_html__('Compact view shows up to three event-bearing months in weekend-focused chunks and skips empty months.', 'vms'); ?></p>
 			<?php endif; ?>
 
-			<?php echo $nav_markup; ?>
+				<?php echo wp_kses($nav_markup, vms_public_calendar_allowed_html()); ?>
 
-			<?php
-			if ($effective_view === 'list') {
-				$list_markup = vms_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
-				echo $list_markup;
-			} elseif ($effective_view === 'compact') {
-				$state_venue_id = ($selected_venue !== 'all') ? absint($selected_venue) : 0;
-				echo vms_public_calendar_render_compact_view($rendered_months, $events, $state_venue_id, $show_open_closed);
-			} else {
-				$list_markup = vms_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
-				$primary_month_events = vms_public_calendar_filter_events_for_month($events, $month['ym']);
-				$days = vms_public_calendar_build_month_days($primary_month_events);
-				$state_venue_id = ($selected_venue !== 'all') ? absint($selected_venue) : 0;
-				$day_states = vms_public_calendar_build_day_states($month, $state_venue_id, $show_open_closed);
-				echo vms_public_calendar_render_month_grid($month, $days, $day_states);
-				echo '<div class="vms-public-cal-mobile-list-fallback" aria-label="' . esc_attr__('Mobile and tablet list view', 'vms') . '">' . $list_markup . '</div>';
-			}
-			echo $nav_markup;
-			?>
+				<?php
+					if ($effective_view === 'list') {
+						$list_markup = vms_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
+						echo wp_kses($list_markup, vms_public_calendar_allowed_html());
+					} elseif ($effective_view === 'compact') {
+						$state_venue_id = ($selected_venue !== 'all') ? absint($selected_venue) : 0;
+						echo wp_kses(vms_public_calendar_render_compact_view($rendered_months, $events, $state_venue_id, $show_open_closed), vms_public_calendar_allowed_html());
+					} else {
+						$list_markup = vms_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
+					$primary_month_events = vms_public_calendar_filter_events_for_month($events, $month['ym']);
+					$days = vms_public_calendar_build_month_days($primary_month_events);
+					$state_venue_id = ($selected_venue !== 'all') ? absint($selected_venue) : 0;
+					$day_states = vms_public_calendar_build_day_states($month, $state_venue_id, $show_open_closed);
+						echo wp_kses(vms_public_calendar_render_month_grid($month, $days, $day_states), vms_public_calendar_allowed_html());
+						echo '<div class="vms-public-cal-mobile-list-fallback" aria-label="' . esc_attr__('Mobile and tablet list view', 'vms') . '">' . wp_kses($list_markup, vms_public_calendar_allowed_html()) . '</div>';
+					}
+					echo wp_kses($nav_markup, vms_public_calendar_allowed_html());
+				?>
 		</div>
 		<?php
 
