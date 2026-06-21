@@ -50,7 +50,8 @@ function vms_sch_get_window_bounds(int $venue_id): array
     // Fallback window: first day of current month through end of month +24 months.
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $start) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $end)) {
         $start = current_time('Y-m-01');
-        $end   = date('Y-m-t', strtotime('+24 months', strtotime($start)));
+        $start_dt = vms_sch_parse_ymd($start);
+        $end = $start_dt ? $start_dt->modify('+24 months')->format('Y-m-t') : $start;
     }
 
     // Safety: ensure start <= end
@@ -66,6 +67,33 @@ function vms_sch_get_window_bounds(int $venue_id): array
     );
 }
 
+function vms_sch_parse_ymd(string $ymd): ?DateTimeImmutable
+{
+    $dt = DateTimeImmutable::createFromFormat('!Y-m-d', $ymd, wp_timezone());
+    if (!$dt instanceof DateTimeImmutable || $dt->format('Y-m-d') !== $ymd) {
+        return null;
+    }
+
+    return $dt;
+}
+
+function vms_sch_allowed_html(): array
+{
+    return array(
+        'a' => array(
+            'class' => true,
+            'href'  => true,
+        ),
+        'br' => array(),
+        'div' => array(
+            'class' => true,
+        ),
+        'span' => array(
+            'class' => true,
+        ),
+    );
+}
+
 /**
  * View window for schedule rendering (separate from creation window).
  *
@@ -75,26 +103,24 @@ function vms_sch_get_window_bounds(int $venue_id): array
 function vms_sch_get_view_window_bounds(string $create_start_ymd, string $create_end_ymd, int $months_back = 12, int $months_ahead = 12): array
 {
     $base_start = current_time('Y-m-01');
-    $base_ts    = strtotime($base_start);
+    $base_dt    = vms_sch_parse_ymd($base_start);
 
     // Clamp to sane bounds (avoid accidental huge renders)
     $months_back  = max(0, min(24, (int) $months_back));
     $months_ahead = max(1, min(24, (int) $months_ahead));
 
-    $view_start = $base_ts ? date('Y-m-01', strtotime('-' . $months_back . ' months', $base_ts)) : $base_start;
-    $view_end   = $base_ts ? date('Y-m-t',  strtotime('+' . $months_ahead . ' months', $base_ts)) : $base_start;
+    $view_start = $base_dt ? $base_dt->modify('-' . $months_back . ' months')->format('Y-m-01') : $base_start;
+    $view_end   = $base_dt ? $base_dt->modify('+' . $months_ahead . ' months')->format('Y-m-t') : $base_start;
 
     // Ensure the view always includes the configured creation window.
-    $vs = strtotime($view_start);
-    $ve = strtotime($view_end);
-    $cs = strtotime($create_start_ymd);
-    $ce = strtotime($create_end_ymd);
+    $create_start_dt = vms_sch_parse_ymd($create_start_ymd);
+    $create_end_dt   = vms_sch_parse_ymd($create_end_ymd);
 
-    if ($cs && $vs && $cs < $vs) {
-        $view_start = date('Y-m-01', $cs);
+    if ($create_start_dt && $create_start_ymd < $view_start) {
+        $view_start = $create_start_dt->format('Y-m-01');
     }
-    if ($ce && $ve && $ce > $ve) {
-        $view_end = date('Y-m-t', $ce);
+    if ($create_end_dt && $create_end_ymd > $view_end) {
+        $view_end = $create_end_dt->format('Y-m-t');
     }
 
     return array(
@@ -504,8 +530,7 @@ function vms_render_schedule_page_content(): void
     echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'vms') . '</option>';
     echo '</select>';
     echo '<span class="vms-sch-muted">' . esc_html__('Past months are view-only.', 'vms') . '</span>';
-    $chk = $include_drafts ? ' checked' : '';
-    echo '<label class="vms-sch-whatif"><input type="checkbox" name="include_drafts" value="1" class="vms-js-auto-submit-field"' . $chk . '> ' . esc_html__('Include Draft/Ready', 'vms') . '</label>';
+    echo '<label class="vms-sch-whatif"><input type="checkbox" name="include_drafts" value="1" class="vms-js-auto-submit-field"' . checked($include_drafts, true, false) . '> ' . esc_html__('Include Draft/Ready', 'vms') . '</label>';
     echo '</form>';
 
     // Single-venue guardrail: if the only venue exists but is not published, call it out loudly.
@@ -665,10 +690,10 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
     $venue_id_param = (int) $venue_id;
 
-    $start_ts = strtotime($start_ymd);
-    $end_ts   = strtotime($end_ymd);
+    $start_dt = vms_sch_parse_ymd($start_ymd);
+    $end_dt   = vms_sch_parse_ymd($end_ymd);
 
-    if (!$start_ts || !$end_ts) {
+    if (!$start_dt || !$end_dt) {
         echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
         return;
     }
@@ -731,8 +756,8 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
     $today_ymd = function_exists('current_time') ? (string) current_time('Y-m-d') : (string) gmdate('Y-m-d');
 
-    for ($ts = $start_ts; $ts <= $end_ts; $ts = strtotime('+1 day', $ts)) {
-        $ymd = date('Y-m-d', $ts);
+    for ($cursor = $start_dt; $cursor <= $end_dt; $cursor = $cursor->modify('+1 day')) {
+        $ymd = $cursor->format('Y-m-d');
         $blackout_notes = isset($blackout_notes_map[$ymd]) && is_array($blackout_notes_map[$ymd]) ? $blackout_notes_map[$ymd] : array();
         $has_blackout = !empty($blackout_notes);
         $event_status = '';
@@ -904,7 +929,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
         echo '<tr class="' . esc_attr($row_state_class . $past_class . ' ' . $status_class) . '">';
 
-        echo '<td>' . esc_html(date_i18n('D, M j, Y', $ts));
+        echo '<td>' . esc_html(wp_date('D, M j, Y', $cursor->getTimestamp(), $cursor->getTimezone()));
 
         // $badge is clunky! Needs it's own row on desktop or hidden on mobile.
         // if ($badge !== '') {
@@ -912,9 +937,9 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
         // }
         echo '</td>';
 
-        echo '<td>' . $holiday_html . $blackout_html . '</td>';
-        echo '<td>' . $plans_html . '</td>';
-        echo '<td>' . $create_html . '</td>';
+        echo '<td>' . wp_kses($holiday_html . $blackout_html, vms_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($plans_html, vms_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($create_html, vms_sch_allowed_html()) . '</td>';
         echo '</tr>';
     }
 
@@ -1126,10 +1151,10 @@ $scope_key = 'single';
 
             echo '<td>';
             echo '<div class="' . esc_attr(implode(' ', $classes)) . '">';
-            echo '<div class="vms-sch-top"><div class="vms-sch-daynum">' . esc_html((string) $day) . '</div>' . $holiday_html . $blackout_html . '</div>';
-            echo $badge;
-            echo $plans_html;
-            echo $create_html;
+            echo '<div class="vms-sch-top"><div class="vms-sch-daynum">' . esc_html((string) $day) . '</div>' . wp_kses($holiday_html . $blackout_html, vms_sch_allowed_html()) . '</div>';
+            echo wp_kses($badge, vms_sch_allowed_html());
+            echo wp_kses($plans_html, vms_sch_allowed_html());
+            echo wp_kses($create_html, vms_sch_allowed_html());
             echo '</div>';
             echo '</td>';
 
@@ -1152,7 +1177,7 @@ $scope_key = 'single';
         echo '</div>';      // closes .vms-panel-body
         echo '</details>';
 
-        $cursor = new DateTime(date('Y-m-01', strtotime('+1 month', $cursor->getTimestamp())), $tz);
+        $cursor = $cursor->modify('first day of next month');
     }
 
     // Month accordion behavior is handled centrally in vms-admin-ui.js.
@@ -1160,10 +1185,10 @@ $scope_key = 'single';
 
 function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, array $plans_by_date, array $venue_name_map): void
 {
-    $start_ts = strtotime($start_ymd);
-    $end_ts   = strtotime($end_ymd);
+    $start_dt = vms_sch_parse_ymd($start_ymd);
+    $end_dt   = vms_sch_parse_ymd($end_ymd);
 
-    if (!$start_ts || !$end_ts) {
+    if (!$start_dt || !$end_dt) {
         echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
         return;
     }
@@ -1191,8 +1216,8 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
     echo '<th>Event Plans</th>';
     echo '</tr></thead><tbody>';
 
-    for ($ts = $start_ts; $ts <= $end_ts; $ts = strtotime('+1 day', $ts)) {
-        $ymd = date('Y-m-d', $ts);
+    for ($cursor = $start_dt; $cursor <= $end_dt; $cursor = $cursor->modify('+1 day')) {
+        $ymd = $cursor->format('Y-m-d');
 
         $venues_html = '<span class="vms-muted">—</span>';
         $holidays_html = '<span class="vms-muted">—</span>';
@@ -1272,10 +1297,10 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
         }
 
         echo '<tr>';
-        echo '<td>' . esc_html(date_i18n('D, M j, Y', $ts)) . '</td>';
-        echo '<td>' . $venues_html . '</td>';
-        echo '<td>' . $holidays_html . '</td>';
-        echo '<td>' . $plans_html . '</td>';
+        echo '<td>' . esc_html(wp_date('D, M j, Y', $cursor->getTimestamp(), $cursor->getTimezone())) . '</td>';
+        echo '<td>' . wp_kses($venues_html, vms_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($holidays_html, vms_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($plans_html, vms_sch_allowed_html()) . '</td>';
         echo '</tr>';
     }
 
@@ -1285,11 +1310,12 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
 
 function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ymd, array $plans_by_date, array $venue_name_map): void
 {
-    $start_ts  = strtotime($start_ymd);
-    $end_ts    = strtotime($end_ymd);
     $today_ymd = wp_date('Y-m-d'); // uses WP timezone settings
 
-    if (!$start_ts || !$end_ts) {
+    $start_dt = vms_sch_parse_ymd($start_ymd);
+    $end_dt   = vms_sch_parse_ymd($end_ymd);
+
+    if (!$start_dt || !$end_dt) {
         echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
         return;
     }
@@ -1298,17 +1324,17 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
     $venue_ids = array_values(array_filter(array_map('intval', (array) $venue_ids)));
 
     // Normalize to first day of start month
-    $cursor    = strtotime(date('Y-m-01', $start_ts));
-    $end_month = strtotime(date('Y-m-01', $end_ts));
+    $cursor    = $start_dt->modify('first day of this month');
+    $end_month = $end_dt->modify('first day of this month');
 
     while ($cursor <= $end_month) {
-        $month_label = date_i18n('F Y', $cursor);
-        $month_start = strtotime(date('Y-m-01', $cursor));
-        $month_end   = strtotime(date('Y-m-t', $cursor));
+        $month_label = wp_date('F Y', $cursor->getTimestamp(), $cursor->getTimezone());
+        $month_start = $cursor;
+        $month_end   = $cursor->modify('last day of this month');
 
         // Precompute blackout notes for this month slice (range-capable).
-        $month_from_ymd = date('Y-m-d', max($month_start, $start_ts));
-        $month_to_ymd   = date('Y-m-d', min($month_end, $end_ts));
+        $month_from_ymd = ($month_start < $start_dt ? $start_dt : $month_start)->format('Y-m-d');
+        $month_to_ymd   = ($month_end > $end_dt ? $end_dt : $month_end)->format('Y-m-d');
         $blackout_notes_by_venue = array();
         if (function_exists('vms_sch_season_get_blackout_notes_map') && !empty($venue_ids)) {
             foreach ($venue_ids as $vid) {
@@ -1318,7 +1344,7 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
             }
         }
 
-        $month_key = date('Y-m', $cursor); // YYYY-MM
+        $month_key = $cursor->format('Y-m'); // YYYY-MM
 
         echo '<details class="vms-av-method vms-sch-month" data-vms-month="' . esc_attr($month_key) . '" data-vms-scope="all">';
         echo '<summary><span>' . esc_html($month_label) . '</span></summary>';
@@ -1331,8 +1357,8 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
         }
         echo '</tr></thead><tbody>';
 
-        $first_dow = (int) date('w', $month_start); // 0=Sun
-        $day_ts    = $month_start;
+        $first_dow = (int) $month_start->format('w'); // 0=Sun
+        $day_dt    = $month_start;
 
         $cell = 0;
         echo '<tr>';
@@ -1343,10 +1369,10 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
             $cell++;
         }
 
-        while ($day_ts <= $month_end) {
-            $ymd = date('Y-m-d', $day_ts);
+        while ($day_dt <= $month_end) {
+            $ymd = $day_dt->format('Y-m-d');
 
-            $in_window = ($day_ts >= $start_ts && $day_ts <= $end_ts);
+            $in_window = ($ymd >= $start_ymd && $ymd <= $end_ymd);
 
             $cell_classes = 'vms-sch-cell';
             if (!$in_window) {
@@ -1361,7 +1387,7 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
 
             echo '<td class="vms-valign-top">';
             echo '<div class="' . esc_attr($cell_classes) . '">';
-            echo '<div class="vms-sch-daynum">' . esc_html((string) ((int) substr($ymd, 8, 2))) . '</div>';
+            echo '<div class="vms-sch-daynum">' . esc_html($day_dt->format('j')) . '</div>';
 
             // Collect plans by venue
             $by_venue = array();
@@ -1455,11 +1481,11 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
             echo '</td>';
 
             $cell++;
-            if ($cell % 7 === 0 && $day_ts !== $month_end) {
+            if ($cell % 7 === 0 && $day_dt < $month_end) {
                 echo '</tr><tr>';
             }
 
-            $day_ts = strtotime('+1 day', $day_ts);
+            $day_dt = $day_dt->modify('+1 day');
         }
 
         // Trailing blanks
@@ -1472,7 +1498,7 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
         echo '</tbody></table>';
         echo '</div></details>';
 
-        $cursor = strtotime('+1 month', $cursor);
+        $cursor = $cursor->modify('first day of next month');
     }
 
     // Month accordion behavior is handled centrally in vms-admin-ui.js.

@@ -2490,61 +2490,6 @@ line	column	type	code	message	docs
 430	46	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;vms_w9&#039;] not unslashed before sanitization. Use wp_unslash() or similar
 430	46	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_GET[&#039;vms_w9&#039;]
 
-FILE: includes/admin/schedule.php
-line	column	type	code	message	docs
-53	18	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-84	30	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-85	30	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-94	23	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-97	21	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-166	64	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;date&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-174	50	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-174	50	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-174	50	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_GET[&#039;_wpnonce&#039;]
-253	9	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
-356	19	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-356	65	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-356	65	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;view&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-365	29	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-365	69	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-385	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-386	29	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-445	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-446	32	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-463	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-464	35	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-490	24	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-490	63	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-508	132	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$chk'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-682	24	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-682	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-683	30	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-683	58	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-735	16	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-915	23	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$holiday_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-915	39	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$blackout_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-916	23	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$plans_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-917	23	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$create_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1129	113	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$holiday_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1129	129	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$blackout_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1130	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$badge'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1131	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$plans_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1132	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$create_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1155	32	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1195	16	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1276	23	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$venues_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1277	23	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$holidays_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1278	23	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$plans_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1301	28	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1302	28	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1306	34	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1307	34	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1310	27	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1311	27	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1321	22	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1334	28	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-1347	20	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-
 FILE: includes/admin/vendor-staff-link.php
 line	column	type	code	message	docs
 74	13	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$sid'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
@@ -3085,7 +3030,7 @@ FILE: vendor-management-system.php
 line	column	type	code	message	docs
 0	0	WARNING	plugin_header_nonexistent_domain_path	The "Domain Path" header in the plugin file must point to an existing folder. Found: "languages"	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#domain-path
 
-FILE: vendor-management-system.php
+FILE: /privatevendor-management-system.php
 line	column	type	code	message	docs
 36	3	WARNING	PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound	load_plugin_textdomain() has been discouraged since WordPress version 4.6. When your plugin is hosted on WordPress.org, you no longer need to manually include this function call for translations under your plugin slug. WordPress will automatically load the translations for you as needed.	https://make.wordpress.org/core/2016/07/06/i18n-improvements-in-4-6/
 
@@ -3447,6 +3392,31 @@ FILE: includes/admin/tax-bypass-ajax.php
 line	column	type	code	message	docs
 14	68	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;until&#039;] not unslashed before sanitization. Use wp_unslash() or similar
 15	69	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;reason&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+
+FILE: includes/admin/schedule.php
+line	column	type	code	message	docs
+192	64	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;date&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+200	50	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+200	50	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+200	50	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_GET[&#039;_wpnonce&#039;]
+279	9	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
+382	19	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+382	65	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+382	65	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;view&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+391	29	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+391	69	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+411	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+412	29	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+471	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+472	32	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+489	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+490	35	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+516	24	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+516	63	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+707	24	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+707	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+708	30	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+708	58	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 
 FILE: includes/admin/vendor-availability.php
 line	column	type	code	message	docs

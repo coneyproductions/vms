@@ -4,7 +4,7 @@ Date: 2026-06-21
 
 ## Purpose
 
-Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, the staffing admin Plugin Check batch from `WPORG-04I`, the Staff Portal Plugin Check batch from `WPORG-04J`, the Vendor Portal Plugin Check batch from `WPORG-04K`, the public calendar Plugin Check batch from `WPORG-04L`, the public vendor profiles Plugin Check batch from `WPORG-04M`, the public vendor profile template Plugin Check batch from `WPORG-04N`, the social template-engine read-only SQL Plugin Check batch from `WPORG-04O`, the social audit error-bearing read-only SQL Plugin Check batch from `WPORG-04P`, the lineup-schedule i18n hotspot batch from `WPORG-04Q`, the vendor-user-links i18n hotspot batch from `WPORG-04R`, and the event-plan-review i18n hotspot batch from `WPORG-04S`.
+Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, the staffing admin Plugin Check batch from `WPORG-04I`, the Staff Portal Plugin Check batch from `WPORG-04J`, the Vendor Portal Plugin Check batch from `WPORG-04K`, the public calendar Plugin Check batch from `WPORG-04L`, the public vendor profiles Plugin Check batch from `WPORG-04M`, the public vendor profile template Plugin Check batch from `WPORG-04N`, the social template-engine read-only SQL Plugin Check batch from `WPORG-04O`, the social audit error-bearing read-only SQL Plugin Check batch from `WPORG-04P`, the lineup-schedule i18n hotspot batch from `WPORG-04Q`, the vendor-user-links i18n hotspot batch from `WPORG-04R`, the event-plan-review i18n hotspot batch from `WPORG-04S`, and the safe isolated-error admin-schedule render/date hotspot batch from `WPORG-04T`.
 
 ## Files Changed
 
@@ -30,6 +30,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - `includes/core/lineup-schedule.php`
 - `includes/core/vendor-user-links.php`
 - `includes/core/event-plan-review.php`
+- `includes/admin/schedule.php`
 - `includes/admin/budget-calculator.php`
 - `includes/cpt/event-plans.php`
 - `includes/admin/goals-forecast.php`
@@ -246,6 +247,9 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - current rebuilt RC after `WPORG-04S`
   - PASS: `dist/wporg-04s/vms-1.0.0-public-release.zip`
   - SHA-256: `efd8df8bbbd0c823fcbc4aa5dfc999e7166d25c89ee163aaa59779198603886b`
+- current rebuilt RC after `WPORG-04T`
+  - PASS: `dist/wporg-04t/vms-1.0.0-public-release.zip`
+  - SHA-256: `3943d3219317a3099c29d4d9678ae266c93aa762fa21b8852efc5f258fadb4ac`
 - package integrity
   - PASS
 - official readme validator after metadata application
@@ -272,6 +276,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - packaged final run after `WPORG-04Q`: `3255` findings
   - packaged final run after `WPORG-04R`: `3224` findings
   - packaged final run after `WPORG-04S`: `3205` findings
+  - packaged final run after `WPORG-04T`: `3175` findings
   - fixed category earlier in the release-prep sequence: `missing_direct_file_access_protection` reduced from `12` to `0`
   - `WPORG-04A` batch delta: `-80` total findings (`-1` errors / `-79` warnings)
   - `WPORG-04B` batch delta: `-113` total findings (`-12` errors / `-101` warnings)
@@ -290,6 +295,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - `WPORG-04Q` batch delta: `-13` total findings (`-12` errors / `-1` warnings)
   - `WPORG-04R` batch delta: `-31` total findings (`-32` errors / `+1` warnings)
   - `WPORG-04S` batch delta: `-19` total findings (`-19` errors / `0` warnings)
+  - `WPORG-04T` batch delta: `-30` total findings (`-30` errors / `0` warnings)
 
 ## Minimum Version Decision
 
