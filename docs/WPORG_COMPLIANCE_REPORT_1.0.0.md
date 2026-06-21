@@ -1,13 +1,13 @@
 # WordPress.org Compliance Report 1.0.0
 
-Date: 2026-06-20
+Date: 2026-06-21
 
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD: `52c27b057c1c979936db52ffdb6ac7122077656e` (`52c27b0`)
+- HEAD: `67cdc005f4795f37d300a56025d0e19962c1950a` (`67cdc00`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- WPORG-04N checkpoint state at the start of this task: committed and pushed
+- WPORG-04O checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -16,10 +16,10 @@ Date: 2026-06-20
 - WordPress runtime evidence:
   - `6.8` disposable lifecycle matrix from `WPORG-02`
   - `7.0` disposable lifecycle matrix from `WPORG-02`
-  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, and `WPORG-04O`
+  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, and `WPORG-04P`
 - PHP runtime evidence:
   - `8.5.3` from `WPORG-02`
-  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, and `WPORG-04O`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, and `WPORG-04P`
 - MySQL: `8.0.35`
 - WP-CLI: `2.12.0`
 - Dependency versions used in lifecycle and smoke work:
@@ -51,8 +51,8 @@ Date: 2026-06-20
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-04o/vms-1.0.0-public-release.zip`
-- SHA-256: `b5ff1494aa35b48e3d108f51d8efc584bacde4fbeceb433acca60ebdac06b690`
+- Artifact: `dist/wporg-04p/vms-1.0.0-public-release.zip`
+- SHA-256: `720dc9a32f3609ebb54ef77227b0cf85123776554f7b62c347e8a77077fcf152`
 - Package integrity: PASS
 
 ## Builder Status
@@ -83,6 +83,8 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php -l includes/core/registry/constants.php`
   - PASS
 - `php -l includes/social-share/template-engine.php`
+  - PASS
+- `php -l includes/social-share/audit.php`
   - PASS
 - direct WordPress boot smoke requiring `vendor-management-system.php`
   - PASS (`VMS_BOOT_OK`)
@@ -128,6 +130,9 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04o --force`
   - PASS
   - current artifact SHA-256: `b5ff1494aa35b48e3d108f51d8efc584bacde4fbeceb433acca60ebdac06b690`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04p --force`
+  - PASS
+  - current artifact SHA-256: `720dc9a32f3609ebb54ef77227b0cf85123776554f7b62c347e8a77077fcf152`
 
 ## Readme Validator
 
@@ -146,8 +151,8 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3270` total findings
-- `1045` errors
+- `3268` total findings
+- `1043` errors
 - `2225` warnings
 
 Comparison:
@@ -168,6 +173,7 @@ Comparison:
 - `WPORG-04M` packaged-plugin final: `3278` total / `1049` errors / `2229` warnings
 - `WPORG-04N` packaged-plugin final: `3274` total / `1045` errors / `2229` warnings
 - `WPORG-04O` packaged-plugin final: `3270` total / `1045` errors / `2225` warnings
+- `WPORG-04P` packaged-plugin final: `3268` total / `1043` errors / `2225` warnings
 
 Dominant remaining codes:
 
@@ -176,15 +182,16 @@ Dominant remaining codes:
 - `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `256`
 - `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `232`
 - `WordPress.Security.EscapeOutput.OutputNotEscaped`: `183`
-- `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `293`
-- `WordPress.DB.DirectDatabaseQuery.NoCaching`: `255`
-- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `156`
-- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `148`
+- `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `294`
+- `WordPress.DB.DirectDatabaseQuery.NoCaching`: `256`
+- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `155`
+- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `146`
+- `WordPress.DB.PreparedSQL.NotPrepared`: `72`
 
 High-level category counts:
 
 - nonce and input handling: `1198`
-- database and SQL safety: `1103`
+- database and SQL safety: `1101`
 - i18n placeholder comments / ordering: `650`
 - escaping and output safety: `183`
 - date/time API usage: `44`
@@ -209,6 +216,7 @@ Fixed across this release-prep sequence:
 - `includes/public/vendor-profiles.php`: `14` -> `2`, with `12` -> `0` errors
 - `includes/public/templates/vendor-profile.php`: `4` -> `0`, with `4` -> `0` errors
 - `includes/social-share/template-engine.php`: `8` -> `4`, with `0` -> `0` errors
+- `includes/social-share/audit.php`: `7` -> `5`, with `2` -> `0` errors
 - remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
 - packaged nonce/input blocker surface: `1517` -> `1198`
@@ -234,7 +242,7 @@ The `WPORG-02` audit conclusions still hold.
 | --- | --- | --- | --- | --- |
 | Plugin Check: nonce/input | `1198` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | The safe public calendar render batch is materially reduced, but Event Plans and portal save flows still need dedicated regression coverage before widening request hardening. | Partially |
 | Plugin Check: escaping | `183` remaining `EscapeOutput` findings | BLOCKER | Shift the next render-surface audit toward the Staff Portal, shared admin render shells, and the remaining public output sites. | Partially |
-| Plugin Check: SQL safety | `1103` remaining DB/SQL findings, including `156` unescaped DB-parameter reports, `148` interpolated SQL reports, and `73` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings. | Partially |
+| Plugin Check: SQL safety | `1101` remaining DB/SQL findings, including `155` unescaped DB-parameter reports, `146` interpolated SQL reports, and `72` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings. | Partially |
 
 ## Should Fix Before Submission
 
@@ -270,9 +278,9 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- `WPORG-04P`
+- `WPORG-04Q`
 - Scope:
   - shift the next safe read-only SQL batch to `includes/modules/admissions/admin-ui.php`,
   - keep the pass limited to the guest-list export CSV read query and table-identifier preparation only,
-  - leave guest-list mutation behavior, REST handlers, permissions, and Event Plans runtime untouched,
+  - leave the remaining `fclose()` filesystem finding, guest-list mutation behavior, REST handlers, permissions, and Event Plans runtime untouched,
   - keep the pass out of ticketing/payment/refund/cancellation flows, portal/profile-save flows, availability mutations, staffing mutations, and publish/TEC sync paths.

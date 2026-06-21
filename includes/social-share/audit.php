@@ -99,19 +99,25 @@ if (!function_exists('vms_social_audit_recent')) {
 		$search = trim($search);
 
 		if ($search === '') {
-			$sql = $wpdb->prepare("SELECT * FROM {$table} ORDER BY id DESC LIMIT %d", $limit);
+			$rows = $wpdb->get_results(
+				$wpdb->prepare('SELECT * FROM %i ORDER BY id DESC LIMIT %d', $table, $limit),
+				ARRAY_A
+			);
 		} else {
 			$like = '%' . $wpdb->esc_like($search) . '%';
-			$sql = $wpdb->prepare(
-				"SELECT * FROM {$table} WHERE action LIKE %s OR platform LIKE %s OR details_json LIKE %s ORDER BY id DESC LIMIT %d",
-				$like,
-				$like,
-				$like,
-				$limit
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE action LIKE %s OR platform LIKE %s OR details_json LIKE %s ORDER BY id DESC LIMIT %d',
+					$table,
+					$like,
+					$like,
+					$like,
+					$limit
+				),
+				ARRAY_A
 			);
 		}
 
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
