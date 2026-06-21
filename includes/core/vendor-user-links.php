@@ -667,9 +667,11 @@ if (!function_exists('vms_vendor_user_link_actor_label')) {
 
             if ($actor_user_id === $linked_user_id) {
                 if ($actor_name !== '' && $actor_email !== '') {
+                    /* translators: 1: Actor display name, 2: Actor email address. */
                     return sprintf(__('Self-service (%1$s <%2$s>)', 'vms'), $actor_name, $actor_email);
                 }
                 if ($actor_email !== '') {
+                    /* translators: %s: Actor email address. */
                     return sprintf(__('Self-service (%s)', 'vms'), $actor_email);
                 }
                 return __('Self-service', 'vms');
@@ -684,6 +686,7 @@ if (!function_exists('vms_vendor_user_link_actor_label')) {
             if ($actor_email !== '') {
                 return $actor_email;
             }
+            /* translators: %d: WordPress user ID. */
             return sprintf(__('User #%d', 'vms'), $actor_user_id);
         }
 
@@ -711,6 +714,7 @@ if (!function_exists('vms_vendor_user_link_notify_admin')) {
 
         $vendor_title = get_the_title($vendor_id);
         if (!is_string($vendor_title) || $vendor_title === '') {
+            /* translators: %d: Vendor post ID. */
             $vendor_title = sprintf(__('Vendor #%d', 'vms'), $vendor_id);
         }
 
@@ -725,36 +729,56 @@ if (!function_exists('vms_vendor_user_link_notify_admin')) {
         $primary_label = !empty($context['set_primary_for_user']) ? __('Yes', 'vms') : __('No', 'vms');
         $vendor_link = current_user_can('edit_post', $vendor_id) ? get_edit_post_link($vendor_id, '') : admin_url('post.php?post=' . $vendor_id . '&action=edit');
         $user_link = current_user_can('list_users') ? admin_url('user-edit.php?user_id=' . $user_id) : '';
+        if ($user_name !== '') {
+            $linked_user_label = wp_specialchars_decode($user_name, ENT_QUOTES);
+        } else {
+            /* translators: %d: WordPress user ID. */
+            $linked_user_label = sprintf(__('User #%d', 'vms'), $user_id);
+        }
 
+        /* translators: %s: Vendor title. */
         $subject = sprintf(__('[VMS] Vendor account linked: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
 
         $lines = array(
             __('A vendor profile was linked to a website account.', 'vms'),
             '',
+            /* translators: %s: Vendor title. */
             sprintf(__('Vendor: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES)),
+            /* translators: %d: Vendor post ID. */
             sprintf(__('Vendor ID: %d', 'vms'), $vendor_id),
         );
         if ($vendor_type !== '') {
+            /* translators: %s: Vendor type label. */
             $lines[] = sprintf(__('Vendor Type: %s', 'vms'), $vendor_type);
         }
-        $lines[] = sprintf(__('Website User: %s', 'vms'), $user_name !== '' ? wp_specialchars_decode($user_name, ENT_QUOTES) : sprintf(__('User #%d', 'vms'), $user_id));
+        /* translators: %s: Website user display label. */
+        $lines[] = sprintf(__('Website User: %s', 'vms'), $linked_user_label);
+        /* translators: %d: WordPress user ID. */
         $lines[] = sprintf(__('User ID: %d', 'vms'), $user_id);
         if ($user_email !== '') {
+            /* translators: %s: Website user email address. */
             $lines[] = sprintf(__('User Email: %s', 'vms'), $user_email);
         }
         if ($role !== '') {
+            /* translators: %s: Vendor/user link role key. */
             $lines[] = sprintf(__('Role: %s', 'vms'), $role);
         }
         if ($status !== '') {
+            /* translators: %s: Vendor/user link status key. */
             $lines[] = sprintf(__('Status: %s', 'vms'), $status);
         }
+        /* translators: %s: Yes/No label for whether the vendor is primary for the user. */
         $lines[] = sprintf(__('Primary portal vendor for this user: %s', 'vms'), $primary_label);
+        /* translators: %s: Source label describing where the link originated. */
         $lines[] = sprintf(__('Source: %s', 'vms'), $source_label);
+        /* translators: %s: Actor label describing who created the link. */
         $lines[] = sprintf(__('Linked by: %s', 'vms'), $actor_label);
         if (is_string($vendor_link) && $vendor_link !== '') {
+            /* translators: %s: Admin URL for the vendor profile. */
             $lines[] = sprintf(__('Vendor Profile: %s', 'vms'), $vendor_link);
         }
         if ($user_link !== '') {
+            /* translators: %s: Admin URL for the linked user account. */
             $lines[] = sprintf(__('User Account: %s', 'vms'), $user_link);
         }
 
@@ -820,6 +844,7 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
 
         $vendor_title = get_the_title($vendor_id);
         if (!is_string($vendor_title) || $vendor_title === '') {
+            /* translators: %d: Vendor post ID. */
             $vendor_title = sprintf(__('Vendor #%d', 'vms'), $vendor_id);
         }
 
@@ -834,31 +859,48 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
         $source_label = ($source === 'vendor_portal') ? __('Vendor portal access request', 'vms') : ucwords(str_replace('_', ' ', $source));
         $vendor_link = current_user_can('edit_post', $vendor_id) ? get_edit_post_link($vendor_id, '') : admin_url('post.php?post=' . $vendor_id . '&action=edit');
         $user_link = current_user_can('list_users') ? admin_url('user-edit.php?user_id=' . $user_id) : '';
+        if ($user_name !== '') {
+            $request_user_label = wp_specialchars_decode($user_name, ENT_QUOTES);
+        } else {
+            /* translators: %d: WordPress user ID. */
+            $request_user_label = sprintf(__('User #%d', 'vms'), $user_id);
+        }
 
+        /* translators: %s: Vendor title. */
         $subject = sprintf(__('[VMS] Vendor portal link requested: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
 
         $lines = array(
             __('A website user requested to be linked to a vendor profile.', 'vms'),
             '',
+            /* translators: %s: Vendor title. */
             sprintf(__('Vendor: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES)),
+            /* translators: %d: Vendor post ID. */
             sprintf(__('Vendor ID: %d', 'vms'), $vendor_id),
         );
         if ($vendor_type !== '') {
+            /* translators: %s: Vendor type label. */
             $lines[] = sprintf(__('Vendor Type: %s', 'vms'), $vendor_type);
         }
-        $lines[] = sprintf(__('Website User: %s', 'vms'), $user_name !== '' ? wp_specialchars_decode($user_name, ENT_QUOTES) : sprintf(__('User #%d', 'vms'), $user_id));
+        /* translators: %s: Website user display label. */
+        $lines[] = sprintf(__('Website User: %s', 'vms'), $request_user_label);
+        /* translators: %d: WordPress user ID. */
         $lines[] = sprintf(__('User ID: %d', 'vms'), $user_id);
         if ($user_email !== '') {
+            /* translators: %s: Website user email address. */
             $lines[] = sprintf(__('User Email: %s', 'vms'), $user_email);
         }
         if ($requested_label !== '') {
+            /* translators: %s: Localized request timestamp. */
             $lines[] = sprintf(__('Requested At: %s', 'vms'), $requested_label);
         }
+        /* translators: %s: Source label describing where the request originated. */
         $lines[] = sprintf(__('Source: %s', 'vms'), $source_label);
         if (is_string($vendor_link) && $vendor_link !== '') {
+            /* translators: %s: Admin URL for the vendor profile. */
             $lines[] = sprintf(__('Vendor Profile: %s', 'vms'), $vendor_link);
         }
         if ($user_link !== '') {
+            /* translators: %s: Admin URL for the requesting user account. */
             $lines[] = sprintf(__('User Account: %s', 'vms'), $user_link);
         }
 

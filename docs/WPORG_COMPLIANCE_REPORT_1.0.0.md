@@ -5,9 +5,9 @@ Date: 2026-06-21
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD: `345ff3ca7e733c6efcc7ed8b461ab4b3bc5d70f5` (`345ff3c`)
+- HEAD: `ede2db7e5b5a4a3affd303e348536f284ac06149` (`ede2db7`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- WPORG-04P checkpoint state at the start of this task: committed and pushed
+- WPORG-04Q checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -16,10 +16,10 @@ Date: 2026-06-21
 - WordPress runtime evidence:
   - `6.8` disposable lifecycle matrix from `WPORG-02`
   - `7.0` disposable lifecycle matrix from `WPORG-02`
-  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, and `WPORG-04Q`
+  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, and `WPORG-04R`
 - PHP runtime evidence:
   - `8.5.3` from `WPORG-02`
-  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, and `WPORG-04Q`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, and `WPORG-04R`
 - MySQL: `8.0.35`
 - WP-CLI: `2.12.0`
 - Dependency versions used in lifecycle and smoke work:
@@ -51,8 +51,8 @@ Date: 2026-06-21
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-04q/vms-1.0.0-public-release.zip`
-- SHA-256: `bdb050f722c55de68a34c1690a7f8143f024801e638a7f00f1a14975c96d3671`
+- Artifact: `dist/wporg-04r/vms-1.0.0-public-release.zip`
+- SHA-256: `4f336a3eb71714ac703633ca0b8f7222ed371881372416779b9159ca9203dd5d`
 - Package integrity: PASS
 
 ## Builder Status
@@ -87,6 +87,8 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php -l includes/social-share/audit.php`
   - PASS
 - `php -l includes/core/lineup-schedule.php`
+  - PASS
+- `php -l includes/core/vendor-user-links.php`
   - PASS
 - direct WordPress boot smoke requiring `vendor-management-system.php`
   - PASS (`VMS_BOOT_OK`)
@@ -138,6 +140,9 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04q --force`
   - PASS
   - current artifact SHA-256: `bdb050f722c55de68a34c1690a7f8143f024801e638a7f00f1a14975c96d3671`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04r --force`
+  - PASS
+  - current artifact SHA-256: `4f336a3eb71714ac703633ca0b8f7222ed371881372416779b9159ca9203dd5d`
 
 ## Readme Validator
 
@@ -156,9 +161,9 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3255` total findings
-- `1031` errors
-- `2224` warnings
+- `3224` total findings
+- `999` errors
+- `2225` warnings
 
 Comparison:
 
@@ -180,10 +185,11 @@ Comparison:
 - `WPORG-04O` packaged-plugin final: `3270` total / `1045` errors / `2225` warnings
 - `WPORG-04P` packaged-plugin final: `3268` total / `1043` errors / `2225` warnings
 - `WPORG-04Q` packaged-plugin final: `3255` total / `1031` errors / `2224` warnings
+- `WPORG-04R` packaged-plugin final: `3224` total / `999` errors / `2225` warnings
 
 Dominant remaining codes:
 
-- `WordPress.WP.I18n.MissingTranslatorsComment`: `622`
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `590`
 - `WordPress.Security.NonceVerification.Recommended`: `597`
 - `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `256`
 - `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `232`
@@ -198,10 +204,15 @@ High-level category counts:
 
 - nonce and input handling: `1198`
 - database and SQL safety: `1101`
-- i18n placeholder comments / ordering: `638`
+- i18n placeholder comments / ordering: `606`
 - escaping and output safety: `183`
 - date/time API usage: `44`
 - development logging: `43`
+
+Packaged rerun note:
+
+- No previously unseen Plugin Check code categories appeared in `WPORG-04R`.
+- The only non-target delta outside `includes/core/vendor-user-links.php` was the reappearance of the previously observed `plugin_header_nonexistent_domain_path` warning.
 
 Fixed across this release-prep sequence:
 
@@ -224,11 +235,12 @@ Fixed across this release-prep sequence:
 - `includes/social-share/template-engine.php`: `8` -> `4`, with `0` -> `0` errors
 - `includes/social-share/audit.php`: `7` -> `5`, with `2` -> `0` errors
 - `includes/core/lineup-schedule.php`: `12` -> `0`, with `12` -> `0` errors
-- extracted-package rerun-only delta outside selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `0`
+- `includes/core/vendor-user-links.php`: `68` -> `36`, with `39` -> `7` errors
+- extracted-package rerun-only delta outside selected file scope: `plugin_header_nonexistent_domain_path`: `0` -> `1` in `WPORG-04R` after falling to `0` in `WPORG-04Q`
 - remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
 - packaged nonce/input blocker surface: `1517` -> `1198`
-- packaged i18n placeholder/comment surface: `792` -> `638`
+- packaged i18n placeholder/comment surface: `792` -> `606`
 - packaged output-escaping surface: `317` -> `183`
 
 Detailed grouping and recommendations:
@@ -256,7 +268,7 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: i18n | `638` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Add `translators:` comments and ordered placeholders in batches after security blockers | Partially |
+| Plugin Check: i18n | `606` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Add `translators:` comments and ordered placeholders in batches after security blockers | Partially |
 | Plugin Check: date/time APIs | `44` `date()` findings remain | SHOULD FIX BEFORE SUBMISSION | Review each case and convert UTC-safe display paths to explicit timezone-safe helpers where appropriate | Partially |
 
 ## Accept / Document
@@ -286,8 +298,8 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- `WPORG-04R`
+- `WPORG-04S`
 - Scope:
-  - repeat the deliberate hotspot scan before selecting the next file,
-  - prefer another i18n-only or read-only display/helper slice outside Event Plans, ticketing/payment/refund/cancellation, portal/profile-save, availability mutations, staffing mutations, and vendor-linking runtime,
-  - `includes/core/vendor-user-links.php` is the leading medium-risk candidate only if the pass can stay strictly on translator comments and avoid its DB/query branches.
+  - stabilize the resurfaced `plugin_header_nonexistent_domain_path` warning in a dedicated, behavior-neutral packaging metadata micro-batch,
+  - then repeat the deliberate hotspot scan before selecting the next file,
+  - `includes/core/vendor-application-confirmation.php` is a possible follow-up only if the pass can stay strictly on translator comments and avoid its DB/request branches.
