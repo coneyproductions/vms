@@ -6,8 +6,8 @@ Date: 2026-06-20
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp plugin check vms --mode=new --format=json`
-- Scan target for current counts: temporary installed package extracted from `dist/wporg-04m/vms-1.0.0-public-release.zip` under a disposable plugin slug, leaving the local `vms/` install untouched
-- Current artifact SHA-256: `08bbe1f22254facca50dfabb096ed06b45b06126efe1111d872ac5c3202ca1e3`
+- Scan target for current counts: temporary installed package extracted from `dist/wporg-04n/vms-1.0.0-public-release.zip` under a disposable plugin slug, leaving the local `vms/` install untouched
+- Current artifact SHA-256: `51c6d2c127845440ffce9eee2c07428ce67b5c8dc90a1b3208c6a0601680b8a9`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -29,6 +29,7 @@ Date: 2026-06-20
 | `WPORG-04K` packaged RC, final | temporary packaged plugin slug | `3319` | `1078` | `2241` | Cleared the safe Vendor Portal render/i18n/read-only-query batch in `includes/portal/vendor-portal.php` without widening into auth, profile-save, upload, availability save, or Event Plans runtime logic. |
 | `WPORG-04L` packaged RC, final | temporary packaged plugin slug | `3290` | `1061` | `2229` | Cleared the safe public calendar render/read-only-filter batch in `includes/public/venue-calendar-shortcode.php` without widening into portal mutation paths, query logic changes, or Event Plans runtime logic. |
 | `WPORG-04M` packaged RC, final | temporary packaged plugin slug | `3278` | `1049` | `2229` | Cleared the safe public vendor profiles render/i18n batch in `includes/public/vendor-profiles.php` without widening into query logic changes, portal mutation paths, or Event Plans runtime logic. |
+| `WPORG-04N` packaged RC, final | temporary packaged plugin slug | `3274` | `1045` | `2229` | Cleared the safe public vendor profile template render batch in `includes/public/templates/vendor-profile.php` without widening into request handling, query logic changes, or Event Plans runtime logic. |
 
 Net reduction from the `WPORG-02` source-tree baseline to the current packaged RC:
 
@@ -36,29 +37,27 @@ Net reduction from the `WPORG-02` source-tree baseline to the current packaged R
 - `-597` errors
 - `-692` warnings
 
-Net reduction from `WPORG-04L`:
+Net reduction from `WPORG-04M`:
 
-- `-12` total findings
-- `-12` errors
+- `-4` total findings
+- `-4` errors
 - `0` warnings
 
 ## Fixed In This Pass
 
-- `includes/public/vendor-profiles.php`
-  - `14` findings -> `2`
-  - `12` errors -> `0`
-  - `2` warnings -> `2`
-  - cleared the file's `MissingTranslatorsComment` and `EscapeOutput` findings entirely while intentionally leaving the two existing slow-query warnings in place and avoiding query logic changes
+- `includes/public/templates/vendor-profile.php`
+  - `4` findings -> `0`
+  - `4` errors -> `0`
+  - `0` warnings -> `0`
+  - cleared the file's `EscapeOutput` findings entirely by adding a narrow final-output allowlist around existing markup fragments while leaving request, query, and mutation behavior untouched
 - Focused validation for this batch
-  - no focused vendor profiles regression exists in `tests/`
+  - no focused vendor profile template regression exists in `tests/`
   - validation stayed on PHP lint, whitespace safety, public-release build, package integrity, and a rerun of packaged Plugin Check against a temporary extracted plugin slug under the local WordPress install
-  - Plugin Check stderr captured external dependency deprecation noise under `test-results/wporg-04m-plugin-check.stderr.txt` while the cleaned raw findings stayed in `docs/plugin-check-1.0.0-raw.txt`
+  - Plugin Check stderr captured external dependency deprecation noise under `test-results/wporg-04n-plugin-check.stderr.txt` while the cleaned raw findings stayed in `docs/plugin-check-1.0.0-raw.txt`
 
 Code-level deltas visible in the packaged scan:
 
-- `WordPress.WP.I18n.MissingTranslatorsComment`: `642` -> `634`
-- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `191` -> `187`
-- i18n placeholder comments and ordering: `658` -> `650`
+- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `187` -> `183`
 
 No new Plugin Check codes appeared in this pass.
 
@@ -68,7 +67,7 @@ No new Plugin Check codes appeared in this pass.
 | --- | ---: | --- | --- | --- |
 | Nonce and input handling | `1198` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | This pass stayed deliberately outside portal mutation and Event Plans save logic. The remaining high-density nonce/input work is still concentrated in `save_event_plan_meta()` and adjacent high-risk portal and integration flows. |
 | Database and SQL safety | `1107` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Prioritize `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL findings before generic direct-query/no-caching warnings. |
-| Escaping and output safety | `187` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/public/templates/vendor-profile.php` | BLOCKER | The highest-yield remaining escape work is now concentrated in the Staff Portal, the vendor profile template, and other render surfaces rather than the cleared vendor profiles controller file. |
+| Escaping and output safety | `183` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | The highest-yield remaining escape work is now concentrated in the Staff Portal, shared admin render shells, and other render surfaces rather than the cleared public vendor profile files. |
 | I18n placeholder comments and ordering | `650` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` | SHOULD FIX BEFORE SUBMISSION | Continue adding `translators:` comments and ordered placeholders after the remaining blocker categories are materially reduced. |
 | Date/time API usage | `44` | `includes/admin/schedule.php`, `includes/modules/staff-tasks/notifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Review each remaining `date()` use. Convert display-only paths to explicit timezone-safe helpers and leave local-time-sensitive cases for deliberate follow-up review. |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` | SHOULD FIX BEFORE SUBMISSION | Remove or hard-gate residual development logging that is still reachable in packaged code. |
@@ -76,7 +75,7 @@ No new Plugin Check codes appeared in this pass.
 ## Event Plans Conclusions
 
 - The Event Plans file remains the highest-density packaged file at `241` findings.
-- No Event Plans runtime findings were changed in `WPORG-04M`.
+- No Event Plans runtime findings were changed in `WPORG-04N`.
 - The low-risk admin list/helper surface is now nearly exhausted.
 - Remaining Event Plans findings are dominated by:
   - `save_event_plan_meta()` and adjacent request/save logic
@@ -85,9 +84,9 @@ No new Plugin Check codes appeared in this pass.
 
 ## Recommended Next Task
 
-- `WPORG-04N`
+- `WPORG-04O`
 - Scope:
-  - shift the next safe public render batch to `includes/public/templates/vendor-profile.php`
-  - keep the pass limited to final output escaping only
-  - leave broader vendor profile content behavior untouched
+  - shift the next safe shared admin render batch to `includes/admin-ui/shell.php`
+  - keep the pass limited to final output escaping of existing shell fragments and notices only
+  - leave caller-generated shell content behavior untouched
   - keep the pass out of Event Plans runtime, portal/profile-save flows, availability mutations, ticketing/payment/refund/cancellation flows, vendor-assignment saves, staffing mutations, and publish/TEC sync paths

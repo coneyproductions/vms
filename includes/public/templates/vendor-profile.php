@@ -87,6 +87,68 @@ for ($i = 1; $i <= 5; $i++) {
         $gallery_images[] = esc_url($url);
     }
 }
+
+$profile_markup_allowed_html = function_exists('vms_vendor_profiles_promo_allowed_html')
+    ? vms_vendor_profiles_promo_allowed_html()
+    : wp_kses_allowed_html('post');
+$profile_markup_allowed_html['section'] = array(
+    'aria-label' => true,
+    'class' => true,
+);
+$profile_markup_allowed_html['div'] = array(
+    'aria-label' => true,
+    'class' => true,
+);
+$profile_markup_allowed_html['p'] = array(
+    'class' => true,
+);
+$profile_markup_allowed_html['h2'] = array(
+    'class' => true,
+);
+$profile_markup_allowed_html['a'] = array_merge(
+    isset($profile_markup_allowed_html['a']) && is_array($profile_markup_allowed_html['a'])
+        ? $profile_markup_allowed_html['a']
+        : array(),
+    array(
+        'aria-label' => true,
+        'class' => true,
+        'href' => true,
+        'rel' => true,
+        'target' => true,
+    )
+);
+$profile_markup_allowed_html['span'] = array_merge(
+    isset($profile_markup_allowed_html['span']) && is_array($profile_markup_allowed_html['span'])
+        ? $profile_markup_allowed_html['span']
+        : array(),
+    array(
+        'aria-hidden' => true,
+        'class' => true,
+    )
+);
+
+$social_icon_allowed_html = function_exists('vms_vendor_profiles_social_icon_allowed_html')
+    ? vms_vendor_profiles_social_icon_allowed_html()
+    : array(
+        'svg' => array(
+            'aria-hidden' => true,
+            'focusable' => true,
+            'viewbox' => true,
+        ),
+        'path' => array(
+            'd' => true,
+            'fill' => true,
+        ),
+    );
+
+foreach ($social_icon_allowed_html as $tag => $attrs) {
+    $profile_markup_allowed_html[$tag] = array_merge(
+        isset($profile_markup_allowed_html[$tag]) && is_array($profile_markup_allowed_html[$tag])
+            ? $profile_markup_allowed_html[$tag]
+            : array(),
+        $attrs
+    );
+}
 ?>
 <main class="vms-vendor-profile" role="main">
     <section class="vms-vp-hero">
@@ -108,7 +170,7 @@ for ($i = 1; $i <= 5; $i++) {
             <?php endif; ?>
 
             <?php if ($social_markup !== '') : ?>
-                <?php echo $social_markup; ?>
+                <?php echo wp_kses($social_markup, $profile_markup_allowed_html); ?>
             <?php endif; ?>
 
             <div class="vms-vp-actions">
@@ -128,14 +190,14 @@ for ($i = 1; $i <= 5; $i++) {
     </section>
 
     <?php if ($next_show_markup !== '') : ?>
-        <?php echo $next_show_markup; ?>
+        <?php echo wp_kses($next_show_markup, $profile_markup_allowed_html); ?>
     <?php endif; ?>
 
     <?php if (trim((string) $vendor->post_content) !== '') : ?>
         <section class="vms-vp-card">
             <h2 class="vms-vp-h2"><?php echo esc_html__('About', 'vms'); ?></h2>
             <div class="vms-vp-content">
-                <?php echo apply_filters('the_content', $vendor->post_content); ?>
+                <?php echo wp_kses(apply_filters('the_content', $vendor->post_content), $profile_markup_allowed_html); ?>
             </div>
         </section>
     <?php endif; ?>
@@ -143,7 +205,7 @@ for ($i = 1; $i <= 5; $i++) {
     <?php if ($video_embed !== '') : ?>
         <section class="vms-vp-card">
             <h2 class="vms-vp-h2"><?php echo esc_html__('Featured video', 'vms'); ?></h2>
-            <div class="vms-vp-video"><?php echo $video_embed; ?></div>
+            <div class="vms-vp-video"><?php echo wp_kses($video_embed, $profile_markup_allowed_html); ?></div>
         </section>
     <?php endif; ?>
 
