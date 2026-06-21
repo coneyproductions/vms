@@ -5,14 +5,14 @@ Date: 2026-06-21
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-04U`: `a9a6ae471ad6dedc122d0ed38c4d50b251038613` (`a9a6ae4`)
+- HEAD at start of `WPORG-04V`: `7dc3c63fa8fb8d4a4b622ebb07c0638120acc4d4` (`7dc3c63`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-04U` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-04V` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 04U extracted-package rerun again left the pre-existing domain-path warning unchanged, but the metadata and packaging state did not change in this batch. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 04V extracted-package rerun again left the pre-existing domain-path warning unchanged, but the metadata and packaging state did not change in this batch. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -158,3 +158,10 @@ Scope note:
   - the selected file `includes/admin/staff-list-columns.php` reduced from `7` findings to `2` warnings-only while clearing `4` translator-comment errors and `1` final-output escaping error,
   - the extracted-package rerun again left the previously observed `plugin_header_nonexistent_domain_path` warning unchanged outside the selected file scope,
   - cleaned raw findings in `docs/plugin-check-1.0.0-raw.txt` with WP-CLI deprecation noise stripped from the packaged output stream during local validation.
+- `WPORG-04V` adds:
+  - current rebuilt RC artifact `dist/wporg-04v/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `1a4df7d0d1cf157c02241fcac4db65fd229b9a395c5158a0d328e6dea78483c7`,
+  - packaged Plugin Check reduction from `3170` to `3163` findings after the medium-risk approvals-review-queue render/i18n hotspot batch,
+  - the selected file `includes/admin/approvals-review-queue.php` reduced from `11` findings to `4` warnings-only while clearing `3` translator-comment errors and `4` final-output escaping errors,
+  - the extracted-package rerun again left the previously observed `plugin_header_nonexistent_domain_path` warning unchanged outside the selected file scope,
+  - cleaned raw findings in `docs/plugin-check-1.0.0-raw.txt` with WP-CLI deprecation noise stripped from the packaged output stream during local validation and mirrored in `test-results/wporg-04v-plugin-check.stderr.txt`.

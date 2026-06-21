@@ -616,10 +616,14 @@ if (!function_exists('vms_approvals_queue_verification_summary')) {
 			$submitted_at = (string) get_post_meta($request_id, 'submitted_at', true);
 
 			$user = ($user_id > 0) ? get_userdata($user_id) : null;
-			$name = ($user instanceof WP_User)
-				? trim((string) $user->display_name)
-				: sprintf(__('User #%d', 'vms'), $user_id);
+			if ($user instanceof WP_User) {
+				$name = trim((string) $user->display_name);
+			} else {
+				/* translators: %d: verification request user ID. */
+				$name = sprintf(__('User #%d', 'vms'), $user_id);
+			}
 			if ($name === '') {
+				/* translators: %d: verification request post ID. */
 				$name = sprintf(__('Request #%d', 'vms'), $request_id);
 			}
 
@@ -694,6 +698,7 @@ if (!function_exists('vms_approvals_queue_vendor_summary')) {
 			$app_id = (int) $post->ID;
 			$title = get_the_title($app_id);
 			if (!is_string($title) || trim($title) === '') {
+				/* translators: %d: vendor application post ID. */
 				$title = sprintf(__('Application #%d', 'vms'), $app_id);
 			}
 			$email = sanitize_email((string) get_post_meta($app_id, '_vms_app_email', true));
@@ -852,6 +857,39 @@ if (!function_exists('vms_approvals_queue_render_help_button')) {
 	}
 }
 
+if (!function_exists('vms_approvals_queue_allowed_help_html')) {
+	/**
+	 * @return array<string,array<string,bool>>
+	 */
+	function vms_approvals_queue_allowed_help_html(): array
+	{
+		return array(
+			'button' => array(
+				'type' => true,
+				'class' => true,
+				'style' => true,
+				'data-vms-tour' => true,
+				'data-vms-tour-start' => true,
+				'data-vms-help-action' => true,
+				'data-vms-help-open' => true,
+			),
+			'details' => array(
+				'class' => true,
+				'style' => true,
+				'data-vms-tour' => true,
+			),
+			'div' => array(
+				'class' => true,
+				'style' => true,
+			),
+			'summary' => array(
+				'class' => true,
+				'style' => true,
+			),
+		);
+	}
+}
+
 if (!function_exists('vms_approvals_queue_render_page')) {
 	function vms_approvals_queue_render_page(): void
 	{
@@ -872,7 +910,7 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 		echo '<div class="wrap vms-approvals-page" data-vms-tour="approvals.queue.root">';
 		echo '<h1>' . esc_html__('Approvals', 'vms') . '</h1>';
 		echo '<p class="description">' . esc_html__('Use this queue first whenever pending badges appear. It consolidates approval work across credential and vendor workflows so submissions are not missed.', 'vms') . '</p>';
-		echo '<p data-vms-tour="approvals.queue.help">' . $help_button . '</p>';
+		echo '<p data-vms-tour="approvals.queue.help">' . wp_kses($help_button, vms_approvals_queue_allowed_help_html()) . '</p>';
 
 		echo '<section class="vms-approvals-overview" data-vms-tour="approvals.queue.total">';
 		echo '<h2>' . esc_html__('Pending Review Items', 'vms') . '</h2>';
@@ -890,7 +928,7 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 			}
 			$label = (string) ($provider['section_label'] ?? $provider['label'] ?? $provider_id);
 			$pending_count = max(0, absint($provider['pending_count'] ?? 0));
-			$screen_url = esc_url((string) ($provider['screen_url'] ?? ''));
+			$screen_url = (string) ($provider['screen_url'] ?? '');
 			$description = (string) ($provider['description'] ?? '');
 			$summary_items = (array) ($provider['summary_items'] ?? array());
 
@@ -908,7 +946,7 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 				echo '<p>' . esc_html__('Queue is clear. New submissions will appear here immediately when created.', 'vms') . '</p>';
 			}
 			if ($screen_url !== '') {
-				echo '<p><a class="button button-primary" href="' . $screen_url . '">' . esc_html__('Open Review Screen', 'vms') . '</a></p>';
+				echo '<p><a class="button button-primary" href="' . esc_url($screen_url) . '">' . esc_html__('Open Review Screen', 'vms') . '</a></p>';
 			} else {
 				echo '<p class="description">' . esc_html__('Destination screen is unavailable right now. Check logs for provider URL errors.', 'vms') . '</p>';
 			}
@@ -1000,10 +1038,10 @@ if (!function_exists('vms_approvals_queue_render_dashboard_card')) {
 		foreach ($providers as $provider) {
 			$label = sanitize_text_field((string) ($provider['menu_label'] ?? $provider['label'] ?? ''));
 			$count = max(0, absint($provider['pending_count'] ?? 0));
-			$screen_url = esc_url((string) ($provider['screen_url'] ?? ''));
+			$screen_url = (string) ($provider['screen_url'] ?? '');
 			echo '<li data-vms-tour="dashboard.approvals.provider">';
 			if ($screen_url !== '') {
-				echo '<a href="' . $screen_url . '">' . esc_html($label) . '</a>';
+				echo '<a href="' . esc_url($screen_url) . '">' . esc_html($label) . '</a>';
 			} else {
 				echo '<span>' . esc_html($label) . '</span>';
 			}
@@ -1072,7 +1110,7 @@ if (!function_exists('vms_approvals_queue_render_vendor_list_tour_launcher')) {
 		);
 		echo '<div class="notice notice-info" data-vms-tour="approvals.vendor.help"><p><strong>' . esc_html__('Vendor approvals live on this table.', 'vms') . '</strong> ';
 		echo esc_html__('Review pending applications promptly so approved vendors are not blocked from onboarding workflows.', 'vms');
-		echo '</p><p>' . $button . '</p></div>';
+		echo '</p><p>' . wp_kses($button, vms_approvals_queue_allowed_help_html()) . '</p></div>';
 	}
 }
 add_action('all_admin_notices', 'vms_approvals_queue_render_vendor_list_tour_launcher', 50);

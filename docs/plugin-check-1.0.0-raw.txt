@@ -915,20 +915,6 @@ line	column	type	code	message	docs
 2403	106	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
 2406	113	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$mode_label'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
 
-FILE: includes/admin/approvals-review-queue.php
-line	column	type	code	message	docs
-25	3	WARNING	WordPress.PHP.DevelopmentFunctions.error_log_error_log	error_log() found. Debug code should not normally be used in production.
-621	27	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-623	33	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-667	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
-697	34	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-875	59	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$help_button'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-911	69	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$screen_url'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1006	36	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$screen_url'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1026	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1026	56	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1075	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$button'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-
 FILE: includes/admin/ticket-integrity-page.php
 line	column	type	code	message	docs
 21	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
@@ -3019,9 +3005,6 @@ line	column	type	code	message	docs
 FILE: vendor-management-system.php
 line	column	type	code	message	docs
 0	0	WARNING	plugin_header_nonexistent_domain_path	The "Domain Path" header in the plugin file must point to an existing folder. Found: "languages"	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#domain-path
-
-FILE: vendor-management-system.php
-line	column	type	code	message	docs
 36	3	WARNING	PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound	load_plugin_textdomain() has been discouraged since WordPress version 4.6. When your plugin is hosted on WordPress.org, you no longer need to manually include this function call for translations under your plugin slug. WordPress will automatically load the translations for you as needed.	https://make.wordpress.org/core/2016/07/06/i18n-improvements-in-4-6/
 
 FILE: includes/social-share/event-plan-panel.php
@@ -3357,6 +3340,13 @@ line	column	type	code	message	docs
 183	15	WARNING	WordPress.Security.NonceVerification.Missing	Processing form data without nonce verification.
 223	41	WARNING	WordPress.Security.NonceVerification.Missing	Processing form data without nonce verification.
 223	41	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;license_key&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+
+FILE: includes/admin/approvals-review-queue.php
+line	column	type	code	message	docs
+25	3	WARNING	WordPress.PHP.DevelopmentFunctions.error_log_error_log	error_log() found. Debug code should not normally be used in production.
+671	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
+1064	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1064	56	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 
 FILE: includes/admin/venue-duplicate-templates.php
 line	column	type	code	message	docs
