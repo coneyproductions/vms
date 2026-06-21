@@ -4,56 +4,57 @@ Date: 2026-06-20
 
 ## Scope
 
-- Scan target: temporary packaged plugin slug extracted from `dist/wporg-04n/vms-1.0.0-public-release.zip`
-- Artifact SHA-256: `51c6d2c127845440ffce9eee2c07428ce67b5c8dc90a1b3208c6a0601680b8a9`
+- Scan target: temporary packaged plugin slug extracted from `dist/wporg-04o/vms-1.0.0-public-release.zip`
+- Artifact SHA-256: `b5ff1494aa35b48e3d108f51d8efc584bacde4fbeceb433acca60ebdac06b690`
 - Raw output: `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp plugin check vms --mode=new --format=json`
 
 ## Current Result
 
-- `3274` total findings
+- `3270` total findings
 - `1045` errors
-- `2229` warnings
+- `2225` warnings
 
-Comparison to the prior packaged RC from `WPORG-04M`:
+Comparison to the prior packaged RC from `WPORG-04N`:
 
-- `3278` -> `3274` total (`-4`)
-- `1049` -> `1045` errors (`-4`)
-- `2229` -> `2229` warnings (`0`)
+- `3274` -> `3270` total (`-4`)
+- `1045` -> `1045` errors (`0`)
+- `2229` -> `2225` warnings (`-4`)
 
-## WPORG-04N Batch
+## WPORG-04O Batch
 
-- `includes/public/templates/vendor-profile.php`
-  - `4` -> `0`
-  - `4` -> `0` errors
-  - `0` -> `0` warnings
-  - selected because it was the highest-value remaining safe public render file already nominated in the 04M handoff and could be cleared mechanically without touching request, query, or mutation logic
-  - added one shared final-output allowlist for the vendor profile render surface
-  - wrapped the social-links fragment, next-show card fragment, filtered profile content, and featured-video embed at the template output boundary
+- `includes/social-share/template-engine.php`
+  - `8` -> `4`
+  - `0` -> `0` errors
+  - `8` -> `4` warnings
+  - selected because it was the highest-value remaining low-risk DB/SQL file in the handoff set that stayed on read-only template lookups and sat outside Event Plans runtime, ticketing, portal saves, and mutation-heavy social queue flows
+  - limited the pass to table-identifier preparation only in two existing read-only lookups
+  - converted the two dynamic table references in `vms_social_template_get()` and `vms_social_template_default_for_platform()` to prepared `%i` identifiers without changing selected columns, filters, ordering, limits, or return shape
 - focused validation
-  - no focused vendor profile template regression exists in `tests/`
+  - no focused social template-engine regression exists in `tests/`
   - the packaged rerun used a temporary extracted plugin slug under the local WordPress install, leaving the installed `vms/` copy untouched
 
 Files touched:
 
-- `includes/public/templates/vendor-profile.php`
+- `includes/social-share/template-engine.php`
 
 Findings intentionally deferred:
 
 - all remaining high-risk Event Plans runtime request/save hardening
 - all publish validation, vendor assignment, staffing mutation, and live refund request flows
 - all TEC publish/resync and ticket cleanup paths
-- all portal/profile-save, upload, availability-save, and link-request input hardening outside this public render-only batch
-- all broader SQL, nonce/input, and i18n follow-up outside this template file
+- all portal/profile-save, upload, availability-save, and link-request input hardening outside this read-only SQL batch
+- all broader SQL, nonce/input, and i18n follow-up outside the two read-only social template lookup helpers
 
 Risk notes:
 
-- selected runtime file is a front-end public vendor profile surface, but the chosen changes stayed on final output escaping of existing markup fragments only
-- Event Plans runtime logic and other mutation-heavy flows were intentionally untouched
+- selected file is a social template lookup surface, but the chosen changes stayed on read-only table-identifier preparation in two existing queries only
+- Event Plans runtime logic, social posting/queue mutation paths, and other mutation-heavy flows were intentionally untouched
 
 Net effect of the selected batch:
 
-- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `187` -> `183` (`-4`)
+- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `158` -> `156` (`-2`)
+- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `150` -> `148` (`-2`)
 - no new Plugin Check code categories appeared
 
 ## Highest-Density Files
@@ -81,7 +82,7 @@ Net effect of the selected batch:
 | Category | Current count | Highest-density files |
 | --- | ---: | --- |
 | Nonce and input handling | `1198` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` |
-| Database and SQL safety | `1107` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` |
+| Database and SQL safety | `1103` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` |
 | Escaping and output safety | `183` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` |
 | I18n placeholder comments and ordering | `650` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` |
 | Date/time API usage | `44` | `includes/admin/schedule.php`, `includes/modules/staff-tasks/notifications.php`, `includes/core/staffing.php` |
@@ -89,9 +90,9 @@ Net effect of the selected batch:
 
 ## Next Recommended Batch
 
-- `WPORG-04O`
+- `WPORG-04P`
 - Scope:
-  - shift the next safe shared admin render batch to `includes/admin-ui/shell.php`
-  - keep the pass limited to final output escaping of existing shell fragments and notices only
-  - leave caller-generated shell content behavior untouched
-  - keep the pass out of Event Plans runtime, portal/profile-save flows, availability mutations, ticketing mutations, refund/cancellation flows, vendor-assignment saves, staffing mutations, and publish/TEC sync paths
+  - shift the next safe read-only SQL batch to `includes/modules/admissions/admin-ui.php`
+  - keep the pass limited to the guest-list export CSV read query and table-identifier preparation only
+  - leave guest-list mutation behavior, REST handlers, permissions, and Event Plans runtime untouched
+  - keep the pass out of ticketing mutations, refund/cancellation flows, portal/profile-save flows, availability mutations, staffing mutations, and publish/TEC sync paths

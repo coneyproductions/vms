@@ -108,7 +108,7 @@ if (!function_exists('vms_social_template_get')) {
 		}
 		global $wpdb;
 		$table = vms_social_table_templates();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $template_id), ARRAY_A);
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $template_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -124,7 +124,8 @@ if (!function_exists('vms_social_template_default_for_platform')) {
 		$table = vms_social_table_templates();
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE platform = %s ORDER BY is_default DESC, id ASC LIMIT 1",
+				'SELECT * FROM %i WHERE platform = %s ORDER BY is_default DESC, id ASC LIMIT 1',
+				$table,
 				$platform
 			),
 			ARRAY_A
