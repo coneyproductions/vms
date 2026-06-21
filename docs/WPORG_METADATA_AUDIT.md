@@ -5,14 +5,14 @@ Date: 2026-06-20
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD: `cd85dbfb13999a19ef3bfa89cc8a2ac9607fe6d0` (`cd85dbf`)
+- HEAD: `fe078720191ce333f366f992d93bf321afffb369` (`fe07872`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-04J` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-04K` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -93,3 +93,8 @@ Scope note:
   - current SHA-256 `06905c9a2c62788056adf9d99857dce37df82e4f7f87a6e7fbb57df5c0d498c5`,
   - packaged Plugin Check reduction from `3435` to `3408` findings after the safe Staff Portal render/i18n/read-only-query batch,
   - cleaned raw findings in `docs/plugin-check-1.0.0-raw.txt` with external dependency deprecation noise captured separately in `test-results/wporg-04j-plugin-check.stderr.txt`.
+- `WPORG-04K` adds:
+  - current rebuilt RC artifact `dist/wporg-04k/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `894cf8280489f4d52561be45e88b4ee317693ad2b61cc400c45ad41b4dceb209`,
+  - packaged Plugin Check reduction from `3408` to `3319` findings after the safe Vendor Portal render/i18n/read-only-query batch,
+  - cleaned raw findings in `docs/plugin-check-1.0.0-raw.txt` with external dependency deprecation noise captured separately in `test-results/wporg-04k-plugin-check.stderr.txt`.

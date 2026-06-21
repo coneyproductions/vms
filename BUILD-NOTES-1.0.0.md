@@ -4,7 +4,7 @@ Date: 2026-06-20
 
 ## Purpose
 
-Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, the staffing admin Plugin Check batch from `WPORG-04I`, and the Staff Portal Plugin Check batch from `WPORG-04J`.
+Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, the staffing admin Plugin Check batch from `WPORG-04I`, the Staff Portal Plugin Check batch from `WPORG-04J`, and the Vendor Portal Plugin Check batch from `WPORG-04K`.
 
 ## Files Changed
 
@@ -21,6 +21,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - `includes/admin/vendor-command-center.php`
 - `includes/admin/vendor-availability.php`
 - `includes/portal/staff-portal.php`
+- `includes/portal/vendor-portal.php`
 - `includes/admin/budget-calculator.php`
 - `includes/cpt/event-plans.php`
 - `includes/admin/goals-forecast.php`
@@ -68,7 +69,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - safe admin-only render-surface cleanup in `vendor-command-center.php` and `vendor-availability.php`, plus shared bootstrap adoption in the two remaining packaged-validation regressions that still hardcoded `wp-load.php`, in `WPORG-04G`,
   - safe admin-only render/request/i18n cleanup in `event-command-center.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04H`,
   - safe admin-only escaping/request/i18n cleanup plus one behavior-preserving rollup count query preparation in `staffing.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04I`,
-  - safe Staff Portal final-output escaping, `translators:` comments, read-only tab normalization, and read-only reporting-query preparation in `staff-portal.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04J`.
+  - safe Staff Portal final-output escaping, `translators:` comments, read-only tab normalization, and read-only reporting-query preparation in `staff-portal.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04J`,
+  - safe Vendor Portal final-output escaping, `translators:` comments, read-only request allowlisting, display-only date cleanup, and read-only admissions-reporting query preparation in `vendor-portal.php`, with the packaged rerun executed against a temporary extracted plugin slug so the installed `vms/` copy stayed untouched, in `WPORG-04K`.
 - Functional code paths, database schemas, uninstall behavior, and add-on behavior were not intentionally changed beyond those narrow release-safety and request-safety adjustments.
 - The plugin header version and `VMS_VERSION` constant remain public `1.0.0`.
 
@@ -86,7 +88,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 ## Validation Commands Run
 
 - `git diff --check`
-  - PASS in `WPORG-02`, the final `WPORG-03` validation pass, the final `WPORG-04E` validation pass, and the final `WPORG-04G` validation pass
+  - PASS in `WPORG-02`, the final `WPORG-03` validation pass, the final `WPORG-04E` validation pass, the final `WPORG-04G` validation pass, and the final `WPORG-04K` validation pass
 - `php -l vendor-management-system.php`
   - PASS
 - `php -l includes/core/registry/constants.php`
@@ -115,6 +117,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - `php -l includes/admin/staffing.php`
   - PASS
 - `php -l includes/portal/staff-portal.php`
+  - PASS
+- `php -l includes/portal/vendor-portal.php`
   - PASS
 - `php -l includes/admin/vendor-command-center.php`
   - PASS
@@ -183,6 +187,9 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - current rebuilt RC after `WPORG-04J`
   - PASS: `dist/wporg-04j/vms-1.0.0-public-release.zip`
   - SHA-256: `06905c9a2c62788056adf9d99857dce37df82e4f7f87a6e7fbb57df5c0d498c5`
+- current rebuilt RC after `WPORG-04K`
+  - PASS: `dist/wporg-04k/vms-1.0.0-public-release.zip`
+  - SHA-256: `894cf8280489f4d52561be45e88b4ee317693ad2b61cc400c45ad41b4dceb209`
 - package integrity
   - PASS
 - official readme validator after metadata application
@@ -200,6 +207,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - packaged final run after `WPORG-04H`: `3491` findings
   - packaged final run after `WPORG-04I`: `3435` findings
   - packaged final run after `WPORG-04J`: `3408` findings
+  - packaged final run after `WPORG-04K`: `3319` findings
   - fixed category earlier in the release-prep sequence: `missing_direct_file_access_protection` reduced from `12` to `0`
   - `WPORG-04A` batch delta: `-80` total findings (`-1` errors / `-79` warnings)
   - `WPORG-04B` batch delta: `-113` total findings (`-12` errors / `-101` warnings)
@@ -209,6 +217,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - `WPORG-04H` batch delta: `-63` total findings (`-63` errors / `0` warnings)
   - `WPORG-04I` batch delta: `-56` total findings (`-24` errors / `-32` warnings)
   - `WPORG-04J` batch delta: `-27` total findings (`-21` errors / `-6` warnings)
+  - `WPORG-04K` batch delta: `-89` total findings (`-80` errors / `-9` warnings)
 
 ## Minimum Version Decision
 

@@ -268,6 +268,78 @@ if (!function_exists('vms_vendor_portal_render_preview_hidden_fields')) {
     }
 }
 
+if (!function_exists('vms_vendor_portal_allowed_tabs')) {
+    function vms_vendor_portal_allowed_tabs(): array
+    {
+        $tabs = apply_filters(
+            'vms_vendor_portal_allowed_tabs',
+            array('dashboard', 'profile', 'tax-profile', 'history', 'availability', 'opportunities', 'all-vendors', 'tech')
+        );
+
+        if (!is_array($tabs)) {
+            $tabs = array();
+        }
+
+        $tabs = array_values(array_unique(array_filter(array_map('sanitize_key', $tabs))));
+        if (empty($tabs)) {
+            $tabs = array('dashboard');
+        }
+
+        return $tabs;
+    }
+}
+
+if (!function_exists('vms_vendor_portal_get_requested_tab')) {
+    function vms_vendor_portal_get_requested_tab(string $default = 'dashboard'): string
+    {
+        $allowed_tabs = vms_vendor_portal_allowed_tabs();
+        $default = sanitize_key($default);
+        if ($default === '' || !in_array($default, $allowed_tabs, true)) {
+            $default = in_array('dashboard', $allowed_tabs, true) ? 'dashboard' : (string) $allowed_tabs[0];
+        }
+
+        if (!isset($_GET['tab'])) {
+            return $default;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only portal tab routing uses an explicit allowlist.
+        $requested_tab = sanitize_key((string) wp_unslash($_GET['tab']));
+
+        return in_array($requested_tab, $allowed_tabs, true) ? $requested_tab : $default;
+    }
+}
+
+if (!function_exists('vms_vendor_portal_get_requested_vendor_id')) {
+    function vms_vendor_portal_get_requested_vendor_id(): int
+    {
+        if (!isset($_GET['vendor_id'])) {
+            return 0;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only vendor switcher routing only loads an already-linked vendor.
+        return absint(wp_unslash((string) $_GET['vendor_id']));
+    }
+}
+
+if (!function_exists('vms_vendor_portal_get_requested_lookback')) {
+    function vms_vendor_portal_get_requested_lookback(array $allowed, int $default): int
+    {
+        $allowed = array_values(array_unique(array_map('absint', $allowed)));
+        if (!in_array($default, $allowed, true)) {
+            $default = !empty($allowed) ? (int) $allowed[0] : 0;
+        }
+
+        if (!isset($_GET['lb'])) {
+            return $default;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only lookback filter is allowlisted and does not mutate data directly.
+        $requested = absint(wp_unslash((string) $_GET['lb']));
+
+        return in_array($requested, $allowed, true) ? $requested : $default;
+    }
+}
+
 
 if (!function_exists('vms_vendor_flag_vendor_update')) {
     function vms_vendor_flag_vendor_update($vendor_id, $context = '', array $meta = array()): void
@@ -479,8 +551,9 @@ if (!function_exists('vms_vendor_portal_get_admissions_headcount')) {
 
         return max(0, (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COALESCE(SUM(CASE WHEN status <> 'canceled' THEN party_size ELSE 0 END), 0)
-             FROM {$table}
+             FROM %i
              WHERE event_plan_id = %d",
+            $table,
             $plan_id
         )));
     }
@@ -865,8 +938,9 @@ if (!function_exists('vms_vendor_portal_get_guest_admissions_count')) {
             if (!empty($table_exists_cache[$table])) {
                 $guest_qty = max(0, (int) $wpdb->get_var($wpdb->prepare(
                     "SELECT COALESCE(SUM(CASE WHEN status <> 'canceled' THEN party_size ELSE 0 END), 0)
-                     FROM {$table}
+                     FROM %i
                      WHERE event_plan_id = %d",
+                    $table,
                     $plan_id
                 )));
             }
@@ -1410,6 +1484,7 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
             echo '</div>';
 
             echo '<div class="vms-vp-progress-card__countline">';
+            /* translators: %d: attendance count for this vendor event card. */
             echo '<strong>' . esc_html(sprintf($history_mode ? __('Final count: %d', 'vms') : __('Current count: %d', 'vms'), $attendance_count)) . '</strong>';
             echo '</div>';
 
@@ -1463,9 +1538,11 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
                     echo '<strong>' . esc_html__('Max bonus reached', 'vms') . '</strong>';
                 } elseif ($mode === 'step' && $next_bonus !== null && $next_threshold !== null) {
                     echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Next bonus', 'vms') . '</span>';
+                    /* translators: %d: attendance threshold needed for the next bonus step. */
                     echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) $next_bonus)) . ' <span class="vms-vp-progress-inline-note">' . esc_html(sprintf(__('at %d', 'vms'), (int) $next_threshold)) . '</span></strong>';
                 } elseif ($mode === 'continuous' && $next_threshold !== null && !empty($snapshot['max_bonus'])) {
                     echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Bonus cap', 'vms') . '</span>';
+                    /* translators: %d: attendance threshold where the bonus cap is reached. */
                     echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) ($snapshot['max_bonus'] ?? 0.0))) . ' <span class="vms-vp-progress-inline-note">' . esc_html(sprintf(__('by %d', 'vms'), (int) $next_threshold)) . '</span></strong>';
                 } elseif ($mode === 'continuous' && !empty($snapshot['per_ticket_rate'])) {
                     echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Bonus rate', 'vms') . '</span>';
@@ -1490,6 +1567,7 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
                     echo '<strong>' . esc_html__('Goal reached', 'vms') . '</strong>';
                 } elseif ($tickets_to_next > 0) {
                     echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'vms') . '</span>';
+                    /* translators: %d: remaining ticket count before the next threshold. */
                     echo '<strong>' . esc_html(sprintf(_n('%d more ticket', '%d more tickets', $tickets_to_next, 'vms'), $tickets_to_next)) . '</strong>';
                 } else {
                     echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'vms') . '</span>';
@@ -1871,6 +1949,7 @@ if (!function_exists('vms_vendor_portal_render_event_history_tab')) {
                     $meta_bits[] = $role_label;
                 }
                 if ($attendance_count !== null) {
+                    /* translators: %d: final attendance count for the completed event. */
                     $meta_bits[] = sprintf(__('Final count: %d', 'vms'), $attendance_count);
                 }
 
@@ -1930,7 +2009,7 @@ if (!function_exists('vms_vendor_portal_frontend_tour_screen_key')) {
             return $screen_key;
         }
 
-        $tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'dashboard';
+        $tab = vms_vendor_portal_get_requested_tab('dashboard');
         if ($tab === 'dashboard') {
             return 'frontend:vms-vendor-portal-dashboard';
         }
@@ -2125,7 +2204,11 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
 
         if ($assigned_here) {
             $detail = $assigned_role !== ''
-                ? sprintf(__('Assigned on this Event Plan as %s.', 'vms'), strtolower($assigned_role))
+                ? sprintf(
+                    /* translators: %s: assigned role label for the vendor on this Event Plan. */
+                    __('Assigned on this Event Plan as %s.', 'vms'),
+                    strtolower($assigned_role)
+                )
                 : __('Assigned on this Event Plan.', 'vms');
 
             return array(
@@ -2850,6 +2933,42 @@ if (!function_exists('vms_vendor_portal_headliner_promo_video_allowed_external_h
     }
 }
 
+if (!function_exists('vms_vendor_portal_headliner_promo_video_allowed_html')) {
+    function vms_vendor_portal_headliner_promo_video_allowed_html(): array
+    {
+        $allowed = wp_kses_allowed_html('post');
+        $allowed['iframe'] = array(
+            'allow' => true,
+            'allowfullscreen' => true,
+            'class' => true,
+            'frameborder' => true,
+            'height' => true,
+            'loading' => true,
+            'name' => true,
+            'referrerpolicy' => true,
+            'sandbox' => true,
+            'src' => true,
+            'title' => true,
+            'width' => true,
+        );
+        $allowed['video'] = array(
+            'class' => true,
+            'controls' => true,
+            'loop' => true,
+            'muted' => true,
+            'playsinline' => true,
+            'poster' => true,
+            'preload' => true,
+        );
+        $allowed['source'] = array(
+            'src' => true,
+            'type' => true,
+        );
+
+        return $allowed;
+    }
+}
+
 if (!function_exists('vms_vendor_portal_normalize_promo_video_external_url')) {
     function vms_vendor_portal_normalize_promo_video_external_url(string $url): string
     {
@@ -2992,7 +3111,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_markup_from
             <?php if ($provider_label !== '') : ?>
                 <p class="vms-headliner-promo-video__description"><?php echo esc_html($provider_label); ?></p>
             <?php endif; ?>
-            <?php echo $body_markup; ?>
+            <?php echo wp_kses($body_markup, vms_vendor_portal_headliner_promo_video_allowed_html()); ?>
         </div>
         <?php
         return (string) ob_get_clean();
@@ -3040,7 +3159,7 @@ if (!function_exists('vms_vendor_portal_get_next_headliner_booking')) {
 
         $today = function_exists('wp_date')
             ? wp_date('Y-m-d', time(), function_exists('wp_timezone') ? wp_timezone() : null)
-            : date('Y-m-d');
+            : gmdate('Y-m-d');
 
         $plans = get_posts(array(
             'post_type'      => 'vms_event_plan',
@@ -3243,8 +3362,10 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         echo esc_html__('Record a quick “we’re coming to the show” clip right on your phone and submit it here. iPhone video is okay. We review it before it goes live so the public event page stays clean and browser-safe.', 'vms');
         echo '</p>';
         echo '<p class="vms-muted vms-portal-promo-video-card__limits">';
+        /* translators: %s: maximum recommended upload size. */
         echo esc_html(sprintf(__('Recommended formats: MP4, MOV, or WebM. Maximum upload: %s. Aim for 30–60 seconds.', 'vms'), $max_label));
         if ($wp_limit > 0 && $wp_limit < $max_bytes && function_exists('size_format')) {
+            /* translators: %s: current site upload size limit. */
             echo ' ' . esc_html(sprintf(__('Your current site upload limit is %s.', 'vms'), size_format($wp_limit, 0)));
         }
         echo '</p>';
@@ -3262,6 +3383,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
                         $requested_label = function_exists('wp_date')
                             ? wp_date('M j, Y g:ia', $requested_ts, function_exists('wp_timezone') ? wp_timezone() : null)
                             : date_i18n('M j, Y g:ia', $requested_ts);
+                        /* translators: %s: date and time from the vendor booking email request. */
                         echo ' ' . esc_html(sprintf(__('Requested in your booking email on %s.', 'vms'), $requested_label));
                     }
                 }
@@ -3270,35 +3392,37 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         }
 
         if (!empty($video['source_type']) && $video['source_type'] !== 'none') {
-            echo vms_vendor_portal_render_headliner_promo_video_markup_from_data($video, array(
+            echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($video, array(
                 'context' => 'portal',
                 'heading' => __('Current public promo', 'vms'),
                 'wrap_class' => 'vms-headliner-promo-video--portal',
-            ));
+            )), vms_vendor_portal_headliner_promo_video_allowed_html());
             if (!empty($video['uploaded_at_gmt'])) {
                 $uploaded_ts = strtotime((string) $video['uploaded_at_gmt'] . ' GMT');
                 if ($uploaded_ts) {
                     $uploaded_label = function_exists('wp_date')
                         ? wp_date('M j, Y g:ia', $uploaded_ts, function_exists('wp_timezone') ? wp_timezone() : null)
                         : date_i18n('M j, Y g:ia', $uploaded_ts);
+                    /* translators: %s: date and time when the current public promo video was last updated. */
                     echo '<p class="vms-muted vms-m0">' . esc_html(sprintf(__('Current public video updated: %s', 'vms'), $uploaded_label)) . '</p>';
                 }
             }
         }
 
         if (!empty($submitted['attachment_id'])) {
-            echo vms_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
+            echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
                 'context' => 'portal',
                 'heading' => __('Submitted for review', 'vms'),
                 'description' => __('Thanks — your clip is in for operator review. It will not appear publicly until we approve it or swap in a browser-safe version.', 'vms'),
                 'wrap_class' => 'vms-headliner-promo-video--portal',
-            ));
+            )), vms_vendor_portal_headliner_promo_video_allowed_html());
             if (!empty($submitted['uploaded_at_gmt'])) {
                 $submitted_ts = strtotime((string) $submitted['uploaded_at_gmt'] . ' GMT');
                 if ($submitted_ts) {
                     $submitted_label = function_exists('wp_date')
                         ? wp_date('M j, Y g:ia', $submitted_ts, function_exists('wp_timezone') ? wp_timezone() : null)
                         : date_i18n('M j, Y g:ia', $submitted_ts);
+                    /* translators: %s: date and time when the promo video was submitted for review. */
                     echo '<p class="vms-muted vms-m0">' . esc_html(sprintf(__('Submitted: %s', 'vms'), $submitted_label)) . '</p>';
                 }
             }
@@ -3397,6 +3521,7 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         if ($error !== UPLOAD_ERR_OK) {
             $message = __('Upload failed before WordPress could save the file. Please try a smaller MP4 if this keeps happening.', 'vms');
             if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+                /* translators: %s: current upload size limit for the promo video. */
                 $message = sprintf(__('That file is larger than the current upload limit. Please keep it under %s.', 'vms'), function_exists('size_format') ? size_format(vms_vendor_portal_headliner_promo_video_max_bytes(), 0) : (string) vms_vendor_portal_headliner_promo_video_max_bytes());
             }
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => $message));
@@ -3419,6 +3544,7 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
             exit;
         }
         if ($size > $max_bytes) {
+            /* translators: %s: current upload size limit for the promo video. */
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('That file is too large. Please keep it under %s.', 'vms'), function_exists('size_format') ? size_format($max_bytes, 0) : (string) $max_bytes)));
             wp_safe_redirect($return_url);
             exit;
@@ -3445,6 +3571,7 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         ));
 
         if (is_wp_error($attachment_id)) {
+            /* translators: %s: media library upload error message. */
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('Upload failed: %s', 'vms'), $attachment_id->get_error_message())));
             wp_safe_redirect($return_url);
             exit;
@@ -3640,6 +3767,7 @@ if (!function_exists('vms_vendor_portal_submit_application_label')) {
         if ($type_label === '') {
             return __('Submit Application', 'vms');
         }
+        /* translators: %s: vendor type label for the application button text. */
         return sprintf(__('Submit %s Application', 'vms'), $type_label);
     }
 }
@@ -3916,7 +4044,7 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
         echo '<div class="vms-portal-card vms-vio-opps-card">';
         echo '<h3>' . esc_html__('Opportunities', 'vms') . '</h3>';
         if (!empty($flash['message'])) {
-            echo vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']);
+            echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
         }
 
         $today = wp_date('Y-m-d', time(), wp_timezone());
@@ -4265,7 +4393,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
 
         ob_start();
         if (!empty($flash['message'])) {
-            echo vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']);
+            echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
         }
 
         echo '<div class="vms-portal-auth-wrap">';
@@ -4277,7 +4405,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
         }
 
         if (empty($candidate_vendor_ids)) {
-            echo vms_portal_notice('warning', __('We could not find a vendor profile using this website account email yet.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('warning', __('We could not find a vendor profile using this website account email yet.', 'vms')));
             echo '<p>' . esc_html__('If your vendor profile uses a different email address, please contact the venue so they can connect the correct record manually.', 'vms') . '</p>';
         } else {
             echo '<p>' . esc_html__('We found the following vendor profile matches for this account. Send a request for the one that should be linked to you.', 'vms') . '</p>';
@@ -4289,6 +4417,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
 
                 $vendor_title = get_the_title($candidate_vendor_id);
                 if (!is_string($vendor_title) || $vendor_title === '') {
+                    /* translators: %d: vendor post ID. */
                     $vendor_title = sprintf(__('Vendor #%d', 'vms'), $candidate_vendor_id);
                 }
 
@@ -4316,15 +4445,29 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
 
                 if ($is_pending) {
                     $pending_message = $requested_label !== ''
-                        ? sprintf(__('Request sent on %s. The venue still needs to review it.', 'vms'), $requested_label)
+                        ? sprintf(
+                            /* translators: %s: date and time when the vendor access request was sent. */
+                            __('Request sent on %s. The venue still needs to review it.', 'vms'),
+                            $requested_label
+                        )
                         : __('Your request is already pending review.', 'vms');
-                    echo vms_portal_notice('warning', $pending_message);
+                    echo wp_kses_post(vms_portal_notice('warning', $pending_message));
                 } else {
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
                     echo '<input type="hidden" name="action" value="vms_vendor_portal_link_request">';
                     echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $candidate_vendor_id) . '">';
                     echo '<input type="hidden" name="return_url" value="' . esc_attr($return_url) . '">';
-                    echo wp_nonce_field('vms_vendor_portal_link_request_submit', '_vms_vendor_link_request_nonce', true, false);
+                    echo wp_kses(
+                        wp_nonce_field('vms_vendor_portal_link_request_submit', '_vms_vendor_link_request_nonce', true, false),
+                        array(
+                            'input' => array(
+                                'id' => true,
+                                'name' => true,
+                                'type' => true,
+                                'value' => true,
+                            ),
+                        )
+                    );
                     echo '<button type="submit" class="button button-primary">' . esc_html__('Request portal access', 'vms') . '</button>';
                     echo '</form>';
                 }
@@ -4426,9 +4569,9 @@ function vms_vendor_portal_shortcode($atts = []): string
     // Logged-in: resolve vendor context (many-to-many)
     $user_id = get_current_user_id();
 
-    $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'dashboard';
+    $tab = vms_vendor_portal_get_requested_tab('dashboard');
 
-    $requested_vendor_id = isset($_GET['vendor_id']) ? absint($_GET['vendor_id']) : 0;
+    $requested_vendor_id = vms_vendor_portal_get_requested_vendor_id();
     $preview_vendor_id   = function_exists('vms_vendor_portal_get_preview_vendor_id')
         ? (int) vms_vendor_portal_get_preview_vendor_id()
         : 0;
@@ -4563,12 +4706,11 @@ function vms_vendor_portal_shortcode($atts = []): string
             $p = get_post($vid);
             if (!$p || $p->post_type !== 'vms_vendor') continue;
 
-            printf(
-                '<option value="%d" %s>%s</option>',
-                $vid,
-                selected($vendor_id, $vid, false),
-                esc_html($p->post_title)
-            );
+            echo '<option value="' . esc_attr((string) $vid) . '"';
+            if ($vendor_id === $vid) {
+                echo ' selected="selected"';
+            }
+            echo '>' . esc_html($p->post_title) . '</option>';
         }
         echo '</select>';
         echo '</form>';
@@ -4606,7 +4748,7 @@ function vms_vendor_portal_shortcode($atts = []): string
         echo '</div>';
         echo '<div class="vms-portal-preview-banner__actions">';
         echo '<a class="button button-secondary" href="' . esc_url($preview_back_url) . '">' . esc_html__('Back to Vendor', 'vms') . '</a>';
-        echo '<a class="button" href="' . $preview_exit_url . '">' . esc_html__('Exit Preview', 'vms') . '</a>';
+        echo '<a class="button" href="' . esc_url($preview_exit_url) . '">' . esc_html__('Exit Preview', 'vms') . '</a>';
         echo '</div>';
         echo '</div>';
     }
@@ -4614,7 +4756,7 @@ function vms_vendor_portal_shortcode($atts = []): string
 
     $flash = vms_vendor_portal_pull_flash($user_id);
     if (!empty($flash['message'])) {
-        echo vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']);
+        echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
     }
 
     // Route
@@ -4844,12 +4986,13 @@ $manual_future = 0;
 
         if ($needs_av_setup) {
             $any_actions = true;
-            echo vms_portal_notice('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'vms')));
         }
 
         if ($needs_ics_sync) {
             $any_actions = true;
-            echo vms_portal_notice('warning', sprintf(__('Your calendar sync is %d days old. Open Availability and tap “Sync Now”.', 'vms'), $ics_stale_days));
+            /* translators: %d: number of days since the vendor ICS calendar was last synced. */
+            echo wp_kses_post(vms_portal_notice('warning', sprintf(__('Your calendar sync is %d days old. Open Availability and tap “Sync Now”.', 'vms'), $ics_stale_days)));
         }
 
         if (!$any_actions) {
@@ -4882,19 +5025,19 @@ $manual_future = 0;
         if (function_exists('vms_vendor_portal_render_event_history_tab')) {
             vms_vendor_portal_render_event_history_tab($vendor_id);
         } else {
-            echo vms_portal_notice('error', __('Event History is not available right now.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('Event History is not available right now.', 'vms')));
         }
     } elseif ($tab === 'profile') {
         if (function_exists('vms_vendor_portal_render_profile')) {
             vms_vendor_portal_render_profile($vendor_id);
         } else {
-            echo vms_portal_notice('error', __('Profile module is not loaded.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('Profile module is not loaded.', 'vms')));
         }
     } elseif ($tab === 'tax-profile') {
         if (function_exists('vms_vendor_portal_render_tax_profile')) {
             vms_vendor_portal_render_tax_profile($vendor_id);
         } else {
-            echo vms_portal_notice('error', __('Tax Profile module is not loaded.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('Tax Profile module is not loaded.', 'vms')));
         }
     } elseif ($tab === 'availability' || $tab === 'opportunities') {
         $venue_id = vms_vendor_guess_venue_id($vendor_id);
@@ -4904,18 +5047,18 @@ $manual_future = 0;
         if (function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             vms_vendor_portal_render_all_vendors_availability($vendor_ids, $base_url, $vendor_id);
         } else {
-            echo vms_portal_notice('error', __('All Vendors view is not available.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('All Vendors view is not available.', 'vms')));
         }
     } elseif ($tab === 'tech') {
         if (function_exists('vms_vendor_portal_render_tech_docs')) {
             vms_vendor_portal_render_tech_docs($vendor_id);
         } else {
-            echo vms_portal_notice('error', __('Tech Docs module is not loaded.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('Tech Docs module is not loaded.', 'vms')));
         }
     } else {
         $custom_rendered = (bool) apply_filters('vms_vendor_portal_render_custom_tab', false, $tab, $portal_context);
         if (!$custom_rendered) {
-            echo vms_portal_notice('error', __('That portal section is not available.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('That portal section is not available.', 'vms')));
         }
     }
 
@@ -5078,7 +5221,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         $vendor_id = (int) $vendor_id;
 
         if ($vendor_id <= 0) {
-            echo vms_portal_notice('error', __('Invalid vendor.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'vms')));
             return;
         }
 
@@ -5145,7 +5288,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             // 1) Save ICS Settings
             if (isset($_POST['vms_save_ics_settings'])) {
                 if (!isset($_POST['vms_ics_nonce']) || !wp_verify_nonce($_POST['vms_ics_nonce'], 'vms_ics_settings')) {
-                    echo vms_portal_notice('error', __('Security check failed.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
                 } else {
                     $new_url = isset($_POST['vms_ics_url']) ? esc_url_raw(trim((string) $_POST['vms_ics_url'])) : '';
                     $new_autosync = !empty($_POST['vms_ics_autosync']) ? 1 : 0;
@@ -5165,14 +5308,14 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         vms_vendor_flag_vendor_update($vendor_id, 'availability_ics_settings');
                     }
 
-                    echo vms_portal_notice('success', __('Calendar settings saved.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('success', __('Calendar settings saved.', 'vms')));
                 }
             }
 
             // 2) Save Manual Availability
             if (isset($_POST['vms_save_availability'])) {
                 if (!isset($_POST['vms_avail_nonce']) || !wp_verify_nonce($_POST['vms_avail_nonce'], 'vms_save_availability')) {
-                    echo vms_portal_notice('error', __('Security check failed.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
                 } else {
                     $incoming = (isset($_POST['vms_availability']) && is_array($_POST['vms_availability']))
                         ? $_POST['vms_availability']
@@ -5204,7 +5347,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         vms_vendor_flag_vendor_update($vendor_id, 'availability_manual');
                     }
 
-                    echo vms_portal_notice('success', __('Availability saved.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('success', __('Availability saved.', 'vms')));
                 }
             }
 
@@ -5214,7 +5357,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     !isset($_POST['vms_pattern_nonce']) ||
                     !wp_verify_nonce($_POST['vms_pattern_nonce'], 'vms_pattern_settings')
                 ) {
-                    echo vms_portal_notice('error', __('Security check failed.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
                 } else {
                     $days = array();
                     if (isset($_POST['vms_pattern_days']) && is_array($_POST['vms_pattern_days'])) {
@@ -5245,22 +5388,22 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
                     vms_vendor_flag_vendor_update($vendor_id, 'availability_pattern');
 
-                    echo vms_portal_notice('success', __('Pattern availability saved.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('success', __('Pattern availability saved.', 'vms')));
                 }
             }
 
             // 3) Sync ICS Now
             if (isset($_POST['vms_sync_ics_now'])) {
                 if (!isset($_POST['vms_ics_nonce']) || !wp_verify_nonce($_POST['vms_ics_nonce'], 'vms_ics_settings')) {
-                    echo vms_portal_notice('error', __('Security check failed.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
                 } else {
                     update_post_meta($vendor_id, '_vms_availability_preferred_method', 'ics');
                     $preferred = 'ics';
 
                     if (empty($ics_url)) {
-                        echo vms_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'vms'));
+                        echo wp_kses_post(vms_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'vms')));
                     } elseif (!function_exists('vms_vendor_ics_sync_now')) {
-                        echo vms_portal_notice('error', __('ICS sync module is not loaded.', 'vms'));
+                        echo wp_kses_post(vms_portal_notice('error', __('ICS sync module is not loaded.', 'vms')));
                     } else {
                         $result = vms_vendor_ics_sync_now($vendor_id, $active_dates);
 
@@ -5291,10 +5434,11 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                                 ? count($result['ics_unavailable'])
                                 : 0;
 
-                            echo vms_portal_notice('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count));
+                            /* translators: %d: number of unavailable dates imported from the ICS calendar. */
+                            echo wp_kses_post(vms_portal_notice('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count)));
                         } else {
                             $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'vms');
-                            echo vms_portal_notice('error', $msg);
+                            echo wp_kses_post(vms_portal_notice('error', $msg));
                         }
                     }
                 }
@@ -5307,7 +5451,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '<h3>' . esc_html__('Availability', 'vms') . '</h3>';
 
         if (empty($active_dates)) {
-            echo vms_portal_notice('warning', __('No season dates configured yet.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('warning', __('No season dates configured yet.', 'vms')));
             return;
         }
         // Always render a fixed month window (prevents months from disappearing when out of season)
@@ -5327,13 +5471,11 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             }
         }
 
-        if (isset($_GET['lb'])) {
-            $req = (int) $_GET['lb'];
-            if (in_array($req, $months_back_allowed, true)) {
-                $months_back = $req;
-                if ($uid > 0) {
-                    update_user_meta($uid, '_vms_portal_av_lookback', $months_back);
-                }
+        $requested_lookback = vms_vendor_portal_get_requested_lookback($months_back_allowed, $months_back);
+        if ($requested_lookback !== $months_back) {
+            $months_back = $requested_lookback;
+            if ($uid > 0) {
+                update_user_meta($uid, '_vms_portal_av_lookback', $months_back);
             }
         }
 
@@ -5346,8 +5488,12 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '<div class="vms-av-wrap" id="vms-av" data-today-ym="' . esc_attr(wp_date('Y-m')) . '">';
 
         // Collapsible: ICS
-        $ics_open = ($preferred === 'ics') ? ' open' : '';
-        echo '<details class="vms-av-method" data-method="ics" ' . $ics_open . '>';
+        $ics_is_open = ($preferred === 'ics');
+        echo '<details class="vms-av-method" data-method="ics"';
+        if ($ics_is_open) {
+            echo ' open';
+        }
+        echo '>';
         echo '<summary>';
         echo '<span>Calendar Sync (ICS)</span>';
         echo '<span class="vms-av-summarymeta" data-summarymeta="ics">' . esc_html($ics_meta) . '</span>';
@@ -5383,7 +5529,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '</div></details>'; // /ICS
 
         // Collapsible: Pattern
-        $pattern_open = ($preferred === 'pattern') ? ' open' : '';
+        $pattern_is_open = ($preferred === 'pattern');
 
         $pattern_enabled = (int) get_post_meta($vendor_id, '_vms_pattern_enabled', true);
 
@@ -5409,7 +5555,11 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         // If none selected, treat as disabled
         if (empty($pattern_days)) $pattern_enabled = 0;
 
-        echo '<details class="vms-av-method" data-method="pattern"' . $pattern_open . '>';
+        echo '<details class="vms-av-method" data-method="pattern"';
+        if ($pattern_is_open) {
+            echo ' open';
+        }
+        echo '>';
         echo '<summary>';
         echo '<span>Pattern Availability</span>';
         echo '<span class="vms-av-summarymeta" data-summarymeta="pattern">' . esc_html($pattern_meta) . '</span>';
@@ -5460,8 +5610,12 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '</div></details>';
 
         // Collapsible: Manual
-        $manual_open = ($preferred === 'manual') ? ' open' : '';
-        echo '<details class="vms-av-method" data-method="manual"' . $manual_open . '>';
+        $manual_is_open = ($preferred === 'manual');
+        echo '<details class="vms-av-method" data-method="manual"';
+        if ($manual_is_open) {
+            echo ' open';
+        }
+        echo '>';
         echo '<summary>';
         echo '<span>Manual Availability</span>';
         echo '<span class="vms-av-summarymeta" data-summarymeta="manual"></span>';
@@ -5657,9 +5811,13 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                 }
             }
 
-$open = ($ym === $default_open_ym) ? ' open' : '';
+            $month_is_open = ($ym === $default_open_ym);
             echo '<div class="vms-av-month" data-ym="' . esc_attr($ym) . '">';
-            echo '<details' . $open . '>';
+            echo '<details';
+            if ($month_is_open) {
+                echo ' open';
+            }
+            echo '>';
             echo '<summary>';
             echo '<span class="vms-av-monthlabel">';
             echo '<span class="vms-av-monthname">' . esc_html($month_label) . '</span>';
@@ -5668,7 +5826,7 @@ $open = ($ym === $default_open_ym) ? ' open' : '';
             echo '<span class="vms-av-counts vms-av-muted" data-active="' . esc_attr((string) $cnt_active) . '">' . esc_html(sprintf('%d active | %d NA | %d A', $cnt_active, $cnt_na, $cnt_a)) . '</span>';
             echo '</summary>';
 
-echo '<table class="vms-av-grid">';
+            echo '<table class="vms-av-grid">';
             echo '<thead><tr class="vms-av-dow">';
             $dow = array(
                 __('Sun', 'vms'),
@@ -6432,7 +6590,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
         echo '<h3>' . esc_html__('All Vendors', 'vms') . '</h3>';
 
         if (!is_array($vendor_ids) || count($vendor_ids) < 2) {
-            echo vms_portal_notice('warning', __('You do not have multiple vendors linked to this account.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('warning', __('You do not have multiple vendors linked to this account.', 'vms')));
             return;
         }
 
@@ -6442,7 +6600,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
         })));
 
         if (empty($vendor_ids)) {
-            echo vms_portal_notice('warning', __('No vendors available for this view.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('warning', __('No vendors available for this view.', 'vms')));
             return;
         }
 
@@ -6463,13 +6621,11 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             }
         }
 
-        if (isset($_GET['lb'])) {
-            $req = (int) $_GET['lb'];
-            if (in_array($req, $months_back_allowed, true)) {
-                $months_back = $req;
-                if ($uid > 0) {
-                    update_user_meta($uid, '_vms_portal_all_vendors_lookback', $months_back);
-                }
+        $requested_lookback = vms_vendor_portal_get_requested_lookback($months_back_allowed, $months_back);
+        if ($requested_lookback !== $months_back) {
+            $months_back = $requested_lookback;
+            if ($uid > 0) {
+                update_user_meta($uid, '_vms_portal_all_vendors_lookback', $months_back);
             }
         }
 
@@ -6478,7 +6634,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             : array();
 
         if (empty($months)) {
-            echo vms_portal_notice('warning', __('No months available for this view.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('warning', __('No months available for this view.', 'vms')));
             return;
         }
 
@@ -6648,9 +6804,13 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
                 ? vms_av_build_month_matrix($ym)
                 : array();
 
-            $open = ($ym === wp_date('Y-m')) ? ' open' : '';
+            $month_is_open = ($ym === wp_date('Y-m'));
 
-            echo '<details class="vms-sch-month vms-av-method"' . $open . '>';
+            echo '<details class="vms-sch-month vms-av-method"';
+            if ($month_is_open) {
+                echo ' open';
+            }
+            echo '>';
             echo '<summary>';
             echo '<span class="vms-sch-monthlabel">' . esc_html($month_label) . '</span>';
             echo '</summary>';
@@ -6680,9 +6840,11 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
                     if ($today !== '' && $date < $today) $cell_classes[] = 'is-past';
                     if ($today !== '' && $date === $today) $cell_classes[] = 'is-today';
 
-                    $cls = !empty($cell_classes) ? ' class="' . esc_attr(implode(' ', $cell_classes)) . '"' : '';
-
-                    echo '<td' . $cls . '>';
+                    if (!empty($cell_classes)) {
+                        echo '<td class="' . esc_attr(implode(' ', $cell_classes)) . '">';
+                    } else {
+                        echo '<td>';
+                    }
                     echo '<div class="vms-sch-cell">';
                     echo '<div class="vms-sch-daynum">' . esc_html((string) $day) . '</div>';
 
@@ -6827,7 +6989,7 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
         // Handle uploads
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_techdocs_save'])) {
             if (!isset($_POST['vms_techdocs_nonce']) || !wp_verify_nonce($_POST['vms_techdocs_nonce'], 'vms_techdocs_save')) {
-                echo vms_portal_notice('error', __('Security check failed.', 'vms'));
+                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
             } else {
 
                 $updated = false;
@@ -6838,7 +7000,8 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
                         update_post_meta($vendor_id, '_vms_stage_plot_attachment_id', (int) $attach_id);
                         $updated = true;
                     } else {
-                        echo vms_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'vms'), $attach_id->get_error_message()));
+                        /* translators: %s: media upload error message. */
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'vms'), $attach_id->get_error_message())));
                     }
                 }
 
@@ -6848,13 +7011,14 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
                         update_post_meta($vendor_id, '_vms_input_list_attachment_id', (int) $attach_id);
                         $updated = true;
                     } else {
-                        echo vms_portal_notice('error', sprintf(__('Input list upload failed: %s', 'vms'), $attach_id->get_error_message()));
+                        /* translators: %s: media upload error message. */
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Input list upload failed: %s', 'vms'), $attach_id->get_error_message())));
                     }
                 }
 
                 if ($updated) {
                     vms_vendor_flag_vendor_update($vendor_id, 'tech_docs');
-                    echo vms_portal_notice('success', __('Tech docs updated.', 'vms'));
+                    echo wp_kses_post(vms_portal_notice('success', __('Tech docs updated.', 'vms')));
                 }
             }
         }
@@ -6898,7 +7062,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         $vendor_id = (int) $vendor_id;
 
         if ($vendor_id <= 0) {
-            echo vms_portal_notice('error', __('Invalid vendor.', 'vms'));
+            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'vms')));
             return;
         }
 
@@ -6932,7 +7096,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_vendor_profile_save'])) {
 
             if (!isset($_POST['vms_vendor_profile_nonce']) || !wp_verify_nonce($_POST['vms_vendor_profile_nonce'], 'vms_vendor_profile_save')) {
-                echo vms_portal_notice('error', __('Security check failed.', 'vms'));
+                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
             } else {
 
                 $display_name  = isset($_POST['vms_vendor_display_name']) ? sanitize_text_field((string) $_POST['vms_vendor_display_name']) : '';
@@ -6965,7 +7129,8 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                     if (!is_wp_error($attach_id)) {
                         set_post_thumbnail($vendor_id, (int) $attach_id);
                     } else {
-                        echo vms_portal_notice('error', sprintf(__('Logo upload failed: %s', 'vms'), $attach_id->get_error_message()));
+                        /* translators: %s: media upload error message. */
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Logo upload failed: %s', 'vms'), $attach_id->get_error_message())));
                     }
                 }
 
@@ -6982,7 +7147,8 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
 
                     $r = wp_update_post($update, true);
                     if (is_wp_error($r)) {
-                        echo vms_portal_notice('error', sprintf(__('Profile save failed: %s', 'vms'), $r->get_error_message()));
+                        /* translators: %s: WordPress post update error message. */
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Profile save failed: %s', 'vms'), $r->get_error_message())));
                     }
                 }
 
@@ -7020,7 +7186,8 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                                 $gallery_value = (string) $uploaded_url;
                             }
                         } else {
-                            echo vms_portal_notice('error', sprintf(__('Gallery photo %1$d upload failed: %2$s', 'vms'), $i, $attach_id->get_error_message()));
+                            /* translators: 1: gallery slot number, 2: media upload error message. */
+                            echo wp_kses_post(vms_portal_notice('error', sprintf(__('Gallery photo %1$d upload failed: %2$s', 'vms'), $i, $attach_id->get_error_message())));
                         }
                     }
 
@@ -7036,7 +7203,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                     vms_vendor_flag_vendor_update($vendor_id, 'profile');
                 }
 
-                echo vms_portal_notice('success', __('Profile saved.', 'vms'));
+                echo wp_kses_post(vms_portal_notice('success', __('Profile saved.', 'vms')));
             }
         }
 
@@ -7192,10 +7359,19 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         echo '<h4>' . esc_html__('Gallery Photos', 'vms') . '</h4>';
         echo '<p class="description">' . esc_html__('Upload up to 5 photos for your public profile. You can also paste an image URL instead.', 'vms') . '</p>';
         for ($i = 1; $i <= 5; $i++) {
+            $photo_number = (string) $i;
             echo '<div class="vms-field">';
-            echo '<label><strong>' . sprintf(esc_html__('Photo %d', 'vms'), $i) . '</strong></label>';
+            echo '<label><strong>' . sprintf(
+                /* translators: %s: gallery photo slot number. */
+                esc_html__('Photo %s', 'vms'),
+                esc_html($photo_number)
+            ) . '</strong></label>';
             if (!empty($gallery_values_current[$i])) {
-                echo '<div class="vms-portal-gallery-preview"><img src="' . esc_url($gallery_values_current[$i]) . '" alt="' . esc_attr(sprintf(__('Photo %d preview', 'vms'), $i)) . '"></div>';
+                echo '<div class="vms-portal-gallery-preview"><img src="' . esc_url($gallery_values_current[$i]) . '" alt="' . esc_attr(sprintf(
+                    /* translators: %s: gallery photo slot number. */
+                    __('Photo %s preview', 'vms'),
+                    $photo_number
+                )) . '"></div>';
             }
             echo '<input type="file" name="vms_vendor_gallery_upload_' . esc_attr((string) $i) . '" accept=".png,.jpg,.jpeg,.webp">';
             echo '<input type="url" name="vms_vendor_gallery_image_' . esc_attr((string) $i) . '" value="' . esc_attr($gallery_values_current[$i] ?? '') . '" placeholder="https://">';
