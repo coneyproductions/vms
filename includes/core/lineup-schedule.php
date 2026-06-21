@@ -64,9 +64,11 @@ if (!function_exists('vms_lineup_schedule_minutes_to_label')) {
         $mins = (int) ($minutes % 60);
         $parts = array();
         if ($hours > 0) {
+            /* translators: %d: Number of hours. */
             $parts[] = sprintf(_n('%d hr', '%d hrs', $hours, 'vms'), $hours);
         }
         if ($mins > 0 || empty($parts)) {
+            /* translators: %d: Number of minutes. */
             $parts[] = sprintf(_n('%d min', '%d mins', $mins, 'vms'), $mins);
         }
 
@@ -369,6 +371,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 if (isset($vendor_seen[$vendor_id])) {
                     $push_warning(
                         'duplicate_vendor',
+                        /* translators: %s: Lineup entry display name. */
                         sprintf(__('The same lineup vendor is assigned more than once: %s.', 'vms'), $display_name),
                         $row_id
                     );
@@ -379,6 +382,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             if (($set_start === '') xor ($set_end === '')) {
                 $push_warning(
                     'missing_time',
+                    /* translators: %s: Lineup entry display name. */
                     sprintf(__('Set time is incomplete for %s.', 'vms'), $display_name),
                     $row_id
                 );
@@ -388,6 +392,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 if ($duration_minutes !== null && $duration_minutes <= 0) {
                     $push_warning(
                         'end_before_start',
+                        /* translators: %s: Lineup entry display name. */
                         sprintf(__('Set end is not after set start for %s.', 'vms'), $display_name),
                         $row_id,
                         'error'
@@ -400,12 +405,14 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                     if ($duration_minutes < 20) {
                         $push_warning(
                             'short_duration',
+                            /* translators: %s: Lineup entry display name. */
                             sprintf(__('The set for %s looks unusually short.', 'vms'), $display_name),
                             $row_id
                         );
                     } elseif ($duration_minutes > 240) {
                         $push_warning(
                             'long_duration',
+                            /* translators: %s: Lineup entry display name. */
                             sprintf(__('The set for %s looks unusually long.', 'vms'), $display_name),
                             $row_id
                         );
@@ -416,6 +423,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             if ($start_minutes !== null && $event_start_minutes !== null && $start_minutes < $event_start_minutes) {
                 $push_warning(
                     'outside_event_bounds',
+                    /* translators: %s: Lineup entry display name. */
                     sprintf(__('The lineup starts before the event start for %s.', 'vms'), $display_name),
                     $row_id
                 );
@@ -423,6 +431,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             if ($end_minutes !== null && $event_end_minutes !== null && $end_minutes > $event_end_minutes) {
                 $push_warning(
                     'outside_event_bounds',
+                    /* translators: %s: Lineup entry display name. */
                     sprintf(__('The lineup ends after the event end for %s.', 'vms'), $display_name),
                     $row_id
                 );
@@ -454,6 +463,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             $primary_entry = $entries[$primary_index];
             $push_warning(
                 'primary_not_last',
+                /* translators: %s: Primary lineup entry display name. */
                 sprintf(__('The primary lineup entry is not scheduled last: %s.', 'vms'), (string) ($primary_entry['display_name'] ?? __('Primary', 'vms'))),
                 sanitize_key((string) ($primary_entry['row_id'] ?? ''))
             );
@@ -472,6 +482,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 if ($delta < 0) {
                     $push_warning(
                         'overlap',
+                        /* translators: 1: Previous lineup entry display name, 2: Current lineup entry display name. */
                         sprintf(__('There is a schedule overlap between %1$s and %2$s.', 'vms'), $last_label, $display_name),
                         $row_id,
                         'error'
@@ -482,6 +493,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                     if ($delta >= 45) {
                         $push_warning(
                             'large_gap',
+                            /* translators: %s: Lineup entry display name. */
                             sprintf(__('There is a large gap before %s.', 'vms'), $display_name),
                             $row_id
                         );

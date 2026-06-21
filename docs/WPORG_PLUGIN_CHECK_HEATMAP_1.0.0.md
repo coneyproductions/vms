@@ -4,60 +4,63 @@ Date: 2026-06-21
 
 ## Scope
 
-- Scan target: temporary packaged plugin slug extracted from `dist/wporg-04p/vms-1.0.0-public-release.zip`
-- Artifact SHA-256: `720dc9a32f3609ebb54ef77227b0cf85123776554f7b62c347e8a77077fcf152`
+- Scan target: extracted packaged directory from `dist/wporg-04q/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree
+- Artifact SHA-256: `bdb050f722c55de68a34c1690a7f8143f024801e638a7f00f1a14975c96d3671`
 - Raw output: `docs/plugin-check-1.0.0-raw.txt`
-- Tool: `wp plugin check vms --mode=new --format=json`
+- Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
 
 ## Current Result
 
-- `3268` total findings
-- `1043` errors
-- `2225` warnings
+- `3255` total findings
+- `1031` errors
+- `2224` warnings
 
-Comparison to the prior packaged RC from `WPORG-04O`:
+Comparison to the prior packaged RC from `WPORG-04P`:
 
-- `3270` -> `3268` total (`-2`)
-- `1045` -> `1043` errors (`-2`)
-- `2225` -> `2225` warnings (`0`)
+- `3268` -> `3255` total (`-13`)
+- `1043` -> `1031` errors (`-12`)
+- `2225` -> `2224` warnings (`-1`)
 
-## WPORG-04P Batch
+## WPORG-04Q Batch
 
-- `includes/social-share/audit.php`
-  - `7` -> `5`
-  - `2` -> `0` errors
-  - `5` -> `5` warnings
-  - selected because `includes/modules/admissions/admin-ui.php` remained the safest warning-only SQL follow-up, but `WPORG-04P` specifically needed a low-risk file with real DB/SQL errors, and `audit.php` was the smallest remaining read-only audit/reporting surface outside ticketing, notifications, admissions REST, vendor-linking, and portal-save flows
-  - limited the pass to the existing read-only `vms_social_audit_recent()` query branches only
-  - converted the dynamic audit table reference to prepared `%i` identifiers and moved the prepared SQL directly into each existing `get_results()` call without changing search behavior, ordering, limits, or result shape
+- 04Q candidate scan summary
+  - `includes/core/lineup-schedule.php` - `12` total / `12` errors / `0` warnings - dominant `WordPress.WP.I18n.MissingTranslatorsComment` - risk `low` - selected because all twelve findings were mechanical placeholder-comment fixes in a shared helper with no save, query, or auth behavior changes
+  - `includes/core/vendor-user-links.php` - `68` total / `39` errors / `29` warnings - dominant `MissingTranslatorsComment` plus DB/SQL warnings - risk `medium` - skipped because the file is shared runtime code with interleaved query findings
+  - `includes/admin/schedule.php` - `52` total / `30` errors / `22` warnings - dominant `date()`, escaping, and nonce/input - risk `medium/high` - skipped because admin action and save flows are mixed through the file
+  - `includes/modules/availability-date-dispatch/admin-ui.php` - `30` total / `21` errors / `9` warnings - dominant escaping, nonce/input, and i18n - risk `high` - skipped because the availability runtime/save area is explicitly sensitive
+  - `includes/core/event-credits.php` - `23` total / `16` errors / `7` warnings - dominant `MissingTranslatorsComment` - risk `high` - skipped because refund, cancellation, and credit behavior is out of scope for this batch
+- `includes/core/lineup-schedule.php`
+  - `12` -> `0`
+  - `12` -> `0` errors
+  - `0` -> `0` warnings
+  - selected because it was the only low-risk 10+ error candidate in the scan whose findings were entirely translator-comment omissions
+  - limited the pass to adding `translators:` comments above the existing `_n()` and `__()` placeholder strings only
 - focused validation
-  - no focused social audit regression exists in `tests/`
-  - the packaged rerun used a temporary extracted plugin slug under the local WordPress install, leaving the installed `vms/` copy untouched
+  - no focused lineup-schedule regression exists in `tests/`
+  - the packaged rerun targeted an extracted packaged directory outside the local site tree, leaving the local `vms/` install untouched
+  - the rerun also stopped emitting the pre-existing `plugin_header_nonexistent_domain_path` warning even though no domain-path or packaging change was made in this batch
 
 Files touched:
 
-- `includes/social-share/audit.php`
+- `includes/core/lineup-schedule.php`
 
 Findings intentionally deferred:
 
 - all remaining high-risk Event Plans runtime request/save hardening
 - all publish validation, vendor assignment, staffing mutation, and live refund request flows
-- all TEC publish/resync and ticket cleanup paths
-- all portal/profile-save, upload, availability-save, and link-request input hardening outside this read-only SQL batch
-- all broader SQL, nonce/input, and i18n follow-up outside the selected social audit readback helper
+- all ticketing, checkout, refund, cancellation, and TEC publish/resync paths
+- all portal/profile-save, upload, availability-save, and link-request input hardening outside this i18n-only helper batch
+- all broader SQL, nonce/input, escaping, and shared-runtime follow-up outside `lineup-schedule.php`
 
 Risk notes:
 
-- selected file is a social audit readback surface, but the chosen changes stayed on prepared identifier handling and direct prepared query handoff inside the existing read-only search/no-search branches only
-- Event Plans runtime logic, social posting/queue mutation paths, notifications, and other mutation-heavy flows were intentionally untouched
+- selected file is a shared lineup helper, but the chosen changes stayed on translator comments only and did not alter any string content or scheduling logic
+- Event Plans runtime logic, vendor-linking flows, availability/save paths, ticketing, refunds, and other mutation-heavy surfaces were intentionally untouched
 
 Net effect of the selected batch:
 
-- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `156` -> `155` (`-1`)
-- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `148` -> `146` (`-2`)
-- `WordPress.DB.PreparedSQL.NotPrepared`: `73` -> `72` (`-1`)
-- `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `293` -> `294` (`+1`)
-- `WordPress.DB.DirectDatabaseQuery.NoCaching`: `255` -> `256` (`+1`)
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `634` -> `622` (`-12`)
+- observed packaged rerun-only delta outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `0` (`-1`)
 - no new Plugin Check code categories appeared
 
 ## Highest-Density Files
@@ -87,15 +90,14 @@ Net effect of the selected batch:
 | Nonce and input handling | `1198` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` |
 | Database and SQL safety | `1101` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` |
 | Escaping and output safety | `183` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` |
-| I18n placeholder comments and ordering | `650` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` |
+| I18n placeholder comments and ordering | `638` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` |
 | Date/time API usage | `44` | `includes/admin/schedule.php`, `includes/modules/staff-tasks/notifications.php`, `includes/core/staffing.php` |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` |
 
 ## Next Recommended Batch
 
-- `WPORG-04Q`
+- `WPORG-04R`
 - Scope:
-  - shift the next safe read-only SQL batch to `includes/modules/admissions/admin-ui.php`
-  - keep the pass limited to the guest-list export CSV read query and table-identifier preparation only
-  - leave the remaining `fclose()` filesystem finding, guest-list mutation behavior, REST handlers, permissions, and Event Plans runtime untouched
-  - keep the pass out of ticketing mutations, refund/cancellation flows, portal/profile-save flows, availability mutations, staffing mutations, and publish/TEC sync paths
+  - repeat the deliberate hotspot scan before selecting the next file
+  - prefer another i18n-only or read-only display/helper slice outside Event Plans, ticketing, refunds, portal-save, availability-save, and vendor-linking runtime
+  - `includes/core/vendor-user-links.php` is the leading medium-risk candidate only if the pass can stay strictly on translator comments and avoid its DB/query branches

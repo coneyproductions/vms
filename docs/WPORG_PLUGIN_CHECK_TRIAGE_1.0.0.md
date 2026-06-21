@@ -5,9 +5,9 @@ Date: 2026-06-21
 ## Scope
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
-- Tool: `wp plugin check vms --mode=new --format=json`
-- Scan target for current counts: temporary installed package extracted from `dist/wporg-04p/vms-1.0.0-public-release.zip` under a disposable plugin slug, leaving the local `vms/` install untouched
-- Current artifact SHA-256: `720dc9a32f3609ebb54ef77227b0cf85123776554f7b62c347e8a77077fcf152`
+- Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
+- Scan target for current counts: extracted packaged directory from `dist/wporg-04q/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
+- Current artifact SHA-256: `bdb050f722c55de68a34c1690a7f8143f024801e638a7f00f1a14975c96d3671`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -32,38 +32,42 @@ Date: 2026-06-21
 | `WPORG-04N` packaged RC, final | temporary packaged plugin slug | `3274` | `1045` | `2229` | Cleared the safe public vendor profile template render batch in `includes/public/templates/vendor-profile.php` without widening into request handling, query logic changes, or Event Plans runtime logic. |
 | `WPORG-04O` packaged RC, final | temporary packaged plugin slug | `3270` | `1045` | `2225` | Cleared the safe social template-engine read-only SQL batch in `includes/social-share/template-engine.php` without widening into query intent changes, social queue/posting mutations, or Event Plans runtime logic. |
 | `WPORG-04P` packaged RC, final | temporary packaged plugin slug | `3268` | `1043` | `2225` | Cleared the safe social audit read-only SQL error batch in `includes/social-share/audit.php` without widening into audit writes, social queue/posting mutations, notification behavior, or Event Plans runtime logic. |
+| `WPORG-04Q` packaged RC, final | extracted packaged directory outside local site tree | `3255` | `1031` | `2224` | Cleared the safe lineup-schedule translator-comment batch in `includes/core/lineup-schedule.php`; the rerun also stopped emitting one pre-existing `plugin_header_nonexistent_domain_path` warning outside the selected file scope. |
 
 Net reduction from the `WPORG-02` source-tree baseline to the current packaged RC:
 
-- `-1299` total findings
-- `-603` errors
-- `-696` warnings
+- `-1312` total findings
+- `-615` errors
+- `-697` warnings
 
-Net reduction from `WPORG-04O`:
+Net reduction from `WPORG-04P`:
 
-- `-2` total findings
-- `-2` errors
-- `0` warnings
+- `-13` total findings
+- `-12` errors
+- `-1` warnings
 
 ## Fixed In This Pass
 
-- `includes/social-share/audit.php`
-  - `7` findings -> `5`
-  - `2` errors -> `0`
-  - `5` warnings -> `5`
-  - cleared the file's real `UnescapedDBParameter` and `PreparedSQL.NotPrepared` errors plus both interpolated-SQL warnings by converting the audit table reference to a prepared `%i` identifier and moving the prepared SQL directly into the two existing read-only query branches
+- 04Q candidate scan summary
+  - `includes/core/lineup-schedule.php` - `12` total / `12` errors / `0` warnings - risk `low` - selected
+  - `includes/core/vendor-user-links.php` - `68` total / `39` errors / `29` warnings - risk `medium` - skipped
+  - `includes/admin/schedule.php` - `52` total / `30` errors / `22` warnings - risk `medium/high` - skipped
+  - `includes/modules/availability-date-dispatch/admin-ui.php` - `30` total / `21` errors / `9` warnings - risk `high` - skipped
+  - `includes/core/event-credits.php` - `23` total / `16` errors / `7` warnings - risk `high` - skipped
+- `includes/core/lineup-schedule.php`
+  - `12` findings -> `0`
+  - `12` errors -> `0`
+  - `0` warnings -> `0`
+  - cleared the file's full `MissingTranslatorsComment` set by adding `translators:` comments above the existing `_n()` and `__()` placeholder strings only
 - Focused validation for this batch
-  - no focused social audit regression exists in `tests/`
-  - validation stayed on PHP lint, whitespace safety, public-release build, package integrity, and a rerun of packaged Plugin Check against a temporary extracted plugin slug under the local WordPress install
-  - Plugin Check stderr captured external dependency deprecation noise under `test-results/wporg-04p-plugin-check.stderr.txt` while the cleaned raw findings stayed in `docs/plugin-check-1.0.0-raw.txt`
+  - no focused lineup-schedule regression exists in `tests/`
+  - validation stayed on PHP lint, whitespace safety, public-release build, package integrity, and a rerun of packaged Plugin Check against an extracted packaged directory outside the local site tree
+  - Plugin Check stderr captured WP-CLI deprecation noise under `test-results/wporg-04q-plugin-check.stderr.txt` while the cleaned raw findings stayed in `docs/plugin-check-1.0.0-raw.txt`
 
 Code-level deltas visible in the packaged scan:
 
-- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `156` -> `155`
-- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `148` -> `146`
-- `WordPress.DB.PreparedSQL.NotPrepared`: `73` -> `72`
-- `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `293` -> `294`
-- `WordPress.DB.DirectDatabaseQuery.NoCaching`: `255` -> `256`
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `634` -> `622`
+- observed rerun-only delta outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `0`
 
 No new Plugin Check codes appeared in this pass.
 
@@ -74,14 +78,14 @@ No new Plugin Check codes appeared in this pass.
 | Nonce and input handling | `1198` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | This pass stayed deliberately outside portal mutation and Event Plans save logic. The remaining high-density nonce/input work is still concentrated in `save_event_plan_meta()` and adjacent high-risk portal and integration flows. |
 | Database and SQL safety | `1101` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Prioritize `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL findings before generic direct-query/no-caching warnings. |
 | Escaping and output safety | `183` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | The highest-yield remaining escape work is now concentrated in the Staff Portal, shared admin render shells, and other render surfaces rather than the cleared public vendor profile files. |
-| I18n placeholder comments and ordering | `650` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` | SHOULD FIX BEFORE SUBMISSION | Continue adding `translators:` comments and ordered placeholders after the remaining blocker categories are materially reduced. |
+| I18n placeholder comments and ordering | `638` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/vendor-document-alerts.php` | SHOULD FIX BEFORE SUBMISSION | Continue adding `translators:` comments and ordered placeholders after the remaining blocker categories are materially reduced. |
 | Date/time API usage | `44` | `includes/admin/schedule.php`, `includes/modules/staff-tasks/notifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Review each remaining `date()` use. Convert display-only paths to explicit timezone-safe helpers and leave local-time-sensitive cases for deliberate follow-up review. |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` | SHOULD FIX BEFORE SUBMISSION | Remove or hard-gate residual development logging that is still reachable in packaged code. |
 
 ## Event Plans Conclusions
 
 - The Event Plans file remains the highest-density packaged file at `241` findings.
-- No Event Plans runtime findings were changed in `WPORG-04P`.
+- No Event Plans runtime findings were changed in `WPORG-04Q`.
 - The low-risk admin list/helper surface is now nearly exhausted.
 - Remaining Event Plans findings are dominated by:
   - `save_event_plan_meta()` and adjacent request/save logic
@@ -90,9 +94,8 @@ No new Plugin Check codes appeared in this pass.
 
 ## Recommended Next Task
 
-- `WPORG-04Q`
+- `WPORG-04R`
 - Scope:
-  - shift the next safe read-only SQL batch to `includes/modules/admissions/admin-ui.php`
-  - keep the pass limited to the guest-list export CSV read query and table-identifier preparation only
-  - leave the remaining `fclose()` filesystem finding, guest-list mutation behavior, REST handlers, permissions, and Event Plans runtime untouched
-  - keep the pass out of ticketing/payment/refund/cancellation flows, portal/profile-save flows, availability mutations, staffing mutations, and publish/TEC sync paths
+  - repeat the deliberate hotspot scan before selecting the next file
+  - prefer another i18n-only or read-only display/helper slice outside Event Plans, ticketing, refunds, portal-save, availability-save, and vendor-linking runtime
+  - `includes/core/vendor-user-links.php` is the leading medium-risk candidate only if the pass can stay strictly on translator comments and avoid its DB/query branches

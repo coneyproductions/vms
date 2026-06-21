@@ -5,14 +5,14 @@ Date: 2026-06-21
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD: `67cdc005f4795f37d300a56025d0e19962c1950a` (`67cdc00`)
+- HEAD: `345ff3ca7e733c6efcc7ed8b461ab4b3bc5d70f5` (`345ff3c`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-04P` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-04Q` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 04Q extracted-package rerun stopped surfacing the pre-existing domain-path warning, but the metadata and packaging state did not change in this batch. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -123,3 +123,10 @@ Scope note:
   - current SHA-256 `720dc9a32f3609ebb54ef77227b0cf85123776554f7b62c347e8a77077fcf152`,
   - packaged Plugin Check reduction from `3270` to `3268` findings after the safe social audit read-only SQL error batch,
   - cleaned raw findings in `docs/plugin-check-1.0.0-raw.txt` with external dependency deprecation noise captured separately in `test-results/wporg-04p-plugin-check.stderr.txt`.
+- `WPORG-04Q` adds:
+  - current rebuilt RC artifact `dist/wporg-04q/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `bdb050f722c55de68a34c1690a7f8143f024801e638a7f00f1a14975c96d3671`,
+  - packaged Plugin Check reduction from `3268` to `3255` findings after the safe lineup-schedule translator-comment batch,
+  - the selected file `includes/core/lineup-schedule.php` reduced from `12` findings to `0`,
+  - the extracted-package rerun also stopped emitting the pre-existing `plugin_header_nonexistent_domain_path` warning outside the selected file scope,
+  - cleaned raw findings in `docs/plugin-check-1.0.0-raw.txt` with WP-CLI deprecation noise captured separately in `test-results/wporg-04q-plugin-check.stderr.txt`.
