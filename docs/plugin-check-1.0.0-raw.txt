@@ -985,17 +985,6 @@ line	column	type	code	message	docs
 81	44	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
 82	44	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
 
-FILE: includes/admin/menu.php
-line	column	type	code	message	docs
-18	7	WARNING	WordPress.PHP.DevelopmentFunctions.error_log_error_log	error_log() found. Debug code should not normally be used in production.
-355	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-355	56	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-458	17	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$filters_attr'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-468	92	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$inc_canceled_checked_attr'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-470	90	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$inc_checked_attr'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-502	54	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$dashboard_tour_button'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-503	57	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-
 FILE: includes/admin/continuity-binder.php
 line	column	type	code	message	docs
 5	19	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
@@ -3367,6 +3356,12 @@ line	column	type	code	message	docs
 86	82	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;vms_staff_user_link_nonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
 86	82	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;vms_staff_user_link_nonce&#039;]
 128	9	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
+
+FILE: includes/admin/menu.php
+line	column	type	code	message	docs
+18	7	WARNING	WordPress.PHP.DevelopmentFunctions.error_log_error_log	error_log() found. Debug code should not normally be used in production.
+388	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+388	56	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 
 FILE: includes/admin/tax-bypass-ajax.php
 line	column	type	code	message	docs

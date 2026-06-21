@@ -56,6 +56,39 @@ if (!function_exists('vms_render_dashboard_health_page')) {
   }
 }
 
+if (!function_exists('vms_admin_menu_allowed_help_html')) {
+  /**
+   * @return array<string,array<string,bool>>
+   */
+  function vms_admin_menu_allowed_help_html(): array
+  {
+    return array(
+      'button' => array(
+        'type' => true,
+        'class' => true,
+        'style' => true,
+        'data-vms-tour' => true,
+        'data-vms-tour-start' => true,
+        'data-vms-help-action' => true,
+        'data-vms-help-open' => true,
+      ),
+      'details' => array(
+        'class' => true,
+        'style' => true,
+        'data-vms-tour' => true,
+      ),
+      'div' => array(
+        'class' => true,
+        'style' => true,
+      ),
+      'summary' => array(
+        'class' => true,
+        'style' => true,
+      ),
+    );
+  }
+}
+
 
 add_action('admin_menu', function () {
 
@@ -448,14 +481,13 @@ function vms_render_dashboard_page_content(): void
     ? ((string) get_user_meta($user_id, '_vms_dash_include_canceled', true) === '1')
     : true;
 
-  $filters_attr = ' id="vms-dashboard-filters"';
-  $filters_attr .= ' data-vms-tour="dashboard-filters"';
-  $filters_attr .= ' data-has-include-drafts="' . ($has_inc_drafts ? '1' : '0') . '"';
-  $filters_attr .= ' data-include-drafts="' . ($inc_drafts ? '1' : '0') . '"';
-  $filters_attr .= ' data-has-include-canceled="' . ($has_inc_canceled ? '1' : '0') . '"';
-  $filters_attr .= ' data-include-canceled="' . ($inc_canceled ? '1' : '0') . '"';
-
-  echo '<div' . $filters_attr . '>';
+  echo '<div id="vms-dashboard-filters"';
+  echo ' data-vms-tour="dashboard-filters"';
+  echo ' data-has-include-drafts="' . esc_attr($has_inc_drafts ? '1' : '0') . '"';
+  echo ' data-include-drafts="' . esc_attr($inc_drafts ? '1' : '0') . '"';
+  echo ' data-has-include-canceled="' . esc_attr($has_inc_canceled ? '1' : '0') . '"';
+  echo ' data-include-canceled="' . esc_attr($inc_canceled ? '1' : '0') . '"';
+  echo '>';
 
 
   if (function_exists('vms_dash_render_venue_selector')) {
@@ -464,10 +496,8 @@ function vms_render_dashboard_page_content(): void
 
   // One canonical checkbox bar:
   echo '<label class="vms-dash-filter"><input type="checkbox" id="vms-only-open" checked> Show only Open</label>';
-  $inc_canceled_checked_attr = checked(true, $inc_canceled, false);
-  echo '<label class="vms-dash-filter"><input type="checkbox" id="vms-include-canceled"' . $inc_canceled_checked_attr . '> Include canceled</label>';
-  $inc_checked_attr = checked(true, $inc_drafts, false);
-  echo '<label class="vms-dash-filter"><input type="checkbox" id="vms-include-drafts"' . $inc_checked_attr . '> Include Draft/Ready</label>';
+  echo '<label class="vms-dash-filter"><input type="checkbox" id="vms-include-canceled"' . checked(true, $inc_canceled, false) . '> Include canceled</label>';
+  echo '<label class="vms-dash-filter"><input type="checkbox" id="vms-include-drafts"' . checked(true, $inc_drafts, false) . '> Include Draft/Ready</label>';
 
   echo '</div>';
 
@@ -499,7 +529,8 @@ function vms_render_dashboard_page_content(): void
   }
   echo '<div class="vms-dashboard-health" data-vms-tour="dashboard_health">';
   echo '<p>' . esc_html__('Need help on this page? Start the tour here or use the floating Help button.', 'vms') . '</p>';
-  echo '<p data-vms-tour="dashboard_help_action">' . $dashboard_tour_button . '</p>';
+  echo '<p data-vms-tour="dashboard_help_action">' . wp_kses($dashboard_tour_button, vms_admin_menu_allowed_help_html()) . '</p>';
+  /* translators: %s: Guided Tours settings admin URL. */
   echo '<p class="description">' . wp_kses_post(sprintf(__('Manage guided tour defaults and reset progress in <a href=\"%s\">Guided Tours settings</a>.', 'vms'), esc_url($guided_tours_url))) . '</p>';
   echo '</div>';
 
