@@ -5,9 +5,9 @@ Date: 2026-06-21
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-04Y`: `551b1373d9a5facfdcacf39a0e2c72ea2f5d9d83` (`551b137`)
+- HEAD at start of `WPORG-05A`: `445e64559fb2bc3c7c06a7bea0a0c6f3d34dc157` (`445e645`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- `WPORG-04X` checkpoint state at the start of this task: committed and pushed
+- `WPORG-04Y` checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -16,10 +16,10 @@ Date: 2026-06-21
 - WordPress runtime evidence:
   - `6.8` disposable lifecycle matrix from `WPORG-02`
   - `7.0` disposable lifecycle matrix from `WPORG-02`
-  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, and `WPORG-04X`
+  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, and `WPORG-05A`
 - PHP runtime evidence:
   - `8.5.3` from `WPORG-02`
-  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, and `WPORG-04Y`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, and `WPORG-05A`
 - MySQL: `8.0.35`
 - WP-CLI: `2.12.0`
 - Dependency versions used in lifecycle and smoke work:
@@ -51,8 +51,8 @@ Date: 2026-06-21
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-04y/vms-1.0.0-public-release.zip`
-- SHA-256: `25fb74d421406702ac95fa7238573a4ff08b9f64b380840bb3c8f3e02cfae7b9`
+- Artifact: `dist/wporg-05a/vms-1.0.0-public-release.zip`
+- SHA-256: `701b77068cfb5c80f7142bcee707554a381f72919e5d000e1e1330820a92876a`
 - Package integrity: PASS
 
 ## Builder Status
@@ -166,6 +166,9 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04y --force`
   - PASS
   - current artifact SHA-256: `25fb74d421406702ac95fa7238573a4ff08b9f64b380840bb3c8f3e02cfae7b9`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05a --force`
+  - PASS
+  - current artifact SHA-256: `701b77068cfb5c80f7142bcee707554a381f72919e5d000e1e1330820a92876a`
 
 ## Readme Validator
 
@@ -184,9 +187,9 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3147` total findings
+- `3124` total findings
 - `922` errors
-- `2225` warnings
+- `2202` warnings
 
 Comparison:
 
@@ -216,12 +219,13 @@ Comparison:
 - `WPORG-04W` packaged-plugin final: `3158` total / `933` errors / `2225` warnings
 - `WPORG-04X` packaged-plugin final: `3150` total / `925` errors / `2225` warnings
 - `WPORG-04Y` packaged-plugin final: `3147` total / `922` errors / `2225` warnings
+- `WPORG-05A` packaged-plugin final: `3124` total / `922` errors / `2202` warnings
 
 Dominant remaining codes:
 
 - `WordPress.WP.I18n.MissingTranslatorsComment`: `552`
-- `WordPress.Security.NonceVerification.Recommended`: `597`
-- `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `256`
+- `WordPress.Security.NonceVerification.Recommended`: `577`
+- `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `254`
 - `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `232`
 - `WordPress.Security.EscapeOutput.OutputNotEscaped`: `161`
 - `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `294`
@@ -232,7 +236,7 @@ Dominant remaining codes:
 
 High-level category counts:
 
-- nonce and input handling: `1198`
+- nonce and input handling: `1176`
 - database and SQL safety: `1101`
 - i18n placeholder comments / ordering: `568`
 - escaping and output safety: `161`
@@ -241,10 +245,10 @@ High-level category counts:
 
 Packaged rerun note:
 
-- No previously unseen Plugin Check code categories appeared in `WPORG-04Y`.
-- The final isolated-safe scan reviewed admin i18n, public render, shared shell, ICS, helpers, settings-page, and feedback candidates before selecting the lowest-risk highest-yield file.
-- The selected `includes/admin/cancelled-event-cost-review.php` batch reduced the file from `3` findings (`3` errors / `0` warnings) to `0` by adding translator comments only to existing admin metabox placeholder strings without changing runtime behavior.
-- The non-target root-file steady state outside `includes/admin/cancelled-event-cost-review.php` remained unchanged: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`.
+- No previously unseen Plugin Check code categories appeared in `WPORG-05A`.
+- The 05A candidate scan covered eight nonce/input-heavy read-only or mixed-read/admin surfaces before selecting the lowest-risk highest-yield file.
+- The selected `includes/admin/vendor-availability.php` batch reduced the file from `22` findings (`0` errors / `22` warnings) to `0` by centralizing raw read-only query access behind one helper while preserving the existing month/date normalization, filter defaults, and explicit allowlists.
+- The non-target root-file steady state improved outside `includes/admin/vendor-availability.php`: `plugin_header_nonexistent_domain_path`: `1` -> `0`, while `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound` remained `1` -> `1`.
 
 Fixed across this release-prep sequence:
 
@@ -256,7 +260,7 @@ Fixed across this release-prep sequence:
 - `includes/admin/due-dates.php`: `46` -> `0`
 - `includes/admin/holidays.php`: `41` -> `0`
 - `includes/admin/vendor-command-center.php`: `51` -> `29`, with `22` -> `0` errors
-- `includes/admin/vendor-availability.php`: `50` -> `22`, with `28` -> `0` errors
+- `includes/admin/vendor-availability.php`: `50` -> `0`, with `28` -> `0` errors
 - `includes/admin/event-command-center.php`: `79` -> `15`, with `63` -> `0` errors
 - `includes/admin/staffing.php`: `59` -> `3`, with `24` -> `0` errors
 - `includes/portal/staff-portal.php`: `86` -> `59`, with `46` -> `25` errors
@@ -275,10 +279,10 @@ Fixed across this release-prep sequence:
 - `includes/admin/menu.php`: `8` -> `3`, with `5` -> `0` errors
 - `includes/core/vendor-document-alerts.php`: `8` -> `0`, with `8` -> `0` errors
 - `includes/admin/cancelled-event-cost-review.php`: `3` -> `0`, with `3` -> `0` errors
-- extracted-package rerun-only steady state outside selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1` in `WPORG-04Y`
+- extracted-package rerun-only steady state outside selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `0`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1` in `WPORG-05A`
 - remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
-- packaged nonce/input blocker surface: `1517` -> `1198`
+- packaged nonce/input blocker surface: `1517` -> `1176`
 - packaged i18n placeholder/comment surface: `792` -> `568`
 - packaged output-escaping surface: `317` -> `161`
 - packaged date/time surface: `86` -> `27`
@@ -300,7 +304,7 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: nonce/input | `1198` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | This pass stayed deliberately outside mutation paths, so Event Plans, portal save, and admissions request flows still need dedicated regression coverage before widening request hardening. | Partially |
+| Plugin Check: nonce/input | `1176` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | This pass stayed deliberately outside mutation paths, so Event Plans, portal save, and admissions request flows still need dedicated regression coverage before widening request hardening. | Partially |
 | Plugin Check: escaping | `161` remaining `EscapeOutput` findings | BLOCKER | Shift the next render-surface audit toward the Staff Portal, shared admin shell boundaries, and the remaining public output sites. | Partially |
 | Plugin Check: SQL safety | `1101` remaining DB/SQL findings, including `155` unescaped DB-parameter reports, `146` interpolated SQL reports, and `72` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings. | Partially |
 
@@ -338,7 +342,7 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- Post-`WPORG-04Y` phased follow-up
+- Post-`WPORG-05A` phased follow-up
 - Scope:
   - start a nonce/input phase centered on `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, and `includes/integrations/ticketing-verifications.php`, with regression coverage before widening into mutation paths
   - follow with a DB/SQL phase that prioritizes `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL issues in admissions, staffing, staff-task, and queue/store helpers before generic direct-query/no-caching warnings

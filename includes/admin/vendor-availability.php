@@ -117,17 +117,36 @@ if (!function_exists('vms_vendor_availability_view_options')) {
     }
 }
 
+if (!function_exists('vms_vendor_availability_query_arg')) {
+    function vms_vendor_availability_query_arg(string $key): string
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin availability filters only change display state.
+        if (!isset($_GET[$key])) {
+            return '';
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin availability filters are sanitized and allowlisted by the caller.
+        return (string) wp_unslash($_GET[$key]);
+    }
+}
+
 if (!function_exists('vms_vendor_availability_selected_filters')) {
     function vms_vendor_availability_selected_filters(): array
     {
-        $month = vms_vendor_availability_normalize_month(isset($_GET['month']) ? (string) wp_unslash($_GET['month']) : '');
-        $date = vms_vendor_availability_normalize_date(isset($_GET['date']) ? (string) wp_unslash($_GET['date']) : '', $month);
-        $view = isset($_GET['view']) ? sanitize_key((string) wp_unslash($_GET['view'])) : 'month';
+        $month = vms_vendor_availability_normalize_month(vms_vendor_availability_query_arg('month'));
+        $date = vms_vendor_availability_normalize_date(vms_vendor_availability_query_arg('date'), $month);
+        $view = sanitize_key(vms_vendor_availability_query_arg('view'));
+        if ($view === '') {
+            $view = 'month';
+        }
         if (!array_key_exists($view, vms_vendor_availability_view_options())) {
             $view = 'month';
         }
 
-        $status = isset($_GET['availability_status']) ? sanitize_key((string) wp_unslash($_GET['availability_status'])) : 'all';
+        $status = sanitize_key(vms_vendor_availability_query_arg('availability_status'));
+        if ($status === '') {
+            $status = 'all';
+        }
         if ($status === 'blocked') {
             $status = 'booked';
         }
@@ -135,17 +154,26 @@ if (!function_exists('vms_vendor_availability_selected_filters')) {
             $status = 'all';
         }
 
-        $day_filter = isset($_GET['day_filter']) ? sanitize_key((string) wp_unslash($_GET['day_filter'])) : 'all';
+        $day_filter = sanitize_key(vms_vendor_availability_query_arg('day_filter'));
+        if ($day_filter === '') {
+            $day_filter = 'all';
+        }
         if (!array_key_exists($day_filter, vms_vendor_availability_day_filter_options())) {
             $day_filter = 'all';
         }
 
-        $setup = isset($_GET['availability_setup']) ? sanitize_key((string) wp_unslash($_GET['availability_setup'])) : 'all';
+        $setup = sanitize_key(vms_vendor_availability_query_arg('availability_setup'));
+        if ($setup === '') {
+            $setup = 'all';
+        }
         if (!array_key_exists($setup, vms_vendor_availability_setup_options())) {
             $setup = 'all';
         }
 
-        $roster = isset($_GET['roster']) ? sanitize_key((string) wp_unslash($_GET['roster'])) : 'published';
+        $roster = sanitize_key(vms_vendor_availability_query_arg('roster'));
+        if ($roster === '') {
+            $roster = 'published';
+        }
         if (!array_key_exists($roster, vms_vendor_availability_roster_options())) {
             $roster = 'published';
         }
@@ -155,11 +183,11 @@ if (!function_exists('vms_vendor_availability_selected_filters')) {
             'view' => $view,
             'month' => $month,
             'date' => $date,
-            'q' => sanitize_text_field((string) (isset($_GET['q']) ? wp_unslash($_GET['q']) : '')),
-            'type' => sanitize_key((string) (isset($_GET['vendor_type']) ? wp_unslash($_GET['vendor_type']) : '')),
+            'q' => sanitize_text_field(vms_vendor_availability_query_arg('q')),
+            'type' => sanitize_key(vms_vendor_availability_query_arg('vendor_type')),
             'status' => $status,
             'day_filter' => $day_filter,
-            'venue_id' => absint(isset($_GET['venue_id']) ? wp_unslash($_GET['venue_id']) : 0),
+            'venue_id' => absint(vms_vendor_availability_query_arg('venue_id')),
             'setup' => $setup,
             'roster' => $roster,
         );
