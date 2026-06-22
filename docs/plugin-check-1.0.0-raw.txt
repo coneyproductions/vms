@@ -968,12 +968,6 @@ line	column	type	code	message	docs
 676	68	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 709	63	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
 
-FILE: includes/admin/cancelled-event-cost-review.php
-line	column	type	code	message	docs
-80	44	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-81	44	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-82	44	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-
 FILE: includes/admin/continuity-binder.php
 line	column	type	code	message	docs
 5	19	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.

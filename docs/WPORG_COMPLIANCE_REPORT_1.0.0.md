@@ -5,9 +5,9 @@ Date: 2026-06-21
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-04X`: `c3559699aacb15cb157d2ad4b412bb78d0e9716a` (`c355969`)
+- HEAD at start of `WPORG-04Y`: `551b1373d9a5facfdcacf39a0e2c72ea2f5d9d83` (`551b137`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- WPORG-04W checkpoint state at the start of this task: committed and pushed
+- `WPORG-04X` checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -19,7 +19,7 @@ Date: 2026-06-21
   - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, and `WPORG-04X`
 - PHP runtime evidence:
   - `8.5.3` from `WPORG-02`
-  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, and `WPORG-04X`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, and `WPORG-04Y`
 - MySQL: `8.0.35`
 - WP-CLI: `2.12.0`
 - Dependency versions used in lifecycle and smoke work:
@@ -51,8 +51,8 @@ Date: 2026-06-21
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-04x/vms-1.0.0-public-release.zip`
-- SHA-256: `b3eaf4abe3129cc1bf9f8185d3db27d545b7afea06d3248236d100d116fbf004`
+- Artifact: `dist/wporg-04y/vms-1.0.0-public-release.zip`
+- SHA-256: `25fb74d421406702ac95fa7238573a4ff08b9f64b380840bb3c8f3e02cfae7b9`
 - Package integrity: PASS
 
 ## Builder Status
@@ -163,6 +163,9 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04x --force`
   - PASS
   - current artifact SHA-256: `b3eaf4abe3129cc1bf9f8185d3db27d545b7afea06d3248236d100d116fbf004`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04y --force`
+  - PASS
+  - current artifact SHA-256: `25fb74d421406702ac95fa7238573a4ff08b9f64b380840bb3c8f3e02cfae7b9`
 
 ## Readme Validator
 
@@ -181,8 +184,8 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3150` total findings
-- `925` errors
+- `3147` total findings
+- `922` errors
 - `2225` warnings
 
 Comparison:
@@ -212,10 +215,11 @@ Comparison:
 - `WPORG-04V` packaged-plugin final: `3163` total / `938` errors / `2225` warnings
 - `WPORG-04W` packaged-plugin final: `3158` total / `933` errors / `2225` warnings
 - `WPORG-04X` packaged-plugin final: `3150` total / `925` errors / `2225` warnings
+- `WPORG-04Y` packaged-plugin final: `3147` total / `922` errors / `2225` warnings
 
 Dominant remaining codes:
 
-- `WordPress.WP.I18n.MissingTranslatorsComment`: `555`
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `552`
 - `WordPress.Security.NonceVerification.Recommended`: `597`
 - `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `256`
 - `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `232`
@@ -230,16 +234,17 @@ High-level category counts:
 
 - nonce and input handling: `1198`
 - database and SQL safety: `1101`
-- i18n placeholder comments / ordering: `571`
+- i18n placeholder comments / ordering: `568`
 - escaping and output safety: `161`
 - date/time API usage: `27`
 - development logging: `43`
 
 Packaged rerun note:
 
-- No previously unseen Plugin Check code categories appeared in `WPORG-04X`.
-- The selected `includes/core/vendor-document-alerts.php` batch reduced the file from `8` findings (`8` errors / `0` warnings) to `0` by adding translator comments only to vendor fallback text plus notification subject/body placeholder strings without changing notification behavior.
-- The non-target root-file steady state outside `includes/core/vendor-document-alerts.php` remained unchanged: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`.
+- No previously unseen Plugin Check code categories appeared in `WPORG-04Y`.
+- The final isolated-safe scan reviewed admin i18n, public render, shared shell, ICS, helpers, settings-page, and feedback candidates before selecting the lowest-risk highest-yield file.
+- The selected `includes/admin/cancelled-event-cost-review.php` batch reduced the file from `3` findings (`3` errors / `0` warnings) to `0` by adding translator comments only to existing admin metabox placeholder strings without changing runtime behavior.
+- The non-target root-file steady state outside `includes/admin/cancelled-event-cost-review.php` remained unchanged: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`.
 
 Fixed across this release-prep sequence:
 
@@ -269,11 +274,12 @@ Fixed across this release-prep sequence:
 - `includes/admin/approvals-review-queue.php`: `11` -> `4`, with `7` -> `0` errors
 - `includes/admin/menu.php`: `8` -> `3`, with `5` -> `0` errors
 - `includes/core/vendor-document-alerts.php`: `8` -> `0`, with `8` -> `0` errors
-- extracted-package rerun-only steady state outside selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1` in `WPORG-04X`
+- `includes/admin/cancelled-event-cost-review.php`: `3` -> `0`, with `3` -> `0` errors
+- extracted-package rerun-only steady state outside selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1` in `WPORG-04Y`
 - remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
 - packaged nonce/input blocker surface: `1517` -> `1198`
-- packaged i18n placeholder/comment surface: `792` -> `571`
+- packaged i18n placeholder/comment surface: `792` -> `568`
 - packaged output-escaping surface: `317` -> `161`
 - packaged date/time surface: `86` -> `27`
 
@@ -302,7 +308,7 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: i18n | `571` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Add `translators:` comments and ordered placeholders in batches after security blockers | Partially |
+| Plugin Check: i18n | `568` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Add `translators:` comments and ordered placeholders in batches after security blockers | Partially |
 | Plugin Check: date/time APIs | `27` `date()` findings remain | SHOULD FIX BEFORE SUBMISSION | Review each case and convert UTC-safe display paths to explicit timezone-safe helpers where appropriate | Partially |
 
 ## Accept / Document
@@ -332,8 +338,10 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- `WPORG-04Y`
+- Post-`WPORG-04Y` phased follow-up
 - Scope:
-  - repeat the deliberate hotspot scan from the `WPORG-04X` packaged baseline and prefer another isolated translator-comment or final-output slice before widening into request, auth, refund, ticketing, or availability-save flows,
-  - `includes/admin/settings/class-vms-settings-notifications.php` and `includes/admin/cancelled-event-cost-review.php` are the next low-risk i18n-only admin candidates; reach for `includes/admin-ui/shell.php` only if a clearly local shared HTML allowlist can be defined without changing callback semantics,
-  - keep avoiding notification/date logic beyond comment-only changes, shared helpers, and raw ICS output unless a later pass can prove they are display-only.
+  - start a nonce/input phase centered on `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, and `includes/integrations/ticketing-verifications.php`, with regression coverage before widening into mutation paths
+  - follow with a DB/SQL phase that prioritizes `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL issues in admissions, staffing, staff-task, and queue/store helpers before generic direct-query/no-caching warnings
+  - keep a separate i18n remainder phase for low-yield placeholder-comment leftovers such as `includes/admin/settings/class-vms-settings-notifications.php`, `includes/public/event-details.php`, and `includes/admin/staff-certifications.php` after the security-heavy phases move forward
+  - reserve an escaping remainder phase for shared render boundaries including `includes/admin-ui/shell.php`, Staff Portal surfaces, vendor-guest output, and other callback-driven HTML paths
+  - finish with a runtime-aware high-risk phase for shared helpers, calendar ICS output, notification-adjacent code, ticketing, cancellation/refund, portal/auth, and Event Plans save/publish flows

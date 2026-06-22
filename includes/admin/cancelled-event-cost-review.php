@@ -77,8 +77,11 @@ if (!function_exists('vms_cancelled_cost_review_render_metabox')) {
         if ($total_cents > 0) {
             echo '<p>' . esc_html__('This cancelled event still shows estimated costs. Zero out anything that was not actually owed so reporting does not overstate the loss.', 'vms') . '</p>';
             echo '<ul class="ul-disc">';
+            /* translators: %s: Formatted labor estimate amount. */
             echo '<li>' . esc_html(sprintf(__('Labor estimate: %s', 'vms'), function_exists('vms_goals_fmt_money') ? vms_goals_fmt_money($labor_cents) : ('$' . number_format($labor_cents / 100, 2)))) . '</li>';
+            /* translators: %s: Formatted vendor/direct estimate amount. */
             echo '<li>' . esc_html(sprintf(__('Vendor/direct estimate: %s', 'vms'), function_exists('vms_goals_fmt_money') ? vms_goals_fmt_money($vendor_direct_cents) : ('$' . number_format($vendor_direct_cents / 100, 2)))) . '</li>';
+            /* translators: %s: Formatted total loaded estimate amount. */
             echo '<li>' . esc_html(sprintf(__('Total still loaded: %s', 'vms'), function_exists('vms_goals_fmt_money') ? vms_goals_fmt_money($total_cents) : ('$' . number_format($total_cents / 100, 2)))) . '</li>';
             echo '</ul>';
         } else {
