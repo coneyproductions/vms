@@ -1500,148 +1500,140 @@ line	column	type	code	message	docs
 381	18	ERROR	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $sql used in $wpdb->get_results()\n$sql assigned unsafely at line 372.
 381	45	ERROR	WordPress.DB.PreparedSQL.NotPrepared	Use placeholders and $wpdb->prepare(); found $sql
 439	96	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-478	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-478	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-478	18	ERROR	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $sql used in $wpdb->get_results()\n$sql assigned unsafely at line 459.
-478	30	ERROR	WordPress.DB.PreparedSQL.NotPrepared	Use placeholders and $wpdb->prepare(); found $sql
-520	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-520	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-520	18	ERROR	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $sql used in $wpdb->get_results()\n$sql assigned unsafely at line 494.
-520	30	ERROR	WordPress.DB.PreparedSQL.NotPrepared	Use placeholders and $wpdb->prepare(); found $sql
+459	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+459	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+502	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+502	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
 550	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
 550	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-550	18	ERROR	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $sql used in $wpdb->get_results()\n$sql assigned unsafely at line 534.
-550	30	ERROR	WordPress.DB.PreparedSQL.NotPrepared	Use placeholders and $wpdb->prepare(); found $sql
-578	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-578	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-578	18	ERROR	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $sql used in $wpdb->get_results()\n$sql assigned unsafely at line 563.
-578	30	ERROR	WordPress.DB.PreparedSQL.NotPrepared	Use placeholders and $wpdb->prepare(); found $sql
-822	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-822	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-825	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-840	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-840	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-853	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-853	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-858	24	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-858	24	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-866	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-866	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-879	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-879	25	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-879	26	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $batches used in $wpdb-&gt;query()\n$batches assigned unsafely at line 878.
-880	4	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$batches} at &quot;UPDATE {$batches} SET generated_count = generated_count + %d, generated_at = %s, updated_at = %s, updated_by = %d WHERE id = %d&quot;
-889	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-889	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-893	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-893	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-981	21	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-1084	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-1122	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-1122	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-1169	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1169	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-1169	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
-1200	28	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-1200	28	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-1236	20	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-1236	20	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-1276	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1276	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-1276	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
-1290	85	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1293	67	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1311	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1311	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-1311	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
-1378	3	ERROR	WordPress.WP.AlternativeFunctions.file_system_operations_fclose	File operations should use WP_Filesystem methods instead of direct PHP filesystem calls. Found: fclose().
-1402	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1402	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-1402	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
-1564	3	ERROR	WordPress.WP.AlternativeFunctions.file_system_operations_fclose	File operations should use WP_Filesystem methods instead of direct PHP filesystem calls. Found: fclose().
-1580	19	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1580	60	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1885	122	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1941	21	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1941	58	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-1948	63	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2199	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-2199	54	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-2282	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-2282	60	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-2282	60	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;vms_pass_claim_token&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-2282	60	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_GET[&#039;vms_pass_claim_token&#039;]
-2287	63	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_SERVER[&#039;REQUEST_URI&#039;]
-2315	16	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2315	16	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2315	17	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;get_row()\n$table assigned unsafely at line 2314.
-2315	40	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;SELECT * FROM {$table} WHERE token_public_key = %s&quot;
-2397	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_key	Detected usage of meta_key, possible slow query.
-2400	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
-2487	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2487	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2487	18	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2478.
-2487	39	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;claiming&#039; WHERE id = %d AND status = &#039;unclaimed&#039;&quot;
-2510	11	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2478.
-2510	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2510	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2510	32	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
-2516	29	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $claims_table used in $wpdb-&gt;get_var()\n$claims_table assigned unsafely at line 2479.
-2516	31	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2516	31	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2517	5	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$claims_table} at &quot;SELECT COUNT(1) FROM {$claims_table} WHERE batch_id = %d AND phone_norm = %s&quot;
-2522	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2478.
-2522	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2522	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2522	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
-2529	35	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $claims_table used in $wpdb-&gt;get_var()\n$claims_table assigned unsafely at line 2479.
-2529	37	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2529	37	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2530	5	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$claims_table} at &quot;SELECT COUNT(1) FROM {$claims_table} WHERE batch_id = %d AND email = %s&quot;
-2535	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2478.
-2535	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2535	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2535	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
-2542	38	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $entries_table used in $wpdb-&gt;get_var()\n$entries_table assigned unsafely at line 2480.
-2542	40	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2542	40	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2543	5	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$entries_table} at &quot;SELECT COALESCE(SUM(party_size), 0) FROM {$entries_table} WHERE pass_batch_id = %d AND status &lt;&gt; &#039;canceled&#039;&quot;
-2547	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2478.
-2547	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2547	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2547	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
-2555	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2575	11	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2478.
-2575	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2575	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2575	32	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
-2593	29	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2632	21	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2632	21	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2634	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2634	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2635	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2478.
-2635	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2635	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2635	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
-2653	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2653	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2661	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2661	25	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2675	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2675	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2682	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2682	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2684	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-2684	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-2750	14	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$content_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-2828	7	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotValidated	Detected usage of a possibly undefined superglobal array index: $_SERVER[&#039;REQUEST_METHOD&#039;]. Check that the array index exists before using it.
-2829	74	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;_vms_pass_claim_nonce&#039;]
-2844	38	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2891	90	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2909	131	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2924	31	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2962	783	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+585	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+585	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+849	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+849	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+852	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+867	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+867	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+880	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+880	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+885	24	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+885	24	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+893	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+893	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+906	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+906	25	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+906	26	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $batches used in $wpdb-&gt;query()\n$batches assigned unsafely at line 905.
+907	4	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$batches} at &quot;UPDATE {$batches} SET generated_count = generated_count + %d, generated_at = %s, updated_at = %s, updated_by = %d WHERE id = %d&quot;
+916	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+916	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+920	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+920	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+1008	21	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+1111	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+1149	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+1149	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+1196	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1196	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+1196	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
+1227	28	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+1227	28	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+1263	20	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+1263	20	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+1303	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1303	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+1303	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
+1317	85	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+1320	67	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+1338	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1338	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+1338	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
+1405	3	ERROR	WordPress.WP.AlternativeFunctions.file_system_operations_fclose	File operations should use WP_Filesystem methods instead of direct PHP filesystem calls. Found: fclose().
+1429	52	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1429	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST[&#039;_wpnonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+1429	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST[&#039;_wpnonce&#039;]
+1591	3	ERROR	WordPress.WP.AlternativeFunctions.file_system_operations_fclose	File operations should use WP_Filesystem methods instead of direct PHP filesystem calls. Found: fclose().
+1607	19	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1607	60	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1912	122	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+1968	21	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1968	58	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+1975	63	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+2226	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+2226	54	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+2309	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+2309	60	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+2309	60	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;vms_pass_claim_token&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+2309	60	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_GET[&#039;vms_pass_claim_token&#039;]
+2314	63	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_SERVER[&#039;REQUEST_URI&#039;]
+2342	16	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2342	16	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2342	17	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;get_row()\n$table assigned unsafely at line 2341.
+2342	40	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;SELECT * FROM {$table} WHERE token_public_key = %s&quot;
+2424	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_key	Detected usage of meta_key, possible slow query.
+2427	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
+2514	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2514	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2514	18	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2505.
+2514	39	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;claiming&#039; WHERE id = %d AND status = &#039;unclaimed&#039;&quot;
+2537	11	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2505.
+2537	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2537	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2537	32	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
+2543	29	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $claims_table used in $wpdb-&gt;get_var()\n$claims_table assigned unsafely at line 2506.
+2543	31	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2543	31	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2544	5	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$claims_table} at &quot;SELECT COUNT(1) FROM {$claims_table} WHERE batch_id = %d AND phone_norm = %s&quot;
+2549	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2505.
+2549	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2549	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2549	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
+2556	35	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $claims_table used in $wpdb-&gt;get_var()\n$claims_table assigned unsafely at line 2506.
+2556	37	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2556	37	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2557	5	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$claims_table} at &quot;SELECT COUNT(1) FROM {$claims_table} WHERE batch_id = %d AND email = %s&quot;
+2562	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2505.
+2562	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2562	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2562	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
+2569	38	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $entries_table used in $wpdb-&gt;get_var()\n$entries_table assigned unsafely at line 2507.
+2569	40	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2569	40	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2570	5	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$entries_table} at &quot;SELECT COALESCE(SUM(party_size), 0) FROM {$entries_table} WHERE pass_batch_id = %d AND status &lt;&gt; &#039;canceled&#039;&quot;
+2574	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2505.
+2574	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2574	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2574	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
+2582	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2602	11	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2505.
+2602	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2602	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2602	32	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
+2620	29	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2659	21	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2659	21	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2661	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2661	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2662	12	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $tokens_table used in $wpdb-&gt;query()\n$tokens_table assigned unsafely at line 2505.
+2662	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2662	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2662	33	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$tokens_table} at &quot;UPDATE {$tokens_table} SET status = &#039;unclaimed&#039; WHERE id = %d&quot;
+2680	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2680	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2688	25	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2688	25	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2702	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2702	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2709	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2709	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2711	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+2711	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+2777	14	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$content_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+2855	7	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotValidated	Detected usage of a possibly undefined superglobal array index: $_SERVER[&#039;REQUEST_METHOD&#039;]. Check that the array index exists before using it.
+2856	74	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;_vms_pass_claim_nonce&#039;]
+2871	38	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+2918	90	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+2936	131	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+2951	31	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
+2989	783	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
 
 FILE: includes/modules/admissions/rest.php
 line	column	type	code	message	docs

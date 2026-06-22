@@ -456,26 +456,34 @@ if (!function_exists('vms_pass_claims_reports_by_source')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
-		$sql = "SELECT
-			s.id,
-			s.source_name,
-			COUNT(DISTINCT b.id) AS batches_count,
-			COUNT(t.id) AS tokens_issued,
-			SUM(CASE WHEN t.status = 'claimed' THEN 1 ELSE 0 END) AS tokens_claimed,
-			COUNT(c.id) AS reservations_count,
-			SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
-			SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
-			COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
-			GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
-			FROM {$sources} s
-			LEFT JOIN {$batches} b ON b.source_id = s.id
-			LEFT JOIN {$tokens} t ON t.batch_id = b.id
-			LEFT JOIN {$claims} c ON c.id = t.claim_id
-			LEFT JOIN {$entries} e ON e.id = c.reservation_entry_id
-			GROUP BY s.id, s.source_name
-			ORDER BY s.source_name ASC";
-
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT
+					s.id,
+					s.source_name,
+					COUNT(DISTINCT b.id) AS batches_count,
+					COUNT(t.id) AS tokens_issued,
+					SUM(CASE WHEN t.status = 'claimed' THEN 1 ELSE 0 END) AS tokens_claimed,
+					COUNT(c.id) AS reservations_count,
+					SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
+					SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
+					COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
+					GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
+					FROM %i s
+					LEFT JOIN %i b ON b.source_id = s.id
+					LEFT JOIN %i t ON t.batch_id = b.id
+					LEFT JOIN %i c ON c.id = t.claim_id
+					LEFT JOIN %i e ON e.id = c.reservation_entry_id
+					GROUP BY s.id, s.source_name
+					ORDER BY s.source_name ASC",
+				$sources,
+				$batches,
+				$tokens,
+				$claims,
+				$entries
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -491,33 +499,41 @@ if (!function_exists('vms_pass_claims_reports_by_batch')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
-		$sql = "SELECT
-			b.id,
-			b.batch_name,
-			b.status,
-			b.validity_type,
-			b.value_type,
-			b.value_amount,
-			b.expires_at,
-			s.source_name,
-			COUNT(t.id) AS tokens_issued,
-			SUM(CASE WHEN t.status = 'claimed' THEN 1 ELSE 0 END) AS tokens_claimed,
-			SUM(CASE WHEN t.status = 'void' THEN 1 ELSE 0 END) AS tokens_void,
-			COUNT(c.id) AS reservations_count,
-			SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
-			SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
-			COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
-			GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
-			FROM {$batches} b
-			LEFT JOIN {$sources} s ON s.id = b.source_id
-			LEFT JOIN {$tokens} t ON t.batch_id = b.id
-			LEFT JOIN {$claims} c ON c.id = t.claim_id
-			LEFT JOIN {$entries} e ON e.id = c.reservation_entry_id
-			GROUP BY b.id, b.batch_name, b.status, b.validity_type, b.value_type, b.value_amount, b.expires_at, s.source_name
-			ORDER BY b.id DESC
-			LIMIT 400";
-
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT
+					b.id,
+					b.batch_name,
+					b.status,
+					b.validity_type,
+					b.value_type,
+					b.value_amount,
+					b.expires_at,
+					s.source_name,
+					COUNT(t.id) AS tokens_issued,
+					SUM(CASE WHEN t.status = 'claimed' THEN 1 ELSE 0 END) AS tokens_claimed,
+					SUM(CASE WHEN t.status = 'void' THEN 1 ELSE 0 END) AS tokens_void,
+					COUNT(c.id) AS reservations_count,
+					SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
+					SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
+					COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
+					GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
+					FROM %i b
+					LEFT JOIN %i s ON s.id = b.source_id
+					LEFT JOIN %i t ON t.batch_id = b.id
+					LEFT JOIN %i c ON c.id = t.claim_id
+					LEFT JOIN %i e ON e.id = c.reservation_entry_id
+					GROUP BY b.id, b.batch_name, b.status, b.validity_type, b.value_type, b.value_amount, b.expires_at, s.source_name
+					ORDER BY b.id DESC
+					LIMIT 400",
+				$batches,
+				$sources,
+				$tokens,
+				$claims,
+				$entries
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -531,23 +547,29 @@ if (!function_exists('vms_pass_claims_reports_source_events')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
-		$sql = "SELECT
-			c.source_id,
-			s.source_name,
-			c.event_plan_id,
-			COUNT(c.id) AS reservations_count,
-			SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
-			SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
-			COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
-			GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
-			FROM {$claims} c
-			LEFT JOIN {$sources} s ON s.id = c.source_id
-			LEFT JOIN {$entries} e ON e.id = c.reservation_entry_id
-			GROUP BY c.source_id, s.source_name, c.event_plan_id
-			ORDER BY s.source_name ASC, reservations_count DESC, c.event_plan_id DESC
-			LIMIT 1000";
-
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT
+					c.source_id,
+					s.source_name,
+					c.event_plan_id,
+					COUNT(c.id) AS reservations_count,
+					SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
+					SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
+					COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
+					GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
+					FROM %i c
+					LEFT JOIN %i s ON s.id = c.source_id
+					LEFT JOIN %i e ON e.id = c.reservation_entry_id
+					GROUP BY c.source_id, s.source_name, c.event_plan_id
+					ORDER BY s.source_name ASC, reservations_count DESC, c.event_plan_id DESC
+					LIMIT 1000",
+				$claims,
+				$sources,
+				$entries
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -560,22 +582,27 @@ if (!function_exists('vms_pass_claims_reports_by_event')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
-		$sql = "SELECT
-			c.event_plan_id,
-			COUNT(c.id) AS reservations_count,
-			COUNT(DISTINCT c.source_id) AS source_count,
-			COUNT(DISTINCT c.batch_id) AS batch_count,
-			SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
-			SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
-			COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
-			GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
-			FROM {$claims} c
-			LEFT JOIN {$entries} e ON e.id = c.reservation_entry_id
-			GROUP BY c.event_plan_id
-			ORDER BY reservations_count DESC, c.event_plan_id DESC
-			LIMIT 400";
-
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT
+					c.event_plan_id,
+					COUNT(c.id) AS reservations_count,
+					COUNT(DISTINCT c.source_id) AS source_count,
+					COUNT(DISTINCT c.batch_id) AS batch_count,
+					SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
+					SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
+					COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
+					GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
+					FROM %i c
+					LEFT JOIN %i e ON e.id = c.reservation_entry_id
+					GROUP BY c.event_plan_id
+					ORDER BY reservations_count DESC, c.event_plan_id DESC
+					LIMIT 400",
+				$claims,
+				$entries
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
