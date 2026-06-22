@@ -5,9 +5,9 @@ Date: 2026-06-22
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-08B`: `5f21f0027fbf3f53634e081d4ce844ea0847353d` (`5f21f00`)
+- HEAD at start of `WPORG-09A`: `b63bab0e2c6b3267b0b94303cbf9f686f7962400` (`b63bab0`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- `WPORG-08A` checkpoint state at the start of this task: committed and pushed
+- `WPORG-08B` checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -51,8 +51,8 @@ Date: 2026-06-22
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-08b/vms-1.0.0-public-release.zip`
-- SHA-256: `bcf0c9d9ec367aa0838fe23acae0aadc5daf5b3ec0672f832cb11f30e0b7e73d`
+- Artifact: `dist/wporg-09a/vms-1.0.0-public-release.zip`
+- SHA-256: `e6aebcba302b1c58a4760bdfc870892dc6dd4204bc4de3cd280670a16292d22b`
 - Package integrity: PASS
 
 ## Builder Status
@@ -208,9 +208,9 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3033` total findings
-- `869` errors
-- `2164` warnings
+- `3030` total findings
+- `867` errors
+- `2163` warnings
 
 Comparison:
 
@@ -252,6 +252,7 @@ Comparison:
 - `WPORG-07B` packaged-plugin final: `3061` total / `898` errors / `2163` warnings
 - `WPORG-08A` packaged-plugin final: `3041` total / `877` errors / `2164` warnings
 - `WPORG-08B` packaged-plugin final: `3033` total / `869` errors / `2164` warnings
+- `WPORG-09A` packaged-plugin final: `3030` total / `867` errors / `2163` warnings
 
 Dominant remaining codes:
 
@@ -272,16 +273,16 @@ High-level category counts:
 - database and SQL safety: `1087`
 - i18n placeholder comments / ordering: `539`
 - escaping and output safety: `145`
-- date/time API usage: `27`
+- date/time API usage: `25`
 - development logging: `43`
 
 Packaged rerun note:
 
-- No previously unseen Plugin Check code categories appeared in `WPORG-08B`.
-- The 08B candidate scan covered ten i18n-heavy files before selecting the admin-only settings page `includes/admin/settings-page.php`; the detailed scan table is recorded in `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`.
-- The selected `includes/admin/settings-page.php` batch reduced the file from `39` findings (`11` errors / `28` warnings) to `31` (`3` errors / `28` warnings) while clearing all `8` `MissingTranslatorsComment` findings through `translators:` comments only.
-- The normalized packaged summary left `includes/helpers/checkin-close.php` and `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound` unchanged outside the selected file scope, while the standing `plugin_header_nonexistent_domain_path` warning was re-associated to `vendor-management-system.php`.
-- `WPORG-08B` recommends pausing targeted i18n cleanup unless another equivalently isolated admin-only translator-comment slice is identified.
+- No previously unseen Plugin Check code categories appeared in `WPORG-09A`.
+- The 09A candidate scan covered all fifteen remaining `date()` files from the packaged `WPORG-08B` baseline before editing; the detailed scan table is recorded in `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`.
+- The selected `includes/admin/settings-page.php` batch reduced the file from `31` findings (`3` errors / `28` warnings) to `29` (`1` error / `28` warnings) while clearing its remaining `2` `WordPress.DateTime.RestrictedFunctions.date_date` findings through direct site-local `wp_date()` calls on already-derived transient timestamps only.
+- The normalized packaged summary left `includes/helpers/checkin-close.php` and `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound` unchanged outside the selected file scope, while the previously oscillating `plugin_header_nonexistent_domain_path` warning no longer appeared in this extracted-package rerun.
+- `WPORG-09A` recommends pausing further date/time cleanup unless another admin-only display-only slice with clear timezone intent emerges; otherwise switch back to the safer isolated DB/SQL reporting backlog before reopening nonce/input runtime work.
 
 Fixed across this release-prep sequence:
 
@@ -318,18 +319,19 @@ Fixed across this release-prep sequence:
 - `includes/admin-ui/context.php`: `6` -> `0`, with `6` -> `0` warnings and `0` -> `0` errors
 - `includes/admin/settings-page.php`: `48` -> `39`, with `20` -> `11` errors and `9` `OutputNotEscaped` findings -> `0`
 - `includes/admin/settings-page.php`: `39` -> `31`, with `8` `MissingTranslatorsComment` findings -> `0`
+- `includes/admin/settings-page.php`: `31` -> `29`, with `2` remaining `date()` findings -> `0`
 - `includes/admin/vendor-list-columns.php`: `11` -> `8`, with `3` -> `0` errors and `3` `OutputNotEscaped` findings -> `0`
 - `includes/core/goals-forecast.php`: `38` -> `32`, with DB/SQL findings `37` -> `31`
 - `includes/modules/admissions/pass-claims.php`: `173` -> `165`, with DB/SQL findings `133` -> `125`
 - `includes/admin/ticket-integrity-page.php`: `48` -> `27`, with `21` `MissingTranslatorsComment` findings -> `0`
-- normalized extracted-package state outside selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1` (re-associated to `vendor-management-system.php`), `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1` in `WPORG-08B`
+- normalized extracted-package state outside selected file scope in `WPORG-09A`: `plugin_header_nonexistent_domain_path`: `1` -> `0`, `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
 - remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
 - packaged nonce/input blocker surface: `1517` -> `1143`
 - packaged i18n placeholder/comment surface: `792` -> `539`
 - packaged SQL safety surface: `1101` -> `1087`
 - packaged output-escaping surface: `317` -> `145`
-- packaged date/time surface: `86` -> `27`
+- packaged date/time surface: `86` -> `25`
 
 Detailed grouping and recommendations:
 
@@ -348,7 +350,7 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: nonce/input | `1143` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-08B` stayed on admin-only translator comments again, so Event Plans, portal save, admissions, ticketing, and other mutation-backed request flows still need dedicated regression coverage before widening request hardening. | Partially |
+| Plugin Check: nonce/input | `1143` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-09A` stayed on admin-only display timestamps again, so Event Plans, portal save, admissions, ticketing, and other mutation-backed request flows still need dedicated regression coverage before widening request hardening. | Partially |
 | Plugin Check: escaping | `145` remaining `OutputNotEscaped` findings | BLOCKER | Pause the escape-only phase after `WPORG-06C`; the remaining candidates are shared allowed-HTML boundaries, public/portal surfaces, metabox/save flows, vendor-assignment dashboards, or excluded Event Plans slices rather than isolated admin-only display targets. | Partially |
 | Plugin Check: SQL safety | `1087` remaining DB/SQL findings, including `148` unescaped DB-parameter reports, `143` interpolated SQL reports, and `68` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings, but pause the DB/SQL phase whenever the candidate is no longer an isolated admin/reporting slice. | Partially |
 
@@ -357,7 +359,7 @@ The `WPORG-02` audit conclusions still hold.
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
 | Plugin Check: i18n | `539` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Pause targeted i18n after `WPORG-08B` unless another isolated admin-only translator-comment or placeholder-ordering slice appears; otherwise switch back to blocker coverage. | Partially |
-| Plugin Check: date/time APIs | `27` `date()` findings remain | SHOULD FIX BEFORE SUBMISSION | Review each case and convert UTC-safe display paths to explicit timezone-safe helpers where appropriate | Partially |
+| Plugin Check: date/time APIs | `25` `date()` findings remain | SHOULD FIX BEFORE SUBMISSION | Pause the date/time phase after `WPORG-09A` unless another admin-only display-only slice appears; the remaining higher-density candidates are scheduling, sales-window, notification, save-flow, portal-stamping, payables, Event Plans, or mixed/runtime helpers. | Partially |
 
 ## Accept / Document
 
@@ -386,10 +388,10 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- Post-`WPORG-08B` phased follow-up
+- Post-`WPORG-09A` phased follow-up
 - Scope:
-  - pause targeted i18n cleanup unless another equivalently isolated admin-only translator-comment slice is identified
-  - if the i18n phase resumes, keep it limited to translator comments, ordered placeholders, or literal `vms` text-domain corrections in admin-only diagnostics/list/report files
-  - otherwise switch back to regression preparation for the mutation-coupled nonce/input backlog before widening more runtime hardening
+  - pause further date/time cleanup unless another equivalently isolated admin-only display/report/list/settings slice appears; the remaining higher-density date/time files are scheduling, ticket-window, digest/notification, payables, portal stamp, CLI, Event Plans, or shared runtime helpers
+  - switch back to the safer isolated DB/SQL backlog first; `includes/modules/admissions/pass-claims.php` proved that admin/report helper slices can still reduce blocker counts without widening into runtime-sensitive flows
+  - keep targeted i18n paused unless another isolated admin-only translator-comment or placeholder-ordering slice appears
   - keep the escape-only phase paused after `WPORG-06C`; the remaining output-heavy files are shared boundaries, public/portal surfaces, vendor-assignment dashboards, metabox/save flows, or excluded Event Plans slices rather than isolated admin-only display targets
-  - revisit the remaining escaping/output files only after new regression coverage makes a shared-boundary follow-up defensible
+  - postpone nonce/input widening until new regression coverage makes the mutation-coupled request paths defensible

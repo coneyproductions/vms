@@ -6,8 +6,8 @@ Date: 2026-06-22
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
-- Scan target for current counts: extracted packaged directory from `dist/wporg-08b/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
-- Current artifact SHA-256: `bcf0c9d9ec367aa0838fe23acae0aadc5daf5b3ec0672f832cb11f30e0b7e73d`
+- Scan target for current counts: extracted packaged directory from `dist/wporg-09a/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
+- Current artifact SHA-256: `e6aebcba302b1c58a4760bdfc870892dc6dd4204bc4de3cd280670a16292d22b`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -53,66 +53,66 @@ Date: 2026-06-22
 | `WPORG-07B` packaged RC, final | extracted packaged directory outside local site tree | `3061` | `898` | `2163` | Cleared the second low-risk DB/SQL batch in the admin-only report helpers inside `includes/modules/admissions/pass-claims.php`; the rerun reintroduced the previously observed `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomainFound` warning unchanged, and introduced no previously unseen Plugin Check code categories. |
 | `WPORG-08A` packaged RC, final | extracted packaged directory outside local site tree | `3041` | `877` | `2164` | Cleared the first cautious i18n placeholder/comment batch in `includes/admin/ticket-integrity-page.php`; the normalized rerun left `plugin_header_nonexistent_domain_path`, `includes/helpers/checkin-close.php`, and `load_plugin_textdomainFound` unchanged outside the selected file scope and introduced no previously unseen Plugin Check code categories. |
 | `WPORG-08B` packaged RC, final | extracted packaged directory outside local site tree | `3033` | `869` | `2164` | Cleared the second cautious i18n placeholder/comment batch in `includes/admin/settings-page.php`; the normalized rerun re-associated the standing `plugin_header_nonexistent_domain_path` warning to `vendor-management-system.php`, left `includes/helpers/checkin-close.php` and `load_plugin_textdomainFound` unchanged outside the selected file scope, and introduced no previously unseen Plugin Check code categories. |
+| `WPORG-09A` packaged RC, final | extracted packaged directory outside local site tree | `3030` | `867` | `2163` | Cleared the first cautious date/time display-only batch in `includes/admin/settings-page.php`; the normalized rerun dropped the previously oscillating `plugin_header_nonexistent_domain_path` warning, left `includes/helpers/checkin-close.php` and `load_plugin_textdomainFound` unchanged outside the selected file scope, and introduced no previously unseen Plugin Check code categories. |
 
 Net reduction from the `WPORG-02` source-tree baseline to the current packaged RC:
 
-- `-1534` total findings
-- `-777` errors
-- `-757` warnings
+- `-1537` total findings
+- `-779` errors
+- `-758` warnings
 
-Net reduction from `WPORG-07B`:
+Net reduction from `WPORG-08B`:
 
-- `-28` total findings
-- `-29` errors
-- `+1` warnings
+- `-3` total findings
+- `-2` errors
+- `-1` warnings
 
 ## Fixed In This Pass
 
-- 08B candidate scan summary
-  - detailed ten-file scan table was recorded in `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
-  - selected `includes/admin/settings-page.php` from the packaged `WPORG-08A` baseline because it was the first remaining admin-only settings/reporting file with at least five safe `MissingTranslatorsComment` findings and no placeholder-order warnings
-  - skipped the other reviewed high-density files because they were Event Plans runtime, checkout/ticketing, upload/verification, portal/public, email, or save-flow coupled
+- 09A candidate scan summary
+  - detailed fifteen-file date/time scan table was recorded in `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
+  - no low-risk admin-only candidate met the preferred `3`-finding threshold; the three-plus finding files were shared runtime helpers, diagnostics/query builders, scheduling/digest logic, or ticket-window logic
+  - selected `includes/admin/settings-page.php` from the packaged `WPORG-08B` baseline because it was the cleanest remaining admin-only settings/report surface where both date/time findings were pure formatting of already-derived transient timestamps for notice display
 - `includes/admin/settings-page.php`
-  - `39` findings -> `31`
-  - `11` errors -> `3`
+  - `31` findings -> `29`
+  - `3` errors -> `1`
   - `28` warnings -> `28`
-  - `8` i18n findings -> `0`
-  - limited the pass to adding `translators:` comments above the existing placeholder-bearing strings in labels and preview descriptions only
+  - `2` date/time findings -> `0`
+  - limited the pass to replacing the legacy `date()` fallbacks with direct site-local `wp_date()` calls on the existing transient timestamps only
 - Focused validation for this batch
   - no focused admin-settings regression exists in `tests/` for `includes/admin/settings-page.php`
   - `php -l includes/admin/settings-page.php` passed
   - `git diff --check` passed
   - validation stayed on PHP lint, whitespace safety, public-release build, package integrity, and a rerun of packaged Plugin Check against an extracted packaged directory outside the local site tree
-  - `php scripts/build-public-release.php --output-dir dist/wporg-08b --force --allow-dirty` passed
+  - `php scripts/build-public-release.php --output-dir dist/wporg-09a --force --allow-dirty` passed
   - packaged ZIP still contains root `readme.txt` and `LICENSE.txt`
-  - normalized packaged findings were saved to `test-results/wporg-08b-plugin-check.raw.txt` and `test-results/wporg-08b-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`
+  - normalized packaged findings were saved to `test-results/wporg-09a-plugin-check.raw.txt` and `test-results/wporg-09a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`
 
 Code-level deltas visible in the packaged scan:
 
-- `WordPress.WP.I18n.MissingTranslatorsComment`: `531` -> `523`
-- `I18n placeholder comments and ordering`: `547` -> `539`
-- `includes/admin/settings-page.php`: `39` -> `31`
-- normalized packaged summary outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1` (re-associated to `vendor-management-system.php`), `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
+- `WordPress.DateTime.RestrictedFunctions.date_date`: `27` -> `25`
+- `includes/admin/settings-page.php`: `31` -> `29`
+- normalized packaged summary outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `0`, `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
 
-No previously unseen Plugin Check codes appeared in this pass. The only normalized file-level movement outside the selected file scope was the standing domain-path warning being attached back to `vendor-management-system.php`.
+No previously unseen Plugin Check codes appeared in this pass. The only normalized file-level movement outside the selected file scope was the previously oscillating domain-path warning disappearing again in this extracted-package rerun.
 
 ## Current Category Triage
 
 | Category | Count | Representative files | Classification | Recommended strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `1143` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-08B` stayed on admin-only translator comments again, so the remaining high-density nonce/input work is still concentrated in mutation-coupled admin, portal, ticketing, and Event Plans/integration flows that need dedicated regression coverage before hardening. |
+| Nonce and input handling | `1143` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-09A` stayed on admin-only display timestamps again, so the remaining high-density nonce/input work is still concentrated in mutation-coupled admin, portal, ticketing, and Event Plans/integration flows that need dedicated regression coverage before hardening. |
 | Database and SQL safety | `1087` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings, but pause the DB/SQL phase whenever the candidate is no longer an isolated admin/reporting read slice. |
 | Escaping and output safety | `145` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | Keep the escape-only audit paused after `WPORG-06C`; the remaining candidates are shared allowed-HTML boundaries, public/portal surfaces, metabox/save flows, vendor-assignment dashboards, or excluded Event Plans slices rather than isolated admin-only display targets. |
 | I18n placeholder comments and ordering | `539` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Pause targeted i18n after `WPORG-08B` unless another equivalently isolated admin-only translator-comment or placeholder-ordering slice is identified; otherwise switch back to blocker coverage. |
-| Date/time API usage | `27` | `includes/modules/staff-tasks/notifications.php`, `includes/helpers.php`, `includes/ticketing/ticket-integrity-monitor.php` | SHOULD FIX BEFORE SUBMISSION | Review each remaining `date()` use. Convert display-only paths to explicit timezone-safe helpers and leave local-time-sensitive cases for deliberate follow-up review. |
+| Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/helpers.php`, `includes/ticketing/ticket-integrity-monitor.php` | SHOULD FIX BEFORE SUBMISSION | Pause the date/time phase after `WPORG-09A` unless another admin-only display-only slice appears; the remaining higher-density candidates are scheduling, sales-window, notification, payables, portal-stamping, Event Plans, or shared runtime helpers. |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` | SHOULD FIX BEFORE SUBMISSION | Remove or hard-gate residual development logging that is still reachable in packaged code. |
 
 ## Event Plans Conclusions
 
 - The Event Plans file remains the highest-density packaged file at `241` findings.
-- No Event Plans runtime findings were changed in `WPORG-08A` or `WPORG-08B`.
-- The selected `settings-page.php` pass stayed outside Event Plans runtime and mutation logic.
-- The read-only nonce/input phase remains closed after `WPORG-05E`, the escape-only phase remains paused after `WPORG-06C`, and `WPORG-08B` stayed completely outside Event Plans runtime.
+- No Event Plans runtime findings were changed in `WPORG-08A`, `WPORG-08B`, or `WPORG-09A`.
+- The selected `settings-page.php` pass stayed outside Event Plans runtime and mutation logic again.
+- The read-only nonce/input phase remains closed after `WPORG-05E`, the escape-only phase remains paused after `WPORG-06C`, and `WPORG-09A` stayed completely outside Event Plans runtime.
 - Remaining Event Plans findings are dominated by:
   - `save_event_plan_meta()` and adjacent request/save logic
   - the main Event Plan details render block tied to integration state
@@ -120,9 +120,10 @@ No previously unseen Plugin Check codes appeared in this pass. The only normaliz
 
 ## Recommended Next Task
 
-- Post-`WPORG-08B` phased follow-up
+- Post-`WPORG-09A` phased follow-up
 - Scope:
-  - pause targeted i18n cleanup unless another equivalently isolated admin-only translator-comment slice is identified; the highest-density remaining i18n files are now Event Plans, checkout/ticketing, upload/verification, portal/public, email, or save-flow coupled
+  - pause further date/time cleanup unless another equivalently isolated admin-only display/report/list/settings slice appears; the remaining higher-density date/time files are scheduling, ticket-window, digest/notification, payables, portal-stamping, Event Plans, or shared runtime helpers
+  - switch back to the safer isolated DB/SQL reporting backlog first; `includes/modules/admissions/pass-claims.php` showed that those slices can still reduce blocker counts without widening into mutation-coupled runtime work
+  - keep targeted i18n paused unless another equivalently isolated admin-only translator-comment slice is identified; the highest-density remaining i18n files are now Event Plans, checkout/ticketing, upload/verification, portal/public, email, or save-flow coupled
   - if the i18n phase resumes, keep it limited to translator comments, ordered placeholders, or literal `vms` text-domain corrections in admin-only diagnostics/list/report files
-  - otherwise switch back to regression preparation for the mutation-coupled nonce/input backlog before widening more runtime hardening
   - keep the escape-only phase paused after `WPORG-06C`; the remaining output-heavy files are shared boundaries, public/portal surfaces, vendor-assignment dashboards, metabox/save flows, or excluded Event Plans slices rather than isolated admin-only display targets

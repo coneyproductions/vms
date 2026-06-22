@@ -2383,7 +2383,7 @@ function vms_render_settings_page_content()
 		if (isset($_GET['vms_entitlement_image_sync_done'])) {
 			$img_sync = get_transient('vms_entitlement_image_sync_last');
 			if (is_array($img_sync)) {
-				$ts_readable = function_exists('wp_date') ? wp_date('Y-m-d H:i', (int) ($img_sync['ts'] ?? 0), wp_timezone()) : date('Y-m-d H:i', (int) ($img_sync['ts'] ?? 0));
+				$ts_readable = wp_date('Y-m-d H:i', (int) ($img_sync['ts'] ?? 0), wp_timezone());
 				$errors = (int) ($img_sync['errors'] ?? 0);
 				$notice_class = ($errors > 0) ? 'notice notice-warning' : 'notice notice-success';
 
@@ -2444,7 +2444,7 @@ function vms_render_settings_page_content()
 			if (isset($_GET['vms_scan_done'])) {
 			$data = get_transient('vms_integrity_scan_last');
 			if (is_array($data) && !empty($data['results'])) {
-				$ts_readable = function_exists('wp_date') ? wp_date('Y-m-d H:i', (int) $data['ts'], wp_timezone()) : date('Y-m-d H:i', (int) $data['ts']);
+				$ts_readable = wp_date('Y-m-d H:i', (int) $data['ts'], wp_timezone());
 				$mode_label = isset($data['mode']) ? (string) $data['mode'] : 'all';
 
 				echo '<div class="notice notice-success"><p><strong>Integrity scan complete.</strong> Mode: ' . esc_html($mode_label) . ' &nbsp;|&nbsp; Limit: ' . (int) $data['limit'] . ' &nbsp;|&nbsp; ' . esc_html($ts_readable) . '</p>';
