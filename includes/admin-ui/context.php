@@ -2,10 +2,24 @@
 
 defined('ABSPATH') || exit;
 
+if (!function_exists('vms_admin_ui_query_arg')) {
+	function vms_admin_ui_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin shell routing helper.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- read-only admin shell routing helper.
+		$value = $_GET[$key];
+		return (string) wp_unslash($value);
+	}
+}
+
 if (!function_exists('vms_admin_ui_get_page_slug')) {
 	function vms_admin_ui_get_page_slug(): string
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = sanitize_key(vms_admin_ui_query_arg('page'));
 		return (string) $page;
 	}
 }
@@ -16,7 +30,7 @@ if (!function_exists('vms_admin_ui_get_post_type')) {
 	 */
 	function vms_admin_ui_get_post_type($screen = null): string
 	{
-		$post_type = isset($_GET['post_type']) ? sanitize_key((string) $_GET['post_type']) : '';
+		$post_type = sanitize_key(vms_admin_ui_query_arg('post_type'));
 		if ($post_type !== '') {
 			return $post_type;
 		}
@@ -32,7 +46,7 @@ if (!function_exists('vms_admin_ui_get_post_type')) {
 			return $post_type;
 		}
 
-		$post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+		$post_id = absint(vms_admin_ui_query_arg('post'));
 		if ($post_id > 0) {
 			$post_type = get_post_type($post_id);
 			if (is_string($post_type)) {

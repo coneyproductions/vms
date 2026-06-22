@@ -4,7 +4,7 @@ Date: 2026-06-21
 
 ## Purpose
 
-Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, the staffing admin Plugin Check batch from `WPORG-04I`, the Staff Portal Plugin Check batch from `WPORG-04J`, the Vendor Portal Plugin Check batch from `WPORG-04K`, the public calendar Plugin Check batch from `WPORG-04L`, the public vendor profiles Plugin Check batch from `WPORG-04M`, the public vendor profile template Plugin Check batch from `WPORG-04N`, the social template-engine read-only SQL Plugin Check batch from `WPORG-04O`, the social audit error-bearing read-only SQL Plugin Check batch from `WPORG-04P`, the lineup-schedule i18n hotspot batch from `WPORG-04Q`, the vendor-user-links i18n hotspot batch from `WPORG-04R`, the event-plan-review i18n hotspot batch from `WPORG-04S`, the safe isolated-error admin-schedule render/date hotspot batch from `WPORG-04T`, the safe staff-list-columns render/i18n hotspot batch from `WPORG-04U`, the medium-risk admin approvals render hardening batch from `WPORG-04V`, the admin UI dashboard render hardening batch from `WPORG-04W`, the vendor alert translator-comment hardening batch from `WPORG-04X`, the final isolated-safe cancelled-event-cost-review translator-comment batch from `WPORG-04Y`, the read-only vendor-availability nonce/input batch from `WPORG-05A`, the read-only vendor-list admin-filter nonce/input batch from `WPORG-05B`, the read-only event-profitability report nonce/input batch from `WPORG-05C`, and the read-only docs-page nonce/input batch from `WPORG-05D`.
+Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-gate evidence from `WPORG-02`, the blocker cleanup plus RC rebuild work from `WPORG-03`, the first packaged blocker-density pass from `WPORG-04A`, the budget-calculator plus limited Event Plans batch from `WPORG-04B`, the protected Event Plans audit slice from `WPORG-04D`, the safe non-Event-Plans high-density batch plus Event Plans bootstrap follow-up from `WPORG-04E`, the safe error-heavy Plugin Check cleanup plus final packaged rerun from `WPORG-04G`, the safe Event Command Center Plugin Check batch from `WPORG-04H`, the staffing admin Plugin Check batch from `WPORG-04I`, the Staff Portal Plugin Check batch from `WPORG-04J`, the Vendor Portal Plugin Check batch from `WPORG-04K`, the public calendar Plugin Check batch from `WPORG-04L`, the public vendor profiles Plugin Check batch from `WPORG-04M`, the public vendor profile template Plugin Check batch from `WPORG-04N`, the social template-engine read-only SQL Plugin Check batch from `WPORG-04O`, the social audit error-bearing read-only SQL Plugin Check batch from `WPORG-04P`, the lineup-schedule i18n hotspot batch from `WPORG-04Q`, the vendor-user-links i18n hotspot batch from `WPORG-04R`, the event-plan-review i18n hotspot batch from `WPORG-04S`, the safe isolated-error admin-schedule render/date hotspot batch from `WPORG-04T`, the safe staff-list-columns render/i18n hotspot batch from `WPORG-04U`, the medium-risk admin approvals render hardening batch from `WPORG-04V`, the admin UI dashboard render hardening batch from `WPORG-04W`, the vendor alert translator-comment hardening batch from `WPORG-04X`, the final isolated-safe cancelled-event-cost-review translator-comment batch from `WPORG-04Y`, the read-only vendor-availability nonce/input batch from `WPORG-05A`, the read-only vendor-list admin-filter nonce/input batch from `WPORG-05B`, the read-only event-profitability report nonce/input batch from `WPORG-05C`, the read-only docs-page nonce/input batch from `WPORG-05D`, and the read-only shared admin context nonce/input batch from `WPORG-05E`.
 
 ## Files Changed
 
@@ -23,6 +23,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - `includes/admin/vendor-list-ui.php`
 - `includes/admin/event-profitability-report.php`
 - `includes/admin/docs-page.php`
+- `includes/admin-ui/context.php`
 - `includes/portal/staff-portal.php`
 - `includes/portal/vendor-portal.php`
 - `includes/public/venue-calendar-shortcode.php`
@@ -104,7 +105,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - read-only admin availability query-helper cleanup in `vendor-availability.php`, with the packaged rerun executed against an extracted packaged directory outside the local site tree so the local `vms/` install stayed untouched, in `WPORG-05A`,
   - read-only vendor admin list filter helper plus allowlist cleanup in `vendor-list-ui.php`, with the packaged rerun executed against an extracted packaged directory outside the local site tree so the local `vms/` install stayed untouched, in `WPORG-05B`,
   - read-only event profitability report filter helper plus view allowlist cleanup in `event-profitability-report.php`, with the packaged rerun executed against an extracted packaged directory outside the local site tree so the local `vms/` install stayed untouched, in `WPORG-05C`,
-  - read-only admin docs route helper cleanup in `docs-page.php`, with the packaged rerun executed against an extracted packaged directory outside the local site tree so the local `vms/` install stayed untouched, in `WPORG-05D`.
+  - read-only admin docs route helper cleanup in `docs-page.php`, with the packaged rerun executed against an extracted packaged directory outside the local site tree so the local `vms/` install stayed untouched, in `WPORG-05D`,
+  - read-only shared admin context query-helper cleanup in `context.php`, with the packaged rerun executed against an extracted packaged directory outside the local site tree so the local `vms/` install stayed untouched, in `WPORG-05E`.
 - Functional code paths, database schemas, uninstall behavior, and add-on behavior were not intentionally changed beyond those narrow release-safety and request-safety adjustments.
 - The plugin header version and `VMS_VERSION` constant remain public `1.0.0`.
 
@@ -122,7 +124,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 ## Validation Commands Run
 
 - `git diff --check`
-  - PASS in `WPORG-02`, the final `WPORG-03` validation pass, the final `WPORG-04E` validation pass, the final `WPORG-04G` validation pass, the final `WPORG-04K` validation pass, the final `WPORG-04L` validation pass, the final `WPORG-04M` validation pass, the final `WPORG-04N` validation pass, the final `WPORG-04O` validation pass, the final `WPORG-04P` validation pass, the final `WPORG-04Q` validation pass, the final `WPORG-04R` validation pass, the final `WPORG-04S` validation pass, the final `WPORG-04Y` validation pass, the final `WPORG-05A` validation pass, the final `WPORG-05B` validation pass, the final `WPORG-05C` validation pass, and the final `WPORG-05D` validation pass
+  - PASS in `WPORG-02`, the final `WPORG-03` validation pass, the final `WPORG-04E` validation pass, the final `WPORG-04G` validation pass, the final `WPORG-04K` validation pass, the final `WPORG-04L` validation pass, the final `WPORG-04M` validation pass, the final `WPORG-04N` validation pass, the final `WPORG-04O` validation pass, the final `WPORG-04P` validation pass, the final `WPORG-04Q` validation pass, the final `WPORG-04R` validation pass, the final `WPORG-04S` validation pass, the final `WPORG-04Y` validation pass, the final `WPORG-05A` validation pass, the final `WPORG-05B` validation pass, the final `WPORG-05C` validation pass, the final `WPORG-05D` validation pass, and the final `WPORG-05E` validation pass
 - `php -l vendor-management-system.php`
   - PASS
 - `php -l includes/core/registry/constants.php`
@@ -190,6 +192,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - PASS
 - `php -l includes/admin/docs-page.php`
   - PASS
+- `php -l includes/admin-ui/context.php`
+  - PASS
 - focused Staff Portal regression
   - no dedicated test exists in `tests/`
 - focused Event Command Center regression
@@ -201,6 +205,8 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - focused event profitability report regression
   - no dedicated test exists in `tests/`
 - focused docs page regression
+  - no dedicated test exists in `tests/`
+- focused context regression
   - no dedicated test exists in `tests/`
 - `php -l tests/add-dispatch-open-vendor-needs.php`
   - PASS
@@ -316,6 +322,9 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
 - current rebuilt RC after `WPORG-05D`
   - PASS: `dist/wporg-05d/vms-1.0.0-public-release.zip`
   - SHA-256: `ab7f747f6fd70853ae556d00b4cbb2961af1c31ba2bd530e70e7c4ab49a02e9c`
+- current rebuilt RC after `WPORG-05E`
+  - PASS: `dist/wporg-05e/vms-1.0.0-public-release.zip`
+  - SHA-256: `66d1fdd1cfcb6e5fb3af92f66a9b329a57c96fb28078b1a57bb47b4237ddad55`
 - package integrity
   - PASS
 - official readme validator after metadata application
@@ -352,6 +361,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - packaged final run after `WPORG-05B`: `3108` findings
   - packaged final run after `WPORG-05C`: `3103` findings
   - packaged final run after `WPORG-05D`: `3098` findings
+  - packaged final run after `WPORG-05E`: `3092` findings
   - fixed category earlier in the release-prep sequence: `missing_direct_file_access_protection` reduced from `12` to `0`
   - `WPORG-04A` batch delta: `-80` total findings (`-1` errors / `-79` warnings)
   - `WPORG-04B` batch delta: `-113` total findings (`-12` errors / `-101` warnings)
@@ -380,6 +390,7 @@ Capture the approved WordPress.org identity pass (`WPORG-01B`), the compliance-g
   - `WPORG-05B` batch delta: `-16` total findings (`0` errors / `-16` warnings)
   - `WPORG-05C` batch delta: `-5` total findings (`0` errors / `-5` warnings)
   - `WPORG-05D` batch delta: `-5` total findings (`0` errors / `-5` warnings)
+  - `WPORG-05E` batch delta: `-6` total findings (`0` errors / `-6` warnings)
 
 ## Minimum Version Decision
 

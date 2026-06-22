@@ -6,8 +6,8 @@ Date: 2026-06-21
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
-- Scan target for current counts: extracted packaged directory from `dist/wporg-05c/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
-- Current artifact SHA-256: `e2b6279b72adf456d5a15c5ed4f6d8dac4051380a09df027d483b7c1f7164c62`
+- Scan target for current counts: extracted packaged directory from `dist/wporg-05e/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
+- Current artifact SHA-256: `66d1fdd1cfcb6e5fb3af92f66a9b329a57c96fb28078b1a57bb47b4237ddad55`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -22,7 +22,7 @@ Date: 2026-06-21
 | `WPORG-04B` packaged RC, final | installed packaged plugin | `3695` | `1317` | `2378` | Cleared the `budget-calculator` request batch and limited Event Plans to the first nonce-gated admin-list slice. |
 | `WPORG-04D` packaged RC, final | installed packaged plugin | `3692` | `1316` | `2376` | Audited Event Plans in depth and applied one protected admin-list helper/output slice only. |
 | `WPORG-04E` packaged RC, final | installed packaged plugin | `3605` | `1316` | `2289` | Cleared the safe high-density batch in `includes/admin/due-dates.php` and `includes/admin/holidays.php` outside Event Plans. |
-| `WPORG-04G` packaged RC, final | installed packaged plugin | `3554` | `1266` | `2288` | Cleared the safe error-heavy render/i18n/date batch in `includes/admin/vendor-command-center.php` and `includes/admin/vendor-availability.php` outside Event Plans. |
+| `WPORG-04G` packaged RC, final | temporary packaged plugin slug | `3554` | `1266` | `2288` | Cleared the safe error-heavy render/i18n/date batch in `includes/admin/vendor-command-center.php` and `includes/admin/vendor-availability.php` without widening into Event Plans runtime or mutation paths. |
 | `WPORG-04H` packaged RC, final | temporary packaged plugin slug | `3491` | `1203` | `2288` | Cleared the safe admin-only Event Command Center render/i18n/date batch in `includes/admin/event-command-center.php` without widening into Event Plans runtime or mutation paths. |
 | `WPORG-04I` packaged RC, final | temporary packaged plugin slug | `3435` | `1179` | `2256` | Cleared the safe staffing-admin escaping/i18n batch in `includes/admin/staffing.php`, leaving only one role-meta input warning plus the rollup count direct-query/no-caching pair. |
 | `WPORG-04J` packaged RC, final | temporary packaged plugin slug | `3408` | `1158` | `2250` | Cleared the safe Staff Portal render/i18n/read-only-query batch in `includes/portal/staff-portal.php` without widening into auth, profile-save, upload, or availability save logic. |
@@ -45,50 +45,50 @@ Date: 2026-06-21
 | `WPORG-05B` packaged RC, final | extracted packaged directory outside local site tree | `3108` | `922` | `2186` | Cleared the read-only vendor-list admin-filter nonce/input hotspot batch in `includes/admin/vendor-list-ui.php`; the rerun reintroduced the previously seen `plugin_header_nonexistent_domain_path` warning, cleared one unrelated `slow_db_query_meta_key` warning in `includes/helpers/checkin-close.php`, left the standing `load_plugin_textdomainFound` warning unchanged, and introduced no previously unseen Plugin Check code categories. |
 | `WPORG-05C` packaged RC, final | extracted packaged directory outside local site tree | `3103` | `922` | `2181` | Cleared the read-only event-profitability report nonce/input hotspot batch in `includes/admin/event-profitability-report.php`; the rerun preserved the standing `plugin_header_nonexistent_domain_path` and `load_plugin_textdomainFound` warnings, reintroduced one unrelated `slow_db_query_meta_key` warning in `includes/helpers/checkin-close.php`, and introduced no previously unseen Plugin Check code categories. |
 | `WPORG-05D` packaged RC, final | extracted packaged directory outside local site tree | `3098` | `922` | `2176` | Cleared the read-only docs-page nonce/input hotspot batch in `includes/admin/docs-page.php`; the rerun preserved the standing `plugin_header_nonexistent_domain_path`, `includes/helpers/checkin-close.php`, and `load_plugin_textdomainFound` warnings outside the selected file scope and introduced no previously unseen Plugin Check code categories. |
+| `WPORG-05E` packaged RC, final | extracted packaged directory outside local site tree | `3092` | `922` | `2170` | Cleared the final low-risk shared admin routing helper in `includes/admin-ui/context.php`; the rerun preserved the standing `plugin_header_nonexistent_domain_path`, `includes/helpers/checkin-close.php`, and `load_plugin_textdomainFound` warnings outside the selected file scope and introduced no previously unseen Plugin Check code categories. |
 
 Net reduction from the `WPORG-02` source-tree baseline to the current packaged RC:
 
-- `-1469` total findings
+- `-1475` total findings
 - `-724` errors
-- `-745` warnings
+- `-751` warnings
 
-Net reduction from `WPORG-05C`:
+Net reduction from `WPORG-05D`:
 
-- `-5` total findings
+- `-6` total findings
 - `0` errors
-- `-5` warnings
+- `-6` warnings
 
 ## Fixed In This Pass
 
-- 05D candidate scan summary
-  - `includes/admin/docs-page.php` - `6` total / `1` errors / `5` warnings - `5` nonce/input findings - dominant `NonceVerification.Recommended` with one `MissingUnslash` companion and one escaping error - read-only module/doc routing only - risk `low` - selected because the file stays isolated to GET-driven docs routing, has no mutation paths, and clears five warnings without changing module fallback or doc-selection semantics
-  - `includes/admin-ui/context.php` - `6` total / `0` errors / `6` warnings - `6` nonce/input findings - dominant `NonceVerification.Recommended` - shared admin page/post-type/post routing only - risk `low` - skipped because it is a broader shared helper surface for similar yield
+- 05E candidate scan summary
+  - `includes/admin-ui/context.php` - `6` total / `0` errors / `6` warnings - `6` nonce/input findings - dominant `NonceVerification.Recommended` - shared admin page/post-type/post routing only - risk `low` - selected because the findings stayed isolated to read-only shell/context routing values and could be centralized without changing screen fallback, shell routing, planning memory, or active-cluster behavior
   - `includes/modules/status-notices/admin-ui.php` - `24` total / `2` errors / `22` warnings - `22` nonce/input findings - dominant `NonceVerification.Recommended`, `InputNotSanitized`, and `MissingUnslash` - read-only view/result/filter/query reads mixed with edit/save/toggle/bulk/trash handlers - risk `medium` - skipped because mutation routes remain coupled in the file
   - `includes/admin/vendor-command-center.php` - `29` total / `0` errors / `29` warnings - `27` nonce/input findings - dominant `NonceVerification.Recommended` and `InputNotSanitized` with slow-query companions - read-only filters mixed with template reset/save/send POST handlers - risk `medium` - skipped because mutation-adjacent code shares the file
   - `includes/admin/event-command-center.php` - `15` total / `0` errors / `15` warnings - `14` nonce/input findings - dominant `NonceVerification.Recommended` - read-only notice/plan/page selectors mixed with promo-upload handling - risk `medium` - skipped because upload/mutation code shares the file
   - `includes/admin/schedule.php` - `22` total / `0` errors / `22` warnings - `21` nonce/input findings - dominant `NonceVerification.Recommended`, `MissingUnslash`, and `InputNotSanitized` - read-only date/view routing mixed with create-event-plan action handling - risk `medium` - skipped because action code shares the file
-  - `includes/admin/vendor-list-ui.php` - `5` total / `4` errors / `1` warnings - `0` current nonce/input findings - dominant `OutputNotEscaped` with one logging companion - read-only vendor list filters only - risk `low` - skipped because `WPORG-05B` already cleared its input warnings, leaving no remaining read-only nonce/input yield
-  - `includes/admin/event-profitability-report.php` - `1` total / `1` errors / `0` warnings - `0` current nonce/input findings - dominant `OutputNotEscaped` - prior low-risk reference point only - risk `low` - skipped because `WPORG-05C` already cleared its read-only input warnings
-- `includes/admin/docs-page.php`
-  - `6` findings -> `1`
-  - `1` errors -> `1`
-  - `5` warnings -> `0`
-  - cleared the file's read-only `mod` and `doc` input warnings by centralizing raw GET access behind one helper while preserving the existing default module, fallback module selection, and document routing semantics
+  - `includes/modules/staff-tasks/admin-ui.php` - `56` total / `8` errors / `48` warnings - `44` nonce/input findings - dominant `NonceVerification.Recommended`, `InputNotSanitized`, and `OutputNotEscaped` - task transitions, assignment updates, one-off creation, AJAX, and settings/template saves share the file - risk `high` - skipped because mutation-heavy staffing flows dominate the surface
+  - `includes/portal/staff-portal.php` - `59` total / `25` errors / `34` warnings - `30` nonce/input findings - dominant `OutputNotEscaped`, `InputNotSanitized`, and `MissingUnslash` - certification uploads, employee-packet acknowledgement, tax save, and availability-save flows share the file - risk `high` - skipped because save/upload paths dominate the remaining findings
+  - `includes/vendor-applications.php` - `90` total / `15` errors / `75` warnings - `61` nonce/input findings - dominant `MissingUnslash`, `NonceVerification.Recommended`, and `InputNotSanitized` - admin approve/reject/repair/resync actions and public vendor application submission share the file - risk `high` - skipped because approval and submission flows dominate the surface
+- `includes/admin-ui/context.php`
+  - `6` findings -> `0`
+  - `0` errors -> `0`
+  - `6` warnings -> `0`
+  - cleared the file's shared read-only `page`, `post_type`, and `post` routing warnings by centralizing raw GET access behind one helper while preserving shell routing, screen fallback, planning-memory updates, and active-cluster behavior
 - Focused validation for this batch
-  - no focused `docs-page` regression exists in `tests/`
-  - `php -l includes/admin/docs-page.php` passed
+  - no focused `context` regression exists in `tests/`
+  - `php -l includes/admin-ui/context.php` passed
   - `git diff --check` passed
   - validation stayed on PHP lint, whitespace safety, public-release build, package integrity, and a rerun of packaged Plugin Check against an extracted packaged directory outside the local site tree
-  - `php scripts/build-public-release.php --output-dir dist/wporg-05d --force --allow-dirty` passed
-  - normalized packaged findings were saved to `test-results/wporg-05d-plugin-check.raw.txt` and promoted into `docs/plugin-check-1.0.0-raw.txt`
+  - `php scripts/build-public-release.php --output-dir dist/wporg-05e --force --allow-dirty` passed
+  - normalized packaged findings were saved to `test-results/wporg-05e-plugin-check.raw.txt` and promoted into `docs/plugin-check-1.0.0-raw.txt`
 
 Code-level deltas visible in the packaged scan:
 
-- `WordPress.Security.NonceVerification.Recommended`: `563` -> `559`
-- `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `228` -> `227`
-- `Nonce and input handling`: `1154` -> `1149`
+- `WordPress.Security.NonceVerification.Recommended`: `559` -> `553`
+- `Nonce and input handling`: `1149` -> `1143`
 - `Database and SQL safety`: `1101` -> `1101`
-- `includes/admin/docs-page.php`: `6` -> `1`
+- `includes/admin-ui/context.php`: `6` -> `0`
 - observed rerun-only steady state outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
 
 No previously unseen Plugin Check codes appeared in this pass, and the standing `load_plugin_textdomain()` warning remained unchanged outside the selected file scope.
@@ -97,7 +97,7 @@ No previously unseen Plugin Check codes appeared in this pass, and the standing 
 
 | Category | Count | Representative files | Classification | Recommended strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `1149` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | This pass stayed deliberately outside portal mutation and Event Plans save logic. The remaining high-density nonce/input work is still concentrated in `save_event_plan_meta()` and adjacent high-risk portal and integration flows. |
+| Nonce and input handling | `1143` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | This pass closed the last low-risk read-only slice. The remaining high-density nonce/input work is concentrated in mutation-coupled admin, portal, ticketing, and Event Plans/integration flows that need dedicated regression coverage before hardening. |
 | Database and SQL safety | `1101` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Prioritize `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL findings before generic direct-query/no-caching warnings. |
 | Escaping and output safety | `161` `EscapeOutput` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | The highest-yield remaining escape work is now concentrated in the Staff Portal, shared admin shell boundaries, and other render paths rather than the cleared dashboard menu slice. |
 | I18n placeholder comments and ordering | `568` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Continue adding `translators:` comments and ordered placeholders after the remaining blocker categories are materially reduced. |
@@ -107,9 +107,9 @@ No previously unseen Plugin Check codes appeared in this pass, and the standing 
 ## Event Plans Conclusions
 
 - The Event Plans file remains the highest-density packaged file at `241` findings.
-- No Event Plans runtime findings were changed in `WPORG-05D`.
-- The selected `docs-page.php` pass stayed completely outside Event Plans runtime and mutation logic.
-- The read-only nonce/input phase now has one admin-filter file cleared completely, one admin-list file reduced to non-input leftovers, and both `event-profitability-report.php` and `docs-page.php` reduced to lone escaping leftovers before widening into mutation-coupled surfaces.
+- No Event Plans runtime findings were changed in `WPORG-05E`.
+- The selected `context.php` pass stayed completely outside Event Plans runtime and mutation logic.
+- The read-only nonce/input phase is exhausted after `WPORG-05E`; all remaining meaningful nonce/input reductions sit inside mutation-coupled or otherwise higher-risk shared helper surfaces.
 - Remaining Event Plans findings are dominated by:
   - `save_event_plan_meta()` and adjacent request/save logic
   - the main Event Plan details render block tied to integration state
@@ -117,10 +117,11 @@ No previously unseen Plugin Check codes appeared in this pass, and the standing 
 
 ## Recommended Next Task
 
-- Post-`WPORG-05D` phased follow-up
+- Post-`WPORG-05E` phased follow-up
 - Scope:
-  - clear the remaining low-risk read-only admin surface in `includes/admin-ui/context.php` before widening into mutation-coupled admin screens such as `status-notices/admin-ui.php`, `vendor-command-center.php`, `event-command-center.php`, and `schedule.php`
+  - pause or close the read-only nonce/input phase here; no additional low-risk read-only admin surface remains
   - follow with a DB/SQL phase that prioritizes `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL issues in admissions, staffing, staff-task, and queue/store helpers before generic direct-query/no-caching warnings
+  - reserve the next nonce/input phase for mutation-coupled admin, portal, vendor-application, ticketing, and Event Plans/integration flows once regression coverage is ready
   - keep a separate i18n remainder phase for low-yield placeholder-comment leftovers such as `includes/admin/settings/class-vms-settings-notifications.php`, `includes/public/event-details.php`, and `includes/admin/staff-certifications.php` after the security-heavy phases move forward
   - reserve an escaping remainder phase for shared render boundaries including `includes/admin-ui/shell.php`, Staff Portal surfaces, vendor-guest output, and other callback-driven HTML paths
   - finish with a runtime-aware high-risk phase for shared helpers, calendar ICS output, notification-adjacent code, ticketing, cancellation/refund, portal/auth, and Event Plans save/publish flows

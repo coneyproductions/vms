@@ -1,12 +1,12 @@
 # WordPress.org Readiness Checklist
 
 Date: 2026-06-21
-Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` blocker cleanup, `WPORG-04A` first packaged blocker-density pass, `WPORG-04B` budget-calculator plus limited Event Plans micro-slice, `WPORG-04D` Event Plans blocker audit plus one protected micro-slice, `WPORG-04E` safe non-Event-Plans request-normalization plus Event Plans bootstrap follow-up, `WPORG-04G` safe error-heavy admin render cleanup outside Event Plans, `WPORG-04H` safe Event Command Center Plugin Check cleanup, `WPORG-04I` staffing admin Plugin Check cleanup, `WPORG-04J` Staff Portal Plugin Check cleanup, `WPORG-04K` Vendor Portal Plugin Check cleanup, `WPORG-04L` public calendar Plugin Check cleanup, `WPORG-04M` public vendor profiles Plugin Check cleanup, `WPORG-04N` public vendor profile template Plugin Check cleanup, `WPORG-04O` social template-engine read-only SQL cleanup, `WPORG-04P` social audit SQL error cleanup, `WPORG-04Q` lineup-schedule i18n hotspot cleanup, `WPORG-04R` vendor-user-links i18n hotspot cleanup, `WPORG-04S` event-plan-review i18n hotspot cleanup, `WPORG-04T` admin-schedule render/date hotspot cleanup, `WPORG-04U` staff-list-columns render/i18n hotspot cleanup, `WPORG-04V` approvals-review-queue render/i18n hotspot cleanup, `WPORG-04W` admin UI dashboard render/i18n hotspot cleanup, `WPORG-04X` vendor alert translator-comment cleanup, `WPORG-04Y` final isolated-safe cancelled-event-cost-review cleanup, `WPORG-05A` read-only vendor-availability nonce/input cleanup, `WPORG-05B` read-only vendor-list admin-filter nonce/input cleanup, `WPORG-05C` read-only event-profitability report nonce/input cleanup, and `WPORG-05D` read-only docs-page nonce/input cleanup.
+Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` blocker cleanup, `WPORG-04A` first packaged blocker-density pass, `WPORG-04B` budget-calculator plus limited Event Plans micro-slice, `WPORG-04D` Event Plans blocker audit plus one protected micro-slice, `WPORG-04E` safe non-Event-Plans request-normalization plus Event Plans bootstrap follow-up, `WPORG-04G` safe error-heavy admin render cleanup outside Event Plans, `WPORG-04H` safe Event Command Center Plugin Check cleanup, `WPORG-04I` staffing admin Plugin Check cleanup, `WPORG-04J` Staff Portal Plugin Check cleanup, `WPORG-04K` Vendor Portal Plugin Check cleanup, `WPORG-04L` public calendar Plugin Check cleanup, `WPORG-04M` public vendor profiles Plugin Check cleanup, `WPORG-04N` public vendor profile template Plugin Check cleanup, `WPORG-04O` social template-engine read-only SQL cleanup, `WPORG-04P` social audit SQL error cleanup, `WPORG-04Q` lineup-schedule i18n hotspot cleanup, `WPORG-04R` vendor-user-links i18n hotspot cleanup, `WPORG-04S` event-plan-review i18n hotspot cleanup, `WPORG-04T` admin-schedule render/date hotspot cleanup, `WPORG-04U` staff-list-columns render/i18n hotspot cleanup, `WPORG-04V` approvals-review-queue render/i18n hotspot cleanup, `WPORG-04W` admin UI dashboard render/i18n hotspot cleanup, `WPORG-04X` vendor alert translator-comment cleanup, `WPORG-04Y` final isolated-safe cancelled-event-cost-review cleanup, `WPORG-05A` read-only vendor-availability nonce/input cleanup, `WPORG-05B` read-only vendor-list admin-filter nonce/input cleanup, `WPORG-05C` read-only event-profitability report nonce/input cleanup, `WPORG-05D` read-only docs-page nonce/input cleanup, and `WPORG-05E` read-only shared admin context nonce/input cleanup.
 
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-05D`: `ce492243a8b1a6b1a8171c74da9bfa7b3fef9638` (`ce49224`)
+- HEAD at start of `WPORG-05E`: `15bae28300744b7bdaa8f6c44ae868c5274c4f65` (`15bae28`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
 - Proven baseline artifact before this release-candidate push: `0.2.24.747`
 - Current public RC markers: `1.0.0`
@@ -59,9 +59,10 @@ Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` b
 - [x] Read-only vendor-list admin-filter nonce/input hotspot batch applied in `includes/admin/vendor-list-ui.php`.
 - [x] Read-only event-profitability report nonce/input hotspot batch applied in `includes/admin/event-profitability-report.php`.
 - [x] Read-only docs-page nonce/input hotspot batch applied in `includes/admin/docs-page.php`.
+- [x] Read-only shared admin context nonce/input hotspot batch applied in `includes/admin-ui/context.php`.
 - [x] Seven remaining Event Plans regression scripts now pass from the nested repo workspace.
 - [x] Two focused packaged-validation regressions now use the shared WordPress bootstrap resolver.
-- [x] Current RC built: `dist/wporg-05d/vms-1.0.0-public-release.zip`
+- [x] Current RC built: `dist/wporg-05e/vms-1.0.0-public-release.zip`
 - [x] Compliance report updated: `docs/WPORG_COMPLIANCE_REPORT_1.0.0.md`
 
 ## Open Blockers
@@ -100,7 +101,7 @@ Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` b
 - WordPress `6.8` and `7.0` both booted through the disposable lifecycle matrix without VMS fatals.
 - PHP `8.3.30` now has direct lint, build, and WordPress boot evidence.
 - The readme validator no longer reports missing or invalid minimum fields.
-- Plugin Check was reduced from the `4567`-finding source-tree baseline to `3098` findings on the current packaged RC.
+- Plugin Check was reduced from the `4567`-finding source-tree baseline to `3092` findings on the current packaged RC.
 - `WPORG-04A` reduced the packaged RC from `3888` findings to `3808`, with `includes/admin/goals-forecast.php` cleared fully and `includes/social-share/event-plan-panel.php` reduced to four DB-only warnings.
 - `WPORG-04B` reduced the packaged RC from `3808` findings to `3695`, with `includes/admin/budget-calculator.php` reduced from `111` findings to `2` and `includes/cpt/event-plans.php` reduced from `248` to `244` without touching Event Plan save or publish logic.
 - `WPORG-04D` reduced the packaged RC from `3695` findings to `3692`, with `includes/cpt/event-plans.php` reduced from `244` to `241` while keeping save, publish, ticketing, cancellation, vendor, staffing, TEC, and Woo mutation paths untouched.
@@ -128,6 +129,7 @@ Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` b
 - `WPORG-05B` reduced the packaged RC from `3124` findings to `3108`, with `includes/admin/vendor-list-ui.php` reduced from `21` to `5` while clearing `16` read-only nonce/input warnings only; the extracted-package rerun reintroduced the previously seen domain-path warning outside the selected file scope, cleared one unrelated `slow_db_query_meta_key` warning in `includes/helpers/checkin-close.php`, and left the standing `load_plugin_textdomain()` warning unchanged.
 - `WPORG-05C` reduced the packaged RC from `3108` findings to `3103`, with `includes/admin/event-profitability-report.php` reduced from `7` to `1` while clearing `6` read-only nonce/input warnings only; the extracted-package rerun preserved the standing domain-path warning outside the selected file scope, reintroduced one unrelated `slow_db_query_meta_key` warning in `includes/helpers/checkin-close.php`, and left the standing `load_plugin_textdomain()` warning unchanged.
 - `WPORG-05D` reduced the packaged RC from `3103` findings to `3098`, with `includes/admin/docs-page.php` reduced from `6` to `1` while clearing `5` read-only nonce/input warnings only; the extracted-package rerun preserved the standing domain-path warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, and left the standing `load_plugin_textdomain()` warning unchanged.
+- `WPORG-05E` reduced the packaged RC from `3098` findings to `3092`, with `includes/admin-ui/context.php` reduced from `6` to `0` while clearing `6` read-only nonce/input warnings only; the extracted-package rerun preserved the standing domain-path warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomain()` warning unchanged, and confirmed that no dedicated `context` regression exists in `tests/`.
 - The remaining Event Plans regression scripts that still hardcoded `wp-load.php` now use the shared bootstrap and pass from the nested repo workspace.
 - `tests/vendor-availability-ux.php` now passes from the nested repo workspace; no dedicated `docs-page` regression exists in `tests/`, and `tests/add-dispatch-open-vendor-needs.php` still fails on a pre-existing visibility assertion outside the selected render-only batch.
 - The remaining submission risk is concentrated in real runtime code quality categories, with one oscillating packaging metadata warning visible again in the packaged rerun.
@@ -140,4 +142,4 @@ The current WordPress.org preparation stack is in a good handoff state when the 
 - a repo-root release builder that passes from the git-backed workspace,
 - packaged Plugin Check raw output plus triage,
 - a rebuilt `1.0.0` RC with updated reports,
-- and a narrowed blocker list plus phased follow-up plan for the post-`WPORG-05D` security and runtime work.
+- and a narrowed blocker list plus phased follow-up plan for the post-`WPORG-05E` security and runtime work.

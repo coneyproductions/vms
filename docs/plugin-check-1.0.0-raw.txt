@@ -3426,15 +3426,6 @@ line	column	type	code	message	docs
 187	19	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 190	44	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 
-FILE: includes/admin-ui/context.php
-line	column	type	code	message	docs
-8	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-8	56	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-19	22	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-19	66	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-35	20	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-35	44	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-
 FILE: includes/modules/status-notices/front.php
 line	column	type	code	message	docs
 26	60	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_SERVER[&#039;REQUEST_URI&#039;] not unslashed before sanitization. Use wp_unslash() or similar
