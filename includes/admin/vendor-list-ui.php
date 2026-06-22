@@ -70,6 +70,23 @@ function vms_admin_tax_settings_get_provider(): string
     return $provider;
 }
 
+function vms_admin_vendor_list_query_arg(string $key): string
+{
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only vendor list filters only affect admin list display state.
+    if (!isset($_GET[$key])) {
+        return '';
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only vendor list filters are unslashed here and allowlisted by the caller.
+    return (string) wp_unslash($_GET[$key]);
+}
+
+function vms_admin_vendor_list_allowed_filter(string $key, array $allowed): string
+{
+    $value = sanitize_key(vms_admin_vendor_list_query_arg($key));
+    return in_array($value, $allowed, true) ? $value : '';
+}
+
 /**
  * Returns true if W-9 requirement is satisfied for the configured provider mode.
  * This does not imply the full tax profile is complete.
@@ -396,8 +413,8 @@ function vms_admin_vendor_list_filters_render()
         return;
     }
 
-    $tax = isset($_GET['vms_tax']) ? (string) $_GET['vms_tax'] : '';
-    $w9  = isset($_GET['vms_w9']) ? (string) $_GET['vms_w9'] : '';
+    $tax = vms_admin_vendor_list_allowed_filter('vms_tax', array('complete', 'incomplete'));
+    $w9  = vms_admin_vendor_list_allowed_filter('vms_w9', array('ok', 'missing'));
 
     echo '<label class="screen-reader-text" for="vms_tax">Tax Profile</label>';
     echo '<select name="vms_tax" id="vms_tax" class="vms-vendor-filter-tax">';
@@ -426,8 +443,8 @@ function vms_admin_vendor_list_filters_apply($query)
     $post_type = $query->get('post_type');
     if ($post_type !== 'vms_vendor') return;
 
-    $tax = isset($_GET['vms_tax']) ? (string) $_GET['vms_tax'] : '';
-    $w9  = isset($_GET['vms_w9']) ? (string) $_GET['vms_w9'] : '';
+    $tax = vms_admin_vendor_list_allowed_filter('vms_tax', array('complete', 'incomplete'));
+    $w9  = vms_admin_vendor_list_allowed_filter('vms_w9', array('ok', 'missing'));
 
     $meta_query = (array) $query->get('meta_query');
     if (!is_array($meta_query)) $meta_query = array();

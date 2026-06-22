@@ -5,14 +5,14 @@ Date: 2026-06-21
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-05A`: `445e64559fb2bc3c7c06a7bea0a0c6f3d34dc157` (`445e645`)
+- HEAD at start of `WPORG-05B`: `59f1357fa18c1f375b7d7f1dec21cf0615443728` (`59f1357`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-05A` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-05B` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 05A extracted-package rerun no longer emitted the pre-existing domain-path warning, while the standing `load_plugin_textdomain()` warning still persisted and the metadata/package contents remained unchanged. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 05B extracted-package rerun reintroduced the previously seen domain-path warning while the standing `load_plugin_textdomain()` warning still persisted and the metadata/package contents remained unchanged. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -193,3 +193,10 @@ Scope note:
   - the selected file `includes/admin/vendor-availability.php` reduced from `22` findings to `0` while clearing `22` warnings only,
   - the extracted-package rerun no longer emitted the previously observed `plugin_header_nonexistent_domain_path` warning outside the selected file scope, while the standing `load_plugin_textdomain()` warning remained unchanged,
   - normalized packaged findings were saved in `test-results/wporg-05a-plugin-check.raw.txt` and promoted into `docs/plugin-check-1.0.0-raw.txt`.
+- `WPORG-05B` adds:
+  - current rebuilt RC artifact `dist/wporg-05b/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `ccbb20fe811dd86e0f92c88c0ed6acf8ded6730b33e09e05074f19c29ddf2e0d`,
+  - packaged Plugin Check reduction from `3124` to `3108` findings after the read-only vendor-list admin-filter nonce/input batch,
+  - the selected file `includes/admin/vendor-list-ui.php` reduced from `21` findings to `5` while clearing `16` warnings only,
+  - the extracted-package rerun reintroduced the previously seen `plugin_header_nonexistent_domain_path` warning outside the selected file scope, cleared one unrelated `slow_db_query_meta_key` warning in `includes/helpers/checkin-close.php`, and left the standing `load_plugin_textdomain()` warning unchanged,
+  - normalized packaged findings were saved in `test-results/wporg-05b-plugin-check.raw.txt` and promoted into `docs/plugin-check-1.0.0-raw.txt`.
