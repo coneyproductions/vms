@@ -6,8 +6,8 @@ Date: 2026-06-22
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
-- Scan target for current counts: extracted packaged directory from `dist/wporg-07b/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
-- Current artifact SHA-256: `275f5ecf22f4170f1824ce85617bfad10e51d9d7db8237fa4de89d69e173adbc`
+- Scan target for current counts: extracted packaged directory from `dist/wporg-08a/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
+- Current artifact SHA-256: `e86c28c1f7ca116697962a37f25d5b5fce4e04eebfd9ee5b6885aad6d2c992f5`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -51,75 +51,67 @@ Date: 2026-06-22
 | `WPORG-06C` packaged RC, final | extracted packaged directory outside local site tree | `3076` | `906` | `2170` | Cleared the third safe escaping/output hotspot batch in `includes/admin/vendor-list-columns.php`; the rerun no longer emitted the previously observed `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomainFound` warning unchanged, and introduced no previously unseen Plugin Check code categories. |
 | `WPORG-07A` packaged RC, final | extracted packaged directory outside local site tree | `3069` | `906` | `2163` | Cleared the first low-risk DB/SQL triage batch in `includes/core/goals-forecast.php`; the rerun again dropped the previously oscillating `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomainFound` warning unchanged, and introduced no previously unseen Plugin Check code categories. |
 | `WPORG-07B` packaged RC, final | extracted packaged directory outside local site tree | `3061` | `898` | `2163` | Cleared the second low-risk DB/SQL batch in the admin-only report helpers inside `includes/modules/admissions/pass-claims.php`; the rerun reintroduced the previously observed `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomainFound` warning unchanged, and introduced no previously unseen Plugin Check code categories. |
+| `WPORG-08A` packaged RC, final | extracted packaged directory outside local site tree | `3041` | `877` | `2164` | Cleared the first cautious i18n placeholder/comment batch in `includes/admin/ticket-integrity-page.php`; the normalized rerun left `plugin_header_nonexistent_domain_path`, `includes/helpers/checkin-close.php`, and `load_plugin_textdomainFound` unchanged outside the selected file scope and introduced no previously unseen Plugin Check code categories. |
 
 Net reduction from the `WPORG-02` source-tree baseline to the current packaged RC:
 
-- `-1506` total findings
-- `-748` errors
-- `-758` warnings
+- `-1526` total findings
+- `-769` errors
+- `-757` warnings
 
-Net reduction from `WPORG-07A`:
+Net reduction from `WPORG-07B`:
 
-- `-8` total findings
-- `-8` errors
-- `0` warnings
+- `-20` total findings
+- `-21` errors
+- `+1` warnings
 
 ## Fixed In This Pass
 
-- 07B candidate scan summary
-  - `includes/modules/admissions/pass-claims.php` - `173` total / `23` errors / `150` warnings / `133` DB/SQL findings - dominant `DirectQuery`, `NoCaching`, `UnescapedDBParameter`, `InterpolatedNotPrepared`, and `NotPrepared` - query type: mixed file, but selected slice is read-only aggregation/report queries - request or user input reaches the selected queries: no direct value interpolation; only admin report tab/export scope chooses which static aggregate runs - runtime context: admin-only reports tab plus admin report CSV export - risk `medium` - selected because four report helpers were isolated to admin reporting, already read-only, and could be prepared without changing joins, grouping, ordering, limits, or result shape
-  - `includes/core/staffing.php` - `153` total / `38` errors / `115` warnings / `122` DB/SQL findings - dominant schema introspection, direct-query/no-caching, unescaped DB parameters, and interpolated table SQL - query type: mixed read/write runtime helpers - request or user input reaches the queries: indirect/shared runtime access - runtime context: core staffing runtime, admin, and scheduling helpers - risk `high` - skipped because read and write behavior remain tightly interleaved through shared staffing helpers
-  - `includes/modules/staff-tasks/store.php` - `90` total / `17` errors / `73` warnings / `90` DB/SQL findings - dominant direct-query/no-caching and not-prepared repository queries - query type: create/update/delete repository - request or user input reaches the queries: yes - runtime context: staff-task CRUD store - risk `high` - skipped because the file is mutation-centric rather than a report/read-only slice
-  - `includes/modules/availability-date-dispatch/helpers.php` - `96` total / `19` errors / `77` warnings / `85` DB/SQL findings - dominant direct-query/no-caching, unescaped DB parameters, and interpolated SQL - query type: mixed helper/runtime queries - request or user input reaches the queries: indirect through assignment and scheduling flows - runtime context: ADD dispatch and vendor-assignment helpers - risk `high` - skipped because assignment behavior dominates the remaining queries
-  - `includes/social-share/queue-repo.php` - `73` total / `7` errors / `66` warnings / `73` DB/SQL findings - dominant repository direct queries plus queue/account/map mutations - query type: mixed repository reads and writes - request or user input reaches the queries: indirect via admin settings and queue actions - runtime context: social queue/account runtime - risk `high` - skipped because the file is mutation-heavy
-  - `includes/modules/admissions/rest.php` - `65` total / `11` errors / `54` warnings / `58` DB/SQL findings - dominant admissions REST reads/writes, unfinished prepare, and logging pressure - query type: mixed REST read/write runtime - request or user input reaches the queries: yes - runtime context: admissions AJAX/REST runtime - risk `high` - skipped because request handling and mutation are interleaved
-  - `includes/integrations/ticketing-claims-framework.php` - `50` total / `16` errors / `34` warnings / `49` DB/SQL findings - dominant grants/reservations/log/schema query helpers - query type: mixed runtime and write coordination - request or user input reaches the queries: indirect through ticketing claims workflows - runtime context: ticketing/claims integration - risk `high` - skipped because schema, reservation, and runtime mutation behavior are interleaved
-  - `includes/core/vendor-user-links.php` - `36` total / `7` errors / `29` warnings / `36` DB/SQL findings - dominant direct-query/no-caching plus dynamic read helpers and unfinished prepare - query type: mixed read/write linkage helpers - request or user input reaches the queries: indirect via portal/admin link lookups - runtime context: shared portal/access-link runtime - risk `medium`/`high` - skipped because it underpins portal/access-control linkage and still mixes reads with write coordination
-  - `includes/modules/admissions/vendor-guest-portal.php` - `75` total / `36` errors / `39` warnings / `35` DB/SQL findings - dominant guest-portal DB reads plus public output pressure - query type: mixed portal reads and public handling - request or user input reaches the queries: yes - runtime context: vendor/public guest portal - risk `high` - skipped because public request handling remains mixed with the DB helpers
-  - `includes/core/goals-forecast.php` - `32` total / `0` errors / `32` warnings / `31` DB/SQL findings - dominant direct-query/no-caching plus remaining write-path identifier warnings - query type: mixed read/write reporting helpers - request or user input reaches the remaining queries: no direct request input in the previously selected read slice - runtime context: admin-only goals forecast reporting - risk `medium` - skipped because `WPORG-07A` already exhausted the clearly isolated low-risk read helpers and the remaining warnings are outside that narrow read-only slice
-- additional DB or adjacent files inspected but not selected: `includes/ticketing/ticket-integrity-daily-report.php`, `includes/social-share/audit.php`, `includes/social-share/installer.php`, and `includes/modules/admissions/admission-tokens.php`
-- `includes/modules/admissions/pass-claims.php`
-  - `173` findings -> `165`
-  - `133` DB/SQL findings -> `125`
-  - `22` `PluginCheck.Security.DirectDB.UnescapedDBParameter` findings -> `18`
-  - `5` `WordPress.DB.PreparedSQL.NotPrepared` findings -> `1`
-  - limited the pass to `vms_pass_claims_reports_by_source()`, `vms_pass_claims_reports_by_batch()`, `vms_pass_claims_reports_source_events()`, and `vms_pass_claims_reports_by_event()` only, preparing the existing table identifiers inline in the current read-only aggregate queries without changing columns, joins, grouping, ordering, limits, export shape, or public claim behavior
+- 08A candidate scan summary
+  - detailed ten-file scan table was recorded in `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
+  - selected `includes/admin/ticket-integrity-page.php` from the packaged `WPORG-07B` baseline because it was the clearest admin-only diagnostics file with `MissingTranslatorsComment` findings only
+  - skipped the other reviewed high-density files because they were Event Plans runtime, checkout/ticketing, upload/verification, portal/public, email, or save-flow coupled
+- `includes/admin/ticket-integrity-page.php`
+  - `48` findings -> `27`
+  - `28` errors -> `7`
+  - `20` warnings -> `20`
+  - `21` i18n findings -> `0`
+  - limited the pass to adding `translators:` comments above the existing placeholder-bearing strings in render/reporting helpers only
 - Focused validation for this batch
-  - no focused `pass-claims` reporting regression exists in `tests/`
-  - `php -l includes/modules/admissions/pass-claims.php` passed
+  - no focused admin-page regression exists in `tests/` for `includes/admin/ticket-integrity-page.php`; adjacent ticket-integrity tests only cover scan locks and daily-report delivery helpers
+  - `php -l includes/admin/ticket-integrity-page.php` passed
   - `git diff --check` passed
   - validation stayed on PHP lint, whitespace safety, public-release build, package integrity, and a rerun of packaged Plugin Check against an extracted packaged directory outside the local site tree
-  - `php scripts/build-public-release.php --output-dir dist/wporg-07b --force --allow-dirty` passed
+  - `php scripts/build-public-release.php --output-dir dist/wporg-08a --force --allow-dirty` passed
   - packaged ZIP still contains root `readme.txt` and `LICENSE.txt`
-  - normalized packaged findings were saved to `test-results/wporg-07b-plugin-check.raw.txt` and `test-results/wporg-07b-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`
+  - normalized packaged findings were saved to `test-results/wporg-08a-plugin-check.raw.txt` and `test-results/wporg-08a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`
 
 Code-level deltas visible in the packaged scan:
 
-- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `152` -> `148`
-- `WordPress.DB.PreparedSQL.NotPrepared`: `72` -> `68`
-- `Database and SQL safety`: `1095` -> `1087`
-- `includes/modules/admissions/pass-claims.php`: `173` -> `165`
-- observed rerun-only change outside the selected file scope: `plugin_header_nonexistent_domain_path`: `0` -> `1`, `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `552` -> `531`
+- `I18n placeholder comments and ordering`: `568` -> `547`
+- `includes/admin/ticket-integrity-page.php`: `48` -> `27`
+- normalized packaged summary outside the selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
 
-No previously unseen Plugin Check codes appeared in this pass. The extracted-package rerun reintroduced the previously observed `plugin_header_nonexistent_domain_path` warning outside the selected file scope.
+No previously unseen Plugin Check codes appeared in this pass. The normalized packaged summary showed no file-level movement outside the selected file scope.
 
 ## Current Category Triage
 
 | Category | Count | Representative files | Classification | Recommended strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `1143` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-07B` stayed on DB-only query preparation again, so the remaining high-density nonce/input work is still concentrated in mutation-coupled admin, portal, ticketing, and Event Plans/integration flows that need dedicated regression coverage before hardening. |
+| Nonce and input handling | `1143` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-08A` stayed on admin-only translator comments, so the remaining high-density nonce/input work is still concentrated in mutation-coupled admin, portal, ticketing, and Event Plans/integration flows that need dedicated regression coverage before hardening. |
 | Database and SQL safety | `1087` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings, but pause the DB/SQL phase whenever the candidate is no longer an isolated admin/reporting read slice. |
 | Escaping and output safety | `145` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | Keep the escape-only audit paused after `WPORG-06C`; the remaining candidates are shared allowed-HTML boundaries, public/portal surfaces, metabox/save flows, vendor-assignment dashboards, or excluded Event Plans slices rather than isolated admin-only display targets. |
-| I18n placeholder comments and ordering | `568` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Continue adding `translators:` comments and ordered placeholders after the remaining blocker categories are materially reduced. |
+| I18n placeholder comments and ordering | `547` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Continue only when the next file is another isolated admin-only translator-comment or placeholder-ordering slice; otherwise pause and switch back to blocker coverage. |
 | Date/time API usage | `27` | `includes/modules/staff-tasks/notifications.php`, `includes/helpers.php`, `includes/ticketing/ticket-integrity-monitor.php` | SHOULD FIX BEFORE SUBMISSION | Review each remaining `date()` use. Convert display-only paths to explicit timezone-safe helpers and leave local-time-sensitive cases for deliberate follow-up review. |
 | Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` | SHOULD FIX BEFORE SUBMISSION | Remove or hard-gate residual development logging that is still reachable in packaged code. |
 
 ## Event Plans Conclusions
 
 - The Event Plans file remains the highest-density packaged file at `241` findings.
-- No Event Plans runtime findings were changed in `WPORG-07B`.
-- The selected `pass-claims.php` report-helper pass stayed outside Event Plans runtime and mutation logic.
-- The read-only nonce/input phase remains closed after `WPORG-05E`, the escape-only phase remains paused after `WPORG-06C`, and `WPORG-07B` stayed completely outside Event Plans runtime.
+- No Event Plans runtime findings were changed in `WPORG-08A`.
+- The selected `ticket-integrity-page.php` pass stayed outside Event Plans runtime and mutation logic.
+- The read-only nonce/input phase remains closed after `WPORG-05E`, the escape-only phase remains paused after `WPORG-06C`, and `WPORG-08A` stayed completely outside Event Plans runtime.
 - Remaining Event Plans findings are dominated by:
   - `save_event_plan_meta()` and adjacent request/save logic
   - the main Event Plan details render block tied to integration state
@@ -127,9 +119,9 @@ No previously unseen Plugin Check codes appeared in this pass. The extracted-pac
 
 ## Recommended Next Task
 
-- Post-`WPORG-07B` phased follow-up
+- Post-`WPORG-08A` phased follow-up
 - Scope:
-  - pause broad DB/SQL cleanup unless another equivalently isolated admin/reporting read-only slice is identified; the remaining high-density DB files are now mostly mutation-coupled, public-facing, ticketing-linked, or portal-linked
-  - if the DB/SQL phase continues, prioritize remaining parameter-safety and preparation issues only where the candidate can be carved away from mutation, schema, auth, checkout/ticketing, cron, or export behavior
-  - otherwise switch to a low-risk i18n remainder batch or prepare regression coverage for the mutation-coupled nonce/input backlog before widening security hardening again
+  - pause broad i18n cleanup unless another equivalently isolated admin-only translator-comment slice is identified; the highest-density remaining i18n files are now Event Plans, checkout/ticketing, upload/verification, portal/public, email, or save-flow coupled
+  - if the i18n phase continues, keep it limited to translator comments, ordered placeholders, or literal `vms` text-domain corrections in admin-only diagnostics/list/report files
+  - otherwise switch back to regression preparation for the mutation-coupled nonce/input backlog before widening more runtime hardening
   - keep the escape-only phase paused after `WPORG-06C`; the remaining output-heavy files are shared boundaries, public/portal surfaces, vendor-assignment dashboards, metabox/save flows, or excluded Event Plans slices rather than isolated admin-only display targets

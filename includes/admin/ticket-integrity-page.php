@@ -994,7 +994,8 @@ function vms_ticket_integrity_render_payment_gateway_health_panel(array $health)
 	echo '</div>';
 	echo '<div class="vms-ticket-integrity__payment-health-status">';
 	echo '<span class="' . esc_attr(vms_ticket_integrity_status_css_class($status_css)) . '">' . esc_html($status_label) . '</span>';
-	echo '<div class="vms-ticket-integrity__payment-health-meta">' . esc_html(sprintf(__('Last checked: %s', 'vms'), (string) ($health['last_checked_local'] ?? __('Never', 'vms')))) . '</div>';
+		/* translators: %s: last payment gateway health check timestamp in the site timezone. */
+		echo '<div class="vms-ticket-integrity__payment-health-meta">' . esc_html(sprintf(__('Last checked: %s', 'vms'), (string) ($health['last_checked_local'] ?? __('Never', 'vms')))) . '</div>';
 	echo '</div>';
 	echo '</div>';
 
@@ -1064,12 +1065,14 @@ function vms_ticket_integrity_render_payment_gateway_health_panel(array $health)
 	echo '<div class="vms-ticket-integrity__payment-health-memory">';
 	echo '<h3>' . esc_html__('Incident Memory', 'vms') . '</h3>';
 	if (!empty($incident['active'])) {
-		echo '<p><strong>' . esc_html__('Current incident', 'vms') . ':</strong> ' . esc_html(sprintf(__('first detected %s', 'vms'), vms_ticket_integrity_format_datetime(absint($incident['first_detected_failure_gmt'] ?? 0)))) . '</p>';
+			/* translators: %s: timestamp when the current payment incident was first detected. */
+			echo '<p><strong>' . esc_html__('Current incident', 'vms') . ':</strong> ' . esc_html(sprintf(__('first detected %s', 'vms'), vms_ticket_integrity_format_datetime(absint($incident['first_detected_failure_gmt'] ?? 0)))) . '</p>';
 		if (!empty($incident['diagnostic_message'])) {
 			echo '<p class="vms-ticket-integrity__issue-detail">' . esc_html((string) $incident['diagnostic_message']) . '</p>';
 		}
 	} elseif (!empty($last_incident['resolved_at_gmt'])) {
-		echo '<p><strong>' . esc_html__('Most recent incident', 'vms') . ':</strong> ' . esc_html(sprintf(__('resolved %s', 'vms'), vms_ticket_integrity_format_datetime(absint($last_incident['resolved_at_gmt'] ?? 0)))) . '</p>';
+			/* translators: %s: timestamp when the most recent payment incident was resolved. */
+			echo '<p><strong>' . esc_html__('Most recent incident', 'vms') . ':</strong> ' . esc_html(sprintf(__('resolved %s', 'vms'), vms_ticket_integrity_format_datetime(absint($last_incident['resolved_at_gmt'] ?? 0)))) . '</p>';
 		if (!empty($last_incident['summary'])) {
 			echo '<p class="vms-ticket-integrity__issue-detail">' . esc_html((string) $last_incident['summary']) . '</p>';
 		}
@@ -1362,12 +1365,14 @@ function vms_ticket_integrity_render_ticket_mapping_list(array $tickets): void
 		$product_id = absint($ticket['mapped_product_id'] ?? 0);
 		$visibility_mode = sanitize_key((string) ($ticket['visibility_mode'] ?? 'public'));
 		$enabled = !array_key_exists('enabled', $ticket) || !empty($ticket['enabled']);
-		$detail = $product_id > 0
-			? sprintf(__('Product #%d', 'vms'), $product_id)
-			: __('Not currently mapped to a product', 'vms');
-		if ($visibility_mode !== '') {
-			$detail .= ' / ' . sprintf(__('Visibility: %s', 'vms'), str_replace('_', ' ', $visibility_mode));
-		}
+			$detail = $product_id > 0
+				/* translators: %d: mapped WooCommerce product ID. */
+				? sprintf(__('Product #%d', 'vms'), $product_id)
+				: __('Not currently mapped to a product', 'vms');
+			if ($visibility_mode !== '') {
+				/* translators: %s: ticket visibility mode label. */
+				$detail .= ' / ' . sprintf(__('Visibility: %s', 'vms'), str_replace('_', ' ', $visibility_mode));
+			}
 		if (!$enabled) {
 			$detail .= ' / ' . __('Disabled in config', 'vms');
 		}
@@ -1394,13 +1399,16 @@ function vms_ticket_integrity_render_product_diagnostic_list(array $products, st
 		$title = trim((string) ($product['title'] ?? __('Untitled product', 'vms')));
 		$status = trim((string) ($product['post_status'] ?? ''));
 		$sku = trim((string) ($product['sku'] ?? ''));
-		$parts = array(sprintf(__('Product #%d', 'vms'), $product_id));
-		if ($status !== '') {
-			$parts[] = sprintf(__('Status: %s', 'vms'), $status);
-		}
-		if ($sku !== '') {
-			$parts[] = sprintf(__('SKU: %s', 'vms'), $sku);
-		}
+			/* translators: %d: WooCommerce product ID. */
+			$parts = array(sprintf(__('Product #%d', 'vms'), $product_id));
+			if ($status !== '') {
+				/* translators: %s: WordPress post status for the product. */
+				$parts[] = sprintf(__('Status: %s', 'vms'), $status);
+			}
+			if ($sku !== '') {
+				/* translators: %s: WooCommerce product SKU. */
+				$parts[] = sprintf(__('SKU: %s', 'vms'), $sku);
+			}
 		if (!empty($product['is_mapped'])) {
 			$parts[] = __('Currently mapped', 'vms');
 		}
@@ -1487,10 +1495,11 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($origin_reasons), 'vms'), count($origin_reasons)),
-			)
-		);
+				array(
+					/* translators: %d: number of reasons explaining the selected ticket origin. */
+					'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($origin_reasons), 'vms'), count($origin_reasons)),
+				)
+			);
 	}
 
 	if (!empty($repeated_drift['flagged']) && !empty($repeated_drift['message'])) {
@@ -1598,10 +1607,11 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 			}
 			echo '</ul>';
 		},
-		array(
-			'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'vms'), count($recent_mutations))
-		)
-	);
+			array(
+				/* translators: %d: number of recent mutation log entries. */
+				'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'vms'), count($recent_mutations))
+			)
+		);
 	echo '</section>';
 }
 
@@ -1727,12 +1737,14 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 		$source_text = trim((string) ($writer_suspect['source_function'] ?? $writer_suspect['source_hook'] ?? ''));
 		$reason_text = trim((string) ($writer_suspect['reason_text'] ?? ''));
 		$parts = array();
-		if ($source_text !== '') {
-			$parts[] = sprintf(__('Likely upstream writer: %s', 'vms'), $source_text);
-		}
-		if ($reason_text !== '') {
-			$parts[] = sprintf(__('Last conflicting reason: %s', 'vms'), $reason_text);
-		}
+			if ($source_text !== '') {
+				/* translators: %s: function or hook name suspected of rewriting ticket inventory. */
+				$parts[] = sprintf(__('Likely upstream writer: %s', 'vms'), $source_text);
+			}
+			if ($reason_text !== '') {
+				/* translators: %s: most recent reason recorded for the conflicting ticket inventory write. */
+				$parts[] = sprintf(__('Last conflicting reason: %s', 'vms'), $reason_text);
+			}
 		if (!empty($parts)) {
 			echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html(implode(' / ', $parts)) . '</p>';
 		}
@@ -1748,10 +1760,11 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($cause_reasons), 'vms'), count($cause_reasons)),
-			)
-		);
+				array(
+					/* translators: %d: number of reasons why the ticket integrity issue was flagged. */
+					'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($cause_reasons), 'vms'), count($cause_reasons)),
+				)
+			);
 	}
 
 	$recommended_action = trim((string) ($diagnostics['recommended_action'] ?? ''));
@@ -1826,10 +1839,11 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 			echo '</tbody></table>';
 			echo '</div>';
 		},
-		array(
-			'summary_meta' => sprintf(_n('%d row', '%d rows', count($ticket_rows), 'vms'), count($ticket_rows))
-		)
-	);
+			array(
+				/* translators: %d: number of ticket inventory rows in the per-ticket snapshot. */
+				'summary_meta' => sprintf(_n('%d row', '%d rows', count($ticket_rows), 'vms'), count($ticket_rows))
+			)
+		);
 
 	if (!empty($comparison)) {
 		$comparison_rows = array_values((array) ($comparison['rows'] ?? array()));
@@ -1879,6 +1893,7 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 				echo '</ul>';
 			},
 			array(
+				/* translators: %d: number of comparison rows against the healthy ticket baseline. */
 				'summary_meta' => sprintf(_n('%d row', '%d rows', count($comparison_rows), 'vms'), count($comparison_rows))
 			)
 		);
@@ -1900,9 +1915,10 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 
 				$headline = trim((string) ($mutation['change_type_label'] ?? __('Inventory mutation', 'vms')));
 				$product_id = absint($mutation['product_id'] ?? 0);
-				if ($product_id > 0) {
-					$headline .= ' / ' . sprintf(__('Product #%d', 'vms'), $product_id);
-				}
+					if ($product_id > 0) {
+						/* translators: %d: WooCommerce product ID tied to the inventory mutation. */
+						$headline .= ' / ' . sprintf(__('Product #%d', 'vms'), $product_id);
+					}
 
 				$time_text = vms_ticket_integrity_format_datetime(absint($mutation['timestamp_gmt'] ?? 0));
 				$source_text = vms_ticket_integrity_format_audit_source($mutation);
@@ -1921,10 +1937,11 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 			}
 			echo '</ul>';
 		},
-		array(
-			'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'vms'), count($recent_mutations))
-		)
-	);
+			array(
+				/* translators: %d: number of recent inventory mutation log entries. */
+				'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'vms'), count($recent_mutations))
+			)
+		);
 	echo '</section>';
 }
 
@@ -1985,12 +2002,14 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 		$source_text = trim((string) ($repair_writer['source_function'] ?? $repair_writer['source_hook'] ?? ''));
 		$reason_text = trim((string) ($repair_writer['reason_text'] ?? ''));
 		$parts = array();
-		if ($source_text !== '') {
-			$parts[] = sprintf(__('Likely upstream writer: %s', 'vms'), $source_text);
-		}
-		if ($reason_text !== '') {
-			$parts[] = sprintf(__('Last conflicting reason: %s', 'vms'), $reason_text);
-		}
+			if ($source_text !== '') {
+				/* translators: %s: function or hook name suspected of re-closing repaired inventory. */
+				$parts[] = sprintf(__('Likely upstream writer: %s', 'vms'), $source_text);
+			}
+			if ($reason_text !== '') {
+				/* translators: %s: most recent reason recorded for the conflicting post-repair write. */
+				$parts[] = sprintf(__('Last conflicting reason: %s', 'vms'), $reason_text);
+			}
 		if (!empty($parts)) {
 			echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html(implode(' / ', $parts)) . '</p>';
 		}
@@ -2097,11 +2116,12 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d entry', '%d entries', count($entries), 'vms'), count($entries)),
-				'class' => 'vms-ticket-integrity__subdetails--role'
-			)
-		);
+				array(
+					/* translators: %d: number of repair log entries recorded for the current ticket role. */
+					'summary_meta' => sprintf(_n('%d entry', '%d entries', count($entries), 'vms'), count($entries)),
+					'class' => 'vms-ticket-integrity__subdetails--role'
+				)
+			);
 	}
 	echo '</div>';
 
@@ -2115,10 +2135,11 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d warning', '%d warnings', count($warnings), 'vms'), count($warnings)),
-			)
-		);
+				array(
+					/* translators: %d: number of repair warnings shown for the current event. */
+					'summary_meta' => sprintf(_n('%d warning', '%d warnings', count($warnings), 'vms'), count($warnings)),
+				)
+			);
 	}
 
 	echo '</section>';

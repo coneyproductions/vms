@@ -889,57 +889,6 @@ line	column	type	code	message	docs
 2436	14	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 2439	106	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
 
-FILE: includes/admin/ticket-integrity-page.php
-line	column	type	code	message	docs
-21	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-21	55	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-153	36	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;alert_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-153	36	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;alert_recipient&#039;]
-158	43	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;daily_report_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-158	43	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;daily_report_recipient&#039;]
-165	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;payment_gateway_health_interval&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-165	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;payment_gateway_health_interval&#039;]
-313	40	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;test_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-595	5	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-820	139	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
-824	10	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_ticket_integrity_build_event_report_markdown'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-831	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-831	63	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-832	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-832	66	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-832	66	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;detail&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-846	12	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-847	12	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-873	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-874	47	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-874	47	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-997	87	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1067	103	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1072	107	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1366	23	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1369	40	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1397	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1399	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1402	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1491	43	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1602	39	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1731	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1734	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1752	43	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1821	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$woo_inventory_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1822	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$sales_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1823	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$last_write_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1830	39	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1882	43	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1904	50	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1925	39	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1989	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-1992	32	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to __() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2101	43	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2119	43	ERROR	WordPress.WP.I18n.MissingTranslatorsComment	A function call to _n() with texts containing placeholders was found, but was not accompanied by a "translators:" comment on the line above to clarify the meaning of the placeholders.	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#descriptions
-2164	59	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$row_class'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-2399	27	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-
 FILE: includes/admin/event-feedback.php
 line	column	type	code	message	docs
 40	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
@@ -2372,6 +2321,36 @@ line	column	type	code	message	docs
 275	68	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;vms_vul&#039;] not unslashed before sanitization. Use wp_unslash() or similar
 275	68	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;vms_vul&#039;]
 
+FILE: includes/admin/ticket-integrity-page.php
+line	column	type	code	message	docs
+21	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+21	55	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+153	36	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;alert_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+153	36	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;alert_recipient&#039;]
+158	43	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;daily_report_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+158	43	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;daily_report_recipient&#039;]
+165	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;payment_gateway_health_interval&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+165	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;payment_gateway_health_interval&#039;]
+313	40	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;test_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+595	5	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
+820	139	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.
+824	10	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_ticket_integrity_build_event_report_markdown'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+831	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+831	63	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+832	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+832	66	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+832	66	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;detail&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+846	12	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+847	12	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+873	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+874	47	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+874	47	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar
+1834	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$woo_inventory_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+1835	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$sales_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+1836	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$last_write_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+2185	59	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$row_class'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+2420	27	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+
 FILE: includes/admin/vendor-staff-link.php
 line	column	type	code	message	docs
 74	13	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$sid'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
@@ -2910,7 +2889,7 @@ line	column	type	code	message	docs
 
 FILE: vendor-management-system.php
 line	column	type	code	message	docs
-36	3	WARNING	PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound	load_plugin_textdomain() has been discouraged since WordPress version 4.6. When your plugin is hosted on WordPress.org, you no longer need to manually include this function call for translations under your plugin slug. WordPress will automatically load the translations for you as needed.	https://make.wordpress.org/core/2016/07/06/i18n-improvements-in-4-6/
+0	0	WARNING	plugin_header_nonexistent_domain_path	The "Domain Path" header in the plugin file must point to an existing folder. Found: "languages"	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#domain-path
 
 FILE: vendor-management-system.php
 line	column	type	code	message	docs
