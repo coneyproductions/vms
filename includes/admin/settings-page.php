@@ -20,6 +20,38 @@ add_action('admin_post_vms_ticketing_stock_clear_preview', 'vms_handle_ticketing
 // Back-compat: older Settings button action
 add_action('admin_post_vms_reconcile_ticketing_stock', 'vms_handle_reconcile_ticketing_stock');
 
+if (!function_exists('vms_settings_page_help_button_allowed_html')) {
+	function vms_settings_page_help_button_allowed_html(): array
+	{
+		return array(
+			'button' => array(
+				'type' => true,
+				'class' => true,
+				'data-vms-tour-start' => true,
+				'data-vms-help-open' => true,
+				'data-vms-tour' => true,
+			),
+		);
+	}
+}
+
+if (!function_exists('vms_settings_page_dropdown_allowed_html')) {
+	function vms_settings_page_dropdown_allowed_html(): array
+	{
+		return array(
+			'select' => array(
+				'id' => true,
+				'name' => true,
+				'class' => true,
+			),
+			'option' => array(
+				'value' => true,
+				'selected' => true,
+			),
+		);
+	}
+}
+
 function vms_handle_set_default_venue(): void
 {
   if (!current_user_can('manage_options')) {
@@ -1713,7 +1745,7 @@ function vms_render_settings_page_content()
       'label' => __('Start Guided Tour', 'vms'),
     ));
   }
-  echo '<p>' . $ticketing_ui_tour_button . '</p>';
+  echo '<p>' . wp_kses($ticketing_ui_tour_button, vms_settings_page_help_button_allowed_html()) . '</p>';
   echo '<p class="description">' . esc_html__('Ticket UI can run in Safe Mode, the older unified V2 layout, or the new progressive flow that keeps all admission choices together while tucking optional add-ons below.', 'vms') . '</p>';
   echo '<p data-vms-tour="ticketing-ui.public-enable">';
   echo '<label for="vms_ticket_ui_layout"><strong>' . esc_html__('Ticket UI Layout', 'vms') . '</strong></label><br />';
@@ -1921,7 +1953,7 @@ function vms_render_settings_page_content()
         $label = esc_html($label);
       }
       echo '<tr>';
-      echo '<td>' . $label . '</td>';
+      echo '<td>' . wp_kses_post($label) . '</td>';
       echo '<td><code>' . esc_html($sku) . '</code></td>';
       echo '<td>' . esc_html((string) $cap) . '</td>';
       echo '<td>' . esc_html((string) $sold) . '</td>';
@@ -2177,14 +2209,18 @@ function vms_render_settings_page_content()
   echo '<p class="description">' . esc_html__('Used in public cancellation notices and other customer-facing links that send visitors to browse upcoming events.', 'vms') . '</p>';
   echo '<p>';
   echo '<label for="vms_public_calendar_page_id"><strong>' . esc_html__('WordPress page', 'vms') . '</strong></label><br />';
-  wp_dropdown_pages(array(
+  $public_calendar_page_dropdown = wp_dropdown_pages(array(
     'name'              => 'vms_settings[public_calendar_page_id]',
     'id'                => 'vms_public_calendar_page_id',
-    'selected'          => $public_calendar_page_id,
-    'show_option_none'  => __('— Auto-detect —', 'vms'),
+    'selected'          => esc_attr((string) $public_calendar_page_id),
+    'show_option_none'  => esc_html__('— Auto-detect —', 'vms'),
     'option_none_value' => '0',
     'post_status'       => 'publish',
+    'echo'              => 0,
   ));
+  if (is_string($public_calendar_page_dropdown) && $public_calendar_page_dropdown !== '') {
+    echo wp_kses($public_calendar_page_dropdown, vms_settings_page_dropdown_allowed_html());
+  }
   echo '</p>';
   echo '<p class="description">' . esc_html__('Choose the public page customers should use to browse events. Auto-detect first looks for the VMS public calendar page, then falls back to the TEC events archive.', 'vms') . '</p>';
   echo '<p>';
@@ -2318,8 +2354,8 @@ function vms_render_settings_page_content()
     echo '<tr>';
     echo '<td><strong>' . esc_html($spec['title']) . '</strong></td>';
     echo '<td><code>' . esc_html($spec['slug']) . '</code></td>';
-    echo '<td>' . $status_html . '</td>';
-    echo '<td>' . $link_html . '</td>';
+    echo '<td>' . wp_kses_post($status_html) . '</td>';
+    echo '<td>' . wp_kses_post($link_html) . '</td>';
     echo '</tr>';
   }
 
@@ -2346,8 +2382,8 @@ function vms_render_settings_page_content()
 				echo '<div class="' . esc_attr($notice_class) . '"><p><strong>Entitlement image sync complete.</strong> ';
 				echo 'Checked: ' . (int) ($img_sync['checked'] ?? 0) . ' &nbsp;|&nbsp; ';
 				echo 'Updated: ' . (int) ($img_sync['updated'] ?? 0) . ' &nbsp;|&nbsp; ';
-				echo 'Skipped (no entitlement image): ' . (int) ($img_sync['skipped'] ?? 0) . ' &nbsp;|&nbsp; ';
-				echo 'Errors: ' . $errors . ' &nbsp;|&nbsp; ';
+					echo 'Skipped (no entitlement image): ' . (int) ($img_sync['skipped'] ?? 0) . ' &nbsp;|&nbsp; ';
+					echo 'Errors: ' . esc_html((string) $errors) . ' &nbsp;|&nbsp; ';
 				echo esc_html($ts_readable);
 				echo '</p></div>';
 
@@ -2371,10 +2407,10 @@ function vms_render_settings_page_content()
 						$product_id = absint($row['product_id'] ?? 0);
 						$entitlement_id = sanitize_key((string) ($row['entitlement_id'] ?? ''));
 						$message = sanitize_text_field((string) ($row['message'] ?? 'error'));
-						echo '<li>';
-						echo 'Product #' . $product_id . ' | Entitlement: ' . esc_html($entitlement_id !== '' ? $entitlement_id : '(missing)') . ' | ';
-						echo esc_html($message);
-						echo '</li>';
+							echo '<li>';
+							echo 'Product #' . esc_html((string) $product_id) . ' | Entitlement: ' . esc_html($entitlement_id !== '' ? $entitlement_id : '(missing)') . ' | ';
+							echo esc_html($message);
+							echo '</li>';
 					}
 					echo '</ul>';
 					echo '</div>';
@@ -2401,9 +2437,9 @@ function vms_render_settings_page_content()
 			$data = get_transient('vms_integrity_scan_last');
 			if (is_array($data) && !empty($data['results'])) {
 				$ts_readable = function_exists('wp_date') ? wp_date('Y-m-d H:i', (int) $data['ts'], wp_timezone()) : date('Y-m-d H:i', (int) $data['ts']);
-				$mode_label = isset($data['mode']) ? esc_html((string) $data['mode']) : 'all';
+				$mode_label = isset($data['mode']) ? (string) $data['mode'] : 'all';
 
-				echo '<div class="notice notice-success"><p><strong>Integrity scan complete.</strong> Mode: ' . $mode_label . ' &nbsp;|&nbsp; Limit: ' . (int) $data['limit'] . ' &nbsp;|&nbsp; ' . esc_html($ts_readable) . '</p>';
+				echo '<div class="notice notice-success"><p><strong>Integrity scan complete.</strong> Mode: ' . esc_html($mode_label) . ' &nbsp;|&nbsp; Limit: ' . (int) $data['limit'] . ' &nbsp;|&nbsp; ' . esc_html($ts_readable) . '</p>';
 
 				$results = $data['results'];
 				if (isset($results['vendors']) || isset($results['venues']) || isset($results['events'])) {
