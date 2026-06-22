@@ -2365,20 +2365,6 @@ line	column	type	code	message	docs
 277	48	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;nonce&#039;] not unslashed before sanitization. Use wp_unslash() or similar
 277	48	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;nonce&#039;]
 
-FILE: includes/admin/vendor-list-columns.php
-line	column	type	code	message	docs
-48	14	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_render_w9_pill'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-56	14	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_render_1099_pill'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-143	32	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$title'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-161	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-161	74	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-162	20	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-162	81	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-209	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-210	46	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-218	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-219	45	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-
 FILE: includes/admin/docs-page.php
 line	column	type	code	message	docs
 115	14	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_docs_render_markdown'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
@@ -2934,7 +2920,7 @@ FILE: vendor-management-system.php
 line	column	type	code	message	docs
 0	0	WARNING	plugin_header_nonexistent_domain_path	The "Domain Path" header in the plugin file must point to an existing folder. Found: "languages"	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#domain-path
 
-FILE: privatevendor-management-system.php
+FILE: vendor-management-system.php
 line	column	type	code	message	docs
 36	3	WARNING	PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound	load_plugin_textdomain() has been discouraged since WordPress version 4.6. When your plugin is hosted on WordPress.org, you no longer need to manually include this function call for translations under your plugin slug. WordPress will automatically load the translations for you as needed.	https://make.wordpress.org/core/2016/07/06/i18n-improvements-in-4-6/
 
@@ -3244,6 +3230,17 @@ line	column	type	code	message	docs
 141	58	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 142	20	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 142	50	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+
+FILE: includes/admin/vendor-list-columns.php
+line	column	type	code	message	docs
+173	17	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+173	74	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+174	20	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+174	81	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+221	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+222	46	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+230	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
+231	45	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 
 FILE: includes/admin/venue-comp-defaults.php
 line	column	type	code	message	docs

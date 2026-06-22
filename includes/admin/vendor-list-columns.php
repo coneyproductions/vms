@@ -7,6 +7,16 @@ if (!defined('ABSPATH')) exit;
  * plus dropdown filters.
  */
 
+function vms_vendor_list_columns_pill_allowed_html(): array
+{
+    return array(
+        'span' => array(
+            'class' => true,
+            'title' => true,
+        ),
+    );
+}
+
 /** -----------------------------
  * Columns
  * ----------------------------- */
@@ -45,7 +55,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($column, $post_id)
         $status = (string) get_post_meta($post_id, '_vms_w9_status', true);
         if (!$status) $status = 'not_requested';
 
-        echo vms_render_w9_pill($status);
+        echo wp_kses(vms_render_w9_pill($status), vms_vendor_list_columns_pill_allowed_html());
         return;
     }
 
@@ -53,7 +63,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($column, $post_id)
         $req = (string) get_post_meta($post_id, '_vms_requires_1099', true);
         if (!$req) $req = 'unknown';
 
-        echo vms_render_1099_pill($req);
+        echo wp_kses(vms_render_1099_pill($req), vms_vendor_list_columns_pill_allowed_html());
         return;
     }
 }, 10, 2);
@@ -128,9 +138,10 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
     $complete = vms_vendor_tax_profile_is_complete((int)$post_id);
 
     if ($complete) {
-        echo '<span class="vms-vendor-tax-pill vms-vendor-tax-pill-complete">✅ ' .
+        $markup = '<span class="vms-vendor-tax-pill vms-vendor-tax-pill-complete">✅ ' .
             esc_html__('Complete', 'vms') .
         '</span>';
+        echo wp_kses($markup, vms_vendor_list_columns_pill_allowed_html());
     } else {
         $missing = function_exists('vms_vendor_tax_profile_missing_items')
             ? vms_vendor_tax_profile_missing_items((int)$post_id)
@@ -140,9 +151,10 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
             ? esc_attr__('Missing: ', 'vms') . esc_attr(implode(', ', $missing))
             : esc_attr__('Incomplete', 'vms');
 
-        echo '<span title="' . $title . '" class="vms-vendor-tax-pill vms-vendor-tax-pill-incomplete">⚠️ ' .
+        $markup = '<span title="' . $title . '" class="vms-vendor-tax-pill vms-vendor-tax-pill-incomplete">⚠️ ' .
             esc_html__('Incomplete', 'vms') .
         '</span>';
+        echo wp_kses($markup, vms_vendor_list_columns_pill_allowed_html());
     }
 }, 20, 2);
 
