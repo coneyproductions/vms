@@ -2918,7 +2918,7 @@ line	column	type	code	message	docs
 
 FILE: vendor-management-system.php
 line	column	type	code	message	docs
-0	0	WARNING	plugin_header_nonexistent_domain_path	The "Domain Path" header in the plugin file must point to an existing folder. Found: "languages"	https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#domain-path
+36	3	WARNING	PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound	load_plugin_textdomain() has been discouraged since WordPress version 4.6. When your plugin is hosted on WordPress.org, you no longer need to manually include this function call for translations under your plugin slug. WordPress will automatically load the translations for you as needed.	https://make.wordpress.org/core/2016/07/06/i18n-improvements-in-4-6/
 
 FILE: vendor-management-system.php
 line	column	type	code	message	docs
@@ -3122,39 +3122,33 @@ line	column	type	code	message	docs
 349	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
 354	17	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
 354	17	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-354	18	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;get_results()\n$table assigned unsafely at line 348.
-354	30	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;SELECT * FROM {$table} ORDER BY is_active DESC, updated_at_utc DESC, id DESC&quot;
-367	16	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-367	16	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-367	17	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;get_row()\n$table assigned unsafely at line 366.
-367	40	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;SELECT * FROM {$table} WHERE id = %d LIMIT 1&quot;
-377	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-377	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-381	16	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-381	16	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-381	17	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;get_row()\n$table assigned unsafely at line 376.
-381	25	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;SELECT * FROM {$table} WHERE is_active = 1 ORDER BY updated_at_utc DESC, id DESC LIMIT 1&quot;
-394	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-394	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+370	16	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+370	16	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+380	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+380	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+384	16	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+384	16	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
 400	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
 400	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-412	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-424	11	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;query()\n$table assigned unsafely at line 390.
-424	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-424	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-424	32	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;UPDATE {$table} SET is_active = 0 WHERE id &lt;&gt; %d&quot;
-439	20	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-439	20	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-452	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-452	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-457	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-457	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-457	10	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;query()\n$table assigned unsafely at line 451.
-457	16	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;UPDATE {$table} SET is_active = 0&quot;
-458	20	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
-458	20	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
-1092	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_key	Detected usage of meta_key, possible slow query.
-1095	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
+406	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+406	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+418	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+430	11	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;query()\n$table assigned unsafely at line 396.
+430	13	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+430	13	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+430	32	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;UPDATE {$table} SET is_active = 0 WHERE id &lt;&gt; %d&quot;
+445	20	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+445	20	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+458	19	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+458	19	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+463	9	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+463	9	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+463	10	WARNING	PluginCheck.Security.DirectDB.UnescapedDBParameter	Unescaped parameter $table used in $wpdb-&gt;query()\n$table assigned unsafely at line 457.
+463	16	WARNING	WordPress.DB.PreparedSQL.InterpolatedNotPrepared	Use placeholders and $wpdb-&gt;prepare(); found interpolated variable {$table} at &quot;UPDATE {$table} SET is_active = 0&quot;
+464	20	WARNING	WordPress.DB.DirectDatabaseQuery.DirectQuery	Use of a direct database call is discouraged.
+464	20	WARNING	WordPress.DB.DirectDatabaseQuery.NoCaching	Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().
+1098	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_key	Detected usage of meta_key, possible slow query.
+1101	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
 
 FILE: includes/cpt/ratings.php
 line	column	type	code	message	docs

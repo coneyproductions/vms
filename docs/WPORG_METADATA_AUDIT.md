@@ -242,3 +242,10 @@ Scope note:
   - the selected file `includes/admin/vendor-list-columns.php` reduced from `11` findings to `8` while clearing all `3` of its `OutputNotEscaped` findings,
   - the extracted-package rerun no longer emitted the previously oscillating `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomain()` warning unchanged, and introduced no previously unseen Plugin Check code categories,
   - normalized packaged findings were saved in `test-results/wporg-06c-plugin-check.raw.txt` and promoted into `docs/plugin-check-1.0.0-raw.txt`.
+- `WPORG-07A` adds:
+  - current rebuilt RC artifact `dist/wporg-07a/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `94507b4c77d748be22553a042e573f0126336692b5d7cbb80d7a4b1fd748b6b2`,
+  - packaged Plugin Check reduction from `3076` to `3069` findings after the first low-risk DB/SQL triage batch,
+  - the selected file `includes/core/goals-forecast.php` reduced from `38` findings to `32` while reducing its DB/SQL subset from `37` to `31` through read-only table-identifier preparation in the three existing goal read helpers only,
+  - the extracted-package rerun again dropped the oscillating `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomain()` warning unchanged, and introduced no previously unseen Plugin Check code categories,
+  - normalized packaged findings were saved in `test-results/wporg-07a-plugin-check.raw.txt` and `test-results/wporg-07a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`.

@@ -351,7 +351,10 @@ if (!function_exists('vms_goals_list')) {
 			return array();
 		}
 
-		$rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY is_active DESC, updated_at_utc DESC, id DESC", ARRAY_A);
+		$rows = $wpdb->get_results(
+			$wpdb->prepare('SELECT * FROM %i ORDER BY is_active DESC, updated_at_utc DESC, id DESC', $table),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -364,7 +367,7 @@ if (!function_exists('vms_goals_get_goal')) {
 			return array();
 		}
 		$table = vms_goals_table_name();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d LIMIT 1", $goal_id), ARRAY_A);
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d LIMIT 1', $table, $goal_id), ARRAY_A);
 		return is_array($row) ? $row : array();
 	}
 }
@@ -378,7 +381,10 @@ if (!function_exists('vms_goals_get_active_goal')) {
 		if ((string) $exists !== (string) $table) {
 			return array();
 		}
-		$row = $wpdb->get_row("SELECT * FROM {$table} WHERE is_active = 1 ORDER BY updated_at_utc DESC, id DESC LIMIT 1", ARRAY_A);
+		$row = $wpdb->get_row(
+			$wpdb->prepare('SELECT * FROM %i WHERE is_active = 1 ORDER BY updated_at_utc DESC, id DESC LIMIT 1', $table),
+			ARRAY_A
+		);
 		return is_array($row) ? $row : array();
 	}
 }
