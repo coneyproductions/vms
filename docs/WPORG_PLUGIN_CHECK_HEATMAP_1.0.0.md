@@ -4,22 +4,90 @@ Date: 2026-06-22
 
 ## Scope
 
-- Scan target: extracted packaged directory from `dist/wporg-09a/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree
-- Artifact SHA-256: `e6aebcba302b1c58a4760bdfc870892dc6dd4204bc4de3cd280670a16292d22b`
+- Scan target: extracted packaged directory from `dist/wporg-10a/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree
+- Artifact SHA-256: `47005213b0869ad2eeda5ddda2ba08fda2f624d4b55aec2b5610978cabf2e81e`
 - Raw output: `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
 
 ## Current Result
 
-- `3030` total findings
+- `3029` total findings
 - `867` errors
-- `2163` warnings
+- `2162` warnings
 
-Comparison to the prior packaged RC from `WPORG-08B`:
+Comparison to the prior packaged RC from `WPORG-09A`:
 
-- `3033` -> `3030` total (`-3`)
-- `869` -> `867` errors (`-2`)
-- `2164` -> `2163` warnings (`-1`)
+- `3030` -> `3029` total (`-1`)
+- `867` -> `867` errors (`0`)
+- `2163` -> `2162` warnings (`-1`)
+
+## WPORG-10A Batch
+
+- 10A candidate scan summary
+  - reviewed all twenty-two packaged logging-hit files from the `WPORG-09A` baseline and then triaged sixteen candidates in depth across public, REST, cron, admin, and Event Plans surfaces before editing
+  - searched the repo for existing logging wrappers and found several scoped abstractions (`VMS_Addons_Logger`, `vms_notify_insert_log()`, `vms_admission_audit_log()`, `vms_due_append_log()`, `vms_safety_audit_log()`, `vms_square_ticket_mirror_log()`, `vms_event_plan_perf_log()`, `vms_email_followups_log()`), but no generic Plugin Check-safe project logger that could replace arbitrary `error_log()` calls without changing diagnostic behavior
+  - no low-risk candidate met the preferred `3`-finding threshold; every `3+` file was tied to public submissions, REST mutations, cron generation, imports, runtime guards, ticket mutation auditing, or excluded Event Plans / ticketing support diagnostics
+  - selected `includes/core/plugin.php` because its two findings were admin-only `VMS_DEBUG_ADMIN_HOOKS` asset-bootstrap traces, clearly temporary development logging, and behavior-neutral to remove
+  - skipped the remaining low-risk one-finding admin/dev candidates because they were either smaller than the selected two-finding slice or more operationally meaningful than the gated asset traces
+- logging candidate scan
+
+| File | Total | Errors | Warnings | Logging | Dominant logging codes | Logging pattern | Surface | Existing safe abstraction | Risk | Decision |
+| --- | ---: | ---: | ---: | ---: | --- | --- | --- | --- | --- | --- |
+| `includes/vendor-applications.php` | `90` | `15` | `75` | `8` | `error_log x8` | vendor creation/link failures, Turnstile verification failures, taxonomy assignment failures | public vendor application + onboarding follow-up | `No generic safe wrapper nearby` | `high` | Skipped: public submission, anti-spam, and account-linking support diagnostics. |
+| `includes/cpt/event-plans.php` | `241` | `108` | `133` | `4` | `error_log x4` | legacy ticket cleanup completion plus TEC sync failures | Event Plans runtime/save/integration | `Scoped perf logger exists nearby, but not an equivalent replacement` | `high` | Skipped: excluded file and runtime/integration diagnostics. |
+| `includes/modules/admissions/rest.php` | `65` | `11` | `54` | `4` | `error_log x4` | create/update/check-in DB failure logs | admissions REST mutation | `Module audit log exists, but it does not replace DB failure logging` | `high` | Skipped: REST mutation support diagnostics. |
+| `includes/admin/data-tools/actions-event-plan-import.php` | `11` | `3` | `8` | `3` | `error_log x3` | preview/commit/revert import failure logs | admin-only CSV import tool | `Admin notices exist, but no Plugin Check-safe persistent logger` | `medium` | Skipped: admin-only, but import failure logs are operationally useful and mutation-coupled. |
+| `includes/modules/staff-tasks/generator.php` | `5` | `0` | `5` | `3` | `error_log x3` | nightly generator skipped/summary/failure logs | cron/task generation | `Subsystem action-log storage exists elsewhere, not equivalent here` | `high` | Skipped: cron health and generation diagnostics. |
+| `includes/runtime-guards.php` | `30` | `1` | `29` | `2` | `error_log x2` | admin diagnostic echo-to-log plus heavy-admin trace payloads | runtime guards / admin diagnostics | `Scoped diagnostic queue exists, but not a safe replacement for trace logging` | `medium` | Skipped: mixed operational diagnostics and trace logging. |
+| `includes/ticketing/ticket-mutation-audit.php` | `19` | `3` | `16` | `2` | `error_log x1`, `debug_backtrace x1` | ticket mutation trace and source capture | ticketing audit/runtime | `This file is the audit subsystem itself` | `high` | Skipped: ticket mutation support and audit-trail diagnostics. |
+| `includes/core/plugin.php` | `10` | `0` | `10` | `2` | `error_log x2` | `VMS_DEBUG_ADMIN_HOOKS` asset enqueue/skip traces | admin-only asset bootstrap | `No` | `low` | Selected: gated dev-only admin traces; removing them is behavior-neutral. |
+| `includes/taxonomies/vendor-type.php` | `3` | `1` | `2` | `2` | `error_log x2` | default-term ensure/delete failure logs | taxonomy bootstrap / repair | `No` | `medium` | Skipped: low count and still operational integrity diagnostics. |
+| `includes/core/event-plan-save-profiler.php` | `32` | `17` | `15` | `1` | `error_log x1` | WP_DEBUG save-profile dump | Event Plan save-flow diagnostics | `Profile store exists, but the file is save-flow coupled` | `high` | Skipped: save-flow instrumentation outside safe scope. |
+| `includes/admin/settings-page.php` | `29` | `1` | `28` | `1` | `error_log x1` | entitlement image sync summary fallback | admin-only ticketing maintenance tool | `Scoped helper exists, but it resolves to flagged error_log() in ticketing-phase-b` | `medium` | Skipped: ticketing maintenance diagnostic with support value. |
+| `includes/core/goals-forecast.php` | `32` | `0` | `32` | `1` | `error_log x1` | provider/refresh failures via `vms_goals_log()` | reporting + refresh runtime | `Scoped wrapper exists, but it still uses error_log()` | `medium` | Skipped: operational refresh diagnostics, not temporary debug. |
+| `includes/core/notifications.php` | `8` | `2` | `6` | `1` | `error_log x1` | failed notification log-row insert fallback | notification audit trail | `vms_notify_insert_log()` exists here; the flagged call is its failure fallback | `high` | Skipped: notification support and audit diagnostic. |
+| `includes/admin/menu.php` | `3` | `0` | `3` | `1` | `error_log x1` | missing renderer warning under `WP_DEBUG` | admin dashboard bootstrap | `No` | `low` | Skipped: only one finding and more operational than the selected asset-trace slice. |
+| `includes/tours/class-vms-tours-registry.php` | `1` | `0` | `1` | `1` | `error_log x1` | `VMS_TOURS_DEBUG` debug log | admin-only guided tours | `No` | `low` | Skipped: one-finding candidate, smaller than the selected two-finding slice. |
+| `includes/admin/vendor-list-ui.php` | `1` | `0` | `1` | `1` | `error_log x1` | non-scalar meta fallback log | admin-only vendor list display | `No` | `medium` | Skipped: deliberate no-silent-failure diagnostic in read-only admin rendering. |
+- `includes/core/plugin.php`
+  - `10` -> `8`
+  - `0` -> `0` errors
+  - `10` -> `8` warnings
+  - `2` -> `0` logging findings
+  - limited the pass to removing the two `VMS_DEBUG_ADMIN_HOOKS` `error_log()` asset-trace branches only; asset loading, screen detection, styles/scripts, routes, and runtime behavior stayed unchanged
+- focused validation
+  - no focused regression exists in `tests/` for `includes/core/plugin.php` or the admin asset bootstrap trace gate
+  - `php -l includes/core/plugin.php` passed
+  - `git diff --check` passed
+  - `php scripts/build-public-release.php --output-dir dist/wporg-10a --force --allow-dirty` passed
+  - packaged ZIP still contains root `readme.txt` and `LICENSE.txt`
+  - the packaged rerun targeted an extracted packaged directory at `/tmp/vms-wporg-10a.5CuQQy/vms` outside the local site tree, leaving the local `vms/` install untouched
+  - normalized packaged findings were saved to `test-results/wporg-10a-plugin-check.raw.txt` and `test-results/wporg-10a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`
+  - the normalized packaged summary kept `includes/helpers/checkin-close.php` and `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound` unchanged outside the selected file scope, while the previously oscillating `plugin_header_nonexistent_domain_path` warning reappeared in this rerun
+
+Files touched:
+
+- `includes/core/plugin.php`
+
+Findings intentionally deferred:
+
+- all remaining public application, REST mutation, cron generation, notification, runtime-guard, ticket mutation, taxonomy repair, Event Plans, and ticketing logging work outside this admin bootstrap slice
+- all remaining nonce/input, escaping/output, DB/SQL, i18n, date/time, and other runtime follow-up outside `includes/core/plugin.php`
+- all Event Plans runtime request/save/publish follow-up
+
+Risk notes:
+
+- selected file is admin-only shared bootstrap code, but the chosen changes stayed strictly inside dev-only tracing branches gated by `VMS_DEBUG_ADMIN_HOOKS`
+- no save, delete, activation, upload, portal/auth, checkout, ticketing mutation, admissions mutation, cron, Event Plans runtime, or query intent paths were changed
+
+Net effect of the selected batch:
+
+- `WordPress.PHP.DevelopmentFunctions.error_log_error_log`: `42` -> `40` (`-2`)
+- `Development logging`: `43` -> `41` (`-2`)
+- `includes/core/plugin.php`: `10` -> `8` (`-2`)
+- packaged totals: `3030` -> `3029` findings, `867` -> `867` errors, `2163` -> `2162` warnings
+- normalized packaged summary outside the selected file scope: `plugin_header_nonexistent_domain_path`: `0` -> `1`, `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
+- no previously unseen Plugin Check code categories appeared
 
 ## WPORG-09A Batch
 
@@ -233,13 +301,14 @@ Net effect of the selected batch:
 | Escaping and output safety | `145` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` |
 | I18n placeholder comments and ordering | `539` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` |
 | Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/helpers.php`, `includes/ticketing/ticket-integrity-monitor.php` |
-| Development logging | `43` findings (`42` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` |
+| Development logging | `41` findings (`40` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` |
 
 ## Next Recommended Phase
 
-- Post-`WPORG-09A` phased follow-up
+- Post-`WPORG-10A` phased follow-up
 - Scope:
-  - pause further date/time cleanup after `WPORG-09A` unless another equivalently isolated admin-only display-only slice is identified; the remaining date/time files are scheduling, ticket-window, notification, payables, portal-stamping, CLI, Event Plans, or shared runtime helpers
+  - pause further logging cleanup unless another equivalently isolated admin-only dev-trace or debug-only slice appears; the remaining higher-density logging files are public submissions, REST mutations, cron generators, runtime guards, notification/ticketing diagnostics, taxonomy repair, or excluded Event Plans work
+  - keep the date/time phase paused after `WPORG-09A`; the remaining date/time files are scheduling, ticket-window, notification, payables, portal-stamping, CLI, Event Plans, or shared runtime helpers
   - switch back to safer isolated DB/SQL reporting slices before widening into mutation-coupled nonce/input runtime work
   - keep targeted i18n paused unless another equivalently isolated admin-only translator-comment slice is identified; the highest-density remaining i18n files are Event Plans, checkout/ticketing, upload/verification, portal, email, or save-flow coupled
   - if the i18n phase resumes, keep it limited to translator comments, ordered placeholders, or literal `vms` text-domain corrections in admin-only diagnostics/list/report files

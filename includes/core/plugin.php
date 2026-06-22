@@ -76,7 +76,6 @@ add_filter('admin_body_class', function (string $classes): string {
  *
  * Rules:
  * - Load on VMS top-level page (page=vms) and all VMS subpages (page starts with vms-)
- * - Optional debug logging is gated by VMS_DEBUG_ADMIN_HOOKS to avoid spam
  */
 add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 
@@ -109,28 +108,7 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 
 
 	if (!$is_vms_page) {
-		if (defined('VMS_DEBUG_ADMIN_HOOKS') && VMS_DEBUG_ADMIN_HOOKS) {
-			$screen_id = '';
-			if (function_exists('get_current_screen')) {
-				$screen = get_current_screen();
-				if (is_object($screen) && isset($screen->id)) {
-					$screen_id = (string) $screen->id;
-				}
-			}
-			error_log('VMS ADMIN ASSETS skipped page=' . $page . ' hook=' . (string) $hook_suffix . ' screen=' . $screen_id);
-		}
 		return;
-	}
-
-	if (defined('VMS_DEBUG_ADMIN_HOOKS') && VMS_DEBUG_ADMIN_HOOKS) {
-		$screen_id = '';
-		if (function_exists('get_current_screen')) {
-			$screen = get_current_screen();
-			if (is_object($screen) && isset($screen->id)) {
-				$screen_id = (string) $screen->id;
-			}
-		}
-		error_log('VMS ADMIN ASSETS enqueue page=' . $page . ' hook=' . (string) $hook_suffix . ' screen=' . $screen_id);
 	}
 
 	$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
