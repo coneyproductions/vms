@@ -5,14 +5,14 @@ Date: 2026-06-22
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-08A`: `256a14d5001c82459db0c5b5059e380531c9f2a3` (`256a14d`)
+- HEAD at start of `WPORG-08B`: `5f21f0027fbf3f53634e081d4ce844ea0847353d` (`5f21f00`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-08A` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-08B` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 08A normalized extracted-package rerun left the standing `plugin_header_nonexistent_domain_path` and `load_plugin_textdomain()` warnings unchanged while the metadata/package contents remained unchanged. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 08B normalized extracted-package rerun left the standing `plugin_header_nonexistent_domain_path` and `load_plugin_textdomain()` warnings unchanged while re-associating the domain-path warning to `vendor-management-system.php` in the normalized summary and leaving the metadata/package contents unchanged. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -263,3 +263,10 @@ Scope note:
   - the selected file `includes/admin/ticket-integrity-page.php` reduced from `48` findings to `27` while clearing its `21` `MissingTranslatorsComment` findings through `translators:` comments only,
   - the normalized extracted-package rerun left `plugin_header_nonexistent_domain_path`, `includes/helpers/checkin-close.php`, and the standing `load_plugin_textdomain()` warning unchanged outside the selected file scope and introduced no previously unseen Plugin Check code categories,
   - normalized packaged findings were saved in `test-results/wporg-08a-plugin-check.raw.txt` and `test-results/wporg-08a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`.
+- `WPORG-08B` adds:
+  - current rebuilt RC artifact `dist/wporg-08b/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `bcf0c9d9ec367aa0838fe23acae0aadc5daf5b3ec0672f832cb11f30e0b7e73d`,
+  - packaged Plugin Check reduction from `3041` to `3033` findings after the second cautious i18n placeholder/comment batch,
+  - the selected file `includes/admin/settings-page.php` reduced from `39` findings to `31` while clearing its `8` `MissingTranslatorsComment` findings through `translators:` comments only,
+  - the normalized extracted-package rerun re-associated the standing `plugin_header_nonexistent_domain_path` warning to `vendor-management-system.php`, left `includes/helpers/checkin-close.php` and the standing `load_plugin_textdomain()` warning unchanged, and introduced no previously unseen Plugin Check code categories,
+  - normalized packaged findings were saved in `test-results/wporg-08b-plugin-check.raw.txt` and `test-results/wporg-08b-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`.

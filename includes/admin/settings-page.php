@@ -1184,6 +1184,7 @@ function vms_field_staff_portal_doc_visibility_roles()
   foreach ($role_map as $role_id => $role) {
     $role_id = absint($role_id);
     if ($role_id <= 0) continue;
+    /* translators: %d: staffing role ID */
     $label = isset($role['name']) ? (string) $role['name'] : sprintf(__('Role #%d', 'vms'), $role_id);
     echo '<label style="display:block;margin:0 0 6px;">';
     echo '<input type="checkbox" name="vms_settings[staff_portal_doc_visibility_role_ids][]" value="' . esc_attr((string) $role_id) . '" ' . checked(in_array($role_id, $selected, true), true, false) . ' /> ';
@@ -1632,6 +1633,7 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
       }
       $rows[] = array(
         'slug' => $k,
+        /* translators: %s: saved vendor type key */
         'label' => vms_settings_calendar_vendor_type_label($k, sprintf(__('Archived type (%s)', 'vms'), $k)),
       );
     }
@@ -1921,6 +1923,7 @@ function vms_render_settings_page_content()
     $max_rows = 75;
     echo '<div class="vms-mt-8" style="max-width:1100px;">';
     echo '<h4 class="vms-mt-8" style="margin:10px 0 6px;">' . esc_html__('Preview details (most recent)', 'vms') . '</h4>';
+    /* translators: %d: maximum number of preview rows shown */
     echo '<p class="description">' . esc_html(sprintf(__('Showing up to %d rows. Download CSV for the full report.', 'vms'), $max_rows)) . '</p>';
     echo '<table class="widefat striped" style="margin-top:8px;">';
     echo '<thead><tr>';
@@ -2126,12 +2129,14 @@ function vms_render_settings_page_content()
       echo '<div class="vms-settings-map-row vms-settings-map-row-multi">';
       echo '<span class="vms-settings-map-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-map-controls">';
+      /* translators: %s: vendor type label */
       echo '<label class="screen-reader-text" for="vms-cal-other-vendors-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Show other vendors for %s', 'vms'), $label)) . '</label>';
       echo '<select id="vms-cal-other-vendors-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_vendor_show_other_vendors_by_type][' . esc_attr($slug) . ']">';
       echo '<option value="">' . esc_html__('Use default', 'vms') . '</option>';
       echo '<option value="1"' . selected($other_choice, '1', false) . '>' . esc_html__('Show other vendors', 'vms') . '</option>';
       echo '<option value="0"' . selected($other_choice, '0', false) . '>' . esc_html__('Hide other vendors', 'vms') . '</option>';
       echo '</select>';
+      /* translators: %s: vendor type label */
       echo '<label class="screen-reader-text" for="vms-cal-open-slot-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Open slot indicator for %s', 'vms'), $label)) . '</label>';
       echo '<select id="vms-cal-open-slot-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_open_slot_display_by_vendor_type][' . esc_attr($slug) . ']">';
       echo '<option value="">' . esc_html__('Use default', 'vms') . '</option>';
@@ -2176,6 +2181,7 @@ function vms_render_settings_page_content()
       echo '<div class="vms-settings-map-row vms-settings-map-row-link">';
       echo '<span class="vms-settings-map-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-map-controls">';
+      /* translators: %s: vendor type label */
       echo '<label class="screen-reader-text" for="vms-cal-link-target-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Open slot target for %s', 'vms'), $label)) . '</label>';
       echo '<select id="vms-cal-link-target-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_open_slot_link_target_by_type][' . esc_attr($slug) . ']">';
       echo '<option value="">' . esc_html__('Use global', 'vms') . '</option>';
@@ -2183,6 +2189,7 @@ function vms_render_settings_page_content()
       echo '<option value="vendor_registration"' . selected($target_choice, 'vendor_registration', false) . '>' . esc_html__('Vendor registration', 'vms') . '</option>';
       echo '<option value="custom"' . selected($target_choice, 'custom', false) . '>' . esc_html__('Custom URL', 'vms') . '</option>';
       echo '</select>';
+      /* translators: %s: vendor type label */
       echo '<label class="screen-reader-text" for="vms-cal-link-custom-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Custom URL for %s', 'vms'), $label)) . '</label>';
       echo '<input id="vms-cal-link-custom-' . esc_attr($slug) . '" type="url" class="regular-text vms-settings-map-url" name="vms_settings[calendar_open_slot_link_custom_url_by_type][' . esc_attr($slug) . ']" value="' . esc_attr($custom_choice) . '" placeholder="https://example.com/apply" />';
       echo '</span>';
@@ -2249,6 +2256,7 @@ function vms_render_settings_page_content()
       echo '<div class="vms-settings-map-row">';
       echo '<span class="vms-settings-map-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-map-controls">';
+      /* translators: %s: vendor type label */
       echo '<label class="screen-reader-text" for="vms-cal-public-vendors-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Public vendor visibility for %s', 'vms'), $label)) . '</label>';
       echo '<select id="vms-cal-public-vendors-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_public_show_vendors_by_type][' . esc_attr($slug) . ']">';
       echo '<option value="">' . esc_html__('Use default', 'vms') . '</option>';
