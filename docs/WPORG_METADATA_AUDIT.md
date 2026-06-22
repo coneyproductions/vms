@@ -1,18 +1,18 @@
 # WordPress.org Metadata Audit
 
-Date: 2026-06-21
+Date: 2026-06-22
 
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-06A`: `303abdb4f0ea2d5092e60089bdc2614164a604f4` (`303abdb`)
+- HEAD at start of `WPORG-06B`: `9bf889f7b08e58b955347ab46bbb6081905dad6d` (`9bf889f`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-06A` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-06B` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 06A extracted-package rerun no longer emitted the standing domain-path warning while the `load_plugin_textdomain()` warning still persisted and the metadata/package contents remained unchanged. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 06B extracted-package rerun reintroduced the previously observed `plugin_header_nonexistent_domain_path` warning while the standing `load_plugin_textdomain()` warning still persisted and the metadata/package contents remained unchanged. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -228,3 +228,10 @@ Scope note:
   - the selected file `includes/admin/settings-page.php` reduced from `48` findings to `39` while clearing all `9` of its `OutputNotEscaped` findings,
   - the extracted-package rerun no longer emitted the previously standing `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, and left the standing `load_plugin_textdomain()` warning unchanged,
   - normalized packaged findings were saved in `test-results/wporg-06a-plugin-check.raw.txt` and promoted into `docs/plugin-check-1.0.0-raw.txt`.
+- `WPORG-06B` adds:
+  - current rebuilt RC artifact `dist/wporg-06b/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `8ea9fd47c875f2beac29011c811eda79112d02b03525e79bf60eda720aed6359`,
+  - packaged Plugin Check reduction from `3082` to `3079` findings after the second escaping/output hardening batch,
+  - the selected file `includes/admin/vendor-list-ui.php` reduced from `5` findings to `1` while clearing all `4` of its `OutputNotEscaped` findings,
+  - the extracted-package rerun reintroduced the previously observed `plugin_header_nonexistent_domain_path` warning outside the selected file scope, left `includes/helpers/checkin-close.php` steady at one warning, left the standing `load_plugin_textdomain()` warning unchanged, and introduced no previously unseen Plugin Check code categories,
+  - normalized packaged findings were saved in `test-results/wporg-06b-plugin-check.raw.txt` and promoted into `docs/plugin-check-1.0.0-raw.txt`.

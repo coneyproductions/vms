@@ -70,6 +70,17 @@ function vms_admin_tax_settings_get_provider(): string
     return $provider;
 }
 
+function vms_admin_vendor_list_pill_allowed_html(): array
+{
+    return array(
+        'span' => array(
+            'class' => true,
+            'title' => true,
+            'aria-hidden' => true,
+        ),
+    );
+}
+
 function vms_admin_vendor_list_query_arg(string $key): string
 {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only vendor list filters only affect admin list display state.
@@ -393,9 +404,15 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
                     ? '<span class="vms-pill vms-pill-ok" title="Tax profile marked complete"><span class="dashicons dashicons-yes"></span> Complete</span>'
                     : '<span class="vms-pill vms-pill-warn" title="Tax profile incomplete"><span class="dashicons dashicons-clock"></span> Incomplete</span>';
 
-                $wrap_title = $missing_title !== '' ? ' title="' . esc_attr($missing_title) . '"' : '';
-
-                echo '<div class="vms-vcol-wrap"' . $wrap_title . '>' . $w9_pill . $mode_pill . $status_pill . '</div>';
+                echo '<div class="vms-vcol-wrap"';
+                if ($missing_title !== '') {
+                    echo ' title="' . esc_attr($missing_title) . '"';
+                }
+                echo '>';
+                echo wp_kses($w9_pill, vms_admin_vendor_list_pill_allowed_html());
+                echo wp_kses($mode_pill, vms_admin_vendor_list_pill_allowed_html());
+                echo wp_kses($status_pill, vms_admin_vendor_list_pill_allowed_html());
+                echo '</div>';
                 break;
             }
     }
