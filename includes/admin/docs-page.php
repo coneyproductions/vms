@@ -3,6 +3,16 @@ if (!defined('ABSPATH')) { exit; }
 
 add_action('admin_menu', 'vms_docs_admin_menu');
 
+function vms_docs_query_arg($key) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only docs routing only changes admin display state.
+    if (!isset($_GET[$key])) {
+        return '';
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only docs routing is unslashed here and sanitized or allowlisted by the caller.
+    return (string) wp_unslash($_GET[$key]);
+}
+
 function vms_docs_admin_menu() {
     // Parent slug depends on how you registered your VMS menu.
     // If your VMS top-level menu slug is different, change 'vms' below to match.
@@ -25,8 +35,11 @@ function vms_docs_admin_page_render() {
 
     $index = vms_docs_index();
 
-    $active_module = isset($_GET['mod']) ? sanitize_key($_GET['mod']) : 'vms';
-    $active_slug   = isset($_GET['doc']) ? sanitize_title($_GET['doc']) : '';
+    $active_module = sanitize_key(vms_docs_query_arg('mod'));
+    if ($active_module === '') {
+        $active_module = 'vms';
+    }
+    $active_slug = sanitize_title(vms_docs_query_arg('doc'));
 
     // Pick first available module if requested one is missing.
     if (empty($index[$active_module])) {

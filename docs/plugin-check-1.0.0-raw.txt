@@ -2390,12 +2390,7 @@ line	column	type	code	message	docs
 
 FILE: includes/admin/docs-page.php
 line	column	type	code	message	docs
-28	28	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-28	57	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-29	28	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-29	59	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-29	59	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;doc&#039;] not unslashed before sanitization. Use wp_unslash() or similar
-102	14	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_docs_render_markdown'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+115	14	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_docs_render_markdown'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
 
 FILE: includes/admin/vendor-user-link.php
 line	column	type	code	message	docs
