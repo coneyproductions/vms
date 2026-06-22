@@ -9,6 +9,34 @@ if (!function_exists('vms_event_profitability_admin_url')) {
 	}
 }
 
+if (!function_exists('vms_event_profitability_query_arg')) {
+	function vms_event_profitability_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only report filters only change admin display state.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only report filters are unslashed here and sanitized or allowlisted by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
+if (!function_exists('vms_event_profitability_selected_filters')) {
+	function vms_event_profitability_selected_filters(): array
+	{
+		$view = sanitize_key(vms_event_profitability_query_arg('profit_view'));
+		if (!in_array($view, array('all', 'future', 'past'), true)) {
+			$view = 'all';
+		}
+
+		return array(
+			'view' => $view,
+			'search' => sanitize_text_field(vms_event_profitability_query_arg('s')),
+		);
+	}
+}
+
 add_action('admin_menu', 'vms_event_profitability_admin_menu', 46);
 function vms_event_profitability_admin_menu(): void
 {
@@ -25,7 +53,7 @@ function vms_event_profitability_admin_menu(): void
 add_action('admin_enqueue_scripts', 'vms_event_profitability_enqueue_assets');
 function vms_event_profitability_enqueue_assets(string $hook): void
 {
-	$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+	$page = sanitize_key(vms_event_profitability_query_arg('page'));
 	if ($page !== 'vms-event-profitability') {
 		return;
 	}
@@ -355,8 +383,9 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 			return;
 		}
 
-		$view = isset($_GET['profit_view']) ? sanitize_key((string) $_GET['profit_view']) : 'all';
-		$search = isset($_GET['s']) ? sanitize_text_field((string) wp_unslash($_GET['s'])) : '';
+		$filters = vms_event_profitability_selected_filters();
+		$view = (string) ($filters['view'] ?? 'all');
+		$search = (string) ($filters['search'] ?? '');
 		$data = vms_event_profitability_get_rows($view, $search);
 		$rows = (array) ($data['rows'] ?? array());
 		$summary = (array) ($data['summary'] ?? array());

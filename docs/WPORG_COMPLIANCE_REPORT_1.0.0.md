@@ -5,9 +5,9 @@ Date: 2026-06-21
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-05B`: `59f1357fa18c1f375b7d7f1dec21cf0615443728` (`59f1357`)
+- HEAD at start of `WPORG-05C`: `406f76168386ab2b758b212b1bf0781eb75cfcb2` (`406f761`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- `WPORG-05A` checkpoint state at the start of this task: committed and pushed
+- `WPORG-05B` checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -16,10 +16,10 @@ Date: 2026-06-21
 - WordPress runtime evidence:
   - `6.8` disposable lifecycle matrix from `WPORG-02`
   - `7.0` disposable lifecycle matrix from `WPORG-02`
-  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, and `WPORG-05A`
+  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, `WPORG-05A`, `WPORG-05B`, and `WPORG-05C`
 - PHP runtime evidence:
   - `8.5.3` from `WPORG-02`
-  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, `WPORG-05A`, and `WPORG-05B`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, `WPORG-05A`, `WPORG-05B`, and `WPORG-05C`
 - MySQL: `8.0.35`
 - WP-CLI: `2.12.0`
 - Dependency versions used in lifecycle and smoke work:
@@ -51,8 +51,8 @@ Date: 2026-06-21
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-05b/vms-1.0.0-public-release.zip`
-- SHA-256: `ccbb20fe811dd86e0f92c88c0ed6acf8ded6730b33e09e05074f19c29ddf2e0d`
+- Artifact: `dist/wporg-05c/vms-1.0.0-public-release.zip`
+- SHA-256: `e2b6279b72adf456d5a15c5ed4f6d8dac4051380a09df027d483b7c1f7164c62`
 - Package integrity: PASS
 
 ## Builder Status
@@ -172,6 +172,9 @@ Commands executed with the Local PHP `8.3.30` binary:
 - `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05b --force`
   - PASS
   - current artifact SHA-256: `ccbb20fe811dd86e0f92c88c0ed6acf8ded6730b33e09e05074f19c29ddf2e0d`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05c --force`
+  - PASS
+  - current artifact SHA-256: `e2b6279b72adf456d5a15c5ed4f6d8dac4051380a09df027d483b7c1f7164c62`
 
 ## Readme Validator
 
@@ -190,9 +193,9 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3108` total findings
+- `3103` total findings
 - `922` errors
-- `2186` warnings
+- `2181` warnings
 
 Comparison:
 
@@ -224,11 +227,12 @@ Comparison:
 - `WPORG-04Y` packaged-plugin final: `3147` total / `922` errors / `2225` warnings
 - `WPORG-05A` packaged-plugin final: `3124` total / `922` errors / `2202` warnings
 - `WPORG-05B` packaged-plugin final: `3108` total / `922` errors / `2186` warnings
+- `WPORG-05C` packaged-plugin final: `3103` total / `922` errors / `2181` warnings
 
 Dominant remaining codes:
 
 - `WordPress.WP.I18n.MissingTranslatorsComment`: `552`
-- `WordPress.Security.NonceVerification.Recommended`: `569`
+- `WordPress.Security.NonceVerification.Recommended`: `563`
 - `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `250`
 - `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `228`
 - `WordPress.Security.EscapeOutput.OutputNotEscaped`: `161`
@@ -240,8 +244,8 @@ Dominant remaining codes:
 
 High-level category counts:
 
-- nonce and input handling: `1160`
-- database and SQL safety: `1100`
+- nonce and input handling: `1154`
+- database and SQL safety: `1101`
 - i18n placeholder comments / ordering: `568`
 - escaping and output safety: `161`
 - date/time API usage: `27`
@@ -249,10 +253,10 @@ High-level category counts:
 
 Packaged rerun note:
 
-- No previously unseen Plugin Check code categories appeared in `WPORG-05B`.
-- The 05B candidate scan covered eight nonce/input-heavy read-only or mixed-read/admin surfaces before selecting the highest-yield isolated read-only list-filter file.
-- The selected `includes/admin/vendor-list-ui.php` batch reduced the file from `21` findings (`4` errors / `17` warnings) to `5` (`4` errors / `1` warning) by centralizing raw read-only admin list filters behind one helper and explicit allowlists while preserving filter semantics and selected-option behavior.
-- The non-target rerun state shifted outside `includes/admin/vendor-list-ui.php`: `plugin_header_nonexistent_domain_path`: `0` -> `1`, `includes/helpers/checkin-close.php`: `1` -> `0`, and `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound` remained `1` -> `1`.
+- No previously unseen Plugin Check code categories appeared in `WPORG-05C`.
+- The 05C candidate scan covered eight read-only or mixed-read admin surfaces before selecting the lowest-risk isolated report screen.
+- The selected `includes/admin/event-profitability-report.php` batch reduced the file from `7` findings (`1` errors / `6` warnings) to `1` (`1` errors / `0` warnings) by centralizing raw read-only report filters behind one helper and an explicit allowlist while preserving defaults, search behavior, and report semantics.
+- The non-target rerun state shifted outside `includes/admin/event-profitability-report.php`: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `includes/helpers/checkin-close.php`: `0` -> `1`, and `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound` remained `1` -> `1`.
 
 Fixed across this release-prep sequence:
 
@@ -284,10 +288,11 @@ Fixed across this release-prep sequence:
 - `includes/core/vendor-document-alerts.php`: `8` -> `0`, with `8` -> `0` errors
 - `includes/admin/cancelled-event-cost-review.php`: `3` -> `0`, with `3` -> `0` errors
 - `includes/admin/vendor-list-ui.php`: `21` -> `5`, with `17` -> `1` warnings and `4` -> `4` errors
-- extracted-package rerun-only steady state outside selected file scope: `plugin_header_nonexistent_domain_path`: `0` -> `1`, `includes/helpers/checkin-close.php`: `1` -> `0`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1` in `WPORG-05B`
+- `includes/admin/event-profitability-report.php`: `7` -> `1`, with `6` -> `0` warnings and `1` -> `1` errors
+- extracted-package rerun-only steady state outside selected file scope: `plugin_header_nonexistent_domain_path`: `1` -> `1`, `includes/helpers/checkin-close.php`: `0` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1` in `WPORG-05C`
 - remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
-- packaged nonce/input blocker surface: `1517` -> `1160`
+- packaged nonce/input blocker surface: `1517` -> `1154`
 - packaged i18n placeholder/comment surface: `792` -> `568`
 - packaged output-escaping surface: `317` -> `161`
 - packaged date/time surface: `86` -> `27`
@@ -309,9 +314,9 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: nonce/input | `1160` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | This pass stayed deliberately outside mutation paths, so Event Plans, portal save, and admissions request flows still need dedicated regression coverage before widening request hardening. | Partially |
+| Plugin Check: nonce/input | `1154` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | This pass stayed deliberately outside mutation paths, so Event Plans, portal save, and admissions request flows still need dedicated regression coverage before widening request hardening. | Partially |
 | Plugin Check: escaping | `161` remaining `EscapeOutput` findings | BLOCKER | Shift the next render-surface audit toward the Staff Portal, shared admin shell boundaries, and the remaining public output sites. | Partially |
-| Plugin Check: SQL safety | `1100` remaining DB/SQL findings, including `155` unescaped DB-parameter reports, `146` interpolated SQL reports, and `72` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings. | Partially |
+| Plugin Check: SQL safety | `1101` remaining DB/SQL findings, including `155` unescaped DB-parameter reports, `146` interpolated SQL reports, and `72` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings. | Partially |
 
 ## Should Fix Before Submission
 
@@ -347,9 +352,9 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- Post-`WPORG-05B` phased follow-up
+- Post-`WPORG-05C` phased follow-up
 - Scope:
-  - clear the remaining low-risk read-only admin surfaces in `includes/admin/event-profitability-report.php`, `includes/admin-ui/context.php`, and `includes/admin/docs-page.php` before widening into mutation-coupled admin screens such as `status-notices/admin-ui.php`, `vendor-command-center.php`, `event-command-center.php`, and `schedule.php`
+  - clear the remaining low-risk read-only admin surfaces in `includes/admin-ui/context.php` and `includes/admin/docs-page.php` before widening into mutation-coupled admin screens such as `status-notices/admin-ui.php`, `vendor-command-center.php`, `event-command-center.php`, and `schedule.php`
   - follow with a DB/SQL phase that prioritizes `PluginCheck.Security.DirectDB.UnescapedDBParameter`, `PreparedSQL.NotPrepared`, and interpolated SQL issues in admissions, staffing, staff-task, and queue/store helpers before generic direct-query/no-caching warnings
   - keep a separate i18n remainder phase for low-yield placeholder-comment leftovers such as `includes/admin/settings/class-vms-settings-notifications.php`, `includes/public/event-details.php`, and `includes/admin/staff-certifications.php` after the security-heavy phases move forward
   - reserve an escaping remainder phase for shared render boundaries including `includes/admin-ui/shell.php`, Staff Portal surfaces, vendor-guest output, and other callback-driven HTML paths
