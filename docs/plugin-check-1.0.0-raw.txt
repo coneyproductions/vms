@@ -2619,29 +2619,11 @@ line	column	type	code	message	docs
 
 FILE: includes/admin/settings-page.php
 line	column	type	code	message	docs
-66	48	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-66	48	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET['_wpnonce'] not unslashed before sanitization. Use wp_unslash() or similar
-66	48	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_GET['_wpnonce']
 155	9	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
 271	3	WARNING	WordPress.PHP.DevelopmentFunctions.error_log_error_log	error_log() found. Debug code should not normally be used in production.
 326	9	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.
-508	51	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-508	51	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST['_wpnonce'] not unslashed before sanitization. Use wp_unslash() or similar
-508	51	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST['_wpnonce']
-524	51	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-524	51	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST['_wpnonce'] not unslashed before sanitization. Use wp_unslash() or similar
-524	51	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST['_wpnonce']
-542	51	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-542	51	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST['_wpnonce'] not unslashed before sanitization. Use wp_unslash() or similar
-542	51	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST['_wpnonce']
-552	51	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-552	51	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST['_wpnonce'] not unslashed before sanitization. Use wp_unslash() or similar
-552	51	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST['_wpnonce']
 569	3	WARNING	Squiz.PHP.DiscouragedFunctions.Discouraged	The use of function set_time_limit() is discouraged
 595	2	ERROR	WordPress.WP.AlternativeFunctions.file_system_operations_fclose	File operations should use WP_Filesystem methods instead of direct PHP filesystem calls. Found: fclose().
-603	51	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
-603	51	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_REQUEST['_wpnonce'] not unslashed before sanitization. Use wp_unslash() or similar
-603	51	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_REQUEST['_wpnonce']
 1665	13	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 1665	46	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.
 1858	13	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.

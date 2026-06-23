@@ -4,24 +4,54 @@ Date: 2026-06-22
 
 ## Scope
 
-- Scan target: extracted packaged directory from `dist/wporg-11a/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree
-- Artifact SHA-256: `f9abd751234a27cd981b74c00bfd3fc33dc2d2cb24c519e682ed9c0c6c18c875`
+- Scan target: extracted packaged directory from `dist/wporg-12b/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree
+- Artifact SHA-256: `f3869eb24d5d9cb0c46ded0bbfd41c66e7174d14cf370b6b49c5ebf3e2aa4946`
 - Raw output: `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
 
 ## Current Result
 
-- `3019` total findings
+- `3001` total findings
 - `865` errors
-- `2154` warnings
+- `2136` warnings
 
-Comparison to the prior packaged RC from `WPORG-10A`:
+Comparison to the prior packaged RC from `WPORG-11A`:
 
-- `3029` -> `3019` total (`-10`)
-- `867` -> `865` errors (`-2`)
-- `2162` -> `2154` warnings (`-8`)
+- `3019` -> `3001` total (`-18`)
+- `865` -> `865` errors (`0`)
+- `2154` -> `2136` warnings (`-18`)
 
-## WPORG-12A Batch
+## WPORG-12B Batch
+
+- 12B selected mutation slice
+  - applied the first bounded admin-only nonce/input mutation-flow hardening batch in `includes/admin/settings-page.php`
+  - kept the scope inside the existing default-venue action plus the ticketing stock preview, commit, clear, CSV, and compatibility handlers only
+  - retained the existing `manage_options` and `wp_verify_nonce()` checks and limited the code change to unslash/sanitize/allowlist normalization of `venue_id`, `_wpnonce`, and `mode`
+  - left the read-only settings-page notice query flags intentionally deferred
+- current grouped findings after `WPORG-12B`
+  - nonce/input: `1125`
+  - DB/SQL: `1077`
+  - escaping/output: `145`
+  - i18n: `539`
+  - date/time: `25`
+  - development logging: `41`
+- current nonce/input concentration after `WPORG-12B`
+  - `89` files still emit nonce/input findings in the packaged baseline
+  - the current top twenty files now account for `732 / 1125` remaining nonce/input findings
+  - `includes/admin/settings-page.php` dropped out of the top twenty after the selected hardening batch
+- selected-file outcome
+  - `includes/admin/settings-page.php`: `29/1/28` -> `11/1/10`
+  - nonce/input subset: `24` -> `6`
+  - removed categories in the selected file: `WordPress.Security.ValidatedSanitizedInput.MissingUnslash x6` and `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized x6`
+  - remaining nonce/input findings in the selected file: `WordPress.Security.NonceVerification.Recommended x6` on read-only notice query flags at lines `1665`, `1858`, `1866`, `2383`, and `2444`
+  - no focused admin-settings regression exists in `tests/`; manual admin QA remains the gate for this batch
+- current follow-up recommendation
+  - next recommended mutation-flow batch: `includes/modules/status-notices/admin-ui.php`
+  - second follow-up candidate: `includes/admin/ticket-integrity-page.php`
+  - third follow-up candidate: `includes/admin/vendor-command-center.php`
+  - do not widen into ticketing, portal/public, upload, admissions-claim, or Event Plans/runtime flows until stronger automated coverage or manual QA plans exist
+
+## WPORG-12A Planning Baseline
 
 - 12A planning-only scope
   - reviewed the packaged `WPORG-11A` nonce/input baseline without editing runtime PHP, tests, or public-release artifacts
@@ -461,7 +491,7 @@ Net effect of the selected batch:
 
 | Category | Current count | Highest-density files |
 | --- | ---: | --- |
-| Nonce and input handling | `1143` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` |
+| Nonce and input handling | `1125` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` |
 | Database and SQL safety | `1077` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` |
 | Escaping and output safety | `145` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` |
 | I18n placeholder comments and ordering | `539` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` |
@@ -470,9 +500,10 @@ Net effect of the selected batch:
 
 ## Next Recommended Phase
 
-- Post-`WPORG-11A` phased follow-up
+- Post-`WPORG-12B` phased follow-up
 - Scope:
-  - continue one more isolated DB/SQL reporting pass only if the next candidate is another read-only admin/report helper with stable query intent; otherwise shift to nonce/input mutation-flow planning
+  - continue the bounded admin-only nonce/input sequence with `includes/modules/status-notices/admin-ui.php`, then `includes/admin/ticket-integrity-page.php`
+  - keep DB/SQL paused unless a new isolated read-only admin/report helper appears that is materially safer than the next admin-only mutation batch
   - pause further logging cleanup unless another equivalently isolated admin-only dev-trace or debug-only slice appears; the remaining higher-density logging files are public submissions, REST mutations, cron generators, runtime guards, notification/ticketing diagnostics, taxonomy repair, or excluded Event Plans work
   - keep the date/time phase paused after `WPORG-09A`; the remaining date/time files are scheduling, ticket-window, notification, payables, portal-stamping, CLI, Event Plans, or shared runtime helpers
   - keep targeted i18n paused unless another equivalently isolated admin-only translator-comment slice is identified; the highest-density remaining i18n files are Event Plans, checkout/ticketing, upload/verification, portal, email, or save-flow coupled

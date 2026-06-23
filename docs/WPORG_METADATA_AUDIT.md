@@ -5,14 +5,14 @@ Date: 2026-06-22
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-11A`: `d4a0339b44703717ede6fc363101269e94fcf6cd` (`d4a0339`)
+- HEAD at start of `WPORG-12B`: `64e43d4d32f93d4e8b503988455f9edd7caaaad2` (`64e43d4`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-11A` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-12B` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 11A normalized extracted-package rerun continued to associate the standing `plugin_header_nonexistent_domain_path` and `load_plugin_textdomain()` warnings with `vendor-management-system.php` while leaving metadata/package contents intact. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 12B normalized extracted-package rerun continued to associate the standing `plugin_header_nonexistent_domain_path` and `load_plugin_textdomain()` warnings with `vendor-management-system.php` while leaving metadata/package contents intact. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -291,3 +291,15 @@ Scope note:
   - the selected file `includes/modules/admissions/pass-claims.php` reduced from `165` findings to `155` while reducing its DB/SQL subset from `125` to `115`,
   - the normalized extracted-package rerun introduced no previously unseen Plugin Check code categories and kept the standing metadata warnings associated with `vendor-management-system.php`,
   - normalized packaged findings were saved in `test-results/wporg-11a-plugin-check.raw.txt` and `test-results/wporg-11a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`.
+- `WPORG-12A` adds:
+  - docs-only nonce/input mutation-flow roadmap updates across the WP.org tracking docs,
+  - no rebuilt artifact because the selected changes were excluded from the public ZIP,
+  - no packaged Plugin Check rerun because the packaged artifact did not change.
+- `WPORG-12B` adds:
+  - current rebuilt RC artifact `dist/wporg-12b/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `f3869eb24d5d9cb0c46ded0bbfd41c66e7174d14cf370b6b49c5ebf3e2aa4946`,
+  - packaged Plugin Check reduction from `3019` to `3001` findings after the first bounded settings-page nonce/input mutation batch,
+  - the selected file `includes/admin/settings-page.php` reduced from `29` findings to `11` while reducing its nonce/input subset from `24` to `6`,
+  - the six remaining nonce/input findings in `includes/admin/settings-page.php` are read-only `WordPress.Security.NonceVerification.Recommended` notice-query flags intentionally deferred from the mutation-handler batch,
+  - the normalized extracted-package rerun introduced no previously unseen Plugin Check code categories and kept the standing metadata warnings associated with `vendor-management-system.php`,
+  - the normalized packaged raw findings were promoted into `docs/plugin-check-1.0.0-raw.txt`.

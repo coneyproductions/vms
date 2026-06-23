@@ -58,12 +58,12 @@ function vms_handle_set_default_venue(): void
     wp_die('Insufficient permissions.');
   }
 
-  $venue_id = isset($_GET['venue_id']) ? absint($_GET['venue_id']) : 0;
+  $venue_id = isset($_GET['venue_id']) ? absint(wp_unslash($_GET['venue_id'])) : 0;
   if ($venue_id <= 0) {
     wp_die('Missing venue_id.');
   }
 
-  $nonce = isset($_GET['_wpnonce']) ? (string) $_GET['_wpnonce'] : '';
+  $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
   if (!wp_verify_nonce($nonce, 'vms_set_default_venue_' . $venue_id)) {
     wp_die('Invalid nonce.');
   }
@@ -505,7 +505,7 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 function vms_handle_ticketing_stock_preview(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
-	$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
 	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_preview')) wp_die('Invalid nonce.');
 
 	$rep = vms_ticketing_stock_reconcile_scan(false);
@@ -521,7 +521,7 @@ function vms_handle_ticketing_stock_preview(): void
 function vms_handle_ticketing_stock_commit(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
-	$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
 	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_commit')) wp_die('Invalid nonce.');
 
 	// Always re-scan right before applying (orders may have changed since preview).
@@ -539,7 +539,7 @@ function vms_handle_ticketing_stock_commit(): void
 function vms_handle_ticketing_stock_clear_preview(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
-	$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
 	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_clear_preview')) wp_die('Invalid nonce.');
 	delete_transient(vms_ticketing_stock_preview_transient_key(get_current_user_id()));
 	wp_safe_redirect(add_query_arg(array('page' => 'vms-settings'), admin_url('admin.php')));
@@ -549,10 +549,10 @@ function vms_handle_ticketing_stock_clear_preview(): void
 function vms_handle_ticketing_stock_csv(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
-	$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
 	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_csv')) wp_die('Invalid nonce.');
 
-	$mode = isset($_GET['mode']) ? sanitize_key((string) $_GET['mode']) : 'preview';
+	$mode = isset($_GET['mode']) ? sanitize_key(wp_unslash($_GET['mode'])) : 'preview';
 	$rep = null;
 	if ($mode === 'commit') {
 		$rep = get_transient('vms_ticketing_stock_reconcile_last');
@@ -600,7 +600,7 @@ function vms_handle_ticketing_stock_csv(): void
 function vms_handle_reconcile_ticketing_stock(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
-	$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
 	if (!$nonce || !wp_verify_nonce($nonce, 'vms_reconcile_ticketing_stock')) wp_die('Invalid nonce.');
 
 	$rep = vms_ticketing_stock_reconcile_scan(true);
