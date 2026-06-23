@@ -37,7 +37,7 @@ if (!function_exists('vms_social_admin_current_tab')) {
 	function vms_social_admin_current_tab(): string
 	{
 		$tabs = vms_social_admin_tabs();
-		$tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'overview';
+		$tab = sanitize_key(wp_unslash((string) ($_GET['tab'] ?? 'overview')));
 		return isset($tabs[$tab]) ? $tab : 'overview';
 	}
 }
@@ -72,8 +72,8 @@ if (!function_exists('vms_social_venue_choices')) {
 if (!function_exists('vms_social_enqueue_admin_assets')) {
 	function vms_social_enqueue_admin_assets(string $hook_suffix = ''): void
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
-		$post_type = isset($_GET['post_type']) ? sanitize_key((string) $_GET['post_type']) : '';
+		$page = sanitize_key(wp_unslash((string) ($_GET['page'] ?? '')));
+		$post_type = sanitize_key(wp_unslash((string) ($_GET['post_type'] ?? '')));
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 		if (is_object($screen) && isset($screen->post_type) && $post_type === '') {
 			$post_type = sanitize_key((string) $screen->post_type);
@@ -144,11 +144,11 @@ if (!function_exists('vms_social_redirect_with_notice')) {
 if (!function_exists('vms_social_render_notices')) {
 	function vms_social_render_notices(): void
 	{
-		$notice = isset($_GET['vms_social_notice']) ? sanitize_text_field(wp_unslash((string) $_GET['vms_social_notice'])) : '';
+		$notice = sanitize_text_field(wp_unslash((string) ($_GET['vms_social_notice'] ?? '')));
 		if ($notice === '') {
 			return;
 		}
-		$type = isset($_GET['vms_social_notice_type']) ? sanitize_key((string) $_GET['vms_social_notice_type']) : 'success';
+		$type = sanitize_key(wp_unslash((string) ($_GET['vms_social_notice_type'] ?? 'success')));
 		$class = in_array($type, array('error', 'warning', 'success', 'info'), true) ? $type : 'success';
 		echo '<div class="notice notice-' . esc_attr($class) . ' is-dismissible"><p>' . esc_html($notice) . '</p></div>';
 	}
@@ -458,8 +458,8 @@ if (!function_exists('vms_social_render_templates_tab')) {
 if (!function_exists('vms_social_render_queue_tab')) {
 	function vms_social_render_queue_tab(): void
 	{
-		$status = isset($_GET['status']) ? sanitize_key((string) $_GET['status']) : '';
-		$platform = isset($_GET['platform']) ? sanitize_key((string) $_GET['platform']) : '';
+		$status = sanitize_key(wp_unslash((string) ($_GET['status'] ?? '')));
+		$platform = sanitize_key(wp_unslash((string) ($_GET['platform'] ?? '')));
 		$rows = vms_social_queue_list(array('status' => $status, 'platform' => $platform), 200);
 
 		echo '<h2>' . esc_html__('Queue', 'vms') . '</h2>';
@@ -516,7 +516,7 @@ if (!function_exists('vms_social_render_queue_tab')) {
 if (!function_exists('vms_social_render_logs_tab')) {
 	function vms_social_render_logs_tab(): void
 	{
-		$search = isset($_GET['log_search']) ? sanitize_text_field((string) $_GET['log_search']) : '';
+		$search = sanitize_text_field(wp_unslash((string) ($_GET['log_search'] ?? '')));
 		$rows = vms_social_audit_recent(200, $search);
 		echo '<h2>' . esc_html__('Audit Logs', 'vms') . '</h2>';
 		echo '<form method="get" action="' . esc_url(admin_url('admin.php')) . '">';
@@ -556,7 +556,7 @@ if (!function_exists('vms_social_handle_save_settings')) {
 			'enabled' => isset($_POST['enabled']) ? 1 : 0,
 			'kill_switch' => isset($_POST['kill_switch']) ? 1 : 0,
 			'utm_enabled' => isset($_POST['utm_enabled']) ? 1 : 0,
-			'max_attempts' => isset($_POST['max_attempts']) ? absint($_POST['max_attempts']) : 5,
+			'max_attempts' => absint(wp_unslash((string) ($_POST['max_attempts'] ?? 5))),
 		));
 		vms_social_audit_log('settings_change', $settings, 0, '', get_current_user_id());
 		vms_social_redirect_with_notice('settings', __('Settings saved.', 'vms'));
@@ -570,12 +570,12 @@ if (!function_exists('vms_social_handle_save_account')) {
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_save_account');
 
-		$platform = sanitize_key((string) ($_POST['platform'] ?? ''));
-		$label = sanitize_text_field((string) ($_POST['label'] ?? ''));
+		$platform = sanitize_key(wp_unslash((string) ($_POST['platform'] ?? '')));
+		$label = sanitize_text_field(wp_unslash((string) ($_POST['label'] ?? '')));
 		$token_json = array();
 		if ($platform === 'webhook') {
-			$token_json['webhook_url'] = esc_url_raw((string) ($_POST['webhook_url'] ?? ''));
-			$token_json['signing_secret'] = sanitize_text_field((string) ($_POST['signing_secret'] ?? ''));
+			$token_json['webhook_url'] = esc_url_raw(wp_unslash((string) ($_POST['webhook_url'] ?? '')));
+			$token_json['signing_secret'] = sanitize_text_field(wp_unslash((string) ($_POST['signing_secret'] ?? '')));
 		}
 
 		$id = vms_social_account_save(array(
@@ -597,7 +597,7 @@ if (!function_exists('vms_social_handle_delete_account')) {
 	{
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_delete_account');
-		$id = absint($_POST['id'] ?? 0);
+		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
 			vms_social_account_delete($id);
 			vms_social_audit_log('disconnect', array('account_id' => $id), 0, '', get_current_user_id());
@@ -613,11 +613,11 @@ if (!function_exists('vms_social_handle_save_venue_map')) {
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_save_venue_map');
 		$id = vms_social_venue_map_save(array(
-			'venue_id' => absint($_POST['venue_id'] ?? 0),
-			'platform' => sanitize_key((string) ($_POST['platform'] ?? '')),
-			'account_id' => absint($_POST['account_id'] ?? 0),
-			'destination_id' => sanitize_text_field((string) ($_POST['destination_id'] ?? '')),
-			'default_template_id' => absint($_POST['default_template_id'] ?? 0),
+			'venue_id' => absint(wp_unslash((string) ($_POST['venue_id'] ?? 0))),
+			'platform' => sanitize_key(wp_unslash((string) ($_POST['platform'] ?? ''))),
+			'account_id' => absint(wp_unslash((string) ($_POST['account_id'] ?? 0))),
+			'destination_id' => sanitize_text_field(wp_unslash((string) ($_POST['destination_id'] ?? ''))),
+			'default_template_id' => absint(wp_unslash((string) ($_POST['default_template_id'] ?? 0))),
 			'is_enabled' => isset($_POST['is_enabled']) ? 1 : 0,
 		));
 		vms_social_audit_log('settings_change', array('venue_map_id' => $id), 0, '', get_current_user_id());
@@ -631,7 +631,7 @@ if (!function_exists('vms_social_handle_delete_venue_map')) {
 	{
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_delete_venue_map');
-		$id = absint($_POST['id'] ?? 0);
+		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
 			vms_social_venue_map_delete($id);
 			vms_social_audit_log('settings_change', array('venue_map_deleted' => $id), 0, '', get_current_user_id());
@@ -648,9 +648,9 @@ if (!function_exists('vms_social_handle_save_template')) {
 		check_admin_referer('vms_social_save_template');
 
 		$id = vms_social_template_save(array(
-			'platform' => sanitize_key((string) ($_POST['platform'] ?? '')),
-			'name' => sanitize_text_field((string) ($_POST['name'] ?? '')),
-			'body' => (string) ($_POST['body'] ?? ''),
+			'platform' => sanitize_key(wp_unslash((string) ($_POST['platform'] ?? ''))),
+			'name' => sanitize_text_field(wp_unslash((string) ($_POST['name'] ?? ''))),
+			'body' => wp_unslash((string) ($_POST['body'] ?? '')),
 			'is_default' => isset($_POST['is_default']) ? 1 : 0,
 			'settings_json' => array(),
 		));
@@ -665,7 +665,7 @@ if (!function_exists('vms_social_handle_delete_template')) {
 	{
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_delete_template');
-		$id = absint($_POST['id'] ?? 0);
+		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
 			vms_social_template_delete($id);
 			vms_social_audit_log('settings_change', array('template_deleted' => $id), 0, '', get_current_user_id());
@@ -680,8 +680,8 @@ if (!function_exists('vms_social_handle_queue_retry')) {
 	{
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_queue_retry');
-		$queue_id = absint($_POST['queue_id'] ?? 0);
-		$event_plan_id = absint($_POST['event_plan_id'] ?? 0);
+		$queue_id = absint(wp_unslash((string) ($_POST['queue_id'] ?? 0)));
+		$event_plan_id = absint(wp_unslash((string) ($_POST['event_plan_id'] ?? 0)));
 		if ($queue_id > 0) {
 			vms_social_queue_retry($queue_id);
 			vms_social_audit_log('retry', array('queue_id' => $queue_id), $queue_id, '', get_current_user_id());
@@ -699,8 +699,8 @@ if (!function_exists('vms_social_handle_queue_cancel')) {
 	{
 		vms_social_require_manage_capability();
 		check_admin_referer('vms_social_queue_cancel');
-		$queue_id = absint($_POST['queue_id'] ?? 0);
-		$event_plan_id = absint($_POST['event_plan_id'] ?? 0);
+		$queue_id = absint(wp_unslash((string) ($_POST['queue_id'] ?? 0)));
+		$event_plan_id = absint(wp_unslash((string) ($_POST['event_plan_id'] ?? 0)));
 		if ($queue_id > 0) {
 			vms_social_queue_cancel($queue_id);
 			vms_social_audit_log('cancel', array('queue_id' => $queue_id), $queue_id, '', get_current_user_id());
