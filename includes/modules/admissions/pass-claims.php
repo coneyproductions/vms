@@ -283,8 +283,24 @@ if (!function_exists('vms_pass_claims_get_sources')) {
 	{
 		global $wpdb;
 		$table = vms_admission_table_pass_sources();
-		$where = $include_inactive ? '1=1' : "status = 'active'";
-		$rows = $wpdb->get_results("SELECT * FROM {$table} WHERE {$where} ORDER BY source_name ASC, id DESC LIMIT 500", ARRAY_A);
+		if ($include_inactive) {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i ORDER BY source_name ASC, id DESC LIMIT 500',
+					$table
+				),
+				ARRAY_A
+			);
+		} else {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE status = %s ORDER BY source_name ASC, id DESC LIMIT 500',
+					$table,
+					'active'
+				),
+				ARRAY_A
+			);
+		}
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -297,7 +313,14 @@ if (!function_exists('vms_pass_claims_get_source_by_id')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_pass_sources();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $source_id), ARRAY_A);
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE id = %d',
+				$table,
+				$source_id
+			),
+			ARRAY_A
+		);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -311,11 +334,13 @@ if (!function_exists('vms_pass_claims_get_batches')) {
 		$limit = max(1, min(500, $limit));
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT b.*, s.source_name
-				 FROM {$table} b
-				 LEFT JOIN {$sources} s ON s.id = b.source_id
+				'SELECT b.*, s.source_name
+				 FROM %i b
+				 LEFT JOIN %i s ON s.id = b.source_id
 				 ORDER BY b.id DESC
-				 LIMIT %d",
+				 LIMIT %d',
+				$table,
+				$sources,
 				$limit
 			),
 			ARRAY_A
@@ -332,7 +357,14 @@ if (!function_exists('vms_pass_claims_get_batch_by_id')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_pass_batches();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $batch_id), ARRAY_A);
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE id = %d',
+				$table,
+				$batch_id
+			),
+			ARRAY_A
+		);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -345,7 +377,14 @@ if (!function_exists('vms_pass_claims_get_token_by_id')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_pass_tokens();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $token_id), ARRAY_A);
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE id = %d',
+				$table,
+				$token_id
+			),
+			ARRAY_A
+		);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -358,27 +397,46 @@ if (!function_exists('vms_pass_claims_get_tokens')) {
 		$batches = vms_admission_table_pass_batches();
 		$claims = vms_admission_table_pass_claims();
 		$entries = vms_admission_table_entries();
-
-		$where = '1=1';
-		$params = array();
-		if ($batch_id > 0) {
-			$where .= ' AND t.batch_id = %d';
-			$params[] = $batch_id;
-		}
-
 		$limit = max(1, min(10000, $limit));
-		$params[] = $limit;
-
-		$sql = "SELECT t.*, b.batch_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
-			FROM {$table} t
-			LEFT JOIN {$batches} b ON b.id = t.batch_id
-			LEFT JOIN {$claims} c ON c.id = t.claim_id
-			LEFT JOIN {$entries} e ON e.id = t.reservation_entry_id
-			WHERE {$where}
-			ORDER BY t.id DESC
-			LIMIT %d";
-
-		$rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
+		if ($batch_id > 0) {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT t.*, b.batch_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
+					 FROM %i t
+					 LEFT JOIN %i b ON b.id = t.batch_id
+					 LEFT JOIN %i c ON c.id = t.claim_id
+					 LEFT JOIN %i e ON e.id = t.reservation_entry_id
+					 WHERE t.batch_id = %d
+					 ORDER BY t.id DESC
+					 LIMIT %d',
+					$table,
+					$batches,
+					$claims,
+					$entries,
+					$batch_id,
+					$limit
+				),
+				ARRAY_A
+			);
+		} else {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT t.*, b.batch_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
+					 FROM %i t
+					 LEFT JOIN %i b ON b.id = t.batch_id
+					 LEFT JOIN %i c ON c.id = t.claim_id
+					 LEFT JOIN %i e ON e.id = t.reservation_entry_id
+					 ORDER BY t.id DESC
+					 LIMIT %d',
+					$table,
+					$batches,
+					$claims,
+					$entries,
+					$limit
+				),
+				ARRAY_A
+			);
+		}
 		return is_array($rows) ? $rows : array();
 	}
 }

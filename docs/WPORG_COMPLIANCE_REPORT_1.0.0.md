@@ -5,9 +5,9 @@ Date: 2026-06-22
 ## Source State
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-10A`: `42b656da62fe944a7f23b2d6341194f3473d7984` (`42b656d`)
+- HEAD at start of `WPORG-11A`: `d4a0339b44703717ede6fc363101269e94fcf6cd` (`d4a0339`)
 - Remote: `origin https://github.com/coneyproductions/vms.git`
-- `WPORG-09A` checkpoint state at the start of this task: committed and pushed
+- `WPORG-10A` checkpoint state at the start of this task: committed and pushed
 - Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
 
 ## Tested Environment
@@ -51,8 +51,8 @@ Date: 2026-06-22
 
 Current rebuilt RC:
 
-- Artifact: `dist/wporg-10a/vms-1.0.0-public-release.zip`
-- SHA-256: `47005213b0869ad2eeda5ddda2ba08fda2f624d4b55aec2b5610978cabf2e81e`
+- Artifact: `dist/wporg-11a/vms-1.0.0-public-release.zip`
+- SHA-256: `f9abd751234a27cd981b74c00bfd3fc33dc2d2cb24c519e682ed9c0c6c18c875`
 - Package integrity: PASS
 
 ## Builder Status
@@ -208,9 +208,9 @@ Raw output:
 
 Current packaged-plugin result:
 
-- `3029` total findings
-- `867` errors
-- `2162` warnings
+- `3019` total findings
+- `865` errors
+- `2154` warnings
 
 Comparison:
 
@@ -254,6 +254,7 @@ Comparison:
 - `WPORG-08B` packaged-plugin final: `3033` total / `869` errors / `2164` warnings
 - `WPORG-09A` packaged-plugin final: `3030` total / `867` errors / `2163` warnings
 - `WPORG-10A` packaged-plugin final: `3029` total / `867` errors / `2162` warnings
+- `WPORG-11A` packaged-plugin final: `3019` total / `865` errors / `2154` warnings
 
 Dominant remaining codes:
 
@@ -262,16 +263,16 @@ Dominant remaining codes:
 - `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `250`
 - `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `227`
 - `WordPress.Security.EscapeOutput.OutputNotEscaped`: `145`
-- `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `294`
-- `WordPress.DB.DirectDatabaseQuery.NoCaching`: `256`
-- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `148`
-- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `143`
-- `WordPress.DB.PreparedSQL.NotPrepared`: `68`
+- `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `296`
+- `WordPress.DB.DirectDatabaseQuery.NoCaching`: `258`
+- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `142`
+- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `136`
+- `WordPress.DB.PreparedSQL.NotPrepared`: `67`
 
 High-level category counts:
 
 - nonce and input handling: `1143`
-- database and SQL safety: `1087`
+- database and SQL safety: `1077`
 - i18n placeholder comments / ordering: `539`
 - escaping and output safety: `145`
 - date/time API usage: `25`
@@ -279,12 +280,11 @@ High-level category counts:
 
 Packaged rerun note:
 
-- No previously unseen Plugin Check code categories appeared in `WPORG-10A`.
-- The 10A candidate scan covered all twenty-two packaged logging-hit files from the packaged `WPORG-09A` baseline before editing; the detailed scan table is recorded in `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`.
-- Existing repo logging abstractions are scoped (`VMS_Addons_Logger`, `vms_notify_insert_log()`, `vms_admission_audit_log()`, `vms_due_append_log()`, `vms_safety_audit_log()`, `vms_square_ticket_mirror_log()`, `vms_event_plan_perf_log()`, `vms_email_followups_log()`) and do not provide a generic Plugin Check-safe replacement for arbitrary `error_log()` calls.
-- The selected `includes/core/plugin.php` batch reduced the file from `10` findings (`0` errors / `10` warnings) to `8` (`0` errors / `8` warnings) while clearing its two gated `VMS_DEBUG_ADMIN_HOOKS` `error_log()` asset traces only.
-- The normalized packaged summary left `includes/helpers/checkin-close.php` and `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound` unchanged outside the selected file scope, while the previously oscillating `plugin_header_nonexistent_domain_path` warning reappeared in this extracted-package rerun.
-- `WPORG-10A` recommends pausing further logging cleanup unless another equally isolated admin-only dev-trace slice appears, and switching back to the safer isolated DB/SQL reporting backlog before nonce/input mutation-flow planning.
+- No previously unseen Plugin Check code categories appeared in `WPORG-11A`.
+- The 11A candidate scan covered the highest-density remaining DB/SQL files from the packaged `WPORG-10A` baseline before editing; the detailed scan table is recorded in `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`.
+- The selected `includes/modules/admissions/pass-claims.php` batch reduced the file from `165` findings (`15` errors / `150` warnings) to `155` (`13` errors / `142` warnings) while reducing its DB/SQL subset from `125` to `115`.
+- The direct-query/no-cache counts increased by two because the formerly interpolated reads are now explicit prepared `$wpdb` calls; `UnescapedDBParameter`, `InterpolatedNotPrepared`, and `NotPrepared` still reduced by `14` combined findings.
+- `WPORG-11A` recommends continuing isolated DB/SQL reporting slices only if another read-only admin/report candidate exists, otherwise preparing nonce/input mutation-flow planning.
 
 Fixed across this release-prep sequence:
 
@@ -323,6 +323,7 @@ Fixed across this release-prep sequence:
 - `includes/admin/settings-page.php`: `39` -> `31`, with `8` `MissingTranslatorsComment` findings -> `0`
 - `includes/admin/settings-page.php`: `31` -> `29`, with `2` remaining `date()` findings -> `0`
 - `includes/core/plugin.php`: `10` -> `8`, with `2` remaining gated admin asset debug traces -> `0`
+- `includes/modules/admissions/pass-claims.php`: `165` -> `155`, with DB/SQL findings `125` -> `115`
 - `includes/admin/vendor-list-columns.php`: `11` -> `8`, with `3` -> `0` errors and `3` `OutputNotEscaped` findings -> `0`
 - `includes/core/goals-forecast.php`: `38` -> `32`, with DB/SQL findings `37` -> `31`
 - `includes/modules/admissions/pass-claims.php`: `173` -> `165`, with DB/SQL findings `133` -> `125`
@@ -332,7 +333,7 @@ Fixed across this release-prep sequence:
 - `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
 - packaged nonce/input blocker surface: `1517` -> `1143`
 - packaged i18n placeholder/comment surface: `792` -> `539`
-- packaged SQL safety surface: `1101` -> `1087`
+- packaged SQL safety surface: `1101` -> `1077`
 - packaged output-escaping surface: `317` -> `145`
 - packaged date/time surface: `86` -> `25`
 
@@ -353,9 +354,9 @@ The `WPORG-02` audit conclusions still hold.
 
 | Check | Finding | Classification | Recommended action | Safe fix applied |
 | --- | --- | --- | --- | --- |
-| Plugin Check: nonce/input | `1143` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-09A` stayed on admin-only display timestamps again, so Event Plans, portal save, admissions, ticketing, and other mutation-backed request flows still need dedicated regression coverage before widening request hardening. | Partially |
+| Plugin Check: nonce/input | `1143` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | `WPORG-05E` closed the last low-risk read-only slice. `WPORG-11A` stayed on DB/SQL read helpers again, so Event Plans, portal save, admissions, ticketing, and other mutation-backed request flows still need dedicated regression coverage before widening request hardening. | Partially |
 | Plugin Check: escaping | `145` remaining `OutputNotEscaped` findings | BLOCKER | Pause the escape-only phase after `WPORG-06C`; the remaining candidates are shared allowed-HTML boundaries, public/portal surfaces, metabox/save flows, vendor-assignment dashboards, or excluded Event Plans slices rather than isolated admin-only display targets. | Partially |
-| Plugin Check: SQL safety | `1087` remaining DB/SQL findings, including `148` unescaped DB-parameter reports, `143` interpolated SQL reports, and `68` `PreparedSQL.NotPrepared` reports | BLOCKER | Prioritize real parameter-safety and preparation issues before generic direct-query/no-caching warnings, but pause the DB/SQL phase whenever the candidate is no longer an isolated admin/reporting slice. | Partially |
+| Plugin Check: SQL safety | `1077` remaining DB/SQL findings, including `142` unescaped DB-parameter reports, `136` interpolated SQL reports, and `67` `PreparedSQL.NotPrepared` reports | BLOCKER | Continue isolated admin/reporting read slices if another low-risk candidate exists; otherwise pause DB/SQL and prepare nonce/input mutation-flow planning with dedicated regression coverage. | Partially |
 
 ## Should Fix Before Submission
 
@@ -392,11 +393,11 @@ The `WPORG-02` audit conclusions still hold.
 
 ## Recommended Next Task
 
-- Post-`WPORG-10A` phased follow-up
+- Post-`WPORG-11A` phased follow-up
 - Scope:
+  - continue one more isolated DB/SQL reporting pass only if the next candidate is another read-only admin/report helper with stable query intent; otherwise shift to nonce/input mutation-flow planning
   - pause further logging cleanup unless another equivalently isolated admin-only dev-trace or debug-only slice appears; the remaining logging files are public submissions, REST mutations, cron generators, runtime guards, notification/ticketing diagnostics, taxonomy repair, or excluded Event Plans work
   - keep the date/time phase paused unless another equivalently isolated admin-only display/report/list/settings slice appears; the remaining higher-density date/time files are scheduling, ticket-window, digest/notification, payables, portal stamp, CLI, Event Plans, or shared runtime helpers
-  - switch back to the safer isolated DB/SQL backlog first; `includes/modules/admissions/pass-claims.php` proved that admin/report helper slices can still reduce blocker counts without widening into runtime-sensitive flows
   - keep targeted i18n paused unless another isolated admin-only translator-comment or placeholder-ordering slice appears
   - keep the escape-only phase paused after `WPORG-06C`; the remaining output-heavy files are shared boundaries, public/portal surfaces, vendor-assignment dashboards, metabox/save flows, or excluded Event Plans slices rather than isolated admin-only display targets
-  - postpone nonce/input widening until new regression coverage makes the mutation-coupled request paths defensible, and prepare that mutation-flow planning after the next isolated DB/SQL pass
+  - postpone nonce/input widening until new regression coverage makes the mutation-coupled request paths defensible, and prepare that mutation-flow planning after the next isolated DB/SQL pass or immediately if no equally safe DB/reporting candidate appears

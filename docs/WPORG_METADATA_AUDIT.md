@@ -5,14 +5,14 @@ Date: 2026-06-22
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-10A`: `42b656da62fe944a7f23b2d6341194f3473d7984` (`42b656d`)
+- HEAD at start of `WPORG-11A`: `d4a0339b44703717ede6fc363101269e94fcf6cd` (`d4a0339`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-10A` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-11A` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 10A normalized extracted-package rerun re-associated the previously oscillating `plugin_header_nonexistent_domain_path` warning to `vendor-management-system.php` again while leaving the standing `load_plugin_textdomain()` warning unchanged and the metadata/package contents intact. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 11A normalized extracted-package rerun continued to associate the standing `plugin_header_nonexistent_domain_path` and `load_plugin_textdomain()` warnings with `vendor-management-system.php` while leaving metadata/package contents intact. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -284,3 +284,10 @@ Scope note:
   - the selected file `includes/core/plugin.php` reduced from `10` findings to `8` while clearing its remaining `2` `WordPress.PHP.DevelopmentFunctions.error_log_error_log` findings by removing the gated `VMS_DEBUG_ADMIN_HOOKS` asset traces only,
   - the normalized extracted-package rerun reintroduced the previously oscillating `plugin_header_nonexistent_domain_path` warning, left `includes/helpers/checkin-close.php` and the standing `load_plugin_textdomain()` warning unchanged, and introduced no previously unseen Plugin Check code categories,
   - normalized packaged findings were saved in `test-results/wporg-10a-plugin-check.raw.txt` and `test-results/wporg-10a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`.
+- `WPORG-11A` adds:
+  - current rebuilt RC artifact `dist/wporg-11a/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `f9abd751234a27cd981b74c00bfd3fc33dc2d2cb24c519e682ed9c0c6c18c875`,
+  - packaged Plugin Check reduction from `3029` to `3019` findings after the isolated pass-claims DB/SQL reporting batch,
+  - the selected file `includes/modules/admissions/pass-claims.php` reduced from `165` findings to `155` while reducing its DB/SQL subset from `125` to `115`,
+  - the normalized extracted-package rerun introduced no previously unseen Plugin Check code categories and kept the standing metadata warnings associated with `vendor-management-system.php`,
+  - normalized packaged findings were saved in `test-results/wporg-11a-plugin-check.raw.txt` and `test-results/wporg-11a-plugin-check.summary.json`, then promoted into `docs/plugin-check-1.0.0-raw.txt`.
