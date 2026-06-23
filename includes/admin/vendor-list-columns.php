@@ -7,6 +7,17 @@ if (!defined('ABSPATH')) exit;
  * plus dropdown filters.
  */
 
+function vms_vendor_list_columns_query_arg(string $key): string
+{
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only vendor admin filter state only changes list display.
+    if (!isset($_GET[$key])) {
+        return '';
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only vendor admin filter state is unslashed here and sanitized by the caller.
+    return (string) wp_unslash($_GET[$key]);
+}
+
 function vms_vendor_list_columns_pill_allowed_html(): array
 {
     return array(
@@ -170,8 +181,8 @@ add_action('restrict_manage_posts', function () {
     global $typenow;
     if ($typenow !== 'vms_vendor') return;
 
-    $w9 = isset($_GET['vms_w9_status']) ? sanitize_text_field(wp_unslash($_GET['vms_w9_status'])) : '';
-    $r1099 = isset($_GET['vms_requires_1099']) ? sanitize_text_field(wp_unslash($_GET['vms_requires_1099'])) : '';
+    $w9 = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_w9_status'));
+    $r1099 = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_requires_1099'));
 
     $w9_opts = [
         ''              => __('All W-9 statuses', 'vms'),
@@ -218,8 +229,8 @@ add_action('pre_get_posts', function ($query) {
 
     $meta_query = (array) $query->get('meta_query');
 
-    if (!empty($_GET['vms_w9_status'])) {
-        $w9 = sanitize_text_field(wp_unslash($_GET['vms_w9_status']));
+    $w9 = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_w9_status'));
+    if ($w9 !== '') {
         $meta_query[] = [
             'key'     => '_vms_w9_status',
             'value'   => $w9,
@@ -227,8 +238,8 @@ add_action('pre_get_posts', function ($query) {
         ];
     }
 
-    if (!empty($_GET['vms_requires_1099'])) {
-        $r = sanitize_text_field(wp_unslash($_GET['vms_requires_1099']));
+    $r = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_requires_1099'));
+    if ($r !== '') {
         $meta_query[] = [
             'key'     => '_vms_requires_1099',
             'value'   => $r,

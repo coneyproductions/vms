@@ -10,19 +10,30 @@ if (!class_exists('VMS_Tours_Admin')) {
 		 */
 		private $service;
 
-		/**
-		 * @var VMS_Tours_Storage
-		 */
-		private $storage;
+			/**
+			 * @var VMS_Tours_Storage
+			 */
+			private $storage;
 
-		public function __construct(VMS_Tours_Service $service, VMS_Tours_Storage $storage)
-		{
-			$this->service = $service;
-			$this->storage = $storage;
-		}
+			public function __construct(VMS_Tours_Service $service, VMS_Tours_Storage $storage)
+			{
+				$this->service = $service;
+				$this->storage = $storage;
+			}
 
-		public function init(): void
-		{
+			private function query_arg(string $key): string
+			{
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tours admin notice flag only changes admin display state.
+				if (!isset($_GET[$key])) {
+					return '';
+				}
+
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only tours admin notice flag is unslashed here and sanitized by the caller.
+				return (string) wp_unslash($_GET[$key]);
+			}
+
+			public function init(): void
+			{
 			add_action('admin_menu', array($this, 'register_menu'), 40);
 			add_action('admin_init', array($this, 'register_settings'));
 			add_action('admin_post_vms_tours_reset_my_state', array($this, 'handle_reset_my_state'));
@@ -200,13 +211,13 @@ if (!class_exists('VMS_Tours_Admin')) {
 			echo '</tbody></table>';
 		}
 
-		public function render_page_content(): void
-		{
-			echo '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">';
+			public function render_page_content(): void
+			{
+				echo '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">';
 
-			if (!empty($_GET['vms_tours_reset_my_state'])) {
-				echo '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice"><p>' . esc_html__('Your tour progress has been reset.', 'vms') . '</p></div>';
-			}
+				if ($this->query_arg('vms_tours_reset_my_state') !== '') {
+					echo '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice"><p>' . esc_html__('Your tour progress has been reset.', 'vms') . '</p></div>';
+				}
 
 			echo '<form method="post" action="options.php" data-vms-tour="guided-tours.global-settings">';
 			settings_fields('vms_tours_settings_group');

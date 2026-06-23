@@ -12,6 +12,19 @@ if (!function_exists('vms_event_plan_import_admin_page_url')) {
 	}
 }
 
+if (!function_exists('vms_event_plan_import_query_arg')) {
+	function vms_event_plan_import_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only import preview state only controls admin display.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only import preview state is unslashed here and sanitized by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
 if (!function_exists('vms_event_plan_import_register_admin_page')) {
 	function vms_event_plan_import_register_admin_page(): void
 	{
@@ -145,7 +158,7 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 			wp_die(esc_html__('Insufficient permissions.', 'vms'));
 		}
 
-		$preview_token = isset($_GET['preview_token']) ? sanitize_key((string) $_GET['preview_token']) : '';
+		$preview_token = sanitize_key(vms_event_plan_import_query_arg('preview_token'));
 		$preview = ($preview_token !== '') ? vms_event_plan_import_get_preview_payload($preview_token) : array();
 		$notice = vms_event_plan_import_pop_notice();
 		$latest_run = array();

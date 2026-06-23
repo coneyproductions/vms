@@ -397,6 +397,7 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 
 		echo '<div class="vms-event-profitability-note-grid">';
 		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Core Profit', 'vms') . '</strong><span>' . esc_html__('Ticket revenue − vendor cost − labor OH', 'vms') . '</span></div>';
+		/* translators: %d: estimated bar profit margin percentage. */
 		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Night Score', 'vms') . '</strong><span>' . esc_html(sprintf(__('Core Profit + estimated bar profit at %d%% margin', 'vms'), $margin_pct)) . '</span></div>';
 		echo '</div>';
 

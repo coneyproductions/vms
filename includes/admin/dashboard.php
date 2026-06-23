@@ -5,6 +5,17 @@
  */
 if (!defined('ABSPATH')) exit;
 
+function vms_dashboard_query_arg(string $key): string
+{
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only dashboard page detection only controls admin asset loading.
+  if (!isset($_GET[$key])) {
+    return '';
+  }
+
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only dashboard page detection is unslashed here and sanitized by the caller.
+  return (string) wp_unslash($_GET[$key]);
+}
+
 function vms_dashboard_register_menu()
 {
   add_submenu_page(
@@ -23,7 +34,7 @@ if (!function_exists('vms_render_dashboard_page')) {
 function vms_dashboard_enqueue_assets($hook)
 {
   // Dashboard page is the VMS top-level (page=vms). Some installs may also have page=vms-dashboard.
-  $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+  $page = sanitize_key(vms_dashboard_query_arg('page'));
   if ($page !== 'vms' && $page !== 'vms-dashboard') return;
 
   $plugin_file = dirname(__DIR__, 2) . '/vendor-management-system.php';

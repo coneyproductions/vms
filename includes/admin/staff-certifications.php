@@ -123,6 +123,7 @@ add_action('admin_notices', function (): void {
 
     $url = admin_url('admin.php?page=vms-staff-certifications');
     echo '<div class="notice notice-warning is-dismissible vms-staff-certifications-admin-notice">';
+    /* translators: %d: number of staff certifications awaiting review. */
     echo '<p><strong>' . esc_html(sprintf(_n('%d staff certification needs review.', '%d staff certifications need review.', $count, 'vms'), $count)) . '</strong> ';
     echo '<a href="' . esc_url($url) . '">' . esc_html__('Open review queue', 'vms') . '</a></p>';
     echo '</div>';
