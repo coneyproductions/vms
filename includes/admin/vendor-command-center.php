@@ -125,6 +125,19 @@ if (!function_exists('vms_vendor_command_center_parse_template_scope')) {
     }
 }
 
+if (!function_exists('vms_vendor_command_center_query_arg')) {
+    function vms_vendor_command_center_query_arg(string $key): string
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Vendor Command Center filters and selection only change admin display state.
+        if (!isset($_GET[$key])) {
+            return '';
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Vendor Command Center filters and selection are unslashed here and sanitized or allowlisted by the caller.
+        return (string) wp_unslash($_GET[$key]);
+    }
+}
+
 if (!function_exists('vms_vendor_command_center_normalize_template_entry')) {
     function vms_vendor_command_center_normalize_template_entry($raw): ?array
     {
@@ -1174,11 +1187,11 @@ if (!function_exists('vms_vendor_command_center_build_rows')) {
 if (!function_exists('vms_vendor_command_center_filter_rows')) {
     function vms_vendor_command_center_filter_rows(array $rows): array
     {
-        $search = sanitize_text_field(wp_unslash((string) ($_GET['vms_vendor_q'] ?? '')));
-        $type_filter = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_type'] ?? '')));
-        $account_filter = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_account'] ?? '')));
-        $onboarding_filter = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_onboarding'] ?? '')));
-        $payables_filter = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_payables'] ?? '')));
+        $search = sanitize_text_field(vms_vendor_command_center_query_arg('vms_vendor_q'));
+        $type_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_type'));
+        $account_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_account'));
+        $onboarding_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_onboarding'));
+        $payables_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_payables'));
 
         $filtered = array();
         foreach ($rows as $row) {
@@ -1416,7 +1429,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         $summary = vms_vendor_command_center_summary_counts($all_rows);
         $type_options = vms_vendor_command_center_all_type_options($all_rows);
 
-        $selected_vendor_id = absint(wp_unslash((string) ($_GET['vendor_id'] ?? 0)));
+        $selected_vendor_id = absint(vms_vendor_command_center_query_arg('vendor_id'));
         if ($selected_vendor_id <= 0 && !empty($rows)) {
             $selected_vendor_id = (int) ($rows[0]['vendor_id'] ?? 0);
         }
@@ -1427,7 +1440,10 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         $selected_template_note = $selected_vendor_id > 0 ? vms_vendor_command_center_active_template_note($selected_vendor_id) : __('Using the General default template for this vendor.', 'vms');
         $template_scope_options = vms_vendor_command_center_template_scope_options($type_options);
         $template_editor_payload = vms_vendor_command_center_template_editor_payload($type_options);
-        $selected_template_scope = sanitize_text_field(wp_unslash((string) ($_GET['template_scope'] ?? vms_vendor_command_center_template_default_scope())));
+        $selected_template_scope = sanitize_text_field(vms_vendor_command_center_query_arg('template_scope'));
+        if ($selected_template_scope === '') {
+            $selected_template_scope = vms_vendor_command_center_template_default_scope();
+        }
         if (!isset($template_scope_options[$selected_template_scope])) {
             $selected_template_scope = vms_vendor_command_center_template_default_scope();
         }
@@ -1585,17 +1601,17 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
 
         echo '<form method="get" class="vms-vcc-filters" data-vms-tour="vendor-command.filters">';
         echo '<input type="hidden" name="page" value="' . esc_attr(vms_vendor_command_center_page_slug()) . '">';
-        echo '<input type="search" name="vms_vendor_q" value="' . esc_attr(sanitize_text_field(wp_unslash((string) ($_GET['vms_vendor_q'] ?? '')))) . '" placeholder="' . esc_attr__('Search vendor, email, phone, or type', 'vms') . '">';
+        echo '<input type="search" name="vms_vendor_q" value="' . esc_attr(sanitize_text_field(vms_vendor_command_center_query_arg('vms_vendor_q'))) . '" placeholder="' . esc_attr__('Search vendor, email, phone, or type', 'vms') . '">';
 
         echo '<select name="vms_vendor_type">';
         echo '<option value="">' . esc_html__('All types', 'vms') . '</option>';
-        $current_type = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_type'] ?? '')));
+        $current_type = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_type'));
         foreach ($type_options as $slug => $label) {
             echo '<option value="' . esc_attr($slug) . '"' . selected($current_type, $slug, false) . '>' . esc_html($label) . '</option>';
         }
         echo '</select>';
 
-        $current_account = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_account'] ?? '')));
+        $current_account = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_account'));
         echo '<select name="vms_vendor_account">';
         echo '<option value="">' . esc_html__('All account states', 'vms') . '</option>';
         echo '<option value="linked"' . selected($current_account, 'linked', false) . '>' . esc_html__('Linked account', 'vms') . '</option>';
@@ -1603,14 +1619,14 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         echo '<option value="no_account"' . selected($current_account, 'no_account', false) . '>' . esc_html__('No account', 'vms') . '</option>';
         echo '</select>';
 
-        $current_onboarding = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_onboarding'] ?? '')));
+        $current_onboarding = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_onboarding'));
         echo '<select name="vms_vendor_onboarding">';
         echo '<option value="">' . esc_html__('All onboarding states', 'vms') . '</option>';
         echo '<option value="contacted"' . selected($current_onboarding, 'contacted', false) . '>' . esc_html__('Contacted', 'vms') . '</option>';
         echo '<option value="needs_contact"' . selected($current_onboarding, 'needs_contact', false) . '>' . esc_html__('Needs contact', 'vms') . '</option>';
         echo '</select>';
 
-        $current_payables = sanitize_key(wp_unslash((string) ($_GET['vms_vendor_payables'] ?? '')));
+        $current_payables = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_payables'));
         echo '<select name="vms_vendor_payables">';
         echo '<option value="">' . esc_html__('All payables states', 'vms') . '</option>';
         foreach (array(
