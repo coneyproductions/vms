@@ -8,6 +8,19 @@ if (!function_exists('vms_status_notice_admin_page_url')) {
 	}
 }
 
+if (!function_exists('vms_status_notice_admin_query_arg')) {
+	function vms_status_notice_admin_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Status Notices admin routing and filters only change admin display state.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Status Notices admin routing and filters are unslashed here and sanitized or cast by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
 if (!function_exists('vms_status_notice_admin_templates')) {
 	function vms_status_notice_admin_templates(): array
 	{
@@ -24,7 +37,7 @@ if (!function_exists('vms_status_notice_admin_templates')) {
 if (!function_exists('vms_status_notice_admin_enqueue_assets')) {
 	function vms_status_notice_admin_enqueue_assets(): void
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = sanitize_key(vms_status_notice_admin_query_arg('page'));
 		if ($page !== 'vms-status-notices') {
 			return;
 		}
@@ -117,7 +130,10 @@ if (!function_exists('vms_status_notice_render_admin_page')) {
 			wp_die(esc_html__('You do not have permission to manage Status Notices.', 'vms'));
 		}
 
-		$view = isset($_GET['view']) ? sanitize_key((string) $_GET['view']) : 'list';
+		$view = sanitize_key(vms_status_notice_admin_query_arg('view'));
+		if ($view === '') {
+			$view = 'list';
+		}
 		if ($view === 'edit') {
 			vms_status_notice_render_edit_screen();
 			return;
@@ -130,7 +146,7 @@ if (!function_exists('vms_status_notice_render_admin_page')) {
 if (!function_exists('vms_status_notice_notice_bar')) {
 	function vms_status_notice_notice_bar(): void
 	{
-		$status = isset($_GET['vms_status_notice_result']) ? sanitize_key((string) $_GET['vms_status_notice_result']) : '';
+		$status = sanitize_key(vms_status_notice_admin_query_arg('vms_status_notice_result'));
 		if ($status === '') {
 			return;
 		}
@@ -150,7 +166,7 @@ if (!function_exists('vms_status_notice_notice_bar')) {
 				$message = __('Status Notice moved to trash.', 'vms');
 				break;
 			case 'bulk_updated':
-				$bulk_count = isset($_GET['bulk_count']) ? absint((string) $_GET['bulk_count']) : 0;
+				$bulk_count = absint(vms_status_notice_admin_query_arg('bulk_count'));
 				if ($bulk_count > 0) {
 					/* translators: %d: number of updated notices */
 					$message = sprintf(_n('%d notice updated.', '%d notices updated.', $bulk_count, 'vms'), $bulk_count);
@@ -170,10 +186,10 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 	function vms_status_notice_render_list_screen(): void
 	{
 		$items = vms_status_notice_query_all();
-		$scope_filter = isset($_GET['scope']) ? sanitize_key((string) $_GET['scope']) : '';
-		$severity_filter = isset($_GET['severity']) ? sanitize_key((string) $_GET['severity']) : '';
-		$enabled_filter = isset($_GET['enabled']) ? sanitize_key((string) $_GET['enabled']) : '';
-		$q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
+		$scope_filter = sanitize_key(vms_status_notice_admin_query_arg('scope'));
+		$severity_filter = sanitize_key(vms_status_notice_admin_query_arg('severity'));
+		$enabled_filter = sanitize_key(vms_status_notice_admin_query_arg('enabled'));
+		$q = sanitize_text_field(vms_status_notice_admin_query_arg('q'));
 
 		$items = array_values(array_filter($items, static function (array $item) use ($scope_filter, $severity_filter, $enabled_filter, $q): bool {
 			if ($scope_filter !== '' && $scope_filter !== (string) ($item['scope'] ?? '')) {
@@ -292,6 +308,7 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 							}
 
 							echo '<tr>';
+							/* translators: %s: notice title. */
 							echo '<th class="check-column"><input type="checkbox" class="vms-status-row-check" name="notice_ids[]" value="' . esc_attr((string) $id) . '" aria-label="' . esc_attr(sprintf(__('Select %s', 'vms'), (string) ($item['title'] ?? 'notice'))) . '"></th>';
 							echo '<td>' . (!empty($item['enabled']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
 							echo '<td><strong><a href="' . esc_url($edit_url) . '">' . esc_html((string) ($item['title'] ?? '')) . '</a></strong><br><span class="description">' . esc_html((string) ($item['headline'] ?? '')) . '</span></td>';
@@ -327,8 +344,8 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 if (!function_exists('vms_status_notice_render_edit_screen')) {
 	function vms_status_notice_render_edit_screen(): void
 	{
-		$notice_id = isset($_GET['id']) ? absint((string) $_GET['id']) : 0;
-		$template = isset($_GET['template']) ? sanitize_key((string) $_GET['template']) : '';
+		$notice_id = absint(vms_status_notice_admin_query_arg('id'));
+		$template = sanitize_key(vms_status_notice_admin_query_arg('template'));
 
 		$notice = $notice_id > 0 ? vms_status_notice_get($notice_id) : null;
 		if (!is_array($notice)) {
@@ -747,6 +764,7 @@ if (!function_exists('vms_status_notice_handle_object_search')) {
 
 			$title = trim((string) $post->post_title);
 			if ($title === '') {
+				/* translators: %d: post ID. */
 				$title = sprintf(__('Untitled (#%d)', 'vms'), (int) $post->ID);
 			}
 
