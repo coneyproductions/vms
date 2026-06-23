@@ -385,9 +385,9 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 			$active = vms_admin_ui_active_cluster();
 		$current_page = vms_admin_ui_get_page_slug();
 		$current_post_type = vms_admin_ui_get_post_type();
-		$current_taxonomy = isset($_GET['taxonomy']) ? sanitize_key((string) $_GET['taxonomy']) : '';
-		$current_tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : '';
-		$current_section = isset($_GET['section']) ? sanitize_key((string) $_GET['section']) : '';
+		$current_taxonomy = sanitize_key(vms_admin_ui_query_arg('taxonomy'));
+		$current_tab = sanitize_key(vms_admin_ui_query_arg('tab'));
+		$current_section = sanitize_key(vms_admin_ui_query_arg('section'));
 
 		global $pagenow;
 		$current_context = array(
@@ -458,6 +458,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 			echo '</a>';
 
 			if ($has_quick_menu) {
+				/* translators: %s: top navigation item label. */
 				$quick_menu_label = sprintf(__('%s quick menu', 'vms'), $label);
 				echo '<div class="vms-admin-topnav__quick-menu" id="' . esc_attr($quick_menu_id) . '" role="menu" aria-label="' . esc_attr($quick_menu_label) . '">';
 				foreach ($items as $quick_item) {
@@ -1045,7 +1046,7 @@ if (!function_exists('vms_admin_ui_handle_legacy_ops_console_slug')) {
 			return;
 		}
 
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = sanitize_key(vms_admin_ui_query_arg('page'));
 		if ($page !== 'vms-ops-console') {
 			return;
 		}
@@ -1073,7 +1074,7 @@ if (!function_exists('vms_admin_ui_handle_ops_console_hub_alias')) {
 			return;
 		}
 
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = sanitize_key(vms_admin_ui_query_arg('page'));
 		if ($page !== 'vms-ops-console-hub' || !function_exists('vms_ops_admin_render_settings_page')) {
 			return;
 		}
@@ -1091,7 +1092,7 @@ if (!function_exists('vms_admin_ui_maybe_redirect_ops_alias_pages')) {
 			return;
 		}
 
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = sanitize_key(vms_admin_ui_query_arg('page'));
 		if ($page === '') {
 			return;
 		}

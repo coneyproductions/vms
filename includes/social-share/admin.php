@@ -15,6 +15,19 @@ if (!function_exists('vms_social_admin_url')) {
 	}
 }
 
+if (!function_exists('vms_social_admin_query_arg')) {
+	function vms_social_admin_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Social Share admin routing, tabs, and filters only change admin display state.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Social Share admin routing, tabs, and filters are unslashed here and sanitized by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
 if (!function_exists('vms_social_admin_tabs')) {
 	/**
 	 * @return array<string,string>
@@ -37,7 +50,7 @@ if (!function_exists('vms_social_admin_current_tab')) {
 	function vms_social_admin_current_tab(): string
 	{
 		$tabs = vms_social_admin_tabs();
-		$tab = sanitize_key(wp_unslash((string) ($_GET['tab'] ?? 'overview')));
+		$tab = sanitize_key(vms_social_admin_query_arg('tab'));
 		return isset($tabs[$tab]) ? $tab : 'overview';
 	}
 }
@@ -72,8 +85,8 @@ if (!function_exists('vms_social_venue_choices')) {
 if (!function_exists('vms_social_enqueue_admin_assets')) {
 	function vms_social_enqueue_admin_assets(string $hook_suffix = ''): void
 	{
-		$page = sanitize_key(wp_unslash((string) ($_GET['page'] ?? '')));
-		$post_type = sanitize_key(wp_unslash((string) ($_GET['post_type'] ?? '')));
+		$page = sanitize_key(vms_social_admin_query_arg('page'));
+		$post_type = sanitize_key(vms_social_admin_query_arg('post_type'));
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 		if (is_object($screen) && isset($screen->post_type) && $post_type === '') {
 			$post_type = sanitize_key((string) $screen->post_type);
@@ -144,11 +157,11 @@ if (!function_exists('vms_social_redirect_with_notice')) {
 if (!function_exists('vms_social_render_notices')) {
 	function vms_social_render_notices(): void
 	{
-		$notice = sanitize_text_field(wp_unslash((string) ($_GET['vms_social_notice'] ?? '')));
+		$notice = sanitize_text_field(vms_social_admin_query_arg('vms_social_notice'));
 		if ($notice === '') {
 			return;
 		}
-		$type = sanitize_key(wp_unslash((string) ($_GET['vms_social_notice_type'] ?? 'success')));
+		$type = sanitize_key(vms_social_admin_query_arg('vms_social_notice_type'));
 		$class = in_array($type, array('error', 'warning', 'success', 'info'), true) ? $type : 'success';
 		echo '<div class="notice notice-' . esc_attr($class) . ' is-dismissible"><p>' . esc_html($notice) . '</p></div>';
 	}
@@ -458,8 +471,8 @@ if (!function_exists('vms_social_render_templates_tab')) {
 if (!function_exists('vms_social_render_queue_tab')) {
 	function vms_social_render_queue_tab(): void
 	{
-		$status = sanitize_key(wp_unslash((string) ($_GET['status'] ?? '')));
-		$platform = sanitize_key(wp_unslash((string) ($_GET['platform'] ?? '')));
+		$status = sanitize_key(vms_social_admin_query_arg('status'));
+		$platform = sanitize_key(vms_social_admin_query_arg('platform'));
 		$rows = vms_social_queue_list(array('status' => $status, 'platform' => $platform), 200);
 
 		echo '<h2>' . esc_html__('Queue', 'vms') . '</h2>';
@@ -516,7 +529,7 @@ if (!function_exists('vms_social_render_queue_tab')) {
 if (!function_exists('vms_social_render_logs_tab')) {
 	function vms_social_render_logs_tab(): void
 	{
-		$search = sanitize_text_field(wp_unslash((string) ($_GET['log_search'] ?? '')));
+		$search = sanitize_text_field(vms_social_admin_query_arg('log_search'));
 		$rows = vms_social_audit_recent(200, $search);
 		echo '<h2>' . esc_html__('Audit Logs', 'vms') . '</h2>';
 		echo '<form method="get" action="' . esc_url(admin_url('admin.php')) . '">';

@@ -17,6 +17,19 @@ if (!function_exists('vms_event_command_center_admin_url')) {
     }
 }
 
+if (!function_exists('vms_event_command_center_query_arg')) {
+    function vms_event_command_center_query_arg(string $key): string
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Event Command Center admin routing and display state only.
+        if (!isset($_GET[$key])) {
+            return '';
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Event Command Center admin routing and display state are unslashed here and sanitized or cast by the caller.
+        return (string) wp_unslash($_GET[$key]);
+    }
+}
+
 if (!function_exists('vms_event_command_center_request_cache')) {
     function vms_event_command_center_request_cache(int $plan_id, string $bucket, callable $resolver)
     {
@@ -64,11 +77,11 @@ if (!function_exists('vms_event_command_center_redirect_with_notice')) {
 if (!function_exists('vms_event_command_center_render_notice')) {
     function vms_event_command_center_render_notice(): void
     {
-        $message = isset($_GET['vms_cc_notice']) ? sanitize_text_field((string) wp_unslash($_GET['vms_cc_notice'])) : '';
+        $message = sanitize_text_field(vms_event_command_center_query_arg('vms_cc_notice'));
         if ($message === '') {
             return;
         }
-        $type = isset($_GET['vms_cc_notice_type']) ? sanitize_key((string) wp_unslash($_GET['vms_cc_notice_type'])) : 'success';
+        $type = sanitize_key(vms_event_command_center_query_arg('vms_cc_notice_type'));
         $class = in_array($type, array('error', 'warning', 'info', 'success'), true) ? $type : 'success';
         echo '<div class="notice notice-' . esc_attr($class) . ' is-dismissible"><p>' . esc_html($message) . '</p></div>';
     }
@@ -467,12 +480,12 @@ if (!function_exists('vms_event_command_center_get_plan_ids')) {
 if (!function_exists('vms_event_command_center_resolve_plan_id')) {
     function vms_event_command_center_resolve_plan_id(): int
     {
-        $plan_id = isset($_GET['plan_id']) ? absint($_GET['plan_id']) : 0;
-        if ($plan_id <= 0 && isset($_GET['event_plan_id'])) {
-            $plan_id = absint($_GET['event_plan_id']);
+        $plan_id = absint(vms_event_command_center_query_arg('plan_id'));
+        if ($plan_id <= 0) {
+            $plan_id = absint(vms_event_command_center_query_arg('event_plan_id'));
         }
-        if ($plan_id <= 0 && isset($_GET['post'])) {
-            $candidate = absint($_GET['post']);
+        if ($plan_id <= 0) {
+            $candidate = absint(vms_event_command_center_query_arg('post'));
             if ($candidate > 0 && get_post_type($candidate) === 'vms_event_plan') {
                 $plan_id = $candidate;
             }
@@ -2979,7 +2992,7 @@ add_filter('vms_admin_ui_shell_pages', 'vms_event_command_center_add_shell_page'
 if (!function_exists('vms_event_command_center_enqueue_assets')) {
     function vms_event_command_center_enqueue_assets(): void
     {
-        $page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
+        $page = sanitize_key(vms_event_command_center_query_arg('page'));
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
         $is_event_plan_editor = $screen
             && in_array((string) ($screen->base ?? ''), array('post', 'post-new'), true)
@@ -3019,7 +3032,7 @@ if (!function_exists('vms_event_command_center_submitbox_link')) {
             return;
         }
 
-        $post_id = isset($_GET['post']) ? absint(wp_unslash($_GET['post'])) : 0;
+        $post_id = absint(vms_event_command_center_query_arg('post'));
         if ($post_id <= 0) {
             return;
         }
