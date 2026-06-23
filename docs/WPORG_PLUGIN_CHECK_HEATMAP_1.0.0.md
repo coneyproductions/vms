@@ -21,6 +21,108 @@ Comparison to the prior packaged RC from `WPORG-10A`:
 - `867` -> `865` errors (`-2`)
 - `2162` -> `2154` warnings (`-8`)
 
+## WPORG-12A Batch
+
+- 12A planning-only scope
+  - reviewed the packaged `WPORG-11A` nonce/input baseline without editing runtime PHP, tests, or public-release artifacts
+  - confirmed the public ZIP does not package the WP.org tracking docs, so this pass did not rebuild `dist/` and did not rerun packaged Plugin Check
+  - counts therefore stay on the `dist/wporg-11a/vms-1.0.0-public-release.zip` baseline until the first mutation-flow code batch lands
+- current grouped findings carried forward into the 12A roadmap
+  - nonce/input: `1143`
+  - DB/SQL: `1077`
+  - escaping/output: `145`
+  - i18n: `539`
+  - date/time: `25`
+  - development logging: `41`
+- remaining nonce/input concentration
+  - `89` files still emit nonce/input findings in the packaged baseline
+  - the top twenty files below account for `739 / 1143` remaining nonce/input findings
+- legend
+  - `Rec`: `WordPress.Security.NonceVerification.Recommended`
+  - `Miss`: `WordPress.Security.NonceVerification.Missing`
+  - `MU`: `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`
+  - `INS`: `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`
+  - `INV`: `WordPress.Security.ValidatedSanitizedInput.InputNotValidated`
+
+### Top Nonce/Input Mutation Candidates
+
+| File | Tot/E/W | N/I | Dominant | Request | Workflow | Sens. | Nearby guards | Partial norm | Behavior impact | Coverage / gate | Risk | Phase | Future note |
+| --- | ---: | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `includes/cpt/event-plans.php` | `241/108/133` | `121` | `Rec60 MU27 INS25 Miss6 INV3` | mixed `$_GET`/`$_POST`/AJAX | Event Plans runtime, admin saves, TEC sync | `high` | mixed nonce/cap checks by branch | mixed | saves, cleanup, refunds, sync, publish state | many Event Plans regressions exist, but no isolated nonce/input slice; requires dedicated batch plus manual QA | `high` | defer until after submission | highest density file, but still excluded and tightly coupled |
+| `includes/vendor-applications.php` | `90/15/75` | `61` | `MU25 Rec15 INS15 Miss5 INV1` | `$_POST`, uploaded file, server | public application submit plus admin review/approval | `high` | admin review guards exist; public submit flow mixed | mixed | vendor creation, approval state, anti-spam, outbound email | no focused tests; add coverage before changes | `high` | needs test coverage first | public onboarding and account-link coupling make this a bad first batch |
+| `includes/integrations/ticketing-claims-admin.php` | `66/1/65` | `59` | `Rec56 Miss2 INS1` | `$_GET`, `$_POST` | admin reservation release/reassign and filters | `medium/high` | nonce yes; capability yes | partial | claim state, reservations, assignee actions | only adjacent `tests/ticket-claims-assignee-validation.php`; add manual QA and focused admin assertions first | `high` | needs manual QA plan first | mutation-heavy ticketing admin path, but smaller than the first admin-only settings batch |
+| `includes/integrations/ticketing-verifications.php` | `102/40/62` | `56` | `Rec21 INS17 Miss11 MU7` | `$_POST`, uploaded file | verification upload, eligibility, ticketing checks | `high` | nonce mixed; capability mixed | mixed | uploads, eligibility, check-in/ticketing outcomes | adjacent `tests/verification-proof-normalization.php` and `tests/ticket-checkout-safety-hardening.php`; expand before changes | `high` | needs test coverage first | upload plus eligibility behavior should not move without coverage |
+| `includes/modules/staff-tasks/admin-ui.php` | `56/8/48` | `44` | `Rec25 INS14 INV3 MU2` | `$_GET`, `$_POST` | admin task transition, assign, generate, create | `medium` | nonce yes; capability yes | partial | assignments, task state, generated work | no focused tests; add manual QA plan before changes | `medium/high` | needs manual QA plan first | bounded admin surface, but still mutates task state and assignments |
+| `includes/portal/vendor-portal.php` | `63/0/63` | `41` | `MU22 INS13 Rec3 INV3` | `$_POST`, uploaded file | vendor portal submissions, availability, ICS, uploads | `high` | auth/portal checks present; nonce mixed | mixed | vendor requests, uploads, availability, portal state | only display-oriented `tests/vendor-availability-ux.php`; add broader coverage first | `high` | defer until after submission | public/authenticated portal writes are too broad for the first batch |
+| `includes/core/event-plan-performance.php` | `39/0/39` | `38` | `Rec18 MU9 INS8 Miss3` | `$_GET`, `$_REQUEST` | Event Plans diagnostics/runtime helper | `low/medium` | mixed | partial | low direct user impact, but runtime helper adjacency | no focused tests; document-only warning candidate unless another Event Plans batch opens | `medium` | likely acceptable/document-only warning | helper-only reads are low value compared with real mutation flows |
+| `includes/portal/staff-portal.php` | `59/25/34` | `30` | `INS13 MU12 INV3 Miss2` | `$_POST`, uploaded file | staff profile, packet ack, tax docs, availability | `high` | auth yes; nonce mixed | mixed | uploads, acknowledgements, profile data, availability | no focused tests for mutation paths | `high` | needs test coverage first | authenticated portal writes and uploads need dedicated safety coverage |
+| `includes/cpt/ratings.php` | `31/0/31` | `29` | `MU10 Miss9 INS5 Rec4 INV1` | `$_POST` | admin `save_post` plus public rating submit | `high` | admin guard exists; public branch mixed | mixed | stored ratings and public submission behavior | no focused tests | `high` | needs test coverage first | mixed admin/public save surface with missing-nonce hits still present |
+| `includes/modules/admissions/pass-claims.php` | `155/13/142` | `27` | `Rec14 INS7 MU5 INV1` | `$_GET`, `$_POST` | admin token actions/reporting plus public claim form | `medium/high` | admin guards present; public branch mixed | partial | token state, resends, exports, claims | no focused nonce/input regression for this slice | `high` | needs manual QA plan first | the remaining hits are no longer isolated to read-only helpers |
+| `includes/runtime-guards.php` | `30/1/29` | `27` | `Rec19 INS3 Miss2 MU2 INV1` | mixed request/server values | runtime diagnostics/helper reads | `low/medium` | mixed | partial | low direct user impact, but request routing side effects possible | no focused tests; document-only warning candidate | `medium` | likely acceptable/document-only warning | low-value helper reads do not justify early mutation work |
+| `includes/admin/vendor-command-center.php` | `29/0/29` | `27` | `Rec24 INS3` | `$_GET`, `$_POST` | admin onboarding email send and template save | `medium` | nonce yes; capability yes | yes for filters | emails, template config, admin actions | no focused tests; manual QA around email/template actions first | `medium` | candidate after first mutation batch | admin-only and bounded, but it still sends email and mutates templates |
+| `includes/admin/settings-page.php` | `29/1/28` | `24` | `Rec12 INS6 MU6` | `$_GET`, `$_POST` | admin settings save and stock preview/commit/clear/export | `low/medium` | nonce yes; `manage_options` yes | partial | settings, stock tools, CSV/export actions | no focused tests; manual admin QA is sufficient for first pass if changes stay on normalization | `low/medium` | candidate for first mutation code batch | existing nonce/cap scaffolding is already in place and the remaining hits cluster around request normalization |
+| `includes/social-share/admin.php` | `24/0/24` | `24` | `Rec16 MU7 INS1` | `$_GET`, `$_POST` | admin webhook/account/template save/delete | `low/medium` | nonce yes; capability yes | partial | webhook config, account config, templates | no focused tests; manual QA around save/delete flows first | `medium` | candidate after first mutation batch | bounded admin-only surface, but still touches external-posting config |
+| `includes/safety/admin.php` | `27/4/23` | `23` | `MU11 Rec10 INS2` | `$_GET`, `$_POST`, uploaded file | admin incident save/close/export/upload | `high` | nonce yes; capability yes | partial | incident state, uploads, exports | no focused tests | `high` | needs manual QA plan first | upload and case-state behavior are too coupled for an early cleanup |
+| `includes/public/event-feedback.php` | `26/3/23` | `23` | `Rec12 INS8 MU3` | `$_GET`, `$_POST` | public feedback submit via `template_redirect` | `high` | nonce mixed | partial | feedback submission, redirects, stored data | no focused tests | `high` | needs test coverage first | public submission and redirect behavior need coverage before hardening |
+| `includes/cpt/venues.php` | `25/3/22` | `22` | `INS7 MU6 Miss5 Rec4` | `$_POST` | venue `save_post` meta and publish-gate logic | `medium/high` | nonce mixed; capability yes | partial | venue metadata, schedule, publish gating | no focused tests | `high` | needs manual QA plan first | save-post coupling makes behavior changes harder to contain |
+| `includes/modules/status-notices/admin-ui.php` | `24/2/22` | `22` | `Rec20 INS1 MU1` | `$_GET`, `$_POST` | admin save, duplicate, toggle, trash, bulk | `low/medium` | nonce yes; custom cap yes | partial | notice state only | no focused tests; manual admin QA is sufficient for first pass if scope stays narrow | `low/medium` | candidate for first mutation code batch | existing nonce/cap scaffolding and bounded admin state changes make this a good early follow-up |
+| `includes/admin/schedule.php` | `22/0/22` | `21` | `Rec17 MU3 INS1` | `$_GET`, `$_POST` | filters plus create Event Plan mutation | `medium/high` | create-action nonce yes; capability yes | partial | Event Plan creation and user-meta persistence | no focused tests | `high` | needs manual QA plan first | mixed read filters and real Event Plan mutation make this riskier than its count suggests |
+| `includes/admin/ticket-integrity-page.php` | `27/7/20` | `20` | `Rec11 MU6 INS3` | `$_GET`, `$_POST` | admin settings plus report preview/dry-run/send/test/export | `low/medium` | nonce yes; `manage_options` yes | partial | report settings, email sends, exports | adjacent `tests/state-of-range-delivery-state.php`, `tests/state-of-range-upcoming-filter.php`, and `tests/ticket-integrity-scan-lock.php`; manual QA still needed for send/test actions | `low/medium` | candidate for first mutation code batch | existing guards plus nearby report coverage make this the second-best early admin batch |
+
+### Remaining Workflow Classification
+
+- read-only already exhausted
+  - `WPORG-05E` closed the last isolated read-only nonce/input cleanup. The remaining top-density files are tied to saves, uploads, approvals, portal submissions, ticketing actions, or Event Plans runtime.
+- admin settings/save flows
+  - `183` top-twenty nonce/input findings are concentrated in bounded admin mutation surfaces such as `settings-page.php`, `ticket-integrity-page.php`, `status-notices/admin-ui.php`, `vendor-command-center.php`, `social-share/admin.php`, and `staff-tasks/admin-ui.php`.
+- portal/public submission flows
+  - `184` top-twenty findings live in `vendor-applications.php`, `vendor-portal.php`, `staff-portal.php`, `ratings.php`, and `public/event-feedback.php`; these are the highest behavior-risk public/authenticated submit paths after Event Plans.
+- ticketing/checkout/check-in flows
+  - `86` findings remain in `ticketing-claims-admin.php`, `ticketing-verifications.php`, `pass-claims.php`, and `ticket-integrity-page.php`; these paths need stronger regression gates before broad hardening.
+- upload/import flows
+  - `79` findings overlap upload-bearing branches in `ticketing-verifications.php`, `vendor-portal.php`, `staff-portal.php`, `safety/admin.php`, and `public/event-feedback.php`.
+- Event Plans/runtime/TEC sync flows
+  - `159` findings remain in `event-plans.php`, `event-plan-performance.php`, and the Event Plan creation branch inside `admin/schedule.php`; keep these deferred until a dedicated runtime batch.
+- approval/decline/delete/cancel flows
+  - concentrated in `vendor-applications.php`, `ticketing-claims-admin.php`, `status-notices/admin-ui.php`, `ratings.php`, `venues.php`, and `safety/admin.php`; even admin-only flows are mutation-sensitive because they change state, assignments, trash status, or outbound email.
+- REST/AJAX flows
+  - surviving hits are embedded inside broader runtime files, especially `event-plans.php`; none of the remaining AJAX surfaces are isolated enough to outrank the first three admin-only batches.
+- mixed/high-risk flows
+  - `48` top-twenty findings sit in helper/runtime-adjacent files such as `runtime-guards.php`, `event-plan-performance.php`, and mixed admin/public save files; these are lower-value than the first bounded admin batches.
+
+### Recommended First 3 Code Batches
+
+| Target | Workflow | Expected reduction | Required pattern | Coverage / QA gate | Why this is safe enough before submission |
+| --- | --- | ---: | --- | --- | --- |
+| `includes/admin/settings-page.php` | default venue settings plus ticketing stock preview/commit/clear/export normalization | `~18-24` | keep existing `manage_options` and nonce checks; normalize `$_GET`/`$_POST` reads with explicit unslash/sanitize/allowlist handling only | manual admin QA is sufficient if scope stays on request normalization and existing actions only | admin-only surface, existing guards already present, and no public/authenticated portal writes |
+| `includes/admin/ticket-integrity-page.php` | report settings plus preview/dry-run/send/test/export normalization | `~14-20` | keep existing `manage_options` and `check_admin_referer()` scaffolding; normalize action and query inputs only | reuse adjacent report/lock tests and add manual QA for send/test/export | bounded admin-only reporting surface with nearby validation evidence already in repo |
+| `includes/modules/status-notices/admin-ui.php` | save, duplicate, toggle, trash, bulk, and editor/list query normalization | `~18-22` | retain existing custom capability and nonce patterns; normalize route/action/request values only | manual admin QA is sufficient if no behavior changes escape normalization | bounded admin-only state changes, existing guard scaffolding, and low external coupling compared with ticketing or portal flows |
+
+- test-coverage recommendation before the first mutation batch
+  - focused automated coverage is not required before the first admin-only batch if the scope stays limited to request normalization around already-existing nonce/capability checks and is backed by manual admin QA
+  - focused automated coverage becomes required before ticketing, portal/public submission, upload/import, admissions claim, or Event Plans/runtime nonce/input work
+
+### Deferred Files
+
+- `includes/cpt/event-plans.php`: keep deferred because the remaining hits span save, publish, cleanup, refund, AJAX, and TEC sync behavior in the highest-density runtime file.
+- `includes/vendor-applications.php`: keep deferred because public submission, anti-spam, approval, vendor creation, and email/linking behavior all sit in the same nonce/input surface.
+- `includes/integrations/ticketing-verifications.php`: keep deferred until upload and eligibility coverage is expanded.
+- `includes/integrations/ticketing-claims-admin.php`: keep deferred until reservation-release and assignee-state QA is documented.
+- `includes/portal/vendor-portal.php`: keep deferred because portal submissions, uploads, and availability writes are tightly coupled.
+- `includes/portal/staff-portal.php`: keep deferred because tax-profile, packet, upload, and availability mutations lack focused coverage.
+- `includes/modules/admissions/pass-claims.php`: keep deferred because the remaining hits are attached to admin token actions plus the public claim surface rather than isolated read helpers.
+- `includes/cpt/venues.php`: keep deferred because venue save-post and publish-gate behavior is still mixed with request handling.
+- `includes/safety/admin.php`: keep deferred because incident workflows include uploads, close actions, and exports.
+- `includes/public/event-feedback.php`: keep deferred because public submission and redirect behavior need dedicated coverage first.
+- `includes/cpt/ratings.php`: keep deferred because admin save-post and public submit logic are mixed in one file.
+- `includes/admin/schedule.php`: keep deferred because its remaining hits sit next to real Event Plan creation behavior.
+
+### Recommended Next Task
+
+- start the first mutation-flow nonce/input code batch in `includes/admin/settings-page.php`
+- keep the first batch limited to request normalization around already-existing nonce and capability checks
+- do not resume another DB/SQL reporting slice before the first admin-only nonce/input batch unless a new isolated read-only candidate appears outside the current top-density mutation surfaces
+
 ## WPORG-11A Batch
 
 - 11A candidate scan summary
