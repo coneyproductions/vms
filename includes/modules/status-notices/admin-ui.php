@@ -173,7 +173,7 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 		$scope_filter = isset($_GET['scope']) ? sanitize_key((string) $_GET['scope']) : '';
 		$severity_filter = isset($_GET['severity']) ? sanitize_key((string) $_GET['severity']) : '';
 		$enabled_filter = isset($_GET['enabled']) ? sanitize_key((string) $_GET['enabled']) : '';
-		$q = isset($_GET['q']) ? sanitize_text_field((string) $_GET['q']) : '';
+		$q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
 
 		$items = array_values(array_filter($items, static function (array $item) use ($scope_filter, $severity_filter, $enabled_filter, $q): bool {
 			if ($scope_filter !== '' && $scope_filter !== (string) ($item['scope'] ?? '')) {
@@ -552,7 +552,7 @@ if (!function_exists('vms_status_notice_handle_save')) {
 		}
 		check_admin_referer('vms_status_notice_save');
 
-		$notice_id = isset($_POST['notice_id']) ? absint((string) $_POST['notice_id']) : 0;
+		$notice_id = isset($_POST['notice_id']) ? absint(wp_unslash((string) $_POST['notice_id'])) : 0;
 		$raw = isset($_POST) ? (array) wp_unslash($_POST) : array();
 		$saved_id = vms_status_notice_save($notice_id, $raw);
 		if ($saved_id <= 0) {
@@ -570,7 +570,7 @@ if (!function_exists('vms_status_notice_handle_duplicate')) {
 		if (!current_user_can(vms_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'vms'));
 		}
-		$notice_id = isset($_GET['id']) ? absint((string) $_GET['id']) : 0;
+		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
 		check_admin_referer('vms_status_notice_duplicate_' . $notice_id);
 
 		$notice = vms_status_notice_get($notice_id);
@@ -602,10 +602,10 @@ if (!function_exists('vms_status_notice_handle_toggle')) {
 		if (!current_user_can(vms_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'vms'));
 		}
-		$notice_id = isset($_GET['id']) ? absint((string) $_GET['id']) : 0;
+		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
 		check_admin_referer('vms_status_notice_toggle_' . $notice_id);
 			if ($notice_id > 0) {
-				$enabled = isset($_GET['enabled']) ? absint((string) $_GET['enabled']) : 0;
+				$enabled = isset($_GET['enabled']) ? absint(wp_unslash((string) $_GET['enabled'])) : 0;
 				update_post_meta($notice_id, '_vms_notice_enabled', $enabled ? 1 : 0);
 				update_post_meta($notice_id, '_vms_notice_updated_at', time());
 			}
@@ -620,7 +620,7 @@ if (!function_exists('vms_status_notice_handle_trash')) {
 		if (!current_user_can(vms_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'vms'));
 		}
-		$notice_id = isset($_GET['id']) ? absint((string) $_GET['id']) : 0;
+		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
 		check_admin_referer('vms_status_notice_trash_' . $notice_id);
 			if ($notice_id > 0) {
 				wp_trash_post($notice_id);
@@ -639,8 +639,8 @@ if (!function_exists('vms_status_notice_handle_bulk')) {
 		check_admin_referer('vms_status_notice_bulk');
 
 		$bulk_action = isset($_POST['bulk_action']) ? sanitize_key((string) wp_unslash($_POST['bulk_action'])) : '';
-		$raw_ids = isset($_POST['notice_ids']) ? (array) wp_unslash($_POST['notice_ids']) : array();
-		$notice_ids = array_values(array_unique(array_filter(array_map('absint', $raw_ids), static function (int $id): bool {
+		$notice_ids = isset($_POST['notice_ids']) ? array_map('absint', (array) wp_unslash($_POST['notice_ids'])) : array();
+		$notice_ids = array_values(array_unique(array_filter($notice_ids, static function (int $id): bool {
 			return $id > 0;
 		})));
 
