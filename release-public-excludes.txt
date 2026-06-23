@@ -6,6 +6,7 @@
 .github/
 .gitignore
 .gitattributes
+release-public-excludes.txt
 .codex/
 .codex-temp/
 .vscode/

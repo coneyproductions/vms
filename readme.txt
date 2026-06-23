@@ -79,6 +79,7 @@ VMS can connect to third-party services only when the corresponding feature is e
 
 1. Cloudflare Turnstile
 Used by: vendor application anti-spam verification, when enabled.
+When enabled and configured with a site key, VMS loads Cloudflare's Turnstile client script on the vendor application form to render the verification widget.
 Data sent: the Turnstile token and visitor IP address during server-side verification.
 Service docs and privacy: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/ and https://www.cloudflare.com/turnstile-privacy-policy/
 
