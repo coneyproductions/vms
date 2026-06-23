@@ -112,7 +112,29 @@ function vms_docs_admin_page_render() {
         }
 
         $md = vms_docs_get_markdown($active_doc['file']);
-        echo vms_docs_render_markdown($md);
+        echo wp_kses(
+            vms_docs_render_markdown($md),
+            array(
+                'a' => array(
+                    'href' => true,
+                    'rel' => true,
+                    'target' => true,
+                ),
+                'code' => array(),
+                'em' => array(),
+                'h1' => array(),
+                'h2' => array(),
+                'h3' => array(),
+                'h4' => array(),
+                'h5' => array(),
+                'h6' => array(),
+                'li' => array(),
+                'p' => array(),
+                'pre' => array(),
+                'strong' => array(),
+                'ul' => array(),
+            )
+        );
     }
 
     echo '</div>'; // right

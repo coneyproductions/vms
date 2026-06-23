@@ -87,12 +87,14 @@ if (!class_exists('VMS_Settings_Notifications')) {
 			echo '<li><strong>' . esc_html__('Email', 'vms') . ':</strong> ' . esc_html__('Ready (core_email)', 'vms') . '</li>';
 
 			if ($sms_provider !== '' && isset($providers[$sms_provider])) {
+				/* translators: %s: active SMS provider key. */
 				echo '<li><strong>' . esc_html__('SMS', 'vms') . ':</strong> ' . esc_html(sprintf(__('Ready (%s)', 'vms'), $sms_provider)) . '</li>';
 			} else {
 				echo '<li><strong>' . esc_html__('SMS', 'vms') . ':</strong> ' . esc_html__('Provider not installed', 'vms') . '</li>';
 			}
 
 			if ($wa_provider !== '' && isset($providers[$wa_provider])) {
+				/* translators: %s: active WhatsApp provider key. */
 				echo '<li><strong>' . esc_html__('WhatsApp', 'vms') . ':</strong> ' . esc_html(sprintf(__('Ready (%s)', 'vms'), $wa_provider)) . '</li>';
 			} else {
 				echo '<li><strong>' . esc_html__('WhatsApp', 'vms') . ':</strong> ' . esc_html__('Provider not installed', 'vms') . '</li>';
