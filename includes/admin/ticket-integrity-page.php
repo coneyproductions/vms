@@ -18,7 +18,7 @@ function vms_ticket_integrity_admin_enqueue_assets(string $hook): void
 {
 	unset($hook);
 
-	$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+	$page = sanitize_key(wp_unslash((string) ($_GET['page'] ?? '')));
 	if (!in_array($page, array('vms-ticket-integrity', 'vms-dashboard'), true)) {
 		return;
 	}
@@ -150,19 +150,19 @@ function vms_ticket_integrity_handle_save_settings(): void
 				'nightly_enabled' => !empty($_POST['nightly_enabled']) ? 1 : 0,
 				'days_ahead' => absint($_POST['days_ahead'] ?? 120),
 				'email_alerts_enabled' => !empty($_POST['email_alerts_enabled']) ? 1 : 0,
-				'alert_recipient' => (string) ($_POST['alert_recipient'] ?? ''),
+				'alert_recipient' => sanitize_email(wp_unslash((string) ($_POST['alert_recipient'] ?? ''))),
 				'send_resolved_notifications' => !empty($_POST['send_resolved_notifications']) ? 1 : 0,
 				'reminder_interval_hours' => absint($_POST['reminder_interval_hours'] ?? 24),
 				'include_yellow_in_email_alerts' => !empty($_POST['include_yellow_in_email_alerts']) ? 1 : 0,
 				'daily_report_enabled' => !empty($_POST['daily_report_enabled']) ? 1 : 0,
-				'daily_report_recipient' => (string) ($_POST['daily_report_recipient'] ?? ''),
+				'daily_report_recipient' => sanitize_email(wp_unslash((string) ($_POST['daily_report_recipient'] ?? ''))),
 				'low_inventory_email_alerts_enabled' => !empty($_POST['low_inventory_email_alerts_enabled']) ? 1 : 0,
 				'low_inventory_threshold' => absint($_POST['low_inventory_threshold'] ?? 25),
 				'low_inventory_percent_threshold' => absint($_POST['low_inventory_percent_threshold'] ?? 10),
 				'critical_inventory_threshold' => absint($_POST['critical_inventory_threshold'] ?? 5),
 				'critical_inventory_percent_threshold' => absint($_POST['critical_inventory_percent_threshold'] ?? 3),
 				'payment_gateway_health_enabled' => !empty($_POST['payment_gateway_health_enabled']) ? 1 : 0,
-				'payment_gateway_health_interval' => (string) ($_POST['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'),
+				'payment_gateway_health_interval' => sanitize_key(wp_unslash((string) ($_POST['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'))),
 			)
 		)
 		: array();
@@ -310,7 +310,7 @@ function vms_ticket_integrity_handle_send_daily_report_test(): void
 		vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'vms')));
 	}
 
-	$recipient = sanitize_email((string) ($_POST['test_recipient'] ?? ''));
+	$recipient = sanitize_email(wp_unslash((string) ($_POST['test_recipient'] ?? '')));
 	if ($recipient === '') {
 		$recipient = sanitize_email((string) get_option('admin_email', ''));
 	}
@@ -828,8 +828,9 @@ add_action('admin_post_vms_ticket_integrity_export_report', 'vms_ticket_integrit
 
 function vms_ticket_integrity_render_notice_from_query(): void
 {
-	$notice = isset($_GET['tim_notice']) ? sanitize_key((string) $_GET['tim_notice']) : '';
-	$detail = isset($_GET['detail']) ? sanitize_text_field((string) $_GET['detail']) : '';
+	$notice = sanitize_key(wp_unslash((string) ($_GET['tim_notice'] ?? '')));
+	$detail = sanitize_text_field(wp_unslash((string) ($_GET['detail'] ?? '')));
+	$notice_recipient = sanitize_email(wp_unslash((string) ($_GET['recipient'] ?? '')));
 
 	if ($notice === '') {
 		return;
@@ -843,8 +844,8 @@ function vms_ticket_integrity_render_notice_from_query(): void
 			$message = sprintf(
 				/* translators: 1: red count, 2: yellow count */
 				__('Ticket integrity scan completed. Red: %1$d. Yellow: %2$d.', 'vms'),
-				absint($_GET['red'] ?? 0),
-				absint($_GET['yellow'] ?? 0)
+				absint(wp_unslash((string) ($_GET['red'] ?? 0))),
+				absint(wp_unslash((string) ($_GET['yellow'] ?? 0)))
 			);
 			break;
 		case 'event_scan_complete':
@@ -870,8 +871,8 @@ function vms_ticket_integrity_render_notice_from_query(): void
 		case 'daily_report_test_sent':
 			$class = 'notice-success';
 			$message = __('State of the Range admin test email sent.', 'vms');
-			if (!empty($_GET['recipient'])) {
-				$message .= ' ' . sanitize_email((string) $_GET['recipient']);
+			if ($notice_recipient !== '') {
+				$message .= ' ' . $notice_recipient;
 			}
 			break;
 		case 'daily_report_failed':
@@ -2417,7 +2418,7 @@ function vms_ticket_integrity_render_admin_page(): void
 	$events = function_exists('vms_ticket_integrity_get_sorted_events') ? vms_ticket_integrity_get_sorted_events() : array();
 	$logs = function_exists('vms_ticket_integrity_get_logs') ? vms_ticket_integrity_get_logs() : array();
 
-	$filter_plan_id = absint($_GET['event'] ?? 0);
+	$filter_plan_id = absint(wp_unslash((string) ($_GET['event'] ?? 0)));
 	if ($filter_plan_id > 0) {
 		$events = array_values(array_filter($events, static function (array $event) use ($filter_plan_id): bool {
 			return absint($event['plan_id'] ?? 0) === $filter_plan_id;

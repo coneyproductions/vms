@@ -6,8 +6,8 @@ Date: 2026-06-22
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
-- Scan target for current counts: extracted packaged directory from `dist/wporg-12c/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
-- Current artifact SHA-256: `53dfcfc65c87e78ae3b7be3441114b054120382ebfb2a2ee88387b09463e823f`
+- Scan target for current counts: extracted packaged directory from `dist/wporg-12d/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
+- Current artifact SHA-256: `be5008b2dd6afd04d2c1c06eedbe60f931b3e1d25c8acff0801159792abf0384`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -59,6 +59,7 @@ Date: 2026-06-22
 | `WPORG-12A` packaged RC, planning only | extracted packaged directory outside local site tree | `3019` | `865` | `2154` | Docs-only nonce/input mutation roadmap; no package rebuild or rerun because the WP.org tracking docs are excluded from the public ZIP. |
 | `WPORG-12B` packaged RC, final | extracted packaged directory outside local site tree | `3001` | `865` | `2136` | Cleared the first bounded admin-only nonce/input mutation batch in `includes/admin/settings-page.php`; the normalized rerun removed eighteen selected-file nonce/input warnings without adding new Plugin Check code categories. |
 | `WPORG-12C` packaged RC, final | extracted packaged directory outside local site tree | `2997` | `865` | `2132` | Cleared the bounded status-notices nonce/input mutation batch in `includes/modules/status-notices/admin-ui.php`; the normalized rerun removed the remaining selected-file input/unslash warnings without adding new Plugin Check code categories. |
+| `WPORG-12D` packaged RC, final | extracted packaged directory outside local site tree | `2985` | `865` | `2120` | Cleared the bounded ticket-integrity nonce/input mutation batch in `includes/admin/ticket-integrity-page.php`; the normalized rerun removed the selected-file input/unslash warnings plus four duplicate read-only `Recommended` hits without adding new Plugin Check code categories. |
 
 Net reduction from the `WPORG-02` source-tree baseline to the current packaged RC:
 
@@ -68,15 +69,21 @@ Net reduction from the `WPORG-02` source-tree baseline to the current packaged R
 
 Net reduction from `WPORG-11A`:
 
-- `-22` total findings
+- `-34` total findings
 - `0` errors
-- `-22` warnings
+- `-34` warnings
 
 Net reduction from `WPORG-12B`:
 
-- `-4` total findings
+- `-16` total findings
 - `0` errors
-- `-4` warnings
+- `-16` warnings
+
+Net reduction from `WPORG-12C`:
+
+- `-12` total findings
+- `0` errors
+- `-12` warnings
 
 Net reduction from `WPORG-10A`:
 
@@ -86,61 +93,54 @@ Net reduction from `WPORG-10A`:
 
 ## Fixed In This Pass
 
-- 12C selected mutation-flow batch
-  - applied bounded request normalization in `includes/modules/status-notices/admin-ui.php`
-  - kept the scope inside the existing list-search filter plus the save, duplicate, toggle, trash, and bulk handlers
-  - retained the existing custom capability and nonce checks and limited the changes to unslash/sanitize normalization of `q`, `notice_id`, `id`, `enabled`, and `notice_ids`
-  - intentionally deferred the read-only route/view/filter/admin-notice query flags because they have no matching nonce flow in the current UI
+- 12D selected mutation-flow batch
+  - applied bounded request normalization in `includes/admin/ticket-integrity-page.php`
+  - kept the mutation scope inside the existing settings save and admin test-email handlers, then normalized the same-page admin notice/filter query round-trips those handlers rely on
+  - retained the existing `manage_options` and `check_admin_referer()` checks and matched the existing downstream email/key sanitizers so saved values, report output, redirects, and test-send behavior stayed unchanged
+  - intentionally deferred scan/rebuild/duplicate-cleanup/export branch changes and the remaining read-only query `Recommended` residue because they have no matching nonce flow in the current UI
 - selected-file outcome
-  - `includes/modules/status-notices/admin-ui.php`: `24` -> `22`
-  - `2` -> `2` errors
-  - `22` -> `20` warnings
-  - nonce/input subset `22` -> `20`
-  - removed `WordPress.Security.ValidatedSanitizedInput.MissingUnslash x1` and `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized x1` from the selected file
-  - remaining nonce/input findings in the selected file are `WordPress.Security.NonceVerification.Recommended x20` on read-only admin query/filter/view reads
+  - `includes/admin/ticket-integrity-page.php`: `27` -> `14`
+  - `7` -> `7` errors
+  - `20` -> `7` warnings
+  - nonce/input subset `20` -> `7`
+  - removed `WordPress.Security.ValidatedSanitizedInput.MissingUnslash x6`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized x3`, and `WordPress.Security.NonceVerification.Recommended x4` from the selected file
+  - remaining nonce/input findings in the selected file are `WordPress.Security.NonceVerification.Recommended x7` on read-only admin query/filter/notice/page reads
 - exact request reads changed
-  - list search query `$_GET['q']` now normalizes through `sanitize_text_field( wp_unslash( ... ) )`
-  - save handler `$_POST['notice_id']` now normalizes through `absint( wp_unslash( ... ) )`
-  - duplicate/toggle/trash handler `$_GET['id']` reads now normalize through `absint( wp_unslash( ... ) )`
-  - toggle handler `$_GET['enabled']` now normalizes through `absint( wp_unslash( ... ) )`
-  - bulk handler `$_POST['notice_ids']` now normalizes directly through `array_map( 'absint', (array) wp_unslash( ... ) )`
+  - admin page gate `$_GET['page']` now normalizes through `sanitize_key( wp_unslash( ... ) )`
+  - settings handler `$_POST['alert_recipient']` and `$_POST['daily_report_recipient']` now normalize through `sanitize_email( wp_unslash( ... ) )`
+  - settings handler `$_POST['payment_gateway_health_interval']` now normalizes through `sanitize_key( wp_unslash( ... ) )`
+  - admin test-email handler `$_POST['test_recipient']` now normalizes through `sanitize_email( wp_unslash( ... ) )`
+  - same-page notice/filter query reads `tim_notice`, `detail`, `red`, `yellow`, `recipient`, and `event` now normalize through the same single-access `wp_unslash()` plus existing `sanitize_key()`, `sanitize_text_field()`, `sanitize_email()`, and `absint()` patterns
 - existing guards relied on
-  - save: `current_user_can( vms_status_notices_capability() )` plus `check_admin_referer( 'vms_status_notice_save' )`
-  - duplicate: `current_user_can( vms_status_notices_capability() )` plus `check_admin_referer( 'vms_status_notice_duplicate_' . $notice_id )`
-  - toggle: `current_user_can( vms_status_notices_capability() )` plus `check_admin_referer( 'vms_status_notice_toggle_' . $notice_id )`
-  - trash: `current_user_can( vms_status_notices_capability() )` plus `check_admin_referer( 'vms_status_notice_trash_' . $notice_id )`
-  - bulk: `current_user_can( vms_status_notices_capability() )` plus `check_admin_referer( 'vms_status_notice_bulk' )`
+  - settings save: `current_user_can( 'manage_options' )` plus `check_admin_referer( 'vms_ticket_integrity_save_settings' )`
+  - admin test email: `current_user_can( 'manage_options' )` plus `check_admin_referer( 'vms_ticket_integrity_send_daily_report_test' )`
 - branches deferred from this batch
-  - asset-page gate `page`
-  - view router `view`
-  - notice/result banner reads `vms_status_notice_result` and `bulk_count`
-  - list filters `scope`, `severity`, and `enabled`
-  - edit-screen reads `id` and `template`
-  - reason: all remaining hits are read-only `Recommended` warnings on admin query/view/filter flows without a matching established nonce flow, so adding nonce checks here would widen behavior rather than just normalize guarded mutation inputs
+  - manual scan, event scan, rebuild, duplicate-cleanup, and report-export request reads
+  - reason: those branches already sit behind capability/nonces, but they touch scan, repair, cleanup, or export behavior more directly and were not needed to clear the current packaged input/unslash residue
+  - remaining read-only page/query/notice hits
+  - reason: the remaining `Recommended` warnings have no matching nonce flow in the current UI, so adding nonce checks here would widen behavior rather than just normalize guarded mutation inputs
 - manual QA checklist for the selected slice
-  - menu/location: `wp-admin/admin.php?page=vms-status-notices`
-  - form/action tested: create or edit a status notice, then save via the existing `admin_post_vms_status_notice_save` flow
-  - form/action tested: duplicate an existing notice from the list table action
-  - form/action tested: toggle enabled/disabled from the list table action
-  - form/action tested: trash a notice from the list table action
-  - form/action tested: bulk enable, bulk disable, and bulk trash with multiple selected notices
-  - fields/actions affected: list search `q`, hidden `notice_id`, action-link `id`, toggle `enabled`, and bulk `notice_ids`
-  - nonce/capability expectation: all selected mutation handlers should continue to require `vms_status_notices_capability()` and the existing matching nonce
-  - redirect/admin notice expectation: equivalent successful actions should keep the same redirect targets and result banners as before
-  - negative case: submit a saved action URL with a missing or invalid nonce and confirm WordPress rejects it without mutating notice state
-  - equivalence expectation: for equivalent user input, saved values, enabled state, trash outcome, bulk counts, and visible notice behavior should remain unchanged before vs. after this batch
+  - menu/location: `wp-admin/admin.php?page=vms-ticket-integrity`
+  - form/action tested: save Ticket Integrity settings via the existing `admin_post_vms_ticket_integrity_save_settings` flow
+  - form/action tested: send the State of the Range admin test email via the existing `admin_post_vms_ticket_integrity_send_daily_report_test` flow
+  - query behavior tested: same-page admin notice banners after each successful action and the `?event=<plan_id>` event filter on the same screen
+  - fields/actions affected: `alert_recipient`, `daily_report_recipient`, `payment_gateway_health_interval`, `test_recipient`, and the read-only `page`, `tim_notice`, `detail`, `red`, `yellow`, `recipient`, and `event` query reads
+  - nonce/capability expectation: both selected mutation handlers should continue to require `manage_options` plus their existing matching nonce
+  - redirect/admin notice expectation: equivalent successful actions should keep the same redirect targets, notice copy, event filtering, and email-recipient fallback behavior as before
+  - negative case: submit a saved action URL with a missing or invalid nonce and confirm WordPress rejects it without saving settings or sending the admin test email
+  - equivalence expectation: for equivalent user input, saved values, admin test recipient fallback, and ticket-integrity screen results should remain unchanged before vs. after this batch
 - packaged outcome
-  - overall packaged totals: `3001` -> `2997`
-  - overall packaged warnings: `2136` -> `2132`
+  - overall packaged totals: `2997` -> `2985`
+  - overall packaged warnings: `2132` -> `2120`
   - overall packaged errors: unchanged at `865`
-  - overall nonce/input surface: `1125` -> `1123`
-  - normalized rerun side effects outside selected file scope: `plugin_header_nonexistent_domain_path` dropped `1` -> `0`; `WordPress.DB.SlowDBQuery.slow_db_query_meta_key` dropped `69` -> `68`
+  - overall nonce/input surface: `1123` -> `1110`
+  - normalized rerun side effects outside selected file scope: none observed; `plugin_header_nonexistent_domain_path` remained absent and `load_plugin_textdomainFound` remained steady at `1`
 - validation for this pass
-  - `php -l includes/modules/status-notices/admin-ui.php` passed
+  - `php -l includes/admin/ticket-integrity-page.php` passed
   - `git diff --check` passed
-  - `php scripts/build-public-release.php --output-dir dist/wporg-12c --force --allow-dirty` passed
-  - packaged Plugin Check reran against an extracted packaged directory outside the local site tree, leaving the local `vms/` install untouched
-  - no focused status-notices regression exists in `tests/`
+  - `php scripts/build-public-release.php --output-dir dist/wporg-12d --force --allow-dirty` passed
+  - packaged Plugin Check reran against `/tmp/vms-wporg-12d.FjfAIt/vms` outside the local site tree, leaving the local `vms/` install untouched
+  - no focused ticket-integrity admin-handler regression exists in `tests/`
 
 No previously unseen Plugin Check codes appeared in this pass.
 
@@ -148,7 +148,7 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 | Category | Count | Representative files | Classification | Recommended strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `1123` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | `WPORG-12B` cleared the first bounded admin-only normalization slice in `includes/admin/settings-page.php`, and `WPORG-12C` removed the remaining status-notices unslash/input warnings while documenting the read-only `Recommended` residue as deferred. Continue with `includes/admin/ticket-integrity-page.php`, then `includes/admin/vendor-command-center.php`, and keep focused automated coverage as a prerequisite before ticketing, portal/public, upload, admissions-claim, or Event Plans/runtime hardening. |
+| Nonce and input handling | `1110` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | `WPORG-12B` cleared the first bounded admin-only normalization slice in `includes/admin/settings-page.php`, `WPORG-12C` reduced the status-notices admin surface, and `WPORG-12D` reduced `includes/admin/ticket-integrity-page.php` to seven read-only `Recommended` warnings plus deferred non-nonce errors. Continue with `includes/admin/vendor-command-center.php`, then `includes/modules/staff-tasks/admin-ui.php`, and keep focused automated coverage as a prerequisite before ticketing, portal/public, upload, admissions-claim, or Event Plans/runtime hardening. |
 | Database and SQL safety | `1076` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Keep DB/SQL paused unless a new isolated admin/reporting read slice appears that is materially safer than the next bounded admin-only mutation batch. |
 | Escaping and output safety | `145` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | Keep the escape-only audit paused after `WPORG-06C`; the remaining candidates are shared allowed-HTML boundaries, public/portal surfaces, metabox/save flows, vendor-assignment dashboards, or excluded Event Plans slices rather than isolated admin-only display targets. |
 | I18n placeholder comments and ordering | `539` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Pause targeted i18n after `WPORG-08B` unless another equivalently isolated admin-only translator-comment or placeholder-ordering slice is identified; otherwise switch back to blocker coverage. |
@@ -158,16 +158,16 @@ No previously unseen Plugin Check codes appeared in this pass.
 ## Nonce/Input Mutation Roadmap
 
 - packaged current baseline
-  - counts now stand at `2997 / 865 / 2132` after `WPORG-12C`
-  - the top twenty nonce/input files now account for `730 / 1123` remaining findings
-  - `includes/admin/settings-page.php` remains outside the top twenty after `WPORG-12B`, and `includes/modules/status-notices/admin-ui.php` now carries only read-only `Recommended` residue in the nonce/input group
-- next bounded admin-only code batches after `WPORG-12C`
+  - counts now stand at `2985 / 865 / 2120` after `WPORG-12D`
+  - the top twenty nonce/input files now account for `724 / 1110` remaining findings
+  - `includes/admin/settings-page.php` and `includes/admin/ticket-integrity-page.php` now both sit outside the top twenty, while `includes/modules/status-notices/admin-ui.php` carries only read-only `Recommended` residue in the nonce/input group
+- next bounded admin-only code batches after `WPORG-12D`
 
 | Target | Workflow | Expected reduction | Guard pattern | Coverage gate | Why first |
 | --- | --- | ---: | --- | --- | --- |
-| `includes/admin/ticket-integrity-page.php` | report settings, preview, dry-run, send/test, export normalization | `~14-20` | keep existing `manage_options` and `check_admin_referer()` usage; normalize request values only | reuse adjacent report/lock tests and add manual QA for send/test/export | bounded admin reporting surface with nearby validation evidence |
 | `includes/admin/vendor-command-center.php` | admin onboarding email send and template-save request normalization | `~20-27` | keep existing capability and nonce scaffolding; normalize action and route values only | manual QA around email/template actions is required | still admin-only and bounded, but slightly riskier because it sends email |
 | `includes/modules/staff-tasks/admin-ui.php` | admin task transition, assign, generate, and create normalization | `~10-16` | keep existing capability and nonce scaffolding; normalize request values only | manual QA around task state transitions is required | still admin-only, but broader state mutation than ticket-integrity |
+| `includes/social-share/admin.php` | admin webhook/account/template save/delete normalization | `~12-18` | keep existing capability and nonce scaffolding; normalize request and action values only | manual QA around save/delete actions is required | still admin-only and bounded, with lower behavior risk than portal or ticketing flows |
 
 - deferred until after submission or until dedicated coverage exists
   - `includes/cpt/event-plans.php`
@@ -193,6 +193,7 @@ No previously unseen Plugin Check codes appeared in this pass.
 - The selected `pass-claims.php` pass stayed outside Event Plans runtime and mutation logic again.
 - The read-only nonce/input phase remains closed after `WPORG-05E`, the escape-only phase remains paused after `WPORG-06C`, and `WPORG-12A` only documented the deferred Event Plans roadmap.
 - `WPORG-12B` stayed inside `includes/admin/settings-page.php` and did not widen into Event Plans runtime, save, publish, cleanup, or integration behavior.
+- `WPORG-12D` stayed inside `includes/admin/ticket-integrity-page.php` and did not widen into Event Plans runtime, save, publish, cleanup, or integration behavior.
 - Remaining Event Plans findings are dominated by:
   - `save_event_plan_meta()` and adjacent request/save logic
   - the main Event Plan details render block tied to integration state
@@ -201,7 +202,7 @@ No previously unseen Plugin Check codes appeared in this pass.
 ## Recommended Next Task
 
 - Next execution target
-  - start the next bounded admin-only nonce/input code batch in `includes/admin/ticket-integrity-page.php`
+  - start the next bounded admin-only nonce/input code batch in `includes/admin/vendor-command-center.php`
 - Scope
   - keep the batch limited to request normalization around already-existing nonce and capability checks
   - do not widen into behavior changes, new nonce fields, new actions, outbound-email rewrites, or adjacent ticketing/runtime rewrites

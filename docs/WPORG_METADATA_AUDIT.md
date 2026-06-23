@@ -5,14 +5,14 @@ Date: 2026-06-22
 Scope note:
 
 - Working branch: `work/unreleased-2026-06-18`
-- HEAD at start of `WPORG-12C`: `a0b06ae693f1713767d9edc64a87737a3128c0a1` (`a0b06ae`)
+- HEAD at start of `WPORG-12D`: `ab2bcffe333ffeae3409cf086ccc9547174d76f9` (`ab2bcff`)
 - Current repo lineage before this public pass: internal `0.2.24.748`
 - Last proven public artifact before this RC: `0.2.24.747`
 - Public version introduced in this pass: `1.0.0`
 
 ## Metadata State
 
-| Item | Current State After `WPORG-12C` | Evidence | Status | Follow-up |
+| Item | Current State After `WPORG-12D` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
 | Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
@@ -24,7 +24,7 @@ Scope note:
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
 | Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 12C normalized extracted-package rerun stopped emitting the oscillating `plugin_header_nonexistent_domain_path` warning again while the standing `load_plugin_textdomain()` warning remains associated with `vendor-management-system.php`. |
+| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 12D normalized extracted-package rerun again did not emit the oscillating `plugin_header_nonexistent_domain_path` warning while the standing `load_plugin_textdomain()` warning remains associated with `vendor-management-system.php`. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |
@@ -310,4 +310,12 @@ Scope note:
   - the selected file `includes/modules/status-notices/admin-ui.php` reduced from `24` findings to `22` while reducing its nonce/input subset from `22` to `20`,
   - the removed status-notices findings were the bulk `notice_ids` `InputNotSanitized` warning and the list-search `q` `MissingUnslash` warning; the remaining status-notices nonce/input surface is now entirely read-only `WordPress.Security.NonceVerification.Recommended` warnings,
   - the normalized extracted-package rerun introduced no previously unseen Plugin Check code categories, stopped emitting the oscillating `plugin_header_nonexistent_domain_path` warning, and left the standing metadata `load_plugin_textdomain()` warning associated with `vendor-management-system.php`,
+  - the normalized packaged raw findings were promoted into `docs/plugin-check-1.0.0-raw.txt`.
+- `WPORG-12D` adds:
+  - current rebuilt RC artifact `dist/wporg-12d/vms-1.0.0-public-release.zip`,
+  - current SHA-256 `be5008b2dd6afd04d2c1c06eedbe60f931b3e1d25c8acff0801159792abf0384`,
+  - packaged Plugin Check reduction from `2997` to `2985` findings after the bounded ticket-integrity nonce/input mutation batch,
+  - the selected file `includes/admin/ticket-integrity-page.php` reduced from `27` findings to `14` while reducing its nonce/input subset from `20` to `7`,
+  - the removed ticket-integrity nonce/input findings were `InputNotSanitized x3`, `MissingUnslash x6`, and `Recommended x4`, cleared by matching the existing downstream email/key sanitizers and normalizing the same-page notice/filter query round-trips without changing report or repair behavior,
+  - the normalized extracted-package rerun introduced no previously unseen Plugin Check code categories, again did not emit the oscillating `plugin_header_nonexistent_domain_path` warning, and left the standing metadata `load_plugin_textdomain()` warning associated with `vendor-management-system.php`,
   - the normalized packaged raw findings were promoted into `docs/plugin-check-1.0.0-raw.txt`.

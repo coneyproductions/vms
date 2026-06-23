@@ -2269,33 +2269,20 @@ line	column	type	code	message	docs
 
 FILE: includes/admin/ticket-integrity-page.php
 line	column	type	code	message	docs
-21	16	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-21	55	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-153	36	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;alert_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar	-
-153	36	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;alert_recipient&#039;]	-
-158	43	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;daily_report_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar	-
-158	43	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;daily_report_recipient&#039;]	-
-165	52	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;payment_gateway_health_interval&#039;] not unslashed before sanitization. Use wp_unslash() or similar	-
-165	52	WARNING	WordPress.Security.ValidatedSanitizedInput.InputNotSanitized	Detected usage of a non-sanitized input variable: $_POST[&#039;payment_gateway_health_interval&#039;]	-
-313	40	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_POST[&#039;test_recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar	-
+21	44	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
 595	5	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.	-
 820	139	ERROR	WordPress.DateTime.RestrictedFunctions.date_date	date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.	-
 824	10	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'vms_ticket_integrity_build_event_report_markdown'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-831	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-831	63	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-832	18	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-832	66	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-832	66	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;detail&#039;] not unslashed before sanitization. Use wp_unslash() or similar	-
-846	12	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-847	12	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-873	15	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-874	47	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
-874	47	WARNING	WordPress.Security.ValidatedSanitizedInput.MissingUnslash	$_GET[&#039;recipient&#039;] not unslashed before sanitization. Use wp_unslash() or similar	-
-1834	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$woo_inventory_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1835	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$sales_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-1836	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$last_write_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-2185	59	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$row_class'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
-2420	27	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
+831	46	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
+832	53	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
+833	58	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
+847	33	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
+848	33	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
+1835	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$woo_inventory_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+1836	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$sales_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+1837	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$last_write_html'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+2186	59	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$row_class'.	https://developer.wordpress.org/apis/security/escaping/#escaping-functions
+2421	48	WARNING	WordPress.Security.NonceVerification.Recommended	Processing form data without nonce verification.	-
 
 FILE: includes/admin/vendor-staff-link.php
 line	column	type	code	message	docs
@@ -3483,3 +3470,7 @@ FILE: includes/modules/email-followups/scheduler.php
 line	column	type	code	message	docs
 73	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_key	Detected usage of meta_key, possible slow query.	-
 74	13	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_query	Detected usage of meta_query, possible slow query.	-
+
+FILE: includes/helpers/checkin-close.php
+line	column	type	code	message	docs
+178	19	WARNING	WordPress.DB.SlowDBQuery.slow_db_query_meta_key	Detected usage of meta_key, possible slow query.	-
