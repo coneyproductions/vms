@@ -14,11 +14,22 @@ function vms_ticket_integrity_register_admin_page(): void
 }
 add_action('admin_menu', 'vms_ticket_integrity_register_admin_page', 45);
 
+function vms_ticket_integrity_query_arg(string $key): string
+{
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Ticket Integrity admin routing and notices only change admin display state.
+	if (!isset($_GET[$key])) {
+		return '';
+	}
+
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Ticket Integrity admin routing and notices are unslashed here and sanitized or cast by the caller.
+	return (string) wp_unslash($_GET[$key]);
+}
+
 function vms_ticket_integrity_admin_enqueue_assets(string $hook): void
 {
 	unset($hook);
 
-	$page = sanitize_key(wp_unslash((string) ($_GET['page'] ?? '')));
+	$page = sanitize_key(vms_ticket_integrity_query_arg('page'));
 	if (!in_array($page, array('vms-ticket-integrity', 'vms-dashboard'), true)) {
 		return;
 	}
@@ -828,9 +839,9 @@ add_action('admin_post_vms_ticket_integrity_export_report', 'vms_ticket_integrit
 
 function vms_ticket_integrity_render_notice_from_query(): void
 {
-	$notice = sanitize_key(wp_unslash((string) ($_GET['tim_notice'] ?? '')));
-	$detail = sanitize_text_field(wp_unslash((string) ($_GET['detail'] ?? '')));
-	$notice_recipient = sanitize_email(wp_unslash((string) ($_GET['recipient'] ?? '')));
+	$notice = sanitize_key(vms_ticket_integrity_query_arg('tim_notice'));
+	$detail = sanitize_text_field(vms_ticket_integrity_query_arg('detail'));
+	$notice_recipient = sanitize_email(vms_ticket_integrity_query_arg('recipient'));
 
 	if ($notice === '') {
 		return;
@@ -844,8 +855,8 @@ function vms_ticket_integrity_render_notice_from_query(): void
 			$message = sprintf(
 				/* translators: 1: red count, 2: yellow count */
 				__('Ticket integrity scan completed. Red: %1$d. Yellow: %2$d.', 'vms'),
-				absint(wp_unslash((string) ($_GET['red'] ?? 0))),
-				absint(wp_unslash((string) ($_GET['yellow'] ?? 0)))
+				absint(vms_ticket_integrity_query_arg('red')),
+				absint(vms_ticket_integrity_query_arg('yellow'))
 			);
 			break;
 		case 'event_scan_complete':
@@ -1832,9 +1843,9 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 						__('Last Write Reason', 'vms')     => (string) ($row['last_write_reason'] ?? '—'),
 					)
 				);
-				echo '<td>' . $woo_inventory_html . '</td>';
-				echo '<td>' . $sales_html . '</td>';
-				echo '<td>' . $last_write_html . '</td>';
+				echo '<td>' . wp_kses_post($woo_inventory_html) . '</td>';
+				echo '<td>' . wp_kses_post($sales_html) . '</td>';
+				echo '<td>' . wp_kses_post($last_write_html) . '</td>';
 				echo '</tr>';
 			}
 			echo '</tbody></table>';
@@ -2181,9 +2192,9 @@ function vms_ticket_integrity_render_results_table(array $events, int $focused_p
 		$event_url = (string) ($event['event_url'] ?? '');
 		$edit_plan_url = (string) ($event['edit_plan_url'] ?? '');
 		$mode = sanitize_key((string) ($event['mode'] ?? ''));
-		$row_class = ($focused_plan_id > 0 && $focused_plan_id === $plan_id) ? ' class="vms-ticket-integrity__focused-row"' : '';
+		$row_class = ($focused_plan_id > 0 && $focused_plan_id === $plan_id) ? 'vms-ticket-integrity__focused-row' : '';
 
-		echo '<tr id="' . esc_attr($event_row_id) . '"' . $row_class . '>';
+		echo '<tr id="' . esc_attr($event_row_id) . '"' . ($row_class !== '' ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
 		echo '<td><span class="' . esc_attr(vms_ticket_integrity_status_css_class($status)) . '">' . esc_html(vms_ticket_integrity_status_label($status)) . '</span></td>';
 		echo '<td>';
 		echo '<strong>' . esc_html((string) ($event['event_title'] ?? __('Untitled event', 'vms'))) . '</strong>';
@@ -2418,7 +2429,7 @@ function vms_ticket_integrity_render_admin_page(): void
 	$events = function_exists('vms_ticket_integrity_get_sorted_events') ? vms_ticket_integrity_get_sorted_events() : array();
 	$logs = function_exists('vms_ticket_integrity_get_logs') ? vms_ticket_integrity_get_logs() : array();
 
-	$filter_plan_id = absint(wp_unslash((string) ($_GET['event'] ?? 0)));
+	$filter_plan_id = absint(vms_ticket_integrity_query_arg('event'));
 	if ($filter_plan_id > 0) {
 		$events = array_values(array_filter($events, static function (array $event) use ($filter_plan_id): bool {
 			return absint($event['plan_id'] ?? 0) === $filter_plan_id;
