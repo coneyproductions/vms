@@ -22,6 +22,19 @@ if (!function_exists('vms_tasks_admin_page_url')) {
 	}
 }
 
+if (!function_exists('vms_tasks_admin_query_arg')) {
+	function vms_tasks_admin_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter state only; no mutation depends on these query args.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin display/filter state is unslashed here and sanitized or cast by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
 if (!function_exists('vms_tasks_is_event_plan_edit_screen')) {
 	function vms_tasks_is_event_plan_edit_screen(): bool
 	{
@@ -89,9 +102,9 @@ if (!function_exists('vms_tasks_render_event_plan_metabox_footer_forms')) {
 		foreach ($vms_tasks_event_plan_metabox_forms as $form_id => $form) {
 			$form_id = sanitize_html_class((string) $form_id);
 			$method = (($form['method'] ?? 'post') === 'get') ? 'get' : 'post';
-			$action = esc_url((string) ($form['action'] ?? ''));
+			$action = (string) ($form['action'] ?? '');
 			$hidden_fields = is_array($form['hidden_fields'] ?? null) ? (array) $form['hidden_fields'] : array();
-			echo '<form id="' . esc_attr($form_id) . '" method="' . esc_attr($method) . '" action="' . $action . '" class="vms-tasks-detached-form" style="display:none;">';
+			echo '<form id="' . esc_attr($form_id) . '" method="' . esc_attr($method) . '" action="' . esc_url($action) . '" class="vms-tasks-detached-form" style="display:none;">';
 			foreach ($hidden_fields as $name => $value) {
 				if ($value === null) {
 					continue;
@@ -107,8 +120,8 @@ add_action('admin_footer', 'vms_tasks_render_event_plan_metabox_footer_forms', 4
 if (!function_exists('vms_tasks_admin_render_notices')) {
 	function vms_tasks_admin_render_notices(): void
 	{
-		$notice = isset($_GET['vms_tasks_notice']) ? sanitize_key((string) wp_unslash($_GET['vms_tasks_notice'])) : '';
-		$message = isset($_GET['vms_tasks_message']) ? sanitize_text_field((string) wp_unslash($_GET['vms_tasks_message'])) : '';
+		$notice = sanitize_key(vms_tasks_admin_query_arg('vms_tasks_notice'));
+		$message = sanitize_text_field(vms_tasks_admin_query_arg('vms_tasks_message'));
 		if ($notice === '' && $message === '') {
 			return;
 		}
@@ -153,6 +166,7 @@ if (!function_exists('vms_tasks_admin_get_venues')) {
 			}
 			$label = trim((string) get_the_title($venue_id));
 			if ($label === '') {
+				/* translators: %d: venue post ID. */
 				$label = sprintf(__('Venue #%d', 'vms'), $venue_id);
 			}
 			$out[$venue_id] = $label;
@@ -492,6 +506,7 @@ if (!function_exists('vms_tasks_admin_get_event_options')) {
 
 			$title = trim((string) ($context['event_title'] ?? get_the_title($event_id)));
 			if ($title === '') {
+				/* translators: %d: event post ID. */
 				$title = sprintf(__('Event #%d', 'vms'), $event_id);
 			}
 			$date_ymd = trim((string) ($context['date_ymd'] ?? ''));
@@ -1215,15 +1230,15 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 		}
 
 		$filters = array(
-			'task_instance_id' => isset($_GET['task_instance_id']) ? absint($_GET['task_instance_id']) : 0,
-			'status' => isset($_GET['status']) ? sanitize_key((string) wp_unslash($_GET['status'])) : '',
-			'event_id' => isset($_GET['event_id']) ? absint($_GET['event_id']) : 0,
-			'event_linkage' => isset($_GET['event_linkage']) ? sanitize_key((string) wp_unslash($_GET['event_linkage'])) : '',
-			'assignee_user_id' => isset($_GET['assignee_user_id']) ? absint($_GET['assignee_user_id']) : 0,
-			'role_key' => isset($_GET['role_key']) ? sanitize_key((string) wp_unslash($_GET['role_key'])) : '',
-			'venue_id' => isset($_GET['venue_id']) ? absint($_GET['venue_id']) : 0,
-			'required_only' => !empty($_GET['required_only']) ? 1 : 0,
-			'due_bucket' => isset($_GET['due_bucket']) ? sanitize_key((string) wp_unslash($_GET['due_bucket'])) : '',
+			'task_instance_id' => absint(vms_tasks_admin_query_arg('task_instance_id')),
+			'status' => sanitize_key(vms_tasks_admin_query_arg('status')),
+			'event_id' => absint(vms_tasks_admin_query_arg('event_id')),
+			'event_linkage' => sanitize_key(vms_tasks_admin_query_arg('event_linkage')),
+			'assignee_user_id' => absint(vms_tasks_admin_query_arg('assignee_user_id')),
+			'role_key' => sanitize_key(vms_tasks_admin_query_arg('role_key')),
+			'venue_id' => absint(vms_tasks_admin_query_arg('venue_id')),
+			'required_only' => !empty(vms_tasks_admin_query_arg('required_only')) ? 1 : 0,
+			'due_bucket' => sanitize_key(vms_tasks_admin_query_arg('due_bucket')),
 			'limit' => 500,
 		);
 		$now_local = vms_tasks_now_local_mysql();
@@ -1255,6 +1270,7 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 				$event_label = trim((string) ($context['event_title'] ?? get_the_title($default_event_id)));
 				$date_ymd = trim((string) ($context['date_ymd'] ?? ''));
 				if ($event_label === '') {
+					/* translators: %d: event post ID. */
 					$event_label = sprintf(__('Event #%d', 'vms'), $default_event_id);
 				}
 				if ($date_ymd !== '') {
@@ -1987,7 +2003,10 @@ if (!function_exists('vms_tasks_render_my_tasks_page')) {
 			wp_die(esc_html__('Insufficient permissions.', 'vms'));
 		}
 		$user_id = absint(get_current_user_id());
-		$tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'today';
+		$tab = sanitize_key(vms_tasks_admin_query_arg('tab'));
+		if ($tab === '') {
+			$tab = 'today';
+		}
 		if (!in_array($tab, array('overdue', 'today', 'upcoming'), true)) {
 			$tab = 'today';
 		}
