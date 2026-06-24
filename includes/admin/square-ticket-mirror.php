@@ -70,7 +70,14 @@ function vms_square_ticket_mirror_render_metabox($post): void
     $action_url = admin_url('admin-post.php');
 
     echo '<div class="vms-square-ticket-mirror">';
-    echo '<p><strong>' . esc_html__('Status', 'vms') . ':</strong> ' . vms_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')) . '</p>';
+    echo '<p><strong>' . esc_html__('Status', 'vms') . ':</strong> ' . wp_kses(
+        vms_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
+        array(
+            'span' => array(
+                'style' => true,
+            ),
+        )
+    ) . '</p>';
 
     if (!empty($eligibility['eligible'])) {
         echo '<p><strong>' . esc_html__('Eligibility', 'vms') . ':</strong> ' . esc_html__('Eligible paid public online ticket', 'vms') . '</p>';
@@ -255,4 +262,3 @@ function vms_square_ticket_mirror_handle_admin_action(): void
     exit;
 }
 add_action('admin_post_vms_square_ticket_mirror_action', 'vms_square_ticket_mirror_handle_admin_action');
-

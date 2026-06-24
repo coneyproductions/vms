@@ -59,7 +59,14 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
 
         $state = vms_square_ticket_mirror_status_context($product_id);
         if (function_exists('vms_square_ticket_mirror_admin_status_badge')) {
-            echo vms_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored'));
+            echo wp_kses(
+                vms_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
+                array(
+                    'span' => array(
+                        'style' => true,
+                    ),
+                )
+            );
         } else {
             echo esc_html(vms_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored')));
         }
