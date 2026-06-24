@@ -2,7 +2,8 @@
 
 Prepared: 2026-06-23
 Branch: `work/unreleased-2026-06-18`
-Commit HEAD: `61952f860ac5487bb8f227b8776cb2edb51df7f4`
+Consultation document commit: `9877881e9a3996ec5d38ae5b445e9b2a7d3a86d1`
+Release-candidate package source HEAD: `61952f860ac5487bb8f227b8776cb2edb51df7f4`
 Package: `dist/wporg-15l/vms-1.0.0-public-release.zip`
 Package SHA-256: `e448ddb1f7297d185176e51b50afa8c9a836f0f6707741b2cb5dfc1127b50783`
 
@@ -251,7 +252,8 @@ Continue small admin-only cleanup batches where they are clearly safe, while ack
 ## 12. Appendix: current package and validation references
 
 - Branch: `work/unreleased-2026-06-18`
-- HEAD: `61952f860ac5487bb8f227b8776cb2edb51df7f4`
+- Consultation document commit: `9877881e9a3996ec5d38ae5b445e9b2a7d3a86d1`
+- Release-candidate package source HEAD: `61952f860ac5487bb8f227b8776cb2edb51df7f4`
 - Package path: `dist/wporg-15l/vms-1.0.0-public-release.zip`
 - SHA-256: `e448ddb1f7297d185176e51b50afa8c9a836f0f6707741b2cb5dfc1127b50783`
 - Latest packaged Plugin Check command:
