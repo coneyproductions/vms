@@ -498,6 +498,7 @@ function vms_render_venue_schedule_box($post)
         $end   = $slots[$i]['end'];
 
         echo '<div class="vms-venue-season-card">';
+        /* translators: %d: number used in this message. */
         echo '<div class="vms-venue-season-title">' . esc_html(sprintf(__('Season %d', 'backstage-venue-manager'), $idx)) . '</div>';
         echo '<div class="vms-venue-season-row">';
 
@@ -711,6 +712,7 @@ add_action('admin_notices', function () {
 
     echo '<div class="notice notice-info is-dismissible">';
     echo '<p><strong>' . esc_html__('Venue restored.', 'backstage-venue-manager') . '</strong> ' . sprintf(
+        /* translators: %s: status label. */
         esc_html__('Status was restored to "%s" (pre-trash state).', 'backstage-venue-manager'),
         esc_html($prev)
     ) . '</p>';

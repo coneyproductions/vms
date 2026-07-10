@@ -16,8 +16,11 @@ Current inventory totals from this pass:
 - Likely findings that need deeper review before editing: `6`
 - Acceptable / false-positive / compatibility-sensitive findings called out explicitly: `10`
 - Product-owner or release-manager decisions required before packaging: `3`
+- Later result sections now record completed working-tree remediations for `WPORG-17B` and `WPORG-18A`/`WPORG-18B`/`WPORG-18D`; the opening totals above remain the initial prereview audit snapshot and are not auto-reduced retroactively.
 
 Highest-priority issues from a WordPress.org rejection-risk perspective:
+
+The initial top-five snapshot below predates the later `WPORG-17B` and `WPORG-18A`/`WPORG-18B`/`WPORG-18D` working-tree remediations.
 
 1. The public plugin currently ships a `Premium Add-ons` installer/licensing surface and Freemius activation/validation/deactivation calls.
 2. The current i18n wrapper pattern uses non-literal gettext inputs and a dynamic text-domain wrapper that is not translation-parser compatible.
@@ -49,7 +52,8 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | ID | Category | Severity | Confidence | Primary reference | Summary | Change risk | Batch |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `A1` | A, L | High | Confirmed | `includes/admin/addons/class-vms-admin-addons.php:15-45`; `includes/admin/addons/class-vms-addons-licensing.php:61-124`; `assets/admin/addons/manifest-addons.json:21-36` | Public package ships premium add-on discovery, installer, license storage, and Freemius remote unlock operations. | Medium | `WPORG-17B` |
-| `J1` | J | High | Confirmed | `includes/core/registry/admin-menu.php:19-30`; `includes/core/registry/statuses.php:13-21` | Dynamic gettext wrapper and non-literal domain usage are not parser-compatible for WordPress.org translations. | Medium | `WPORG-18` |
+| `J1` | J | High | Confirmed | `includes/core/registry/admin-menu.php:19-30`; `includes/core/registry/statuses.php:13-21` | Dynamic gettext wrapper and non-literal domain usage were remediated in the working tree; final `WPORG-18` verification now shows zero parser violations and zero actionable i18n Plugin Check findings. | Medium | `WPORG-18A`, `WPORG-18B` |
+| `J2` | J | High | Confirmed | `includes/admin/continuity-binder.php:266`; `includes/core/event-credits.php:380`; `includes/core/event-plan-save-profiler.php:1476`; `includes/modules/email-followups/admin-ui.php:604`; `vms/includes/modules/admissions/outreach-recipients.php:1861` | Translator-comment, placeholder-order, and final semantic comment-audit findings were remediated in the working tree; `WPORG-18D` corrected the remaining misleading heuristic comments and the final verification suite stayed clean. | Low to Medium | `WPORG-18B`, `WPORG-18D` |
 | `M1` | M | High | Confirmed | `vendor-management-system.php:3-13`; `readme.txt:4-9`; `vms-build.txt:1`; `vms/vendor-management-system.php:3-13`; `vms/readme.txt:4-9`; `vms/vms-build.txt:1` | Mirror release metadata says `1.0.0`; live local plugin says `1.1.0`. Packaging decision is blocked until versions are reconciled. | Low | `WPORG-28` |
 | `H1` | D, H | High | Confirmed | `includes/admin/tax-profile-admin-metabox.php:35-38`; `includes/portal/vendor-tax-profile.php:117-129` | Tax-profile upload handlers trust `$_FILES['type']` before `media_handle_upload()`. | Medium | `WPORG-21` |
 | `K1` | K | High | Confirmed | `includes/admin/admin-notices.php:16-64` | First-run notice is global, promotional, and not scoped to VMS screens. | Low | `WPORG-23` |
@@ -384,13 +388,16 @@ Status:
 
 Status:
 
-- One confirmed high-priority blocker.
-- The issue is broad enough to justify its own narrow batch.
+- `WPORG-18A` parser-compliance remediation is now applied and verified in the mirror and corresponding live tree.
+- `WPORG-18B` translator-comment and placeholder-order remediation is now applied and verified in the mirror and corresponding live tree.
+- `WPORG-18D` final semantic translator-comment audit is now applied and verified in the mirror and corresponding live tree.
+- No actionable i18n parser, translator-comment, or placeholder-order findings remain in the verified working tree.
 
 Evidence count:
 
-- `vms_i18n_runtime()` call sites found in this pass: `54`
-- `VMS_TEXTDOMAIN` references found in this pass: `22`
+- Pre-remediation `vms_i18n_runtime()` call sites found in this pass: `54`
+- Pre-remediation `VMS_TEXTDOMAIN` references found in this pass: `22`
+- Direct runtime gettext-parser violations confirmed before remediation: `5` in the mirror runtime tree, with matching live-tree violations in the corresponding files
 
 ### `J1` Dynamic gettext wrapper and non-literal domain usage break parser compatibility
 
@@ -398,9 +405,9 @@ Evidence count:
 - Confidence: Confirmed
 - References: `includes/core/registry/admin-menu.php:19-30`; `includes/core/registry/admin-menu.php:81-214`; `includes/core/registry/statuses.php:13-21`; `includes/core/registry/statuses.php:34-70`; `includes/admin-ui/nav.php:781-787`; `includes/tours/tours.php:64`; `includes/modules/staff-tasks/notifications.php:337`; `includes/social-share/queue-runner.php:66`
 - Why WordPress.org may object: WordPress.org translation tooling expects literal source strings and literal text domains in gettext-family calls. A wrapper that accepts `$text` and `$domain` at runtime prevents reliable extraction.
-- Recommended remediation: convert these wrapper calls back to literal gettext invocations or redesign the wrapper so it does not obscure literal strings from parsers. Do not pass dynamic runtime labels through gettext unless the source strings remain literal at the call site.
+- Recommended remediation: convert these wrapper calls back to literal gettext invocations or redesign the wrapper so it does not obscure literal strings from parsers. Do not pass dynamic runtime labels through gettext unless the source strings remain literal at the call site. That remediation is now applied in the working tree and verified by zero token-aware parser violations across mirror/live, successful mirror POT extraction, and a clean live `wp plugin check vms --checks=i18n_usage --slug=backstage-venue-manager` run.
 - Compatibility or regression risk: Medium because the wrapper is spread across admin registry and status label surfaces.
-- Suggested remediation batch ID: `WPORG-18`
+- Suggested remediation batch ID: `WPORG-18A`
 
 Already resolved note:
 
@@ -528,40 +535,34 @@ Conclusion:
 
 Recommended follow-up order, keeping each pass narrow:
 
-1. `WPORG-17B — Package-scope trialware/add-ons compliance`
-   - Scope: `A1` only
-   - Goal: remove or constrain the public premium add-ons / Freemius / installer surface
-2. `WPORG-18 - Internationalization parser compliance`
-   - Scope: `J1`
-   - Goal: replace `vms_i18n_runtime()` call sites and non-literal domain usage
-3. `WPORG-19 - Nonce and capability hardening`
+1. `WPORG-19 - Nonce and capability hardening`
    - Scope: `C1`
    - Goal: unslash nonce inputs in state-changing handlers without widening behavior
-4. `WPORG-20 - Input sanitization and structured-payload review`
+2. `WPORG-20 - Input sanitization and structured-payload review`
    - Scope: `D1`, `D2`, `D3`, `D4`
    - Goal: remove `FILTER_UNSAFE_RAW`, then validate JSON/body/fingerprint inputs deliberately
-5. `WPORG-21 - Upload handling hardening`
+3. `WPORG-21 - Upload handling hardening`
    - Scope: `H1`, `H2`, `H3`
    - Goal: align uploads with content-based validation and private-storage justification
-6. `WPORG-22 - Inline asset enqueue migration`
+4. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
-7. `WPORG-23 - Admin notice scope`
+5. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
-8. `WPORG-24 - Output escaping contract pass`
+6. `WPORG-24 - Output escaping contract pass`
    - Scope: `E1`
    - Goal: separate genuine escaping defects from safe HTML/JSON patterns
-9. `WPORG-25 - Output buffer lifecycle review`
+7. `WPORG-25 - Output buffer lifecycle review`
    - Scope: `I1`, `I2`
    - Goal: document and tighten buffer ownership without blind removals
-10. `WPORG-26 - Prefix and collision review`
+8. `WPORG-26 - Prefix and collision review`
     - Scope: section F only
     - Goal: document why the existing `vms` internal namespace is intentional and compatibility-sensitive
-11. `WPORG-27 - Dependency, licensing, and tooling reproducibility verification`
+9. `WPORG-27 - Dependency, licensing, and tooling reproducibility verification`
     - Scope: section L and section N
     - Goal: final dependency inventory, disclosure check, and reproducible scanner setup
-12. `WPORG-28 - Release metadata and packaging validation`
+10. `WPORG-28 - Release metadata and packaging validation`
     - Scope: `M1`
     - Goal: choose the public version and validate final ZIP / slug expectations
 
@@ -584,7 +585,7 @@ Recommended follow-up order, keeping each pass narrow:
 
 - [ ] Decide whether the public package will retain any premium add-ons / licensing surface.
 - [ ] Resolve mirror vs live version drift and synchronize all public metadata markers.
-- [ ] Remove dynamic gettext wrapper usage that blocks translation extraction.
+- [x] Run the final `WPORG-18B` parser/extraction audit after the `WPORG-18A` code remediation.
 - [ ] Normalize nonce verification in legacy save, admin-post, and frontend mutation handlers.
 - [ ] Replace `FILTER_UNSAFE_RAW` and validate structured request bodies explicitly.
 - [ ] Harden upload validation across tax-profile, import, and private-file flows.
@@ -686,7 +687,7 @@ Date: 2026-07-10
 
 ### Remaining Follow-Up Batches
 
-- `WPORG-18` — Internationalization parser compliance
+- `WPORG-18B` — Internationalization parser compliance verification
 - `WPORG-19` — Nonce and capability hardening
 - `WPORG-20` — Input sanitization and structured-payload review
 - `WPORG-21` — Upload handling hardening
@@ -708,6 +709,237 @@ Date: 2026-07-10
 - Confirmed separately distributed companion-plugin compatibility hooks were retained rather than renamed.
 - Detailed command verification for this batch is recorded in the task report rather than duplicated inline here.
 
+## WPORG-18A Result
+
+Date: 2026-07-10
+
+### Summary
+
+- Result: `PASS`
+- Scope completed: parser-compliance remediation for wrapper-mediated gettext usage and dynamic Event Plan notice strings, applied to both `packages/vms-github-reconcile` and `vms/`
+- Starting mirror HEAD: `99bdeaddeab7e1181573f886169ae60588c52d39`
+- Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task
+
+### Audit Totals
+
+- Post-remediation gettext-family runtime calls audited with token-aware scans: `9,576` in `packages/vms-github-reconcile`, `10,903` in `vms/`, `20,479` combined
+- Direct non-literal source-string findings fixed: `5` in the mirror runtime tree and the `5` corresponding live-tree matches
+- Direct non-literal context findings fixed: `0`
+- Direct non-literal domain findings fixed: `1` in the mirror runtime tree and the `1` corresponding live-tree match
+- Wrapper-mediated parser blockers removed from core runtime: `54` pre-remediation `vms_i18n_runtime()` call sites in the mirror, with corresponding live-tree matches
+
+### Wrappers Reviewed
+
+- Reviewed wrapper: `vms_i18n_runtime()`
+- Additional project-defined gettext wrappers found in the audited mirror/live runtime trees: none confirmed beyond `vms_i18n_runtime()`
+
+### `vms_i18n_runtime()` Disposition
+
+- Retained the function name and callable signature as a compatibility shim.
+- Removed its internal generic `__($text, $domain)` behavior so core runtime code no longer feeds arbitrary runtime values into gettext through the wrapper.
+- Converted core runtime call sites to direct literal gettext calls using the literal domain `'backstage-venue-manager'`.
+
+### What Was Changed
+
+- Replaced core wrapper-mediated labels in:
+  - `includes/core/registry/admin-menu.php`
+  - `includes/core/registry/statuses.php`
+  - `includes/admin-ui/nav.php`
+  - `includes/tours/tours.php`
+  - `includes/social-share/queue-runner.php`
+  - `includes/modules/staff-tasks/notifications.php`
+- Rewrote the four dynamic Event Plan admin notices in `includes/cpt/event-plans.php` to use literal gettext strings with placeholders instead of translating `$msg` at runtime.
+- Applied the same semantic changes to the corresponding files in `vms/`.
+
+### Files Changed
+
+- Mirror:
+  - `packages/vms-github-reconcile/includes/core/registry/admin-menu.php`
+  - `packages/vms-github-reconcile/includes/core/registry/statuses.php`
+  - `packages/vms-github-reconcile/includes/admin-ui/nav.php`
+  - `packages/vms-github-reconcile/includes/tours/tours.php`
+  - `packages/vms-github-reconcile/includes/social-share/queue-runner.php`
+  - `packages/vms-github-reconcile/includes/modules/staff-tasks/notifications.php`
+  - `packages/vms-github-reconcile/includes/cpt/event-plans.php`
+  - `packages/vms-github-reconcile/docs/WPORG_PREREVIEW_REMEDIATION.md`
+- Live:
+  - `vms/includes/core/registry/admin-menu.php`
+  - `vms/includes/core/registry/statuses.php`
+  - `vms/includes/admin-ui/nav.php`
+  - `vms/includes/tours/tours.php`
+  - `vms/includes/social-share/queue-runner.php`
+  - `vms/includes/modules/staff-tasks/notifications.php`
+  - `vms/includes/cpt/event-plans.php`
+
+### Compatibility Decisions
+
+- Preserved `vms_i18n_runtime()` as a callable compatibility shim rather than deleting or renaming it.
+- Preserved `VMS_TEXTDOMAIN` itself; only removed it from gettext execution paths.
+- Did not rename internal `vms` identifiers, hooks, menu slugs, options, or metadata.
+
+### Translator-Comment Improvements
+
+- Added translators comments for the remediated Event Plan notice templates that now use placeholders for:
+  - default pay label plus action label
+  - default pay label fallback warning
+  - selected guarantee, maximum guarantee, and action label
+  - selected guarantee plus maximum guarantee fallback warning
+
+### Verification Performed
+
+- Confirmed mirror start state:
+  - `git rev-parse HEAD` matched `99bdeaddeab7e1181573f886169ae60588c52d39`
+  - `git status --short` was clean before edits
+  - `stash@{0}` existed as `WPORG-16D preserve unrelated sidebar+doc work` and was not touched
+- Ran token-aware runtime gettext scans before remediation to locate non-literal source/domain findings in both trees.
+- Re-ran targeted wrapper and gettext searches after remediation.
+- Ran `git status --short`, `git diff --check`, and `php -l` on each changed PHP file in both trees.
+- Ran the listed local project tests and a safe local extraction check where available in the current environment.
+- Ran `wp plugin check vms --checks=i18n_usage --slug=backstage-venue-manager` against the local site environment. With the slug override in place, the earlier `TextDomainMismatch` noise disappeared, but Plugin Check still reported broader pre-existing placeholder-comment issues outside this narrow remediation batch.
+
+### Remaining I18n Questions / False Positives
+
+- A token scan can false-positive on gettext calls that place a `translators:` comment directly inside the argument list, such as `includes/modules/admissions/pass-claims.php`; manual inspection confirmed that cited call still uses a literal source string and literal domain.
+- The broader `MissingTranslatorsComment`, unordered-placeholder, and mixed-placeholder findings that remained after `WPORG-18A` were subsequently remediated in `WPORG-18B`.
+- Final mirror POT extraction, mirror/live token-aware scans, and the live `wp plugin check vms --checks=i18n_usage --slug=backstage-venue-manager` run are now clean; see `WPORG-18B Result` below.
+
+## WPORG-18B Result
+
+Date: 2026-07-10
+
+### Summary
+
+- Result: `PASS WITH NOTES`
+- Scope completed: translator-comment remediation, placeholder numbering/order remediation, final extraction verification, and mirror/live alignment for the combined `WPORG-18` batch
+- Starting mirror HEAD: `99bdeaddeab7e1181573f886169ae60588c52d39`
+- Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task
+
+### Baseline Plugin Check Totals
+
+- Baseline live run recorded `685` actionable i18n findings:
+  - `664` `WordPress.WP.I18n.MissingTranslatorsComment`
+  - `20` `WordPress.WP.I18n.UnorderedPlaceholdersText`
+  - `1` `WordPress.WP.I18n.MixedOrderedPlaceholdersText`
+- Baseline findings spanned `68` PHP files in the combined source snapshot.
+- Split at capture time:
+  - `545` findings in files present in both the mirror and live trees (`529` missing-comment, `16` unordered-placeholder)
+  - `140` findings in live-only outreach/admissions files absent from the mirror (`135` missing-comment, `4` unordered-placeholder, `1` mixed-placeholder)
+- Live-only files absent from the mirror:
+  - `vms/includes/modules/admissions/outreach-recipients.php`
+  - `vms/includes/modules/admissions/outreach.php`
+  - `vms/includes/modules/outreach/admin-ui.php`
+  - `vms/includes/modules/outreach/contacts.php`
+
+### Remediation Completed
+
+- Inserted parser-visible translator comments in bulk with a tokenized helper:
+  - `511` comments in `packages/vms-github-reconcile`
+  - `661` comments in `vms`
+- Applied targeted manual follow-up where bulk comments were not extractor-visible in mixed PHP/HTML blocks and where multi-value strings still needed numbering or ordering fixes.
+- Numbered `21` scanner-flagged multi-value placeholder sequences and corrected the `1` mixed ordered-placeholder defect.
+- Resolved the final mirror/live alignment miss in `includes/modules/email-followups/admin-ui.php` so the mirror now matches the already-clean live placeholder ordering for the manual-send notice.
+
+### Verification Performed
+
+- `git diff --check`: clean
+- `php -l` passed for all `66` changed mirror PHP files
+- `php -l` passed for the `66` shared live counterparts plus the `4` additional live-only outreach/admissions files absent from the mirror
+- Token-aware gettext scan after remediation:
+  - mirror: `9,576` audited gettext-family calls, `0` non-literal source/context/domain violations
+  - live: `10,903` audited gettext-family calls, `0` non-literal source/context/domain violations
+- Remaining `vms_i18n_runtime()` references: compatibility-shim definitions only in:
+  - `packages/vms-github-reconcile/includes/core/registry/admin-menu.php`
+  - `vms/includes/core/registry/admin-menu.php`
+- Final mirror multi-placeholder scan: `0` remaining unnumbered multi-placeholder gettext strings
+- POT extraction:
+  - `wp i18n make-pot` succeeded for `packages/vms-github-reconcile`
+  - generated a `31,060`-line POT at `packages/vms-github-reconcile/.codex-temp/backstage-venue-manager.pot`
+  - verified extracted updated strings/comments including:
+    - `Manual send step complete: %1$d sent, %2$d skipped, %3$d errors.`
+    - `Last updated: %1$s by %2$s`
+    - `Because %1$s was cancelled, we have issued an event credit for %2$s.`
+- Plugin Check:
+  - `wp plugin check vms --checks=i18n_usage --slug=backstage-venue-manager` completed successfully
+  - final result: `Success: Checks complete. No errors found.`
+  - stderr contained only upstream WP-CLI / PHP `8.5` deprecation noise, not plugin findings
+- Existing project tests passed:
+  - `php tests/runtime-stub-guards.php`
+  - `php tests/release-compatibility-harness.php`
+  - `php tests/public-release-build-pipeline.php`
+
+### Notes / Acceptable Follow-Up
+
+- The live Plugin Check result is clean and the mirror extraction/parser checks are clean.
+- Many bulk-added translator comments still use heuristic fallback wording rather than fully hand-curated prose. They are extractor-visible and no longer trigger Plugin Check, but a later translator-copy review could improve specificity without changing runtime behavior.
+
+### Mirror / Live Alignment
+
+- Mirror change set at closeout: `docs/WPORG_PREREVIEW_REMEDIATION.md` plus the `66` modified mirror PHP files reported by final `git diff --name-status`.
+- Live change set at closeout: the same `66` runtime paths under `vms/` plus the `4` live-only outreach/admissions files listed above.
+- Shared i18n remediations are now aligned across the `66` changed mirror PHP files and their corresponding `vms/` runtime paths.
+- Additional live-only outreach/admissions fixes were applied only in the local `vms/` tree because those modules do not exist in the mirror.
+- `WPORG-18` is now ready for the combined remediation commit whenever requested.
+
+## WPORG-18D Result
+
+Date: 2026-07-10
+
+### Summary
+
+- Result: `PASS`
+- Scope completed: final semantic audit of WPORG-18B translator comments, correction of materially misleading heuristic comments in mirror/live, rerun of the parser and extraction gates, and closeout confirmation that the combined `WPORG-18` remediation is ready to close.
+
+### Semantic Audit Findings
+
+- Reviewed all `519` changed mirror translator comments introduced or modified by the combined `WPORG-18` diff.
+- Corrected `26` materially inaccurate mirror translator comments and applied matching live-tree updates for the corresponding runtime strings.
+- Corrected misleading placeholder descriptions that had been inferred as the wrong value type, including:
+  - linked TEC status labels described as URLs,
+  - failed-vendor counts, ticket numbers, gallery photo numbers, and maximum admitted party size described as email addresses or URLs,
+  - submitted vendor/act names, guest labels, ticket labels, event titles, and linked TEC product ID lists described as the wrong semantic value,
+  - formatted last-snapshot timestamps and enabled ticket titles described as the wrong placeholder type,
+  - pass resend success and failure placeholders that had the email address and failure message descriptions reversed.
+- `252` changed mirror translator comments still match generic fallback wording patterns such as `human-readable value used in this message`, `number used in this message`, or `date or time value`; these were retained after value-trace review because the placeholder type, position, and meaning remained accurate enough and no materially inaccurate descriptions remained.
+
+### Verification Re-Run
+
+- Workspace safety reconfirmed:
+  - mirror HEAD remained `99bdeaddeab7e1181573f886169ae60588c52d39` before the final closeout commit step,
+  - `git diff --check` stayed clean,
+  - `.codex-temp` remained untracked,
+  - `stash@{0}: On work/unreleased-2026-06-18: WPORG-16D preserve unrelated sidebar+doc work` remained untouched.
+- `php -l` passed for all `66` changed mirror PHP files.
+- `php -l` passed for the `66` shared live counterparts plus the `4` additional live-only outreach/admissions files absent from the mirror.
+- Token-aware gettext scan after the semantic fixes:
+  - mirror: `9,576` audited gettext-family calls, `0` non-literal source/context/domain violations,
+  - live: `10,903` audited gettext-family calls, `0` non-literal source/context/domain violations.
+- Multi-placeholder scan after the semantic fixes:
+  - mirror: `0` remaining unnumbered or mixed multi-placeholder gettext strings,
+  - live: `0` remaining unnumbered or mixed multi-placeholder gettext strings.
+- Remaining `vms_i18n_runtime()` references stayed limited to the compatibility-shim definitions in:
+  - `packages/vms-github-reconcile/includes/core/registry/admin-menu.php`
+  - `vms/includes/core/registry/admin-menu.php`
+- Mirror POT extraction re-ran successfully:
+  - regenerated `packages/vms-github-reconcile/.codex-temp/backstage-venue-manager.pot`,
+  - generated `31,060` lines,
+  - reconfirmed extracted numbered-placeholder strings and translator comments including:
+    - `Last updated: %1$s by %2$s`,
+    - `Because %1$s was cancelled, we have issued an event credit for %2$s.`,
+    - `Manual send step complete: %1$d sent, %2$d skipped, %3$d errors.`
+- Live Plugin Check re-ran successfully:
+  - `wp plugin check vms --checks=i18n_usage --slug=backstage-venue-manager`
+  - final result: `Success: Checks complete. No errors found.`
+  - stderr contained only upstream WP-CLI / PHP `8.5` deprecation noise, not plugin findings.
+- Existing project tests still passed:
+  - `php tests/runtime-stub-guards.php`
+  - `php tests/release-compatibility-harness.php`
+  - `php tests/public-release-build-pipeline.php`
+
+### Closeout
+
+- No actionable i18n parser, translator-comment, or placeholder-order issues remain in the current verified WPORG-18 working tree.
+- The combined `WPORG-18` remediation is cleared for the single local commit `Make plugin translations parser compliant`.
+
 ## Non-Actions in This Audit
 
 This audit did not:
@@ -724,4 +956,4 @@ This audit did not:
 - change version markers,
 - or modify production data.
 
-The only intended codebase change from this task is this documentation file.
+That note applied to the earlier docs-only audit pass; later result sections capture subsequent remediation batches that changed runtime code in the mirror and live trees.

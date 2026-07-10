@@ -58,6 +58,7 @@ if ($render_mode !== 'full') {
         <?php if ($linked_tec_id > 0) : ?>
             <p class="description">
                 <strong><?php esc_html_e('Linked event:', 'backstage-venue-manager'); ?></strong>
+                <?php /* translators: %d: linked TEC event ID. */ ?>
                 <?php echo esc_html($linked_tec_title !== '' ? $linked_tec_title : sprintf(__('TEC event #%d', 'backstage-venue-manager'), $linked_tec_id)); ?>
             </p>
         <?php endif; ?>
@@ -233,6 +234,7 @@ if (function_exists('wp_enqueue_media')) {
     <div class="vms-ticketing__togglebar">
         <strong><?php esc_html_e('Tickets for this event:', 'backstage-venue-manager'); ?></strong>
         <select name="vms_ticketing_enabled_override" id="vms-ticketing-enabled-override">
+            <?php /* translators: %s: current global ticketing setting label. */ ?>
             <option value="" <?php selected($ticketing_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), $ticketing_global_label)); ?></option>
             <option value="on" <?php selected($ticketing_override, 'on'); ?>><?php esc_html_e('On', 'backstage-venue-manager'); ?></option>
             <option value="off" <?php selected($ticketing_override, 'off'); ?>><?php esc_html_e('Off', 'backstage-venue-manager'); ?></option>
@@ -245,6 +247,7 @@ if (function_exists('wp_enqueue_media')) {
     <div class="vms-ticketing__togglebar" data-vms-tour="ticketing-ui.event-override">
         <strong><?php esc_html_e('Public ticket UI:', 'backstage-venue-manager'); ?></strong>
         <select name="vms_ticket_ui_layout_override" id="vms-ticket-ui-layout-override">
+            <?php /* translators: %s: current global public ticket UI layout label. */ ?>
             <option value="" <?php selected($ticket_ui_layout_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), (string) ($ticket_ui_global_labels[$ticket_ui_global_layout] ?? $ticket_ui_global_layout))); ?></option>
             <option value="progressive" <?php selected($ticket_ui_layout_override, 'progressive'); ?>><?php esc_html_e('Force Progressive', 'backstage-venue-manager'); ?></option>
             <option value="v2" <?php selected($ticket_ui_layout_override, 'v2'); ?>><?php esc_html_e('Force V2 Unified', 'backstage-venue-manager'); ?></option>
@@ -255,6 +258,7 @@ if (function_exists('wp_enqueue_media')) {
     <div class="vms-ticketing__togglebar" data-vms-tour="ticketing-ui.availability-override">
         <strong><?php esc_html_e('Total availability:', 'backstage-venue-manager'); ?></strong>
         <select name="vms_ticket_ui_availability_display_override" id="vms-ticket-ui-availability-display-override">
+            <?php /* translators: %s: current global total-availability display label. */ ?>
             <option value="" <?php selected($ticket_ui_availability_display_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), (string) ($ticket_ui_availability_labels[$ticket_ui_global_availability_display] ?? $ticket_ui_global_availability_display))); ?></option>
             <option value="always" <?php selected($ticket_ui_availability_display_override, 'always'); ?>><?php esc_html_e('Always show', 'backstage-venue-manager'); ?></option>
             <option value="low" <?php selected($ticket_ui_availability_display_override, 'low'); ?>><?php esc_html_e('Only when low', 'backstage-venue-manager'); ?></option>
@@ -262,6 +266,7 @@ if (function_exists('wp_enqueue_media')) {
         </select>
         <strong class="vms-ml-10"><?php esc_html_e('Sale availability:', 'backstage-venue-manager'); ?></strong>
         <select name="vms_ticket_ui_sale_availability_display_override" id="vms-ticket-ui-sale-availability-display-override">
+            <?php /* translators: %s: current global sale-availability display label. */ ?>
             <option value="" <?php selected($ticket_ui_sale_availability_display_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), (string) ($ticket_ui_sale_availability_labels[$ticket_ui_global_sale_availability_display] ?? $ticket_ui_global_sale_availability_display))); ?></option>
             <option value="when_capped" <?php selected($ticket_ui_sale_availability_display_override, 'when_capped'); ?>><?php esc_html_e('Show capped sale quantity', 'backstage-venue-manager'); ?></option>
             <option value="low" <?php selected($ticket_ui_sale_availability_display_override, 'low'); ?>><?php esc_html_e('Only when sale quantity is low', 'backstage-venue-manager'); ?></option>

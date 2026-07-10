@@ -22,6 +22,7 @@ if ($issue === 'missing_vendor') {
 
     echo '<div class="notice notice-error inline vms-notice vms-notice--critical"><p>' .
         esc_html__('🚩 This event plan lost its vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+        /* translators: %s: previous vendor. */
         ' ' . sprintf(esc_html__('Previous vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
         ' ' . esc_html__('Select a new Primary Vendor, then mark Ready again.', 'backstage-venue-manager') .
         '</p></div>';
@@ -34,6 +35,7 @@ if ($issue === 'missing_vendor') {
 
     echo '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p>' .
         esc_html__('🚩 This event plan lost a secondary vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+        /* translators: %s: removed vendor. */
         ' ' . sprintf(esc_html__('Removed vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
         ' ' . esc_html__('Review the Secondary Vendors section below, then mark Ready again if needed.', 'backstage-venue-manager') .
         '</p></div>';
@@ -66,10 +68,13 @@ if ($post->post_status === 'auto-draft' && isset($_GET['vms_prefill_vendor_id'],
             }
 
             $secondary_message = ($prefill_type_label !== '')
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 ? sprintf(__('Booking prefill: %1$s was added as a secondary vendor (%2$s). Review the Secondary Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label, $prefill_type_label)
+                /* translators: %s: booking prefill. */
                 : sprintf(__('Booking prefill: %s was added as a secondary vendor. Review the Secondary Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
             echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($secondary_message) . '</p></div>';
         } elseif ($prefill_mode === 'primary') {
+            /* translators: %s: booking prefill. */
             $primary_message = sprintf(__('Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
             echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($primary_message) . '</p></div>';
         }

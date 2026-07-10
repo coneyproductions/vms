@@ -384,6 +384,7 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 			$remaining_count = count((array) ($batch['emails'] ?? array()));
 			echo '<section class="vms-efu-batch-card">';
 			echo '<h2>' . esc_html__('Manual send in progress', 'backstage-venue-manager') . '</h2>';
+			/* translators: %d: number of items described in this message. */
 			echo '<p>' . esc_html(sprintf(_n('%d selected recipient is waiting for the next send step.', '%d selected recipients are waiting for the next send step.', $remaining_count, 'backstage-venue-manager'), $remaining_count)) . '</p>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-batch-continue-form">';
 			wp_nonce_field('vms_email_followups_manual_send');
@@ -415,6 +416,7 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 		echo '<input type="hidden" name="email_key" value="' . esc_attr($email_key) . '" />';
 		echo '<input type="hidden" name="recipient_selection_present" value="1" />';
 		if (!empty($recipients)) {
+			/* translators: %d: number used in this message. */
 			echo '<details class="vms-efu-recipient-list vms-efu-recipient-picker" open><summary>' . esc_html(sprintf(_n('Choose recipients (%d eligible; all selected by default)', 'Choose recipients (%d eligible; all selected by default)', count($recipients), 'backstage-venue-manager'), count($recipients))) . '</summary>';
 			echo '<div class="vms-efu-recipient-tools"><button type="button" class="button" data-vms-efu-select="all">' . esc_html__('Select all', 'backstage-venue-manager') . '</button> <button type="button" class="button" data-vms-efu-select="none">' . esc_html__('Select none', 'backstage-venue-manager') . '</button> <span class="vms-efu-selected-count" aria-live="polite"></span></div>';
 			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Send', 'backstage-venue-manager') . '</th><th>' . esc_html__('Email', 'backstage-venue-manager') . '</th><th>' . esc_html__('Name', 'backstage-venue-manager') . '</th><th>' . esc_html__('Tickets', 'backstage-venue-manager') . '</th><th>' . esc_html__('Orders', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
@@ -430,6 +432,7 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 			echo '<p class="vms-efu-warning">' . esc_html__('No eligible recipients were found for this event/template preview.', 'backstage-venue-manager') . '</p>';
 		}
 		echo '<label class="vms-efu-check"><input type="checkbox" name="confirm_send" value="1" /> <span>' . esc_html__('I understand this sends to the selected eligible recipients above.', 'backstage-venue-manager') . '</span></label>';
+		/* translators: %d: number used in this message. */
 		echo '<p class="vms-efu-send-note">' . esc_html(sprintf(__('Manual sends are processed in batches of up to %d recipients to reduce timeout risk. If more remain, VMS will show a Continue Sending button after the page returns.', 'backstage-venue-manager'), vms_email_followups_manual_batch_size())) . '</p>';
 		echo '<p class="vms-efu-send-progress" aria-live="polite"></p>';
 		echo '<button type="submit" class="button">' . esc_html__('Send to Selected Recipients', 'backstage-venue-manager') . '</button>';
@@ -597,8 +600,10 @@ if (!function_exists('vms_email_followups_manual_send_post')) {
 			vms_email_followups_batch_clear($batch_token);
 		}
 
-		$message = sprintf(__('Manual send step complete: %d sent, %d skipped, %d errors.', 'backstage-venue-manager'), (int) ($result['sent'] ?? 0), (int) ($result['skipped'] ?? 0), (int) ($result['errors'] ?? 0));
+		/* translators: 1: sent count, 2: skipped count, 3: error count. */
+		$message = sprintf(__('Manual send step complete: %1$d sent, %2$d skipped, %3$d errors.', 'backstage-venue-manager'), (int) ($result['sent'] ?? 0), (int) ($result['skipped'] ?? 0), (int) ($result['errors'] ?? 0));
 		if (!empty($remaining)) {
+			/* translators: %d: number of items described in this message. */
 			$message .= ' ' . sprintf(_n('%d recipient remains for the next batch.', '%d recipients remain for the next batch.', count($remaining), 'backstage-venue-manager'), count($remaining));
 		}
 		vms_email_followups_redirect_notice('preview', $message, !empty($result['ok']) ? 'success' : 'warning', $args);

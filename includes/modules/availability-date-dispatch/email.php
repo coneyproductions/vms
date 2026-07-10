@@ -7,9 +7,11 @@ if (!function_exists('vms_add_dispatch_email_subject')) {
 		$title = trim((string) ($context['event_title'] ?? ''));
 		$date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		if ($title !== '' && $date !== '') {
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			return sprintf(__('Availability Request: %1$s on %2$s', 'backstage-venue-manager'), $title, $date);
 		}
 		if ($title !== '') {
+			/* translators: %s: availability request. */
 			return sprintf(__('Availability Request: %s', 'backstage-venue-manager'), $title);
 		}
 
@@ -131,6 +133,7 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_notification')) {
 		$event_date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		$venue_name = trim((string) ($context['venue_name'] ?? ''));
 		$subject = $event_title !== ''
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			? sprintf(__('Vendor Interest: %1$s for %2$s', 'backstage-venue-manager'), $vendor_name !== '' ? $vendor_name : __('Vendor', 'backstage-venue-manager'), $event_title)
 			: __('Vendor Interest Submitted', 'backstage-venue-manager');
 
@@ -234,6 +237,7 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_withdraw_notificat
 		$event_date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		$venue_name = trim((string) ($context['venue_name'] ?? ''));
 		$subject = $event_title !== ''
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			? sprintf(__('Vendor Interest Withdrawn: %1$s for %2$s', 'backstage-venue-manager'), $vendor_name !== '' ? $vendor_name : __('Vendor', 'backstage-venue-manager'), $event_title)
 			: __('Vendor Interest Withdrawn', 'backstage-venue-manager');
 

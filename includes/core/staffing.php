@@ -321,6 +321,7 @@ if (!function_exists('vms_staffing_staff_role_match_for_role')) {
 			$role_term_cache[$role_id] = ($term instanceof WP_Term) ? $term : null;
 		}
 		$role_term = $role_term_cache[$role_id];
+		/* translators: %d: role ID. */
 		$role_name = $role_term instanceof WP_Term ? (string) $role_term->name : sprintf(__('Role #%d', 'backstage-venue-manager'), $role_id);
 
 		if (!isset($staff_term_cache[$staff_id])) {
@@ -374,6 +375,7 @@ if (!function_exists('vms_staffing_staff_role_match_for_role')) {
 		return array(
 			'ok' => false,
 			'source' => 'none',
+			/* translators: %s: human-readable value used in this message. */
 			'reason' => sprintf(__('Not marked eligible for %s.', 'backstage-venue-manager'), $role_name),
 		);
 	}
@@ -769,25 +771,34 @@ if (!function_exists('vms_staffing_send_staff_qualification_submission_notificat
 		$review_url = vms_staffing_staff_qualification_review_url($staff_id);
 
 		$admin_body = vms_staffing_staff_qualification_mail_lines(array(
+			/* translators: %s: a staff certification was submitted for review. */
 			sprintf(__('A staff certification was submitted for review: %s', 'backstage-venue-manager'), $qualification),
 			'',
+			/* translators: %s: staff member. */
 			sprintf(__('Staff member: %s', 'backstage-venue-manager'), $staff_name),
+			/* translators: %s: certification. */
 			sprintf(__('Certification: %s', 'backstage-venue-manager'), $qualification),
+			/* translators: %s: expiration. */
 			sprintf(__('Expiration: %s', 'backstage-venue-manager'), $expiration),
+			/* translators: %s: review link URL. */
 			sprintf(__('Review link: %s', 'backstage-venue-manager'), $review_url),
 		));
 		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, 'submitted') as $email) {
+			/* translators: %s: [vms] staff certification pending review. */
 			wp_mail($email, sprintf(__('[VMS] Staff certification pending review: %s', 'backstage-venue-manager'), $qualification), $admin_body, vms_staffing_mail_headers());
 		}
 
 		$user = $submitter_user_id ? get_user_by('id', absint($submitter_user_id)) : vms_staffing_get_staff_user($staff_id);
 		if ($user instanceof WP_User && is_email($user->user_email)) {
 			$staff_body = vms_staffing_staff_qualification_mail_lines(array(
+				/* translators: %s: human-readable value used in this message. */
 				sprintf(__('We received your %s certificate.', 'backstage-venue-manager'), $qualification),
 				'',
 				__('It is now pending review. We will notify you when it has been approved or if anything needs to be corrected.', 'backstage-venue-manager'),
+				/* translators: %s: expiration date submitted. */
 				$expiration !== __('Not provided', 'backstage-venue-manager') ? sprintf(__('Expiration date submitted: %s', 'backstage-venue-manager'), $expiration) : '',
 			));
+			/* translators: %s: human-readable value used in this message. */
 			wp_mail($user->user_email, sprintf(__('We received your %s certificate', 'backstage-venue-manager'), $qualification), $staff_body, vms_staffing_mail_headers());
 		}
 	}
@@ -807,15 +818,21 @@ if (!function_exists('vms_staffing_send_staff_qualification_review_notification'
 
 		if ($new_status === 'active') {
 			$lines = array(
+				/* translators: %s: human-readable value used in this message. */
 				sprintf(__('Your %s certificate has been approved.', 'backstage-venue-manager'), $qualification),
+				/* translators: %s: expiration date on file. */
 				$expiration !== '' ? sprintf(__('Expiration date on file: %s', 'backstage-venue-manager'), $expiration) : '',
 			);
+			/* translators: %s: human-readable value used in this message. */
 			$subject = sprintf(__('Your %s certificate was approved', 'backstage-venue-manager'), $qualification);
 		} else {
 			$lines = array(
+				/* translators: %s: human-readable value used in this message. */
 				sprintf(__('Your %s certificate could not be approved yet.', 'backstage-venue-manager'), $qualification),
+				/* translators: %s: reason. */
 				$notes !== '' ? sprintf(__('Reason: %s', 'backstage-venue-manager'), $notes) : __('Please upload a replacement or contact the venue if you have questions.', 'backstage-venue-manager'),
 			);
+			/* translators: %s: human-readable value used in this message. */
 			$subject = sprintf(__('Your %s certificate needs attention', 'backstage-venue-manager'), $qualification);
 		}
 
@@ -829,16 +846,23 @@ if (!function_exists('vms_staffing_send_staff_qualification_review_notification'
 			$staff_name = __('Staff member', 'backstage-venue-manager');
 		}
 		$admin_lines = array(
-			sprintf(__('Staff certification %s: %s', 'backstage-venue-manager'), $status_event, $qualification),
+			/* translators: 1: certification review action such as approved or rejected, 2: certification name. */
+			sprintf(__('Staff certification %1$s: %2$s', 'backstage-venue-manager'), $status_event, $qualification),
 			'',
+			/* translators: %s: staff member. */
 			sprintf(__('Staff member: %s', 'backstage-venue-manager'), $staff_name),
+			/* translators: %s: certification. */
 			sprintf(__('Certification: %s', 'backstage-venue-manager'), $qualification),
+			/* translators: %s: expiration. */
 			$expiration !== '' ? sprintf(__('Expiration: %s', 'backstage-venue-manager'), $expiration) : '',
+			/* translators: %s: reason. */
 			($new_status === 'rejected' && $notes !== '') ? sprintf(__('Reason: %s', 'backstage-venue-manager'), $notes) : '',
+			/* translators: %s: staff profile. */
 			sprintf(__('Staff profile: %s', 'backstage-venue-manager'), vms_staffing_staff_qualification_review_url($staff_id)),
 		);
 		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, $status_event) as $email) {
-			wp_mail($email, sprintf(__('[VMS] Staff certification %s: %s', 'backstage-venue-manager'), $status_event, $qualification), vms_staffing_staff_qualification_mail_lines($admin_lines), vms_staffing_mail_headers());
+			/* translators: 1: certification review action such as approved or rejected, 2: certification name. */
+			wp_mail($email, sprintf(__('[VMS] Staff certification %1$s: %2$s', 'backstage-venue-manager'), $status_event, $qualification), vms_staffing_staff_qualification_mail_lines($admin_lines), vms_staffing_mail_headers());
 		}
 	}
 }
@@ -1101,12 +1125,15 @@ if (!function_exists('vms_staffing_staff_candidate_status_for_role')) {
 		} elseif ($hard_blocked) {
 			$parts = array();
 			if (!empty($qualification['missing'])) {
+				/* translators: %s: human-readable value used in this message. */
 				$parts[] = sprintf(__('missing %s', 'backstage-venue-manager'), implode(', ', array_map('strval', (array) $qualification['missing'])));
 			}
 			if (!empty($qualification['expired'])) {
+				/* translators: %s: human-readable value used in this message. */
 				$parts[] = sprintf(__('expired %s', 'backstage-venue-manager'), implode(', ', array_map('strval', (array) $qualification['expired'])));
 			}
 			$ineligibility_reason = !empty($parts)
+				/* translators: %s: requires active qualifications. */
 				? sprintf(__('Requires active qualifications: %s.', 'backstage-venue-manager'), implode('; ', $parts))
 				: __('Requires an active hard-block qualification.', 'backstage-venue-manager');
 		}
@@ -3408,6 +3435,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 								'type'       => 'unavailable_assigned',
 								'staff_id'   => $staff_id,
 								'staff_name' => (string) get_the_title($staff_id),
+								/* translators: %s: human-readable value used in this message. */
 								'summary'    => sprintf(__('Assigned while unavailable (%s)', 'backstage-venue-manager'), $event_date),
 							);
 						}
@@ -3481,6 +3509,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 						'type'       => 'overlap_conflict',
 						'staff_id'   => $staff_id,
 						'staff_name' => (string) get_the_title($staff_id),
+						/* translators: %d: number used in this message. */
 						'summary'    => sprintf(__('Overlapping confirmed assignment (%d)', 'backstage-venue-manager'), $cnt),
 					);
 				}

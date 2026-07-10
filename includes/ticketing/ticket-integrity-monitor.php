@@ -214,6 +214,7 @@ function vms_ticket_integrity_issue_summary(array $issues): string
 	}
 
 	if (empty($titles)) {
+		/* translators: %d: number of open issues. */
 		return sprintf(_n('%d open issue', '%d open issues', count($open_issues), 'backstage-venue-manager'), count($open_issues));
 	}
 
@@ -884,6 +885,7 @@ function vms_ticket_integrity_build_failure_result(int $plan_id, int $tec_event_
 	return array(
 		'plan_id' => $plan_id,
 		'tec_event_id' => $tec_event_id,
+		/* translators: %d: number used in this message. */
 		'event_title' => $event_title !== '' ? $event_title : sprintf(__('Event %d', 'backstage-venue-manager'), $tec_event_id > 0 ? $tec_event_id : $plan_id),
 		'event_timestamp' => $event_timestamp,
 		'event_date_local' => $event_timestamp > 0 ? vms_ticket_integrity_format_datetime($event_timestamp) : '',
@@ -934,6 +936,7 @@ function vms_ticket_integrity_send_alert_email(array &$events, array $alerts, ar
 	$site_name = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
 	$subject = sprintf('[%s] %s', $site_name, __('Ticket Integrity Monitor update', 'backstage-venue-manager'));
 	$lines = array();
+	/* translators: %s: scan completed. */
 	$lines[] = sprintf(__('Scan completed: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime(absint($scan_meta['completed_at_gmt'] ?? time())));
 	$lines[] = '';
 
@@ -985,6 +988,7 @@ function vms_ticket_integrity_send_alert_email(array &$events, array $alerts, ar
 		$lines[] = '';
 	}
 
+	/* translators: %s: review the full monitor. */
 	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), vms_ticket_integrity_admin_url());
 	$sent = wp_mail($recipient, $subject, implode("\n", $lines));
 
@@ -1048,6 +1052,7 @@ function vms_ticket_integrity_merge_scan_result(array &$events, array $existing_
 		if (!$had_open_issue) {
 			vms_ticket_integrity_log_event(
 				'issue_detected',
+				/* translators: %s: ticket integrity issue detected. */
 				sprintf(__('Ticket integrity issue detected: %s', 'backstage-venue-manager'), (string) ($issue['title'] ?? $key)),
 				array(
 					'event_key' => $event_key,
@@ -1083,6 +1088,7 @@ function vms_ticket_integrity_merge_scan_result(array &$events, array $existing_
 
 		vms_ticket_integrity_log_event(
 			'issue_resolved',
+			/* translators: %s: ticket integrity issue resolved. */
 			sprintf(__('Ticket integrity issue resolved: %s', 'backstage-venue-manager'), (string) ($old_issue['title'] ?? $key)),
 			array(
 				'event_key' => $event_key,
@@ -1243,6 +1249,7 @@ function vms_ticket_integrity_scan_all(array $args = array()): array
 			} catch (Throwable $error) {
 				vms_ticket_integrity_log_event(
 					'scan_failed',
+					/* translators: %d: number used in this message. */
 					sprintf(__('Ticket integrity scan failed for plan %d.', 'backstage-venue-manager'), $plan_id),
 					array(
 						'plan_id' => $plan_id,
@@ -1361,6 +1368,7 @@ function vms_ticket_integrity_scan_event_now(int $plan_id, array $args = array()
 	} catch (Throwable $error) {
 		vms_ticket_integrity_log_event(
 			'scan_failed',
+			/* translators: %d: number used in this message. */
 			sprintf(__('Targeted ticket integrity scan failed for plan %d.', 'backstage-venue-manager'), $plan_id),
 			array(
 				'plan_id' => $plan_id,

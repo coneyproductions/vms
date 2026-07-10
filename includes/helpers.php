@@ -1131,11 +1131,13 @@ if (!function_exists('vms_comp_final_payment_timing_label')) {
         }
         if ($timing === 'days_after') {
             if ($days_after !== '') {
+                /* translators: %s: human-readable value used in this message. */
                 return sprintf(_n('%s day after event', '%s days after event', (int) $days_after, 'backstage-venue-manager'), $days_after);
             }
             return __('After event - number of days not set', 'backstage-venue-manager');
         }
         if ($timing === 'fixed_date') {
+            /* translators: %s: specific date. */
             return $fixed_date !== '' ? sprintf(__('Specific date: %s', 'backstage-venue-manager'), $fixed_date) : __('Specific date not set', 'backstage-venue-manager');
         }
         if ($timing === 'custom') {

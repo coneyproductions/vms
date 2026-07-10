@@ -56,6 +56,7 @@ if (!function_exists('vms_email_followups_customer_greeting')) {
 	function vms_email_followups_customer_greeting(array $recipient = array()): string
 	{
 		$first_name = vms_email_followups_customer_first_name($recipient);
+		/* translators: %s: human-readable value used in this message. */
 		return $first_name !== '' ? sprintf(__('Hi %s,', 'backstage-venue-manager'), $first_name) : __('Hi there,', 'backstage-venue-manager');
 	}
 }
@@ -140,6 +141,7 @@ if (!function_exists('vms_email_followups_send_test')) {
 		$rendered = vms_email_followups_render_message($email_key, $event_plan_id, array('email' => $to, 'name' => __('Test Recipient', 'backstage-venue-manager')));
 		list($allowed, $reason) = vms_email_followups_context_allows_send((array) ($rendered['context'] ?? array()));
 		if (!$allowed) {
+			/* translators: %s: test blocked. */
 			return array('ok' => false, 'message' => sprintf(__('Test blocked: %s', 'backstage-venue-manager'), $reason));
 		}
 		$ok = wp_mail($to, '[TEST] ' . (string) $rendered['subject'], (string) $rendered['body_html'], vms_email_followups_headers());

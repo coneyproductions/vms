@@ -139,6 +139,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
             <p class="description"><?php esc_html_e('Track certifications, licenses, and other role qualifications for staff scheduling checks. Staff uploads stay Pending Review until an admin approves them.', 'backstage-venue-manager'); ?></p>
             <?php if ($pending_review_count > 0) : ?>
                 <div class="notice notice-warning inline vms-staff-qualification-review-notice">
+                    <?php /* translators: %d: number of uploaded certifications needing review. */ ?>
                     <p><strong><?php echo esc_html(sprintf(_n('%d uploaded certification needs review.', '%d uploaded certifications need review.', $pending_review_count, 'backstage-venue-manager'), $pending_review_count)); ?></strong> <?php esc_html_e('Change the status to Approved or Rejected, add a review note if needed, then update this staff profile.', 'backstage-venue-manager'); ?></p>
                 </div>
             <?php endif; ?>
@@ -209,9 +210,11 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                             </label>
                             <div class="vms-staff-qualification-card__actions">
                                 <?php if ($submitted_label !== '') : ?>
+                                    <?php /* translators: %s: submission timestamp. */ ?>
                                     <span class="description"><?php echo esc_html(sprintf(__('Submitted %s', 'backstage-venue-manager'), $submitted_label)); ?><?php echo $submitted_by instanceof WP_User ? esc_html(' · ' . ($submitted_by->display_name ?: $submitted_by->user_login)) : ''; ?></span>
                                 <?php endif; ?>
                                 <?php if ($reviewed_label !== '') : ?>
+                                    <?php /* translators: %s: review timestamp. */ ?>
                                     <span class="description"><?php echo esc_html(sprintf(__('Reviewed %s', 'backstage-venue-manager'), $reviewed_label)); ?><?php echo $reviewed_by instanceof WP_User ? esc_html(' · ' . ($reviewed_by->display_name ?: $reviewed_by->user_login)) : ''; ?></span>
                                 <?php endif; ?>
                                 <button type="button" class="button vms-staff-qualification-remove"><?php esc_html_e('Remove', 'backstage-venue-manager'); ?></button>

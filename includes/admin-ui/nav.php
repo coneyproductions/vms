@@ -777,13 +777,13 @@ if (!function_exists('vms_admin_ui_grouped_left_menu_default_clusters')) {
 
 		if (empty($clusters)) {
 			$clusters = array(
-				'dashboard' => array('key' => 'dashboard', 'label' => vms_i18n_runtime('Dashboard', 'backstage-venue-manager'), 'sections' => array('dashboard'), 'slugs' => array('vms-dashboard'), 'pages' => array()),
-				'planning' => array('key' => 'planning', 'label' => vms_i18n_runtime('Planning', 'backstage-venue-manager'), 'sections' => array('events_schedule', 'tickets_admissions'), 'slugs' => array('vms-schedule', 'edit.php?post_type=vms_event_plan'), 'pages' => array()),
-				'vendors_staff' => array('key' => 'vendors_staff', 'label' => vms_i18n_runtime('Vendors & Staff', 'backstage-venue-manager'), 'sections' => array('vendors_staff'), 'slugs' => array('vms-vendor-command-center'), 'pages' => array()),
-				'marketing_social' => array('key' => 'marketing_social', 'label' => vms_i18n_runtime('Marketing & Social', 'backstage-venue-manager'), 'sections' => array('marketing_sales'), 'slugs' => array('vms-marketing-social'), 'pages' => array()),
-				'venues' => array('key' => 'venues', 'label' => vms_i18n_runtime('Venues', 'backstage-venue-manager'), 'sections' => array('venue_setup'), 'slugs' => array('edit.php?post_type=vms_venue'), 'pages' => array()),
-				'settings' => array('key' => 'settings', 'label' => vms_i18n_runtime('Settings', 'backstage-venue-manager'), 'sections' => array('settings_addons'), 'slugs' => array('vms-settings'), 'pages' => array()),
-				'tools' => array('key' => 'tools', 'label' => vms_i18n_runtime('Tools', 'backstage-venue-manager'), 'sections' => array('reports_finance', 'tools_integrity'), 'slugs' => array('vms-admin-pages'), 'pages' => array()),
+				'dashboard' => array('key' => 'dashboard', 'label' => __('Dashboard', 'backstage-venue-manager'), 'sections' => array('dashboard'), 'slugs' => array('vms-dashboard'), 'pages' => array()),
+				'planning' => array('key' => 'planning', 'label' => __('Planning', 'backstage-venue-manager'), 'sections' => array('events_schedule', 'tickets_admissions'), 'slugs' => array('vms-schedule', 'edit.php?post_type=vms_event_plan'), 'pages' => array()),
+				'vendors_staff' => array('key' => 'vendors_staff', 'label' => __('Vendors & Staff', 'backstage-venue-manager'), 'sections' => array('vendors_staff'), 'slugs' => array('vms-vendor-command-center'), 'pages' => array()),
+				'marketing_social' => array('key' => 'marketing_social', 'label' => __('Marketing & Social', 'backstage-venue-manager'), 'sections' => array('marketing_sales'), 'slugs' => array('vms-marketing-social'), 'pages' => array()),
+				'venues' => array('key' => 'venues', 'label' => __('Venues', 'backstage-venue-manager'), 'sections' => array('venue_setup'), 'slugs' => array('edit.php?post_type=vms_venue'), 'pages' => array()),
+				'settings' => array('key' => 'settings', 'label' => __('Settings', 'backstage-venue-manager'), 'sections' => array('settings_addons'), 'slugs' => array('vms-settings'), 'pages' => array()),
+				'tools' => array('key' => 'tools', 'label' => __('Tools', 'backstage-venue-manager'), 'sections' => array('reports_finance', 'tools_integrity'), 'slugs' => array('vms-admin-pages'), 'pages' => array()),
 			);
 		}
 

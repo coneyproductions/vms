@@ -668,6 +668,7 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 			$labels = vms_ticketing_claims_program_labels($allowed_programs);
 			$label_text = !empty($labels) ? implode(', ', $labels) : __('required credential', 'backstage-venue-manager');
 			$result['reason_code'] = 'credential_not_approved';
+			/* translators: %s: human-readable value used in this message. */
 			$result['message'] = sprintf(__('This account is not approved for %s.', 'backstage-venue-manager'), $label_text);
 			return $result;
 		}

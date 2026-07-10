@@ -626,16 +626,21 @@ if (!function_exists('vms_feedback_send_new_submission_notification')) {
 		$attendee_email = trim((string) ($attendee['email'] ?? ''));
 		$overall_rating = vms_feedback_payload_rating($payload, 'overall.event_rating');
 		$admin_url = vms_feedback_response_admin_url($event_plan_id, $response_id);
+		/* translators: %s: new event feedback. */
 		$subject = sprintf(__('New event feedback: %s', 'backstage-venue-manager'), wp_strip_all_tags($event_title));
 		$lines = array(
+			/* translators: %s: event title receiving the feedback response. */
 			sprintf(__('A new private Event Feedback response was submitted for %s.', 'backstage-venue-manager'), wp_strip_all_tags($event_title)),
 			'',
+			/* translators: %s: submitted by. */
 			sprintf(__('Submitted by: %s', 'backstage-venue-manager'), $attendee_name !== '' ? $attendee_name : __('Anonymous', 'backstage-venue-manager')),
 		);
 		if ($attendee_email !== '') {
+			/* translators: %s: email address. */
 			$lines[] = sprintf(__('Email: %s', 'backstage-venue-manager'), $attendee_email);
 		}
 		if ($overall_rating > 0) {
+			/* translators: %d: overall rating. */
 			$lines[] = sprintf(__('Overall rating: %d/5', 'backstage-venue-manager'), $overall_rating);
 		}
 		$final_comment = trim((string) ($payload['final_comment'] ?? ''));

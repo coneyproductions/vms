@@ -259,4 +259,3 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
 
     WP_CLI::add_command('vms square-ticket-mirror', 'VMS_CLI_Square_Ticket_Mirror_Command');
 }
-

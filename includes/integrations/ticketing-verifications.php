@@ -253,6 +253,7 @@ if (!function_exists('vms_ticketing_verification_role_label_for_program')) {
             return __('VMS Verified Member', 'backstage-venue-manager');
         }
         $program_label = vms_ticketing_verification_program_label($program);
+        /* translators: %s: human-readable value used in this message. */
         return sprintf(__('VMS Verified %s', 'backstage-venue-manager'), $program_label);
     }
 }
@@ -512,6 +513,7 @@ if (!function_exists('vms_ticketing_verification_register_cpt')) {
             'exclude_from_search'       => true,
             'show_in_admin_all_list'    => true,
             'show_in_admin_status_list' => true,
+            /* translators: %s: human-readable value used in this message. */
             'label_count'               => _n_noop('Approved <span class="count">(%s)</span>', 'Approved <span class="count">(%s)</span>', 'backstage-venue-manager'),
         ));
 
@@ -522,6 +524,7 @@ if (!function_exists('vms_ticketing_verification_register_cpt')) {
             'exclude_from_search'       => true,
             'show_in_admin_all_list'    => true,
             'show_in_admin_status_list' => true,
+            /* translators: %s: human-readable value used in this message. */
             'label_count'               => _n_noop('Denied <span class="count">(%s)</span>', 'Denied <span class="count">(%s)</span>', 'backstage-venue-manager'),
         ));
 
@@ -613,6 +616,7 @@ if (!function_exists('vms_ticketing_verification_format_bytes')) {
     {
         $bytes = max(0, $bytes);
         if ($bytes < 1024) {
+            /* translators: %d: number of items described in this message. */
             return sprintf(__('%d B', 'backstage-venue-manager'), $bytes);
         }
 
@@ -1128,6 +1132,7 @@ if (!function_exists('vms_ticketing_verification_decision_email_subject')) {
 
         if ($decision === 'approved') {
             return sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 __('Approved: %1$s verification on %2$s', 'backstage-venue-manager'),
                 $program_label,
                 $site_name
@@ -1136,6 +1141,7 @@ if (!function_exists('vms_ticketing_verification_decision_email_subject')) {
 
         if ($decision === 'denied' && $previous === 'approved') {
             return sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 __('Update: %1$s verification changed on %2$s', 'backstage-venue-manager'),
                 $program_label,
                 $site_name
@@ -1143,6 +1149,7 @@ if (!function_exists('vms_ticketing_verification_decision_email_subject')) {
         }
 
         return sprintf(
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
             __('Update on your %1$s verification for %2$s', 'backstage-venue-manager'),
             $program_label,
             $site_name
@@ -1169,11 +1176,13 @@ if (!function_exists('vms_ticketing_verification_decision_email_body')) {
         }
 
         $lines   = array();
+        /* translators: %s: human-readable value used in this message. */
         $lines[] = sprintf(__('Hi %s,', 'backstage-venue-manager'), $name);
         $lines[] = '';
 
         if ($decision === 'approved') {
             $lines[] = sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 __('Your %1$s verification has been approved on %2$s.', 'backstage-venue-manager'),
                 $program_label,
                 $site_name
@@ -1181,12 +1190,14 @@ if (!function_exists('vms_ticketing_verification_decision_email_body')) {
             $lines[] = __('You can now access eligible discounted tickets when logged into your account.', 'backstage-venue-manager');
         } elseif ($decision === 'denied' && $previous === 'approved') {
             $lines[] = sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 __('Your %1$s verification status has been updated and your access is no longer active on %2$s.', 'backstage-venue-manager'),
                 $program_label,
                 $site_name
             );
         } else {
             $lines[] = sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 __('We reviewed your %1$s verification request for %2$s and it was not approved at this time.', 'backstage-venue-manager'),
                 $program_label,
                 $site_name
@@ -1286,6 +1297,7 @@ if (!function_exists('vms_ticketing_verification_form_upload_label')) {
     function vms_ticketing_verification_form_upload_label(): string
     {
         return sprintf(
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
             __('Upload proof (%1$s, max %2$s)', 'backstage-venue-manager'),
             vms_ticketing_verification_allowed_formats_label(),
             vms_ticketing_verification_upload_limit_label()
@@ -1308,8 +1320,10 @@ if (!function_exists('vms_ticketing_verification_notice_message')) {
             case 'file_missing':
                 return __('Please choose a proof file before submitting.', 'backstage-venue-manager');
             case 'file_too_large':
+                /* translators: %s: human-readable value used in this message. */
                 return sprintf(__('That image is too large. Upload a JPG, PNG, or WEBP up to %s.', 'backstage-venue-manager'), $limit_label);
             case 'pdf_too_large':
+                /* translators: %s: human-readable value used in this message. */
                 return sprintf(__('That PDF is too large. Upload a PDF up to %s, or upload a JPG/PNG screenshot instead.', 'backstage-venue-manager'), $limit_label);
             case 'file_type_not_allowed':
                 return __('Unsupported file type. Upload JPG, PNG, WEBP, or PDF. If your phone saved HEIC/HEIF, take a screenshot or export it as JPG/PNG first.', 'backstage-venue-manager');
@@ -1501,6 +1515,7 @@ if (!function_exists('vms_ticketing_verification_render_panel')) {
                     }
                     ?>
                     <div class="vms-verification-status vms-verification-status--approved">
+                        <?php /* translators: %s: comma-separated approved verification groups. */ ?>
                         <p class="vms-verify-copy"><strong><?php echo esc_html(sprintf(__("You're verified for: %s", 'backstage-venue-manager'), implode(', ', $labels))); ?></strong></p>
                         <p class="vms-verify-copy"><?php echo esc_html__('Your account is approved for eligible discounted tickets.', 'backstage-venue-manager'); ?></p>
                     </div>
@@ -1811,6 +1826,7 @@ if (!function_exists('vms_ticketing_verification_send_submission_notification'))
             'vms_verification_proof_' . $request_id
         );
 
+        /* translators: %d: user ID. */
         $user_label = sprintf(__('User #%d', 'backstage-venue-manager'), $user_id);
         $user_email = '';
         if ($user instanceof WP_User) {
@@ -1841,6 +1857,7 @@ if (!function_exists('vms_ticketing_verification_send_submission_notification'))
         }
 
         $subject = sprintf(
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
             __('[%1$s] New eligibility verification pending: %2$s', 'backstage-venue-manager'),
             $site_name !== '' ? $site_name : 'VMS',
             $program_label
@@ -1850,18 +1867,25 @@ if (!function_exists('vms_ticketing_verification_send_submission_notification'))
         $lines = array(
             __('A new eligibility verification request is pending review.', 'backstage-venue-manager'),
             '',
+            /* translators: %s: program. */
             sprintf(__('Program: %s', 'backstage-venue-manager'), $program_label),
+            /* translators: %s: submitted timestamp. */
             sprintf(__('Submitted: %s', 'backstage-venue-manager'), $submitted_at !== '' ? $submitted_at : (string) $request->post_date),
+            /* translators: %s: user. */
             sprintf(__('User: %s', 'backstage-venue-manager'), $user_label),
         );
         if ($user_email !== '') {
+            /* translators: %s: email address. */
             $lines[] = sprintf(__('Email: %s', 'backstage-venue-manager'), $user_email);
         }
         if ($submit_notes !== '') {
+            /* translators: %s: user note. */
             $lines[] = sprintf(__('User note: %s', 'backstage-venue-manager'), $submit_notes);
         }
         $lines[] = '';
+        /* translators: %s: review queue. */
         $lines[] = sprintf(__('Review queue: %s', 'backstage-venue-manager'), $approvals_url);
+        /* translators: %s: view proof. */
         $lines[] = sprintf(__('View proof: %s', 'backstage-venue-manager'), $proof_url);
 
         $body = implode("\n", $lines);
@@ -2426,12 +2450,15 @@ if (!function_exists('vms_ticketing_verification_render_user_credential_fields')
                                     <?php
                                     $details = array(__('Currently approved.', 'backstage-venue-manager'));
                                     if ($verified_at !== '') {
+                                        /* translators: %s: human-readable value used in this message. */
                                         $details[] = sprintf(__('Approved at %s.', 'backstage-venue-manager'), $verified_at);
                                     }
                                     if ($verified_by_user instanceof WP_User) {
+                                        /* translators: %s: human-readable value used in this message. */
                                         $details[] = sprintf(__('Approved by %s.', 'backstage-venue-manager'), $verified_by_user->display_name);
                                     }
                                     if ($notes !== '') {
+                                        /* translators: %s: note. */
                                         $details[] = sprintf(__('Note: %s', 'backstage-venue-manager'), $notes);
                                     }
                                     echo esc_html(implode(' ', $details));
@@ -2555,6 +2582,7 @@ if (!function_exists('vms_ticketing_verification_render_user_allowance_fields'))
                                 value="<?php echo esc_attr($override); ?>"
                                 placeholder="<?php echo esc_attr((string) $default_value); ?>"
                             />
+                            <?php /* translators: %d: default per-user allowance value. */ ?>
                             <p class="description"><?php echo esc_html(sprintf(__('Leave blank to use default (%d).', 'backstage-venue-manager'), $default_value)); ?></p>
                         </td>
                     </tr>
@@ -2794,6 +2822,7 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                                         name="<?php echo esc_attr('vms_verification_program_labels_existing[' . $program_key . ']'); ?>"
                                         value="<?php echo esc_attr((string) $program_label); ?>"
                                     />
+                                    <?php /* translators: %s: internal verification program key. */ ?>
                                     <p class="description"><?php echo esc_html(sprintf(__('Internal key: %s', 'backstage-venue-manager'), $program_key)); ?></p>
                                 </td>
                             </tr>
@@ -2881,10 +2910,13 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                                 />
                                 <span><?php echo esc_html__('MB', 'backstage-venue-manager'); ?></span>
                                 <p class="description"><?php echo esc_html__('Applies to the original file the customer selects before any browser-side normalization.', 'backstage-venue-manager'); ?></p>
+                                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                                 <p class="description"><?php echo esc_html(sprintf(__('Configured limit: %1$s. Effective limit on this server: %2$s.', 'backstage-venue-manager'), vms_ticketing_verification_format_bytes($configured_upload_bytes), vms_ticketing_verification_format_bytes($effective_upload_bytes))); ?></p>
                                 <?php if ($server_upload_bytes > 0 && $server_upload_bytes < $configured_upload_bytes) : ?>
+                                    <?php /* translators: %s: formatted upload size limit. */ ?>
                                     <p class="description"><?php echo esc_html(sprintf(__('The server is currently capping uploads at %s, so larger values here will not take effect until PHP/WordPress upload limits are raised.', 'backstage-venue-manager'), vms_ticketing_verification_format_bytes($server_upload_bytes))); ?></p>
                                 <?php endif; ?>
+                                <?php /* translators: 1: maximum image long-edge size in pixels, 2: JPEG quality setting. */ ?>
                                 <p class="description"><?php echo esc_html(sprintf(__('Image normalization target: long edge %1$d px, JPEG quality %2$d. PDFs stay separate.', 'backstage-venue-manager'), (int) VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION, (int) VMS_TICKETING_VERIFICATION_IMAGE_QUALITY)); ?></p>
                             </td>
                         </tr>
@@ -2926,6 +2958,7 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                 <a class="button button-link" href="<?php echo esc_url(admin_url('admin.php?page=vms-verifications&status=' . rawurlencode($status_filter))); ?>"><?php echo esc_html__('Reset', 'backstage-venue-manager'); ?></a>
             </form>
 
+            <?php /* translators: %d: number of verification requests shown in the table. */ ?>
             <p class="description"><?php echo esc_html(sprintf(_n('%d request shown.', '%d requests shown.', $results_count, 'backstage-venue-manager'), $results_count)); ?></p>
 
             <table class="widefat striped" data-vms-tour="approvals.credentials.table">
@@ -2966,6 +2999,7 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                                         <strong><?php echo esc_html($user->display_name); ?></strong><br />
                                         <span class="description"><?php echo esc_html($user->user_email); ?></span>
                                     <?php else : ?>
+                                        <?php /* translators: %d: WordPress user ID. */ ?>
                                         <span><?php echo esc_html(sprintf(__('User #%d', 'backstage-venue-manager'), $user_id)); ?></span>
                                     <?php endif; ?>
                                     <?php if ($submit_notes !== '') : ?>

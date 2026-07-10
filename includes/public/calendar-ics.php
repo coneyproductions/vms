@@ -258,7 +258,9 @@ if (!function_exists('vms_calendar_ics_build')) {
 		$tz_name = ($tz instanceof DateTimeZone) ? (string) $tz->getName() : 'UTC';
 		$site_host = (string) wp_parse_url(home_url('/'), PHP_URL_HOST);
 		$cal_name = ($mode === 'vendor')
+			/* translators: %s: human-readable value used in this message. */
 			? sprintf(__('%s Vendor Calendar', 'backstage-venue-manager'), $site_name)
+			/* translators: %s: human-readable value used in this message. */
 			: sprintf(__('%s Public Calendar', 'backstage-venue-manager'), $site_name);
 
 		$out = "BEGIN:VCALENDAR\r\n";
@@ -300,9 +302,11 @@ if (!function_exists('vms_calendar_ics_build')) {
 
 			$description_parts = array();
 			if ($venue_name !== '') {
+				/* translators: %s: venue. */
 				$description_parts[] = sprintf(__('Venue: %s', 'backstage-venue-manager'), $venue_name);
 			}
 			if ($status_label !== '') {
+				/* translators: %s: your status. */
 				$description_parts[] = sprintf(__('Your status: %s', 'backstage-venue-manager'), $status_label);
 			}
 			if ($excerpt !== '') {

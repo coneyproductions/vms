@@ -55,7 +55,9 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
             $linked_tec_id = absint($linked_tec_summary['linked_tec_id'] ?? 0);
             if ($linked_tec_id > 0) {
                 printf(
+                    /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                     esc_html__('Linked TEC event: %1$s (%2$s).', 'backstage-venue-manager'),
+                    /* translators: %d: event ID. */
                     esc_html((string) ($linked_tec_summary['linked_tec_title'] ?? sprintf(__('Event #%d', 'backstage-venue-manager'), $linked_tec_id))),
                     esc_html(strtoupper((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft')))
                 );
@@ -67,6 +69,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
     <p class="description">
         <?php
             printf(
+                /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
                 esc_html__('Configured tickets: %1$d. Configured add-ons: %2$d.', 'backstage-venue-manager'),
                 absint($ticketing_summary['effective_ticket_count'] ?? 0),
                 absint($vms_readiness_detail_context['add_on_summary']['enabled_add_on_count'] ?? 0)
@@ -76,6 +79,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
     <p class="description">
         <?php
             printf(
+                /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
                 esc_html__('Secondary vendor warnings: %1$d. Selected secondary vendors: %2$d.', 'backstage-venue-manager'),
                 count((array) ($secondary_vendor_boot_summary['secondary_missing'] ?? array()))
                     + count((array) ($secondary_vendor_boot_summary['secondary_mismatch'] ?? array()))

@@ -1079,6 +1079,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_unmapped_' . $ticket_key,
 					$severity,
 					'mapping',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Enabled ticket "%s" has no mapped product', 'backstage-venue-manager'), $title),
 					__('This ticket row is enabled, but VMS does not currently have a linked Woo/TEC product for it. If this is supposed to be part of the live public path, customers are at risk.', 'backstage-venue-manager')
 				)
@@ -1090,6 +1091,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_mapping_problem_' . $ticket_key,
 					'red',
 					'mapping',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Enabled ticket "%s" points to an invalid product object', 'backstage-venue-manager'), $title),
 					__('The mapped product is missing, trashed, not a product, or linked to the wrong event. The current customer-facing path is not trustworthy until this mapping is repaired.', 'backstage-venue-manager')
 				)
@@ -1104,6 +1106,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_hidden_status_' . $ticket_key,
 						'red',
 						'visibility',
+						/* translators: %s: human-readable value used in this message. */
 						sprintf(__('Enabled ticket "%s" is unpublished', 'backstage-venue-manager'), $title),
 						__('The mapped ticket product exists but is not publicly published, so customers may not be able to purchase it.', 'backstage-venue-manager')
 					)
@@ -1117,6 +1120,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_hidden_catalog_' . $ticket_key,
 						'red',
 						'visibility',
+						/* translators: %s: human-readable value used in this message. */
 						sprintf(__('Enabled ticket "%s" is hidden from catalog visibility', 'backstage-venue-manager'), $title),
 						__('The mapped ticket product is marked hidden, which can suppress the public purchase path even when the ticket should be on sale.', 'backstage-venue-manager')
 					)
@@ -1130,6 +1134,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_negative_stock_' . $ticket_key,
 						'red',
 						'inventory',
+						/* translators: %s: human-readable value used in this message. */
 						sprintf(__('Enabled ticket "%s" has negative stock state', 'backstage-venue-manager'), $title),
 						__('The mapped product reports a negative stock quantity, which is a malformed live inventory state.', 'backstage-venue-manager')
 					)
@@ -1143,6 +1148,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_zero_stock_mismatch_' . $ticket_key,
 						'red',
 						'inventory',
+						/* translators: %s: human-readable value used in this message. */
 						sprintf(__('Enabled ticket "%s" looks sold out unexpectedly', 'backstage-venue-manager'), $title),
 						__('The Event Plan config still suggests sellable capacity, but the mapped product currently reports zero stock.', 'backstage-venue-manager')
 					)
@@ -1157,6 +1163,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_outofstock_' . $ticket_key,
 						$severity,
 						'inventory',
+						/* translators: %s: human-readable value used in this message. */
 						sprintf(__('Enabled ticket "%s" is currently out of stock', 'backstage-venue-manager'), $title),
 						__('The mapped product is reporting out-of-stock while the customer-facing config still reads as active. This can create a false sold-out condition or an unexpectedly closed path.', 'backstage-venue-manager')
 					)
@@ -1170,7 +1177,9 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					$total = absint($inventory_signal['total'] ?? 0);
 					$percent = is_numeric($inventory_signal['percent_remaining'] ?? null) ? number_format((float) $inventory_signal['percent_remaining'], 1) : '0.0';
 					$details = ($total > 0)
+						/* translators: 1: number 1 used in this message, 2: number 2 used in this message, 3: value 3 used in this message. */
 						? sprintf(__('Remaining inventory is %1$d of %2$d (%3$s%%).', 'backstage-venue-manager'), $remaining, $total, $percent)
+						/* translators: %1$d: number used in this message. */
 						: sprintf(__('Remaining inventory is %1$d tickets.', 'backstage-venue-manager'), $remaining);
 
 					vms_ticket_integrity_add_issue(
@@ -1179,6 +1188,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 							'ticket_low_inventory_' . $ticket_key,
 							(string) ($inventory_signal['severity'] ?? 'yellow'),
 							'inventory',
+							/* translators: %s: human-readable value used in this message. */
 							sprintf(__('Ticket "%s" is running low', 'backstage-venue-manager'), $title),
 							$details,
 							array(
@@ -1199,6 +1209,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_price_mismatch_' . $ticket_key,
 						'red',
 						'data',
+						/* translators: %s: formatted price. */
 						sprintf(__('Enabled ticket "%s" is missing a live price', 'backstage-venue-manager'), $title),
 						__('The Event Plan config still expects this to be a paid ticket, but the mapped product price is blank or zero.', 'backstage-venue-manager')
 					)
@@ -1213,6 +1224,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_bad_start_' . $ticket_key,
 					'red',
 					'sale_window',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Enabled ticket "%s" has a malformed sale start', 'backstage-venue-manager'), $title),
 					__('The configured sale-start value could not be parsed with WordPress timezone semantics, so the public open/closed state may be wrong.', 'backstage-venue-manager')
 				)
@@ -1226,6 +1238,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_bad_end_' . $ticket_key,
 					'red',
 					'sale_window',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Enabled ticket "%s" has a malformed sale end', 'backstage-venue-manager'), $title),
 					__('The configured sale-end value could not be parsed with WordPress timezone semantics, so the public open/closed state may be wrong.', 'backstage-venue-manager')
 				)
@@ -1239,6 +1252,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_window_reversed_' . $ticket_key,
 					'red',
 					'sale_window',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Enabled ticket "%s" has a reversed sale window', 'backstage-venue-manager'), $title),
 					__('The sale end is earlier than the sale start, which is a hard customer-facing risk.', 'backstage-venue-manager')
 				)
@@ -1252,6 +1266,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_window_drift_' . $ticket_key,
 					'red',
 					'sale_window',
+					/* translators: %s: ticket label that appears open in config but closed by live product dates. */
 					sprintf(__('Enabled ticket "%s" appears closed by live product dates', 'backstage-venue-manager'), $title),
 					__('The Event Plan config reads as currently on sale, but the mapped product carries start/end dates that currently close the product. This is a strong false sold-out / early-close signal.', 'backstage-venue-manager')
 				)
@@ -1268,6 +1283,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_verified_invalid_' . $ticket_key,
 						'red',
 						'verified',
+						/* translators: %s: human-readable value used in this message. */
 						sprintf(__('Verified ticket "%s" has no valid qualification rule', 'backstage-venue-manager'), $title),
 						__('This ticket is gated as a verified-only path, but no credential program or direct-grant rule is currently configured for it.', 'backstage-venue-manager')
 					)
@@ -1281,6 +1297,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 							'ticket_verified_program_missing_' . $ticket_key,
 							'red',
 							'verified',
+							/* translators: %s: human-readable value used in this message. */
 							sprintf(__('Verified ticket "%s" references missing programs', 'backstage-venue-manager'), $title),
 							__('One or more verification programs referenced by this ticket no longer exist in the current program registry.', 'backstage-venue-manager'),
 							array('programs' => $missing_programs)
@@ -1362,6 +1379,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'entitlement_mapping_problem_' . $entitlement_id,
 					'yellow',
 					'addons',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Add-on "%s" points to an invalid product object', 'backstage-venue-manager'), $label),
 					__('This add-on is enabled in config, but its linked Woo product is missing, trashed, or not a product. Core ticket sales may still work, but the add-on path is not healthy.', 'backstage-venue-manager')
 				)
@@ -1375,6 +1393,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'entitlement_no_parent_' . $entitlement_id,
 					'red',
 					'addons',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Add-on "%s" has no qualifying ticket path', 'backstage-venue-manager'), $label),
 					__('This add-on still requires qualifying tickets, but the current Event Plan does not have any enabled qualifying ticket rows that can unlock it.', 'backstage-venue-manager')
 				)
@@ -1386,6 +1405,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'entitlement_parent_closed_' . $entitlement_id,
 					'red',
 					'addons',
+					/* translators: %s: human-readable value used in this message. */
 					sprintf(__('Add-on "%s" has no live qualifying ticket path', 'backstage-venue-manager'), $label),
 					__('This add-on is still live, but the qualifying customer-facing ticket path currently is not sellable. That can leave the add-on path effectively broken.', 'backstage-venue-manager')
 				)
@@ -1451,6 +1471,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 		$details = __('TEC is calculating zero available tickets even though the event still has remaining capacity.', 'backstage-venue-manager');
 		$cause_label = trim((string) ($inventory_diagnostics['suspected_cause_label'] ?? ''));
 		if ($cause_label !== '' && $cause_label !== vms_ticket_inventory_forensics_cause_label('healthy')) {
+			/* translators: %s: likely pattern. */
 			$details .= ' ' . sprintf(__('Likely pattern: %s.', 'backstage-venue-manager'), $cause_label);
 		}
 

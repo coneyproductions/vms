@@ -708,6 +708,7 @@ if (!function_exists('vms_vendor_app_send_confirmation_email')) {
             : home_url('/vendor-portal/');
         $subject = __('Confirm your vendor application email', 'backstage-venue-manager');
         if ($name !== '') {
+            /* translators: %s: human-readable value used in this message. */
             $subject = sprintf(__('Confirm your vendor application for %s', 'backstage-venue-manager'), $name);
         }
 
@@ -721,6 +722,7 @@ if (!function_exists('vms_vendor_app_send_confirmation_email')) {
             __('If you already have a website account with this email, we will attach the application to that account after confirmation.', 'backstage-venue-manager'),
             __('If you do not have a website account yet, we will prepare one for this email after confirmation and you can use the normal password reset flow later if needed.', 'backstage-venue-manager'),
             '',
+            /* translators: %s: vendor portal URL. */
             sprintf(__('Vendor Portal: %s', 'backstage-venue-manager'), $portal_url),
             __('Please also check your spam or junk folder if you do not see future updates.', 'backstage-venue-manager'),
         );
@@ -911,10 +913,12 @@ if (!function_exists('vms_vendor_app_send_review_ready_admin_notification')) {
         $email = vms_vendor_app_get_confirmation_email($app_id);
         $name = trim((string) get_the_title($app_id));
         if ($name === '') {
+            /* translators: %d: application ID. */
             $name = sprintf(__('Application #%d', 'backstage-venue-manager'), $app_id);
         }
 
         $to = apply_filters('vms_vendor_app_notify_email', get_option('admin_email'));
+        /* translators: %s: vendor application ready for review. */
         $subject = sprintf(__('Vendor Application Ready for Review: %s', 'backstage-venue-manager'), $name);
         $vendor_type = sanitize_key((string) get_post_meta($app_id, '_vms_app_vendor_type', true));
         $contact_name = trim((string) get_post_meta($app_id, vms_vendor_app_meta_key('contact_name') ?: '_vms_app_contact_name', true));
@@ -924,17 +928,23 @@ if (!function_exists('vms_vendor_app_send_review_ready_admin_notification')) {
         $body_lines = array(
             __('A vendor application is now ready for operator review.', 'backstage-venue-manager'),
             '',
+            /* translators: %s: name. */
             sprintf(__('Name: %s', 'backstage-venue-manager'), $name),
+            /* translators: %s: type. */
             sprintf(__('Type: %s', 'backstage-venue-manager'), vms_vendor_app_vendor_type_label($vendor_type)),
+            /* translators: %s: email address. */
             sprintf(__('Email: %s', 'backstage-venue-manager'), $email),
+            /* translators: %s: confirmation state. */
             sprintf(__('Confirmation State: %s', 'backstage-venue-manager'), vms_vendor_app_confirmation_state_label(vms_vendor_app_get_confirmation_state($app_id))),
         );
 
         if ($contact_name !== '') {
+            /* translators: %s: primary contact. */
             $body_lines[] = sprintf(__('Primary Contact: %s', 'backstage-venue-manager'), $contact_name);
         }
         if ($submitted_user instanceof WP_User) {
-            $body_lines[] = sprintf(__('Resolved Website User: %s (#%d)', 'backstage-venue-manager'), $submitted_user->user_login, (int) $submitted_user->ID);
+            /* translators: 1: website username, 2: website user ID. */
+            $body_lines[] = sprintf(__('Resolved Website User: %1$s (#%2$d)', 'backstage-venue-manager'), $submitted_user->user_login, (int) $submitted_user->ID);
         }
 
         $body_lines[] = '';

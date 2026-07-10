@@ -2165,6 +2165,7 @@ function vms_square_ticket_mirror_order_item_stamp_decision(int $product_id, str
     if ((string) ($state['status'] ?? '') !== 'mirrored') {
         $decision['reason_code'] = 'mirror_status_' . sanitize_key((string) ($state['status'] ?? 'not_mirrored'));
         $decision['reason_message'] = sprintf(
+            /* translators: %s: status label. */
             __('Mirror status is %s, so the order item was not stamped.', 'backstage-venue-manager'),
             vms_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored'))
         );

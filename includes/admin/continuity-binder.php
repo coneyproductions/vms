@@ -263,7 +263,8 @@ function vms_render_continuity_binder_page_content() {
         $user       = $data['updated_by'] ? get_userdata((int) $data['updated_by']) : null;
         $who        = ($user && !empty($user->display_name)) ? $user->display_name : __('Unknown', 'backstage-venue-manager');
 
-        echo '<p><em>' . esc_html(sprintf(__('Last updated: %s by %s', 'backstage-venue-manager'), $updated_at, $who)) . '</em></p>';
+        /* translators: 1: formatted update timestamp, 2: user display name. */
+        echo '<p><em>' . esc_html(sprintf(__('Last updated: %1$s by %2$s', 'backstage-venue-manager'), $updated_at, $who)) . '</em></p>';
     } else {
         echo '<p><em>' . esc_html__('Currently showing defaults (not yet saved). Click “Edit Binder” to customize and save.', 'backstage-venue-manager') . '</em></p>';
     }

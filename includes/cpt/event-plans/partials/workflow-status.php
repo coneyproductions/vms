@@ -102,6 +102,7 @@
                         $linked_date = (string) get_post_meta($linked_plan_id, '_vms_event_date', true);
                         $linked_label = trim((string) get_the_title($linked_plan_id));
                         if ($linked_label === '') {
+                            /* translators: %d: event plan ID. */
                             $linked_label = sprintf(__('Event Plan #%d', 'backstage-venue-manager'), $linked_plan_id);
                         }
                         if ($linked_date !== '') {
@@ -157,6 +158,7 @@
     <?php if ($rescheduled_from_id > 0 && get_post_type($rescheduled_from_id) === 'vms_event_plan') : ?>
         <p class="description">
             <strong><?php esc_html_e('Rescheduled from:', 'backstage-venue-manager'); ?></strong>
+            <?php /* translators: %d: event plan ID. */ ?>
             <a href="<?php echo esc_url(vms_event_plan_admin_edit_url($rescheduled_from_id)); ?>"><?php echo esc_html(get_the_title($rescheduled_from_id) ?: sprintf(__('Event Plan #%d', 'backstage-venue-manager'), $rescheduled_from_id)); ?></a>
         </p>
     <?php endif; ?>

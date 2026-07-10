@@ -217,6 +217,7 @@ if (!function_exists('vms_admission_email_pass_result')) {
 			return $result;
 		}
 		$url = vms_admission_public_pass_url($primary_token, true);
+		/* translators: %s: human-readable value used in this message. */
 		$subject = sprintf(__('Your admission pass for %s', 'backstage-venue-manager'), $title);
 		$count = count($group_rows);
 		$body = '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#162033;max-width:720px;margin:0 auto;">';
@@ -239,6 +240,7 @@ if (!function_exists('vms_admission_email_pass_result')) {
 				continue;
 			}
 			$qr_url = vms_admission_qr_image_url('vms-admission:' . $group_token);
+			/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 			$label = $count > 1 ? sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $slot, $count) : __('Gate QR code', 'backstage-venue-manager');
 			$body .= '<div style="border:1px solid #d9e2ef;border-radius:12px;padding:12px;background:#fff;text-align:center;min-width:190px;">';
 			$body .= '<strong style="display:block;margin-bottom:8px;">' . esc_html($label) . '</strong>';
@@ -403,6 +405,7 @@ if (!function_exists('vms_admission_scan_template_router')) {
 					if ($group_qr_url === '') {
 						continue;
 					}
+					/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 					echo '<div class="vms-pass-qr-item"><strong>' . esc_html(sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $slot, $group_count)) . '</strong><img class="vms-pass-qr" src="' . esc_url($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"><span>' . esc_html('GL-' . $group_entry_id) . '</span></div>';
 					$slot++;
 				}
@@ -422,6 +425,7 @@ if (!function_exists('vms_admission_scan_template_router')) {
 			}
 			$party_size = $group_count > 1 ? $group_count : (is_array($row) ? max(1, (int) ($row['party_size'] ?? 1)) : 1);
 			if ($party_size > 1) {
+				/* translators: %d: number of items described in this message. */
 				echo '<p class="vms-pass-meta"><strong>' . esc_html__('Admits:', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(_n('%d person', '%d people', $party_size, 'backstage-venue-manager'), $party_size)) . '</p>';
 			}
 			if ($event_is_cancelled) {

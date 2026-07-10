@@ -710,6 +710,7 @@ if (!function_exists('vms_add_dispatch_get_event_plan_context')) {
 					(int) $open_spots
 				);
 			} else {
+				/* translators: %s: human-readable value used in this message. */
 				$missing_slot_labels[] = sprintf(__('Additional vendor (%s) slot open', 'backstage-venue-manager'), (string) ($group['label'] ?? __('Vendor', 'backstage-venue-manager')));
 			}
 		}
@@ -2356,6 +2357,7 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 					: __('This group is full. Confirming this assignment requires the over-capacity override.', 'backstage-venue-manager');
 			}
 			if ($slot_limit !== null && $filled > (int) $slot_limit) {
+				/* translators: %d: number used in this message. */
 				$warnings[] = sprintf(__('This group is already over capacity by %d.', 'backstage-venue-manager'), $filled - (int) $slot_limit);
 			}
 
@@ -2366,6 +2368,7 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 				'mode' => $mode,
 				'slot_limit' => $slot_limit,
 				'filled' => $filled,
+				/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 				'capacity_label' => $slot_limit === null ? __('No slot limit', 'backstage-venue-manager') : sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $filled, (int) $slot_limit),
 				'allow_over_capacity' => $allow_over_capacity,
 				'is_full' => $slot_limit !== null && $filled >= (int) $slot_limit,
@@ -2378,6 +2381,7 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 		$warnings = array();
 		if ($target_mode !== 'primary' && $original_type !== '' && !in_array($original_type, $current_types, true) && !empty($current_types)) {
 			$warnings[] = sprintf(
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 				__('This vendor originally responded as %1$s, but their current vendor type is %2$s.', 'backstage-venue-manager'),
 				vms_add_dispatch_type_label($original_type),
 				vms_add_dispatch_assign_vendor_type_label_list($current_types)

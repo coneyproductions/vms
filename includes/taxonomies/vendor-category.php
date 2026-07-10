@@ -255,6 +255,7 @@ add_action('vms_vendor_type_edit_form_fields', function ($term) {
 		<td>
 			<input type="text" id="vms_vendor_type_category_label" name="vms_vendor_type_category_label" value="<?php echo esc_attr($value); ?>">
 			<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service.', 'backstage-venue-manager'); ?></p>
+			<?php /* translators: %s: resolved vendor category label. */ ?>
 			<p class="description"><?php printf(esc_html__('Current resolved label: %s', 'backstage-venue-manager'), esc_html($resolved)); ?></p>
 		</td>
 	</tr>

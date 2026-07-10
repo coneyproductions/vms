@@ -108,7 +108,9 @@ if (!function_exists('vms_add_dispatch_render_public_response')) {
 				$already = !empty($result['already_recorded']);
 				$label = $final_status === 'available' ? __('Available', 'backstage-venue-manager') : __('Unavailable', 'backstage-venue-manager');
 				$message = $already
+					/* translators: %s: human-readable value used in this message. */
 					? sprintf(__('Your response was already recorded as %s.', 'backstage-venue-manager'), $label)
+					/* translators: %s: human-readable value used in this message. */
 					: sprintf(__('Your response has been recorded as %s.', 'backstage-venue-manager'), $label);
 				$html .= '<p class="vms-add-success">' . esc_html($message) . '</p>';
 				$html .= '<p class="vms-add-note">' . esc_html__('Thank you. The operator can now use your response in VMS availability and Event Plan staffing decisions.', 'backstage-venue-manager') . '</p>';
@@ -118,6 +120,7 @@ if (!function_exists('vms_add_dispatch_render_public_response')) {
 
 		if (in_array($current_status, array('available', 'unavailable'), true)) {
 			$label = $current_status === 'available' ? __('Available', 'backstage-venue-manager') : __('Unavailable', 'backstage-venue-manager');
+			/* translators: %s: human-readable value used in this message. */
 			$html .= '<p class="vms-add-success">' . esc_html(sprintf(__('Your response is already recorded as %s.', 'backstage-venue-manager'), $label)) . '</p>';
 			vms_add_dispatch_render_public_shell(__('Availability Response', 'backstage-venue-manager'), $html);
 		}

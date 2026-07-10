@@ -133,6 +133,7 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 
 		echo '<header class="vms-feedback-header">';
 		echo '<p class="vms-feedback-eyebrow">' . esc_html__('Private post-event survey', 'backstage-venue-manager') . '</p>';
+		/* translators: %s: human-readable value used in this message. */
 		echo '<h1>' . esc_html(sprintf(__('How was your night at %s?', 'backstage-venue-manager'), $venue_title)) . '</h1>';
 		if ($event_title !== '') {
 			echo '<p class="vms-feedback-event-title">' . esc_html($event_title . ($date_label !== '' ? ' · ' . $date_label : '')) . '</p>';
@@ -230,6 +231,7 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 			$type_label = (string) ($vendor['type_label'] ?? __('Vendor', 'backstage-venue-manager'));
 			echo '<section class="vms-feedback-section" data-vms-feedback-role="secondary-vendor">';
 			echo '<h2>' . esc_html($vendor_name) . '</h2>';
+			/* translators: %s: human-readable value used in this message. */
 			echo '<p class="vms-feedback-section-note">' . esc_html(sprintf(__('Feedback for this %s.', 'backstage-venue-manager'), strtolower($type_label))) . '</p>';
 			echo '<input type="hidden" name="secondary_vendors[' . esc_attr((string) $vendor_id) . '][id]" value="' . esc_attr((string) $vendor_id) . '">';
 			vms_feedback_render_choice_field('secondary_vendors[' . $vendor_id . '][did_order]', __('Did you order from them?', 'backstage-venue-manager'), vms_feedback_secondary_vendor_order_options());
@@ -461,6 +463,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		}
 
 		$title = sprintf(
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			__('Feedback: %1$s - %2$s', 'backstage-venue-manager'),
 			(string) ($context['event_title'] ?? ('Event Plan #' . $event_plan_id)),
 			wp_date('M j, Y g:i a')

@@ -416,6 +416,7 @@ if (!function_exists('vms_add_dispatch_render_request_builder')) {
 			echo '<input type="hidden" name="include_no_response" value="' . esc_attr((string) (int) ($builder_args['include_no_response'] ?? $builder_args['include_unknown'] ?? 0)) . '">';
 			echo '<input type="hidden" name="include_tentative" value="' . esc_attr((string) (int) ($builder_args['include_tentative'] ?? 0)) . '">';
 			echo '<input type="hidden" name="include_previously_contacted" value="' . esc_attr((string) (int) ($builder_args['include_previously_contacted'] ?? 0)) . '">';
+			/* translators: %1$d: number of items described in this message. */
 			echo '<h3 class="vms-add-review-heading">' . esc_html__('Vendor Review', 'backstage-venue-manager') . ' <span class="vms-add-muted">(' . esc_html(sprintf(__('%1$d matching this vendor type', 'backstage-venue-manager'), $total_candidates)) . ' • <span data-vms-add-eligible-count>' . esc_html((string) $included_count) . '</span> ' . esc_html__('selectable', 'backstage-venue-manager') . ' • <span data-vms-add-selected-count>0</span> ' . esc_html__('selected', 'backstage-venue-manager') . ')</span></h3>';
 			echo '<div class="vms-add-recipient-actions">';
 			echo '<button class="button button-small" type="button" data-vms-add-select-all>' . esc_html__('Select all eligible', 'backstage-venue-manager') . '</button>';
@@ -628,13 +629,16 @@ if (!function_exists('vms_add_dispatch_need_row_summary_label')) {
 		$label = (string) ($row['label'] ?? __('Vendor', 'backstage-venue-manager'));
 		$status = sanitize_key((string) ($row['status'] ?? ''));
 		if ($status === 'over_capacity') {
+			/* translators: 1: value 1 used in this message, 2: number 2 used in this message. */
 			return sprintf(__('%1$s: over capacity by %2$d', 'backstage-venue-manager'), $label, max(0, (int) ($row['over_capacity_by'] ?? 0)));
 		}
 		if ($status === 'full') {
+			/* translators: %s: human-readable value used in this message. */
 			return sprintf(__('%s: full', 'backstage-venue-manager'), $label);
 		}
 
 		return sprintf(
+			/* translators: 1: value 1 used in this message, 2: number 2 used in this message. */
 			_n('%1$s: %2$d slot open', '%1$s: %2$d slots open', max(1, (int) ($row['open_needed'] ?? $row['open_spots'] ?? 1)), 'backstage-venue-manager'),
 			$label,
 			max(1, (int) ($row['open_needed'] ?? $row['open_spots'] ?? 1))
@@ -902,6 +906,7 @@ if (!function_exists('vms_add_dispatch_render_dashboard_home')) {
 				$dispatch_url = vms_add_dispatch_admin_url(array('event_plan_id' => (int) ($context['event_plan_id'] ?? 0)));
 				$edit_url = get_edit_post_link((int) ($context['event_plan_id'] ?? 0), '');
 				echo '<div class="vms-add-quickstart-event">';
+				/* translators: %s: event. */
 				echo '<div class="vms-add-quickstart-event__head"><strong>' . esc_html(sprintf(__('Event: %s', 'backstage-venue-manager'), (string) ($context['event_title'] ?? ''))) . '</strong><span>' . esc_html(vms_add_dispatch_format_date((string) ($context['event_date'] ?? ''))) . '</span></div>';
 				if (!empty($context['venue_name'])) {
 					echo '<div class="description">' . esc_html((string) $context['venue_name']) . '</div>';
@@ -1075,9 +1080,11 @@ if (!function_exists('vms_add_dispatch_handle_send_request')) {
 
 		if (function_exists('vms_add_admin_notice')) {
 			if ($sent > 0) {
+				/* translators: %d: number used in this message. */
 				vms_add_admin_notice(sprintf(__('ADD request sent to %d vendor(s).', 'backstage-venue-manager'), $sent), 'success');
 			}
 			if ($failed > 0) {
+				/* translators: %d: number of vendors whose ADD notification email failed. */
 				vms_add_admin_notice(sprintf(__('ADD could not email %d vendor(s). Check notification logs and recipient email addresses.', 'backstage-venue-manager'), $failed), 'warning');
 			}
 		}

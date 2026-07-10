@@ -1467,32 +1467,47 @@ function vms_event_plan_save_profiler_render_meta_box(WP_Post $post): void
 
     echo '<p><strong>' . esc_html__('Last Event Plan save', 'backstage-venue-manager') . '</strong></p>';
     echo '<ul style="margin-left:1em;list-style:disc;">';
+    /* translators: %s: type. */
     echo '<li>' . esc_html(sprintf(__('Type: %s', 'backstage-venue-manager'), $save_type ?: '-')) . '</li>';
+    /* translators: %s: changed. */
     echo '<li>' . esc_html(sprintf(__('Changed: %s', 'backstage-venue-manager'), vms_event_plan_save_profiler_changed_modules_label($profile))) . '</li>';
+    /* translators: %d: elapsed. */
     echo '<li>' . esc_html(sprintf(__('Elapsed: %d ms', 'backstage-venue-manager'), $elapsed)) . '</li>';
     if ($recorded !== '') {
+        /* translators: %s: recorded gmt. */
         echo '<li>' . esc_html(sprintf(__('Recorded GMT: %s', 'backstage-venue-manager'), $recorded)) . '</li>';
     }
-    echo '<li>' . esc_html(sprintf(__('Status: %s → %s', 'backstage-venue-manager'), $status_start ?: '-', $status_end ?: '-')) . '</li>';
+    /* translators: 1: previous status label, 2: new status label. */
+    echo '<li>' . esc_html(sprintf(__('Status: %1$s → %2$s', 'backstage-venue-manager'), $status_start ?: '-', $status_end ?: '-')) . '</li>';
     $post_field_changes = is_array($profile['post_field_changes'] ?? null) ? array_values(array_filter(array_map('sanitize_key', $profile['post_field_changes']))) : array();
     if (!empty($post_field_changes)) {
+        /* translators: %s: post fields changed. */
         echo '<li>' . esc_html(sprintf(__('Post fields changed: %s', 'backstage-venue-manager'), implode(', ', $post_field_changes))) . '</li>';
     }
+    /* translators: %s: request action. */
     echo '<li>' . esc_html(sprintf(__('Request action: %s', 'backstage-venue-manager'), $request_action ?: '-')) . '</li>';
+    /* translators: %s: wp action. */
     echo '<li>' . esc_html(sprintf(__('WP action: %s', 'backstage-venue-manager'), $wp_action ?: '-')) . '</li>';
+    /* translators: %d: meta writes. */
     echo '<li>' . esc_html(sprintf(__('Meta writes: %d', 'backstage-venue-manager'), absint($profile['meta_writes'] ?? 0))) . '</li>';
+    /* translators: %d: meta update attempts. */
     echo '<li>' . esc_html(sprintf(__('Meta update attempts: %d', 'backstage-venue-manager'), absint($profile['meta_update_attempts'] ?? 0))) . '</li>';
+    /* translators: %d: no-op meta update attempts. */
     echo '<li>' . esc_html(sprintf(__('No-op meta update attempts: %d', 'backstage-venue-manager'), absint($profile['noop_meta_update_attempts'] ?? 0))) . '</li>';
+    /* translators: %d: ticket config writes. */
     echo '<li>' . esc_html(sprintf(__('Ticket config writes: %d', 'backstage-venue-manager'), absint($profile['ticket_config_writes'] ?? 0))) . '</li>';
+    /* translators: %d: ticket sync writes. */
     echo '<li>' . esc_html(sprintf(__('Ticket sync writes: %d', 'backstage-venue-manager'), absint($profile['ticket_sync_writes'] ?? 0))) . '</li>';
     echo '</ul>';
 
     if (!empty($heavy_summary['triggered']) || !empty($heavy_summary['skipped'])) {
         echo '<details open><summary>' . esc_html__('Heavy work summary', 'backstage-venue-manager') . '</summary><ul style="margin-left:1em;list-style:disc;">';
         if (!empty($heavy_summary['triggered'])) {
+            /* translators: %s: triggered. */
             echo '<li>' . esc_html(sprintf(__('Triggered: %s', 'backstage-venue-manager'), implode(', ', $heavy_summary['triggered']))) . '</li>';
         }
         if (!empty($heavy_summary['skipped'])) {
+            /* translators: %s: skipped. */
             echo '<li>' . esc_html(sprintf(__('Skipped: %s', 'backstage-venue-manager'), implode(', ', $heavy_summary['skipped']))) . '</li>';
         }
         echo '</ul></details>';
@@ -1545,6 +1560,7 @@ function vms_event_plan_save_profiler_render_hub_summary(int $post_id): void
     echo '</div>';
     echo '<div class="vms-ep-save-profile__facts">';
     echo '<span><strong>' . esc_html__('Changed:', 'backstage-venue-manager') . '</strong> ' . esc_html($changed) . '</span>';
+    /* translators: %d: number of items described in this message. */
     echo '<span><strong>' . esc_html__('Duration:', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(__('%d ms', 'backstage-venue-manager'), $elapsed)) . '</span>';
     if ($recorded !== '') {
         echo '<span><strong>' . esc_html__('Recorded GMT:', 'backstage-venue-manager') . '</strong> ' . esc_html($recorded) . '</span>';

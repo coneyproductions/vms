@@ -153,4 +153,3 @@ function vms_docs_get_markdown($file_path) {
 
     return ltrim($raw);
 }
-

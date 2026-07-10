@@ -778,7 +778,9 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 	$lines = array();
 	$lines[] = __('Payment Gateway Health', 'backstage-venue-manager');
 	$lines[] = str_repeat('=', 22);
+	/* translators: %s: detected. */
 	$lines[] = sprintf(__('Detected: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? time())));
+	/* translators: %s: status. */
 	$lines[] = sprintf(__('Status: %s', 'backstage-venue-manager'), vms_ticket_integrity_payment_gateway_status_label((string) ($health['status'] ?? 'critical')));
 	$lines[] = '';
 	$lines[] = sanitize_text_field((string) ($health['summary'] ?? __('Payment gateway health is critical.', 'backstage-venue-manager')));
@@ -799,6 +801,7 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 		);
 	}
 	$lines[] = '';
+	/* translators: %s: review the full monitor. */
 	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), vms_ticket_integrity_admin_url());
 
 	$body_text = implode("\n", $lines);
@@ -1044,6 +1047,7 @@ function vms_ticket_integrity_render_payment_gateway_admin_notice(): void
 	echo '<div class="notice notice-error">';
 	echo '<p><strong>' . esc_html__('Payment Gateway Health:', 'backstage-venue-manager') . '</strong> ' . esc_html($message) . '</p>';
 	if ($first_detected > 0) {
+		/* translators: %s: first detected. */
 		echo '<p>' . esc_html(sprintf(__('First detected: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime($first_detected))) . '</p>';
 	}
 	echo '<p><a class="button button-secondary" href="' . esc_url(vms_ticket_integrity_admin_url()) . '">' . esc_html__('Open Ticket Integrity', 'backstage-venue-manager') . '</a></p>';

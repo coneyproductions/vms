@@ -823,12 +823,16 @@ function vms_ticket_integrity_build_state_of_range_payment_gateway_lines(array $
 	$apple_pay = is_array($health['apple_pay'] ?? null) ? $health['apple_pay'] : array();
 
 	$lines[] = __('Payment Gateway Health', 'backstage-venue-manager');
+	/* translators: %s: status. */
 	$lines[] = '- ' . sprintf(__('Status: %s', 'backstage-venue-manager'), $status);
+	/* translators: %s: last checked. */
 	$lines[] = '- ' . sprintf(__('Last checked: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? 0)));
+	/* translators: %d: checkout methods available. */
 	$lines[] = '- ' . sprintf(__('Checkout methods available: %d', 'backstage-venue-manager'), absint($checkout['available_count'] ?? 0));
 
 	$available_titles = (array) ($checkout['available_gateway_titles'] ?? array());
 	if (!empty($available_titles)) {
+		/* translators: %s: available methods. */
 		$lines[] = '- ' . sprintf(__('Available methods: %s', 'backstage-venue-manager'), implode(', ', $available_titles));
 	} else {
 		$lines[] = '- ' . __('Available methods: none', 'backstage-venue-manager');
@@ -836,6 +840,7 @@ function vms_ticket_integrity_build_state_of_range_payment_gateway_lines(array $
 
 	if (!empty($square['plugin_active']) || !empty($square['expected'])) {
 		$lines[] = '- ' . sprintf(
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
 			__('Square: %1$s | Gateway %2$s | %3$s', 'backstage-venue-manager'),
 			!empty($square['connection_present']) ? __('Connected', 'backstage-venue-manager') : __('Disconnected', 'backstage-venue-manager'),
 			!empty($square['gateway_enabled']) ? __('enabled', 'backstage-venue-manager') : __('disabled', 'backstage-venue-manager'),
@@ -851,12 +856,14 @@ function vms_ticket_integrity_build_state_of_range_payment_gateway_lines(array $
 
 	$summary = trim((string) ($health['summary'] ?? ''));
 	if ($summary !== '') {
+		/* translators: %s: summary. */
 		$lines[] = '- ' . sprintf(__('Summary: %s', 'backstage-venue-manager'), $summary);
 	}
 
 	$incident = is_array($health['incident'] ?? null) ? $health['incident'] : array();
 	if (!empty($incident['active'])) {
 		$lines[] = '- ' . sprintf(
+			/* translators: %s: current incident since. */
 			__('Current incident since: %s', 'backstage-venue-manager'),
 			vms_ticket_integrity_format_datetime(absint($incident['first_detected_failure_gmt'] ?? 0))
 		);
@@ -865,6 +872,7 @@ function vms_ticket_integrity_build_state_of_range_payment_gateway_lines(array $
 	$last_incident = is_array($health['last_incident'] ?? null) ? $health['last_incident'] : array();
 	if (empty($incident['active']) && !empty($last_incident['resolved_at_gmt'])) {
 		$lines[] = '- ' . sprintf(
+			/* translators: %s: most recent incident resolved. */
 			__('Most recent incident resolved: %s', 'backstage-venue-manager'),
 			vms_ticket_integrity_format_datetime(absint($last_incident['resolved_at_gmt'] ?? 0))
 		);
@@ -902,13 +910,17 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 	$lines = array();
 	$lines[] = __('State of the Range', 'backstage-venue-manager');
 	$lines[] = str_repeat('=', 18);
+	/* translators: %s: generated. */
 	$lines[] = sprintf(__('Generated: %s', 'backstage-venue-manager'), function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime($report_generated_at) : wp_date('Y-m-d g:i a', $report_generated_at));
+	/* translators: %s: last integrity scan. */
 	$lines[] = sprintf(__('Last integrity scan: %s', 'backstage-venue-manager'), function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime(absint($last_scan['completed_at_gmt'] ?? 0)) : wp_date('Y-m-d g:i a'));
 	$report_meta = is_array($store['report_meta'] ?? null) ? $store['report_meta'] : array();
 	if (!empty($report_meta['used_stale_snapshot'])) {
 		$lines[] = sprintf(
 			!empty($report_meta['refresh_failed'])
+				/* translators: %s: formatted date/time of the last successful integrity snapshot. */
 				? __('Warning: today\'s integrity refresh failed, so this email is using the last successful snapshot from %s.', 'backstage-venue-manager')
+				/* translators: %s: formatted date/time of the last successful integrity snapshot. */
 				: __('Warning: this email is using the last available integrity snapshot from %s. Run a fresh integrity scan to update the data.', 'backstage-venue-manager'),
 			function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime(absint($last_scan['completed_at_gmt'] ?? 0)) : wp_date('Y-m-d g:i a', absint($last_scan['completed_at_gmt'] ?? 0))
 		);
@@ -956,6 +968,7 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 				foreach ((array) $row['low_inventory'] as $signal) {
 					$low_names[] = (string) ($signal['ticket_title'] ?? __('Ticket', 'backstage-venue-manager'));
 				}
+				/* translators: %s: human-readable value used in this message. */
 				$urgent .= ': ' . sprintf(__('Low inventory on %s', 'backstage-venue-manager'), implode(', ', array_slice(array_unique($low_names), 0, 3)));
 			} else {
 				$urgent .= ': ' . (string) ($row['issue_summary'] ?? __('Needs review', 'backstage-venue-manager'));
@@ -965,12 +978,19 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 	}
 
 	$lines[] = __('Morning snapshot', 'backstage-venue-manager');
+	/* translators: %d: events scanned. */
 	$lines[] = '- ' . sprintf(__('Events scanned: %d', 'backstage-venue-manager'), absint($summary['events_scanned'] ?? count($rows)));
+	/* translators: %d: shows this week. */
 	$lines[] = '- ' . sprintf(__('Shows this week: %d', 'backstage-venue-manager'), $shows_this_week);
+	/* translators: %d: tickets sold (tracked upcoming events). */
 	$lines[] = '- ' . sprintf(__('Tickets sold (tracked upcoming events): %d', 'backstage-venue-manager'), $total_sold);
+	/* translators: %s: gross sales (tracked upcoming events). */
 	$lines[] = '- ' . sprintf(__('Gross sales (tracked upcoming events): %s', 'backstage-venue-manager'), vms_ticket_integrity_money_string($total_gross));
+	/* translators: %d: events needing attention. */
 	$lines[] = '- ' . sprintf(__('Events needing attention: %d', 'backstage-venue-manager'), $attention_count);
+	/* translators: %d: low inventory warnings. */
 	$lines[] = '- ' . sprintf(__('Low inventory warnings: %d', 'backstage-venue-manager'), $low_inventory_count);
+	/* translators: 1: number 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message. */
 	$lines[] = '- ' . sprintf(__('Integrity summary — Red: %1$d, Yellow: %2$d, Green: %3$d', 'backstage-venue-manager'), absint($summary['red'] ?? 0), absint($summary['yellow'] ?? 0), absint($summary['green'] ?? 0));
 	$lines[] = '';
 
@@ -994,16 +1014,24 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 		);
 			$lines[] = sprintf(
 				'  %1$s | %2$s | %3$s | %4$s | %5$s',
+				/* translators: %s: days. */
 				sprintf(__('Days: %s', 'backstage-venue-manager'), $days_text),
+				/* translators: %d: sold. */
 				sprintf(__('Sold: %d', 'backstage-venue-manager'), absint($row['tickets_sold'] ?? 0)),
+				/* translators: %s: gross. */
 				sprintf(__('Gross: %s', 'backstage-venue-manager'), vms_ticket_integrity_money_string((float) ($row['gross_sales'] ?? 0))),
+				/* translators: %s: available inventory. */
 				sprintf(__('Available inventory: %s', 'backstage-venue-manager'), $tickets_left),
+				/* translators: %s: status. */
 				sprintf(__('Status: %s', 'backstage-venue-manager'), strtoupper((string) ($row['status'] ?? 'green')))
 			);
 			$lines[] = sprintf(
 				'  %1$s | %2$s | %3$s',
+				/* translators: %d: ticket capacity. */
 				sprintf(__('Ticket capacity: %d', 'backstage-venue-manager'), absint($row['total_capacity'] ?? 0)),
+				/* translators: %d: paid sold. */
 				sprintf(__('Paid sold: %d', 'backstage-venue-manager'), absint($row['paid_tickets_sold'] ?? 0)),
+				/* translators: %d: free/qualified sold. */
 				sprintf(__('Free/qualified sold: %d', 'backstage-venue-manager'), absint($row['free_tickets_sold'] ?? 0))
 			);
 		if (!empty($row['low_inventory'])) {
@@ -1011,6 +1039,7 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 				$lines[] = sprintf(
 					'  %1$s',
 					sprintf(
+						/* translators: 1: value 1 used in this message, 2: number 2 used in this message, 3: value 3 used in this message. */
 						__('Low inventory: %1$s has %2$d left (%3$s%%).', 'backstage-venue-manager'),
 						(string) ($signal['ticket_title'] ?? __('Ticket', 'backstage-venue-manager')),
 						absint($signal['remaining'] ?? 0),
@@ -1020,11 +1049,13 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 			}
 		}
 		if (!empty($row['issue_summary']) && ($row['status'] ?? '') !== 'green') {
+			/* translators: %s: issues. */
 			$lines[] = '  ' . sprintf(__('Issues: %s', 'backstage-venue-manager'), (string) $row['issue_summary']);
 		}
 		$lines[] = '';
 	}
 
+	/* translators: %s: review the full monitor. */
 	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), function_exists('vms_ticket_integrity_admin_url') ? vms_ticket_integrity_admin_url() : admin_url());
 
 	return array(

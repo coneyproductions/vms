@@ -169,11 +169,14 @@ if (!function_exists('vms_email_followups_template_timing_label')) {
 			return __('Manual only', 'backstage-venue-manager');
 		}
 		if ($mode === 'day_of') {
+			/* translators: %s: human-readable value used in this message. */
 			return sprintf(__('Day of event at %s', 'backstage-venue-manager'), $time);
 		}
 		if ($mode === 'after') {
+			/* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
 			return sprintf(_n('%1$d day after event at %2$s', '%1$d days after event at %2$s', max(1, $days), 'backstage-venue-manager'), max(1, $days), $time);
 		}
+		/* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
 		return sprintf(_n('%1$d day before event at %2$s', '%1$d days before event at %2$s', max(1, $days), 'backstage-venue-manager'), max(1, $days), $time);
 	}
 }

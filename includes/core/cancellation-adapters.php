@@ -1395,6 +1395,7 @@ if (!function_exists('vms_cancellation_resolve_staff_notification_recipient')) {
 		$user_label = ($user instanceof WP_User) ? trim((string) $user->display_name) : '';
 		$label = $user_label !== '' ? $user_label : $post_title;
 		if ($label === '') {
+			/* translators: %d: staff ID. */
 			$label = sprintf(__('Staff #%d', 'backstage-venue-manager'), $staff_id);
 		}
 

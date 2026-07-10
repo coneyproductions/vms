@@ -781,6 +781,7 @@ if (!function_exists('vms_vendor_booking_onboarding_process_plan')) {
 
         if ($allow_notices && function_exists('vms_add_admin_notice')) {
             if ($results['sent'] > 0) {
+                /* translators: %d: number of items described in this message. */
                 vms_add_admin_notice(sprintf(_n('%d booked-vendor email sent.', '%d booked-vendor emails sent.', $results['sent'], 'backstage-venue-manager'), $results['sent']), 'success');
             }
             if (!empty($results['failed'])) {
@@ -843,8 +844,10 @@ if (!function_exists('vms_vendor_booking_onboarding_send_reminder')) {
             return array('success' => false, 'error_message' => __('No valid vendor email address was found.', 'backstage-venue-manager'));
         }
 
+        /* translators: %s: human-readable value used in this message. */
         $subject = sprintf(__('Reminder: promo video for %s', 'backstage-venue-manager'), (string) ($tokens['{event_title}'] ?? __('your upcoming show', 'backstage-venue-manager')));
         $body = implode("\n", array(
+            /* translators: %s: human-readable value used in this message. */
             sprintf(__('Hi %s,', 'backstage-venue-manager'), (string) ($tokens['{contact_name}'] ?? __('there', 'backstage-venue-manager'))),
             '',
             __('This is a friendly reminder about the short promo clip for your upcoming show.', 'backstage-venue-manager'),

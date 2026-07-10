@@ -198,6 +198,7 @@ if (!function_exists('vms_ticketing_claims_render_account_benefits_entry')) {
 				$program_label = function_exists('vms_ticketing_verification_program_label')
 					? vms_ticketing_verification_program_label($program_key)
 					: ucwords(str_replace('_', ' ', $program_key));
+				/* translators: %s: human-readable value used in this message. */
 				echo '<li>' . esc_html(sprintf(__('Verified for %s eligibility', 'backstage-venue-manager'), $program_label)) . '</li>';
 			}
 			echo '</ul>';
@@ -233,6 +234,7 @@ if (!function_exists('vms_ticketing_claims_render_account_benefits_entry')) {
 					echo '<p class="vms-benefits-card-help">' . esc_html($status_help) . '</p>';
 				}
 				if ($qty_limit > 0) {
+					/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 					echo '<p class="vms-benefits-card-help">' . esc_html(sprintf(__('Used %1$d of %2$d units', 'backstage-venue-manager'), $qty_used, $qty_limit)) . '</p>';
 				}
 				if ($note !== '') {
@@ -522,12 +524,14 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		if ($eligible && $remaining_before_assignment <= 0) {
 			$eligible = false;
 			$reason_code = 'assignee_limit_reached';
+			/* translators: %d: number used in this message. */
 			$message = sprintf(__('This guest has already used the %d-ticket limit for this event.', 'backstage-venue-manager'), $claims_per_assignee);
 		}
 
 		$remaining_after_assignment = max(0, $remaining_before_assignment - 1);
 		if ($eligible) {
 			$message = sprintf(
+				/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 				__('Eligible account confirmed. This account is eligible for %1$d ticket(s) for this event (%2$d remaining after this ticket).', 'backstage-venue-manager'),
 				$claims_per_assignee,
 				$remaining_after_assignment

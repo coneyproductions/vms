@@ -413,6 +413,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
 
         $title = trim((string) ($args['post_title'] ?? $source->post_title));
         if ($title === '') {
+            /* translators: %d: event plan ID. */
             $title = sprintf(__('Event Plan #%d', 'backstage-venue-manager'), $source_post_id);
         }
 
@@ -728,9 +729,12 @@ class VMS_Admin_Event_Plans
                 $summary_bits[] = $type_name !== '' ? $type_name : $type_slug;
             }
         } elseif ($group_count > 1) {
+            /* translators: %d: number of groups. */
             $summary_bits[] = sprintf(_n('%d group', '%d groups', $group_count, 'backstage-venue-manager'), $group_count);
         }
+        /* translators: %d: number of selected items. */
         $summary_bits[] = sprintf(_n('%d selected', '%d selected', count((array) $secondary_vendor_ids), 'backstage-venue-manager'), count((array) $secondary_vendor_ids));
+        /* translators: %d: number of warnings. */
         $summary_bits[] = sprintf(_n('%d warning', '%d warnings', $warning_count, 'backstage-venue-manager'), $warning_count);
 
         return array(
@@ -1879,7 +1883,9 @@ class VMS_Admin_Event_Plans
                         : !array_key_exists('open_for_dispatch', $assignment) || !empty($assignment['open_for_dispatch']);
                     $open_slots = $slot_limit_value === null ? null : max(0, $slot_limit_value - $selected_count);
                     $occupancy_label = $slot_limit_value === null
+                        /* translators: %d: number of selected items. */
                         ? sprintf(_n('%d selected', '%d selected', $selected_count, 'backstage-venue-manager'), $selected_count)
+                        /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
                         : sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $selected_count, $slot_limit_value);
 
                     $assignment_groups[] = array(
@@ -2118,17 +2124,21 @@ class VMS_Admin_Event_Plans
             $warning_items[] = $this->get_event_plan_integrity_issue_label($integrity_issue);
         }
         if (!empty($secondary_missing)) {
+            /* translators: %d: number of items described in this message. */
             $warning_items[] = sprintf(_n('%d selected secondary vendor is missing or trashed.', '%d selected secondary vendors are missing or trashed.', count($secondary_missing), 'backstage-venue-manager'), count($secondary_missing));
         }
         if (!empty($secondary_mismatch)) {
+            /* translators: %d: number of items described in this message. */
             $warning_items[] = sprintf(_n('%d selected secondary vendor no longer matches the chosen vendor type.', '%d selected secondary vendors no longer match the chosen vendor type.', count($secondary_mismatch), 'backstage-venue-manager'), count($secondary_mismatch));
         }
         if (!empty($secondary_unqualified)) {
+            /* translators: %d: number of items described in this message. */
             $warning_items[] = sprintf(_n('%d selected secondary vendor needs profile qualification fixes.', '%d selected secondary vendors need profile qualification fixes.', count($secondary_unqualified), 'backstage-venue-manager'), count($secondary_unqualified));
         }
 
         $linked_tec_label = !empty($linked_tec_summary['linked_tec_id'])
             ? sprintf(
+                /* translators: %1$s: human-readable linked TEC status label. */
                 __('Linked (%1$s)', 'backstage-venue-manager'),
                 $this->get_event_plan_integrity_issue_label((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft'))
             )
@@ -2148,6 +2158,7 @@ class VMS_Admin_Event_Plans
             array(
                 'label' => __('Linked TEC status', 'backstage-venue-manager'),
                 'value' => !empty($linked_tec_summary['linked_tec_id'])
+                    /* translators: %s: uppercase linked TEC status value. */
                     ? sprintf(__('Linked (%s)', 'backstage-venue-manager'), strtoupper((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft')))
                     : __('Not linked', 'backstage-venue-manager'),
                 'state' => !empty($linked_tec_summary['linked_tec_id']) ? 'ok' : 'info',
@@ -3496,12 +3507,14 @@ class VMS_Admin_Event_Plans
         }
         $alias_labels = array_values(array_unique(array_filter($alias_labels, 'strlen')));
         $alias_suffix = !empty($alias_labels)
+            /* translators: %s: human-readable value used in this message. */
             ? sprintf(__(' (also %s)', 'backstage-venue-manager'), implode(', ', $alias_labels))
             : '';
 
         if ($kind_label !== '' || $display_name !== '') {
             $subject_label = $display_name !== '' ? $display_name : ($email !== '' ? $email : __('Unknown recipient', 'backstage-venue-manager'));
             $line = sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
                 __('%1$s: %2$s - %3$s', 'backstage-venue-manager'),
                 $status_label,
                 $kind_label !== '' ? $kind_label : __('Recipient', 'backstage-venue-manager'),
@@ -3521,18 +3534,23 @@ class VMS_Admin_Event_Plans
         }
 
         if ($status === 'failed') {
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
             return sprintf(__('Failed: %1$s (%2$s)', 'backstage-venue-manager'), $email, $error !== '' ? $error : 'send_failed');
         }
         if ($status === 'skipped') {
             if ($reason !== '' && $email !== '') {
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 return sprintf(__('Skipped: %1$s (%2$s)', 'backstage-venue-manager'), $email, $reason);
             }
             if ($reason !== '') {
+                /* translators: %s: skipped. */
                 return sprintf(__('Skipped: %s', 'backstage-venue-manager'), $reason);
             }
+            /* translators: %s: skipped. */
             return sprintf(__('Skipped: %s', 'backstage-venue-manager'), $email);
         }
 
+        /* translators: %s: sent. */
         return sprintf(__('Sent: %s', 'backstage-venue-manager'), $email);
     }
 
@@ -3546,9 +3564,11 @@ class VMS_Admin_Event_Plans
             $updated = isset($data['updated_products']) && is_array($data['updated_products']) ? count($data['updated_products']) : 0;
             $failed = isset($data['failed_products']) && is_array($data['failed_products']) ? count($data['failed_products']) : 0;
             ?>
-            <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Updated products: %d', 'backstage-venue-manager'), (int) $updated)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Failed products: %d', 'backstage-venue-manager'), (int) $failed)); ?></span>
+	            <div class="vms-cancel-job-step__meta">
+	                <?php /* translators: %d: number of updated products. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Updated products: %d', 'backstage-venue-manager'), (int) $updated)); ?></span>
+	                <?php /* translators: %d: number of failed products. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Failed products: %d', 'backstage-venue-manager'), (int) $failed)); ?></span>
             </div>
             <?php if (!empty($data['failed_products']) && is_array($data['failed_products'])) : ?>
                 <ul class="vms-cancel-job-list">
@@ -3557,7 +3577,8 @@ class VMS_Admin_Event_Plans
                         $product_id = absint($row['product_id'] ?? 0);
                         $error = sanitize_text_field((string) ($row['error'] ?? 'unknown_error'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Product #%1$d failed: %2$s', 'backstage-venue-manager'), $product_id, $error)); ?></li>
+	                        <?php /* translators: 1: product ID, 2: failure reason. */ ?>
+	                        <li><?php echo esc_html(sprintf(__('Product #%1$d failed: %2$s', 'backstage-venue-manager'), $product_id, $error)); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
@@ -3571,11 +3592,15 @@ class VMS_Admin_Event_Plans
             $eligible_count = absint($data['auto_refund_eligible_count'] ?? 0);
             $manual_review_count = absint($data['manual_review_count'] ?? 0);
             ?>
-            <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Candidate orders: %d', 'backstage-venue-manager'), (int) $candidate_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Orders scanned: %d', 'backstage-venue-manager'), absint($data['orders_scanned'] ?? 0))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Auto-eligible: %d', 'backstage-venue-manager'), $eligible_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Manual review: %d', 'backstage-venue-manager'), $manual_review_count)); ?></span>
+	            <div class="vms-cancel-job-step__meta">
+	                <?php /* translators: %d: number of candidate orders. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Candidate orders: %d', 'backstage-venue-manager'), (int) $candidate_count)); ?></span>
+	                <?php /* translators: %d: number of scanned orders. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Orders scanned: %d', 'backstage-venue-manager'), absint($data['orders_scanned'] ?? 0))); ?></span>
+	                <?php /* translators: %d: number of automatically eligible orders. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Auto-eligible: %d', 'backstage-venue-manager'), $eligible_count)); ?></span>
+	                <?php /* translators: %d: number of orders requiring manual review. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Manual review: %d', 'backstage-venue-manager'), $manual_review_count)); ?></span>
             </div>
             <?php if (!empty($candidates)) : ?>
                 <ul class="vms-cancel-job-list">
@@ -3588,17 +3613,20 @@ class VMS_Admin_Event_Plans
                         $detail_bits = array();
                         $estimated_refund_total = (float) ($cand['estimated_refund_total'] ?? 0.0);
                         if ($estimated_refund_total > 0) {
+                            /* translators: %s: human-readable value used in this message. */
                             $detail_bits[] = sprintf(__('Est. refund: $%s', 'backstage-venue-manager'), number_format_i18n($estimated_refund_total, 2));
                         }
                         if (!empty($cand['auto_refund_eligible'])) {
                             $detail_bits[] = __('auto-refund eligible', 'backstage-venue-manager');
                         } else {
                             $reason = sanitize_text_field((string) ($cand['manual_review_reason'] ?? 'manual_review_required'));
+                            /* translators: %s: manual review. */
                             $detail_bits[] = sprintf(__('manual review: %s', 'backstage-venue-manager'), ucwords(str_replace(array('_', '-'), ' ', $reason)));
                         }
                         ?>
                         <li>
-                            <?php echo esc_html(sprintf(__('Order #%1$s (%2$d items)', 'backstage-venue-manager'), $order_no, $line_count)); ?><?php echo !empty($detail_bits) ? esc_html(' — ' . implode(' • ', $detail_bits)) : ''; ?>
+	                            <?php /* translators: 1: order number, 2: number of order line items. */ ?>
+	                            <?php echo esc_html(sprintf(__('Order #%1$s (%2$d items)', 'backstage-venue-manager'), $order_no, $line_count)); ?><?php echo !empty($detail_bits) ? esc_html(' — ' . implode(' • ', $detail_bits)) : ''; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -3612,11 +3640,15 @@ class VMS_Admin_Event_Plans
             $failed = isset($data['failed_orders']) && is_array($data['failed_orders']) ? $data['failed_orders'] : array();
             $skipped = isset($data['skipped_orders']) && is_array($data['skipped_orders']) ? $data['skipped_orders'] : array();
             ?>
-            <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Queued: %d', 'backstage-venue-manager'), count($queued))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Refunds sent: %d', 'backstage-venue-manager'), count($created))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Failed: %d', 'backstage-venue-manager'), count($failed))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'backstage-venue-manager'), count($skipped))); ?></span>
+	            <div class="vms-cancel-job-step__meta">
+	                <?php /* translators: %d: number of queued refund actions. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Queued: %d', 'backstage-venue-manager'), count($queued))); ?></span>
+	                <?php /* translators: %d: number of sent refunds. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Refunds sent: %d', 'backstage-venue-manager'), count($created))); ?></span>
+	                <?php /* translators: %d: number of failed refund actions. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Failed: %d', 'backstage-venue-manager'), count($failed))); ?></span>
+	                <?php /* translators: %d: number of skipped refund actions. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'backstage-venue-manager'), count($skipped))); ?></span>
             </div>
             <?php if (!empty($created)) : ?>
                 <ul class="vms-cancel-job-list">
@@ -3626,7 +3658,8 @@ class VMS_Admin_Event_Plans
                         $refund_id = absint($row['refund_id'] ?? 0);
                         $amount = number_format_i18n((float) ($row['amount'] ?? 0), 2);
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Order #%1$d refunded (%2$s, refund #%3$d)', 'backstage-venue-manager'), $order_id, '$' . $amount, $refund_id)); ?></li>
+	                        <?php /* translators: 1: order ID, 2: formatted refund amount, 3: refund ID. */ ?>
+	                        <li><?php echo esc_html(sprintf(__('Order #%1$d refunded (%2$s, refund #%3$d)', 'backstage-venue-manager'), $order_id, '$' . $amount, $refund_id)); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3638,7 +3671,8 @@ class VMS_Admin_Event_Plans
                         $order_no = (string) ($row['order_number'] ?? (string) $order_id);
                         $reason = sanitize_text_field((string) ($row['reason'] ?? 'manual_review_required'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Queued for manual review: order #%1$s (%2$s)', 'backstage-venue-manager'), $order_no, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
+	                        <?php /* translators: 1: order number, 2: manual review reason label. */ ?>
+	                        <li><?php echo esc_html(sprintf(__('Queued for manual review: order #%1$s (%2$s)', 'backstage-venue-manager'), $order_no, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3649,7 +3683,8 @@ class VMS_Admin_Event_Plans
                         $order_id = absint($row['order_id'] ?? 0);
                         $error = sanitize_text_field((string) ($row['error'] ?? 'unknown_error'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Order #%1$d failed: %2$s', 'backstage-venue-manager'), $order_id, $error)); ?></li>
+	                        <?php /* translators: 1: order ID, 2: failure reason. */ ?>
+	                        <li><?php echo esc_html(sprintf(__('Order #%1$d failed: %2$s', 'backstage-venue-manager'), $order_id, $error)); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3660,7 +3695,8 @@ class VMS_Admin_Event_Plans
                         $order_id = absint($row['order_id'] ?? 0);
                         $reason = sanitize_text_field((string) ($row['reason'] ?? 'skipped'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Order #%1$d skipped: %2$s', 'backstage-venue-manager'), $order_id, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
+	                        <?php /* translators: 1: order ID, 2: skip reason label. */ ?>
+	                        <li><?php echo esc_html(sprintf(__('Order #%1$d skipped: %2$s', 'backstage-venue-manager'), $order_id, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3688,17 +3724,23 @@ class VMS_Admin_Event_Plans
             }
             $missing_email_count = absint($skip_reasons['missing_email'] ?? 0);
             ?>
-            <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Recipients discovered: %d', 'backstage-venue-manager'), $recipient_count)); ?></span>
-                <?php if ($deliverable_count !== $recipient_count) : ?>
-                    <span><?php echo esc_html(sprintf(__('Deliverable: %d', 'backstage-venue-manager'), $deliverable_count)); ?></span>
-                <?php endif; ?>
-                <span><?php echo esc_html(sprintf(__('Sent: %d', 'backstage-venue-manager'), $sent_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Failed: %d', 'backstage-venue-manager'), $failed_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'backstage-venue-manager'), $skipped_count)); ?></span>
-                <?php if ($missing_email_count > 0) : ?>
-                    <span><?php echo esc_html(sprintf(__('Missing email skips: %d', 'backstage-venue-manager'), $missing_email_count)); ?></span>
-                <?php endif; ?>
+	            <div class="vms-cancel-job-step__meta">
+	                <?php /* translators: %d: number of discovered recipients. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Recipients discovered: %d', 'backstage-venue-manager'), $recipient_count)); ?></span>
+	                <?php if ($deliverable_count !== $recipient_count) : ?>
+	                    <?php /* translators: %d: number of deliverable recipients. */ ?>
+	                    <span><?php echo esc_html(sprintf(__('Deliverable: %d', 'backstage-venue-manager'), $deliverable_count)); ?></span>
+	                <?php endif; ?>
+	                <?php /* translators: %d: number of sent notifications. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Sent: %d', 'backstage-venue-manager'), $sent_count)); ?></span>
+	                <?php /* translators: %d: number of failed notifications. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Failed: %d', 'backstage-venue-manager'), $failed_count)); ?></span>
+	                <?php /* translators: %d: number of skipped notifications. */ ?>
+	                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'backstage-venue-manager'), $skipped_count)); ?></span>
+	                <?php if ($missing_email_count > 0) : ?>
+	                    <?php /* translators: %d: number of notifications skipped for missing email addresses. */ ?>
+	                    <span><?php echo esc_html(sprintf(__('Missing email skips: %d', 'backstage-venue-manager'), $missing_email_count)); ?></span>
+	                <?php endif; ?>
             </div>
             <?php
             $sent = isset($data['sent']) && is_array($data['sent']) ? $data['sent'] : array();
@@ -3714,6 +3756,7 @@ class VMS_Admin_Event_Plans
                         <span>
                             <?php
                             echo esc_html(sprintf(
+                                /* translators: 1: value 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message, 4: number 4 used in this message. */
                                 __('%1$s: sent %2$d, failed %3$d, skipped %4$d', 'backstage-venue-manager'),
                                 $label,
                                 absint($group_row['sent'] ?? 0),
@@ -3979,7 +4022,8 @@ class VMS_Admin_Event_Plans
                                 <?php endif; ?>
                                 <?php if ($updated !== '') : ?>
                                     <p class="vms-cancel-job-step__updated">
-                                        <?php echo esc_html(sprintf(__('Updated: %s', 'backstage-venue-manager'), $updated)); ?>
+	                                        <?php /* translators: %s: formatted update timestamp. */ ?>
+	                                        <?php echo esc_html(sprintf(__('Updated: %s', 'backstage-venue-manager'), $updated)); ?>
                                     </p>
                                 <?php endif; ?>
 
@@ -4139,6 +4183,7 @@ class VMS_Admin_Event_Plans
 
             if ($bypass_active) {
                 $until_txt = $bypass_until !== '' ? esc_html($bypass_until) : esc_html__('(date unknown)', 'backstage-venue-manager');
+                /* translators: %s: date or time value. */
                 return '<span class="vms-ep-tax-badge vms-ep-tax-badge--bypass" aria-label="Tax profile bypass active">TB</span><span class="vms-ep-tax-badge-note">' . sprintf(esc_html__('until %s', 'backstage-venue-manager'), $until_txt) . '</span>';
             }
 
@@ -5206,13 +5251,16 @@ class VMS_Admin_Event_Plans
         $lineup_primary_warning_count = (int) ($lineup_primary_entry['warning_count'] ?? 0);
         $lineup_primary_pay_summary = '';
         if ($comp_structure === 'door_split') {
+            /* translators: %s: door split. */
             $lineup_primary_pay_summary = ($door_split_percent !== '') ? sprintf(__('Door split: %s%%', 'backstage-venue-manager'), rtrim(rtrim((string) $door_split_percent, '0'), '.')) : __('Door split', 'backstage-venue-manager');
         } elseif ($comp_structure === 'flat_fee_door_split') {
             $fee_label = ($flat_fee_amount !== '') ? function_exists('vms_format_currency') ? vms_format_currency((float) $flat_fee_amount) : ('$' . number_format((float) $flat_fee_amount, 2)) : __('No guarantee set', 'backstage-venue-manager');
             $split_label = ($door_split_percent !== '') ? rtrim(rtrim((string) $door_split_percent, '0'), '.') . '%' : __('door split', 'backstage-venue-manager');
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
             $lineup_primary_pay_summary = sprintf(__('%1$s + %2$s door', 'backstage-venue-manager'), $fee_label, $split_label);
         } elseif ($comp_structure === 'attendance_bonus') {
             $fee_label = ($flat_fee_amount !== '') ? function_exists('vms_format_currency') ? vms_format_currency((float) $flat_fee_amount) : ('$' . number_format((float) $flat_fee_amount, 2)) : __('No base fee set', 'backstage-venue-manager');
+            /* translators: %s: human-readable value used in this message. */
             $lineup_primary_pay_summary = sprintf(__('Attendance bonus | Base %s', 'backstage-venue-manager'), $fee_label);
         } else {
             if ($flat_fee_amount !== '') {
@@ -5414,6 +5462,7 @@ class VMS_Admin_Event_Plans
 
                 echo '<div class="notice notice-error inline vms-notice vms-notice--critical"><p>' .
                     esc_html__('🚩 This event plan lost its vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+                    /* translators: %s: previous vendor. */
                     ' ' . sprintf(esc_html__('Previous vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
                     ' ' . esc_html__('Select a new Primary Vendor, then mark Ready again.', 'backstage-venue-manager') .
                     '</p></div>';
@@ -5424,6 +5473,7 @@ class VMS_Admin_Event_Plans
 
                 echo '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p>' .
                     esc_html__('🚩 This event plan lost a secondary vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+                    /* translators: %s: removed vendor. */
                     ' ' . sprintf(esc_html__('Removed vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
                     ' ' . esc_html__('Review the Additional Vendors section below, then mark Ready again if needed.', 'backstage-venue-manager') .
                     '</p></div>';
@@ -5458,10 +5508,13 @@ class VMS_Admin_Event_Plans
                         }
 
                         $secondary_message = ($prefill_type_label !== '')
+                            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                             ? sprintf(__('Booking prefill: %1$s was added as a secondary vendor (%2$s). Review the Additional Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label, $prefill_type_label)
+                            /* translators: %s: booking prefill. */
                             : sprintf(__('Booking prefill: %s was added as a secondary vendor. Review the Additional Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
                         echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($secondary_message) . '</p></div>';
                     } elseif ($prefill_mode === 'primary') {
+                        /* translators: %s: booking prefill. */
                         $primary_message = sprintf(__('Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
                         echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($primary_message) . '</p></div>';
                     }
@@ -5628,9 +5681,12 @@ class VMS_Admin_Event_Plans
                 $vms_secondary_summary_bits[] = $vms_secondary_type_name !== '' ? $vms_secondary_type_name : $vms_secondary_type_slug;
             }
         } elseif ($vms_secondary_group_count > 1) {
+            /* translators: %d: number of groups. */
             $vms_secondary_summary_bits[] = sprintf(_n('%d group', '%d groups', $vms_secondary_group_count, 'backstage-venue-manager'), $vms_secondary_group_count);
         }
+        /* translators: %d: number of selected items. */
         $vms_secondary_summary_bits[] = sprintf(_n('%d selected', '%d selected', count((array) $secondary_vendor_ids), 'backstage-venue-manager'), count((array) $secondary_vendor_ids));
+        /* translators: %d: number of warnings. */
         $vms_secondary_summary_bits[] = sprintf(_n('%d warning', '%d warnings', $vms_secondary_warning_count, 'backstage-venue-manager'), $vms_secondary_warning_count);
     ?>
     <?php if ($secondary_vendor_lazy_enabled) : ?>
@@ -5819,7 +5875,8 @@ class VMS_Admin_Event_Plans
             </ul>
         <?php endif; ?>
         <?php if (!empty($vms_readiness_warning_items)) : ?>
-            <p class="description"><?php echo esc_html(sprintf(_n('%d warning needs attention. Expand Readiness details below for the full list.', '%d warnings need attention. Expand Readiness details below for the full list.', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items))); ?></p>
+	            <?php /* translators: %d: number of readiness warnings. */ ?>
+	            <p class="description"><?php echo esc_html(sprintf(_n('%d warning needs attention. Expand Readiness details below for the full list.', '%d warnings need attention. Expand Readiness details below for the full list.', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items))); ?></p>
         <?php endif; ?>
     </div>
     <?php if (function_exists('vms_event_plan_perf_memory_checkpoint')) {
@@ -5855,7 +5912,13 @@ class VMS_Admin_Event_Plans
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
                 <span class="vms-collapsible-label"><?php esc_html_e('Readiness details', 'backstage-venue-manager'); ?></span>
-                <span class="vms-collapsible-meta"><?php echo esc_html(sprintf(_n('%d blocking issue', '%d blocking issues', absint($readiness_boot_summary['blocking_issue_count'] ?? 0), 'backstage-venue-manager'), absint($readiness_boot_summary['blocking_issue_count'] ?? 0)) . ' • ' . sprintf(_n('%d warning', '%d warnings', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items))); ?></span>
+	                <?php
+	                /* translators: %d: number of blocking readiness issues. */
+	                $vms_readiness_blocking_meta = sprintf(_n('%d blocking issue', '%d blocking issues', absint($readiness_boot_summary['blocking_issue_count'] ?? 0), 'backstage-venue-manager'), absint($readiness_boot_summary['blocking_issue_count'] ?? 0));
+	                /* translators: %d: number of readiness warnings. */
+	                $vms_readiness_warning_meta = sprintf(_n('%d warning', '%d warnings', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items));
+	                ?>
+	                <span class="vms-collapsible-meta"><?php echo esc_html($vms_readiness_blocking_meta . ' • ' . $vms_readiness_warning_meta); ?></span>
                 <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'backstage-venue-manager'); ?></span>
             </button>
             <div class="vms-collapsible-body" hidden>
@@ -8997,6 +9060,7 @@ class VMS_Admin_Event_Plans
                     continue;
                 }
 
+                /* translators: %d: role ID. */
                 $role_name = $staff_roles_index[$staff_role_id] ?? sprintf(__('Role #%d', 'backstage-venue-manager'), $staff_role_id);
                 $headcount_value = isset($staffing_headcounts[$staff_role_id]) ? max(0, absint($staffing_headcounts[$staff_role_id])) : 0;
                 $assigned_staff = isset($staffing_raw_assignments[$staff_role_id]) && is_array($staffing_raw_assignments[$staff_role_id])
@@ -9080,9 +9144,11 @@ class VMS_Admin_Event_Plans
                     }
                     $issues = array();
                     if (!empty($qual_check['missing'])) {
+                        /* translators: %s: human-readable value used in this message. */
                         $issues[] = sprintf(__('missing %s', 'backstage-venue-manager'), implode(', ', array_map('sanitize_text_field', (array) $qual_check['missing'])));
                     }
                     if (!empty($qual_check['expired'])) {
+                        /* translators: %s: human-readable value used in this message. */
                         $issues[] = sprintf(__('expired %s', 'backstage-venue-manager'), implode(', ', array_map('sanitize_text_field', (array) $qual_check['expired'])));
                     }
                     if (!empty($issues)) {
@@ -9451,19 +9517,29 @@ class VMS_Admin_Event_Plans
                     $needs_ack_to_proceed = in_array($requested_action, array('mark_ready', 'publish_now', 'lock_draft_pay'), true);
 
 if (function_exists('vms_add_admin_notice')) {
-                        $label = ($default['label'] !== '' ? $default['label'] : 'defaults');
+                        $label = ($default['label'] !== '' ? $default['label'] : __('defaults', 'backstage-venue-manager'));
                         if ($needs_ack_to_proceed) {
-                            $verb = 'Mark Ready';
+                            $verb = __('Mark Ready', 'backstage-venue-manager');
                             if ($requested_action === 'publish_now') {
-                                $verb = 'Publish';
+                                $verb = __('Publish', 'backstage-venue-manager');
                             } elseif ($requested_action === 'lock_draft_pay') {
-                                $verb = 'Lock Draft Pay';
+                                $verb = __('Lock Draft Pay', 'backstage-venue-manager');
                             }
-                            $msg = 'Draft Pay differs from ' . $label . '. Acknowledge the difference before ' . $verb . '. Your edits were saved, but the status action was blocked.';
-                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'error');
+
+                            $message = sprintf(
+                                /* translators: 1: default pay configuration label, 2: requested status action label. */
+                                __('Draft Pay differs from %1$s. Acknowledge the difference before %2$s. Your edits were saved, but the status action was blocked.', 'backstage-venue-manager'),
+                                $label,
+                                $verb
+                            );
+                            vms_add_admin_notice($message, 'error');
                         } else {
-                            $msg = 'Draft Pay differs from ' . $label . '. You can keep saving Draft changes, but you must acknowledge before Mark Ready, Publish, or Lock Draft Pay.';
-                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'warning');
+                            $message = sprintf(
+                                /* translators: %s: default pay configuration label. */
+                                __('Draft Pay differs from %s. You can keep saving Draft changes, but you must acknowledge before Mark Ready, Publish, or Lock Draft Pay.', 'backstage-venue-manager'),
+                                $label
+                            );
+                            vms_add_admin_notice($message, 'warning');
                         }
                     }
 
@@ -9506,18 +9582,29 @@ if (function_exists('vms_add_admin_notice')) {
                         $max = '$' . number_format_i18n((float) $guarantee_max, 2);
 
                         if ($needs_low_ack_to_proceed) {
-                            $verb = 'Mark Ready';
+                            $verb = __('Mark Ready', 'backstage-venue-manager');
                             if ($requested_action_raw === 'publish_now') {
-                                $verb = 'Publish';
+                                $verb = __('Publish', 'backstage-venue-manager');
                             } elseif ($requested_action_raw === 'lock_draft_pay') {
-                                $verb = 'Lock Draft Pay';
+                                $verb = __('Lock Draft Pay', 'backstage-venue-manager');
                             }
 
-                            $msg = 'Draft Pay has a lower guaranteed payout (' . $sel . ') than the highest guaranteed option (' . $max . '). Acknowledge this choice before ' . $verb . '. Your edits were saved, but the status action was blocked.';
-                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'error');
+                            $message = sprintf(
+                                /* translators: 1: selected guarantee amount, 2: highest available guarantee amount, 3: requested status action label. */
+                                __('Draft Pay has a lower guaranteed payout (%1$s) than the highest guaranteed option (%2$s). Acknowledge this choice before %3$s. Your edits were saved, but the status action was blocked.', 'backstage-venue-manager'),
+                                $sel,
+                                $max,
+                                $verb
+                            );
+                            vms_add_admin_notice($message, 'error');
                         } else {
-                            $msg = 'Draft Pay has a lower guaranteed payout (' . $sel . ') than the highest guaranteed option (' . $max . '). You can keep saving Draft changes, but you must acknowledge before Mark Ready, Publish, or Lock Draft Pay.';
-                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'warning');
+                            $message = sprintf(
+                                /* translators: 1: selected guarantee amount, 2: highest available guarantee amount. */
+                                __('Draft Pay has a lower guaranteed payout (%1$s) than the highest guaranteed option (%2$s). You can keep saving Draft changes, but you must acknowledge before Mark Ready, Publish, or Lock Draft Pay.', 'backstage-venue-manager'),
+                                $sel,
+                                $max
+                            );
+                            vms_add_admin_notice($message, 'warning');
                         }
                     }
 
@@ -10316,6 +10403,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_absolute_time_warning_roles) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
+                                /* translators: %s: absolute staff shift times are missing for. */
                                 __('Absolute staff shift times are missing for: %s. When Time mode is Absolute and the role is in use, enter Shift start plus Shift end or Duration.', 'backstage-venue-manager'),
                                 implode(', ', array_map('sanitize_text_field', array_unique($staffing_absolute_time_warning_roles)))
                             ),
@@ -10326,6 +10414,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_required_now_gap_roles) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
+                                /* translators: %s: current attendance has activated these staff requirements, but they are still not fully assigned. */
                                 __('Current attendance has activated these staff requirements, but they are still not fully assigned: %s.', 'backstage-venue-manager'),
                                 implode(', ', array_map('sanitize_text_field', array_unique($staffing_required_now_gap_roles)))
                             ),
@@ -10336,6 +10425,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_role_assignment_warnings) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
+                                /* translators: %s: staff assignment review needed. */
                                 __('Staff assignment review needed: %s.', 'backstage-venue-manager'),
                                 implode(' | ', array_map('sanitize_text_field', array_unique($staffing_role_assignment_warnings)))
                             ),
@@ -10345,6 +10435,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_role_assignment_blocked) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
+                                /* translators: %s: invalid staff assignments were blocked because those staff are not currently eligible for the selected roles. */
                                 __('Invalid staff assignments were blocked because those staff are not currently eligible for the selected roles: %s.', 'backstage-venue-manager'),
                                 implode(' | ', array_map('sanitize_text_field', array_unique($staffing_role_assignment_blocked)))
                             ),
@@ -10356,6 +10447,7 @@ if (function_exists('vms_add_admin_notice')) {
                         if (!empty($template_apply_result['ok']) && function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(
                                 sprintf(
+                                    /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
                                     __('Staffing template applied. Seeded %1$d role slots and skipped %2$d existing role slots.', 'backstage-venue-manager'),
                                     (int) ($template_apply_result['seeded'] ?? 0),
                                     (int) ($template_apply_result['skipped'] ?? 0)
@@ -10365,6 +10457,7 @@ if (function_exists('vms_add_admin_notice')) {
                         } elseif (function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(
                                 sprintf(
+                                    /* translators: %s: staffing template apply failed. */
                                     __('Staffing template apply failed: %s.', 'backstage-venue-manager'),
                                     sanitize_text_field((string) ($template_apply_result['error'] ?? 'unknown_error'))
                                 ),
@@ -10714,6 +10807,7 @@ if (function_exists('vms_add_admin_notice')) {
 
                         vms_add_admin_notice(
                             sprintf(
+                                /* translators: 1: value 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message, 4: number 4 used in this message. */
                                 __('Live refund batch submitted. Policy: %1$s. Refunded: %2$d. Queued for manual review: %3$d. Failed: %4$d.', 'backstage-venue-manager'),
                                 sanitize_text_field($target_policy_label),
                                 (int) $created_count,
@@ -10757,6 +10851,7 @@ if (function_exists('vms_add_admin_notice')) {
                             $run_state_label = isset($state_labels[$run_state]) ? (string) $state_labels[$run_state] : strtoupper($run_state ?: 'queued');
                             vms_add_admin_notice(
                                 sprintf(
+                                    /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                                     __('Cancellation step retried: %1$s. Job state: %2$s.', 'backstage-venue-manager'),
                                     sanitize_text_field($retry_step_key),
                                     $run_state_label
@@ -10854,6 +10949,7 @@ if (function_exists('vms_add_admin_notice')) {
                             $retried = isset($retry_all['retried_steps']) && is_array($retry_all['retried_steps']) ? count($retry_all['retried_steps']) : 0;
                             vms_add_admin_notice(
                                 sprintf(
+                                    /* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
                                     __('Cancellation bulk retry queued for %1$d step(s). Job state: %2$s.', 'backstage-venue-manager'),
                                     $retried,
                                     $run_state_label
@@ -11002,6 +11098,7 @@ if (function_exists('vms_add_admin_notice')) {
                             $applied_label = __('Date defaults', 'backstage-venue-manager');
                         }
                         $applied_label = sanitize_text_field($applied_label);
+                        /* translators: %s: applied date-default label. */
                         vms_add_admin_notice(sprintf(__('%s applied for this date.', 'backstage-venue-manager'), $applied_label), 'success');
                         vms_admin_scroll_to_compensation($post_id);
                         break;
@@ -11661,7 +11758,8 @@ if (function_exists('vms_add_admin_notice')) {
                 if ($availability === 'unavailable') {
                     $band_name = get_the_title($band_id) ?: __('Selected Primary Vendor', 'backstage-venue-manager');
                     $nice_date = date_i18n('M j, Y', strtotime($event_date));
-                    $errors[] = sprintf(__('%s is marked Not Available on %s.', 'backstage-venue-manager'), $band_name, $nice_date);
+                    /* translators: 1: primary vendor name, 2: event date. */
+                    $errors[] = sprintf(__('%1$s is marked Not Available on %2$s.', 'backstage-venue-manager'), $band_name, $nice_date);
                 }
             }
 
@@ -11673,7 +11771,8 @@ if (function_exists('vms_add_admin_notice')) {
                         if (function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Tax profile bypass active for "%s" until %s. Ready/Publish allowed, but W-9 is still required.', 'backstage-venue-manager'),
+                                    /* translators: 1: primary vendor name, 2: bypass expiration date. */
+                                    __('Tax profile bypass active for "%1$s" until %2$s. Ready/Publish allowed, but W-9 is still required.', 'backstage-venue-manager'),
                                     get_the_title($band_id),
                                     (string) get_post_meta($band_id, '_vms_tax_bypass_until', true)
                                 ),
@@ -11685,7 +11784,8 @@ if (function_exists('vms_add_admin_notice')) {
                             $vendor_name = get_the_title($band_id);
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Primary Vendor "%s" is missing required Tax Profile items: %s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'backstage-venue-manager'),
+                                    /* translators: 1: primary vendor name, 2: comma-separated missing tax profile items. */
+                                    __('Primary Vendor "%1$s" is missing required Tax Profile items: %2$s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'backstage-venue-manager'),
                                     $vendor_name ? $vendor_name : '#' . $band_id,
                                     implode(', ', $missing)
                                 ),
@@ -11711,7 +11811,9 @@ if (function_exists('vms_add_admin_notice')) {
                                 if (function_exists('vms_add_admin_notice')) {
                                     vms_add_admin_notice(
                                         sprintf(
-                                            __('Tax profile bypass active for staff "%s" until %s. Ready/Publish allowed, but W-9 is still required.', 'backstage-venue-manager'),
+                                            /* translators: 1: vendor or staff name, 2: bypass expiration date. */
+                                            /* translators: 1: staff member name, 2: bypass expiration date. */
+                                            __('Tax profile bypass active for staff "%1$s" until %2$s. Ready/Publish allowed, but W-9 is still required.', 'backstage-venue-manager'),
                                             get_the_title($sid),
                                             (string) get_post_meta($sid, '_vms_tax_bypass_until', true)
                                         ),
@@ -11723,7 +11825,9 @@ if (function_exists('vms_add_admin_notice')) {
                                     $staff_name = get_the_title($sid);
                                     vms_add_admin_notice(
                                         sprintf(
-                                            __('Staff "%s" is missing required Tax Profile items: %s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'backstage-venue-manager'),
+                                            /* translators: 1: vendor or staff name, 2: comma-separated missing tax profile items. */
+                                            /* translators: 1: staff member name, 2: comma-separated missing tax profile items. */
+                                            __('Staff "%1$s" is missing required Tax Profile items: %2$s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'backstage-venue-manager'),
                                             $staff_name ? $staff_name : '#' . $sid,
                                             implode(', ', $missing)
                                         ),
@@ -11748,8 +11852,11 @@ if (function_exists('vms_add_admin_notice')) {
                     if ($holiday_name === '') {
                         $holiday_name = __('Holiday', 'backstage-venue-manager');
                     }
-                    $errors[] = sprintf(__('Venue is CLOSED for "%s" on %s.', 'backstage-venue-manager'), $holiday_name, $event_date);
+                    /* translators: 1: holiday name, 2: event date. */
+                    /* translators: 1: holiday name, 2: event date. */
+                    $errors[] = sprintf(__('Venue is CLOSED for "%1$s" on %2$s.', 'backstage-venue-manager'), $holiday_name, $event_date);
                 } else {
+                    /* translators: %s: date or time value. */
                     $errors[] = sprintf(__('Venue is CLOSED by Season Dates rules on %s.', 'backstage-venue-manager'), $event_date);
                 }
             }
@@ -11799,6 +11906,7 @@ if (function_exists('vms_add_admin_notice')) {
 
             vms_event_plan_perf_wp_update_post($autoset_postarr, 'event_plan_autoset_title_action', $post_id);
 
+            /* translators: %s: human-readable value used in this message. */
             vms_add_admin_notice(sprintf(__('Event title set to "%s".', 'backstage-venue-manager'), $new_title), 'success');
         }
 
@@ -12051,6 +12159,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (function_exists('vms_add_admin_notice')) {
                         $received_type = $request_candidate_id > 0 ? sanitize_key((string) get_post_type($request_candidate_id)) : '';
                         $debug_context = sprintf(
+                            /* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
                             __('Received ID %1$d (%2$s).', 'backstage-venue-manager'),
                             (int) $request_candidate_id,
                             $received_type !== '' ? $received_type : __('unknown type', 'backstage-venue-manager')
@@ -12130,6 +12239,7 @@ if (function_exists('vms_add_admin_notice')) {
                 if (function_exists('vms_add_admin_notice')) {
                     vms_add_admin_notice(
                         sprintf(
+                            /* translators: 1: value 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message, 4: number 4 used in this message. */
                             __('Live refund batch submitted. Policy: %1$s. Refunded: %2$d. Queued for manual review: %3$d. Failed: %4$d.', 'backstage-venue-manager'),
                             sanitize_text_field($target_policy_label),
                             (int) $created_count,
@@ -13877,6 +13987,7 @@ if (function_exists('vms_add_admin_notice')) {
                 $label = __('Payment blocked', 'backstage-venue-manager');
                 $class = 'vms-pill-pay-blocked';
             } elseif ($bypass_active) {
+                /* translators: %s: date or time value. */
                 $label = sprintf(__('Bypass until %s', 'backstage-venue-manager'), ($bypass_until !== '' ? $bypass_until : '—'));
                 $class = 'vms-pill-bypass';
             }

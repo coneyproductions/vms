@@ -387,6 +387,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 		}
 		$item = new WC_Order_Item_Product();
 		$item->set_product($product);
+		/* translators: %s: human-readable value used in this message. */
 		$item->set_name(sprintf(__('Complimentary Admission — %s', 'backstage-venue-manager'), $guest_name));
 		$item->set_quantity(max(1, $party_size));
 		$item->set_subtotal(0);
@@ -1084,6 +1085,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 			$event_plan_id = (int) ($event['event_plan_id'] ?? 0);
 			$card_attr = ($selected_event === $event_plan_id || $event_index === 0) ? ' data-vms-tour="vendor-portal-guest.card"' : '';
 			echo '<section class="vms-vendor-guest-card"' . $card_attr . '>';
+			/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 			echo '<div class="vms-vendor-guest-topline"><div><h3>' . esc_html((string) ($event['title'] ?? '')) . '</h3></div><span class="vms-vendor-guest-pill">' . esc_html(sprintf(__('Remaining: %1$d of %2$d', 'backstage-venue-manager'), (int) ($event['remaining'] ?? 0), (int) ($event['allotment'] ?? 0))) . '</span></div>';
 			$meta = array();
 			if (!empty($event['event_date'])) {
@@ -1092,6 +1094,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 			if (!empty($event['venue_name'])) {
 				$meta[] = esc_html((string) $event['venue_name']);
 			}
+			/* translators: %d: used headcount. */
 			$meta[] = esc_html(sprintf(__('Used headcount: %d', 'backstage-venue-manager'), (int) ($event['used'] ?? 0)));
 			if (!empty($event['first_time_only'])) {
 				$meta[] = esc_html__('First-time guests only', 'backstage-venue-manager');
@@ -1121,6 +1124,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 				for ($slot = 2; $slot <= $max_party; $slot++) {
 					$card_hidden = ' hidden';
 					$card_disabled = ' disabled';
+					/* translators: %d: number used in this message. */
 					$label = sprintf(__('Guest Pass +%d', 'backstage-venue-manager'), $slot - 1);
 					echo '<fieldset class="vms-vendor-guest-person is-companion" data-vms-guest-slot="' . esc_attr((string) $slot) . '"' . $card_hidden . '>';
 					echo '<legend data-vms-guest-legend>' . esc_html($label) . '</legend>';
@@ -1156,6 +1160,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 					if (!empty($row['phone'])) {
 						$entry_meta[] = esc_html((string) $row['phone']);
 					}
+					/* translators: %d: party size. */
 					$entry_meta[] = esc_html(sprintf(__('Party Size: %d', 'backstage-venue-manager'), max(1, (int) ($row['party_size'] ?? 1))));
 					if (!empty($row['notes'])) {
 						$entry_meta[] = esc_html((string) $row['notes']);
@@ -1264,6 +1269,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 				$allotment = (int) ($rule['allotment'] ?? 0);
 				if (($used + $party_size) > $allotment) {
 					$flash_type = 'error';
+					/* translators: %d: this guest group would exceed your allowed headcount cap for this event. remaining spots. */
 					$flash_message = sprintf(__('This guest group would exceed your allowed headcount cap for this event. Remaining spots: %d.', 'backstage-venue-manager'), max(0, $allotment - $used));
 				} else {
 					$seen_names = array();
@@ -1276,19 +1282,23 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						$guest_email = (string) ($guest_row['email'] ?? '');
 						$guest_email_raw = (string) ($guest_row['email_raw'] ?? '');
 						$phone = (string) ($guest_row['phone'] ?? '');
+						/* translators: %d: number used in this message. */
 						$guest_label = $slot === 1 ? __('the primary guest', 'backstage-venue-manager') : sprintf(__('guest %d', 'backstage-venue-manager'), $slot);
 						if (!vms_admission_vendor_guest_has_full_name($guest_name)) {
 							$flash_type = 'error';
+							/* translators: %s: human-readable value used in this message. */
 							$flash_message = sprintf(__('Please enter a real first and last name for %s.', 'backstage-venue-manager'), $guest_label);
 							break;
 						}
 						if ($guest_email_raw !== '' && $guest_email === '') {
 							$flash_type = 'error';
+							/* translators: %s: guest label such as the primary guest or guest 2. */
 							$flash_message = sprintf(__('Please enter a valid email address for %s.', 'backstage-venue-manager'), $guest_label);
 							break;
 						}
 						if ($guest_email === '' && trim($phone) === '') {
 							$flash_type = 'error';
+							/* translators: %s: guest label such as the primary guest or guest 2. */
 							$flash_message = sprintf(__('Please add an email or phone number for %s.', 'backstage-venue-manager'), $guest_label);
 							break;
 						}
@@ -1297,30 +1307,36 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						$phone_norm = vms_admission_normalize_phone($phone);
 						if ($name_norm !== '' && isset($seen_names[$name_norm])) {
 							$flash_type = 'error';
+							/* translators: %1$s: human-readable value used in this message. */
 							$flash_message = sprintf(__('You entered %1$s more than once in this guest group. Each person needs their own named pass.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
 						if ($email_norm !== '' && isset($seen_emails[$email_norm])) {
 							$flash_type = 'error';
+							/* translators: %s: guest name already using that email address. */
 							$flash_message = sprintf(__('Each guest needs their own contact info. The email for %s is already being used in this guest group.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
 						if ($phone_norm !== '' && isset($seen_phones[$phone_norm])) {
 							$flash_type = 'error';
+							/* translators: %s: human-readable value used in this message. */
 							$flash_message = sprintf(__('Each guest needs their own contact info. The phone number for %s is already being used in this guest group.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
 						$report = vms_admission_vendor_guest_validation_report($event_plan_id, $guest_name, $guest_email, $phone);
 						if (!empty($report['duplicate_count'])) {
 							$flash_type = 'error';
+							/* translators: %s: human-readable value used in this message. */
 							$flash_message = sprintf(__('%s is already on the list for this event.', 'backstage-venue-manager'), $guest_name);
 							break;
 						} elseif (!empty($report['same_event_paid'])) {
 							$flash_type = 'error';
+							/* translators: %s: human-readable value used in this message. */
 							$flash_message = sprintf(__('%s already appears to have a paid ticket for this event.', 'backstage-venue-manager'), $guest_name);
 							break;
 						} elseif (!empty($rule['first_time_only']) && (!empty($report['prior_comp_count']) || !empty($report['any_paid']))) {
 							$flash_type = 'error';
+							/* translators: %s: human-readable value used in this message. */
 							$flash_message = sprintf(__('%s does not qualify for this event’s first-time-only free pass rule.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
@@ -1426,10 +1442,13 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						} else {
 							$total_added = count($validated_guests);
 							if ($email_count > 0 && $email_count === $total_added) {
+								/* translators: %d: number of items described in this message. */
 								$flash_message = sprintf(_n('%d guest pass added and emailed for scanner check-in.', '%d guest passes added and emailed for scanner check-in.', $total_added, 'backstage-venue-manager'), $total_added);
 							} elseif ($email_count > 0) {
+								/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 								$flash_message = sprintf(_n('%1$d guest pass added. %2$d pass email was sent and the rest are ready in the scanner.', '%1$d guest passes added. %2$d pass emails were sent and the rest are ready in the scanner.', $total_added, 'backstage-venue-manager'), $total_added, $email_count);
 							} else {
+								/* translators: %d: number of items described in this message. */
 								$flash_message = sprintf(_n('%d guest pass added and ready in the scanner.', '%d guest passes added and ready in the scanner.', $total_added, 'backstage-venue-manager'), $total_added);
 							}
 						}

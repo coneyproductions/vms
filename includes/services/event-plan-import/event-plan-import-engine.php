@@ -1637,6 +1637,7 @@ if (!function_exists('vms_event_plan_import_resolve_or_create_vendor')) {
 			return array('id' => $vendor_id, 'message' => $note);
 		}
 		if (!$auto_create) {
+			/* translators: %s: human-readable value used in this message. */
 			return array('id' => 0, 'message' => $note !== '' ? $note : sprintf(__('Vendor "%s" was not found.', 'backstage-venue-manager'), $vendor_name));
 		}
 

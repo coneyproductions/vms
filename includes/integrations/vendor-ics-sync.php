@@ -34,6 +34,7 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
 
     $code = (int) wp_remote_retrieve_response_code($response);
     if ($code < 200 || $code >= 300) {
+        /* translators: %d: number used in this message. */
         return array('ok' => false, 'error' => sprintf(__('ICS fetch failed (HTTP %d).', 'backstage-venue-manager'), $code));
     }
 

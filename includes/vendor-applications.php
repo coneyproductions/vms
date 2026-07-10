@@ -826,6 +826,7 @@ if (!function_exists('vms_vendor_app_default_response_message')) {
 
         if ($status === 'holding') {
             return sprintf(
+                /* translators: %s: submitted vendor or act name. */
                 __('Thank you for reaching out to Serenade Range. We reviewed %s and are keeping it on file for future consideration. At this time, we are being selective with new bookings and generally need stronger evidence that an act can draw enough ticket-paying guests to cover its fee and the event overhead. This is not a rejection, but it does mean we are not moving forward right now and Vendor Portal access is not active yet. Feel free to reply with updated draw history, ticket sales history, recent show results, or audience information any time.', 'backstage-venue-manager'),
                 $name
             );
@@ -833,6 +834,7 @@ if (!function_exists('vms_vendor_app_default_response_message')) {
 
         if ($status === 'approved') {
             return sprintf(
+                /* translators: %s: submitted vendor or act name. */
                 __('Thank you for reaching out to Serenade Range. We reviewed %s and approved it for our vendor records. This does not guarantee an immediate booking, but it means we may consider you for future dates. For paid entertainment bookings, we still need enough confidence that expected ticket sales can cover the artist/vendor fee and event overhead before confirming a date. If your vendor profile is already linked to a website account, your Vendor Portal details are listed below. If not, reply to this email and we will help connect the correct account.', 'backstage-venue-manager'),
                 $name
             );
@@ -840,6 +842,7 @@ if (!function_exists('vms_vendor_app_default_response_message')) {
 
         if ($status === 'rejected') {
             return sprintf(
+                /* translators: %s: submitted vendor or act name. */
                 __('Thank you for reaching out to Serenade Range. We reviewed %s and do not think it is the right fit for our current programming needs. We appreciate you taking the time to send your information and wish you the best with future opportunities.', 'backstage-venue-manager'),
                 $name
             );
@@ -883,6 +886,7 @@ if (!function_exists('vms_vendor_app_response_guidance')) {
 
         $lines = array(
             __('Vendor Portal details:', 'backstage-venue-manager'),
+            /* translators: %s: vendor portal URL. */
             sprintf(__('Vendor Portal: %s', 'backstage-venue-manager'), $portal_url),
             __('Vendor tools and updates live in the Vendor Portal. WooCommerce My Account is still your normal customer/ticket area and may show customer information there.', 'backstage-venue-manager'),
         );
@@ -890,9 +894,12 @@ if (!function_exists('vms_vendor_app_response_guidance')) {
         if ($login_user instanceof WP_User) {
             $login_email = sanitize_email((string) $login_user->user_email);
             if ($login_email !== '') {
+                /* translators: %s: email address. */
                 $lines[] = sprintf(__('Login email: %s', 'backstage-venue-manager'), $login_email);
             }
+            /* translators: %s: username. */
             $lines[] = sprintf(__('Username: %s', 'backstage-venue-manager'), $login_user->user_login);
+            /* translators: %s: password reset. */
             $lines[] = sprintf(__('Password reset: %s', 'backstage-venue-manager'), $reset_url);
             $lines[] = __('If you do not remember your password, use the reset link above and then sign in through the Vendor Portal URL.', 'backstage-venue-manager');
         } else {
@@ -1545,6 +1552,7 @@ function vms_vendor_applications_metabox_details($post): void
         : 0;
     if ($submitted_user_id > 0) {
         $user = get_userdata($submitted_user_id);
+        /* translators: %d: user ID. */
         $user_label = sprintf(__('User #%d', 'backstage-venue-manager'), $submitted_user_id);
         $user_url = '';
 
@@ -1566,6 +1574,7 @@ function vms_vendor_applications_metabox_details($post): void
                 $user_url = admin_url('user-edit.php?user_id=' . $submitted_user_id);
             }
         } else {
+            /* translators: %d: user ID. */
             $user_label = sprintf(__('User #%d (account no longer exists)', 'backstage-venue-manager'), $submitted_user_id);
         }
 
@@ -1665,6 +1674,7 @@ function vms_vendor_applications_metabox_actions($post): void
     echo '<textarea id="vms-app-decision-message" name="vms_vendor_app_decision_message" rows="7" style="width:100%;">' . esc_textarea(vms_vendor_app_default_response_message((int) $post->ID, $status === 'pending' ? 'holding' : $status)) . '</textarea>';
 
     if ($email !== '') {
+        /* translators: %s: email address. */
         echo '<p><label><input type="checkbox" name="vms_vendor_app_send_response_email" value="1" checked> ' . esc_html(sprintf(__('Email this message to %s', 'backstage-venue-manager'), $email)) . '</label></p>';
     } else {
         echo '<p class="description">' . esc_html__('No applicant email is saved, so this decision can be recorded but not emailed automatically.', 'backstage-venue-manager') . '</p>';
@@ -1697,8 +1707,10 @@ function vms_vendor_applications_metabox_actions($post): void
         echo '<p><strong>' . esc_html__('Last response', 'backstage-venue-manager') . '</strong></p>';
         if ($last_sent_at !== '') {
             $sent_label = mysql2date(get_option('date_format') . ' ' . get_option('time_format'), $last_sent_at, true);
+            /* translators: %s: human-readable value used in this message. */
             echo '<p class="description">' . esc_html(sprintf(__('Recorded %s', 'backstage-venue-manager'), $sent_label));
             if ($last_sent_to !== '') {
+                /* translators: %s: to. */
                 echo esc_html(' - ' . sprintf(__('To: %s', 'backstage-venue-manager'), $last_sent_to));
             }
             echo '</p>';

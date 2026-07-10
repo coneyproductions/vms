@@ -52,6 +52,7 @@
         <div id="vms-low-guarantee-summary" class="description vms-mt-6">
             <?php
             echo esc_html(sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 __('Selected guaranteed: %1$s. Highest available guaranteed: %2$s.', 'backstage-venue-manager'),
                 $vms_fmt_money($vms_selected_guarantee),
                 $vms_fmt_money($vms_guarantee_max)

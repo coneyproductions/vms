@@ -706,6 +706,7 @@ if (!function_exists('vms_feedback_admin_render_content')) {
 		echo '<h2>' . esc_html__('Response count', 'backstage-venue-manager') . '</h2>';
 		echo '<p class="vms-feedback-big-number">' . esc_html(number_format_i18n(count($unique_responses))) . '</p>';
 		if (!empty($duplicate_ids)) {
+			/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 			echo '<p class="description">' . esc_html(sprintf(__('%1$d stored response(s); %2$d likely duplicate(s) excluded from averages.', 'backstage-venue-manager'), count($responses), count($duplicate_ids))) . '</p>';
 		}
 		echo '<p class="description">' . esc_html__('Private/internal only. Do not share raw comments with vendors unless you intentionally curate or anonymize them.', 'backstage-venue-manager') . '</p>';

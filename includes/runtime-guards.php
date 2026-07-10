@@ -1242,6 +1242,7 @@ if (!function_exists('vms_render_resource_fingerprint_admin_screen')) {
 		}
 		echo '<p>';
 		echo esc_html(sprintf(
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			__('Logging threshold: %1$ss or %2$s MB peak memory. Slow/heavy request context also records WP-Cron, Action Scheduler, and calculation markers.', 'backstage-venue-manager'),
 			number_format(vms_resource_fingerprint_threshold_seconds(), 1),
 			number_format(vms_resource_fingerprint_memory_threshold_bytes() / 1048576, 0)

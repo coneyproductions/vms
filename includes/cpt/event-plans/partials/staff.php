@@ -10,6 +10,7 @@
             echo esc_html(
                 $staff_headcount_wired
                     ? sprintf(
+                        /* translators: %1$d: anticipated guests. */
                         __('Anticipated guests: %1$d. Staffing highlights below update against this number.', 'backstage-venue-manager'),
                         $staff_current_headcount,
                         $staff_headcount_label
@@ -24,12 +25,15 @@
         $applied_template_band_min = (is_array($staff_applied_template) && isset($staff_applied_template['min_headcount']) && $staff_applied_template['min_headcount'] !== null && $staff_applied_template['min_headcount'] !== '') ? max(0, (int) $staff_applied_template['min_headcount']) : null;
         $applied_template_band_max = (is_array($staff_applied_template) && isset($staff_applied_template['max_headcount']) && $staff_applied_template['max_headcount'] !== null && $staff_applied_template['max_headcount'] !== '') ? max(0, (int) $staff_applied_template['max_headcount']) : null;
         if ($staff_headcount_wired && is_array($staff_applied_template) && $applied_template_band_max !== null && $staff_current_headcount > $applied_template_band_max) {
+            /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
             $staff_template_alerts[] = sprintf(__('Anticipated guests (%1$d) are above the applied template ceiling of %2$d. Review staffing now.', 'backstage-venue-manager'), $staff_current_headcount, $applied_template_band_max);
         }
         if ($staff_headcount_wired && is_array($staff_applied_template) && $applied_template_band_min !== null && $staff_current_headcount < $applied_template_band_min) {
+            /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
             $staff_template_alerts[] = sprintf(__('Anticipated guests (%1$d) are below the applied template floor of %2$d.', 'backstage-venue-manager'), $staff_current_headcount, $applied_template_band_min);
         }
         if ($staff_headcount_wired && is_array($staff_recommended_template) && !empty($staff_recommended_template['template_id']) && (int) $staff_recommended_template['template_id'] > 0 && (int) $staff_recommended_template['template_id'] !== (int) $staff_applied_template_id) {
+            /* translators: %s: current guest count fits a different staffing template. */
             $staff_template_alerts[] = sprintf(__('Current guest count fits a different staffing template: %s.', 'backstage-venue-manager'), isset($staff_recommended_template['name']) ? (string) $staff_recommended_template['name'] : __('Recommended template', 'backstage-venue-manager'));
         }
 
@@ -51,6 +55,7 @@
             }
         }
         if ($staff_headcount_wired && $next_threshold_gap !== null && $next_threshold_gap <= 10) {
+            /* translators: %s: human-readable value used in this message. */
             $staff_template_alerts[] = sprintf(__('This event is %1$d away from the next staffing trigger%2$s.', 'backstage-venue-manager'), $next_threshold_gap, $next_threshold_role !== '' ? sprintf(__(' for %s', 'backstage-venue-manager'), $next_threshold_role) : '');
         }
     ?>
@@ -71,6 +76,7 @@
             <?php
                 $applied_name = (is_array($staff_applied_template) && !empty($staff_applied_template['name'])) ? (string) $staff_applied_template['name'] : __('None recorded', 'backstage-venue-manager');
                 $recommended_name = (is_array($staff_recommended_template) && !empty($staff_recommended_template['name'])) ? (string) $staff_recommended_template['name'] : __('No match', 'backstage-venue-manager');
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                 echo esc_html(sprintf(__('Applied: %1$s · Recommended now: %2$s', 'backstage-venue-manager'), $applied_name, $recommended_name));
             ?>
         </p>
@@ -91,6 +97,7 @@
                             $tpl_label_parts = array();
                             $tpl_label_parts[] = isset($tpl_row['name']) ? (string) $tpl_row['name'] : ('#' . $tpl_id);
                             if (isset($tpl_row['min_headcount']) && $tpl_row['min_headcount'] !== null && $tpl_row['min_headcount'] !== '' || isset($tpl_row['max_headcount']) && $tpl_row['max_headcount'] !== null && $tpl_row['max_headcount'] !== '') {
+                                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                                 $tpl_label_parts[] = sprintf(__('guests %1$s-%2$s', 'backstage-venue-manager'), (isset($tpl_row['min_headcount']) && $tpl_row['min_headcount'] !== null && $tpl_row['min_headcount'] !== '' ? (int) $tpl_row['min_headcount'] : 0), (isset($tpl_row['max_headcount']) && $tpl_row['max_headcount'] !== null && $tpl_row['max_headcount'] !== '' ? (int) $tpl_row['max_headcount'] : '∞'));
                             }
                         ?>
@@ -196,6 +203,7 @@
                         $state_pill = __('Always needed', 'backstage-venue-manager');
                         $state_class = 'is-active';
                     } else {
+                        /* translators: %d: number used in this message. */
                         $state_pill = sprintf(__('Needed at %d+ guests', 'backstage-venue-manager'), $activation_threshold);
                         $state_class = 'is-waiting';
                     }
@@ -204,11 +212,13 @@
                         $threshold_copy = __('Set staff needed and the guest trigger for when this role should become needed.', 'backstage-venue-manager');
                     } elseif (!$staff_headcount_wired) {
                         $threshold_copy = sprintf(
+                            /* translators: %d: number used in this message. */
                             __('Guest count is not available yet. This role will become needed at %d guests once sales or guest entries are available.', 'backstage-venue-manager'),
                             $activation_threshold
                         );
                     } elseif ($required_now) {
                         $threshold_copy = sprintf(
+                            /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
                             __('This role is needed now based on %1$d anticipated guests. It turns on at %2$d guests.', 'backstage-venue-manager'),
                             $staff_current_headcount,
                             $activation_threshold
@@ -220,6 +230,7 @@
                         );
                     } else {
                         $threshold_copy = sprintf(
+                            /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
                             __('This role becomes needed at %2$d anticipated guests. Current guest count: %1$d.', 'backstage-venue-manager'),
                             $staff_current_headcount,
                             $activation_threshold
@@ -242,6 +253,7 @@
                             <span class="description" data-vms-role-base-summary>
                                 <?php
                                     echo esc_html(sprintf(
+                                        /* translators: 1: number 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message, 4: value 4 used in this message. */
                                         __('Need %1$d · Filled %2$d · Open %3$d%4$s', 'backstage-venue-manager'),
                                         (int) $headcount,
                                         (int) $filled,
@@ -331,6 +343,7 @@
                                     continue;
                                 }
                                 $qualification_summary_parts[] = sprintf(
+                                    /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                                     __('%1$s (%2$s)', 'backstage-venue-manager'),
                                     (string) $qualification_rule['name'],
                                     function_exists('vms_staffing_admin_qualification_mode_label')
@@ -340,6 +353,7 @@
                             }
                         ?>
                         <?php if (!empty($qualification_summary_parts)) : ?>
+                            <?php /* translators: %s: comma-separated required qualification names. */ ?>
                             <p class="description vms-m0"><?php echo esc_html(sprintf(__('Required qualifications: %s.', 'backstage-venue-manager'), implode(', ', $qualification_summary_parts))); ?></p>
                         <?php endif; ?>
                     <?php endif; ?>
@@ -355,6 +369,7 @@
                         <p class="description vms-m0">
                             <?php
                                 echo esc_html(sprintf(
+                                    /* translators: %s: human-readable value used in this message. */
                                     __('No %s-eligible staff found.', 'backstage-venue-manager'),
                                     strtolower((string) $role->name)
                                 ));
@@ -390,9 +405,11 @@
                                     $qual_disabled = (!$qual_ok && $qual_mode === 'hard_block' && !$checked);
                                     $qual_parts = array();
                                     if (!empty($qual_check['missing'])) {
+                                        /* translators: %s: human-readable value used in this message. */
                                         $qual_parts[] = sprintf(__('missing %s', 'backstage-venue-manager'), implode(', ', array_map('strval', (array) $qual_check['missing'])));
                                     }
                                     if (!empty($qual_check['expired'])) {
+                                        /* translators: %s: human-readable value used in this message. */
                                         $qual_parts[] = sprintf(__('expired %s', 'backstage-venue-manager'), implode(', ', array_map('strval', (array) $qual_check['expired'])));
                                     }
                                 ?>

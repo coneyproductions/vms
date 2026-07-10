@@ -345,6 +345,7 @@ if (!function_exists('vms_admission_rest_create')) {
 		$settings = vms_admission_settings();
 		$max_party = max(1, (int) $settings['max_party_size']);
 		if ($party_size < 1 || $party_size > $max_party) {
+			/* translators: %d: number used in this message. */
 			return vms_admission_rest_error('invalid_party_size', sprintf(__('Party size must be between 1 and %d.', 'backstage-venue-manager'), $max_party), 400);
 		}
 
@@ -476,6 +477,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 		if (null !== $req->get_param('party_size')) {
 			$party_size = absint($req->get_param('party_size'));
 			if ($party_size < 1 || $party_size > $max_party) {
+				/* translators: %d: number used in this message. */
 				return vms_admission_rest_error('invalid_party_size', sprintf(__('Party size must be between 1 and %d.', 'backstage-venue-manager'), $max_party), 400);
 			}
 			$updates['party_size'] = $party_size;
@@ -749,6 +751,7 @@ if (!function_exists('vms_admission_rest_scan')) {
 			$message = __('Already checked in.', 'backstage-venue-manager');
 			$checked_in_at = vms_admission_format_local_datetime((string) ($row['checked_in_at'] ?? ''));
 			if ($checked_in_at !== '') {
+				/* translators: %s: human-readable value used in this message. */
 				$message = sprintf(__('Already checked in at %s.', 'backstage-venue-manager'), $checked_in_at);
 			}
 			return vms_admission_rest_error('already_checked_in', $message, 409, array('item' => vms_admission_prepare_row($row)));

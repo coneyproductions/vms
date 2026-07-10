@@ -252,6 +252,7 @@ if (!function_exists('vms_event_details_render_card')) {
                         <dd class="vms-event-details-card__value">
                             <?php if ($date_label !== '') : ?><span class="vms-event-details-card__strong"><?php echo esc_html($date_label); ?></span><?php endif; ?>
                             <?php if ($time_label !== '') : ?><span><?php echo esc_html($time_label); ?></span><?php endif; ?>
+                            <?php /* translators: %s: gate opening time label. */ ?>
                             <?php if ($gates_label !== '') : ?><span><?php echo esc_html(sprintf(__('Gates open %s', 'backstage-venue-manager'), $gates_label)); ?></span><?php endif; ?>
                         </dd>
                     </div>
@@ -577,6 +578,7 @@ if (!function_exists('vms_event_details_ticket_context')) {
         }, $free_labels))));
 
         if ($min_price !== null && $min_price > 0) {
+            /* translators: %s: human-readable value used in this message. */
             $label = sprintf(__('From %s online', 'backstage-venue-manager'), function_exists('wc_price') ? wp_strip_all_tags(wc_price($min_price)) : '$' . number_format_i18n($min_price, 2));
         } else {
             $label = __('Tickets are available on this page.', 'backstage-venue-manager');

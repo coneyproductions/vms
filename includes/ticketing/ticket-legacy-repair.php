@@ -822,9 +822,11 @@ function vms_ticket_integrity_duplicate_cleanup_summary(array $result): string
 	$adopted = array_values((array) ($result['adopted'] ?? array()));
 
 	if (!empty($retired)) {
+		/* translators: %d: number of items described in this message. */
 		$summary_bits[] = sprintf(_n('%d duplicate product retired', '%d duplicate products retired', count($retired), 'backstage-venue-manager'), count($retired));
 	}
 	if (!empty($adopted)) {
+		/* translators: %d: number of items described in this message. */
 		$summary_bits[] = sprintf(_n('%d sold legacy ticket promoted back into the active map', '%d sold legacy tickets promoted back into the active map', count($adopted), 'backstage-venue-manager'), count($adopted));
 	}
 	if (empty($summary_bits)) {
@@ -896,6 +898,7 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 		if ($action === 'retire_extra') {
 			if ($active_product_id <= 0) {
 				$errors[] = sprintf(
+					/* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
 					__('Skipped retiring duplicate product #%1$d for “%2$s” because no active canonical product could be determined.', 'backstage-venue-manager'),
 					$legacy_product_id,
 					$ticket_title
@@ -915,6 +918,7 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 				);
 			} else {
 				$errors[] = sprintf(
+					/* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
 					__('Failed to retire duplicate product #%1$d for “%2$s”.', 'backstage-venue-manager'),
 					$legacy_product_id,
 					$ticket_title
@@ -929,6 +933,7 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 
 		if ($ticket_key === '') {
 			$errors[] = sprintf(
+				/* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
 				__('Skipped promoting sold legacy product #%1$d for “%2$s” because the active ticket key could not be resolved safely.', 'backstage-venue-manager'),
 				$legacy_product_id,
 				$ticket_title
@@ -1000,6 +1005,7 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 				);
 			} else {
 				$errors[] = sprintf(
+					/* translators: 1: number 1 used in this message, 2: value 2 used in this message, 3: number 3 used in this message. */
 					__('Promoted sold legacy product #%1$d for “%2$s”, but failed to retire the newer duplicate product #%3$d.', 'backstage-venue-manager'),
 					$legacy_product_id,
 					$ticket_title,
@@ -1108,6 +1114,7 @@ function vms_ticket_integrity_repair_normalize_sync_map(int $plan_id, array $cfg
 		$product_id = absint($row['woo_product_id'] ?? 0);
 		if ($product_id > 0 && !vms_ticket_integrity_repair_product_is_valid($product_id, $tec_event_id)) {
 			$changed = true;
+			/* translators: %s: human-readable value used in this message. */
 			$notes[] = sprintf(__('Removed stale mapped ticket reference for %s.', 'backstage-venue-manager'), $ticket_key);
 			continue;
 		}
@@ -1141,6 +1148,7 @@ function vms_ticket_integrity_repair_normalize_sync_map(int $plan_id, array $cfg
 		$product_id = absint($row['woo_product_id'] ?? 0);
 		if ($product_id > 0 && !vms_ticket_integrity_repair_product_is_valid($product_id, $tec_event_id)) {
 			$changed = true;
+			/* translators: %s: human-readable value used in this message. */
 			$notes[] = sprintf(__('Removed stale mapped add-on reference for %s.', 'backstage-venue-manager'), $entitlement_id);
 			continue;
 		}

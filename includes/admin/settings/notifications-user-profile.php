@@ -26,6 +26,7 @@ if (!function_exists('vms_notify_render_user_profile_fields')) {
 		echo '<th><label for="vms_locale_preference">' . esc_html__('Locale preference', 'backstage-venue-manager') . '</label></th>';
 		echo '<td>';
 		echo '<select id="vms_locale_preference" name="vms_locale_preference">';
+		/* translators: %s: human-readable value used in this message. */
 		echo '<option value="" ' . selected($locale_pref, '', false) . '>' . esc_html(sprintf(__('Use site locale (%s)', 'backstage-venue-manager'), $site_locale)) . '</option>';
 		echo '<option value="en_US" ' . selected($locale_pref, 'en_US', false) . '>English (US)</option>';
 		echo '<option value="es_ES" ' . selected($locale_pref, 'es_ES', false) . '>Español (ES)</option>';

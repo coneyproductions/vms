@@ -1193,6 +1193,7 @@ function vms_ticket_inventory_forensics_subject_label(array $scope, array $after
 	$product_id = absint($scope['product_id'] ?? 0);
 	if ($product_id > 0) {
 		$title = trim((string) ($after_snapshot['title'] ?? get_the_title($product_id)));
+		/* translators: %d: product ID. */
 		return $title !== '' ? $title : sprintf(__('Product #%d', 'backstage-venue-manager'), $product_id);
 	}
 
@@ -1202,6 +1203,7 @@ function vms_ticket_inventory_forensics_subject_label(array $scope, array $after
 		return $title;
 	}
 
+	/* translators: %d: event ID. */
 	return $event_id > 0 ? sprintf(__('Event #%d', 'backstage-venue-manager'), $event_id) : __('Inventory object', 'backstage-venue-manager');
 }
 
@@ -1209,12 +1211,14 @@ function vms_ticket_inventory_forensics_build_summary(string $change_type, strin
 {
 	$subject = vms_ticket_inventory_forensics_subject_label($scope, $after_snapshot);
 	if ($result_status === 'no_op') {
+		/* translators: %s: human-readable value used in this message. */
 		return sprintf(__('Inventory write had no effect for %s.', 'backstage-venue-manager'), $subject);
 	}
 
 	switch ($change_type) {
 		case 'stock_zeroed':
 			return sprintf(
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
 				__('Stock changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
 				vms_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? null),
 				vms_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? null),
@@ -1222,6 +1226,7 @@ function vms_ticket_inventory_forensics_build_summary(string $change_type, strin
 			);
 		case 'stock_quantity_changed':
 			return sprintf(
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
 				__('Stock quantity changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
 				vms_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? null),
 				vms_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? null),
@@ -1230,6 +1235,7 @@ function vms_ticket_inventory_forensics_build_summary(string $change_type, strin
 		case 'manage_stock_enabled':
 		case 'manage_stock_disabled':
 			return sprintf(
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
 				__('Manage stock changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
 				vms_ticket_inventory_forensics_bool_label(!empty($before_snapshot['managing_stock'])),
 				vms_ticket_inventory_forensics_bool_label(!empty($after_snapshot['managing_stock'])),
@@ -1237,6 +1243,7 @@ function vms_ticket_inventory_forensics_build_summary(string $change_type, strin
 			);
 		case 'stock_status_changed':
 			return sprintf(
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
 				__('Stock status changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
 				trim((string) ($before_snapshot['stock_status'] ?? '')) !== '' ? (string) ($before_snapshot['stock_status'] ?? '') : __('(empty)', 'backstage-venue-manager'),
 				trim((string) ($after_snapshot['stock_status'] ?? '')) !== '' ? (string) ($after_snapshot['stock_status'] ?? '') : __('(empty)', 'backstage-venue-manager'),
@@ -1246,6 +1253,7 @@ function vms_ticket_inventory_forensics_build_summary(string $change_type, strin
 			$before_value = $before_snapshot['ticket_capacity_raw'] ?? $before_snapshot['event_global_stock_level_raw'] ?? '';
 			$after_value = $after_snapshot['ticket_capacity_raw'] ?? $after_snapshot['event_global_stock_level_raw'] ?? '';
 			return sprintf(
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message, 4: value 4 used in this message. */
 				__('Capacity-related field %1$s changed %2$s -> %3$s for %4$s.', 'backstage-venue-manager'),
 				$meta_key,
 				vms_ticket_inventory_forensics_display_quantity($before_value),
@@ -1253,8 +1261,10 @@ function vms_ticket_inventory_forensics_build_summary(string $change_type, strin
 				$subject
 			);
 		case 'sale_window_changed':
+			/* translators: %s: human-readable value used in this message. */
 			return sprintf(__('Sale window changed for %s.', 'backstage-venue-manager'), $subject);
 		default:
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			return sprintf(__('Availability-related field %1$s changed for %2$s.', 'backstage-venue-manager'), $meta_key, $subject);
 	}
 }
@@ -2182,6 +2192,7 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 
 		$rows[] = array(
 			'product_id' => $product_id,
+			/* translators: %d: product ID. */
 			'ticket_label' => $ticket_label !== '' ? $ticket_label : sprintf(__('Product #%d', 'backstage-venue-manager'), $product_id),
 			'title' => (string) ($product_snapshot['title'] ?? ''),
 			'sku' => (string) ($product_snapshot['sku'] ?? ''),
@@ -2533,6 +2544,7 @@ function vms_ticket_inventory_forensics_classify_cause(array $ticket_rows, array
 		$flags = is_array($row['mismatch_flags'] ?? null) ? $row['mismatch_flags'] : array();
 		if (!empty($flags['unexpected_zero_stock']) || !empty($flags['unexpected_outofstock']) || !empty($flags['zero_available_conflict'])) {
 			$per_ticket = true;
+			/* translators: %s: human-readable value used in this message. */
 			$reasons[] = sprintf(__('Ticket "%s" is reporting sold-out stock even though remaining capacity still exists.', 'backstage-venue-manager'), (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')));
 		}
 
@@ -2551,6 +2563,7 @@ function vms_ticket_inventory_forensics_classify_cause(array $ticket_rows, array
 
 		if (!empty($flags['sale_window_conflict'])) {
 			$sale_window = true;
+			/* translators: %s: ticket label that appears open in config but closed by live sale dates. */
 			$reasons[] = sprintf(__('Ticket "%s" looks open in config but closed by live sale dates.', 'backstage-venue-manager'), (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')));
 		}
 	}
@@ -2726,6 +2739,7 @@ function vms_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_ro
 		$ticket_rows[$index]['verification_result'] = 'woo_recorruption';
 		$ticket_rows[$index]['verification_result_label'] = vms_ticket_inventory_forensics_verification_label('woo_recorruption');
 		$ticket_rows[$index]['verification_reason'] = $source_text !== ''
+			/* translators: %s: human-readable value used in this message. */
 			? sprintf(__('Repair previously left Woo sellable, but a later write from %s closed it again.', 'backstage-venue-manager'), $source_text)
 			: __('Repair previously left Woo sellable, but a later inventory write closed it again.', 'backstage-venue-manager');
 		$ticket_rows[$index]['woo_recorruption'] = 1;
@@ -2754,6 +2768,7 @@ function vms_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_ro
 
 	$source_text = trim((string) ($latest_bad_write['source_function'] ?? $latest_bad_write['source_hook'] ?? ''));
 	$message = $source_text !== ''
+		/* translators: %s: human-readable value used in this message. */
 		? sprintf(__('Woo was repaired into a sellable state, but a later write from %s closed it again.', 'backstage-venue-manager'), $source_text)
 		: __('Woo was repaired into a sellable state, but a later inventory write closed it again.', 'backstage-venue-manager');
 

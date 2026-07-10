@@ -211,6 +211,7 @@
                                     <p class="description vms-lineup-row__aux-copy">
                                         <?php
                                         printf(
+                                            /* translators: %s: human-readable value used in this message. */
                                             esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'backstage-venue-manager'),
                                             esc_html($nice)
                                         );

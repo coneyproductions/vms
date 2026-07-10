@@ -132,6 +132,7 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
     }
 
     if ($count > 0 && function_exists('vms_add_admin_notice')) {
+        /* translators: %d: number used in this message. */
         vms_add_admin_notice(sprintf(__('🚩 Vendor deleted. %d event plan(s) were reverted to Draft and flagged for review.', 'backstage-venue-manager'), $count), 'warning');
     }
 }
@@ -383,6 +384,7 @@ class VMS_Admin_Vendors
         echo '<p><strong>' . esc_html__('Gallery photos (up to 5)', 'backstage-venue-manager') . '</strong></p>';
         for ($i = 1; $i <= 5; $i++) {
             $gallery_value = (string) get_post_meta($post_id, '_vms_vendor_gallery_image_' . $i, true);
+            /* translators: %d: gallery photo number. */
             echo '<p><label><strong>' . sprintf(esc_html__('Photo %d URL', 'backstage-venue-manager'), $i) . '</strong></label><br />';
             echo '<input type="url" class="widefat" name="vms_vendor_gallery_image_' . esc_attr((string) $i) . '" value="' . esc_attr($gallery_value) . '" placeholder="https://" /></p>';
         }

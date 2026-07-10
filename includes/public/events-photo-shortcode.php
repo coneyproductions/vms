@@ -392,6 +392,7 @@ if (!function_exists('vms_events_photo_shortcode')) {
             }
 
             if (!empty($overlay['is_rescheduled']) && $replacement_date !== '') {
+                /* translators: %s: human-readable value used in this message. */
                 echo '<div class="vms-events-photo-card__status-note">' . esc_html(sprintf(__('Rescheduled to %s', 'backstage-venue-manager'), $replacement_date)) . '</div>';
             } elseif (!empty($overlay['is_cancelled'])) {
                 echo '<div class="vms-events-photo-card__status-note">' . esc_html__('Cancelled', 'backstage-venue-manager') . '</div>';

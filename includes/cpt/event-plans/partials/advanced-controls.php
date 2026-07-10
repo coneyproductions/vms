@@ -265,6 +265,7 @@
 						<div class="vms-ticketing__togglebar">
 							<strong><?php esc_html_e('Tickets for this event:', 'backstage-venue-manager'); ?></strong>
 							<select name="vms_ticketing_enabled_override" id="vms-ticketing-enabled-override">
+								<?php /* translators: %s: current global ticketing setting label. */ ?>
 								<option value="" <?php selected($ticketing_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), $ticketing_global_label)); ?></option>
 								<option value="on" <?php selected($ticketing_override, 'on'); ?>><?php esc_html_e('On', 'backstage-venue-manager'); ?></option>
 								<option value="off" <?php selected($ticketing_override, 'off'); ?>><?php esc_html_e('Off', 'backstage-venue-manager'); ?></option>
@@ -277,6 +278,7 @@
 						<div class="vms-ticketing__togglebar" data-vms-tour="ticketing-ui.event-override">
 							<strong><?php esc_html_e('Public ticket UI:', 'backstage-venue-manager'); ?></strong>
 							<select name="vms_ticket_ui_layout_override" id="vms-ticket-ui-layout-override">
+								<?php /* translators: %s: current global public ticket UI layout label. */ ?>
 								<option value="" <?php selected($ticket_ui_layout_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), (string) ($ticket_ui_global_labels[$ticket_ui_global_layout] ?? $ticket_ui_global_layout))); ?></option>
 								<option value="progressive" <?php selected($ticket_ui_layout_override, 'progressive'); ?>><?php esc_html_e('Force Progressive', 'backstage-venue-manager'); ?></option>
 								<option value="v2" <?php selected($ticket_ui_layout_override, 'v2'); ?>><?php esc_html_e('Force V2 Unified', 'backstage-venue-manager'); ?></option>

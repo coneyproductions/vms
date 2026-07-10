@@ -96,8 +96,11 @@ $secondary_config = array(
 		'market' => __('Market', 'backstage-venue-manager'),
 		'standard' => __('Standard', 'backstage-venue-manager'),
 		'pendingVendor' => __('Select vendor', 'backstage-venue-manager'),
+		/* translators: %d: number used in this message. */
 		'overCapacity' => __('Over capacity by %d', 'backstage-venue-manager'),
+		/* translators: %d: number used in this message. */
 		'target' => __('Target %d', 'backstage-venue-manager'),
+		/* translators: %d: number of items described in this message. */
 		'needed' => __('%d needed', 'backstage-venue-manager'),
 		'hiddenFromDispatch' => __('Hidden from ADD', 'backstage-venue-manager'),
 		'saveUnavailable' => __('Additional Vendors save is not available right now.', 'backstage-venue-manager'),
@@ -191,17 +194,23 @@ $render_secondary_vendor_group_summary = static function (array $group): array {
 
 	if (!$has_type) {
 		$parts[] = ($slot_limit === null)
+			/* translators: %d: number of selected items. */
 			? sprintf(_n('%d selected', '%d selected', $filled, 'backstage-venue-manager'), $filled)
+			/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 			: sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $filled, $slot_limit);
 		$parts[] = __('Choose type first', 'backstage-venue-manager');
 	} else {
 		$parts[] = ($slot_limit === null)
+			/* translators: %d: number of selected items. */
 			? sprintf(_n('%d selected', '%d selected', $filled, 'backstage-venue-manager'), $filled)
+			/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 			: sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $filled, $slot_limit);
 		$parts[] = $is_market_group ? __('Market', 'backstage-venue-manager') : __('Standard', 'backstage-venue-manager');
 		if ($is_market_group && $needed_slots !== null) {
+			/* translators: %d: number used in this message. */
 			$parts[] = sprintf(__('Target %d', 'backstage-venue-manager'), $needed_slots);
 			$parts[] = $open_for_dispatch
+				/* translators: %d: number of items described in this message. */
 				? sprintf(_n('%d needed', '%d needed', max(0, $needed_slots - $filled), 'backstage-venue-manager'), max(0, $needed_slots - $filled))
 				: __('Hidden from ADD', 'backstage-venue-manager');
 		}
@@ -209,6 +218,7 @@ $render_secondary_vendor_group_summary = static function (array $group): array {
 			$parts[] = __('No slot limit set', 'backstage-venue-manager');
 		} elseif ($filled > $slot_limit) {
 			$over_capacity = true;
+			/* translators: %d: number used in this message. */
 			$warning = sprintf(__('Over capacity by %d', 'backstage-venue-manager'), $filled - $slot_limit);
 			$parts[] = $warning;
 		}
@@ -387,11 +397,13 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 		$mismatch_labels = array();
 		foreach ($group_mismatch as $vendor_id) {
 			$vendor_id = (int) $vendor_id;
+			/* translators: %d: vendor ID. */
 			$mismatch_labels[] = trim((string) ($group_titles[$vendor_id] ?? sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id)));
 		}
 		echo '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p>';
 		echo esc_html__('🚩 One or more selected vendors no longer match this vendor type. Review and re-select vendors below.', 'backstage-venue-manager');
 		if (!empty($mismatch_labels)) {
+			/* translators: %s: affected vendor(s). */
 			echo ' ' . esc_html(sprintf(__('Affected vendor(s): %s', 'backstage-venue-manager'), implode(', ', $mismatch_labels)));
 		}
 		echo '</p></div>';
@@ -405,6 +417,7 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 			echo '<ul class="vms-help-missing-list">';
 			foreach ($group_unqualified as $vendor_id) {
 				$vendor_id = (int) $vendor_id;
+				/* translators: %d: vendor ID. */
 				$vendor_label = trim((string) ($group_titles[$vendor_id] ?? sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id)));
 				$missing_items = isset($group_missing_map[$vendor_id]) && is_array($group_missing_map[$vendor_id]) ? $group_missing_map[$vendor_id] : array();
 				$missing_items = array_map(static function ($missing_item): string {
@@ -602,6 +615,7 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 						<?php if (!empty($category_list)) : ?>
 							- <?php echo esc_html($category_label); ?>: <?php echo esc_html(implode(', ', $category_list)); ?>
 						<?php else : ?>
+							<?php /* translators: %s: secondary vendor category label. */ ?>
 							- <?php printf(esc_html__('No %s selected yet.', 'backstage-venue-manager'), esc_html(strtolower($category_label))); ?>
 						<?php endif; ?>
 					</li>
@@ -614,6 +628,7 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 			<?php
 			if (!empty($vendor_category_names)) {
 				printf(
+					/* translators: %s: tec event categories that will be synced from this plan. */
 					esc_html__('TEC Event Categories that will be synced from this plan: %s', 'backstage-venue-manager'),
 					esc_html(implode(', ', $vendor_category_names))
 				);

@@ -2695,6 +2695,7 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
         $msg = is_wp_error($new_id) ? $new_id->get_error_message() : 'Unknown error';
         return array(
             'ok'      => false,
+            /* translators: %s: failed to create the calendar event. */
             'message' => sprintf(__('Failed to create the calendar event: %s', 'backstage-venue-manager'), $msg),
         );
     }
@@ -3323,30 +3324,35 @@ function vms_ticketing_v2_reconcile_event_plan_ticket_cache(int $plan_id, int $t
     $warnings = array();
     if (!empty($mapped_missing)) {
         $warnings[] = sprintf(
+            /* translators: %s: mapped ticket products are missing. */
             __('Mapped ticket products are missing: %s. Run Preview → Commit to repair mappings.', 'backstage-venue-manager'),
             $format_ids($mapped_missing)
         );
     }
     if (!empty($mapped_trashed)) {
         $warnings[] = sprintf(
+            /* translators: %s: mapped ticket products are in trash. */
             __('Mapped ticket products are in Trash: %s. Run Preview → Commit to repair mappings.', 'backstage-venue-manager'),
             $format_ids($mapped_trashed)
         );
     }
     if (!empty($mapped_not_product)) {
         $warnings[] = sprintf(
+            /* translators: %s: mapped ticket ids are not woo products. */
             __('Mapped ticket IDs are not Woo products: %s. Run Preview → Commit to repair mappings.', 'backstage-venue-manager'),
             $format_ids($mapped_not_product)
         );
     }
     if (!empty($mapped_marker_mismatch)) {
         $warnings[] = sprintf(
+            /* translators: %s: mapped ticket products have marker mismatches. */
             __('Mapped ticket products have marker mismatches: %s. Run Preview → Commit to restamp canonical IDs.', 'backstage-venue-manager'),
             $format_ids($mapped_marker_mismatch)
         );
     }
     if (!empty($detected_unmapped)) {
         $warnings[] = sprintf(
+            /* translators: %s: comma-separated linked TEC ticket product IDs not tracked in the VMS sync map. */
             __('Linked TEC event has ticket products not tracked in VMS sync map: %s. Preview before commit to reconcile.', 'backstage-venue-manager'),
             $format_ids($detected_unmapped)
         );
@@ -3418,6 +3424,7 @@ function vms_ticketing_v2_reconcile_event_plan_ticket_cache(int $plan_id, int $t
         if (!$persist_ok) {
             $persist_failures = array_values(array_unique(array_filter(array_map('sanitize_key', $persist_failures))));
             $warnings[] = sprintf(
+                /* translators: %s: ticket reconciliation was applied, but persistence verification failed for. */
                 __('Ticket reconciliation was applied, but persistence verification failed for: %s. Refresh this page and verify canonical ticket IDs.', 'backstage-venue-manager'),
                 implode(', ', $persist_failures)
             );
@@ -3517,6 +3524,7 @@ function vms_ticketing_v2_enabled_entitlement_sequence_warnings(array $entitleme
         $sample = array_slice($missing, 0, 5);
         $more = count($missing) > 5 ? ' +' . (count($missing) - 5) . ' more' : '';
         $warnings[] = sprintf(
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
             __('Enabled add-on labels appear to skip %1$s #%2$s%3$s. Review the saved config before committing if those add-ons should exist.', 'backstage-venue-manager'),
             (string) ($group['prefix'] ?? 'Add-on'),
             implode(', #', $sample),
@@ -8063,6 +8071,7 @@ function vms_ticketing_v2_commit_error_steps(string $code, array $diagnostics = 
     $untracked = is_array($diagnostics['untracked_event_ticket_product_ids'] ?? null) ? array_values(array_filter(array_map('absint', $diagnostics['untracked_event_ticket_product_ids']))) : array();
     if (!empty($untracked)) {
         $steps[] = sprintf(
+            /* translators: %s: comma-separated linked TEC ticket product IDs VMS is not tracking. */
             __('This linked TEC event already has ticket products VMS is not tracking: %s. VMS will not delete them automatically.', 'backstage-venue-manager'),
             '#' . implode(', #', $untracked)
         );
@@ -8128,6 +8137,7 @@ function vms_ticketing_v2_build_commit_failure_diagnostics(int $plan_id, array $
         }
         $ticket_label = trim((string) ($ticket_row['title'] ?? $ticket_row['ticket_key'] ?? 'Verified ticket'));
         $verified_ticket_rule_issues[] = sprintf(
+            /* translators: %s: human-readable value used in this message. */
             __('%s is set to require credentials, but no credential program or direct-grant rule is configured.', 'backstage-venue-manager'),
             $ticket_label
         );
@@ -9421,6 +9431,7 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
     if (is_array($legacy_cleanup) && !empty($legacy_cleanup['retired']) && is_array($legacy_cleanup['retired']) && function_exists('vms_add_admin_notice')) {
         $count = count($legacy_cleanup['retired']);
         if ($count > 0) {
+            /* translators: %d: number used in this message. */
             vms_add_admin_notice(sprintf(__('Retired %d legacy SR-prefixed duplicate products for this event.', 'backstage-venue-manager'), $count), 'warning');
         }
     }
@@ -9498,6 +9509,7 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
             $sample = array_slice($recon_warnings, 0, 2);
             $msg = __('Ticketing sync committed, but reconciliation found mismatches:', 'backstage-venue-manager') . ' ' . implode(' ', $sample);
             if (count($recon_warnings) > 2) {
+                /* translators: %d: number used in this message. */
                 $msg .= ' ' . sprintf(__('(+%d more)', 'backstage-venue-manager'), count($recon_warnings) - 2);
             }
             vms_add_admin_notice($msg, 'warning');

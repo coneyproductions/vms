@@ -367,6 +367,7 @@ if (!function_exists('vms_event_credit_send_email')) {
 		}
 
 		$site_name = wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES);
+		/* translators: %s: human-readable value used in this message. */
 		$subject = sprintf(__('%s Event Credit', 'backstage-venue-manager'), $site_name);
 		$expires_text = '';
 		$expires_ts = $expires_at_gmt !== '' ? strtotime($expires_at_gmt . ' GMT') : 0;
@@ -375,15 +376,19 @@ if (!function_exists('vms_event_credit_send_email')) {
 		}
 
 		$lines = array();
-		$lines[] = sprintf(__('Because %s was cancelled, we have issued an event credit for %s.', 'backstage-venue-manager'), $event_title, vms_event_credit_format_money($amount, $currency));
+		/* translators: 1: cancelled event title, 2: formatted credit amount. */
+		$lines[] = sprintf(__('Because %1$s was cancelled, we have issued an event credit for %2$s.', 'backstage-venue-manager'), $event_title, vms_event_credit_format_money($amount, $currency));
 		$lines[] = '';
+		/* translators: %s: event credit code. */
 		$lines[] = sprintf(__('Event Credit Code: %s', 'backstage-venue-manager'), $code);
 		if ($expires_text !== '') {
+			/* translators: %s: good through. */
 			$lines[] = sprintf(__('Good through: %s', 'backstage-venue-manager'), $expires_text);
 		}
 		$lines[] = '';
 		$lines[] = __('Use this code at checkout for an eligible future event. If you would rather receive a refund instead, reply to this message and we will help.', 'backstage-venue-manager');
 		$lines[] = '';
+		/* translators: %s: human-readable value used in this message. */
 		$lines[] = sprintf(__('Thank you, %s', 'backstage-venue-manager'), $site_name);
 
 		$sent = wp_mail($email, $subject, implode("\n", $lines));
@@ -441,6 +446,7 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 		$tec_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
 		$tec_event_id = absint(get_post_meta($event_plan_id, $tec_key, true));
 
+		/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 		$title = sprintf(__('Event Credit %1$s — Order %2$s', 'backstage-venue-manager'), $code, $order_number);
 		$credit_id = wp_insert_post(array(
 			'post_type' => VMS_CPT_EVENT_CREDIT,
@@ -527,6 +533,7 @@ if (!function_exists('vms_event_credits_handle_event_plan_save')) {
 			$scan = vms_event_credits_discover_candidates($post_id);
 			$count = isset($scan['data']['candidate_order_count']) ? absint($scan['data']['candidate_order_count']) : 0;
 			if (function_exists('vms_add_admin_notice')) {
+				/* translators: %d: number of candidate orders found in the scan. */
 				vms_add_admin_notice(sprintf(__('Event Credit candidate scan complete. Found %d candidate order(s).', 'backstage-venue-manager'), $count), 'success');
 			}
 			update_post_meta($post_id, '_vms_admin_scroll_to', 'vms_event_credits_panel');
@@ -551,7 +558,9 @@ if (!function_exists('vms_event_credits_handle_event_plan_save')) {
 			$code = sanitize_text_field((string) ($result['code'] ?? get_post_meta($credit_id, '_vms_event_credit_code', true)));
 			if (function_exists('vms_add_admin_notice')) {
 				$msg = !empty($result['existing'])
+					/* translators: %s: an event credit already exists for this order. */
 					? sprintf(__('An Event Credit already exists for this order: %s', 'backstage-venue-manager'), $code)
+					/* translators: %s: event credit created. */
 					: sprintf(__('Event Credit created: %s', 'backstage-venue-manager'), $code);
 				if ($send_email && empty($result['email_sent'])) {
 					$msg .= ' ' . __('The credit was created, but the customer email could not be sent.', 'backstage-venue-manager');
@@ -561,6 +570,7 @@ if (!function_exists('vms_event_credits_handle_event_plan_save')) {
 		} else {
 			if (function_exists('vms_add_admin_notice')) {
 				$error = sanitize_text_field((string) ($result['error'] ?? 'event_credit_failed'));
+				/* translators: %s: event credit could not be created. */
 				vms_add_admin_notice(sprintf(__('Event Credit could not be created: %s', 'backstage-venue-manager'), $error), 'error');
 			}
 		}
@@ -922,13 +932,20 @@ if (!function_exists('vms_event_credit_render_details_metabox')) {
 			<tr>
 				<th scope="row"><?php esc_html_e('Original Event / Order', 'backstage-venue-manager'); ?></th>
 				<td>
+					<?php /* translators: %d: event plan ID. */ ?>
 					<?php if ($event_plan_id > 0) : ?><a href="<?php echo esc_url(get_edit_post_link($event_plan_id)); ?>"><?php echo esc_html(get_the_title($event_plan_id) ?: sprintf(__('Event Plan #%d', 'backstage-venue-manager'), $event_plan_id)); ?></a><?php endif; ?>
+					<?php /* translators: %d: order ID. */ ?>
 					<?php if ($order_id > 0) : ?><br /><a href="<?php echo esc_url(admin_url('post.php?post=' . $order_id . '&action=edit')); ?>"><?php echo esc_html(sprintf(__('Order #%d', 'backstage-venue-manager'), $order_id)); ?></a><?php endif; ?>
 				</td>
 			</tr>
 			<tr>
 				<th scope="row"><?php esc_html_e('Coupon', 'backstage-venue-manager'); ?></th>
-				<td><?php echo $coupon_id > 0 ? '<a href="' . esc_url(admin_url('post.php?post=' . $coupon_id . '&action=edit')) . '">' . esc_html(sprintf(__('Coupon #%d', 'backstage-venue-manager'), $coupon_id)) . '</a>' : esc_html__('No coupon created', 'backstage-venue-manager'); ?></td>
+				<td><?php if ($coupon_id > 0) : ?>
+					<?php /* translators: %d: coupon ID. */ ?>
+					<a href="<?php echo esc_url(admin_url('post.php?post=' . $coupon_id . '&action=edit')); ?>"><?php echo esc_html(sprintf(__('Coupon #%d', 'backstage-venue-manager'), $coupon_id)); ?></a>
+				<?php else : ?>
+					<?php echo esc_html__('No coupon created', 'backstage-venue-manager'); ?>
+				<?php endif; ?></td>
 			</tr>
 			<tr>
 				<th scope="row"><label for="vms_event_credit_expires_at_gmt"><?php esc_html_e('Expires at GMT', 'backstage-venue-manager'); ?></label></th>
@@ -1040,6 +1057,7 @@ if (!function_exists('vms_event_credit_admin_column_content')) {
 					echo '<a href="' . esc_url(get_edit_post_link($event_plan_id)) . '">' . esc_html(get_the_title($event_plan_id) ?: ('#' . $event_plan_id)) . '</a>';
 				}
 				if ($order_id > 0) {
+					/* translators: %d: order ID. */
 					echo '<br /><a href="' . esc_url(admin_url('post.php?post=' . $order_id . '&action=edit')) . '">' . esc_html(sprintf(__('Order #%d', 'backstage-venue-manager'), $order_id)) . '</a>';
 				}
 				break;

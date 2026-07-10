@@ -705,18 +705,21 @@ function vms_ticket_mutation_audit_build_summary(string $change_type, string $re
 	$before_mapped = count((array) ($before_snapshot['sync_map']['mapped_product_ids'] ?? array()));
 	$after_mapped = count((array) ($after_snapshot['sync_map']['mapped_product_ids'] ?? array()));
 	if ($before_mapped !== $after_mapped) {
+		/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 		$parts[] = sprintf(__('Mapped products %1$d -> %2$d.', 'backstage-venue-manager'), $before_mapped, $after_mapped);
 	}
 
 	$before_leftovers = count((array) ($before_snapshot['legacy_leftover_ids'] ?? array()));
 	$after_leftovers = count((array) ($after_snapshot['legacy_leftover_ids'] ?? array()));
 	if ($before_leftovers !== $after_leftovers) {
+		/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 		$parts[] = sprintf(__('Legacy leftovers %1$d -> %2$d.', 'backstage-venue-manager'), $before_leftovers, $after_leftovers);
 	}
 
 	$before_origin = sanitize_key((string) ($before_snapshot['origin']['classification'] ?? ''));
 	$after_origin = sanitize_key((string) ($after_snapshot['origin']['classification'] ?? ''));
 	if ($before_origin !== '' && $after_origin !== '' && $before_origin !== $after_origin) {
+		/* translators: %s: human-readable value used in this message. */
 		$parts[] = sprintf(__('Origin now reads as %s.', 'backstage-venue-manager'), vms_ticket_mutation_audit_origin_label($after_origin));
 	}
 
