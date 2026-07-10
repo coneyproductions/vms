@@ -263,10 +263,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (
-        empty($_POST['vms_venue_location_nonce']) ||
-        !wp_verify_nonce($_POST['vms_venue_location_nonce'], 'vms_save_venue_location')
-    ) {
+    $nonce = (isset($_POST['vms_venue_location_nonce']) && !is_array($_POST['vms_venue_location_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_location_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_location')) {
         return;
     }
 
@@ -377,10 +377,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (
-        empty($_POST['vms_venue_default_times_nonce']) ||
-        !wp_verify_nonce($_POST['vms_venue_default_times_nonce'], 'vms_save_venue_default_times')
-    ) {
+    $nonce = (isset($_POST['vms_venue_default_times_nonce']) && !is_array($_POST['vms_venue_default_times_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_default_times_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_default_times')) {
         return;
     }
 
@@ -532,10 +532,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (
-        empty($_POST['vms_venue_schedule_nonce']) ||
-        !wp_verify_nonce($_POST['vms_venue_schedule_nonce'], 'vms_save_venue_schedule')
-    ) {
+    $nonce = (isset($_POST['vms_venue_schedule_nonce']) && !is_array($_POST['vms_venue_schedule_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_schedule_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_schedule')) {
         return;
     }
 

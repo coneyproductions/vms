@@ -45,15 +45,22 @@ if (!function_exists('vms_admission_rest_request_nonce')) {
 	{
 		$nonce = '';
 		if (method_exists($request, 'get_header')) {
-			$nonce = (string) $request->get_header('X-WP-Nonce');
+			$header_nonce = $request->get_header('X-WP-Nonce');
+			if (is_string($header_nonce)) {
+				$nonce = sanitize_text_field($header_nonce);
+			}
 		}
 		if ($nonce === '' && method_exists($request, 'get_param')) {
-			$nonce = (string) $request->get_param('_wpnonce');
+			$param_nonce = $request->get_param('_wpnonce');
+			if (!is_scalar($param_nonce)) {
+				return '';
+			}
+			$nonce = sanitize_text_field((string) $param_nonce);
 		}
 		if ($nonce === '') {
 			return '';
 		}
-		return sanitize_text_field(wp_unslash($nonce));
+		return $nonce;
 	}
 }
 

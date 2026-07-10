@@ -282,10 +282,10 @@ function vms_save_template_metabox(int $post_id, WP_Post $post): void
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (
-        !isset($_POST['vms_venue_template_nonce']) ||
-        !wp_verify_nonce($_POST['vms_venue_template_nonce'], 'vms_save_venue_template')
-    ) {
+    $nonce = (isset($_POST['vms_venue_template_nonce']) && !is_array($_POST['vms_venue_template_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_template_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_template')) {
         return;
     }
 
@@ -360,10 +360,10 @@ function vms_handle_create_venue_from_template(): void
 {
     if (!current_user_can('edit_posts')) wp_die('Not allowed.');
 
-    if (
-        !isset($_POST['vms_create_venue_from_template_nonce']) ||
-        !wp_verify_nonce($_POST['vms_create_venue_from_template_nonce'], 'vms_create_venue_from_template')
-    ) {
+    $nonce = (isset($_POST['vms_create_venue_from_template_nonce']) && !is_array($_POST['vms_create_venue_from_template_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_create_venue_from_template_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_create_venue_from_template')) {
         wp_die('Invalid nonce.');
     }
 

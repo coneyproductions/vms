@@ -344,7 +344,10 @@ function vms_render_comp_package_meta_box($post)
 
 add_action('save_post_vms_comp_package', function ($post_id, $post) {
 
-    if (!isset($_POST['vms_comp_package_nonce']) || !wp_verify_nonce($_POST['vms_comp_package_nonce'], 'vms_save_comp_package')) {
+    $nonce = (isset($_POST['vms_comp_package_nonce']) && !is_array($_POST['vms_comp_package_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_comp_package_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_comp_package')) {
         return;
     }
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;

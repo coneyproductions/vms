@@ -9100,9 +9100,9 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
     }
 
     $nonce = '';
-    if (isset($data['nonce'])) {
+    if (isset($data['nonce']) && !is_array($data['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $data['nonce']));
-    } elseif (isset($_REQUEST['nonce'])) {
+    } elseif (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ticketing_v2_atomic_add_to_cart')) {
@@ -9489,9 +9489,9 @@ function vms_ticketing_v2_ajax_silent_add(): void
 
     // Nonce may arrive via query string, form POST, or JSON payload.
     $nonce = '';
-    if (isset($data['nonce'])) {
+    if (isset($data['nonce']) && !is_array($data['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $data['nonce']));
-    } elseif (isset($_REQUEST['nonce'])) {
+    } elseif (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash($_REQUEST['nonce']));
     }
 
@@ -9632,7 +9632,7 @@ function vms_ticketing_v2_ajax_cart_context(): void
     $tec_event_id = absint($_REQUEST['tec_event_id'] ?? 0);
 
     $nonce = '';
-    if (isset($_REQUEST['nonce'])) {
+    if (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
     if ($nonce !== '' && !wp_verify_nonce($nonce, 'vms_ticketing_v2_cart_context')) {

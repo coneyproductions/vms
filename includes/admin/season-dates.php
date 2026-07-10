@@ -210,7 +210,9 @@ function vms_sd_maybe_handle_post(): void
 	$venue_id = absint($post['venue_id'] ?? ($_GET['venue_id'] ?? 0));
 	$redirect = vms_sd_base_url($page_slug, $venue_id);
 
-	$nonce = (string)($post['vms_season_dates_nonce'] ?? '');
+	$nonce = (isset($post['vms_season_dates_nonce']) && !is_array($post['vms_season_dates_nonce']))
+		? sanitize_text_field((string) $post['vms_season_dates_nonce'])
+		: '';
 	if (!$venue_id || !wp_verify_nonce($nonce, 'vms_season_dates_' . $venue_id)) {
 		vms_sd_redirect(add_query_arg('vms_error', 'bad_nonce', $redirect));
 		return;

@@ -197,7 +197,9 @@ function vms_handle_create_event_plan(): void
         wp_die('Invalid date.');
     }
 
-    $nonce = isset($_GET['_wpnonce']) ? (string) $_GET['_wpnonce'] : '';
+    $nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
+        ? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
+        : '';
     if (!wp_verify_nonce($nonce, 'vms_create_event_plan_' . $ymd)) {
         wp_die('Invalid nonce.');
     }

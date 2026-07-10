@@ -174,10 +174,10 @@ function vms_save_rating_details_meta($post_id, $post)
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if ($post->post_type !== 'vms_rating') return;
 
-    if (
-        !isset($_POST['vms_rating_details_nonce']) ||
-        !wp_verify_nonce($_POST['vms_rating_details_nonce'], 'vms_save_rating_details')
-    ) {
+    $nonce = (isset($_POST['vms_rating_details_nonce']) && !is_array($_POST['vms_rating_details_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_rating_details_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_rating_details')) {
         return;
     }
 
@@ -399,10 +399,10 @@ function vms_rate_band_shortcode($atts) {
  */
 function vms_handle_rating_submission($event_id, $band_id)
 {
-    if (
-        !isset($_POST['vms_rating_nonce']) ||
-        !wp_verify_nonce($_POST['vms_rating_nonce'], 'vms_submit_rating')
-    ) {
+    $nonce = (isset($_POST['vms_rating_nonce']) && !is_array($_POST['vms_rating_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_rating_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_submit_rating')) {
 
         return array(
             'success' => false,

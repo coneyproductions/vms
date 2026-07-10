@@ -280,11 +280,11 @@ if (!function_exists('vms_staffing_admin_save_role_term_meta')) {
 		$term_id = absint($term_id);
 		if ($term_id <= 0) return;
 		if (!current_user_can('manage_options')) return;
-		if (isset($_POST['_wpnonce_add-tag'])) {
-			$add_nonce = sanitize_text_field((string) wp_unslash($_POST['_wpnonce_add-tag']));
+		if (isset($_POST['_wpnonce_add-tag']) && !is_array($_POST['_wpnonce_add-tag'])) {
+			$add_nonce = sanitize_text_field(wp_unslash((string) $_POST['_wpnonce_add-tag']));
 			if (!wp_verify_nonce($add_nonce, 'add-tag')) return;
-		} elseif (isset($_POST['_wpnonce'])) {
-			$edit_nonce = sanitize_text_field((string) wp_unslash($_POST['_wpnonce']));
+		} elseif (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce'])) {
+			$edit_nonce = sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']));
 			if (!wp_verify_nonce($edit_nonce, 'update-tag_' . $term_id)) return;
 		} else {
 			return;

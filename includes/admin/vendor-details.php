@@ -38,10 +38,10 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (
-        empty($_POST['vms_vendor_defaults_nonce']) ||
-        !wp_verify_nonce($_POST['vms_vendor_defaults_nonce'], 'vms_save_vendor_defaults')
-    ) {
+    $nonce = (isset($_POST['vms_vendor_defaults_nonce']) && !is_array($_POST['vms_vendor_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_defaults_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_vendor_defaults')) {
         return;
     }
  

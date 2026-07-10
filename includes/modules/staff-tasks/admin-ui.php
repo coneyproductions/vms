@@ -701,7 +701,10 @@ if (!function_exists('vms_tasks_admin_handle_transition')) {
 	function vms_tasks_admin_handle_transition(): void
 	{
 		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
-		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce((string) wp_unslash($_POST['_wpnonce']), 'vms_tasks_transition')) {
+		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
+			: '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_transition')) {
 			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
@@ -744,7 +747,9 @@ if (!function_exists('vms_tasks_admin_handle_generate_event')) {
 			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		$event_id = absint($_GET['event_id'] ?? 0);
-		$nonce = isset($_GET['_wpnonce']) ? (string) wp_unslash($_GET['_wpnonce']) : '';
+		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
+			: '';
 		if (!wp_verify_nonce($nonce, 'vms_tasks_generate_event_' . $event_id)) {
 			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
@@ -775,7 +780,10 @@ if (!function_exists('vms_tasks_admin_handle_update_assignment')) {
 		if (!vms_tasks_current_user_can_manage_all()) {
 			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce((string) wp_unslash($_POST['_wpnonce']), 'vms_tasks_update_assignment')) {
+		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
+			: '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_update_assignment')) {
 			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
@@ -840,7 +848,10 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 		if (!vms_tasks_current_user_can_manage_all()) {
 			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce((string) wp_unslash($_POST['_wpnonce']), 'vms_tasks_create_one_off')) {
+		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
+			: '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_create_one_off')) {
 			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 		if (!vms_tasks_db_ready()) {
@@ -1068,7 +1079,9 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 		if (!vms_tasks_current_user_can_manage_all()) {
 			wp_send_json_error(array('message' => __('Insufficient permissions.', 'backstage-venue-manager')), 403);
 		}
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field((string) wp_unslash($_POST['nonce'])) : '';
+		$nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
+			: '';
 		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_create_one_off')) {
 			wp_send_json_error(array('message' => __('Security check failed.', 'backstage-venue-manager')), 403);
 		}

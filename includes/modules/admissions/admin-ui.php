@@ -120,7 +120,10 @@ if (!function_exists('vms_admission_export_csv')) {
 		if ($event_plan_id <= 0) {
 			wp_die(esc_html__('Missing event plan.', 'backstage-venue-manager'));
 		}
-		if (!wp_verify_nonce((string) ($_GET['_wpnonce'] ?? ''), 'vms_admissions_export_csv_' . $event_plan_id)) {
+		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
+			: '';
+		if (!wp_verify_nonce($nonce, 'vms_admissions_export_csv_' . $event_plan_id)) {
 			wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
 		}
 

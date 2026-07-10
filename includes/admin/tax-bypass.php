@@ -267,10 +267,10 @@ add_action('save_post', function ($post_id, $post) {
 
     if (!current_user_can('manage_options')) return;
 
-    if (
-        empty($_POST['vms_tax_bypass_nonce']) ||
-        !wp_verify_nonce($_POST['vms_tax_bypass_nonce'], 'vms_save_tax_bypass')
-    ) {
+    $nonce = (isset($_POST['vms_tax_bypass_nonce']) && !is_array($_POST['vms_tax_bypass_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_tax_bypass_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_tax_bypass')) {
         return;
     }
 

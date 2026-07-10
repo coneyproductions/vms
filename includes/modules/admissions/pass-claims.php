@@ -1252,7 +1252,9 @@ if (!function_exists('vms_pass_claims_handle_token_status_change')) {
 		$token_id = isset($_REQUEST['token_id']) ? absint((string) $_REQUEST['token_id']) : 0;
 		$target_status = sanitize_key((string) ($_REQUEST['status'] ?? ''));
 		$batch_id = isset($_REQUEST['batch_id']) ? absint((string) $_REQUEST['batch_id']) : 0;
-		$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
+			: '';
 
 		if ($token_id <= 0 || !in_array($target_status, array('void', 'unclaimed'), true)) {
 			vms_pass_claims_set_user_message('error', __('Invalid pass action request.', 'backstage-venue-manager'));
@@ -1359,7 +1361,9 @@ if (!function_exists('vms_pass_claims_handle_resend_email')) {
 		}
 		$token_id = isset($_REQUEST['token_id']) ? absint((string) $_REQUEST['token_id']) : 0;
 		$batch_id = isset($_REQUEST['batch_id']) ? absint((string) $_REQUEST['batch_id']) : 0;
-		$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
+			: '';
 		if ($token_id <= 0 || !wp_verify_nonce($nonce, 'vms_pass_resend_email_' . $token_id)) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
@@ -1396,7 +1400,9 @@ if (!function_exists('vms_pass_claims_handle_export_csv')) {
 		}
 
 		$batch_id = isset($_REQUEST['batch_id']) ? absint((string) $_REQUEST['batch_id']) : 0;
-		$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
+			: '';
 		if (!wp_verify_nonce($nonce, 'vms_pass_export_' . $batch_id)) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
@@ -1487,7 +1493,9 @@ if (!function_exists('vms_pass_claims_handle_report_export_csv')) {
 		if (!in_array($scope, array('source', 'batch', 'source_event', 'event'), true)) {
 			$scope = 'source';
 		}
-		$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
+			: '';
 		if (!wp_verify_nonce($nonce, 'vms_pass_report_export_' . $scope)) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
@@ -2916,7 +2924,9 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 		);
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_pass_claim_submit'])) {
-			$nonce = isset($_POST['_vms_pass_claim_nonce']) ? (string) wp_unslash($_POST['_vms_pass_claim_nonce']) : '';
+			$nonce = (isset($_POST['_vms_pass_claim_nonce']) && !is_array($_POST['_vms_pass_claim_nonce']))
+				? sanitize_text_field(wp_unslash((string) $_POST['_vms_pass_claim_nonce']))
+				: '';
 			if (!wp_verify_nonce($nonce, 'vms_pass_claim_submit')) {
 				$error = __('Invalid request. Please refresh and try again.', 'backstage-venue-manager');
 			} else {

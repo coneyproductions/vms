@@ -702,9 +702,14 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function verify_rest_nonce(WP_REST_Request $request): bool
 		{
-			$nonce = (string) $request->get_header('X-WP-Nonce');
+			$nonce = $request->get_header('X-WP-Nonce');
+			$nonce = is_string($nonce) ? sanitize_text_field($nonce) : '';
 			if ($nonce === '') {
-				$nonce = (string) $request->get_param('_wpnonce');
+				$param = $request->get_param('_wpnonce');
+				if (!is_scalar($param)) {
+					return false;
+				}
+				$nonce = sanitize_text_field((string) $param);
 			}
 			return $nonce !== '' && wp_verify_nonce($nonce, 'wp_rest');
 		}

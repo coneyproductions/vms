@@ -89,7 +89,10 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 	// Save handler
 	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_vendor_tax_save'])) {
 
-		if (empty($_POST['vms_vendor_tax_nonce']) || !wp_verify_nonce($_POST['vms_vendor_tax_nonce'], 'vms_vendor_tax_save')) {
+		$nonce = (isset($_POST['vms_vendor_tax_nonce']) && !is_array($_POST['vms_vendor_tax_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_tax_nonce']))
+			: '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_tax_save')) {
 			echo vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager'));
 		} else {
 

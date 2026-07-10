@@ -123,7 +123,9 @@ if (!function_exists('vms_event_command_center_handle_promo_video_action')) {
         }
 
         $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
-        $nonce = isset($_POST['_vms_cc_promo_nonce']) ? sanitize_text_field((string) wp_unslash($_POST['_vms_cc_promo_nonce'])) : '';
+        $nonce = (isset($_POST['_vms_cc_promo_nonce']) && !is_array($_POST['_vms_cc_promo_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['_vms_cc_promo_nonce']))
+            : '';
         $promo_action = isset($_POST['promo_action']) ? sanitize_key((string) wp_unslash($_POST['promo_action'])) : '';
         if ($plan_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_cc_promo_video_' . $plan_id)) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));

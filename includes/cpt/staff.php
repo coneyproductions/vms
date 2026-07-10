@@ -287,7 +287,10 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
-    if (!isset($_POST['vms_staff_qualifications_nonce']) || !wp_verify_nonce((string) $_POST['vms_staff_qualifications_nonce'], 'vms_staff_qualifications_save')) return;
+    $nonce = (isset($_POST['vms_staff_qualifications_nonce']) && !is_array($_POST['vms_staff_qualifications_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_qualifications_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_qualifications_save')) return;
 
     $rows = (isset($_POST['vms_staff_qualifications']) && is_array($_POST['vms_staff_qualifications']))
         ? (array) wp_unslash($_POST['vms_staff_qualifications'])

@@ -75,7 +75,7 @@ if (!function_exists('vms_vendor_portal_get_preview_vendor_id')) {
             return 0;
         }
 
-        $raw_nonce = isset($_REQUEST['vms_preview_nonce'])
+        $raw_nonce = (isset($_REQUEST['vms_preview_nonce']) && !is_array($_REQUEST['vms_preview_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_REQUEST['vms_preview_nonce']))
             : '';
 
@@ -3498,7 +3498,9 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         $vendor_id = isset($_REQUEST['vendor_id']) ? absint($_REQUEST['vendor_id']) : 0;
         $plan_id = isset($_REQUEST['plan_id']) ? absint($_REQUEST['plan_id']) : 0;
         $return_url = isset($_REQUEST['return_url']) ? esc_url_raw((string) wp_unslash($_REQUEST['return_url'])) : home_url('/vendor-portal/?tab=dashboard');
-        $nonce = isset($_REQUEST['_vms_headliner_promo_video_nonce']) ? sanitize_text_field((string) wp_unslash($_REQUEST['_vms_headliner_promo_video_nonce'])) : '';
+        $nonce = (isset($_REQUEST['_vms_headliner_promo_video_nonce']) && !is_array($_REQUEST['_vms_headliner_promo_video_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_headliner_promo_video_nonce']))
+            : '';
 
         if ($plan_id <= 0 || $vendor_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_upload_' . $plan_id)) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
@@ -3612,7 +3614,9 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_remove')) {
         $vendor_id = isset($_REQUEST['vendor_id']) ? absint($_REQUEST['vendor_id']) : 0;
         $plan_id = isset($_REQUEST['plan_id']) ? absint($_REQUEST['plan_id']) : 0;
         $return_url = isset($_REQUEST['return_url']) ? esc_url_raw((string) wp_unslash($_REQUEST['return_url'])) : home_url('/vendor-portal/?tab=dashboard');
-        $nonce = isset($_REQUEST['_vms_headliner_promo_video_remove_nonce']) ? sanitize_text_field((string) wp_unslash($_REQUEST['_vms_headliner_promo_video_remove_nonce'])) : '';
+        $nonce = (isset($_REQUEST['_vms_headliner_promo_video_remove_nonce']) && !is_array($_REQUEST['_vms_headliner_promo_video_remove_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_headliner_promo_video_remove_nonce']))
+            : '';
 
         if ($plan_id <= 0 || $vendor_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_remove_' . $plan_id)) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
@@ -4211,7 +4215,9 @@ if (!function_exists('vms_vendor_portal_handle_interest_submit')) {
         if (!is_user_logged_in()) {
             wp_die(esc_html__('Please log in to submit interest.', 'backstage-venue-manager'));
         }
-        $nonce = isset($_REQUEST['_vms_vendor_interest_nonce']) ? (string) wp_unslash($_REQUEST['_vms_vendor_interest_nonce']) : '';
+        $nonce = (isset($_REQUEST['_vms_vendor_interest_nonce']) && !is_array($_REQUEST['_vms_vendor_interest_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_vendor_interest_nonce']))
+            : '';
         if (!wp_verify_nonce($nonce, 'vms_vendor_portal_interest_submit')) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
@@ -4257,7 +4263,9 @@ if (!function_exists('vms_vendor_portal_handle_interest_withdraw')) {
         if (!is_user_logged_in()) {
             wp_die(esc_html__('Please log in to manage your interest.', 'backstage-venue-manager'));
         }
-        $nonce = isset($_REQUEST['_vms_vendor_withdraw_nonce']) ? (string) wp_unslash($_REQUEST['_vms_vendor_withdraw_nonce']) : '';
+        $nonce = (isset($_REQUEST['_vms_vendor_withdraw_nonce']) && !is_array($_REQUEST['_vms_vendor_withdraw_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_vendor_withdraw_nonce']))
+            : '';
         if (!wp_verify_nonce($nonce, 'vms_vendor_portal_interest_withdraw')) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
@@ -4302,7 +4310,9 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
             wp_die(esc_html__('Please log in to request vendor portal access.', 'backstage-venue-manager'));
         }
 
-        $nonce = isset($_REQUEST['_vms_vendor_link_request_nonce']) ? (string) wp_unslash($_REQUEST['_vms_vendor_link_request_nonce']) : '';
+        $nonce = (isset($_REQUEST['_vms_vendor_link_request_nonce']) && !is_array($_REQUEST['_vms_vendor_link_request_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_vendor_link_request_nonce']))
+            : '';
         if (!wp_verify_nonce($nonce, 'vms_vendor_portal_link_request_submit')) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
@@ -5287,7 +5297,10 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
             // 1) Save ICS Settings
             if (isset($_POST['vms_save_ics_settings'])) {
-                if (!isset($_POST['vms_ics_nonce']) || !wp_verify_nonce($_POST['vms_ics_nonce'], 'vms_ics_settings')) {
+                $nonce = (isset($_POST['vms_ics_nonce']) && !is_array($_POST['vms_ics_nonce']))
+                    ? sanitize_text_field(wp_unslash((string) $_POST['vms_ics_nonce']))
+                    : '';
+                if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ics_settings')) {
                     echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $new_url = isset($_POST['vms_ics_url']) ? esc_url_raw(trim((string) $_POST['vms_ics_url'])) : '';
@@ -5314,7 +5327,10 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
             // 2) Save Manual Availability
             if (isset($_POST['vms_save_availability'])) {
-                if (!isset($_POST['vms_avail_nonce']) || !wp_verify_nonce($_POST['vms_avail_nonce'], 'vms_save_availability')) {
+                $nonce = (isset($_POST['vms_avail_nonce']) && !is_array($_POST['vms_avail_nonce']))
+                    ? sanitize_text_field(wp_unslash((string) $_POST['vms_avail_nonce']))
+                    : '';
+                if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_availability')) {
                     echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $incoming = (isset($_POST['vms_availability']) && is_array($_POST['vms_availability']))
@@ -5355,7 +5371,8 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             if (isset($_POST['vms_save_pattern'])) {
                 if (
                     !isset($_POST['vms_pattern_nonce']) ||
-                    !wp_verify_nonce($_POST['vms_pattern_nonce'], 'vms_pattern_settings')
+                    is_array($_POST['vms_pattern_nonce']) ||
+                    !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_pattern_nonce'])), 'vms_pattern_settings')
                 ) {
                     echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
@@ -5394,7 +5411,10 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
             // 3) Sync ICS Now
             if (isset($_POST['vms_sync_ics_now'])) {
-                if (!isset($_POST['vms_ics_nonce']) || !wp_verify_nonce($_POST['vms_ics_nonce'], 'vms_ics_settings')) {
+                $nonce = (isset($_POST['vms_ics_nonce']) && !is_array($_POST['vms_ics_nonce']))
+                    ? sanitize_text_field(wp_unslash((string) $_POST['vms_ics_nonce']))
+                    : '';
+                if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ics_settings')) {
                     echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     update_post_meta($vendor_id, '_vms_availability_preferred_method', 'ics');
@@ -6988,7 +7008,10 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
 
         // Handle uploads
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_techdocs_save'])) {
-            if (!isset($_POST['vms_techdocs_nonce']) || !wp_verify_nonce($_POST['vms_techdocs_nonce'], 'vms_techdocs_save')) {
+            $nonce = (isset($_POST['vms_techdocs_nonce']) && !is_array($_POST['vms_techdocs_nonce']))
+                ? sanitize_text_field(wp_unslash((string) $_POST['vms_techdocs_nonce']))
+                : '';
+            if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_techdocs_save')) {
                 echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
             } else {
 
@@ -7095,7 +7118,10 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         // Save handler
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_vendor_profile_save'])) {
 
-            if (!isset($_POST['vms_vendor_profile_nonce']) || !wp_verify_nonce($_POST['vms_vendor_profile_nonce'], 'vms_vendor_profile_save')) {
+            $nonce = (isset($_POST['vms_vendor_profile_nonce']) && !is_array($_POST['vms_vendor_profile_nonce']))
+                ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_profile_nonce']))
+                : '';
+            if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_profile_save')) {
                 echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
             } else {
 

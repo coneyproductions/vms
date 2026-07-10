@@ -163,7 +163,9 @@ if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
 			wp_die(esc_html__('Missing preview token.', 'backstage-venue-manager'));
 		}
 
-		$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
+		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
+			: '';
 		if (!wp_verify_nonce($nonce, 'vms_event_plan_import_download_report_' . $token)) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}

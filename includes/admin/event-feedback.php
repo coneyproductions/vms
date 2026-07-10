@@ -65,7 +65,11 @@ if (!function_exists('vms_feedback_admin_handle_save_settings')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
-		if (!isset($_POST['vms_feedback_settings_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_settings_nonce'])), 'vms_feedback_save_settings')) {
+		if (
+			!isset($_POST['vms_feedback_settings_nonce'])
+			|| is_array($_POST['vms_feedback_settings_nonce'])
+			|| !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_settings_nonce'])), 'vms_feedback_save_settings')
+		) {
 			wp_die(esc_html__('Settings form expired. Please try again.', 'backstage-venue-manager'));
 		}
 		$enabled = !empty($_POST['notify_enabled']);
@@ -91,7 +95,11 @@ if (!function_exists('vms_feedback_admin_handle_delete_response')) {
 			wp_safe_redirect(add_query_arg('vms_feedback_deleted', 'missing', vms_feedback_admin_redirect_url($event_plan_id)));
 			exit;
 		}
-		if (!isset($_POST['vms_feedback_delete_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_delete_nonce'])), 'vms_feedback_delete_response_' . $response_id)) {
+		if (
+			!isset($_POST['vms_feedback_delete_nonce'])
+			|| is_array($_POST['vms_feedback_delete_nonce'])
+			|| !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_delete_nonce'])), 'vms_feedback_delete_response_' . $response_id)
+		) {
 			wp_die(esc_html__('Delete request expired. Please try again.', 'backstage-venue-manager'));
 		}
 		if ($event_plan_id <= 0) {

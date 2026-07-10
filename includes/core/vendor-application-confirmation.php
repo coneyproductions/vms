@@ -1531,7 +1531,9 @@ if (!function_exists('vms_vendor_app_handle_resend_confirmation')) {
     function vms_vendor_app_handle_resend_confirmation(): void
     {
         $app_ref = isset($_REQUEST['vms_app_ref']) ? sanitize_text_field((string) wp_unslash($_REQUEST['vms_app_ref'])) : '';
-        $nonce = isset($_REQUEST['_vms_vendor_app_resend_nonce']) ? (string) wp_unslash($_REQUEST['_vms_vendor_app_resend_nonce']) : '';
+        $nonce = (isset($_REQUEST['_vms_vendor_app_resend_nonce']) && !is_array($_REQUEST['_vms_vendor_app_resend_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_vendor_app_resend_nonce']))
+            : '';
         $return_url = isset($_REQUEST['return_url']) ? esc_url_raw((string) wp_unslash($_REQUEST['return_url'])) : '';
 
         if ($app_ref === '' || !$nonce || !wp_verify_nonce($nonce, 'vms_vendor_app_resend_confirmation_' . $app_ref)) {

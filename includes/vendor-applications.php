@@ -1737,7 +1737,9 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
         if (empty($_POST['vms_vendor_app_admin_fields_present'])) {
             return;
         }
-        $nonce = isset($_POST['vms_vendor_app_decision_nonce']) ? (string) $_POST['vms_vendor_app_decision_nonce'] : '';
+        $nonce = (isset($_POST['vms_vendor_app_decision_nonce']) && !is_array($_POST['vms_vendor_app_decision_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_app_decision_nonce']))
+            : '';
         if (!$nonce || !wp_verify_nonce($nonce, 'vms_vendor_app_decision_' . (int) $post_id)) {
             return;
         }
@@ -2590,7 +2592,9 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
  */
 function vms_vendor_apply_handle_frontend_post(): string
 {
-    $nonce = isset($_POST['vms_vendor_apply_nonce']) ? (string) $_POST['vms_vendor_apply_nonce'] : '';
+    $nonce = (isset($_POST['vms_vendor_apply_nonce']) && !is_array($_POST['vms_vendor_apply_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_apply_nonce']))
+        : '';
     if (!$nonce || !wp_verify_nonce($nonce, 'vms_vendor_apply')) {
         vms_vendor_apply_frontend_redirect('nonce');
         return '';

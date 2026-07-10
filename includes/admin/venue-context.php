@@ -166,7 +166,10 @@ add_action('admin_post_vms_set_current_venue', function () {
         wp_die('Not allowed');
     }
 
-    if (empty($_POST['vms_current_venue_nonce']) || !wp_verify_nonce($_POST['vms_current_venue_nonce'], 'vms_set_current_venue')) {
+    $nonce = (isset($_POST['vms_current_venue_nonce']) && !is_array($_POST['vms_current_venue_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_current_venue_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_set_current_venue')) {
         wp_die('Bad nonce');
     }
 
@@ -221,7 +224,10 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
         wp_die('Not allowed');
     }
 
-    if (empty($_POST['vms_dash_venue_nonce']) || !wp_verify_nonce($_POST['vms_dash_venue_nonce'], 'vms_set_dashboard_venue')) {
+    $nonce = (isset($_POST['vms_dash_venue_nonce']) && !is_array($_POST['vms_dash_venue_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_dash_venue_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_set_dashboard_venue')) {
         wp_die('Bad nonce');
     }
 
@@ -274,7 +280,9 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
         wp_send_json_error(array('message' => 'Not allowed'), 403);
     }
 
-    $nonce = isset($_POST['nonce']) ? (string) $_POST['nonce'] : '';
+    $nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
+        : '';
     if (!$nonce || !wp_verify_nonce($nonce, 'vms_set_dashboard_prefs')) {
         wp_send_json_error(array('message' => 'Bad nonce'), 403);
     }

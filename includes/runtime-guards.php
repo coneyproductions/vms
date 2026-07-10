@@ -479,6 +479,7 @@ if (!function_exists('vms_admin_guard_is_verified_action')) {
 		if ($nonce === '') {
 			$nonce = vms_admin_guard_request_value('_wpnonce');
 		}
+		$nonce = sanitize_text_field($nonce);
 
 		if ($nonce === '' || !function_exists('wp_verify_nonce')) {
 			return false;

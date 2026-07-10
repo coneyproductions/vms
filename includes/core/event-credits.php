@@ -510,7 +510,10 @@ add_action('save_post_vms_event_plan', 'vms_event_credits_handle_event_plan_save
 if (!function_exists('vms_event_credits_handle_event_plan_save')) {
 	function vms_event_credits_handle_event_plan_save(int $post_id, WP_Post $post): void
 	{
-		if (!isset($_POST['vms_event_plan_details_nonce']) || !wp_verify_nonce((string) $_POST['vms_event_plan_details_nonce'], 'vms_save_event_plan_details')) {
+		$nonce = (isset($_POST['vms_event_plan_details_nonce']) && !is_array($_POST['vms_event_plan_details_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_plan_details_nonce']))
+			: '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
 			return;
 		}
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -964,7 +967,10 @@ add_action('save_post_' . VMS_CPT_EVENT_CREDIT, 'vms_event_credit_save_metabox',
 if (!function_exists('vms_event_credit_save_metabox')) {
 	function vms_event_credit_save_metabox(int $post_id, WP_Post $post): void
 	{
-		if (!isset($_POST['vms_event_credit_nonce']) || !wp_verify_nonce((string) $_POST['vms_event_credit_nonce'], 'vms_save_event_credit')) {
+		$nonce = (isset($_POST['vms_event_credit_nonce']) && !is_array($_POST['vms_event_credit_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_credit_nonce']))
+			: '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_credit')) {
 			return;
 		}
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {

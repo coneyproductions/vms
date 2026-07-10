@@ -306,7 +306,11 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		if ($event_plan_id <= 0 || !vms_feedback_verify_public_token($event_plan_id, $token)) {
 			wp_die(esc_html__('Invalid feedback link.', 'backstage-venue-manager'));
 		}
-		if (!isset($_POST['vms_feedback_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_nonce'])), 'vms_feedback_submit_' . $event_plan_id)) {
+		if (
+			!isset($_POST['vms_feedback_nonce'])
+			|| is_array($_POST['vms_feedback_nonce'])
+			|| !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_nonce'])), 'vms_feedback_submit_' . $event_plan_id)
+		) {
 			wp_die(esc_html__('Feedback form expired. Please refresh and try again.', 'backstage-venue-manager'));
 		}
 		$honeypot = isset($_POST['vms_feedback_company']) ? trim((string) wp_unslash($_POST['vms_feedback_company'])) : '';

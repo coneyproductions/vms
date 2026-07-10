@@ -180,7 +180,7 @@ function vms_admin_holidays_adminpost_handle(string $expected_action): void
 	}
 
 	// Read from REQUEST so this works for POST forms and GET delete links
-	$nonce = isset($_REQUEST['vms_holidays_nonce'])
+	$nonce = (isset($_REQUEST['vms_holidays_nonce']) && !is_array($_REQUEST['vms_holidays_nonce']))
 		? sanitize_text_field(wp_unslash((string) $_REQUEST['vms_holidays_nonce']))
 		: '';
 

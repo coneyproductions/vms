@@ -8887,9 +8887,12 @@ class VMS_Admin_Event_Plans
      */
     public function save_event_plan_meta(int $post_id, WP_Post $post): void
     {
-        if (!isset($_POST['vms_event_plan_details_nonce']) || !wp_verify_nonce($_POST['vms_event_plan_details_nonce'], 'vms_save_event_plan_details')) {
-            return;
-        }
+	        $nonce = (isset($_POST['vms_event_plan_details_nonce']) && !is_array($_POST['vms_event_plan_details_nonce']))
+	            ? sanitize_text_field(wp_unslash((string) $_POST['vms_event_plan_details_nonce']))
+	            : '';
+	        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+	            return;
+	        }
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
         if (!current_user_can('edit_post', $post_id)) return;
         if (isset($_POST['post_ID']) && absint($_POST['post_ID']) > 0 && absint($_POST['post_ID']) !== $post_id) {
@@ -11416,7 +11419,8 @@ if (function_exists('vms_add_admin_notice')) {
                     return false;
                 }
 
-                return (bool) wp_verify_nonce($nonce, 'vms_event_plan_list_filters');
+	                $nonce = sanitize_text_field($nonce);
+	                return (bool) wp_verify_nonce($nonce, 'vms_event_plan_list_filters');
             }
     
             function vms_admin_event_plan_list_include_drafts_requested(): bool
@@ -12017,7 +12021,9 @@ if (function_exists('vms_add_admin_notice')) {
                     $result['redirect_url'] = $redirect_url !== ''
                         ? $redirect_url
                         : vms_event_plan_edit_screen_url($post_id);
-                    $nonce = isset($request['_vms_resync_calendar_nonce']) ? (string) wp_unslash($request['_vms_resync_calendar_nonce']) : '';
+	                    $nonce = (isset($request['_vms_resync_calendar_nonce']) && !is_array($request['_vms_resync_calendar_nonce']))
+	                        ? sanitize_text_field(wp_unslash((string) $request['_vms_resync_calendar_nonce']))
+	                        : '';
                     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_resync_calendar')) {
                         $result['notice_message'] = __('Calendar re-sync request could not be verified. Please reload the Event Plan and try again.', 'backstage-venue-manager');
                     } else {
@@ -12178,7 +12184,9 @@ if (function_exists('vms_add_admin_notice')) {
                     exit;
                 }
 
-                $nonce = isset($request['_wpnonce']) ? (string) wp_unslash($request['_wpnonce']) : '';
+	                $nonce = (isset($request['_wpnonce']) && !is_array($request['_wpnonce']))
+	                    ? sanitize_text_field(wp_unslash((string) $request['_wpnonce']))
+	                    : '';
                 $nonce_ok = false;
                 foreach (array_unique(array_filter(array(absint($post_id), absint($request_candidate_id), absint($requested_source_post_id), absint($requested_post_id)))) as $nonce_post_id) {
                     if (wp_verify_nonce($nonce, 'vms_run_live_refunds_now_' . $nonce_post_id)) {

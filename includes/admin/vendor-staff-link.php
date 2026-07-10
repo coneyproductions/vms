@@ -105,7 +105,10 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 	if (wp_is_post_revision($post_id)) return;
 	if (!current_user_can('edit_post', $post_id)) return;
 
-	if (!isset($_POST['vms_vendor_staff_link_nonce']) || !wp_verify_nonce((string) $_POST['vms_vendor_staff_link_nonce'], 'vms_vendor_staff_link_save')) {
+	$nonce = (isset($_POST['vms_vendor_staff_link_nonce']) && !is_array($_POST['vms_vendor_staff_link_nonce']))
+		? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_staff_link_nonce']))
+		: '';
+	if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_staff_link_save')) {
 		return;
 	}
 

@@ -2094,7 +2094,10 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             vms_ticketing_verification_finish_error($redirect_to, 'login_required', 401);
         }
 
-        if (!isset($_POST['vms_verification_nonce']) || !wp_verify_nonce((string) $_POST['vms_verification_nonce'], 'vms_submit_verification_request')) {
+        $nonce = (isset($_POST['vms_verification_nonce']) && !is_array($_POST['vms_verification_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['vms_verification_nonce']))
+            : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_submit_verification_request')) {
             wp_die(esc_html__('Invalid verification request.', 'backstage-venue-manager'));
         }
 
@@ -2239,7 +2242,8 @@ if (!function_exists('vms_ticketing_verification_handle_save_programs')) {
 
         if (
             !isset($_POST['vms_verification_programs_nonce'])
-            || !wp_verify_nonce((string) $_POST['vms_verification_programs_nonce'], 'vms_save_verification_programs')
+            || is_array($_POST['vms_verification_programs_nonce'])
+            || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_verification_programs_nonce'])), 'vms_save_verification_programs')
         ) {
             wp_die(esc_html__('Invalid verification program settings request.', 'backstage-venue-manager'));
         }
@@ -2336,7 +2340,8 @@ if (!function_exists('vms_ticketing_verification_handle_save_allowances')) {
 
         if (
             !isset($_POST['vms_verification_allowances_nonce'])
-            || !wp_verify_nonce((string) $_POST['vms_verification_allowances_nonce'], 'vms_save_verification_allowances')
+            || is_array($_POST['vms_verification_allowances_nonce'])
+            || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_verification_allowances_nonce'])), 'vms_save_verification_allowances')
         ) {
             wp_die(esc_html__('Invalid allowance settings request.', 'backstage-venue-manager'));
         }
@@ -2372,7 +2377,8 @@ if (!function_exists('vms_ticketing_verification_handle_save_upload_settings')) 
 
         if (
             !isset($_POST['vms_verification_upload_settings_nonce'])
-            || !wp_verify_nonce((string) $_POST['vms_verification_upload_settings_nonce'], 'vms_save_verification_upload_settings')
+            || is_array($_POST['vms_verification_upload_settings_nonce'])
+            || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_verification_upload_settings_nonce'])), 'vms_save_verification_upload_settings')
         ) {
             wp_die(esc_html__('Invalid upload settings request.', 'backstage-venue-manager'));
         }
@@ -3063,7 +3069,10 @@ if (!function_exists('vms_ticketing_verification_handle_decision')) {
             wp_die(esc_html__('Invalid verification decision.', 'backstage-venue-manager'));
         }
 
-        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce((string) $_POST['_wpnonce'], 'vms_verification_decision_' . $request_id)) {
+        $nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
+            : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_verification_decision_' . $request_id)) {
             wp_die(esc_html__('Invalid verification decision nonce.', 'backstage-venue-manager'));
         }
 
@@ -3163,7 +3172,10 @@ if (!function_exists('vms_ticketing_verification_stream_proof')) {
             wp_die(esc_html__('Verification proof not found.', 'backstage-venue-manager'));
         }
 
-        if (!isset($_GET['_wpnonce']) || !wp_verify_nonce((string) $_GET['_wpnonce'], 'vms_verification_proof_' . $request_id)) {
+        $nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
+            ? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
+            : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_verification_proof_' . $request_id)) {
             wp_die(esc_html__('Invalid proof request nonce.', 'backstage-venue-manager'));
         }
 

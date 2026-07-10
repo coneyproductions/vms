@@ -50,10 +50,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
 
     // Nonce
-    if (
-        empty($_POST['vms_venue_comp_defaults_nonce']) ||
-        !wp_verify_nonce($_POST['vms_venue_comp_defaults_nonce'], 'vms_save_venue_comp_defaults')
-    ) {
+    $nonce = (isset($_POST['vms_venue_comp_defaults_nonce']) && !is_array($_POST['vms_venue_comp_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_comp_defaults_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_comp_defaults')) {
         return;
     }
 

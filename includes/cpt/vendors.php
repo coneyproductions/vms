@@ -426,8 +426,14 @@ class VMS_Admin_Vendors
     public function save_vendor_meta($post_id, $post)
     {
         // Check nonce(s). Either meta box nonce should allow saving its own fields.
-        $details_ok = (isset($_POST['vms_vendor_details_nonce']) && wp_verify_nonce($_POST['vms_vendor_details_nonce'], 'vms_save_vendor_details'));
-        $profile_ok = (isset($_POST['vms_vendor_public_profile_nonce']) && wp_verify_nonce($_POST['vms_vendor_public_profile_nonce'], 'vms_save_vendor_public_profile'));
+        $details_nonce = (isset($_POST['vms_vendor_details_nonce']) && !is_array($_POST['vms_vendor_details_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_details_nonce']))
+            : '';
+        $profile_nonce = (isset($_POST['vms_vendor_public_profile_nonce']) && !is_array($_POST['vms_vendor_public_profile_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_public_profile_nonce']))
+            : '';
+        $details_ok = ($details_nonce !== '' && wp_verify_nonce($details_nonce, 'vms_save_vendor_details'));
+        $profile_ok = ($profile_nonce !== '' && wp_verify_nonce($profile_nonce, 'vms_save_vendor_public_profile'));
 
         if (!$details_ok && !$profile_ok) {
             return;
