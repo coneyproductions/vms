@@ -246,7 +246,7 @@ if (!function_exists('vms_admin_ui_active_cluster')) {
 			return 'venues';
 		}
 
-		if (in_array($page, array('vms-settings', 'vms-guided-tours', 'vms-status-notices', 'vms-reference-keys-map', 'vms-continuity-binder', 'vms-addons', 'vms-docs', 'vms-import-event-plans'), true)) {
+		if (in_array($page, array('vms-settings', 'vms-guided-tours', 'vms-status-notices', 'vms-reference-keys-map', 'vms-continuity-binder', 'vms-docs', 'vms-import-event-plans'), true)) {
 			return 'settings';
 		}
 

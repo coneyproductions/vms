@@ -87,15 +87,18 @@ if (!function_exists('vms_module_is_licensed')) {
 	function vms_module_is_licensed(string $slug): bool
 	{
 		$module = vms_get_registered_module($slug);
-		if (!$module || empty($module['premium'])) {
-			return true;
+		if (!$module) {
+			return false;
 		}
 
-		$licensed_slugs = array_map('sanitize_key', (array) get_option('vms_premium_modules_enabled', array()));
-		$licensed = in_array($slug, $licensed_slugs, true);
+		$licensed = true;
 
 		/**
-		 * Filter premium module licensing status.
+		 * Filter companion-module availability status.
+		 *
+		 * The WordPress.org core package does not ship local premium-license
+		 * enforcement. Separately distributed companion plugins may still use
+		 * this compatibility hook to report their own availability state.
 		 *
 		 * @param bool  $licensed Current computed status.
 		 * @param string $slug    Module slug.
@@ -114,10 +117,11 @@ if (!function_exists('vms_module_is_enabled')) {
 			// Fail closed until the module has registered itself with VMS.
 			return false;
 		}
+
 		$enabled = vms_module_is_licensed($slug);
 
 		/**
-		 * Filter module enablement (premium and non-premium).
+		 * Filter module enablement after companion-availability checks.
 		 *
 		 * @param bool  $enabled Computed enable state.
 		 * @param string $slug   Module slug.

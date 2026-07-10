@@ -14,7 +14,7 @@ Manage venue operations, event plans, vendor records, and optional ticketing wor
 
 Backstage Venue Manager helps venue operators manage event plans, vendor records, and related venue workflows from WordPress.
 
-Some features work on a baseline install. Other features are intentionally feature-gated behind optional integrations such as WooCommerce, The Events Calendar, or Event Tickets. When an optional dependency is missing, Backstage Venue Manager is intended to keep loading while the dependent feature stays unavailable.
+The core plugin loads without WooCommerce, The Events Calendar, or Event Tickets. Features that depend on one of those optional integrations become available when the required plugin is installed and active. When an optional dependency is missing, Backstage Venue Manager is intended to keep loading while the dependent feature stays unavailable.
 
 Backstage Venue Manager 1.0.0 was runtime-tested on WordPress 6.8 and 7.0. Packaging, repo-root release tests, and direct WordPress boot smoke were also revalidated under PHP 8.3 during this release-candidate pass.
 
@@ -88,17 +88,12 @@ Used by: admissions and pass-claim QR image generation, when those workflows are
 Data sent: the QR payload encoded into the generated QR-image request URL.
 Service docs and privacy: https://goqr.me/api/ and https://goqr.me/privacy-safety-security/
 
-3. Freemius
-Used by: optional add-on licensing, validation, deactivation, and health checks initiated by an operator.
-Data sent: site URL, site title, plugin or add-on version, a derived installation UID, install ID, license-key payloads, and related licensing request data when those actions are used.
-Service terms and privacy: https://freemius.com/terms/ and https://freemius.com/privacy/
-
-4. Vendor-provided ICS calendar URLs
+3. Vendor-provided ICS calendar URLs
 Used by: vendor availability ICS sync, when an operator or vendor configures an ICS URL.
 Data sent: Backstage Venue Manager fetches the configured ICS URL directly from the remote calendar host.
 Service terms and privacy: depend on the configured calendar host.
 
-5. Operator-configured webhook endpoints
+4. Operator-configured webhook endpoints
 Used by: webhook-based social sharing and publishing workflows, when configured.
 Data sent: event identifiers, venue summary fields, rendered caption text, destination URL, featured image URL, queue metadata, and an HMAC signature when a signing secret is configured.
 Service terms and privacy: depend on the configured webhook destination selected by the operator.
@@ -113,7 +108,7 @@ Depending on the modules in use, retained data can include settings, venue and v
 
 WooCommerce, The Events Calendar, and Event Tickets are optional integrations for 1.0.0. Backstage Venue Manager should continue loading without them, but dependent features will remain unavailable until the required plugin stack is installed.
 
-Optional add-ons are distributed as separate plugins. Installation, activation, and licensing actions are operator-initiated. The WordPress.org core plugin does not include remote code delivery.
+Optional add-ons are distributed as separate plugins. The WordPress.org core plugin can detect compatible companion plugins when they are installed, but it does not install, license, or unlock them from inside the core plugin.
 
 == Support and Security Reporting ==
 

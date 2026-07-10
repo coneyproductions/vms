@@ -205,7 +205,7 @@ if (!function_exists('vms_admin_menu_default_left_rail_specs')) {
 				'sections' => array('settings_addons'),
 				'cluster' => 'settings',
 				'label' => vms_i18n_runtime('Settings', 'backstage-venue-manager'),
-				'slugs' => array('vms-settings', 'vms-addons'),
+				'slugs' => array('vms-settings'),
 			),
 			array(
 				'section' => 'tools',
@@ -467,7 +467,6 @@ if (!function_exists('vms_admin_menu_register_core_page_metadata')) {
 			array('vms-continuity-binder', 'Continuity Binder', 'tools_integrity', 60, 'vms-core'),
 
 			array('vms-settings', 'Settings', 'settings_addons', 10, 'vms-core', '', true),
-			array('vms-addons', 'Add-ons', 'settings_addons', 20, 'vms-core', '', true),
 			array('vms-guided-tours', 'Guided Tours', 'settings_addons', 30, 'vms-core'),
 			array('vms-tour-maintenance', 'Tour Maintenance', 'settings_addons', 40, 'vms-core'),
 			array('vms-status-notices', 'Status Notices', 'settings_addons', 50, 'vms-core'),

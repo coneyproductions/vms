@@ -594,6 +594,120 @@ Recommended follow-up order, keeping each pass narrow:
 - [ ] Reconfirm external-service disclosures after the package-scope decisions above.
 - [ ] Validate the final public ZIP folder, slug, and version before any packaging or submission work.
 
+## WPORG-17B Result
+
+Date: 2026-07-10
+
+### Summary
+
+- Result: `PASS WITH NOTES`
+- Scope completed: package-scope trialware, premium add-on, and Freemius remediation in the public core plugin, applied to both `packages/vms-github-reconcile` and `vms/`
+- Starting mirror HEAD: `1b82ba0336b93f998503d53a1f646229c63226af`
+- Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task
+
+### What Was Confirmed
+
+- The WordPress.org-facing core package did not contain any currently registered core module marked `'premium' => true`.
+- The noncompliant surface was concentrated in a dedicated add-ons admin subsystem that bundled:
+  - a `Premium Add-ons` menu page,
+  - ZIP installation and update actions,
+  - license-key storage and validation UI,
+  - custom Freemius remote licensing calls,
+  - Freemius reachability diagnostics,
+  - add-on manifest metadata for separately distributed products.
+- The current bundled add-on manifest identified:
+  - `Meta Ads Builder` as a separate companion plugin target (`vms-meta-ads/vms-meta-ads.php`),
+  - `Show Risk Advisor` as a separate companion plugin target (`vmsx-weather-risk/vmsx-weather-risk.php`),
+  - `Social Sharing` as a core-bundled feature, not a separately distributed paid add-on.
+- Other named items from the prereview brief were either absent from the inspected current public package as premium bundles, or were ordinary core/plugin-integration references rather than bundled locked implementations.
+
+### What Was Changed
+
+- Removed the bundled premium add-ons / Freemius admin subsystem from the public core plugin load path in both trees.
+- Removed the `vms-addons` page link from VMS admin navigation and screen-context routing in both trees.
+- Removed the `vms-addons` page registration from the admin-page registry in both trees.
+- Revised the core-module compatibility helper so the WordPress.org package no longer reads `vms_premium_modules_enabled` or ships local premium-license enforcement logic by default.
+- Updated both `readme.txt` files to remove Freemius as a current external service and to describe optional add-ons as separately distributed companion plugins that are detected, not installed/licensed/unlocked, by the core plugin.
+
+### What Was Removed
+
+- Mirror and live removals:
+  - `assets/admin/addons/addons.css`
+  - `assets/admin/addons/addons.js`
+  - `assets/admin/addons/manifest-addons.json`
+  - `includes/admin/addons/class-vms-addons-health.php`
+  - `includes/admin/addons/class-vms-addons-installer.php`
+  - `includes/admin/addons/class-vms-addons-licensing.php`
+  - `includes/admin/addons/class-vms-addons-logger.php`
+  - `includes/admin/addons/class-vms-addons-manifest.php`
+  - `includes/admin/addons/class-vms-admin-addons.php`
+  - `includes/admin/addons/views/page-addons.php`
+
+### What Was Retained and Why
+
+- `vms_module_is_licensed()`, `vms_module_is_enabled()`, and the `vms_premium_module_licensed` filter name were retained as compatibility hooks so separately distributed companion plugins can continue to report their own availability state without forcing a broad identifier migration.
+- In the remediated public core package, those identifiers no longer read license options, perform paid-plan or trial checks, enforce quota state, or trigger remote entitlement / license validation. `vms_module_is_licensed()` now defaults registered modules to available and only exposes a compatibility filter that separate companion plugins may use for their own availability reporting.
+- No currently bundled core module is registered with `'premium' => true`, so the retained compatibility layer does not disable or hide any local functionality shipped in the WordPress.org core package.
+- The public plugin remains fully functional without license validation, while companion plugins remain separately distributed rather than bundled in disabled form inside the WordPress.org package.
+- Generic companion-plugin discovery and extension points were retained, including:
+  - existing `vms_register_admin_page()` / registry contracts,
+  - existing page/context identifiers other companion plugins may rely on,
+  - passive companion-plugin references such as `Meta Ads Builder not active` and the vendor-portal dashboard extension hook for companion add-ons.
+- Core runtime features such as Social Sharing, ticketing add-ons / entitlements, and other non-licensing add-on terminology were retained because they describe included functionality or neutral compatibility hooks rather than paid unlock flows.
+
+### Package-Boundary Conclusions
+
+- `Backstage Venue Manager` on WordPress.org should ship as a fully functional core plugin without the bundled premium add-ons / Freemius management surface.
+- `Meta Ads Builder` and `Show Risk Advisor` are separate companion-plugin targets, not bundled free-core functionality that should remain in disabled form inside the WordPress.org package.
+- `Social Sharing` is core-bundled functionality and should remain in the public package.
+- No code path reviewed in this batch still requires a license key, payment, entitlement response, or Freemius account to unlock code that remains bundled in the WordPress.org core package.
+
+### Freemius Conclusions
+
+- No Freemius SDK or bootstrap was found in the current public package.
+- The Freemius-related code in scope was a custom licensing / validation / diagnostics layer used only for add-on licensing and premium-management workflows.
+- Final disposition for the public core package: removed.
+- Freemius was also removed from the WordPress.org-facing readme external-services disclosure because it is no longer part of the public core package after this batch.
+
+### External Services After Remediation
+
+- Retained in the public core package:
+  - Cloudflare Turnstile
+  - QRServer / goQR.me
+  - Vendor-provided ICS calendar URLs
+  - Operator-configured webhook endpoints
+- Removed from the public core package:
+  - Freemius licensing / validation / health-check traffic
+
+### Remaining Product-Owner Decisions
+
+- No new WPORG-17B stop-condition decision was required to complete this batch.
+- Previously documented release-level decisions still remain outside this batch, including the `1.0.0` vs `1.1.0` metadata decision and final public package / slug validation.
+
+### Remaining Follow-Up Batches
+
+- `WPORG-18` — Internationalization parser compliance
+- `WPORG-19` — Nonce and capability hardening
+- `WPORG-20` — Input sanitization and structured-payload review
+- `WPORG-21` — Upload handling hardening
+- `WPORG-22` — Inline asset enqueue migration
+- `WPORG-23` — Admin notice scope
+- `WPORG-24` — Output escaping contract pass
+- `WPORG-25` — Output buffer lifecycle review
+- `WPORG-26` — Prefix and collision review
+- `WPORG-27` — Dependency, licensing, and tooling reproducibility verification
+- `WPORG-28` — Release metadata and packaging validation
+
+### Verification Results
+
+- Confirmed mirror starting HEAD matched `1b82ba0336b93f998503d53a1f646229c63226af`.
+- Confirmed mirror worktree started clean and `stash@{0}` remained unchanged in this batch.
+- Confirmed the bundled add-ons admin load points, page wiring, UI assets, and Freemius-specific runtime files were removed from both mirror and live trees.
+- Confirmed the core readme no longer lists Freemius as an active external service and no longer describes core-plugin licensing actions for optional add-ons.
+- Confirmed the public core package no longer reads `vms_premium_modules_enabled` for local module unlocking.
+- Confirmed separately distributed companion-plugin compatibility hooks were retained rather than renamed.
+- Detailed command verification for this batch is recorded in the task report rather than duplicated inline here.
+
 ## Non-Actions in This Audit
 
 This audit did not:

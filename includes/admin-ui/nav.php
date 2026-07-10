@@ -225,7 +225,6 @@ if (!function_exists('vms_admin_ui_nav_clusters')) {
 					array('label' => 'Import Event Plans (CSV)', 'url' => vms_admin_ui_page_url('vms-import-event-plans')),
 					array('label' => 'Reference: Keys + Identifiers', 'url' => vms_admin_ui_page_url('vms-reference-keys-map')),
 					array('label' => 'Continuity Binder', 'url' => vms_admin_ui_page_url('vms-continuity-binder')),
-					array('label' => 'Add-ons', 'url' => vms_admin_ui_page_url('vms-addons')),
 					array('label' => 'Docs', 'url' => vms_admin_ui_page_url('vms-docs')),
 				),
 			),
