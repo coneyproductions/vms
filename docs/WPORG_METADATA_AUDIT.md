@@ -14,7 +14,7 @@ Scope note:
 
 | Item | Current State After `WPORG-12D` | Evidence | Status | Follow-up |
 | --- | --- | --- | --- | --- |
-| Plugin Name | `VMS – Venue Management System` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
+| Plugin Name | `Backstage Venue Manager` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Description | Public-facing, concise, and source-backed. | `vendor-management-system.php`; `readme.txt` | Applied | Final wording can still be tuned before submission if desired. |
 | Version | `1.0.0` synchronized across canonical version markers. | `vendor-management-system.php`; `includes/core/registry/constants.php`; `vms-build.txt`; `readme.txt` | Applied | Keep provenance note with internal `0.2.24.748` / proven `0.2.24.747`. |
@@ -23,8 +23,8 @@ Scope note:
 | License | `GPLv2 or later` | `vendor-management-system.php`; `readme.txt`; `LICENSE.txt` | Applied | None in this pass. |
 | License URI | `https://www.gnu.org/licenses/gpl-2.0.html` | `vendor-management-system.php`; `readme.txt` | Applied | None in this pass. |
 | Root license file | Present at the plugin root. | `LICENSE.txt` | Applied | Confirmed not excluded from public packaging. |
-| Text Domain | `vms` | `vendor-management-system.php`; `includes/core/registry/constants.php` | Applied | None in this pass. |
-| Domain Path | `/languages` | `vendor-management-system.php`; existing `load_plugin_textdomain()` call | Applied | No `languages/` files are bundled yet; the 12D normalized extracted-package rerun again did not emit the oscillating `plugin_header_nonexistent_domain_path` warning while the standing `load_plugin_textdomain()` warning remains associated with `vendor-management-system.php`. |
+| Text Domain | `backstage-venue-manager` | `vendor-management-system.php`; runtime i18n calls in `includes/` | Applied | Internal `vms` identifiers and constants remain unchanged by request. |
+| Domain Path | Not declared in the plugin header. | `vendor-management-system.php` | Open | Add only if WordPress.org review or translation packaging requires it. No manual `load_plugin_textdomain()` call is present in the current runtime source. |
 | Root `readme.txt` | Present at the plugin root with WordPress.org-oriented content. | `readme.txt`; readme-validator rerun | Applied | Keep validator notes limited to optional listing polish items. |
 | Contributors | `coneyproductions` | `readme.txt` | Applied | None in this pass. |
 | Stable tag | `1.0.0` | `readme.txt` | Applied | Keep synchronized with version markers. |

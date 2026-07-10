@@ -36,7 +36,7 @@ if (!function_exists('vms_admission_rest_permission_error')) {
 if (!function_exists('vms_admission_rest_expired_session_message')) {
 	function vms_admission_rest_expired_session_message(): string
 	{
-		return __('Your Admissions session expired. Refresh the page and try again.', 'vms');
+		return __('Your Admissions session expired. Refresh the page and try again.', 'backstage-venue-manager');
 	}
 }
 
@@ -72,7 +72,7 @@ if (!function_exists('vms_admission_rest_can_checkin_request')) {
 	function vms_admission_rest_can_checkin_request(WP_REST_Request $request)
 	{
 		if (!vms_admission_current_user_can_checkin()) {
-			return vms_admission_rest_permission_error('vms_admission_forbidden', __('Access denied.', 'vms'));
+			return vms_admission_rest_permission_error('vms_admission_forbidden', __('Access denied.', 'backstage-venue-manager'));
 		}
 		if (!vms_admission_rest_request_has_valid_nonce($request)) {
 			return vms_admission_rest_permission_error('vms_admission_bad_nonce', vms_admission_rest_expired_session_message());
@@ -85,7 +85,7 @@ if (!function_exists('vms_admission_rest_can_manage_request')) {
 	function vms_admission_rest_can_manage_request(WP_REST_Request $request)
 	{
 		if (!vms_admission_current_user_can_manage()) {
-			return vms_admission_rest_permission_error('vms_admission_forbidden', __('Access denied.', 'vms'));
+			return vms_admission_rest_permission_error('vms_admission_forbidden', __('Access denied.', 'backstage-venue-manager'));
 		}
 		if (!vms_admission_rest_request_has_valid_nonce($request)) {
 			return vms_admission_rest_permission_error('vms_admission_bad_nonce', vms_admission_rest_expired_session_message());
@@ -148,14 +148,14 @@ if (!function_exists('vms_admission_event_plan_gate_block')) {
 		if (!is_array($plan)) {
 			return array(
 				'code' => 'invalid_event_plan',
-				'message' => __('Event plan not found.', 'vms'),
+				'message' => __('Event plan not found.', 'backstage-venue-manager'),
 			);
 		}
 		$status = sanitize_key((string) ($plan['status'] ?? ''));
 		if ($status === 'cancelled' || $status === 'canceled') {
 			return array(
 				'code' => 'event_cancelled',
-				'message' => __('This event has been cancelled.', 'vms'),
+				'message' => __('This event has been cancelled.', 'backstage-venue-manager'),
 			);
 		}
 		return null;
@@ -200,18 +200,18 @@ if (!function_exists('vms_admission_source_label')) {
 		$source = sanitize_key($source);
 		$kind = sanitize_key($kind);
 		if ($source === 'vendor' || $source === 'vendor_guest') {
-			return __('Vendor Guest', 'vms');
+			return __('Vendor Guest', 'backstage-venue-manager');
 		}
 		if ($source === 'pass_claim' || $kind === 'pass') {
-			return __('Guest Pass', 'vms');
+			return __('Guest Pass', 'backstage-venue-manager');
 		}
 		if ($source === 'operator' || $kind === 'comp') {
-			return __('Guest List', 'vms');
+			return __('Guest List', 'backstage-venue-manager');
 		}
 		if ($kind === 'ticket' || $source === 'tec' || $source === 'woo') {
-			return __('Paid Ticket', 'vms');
+			return __('Paid Ticket', 'backstage-venue-manager');
 		}
-		return __('Admission', 'vms');
+		return __('Admission', 'backstage-venue-manager');
 	}
 }
 
@@ -241,13 +241,13 @@ if (!function_exists('vms_admission_rest_list')) {
 		global $wpdb;
 		$event_plan_id = absint($req->get_param('event_plan_id'));
 		if ($event_plan_id <= 0) {
-			return vms_admission_rest_error('invalid_event_plan', __('Event plan is required.', 'vms'), 400);
+			return vms_admission_rest_error('invalid_event_plan', __('Event plan is required.', 'backstage-venue-manager'), 400);
 		}
 		if (!vms_admission_event_plan_context($event_plan_id)) {
-			return vms_admission_rest_error('invalid_event_plan', __('Event plan not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_event_plan', __('Event plan not found.', 'backstage-venue-manager'), 404);
 		}
 		if (!vms_admission_current_user_can_checkin()) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$status_filter = vms_admission_parse_status_filter((string) $req->get_param('status'));
@@ -309,7 +309,7 @@ if (!function_exists('vms_admission_rest_list')) {
 
 		$rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
 		if (!is_array($rows)) {
-			return vms_admission_rest_error('db_error', __('Could not load admissions.', 'vms'), 500);
+			return vms_admission_rest_error('db_error', __('Could not load admissions.', 'backstage-venue-manager'), 500);
 		}
 
 		$data = array_map('vms_admission_prepare_row', $rows);
@@ -321,7 +321,7 @@ if (!function_exists('vms_admission_rest_create')) {
 	function vms_admission_rest_create(WP_REST_Request $req)
 	{
 		if (!vms_admission_current_user_can_manage()) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$event_plan_id = absint($req->get_param('event_plan_id'));
@@ -332,27 +332,27 @@ if (!function_exists('vms_admission_rest_create')) {
 		$notes = sanitize_textarea_field((string) $req->get_param('notes'));
 
 		if ($event_plan_id <= 0) {
-			return vms_admission_rest_error('invalid_event_plan', __('Event plan is required.', 'vms'), 400);
+			return vms_admission_rest_error('invalid_event_plan', __('Event plan is required.', 'backstage-venue-manager'), 400);
 		}
 		$plan = vms_admission_event_plan_context($event_plan_id);
 		if (!$plan) {
-			return vms_admission_rest_error('invalid_event_plan', __('Event plan not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_event_plan', __('Event plan not found.', 'backstage-venue-manager'), 404);
 		}
 		if ($guest_name === '') {
-			return vms_admission_rest_error('invalid_guest_name', __('Guest name is required.', 'vms'), 400);
+			return vms_admission_rest_error('invalid_guest_name', __('Guest name is required.', 'backstage-venue-manager'), 400);
 		}
 
 		$settings = vms_admission_settings();
 		$max_party = max(1, (int) $settings['max_party_size']);
 		if ($party_size < 1 || $party_size > $max_party) {
-			return vms_admission_rest_error('invalid_party_size', sprintf(__('Party size must be between 1 and %d.', 'vms'), $max_party), 400);
+			return vms_admission_rest_error('invalid_party_size', sprintf(__('Party size must be between 1 and %d.', 'backstage-venue-manager'), $max_party), 400);
 		}
 
 		$guest_name_norm = vms_admission_normalize_name($guest_name);
 		$guest_email_norm = vms_admission_normalize_email($guest_email);
 		$phone_norm = vms_admission_normalize_phone($phone);
 		if ($guest_name_norm === '') {
-			return vms_admission_rest_error('invalid_guest_name', __('Guest name is required.', 'vms'), 400);
+			return vms_admission_rest_error('invalid_guest_name', __('Guest name is required.', 'backstage-venue-manager'), 400);
 		}
 
 		global $wpdb;
@@ -387,7 +387,7 @@ if (!function_exists('vms_admission_rest_create')) {
 
 		if ($insert === false) {
 			error_log('VMS Admission create failed: ' . (string) $wpdb->last_error);
-			return vms_admission_rest_error('db_error', __('Could not create admission entry.', 'vms'), 500);
+			return vms_admission_rest_error('db_error', __('Could not create admission entry.', 'backstage-venue-manager'), 500);
 		}
 
 		$entry_id = (int) $wpdb->insert_id;
@@ -411,26 +411,26 @@ if (!function_exists('vms_admission_rest_patch')) {
 	function vms_admission_rest_patch(WP_REST_Request $req)
 	{
 		if (!vms_admission_current_user_can_manage()) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$entry_id = absint($req->get_param('id'));
 		if ($entry_id <= 0) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		global $wpdb;
 		$table = vms_admission_table_entries();
 		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
 		if (!is_array($row)) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		$requested_status = null;
 		if (null !== $req->get_param('status')) {
 			$requested_status = sanitize_key((string) $req->get_param('status'));
 			if (!in_array($requested_status, array('active', 'partial', 'checked_in', 'canceled'), true)) {
-				return vms_admission_rest_error('invalid_status', __('Invalid status.', 'vms'), 400);
+				return vms_admission_rest_error('invalid_status', __('Invalid status.', 'backstage-venue-manager'), 400);
 			}
 		}
 
@@ -443,7 +443,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 			&& null === $req->get_param('phone')
 			&& null === $req->get_param('notes');
 		if ($is_canceled && !$is_restore_only) {
-			return vms_admission_rest_error('cannot_edit_canceled', __('Canceled entries cannot be edited.', 'vms'), 409);
+			return vms_admission_rest_error('cannot_edit_canceled', __('Canceled entries cannot be edited.', 'backstage-venue-manager'), 409);
 		}
 
 		$updates = array();
@@ -455,7 +455,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 		if (null !== $req->get_param('guest_name')) {
 			$guest_name = sanitize_text_field((string) $req->get_param('guest_name'));
 			if ($guest_name === '') {
-				return vms_admission_rest_error('invalid_guest_name', __('Guest name is required.', 'vms'), 400);
+				return vms_admission_rest_error('invalid_guest_name', __('Guest name is required.', 'backstage-venue-manager'), 400);
 			}
 			$updates['guest_name'] = $guest_name;
 			$updates['guest_name_norm'] = vms_admission_normalize_name($guest_name);
@@ -476,7 +476,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 		if (null !== $req->get_param('party_size')) {
 			$party_size = absint($req->get_param('party_size'));
 			if ($party_size < 1 || $party_size > $max_party) {
-				return vms_admission_rest_error('invalid_party_size', sprintf(__('Party size must be between 1 and %d.', 'vms'), $max_party), 400);
+				return vms_admission_rest_error('invalid_party_size', sprintf(__('Party size must be between 1 and %d.', 'backstage-venue-manager'), $max_party), 400);
 			}
 			$updates['party_size'] = $party_size;
 			$formats[] = '%d';
@@ -517,7 +517,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 		$ok = $wpdb->update($table, $updates, array('id' => $entry_id), $formats, array('%d'));
 		if ($ok === false) {
 			error_log('VMS Admission update failed: ' . (string) $wpdb->last_error);
-			return vms_admission_rest_error('db_error', __('Could not update entry.', 'vms'), 500);
+			return vms_admission_rest_error('db_error', __('Could not update entry.', 'backstage-venue-manager'), 500);
 		}
 
 		$action = ($status === 'canceled') ? 'entry_cancel' : 'entry_update';
@@ -532,12 +532,12 @@ if (!function_exists('vms_admission_rest_checkin')) {
 	function vms_admission_rest_checkin(WP_REST_Request $req)
 	{
 		if (!vms_admission_current_user_can_checkin()) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$entry_id = absint($req->get_param('id'));
 		if ($entry_id <= 0) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		$qty = absint($req->get_param('qty'));
@@ -552,23 +552,23 @@ if (!function_exists('vms_admission_rest_checkin')) {
 
 		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
 		if (!is_array($row)) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		$status = (string) ($row['status'] ?? 'active');
 		if ($status === 'canceled') {
-			return vms_admission_rest_error('conflict', __('Entry is canceled.', 'vms'), 409);
+			return vms_admission_rest_error('conflict', __('Entry is canceled.', 'backstage-venue-manager'), 409);
 		}
 		$event_gate_block = vms_admission_event_plan_gate_block((int) ($row['event_plan_id'] ?? 0));
 		if (is_array($event_gate_block)) {
-			return vms_admission_rest_error((string) ($event_gate_block['code'] ?? 'event_unavailable'), (string) ($event_gate_block['message'] ?? __('This admission is not valid right now.', 'vms')), 409, array('item' => vms_admission_prepare_row($row)));
+			return vms_admission_rest_error((string) ($event_gate_block['code'] ?? 'event_unavailable'), (string) ($event_gate_block['message'] ?? __('This admission is not valid right now.', 'backstage-venue-manager')), 409, array('item' => vms_admission_prepare_row($row)));
 		}
 
 		$party_size = max(1, (int) ($row['party_size'] ?? 1));
 		$checked_in_qty = max(0, (int) ($row['checked_in_qty'] ?? 0));
 
 		if ($checked_in_qty >= $party_size) {
-			return vms_admission_rest_error('conflict', __('Already fully checked in.', 'vms'), 409);
+			return vms_admission_rest_error('conflict', __('Already fully checked in.', 'backstage-venue-manager'), 409);
 		}
 
 		$new_qty = min($party_size, $checked_in_qty + $qty);
@@ -594,12 +594,12 @@ if (!function_exists('vms_admission_rest_checkin')) {
 		$updated = $wpdb->query($sql);
 		if ($updated === false) {
 			error_log('VMS Admission checkin failed: ' . (string) $wpdb->last_error);
-			return vms_admission_rest_error('db_error', __('Could not check in guest.', 'vms'), 500);
+			return vms_admission_rest_error('db_error', __('Could not check in guest.', 'backstage-venue-manager'), 500);
 		}
 
 		$fresh = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
 		if (!is_array($fresh)) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		vms_admission_audit_log((int) $fresh['event_plan_id'], $entry_id, 'checkin', $user_id, 'door', array('qty' => $qty));
@@ -618,15 +618,15 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 		$can_door = current_user_can(vms_admission_door_capability());
 
 		if (!$allow_uncheckin) {
-			return vms_admission_rest_error('disabled', __('Undo check-in is disabled.', 'vms'), 403);
+			return vms_admission_rest_error('disabled', __('Undo check-in is disabled.', 'backstage-venue-manager'), 403);
 		}
 		if (!($can_manage || ($can_door && $allow_door))) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$entry_id = absint($req->get_param('id'));
 		if ($entry_id <= 0) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		$qty = absint($req->get_param('qty'));
@@ -641,18 +641,18 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 
 		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
 		if (!is_array($row)) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		$status = (string) ($row['status'] ?? 'active');
 		if ($status === 'canceled') {
-			return vms_admission_rest_error('conflict', __('Entry is canceled.', 'vms'), 409);
+			return vms_admission_rest_error('conflict', __('Entry is canceled.', 'backstage-venue-manager'), 409);
 		}
 
 		$party_size = max(1, (int) ($row['party_size'] ?? 1));
 		$checked_in_qty = max(0, (int) ($row['checked_in_qty'] ?? 0));
 		if ($checked_in_qty <= 0) {
-			return vms_admission_rest_error('conflict', __('Entry is not checked in.', 'vms'), 409);
+			return vms_admission_rest_error('conflict', __('Entry is not checked in.', 'backstage-venue-manager'), 409);
 		}
 
 		$new_qty = max(0, $checked_in_qty - $qty);
@@ -690,12 +690,12 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 		$updated = $wpdb->query($sql);
 		if ($updated === false) {
 			error_log('VMS Admission uncheckin failed: ' . (string) $wpdb->last_error);
-			return vms_admission_rest_error('db_error', __('Could not undo check-in.', 'vms'), 500);
+			return vms_admission_rest_error('db_error', __('Could not undo check-in.', 'backstage-venue-manager'), 500);
 		}
 
 		$fresh = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
 		if (!is_array($fresh)) {
-			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'vms'), 404);
+			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
 
 		$ctx = $can_manage ? 'admin' : 'door';
@@ -710,7 +710,7 @@ if (!function_exists('vms_admission_rest_scan')) {
 	function vms_admission_rest_scan(WP_REST_Request $req)
 	{
 		if (!vms_admission_current_user_can_checkin()) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$raw = sanitize_text_field((string) $req->get_param('scan'));
@@ -718,7 +718,7 @@ if (!function_exists('vms_admission_rest_scan')) {
 		$auto_checkin = !empty($req->get_param('auto_checkin'));
 		$token = function_exists('vms_admission_extract_scan_token') ? vms_admission_extract_scan_token($raw) : '';
 		if ($token === '') {
-			return vms_admission_rest_error('not_found', __('This code was not recognized. Search by name or phone if needed.', 'vms'), 404);
+			return vms_admission_rest_error('not_found', __('This code was not recognized. Search by name or phone if needed.', 'backstage-venue-manager'), 404);
 		}
 
 		global $wpdb;
@@ -731,25 +731,25 @@ if (!function_exists('vms_admission_rest_scan')) {
 		}
 		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE {$where} LIMIT 1", $params), ARRAY_A);
 		if (!is_array($row)) {
-			return vms_admission_rest_error('not_found', __('Admission not found for this event.', 'vms'), 404);
+			return vms_admission_rest_error('not_found', __('Admission not found for this event.', 'backstage-venue-manager'), 404);
 		}
 		if ((string) ($row['status'] ?? '') === 'canceled') {
-			return vms_admission_rest_error('voided', __('This admission is voided/canceled.', 'vms'), 409, array('item' => vms_admission_prepare_row($row)));
+			return vms_admission_rest_error('voided', __('This admission is voided/canceled.', 'backstage-venue-manager'), 409, array('item' => vms_admission_prepare_row($row)));
 		}
 		if ($event_plan_id > 0 && (int) ($row['event_plan_id'] ?? 0) !== $event_plan_id) {
-			return vms_admission_rest_error('wrong_event', __('This admission is not valid for the selected event.', 'vms'), 409, array('item' => vms_admission_prepare_row($row)));
+			return vms_admission_rest_error('wrong_event', __('This admission is not valid for the selected event.', 'backstage-venue-manager'), 409, array('item' => vms_admission_prepare_row($row)));
 		}
 		$event_gate_block = vms_admission_event_plan_gate_block((int) ($row['event_plan_id'] ?? 0));
 		if (is_array($event_gate_block)) {
-			return vms_admission_rest_error((string) ($event_gate_block['code'] ?? 'event_unavailable'), (string) ($event_gate_block['message'] ?? __('This admission is not valid right now.', 'vms')), 409, array('item' => vms_admission_prepare_row($row)));
+			return vms_admission_rest_error((string) ($event_gate_block['code'] ?? 'event_unavailable'), (string) ($event_gate_block['message'] ?? __('This admission is not valid right now.', 'backstage-venue-manager')), 409, array('item' => vms_admission_prepare_row($row)));
 		}
 		$party_size = max(1, (int) ($row['party_size'] ?? 1));
 		$checked_in_qty = max(0, (int) ($row['checked_in_qty'] ?? 0));
 		if ($checked_in_qty >= $party_size) {
-			$message = __('Already checked in.', 'vms');
+			$message = __('Already checked in.', 'backstage-venue-manager');
 			$checked_in_at = vms_admission_format_local_datetime((string) ($row['checked_in_at'] ?? ''));
 			if ($checked_in_at !== '') {
-				$message = sprintf(__('Already checked in at %s.', 'vms'), $checked_in_at);
+				$message = sprintf(__('Already checked in at %s.', 'backstage-venue-manager'), $checked_in_at);
 			}
 			return vms_admission_rest_error('already_checked_in', $message, 409, array('item' => vms_admission_prepare_row($row)));
 		}
@@ -767,12 +767,12 @@ if (!function_exists('vms_admission_rest_summary')) {
 	function vms_admission_rest_summary(WP_REST_Request $req)
 	{
 		if (!vms_admission_current_user_can_checkin()) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$event_plan_id = absint($req->get_param('event_plan_id'));
 		if ($event_plan_id <= 0) {
-			return vms_admission_rest_error('invalid_event_plan', __('Event plan is required.', 'vms'), 400);
+			return vms_admission_rest_error('invalid_event_plan', __('Event plan is required.', 'backstage-venue-manager'), 400);
 		}
 
 		global $wpdb;
@@ -789,7 +789,7 @@ if (!function_exists('vms_admission_rest_summary')) {
 		);
 		$totals = $wpdb->get_row($sql, ARRAY_A);
 		if (!is_array($totals)) {
-			return vms_admission_rest_error('db_error', __('Could not load summary.', 'vms'), 500);
+			return vms_admission_rest_error('db_error', __('Could not load summary.', 'backstage-venue-manager'), 500);
 		}
 
 		$data = array(
@@ -806,7 +806,7 @@ if (!function_exists('vms_admission_rest_event_plans_today')) {
 	function vms_admission_rest_event_plans_today(WP_REST_Request $req)
 	{
 		if (!vms_admission_current_user_can_checkin()) {
-			return vms_admission_rest_error('forbidden', __('Access denied.', 'vms'), 403);
+			return vms_admission_rest_error('forbidden', __('Access denied.', 'backstage-venue-manager'), 403);
 		}
 
 		$today = wp_date('Y-m-d', time(), wp_timezone());

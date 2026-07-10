@@ -126,7 +126,7 @@ add_action('add_meta_boxes', function () {
     foreach (vms_tax_bypass_supported_post_types() as $pt) {
         add_meta_box(
             'vms_tax_bypass_box',
-            __('Tax Compliance Bypass', 'vms'),
+            __('Tax Compliance Bypass', 'backstage-venue-manager'),
             'vms_render_tax_bypass_box',
             $pt,
             'side',
@@ -138,7 +138,7 @@ add_action('add_meta_boxes', function () {
 function vms_render_tax_bypass_box($post)
 {
     if (!current_user_can('manage_options')) {
-        echo '<p class="description">' . esc_html__('Admins only.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('Admins only.', 'backstage-venue-manager') . '</p>';
         return;
     }
 
@@ -164,40 +164,40 @@ function vms_render_tax_bypass_box($post)
     echo '<p class="vms-tax-bypass-badge-row">' . $badge . '</p>';
 
     echo '<p class="description vms-tax-bypass-desc-top">' .
-        esc_html__('Use only if a W-9 is verbally agreed and will be supplied soon. This bypass expires automatically.', 'vms') .
+        esc_html__('Use only if a W-9 is verbally agreed and will be supplied soon. This bypass expires automatically.', 'backstage-venue-manager') .
         '</p>';
 
     // Toggle
     echo '<p class="vms-tax-bypass-field-row">';
     echo '<label class="vms-tax-bypass-strong-label">';
     echo '<input type="checkbox" name="vms_tax_bypass_enabled" value="1" ' . checked($s['enabled'], true, false) . '> ';
-    echo esc_html__('Allow temporary bypass', 'vms');
+    echo esc_html__('Allow temporary bypass', 'backstage-venue-manager');
     echo '</label>';
     echo '</p>';
 
     // Expiration
     echo '<p class="vms-tax-bypass-field-row-tight">';
-    echo '<label class="vms-tax-bypass-strong-label vms-tax-bypass-strong-label-block">' . esc_html__('Bypass expires on (required)', 'vms') . '</label>';
+    echo '<label class="vms-tax-bypass-strong-label vms-tax-bypass-strong-label-block">' . esc_html__('Bypass expires on (required)', 'backstage-venue-manager') . '</label>';
     echo '<input type="date" name="vms_tax_bypass_until" value="' . esc_attr($s['until']) . '" class="vms-tax-bypass-input-full">';
     echo '</p>';
 
     // Reason
     echo '<p class="vms-tax-bypass-field-row-tight">';
-    echo '<label class="vms-tax-bypass-strong-label vms-tax-bypass-strong-label-block">' . esc_html__('Reason (required)', 'vms') . '</label>';
+    echo '<label class="vms-tax-bypass-strong-label vms-tax-bypass-strong-label-block">' . esc_html__('Reason (required)', 'backstage-venue-manager') . '</label>';
     echo '<textarea name="vms_tax_bypass_reason" rows="3" class="vms-tax-bypass-input-full">' . esc_textarea($s['reason']) . '</textarea>';
     echo '</p>';
 
     // Audit line
     if ($set_at > 0) {
         $who = $set_by ? get_user_by('id', $set_by) : null;
-        $who_name = $who ? ($who->display_name ?: $who->user_login) : __('Unknown', 'vms');
+        $who_name = $who ? ($who->display_name ?: $who->user_login) : __('Unknown', 'backstage-venue-manager');
 
         $dt = new DateTime('@' . $set_at);
         $dt->setTimezone(wp_timezone());
 
         echo '<p class="description vms-tax-bypass-audit">';
-        echo esc_html__('Last set by:', 'vms') . ' <strong>' . esc_html($who_name) . '</strong><br>';
-        echo esc_html__('At:', 'vms') . ' ' . esc_html($dt->format('M j, Y g:ia'));
+        echo esc_html__('Last set by:', 'backstage-venue-manager') . ' <strong>' . esc_html($who_name) . '</strong><br>';
+        echo esc_html__('At:', 'backstage-venue-manager') . ' ' . esc_html($dt->format('M j, Y g:ia'));
         echo '</p>';
     }
 
@@ -212,7 +212,7 @@ function vms_render_tax_bypass_box($post)
 
     echo '<hr class="vms-tax-bypass-divider">';
     echo '<p class="description vms-tax-bypass-save-note">' .
-        esc_html__('Save/Update this post to apply changes.', 'vms') .
+        esc_html__('Save/Update this post to apply changes.', 'backstage-venue-manager') .
         '</p>';
 
     add_action('admin_footer-post.php', 'vms_admin_disable_required_for_tax_fields');

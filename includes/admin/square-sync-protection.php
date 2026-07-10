@@ -47,8 +47,8 @@ if (!function_exists('vms_square_sync_protection_redirect')) {
 add_action('admin_menu', function (): void {
     add_submenu_page(
         'vms-dashboard',
-        __('Square Sync Protection', 'vms'),
-        __('Square Sync Protection', 'vms'),
+        __('Square Sync Protection', 'backstage-venue-manager'),
+        __('Square Sync Protection', 'backstage-venue-manager'),
         'manage_options',
         'vms-square-sync-protection',
         'vms_render_square_sync_protection_page'
@@ -57,12 +57,12 @@ add_action('admin_menu', function (): void {
 
 add_action('admin_post_vms_square_sync_protection_scan', function (): void {
     if (!current_user_can('manage_options')) {
-        wp_die(esc_html__('Insufficient permissions.', 'vms'));
+        wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
     check_admin_referer('vms_square_sync_protection_scan');
 
     if (!function_exists('vms_square_firewall_scan_products')) {
-        wp_die(esc_html__('Square Sync Firewall is not loaded.', 'vms'));
+        wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
     }
 
     $report = vms_square_firewall_scan_products(false, 10000);
@@ -72,12 +72,12 @@ add_action('admin_post_vms_square_sync_protection_scan', function (): void {
 
 add_action('admin_post_vms_square_sync_protection_repair', function (): void {
     if (!current_user_can('manage_options')) {
-        wp_die(esc_html__('Insufficient permissions.', 'vms'));
+        wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
     check_admin_referer('vms_square_sync_protection_repair');
 
     if (!function_exists('vms_square_firewall_scan_products')) {
-        wp_die(esc_html__('Square Sync Firewall is not loaded.', 'vms'));
+        wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
     }
 
     $report = vms_square_firewall_scan_products(true, 10000);
@@ -87,13 +87,13 @@ add_action('admin_post_vms_square_sync_protection_repair', function (): void {
 
 add_action('admin_post_vms_square_sync_protection_csv', function (): void {
     if (!current_user_can('manage_options')) {
-        wp_die(esc_html__('Insufficient permissions.', 'vms'));
+        wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
     check_admin_referer('vms_square_sync_protection_csv');
 
     $report = vms_square_sync_protection_get_report();
     if (empty($report)) {
-        wp_die(esc_html__('No Square Sync Protection report is available. Run a scan first.', 'vms'));
+        wp_die(esc_html__('No Square Sync Protection report is available. Run a scan first.', 'backstage-venue-manager'));
     }
 
     $filename = 'vms-square-sync-protection-' . gmdate('Ymd-His') . '.csv';
@@ -130,15 +130,15 @@ if (!function_exists('vms_render_square_sync_protection_summary_table')) {
     function vms_render_square_sync_protection_summary_table(array $report): void
     {
         $labels = array(
-            'mode' => __('Mode', 'vms'),
-            'checked' => __('Products checked', 'vms'),
-            'protected_candidates' => __('VMS/TEC products found', 'vms'),
-            'had_square_links' => __('Had Square links/metadata', 'vms'),
-            'sync_yes' => __('Marked Sync with Square = yes', 'vms'),
-            'already_safe' => __('Already safe', 'vms'),
-            'repaired' => __('Repaired', 'vms'),
-            'meta_cleared' => __('Square meta fields cleared', 'vms'),
-            'skipped' => __('Normal products skipped', 'vms'),
+            'mode' => __('Mode', 'backstage-venue-manager'),
+            'checked' => __('Products checked', 'backstage-venue-manager'),
+            'protected_candidates' => __('VMS/TEC products found', 'backstage-venue-manager'),
+            'had_square_links' => __('Had Square links/metadata', 'backstage-venue-manager'),
+            'sync_yes' => __('Marked Sync with Square = yes', 'backstage-venue-manager'),
+            'already_safe' => __('Already safe', 'backstage-venue-manager'),
+            'repaired' => __('Repaired', 'backstage-venue-manager'),
+            'meta_cleared' => __('Square meta fields cleared', 'backstage-venue-manager'),
+            'skipped' => __('Normal products skipped', 'backstage-venue-manager'),
         );
 
         echo '<table class="widefat striped">';
@@ -166,18 +166,18 @@ if (!function_exists('vms_render_square_sync_protection_rows')) {
     {
         $rows = (array) ($report['rows'] ?? array());
         if (empty($rows)) {
-            echo '<p>' . esc_html__('No protected VMS/TEC products were found in the displayed report rows.', 'vms') . '</p>';
+            echo '<p>' . esc_html__('No protected VMS/TEC products were found in the displayed report rows.', 'backstage-venue-manager') . '</p>';
             return;
         }
 
         echo '<table class="widefat striped">';
         echo '<thead><tr>';
-        echo '<th>' . esc_html__('Product', 'vms') . '</th>';
-        echo '<th>' . esc_html__('SKU', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Reason', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Sync with Square', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Square link', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Meta cleared', 'vms') . '</th>';
+        echo '<th>' . esc_html__('Product', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('SKU', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Reason', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Sync with Square', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Square link', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Meta cleared', 'backstage-venue-manager') . '</th>';
         echo '</tr></thead><tbody>';
 
         foreach ($rows as $row) {
@@ -202,7 +202,7 @@ if (!function_exists('vms_render_square_sync_protection_rows')) {
             echo '<td><code>' . esc_html((string) ($row['sku'] ?? '')) . '</code></td>';
             echo '<td><code>' . esc_html((string) ($row['reason'] ?? '')) . '</code></td>';
             echo '<td>' . esc_html((string) ($row['sync_value'] ?? '')) . '</td>';
-            echo '<td>' . (!empty($row['had_square_link']) ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+            echo '<td>' . (!empty($row['had_square_link']) ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
             echo '<td>' . esc_html((string) (int) ($row['meta_cleared'] ?? 0)) . '</td>';
             echo '</tr>';
         }
@@ -217,43 +217,43 @@ if (!function_exists('vms_render_square_sync_protection_page_content')) {
         $report = vms_square_sync_protection_get_report();
         $notice = isset($_GET['vms_square_notice']) ? sanitize_key((string) $_GET['vms_square_notice']) : '';
 
-        echo '<p>' . esc_html__('Protect VMS/TEC tickets, admissions, passes, and event add-ons from Square catalog or inventory sync while leaving normal Square-owned items available for menus, merch, and inventory workflows.', 'vms') . '</p>';
+        echo '<p>' . esc_html__('Protect VMS/TEC tickets, admissions, passes, and event add-ons from Square catalog or inventory sync while leaving normal Square-owned items available for menus, merch, and inventory workflows.', 'backstage-venue-manager') . '</p>';
 
         if ($notice === 'scan_done') {
-            echo '<div class="notice notice-info"><p>' . esc_html__('Square Sync Protection scan complete.', 'vms') . '</p></div>';
+            echo '<div class="notice notice-info"><p>' . esc_html__('Square Sync Protection scan complete.', 'backstage-venue-manager') . '</p></div>';
         } elseif ($notice === 'repair_done') {
-            echo '<div class="notice notice-success"><p>' . esc_html__('Square Sync Protection repair complete.', 'vms') . '</p></div>';
+            echo '<div class="notice notice-success"><p>' . esc_html__('Square Sync Protection repair complete.', 'backstage-venue-manager') . '</p></div>';
         }
 
         echo '<div class="card">';
-        echo '<h2>' . esc_html__('Run protection tools', 'vms') . '</h2>';
-        echo '<p>' . esc_html__('Scan shows what would be protected. Repair forces protected products to Sync with Square = no and removes stale Square item IDs from those products.', 'vms') . '</p>';
+        echo '<h2>' . esc_html__('Run protection tools', 'backstage-venue-manager') . '</h2>';
+        echo '<p>' . esc_html__('Scan shows what would be protected. Repair forces protected products to Sync with Square = no and removes stale Square item IDs from those products.', 'backstage-venue-manager') . '</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         wp_nonce_field('vms_square_sync_protection_scan');
         echo '<input type="hidden" name="action" value="vms_square_sync_protection_scan" />';
-        submit_button(__('Scan protected products', 'vms'), 'secondary', 'submit', false);
+        submit_button(__('Scan protected products', 'backstage-venue-manager'), 'secondary', 'submit', false);
         echo '</form>';
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         wp_nonce_field('vms_square_sync_protection_repair');
         echo '<input type="hidden" name="action" value="vms_square_sync_protection_repair" />';
-        submit_button(__('Repair protected products', 'vms'), 'primary', 'submit', false);
+        submit_button(__('Repair protected products', 'backstage-venue-manager'), 'primary', 'submit', false);
         echo '</form>';
-        echo '<p class="description">' . esc_html__('Normal Square catalog products such as bar/menu items, shirts, eggs, and merch are skipped unless they are explicitly marked as VMS/TEC ticketing products.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('Normal Square catalog products such as bar/menu items, shirts, eggs, and merch are skipped unless they are explicitly marked as VMS/TEC ticketing products.', 'backstage-venue-manager') . '</p>';
         echo '</div>';
 
         if (!empty($report)) {
             $csv_url = wp_nonce_url(admin_url('admin-post.php?action=vms_square_sync_protection_csv'), 'vms_square_sync_protection_csv');
-            echo '<h2>' . esc_html__('Last report', 'vms') . '</h2>';
+            echo '<h2>' . esc_html__('Last report', 'backstage-venue-manager') . '</h2>';
             if (!empty($report['ts'])) {
                 $ts = (int) $report['ts'];
                 $readable = function_exists('wp_date') ? wp_date('Y-m-d H:i', $ts, wp_timezone()) : date('Y-m-d H:i', $ts);
                 echo '<p class="description">' . esc_html($readable) . '</p>';
             }
             vms_render_square_sync_protection_summary_table($report);
-            echo '<p><a class="button button-secondary" href="' . esc_url($csv_url) . '">' . esc_html__('Download report CSV', 'vms') . '</a></p>';
-            echo '<h3>' . esc_html__('Protected product details', 'vms') . '</h3>';
-            echo '<p class="description">' . esc_html__('Showing up to the first 200 protected products from the report.', 'vms') . '</p>';
+            echo '<p><a class="button button-secondary" href="' . esc_url($csv_url) . '">' . esc_html__('Download report CSV', 'backstage-venue-manager') . '</a></p>';
+            echo '<h3>' . esc_html__('Protected product details', 'backstage-venue-manager') . '</h3>';
+            echo '<p class="description">' . esc_html__('Showing up to the first 200 protected products from the report.', 'backstage-venue-manager') . '</p>';
             vms_render_square_sync_protection_rows($report);
         }
     }
@@ -263,14 +263,14 @@ if (!function_exists('vms_render_square_sync_protection_page')) {
     function vms_render_square_sync_protection_page(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('Insufficient permissions.', 'vms'));
+            wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
         }
 
         if (function_exists('vms_admin_ui_render_shell')) {
             vms_admin_ui_render_shell(
                 array(
-                    'title' => __('Square Sync Protection', 'vms'),
-                    'subtitle' => __('Protect VMS-owned products from accidental Square catalog and inventory sync.', 'vms'),
+                    'title' => __('Square Sync Protection', 'backstage-venue-manager'),
+                    'subtitle' => __('Protect VMS-owned products from accidental Square catalog and inventory sync.', 'backstage-venue-manager'),
                     'shell_id' => 'vms-square-sync-protection-wrap',
                 ),
                 'vms_render_square_sync_protection_page_content'
@@ -279,7 +279,7 @@ if (!function_exists('vms_render_square_sync_protection_page')) {
         }
 
         echo '<div class="wrap" id="vms-square-sync-protection-wrap">';
-        echo '<h1>' . esc_html__('Square Sync Protection', 'vms') . '</h1>';
+        echo '<h1>' . esc_html__('Square Sync Protection', 'backstage-venue-manager') . '</h1>';
         vms_render_square_sync_protection_page_content();
         echo '</div>';
     }

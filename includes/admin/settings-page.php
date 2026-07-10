@@ -422,7 +422,7 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 		if ($apply_changes) {
 			$reason_text = sprintf(
 				/* translators: 1: capacity, 2: sold quantity, 3: remaining quantity */
-				__('Manual add-on reconciliation recalculated Woo stock from capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'vms'),
+				__('Manual add-on reconciliation recalculated Woo stock from capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'backstage-venue-manager'),
 				$capacity,
 				$sold_qty,
 				$remaining
@@ -430,7 +430,7 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 			if (!empty($sold_res['ignored_total_sales_count'])) {
 				$reason_text .= ' ' . sprintf(
 					/* translators: %d: number of products */
-					__('The reconciliation ignored stale Woo total_sales counters on %d related product(s) and trusted the paid-order scan instead.', 'vms'),
+					__('The reconciliation ignored stale Woo total_sales counters on %d related product(s) and trusted the paid-order scan instead.', 'backstage-venue-manager'),
 					absint($sold_res['ignored_total_sales_count'])
 				);
 			}
@@ -876,7 +876,7 @@ function vms_field_timezone()
   if (!$saved && $wp_tz) $saved = $wp_tz;
 
   echo '<select name="vms_settings[timezone]" class="vms-minw-320">';
-  echo '<option value="">' . esc_html__('(Use WordPress Site Timezone)', 'vms') . '</option>';
+  echo '<option value="">' . esc_html__('(Use WordPress Site Timezone)', 'backstage-venue-manager') . '</option>';
 
   foreach ($tzs as $tz) {
     echo '<option value="' . esc_attr($tz) . '" ' . selected($saved, $tz, false) . '>' . esc_html($tz) . '</option>';
@@ -884,13 +884,13 @@ function vms_field_timezone()
   echo '</select>';
 
   echo '<p class="description">';
-  echo esc_html__('Use a named timezone (e.g., America/Chicago) to handle daylight saving time correctly.', 'vms');
+  echo esc_html__('Use a named timezone (e.g., America/Chicago) to handle daylight saving time correctly.', 'backstage-venue-manager');
   echo '</p>';
 
   $wp_offset = get_option('gmt_offset');
   if (empty($wp_tz) && $wp_offset !== '') {
     echo '<p class="description vms-text-danger">';
-    echo esc_html__('Warning: Your WordPress site timezone is set as a UTC offset. Consider switching WP to a named timezone for best results.', 'vms');
+    echo esc_html__('Warning: Your WordPress site timezone is set as a UTC offset. Consider switching WP to a named timezone for best results.', 'backstage-venue-manager');
     echo '</p>';
   }
 }
@@ -902,7 +902,7 @@ function vms_field_enable_woo()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[enable_woo]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('Enable WooCommerce product publishing + attendance integration', 'vms');
+  echo esc_html__('Enable WooCommerce product publishing + attendance integration', 'backstage-venue-manager');
   echo '</label>';
 }
 
@@ -921,7 +921,7 @@ function vms_field_enable_tec_publish()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[enable_tec_publish]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('Allow “Publish to Calendar” actions', 'vms');
+  echo esc_html__('Allow “Publish to Calendar” actions', 'backstage-venue-manager');
   echo '</label>';
 }
 
@@ -940,7 +940,7 @@ function vms_field_default_venue()
   ));
 
   echo '<select name="vms_settings[default_venue_id]" class="vms-minw-320">';
-  echo '<option value="0">' . esc_html__('— None —', 'vms') . '</option>';
+  echo '<option value="0">' . esc_html__('— None —', 'backstage-venue-manager') . '</option>';
 
   foreach ($venues as $vid) {
     $vid = (int) $vid;
@@ -950,7 +950,7 @@ function vms_field_default_venue()
   }
 
   echo '</select>';
-  echo '<p class="description">' . esc_html__('Used when no venue is selected in context.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Used when no venue is selected in context.', 'backstage-venue-manager') . '</p>';
 
   // Validate: Default Venue should be a published venue.
   $saved_is_valid = ($saved > 0 && get_post_type($saved) === 'vms_venue' && get_post_status($saved) === 'publish');
@@ -1027,7 +1027,7 @@ function vms_field_admission_max_party_size()
   if ($val > 100) $val = 100;
 
   echo '<input type="number" min="1" max="100" step="1" name="vms_settings[vms_admission_max_party_size]" value="' . esc_attr((string) $val) . '" class="vms-input-narrow" />';
-  echo '<p class="description">' . esc_html__('Maximum number of people allowed in a single guest list entry.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Maximum number of people allowed in a single guest list entry.', 'backstage-venue-manager') . '</p>';
 }
 
 function vms_field_admission_allow_uncheckin()
@@ -1037,7 +1037,7 @@ function vms_field_admission_allow_uncheckin()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[vms_admission_allow_uncheckin]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('Allow an entry to be checked in and later undone (reverted back to Active).', 'vms');
+  echo esc_html__('Allow an entry to be checked in and later undone (reverted back to Active).', 'backstage-venue-manager');
   echo '</label>';
 }
 
@@ -1048,7 +1048,7 @@ function vms_field_admission_allow_uncheckin_for_door()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[vms_admission_allow_uncheckin_for_door]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('If undo is enabled, allow door users to undo check-in (otherwise managers only).', 'vms');
+  echo esc_html__('If undo is enabled, allow door users to undo check-in (otherwise managers only).', 'backstage-venue-manager');
   echo '</label>';
 }
 
@@ -1059,7 +1059,7 @@ function vms_field_admission_door_show_phone()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[vms_admission_door_show_phone]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('Show full phone numbers in the door check-in UI (otherwise show masked phone).', 'vms');
+  echo esc_html__('Show full phone numbers in the door check-in UI (otherwise show masked phone).', 'backstage-venue-manager');
   echo '</label>';
 }
 
@@ -1070,9 +1070,9 @@ function vms_field_vendor_portal_show_secondary_ticket_sales()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[vendor_portal_show_secondary_ticket_sales]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('Show ticket sales / attendance snapshot to secondary vendors in Vendor Portal', 'vms');
+  echo esc_html__('Show ticket sales / attendance snapshot to secondary vendors in Vendor Portal', 'backstage-venue-manager');
   echo '</label>';
-  echo '<p class="description">' . esc_html__('Useful for food vendors and other secondary vendors who need expected crowd size. Compensation and bonus details remain hidden.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Useful for food vendors and other secondary vendors who need expected crowd size. Compensation and bonus details remain hidden.', 'backstage-venue-manager') . '</p>';
 }
 
 function vms_field_availability_date_dispatch_enabled()
@@ -1082,9 +1082,9 @@ function vms_field_availability_date_dispatch_enabled()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[availability_date_dispatch_enabled]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('Enable the Availability & Date Dispatch internal module', 'vms');
+  echo esc_html__('Enable the Availability & Date Dispatch internal module', 'backstage-venue-manager');
   echo '</label>';
-  echo '<p class="description">' . esc_html__('When enabled, operators can send secure availability requests from Event Plans and record ADD responses back into canonical vendor availability. Disable this checkbox to turn off the module without deleting its stored request history.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('When enabled, operators can send secure availability requests from Event Plans and record ADD responses back into canonical vendor availability. Disable this checkbox to turn off the module without deleting its stored request history.', 'backstage-venue-manager') . '</p>';
 }
 
 function vms_field_vendor_doc_submission_notifications()
@@ -1108,21 +1108,21 @@ function vms_field_vendor_doc_submission_notifications()
   $target_options = function_exists('vms_vendor_submission_recipient_mode_options')
     ? vms_vendor_submission_recipient_mode_options()
     : array(
-        'site_admin' => __('Site admin email', 'vms'),
-        'user' => __('Specific WordPress user', 'vms'),
-        'role' => __('All users in a WordPress role', 'vms'),
-        'capability' => __('All users with a capability', 'vms'),
-        'none' => __('Do not email anyone', 'vms'),
+        'site_admin' => __('Site admin email', 'backstage-venue-manager'),
+        'user' => __('Specific WordPress user', 'backstage-venue-manager'),
+        'role' => __('All users in a WordPress role', 'backstage-venue-manager'),
+        'capability' => __('All users with a capability', 'backstage-venue-manager'),
+        'none' => __('Do not email anyone', 'backstage-venue-manager'),
       );
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[vendor_doc_submission_notify_enabled]" value="1" ' . checked($enabled, 1, false) . ' /> ';
-  echo esc_html__('Send an email alert when a vendor submits tech docs, a W-9/tax step, or a promo video', 'vms');
+  echo esc_html__('Send an email alert when a vendor submits tech docs, a W-9/tax step, or a promo video', 'backstage-venue-manager');
   echo '</label>';
 
-  echo '<p class="description">' . esc_html__('These submissions still flag the vendor as Needs review in VMS even if email alerts are turned off.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('These submissions still flag the vendor as Needs review in VMS even if email alerts are turned off.', 'backstage-venue-manager') . '</p>';
 
-  echo '<p><label for="vms_vendor_doc_submission_notify_target"><strong>' . esc_html__('Send alerts to', 'vms') . '</strong></label><br>';
+  echo '<p><label for="vms_vendor_doc_submission_notify_target"><strong>' . esc_html__('Send alerts to', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<select id="vms_vendor_doc_submission_notify_target" name="vms_settings[vendor_doc_submission_notify_target]" class="vms-minw-320">';
   foreach ($target_options as $value => $label) {
     echo '<option value="' . esc_attr((string) $value) . '" ' . selected($target, (string) $value, false) . '>' . esc_html((string) $label) . '</option>';
@@ -1133,9 +1133,9 @@ function vms_field_vendor_doc_submission_notifications()
     'orderby' => 'display_name',
     'order' => 'ASC',
   ));
-  echo '<p><label for="vms_vendor_doc_submission_notify_user_id"><strong>' . esc_html__('Specific user', 'vms') . '</strong></label><br>';
+  echo '<p><label for="vms_vendor_doc_submission_notify_user_id"><strong>' . esc_html__('Specific user', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<select id="vms_vendor_doc_submission_notify_user_id" name="vms_settings[vendor_doc_submission_notify_user_id]" class="vms-minw-320">';
-  echo '<option value="0">' . esc_html__('— Select a user —', 'vms') . '</option>';
+  echo '<option value="0">' . esc_html__('— Select a user —', 'backstage-venue-manager') . '</option>';
   foreach ($users as $user) {
     if (!($user instanceof WP_User)) continue;
     $label = $user->display_name !== '' ? $user->display_name : $user->user_login;
@@ -1144,22 +1144,22 @@ function vms_field_vendor_doc_submission_notifications()
     }
     echo '<option value="' . esc_attr((string) $user->ID) . '" ' . selected($user_id, (int) $user->ID, false) . '>' . esc_html($label) . '</option>';
   }
-  echo '</select><br><span class="description">' . esc_html__('Used only when “Specific WordPress user” is selected above.', 'vms') . '</span></p>';
+  echo '</select><br><span class="description">' . esc_html__('Used only when “Specific WordPress user” is selected above.', 'backstage-venue-manager') . '</span></p>';
 
   global $wp_roles;
   $role_names = ($wp_roles instanceof WP_Roles) ? (array) $wp_roles->roles : array();
-  echo '<p><label for="vms_vendor_doc_submission_notify_role"><strong>' . esc_html__('WordPress role', 'vms') . '</strong></label><br>';
+  echo '<p><label for="vms_vendor_doc_submission_notify_role"><strong>' . esc_html__('WordPress role', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<select id="vms_vendor_doc_submission_notify_role" name="vms_settings[vendor_doc_submission_notify_role]" class="vms-minw-320">';
-  echo '<option value="">' . esc_html__('— Select a role —', 'vms') . '</option>';
+  echo '<option value="">' . esc_html__('— Select a role —', 'backstage-venue-manager') . '</option>';
   foreach ($role_names as $role_key => $role_data) {
     $role_label = isset($role_data['name']) ? (string) $role_data['name'] : (string) $role_key;
     echo '<option value="' . esc_attr((string) $role_key) . '" ' . selected($role, (string) $role_key, false) . '>' . esc_html($role_label) . '</option>';
   }
-  echo '</select><br><span class="description">' . esc_html__('Used only when “All users in a WordPress role” is selected above.', 'vms') . '</span></p>';
+  echo '</select><br><span class="description">' . esc_html__('Used only when “All users in a WordPress role” is selected above.', 'backstage-venue-manager') . '</span></p>';
 
-  echo '<p><label for="vms_vendor_doc_submission_notify_capability"><strong>' . esc_html__('Capability', 'vms') . '</strong></label><br>';
+  echo '<p><label for="vms_vendor_doc_submission_notify_capability"><strong>' . esc_html__('Capability', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<input id="vms_vendor_doc_submission_notify_capability" type="text" class="regular-text" name="vms_settings[vendor_doc_submission_notify_capability]" value="' . esc_attr($capability) . '" placeholder="manage_options" />';
-  echo '<br><span class="description">' . esc_html__('Used only when “All users with a capability” is selected above. Example: manage_options.', 'vms') . '</span></p>';
+  echo '<br><span class="description">' . esc_html__('Used only when “All users with a capability” is selected above. Example: manage_options.', 'backstage-venue-manager') . '</span></p>';
 }
 
 
@@ -1173,19 +1173,19 @@ function vms_field_staff_portal_doc_visibility_roles()
   $role_map = function_exists('vms_staffing_role_map_by_id') ? (array) vms_staffing_role_map_by_id(false) : array();
 
   if (empty($role_map)) {
-    echo '<p class="description">' . esc_html__('No staffing roles are available yet. Create staffing roles first, then come back here to limit who sees event docs in the Staff Portal.', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('No staffing roles are available yet. Create staffing roles first, then come back here to limit who sees event docs in the Staff Portal.', 'backstage-venue-manager') . '</p>';
     return;
   }
 
   echo '<fieldset>';
-  echo '<legend class="screen-reader-text">' . esc_html__('Staff Portal tech doc visibility', 'vms') . '</legend>';
-  echo '<p class="description">' . esc_html__('Leave everything unchecked to show event tech docs to all assigned staff. Check one or more staffing roles to only show docs when the assigned shift uses one of those roles.', 'vms') . '</p>';
+  echo '<legend class="screen-reader-text">' . esc_html__('Staff Portal tech doc visibility', 'backstage-venue-manager') . '</legend>';
+  echo '<p class="description">' . esc_html__('Leave everything unchecked to show event tech docs to all assigned staff. Check one or more staffing roles to only show docs when the assigned shift uses one of those roles.', 'backstage-venue-manager') . '</p>';
 
   foreach ($role_map as $role_id => $role) {
     $role_id = absint($role_id);
     if ($role_id <= 0) continue;
     /* translators: %d: staffing role ID */
-    $label = isset($role['name']) ? (string) $role['name'] : sprintf(__('Role #%d', 'vms'), $role_id);
+    $label = isset($role['name']) ? (string) $role['name'] : sprintf(__('Role #%d', 'backstage-venue-manager'), $role_id);
     echo '<label style="display:block;margin:0 0 6px;">';
     echo '<input type="checkbox" name="vms_settings[staff_portal_doc_visibility_role_ids][]" value="' . esc_attr((string) $role_id) . '" ' . checked(in_array($role_id, $selected, true), true, false) . ' /> ';
     echo esc_html($label);
@@ -1201,7 +1201,7 @@ function vms_field_season_dates_link()
   $url = admin_url('admin.php?page=vms-season-dates');
 
   echo '<a class="button button-secondary" href="' . esc_url($url) . '">';
-  echo esc_html__('Manage Season Dates', 'vms');
+  echo esc_html__('Manage Season Dates', 'backstage-venue-manager');
   echo '</a>';
 
   $rules = get_option('vms_season_rules_v1', array());
@@ -1226,16 +1226,16 @@ register_setting('vms_settings_group', 'vms_settings', array(
 
   add_settings_section(
     'vms_settings_venues',
-    __('Venues', 'vms'),
+    __('Venues', 'backstage-venue-manager'),
     function () {
-      echo '<p>' . esc_html__('Default venue behavior and fallbacks.', 'vms') . '</p>';
+      echo '<p>' . esc_html__('Default venue behavior and fallbacks.', 'backstage-venue-manager') . '</p>';
     },
     'vms-settings'
   );
 
   add_settings_field(
     'vms_default_venue_id',
-    __('Default Venue', 'vms'),
+    __('Default Venue', 'backstage-venue-manager'),
     'vms_field_default_venue',
     'vms-settings',
     'vms_settings_venues'
@@ -1246,16 +1246,16 @@ add_action('admin_init', function () {
 
   add_settings_section(
     'vms_settings_admissions',
-    __('Guest List / Admissions', 'vms'),
+    __('Guest List / Admissions', 'backstage-venue-manager'),
     function () {
-      echo '<p>' . esc_html__('Controls for the Guest List / Comp Admission module and door check-in behavior.', 'vms') . '</p>';
+      echo '<p>' . esc_html__('Controls for the Guest List / Comp Admission module and door check-in behavior.', 'backstage-venue-manager') . '</p>';
     },
     'vms-settings'
   );
 
   add_settings_field(
     'vms_admission_max_party_size',
-    __('Max party size', 'vms'),
+    __('Max party size', 'backstage-venue-manager'),
     'vms_field_admission_max_party_size',
     'vms-settings',
     'vms_settings_admissions'
@@ -1263,7 +1263,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_admission_allow_uncheckin',
-    __('Allow undo check-in', 'vms'),
+    __('Allow undo check-in', 'backstage-venue-manager'),
     'vms_field_admission_allow_uncheckin',
     'vms-settings',
     'vms_settings_admissions'
@@ -1271,7 +1271,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_admission_allow_uncheckin_for_door',
-    __('Allow undo check-in for door staff', 'vms'),
+    __('Allow undo check-in for door staff', 'backstage-venue-manager'),
     'vms_field_admission_allow_uncheckin_for_door',
     'vms-settings',
     'vms_settings_admissions'
@@ -1279,7 +1279,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_admission_door_show_phone',
-    __('Show phone numbers at door', 'vms'),
+    __('Show phone numbers at door', 'backstage-venue-manager'),
     'vms_field_admission_door_show_phone',
     'vms-settings',
     'vms_settings_admissions'
@@ -1290,16 +1290,16 @@ add_action('admin_init', function () {
 
   add_settings_section(
     'vms_settings_vendor_portal',
-    __('Vendor Portal', 'vms'),
+    __('Vendor Portal', 'backstage-venue-manager'),
     function () {
-      echo '<p>' . esc_html__('Controls what vendors can see inside their portal.', 'vms') . '</p>';
+      echo '<p>' . esc_html__('Controls what vendors can see inside their portal.', 'backstage-venue-manager') . '</p>';
     },
     'vms-settings'
   );
 
   add_settings_field(
     'vms_vendor_portal_show_secondary_ticket_sales',
-    __('Secondary vendor crowd visibility', 'vms'),
+    __('Secondary vendor crowd visibility', 'backstage-venue-manager'),
     'vms_field_vendor_portal_show_secondary_ticket_sales',
     'vms-settings',
     'vms_settings_vendor_portal'
@@ -1307,7 +1307,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_availability_date_dispatch_enabled',
-    __('Availability & Date Dispatch', 'vms'),
+    __('Availability & Date Dispatch', 'backstage-venue-manager'),
     'vms_field_availability_date_dispatch_enabled',
     'vms-settings',
     'vms_settings_vendor_portal'
@@ -1315,7 +1315,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_vendor_doc_submission_notifications',
-    __('Vendor document submission alerts', 'vms'),
+    __('Vendor document submission alerts', 'backstage-venue-manager'),
     'vms_field_vendor_doc_submission_notifications',
     'vms-settings',
     'vms_settings_vendor_portal'
@@ -1326,16 +1326,16 @@ add_action('admin_init', function () {
 
   add_settings_section(
     'vms_settings_staff_portal',
-    __('Staff Portal', 'vms'),
+    __('Staff Portal', 'backstage-venue-manager'),
     function () {
-      echo '<p>' . esc_html__('Controls what assigned staff can see inside their portal dashboard.', 'vms') . '</p>';
+      echo '<p>' . esc_html__('Controls what assigned staff can see inside their portal dashboard.', 'backstage-venue-manager') . '</p>';
     },
     'vms-settings'
   );
 
   add_settings_field(
     'vms_staff_portal_doc_visibility_roles',
-    __('Tech doc visibility by staffing role', 'vms'),
+    __('Tech doc visibility by staffing role', 'backstage-venue-manager'),
     'vms_field_staff_portal_doc_visibility_roles',
     'vms-settings',
     'vms_settings_staff_portal'
@@ -1396,7 +1396,7 @@ add_action('admin_init', function () {
 // Section
   add_settings_section(
     'vms_dash_section',
-    __('Dashboard', 'vms'),
+    __('Dashboard', 'backstage-venue-manager'),
     function () {
       echo '<p class="description">Controls how the Dashboard calculates ranges (This Week and Upcoming Bills).</p>';
     },
@@ -1406,7 +1406,7 @@ add_action('admin_init', function () {
   // Fields
   add_settings_field(
     'vms_dash_week_mode',
-    __('Week view mode', 'vms'),
+    __('Week view mode', 'backstage-venue-manager'),
     'vms_dash_field_week_mode',
     'vms-settings',
     'vms_dash_section'
@@ -1414,7 +1414,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_dash_week_start',
-    __('Week starts on', 'vms'),
+    __('Week starts on', 'backstage-venue-manager'),
     'vms_dash_field_week_start',
     'vms-settings',
     'vms_dash_section'
@@ -1422,7 +1422,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_dash_week_span',
-    __('Week preview length', 'vms'),
+    __('Week preview length', 'backstage-venue-manager'),
     'vms_dash_field_week_span',
     'vms-settings',
     'vms_dash_section'
@@ -1431,7 +1431,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_dash_bills_span',
-    __('Upcoming Bills window (days)', 'vms'),
+    __('Upcoming Bills window (days)', 'backstage-venue-manager'),
     'vms_dash_field_bills_span',
     'vms-settings',
     'vms_dash_section'
@@ -1439,7 +1439,7 @@ add_action('admin_init', function () {
 
   add_settings_field(
     'vms_dash_bills_terms_days',
-    __('Upcoming Bills terms offset (days)', 'vms'),
+    __('Upcoming Bills terms offset (days)', 'backstage-venue-manager'),
     'vms_dash_field_bills_terms_days',
     'vms-settings',
     'vms_dash_section'
@@ -1524,28 +1524,28 @@ if (!function_exists('vms_settings_calendar_icon_choices')) {
   function vms_settings_calendar_icon_choices(): array
   {
     return array(
-      '🎵' => __('Music', 'vms'),
-      '🎤' => __('Mic', 'vms'),
-      '🎸' => __('Guitar', 'vms'),
-      '🎹' => __('Keys', 'vms'),
-      '🥁' => __('Drums', 'vms'),
-      '🍔' => __('Food', 'vms'),
-      '🌮' => __('Taco', 'vms'),
-      '🍕' => __('Pizza', 'vms'),
-      '🍹' => __('Cocktail', 'vms'),
-      '🍺' => __('Beer', 'vms'),
-      '🍷' => __('Wine', 'vms'),
-      '☕' => __('Coffee', 'vms'),
-      '🧁' => __('Dessert', 'vms'),
-      '🛍️' => __('Merch', 'vms'),
-      '🎪' => __('Booth', 'vms'),
-      '📸' => __('Photo', 'vms'),
-      '🎥' => __('Video', 'vms'),
-      '🎨' => __('Art', 'vms'),
-      '🎟️' => __('Tickets', 'vms'),
-      '🧰' => __('Services', 'vms'),
-      '🚚' => __('Truck', 'vms'),
-      '✨' => __('General', 'vms'),
+      '🎵' => __('Music', 'backstage-venue-manager'),
+      '🎤' => __('Mic', 'backstage-venue-manager'),
+      '🎸' => __('Guitar', 'backstage-venue-manager'),
+      '🎹' => __('Keys', 'backstage-venue-manager'),
+      '🥁' => __('Drums', 'backstage-venue-manager'),
+      '🍔' => __('Food', 'backstage-venue-manager'),
+      '🌮' => __('Taco', 'backstage-venue-manager'),
+      '🍕' => __('Pizza', 'backstage-venue-manager'),
+      '🍹' => __('Cocktail', 'backstage-venue-manager'),
+      '🍺' => __('Beer', 'backstage-venue-manager'),
+      '🍷' => __('Wine', 'backstage-venue-manager'),
+      '☕' => __('Coffee', 'backstage-venue-manager'),
+      '🧁' => __('Dessert', 'backstage-venue-manager'),
+      '🛍️' => __('Merch', 'backstage-venue-manager'),
+      '🎪' => __('Booth', 'backstage-venue-manager'),
+      '📸' => __('Photo', 'backstage-venue-manager'),
+      '🎥' => __('Video', 'backstage-venue-manager'),
+      '🎨' => __('Art', 'backstage-venue-manager'),
+      '🎟️' => __('Tickets', 'backstage-venue-manager'),
+      '🧰' => __('Services', 'backstage-venue-manager'),
+      '🚚' => __('Truck', 'backstage-venue-manager'),
+      '✨' => __('General', 'backstage-venue-manager'),
     );
   }
 }
@@ -1571,7 +1571,7 @@ if (!function_exists('vms_settings_calendar_vendor_type_label')) {
       'talent',
     );
     if (in_array($slug, $primary_keys, true) || in_array($label_key, $primary_keys, true)) {
-      return __('Primary Vendor', 'vms');
+      return __('Primary Vendor', 'backstage-venue-manager');
     }
 
     $secondary_keys = array(
@@ -1582,7 +1582,7 @@ if (!function_exists('vms_settings_calendar_vendor_type_label')) {
       'food_truck',
     );
     if (in_array($slug, $secondary_keys, true) || in_array($label_key, $secondary_keys, true)) {
-      return __('Secondary Vendor', 'vms');
+      return __('Secondary Vendor', 'backstage-venue-manager');
     }
 
     return ($label !== '') ? $label : $slug;
@@ -1634,7 +1634,7 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
       $rows[] = array(
         'slug' => $k,
         /* translators: %s: saved vendor type key */
-        'label' => vms_settings_calendar_vendor_type_label($k, sprintf(__('Archived type (%s)', 'vms'), $k)),
+        'label' => vms_settings_calendar_vendor_type_label($k, sprintf(__('Archived type (%s)', 'backstage-venue-manager'), $k)),
       );
     }
 
@@ -1647,14 +1647,14 @@ function vms_render_settings_page()
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
-        'title' => __('VMS Settings', 'vms'),
+        'title' => __('VMS Settings', 'backstage-venue-manager'),
       ),
       'vms_render_settings_page_content'
     );
     return;
   }
 
-  echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'vms') . '</h1>';
+  echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';
   vms_render_settings_page_content();
   echo '</div>';
 }
@@ -1663,11 +1663,11 @@ function vms_render_settings_page_content()
 {
 
   if (isset($_GET['vms_notice']) && (string) $_GET['vms_notice'] === 'default_venue_set') {
-    echo '<div class="notice notice-success"><p>' . esc_html__('Default venue updated.', 'vms') . '</p></div>';
+    echo '<div class="notice notice-success"><p>' . esc_html__('Default venue updated.', 'backstage-venue-manager') . '</p></div>';
   }
 
   if (defined('VMS_VERSION')) {
-    echo '<p class="description">' . esc_html__('Plugin version:', 'vms') . ' ' . esc_html((string) VMS_VERSION) . '</p>';
+    echo '<p class="description">' . esc_html__('Plugin version:', 'backstage-venue-manager') . ' ' . esc_html((string) VMS_VERSION) . '</p>';
   }
   echo '<form method="post" action="options.php">';
   settings_fields('vms_settings_group');
@@ -1724,84 +1724,84 @@ function vms_render_settings_page_content()
     $ticket_ui_addons_subtext = function_exists('vms_ticketing_ui_addons_section_subtext_default') ? vms_ticketing_ui_addons_section_subtext_default() : 'Click here to add a fire pit or table to your order.';
   }
 
-  echo '<h2 class="vms-mt-24">' . esc_html__('Ticketing', 'vms') . '</h2>';
+  echo '<h2 class="vms-mt-24">' . esc_html__('Ticketing', 'backstage-venue-manager') . '</h2>';
   echo '<table class="form-table" role="presentation">';
   echo '<tr>';
-  echo '<th scope="row">' . esc_html__('Default behavior', 'vms') . '</th>';
+  echo '<th scope="row">' . esc_html__('Default behavior', 'backstage-venue-manager') . '</th>';
   echo '<td>';
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[ticketing_enabled_default]" value="1" ' . checked($ticketing_default, 1, false) . ' /> ';
-  echo esc_html__('Enable ticketing features by default for new Event Plans', 'vms');
+  echo esc_html__('Enable ticketing features by default for new Event Plans', 'backstage-venue-manager');
   echo '</label>';
-  echo '<p class="description">' . esc_html__('Recommended for operators who regularly sell tickets. Even when enabled, ticketing requires The Events Calendar + Event Tickets (Woo) + WooCommerce.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Recommended for operators who regularly sell tickets. Even when enabled, ticketing requires The Events Calendar + Event Tickets (Woo) + WooCommerce.', 'backstage-venue-manager') . '</p>';
   echo '</td>';
   echo '</tr>';
   echo '<tr data-vms-tour="ticketing-ui.about">';
-  echo '<th scope="row"><label for="vms_ticket_ui_layout">' . esc_html__('Ticket UI', 'vms') . '</label></th>';
+  echo '<th scope="row"><label for="vms_ticket_ui_layout">' . esc_html__('Ticket UI', 'backstage-venue-manager') . '</label></th>';
   echo '<td data-vms-tour="ticketing-ui.settings-root">';
-  $ticketing_ui_tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.settings.ticketing_ui" data-vms-tour="ticketing-ui.start-tour">' . esc_html__('Start Guided Tour', 'vms') . '</button>';
+  $ticketing_ui_tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.settings.ticketing_ui" data-vms-tour="ticketing-ui.start-tour">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
   if (function_exists('vms_render_help_button')) {
     $ticketing_ui_tour_button = vms_render_help_button(array(
       'tour_id' => 'vms.settings.ticketing_ui',
       'anchor' => 'ticketing-ui.start-tour',
-      'label' => __('Start Guided Tour', 'vms'),
+      'label' => __('Start Guided Tour', 'backstage-venue-manager'),
     ));
   }
   echo '<p>' . wp_kses($ticketing_ui_tour_button, vms_settings_page_help_button_allowed_html()) . '</p>';
-  echo '<p class="description">' . esc_html__('Ticket UI can run in Safe Mode, the older unified V2 layout, or the new progressive flow that keeps all admission choices together while tucking optional add-ons below.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Ticket UI can run in Safe Mode, the older unified V2 layout, or the new progressive flow that keeps all admission choices together while tucking optional add-ons below.', 'backstage-venue-manager') . '</p>';
   echo '<p data-vms-tour="ticketing-ui.public-enable">';
-  echo '<label for="vms_ticket_ui_layout"><strong>' . esc_html__('Ticket UI Layout', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_ticket_ui_layout"><strong>' . esc_html__('Ticket UI Layout', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<select id="vms_ticket_ui_layout" name="vms_settings[ticket_ui_layout]">';
-  echo '<option value="classic"' . selected($ticket_ui_layout, 'classic', false) . '>' . esc_html__('Safe Mode (TEC-only)', 'vms') . '</option>';
-  echo '<option value="v2"' . selected($ticket_ui_layout, 'v2', false) . '>' . esc_html__('V2 (Unified)', 'vms') . '</option>';
-  echo '<option value="progressive"' . selected($ticket_ui_layout, 'progressive', false) . '>' . esc_html__('Progressive (Tickets + Add-ons)', 'vms') . '</option>';
+  echo '<option value="classic"' . selected($ticket_ui_layout, 'classic', false) . '>' . esc_html__('Safe Mode (TEC-only)', 'backstage-venue-manager') . '</option>';
+  echo '<option value="v2"' . selected($ticket_ui_layout, 'v2', false) . '>' . esc_html__('V2 (Unified)', 'backstage-venue-manager') . '</option>';
+  echo '<option value="progressive"' . selected($ticket_ui_layout, 'progressive', false) . '>' . esc_html__('Progressive (Tickets + Add-ons)', 'backstage-venue-manager') . '</option>';
   echo '</select>';
   echo '</p>';
   echo '<p>';
-  echo '<label for="vms_ticket_ui_addons_heading"><strong>' . esc_html__('Add-on section heading', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_ticket_ui_addons_heading"><strong>' . esc_html__('Add-on section heading', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<input id="vms_ticket_ui_addons_heading" type="text" class="regular-text" name="vms_settings[ticket_ui_addons_heading]" value="' . esc_attr($ticket_ui_addons_heading) . '" />';
-  echo '<span class="description vms-ml-10">' . esc_html__('Shown as the collapsed add-on section title in Progressive layout.', 'vms') . '</span>';
+  echo '<span class="description vms-ml-10">' . esc_html__('Shown as the collapsed add-on section title in Progressive layout.', 'backstage-venue-manager') . '</span>';
   echo '</p>';
   echo '<p>';
-  echo '<label for="vms_ticket_ui_addons_subtext"><strong>' . esc_html__('Add-on section subtext', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_ticket_ui_addons_subtext"><strong>' . esc_html__('Add-on section subtext', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<input id="vms_ticket_ui_addons_subtext" type="text" class="large-text" name="vms_settings[ticket_ui_addons_subtext]" value="' . esc_attr($ticket_ui_addons_subtext) . '" />';
   echo '</p>';
   echo '<p data-vms-tour="ticketing-ui.admin-preview">';
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[ticket_ui_v2_admin_preview]" value="1" ' . checked($ticket_ui_admin_preview, 1, false) . ' /> ';
-  echo esc_html__('Enable V2 preview for admins only when layout is Safe Mode', 'vms');
+  echo esc_html__('Enable V2 preview for admins only when layout is Safe Mode', 'backstage-venue-manager');
   echo '</label>';
   echo '</p>';
   echo '<p>';
-  echo '<label for="vms_ticket_ui_availability_display"><strong>' . esc_html__('Display total ticket availability', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_ticket_ui_availability_display"><strong>' . esc_html__('Display total ticket availability', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<select id="vms_ticket_ui_availability_display" name="vms_settings[ticket_ui_availability_display]">';
-  echo '<option value="always"' . selected($ticket_ui_availability_display, 'always', false) . '>' . esc_html__('Always show total remaining', 'vms') . '</option>';
-  echo '<option value="low"' . selected($ticket_ui_availability_display, 'low', false) . '>' . esc_html__('Only show when low', 'vms') . '</option>';
-  echo '<option value="hide"' . selected($ticket_ui_availability_display, 'hide', false) . '>' . esc_html__('Hide total availability', 'vms') . '</option>';
+  echo '<option value="always"' . selected($ticket_ui_availability_display, 'always', false) . '>' . esc_html__('Always show total remaining', 'backstage-venue-manager') . '</option>';
+  echo '<option value="low"' . selected($ticket_ui_availability_display, 'low', false) . '>' . esc_html__('Only show when low', 'backstage-venue-manager') . '</option>';
+  echo '<option value="hide"' . selected($ticket_ui_availability_display, 'hide', false) . '>' . esc_html__('Hide total availability', 'backstage-venue-manager') . '</option>';
   echo '</select>';
-  echo '<label for="vms_ticket_ui_availability_low_threshold" class="vms-ml-10">' . esc_html__('Low threshold', 'vms') . '</label> ';
+  echo '<label for="vms_ticket_ui_availability_low_threshold" class="vms-ml-10">' . esc_html__('Low threshold', 'backstage-venue-manager') . '</label> ';
   echo '<input id="vms_ticket_ui_availability_low_threshold" type="number" min="1" step="1" class="small-text" name="vms_settings[ticket_ui_availability_low_threshold]" value="' . esc_attr((string) $ticket_ui_availability_low_threshold) . '" />';
-  echo '<br /><span class="description">' . esc_html__('Recommended: only show total inventory when an event is close to selling out, so the page does not advertise large remaining capacity.', 'vms') . '</span>';
+  echo '<br /><span class="description">' . esc_html__('Recommended: only show total inventory when an event is close to selling out, so the page does not advertise large remaining capacity.', 'backstage-venue-manager') . '</span>';
   echo '</p>';
   echo '<p>';
-  echo '<label for="vms_ticket_ui_sale_availability_display"><strong>' . esc_html__('Display sale quantity remaining', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_ticket_ui_sale_availability_display"><strong>' . esc_html__('Display sale quantity remaining', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<select id="vms_ticket_ui_sale_availability_display" name="vms_settings[ticket_ui_sale_availability_display]">';
-  echo '<option value="when_capped"' . selected($ticket_ui_sale_availability_display, 'when_capped', false) . '>' . esc_html__('Show when a capped sale is active', 'vms') . '</option>';
-  echo '<option value="low"' . selected($ticket_ui_sale_availability_display, 'low', false) . '>' . esc_html__('Only show when sale quantity is low', 'vms') . '</option>';
-  echo '<option value="hide"' . selected($ticket_ui_sale_availability_display, 'hide', false) . '>' . esc_html__('Hide sale quantity', 'vms') . '</option>';
+  echo '<option value="when_capped"' . selected($ticket_ui_sale_availability_display, 'when_capped', false) . '>' . esc_html__('Show when a capped sale is active', 'backstage-venue-manager') . '</option>';
+  echo '<option value="low"' . selected($ticket_ui_sale_availability_display, 'low', false) . '>' . esc_html__('Only show when sale quantity is low', 'backstage-venue-manager') . '</option>';
+  echo '<option value="hide"' . selected($ticket_ui_sale_availability_display, 'hide', false) . '>' . esc_html__('Hide sale quantity', 'backstage-venue-manager') . '</option>';
   echo '</select>';
-  echo '<label for="vms_ticket_ui_sale_availability_low_threshold" class="vms-ml-10">' . esc_html__('Sale low threshold', 'vms') . '</label> ';
+  echo '<label for="vms_ticket_ui_sale_availability_low_threshold" class="vms-ml-10">' . esc_html__('Sale low threshold', 'backstage-venue-manager') . '</label> ';
   echo '<input id="vms_ticket_ui_sale_availability_low_threshold" type="number" min="1" step="1" class="small-text" name="vms_settings[ticket_ui_sale_availability_low_threshold]" value="' . esc_attr((string) $ticket_ui_sale_availability_low_threshold) . '" />';
-  echo '<br /><span class="description">' . esc_html__('This is separate from total availability so Early Bird urgency can show without exposing full event capacity.', 'vms') . '</span>';
+  echo '<br /><span class="description">' . esc_html__('This is separate from total availability so Early Bird urgency can show without exposing full event capacity.', 'backstage-venue-manager') . '</span>';
   echo '</p>';
   echo '<p>';
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[ticket_ui_help_tickets_enabled]" value="1" ' . checked($ticket_help_tickets_enabled, 1, false) . ' /> ';
-  echo esc_html__('Show ticket help above Tickets', 'vms');
+  echo esc_html__('Show ticket help above Tickets', 'backstage-venue-manager');
   echo '</label>';
   echo '</p>';
   echo '<p>';
-  echo '<label for="vms_ticket_ui_help_tickets_default"><strong>' . esc_html__('Default ticket help copy', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_ticket_ui_help_tickets_default"><strong>' . esc_html__('Default ticket help copy', 'backstage-venue-manager') . '</strong></label><br />';
   wp_editor(
     $ticket_help_tickets_default,
     'vms_ticket_ui_help_tickets_default_editor',
@@ -1821,11 +1821,11 @@ function vms_render_settings_page_content()
   echo '<p>';
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[ticket_ui_help_addons_enabled]" value="1" ' . checked($ticket_help_addons_enabled, 1, false) . ' /> ';
-  echo esc_html__('Show add-on help above the add-on section', 'vms');
+  echo esc_html__('Show add-on help above the add-on section', 'backstage-venue-manager');
   echo '</label>';
   echo '</p>';
   echo '<p>';
-  echo '<label for="vms_ticket_ui_help_addons_default"><strong>' . esc_html__('Default add-on help copy', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_ticket_ui_help_addons_default"><strong>' . esc_html__('Default add-on help copy', 'backstage-venue-manager') . '</strong></label><br />';
   wp_editor(
     $ticket_help_addons_default,
     'vms_ticket_ui_help_addons_default_editor',
@@ -1842,8 +1842,8 @@ function vms_render_settings_page_content()
     )
   );
   echo '</p>';
-  echo '<p class="description">' . esc_html__('These are the default public help boxes shown above tickets and above add-ons. Use the editor for bold, lists, alignment, links, and text color. Individual Event Plans can override the copy with the same editor when a show needs custom wording.', 'vms') . '</p>';
-  echo '<p class="description" data-vms-tour="ticketing-ui.rollback">' . esc_html__('Behavior: when Layout is Safe Mode and Admin Preview is ON, admins see V2 while public users stay on Safe Mode. To roll back instantly, set Layout to Safe Mode and turn Admin Preview OFF.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('These are the default public help boxes shown above tickets and above add-ons. Use the editor for bold, lists, alignment, links, and text color. Individual Event Plans can override the copy with the same editor when a show needs custom wording.', 'backstage-venue-manager') . '</p>';
+  echo '<p class="description" data-vms-tour="ticketing-ui.rollback">' . esc_html__('Behavior: when Layout is Safe Mode and Admin Preview is ON, admins see V2 while public users stay on Safe Mode. To roll back instantly, set Layout to Safe Mode and turn Admin Preview OFF.', 'backstage-venue-manager') . '</p>';
   echo '</td>';
   echo '</tr>';
   echo '</table>';
@@ -1874,8 +1874,8 @@ function vms_render_settings_page_content()
     }
   }
 
-  echo '<h3 class="vms-mt-16">' . esc_html__('Ticketing inventory tools', 'vms') . '</h3>';
-  echo '<p class="description">' . esc_html__('Preview and reconcile entitlement availability from paid orders. Use Preview first, then Commit fixes. This prevents stock from being reset to full capacity after you change ticketing config and commit again.', 'vms') . '</p>';
+  echo '<h3 class="vms-mt-16">' . esc_html__('Ticketing inventory tools', 'backstage-venue-manager') . '</h3>';
+  echo '<p class="description">' . esc_html__('Preview and reconcile entitlement availability from paid orders. Use Preview first, then Commit fixes. This prevents stock from being reset to full capacity after you change ticketing config and commit again.', 'backstage-venue-manager') . '</p>';
 
   $preview_url = add_query_arg(
     array(
@@ -1908,13 +1908,13 @@ function vms_render_settings_page_content()
   );
 
   echo '<p style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">';
-  echo '<a class="button button-secondary" href="' . esc_url($preview_url) . '">' . esc_html__('Preview changes', 'vms') . '</a>';
+  echo '<a class="button button-secondary" href="' . esc_url($preview_url) . '">' . esc_html__('Preview changes', 'backstage-venue-manager') . '</a>';
   if (is_array($preview_rep)) {
-    echo '<a class="button button-primary" href="' . esc_url($commit_url) . '">' . esc_html__('Commit fixes', 'vms') . '</a>';
-    echo '<a class="button" href="' . esc_url($csv_url) . '">' . esc_html__('Download CSV (preview)', 'vms') . '</a>';
-    echo '<a class="button-link" href="' . esc_url($clear_preview_url) . '">' . esc_html__('Clear preview', 'vms') . '</a>';
+    echo '<a class="button button-primary" href="' . esc_url($commit_url) . '">' . esc_html__('Commit fixes', 'backstage-venue-manager') . '</a>';
+    echo '<a class="button" href="' . esc_url($csv_url) . '">' . esc_html__('Download CSV (preview)', 'backstage-venue-manager') . '</a>';
+    echo '<a class="button-link" href="' . esc_url($clear_preview_url) . '">' . esc_html__('Clear preview', 'backstage-venue-manager') . '</a>';
   } else {
-    echo '<span class="description" style="margin-left:6px;">' . esc_html__('Run Preview to generate a report before committing.', 'vms') . '</span>';
+    echo '<span class="description" style="margin-left:6px;">' . esc_html__('Run Preview to generate a report before committing.', 'backstage-venue-manager') . '</span>';
   }
   echo '</p>';
 
@@ -1922,18 +1922,18 @@ function vms_render_settings_page_content()
     $rows = (array) $preview_rep['results'];
     $max_rows = 75;
     echo '<div class="vms-mt-8" style="max-width:1100px;">';
-    echo '<h4 class="vms-mt-8" style="margin:10px 0 6px;">' . esc_html__('Preview details (most recent)', 'vms') . '</h4>';
+    echo '<h4 class="vms-mt-8" style="margin:10px 0 6px;">' . esc_html__('Preview details (most recent)', 'backstage-venue-manager') . '</h4>';
     /* translators: %d: maximum number of preview rows shown */
-    echo '<p class="description">' . esc_html(sprintf(__('Showing up to %d rows. Download CSV for the full report.', 'vms'), $max_rows)) . '</p>';
+    echo '<p class="description">' . esc_html(sprintf(__('Showing up to %d rows. Download CSV for the full report.', 'backstage-venue-manager'), $max_rows)) . '</p>';
     echo '<table class="widefat striped" style="margin-top:8px;">';
     echo '<thead><tr>';
-    echo '<th>' . esc_html__('Product', 'vms') . '</th>';
-    echo '<th>' . esc_html__('SKU', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Capacity', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Sold', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Old qty', 'vms') . '</th>';
-    echo '<th>' . esc_html__('New qty', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Status', 'vms') . '</th>';
+    echo '<th>' . esc_html__('Product', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('SKU', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Capacity', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Sold', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Old qty', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('New qty', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
     echo '</tr></thead><tbody>';
     $i = 0;
     foreach ($rows as $r) {
@@ -2025,14 +2025,14 @@ function vms_render_settings_page_content()
     return (!empty($value) && $value !== '0' && strtolower((string) $value) !== 'false') ? '1' : '0';
   };
 
-  echo '<h2 class="vms-mt-24">' . esc_html__('Calendar', 'vms') . '</h2>';
+  echo '<h2 class="vms-mt-24">' . esc_html__('Calendar', 'backstage-venue-manager') . '</h2>';
   echo '<table class="form-table" role="presentation">';
 
-  echo '<tr><th scope="row">' . esc_html__('Vendor Type Icons', 'vms') . '</th><td>';
+  echo '<tr><th scope="row">' . esc_html__('Vendor Type Icons', 'backstage-venue-manager') . '</th><td>';
   $icon_choices = vms_settings_calendar_icon_choices();
 
   if (empty($vendor_type_rows)) {
-    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can pick icons from a list here.', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can pick icons from a list here.', 'backstage-venue-manager') . '</p>';
   } else {
     echo '<div class="vms-settings-icon-grid">';
     foreach ($vendor_type_rows as $row) {
@@ -2051,13 +2051,13 @@ function vms_render_settings_page_content()
       echo '<span class="vms-settings-icon-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-icon-select-wrap">';
       echo '<select id="' . esc_attr($field_id) . '" name="vms_settings[calendar_vendor_type_icons][' . esc_attr($slug) . ']" class="vms-settings-icon-select">';
-      echo '<option value="">' . esc_html__('No icon', 'vms') . '</option>';
+      echo '<option value="">' . esc_html__('No icon', 'backstage-venue-manager') . '</option>';
       foreach ($icon_choices as $icon => $icon_label) {
         $option_label = trim($icon . ' ' . (string) $icon_label);
         echo '<option value="' . esc_attr((string) $icon) . '"' . selected($current_icon, (string) $icon, false) . '>' . esc_html($option_label) . '</option>';
       }
       if ($current_icon !== '' && !array_key_exists($current_icon, $icon_choices)) {
-        echo '<option value="' . esc_attr($current_icon) . '" selected>' . esc_html($current_icon . ' ' . __('(custom saved)', 'vms')) . '</option>';
+        echo '<option value="' . esc_attr($current_icon) . '" selected>' . esc_html($current_icon . ' ' . __('(custom saved)', 'backstage-venue-manager')) . '</option>';
       }
       echo '</select>';
       $preview = ($current_icon !== '') ? $current_icon : '—';
@@ -2067,12 +2067,12 @@ function vms_render_settings_page_content()
     }
     echo '</div>';
   }
-  echo '<p class="description">' . esc_html__('Pick icons from the list. No manual formatting required.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Pick icons from the list. No manual formatting required.', 'backstage-venue-manager') . '</p>';
   echo '</td></tr>';
 
-  echo '<tr><th scope="row">' . esc_html__('Slot Limit Defaults', 'vms') . '</th><td>';
+  echo '<tr><th scope="row">' . esc_html__('Slot Limit Defaults', 'backstage-venue-manager') . '</th><td>';
   if (empty($vendor_type_rows)) {
-    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set slot limits from pickers here.', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set slot limits from pickers here.', 'backstage-venue-manager') . '</p>';
   } else {
     echo '<div class="vms-settings-map-grid">';
     foreach ($vendor_type_rows as $row) {
@@ -2095,24 +2095,24 @@ function vms_render_settings_page_content()
       echo '<label class="vms-settings-map-row" for="' . esc_attr($field_id) . '">';
       echo '<span class="vms-settings-map-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-map-controls">';
-      echo '<input id="' . esc_attr($field_id) . '" type="number" min="0" step="1" class="small-text vms-settings-map-number" name="vms_settings[calendar_default_slot_limits][' . esc_attr($slug) . ']" value="' . esc_attr($limit_value) . '" placeholder="' . esc_attr__('Use default', 'vms') . '" />';
+      echo '<input id="' . esc_attr($field_id) . '" type="number" min="0" step="1" class="small-text vms-settings-map-number" name="vms_settings[calendar_default_slot_limits][' . esc_attr($slug) . ']" value="' . esc_attr($limit_value) . '" placeholder="' . esc_attr__('Use default', 'backstage-venue-manager') . '" />';
       echo '</span>';
       echo '</label>';
     }
     echo '</div>';
   }
-  echo '<p class="description">' . esc_html__('Set max slots per Vendor Type. Leave blank to keep default behavior.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Set max slots per Vendor Type. Leave blank to keep default behavior.', 'backstage-venue-manager') . '</p>';
   echo '</td></tr>';
 
-  echo '<tr><th scope="row">' . esc_html__('Vendor Calendar Visibility', 'vms') . '</th><td>';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_vendor_show_event_overlay]" value="1" ' . checked($calendar_vendor_overlay, 1, false) . ' /> ' . esc_html__('Show scheduled event overlay in vendor availability calendar', 'vms') . '</label><br />';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_vendor_show_tentative]" value="1" ' . checked($calendar_vendor_tentative, 1, false) . ' /> ' . esc_html__('Show Draft/Ready events to vendors as Tentative', 'vms') . '</label><br />';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_show_tickets_sold_to_vendors]" value="1" ' . checked($calendar_show_tickets, 1, false) . ' /> ' . esc_html__('Show tickets sold to vendors', 'vms') . '</label><br />';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_show_open_slots_vendor]" value="1" ' . checked($calendar_open_slots_vendor, 1, false) . ' /> ' . esc_html__('Show open slot indicator in vendor calendar', 'vms') . '</label><br />';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_show_open_slots_public]" value="1" ' . checked($calendar_open_slots_public, 1, false) . ' /> ' . esc_html__('Show open slot indicator in public calendar', 'vms') . '</label>';
-  echo '<p><strong>' . esc_html__('Per-type overrides', 'vms') . '</strong></p>';
+  echo '<tr><th scope="row">' . esc_html__('Vendor Calendar Visibility', 'backstage-venue-manager') . '</th><td>';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_vendor_show_event_overlay]" value="1" ' . checked($calendar_vendor_overlay, 1, false) . ' /> ' . esc_html__('Show scheduled event overlay in vendor availability calendar', 'backstage-venue-manager') . '</label><br />';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_vendor_show_tentative]" value="1" ' . checked($calendar_vendor_tentative, 1, false) . ' /> ' . esc_html__('Show Draft/Ready events to vendors as Tentative', 'backstage-venue-manager') . '</label><br />';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_show_tickets_sold_to_vendors]" value="1" ' . checked($calendar_show_tickets, 1, false) . ' /> ' . esc_html__('Show tickets sold to vendors', 'backstage-venue-manager') . '</label><br />';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_show_open_slots_vendor]" value="1" ' . checked($calendar_open_slots_vendor, 1, false) . ' /> ' . esc_html__('Show open slot indicator in vendor calendar', 'backstage-venue-manager') . '</label><br />';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_show_open_slots_public]" value="1" ' . checked($calendar_open_slots_public, 1, false) . ' /> ' . esc_html__('Show open slot indicator in public calendar', 'backstage-venue-manager') . '</label>';
+  echo '<p><strong>' . esc_html__('Per-type overrides', 'backstage-venue-manager') . '</strong></p>';
   if (empty($vendor_type_rows)) {
-    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set per-type visibility here.', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set per-type visibility here.', 'backstage-venue-manager') . '</p>';
   } else {
     echo '<div class="vms-settings-map-grid">';
     foreach ($vendor_type_rows as $row) {
@@ -2130,37 +2130,37 @@ function vms_render_settings_page_content()
       echo '<span class="vms-settings-map-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-map-controls">';
       /* translators: %s: vendor type label */
-      echo '<label class="screen-reader-text" for="vms-cal-other-vendors-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Show other vendors for %s', 'vms'), $label)) . '</label>';
+      echo '<label class="screen-reader-text" for="vms-cal-other-vendors-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Show other vendors for %s', 'backstage-venue-manager'), $label)) . '</label>';
       echo '<select id="vms-cal-other-vendors-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_vendor_show_other_vendors_by_type][' . esc_attr($slug) . ']">';
-      echo '<option value="">' . esc_html__('Use default', 'vms') . '</option>';
-      echo '<option value="1"' . selected($other_choice, '1', false) . '>' . esc_html__('Show other vendors', 'vms') . '</option>';
-      echo '<option value="0"' . selected($other_choice, '0', false) . '>' . esc_html__('Hide other vendors', 'vms') . '</option>';
+      echo '<option value="">' . esc_html__('Use default', 'backstage-venue-manager') . '</option>';
+      echo '<option value="1"' . selected($other_choice, '1', false) . '>' . esc_html__('Show other vendors', 'backstage-venue-manager') . '</option>';
+      echo '<option value="0"' . selected($other_choice, '0', false) . '>' . esc_html__('Hide other vendors', 'backstage-venue-manager') . '</option>';
       echo '</select>';
       /* translators: %s: vendor type label */
-      echo '<label class="screen-reader-text" for="vms-cal-open-slot-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Open slot indicator for %s', 'vms'), $label)) . '</label>';
+      echo '<label class="screen-reader-text" for="vms-cal-open-slot-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Open slot indicator for %s', 'backstage-venue-manager'), $label)) . '</label>';
       echo '<select id="vms-cal-open-slot-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_open_slot_display_by_vendor_type][' . esc_attr($slug) . ']">';
-      echo '<option value="">' . esc_html__('Use default', 'vms') . '</option>';
-      echo '<option value="1"' . selected($open_slot_choice, '1', false) . '>' . esc_html__('Show open slots', 'vms') . '</option>';
-      echo '<option value="0"' . selected($open_slot_choice, '0', false) . '>' . esc_html__('Hide open slots', 'vms') . '</option>';
+      echo '<option value="">' . esc_html__('Use default', 'backstage-venue-manager') . '</option>';
+      echo '<option value="1"' . selected($open_slot_choice, '1', false) . '>' . esc_html__('Show open slots', 'backstage-venue-manager') . '</option>';
+      echo '<option value="0"' . selected($open_slot_choice, '0', false) . '>' . esc_html__('Hide open slots', 'backstage-venue-manager') . '</option>';
       echo '</select>';
       echo '</span>';
       echo '</div>';
     }
     echo '</div>';
   }
-  echo '<p class="description">' . esc_html__('Use "Use default" to keep automatic behavior by vendor type.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Use "Use default" to keep automatic behavior by vendor type.', 'backstage-venue-manager') . '</p>';
   echo '</td></tr>';
 
-  echo '<tr><th scope="row">' . esc_html__('Open Slot Link', 'vms') . '</th><td>';
+  echo '<tr><th scope="row">' . esc_html__('Open Slot Link', 'backstage-venue-manager') . '</th><td>';
   echo '<select name="vms_settings[calendar_open_slot_link_target]">';
-  echo '<option value="vendor_dashboard"' . selected($calendar_open_slot_target, 'vendor_dashboard', false) . '>' . esc_html__('Vendor dashboard', 'vms') . '</option>';
-  echo '<option value="vendor_registration"' . selected($calendar_open_slot_target, 'vendor_registration', false) . '>' . esc_html__('Vendor registration page', 'vms') . '</option>';
-  echo '<option value="custom"' . selected($calendar_open_slot_target, 'custom', false) . '>' . esc_html__('Custom URL', 'vms') . '</option>';
+  echo '<option value="vendor_dashboard"' . selected($calendar_open_slot_target, 'vendor_dashboard', false) . '>' . esc_html__('Vendor dashboard', 'backstage-venue-manager') . '</option>';
+  echo '<option value="vendor_registration"' . selected($calendar_open_slot_target, 'vendor_registration', false) . '>' . esc_html__('Vendor registration page', 'backstage-venue-manager') . '</option>';
+  echo '<option value="custom"' . selected($calendar_open_slot_target, 'custom', false) . '>' . esc_html__('Custom URL', 'backstage-venue-manager') . '</option>';
   echo '</select>';
   echo '<p><input type="url" class="regular-text" name="vms_settings[calendar_open_slot_link_custom_url]" value="' . esc_attr($calendar_open_slot_custom) . '" placeholder="https://example.com/apply" /></p>';
-  echo '<p><strong>' . esc_html__('Per-type link target overrides', 'vms') . '</strong></p>';
+  echo '<p><strong>' . esc_html__('Per-type link target overrides', 'backstage-venue-manager') . '</strong></p>';
   if (empty($vendor_type_rows)) {
-    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set per-type link behavior here.', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set per-type link behavior here.', 'backstage-venue-manager') . '</p>';
   } else {
     echo '<div class="vms-settings-map-grid">';
     foreach ($vendor_type_rows as $row) {
@@ -2182,45 +2182,45 @@ function vms_render_settings_page_content()
       echo '<span class="vms-settings-map-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-map-controls">';
       /* translators: %s: vendor type label */
-      echo '<label class="screen-reader-text" for="vms-cal-link-target-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Open slot target for %s', 'vms'), $label)) . '</label>';
+      echo '<label class="screen-reader-text" for="vms-cal-link-target-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Open slot target for %s', 'backstage-venue-manager'), $label)) . '</label>';
       echo '<select id="vms-cal-link-target-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_open_slot_link_target_by_type][' . esc_attr($slug) . ']">';
-      echo '<option value="">' . esc_html__('Use global', 'vms') . '</option>';
-      echo '<option value="vendor_dashboard"' . selected($target_choice, 'vendor_dashboard', false) . '>' . esc_html__('Vendor dashboard', 'vms') . '</option>';
-      echo '<option value="vendor_registration"' . selected($target_choice, 'vendor_registration', false) . '>' . esc_html__('Vendor registration', 'vms') . '</option>';
-      echo '<option value="custom"' . selected($target_choice, 'custom', false) . '>' . esc_html__('Custom URL', 'vms') . '</option>';
+      echo '<option value="">' . esc_html__('Use global', 'backstage-venue-manager') . '</option>';
+      echo '<option value="vendor_dashboard"' . selected($target_choice, 'vendor_dashboard', false) . '>' . esc_html__('Vendor dashboard', 'backstage-venue-manager') . '</option>';
+      echo '<option value="vendor_registration"' . selected($target_choice, 'vendor_registration', false) . '>' . esc_html__('Vendor registration', 'backstage-venue-manager') . '</option>';
+      echo '<option value="custom"' . selected($target_choice, 'custom', false) . '>' . esc_html__('Custom URL', 'backstage-venue-manager') . '</option>';
       echo '</select>';
       /* translators: %s: vendor type label */
-      echo '<label class="screen-reader-text" for="vms-cal-link-custom-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Custom URL for %s', 'vms'), $label)) . '</label>';
+      echo '<label class="screen-reader-text" for="vms-cal-link-custom-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Custom URL for %s', 'backstage-venue-manager'), $label)) . '</label>';
       echo '<input id="vms-cal-link-custom-' . esc_attr($slug) . '" type="url" class="regular-text vms-settings-map-url" name="vms_settings[calendar_open_slot_link_custom_url_by_type][' . esc_attr($slug) . ']" value="' . esc_attr($custom_choice) . '" placeholder="https://example.com/apply" />';
       echo '</span>';
       echo '</div>';
     }
     echo '</div>';
   }
-  echo '<p class="description">' . esc_html__('Choose a target per Vendor Type. Enter a custom URL only when target is Custom URL.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Choose a target per Vendor Type. Enter a custom URL only when target is Custom URL.', 'backstage-venue-manager') . '</p>';
   echo '</td></tr>';
 
-  echo '<tr><th scope="row">' . esc_html__('Public Calendar', 'vms') . '</th><td>';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_public_shortcode_enabled]" value="1" ' . checked($calendar_public_enabled, 1, false) . ' /> ' . esc_html__('Enable [vms_public_calendar] shortcode', 'vms') . '</label><br />';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_public_show_vendors]" value="1" ' . checked($calendar_public_show_vendors, 1, false) . ' /> ' . esc_html__('Allow vendor lines in public calendar', 'vms') . '</label><br />';
-  echo '<label><input type="checkbox" name="vms_settings[calendar_public_hide_past_default]" value="1" ' . checked($calendar_public_hide_past, 1, false) . ' /> ' . esc_html__('Hide past events by default', 'vms') . '</label>';
-  echo '<p><label for="vms_public_calendar_default_view"><strong>' . esc_html__('Default public calendar view', 'vms') . '</strong></label><br />';
+  echo '<tr><th scope="row">' . esc_html__('Public Calendar', 'backstage-venue-manager') . '</th><td>';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_public_shortcode_enabled]" value="1" ' . checked($calendar_public_enabled, 1, false) . ' /> ' . esc_html__('Enable [vms_public_calendar] shortcode', 'backstage-venue-manager') . '</label><br />';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_public_show_vendors]" value="1" ' . checked($calendar_public_show_vendors, 1, false) . ' /> ' . esc_html__('Allow vendor lines in public calendar', 'backstage-venue-manager') . '</label><br />';
+  echo '<label><input type="checkbox" name="vms_settings[calendar_public_hide_past_default]" value="1" ' . checked($calendar_public_hide_past, 1, false) . ' /> ' . esc_html__('Hide past events by default', 'backstage-venue-manager') . '</label>';
+  echo '<p><label for="vms_public_calendar_default_view"><strong>' . esc_html__('Default public calendar view', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<select id="vms_public_calendar_default_view" name="vms_settings[calendar_public_default_view]">';
-  echo '<option value="auto"' . selected($calendar_public_default_view, 'auto', false) . '>' . esc_html__('Auto', 'vms') . '</option>';
-  echo '<option value="month"' . selected($calendar_public_default_view, 'month', false) . '>' . esc_html__('Month', 'vms') . '</option>';
-  echo '<option value="compact"' . selected($calendar_public_default_view, 'compact', false) . '>' . esc_html__('Compact weekend chunks', 'vms') . '</option>';
-  echo '<option value="list"' . selected($calendar_public_default_view, 'list', false) . '>' . esc_html__('List', 'vms') . '</option>';
+  echo '<option value="auto"' . selected($calendar_public_default_view, 'auto', false) . '>' . esc_html__('Auto', 'backstage-venue-manager') . '</option>';
+  echo '<option value="month"' . selected($calendar_public_default_view, 'month', false) . '>' . esc_html__('Month', 'backstage-venue-manager') . '</option>';
+  echo '<option value="compact"' . selected($calendar_public_default_view, 'compact', false) . '>' . esc_html__('Compact weekend chunks', 'backstage-venue-manager') . '</option>';
+  echo '<option value="list"' . selected($calendar_public_default_view, 'list', false) . '>' . esc_html__('List', 'backstage-venue-manager') . '</option>';
   echo '</select></p>';
-  echo '<p class="description">' . esc_html__('Compact weekend chunks starts at the selected month, shows three months at a time on desktop, and only keeps weekday columns that are actually open or booked for that month.', 'vms') . '</p>';
-  echo '<p><strong>' . esc_html__('Customer-facing event calendar link', 'vms') . '</strong></p>';
-  echo '<p class="description">' . esc_html__('Used in public cancellation notices and other customer-facing links that send visitors to browse upcoming events.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Compact weekend chunks starts at the selected month, shows three months at a time on desktop, and only keeps weekday columns that are actually open or booked for that month.', 'backstage-venue-manager') . '</p>';
+  echo '<p><strong>' . esc_html__('Customer-facing event calendar link', 'backstage-venue-manager') . '</strong></p>';
+  echo '<p class="description">' . esc_html__('Used in public cancellation notices and other customer-facing links that send visitors to browse upcoming events.', 'backstage-venue-manager') . '</p>';
   echo '<p>';
-  echo '<label for="vms_public_calendar_page_id"><strong>' . esc_html__('WordPress page', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_public_calendar_page_id"><strong>' . esc_html__('WordPress page', 'backstage-venue-manager') . '</strong></label><br />';
   $public_calendar_page_dropdown = wp_dropdown_pages(array(
     'name'              => 'vms_settings[public_calendar_page_id]',
     'id'                => 'vms_public_calendar_page_id',
     'selected'          => esc_attr((string) $public_calendar_page_id),
-    'show_option_none'  => esc_html__('— Auto-detect —', 'vms'),
+    'show_option_none'  => esc_html__('— Auto-detect —', 'backstage-venue-manager'),
     'option_none_value' => '0',
     'post_status'       => 'publish',
     'echo'              => 0,
@@ -2229,18 +2229,18 @@ function vms_render_settings_page_content()
     echo wp_kses($public_calendar_page_dropdown, vms_settings_page_dropdown_allowed_html());
   }
   echo '</p>';
-  echo '<p class="description">' . esc_html__('Choose the public page customers should use to browse events. Auto-detect first looks for the VMS public calendar page, then falls back to the TEC events archive.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Choose the public page customers should use to browse events. Auto-detect first looks for the VMS public calendar page, then falls back to the TEC events archive.', 'backstage-venue-manager') . '</p>';
   echo '<p>';
-  echo '<label for="vms_public_calendar_custom_url"><strong>' . esc_html__('Advanced custom URL override', 'vms') . '</strong></label><br />';
+  echo '<label for="vms_public_calendar_custom_url"><strong>' . esc_html__('Advanced custom URL override', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<input id="vms_public_calendar_custom_url" type="text" class="regular-text" name="vms_settings[public_calendar_custom_url]" value="' . esc_attr($public_calendar_custom_url) . '" placeholder="/events-calendar" />';
   echo '</p>';
-  echo '<p class="description">' . esc_html__('Optional. Use only when the destination is not a normal WordPress page, such as a TEC archive, external calendar, or custom landing page. Site-relative paths like /events-calendar are allowed.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Optional. Use only when the destination is not a normal WordPress page, such as a TEC archive, external calendar, or custom landing page. Site-relative paths like /events-calendar are allowed.', 'backstage-venue-manager') . '</p>';
   if ($public_calendar_resolved_url !== '') {
-    echo '<p class="description"><strong>' . esc_html__('Resolved link:', 'vms') . '</strong> <code>' . esc_html($public_calendar_resolved_url) . '</code></p>';
+    echo '<p class="description"><strong>' . esc_html__('Resolved link:', 'backstage-venue-manager') . '</strong> <code>' . esc_html($public_calendar_resolved_url) . '</code></p>';
   }
-  echo '<p><strong>' . esc_html__('Public vendor visibility by type', 'vms') . '</strong></p>';
+  echo '<p><strong>' . esc_html__('Public vendor visibility by type', 'backstage-venue-manager') . '</strong></p>';
   if (empty($vendor_type_rows)) {
-    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set public visibility by type here.', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can set public visibility by type here.', 'backstage-venue-manager') . '</p>';
   } else {
     echo '<div class="vms-settings-map-grid">';
     foreach ($vendor_type_rows as $row) {
@@ -2257,18 +2257,18 @@ function vms_render_settings_page_content()
       echo '<span class="vms-settings-map-type">' . esc_html($label) . '</span>';
       echo '<span class="vms-settings-map-controls">';
       /* translators: %s: vendor type label */
-      echo '<label class="screen-reader-text" for="vms-cal-public-vendors-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Public vendor visibility for %s', 'vms'), $label)) . '</label>';
+      echo '<label class="screen-reader-text" for="vms-cal-public-vendors-' . esc_attr($slug) . '">' . esc_html(sprintf(__('Public vendor visibility for %s', 'backstage-venue-manager'), $label)) . '</label>';
       echo '<select id="vms-cal-public-vendors-' . esc_attr($slug) . '" class="vms-settings-map-select" name="vms_settings[calendar_public_show_vendors_by_type][' . esc_attr($slug) . ']">';
-      echo '<option value="">' . esc_html__('Use default', 'vms') . '</option>';
-      echo '<option value="1"' . selected($public_choice, '1', false) . '>' . esc_html__('Show vendors', 'vms') . '</option>';
-      echo '<option value="0"' . selected($public_choice, '0', false) . '>' . esc_html__('Hide vendors', 'vms') . '</option>';
+      echo '<option value="">' . esc_html__('Use default', 'backstage-venue-manager') . '</option>';
+      echo '<option value="1"' . selected($public_choice, '1', false) . '>' . esc_html__('Show vendors', 'backstage-venue-manager') . '</option>';
+      echo '<option value="0"' . selected($public_choice, '0', false) . '>' . esc_html__('Hide vendors', 'backstage-venue-manager') . '</option>';
       echo '</select>';
       echo '</span>';
       echo '</div>';
     }
     echo '</div>';
   }
-  echo '<p class="description">' . esc_html__('Use default keeps built-in behavior (Primary Vendor shown publicly by default).', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Use default keeps built-in behavior (Primary Vendor shown publicly by default).', 'backstage-venue-manager') . '</p>';
   echo '</td></tr>';
 
   echo '</table>';
@@ -2540,10 +2540,10 @@ function vms_field_sch_hide_past_default()
 
   echo '<label>';
   echo '<input type="checkbox" name="vms_settings[sch_hide_past_default]" value="1" ' . checked($val, 1, false) . ' /> ';
-  echo esc_html__('Hide past dates by default in Schedule list view', 'vms');
+  echo esc_html__('Hide past dates by default in Schedule list view', 'backstage-venue-manager');
   echo '</label>';
 
   echo '<p class="description">';
-  echo esc_html__('When enabled, past dates are hidden unless you add show_past=1 to the URL.', 'vms');
+  echo esc_html__('When enabled, past dates are hidden unless you add show_past=1 to the URL.', 'backstage-venue-manager');
   echo '</p>';
 }

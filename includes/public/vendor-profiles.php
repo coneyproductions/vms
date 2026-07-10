@@ -365,14 +365,14 @@ if (!function_exists('vms_vendor_profiles_group_heading')) {
         $count = max(1, $count);
 
         if ($group_key === 'food_vendors') {
-            return __('Food Vendors', 'vms');
+            return __('Food Vendors', 'backstage-venue-manager');
         }
 
         $label = function_exists('vms_vendor_type_label')
             ? trim((string) vms_vendor_type_label($type_slug))
             : '';
         if ($label === '') {
-            $label = __('Vendor', 'vms');
+            $label = __('Vendor', 'backstage-venue-manager');
         }
 
         if ($count === 1) {
@@ -512,7 +512,7 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
                 $display_name = trim((string) get_the_title($vendor_id));
             }
             if ($display_name === '') {
-                $display_name = __('Vendor', 'vms');
+                $display_name = __('Vendor', 'backstage-venue-manager');
             }
 
             $groups[$group_key]['cards'][$dedupe_key] = array(
@@ -904,10 +904,10 @@ if (!function_exists('vms_vendor_profiles_teaser_label')) {
         $type_name = vms_vendor_profiles_primary_type_name($vendor_id);
         if ($type_name !== '') {
             /* translators: %s: vendor type label in lowercase. */
-            return sprintf(__('Meet the %s', 'vms'), strtolower($type_name));
+            return sprintf(__('Meet the %s', 'backstage-venue-manager'), strtolower($type_name));
         }
 
-        return __('Meet this vendor', 'vms');
+        return __('Meet this vendor', 'backstage-venue-manager');
     }
 }
 
@@ -916,32 +916,32 @@ if (!function_exists('vms_vendor_profiles_teaser_heading')) {
     {
         $title = trim((string) get_the_title($vendor_id));
         if ($title === '') {
-            return __('Meet this vendor', 'vms');
+            return __('Meet this vendor', 'backstage-venue-manager');
         }
 
         $type_name = strtolower(vms_vendor_profiles_primary_type_name($vendor_id));
         if ($type_name !== '') {
             if (strpos($type_name, 'music vendor') !== false) {
                 /* translators: %s: vendor title. */
-                return sprintf(__('Meet %s', 'vms'), $title);
+                return sprintf(__('Meet %s', 'backstage-venue-manager'), $title);
             }
 
             if (strpos($type_name, 'food vendor') !== false) {
                 /* translators: %s: vendor title. */
-                return sprintf(__('Meet the food vendor: %s', 'vms'), $title);
+                return sprintf(__('Meet the food vendor: %s', 'backstage-venue-manager'), $title);
             }
 
             if (strpos($type_name, 'artist') !== false) {
                 /* translators: %s: vendor title. */
-                return sprintf(__('Meet the music vendor: %s', 'vms'), $title);
+                return sprintf(__('Meet the music vendor: %s', 'backstage-venue-manager'), $title);
             }
 
             /* translators: 1: vendor type label in lowercase, 2: vendor title. */
-            return sprintf(__('Meet the %1$s: %2$s', 'vms'), $type_name, $title);
+            return sprintf(__('Meet the %1$s: %2$s', 'backstage-venue-manager'), $type_name, $title);
         }
 
         /* translators: %s: vendor title. */
-        return sprintf(__('Meet %s', 'vms'), $title);
+        return sprintf(__('Meet %s', 'backstage-venue-manager'), $title);
     }
 }
 
@@ -949,12 +949,12 @@ if (!function_exists('vms_vendor_profiles_social_label')) {
     function vms_vendor_profiles_social_label(string $key): string
     {
         $labels = array(
-            'facebook'  => __('Facebook', 'vms'),
-            'instagram' => __('Instagram', 'vms'),
-            'x'         => __('X', 'vms'),
-            'tiktok'    => __('TikTok', 'vms'),
-            'youtube'   => __('YouTube', 'vms'),
-            'spotify'   => __('Spotify', 'vms'),
+            'facebook'  => __('Facebook', 'backstage-venue-manager'),
+            'instagram' => __('Instagram', 'backstage-venue-manager'),
+            'x'         => __('X', 'backstage-venue-manager'),
+            'tiktok'    => __('TikTok', 'backstage-venue-manager'),
+            'youtube'   => __('YouTube', 'backstage-venue-manager'),
+            'spotify'   => __('Spotify', 'backstage-venue-manager'),
         );
         return isset($labels[$key]) ? (string) $labels[$key] : ucfirst($key);
     }
@@ -1047,7 +1047,7 @@ if (!function_exists('vms_vendor_profiles_render_social_links')) {
         }
 
         ob_start();
-        echo '<div class="vms-vp-socials" aria-label="' . esc_attr__('Social links', 'vms') . '">';
+        echo '<div class="vms-vp-socials" aria-label="' . esc_attr__('Social links', 'backstage-venue-manager') . '">';
         foreach ($links as $key => $url) {
             echo '<a class="vms-vp-social vms-vp-social--' . esc_attr($key) . '" href="' . esc_url($url) . '" target="_blank" rel="noopener" aria-label="' . esc_attr(vms_vendor_profiles_social_label((string) $key)) . '"><span class="vms-vp-social__glyph" aria-hidden="true">' . wp_kses(vms_vendor_profiles_social_svg((string) $key), vms_vendor_profiles_social_icon_allowed_html()) . '</span></a>';
         }
@@ -1127,7 +1127,7 @@ if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
                     ? (string) vms_vendor_portal_render_headliner_promo_video_player($promo_plan_id, array(
                         'context' => 'public',
                         /* translators: %s: vendor title. */
-                        'heading' => sprintf(__('A quick hello from %s', 'vms'), $title_text),
+                        'heading' => sprintf(__('A quick hello from %s', 'backstage-venue-manager'), $title_text),
                         'wrap_class' => 'vms-vendor-teaser__promo-video',
                     ))
                     : '';
@@ -1164,7 +1164,7 @@ if (!function_exists('vms_vendor_profiles_render_next_show_card')) {
         ob_start();
         ?>
         <section class="<?php echo esc_attr($classes); ?>">
-            <p class="vms-vp-next-show__eyebrow"><?php echo esc_html__('Next show', 'vms'); ?></p>
+            <p class="vms-vp-next-show__eyebrow"><?php echo esc_html__('Next show', 'backstage-venue-manager'); ?></p>
             <h2 class="vms-vp-h2 vms-vp-next-show__title"><?php echo esc_html($next_event['title'] ?? ''); ?></h2>
             <?php if (!empty($next_event['date_label'])) : ?>
                 <p class="vms-vp-next-show__date"><?php echo esc_html($next_event['date_label']); ?></p>
@@ -1173,7 +1173,7 @@ if (!function_exists('vms_vendor_profiles_render_next_show_card')) {
             $promo_markup = (!empty($next_event['plan_id']) && function_exists('vms_vendor_portal_render_headliner_promo_video_player'))
                 ? (string) vms_vendor_portal_render_headliner_promo_video_player((int) $next_event['plan_id'], array(
                     'context' => 'public',
-                    'heading' => __('Promo video', 'vms'),
+                    'heading' => __('Promo video', 'backstage-venue-manager'),
                     'wrap_class' => 'vms-vp-next-show__promo-video',
                 ))
                 : '';
@@ -1183,7 +1183,7 @@ if (!function_exists('vms_vendor_profiles_render_next_show_card')) {
             <?php endif; ?>
             <?php if (!empty($next_event['url'])) : ?>
                 <div class="vms-vp-actions vms-vp-next-show__actions">
-                    <a class="vms-vp-btn" href="<?php echo esc_url((string) $next_event['url']); ?>"><?php echo esc_html__('Get tickets to our show', 'vms'); ?></a>
+                    <a class="vms-vp-btn" href="<?php echo esc_url((string) $next_event['url']); ?>"><?php echo esc_html__('Get tickets to our show', 'backstage-venue-manager'); ?></a>
                 </div>
             <?php endif; ?>
         </section>
@@ -1275,8 +1275,8 @@ if (!function_exists('vms_vendor_profiles_render_event_promo_video_section')) {
         $vendor_name = trim((string) get_the_title($vendor_id));
         $heading = $vendor_name !== ''
             /* translators: %s: vendor title. */
-            ? sprintf(__('A quick hello from %s', 'vms'), $vendor_name)
-            : __('A quick hello from the artist', 'vms');
+            ? sprintf(__('A quick hello from %s', 'backstage-venue-manager'), $vendor_name)
+            : __('A quick hello from the artist', 'backstage-venue-manager');
 
         $promo_markup = (string) vms_vendor_portal_render_headliner_promo_video_player($promo_plan_id, array(
             'context' => 'public',

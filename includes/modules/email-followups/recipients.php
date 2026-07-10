@@ -35,7 +35,7 @@ if (!function_exists('vms_email_followups_event_context')) {
 		$event_plan_id = absint($event_plan_id);
 		$post = $event_plan_id > 0 ? get_post($event_plan_id) : null;
 		if (!$post || $post->post_type !== 'vms_event_plan') {
-			return array('valid' => false, 'message' => __('Event Plan not found.', 'vms'));
+			return array('valid' => false, 'message' => __('Event Plan not found.', 'backstage-venue-manager'));
 		}
 
 		$status_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
@@ -135,7 +135,7 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 		);
 
 		if (!function_exists('vms_get_ticket_sales_rows')) {
-			$result['warnings'][] = __('Ticket sales resolver is unavailable.', 'vms');
+			$result['warnings'][] = __('Ticket sales resolver is unavailable.', 'backstage-venue-manager');
 			return $result;
 		}
 
@@ -282,9 +282,9 @@ if (!function_exists('vms_email_followups_event_choice_label')) {
 		$status = '';
 		if ($date !== '') {
 			if ($date < $today) {
-				$status = ' — ' . __('past event', 'vms');
+				$status = ' — ' . __('past event', 'backstage-venue-manager');
 			} elseif ($date === $today) {
-				$status = ' — ' . __('today', 'vms');
+				$status = ' — ' . __('today', 'backstage-venue-manager');
 			}
 		}
 

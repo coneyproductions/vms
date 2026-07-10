@@ -30,8 +30,8 @@ if (!function_exists('vms_event_plan_import_register_admin_page')) {
 	{
 		add_submenu_page(
 			null,
-			__('Import Event Plans (CSV)', 'vms'),
-			__('Import Event Plans (CSV)', 'vms'),
+			__('Import Event Plans (CSV)', 'backstage-venue-manager'),
+			__('Import Event Plans (CSV)', 'backstage-venue-manager'),
 			'manage_options',
 			'vms-import-event-plans',
 			'vms_event_plan_import_render_admin_page'
@@ -64,12 +64,12 @@ if (!function_exists('vms_event_plan_import_render_summary_cards')) {
 	function vms_event_plan_import_render_summary_cards(array $summary): void
 	{
 		$cards = array(
-			'total_rows' => __('Rows', 'vms'),
-			'create' => __('Create', 'vms'),
-			'update' => __('Update', 'vms'),
-			'skip' => __('Skip', 'vms'),
-			'errors' => __('Errors', 'vms'),
-			'warnings' => __('Warnings', 'vms'),
+			'total_rows' => __('Rows', 'backstage-venue-manager'),
+			'create' => __('Create', 'backstage-venue-manager'),
+			'update' => __('Update', 'backstage-venue-manager'),
+			'skip' => __('Skip', 'backstage-venue-manager'),
+			'errors' => __('Errors', 'backstage-venue-manager'),
+			'warnings' => __('Warnings', 'backstage-venue-manager'),
 		);
 
 		echo '<div class="vms-admin-hub-grid">';
@@ -93,19 +93,19 @@ if (!function_exists('vms_event_plan_import_render_preview_table')) {
 		echo '<table class="widefat striped">';
 		echo '<thead><tr>';
 		if ($show_selectors) {
-			echo '<th>' . esc_html__('Commit', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Commit', 'backstage-venue-manager') . '</th>';
 		}
-		echo '<th>' . esc_html__('Row', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Event Key', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Plan', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Action', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Messages', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Row', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Event Key', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Plan', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Action', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Messages', 'backstage-venue-manager') . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
 
 		if (empty($rows)) {
 			$colspan = $show_selectors ? 6 : 5;
-			echo '<tr><td colspan="' . esc_attr((string) $colspan) . '">' . esc_html__('No preview rows are available.', 'vms') . '</td></tr>';
+			echo '<tr><td colspan="' . esc_attr((string) $colspan) . '">' . esc_html__('No preview rows are available.', 'backstage-venue-manager') . '</td></tr>';
 		} else {
 			foreach ($rows as $row) {
 				if (!is_array($row)) {
@@ -155,7 +155,7 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 	function vms_event_plan_import_render_admin_page(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
 		$preview_token = sanitize_key(vms_event_plan_import_query_arg('preview_token'));
@@ -170,7 +170,7 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 
 		$render_content = static function () use ($notice, $preview, $preview_token, $latest_run, $revertible_run): void {
 			echo '<p class="vms-admin-hub-intro">';
-			echo esc_html__('Upload a CSV, preview changes, then commit. This importer only writes VMS Event Plan data and does not create or update TEC/Woo records.', 'vms');
+			echo esc_html__('Upload a CSV, preview changes, then commit. This importer only writes VMS Event Plan data and does not create or update TEC/Woo records.', 'backstage-venue-manager');
 			echo '</p>';
 
 			if (!empty($notice) && is_array($notice)) {
@@ -182,35 +182,35 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 			}
 
 			echo '<section class="vms-pass-card">';
-			echo '<h2>' . esc_html__('Preview Import', 'vms') . '</h2>';
+			echo '<h2>' . esc_html__('Preview Import', 'backstage-venue-manager') . '</h2>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data">';
 			wp_nonce_field('vms_event_plan_import_preview');
 			echo '<input type="hidden" name="action" value="vms_event_plan_import_preview" />';
-			echo '<p><label><strong>' . esc_html__('CSV file', 'vms') . '</strong><br />';
+			echo '<p><label><strong>' . esc_html__('CSV file', 'backstage-venue-manager') . '</strong><br />';
 			echo '<input type="file" name="event_plan_csv_file" accept=".csv,text/csv,text/plain" />';
 			echo '</label></p>';
 
 			echo '<p><label>';
 			echo '<input type="checkbox" name="auto_create_missing_vendors" value="1" checked="checked" /> ';
-			echo esc_html__('Auto-create missing vendors', 'vms');
+			echo esc_html__('Auto-create missing vendors', 'backstage-venue-manager');
 			echo '</label></p>';
 
 			echo '<p><label>';
 			echo '<input type="checkbox" name="allow_update_locked_plans" value="1" /> ';
-			echo esc_html__('Allow updates to Published/Cancelled plans', 'vms');
+			echo esc_html__('Allow updates to Published/Cancelled plans', 'backstage-venue-manager');
 			echo '</label></p>';
 
 			echo '<p class="description">';
-			echo esc_html__('Required columns: event_key, event_date, venue_name, primary_vendor_name. Preview must run before Commit.', 'vms');
+			echo esc_html__('Required columns: event_key, event_date, venue_name, primary_vendor_name. Preview must run before Commit.', 'backstage-venue-manager');
 			echo '</p>';
 
 			echo '<p>';
-			echo '<button type="submit" class="button button-primary">' . esc_html__('Preview changes', 'vms') . '</button> ';
+			echo '<button type="submit" class="button button-primary">' . esc_html__('Preview changes', 'backstage-venue-manager') . '</button> ';
 			$sample_url = wp_nonce_url(
 				add_query_arg(array('action' => 'vms_event_plan_import_download_sample_csv'), admin_url('admin-post.php')),
 				'vms_event_plan_import_download_sample_csv'
 			);
-			echo '<a class="button" href="' . esc_url($sample_url) . '">' . esc_html__('Download sample CSV', 'vms') . '</a>';
+			echo '<a class="button" href="' . esc_url($sample_url) . '">' . esc_html__('Download sample CSV', 'backstage-venue-manager') . '</a>';
 			echo '</p>';
 			echo '</form>';
 			echo '</section>';
@@ -247,10 +247,10 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 				}
 
 				echo '<section class="vms-pass-card">';
-				echo '<h2>' . esc_html__('Preview Results', 'vms') . '</h2>';
+				echo '<h2>' . esc_html__('Preview Results', 'backstage-venue-manager') . '</h2>';
 				echo '<p>';
-				echo '<strong>' . esc_html__('Source file:', 'vms') . '</strong> ';
-				echo '<code>' . esc_html($source_name !== '' ? $source_name : __('(unknown)', 'vms')) . '</code>';
+				echo '<strong>' . esc_html__('Source file:', 'backstage-venue-manager') . '</strong> ';
+				echo '<code>' . esc_html($source_name !== '' ? $source_name : __('(unknown)', 'backstage-venue-manager')) . '</code>';
 				echo '</p>';
 				vms_event_plan_import_render_summary_cards($summary);
 
@@ -263,25 +263,25 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 				echo '<input type="hidden" name="action" value="vms_event_plan_import_commit" />';
 				echo '<input type="hidden" name="preview_token" value="' . esc_attr($preview_token) . '" />';
 
-				echo '<p><strong>' . esc_html__('Commit scope', 'vms') . '</strong></p>';
+				echo '<p><strong>' . esc_html__('Commit scope', 'backstage-venue-manager') . '</strong></p>';
 				echo '<p>';
-				echo '<label style="margin-right:14px;"><input type="radio" name="commit_scope" value="all" checked="checked" /> ' . esc_html__('Commit all eligible rows', 'vms') . '</label>';
-				echo '<label><input type="radio" name="commit_scope" value="selected" /> ' . esc_html__('Commit selected rows only', 'vms') . '</label>';
+				echo '<label style="margin-right:14px;"><input type="radio" name="commit_scope" value="all" checked="checked" /> ' . esc_html__('Commit all eligible rows', 'backstage-venue-manager') . '</label>';
+				echo '<label><input type="radio" name="commit_scope" value="selected" /> ' . esc_html__('Commit selected rows only', 'backstage-venue-manager') . '</label>';
 				echo '</p>';
 
 				echo '<p class="description">';
-				echo esc_html__('Eligible rows are Create/Update rows. Error and Skip rows are never committed.', 'vms');
+				echo esc_html__('Eligible rows are Create/Update rows. Error and Skip rows are never committed.', 'backstage-venue-manager');
 				echo '</p>';
 				echo '<p>';
-				echo '<button type="button" class="button" id="vms-epcsv-select-all">' . esc_html__('Select all eligible', 'vms') . '</button> ';
-				echo '<button type="button" class="button" id="vms-epcsv-clear-all">' . esc_html__('Clear selection', 'vms') . '</button> ';
-				echo '<span class="description">' . esc_html__('Selected rows:', 'vms') . ' <strong id="vms-epcsv-selected-count">0</strong></span>';
+				echo '<button type="button" class="button" id="vms-epcsv-select-all">' . esc_html__('Select all eligible', 'backstage-venue-manager') . '</button> ';
+				echo '<button type="button" class="button" id="vms-epcsv-clear-all">' . esc_html__('Clear selection', 'backstage-venue-manager') . '</button> ';
+				echo '<span class="description">' . esc_html__('Selected rows:', 'backstage-venue-manager') . ' <strong id="vms-epcsv-selected-count">0</strong></span>';
 				echo '</p>';
 
 				vms_event_plan_import_render_preview_table($preview_rows, true);
 
 				echo '<p class="vms-pass-actions">';
-				echo '<button type="submit" class="button button-primary">' . esc_html__('Commit import', 'vms') . '</button>';
+				echo '<button type="submit" class="button button-primary">' . esc_html__('Commit import', 'backstage-venue-manager') . '</button>';
 				echo '</p>';
 				echo '</form>';
 
@@ -296,18 +296,18 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 					'vms_event_plan_import_download_report_' . $preview_token
 				);
 				echo '<p class="vms-pass-actions">';
-				echo '<a class="button" href="' . esc_url($report_url) . '">' . esc_html__('Download full report CSV', 'vms') . '</a>';
+				echo '<a class="button" href="' . esc_url($report_url) . '">' . esc_html__('Download full report CSV', 'backstage-venue-manager') . '</a>';
 				echo '</p>';
 
 				echo '<p class="description">';
 				echo esc_html(sprintf(
 					/* translators: %d: row count */
-					__('Showing all parsed preview rows. Total parsed rows: %d.', 'vms'),
+					__('Showing all parsed preview rows. Total parsed rows: %d.', 'backstage-venue-manager'),
 					$total_rows
 				));
 				echo '</p>';
 
-				$selected_required_message = __('Select at least one eligible row before committing selected rows.', 'vms');
+				$selected_required_message = __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager');
 				echo '<script>(function(){';
 				echo 'var form=document.getElementById("vms-epcsv-commit-form");if(!form){return;}';
 				echo 'var checks=Array.prototype.slice.call(form.querySelectorAll(".vms-epcsv-row-check"));';
@@ -333,13 +333,13 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 				$run_hash = (string) ($latest_run['source_file_hash'] ?? '');
 
 				echo '<section class="vms-pass-card">';
-				echo '<h2>' . esc_html__('Last Import Run', 'vms') . '</h2>';
-				echo '<p><strong>' . esc_html__('Run ID:', 'vms') . '</strong> <code>' . esc_html($run_id) . '</code></p>';
+				echo '<h2>' . esc_html__('Last Import Run', 'backstage-venue-manager') . '</h2>';
+				echo '<p><strong>' . esc_html__('Run ID:', 'backstage-venue-manager') . '</strong> <code>' . esc_html($run_id) . '</code></p>';
 				if ($run_time !== '') {
-					echo '<p><strong>' . esc_html__('Timestamp:', 'vms') . '</strong> ' . esc_html($run_time) . '</p>';
+					echo '<p><strong>' . esc_html__('Timestamp:', 'backstage-venue-manager') . '</strong> ' . esc_html($run_time) . '</p>';
 				}
 				if ($run_hash !== '') {
-					echo '<p><strong>' . esc_html__('File hash:', 'vms') . '</strong> <code>' . esc_html($run_hash) . '</code></p>';
+					echo '<p><strong>' . esc_html__('File hash:', 'backstage-venue-manager') . '</strong> <code>' . esc_html($run_hash) . '</code></p>';
 				}
 				vms_event_plan_import_render_summary_cards($run_summary);
 				echo '</section>';
@@ -348,15 +348,15 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 			if (!empty($revertible_run) && is_array($revertible_run)) {
 				$revert_run_id = (string) ($revertible_run['run_id'] ?? '');
 				echo '<section class="vms-pass-card">';
-				echo '<h2>' . esc_html__('Rollback', 'vms') . '</h2>';
+				echo '<h2>' . esc_html__('Rollback', 'backstage-venue-manager') . '</h2>';
 				echo '<p class="description">';
-				echo esc_html__('Revert restores only the fields touched by this importer for updated plans in the latest reversible run.', 'vms');
+				echo esc_html__('Revert restores only the fields touched by this importer for updated plans in the latest reversible run.', 'backstage-venue-manager');
 				echo '</p>';
-				echo '<p><strong>' . esc_html__('Revert candidate:', 'vms') . '</strong> <code>' . esc_html($revert_run_id) . '</code></p>';
+				echo '<p><strong>' . esc_html__('Revert candidate:', 'backstage-venue-manager') . '</strong> <code>' . esc_html($revert_run_id) . '</code></p>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
 				wp_nonce_field('vms_event_plan_import_revert_last');
 				echo '<input type="hidden" name="action" value="vms_event_plan_import_revert_last" />';
-				echo '<button type="submit" class="button button-secondary">' . esc_html__('Revert last import', 'vms') . '</button>';
+				echo '<button type="submit" class="button button-secondary">' . esc_html__('Revert last import', 'backstage-venue-manager') . '</button>';
 				echo '</form>';
 				echo '</section>';
 			}
@@ -365,15 +365,15 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
 				array(
-					'title' => __('Import Event Plans (CSV)', 'vms'),
-					'subtitle' => __('Preview then commit VMS-only Event Plan updates.', 'vms'),
+					'title' => __('Import Event Plans (CSV)', 'backstage-venue-manager'),
+					'subtitle' => __('Preview then commit VMS-only Event Plan updates.', 'backstage-venue-manager'),
 				),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('Import Event Plans (CSV)', 'vms') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('Import Event Plans (CSV)', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}

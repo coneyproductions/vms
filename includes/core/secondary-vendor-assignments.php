@@ -42,12 +42,12 @@ if (!function_exists('vms_event_plan_secondary_vendor_type_options')) {
 
 		if (empty($options)) {
 			$options = array(
-				'band' => __('Music Vendor', 'vms'),
-				'food_truck' => __('Food Vendor', 'vms'),
-				'dessert_truck' => __('Dessert Vendor', 'vms'),
-				'drink_truck' => __('Drink Vendor', 'vms'),
-				'photographer' => __('Photographer', 'vms'),
-				'market_vendor' => __('Market Vendor', 'vms'),
+				'band' => __('Music Vendor', 'backstage-venue-manager'),
+				'food_truck' => __('Food Vendor', 'backstage-venue-manager'),
+				'dessert_truck' => __('Dessert Vendor', 'backstage-venue-manager'),
+				'drink_truck' => __('Drink Vendor', 'backstage-venue-manager'),
+				'photographer' => __('Photographer', 'backstage-venue-manager'),
+				'market_vendor' => __('Market Vendor', 'backstage-venue-manager'),
 			);
 		}
 
@@ -68,8 +68,8 @@ if (!function_exists('vms_event_plan_secondary_vendor_mode_options')) {
 	function vms_event_plan_secondary_vendor_mode_options(): array
 	{
 		return array(
-			'standard' => __('Standard', 'vms'),
-			'market' => __('Market', 'vms'),
+			'standard' => __('Standard', 'backstage-venue-manager'),
+			'market' => __('Market', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -459,8 +459,8 @@ if (!function_exists('vms_event_plan_validate_secondary_vendor_assignment_capaci
 		foreach ($over_capacity_rows as $row) {
 			$labels[] = sprintf(
 				/* translators: 1: vendor type label, 2: filled count, 3: capacity */
-				__('%1$s (%2$d of %3$d filled)', 'vms'),
-				(string) ($row['label'] ?? __('Additional Vendor', 'vms')),
+				__('%1$s (%2$d of %3$d filled)', 'backstage-venue-manager'),
+				(string) ($row['label'] ?? __('Additional Vendor', 'backstage-venue-manager')),
 				(int) ($row['filled'] ?? 0),
 				(int) ($row['slot_limit'] ?? 0)
 			);
@@ -470,7 +470,7 @@ if (!function_exists('vms_event_plan_validate_secondary_vendor_assignment_capaci
 			'vms_secondary_vendor_over_capacity',
 			sprintf(
 				/* translators: %s: comma-separated over-capacity groups */
-				__('Additional Vendors cannot be saved over capacity unless you check the over-capacity override for each affected group: %s.', 'vms'),
+				__('Additional Vendors cannot be saved over capacity unless you check the over-capacity override for each affected group: %s.', 'backstage-venue-manager'),
 				implode(', ', $labels)
 			),
 			array('over_capacity_groups' => $over_capacity_rows)
@@ -659,7 +659,7 @@ if (!function_exists('vms_event_plan_write_secondary_vendor_assignments')) {
 	{
 		$post_id = absint($post_id);
 		if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan') {
-			return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for secondary-vendor assignment.', 'vms'));
+			return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for secondary-vendor assignment.', 'backstage-venue-manager'));
 		}
 
 		$k_secondary_ids = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids') : '_vms_secondary_vendor_ids';
@@ -971,7 +971,7 @@ if (!function_exists('vms_event_plan_set_secondary_vendors')) {
 	{
 		$post_id = absint($post_id);
 		if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan') {
-			return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for secondary-vendor assignment.', 'vms'));
+			return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for secondary-vendor assignment.', 'backstage-venue-manager'));
 		}
 
 		$type_slug = vms_event_plan_normalize_secondary_vendor_type_slug($type_slug);
@@ -1035,7 +1035,7 @@ if (!function_exists('vms_event_plan_save_secondary_vendors_module')) {
 	{
 		$post_id = absint($post_id);
 		if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan') {
-			return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for Additional Vendors save.', 'vms'));
+			return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for Additional Vendors save.', 'backstage-venue-manager'));
 		}
 
 		$current_vendor_state = vms_event_plan_get_secondary_vendor_state($post_id);

@@ -18,17 +18,17 @@ function vms_ticketing_v2_add_product_event_columns(array $cols): array
     foreach ($cols as $key => $label) {
         $out[$key] = $label;
         if ($key === 'name') {
-            $out['vms_event'] = __('Event', 'vms');
-            $out['vms_event_date'] = __('Event Date', 'vms');
-            $out['vms_square_mirror'] = __('Square Mirror', 'vms');
+            $out['vms_event'] = __('Event', 'backstage-venue-manager');
+            $out['vms_event_date'] = __('Event Date', 'backstage-venue-manager');
+            $out['vms_square_mirror'] = __('Square Mirror', 'backstage-venue-manager');
             $inserted = true;
         }
     }
 
     if (!$inserted) {
-        $out['vms_event'] = __('Event', 'vms');
-        $out['vms_event_date'] = __('Event Date', 'vms');
-        $out['vms_square_mirror'] = __('Square Mirror', 'vms');
+        $out['vms_event'] = __('Event', 'backstage-venue-manager');
+        $out['vms_event_date'] = __('Event Date', 'backstage-venue-manager');
+        $out['vms_square_mirror'] = __('Square Mirror', 'backstage-venue-manager');
     }
 
     return $out;

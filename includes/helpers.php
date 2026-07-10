@@ -819,11 +819,11 @@ if (!function_exists('vms_comp_deposit_status_options')) {
     function vms_comp_deposit_status_options(): array
     {
         return array(
-            'not_required' => __('Not required', 'vms'),
-            'unpaid'       => __('Unpaid', 'vms'),
-            'paid'         => __('Paid', 'vms'),
-            'waived'       => __('Waived', 'vms'),
-            'refunded'     => __('Refunded', 'vms'),
+            'not_required' => __('Not required', 'backstage-venue-manager'),
+            'unpaid'       => __('Unpaid', 'backstage-venue-manager'),
+            'paid'         => __('Paid', 'backstage-venue-manager'),
+            'waived'       => __('Waived', 'backstage-venue-manager'),
+            'refunded'     => __('Refunded', 'backstage-venue-manager'),
         );
     }
 }
@@ -832,9 +832,9 @@ if (!function_exists('vms_comp_deposit_treatment_options')) {
     function vms_comp_deposit_treatment_options(): array
     {
         return array(
-            'creditable'    => __('Applies toward total payment', 'vms'),
-            'refundable'    => __('Refundable', 'vms'),
-            'nonrefundable' => __('Non-refundable', 'vms'),
+            'creditable'    => __('Applies toward total payment', 'backstage-venue-manager'),
+            'refundable'    => __('Refundable', 'backstage-venue-manager'),
+            'nonrefundable' => __('Non-refundable', 'backstage-venue-manager'),
         );
     }
 }
@@ -970,12 +970,12 @@ if (!function_exists('vms_comp_final_payment_timing_options')) {
     function vms_comp_final_payment_timing_options(): array
     {
         return array(
-            'not_set'       => __('Not set', 'vms'),
-            'in_advance'    => __('In advance', 'vms'),
-            'day_of_event'  => __('Day of event', 'vms'),
-            'days_after'    => __('N days after event', 'vms'),
-            'fixed_date'    => __('Specific date', 'vms'),
-            'custom'        => __('Custom timing', 'vms'),
+            'not_set'       => __('Not set', 'backstage-venue-manager'),
+            'in_advance'    => __('In advance', 'backstage-venue-manager'),
+            'day_of_event'  => __('Day of event', 'backstage-venue-manager'),
+            'days_after'    => __('N days after event', 'backstage-venue-manager'),
+            'fixed_date'    => __('Specific date', 'backstage-venue-manager'),
+            'custom'        => __('Custom timing', 'backstage-venue-manager'),
         );
     }
 }
@@ -984,14 +984,14 @@ if (!function_exists('vms_comp_final_payment_method_options')) {
     function vms_comp_final_payment_method_options(): array
     {
         return array(
-            'not_set'            => __('Not set', 'vms'),
-            'check'              => __('Check', 'vms'),
-            'cash'               => __('Cash', 'vms'),
-            'ach_direct_deposit' => __('ACH / Direct Deposit', 'vms'),
-            'zelle'              => __('Zelle', 'vms'),
-            'venmo'              => __('Venmo', 'vms'),
-            'paypal'             => __('PayPal', 'vms'),
-            'other'              => __('Other', 'vms'),
+            'not_set'            => __('Not set', 'backstage-venue-manager'),
+            'check'              => __('Check', 'backstage-venue-manager'),
+            'cash'               => __('Cash', 'backstage-venue-manager'),
+            'ach_direct_deposit' => __('ACH / Direct Deposit', 'backstage-venue-manager'),
+            'zelle'              => __('Zelle', 'backstage-venue-manager'),
+            'venmo'              => __('Venmo', 'backstage-venue-manager'),
+            'paypal'             => __('PayPal', 'backstage-venue-manager'),
+            'other'              => __('Other', 'backstage-venue-manager'),
         );
     }
 }
@@ -1124,22 +1124,22 @@ if (!function_exists('vms_comp_final_payment_timing_label')) {
         $custom_text = isset($terms['final_payment_custom_text']) ? trim((string) $terms['final_payment_custom_text']) : '';
 
         if ($timing === 'in_advance') {
-            return __('In advance', 'vms');
+            return __('In advance', 'backstage-venue-manager');
         }
         if ($timing === 'day_of_event') {
-            return __('Day of event', 'vms');
+            return __('Day of event', 'backstage-venue-manager');
         }
         if ($timing === 'days_after') {
             if ($days_after !== '') {
-                return sprintf(_n('%s day after event', '%s days after event', (int) $days_after, 'vms'), $days_after);
+                return sprintf(_n('%s day after event', '%s days after event', (int) $days_after, 'backstage-venue-manager'), $days_after);
             }
-            return __('After event - number of days not set', 'vms');
+            return __('After event - number of days not set', 'backstage-venue-manager');
         }
         if ($timing === 'fixed_date') {
-            return $fixed_date !== '' ? sprintf(__('Specific date: %s', 'vms'), $fixed_date) : __('Specific date not set', 'vms');
+            return $fixed_date !== '' ? sprintf(__('Specific date: %s', 'backstage-venue-manager'), $fixed_date) : __('Specific date not set', 'backstage-venue-manager');
         }
         if ($timing === 'custom') {
-            return $custom_text !== '' ? $custom_text : __('Custom timing not set', 'vms');
+            return $custom_text !== '' ? $custom_text : __('Custom timing not set', 'backstage-venue-manager');
         }
 
         return '';
@@ -1152,7 +1152,7 @@ if (!function_exists('vms_comp_final_payment_method_label')) {
         $method = vms_normalize_comp_final_payment_method($terms['final_payment_method'] ?? '');
         $other = isset($terms['final_payment_method_other']) ? trim((string) $terms['final_payment_method_other']) : '';
         if ($method === 'other') {
-            return $other !== '' ? $other : __('Other method not specified', 'vms');
+            return $other !== '' ? $other : __('Other method not specified', 'backstage-venue-manager');
         }
         if ($method === 'not_set') {
             return '';
@@ -1169,10 +1169,10 @@ if (!function_exists('vms_comp_final_payment_summary_part')) {
         $method_label = vms_comp_final_payment_method_label($terms);
         $parts = array();
         if ($timing_label !== '') {
-            $parts[] = __('Expected final payment:', 'vms') . ' ' . $timing_label;
+            $parts[] = __('Expected final payment:', 'backstage-venue-manager') . ' ' . $timing_label;
         }
         if ($method_label !== '') {
-            $parts[] = __('Payment method:', 'vms') . ' ' . $method_label;
+            $parts[] = __('Payment method:', 'backstage-venue-manager') . ' ' . $method_label;
         }
         return implode('; ', $parts);
     }
@@ -1525,7 +1525,7 @@ if (!function_exists('vms_get_attendance_bonus_progress_snapshot')) {
             $snapshot['step_bonus'] = $step_bonus;
 
             if ($step_size === null || $step_size < 1 || $step_bonus === null || $step_bonus <= 0) {
-                $snapshot['message'] = __('Attendance bonus tiers are not fully configured yet.', 'vms');
+                $snapshot['message'] = __('Attendance bonus tiers are not fully configured yet.', 'backstage-venue-manager');
                 return $snapshot;
             }
 
@@ -1592,7 +1592,7 @@ if (!function_exists('vms_get_attendance_bonus_progress_snapshot')) {
             $snapshot['per_ticket_rate'] = $per_ticket_rate;
 
             if ($per_ticket_rate === null || $per_ticket_rate <= 0) {
-                $snapshot['message'] = __('Attendance bonus accrual is not fully configured yet.', 'vms');
+                $snapshot['message'] = __('Attendance bonus accrual is not fully configured yet.', 'backstage-venue-manager');
                 return $snapshot;
             }
 
@@ -1625,7 +1625,7 @@ if (!function_exists('vms_get_attendance_bonus_progress_snapshot')) {
                 return $snapshot;
             }
 
-            $snapshot['message'] = __('This bonus grows ticket by ticket and does not have a fixed cap.', 'vms');
+            $snapshot['message'] = __('This bonus grows ticket by ticket and does not have a fixed cap.', 'backstage-venue-manager');
             return $snapshot;
         }
 
@@ -2465,10 +2465,10 @@ function vms_get_event_plan_comp_options(int $venue_id, string $event_date, int 
 
     $opts['defaults']['venue'] = array(
         'key' => 'venue',
-        'title' => __('Venue Defaults', 'vms'),
+        'title' => __('Venue Defaults', 'backstage-venue-manager'),
         'subtitle' => ($venue_id > 0 && $has_date)
-            ? (empty($venue_terms) ? __('Not set for this day', 'vms') : __('For this day', 'vms'))
-            : __('Select Venue + Date', 'vms'),
+            ? (empty($venue_terms) ? __('Not set for this day', 'backstage-venue-manager') : __('For this day', 'backstage-venue-manager'))
+            : __('Select Venue + Date', 'backstage-venue-manager'),
         'enabled' => (!empty($venue_terms)),
         'terms' => $venue_terms,
         'guarantee' => (!empty($venue_terms)) ? vms_comp_guaranteed_amount($venue_terms) : 0.0,
@@ -2476,14 +2476,14 @@ function vms_get_event_plan_comp_options(int $venue_id, string $event_date, int 
 
     $opts['defaults']['vendor'] = array(
         'key' => 'vendor',
-        'title' => __('Vendor Defaults', 'vms'),
+        'title' => __('Vendor Defaults', 'backstage-venue-manager'),
         'subtitle' => ($vendor_id > 0)
             ? (empty($vendor_terms)
-                ? __('Not set on vendor', 'vms')
+                ? __('Not set on vendor', 'backstage-venue-manager')
                 : ($vendor_has_dow_override
-                    ? __('Venue + day defaults', 'vms')
-                    : ($vendor_has_venue_override ? __('Venue-specific defaults', 'vms') : __('Global vendor defaults', 'vms'))))
-            : __('Select Music Vendor', 'vms'),
+                    ? __('Venue + day defaults', 'backstage-venue-manager')
+                    : ($vendor_has_venue_override ? __('Venue-specific defaults', 'backstage-venue-manager') : __('Global vendor defaults', 'backstage-venue-manager'))))
+            : __('Select Music Vendor', 'backstage-venue-manager'),
         'enabled' => (!empty($vendor_terms) && $vendor_id > 0),
         'terms' => $vendor_terms,
         'guarantee' => (!empty($vendor_terms)) ? vms_comp_guaranteed_amount($vendor_terms) : 0.0,
@@ -2491,9 +2491,9 @@ function vms_get_event_plan_comp_options(int $venue_id, string $event_date, int 
 
     // Holiday tile is always shown.
     $holiday_enabled = (!empty($holiday_terms));
-    $holiday_sub = __('No holiday', 'vms');
+    $holiday_sub = __('No holiday', 'backstage-venue-manager');
     if ($venue_id <= 0 || !$has_date) {
-        $holiday_sub = __('Select Venue + Date', 'vms');
+        $holiday_sub = __('Select Venue + Date', 'backstage-venue-manager');
     } elseif ($holiday) {
         if ($holiday_enabled) {
             $holiday_sub = $holiday_name;
@@ -2504,7 +2504,7 @@ function vms_get_event_plan_comp_options(int $venue_id, string $event_date, int 
 
     $opts['defaults']['holiday'] = array(
         'key' => 'holiday',
-        'title' => __('Holiday Defaults', 'vms'),
+        'title' => __('Holiday Defaults', 'backstage-venue-manager'),
         'subtitle' => $holiday_sub,
         'enabled' => $holiday_enabled,
         'terms' => $holiday_enabled ? $holiday_terms : array(),
@@ -2532,8 +2532,8 @@ function vms_get_event_plan_comp_options(int $venue_id, string $event_date, int 
             'id' => (int) $pkg->ID,
             'title' => (string) $pkg->post_title,
             'subtitle' => (($terms['structure'] ?? '') === 'attendance_bonus')
-                ? __('Guaranteed payout + variable attendance bonus', 'vms')
-                : __('Package', 'vms'),
+                ? __('Guaranteed payout + variable attendance bonus', 'backstage-venue-manager')
+                : __('Package', 'backstage-venue-manager'),
             'enabled' => !empty($terms),
             'terms' => $terms,
             'guarantee' => !empty($terms) ? vms_comp_guaranteed_amount($terms) : 0.0,
@@ -2645,8 +2645,8 @@ function vms_vendor_tax_profile_missing_items(int $vendor_id): array
             $emp_missing = array();
             $w4 = (int) get_post_meta($vendor_id, '_vms_employee_w4_received', true) ? 1 : 0;
             $i9 = (int) get_post_meta($vendor_id, '_vms_employee_i9_verified', true) ? 1 : 0;
-            if (!$w4) $emp_missing[] = __('W-4 received', 'vms');
-            if (!$i9) $emp_missing[] = __('I-9 verified', 'vms');
+            if (!$w4) $emp_missing[] = __('W-4 received', 'backstage-venue-manager');
+            if (!$i9) $emp_missing[] = __('I-9 verified', 'backstage-venue-manager');
             return $emp_missing;
         }
     }
@@ -3625,13 +3625,13 @@ function vms_vendor_add_updates_column($columns)
     foreach ($columns as $key => $label) {
         // Put it before date if possible
         if ($key === 'date') {
-            $new['vms_vendor_updates'] = __('Updates', 'vms');
+            $new['vms_vendor_updates'] = __('Updates', 'backstage-venue-manager');
         }
         $new[$key] = $label;
     }
 
     if (!isset($new['vms_vendor_updates'])) {
-        $new['vms_vendor_updates'] = __('Updates', 'vms');
+        $new['vms_vendor_updates'] = __('Updates', 'backstage-venue-manager');
     }
 
     return $new;
@@ -3685,7 +3685,7 @@ function vms_vendor_add_change_tracking_metabox()
 {
     add_meta_box(
         'vms_vendor_change_tracking',
-        __('Vendor Updates', 'vms'),
+        __('Vendor Updates', 'backstage-venue-manager'),
         'vms_vendor_change_tracking_metabox_cb',
         'vms_vendor',
         'side',
@@ -3728,7 +3728,7 @@ function vms_vendor_change_tracking_metabox_cb($post)
         echo '<div><strong>Last vendor update:</strong></div>';
         echo '<div>' . esc_html($when) . ($who_name ? ' <span style="opacity:.8;">(' . esc_html($who_name) . ')</span>' : '') . '</div>';
         if ($update_context_label !== '') {
-            echo '<div style="margin-top:4px;opacity:.85;"><strong>' . esc_html__('Update type:', 'vms') . '</strong> ' . esc_html($update_context_label) . '</div>';
+            echo '<div style="margin-top:4px;opacity:.85;"><strong>' . esc_html__('Update type:', 'backstage-venue-manager') . '</strong> ' . esc_html($update_context_label) . '</div>';
         }
         echo '</div>';
     } else {
@@ -4481,7 +4481,7 @@ if (!function_exists('vms_ticketing_ui_help_default_text')) {
 	{
 		$section = sanitize_key($section);
 		if ($section === 'addons') {
-			return (string) __('Fire pits, tables, and other extras are optional. Add one only if you want to reserve that amenity for your group.', 'vms');
+			return (string) __('Fire pits, tables, and other extras are optional. Add one only if you want to reserve that amenity for your group.', 'backstage-venue-manager');
 		}
 
 		return '';
@@ -4491,14 +4491,14 @@ if (!function_exists('vms_ticketing_ui_help_default_text')) {
 if (!function_exists('vms_ticketing_ui_addons_section_heading_default')) {
 	function vms_ticketing_ui_addons_section_heading_default(): string
 	{
-		return (string) __('Fire Pits & Tables', 'vms');
+		return (string) __('Fire Pits & Tables', 'backstage-venue-manager');
 	}
 }
 
 if (!function_exists('vms_ticketing_ui_addons_section_subtext_default')) {
 	function vms_ticketing_ui_addons_section_subtext_default(): string
 	{
-		return (string) __('Click here to add a fire pit or table to your order.', 'vms');
+		return (string) __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager');
 	}
 }
 

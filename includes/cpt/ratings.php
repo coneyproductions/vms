@@ -10,19 +10,19 @@ function vms_register_rating_cpt()
 {
 
     $labels = array(
-        'name'               => __('Ratings', 'vms'),
-        'singular_name'      => __('Rating', 'vms'),
-        'menu_name'          => __('Ratings', 'vms'),
-        'name_admin_bar'     => __('Rating', 'vms'),
-        'add_new'            => __('Add New', 'vms'),
-        'add_new_item'       => __('Add New Rating', 'vms'),
-        'new_item'           => __('New Rating', 'vms'),
-        'edit_item'          => __('Edit Rating', 'vms'),
-        'view_item'          => __('View Rating', 'vms'),
-        'all_items'          => __('All Ratings', 'vms'),
-        'search_items'       => __('Search Ratings', 'vms'),
-        'not_found'          => __('No ratings found.', 'vms'),
-        'not_found_in_trash' => __('No ratings found in Trash.', 'vms'),
+        'name'               => __('Ratings', 'backstage-venue-manager'),
+        'singular_name'      => __('Rating', 'backstage-venue-manager'),
+        'menu_name'          => __('Ratings', 'backstage-venue-manager'),
+        'name_admin_bar'     => __('Rating', 'backstage-venue-manager'),
+        'add_new'            => __('Add New', 'backstage-venue-manager'),
+        'add_new_item'       => __('Add New Rating', 'backstage-venue-manager'),
+        'new_item'           => __('New Rating', 'backstage-venue-manager'),
+        'edit_item'          => __('Edit Rating', 'backstage-venue-manager'),
+        'view_item'          => __('View Rating', 'backstage-venue-manager'),
+        'all_items'          => __('All Ratings', 'backstage-venue-manager'),
+        'search_items'       => __('Search Ratings', 'backstage-venue-manager'),
+        'not_found'          => __('No ratings found.', 'backstage-venue-manager'),
+        'not_found_in_trash' => __('No ratings found in Trash.', 'backstage-venue-manager'),
     );
 
     $args = array(
@@ -48,7 +48,7 @@ function vms_add_rating_details_metabox()
 {
     add_meta_box(
         'vms_rating_details',
-        __('Rating Details', 'vms'),
+        __('Rating Details', 'backstage-venue-manager'),
         'vms_render_rating_details_metabox',
         'vms_rating',
         'normal',
@@ -85,10 +85,10 @@ function vms_render_rating_details_metabox($post)
 ?>
     <table class="form-table">
         <tr>
-            <th scope="row"><label for="vms_band_id"><?php esc_html_e('Music Vendor / Vendor', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_band_id"><?php esc_html_e('Music Vendor / Vendor', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <select id="vms_band_id" name="vms_band_id" class="vms-rating-select-wide">
-                    <option value=""><?php esc_html_e('-- Select Music Vendor --', 'vms'); ?></option>
+                    <option value=""><?php esc_html_e('-- Select Music Vendor --', 'backstage-venue-manager'); ?></option>
                     <?php foreach ($bands as $band) : ?>
                         <option value="<?php echo esc_attr($band->ID); ?>"
                             <?php selected($band_id, $band->ID); ?>>
@@ -100,10 +100,10 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_event_id"><?php esc_html_e('Event', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_event_id"><?php esc_html_e('Event', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <select id="vms_event_id" name="vms_event_id" class="vms-rating-select-wide">
-                    <option value=""><?php esc_html_e('-- Select Event --', 'vms'); ?></option>
+                    <option value=""><?php esc_html_e('-- Select Event --', 'backstage-venue-manager'); ?></option>
                     <?php foreach ($events as $event) : ?>
                         <?php
                         $ts   = strtotime($event->post_date);
@@ -119,10 +119,10 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_rating_value"><?php esc_html_e('Rating (Stars)', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_rating_value"><?php esc_html_e('Rating (Stars)', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <select id="vms_rating_value" name="vms_rating_value">
-                    <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                    <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                     <?php for ($i = 1; $i <= 5; $i++) : ?>
                         <option value="<?php echo esc_attr($i); ?>"
                             <?php selected($stars, $i); ?>>
@@ -134,7 +134,7 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_reviewer_name"><?php esc_html_e('Reviewer Name', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_reviewer_name"><?php esc_html_e('Reviewer Name', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <input type="text" id="vms_reviewer_name" name="vms_reviewer_name"
                     class="regular-text"
@@ -143,7 +143,7 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_reviewer_email"><?php esc_html_e('Reviewer Email', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_reviewer_email"><?php esc_html_e('Reviewer Email', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <input type="email" id="vms_reviewer_email" name="vms_reviewer_email"
                     class="regular-text"
@@ -152,15 +152,15 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><?php esc_html_e('Verified Attendance', 'vms'); ?></th>
+            <th scope="row"><?php esc_html_e('Verified Attendance', 'backstage-venue-manager'); ?></th>
             <td>
                 <label>
                     <input type="checkbox" name="vms_verified_attendance" value="1"
                         <?php checked($verified, 1); ?> />
-                    <?php esc_html_e('Mark this rating as from a verified attendee', 'vms'); ?>
+                    <?php esc_html_e('Mark this rating as from a verified attendee', 'backstage-venue-manager'); ?>
                 </label>
                 <p class="description">
-                    <?php esc_html_e('In the future, this will be set automatically based on ticket/attendance checks.', 'vms'); ?>
+                    <?php esc_html_e('In the future, this will be set automatically based on ticket/attendance checks.', 'backstage-venue-manager'); ?>
                 </p>
             </td>
         </tr>

@@ -240,9 +240,9 @@ if (!function_exists('vms_vendor_portal_render_my_account_notice')) {
             : home_url('/vendor-portal/?tab=dashboard');
 
         echo '<section class="vms-vendor-account-guide vms-notice vms-notice-success">';
-        echo '<p><strong>' . esc_html__('Looking for your Vendor Portal?', 'vms') . '</strong></p>';
-        echo '<p>' . esc_html__('Vendor tools and updates live in the Vendor Portal. This My Account area still remains available for normal customer orders, tickets, and account settings.', 'vms') . '</p>';
-        echo '<p class="vms-vendor-account-guide__actions"><a class="button" href="' . esc_url($portal_url) . '">' . esc_html__('Open Vendor Portal', 'vms') . '</a></p>';
+        echo '<p><strong>' . esc_html__('Looking for your Vendor Portal?', 'backstage-venue-manager') . '</strong></p>';
+        echo '<p>' . esc_html__('Vendor tools and updates live in the Vendor Portal. This My Account area still remains available for normal customer orders, tickets, and account settings.', 'backstage-venue-manager') . '</p>';
+        echo '<p class="vms-vendor-account-guide__actions"><a class="button" href="' . esc_url($portal_url) . '">' . esc_html__('Open Vendor Portal', 'backstage-venue-manager') . '</a></p>';
         echo '</section>';
     }
 }
@@ -879,11 +879,11 @@ if (!function_exists('vms_vendor_portal_get_data_tools_sales_snapshot')) {
             || ($door_rows_seen > 0)
             || ($free_ticket_qty_total > 0);
 
-        $label = __('Paid ticket sales', 'vms');
+        $label = __('Paid ticket sales', 'backstage-venue-manager');
         if ($free_ticket_qty_total > 0) {
-            $label = __('Ticketed attendance', 'vms');
+            $label = __('Ticketed attendance', 'backstage-venue-manager');
         } elseif ($door_paid_qty > 0) {
-            $label = __('Paid ticket sales + counted door sales', 'vms');
+            $label = __('Paid ticket sales + counted door sales', 'backstage-venue-manager');
         }
 
         $cache[$plan_id] = array(
@@ -998,17 +998,17 @@ if (!function_exists('vms_vendor_portal_get_count_breakdown')) {
         $lines = array(
             array(
                 'key' => 'presales',
-                'label' => __('Presales', 'vms'),
+                'label' => __('Presales', 'backstage-venue-manager'),
                 'qty' => $presales,
             ),
             array(
                 'key' => 'door_sales',
-                'label' => __('Door sales', 'vms'),
+                'label' => __('Door sales', 'backstage-venue-manager'),
                 'qty' => $door_sales,
             ),
             array(
                 'key' => 'comp_guest',
-                'label' => __('Comped / guest list', 'vms'),
+                'label' => __('Comped / guest list', 'backstage-venue-manager'),
                 'qty' => $comp_guest,
             ),
         );
@@ -1064,7 +1064,7 @@ if (!function_exists('vms_vendor_portal_get_progress_headcount_context')) {
                 'wired' => false,
                 'headcount' => 0,
                 'source' => 'none',
-                'label' => __('Sales not wired yet', 'vms'),
+                'label' => __('Sales not wired yet', 'backstage-venue-manager'),
             );
 
         if ($plan_id <= 0) {
@@ -1078,7 +1078,7 @@ if (!function_exists('vms_vendor_portal_get_progress_headcount_context')) {
                 'wired' => true,
                 'headcount' => max(0, (int) ($merged_snapshot['headcount'] ?? 0)),
                 'source' => (string) ($merged_snapshot['source'] ?? 'data_tools_merged_ticket_sales'),
-                'label' => (string) ($merged_snapshot['label'] ?? __('Paid ticket sales', 'vms')),
+                'label' => (string) ($merged_snapshot['label'] ?? __('Paid ticket sales', 'backstage-venue-manager')),
                 'stats_payload' => $stats_payload,
                 'merged_snapshot' => $merged_snapshot,
                 'updated_label' => (string) ($merged_snapshot['updated_label'] ?? ''),
@@ -1093,7 +1093,7 @@ if (!function_exists('vms_vendor_portal_get_progress_headcount_context')) {
         }
 
         $source_mode = sanitize_key((string) ($stats_payload['source_mode'] ?? 'cached'));
-        $ticket_label = ($source_mode === 'live') ? __('Live paid ticket sales', 'vms') : __('Paid ticket sales', 'vms');
+        $ticket_label = ($source_mode === 'live') ? __('Live paid ticket sales', 'backstage-venue-manager') : __('Paid ticket sales', 'backstage-venue-manager');
         $has_ticket_linkage = !empty($stats_payload['ticket_product_ids']) || !empty($stats_payload['all_ticket_product_ids']);
 
         if ($ticket_qty > 0 || $has_ticket_linkage) {
@@ -1150,7 +1150,7 @@ if (!function_exists('vms_vendor_portal_build_secondary_sales_snapshot_card')) {
         }
 
         $attendance_count = max(0, (int) ($headcount_context['headcount'] ?? 0));
-        $source_label = isset($headcount_context['label']) ? (string) ($headcount_context['label'] ?? '') : __('Ticket sales', 'vms');
+        $source_label = isset($headcount_context['label']) ? (string) ($headcount_context['label'] ?? '') : __('Ticket sales', 'backstage-venue-manager');
 
         $event_date = (string) get_post_meta($plan_id, '_vms_event_date', true);
         $event_date_label = $event_date !== ''
@@ -1171,7 +1171,7 @@ if (!function_exists('vms_vendor_portal_build_secondary_sales_snapshot_card')) {
             'event_date' => $event_date,
             'event_date_label' => $event_date_label,
             'attendance_count' => $attendance_count,
-            'source_label' => $source_label !== '' ? $source_label : __('Ticket sales', 'vms'),
+            'source_label' => $source_label !== '' ? $source_label : __('Ticket sales', 'backstage-venue-manager'),
             'count_breakdown' => $count_breakdown,
             'updated_label' => $updated_label,
             'is_history' => false,
@@ -1202,7 +1202,7 @@ if (!function_exists('vms_vendor_portal_build_bonus_progress_card')) {
 
         $headcount_context = vms_vendor_portal_get_progress_headcount_context($plan_id);
         $attendance_count = max(0, (int) ($headcount_context['headcount'] ?? 0));
-        $source_label = isset($headcount_context['label']) ? (string) ($headcount_context['label']) : __('Ticket sales', 'vms');
+        $source_label = isset($headcount_context['label']) ? (string) ($headcount_context['label']) : __('Ticket sales', 'backstage-venue-manager');
 
         if ($structure === 'attendance_bonus') {
             $snapshot = function_exists('vms_get_attendance_bonus_progress_snapshot')
@@ -1250,7 +1250,7 @@ if (!function_exists('vms_vendor_portal_build_bonus_progress_card')) {
                 'step_bonus' => null,
                 'per_ticket_rate' => null,
                 'steps_reached' => 0,
-                'message' => __('No attendance bonus was configured for this event.', 'vms'),
+                'message' => __('No attendance bonus was configured for this event.', 'backstage-venue-manager'),
             );
         }
 
@@ -1455,7 +1455,7 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
             $meter_enabled = !$is_sales_snapshot && !$history_mode && !empty($snapshot['meter_enabled']);
             $max_reached = !empty($snapshot['max_reached']);
             $progress_percent = max(0.0, min(100.0, ((float) ($snapshot['meter_percent'] ?? 0.0)) * 100));
-            $source_label = (string) ($card['source_label'] ?? __('Ticket sales', 'vms'));
+            $source_label = (string) ($card['source_label'] ?? __('Ticket sales', 'backstage-venue-manager'));
             $count_breakdown = isset($card['count_breakdown']) && is_array($card['count_breakdown'])
                 ? (array) $card['count_breakdown']
                 : array();
@@ -1477,7 +1477,7 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
             echo '</div>';
             if (!$is_sales_snapshot) {
                 echo '<div class="vms-vp-progress-card__amount">';
-                echo '<span class="vms-vp-progress-card__amount-label">' . esc_html($history_mode ? __('Final payout', 'vms') : __('Projected payout', 'vms')) . '</span>';
+                echo '<span class="vms-vp-progress-card__amount-label">' . esc_html($history_mode ? __('Final payout', 'backstage-venue-manager') : __('Projected payout', 'backstage-venue-manager')) . '</span>';
                 echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money($projected_total)) . '</strong>';
                 echo '</div>';
             }
@@ -1485,7 +1485,7 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
 
             echo '<div class="vms-vp-progress-card__countline">';
             /* translators: %d: attendance count for this vendor event card. */
-            echo '<strong>' . esc_html(sprintf($history_mode ? __('Final count: %d', 'vms') : __('Current count: %d', 'vms'), $attendance_count)) . '</strong>';
+            echo '<strong>' . esc_html(sprintf($history_mode ? __('Final count: %d', 'backstage-venue-manager') : __('Current count: %d', 'backstage-venue-manager'), $attendance_count)) . '</strong>';
             echo '</div>';
 
             if ($meter_enabled) {
@@ -1498,13 +1498,13 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
 
             if ($is_sales_snapshot) {
                 echo '<div class="vms-vp-progress-stat">';
-                echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Status', 'vms') . '</span>';
+                echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Status', 'backstage-venue-manager') . '</span>';
                 echo '<strong>' . esc_html($source_label) . '</strong>';
                 echo '</div>';
 
                 if (!empty($count_breakdown['has_any'])) {
                     echo '<div class="vms-vp-progress-stat vms-vp-progress-stat--breakdown">';
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Count source', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Count source', 'backstage-venue-manager') . '</span>';
                     if ($count_breakdown_markup !== '') {
                         echo wp_kses_post($count_breakdown_markup);
                     } else {
@@ -1514,70 +1514,70 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
                 }
             } else {
                 echo '<div class="vms-vp-progress-stat">';
-                echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Base pay', 'vms') . '</span>';
+                echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Base pay', 'backstage-venue-manager') . '</span>';
                 echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money($base_pay)) . '</strong>';
                 echo '</div>';
 
                 echo '<div class="vms-vp-progress-stat">';
-                echo '<span class="vms-vp-progress-stat__label">' . esc_html($history_mode ? __('Bonus earned', 'vms') : __('Current bonus', 'vms')) . '</span>';
+                echo '<span class="vms-vp-progress-stat__label">' . esc_html($history_mode ? __('Bonus earned', 'backstage-venue-manager') : __('Current bonus', 'backstage-venue-manager')) . '</span>';
                 echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money($current_bonus)) . '</strong>';
                 echo '</div>';
 
                 echo '<div class="vms-vp-progress-stat">';
                 if ($history_mode) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Result', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Result', 'backstage-venue-manager') . '</span>';
                     if ($max_reached) {
-                        echo '<strong>' . esc_html__('Max bonus reached', 'vms') . '</strong>';
+                        echo '<strong>' . esc_html__('Max bonus reached', 'backstage-venue-manager') . '</strong>';
                     } elseif ($current_bonus > 0) {
-                        echo '<strong>' . esc_html__('Bonus unlocked', 'vms') . '</strong>';
+                        echo '<strong>' . esc_html__('Bonus unlocked', 'backstage-venue-manager') . '</strong>';
                     } else {
-                        echo '<strong>' . esc_html__('No bonus unlocked', 'vms') . '</strong>';
+                        echo '<strong>' . esc_html__('No bonus unlocked', 'backstage-venue-manager') . '</strong>';
                     }
                 } elseif ($max_reached) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Status', 'vms') . '</span>';
-                    echo '<strong>' . esc_html__('Max bonus reached', 'vms') . '</strong>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Status', 'backstage-venue-manager') . '</span>';
+                    echo '<strong>' . esc_html__('Max bonus reached', 'backstage-venue-manager') . '</strong>';
                 } elseif ($mode === 'step' && $next_bonus !== null && $next_threshold !== null) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Next bonus', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Next bonus', 'backstage-venue-manager') . '</span>';
                     /* translators: %d: attendance threshold needed for the next bonus step. */
-                    echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) $next_bonus)) . ' <span class="vms-vp-progress-inline-note">' . esc_html(sprintf(__('at %d', 'vms'), (int) $next_threshold)) . '</span></strong>';
+                    echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) $next_bonus)) . ' <span class="vms-vp-progress-inline-note">' . esc_html(sprintf(__('at %d', 'backstage-venue-manager'), (int) $next_threshold)) . '</span></strong>';
                 } elseif ($mode === 'continuous' && $next_threshold !== null && !empty($snapshot['max_bonus'])) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Bonus cap', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Bonus cap', 'backstage-venue-manager') . '</span>';
                     /* translators: %d: attendance threshold where the bonus cap is reached. */
-                    echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) ($snapshot['max_bonus'] ?? 0.0))) . ' <span class="vms-vp-progress-inline-note">' . esc_html(sprintf(__('by %d', 'vms'), (int) $next_threshold)) . '</span></strong>';
+                    echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) ($snapshot['max_bonus'] ?? 0.0))) . ' <span class="vms-vp-progress-inline-note">' . esc_html(sprintf(__('by %d', 'backstage-venue-manager'), (int) $next_threshold)) . '</span></strong>';
                 } elseif ($mode === 'continuous' && !empty($snapshot['per_ticket_rate'])) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Bonus rate', 'vms') . '</span>';
-                    echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) $snapshot['per_ticket_rate'])) . ' <span class="vms-vp-progress-inline-note">' . esc_html__('per ticket', 'vms') . '</span></strong>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Bonus rate', 'backstage-venue-manager') . '</span>';
+                    echo '<strong>' . wp_kses_post(vms_vendor_portal_format_money((float) $snapshot['per_ticket_rate'])) . ' <span class="vms-vp-progress-inline-note">' . esc_html__('per ticket', 'backstage-venue-manager') . '</span></strong>';
                 } else {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Next step', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Next step', 'backstage-venue-manager') . '</span>';
                     $fallback_message = trim((string) ($snapshot['message'] ?? ''));
-                    echo '<strong>' . esc_html($fallback_message !== '' ? $fallback_message : __('Waiting for current attendance wiring.', 'vms')) . '</strong>';
+                    echo '<strong>' . esc_html($fallback_message !== '' ? $fallback_message : __('Waiting for current attendance wiring.', 'backstage-venue-manager')) . '</strong>';
                 }
                 echo '</div>';
 
                 echo '<div class="vms-vp-progress-stat">';
                 if ($history_mode) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Count source', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Count source', 'backstage-venue-manager') . '</span>';
                     if ($count_breakdown_markup !== '') {
                         echo wp_kses_post($count_breakdown_markup);
                     } else {
                         echo '<strong>' . esc_html($source_label) . '</strong>';
                     }
                 } elseif ($max_reached) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'vms') . '</span>';
-                    echo '<strong>' . esc_html__('Goal reached', 'vms') . '</strong>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'backstage-venue-manager') . '</span>';
+                    echo '<strong>' . esc_html__('Goal reached', 'backstage-venue-manager') . '</strong>';
                 } elseif ($tickets_to_next > 0) {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'backstage-venue-manager') . '</span>';
                     /* translators: %d: remaining ticket count before the next threshold. */
-                    echo '<strong>' . esc_html(sprintf(_n('%d more ticket', '%d more tickets', $tickets_to_next, 'vms'), $tickets_to_next)) . '</strong>';
+                    echo '<strong>' . esc_html(sprintf(_n('%d more ticket', '%d more tickets', $tickets_to_next, 'backstage-venue-manager'), $tickets_to_next)) . '</strong>';
                 } else {
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'vms') . '</span>';
-                    echo '<strong>' . esc_html__('Live now', 'vms') . '</strong>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('To go', 'backstage-venue-manager') . '</span>';
+                    echo '<strong>' . esc_html__('Live now', 'backstage-venue-manager') . '</strong>';
                 }
                 echo '</div>';
 
                 if (!$history_mode && !empty($count_breakdown['has_any'])) {
                     echo '<div class="vms-vp-progress-stat vms-vp-progress-stat--breakdown">';
-                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Count source', 'vms') . '</span>';
+                    echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Count source', 'backstage-venue-manager') . '</span>';
                     if ($count_breakdown_markup !== '') {
                         echo wp_kses_post($count_breakdown_markup);
                     } else {
@@ -1590,7 +1590,7 @@ if (!function_exists('vms_vendor_portal_render_progress_cards_section')) {
             echo '</div>';
 
             if ($updated_label !== '') {
-                echo '<div class="vms-vp-progress-card__foot vms-muted">' . esc_html__('Updated', 'vms') . ': ' . esc_html($updated_label) . '</div>';
+                echo '<div class="vms-vp-progress-card__foot vms-muted">' . esc_html__('Updated', 'backstage-venue-manager') . ': ' . esc_html($updated_label) . '</div>';
             }
             echo '</article>';
         }
@@ -1675,7 +1675,7 @@ if (!function_exists('vms_vendor_portal_render_secondary_sales_snapshot_section'
             return;
         }
 
-        vms_vendor_portal_render_progress_cards_section($cards, __('Ticket Snapshot', 'vms'), false, false);
+        vms_vendor_portal_render_progress_cards_section($cards, __('Ticket Snapshot', 'backstage-venue-manager'), false, false);
     }
 }
 
@@ -1692,7 +1692,7 @@ if (!function_exists('vms_vendor_portal_render_bonus_progress_section')) {
             return;
         }
 
-        vms_vendor_portal_render_progress_cards_section($cards, __('Bonus Progress', 'vms'), false);
+        vms_vendor_portal_render_progress_cards_section($cards, __('Bonus Progress', 'backstage-venue-manager'), false);
     }
 }
 
@@ -1842,16 +1842,16 @@ if (!function_exists('vms_vendor_portal_get_past_assigned_event_rows')) {
             $lineup_vendor_ids = array_values(array_unique(array_filter(array_map('absint', (array) get_post_meta($plan_id, $k_lineup_vendor_id, false)))));
 
             $role_key = 'assigned';
-            $role_label = __('Assigned', 'vms');
+            $role_label = __('Assigned', 'backstage-venue-manager');
             if ($band_vendor_id === $vendor_id) {
                 $role_key = 'primary';
-                $role_label = __('Primary', 'vms');
+                $role_label = __('Primary', 'backstage-venue-manager');
             } elseif ($secondary_vendor_id === $vendor_id) {
                 $role_key = 'supporting';
-                $role_label = __('Supporting', 'vms');
+                $role_label = __('Supporting', 'backstage-venue-manager');
             } elseif (in_array($vendor_id, $lineup_vendor_ids, true)) {
                 $role_key = 'lineup';
-                $role_label = __('Lineup', 'vms');
+                $role_label = __('Lineup', 'backstage-venue-manager');
             }
 
             $event_date = (string) get_post_meta($plan_id, '_vms_event_date', true);
@@ -1911,24 +1911,24 @@ if (!function_exists('vms_vendor_portal_render_event_history_tab')) {
             : array();
         $rows = vms_vendor_portal_get_past_assigned_event_rows($vendor_id, 20);
 
-        echo '<h3>' . esc_html__('Event History', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Event History', 'backstage-venue-manager') . '</h3>';
 
         $rendered_any = false;
 
         if (!empty($primary_cards)) {
-            vms_vendor_portal_render_progress_cards_section($primary_cards, __('Past Show Performance', 'vms'), true, false);
+            vms_vendor_portal_render_progress_cards_section($primary_cards, __('Past Show Performance', 'backstage-venue-manager'), true, false);
             $rendered_any = true;
         }
 
         if (!empty($secondary_cards)) {
-            vms_vendor_portal_render_progress_cards_section($secondary_cards, __('Past Ticket Snapshot', 'vms'), true, false);
+            vms_vendor_portal_render_progress_cards_section($secondary_cards, __('Past Ticket Snapshot', 'backstage-venue-manager'), true, false);
             $rendered_any = true;
         }
 
         if (!empty($rows)) {
             $rendered_any = true;
             echo '<div class="vms-portal-card">';
-            echo '<h3>' . esc_html__('Past Shows', 'vms') . '</h3>';
+            echo '<h3>' . esc_html__('Past Shows', 'backstage-venue-manager') . '</h3>';
             echo '<ul class="vms-dash-list">';
             foreach ($rows as $row) {
                 if (!is_array($row)) {
@@ -1950,7 +1950,7 @@ if (!function_exists('vms_vendor_portal_render_event_history_tab')) {
                 }
                 if ($attendance_count !== null) {
                     /* translators: %d: final attendance count for the completed event. */
-                    $meta_bits[] = sprintf(__('Final count: %d', 'vms'), $attendance_count);
+                    $meta_bits[] = sprintf(__('Final count: %d', 'backstage-venue-manager'), $attendance_count);
                 }
 
                 echo '<li>';
@@ -1975,7 +1975,7 @@ if (!function_exists('vms_vendor_portal_render_event_history_tab')) {
 
         if (!$rendered_any) {
             echo '<div class="vms-portal-card">';
-            echo '<p class="vms-muted vms-m0">' . esc_html__('No completed event history is available yet.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-m0">' . esc_html__('No completed event history is available yet.', 'backstage-venue-manager') . '</p>';
             echo '</div>';
         }
     }
@@ -1994,7 +1994,7 @@ if (!function_exists('vms_vendor_portal_render_recent_performance_section')) {
             return;
         }
 
-        vms_vendor_portal_render_progress_cards_section($cards, __('Recent Performance', 'vms'), true);
+        vms_vendor_portal_render_progress_cards_section($cards, __('Recent Performance', 'backstage-venue-manager'), true);
     }
 }
 
@@ -2028,11 +2028,11 @@ if (!function_exists('vms_vendor_portal_register_tours')) {
     {
         $tours[] = array(
             'id' => 'vms.vendor.portal.progress',
-            'title' => __('Vendor Portal Bonus Progress', 'vms'),
+            'title' => __('Vendor Portal Bonus Progress', 'backstage-venue-manager'),
             'screen' => 'frontend:vms-vendor-portal-dashboard',
             'version' => '1.0.0',
             'level' => 'beginner',
-            'description' => __('Understand how close a paid vendor is to attendance-bonus targets.', 'vms'),
+            'description' => __('Understand how close a paid vendor is to attendance-bonus targets.', 'backstage-venue-manager'),
             'audience' => array(
                 'capabilities_any' => array('read'),
                 'capabilities_all' => array(),
@@ -2046,22 +2046,22 @@ if (!function_exists('vms_vendor_portal_register_tours')) {
                 array(
                     'id' => 'vendor_progress_help',
                     'selector' => '[data-vms-tour="vendor-progress.help"]',
-                    'title' => __('Projected, Not Final', 'vms'),
-                    'body' => wp_kses_post(__('This section shows your live progress toward bonus goals for each upcoming event.', 'vms')),
+                    'title' => __('Projected, Not Final', 'backstage-venue-manager'),
+                    'body' => wp_kses_post(__('This section shows your live progress toward bonus goals for each upcoming event.', 'backstage-venue-manager')),
                     'placement' => 'top',
                 ),
                 array(
                     'id' => 'vendor_progress_cards',
                     'selector' => '[data-vms-tour="vendor-progress.cards"]',
-                    'title' => __('Read Each Event Card', 'vms'),
-                    'body' => wp_kses_post(__('Each card shows your current counted attendance, your current unlocked bonus, the next target, and the projected payout for that event.', 'vms')),
+                    'title' => __('Read Each Event Card', 'backstage-venue-manager'),
+                    'body' => wp_kses_post(__('Each card shows your current counted attendance, your current unlocked bonus, the next target, and the projected payout for that event.', 'backstage-venue-manager')),
                     'placement' => 'top',
                 ),
                 array(
                     'id' => 'vendor_progress_bar',
                     'selector' => '[data-vms-tour="vendor-progress.bar"]',
-                    'title' => __('See How Close The Next Goal Is', 'vms'),
-                    'body' => wp_kses_post(__('The bar fills toward the next meaningful target so you can tell at a glance whether the next bonus is close, reached, or already capped.', 'vms')),
+                    'title' => __('See How Close The Next Goal Is', 'backstage-venue-manager'),
+                    'body' => wp_kses_post(__('The bar fills toward the next meaningful target so you can tell at a glance whether the next bonus is close, reached, or already capped.', 'backstage-venue-manager')),
                     'placement' => 'top',
                 ),
             ),
@@ -2159,16 +2159,16 @@ if (!function_exists('vms_vendor_availability_source_label')) {
     {
         $reason = sanitize_key($reason);
         $map = array(
-            'assigned_here' => __('Current assignment', 'vms'),
-            'manual' => __('Manual', 'vms'),
-            'pattern' => __('Pattern', 'vms'),
-            'ics' => __('ICS', 'vms'),
-            'assigned_elsewhere' => __('Conflict', 'vms'),
-            'no_response' => __('No reply', 'vms'),
-            'invalid' => __('Unknown', 'vms'),
+            'assigned_here' => __('Current assignment', 'backstage-venue-manager'),
+            'manual' => __('Manual', 'backstage-venue-manager'),
+            'pattern' => __('Pattern', 'backstage-venue-manager'),
+            'ics' => __('ICS', 'backstage-venue-manager'),
+            'assigned_elsewhere' => __('Conflict', 'backstage-venue-manager'),
+            'no_response' => __('No reply', 'backstage-venue-manager'),
+            'invalid' => __('Unknown', 'backstage-venue-manager'),
         );
 
-        return $map[$reason] ?? __('Unknown', 'vms');
+        return $map[$reason] ?? __('Unknown', 'backstage-venue-manager');
     }
 }
 
@@ -2192,9 +2192,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         if ($vendor_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             return array(
                 'state' => 'no-response',
-                'label' => __('No reply', 'vms'),
+                'label' => __('No reply', 'backstage-venue-manager'),
                 'reason' => 'invalid',
-                'detail' => __('Date or vendor record is invalid.', 'vms'),
+                'detail' => __('Date or vendor record is invalid.', 'backstage-venue-manager'),
                 'source' => vms_vendor_availability_source_label('invalid'),
                 'conflict' => false,
                 'assignable' => false,
@@ -2206,14 +2206,14 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
             $detail = $assigned_role !== ''
                 ? sprintf(
                     /* translators: %s: assigned role label for the vendor on this Event Plan. */
-                    __('Assigned on this Event Plan as %s.', 'vms'),
+                    __('Assigned on this Event Plan as %s.', 'backstage-venue-manager'),
                     strtolower($assigned_role)
                 )
-                : __('Assigned on this Event Plan.', 'vms');
+                : __('Assigned on this Event Plan.', 'backstage-venue-manager');
 
             return array(
                 'state' => 'current',
-                'label' => __('Current assignment', 'vms'),
+                'label' => __('Current assignment', 'backstage-venue-manager'),
                 'reason' => 'assigned_here',
                 'detail' => $detail,
                 'source' => vms_vendor_availability_source_label('assigned_here'),
@@ -2226,9 +2226,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         if ($busy_source === 'booked') {
             return array(
                 'state' => 'booked',
-                'label' => __('Booked', 'vms'),
+                'label' => __('Booked', 'backstage-venue-manager'),
                 'reason' => 'assigned_elsewhere',
-                'detail' => __('Booked on another Event Plan for this same date.', 'vms'),
+                'detail' => __('Booked on another Event Plan for this same date.', 'backstage-venue-manager'),
                 'source' => vms_vendor_availability_source_label('assigned_elsewhere'),
                 'conflict' => true,
                 'assignable' => false,
@@ -2238,9 +2238,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         if ($busy_source === 'tentative') {
             return array(
                 'state' => 'tentative',
-                'label' => __('Tentative', 'vms'),
+                'label' => __('Tentative', 'backstage-venue-manager'),
                 'reason' => 'assigned_elsewhere',
-                'detail' => __('Tentatively assigned on another Event Plan for this same date.', 'vms'),
+                'detail' => __('Tentatively assigned on another Event Plan for this same date.', 'backstage-venue-manager'),
                 'source' => vms_vendor_availability_source_label('assigned_elsewhere'),
                 'conflict' => true,
                 'assignable' => false,
@@ -2253,9 +2253,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         if ($manual_state === 'available') {
             return array(
                 'state' => 'available',
-                'label' => __('Available', 'vms'),
+                'label' => __('Available', 'backstage-venue-manager'),
                 'reason' => 'manual',
-                'detail' => __('Marked available manually for this date.', 'vms'),
+                'detail' => __('Marked available manually for this date.', 'backstage-venue-manager'),
                 'source' => vms_vendor_availability_source_label('manual'),
                 'conflict' => false,
                 'assignable' => true,
@@ -2265,9 +2265,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         if ($manual_state === 'unavailable') {
             return array(
                 'state' => 'unavailable',
-                'label' => __('Unavailable', 'vms'),
+                'label' => __('Unavailable', 'backstage-venue-manager'),
                 'reason' => 'manual',
-                'detail' => __('Marked unavailable manually for this date.', 'vms'),
+                'detail' => __('Marked unavailable manually for this date.', 'backstage-venue-manager'),
                 'source' => vms_vendor_availability_source_label('manual'),
                 'conflict' => false,
                 'assignable' => false,
@@ -2285,9 +2285,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
                 if (!in_array($dow, $pattern_days, true)) {
                     return array(
                         'state' => 'unavailable',
-                        'label' => __('Unavailable', 'vms'),
+                        'label' => __('Unavailable', 'backstage-venue-manager'),
                         'reason' => 'pattern',
-                        'detail' => __('Outside the vendor\'s weekly availability pattern.', 'vms'),
+                        'detail' => __('Outside the vendor\'s weekly availability pattern.', 'backstage-venue-manager'),
                         'source' => vms_vendor_availability_source_label('pattern'),
                         'conflict' => false,
                         'assignable' => false,
@@ -2304,9 +2304,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         if (in_array($date, $ics_unavailable, true)) {
             return array(
                 'state' => 'unavailable',
-                'label' => __('Unavailable', 'vms'),
+                'label' => __('Unavailable', 'backstage-venue-manager'),
                 'reason' => 'ics',
-                'detail' => __('Blocked by synced calendar (ICS).', 'vms'),
+                'detail' => __('Blocked by synced calendar (ICS).', 'backstage-venue-manager'),
                 'source' => vms_vendor_availability_source_label('ics'),
                 'conflict' => false,
                 'assignable' => false,
@@ -2317,9 +2317,9 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         if ($pattern_matches) {
             return array(
                 'state' => 'available',
-                'label' => __('Available', 'vms'),
+                'label' => __('Available', 'backstage-venue-manager'),
                 'reason' => 'pattern',
-                'detail' => __('Matches the vendor\'s weekly availability pattern.', 'vms'),
+                'detail' => __('Matches the vendor\'s weekly availability pattern.', 'backstage-venue-manager'),
                 'source' => vms_vendor_availability_source_label('pattern'),
                 'conflict' => false,
                 'assignable' => true,
@@ -2328,12 +2328,12 @@ if (!function_exists('vms_vendor_effective_availability_for_date')) {
         }
 
         $detail = vms_vendor_has_availability_setup($vendor_id)
-            ? __('No explicit availability signal was found for this date.', 'vms')
-            : __('Vendor has not set availability yet.', 'vms');
+            ? __('No explicit availability signal was found for this date.', 'backstage-venue-manager')
+            : __('Vendor has not set availability yet.', 'backstage-venue-manager');
 
         return array(
             'state' => 'no-response',
-            'label' => __('No reply', 'vms'),
+            'label' => __('No reply', 'backstage-venue-manager'),
             'reason' => 'no_response',
             'detail' => $detail,
             'source' => vms_vendor_availability_source_label('no_response'),
@@ -3020,13 +3020,13 @@ if (!function_exists('vms_vendor_portal_promo_video_provider_label')) {
     {
         $provider = sanitize_key($provider);
         $labels = array(
-            'youtube' => __('YouTube link', 'vms'),
-            'vimeo' => __('Vimeo link', 'vms'),
-            'facebook' => __('Facebook link', 'vms'),
-            'instagram' => __('Instagram link', 'vms'),
-            'link' => __('External video link', 'vms'),
+            'youtube' => __('YouTube link', 'backstage-venue-manager'),
+            'vimeo' => __('Vimeo link', 'backstage-venue-manager'),
+            'facebook' => __('Facebook link', 'backstage-venue-manager'),
+            'instagram' => __('Instagram link', 'backstage-venue-manager'),
+            'link' => __('External video link', 'backstage-venue-manager'),
         );
-        return (string) ($labels[$provider] ?? __('External video link', 'vms'));
+        return (string) ($labels[$provider] ?? __('External video link', 'backstage-venue-manager'));
     }
 }
 
@@ -3082,7 +3082,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_markup_from
         if ($source_type === 'attachment' && !empty($data['url'])) {
             $mime = !empty($data['mime']) ? (string) $data['mime'] : 'video/mp4';
             $url = (string) $data['url'];
-            $body_markup = '<div class="vms-headliner-promo-video__frame"><video class="vms-headliner-promo-video__player" controls preload="metadata" playsinline><source src="' . esc_url($url) . '" type="' . esc_attr($mime) . '"><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html__('Watch promo video', 'vms') . '</a></video></div>';
+            $body_markup = '<div class="vms-headliner-promo-video__frame"><video class="vms-headliner-promo-video__player" controls preload="metadata" playsinline><source src="' . esc_url($url) . '" type="' . esc_attr($mime) . '"><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html__('Watch promo video', 'backstage-venue-manager') . '</a></video></div>';
         } elseif ($source_type === 'external' && !empty($data['external_url'])) {
             $external_url = (string) $data['external_url'];
             $provider = sanitize_key((string) ($data['provider'] ?? 'link'));
@@ -3091,7 +3091,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_markup_from
             if (is_string($oembed) && $oembed !== '') {
                 $body_markup = '<div class="vms-headliner-promo-video__frame vms-headliner-promo-video__frame--embed">' . $oembed . '</div>';
             } else {
-                $body_markup = '<div class="vms-headliner-promo-video__frame vms-headliner-promo-video__frame--link"><a class="button" href="' . esc_url($external_url) . '" target="_blank" rel="noopener">' . esc_html__('Open promo video', 'vms') . '</a></div>';
+                $body_markup = '<div class="vms-headliner-promo-video__frame vms-headliner-promo-video__frame--link"><a class="button" href="' . esc_url($external_url) . '" target="_blank" rel="noopener">' . esc_html__('Open promo video', 'backstage-venue-manager') . '</a></div>';
             }
         }
 
@@ -3344,7 +3344,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         echo '<div class="vms-portal-card vms-portal-promo-video-card">';
         echo '<div class="vms-portal-promo-video-card__header">';
         echo '<div>';
-        echo '<h3>' . esc_html__('Intro Video for Your Next Show', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Intro Video for Your Next Show', 'backstage-venue-manager') . '</h3>';
         if (!empty($next['title'])) {
             echo '<p class="vms-muted vms-m0"><strong>' . esc_html((string) $next['title']) . '</strong>';
             if (!empty($next['date_label'])) {
@@ -3354,19 +3354,19 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         }
         echo '</div>';
         if (!empty($next['event_url'])) {
-            echo '<a class="button" target="_blank" rel="noopener" href="' . esc_url((string) $next['event_url']) . '">' . esc_html__('View Event Page', 'vms') . '</a>';
+            echo '<a class="button" target="_blank" rel="noopener" href="' . esc_url((string) $next['event_url']) . '">' . esc_html__('View Event Page', 'backstage-venue-manager') . '</a>';
         }
         echo '</div>';
 
         echo '<p class="vms-muted">';
-        echo esc_html__('Record a quick “we’re coming to the show” clip right on your phone and submit it here. iPhone video is okay. We review it before it goes live so the public event page stays clean and browser-safe.', 'vms');
+        echo esc_html__('Record a quick “we’re coming to the show” clip right on your phone and submit it here. iPhone video is okay. We review it before it goes live so the public event page stays clean and browser-safe.', 'backstage-venue-manager');
         echo '</p>';
         echo '<p class="vms-muted vms-portal-promo-video-card__limits">';
         /* translators: %s: maximum recommended upload size. */
-        echo esc_html(sprintf(__('Recommended formats: MP4, MOV, or WebM. Maximum upload: %s. Aim for 30–60 seconds.', 'vms'), $max_label));
+        echo esc_html(sprintf(__('Recommended formats: MP4, MOV, or WebM. Maximum upload: %s. Aim for 30–60 seconds.', 'backstage-venue-manager'), $max_label));
         if ($wp_limit > 0 && $wp_limit < $max_bytes && function_exists('size_format')) {
             /* translators: %s: current site upload size limit. */
-            echo ' ' . esc_html(sprintf(__('Your current site upload limit is %s.', 'vms'), size_format($wp_limit, 0)));
+            echo ' ' . esc_html(sprintf(__('Your current site upload limit is %s.', 'backstage-venue-manager'), size_format($wp_limit, 0)));
         }
         echo '</p>';
 
@@ -3374,9 +3374,9 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
             $booking_status = (array) vms_vendor_booking_onboarding_get_vendor_plan_status($plan_id, $vendor_id);
             if (!empty($booking_status['video_required'])) {
                 echo '<p class="vms-muted vms-m0">';
-                echo esc_html((string) ($booking_status['video_label'] ?? __('Video needed', 'vms')));
+                echo esc_html((string) ($booking_status['video_label'] ?? __('Video needed', 'backstage-venue-manager')));
                 if (!empty($booking_status['video_waived'])) {
-                    echo ' ' . esc_html__('An operator has waived it for this show, so you can skip it if needed.', 'vms');
+                    echo ' ' . esc_html__('An operator has waived it for this show, so you can skip it if needed.', 'backstage-venue-manager');
                 } elseif (!empty($booking_status['initial_sent_at_gmt'])) {
                     $requested_ts = strtotime((string) $booking_status['initial_sent_at_gmt'] . ' GMT');
                     if ($requested_ts) {
@@ -3384,7 +3384,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
                             ? wp_date('M j, Y g:ia', $requested_ts, function_exists('wp_timezone') ? wp_timezone() : null)
                             : date_i18n('M j, Y g:ia', $requested_ts);
                         /* translators: %s: date and time from the vendor booking email request. */
-                        echo ' ' . esc_html(sprintf(__('Requested in your booking email on %s.', 'vms'), $requested_label));
+                        echo ' ' . esc_html(sprintf(__('Requested in your booking email on %s.', 'backstage-venue-manager'), $requested_label));
                     }
                 }
                 echo '</p>';
@@ -3394,7 +3394,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         if (!empty($video['source_type']) && $video['source_type'] !== 'none') {
             echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($video, array(
                 'context' => 'portal',
-                'heading' => __('Current public promo', 'vms'),
+                'heading' => __('Current public promo', 'backstage-venue-manager'),
                 'wrap_class' => 'vms-headliner-promo-video--portal',
             )), vms_vendor_portal_headliner_promo_video_allowed_html());
             if (!empty($video['uploaded_at_gmt'])) {
@@ -3404,7 +3404,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
                         ? wp_date('M j, Y g:ia', $uploaded_ts, function_exists('wp_timezone') ? wp_timezone() : null)
                         : date_i18n('M j, Y g:ia', $uploaded_ts);
                     /* translators: %s: date and time when the current public promo video was last updated. */
-                    echo '<p class="vms-muted vms-m0">' . esc_html(sprintf(__('Current public video updated: %s', 'vms'), $uploaded_label)) . '</p>';
+                    echo '<p class="vms-muted vms-m0">' . esc_html(sprintf(__('Current public video updated: %s', 'backstage-venue-manager'), $uploaded_label)) . '</p>';
                 }
             }
         }
@@ -3412,8 +3412,8 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         if (!empty($submitted['attachment_id'])) {
             echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
                 'context' => 'portal',
-                'heading' => __('Submitted for review', 'vms'),
-                'description' => __('Thanks — your clip is in for operator review. It will not appear publicly until we approve it or swap in a browser-safe version.', 'vms'),
+                'heading' => __('Submitted for review', 'backstage-venue-manager'),
+                'description' => __('Thanks — your clip is in for operator review. It will not appear publicly until we approve it or swap in a browser-safe version.', 'backstage-venue-manager'),
                 'wrap_class' => 'vms-headliner-promo-video--portal',
             )), vms_vendor_portal_headliner_promo_video_allowed_html());
             if (!empty($submitted['uploaded_at_gmt'])) {
@@ -3423,13 +3423,13 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
                         ? wp_date('M j, Y g:ia', $submitted_ts, function_exists('wp_timezone') ? wp_timezone() : null)
                         : date_i18n('M j, Y g:ia', $submitted_ts);
                     /* translators: %s: date and time when the promo video was submitted for review. */
-                    echo '<p class="vms-muted vms-m0">' . esc_html(sprintf(__('Submitted: %s', 'vms'), $submitted_label)) . '</p>';
+                    echo '<p class="vms-muted vms-m0">' . esc_html(sprintf(__('Submitted: %s', 'backstage-venue-manager'), $submitted_label)) . '</p>';
                 }
             }
         }
 
         if ((empty($video['source_type']) || $video['source_type'] === 'none') && empty($submitted['attachment_id'])) {
-            echo '<p class="vms-muted vms-portal-promo-video-card__empty">' . esc_html__('No intro video has been submitted for this show yet.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-portal-promo-video-card__empty">' . esc_html__('No intro video has been submitted for this show yet.', 'backstage-venue-manager') . '</p>';
         }
 
         echo '<form class="vms-portal-promo-video-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data">';
@@ -3439,11 +3439,11 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         echo '<input type="hidden" name="return_url" value="' . esc_attr($return_url) . '">';
         wp_nonce_field('vms_vendor_portal_headliner_promo_video_upload_' . $plan_id, '_vms_headliner_promo_video_nonce');
         echo '<label class="vms-field">';
-        echo '<span><strong>' . esc_html__('Submit or replace intro video', 'vms') . '</strong></span>';
+        echo '<span><strong>' . esc_html__('Submit or replace intro video', 'backstage-venue-manager') . '</strong></span>';
         echo '<input type="file" name="vms_headliner_promo_video" accept="' . esc_attr(vms_vendor_portal_headliner_promo_video_accept_attr()) . '" required>';
         echo '</label>';
         echo '<div class="vms-portal-promo-video-card__actions">';
-        echo '<button type="submit" class="button button-primary">' . esc_html(!empty($submitted['attachment_id']) ? __('Replace Submitted Video', 'vms') : __('Submit Intro Video', 'vms')) . '</button>';
+        echo '<button type="submit" class="button button-primary">' . esc_html(!empty($submitted['attachment_id']) ? __('Replace Submitted Video', 'backstage-venue-manager') : __('Submit Intro Video', 'backstage-venue-manager')) . '</button>';
         echo '</div>';
         echo '</form>';
 
@@ -3454,7 +3454,7 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
             echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
             echo '<input type="hidden" name="return_url" value="' . esc_attr($return_url) . '">';
             wp_nonce_field('vms_vendor_portal_headliner_promo_video_remove_' . $plan_id, '_vms_headliner_promo_video_remove_nonce');
-            $remove_label = !empty($submitted['attachment_id']) ? __('Remove Submitted Video', 'vms') : __('Remove Current Video', 'vms');
+            $remove_label = !empty($submitted['attachment_id']) ? __('Remove Submitted Video', 'backstage-venue-manager') : __('Remove Current Video', 'backstage-venue-manager');
             echo '<button type="submit" class="button button-secondary">' . esc_html($remove_label) . '</button>';
             echo '</form>';
         }
@@ -3491,7 +3491,7 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
     function vms_vendor_portal_handle_headliner_promo_video_upload(): void
     {
         if (!is_user_logged_in()) {
-            wp_die(esc_html__('Please log in to upload a promo video.', 'vms'));
+            wp_die(esc_html__('Please log in to upload a promo video.', 'backstage-venue-manager'));
         }
 
         $user_id = (int) get_current_user_id();
@@ -3501,17 +3501,17 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         $nonce = isset($_REQUEST['_vms_headliner_promo_video_nonce']) ? sanitize_text_field((string) wp_unslash($_REQUEST['_vms_headliner_promo_video_nonce'])) : '';
 
         if ($plan_id <= 0 || $vendor_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_upload_' . $plan_id)) {
-            wp_die(esc_html__('Security check failed.', 'vms'));
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
         if (!vms_vendor_portal_can_manage_headliner_promo_video($user_id, $vendor_id, $plan_id)) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to manage that promo video.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to manage that promo video.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
 
         if (empty($_FILES['vms_headliner_promo_video']) || !is_array($_FILES['vms_headliner_promo_video'])) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('Please choose a video file to upload.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('Please choose a video file to upload.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
@@ -3519,10 +3519,10 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         $upload = $_FILES['vms_headliner_promo_video'];
         $error = isset($upload['error']) ? (int) $upload['error'] : UPLOAD_ERR_NO_FILE;
         if ($error !== UPLOAD_ERR_OK) {
-            $message = __('Upload failed before WordPress could save the file. Please try a smaller MP4 if this keeps happening.', 'vms');
+            $message = __('Upload failed before WordPress could save the file. Please try a smaller MP4 if this keeps happening.', 'backstage-venue-manager');
             if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
                 /* translators: %s: current upload size limit for the promo video. */
-                $message = sprintf(__('That file is larger than the current upload limit. Please keep it under %s.', 'vms'), function_exists('size_format') ? size_format(vms_vendor_portal_headliner_promo_video_max_bytes(), 0) : (string) vms_vendor_portal_headliner_promo_video_max_bytes());
+                $message = sprintf(__('That file is larger than the current upload limit. Please keep it under %s.', 'backstage-venue-manager'), function_exists('size_format') ? size_format(vms_vendor_portal_headliner_promo_video_max_bytes(), 0) : (string) vms_vendor_portal_headliner_promo_video_max_bytes());
             }
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => $message));
             wp_safe_redirect($return_url);
@@ -3534,18 +3534,18 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         $size = isset($upload['size']) ? (int) $upload['size'] : 0;
         $max_bytes = vms_vendor_portal_headliner_promo_video_max_bytes();
         if ($tmp_name === '' || !is_uploaded_file($tmp_name)) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('We could not read the uploaded file. Please try again.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('We could not read the uploaded file. Please try again.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
         if ($size <= 0) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('That file appears to be empty.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('That file appears to be empty.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
         if ($size > $max_bytes) {
             /* translators: %s: current upload size limit for the promo video. */
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('That file is too large. Please keep it under %s.', 'vms'), function_exists('size_format') ? size_format($max_bytes, 0) : (string) $max_bytes)));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('That file is too large. Please keep it under %s.', 'backstage-venue-manager'), function_exists('size_format') ? size_format($max_bytes, 0) : (string) $max_bytes)));
             wp_safe_redirect($return_url);
             exit;
         }
@@ -3554,7 +3554,7 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         $ext = isset($checked['ext']) ? sanitize_key((string) $checked['ext']) : '';
         $mime = isset($checked['type']) ? sanitize_text_field((string) $checked['type']) : '';
         if ($ext === '' || $mime === '' || strpos($mime, 'video/') !== 0) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('Please upload an MP4, MOV, or WebM video.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('Please upload an MP4, MOV, or WebM video.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
@@ -3572,7 +3572,7 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
 
         if (is_wp_error($attachment_id)) {
             /* translators: %s: media library upload error message. */
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('Upload failed: %s', 'vms'), $attachment_id->get_error_message())));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $attachment_id->get_error_message())));
             wp_safe_redirect($return_url);
             exit;
         }
@@ -3588,12 +3588,12 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         $duration_notice = '';
         $data = vms_vendor_portal_get_headliner_promo_video_submission_data($plan_id);
         if (!empty($data['duration_seconds']) && (int) $data['duration_seconds'] > 90) {
-            $duration_notice = ' ' . __('Heads up: that clip is longer than 90 seconds, so a shorter cut may perform better.', 'vms');
+            $duration_notice = ' ' . __('Heads up: that clip is longer than 90 seconds, so a shorter cut may perform better.', 'backstage-venue-manager');
         }
 
         vms_vendor_portal_set_flash($user_id, array(
             'type' => 'success',
-            'message' => __('Intro video submitted. We will review it before it goes live on your upcoming show.', 'vms') . $duration_notice,
+            'message' => __('Intro video submitted. We will review it before it goes live on your upcoming show.', 'backstage-venue-manager') . $duration_notice,
         ));
         wp_safe_redirect($return_url);
         exit;
@@ -3605,7 +3605,7 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_remove')) {
     function vms_vendor_portal_handle_headliner_promo_video_remove(): void
     {
         if (!is_user_logged_in()) {
-            wp_die(esc_html__('Please log in to remove a promo video.', 'vms'));
+            wp_die(esc_html__('Please log in to remove a promo video.', 'backstage-venue-manager'));
         }
 
         $user_id = (int) get_current_user_id();
@@ -3615,11 +3615,11 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_remove')) {
         $nonce = isset($_REQUEST['_vms_headliner_promo_video_remove_nonce']) ? sanitize_text_field((string) wp_unslash($_REQUEST['_vms_headliner_promo_video_remove_nonce'])) : '';
 
         if ($plan_id <= 0 || $vendor_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_remove_' . $plan_id)) {
-            wp_die(esc_html__('Security check failed.', 'vms'));
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
         if (!vms_vendor_portal_can_manage_headliner_promo_video($user_id, $vendor_id, $plan_id)) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to manage that promo video.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to manage that promo video.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
@@ -3644,8 +3644,8 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_remove')) {
         }
 
         $message = $removed_submission
-            ? __('Submitted intro video removed from this show.', 'vms')
-            : __('Current promo video removed from this upcoming show.', 'vms');
+            ? __('Submitted intro video removed from this show.', 'backstage-venue-manager')
+            : __('Current promo video removed from this upcoming show.', 'backstage-venue-manager');
         vms_vendor_portal_set_flash($user_id, array('type' => 'success', 'message' => $message));
         wp_safe_redirect($return_url);
         exit;
@@ -3738,7 +3738,7 @@ if (!function_exists('vms_vendor_portal_opportunity_target_meta')) {
             $icon = trim((string) ($icon_map[$viewer_type] ?? ($icon_map['talent'] ?? '')));
             $label = function_exists('vms_add_dispatch_type_label') ? trim((string) vms_add_dispatch_type_label($viewer_type)) : '';
             if ($label === '' || sanitize_key($label) === 'talent') {
-                $label = __('Primary Vendor', 'vms');
+                $label = __('Primary Vendor', 'backstage-venue-manager');
             }
             return array(
                 'icon' => $icon,
@@ -3749,13 +3749,13 @@ if (!function_exists('vms_vendor_portal_opportunity_target_meta')) {
         if ($secondary_type !== '') {
             return array(
                 'icon' => trim((string) ($icon_map[$secondary_type] ?? ($icon_map[$viewer_type] ?? ''))),
-                'label' => $secondary_label !== '' ? $secondary_label : (function_exists('vms_add_dispatch_type_label') ? (string) vms_add_dispatch_type_label($secondary_type) : __('Vendor', 'vms')),
+                'label' => $secondary_label !== '' ? $secondary_label : (function_exists('vms_add_dispatch_type_label') ? (string) vms_add_dispatch_type_label($secondary_type) : __('Vendor', 'backstage-venue-manager')),
             );
         }
 
         return array(
             'icon' => trim((string) ($icon_map[$viewer_type] ?? '')),
-            'label' => function_exists('vms_add_dispatch_type_label') ? (string) vms_add_dispatch_type_label($viewer_type) : __('Vendor', 'vms'),
+            'label' => function_exists('vms_add_dispatch_type_label') ? (string) vms_add_dispatch_type_label($viewer_type) : __('Vendor', 'backstage-venue-manager'),
         );
     }
 }
@@ -3765,10 +3765,10 @@ if (!function_exists('vms_vendor_portal_submit_application_label')) {
     {
         $type_label = trim($type_label);
         if ($type_label === '') {
-            return __('Submit Application', 'vms');
+            return __('Submit Application', 'backstage-venue-manager');
         }
         /* translators: %s: vendor type label for the application button text. */
-        return sprintf(__('Submit %s Application', 'vms'), $type_label);
+        return sprintf(__('Submit %s Application', 'backstage-venue-manager'), $type_label);
     }
 }
 
@@ -3790,14 +3790,14 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
             ? vms_vendor_portal_modal_date_label((string) ($event['date_key'] ?? ''))
             : '';
 
-        $event_label = $title !== '' ? $title : __('Event', 'vms');
+        $event_label = $title !== '' ? $title : __('Event', 'backstage-venue-manager');
         if ($time_label !== '') {
             $event_label .= ' @ ' . $time_label;
         }
 
         $modal_base = array(
             'event_plan_id' => $plan_id,
-            'modal_title' => $title !== '' ? $title : __('Event', 'vms'),
+            'modal_title' => $title !== '' ? $title : __('Event', 'backstage-venue-manager'),
             'modal_date_label' => $date_label,
             'modal_time_label' => $time_label,
             'modal_excerpt' => trim((string) ($event['excerpt'] ?? '')),
@@ -3897,7 +3897,7 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
                     $secondary_icon = trim((string) ($icon_map[$secondary_type_slug] ?? ''));
                     $line_items[] = array(
                         'kind' => 'slot',
-                        'text' => trim(($secondary_icon !== '' ? ($secondary_icon . ' ') : '') . __('Open', 'vms')),
+                        'text' => trim(($secondary_icon !== '' ? ($secondary_icon . ' ') : '') . __('Open', 'backstage-venue-manager')),
                         'url'  => '',
                         'event_plan_id' => $plan_id,
                     );
@@ -3906,7 +3906,7 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
                 $primary_icon = trim((string) ($icon_map['talent'] ?? ($icon_map[$viewer_type] ?? '')));
                 $line_items[] = array(
                     'kind' => 'slot',
-                    'text' => trim(($primary_icon !== '' ? ($primary_icon . ' ') : '') . __('Open', 'vms')),
+                    'text' => trim(($primary_icon !== '' ? ($primary_icon . ' ') : '') . __('Open', 'backstage-venue-manager')),
                     'url'  => '',
                     'event_plan_id' => $plan_id,
                 );
@@ -3964,7 +3964,7 @@ if (!function_exists('vms_vendor_portal_opportunity_status')) {
             return array(
                 'visible' => true,
                 'status' => 'accepted',
-                'label' => __('Booked', 'vms'),
+                'label' => __('Booked', 'backstage-venue-manager'),
                 'can_submit' => false,
                 'can_withdraw' => false,
                 'submitted_at' => '',
@@ -3991,7 +3991,7 @@ if (!function_exists('vms_vendor_portal_opportunity_status')) {
                 return array(
                     'visible' => true,
                     'status' => 'accepted',
-                    'label' => __('Booked', 'vms'),
+                    'label' => __('Booked', 'backstage-venue-manager'),
                     'can_submit' => false,
                     'can_withdraw' => false,
                     'submitted_at' => (string) (($interest['responded_at'] ?? '') ?: ($interest['created_at'] ?? '')),
@@ -4006,7 +4006,7 @@ if (!function_exists('vms_vendor_portal_opportunity_status')) {
                 return array(
                     'visible' => true,
                     'status' => 'withdrawn',
-                    'label' => __('Withdrawn', 'vms'),
+                    'label' => __('Withdrawn', 'backstage-venue-manager'),
                     'can_submit' => $is_open,
                     'can_withdraw' => false,
                     'submitted_at' => $submitted_at,
@@ -4016,7 +4016,7 @@ if (!function_exists('vms_vendor_portal_opportunity_status')) {
             return array(
                 'visible' => true,
                 'status' => $request_status === 'active' ? 'pending' : 'reviewed',
-                'label' => $request_status === 'active' ? __('Requested', 'vms') : __('Submitted', 'vms'),
+                'label' => $request_status === 'active' ? __('Requested', 'backstage-venue-manager') : __('Submitted', 'backstage-venue-manager'),
                 'can_submit' => false,
                 'can_withdraw' => $request_status === 'active' && $response_status === 'available',
                 'submitted_at' => $submitted_at,
@@ -4026,7 +4026,7 @@ if (!function_exists('vms_vendor_portal_opportunity_status')) {
         return array(
             'visible' => $is_open || $viewer_type !== '',
             'status' => $is_open ? 'open' : 'booked',
-            'label' => $is_open ? __('Open', 'vms') : __('Booked', 'vms'),
+            'label' => $is_open ? __('Open', 'backstage-venue-manager') : __('Booked', 'backstage-venue-manager'),
             'can_submit' => $is_open,
             'can_withdraw' => false,
             'submitted_at' => '',
@@ -4042,7 +4042,7 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
         $flash = vms_vendor_portal_pull_flash($user_id);
 
         echo '<div class="vms-portal-card vms-vio-opps-card">';
-        echo '<h3>' . esc_html__('Opportunities', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Opportunities', 'backstage-venue-manager') . '</h3>';
         if (!empty($flash['message'])) {
             echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
         }
@@ -4130,7 +4130,7 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
         });
 
         if (empty($items)) {
-            echo '<p class="vms-muted vms-m0">' . esc_html__('No upcoming opportunities are available for your vendor type right now.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-m0">' . esc_html__('No upcoming opportunities are available for your vendor type right now.', 'backstage-venue-manager') . '</p>';
             echo '</div>';
             return;
         }
@@ -4144,7 +4144,7 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
             $venue_name = trim((string) ($event['venue_name'] ?? ''));
             $title = trim((string) ($event['title'] ?? ''));
             $status_key = sanitize_html_class((string) ($status['status'] ?? 'booked'));
-            $status_label = (string) ($status['label'] ?? __('Booked', 'vms'));
+            $status_label = (string) ($status['label'] ?? __('Booked', 'backstage-venue-manager'));
             $time_label = '';
             $start_local = isset($event['start_local']) ? (string) $event['start_local'] : '';
             if ($start_local !== '') {
@@ -4169,12 +4169,12 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
             }
             echo '</div>';
             echo '<div class="vms-vio-opps-item__body">';
-            echo '<h4 class="vms-vio-opps-item__title">' . esc_html($title !== '' ? $title : __('Event', 'vms')) . '</h4>';
+            echo '<h4 class="vms-vio-opps-item__title">' . esc_html($title !== '' ? $title : __('Event', 'backstage-venue-manager')) . '</h4>';
             echo '<div class="vms-vio-opps-item__actions">';
             echo '<span class="vms-vio-opps-status vms-vio-opps-status--' . esc_attr($status_key) . '">' . esc_html($status_label) . '</span>';
             $submitted_at = trim((string) ($status['submitted_at'] ?? ''));
             if ($submitted_at !== '') {
-                echo '<span class="vms-vio-opps-submitted">' . esc_html__('Submitted:', 'vms') . ' ' . esc_html($submitted_at) . '</span>';
+                echo '<span class="vms-vio-opps-submitted">' . esc_html__('Submitted:', 'backstage-venue-manager') . ' ' . esc_html($submitted_at) . '</span>';
             }
             if (!empty($status['can_submit']) && $plan_id > 0) {
                 echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -4183,7 +4183,7 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
                 echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $plan_id) . '">';
                 echo '<input type="hidden" name="return_url" value="' . esc_attr(add_query_arg(array('vendor_id' => $vendor_id, 'tab' => 'availability'), (string) ($portal_context['base_url'] ?? get_permalink()))) . '">';
                 wp_nonce_field('vms_vendor_portal_interest_submit', '_vms_vendor_interest_nonce');
-                echo '<button type="submit" class="button button-primary">' . esc_html__('Apply', 'vms') . '</button>';
+                echo '<button type="submit" class="button button-primary">' . esc_html__('Apply', 'backstage-venue-manager') . '</button>';
                 echo '</form>';
             }
             if (!empty($status['can_withdraw']) && $plan_id > 0) {
@@ -4193,7 +4193,7 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
                 echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $plan_id) . '">';
                 echo '<input type="hidden" name="return_url" value="' . esc_attr(add_query_arg(array('vendor_id' => $vendor_id, 'tab' => 'availability'), (string) ($portal_context['base_url'] ?? get_permalink()))) . '">';
                 wp_nonce_field('vms_vendor_portal_interest_withdraw', '_vms_vendor_withdraw_nonce');
-                echo '<button type="submit" class="button">' . esc_html__('Withdraw', 'vms') . '</button>';
+                echo '<button type="submit" class="button">' . esc_html__('Withdraw', 'backstage-venue-manager') . '</button>';
                 echo '</form>';
             }
             echo '</div>';
@@ -4209,11 +4209,11 @@ if (!function_exists('vms_vendor_portal_handle_interest_submit')) {
     function vms_vendor_portal_handle_interest_submit(): void
     {
         if (!is_user_logged_in()) {
-            wp_die(esc_html__('Please log in to submit interest.', 'vms'));
+            wp_die(esc_html__('Please log in to submit interest.', 'backstage-venue-manager'));
         }
         $nonce = isset($_REQUEST['_vms_vendor_interest_nonce']) ? (string) wp_unslash($_REQUEST['_vms_vendor_interest_nonce']) : '';
         if (!wp_verify_nonce($nonce, 'vms_vendor_portal_interest_submit')) {
-            wp_die(esc_html__('Security check failed.', 'vms'));
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
         $user_id = get_current_user_id();
@@ -4226,14 +4226,14 @@ if (!function_exists('vms_vendor_portal_handle_interest_submit')) {
             $can_access = vms_user_can_access_vendor($user_id, $vendor_id);
         }
         if (!$can_access) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to submit interest for that vendor.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to submit interest for that vendor.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
 
         $result = function_exists('vms_add_dispatch_create_portal_interest')
             ? vms_add_dispatch_create_portal_interest($event_plan_id, $vendor_id)
-            : new WP_Error('add_dispatch_unavailable', __('ADD is not available in this build.', 'vms'));
+            : new WP_Error('add_dispatch_unavailable', __('ADD is not available in this build.', 'backstage-venue-manager'));
 
         if (is_wp_error($result)) {
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => $result->get_error_message()));
@@ -4241,8 +4241,8 @@ if (!function_exists('vms_vendor_portal_handle_interest_submit')) {
             vms_vendor_portal_set_flash($user_id, array(
                 'type' => 'success',
                 'message' => !empty($result['already_exists'])
-                    ? __('Your interest was already on file for this date.', 'vms')
-                    : __('Your interest has been sent to the venue.', 'vms'),
+                    ? __('Your interest was already on file for this date.', 'backstage-venue-manager')
+                    : __('Your interest has been sent to the venue.', 'backstage-venue-manager'),
             ));
         }
         wp_safe_redirect($return_url);
@@ -4255,11 +4255,11 @@ if (!function_exists('vms_vendor_portal_handle_interest_withdraw')) {
     function vms_vendor_portal_handle_interest_withdraw(): void
     {
         if (!is_user_logged_in()) {
-            wp_die(esc_html__('Please log in to manage your interest.', 'vms'));
+            wp_die(esc_html__('Please log in to manage your interest.', 'backstage-venue-manager'));
         }
         $nonce = isset($_REQUEST['_vms_vendor_withdraw_nonce']) ? (string) wp_unslash($_REQUEST['_vms_vendor_withdraw_nonce']) : '';
         if (!wp_verify_nonce($nonce, 'vms_vendor_portal_interest_withdraw')) {
-            wp_die(esc_html__('Security check failed.', 'vms'));
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
         $user_id = get_current_user_id();
@@ -4272,21 +4272,21 @@ if (!function_exists('vms_vendor_portal_handle_interest_withdraw')) {
             $can_access = vms_user_can_access_vendor($user_id, $vendor_id);
         }
         if (!$can_access) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to update that request.', 'vms')));
+            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to update that request.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
         }
 
         $result = function_exists('vms_add_dispatch_withdraw_portal_interest')
             ? vms_add_dispatch_withdraw_portal_interest($event_plan_id, $vendor_id)
-            : new WP_Error('add_dispatch_unavailable', __('This request could not be updated right now.', 'vms'));
+            : new WP_Error('add_dispatch_unavailable', __('This request could not be updated right now.', 'backstage-venue-manager'));
 
         if (is_wp_error($result)) {
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => $result->get_error_message()));
         } else {
             vms_vendor_portal_set_flash($user_id, array(
                 'type' => 'success',
-                'message' => __('Your request has been withdrawn.', 'vms'),
+                'message' => __('Your request has been withdrawn.', 'backstage-venue-manager'),
             ));
         }
         wp_safe_redirect($return_url);
@@ -4299,12 +4299,12 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
     function vms_vendor_portal_handle_link_request_submit(): void
     {
         if (!is_user_logged_in()) {
-            wp_die(esc_html__('Please log in to request vendor portal access.', 'vms'));
+            wp_die(esc_html__('Please log in to request vendor portal access.', 'backstage-venue-manager'));
         }
 
         $nonce = isset($_REQUEST['_vms_vendor_link_request_nonce']) ? (string) wp_unslash($_REQUEST['_vms_vendor_link_request_nonce']) : '';
         if (!wp_verify_nonce($nonce, 'vms_vendor_portal_link_request_submit')) {
-            wp_die(esc_html__('Security check failed.', 'vms'));
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
         $user_id = get_current_user_id();
@@ -4319,7 +4319,7 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
         if ($vendor_id <= 0 || !in_array($vendor_id, $matched_vendor_ids, true)) {
             vms_vendor_portal_set_flash($user_id, array(
                 'type' => 'error',
-                'message' => __('That vendor profile is not available for self-service linking from this account.', 'vms'),
+                'message' => __('That vendor profile is not available for self-service linking from this account.', 'backstage-venue-manager'),
             ));
             wp_safe_redirect($return_url);
             exit;
@@ -4328,7 +4328,7 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
         if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $vendor_id)) {
             vms_vendor_portal_set_flash($user_id, array(
                 'type' => 'success',
-                'message' => __('Your account is already linked to that vendor profile.', 'vms'),
+                'message' => __('Your account is already linked to that vendor profile.', 'backstage-venue-manager'),
             ));
             wp_safe_redirect($return_url);
             exit;
@@ -4348,12 +4348,12 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
 
             vms_vendor_portal_set_flash($user_id, array(
                 'type' => 'success',
-                'message' => __('Your portal access request has been sent to the venue.', 'vms'),
+                'message' => __('Your portal access request has been sent to the venue.', 'backstage-venue-manager'),
             ));
         } else {
             vms_vendor_portal_set_flash($user_id, array(
                 'type' => 'success',
-                'message' => __('That portal access request is already pending review.', 'vms'),
+                'message' => __('That portal access request is already pending review.', 'backstage-venue-manager'),
             ));
         }
 
@@ -4368,7 +4368,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
     {
         $user_id = (int) $user_id;
         if ($user_id <= 0) {
-            return '<p>' . esc_html__('Your account is not linked to a vendor profile yet. Please contact the venue admin.', 'vms') . '</p>';
+            return '<p>' . esc_html__('Your account is not linked to a vendor profile yet. Please contact the venue admin.', 'backstage-venue-manager') . '</p>';
         }
 
         $user = get_userdata($user_id);
@@ -4398,17 +4398,17 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
 
         echo '<div class="vms-portal-auth-wrap">';
         echo '<div class="vms-portal-auth-col vms-portal-auth-apply">';
-        echo '<h2>' . esc_html__('Vendor profile link needed', 'vms') . '</h2>';
-        echo '<p>' . esc_html__('Your website account is active, but it is not linked to a vendor profile yet.', 'vms') . '</p>';
+        echo '<h2>' . esc_html__('Vendor profile link needed', 'backstage-venue-manager') . '</h2>';
+        echo '<p>' . esc_html__('Your website account is active, but it is not linked to a vendor profile yet.', 'backstage-venue-manager') . '</p>';
         if ($user_email !== '') {
-            echo '<p><strong>' . esc_html__('Signed in as:', 'vms') . '</strong> ' . esc_html($user_email) . '</p>';
+            echo '<p><strong>' . esc_html__('Signed in as:', 'backstage-venue-manager') . '</strong> ' . esc_html($user_email) . '</p>';
         }
 
         if (empty($candidate_vendor_ids)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('We could not find a vendor profile using this website account email yet.', 'vms')));
-            echo '<p>' . esc_html__('If your vendor profile uses a different email address, please contact the venue so they can connect the correct record manually.', 'vms') . '</p>';
+            echo wp_kses_post(vms_portal_notice('warning', __('We could not find a vendor profile using this website account email yet.', 'backstage-venue-manager')));
+            echo '<p>' . esc_html__('If your vendor profile uses a different email address, please contact the venue so they can connect the correct record manually.', 'backstage-venue-manager') . '</p>';
         } else {
-            echo '<p>' . esc_html__('We found the following vendor profile matches for this account. Send a request for the one that should be linked to you.', 'vms') . '</p>';
+            echo '<p>' . esc_html__('We found the following vendor profile matches for this account. Send a request for the one that should be linked to you.', 'backstage-venue-manager') . '</p>';
             foreach ($candidate_vendor_ids as $candidate_vendor_id) {
                 $vendor = get_post($candidate_vendor_id);
                 if (!$vendor || $vendor->post_type !== 'vms_vendor') {
@@ -4418,7 +4418,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
                 $vendor_title = get_the_title($candidate_vendor_id);
                 if (!is_string($vendor_title) || $vendor_title === '') {
                     /* translators: %d: vendor post ID. */
-                    $vendor_title = sprintf(__('Vendor #%d', 'vms'), $candidate_vendor_id);
+                    $vendor_title = sprintf(__('Vendor #%d', 'backstage-venue-manager'), $candidate_vendor_id);
                 }
 
                 $vendor_type = function_exists('vms_vendor_user_link_vendor_type_label')
@@ -4447,10 +4447,10 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
                     $pending_message = $requested_label !== ''
                         ? sprintf(
                             /* translators: %s: date and time when the vendor access request was sent. */
-                            __('Request sent on %s. The venue still needs to review it.', 'vms'),
+                            __('Request sent on %s. The venue still needs to review it.', 'backstage-venue-manager'),
                             $requested_label
                         )
-                        : __('Your request is already pending review.', 'vms');
+                        : __('Your request is already pending review.', 'backstage-venue-manager');
                     echo wp_kses_post(vms_portal_notice('warning', $pending_message));
                 } else {
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -4468,7 +4468,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
                             ),
                         )
                     );
-                    echo '<button type="submit" class="button button-primary">' . esc_html__('Request portal access', 'vms') . '</button>';
+                    echo '<button type="submit" class="button button-primary">' . esc_html__('Request portal access', 'backstage-venue-manager') . '</button>';
                     echo '</form>';
                 }
                 echo '</div>';
@@ -4522,16 +4522,16 @@ function vms_vendor_portal_shortcode($atts = []): string
 ?>
         <div class="vms-portal vms-portal-auth-shell" id="vms-portal-root">
             <div class="vms-portal-auth-header">
-                <span class="vms-portal-auth-kicker"><?php echo esc_html__('Vendor Portal', 'vms'); ?></span>
-                <h1><?php echo esc_html__('Choose Your Vendor Path', 'vms'); ?></h1>
-                <p><?php echo esc_html__('Already-approved vendors can sign in below. New vendors should apply for access first and wait for manual review before portal tools become available.', 'vms'); ?></p>
+                <span class="vms-portal-auth-kicker"><?php echo esc_html__('Vendor Portal', 'backstage-venue-manager'); ?></span>
+                <h1><?php echo esc_html__('Choose Your Vendor Path', 'backstage-venue-manager'); ?></h1>
+                <p><?php echo esc_html__('Already-approved vendors can sign in below. New vendors should apply for access first and wait for manual review before portal tools become available.', 'backstage-venue-manager'); ?></p>
             </div>
 
             <div class="vms-portal-auth-wrap">
                 <section class="vms-portal-auth-col vms-portal-auth-login">
-                    <span class="vms-portal-auth-eyebrow"><?php echo esc_html__('Already approved', 'vms'); ?></span>
-                    <h2><?php echo esc_html__('Approved Vendor Login', 'vms'); ?></h2>
-                    <p class="vms-portal-auth-copy"><?php echo esc_html__('Use this login only if your vendor has already been approved and linked to a website account.', 'vms'); ?></p>
+                    <span class="vms-portal-auth-eyebrow"><?php echo esc_html__('Already approved', 'backstage-venue-manager'); ?></span>
+                    <h2><?php echo esc_html__('Approved Vendor Login', 'backstage-venue-manager'); ?></h2>
+                    <p class="vms-portal-auth-copy"><?php echo esc_html__('Use this login only if your vendor has already been approved and linked to a website account.', 'backstage-venue-manager'); ?></p>
                     <?php
                     echo wp_login_form(array(
                         'echo'     => false,
@@ -4539,26 +4539,26 @@ function vms_vendor_portal_shortcode($atts = []): string
                     ));
                     ?>
                     <p class="vms-portal-auth-link-row">
-                        <a href="<?php echo esc_url(wp_lostpassword_url($login_redirect_url)); ?>"><?php echo esc_html__('Forgot password or need a reset?', 'vms'); ?></a>
+                        <a href="<?php echo esc_url(wp_lostpassword_url($login_redirect_url)); ?>"><?php echo esc_html__('Forgot password or need a reset?', 'backstage-venue-manager'); ?></a>
                     </p>
-                    <p class="vms-portal-auth-hint"><?php echo esc_html__('Vendor tools live in the Vendor Portal. If you sign into WooCommerce My Account, you may still see customer and ticket information there as well.', 'vms'); ?></p>
+                    <p class="vms-portal-auth-hint"><?php echo esc_html__('Vendor tools live in the Vendor Portal. If you sign into WooCommerce My Account, you may still see customer and ticket information there as well.', 'backstage-venue-manager'); ?></p>
                 </section>
 
                 <section class="vms-portal-auth-col vms-portal-auth-apply">
-                    <span class="vms-portal-auth-eyebrow"><?php echo esc_html__('New vendor', 'vms'); ?></span>
-                    <h2><?php echo esc_html__('Apply for Vendor Access', 'vms'); ?></h2>
-                    <p class="vms-portal-auth-copy"><?php echo esc_html__('Start here if you are not approved yet. Applications are reviewed by an operator and approval is not instant.', 'vms'); ?></p>
+                    <span class="vms-portal-auth-eyebrow"><?php echo esc_html__('New vendor', 'backstage-venue-manager'); ?></span>
+                    <h2><?php echo esc_html__('Apply for Vendor Access', 'backstage-venue-manager'); ?></h2>
+                    <p class="vms-portal-auth-copy"><?php echo esc_html__('Start here if you are not approved yet. Applications are reviewed by an operator and approval is not instant.', 'backstage-venue-manager'); ?></p>
                     <ul class="vms-portal-auth-list">
-                        <li><?php echo esc_html__('Complete the vendor application form.', 'vms'); ?></li>
-                        <li><?php echo esc_html__('Wait for an approval email with next-step instructions.', 'vms'); ?></li>
-                        <li><?php echo esc_html__('Use the Vendor Portal after you are approved.', 'vms'); ?></li>
+                        <li><?php echo esc_html__('Complete the vendor application form.', 'backstage-venue-manager'); ?></li>
+                        <li><?php echo esc_html__('Wait for an approval email with next-step instructions.', 'backstage-venue-manager'); ?></li>
+                        <li><?php echo esc_html__('Use the Vendor Portal after you are approved.', 'backstage-venue-manager'); ?></li>
                     </ul>
                     <p>
                         <a class="button button-primary" href="<?php echo esc_url($apply_url); ?>">
-                            <?php echo esc_html__('Apply for Vendor Access', 'vms'); ?>
+                            <?php echo esc_html__('Apply for Vendor Access', 'backstage-venue-manager'); ?>
                         </a>
                     </p>
-                    <p class="vms-portal-auth-hint"><?php echo esc_html__('Already applied? Watch your email, including spam or junk folders, for the review outcome and portal guidance.', 'vms'); ?></p>
+                    <p class="vms-portal-auth-hint"><?php echo esc_html__('Already applied? Watch your email, including spam or junk folders, for the review outcome and portal guidance.', 'backstage-venue-manager'); ?></p>
                 </section>
             </div>
         </div>
@@ -4628,13 +4628,13 @@ function vms_vendor_portal_shortcode($atts = []): string
         }
         return function_exists('vms_vendor_portal_render_link_request_panel')
             ? vms_vendor_portal_render_link_request_panel($user_id, (string) $base_url)
-            : '<p>' . esc_html__('Your account is not linked to a vendor profile yet. Please contact the venue admin.', 'vms') . '</p>';
+            : '<p>' . esc_html__('Your account is not linked to a vendor profile yet. Please contact the venue admin.', 'backstage-venue-manager') . '</p>';
     }
 
     // Ensure vendor exists
     $vendor = get_post($vendor_id);
     if (!$vendor || $vendor->post_type !== 'vms_vendor') {
-        return '<p>' . esc_html__('Your linked vendor profile could not be found. Please contact the venue admin.', 'vms') . '</p>';
+        return '<p>' . esc_html__('Your linked vendor profile could not be found. Please contact the venue admin.', 'backstage-venue-manager') . '</p>';
     }
 
     // Ensure we have vendor_ids for the switcher even if the relationship table is not available.
@@ -4697,7 +4697,7 @@ function vms_vendor_portal_shortcode($atts = []): string
         if ($is_preview && function_exists('vms_vendor_portal_render_preview_hidden_fields')) {
             vms_vendor_portal_render_preview_hidden_fields((int) $vendor_id);
         }
-        echo '<label class="vms-portal-vendor-switch-label">' . esc_html__('Vendor', 'vms') . '</label>';
+        echo '<label class="vms-portal-vendor-switch-label">' . esc_html__('Vendor', 'backstage-venue-manager') . '</label>';
         echo '<select name="vendor_id" class="vms-portal-vendor-switch-select" onchange="this.form.submit()">';
         foreach ($vendor_ids as $vid) {
             $vid = (int) $vid;
@@ -4716,23 +4716,23 @@ function vms_vendor_portal_shortcode($atts = []): string
         echo '</form>';
     }
 
-    echo '<h2>' . esc_html(function_exists('vms_ui_text') ? vms_ui_text('portal_title_prefix', __('Vendor Portal:', 'vms')) : __('Vendor Portal:', 'vms')) . ' ' . esc_html($vendor->post_title) . '</h2>';
+    echo '<h2>' . esc_html(function_exists('vms_ui_text') ? vms_ui_text('portal_title_prefix', __('Vendor Portal:', 'backstage-venue-manager')) : __('Vendor Portal:', 'backstage-venue-manager')) . ' ' . esc_html($vendor->post_title) . '</h2>';
 
     echo '<nav class="vms-portal-nav">';
-    echo '<a class="' . ($active_tab === 'dashboard' ? 'is-active' : '') . '" href="' . esc_url($url_dashboard) . '">' . esc_html__('Dashboard', 'vms') . '</a>';
-    echo '<a class="' . ($active_tab === 'profile' ? 'is-active' : '') . '" href="' . esc_url($url_profile) . '">' . esc_html__('Profile', 'vms') . '</a>';
-    echo '<a class="' . ($active_tab === 'tax-profile' ? 'is-active' : '') . '" href="' . esc_url($url_tax_profile) . '">' . esc_html__('Tax Profile', 'vms') . '</a>';
+    echo '<a class="' . ($active_tab === 'dashboard' ? 'is-active' : '') . '" href="' . esc_url($url_dashboard) . '">' . esc_html__('Dashboard', 'backstage-venue-manager') . '</a>';
+    echo '<a class="' . ($active_tab === 'profile' ? 'is-active' : '') . '" href="' . esc_url($url_profile) . '">' . esc_html__('Profile', 'backstage-venue-manager') . '</a>';
+    echo '<a class="' . ($active_tab === 'tax-profile' ? 'is-active' : '') . '" href="' . esc_url($url_tax_profile) . '">' . esc_html__('Tax Profile', 'backstage-venue-manager') . '</a>';
     if ($has_event_history) {
-        echo '<a class="' . ($active_tab === 'history' ? 'is-active' : '') . '" href="' . esc_url($url_history) . '">' . esc_html__('Event History', 'vms') . '</a>';
+        echo '<a class="' . ($active_tab === 'history' ? 'is-active' : '') . '" href="' . esc_url($url_history) . '">' . esc_html__('Event History', 'backstage-venue-manager') . '</a>';
     }
-    echo '<a class="' . ($active_tab === 'availability' ? 'is-active' : '') . '" href="' . esc_url($url_availability) . '">' . esc_html__('Availability', 'vms') . '</a>';
-    echo '<a class="' . ($active_tab === 'tech' ? 'is-active' : '') . '" href="' . esc_url($url_tech) . '">' . esc_html__('Tech Docs', 'vms') . '</a>';
+    echo '<a class="' . ($active_tab === 'availability' ? 'is-active' : '') . '" href="' . esc_url($url_availability) . '">' . esc_html__('Availability', 'backstage-venue-manager') . '</a>';
+    echo '<a class="' . ($active_tab === 'tech' ? 'is-active' : '') . '" href="' . esc_url($url_tech) . '">' . esc_html__('Tech Docs', 'backstage-venue-manager') . '</a>';
     do_action('vms_vendor_portal_nav_links', $active_tab, $portal_context);
     if (!$is_preview) {
         $apply_url = function_exists('vms_vendor_app_get_application_page_url')
             ? vms_vendor_app_get_application_page_url(array('vms_from_portal' => '1'))
             : home_url('/vendor-application/?vms_from_portal=1');
-        echo '<a href="' . esc_url($apply_url) . '">' . esc_html__('Add a Business', 'vms') . '</a>';
+        echo '<a href="' . esc_url($apply_url) . '">' . esc_html__('Add a Business', 'backstage-venue-manager') . '</a>';
     }
     echo '</nav>';
     echo '<script>(function(){function vmsPortalStripOpportunityTabs(){var nav=document.querySelector("#vms-portal-root .vms-portal-nav");if(!nav){return;}var links=nav.querySelectorAll("a");for(var i=links.length-1;i>=0;i--){var link=links[i];var href=link.getAttribute("href")||"";var text=(link.textContent||"").trim().toLowerCase();var isOpportunity=false;try{var url=new URL(href,window.location.origin);isOpportunity=(url.searchParams.get("tab")==="opportunities");}catch(e){isOpportunity=(href.indexOf("tab=opportunities")!==-1);}if(isOpportunity||text==="opportunities"||text==="open dates"){if(link.parentNode){link.parentNode.removeChild(link);}}}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",vmsPortalStripOpportunityTabs);}else{vmsPortalStripOpportunityTabs();}})();</script>';
@@ -4743,12 +4743,12 @@ function vms_vendor_portal_shortcode($atts = []): string
 
         echo '<div class="vms-portal-preview-banner">';
         echo '<div class="vms-portal-preview-banner__copy">';
-        echo '<strong>' . esc_html__('Admin Preview Mode', 'vms') . '</strong> ';
-        echo esc_html__('You are previewing this vendor portal as an operator using the vendor’s real portal data.', 'vms');
+        echo '<strong>' . esc_html__('Admin Preview Mode', 'backstage-venue-manager') . '</strong> ';
+        echo esc_html__('You are previewing this vendor portal as an operator using the vendor’s real portal data.', 'backstage-venue-manager');
         echo '</div>';
         echo '<div class="vms-portal-preview-banner__actions">';
-        echo '<a class="button button-secondary" href="' . esc_url($preview_back_url) . '">' . esc_html__('Back to Vendor', 'vms') . '</a>';
-        echo '<a class="button" href="' . esc_url($preview_exit_url) . '">' . esc_html__('Exit Preview', 'vms') . '</a>';
+        echo '<a class="button button-secondary" href="' . esc_url($preview_back_url) . '">' . esc_html__('Back to Vendor', 'backstage-venue-manager') . '</a>';
+        echo '<a class="button" href="' . esc_url($preview_exit_url) . '">' . esc_html__('Exit Preview', 'backstage-venue-manager') . '</a>';
         echo '</div>';
         echo '</div>';
     }
@@ -4877,7 +4877,7 @@ $manual_future = 0;
         echo '<div>';
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Next Booking', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Next Booking', 'backstage-venue-manager') . '</h3>';
 
         if ($next_booking) {
             $d = (string) get_post_meta($next_booking->ID, '_vms_event_date', true);
@@ -4901,11 +4901,11 @@ $manual_future = 0;
                 : '';
             echo '<div class="vms-portal-hero-value">' . esc_html($date_label) . '</div>';
             if ($time_label) {
-                echo '<div class="vms-muted vms-mt-2">' . esc_html__('Set time:', 'vms') . ' ' . esc_html($time_label) . '</div>';
+                echo '<div class="vms-muted vms-mt-2">' . esc_html__('Set time:', 'backstage-venue-manager') . ' ' . esc_html($time_label) . '</div>';
             }
-            echo '<div class="vms-muted vms-mt-8">' . esc_html__('Event Plan:', 'vms') . ' ' . esc_html(get_the_title($next_booking)) . '</div>';
+            echo '<div class="vms-muted vms-mt-8">' . esc_html__('Event Plan:', 'backstage-venue-manager') . ' ' . esc_html(get_the_title($next_booking)) . '</div>';
         } else {
-            echo '<p class="vms-muted vms-m0">' . esc_html__('No upcoming bookings found yet.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-m0">' . esc_html__('No upcoming bookings found yet.', 'backstage-venue-manager') . '</p>';
         }
 
         echo '</div>';
@@ -4915,7 +4915,7 @@ $manual_future = 0;
         }
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Upcoming Bookings', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Upcoming Bookings', 'backstage-venue-manager') . '</h3>';
 
         if (!empty($upcoming)) {
             echo '<ul class="vms-dash-list">';
@@ -4944,12 +4944,12 @@ $manual_future = 0;
             }
             echo '</ul>';
         } else {
-            echo '<p class="vms-muted vms-m0">' . esc_html__('Nothing scheduled yet.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-m0">' . esc_html__('Nothing scheduled yet.', 'backstage-venue-manager') . '</p>';
         }
 
         echo '<div class="vms-dash-actions">';
-        echo '<a class="button button-primary" href="' . esc_url($url_availability) . '">' . esc_html__('Update Availability', 'vms') . '</a>';
-        echo '<a class="button" href="' . esc_url($url_profile) . '">' . esc_html__('Edit Profile', 'vms') . '</a>';
+        echo '<a class="button button-primary" href="' . esc_url($url_availability) . '">' . esc_html__('Update Availability', 'backstage-venue-manager') . '</a>';
+        echo '<a class="button" href="' . esc_url($url_profile) . '">' . esc_html__('Edit Profile', 'backstage-venue-manager') . '</a>';
         echo '</div>';
 
         echo '</div>'; // bookings card
@@ -4960,48 +4960,48 @@ $manual_future = 0;
         echo '<div>';
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Availability Setup', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Availability Setup', 'backstage-venue-manager') . '</h3>';
 
         echo '<div class="vms-dash-kpis">';
-        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Manual', 'vms') . '</b><span>' . esc_html($manual_future) . '</span> <span class="vms-muted">' . esc_html__('future overrides', 'vms') . '</span></div>';
+        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Manual', 'backstage-venue-manager') . '</b><span>' . esc_html($manual_future) . '</span> <span class="vms-muted">' . esc_html__('future overrides', 'backstage-venue-manager') . '</span></div>';
 
         $ics_label = $ics_enabled ? 'On' : 'Off';
         if ($ics_enabled && $ics_last_h) $ics_label .= ' | ' . $ics_last_h;
-        echo '<div class="vms-dash-kpi"><b>' . esc_html__('ICS', 'vms') . '</b><span>' . esc_html($ics_label) . '</span></div>';
+        echo '<div class="vms-dash-kpi"><b>' . esc_html__('ICS', 'backstage-venue-manager') . '</b><span>' . esc_html($ics_label) . '</span></div>';
 
-        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Pattern', 'vms') . '</b><span>' . esc_html($pattern_label) . '</span></div>';
+        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Pattern', 'backstage-venue-manager') . '</b><span>' . esc_html($pattern_label) . '</span></div>';
         echo '</div>';
 
         echo '<div class="vms-muted vms-mt-10">';
-        echo esc_html__('Priority order:', 'vms') . ' ';
-        echo esc_html__('Manual overrides Pattern, and Pattern overrides ICS.', 'vms');
+        echo esc_html__('Priority order:', 'backstage-venue-manager') . ' ';
+        echo esc_html__('Manual overrides Pattern, and Pattern overrides ICS.', 'backstage-venue-manager');
         echo '</div>';
 
         echo '</div>';
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Action Needed', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Action Needed', 'backstage-venue-manager') . '</h3>';
 
         $any_actions = false;
 
         if ($needs_av_setup) {
             $any_actions = true;
-            echo wp_kses_post(vms_portal_notice('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager')));
         }
 
         if ($needs_ics_sync) {
             $any_actions = true;
             /* translators: %d: number of days since the vendor ICS calendar was last synced. */
-            echo wp_kses_post(vms_portal_notice('warning', sprintf(__('Your calendar sync is %d days old. Open Availability and tap “Sync Now”.', 'vms'), $ics_stale_days)));
+            echo wp_kses_post(vms_portal_notice('warning', sprintf(__('Your calendar sync is %d days old. Open Availability and tap “Sync Now”.', 'backstage-venue-manager'), $ics_stale_days)));
         }
 
         if (!$any_actions) {
-            echo '<p class="vms-muted vms-m0">' . esc_html__('You’re all set.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-m0">' . esc_html__('You’re all set.', 'backstage-venue-manager') . '</p>';
         }
 
         echo '<div class="vms-dash-actions">';
-        echo '<a class="button" href="' . esc_url($url_availability) . '#ics">' . esc_html__('Calendar Sync (ICS)', 'vms') . '</a>';
-        echo '<a class="button" href="' . esc_url($url_tax_profile) . '">' . esc_html__('Tax Profile', 'vms') . '</a>';
+        echo '<a class="button" href="' . esc_url($url_availability) . '#ics">' . esc_html__('Calendar Sync (ICS)', 'backstage-venue-manager') . '</a>';
+        echo '<a class="button" href="' . esc_url($url_tax_profile) . '">' . esc_html__('Tax Profile', 'backstage-venue-manager') . '</a>';
         echo '</div>';
 
         echo '</div>';
@@ -5025,19 +5025,19 @@ $manual_future = 0;
         if (function_exists('vms_vendor_portal_render_event_history_tab')) {
             vms_vendor_portal_render_event_history_tab($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Event History is not available right now.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('Event History is not available right now.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'profile') {
         if (function_exists('vms_vendor_portal_render_profile')) {
             vms_vendor_portal_render_profile($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Profile module is not loaded.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('Profile module is not loaded.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'tax-profile') {
         if (function_exists('vms_vendor_portal_render_tax_profile')) {
             vms_vendor_portal_render_tax_profile($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Tax Profile module is not loaded.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('Tax Profile module is not loaded.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'availability' || $tab === 'opportunities') {
         $venue_id = vms_vendor_guess_venue_id($vendor_id);
@@ -5047,18 +5047,18 @@ $manual_future = 0;
         if (function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             vms_vendor_portal_render_all_vendors_availability($vendor_ids, $base_url, $vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('All Vendors view is not available.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('All Vendors view is not available.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'tech') {
         if (function_exists('vms_vendor_portal_render_tech_docs')) {
             vms_vendor_portal_render_tech_docs($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Tech Docs module is not loaded.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('Tech Docs module is not loaded.', 'backstage-venue-manager')));
         }
     } else {
         $custom_rendered = (bool) apply_filters('vms_vendor_portal_render_custom_tab', false, $tab, $portal_context);
         if (!$custom_rendered) {
-            echo wp_kses_post(vms_portal_notice('error', __('That portal section is not available.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('That portal section is not available.', 'backstage-venue-manager')));
         }
     }
 
@@ -5221,7 +5221,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         $vendor_id = (int) $vendor_id;
 
         if ($vendor_id <= 0) {
-            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'backstage-venue-manager')));
             return;
         }
 
@@ -5248,12 +5248,12 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         $ics_last     = (int) get_post_meta($vendor_id, '_vms_ics_last_sync', true);
         $ics_meta = '';
         if (!empty($ics_url)) {
-            $ics_meta = __('Enabled', 'vms');
+            $ics_meta = __('Enabled', 'backstage-venue-manager');
             if (!empty($ics_last)) {
-                $ics_meta .= ' | ' . __('Last sync', 'vms') . ' ' . wp_date('M j, Y g:ia', (int)$ics_last, wp_timezone());
+                $ics_meta .= ' | ' . __('Last sync', 'backstage-venue-manager') . ' ' . wp_date('M j, Y g:ia', (int)$ics_last, wp_timezone());
             }
         } else {
-            $ics_meta = __('Not set', 'vms');
+            $ics_meta = __('Not set', 'backstage-venue-manager');
         }
 
         // Optional: dates marked unavailable from ICS sync module
@@ -5288,7 +5288,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             // 1) Save ICS Settings
             if (isset($_POST['vms_save_ics_settings'])) {
                 if (!isset($_POST['vms_ics_nonce']) || !wp_verify_nonce($_POST['vms_ics_nonce'], 'vms_ics_settings')) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $new_url = isset($_POST['vms_ics_url']) ? esc_url_raw(trim((string) $_POST['vms_ics_url'])) : '';
                     $new_autosync = !empty($_POST['vms_ics_autosync']) ? 1 : 0;
@@ -5308,14 +5308,14 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         vms_vendor_flag_vendor_update($vendor_id, 'availability_ics_settings');
                     }
 
-                    echo wp_kses_post(vms_portal_notice('success', __('Calendar settings saved.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('success', __('Calendar settings saved.', 'backstage-venue-manager')));
                 }
             }
 
             // 2) Save Manual Availability
             if (isset($_POST['vms_save_availability'])) {
                 if (!isset($_POST['vms_avail_nonce']) || !wp_verify_nonce($_POST['vms_avail_nonce'], 'vms_save_availability')) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $incoming = (isset($_POST['vms_availability']) && is_array($_POST['vms_availability']))
                         ? $_POST['vms_availability']
@@ -5347,7 +5347,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         vms_vendor_flag_vendor_update($vendor_id, 'availability_manual');
                     }
 
-                    echo wp_kses_post(vms_portal_notice('success', __('Availability saved.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('success', __('Availability saved.', 'backstage-venue-manager')));
                 }
             }
 
@@ -5357,7 +5357,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     !isset($_POST['vms_pattern_nonce']) ||
                     !wp_verify_nonce($_POST['vms_pattern_nonce'], 'vms_pattern_settings')
                 ) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $days = array();
                     if (isset($_POST['vms_pattern_days']) && is_array($_POST['vms_pattern_days'])) {
@@ -5388,22 +5388,22 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
                     vms_vendor_flag_vendor_update($vendor_id, 'availability_pattern');
 
-                    echo wp_kses_post(vms_portal_notice('success', __('Pattern availability saved.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('success', __('Pattern availability saved.', 'backstage-venue-manager')));
                 }
             }
 
             // 3) Sync ICS Now
             if (isset($_POST['vms_sync_ics_now'])) {
                 if (!isset($_POST['vms_ics_nonce']) || !wp_verify_nonce($_POST['vms_ics_nonce'], 'vms_ics_settings')) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     update_post_meta($vendor_id, '_vms_availability_preferred_method', 'ics');
                     $preferred = 'ics';
 
                     if (empty($ics_url)) {
-                        echo wp_kses_post(vms_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'vms')));
+                        echo wp_kses_post(vms_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')));
                     } elseif (!function_exists('vms_vendor_ics_sync_now')) {
-                        echo wp_kses_post(vms_portal_notice('error', __('ICS sync module is not loaded.', 'vms')));
+                        echo wp_kses_post(vms_portal_notice('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')));
                     } else {
                         $result = vms_vendor_ics_sync_now($vendor_id, $active_dates);
 
@@ -5435,9 +5435,9 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                                 : 0;
 
                             /* translators: %d: number of unavailable dates imported from the ICS calendar. */
-                            echo wp_kses_post(vms_portal_notice('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count)));
+                            echo wp_kses_post(vms_portal_notice('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count)));
                         } else {
-                            $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'vms');
+                            $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'backstage-venue-manager');
                             echo wp_kses_post(vms_portal_notice('error', $msg));
                         }
                     }
@@ -5448,10 +5448,10 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         // ----------------------------------------------------------
         // Render UI
         // ----------------------------------------------------------
-        echo '<h3>' . esc_html__('Availability', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Availability', 'backstage-venue-manager') . '</h3>';
 
         if (empty($active_dates)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('No season dates configured yet.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('warning', __('No season dates configured yet.', 'backstage-venue-manager')));
             return;
         }
         // Always render a fixed month window (prevents months from disappearing when out of season)
@@ -5504,19 +5504,19 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         wp_nonce_field('vms_ics_settings', 'vms_ics_nonce');
 
         echo '<div class="field">';
-        echo '<label><strong>' . esc_html__('ICS Feed URL', 'vms') . '</strong></label><br>';
+        echo '<label><strong>' . esc_html__('ICS Feed URL', 'backstage-venue-manager') . '</strong></label><br>';
         echo '<input type="url" name="vms_ics_url" value="' . esc_attr($ics_url) . '" class="vms-w-100">';
         echo '</div>';
 
         echo '<div class="field vms-field-tight">';
         echo '<label class="vms-label-block">';
         echo '<input type="checkbox" name="vms_ics_autosync" value="1" ' . checked(1, $ics_autosync, false) . '> ';
-        echo esc_html__('Auto-sync this calendar periodically (optional)', 'vms');
+        echo esc_html__('Auto-sync this calendar periodically (optional)', 'backstage-venue-manager');
         echo '</label>';
 
         echo '<div class="vms-av-actions">';
-        echo '<button class="button button-primary" type="submit" name="vms_save_ics_settings">' . esc_html__('Save Calendar Settings', 'vms') . '</button>';
-        echo '<button class="button" type="submit" name="vms_sync_ics_now">' . esc_html__('Sync Now', 'vms') . '</button>';
+        echo '<button class="button button-primary" type="submit" name="vms_save_ics_settings">' . esc_html__('Save Calendar Settings', 'backstage-venue-manager') . '</button>';
+        echo '<button class="button" type="submit" name="vms_sync_ics_now">' . esc_html__('Sync Now', 'backstage-venue-manager') . '</button>';
         echo '</div>';
 
         // if ($ics_last) {
@@ -5542,14 +5542,14 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         })));
         sort($pattern_days);
 
-        $pattern_meta = __('Off', 'vms');
+        $pattern_meta = __('Off', 'backstage-venue-manager');
         if ($pattern_enabled && !empty($pattern_days)) {
             $labels = array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
             $picked = array();
             foreach ($pattern_days as $d) {
                 if (isset($labels[(int)$d])) $picked[] = $labels[(int)$d];
             }
-            $pattern_meta = __('Enabled', 'vms') . ' | ' . implode(', ', $picked);
+            $pattern_meta = __('Enabled', 'backstage-venue-manager') . ' | ' . implode(', ', $picked);
         }
 
         // If none selected, treat as disabled
@@ -5567,11 +5567,11 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '<div class="vms-av-card vms-av-card--plain">';
 
         echo '<p class="vms-av-muted vms-m0 vms-mb-10">';
-        echo esc_html__('Choose the days you’re usually available. All other days will be marked Unavailable.', 'vms');
+        echo esc_html__('Choose the days you’re usually available. All other days will be marked Unavailable.', 'backstage-venue-manager');
         echo '<br>';
-        echo esc_html__('You can still tap any date in the calendar to override.', 'vms');
+        echo esc_html__('You can still tap any date in the calendar to override.', 'backstage-venue-manager');
         echo '<br>';
-        echo esc_html__('Selecting any day here will automatically enable pattern availability when you save.', 'vms');
+        echo esc_html__('Selecting any day here will automatically enable pattern availability when you save.', 'backstage-venue-manager');
         echo '</p>';
 
         echo '<form method="post">';
@@ -5579,17 +5579,17 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
         echo '<label class="vms-flex vms-gap-8 vms-ai-center vms-m0 vms-mb-12">';
         echo '<input type="checkbox" name="vms_pattern_enabled" value="1" ' . checked(1, $pattern_enabled, false) . '>';
-        echo '<strong>' . esc_html__('Enable pattern availability', 'vms') . '</strong>';
+        echo '<strong>' . esc_html__('Enable pattern availability', 'backstage-venue-manager') . '</strong>';
         echo '</label>';
 
         $dows = array(
-            0 => __('Sun', 'vms'),
-            1 => __('Mon', 'vms'),
-            2 => __('Tue', 'vms'),
-            3 => __('Wed', 'vms'),
-            4 => __('Thu', 'vms'),
-            5 => __('Fri', 'vms'),
-            6 => __('Sat', 'vms'),
+            0 => __('Sun', 'backstage-venue-manager'),
+            1 => __('Mon', 'backstage-venue-manager'),
+            2 => __('Tue', 'backstage-venue-manager'),
+            3 => __('Wed', 'backstage-venue-manager'),
+            4 => __('Thu', 'backstage-venue-manager'),
+            5 => __('Fri', 'backstage-venue-manager'),
+            6 => __('Sat', 'backstage-venue-manager'),
         );
 
         echo '<div class="vms-flex vms-gap-10 vms-wrap vms-m0 vms-mb-12">';
@@ -5603,7 +5603,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '</div>';
 
         echo '<button class="button button-primary" type="submit" name="vms_save_pattern">';
-        echo esc_html__('Save Pattern', 'vms');
+        echo esc_html__('Save Pattern', 'backstage-venue-manager');
         echo '</button>';
 
         echo '</form>';
@@ -5621,8 +5621,8 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '<span class="vms-av-summarymeta" data-summarymeta="manual"></span>';
         echo '</summary>';
         echo '<div class="vms-pt-12">';
-        echo '<p class="vms-av-help">' . esc_html__('Tap a date to toggle: Unset > Available > Unavailable. Then click Save Availability.', 'vms') . '</p>';
-        echo '<div class="vms-av-opps-intro" id="vms-opportunities"><strong>' . esc_html__('Opportunities', 'vms') . '</strong><span class="vms-av-muted">' . esc_html__('Hover or focus an event title for details. Apply on open dates.', 'vms') . '</span></div>';
+        echo '<p class="vms-av-help">' . esc_html__('Tap a date to toggle: Unset > Available > Unavailable. Then click Save Availability.', 'backstage-venue-manager') . '</p>';
+        echo '<div class="vms-av-opps-intro" id="vms-opportunities"><strong>' . esc_html__('Opportunities', 'backstage-venue-manager') . '</strong><span class="vms-av-muted">' . esc_html__('Hover or focus an event title for details. Apply on open dates.', 'backstage-venue-manager') . '</span></div>';
 
         // Lookback selector (view-only months)
         echo '<form method="get" class="vms-av-lookback">';
@@ -5631,22 +5631,22 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         if (function_exists('vms_vendor_portal_render_preview_hidden_fields')) {
             vms_vendor_portal_render_preview_hidden_fields((int) $vendor_id);
         }
-        echo '<label for="vms-av-lb">' . esc_html__('Show past:', 'vms') . '</label>';
+        echo '<label for="vms-av-lb">' . esc_html__('Show past:', 'backstage-venue-manager') . '</label>';
         echo '<select id="vms-av-lb" name="lb" onchange="this.form.submit()">';
-        echo '<option value="0"' . selected(0, $months_back, false) . '>' . esc_html__('None', 'vms') . '</option>';
-        echo '<option value="1"' . selected(1, $months_back, false) . '>' . esc_html__('1 month', 'vms') . '</option>';
-        echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'vms') . '</option>';
+        echo '<option value="0"' . selected(0, $months_back, false) . '>' . esc_html__('None', 'backstage-venue-manager') . '</option>';
+        echo '<option value="1"' . selected(1, $months_back, false) . '>' . esc_html__('1 month', 'backstage-venue-manager') . '</option>';
+        echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'backstage-venue-manager') . '</option>';
         echo '</select>';
-        echo '<span class="vms-av-muted">' . esc_html__('Past months are view-only.', 'vms') . '</span>';
+        echo '<span class="vms-av-muted">' . esc_html__('Past months are view-only.', 'backstage-venue-manager') . '</span>';
         echo '</form>';
 
         // Small legend (quick scan for what the colors mean)
-        echo '<div class="vms-av-legend" role="note" aria-label="' . esc_attr__('Availability legend', 'vms') . '">';
-        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-unset" aria-hidden="true"></span>' . esc_html__('Unset', 'vms') . '</span>';
-        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-available" aria-hidden="true"></span>' . esc_html__('Available', 'vms') . '</span>';
-        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-unavailable" aria-hidden="true"></span>' . esc_html__('Unavailable', 'vms') . '</span>';
-        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-tentative" aria-hidden="true"></span>' . esc_html__('Tentative', 'vms') . '</span>';
-        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-booked" aria-hidden="true"></span>' . esc_html__('Booked', 'vms') . '</span>';
+        echo '<div class="vms-av-legend" role="note" aria-label="' . esc_attr__('Availability legend', 'backstage-venue-manager') . '">';
+        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-unset" aria-hidden="true"></span>' . esc_html__('Unset', 'backstage-venue-manager') . '</span>';
+        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-available" aria-hidden="true"></span>' . esc_html__('Available', 'backstage-venue-manager') . '</span>';
+        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-unavailable" aria-hidden="true"></span>' . esc_html__('Unavailable', 'backstage-venue-manager') . '</span>';
+        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-tentative" aria-hidden="true"></span>' . esc_html__('Tentative', 'backstage-venue-manager') . '</span>';
+        echo '<span class="vms-av-leg-item"><span class="vms-av-swatch is-booked" aria-hidden="true"></span>' . esc_html__('Booked', 'backstage-venue-manager') . '</span>';
         echo '</div>';
 
         echo '<form method="post" id="vms-av-form">';
@@ -5726,7 +5726,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                 $plan_id = absint($event['event_plan_id'] ?? 0);
                 $title = isset($event['title']) ? trim((string) $event['title']) : '';
                 if ($title === '') {
-                    $title = __('Event', 'vms');
+                    $title = __('Event', 'backstage-venue-manager');
                 }
 
                 $groups = isset($event['vendor_groups']) && is_array($event['vendor_groups']) ? $event['vendor_groups'] : array();
@@ -5746,11 +5746,11 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     $opportunity_type_label = trim((string) ($opportunity_target['label'] ?? ''));
 
                     $status_key = sanitize_key((string) ($opportunity_status['status'] ?? ''));
-                    $status_label = (string) ($opportunity_status['label'] ?? __('Opportunity', 'vms'));
+                    $status_label = (string) ($opportunity_status['label'] ?? __('Opportunity', 'backstage-venue-manager'));
                     if ($status_key === 'open') {
-                        $status_label = __('Open', 'vms');
+                        $status_label = __('Open', 'backstage-venue-manager');
                     } elseif ($status_key === 'pending') {
-                        $status_label = __('Requested', 'vms');
+                        $status_label = __('Requested', 'backstage-venue-manager');
                     }
 
                     if (!isset($opportunity_rows_by_date[$d])) {
@@ -5764,7 +5764,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         'type_label' => $opportunity_type_label,
                         'submit_label' => function_exists('vms_vendor_portal_submit_application_label')
                             ? vms_vendor_portal_submit_application_label($opportunity_type_label)
-                            : __('Submit Application', 'vms'),
+                            : __('Submit Application', 'backstage-venue-manager'),
                         'submitted_at' => (string) ($opportunity_status['submitted_at'] ?? ''),
                         'can_submit' => !empty($opportunity_status['can_submit']),
                         'can_withdraw' => !empty($opportunity_status['can_withdraw']),
@@ -5821,7 +5821,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             echo '<summary>';
             echo '<span class="vms-av-monthlabel">';
             echo '<span class="vms-av-monthname">' . esc_html($month_label) . '</span>';
-            echo '<span class="vms-av-howto">' . esc_html__('Tap days to toggle availability', 'vms') . '</span>';
+            echo '<span class="vms-av-howto">' . esc_html__('Tap days to toggle availability', 'backstage-venue-manager') . '</span>';
             echo '</span>';
             echo '<span class="vms-av-counts vms-av-muted" data-active="' . esc_attr((string) $cnt_active) . '">' . esc_html(sprintf('%d active | %d NA | %d A', $cnt_active, $cnt_na, $cnt_a)) . '</span>';
             echo '</summary>';
@@ -5829,13 +5829,13 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             echo '<table class="vms-av-grid">';
             echo '<thead><tr class="vms-av-dow">';
             $dow = array(
-                __('Sun', 'vms'),
-                __('Mon', 'vms'),
-                __('Tue', 'vms'),
-                __('Wed', 'vms'),
-                __('Thu', 'vms'),
-                __('Fri', 'vms'),
-                __('Sat', 'vms')
+                __('Sun', 'backstage-venue-manager'),
+                __('Mon', 'backstage-venue-manager'),
+                __('Tue', 'backstage-venue-manager'),
+                __('Wed', 'backstage-venue-manager'),
+                __('Thu', 'backstage-venue-manager'),
+                __('Fri', 'backstage-venue-manager'),
+                __('Sat', 'backstage-venue-manager')
             );
             foreach ($dow as $lbl) {
                 echo '<th scope="col">' . esc_html($lbl) . '</th>';
@@ -5876,7 +5876,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     $status_key = ($base_state === 'available' || $base_state === 'unavailable') ? $base_state : 'unset';
                     $status_label = trim((string) ($availability['label'] ?? ''));
                     if ($status_label === '') {
-                        $status_label = ($status_key === 'available') ? __('Available', 'vms') : (($status_key === 'unavailable') ? __('Unavailable', 'vms') : __('Unset', 'vms'));
+                        $status_label = ($status_key === 'available') ? __('Available', 'backstage-venue-manager') : (($status_key === 'unavailable') ? __('Unavailable', 'backstage-venue-manager') : __('Unset', 'backstage-venue-manager'));
                     }
 
                     $show_status_badge = ($is_active && empty($is_busy));
@@ -5888,9 +5888,9 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     echo '<div class="vms-av-cell-badges">';
                     if (!empty($is_busy)) {
                         if ($busy_src === 'booked') {
-                            echo '<span class="vms-av-badge-booked">' . esc_html__('Booked', 'vms') . '</span>';
+                            echo '<span class="vms-av-badge-booked">' . esc_html__('Booked', 'backstage-venue-manager') . '</span>';
                         } else {
-                            echo '<span class="vms-av-badge-tentative">' . esc_html__('Tentative', 'vms') . '</span>';
+                            echo '<span class="vms-av-badge-tentative">' . esc_html__('Tentative', 'backstage-venue-manager') . '</span>';
                         }
                     }
                     if ($show_status_badge) {
@@ -6061,25 +6061,25 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                                 if ($line_plan_id > 0 && isset($opportunity_plan_map[$line_plan_id]) && is_array($opportunity_plan_map[$line_plan_id])) {
                                     $modal_opp = $opportunity_plan_map[$line_plan_id];
                                     if (!empty($modal_opp['can_submit']) && !empty($modal_opp['submit_url'])) {
-                                        $modal_primary_label = (string) ($modal_opp['submit_label'] ?? __('Submit Application', 'vms'));
+                                        $modal_primary_label = (string) ($modal_opp['submit_label'] ?? __('Submit Application', 'backstage-venue-manager'));
                                         $modal_primary_url = (string) ($modal_opp['submit_url'] ?? '');
                                         if ($line_url !== '') {
-                                            $modal_secondary_label = __('View Event Page', 'vms');
+                                            $modal_secondary_label = __('View Event Page', 'backstage-venue-manager');
                                             $modal_secondary_url = $line_url;
                                         }
                                     } elseif (!empty($modal_opp['can_withdraw']) && !empty($modal_opp['withdraw_url'])) {
-                                        $modal_primary_label = __('Withdraw Request', 'vms');
+                                        $modal_primary_label = __('Withdraw Request', 'backstage-venue-manager');
                                         $modal_primary_url = (string) ($modal_opp['withdraw_url'] ?? '');
                                         if ($line_url !== '') {
-                                            $modal_secondary_label = __('View Event Page', 'vms');
+                                            $modal_secondary_label = __('View Event Page', 'backstage-venue-manager');
                                             $modal_secondary_url = $line_url;
                                         }
                                     } elseif ($line_url !== '') {
-                                        $modal_primary_label = __('View Event Page', 'vms');
+                                        $modal_primary_label = __('View Event Page', 'backstage-venue-manager');
                                         $modal_primary_url = $line_url;
                                     }
                                 } elseif ($line_url !== '') {
-                                    $modal_primary_label = __('View Event Page', 'vms');
+                                    $modal_primary_label = __('View Event Page', 'backstage-venue-manager');
                                     $modal_primary_url = $line_url;
                                 }
 
@@ -6170,7 +6170,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         echo '<div class="vms-av-opportunity-list">';
                         foreach ((array) $render_opportunity_rows as $opp_row) {
                             $opp_status = sanitize_html_class((string) ($opp_row['status'] ?? 'open'));
-                            $opp_label = trim((string) ($opp_row['label'] ?? __('Opportunity', 'vms')));
+                            $opp_label = trim((string) ($opp_row['label'] ?? __('Opportunity', 'backstage-venue-manager')));
                             $opp_icon = trim((string) ($opp_row['icon'] ?? ''));
                             $opp_submitted_raw = trim((string) ($opp_row['submitted_at'] ?? ''));
                             $opp_submitted_label = '';
@@ -6189,10 +6189,10 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                                 echo '<span class="vms-av-opportunity-date">' . esc_html($opp_submitted_label) . '</span>';
                             }
                             if (!empty($opp_row['can_submit']) && $opp_submit_url !== '') {
-                                echo '<a class="button button-small button-primary vms-av-opportunity-action" href="' . esc_url($opp_submit_url) . '">' . esc_html__('Apply', 'vms') . '</a>';
+                                echo '<a class="button button-small button-primary vms-av-opportunity-action" href="' . esc_url($opp_submit_url) . '">' . esc_html__('Apply', 'backstage-venue-manager') . '</a>';
                             }
                             if (!empty($opp_row['can_withdraw']) && $opp_withdraw_url !== '') {
-                                echo '<a class="button button-small vms-av-opportunity-action" href="' . esc_url($opp_withdraw_url) . '">' . esc_html__('Withdraw', 'vms') . '</a>';
+                                echo '<a class="button button-small vms-av-opportunity-action" href="' . esc_url($opp_withdraw_url) . '">' . esc_html__('Withdraw', 'backstage-venue-manager') . '</a>';
                             }
                             echo '</div>';
                         }
@@ -6209,7 +6209,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         }
 
         echo '<p class="vms-m0 vms-mt-14">';
-        echo '<button class="button button-primary" type="submit" name="vms_save_availability">' . esc_html__('Save Availability', 'vms') . '</button>';
+        echo '<button class="button button-primary" type="submit" name="vms_save_availability">' . esc_html__('Save Availability', 'backstage-venue-manager') . '</button>';
         echo '</p>';
 
         echo '</form>';
@@ -6587,10 +6587,10 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
      */
     function vms_vendor_portal_render_all_vendors_availability($vendor_ids, $base_url, $current_vendor_id = 0)
     {
-        echo '<h3>' . esc_html__('All Vendors', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('All Vendors', 'backstage-venue-manager') . '</h3>';
 
         if (!is_array($vendor_ids) || count($vendor_ids) < 2) {
-            echo wp_kses_post(vms_portal_notice('warning', __('You do not have multiple vendors linked to this account.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('warning', __('You do not have multiple vendors linked to this account.', 'backstage-venue-manager')));
             return;
         }
 
@@ -6600,7 +6600,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
         })));
 
         if (empty($vendor_ids)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('No vendors available for this view.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('warning', __('No vendors available for this view.', 'backstage-venue-manager')));
             return;
         }
 
@@ -6634,7 +6634,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             : array();
 
         if (empty($months)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('No months available for this view.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('warning', __('No months available for this view.', 'backstage-venue-manager')));
             return;
         }
 
@@ -6647,12 +6647,12 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             vms_vendor_portal_render_preview_hidden_fields((int) $current_vendor_id);
         }
 
-        echo '<label for="vms-av-lb-all">' . esc_html__('Show past:', 'vms') . '</label>';
+        echo '<label for="vms-av-lb-all">' . esc_html__('Show past:', 'backstage-venue-manager') . '</label>';
         echo '<select id="vms-av-lb-all" name="lb" onchange="this.form.submit()">';
         $opts = array(
-            0  => __('None', 'vms'),
-            1  => __('1 month', 'vms'),
-            12 => __('12 months', 'vms'),
+            0  => __('None', 'backstage-venue-manager'),
+            1  => __('1 month', 'backstage-venue-manager'),
+            12 => __('12 months', 'backstage-venue-manager'),
         );
         foreach ($opts as $val => $label) {
             echo '<option value="' . esc_attr((string) $val) . '" ' . selected($months_back, (int) $val, false) . '>' . esc_html($label) . '</option>';
@@ -6727,7 +6727,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
                 $venue_id = absint($event['venue_id'] ?? 0);
                 $title = isset($event['title']) ? trim((string) $event['title']) : '';
                 if ($title === '') {
-                    $title = __('(Event)', 'vms');
+                    $title = __('(Event)', 'backstage-venue-manager');
                 }
 
                 $time_txt = '';
@@ -6751,9 +6751,9 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
                     ? (string) (vms_calendar_assignment_status_for_plan($status) ?? '')
                     : '';
                 if ($busy_src === 'tentative') {
-                    $label = __('Tentative', 'vms') . ': ' . $label;
+                    $label = __('Tentative', 'backstage-venue-manager') . ': ' . $label;
                 } elseif ($busy_src === 'booked') {
-                    $label = __('Booked', 'vms') . ': ' . $label;
+                    $label = __('Booked', 'backstage-venue-manager') . ': ' . $label;
                 }
 
                 if (!isset($bookings[$date])) {
@@ -6817,7 +6817,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
 
             echo '<table class="widefat vms-av-grid vms-sch-grid">';
             echo '<thead><tr class="vms-av-dow">';
-            $dow = array(__('Sun', 'vms'), __('Mon', 'vms'), __('Tue', 'vms'), __('Wed', 'vms'), __('Thu', 'vms'), __('Fri', 'vms'), __('Sat', 'vms'));
+            $dow = array(__('Sun', 'backstage-venue-manager'), __('Mon', 'backstage-venue-manager'), __('Tue', 'backstage-venue-manager'), __('Wed', 'backstage-venue-manager'), __('Thu', 'backstage-venue-manager'), __('Fri', 'backstage-venue-manager'), __('Sat', 'backstage-venue-manager'));
             foreach ($dow as $d) {
                 echo '<th class="vms-sch-dow">' . esc_html($d) . '</th>';
             }
@@ -6857,9 +6857,9 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
                             if ($venue_id > 0 && isset($venue_name[$venue_id]) && $venue_name[$venue_id] !== '') {
                                 $vlabel = $venue_name[$venue_id];
                             } elseif ($venue_id > 0) {
-                                $vlabel = __('(Venue)', 'vms');
+                                $vlabel = __('(Venue)', 'backstage-venue-manager');
                             } else {
-                                $vlabel = __('(No venue)', 'vms');
+                                $vlabel = __('(No venue)', 'backstage-venue-manager');
                             }
 
                             echo '<div class="vms-sch-planline">';
@@ -6976,8 +6976,8 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
     {
         $vendor_id = (int) $vendor_id;
 
-        echo '<h3>' . esc_html__('Tech Docs', 'vms') . '</h3>';
-        echo '<p class="vms-muted">' . esc_html__('Upload your current stage plot and input list (PDF or image). You can replace them any time.', 'vms') . '</p>';
+        echo '<h3>' . esc_html__('Tech Docs', 'backstage-venue-manager') . '</h3>';
+        echo '<p class="vms-muted">' . esc_html__('Upload your current stage plot and input list (PDF or image). You can replace them any time.', 'backstage-venue-manager') . '</p>';
 
         // Ensure media handling functions are available on front-end
         if (!function_exists('media_handle_upload')) {
@@ -6989,7 +6989,7 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
         // Handle uploads
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_techdocs_save'])) {
             if (!isset($_POST['vms_techdocs_nonce']) || !wp_verify_nonce($_POST['vms_techdocs_nonce'], 'vms_techdocs_save')) {
-                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
+                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
             } else {
 
                 $updated = false;
@@ -7001,7 +7001,7 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
                         $updated = true;
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'vms'), $attach_id->get_error_message())));
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'backstage-venue-manager'), $attach_id->get_error_message())));
                     }
                 }
 
@@ -7012,13 +7012,13 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
                         $updated = true;
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Input list upload failed: %s', 'vms'), $attach_id->get_error_message())));
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Input list upload failed: %s', 'backstage-venue-manager'), $attach_id->get_error_message())));
                     }
                 }
 
                 if ($updated) {
                     vms_vendor_flag_vendor_update($vendor_id, 'tech_docs');
-                    echo wp_kses_post(vms_portal_notice('success', __('Tech docs updated.', 'vms')));
+                    echo wp_kses_post(vms_portal_notice('success', __('Tech docs updated.', 'backstage-venue-manager')));
                 }
             }
         }
@@ -7031,8 +7031,8 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
 
         echo '<div class="vms-portal-card">';
         echo '<ul class="vms-m0 vms-pl-18">';
-        echo '<li><strong>' . esc_html__('Stage Plot:', 'vms') . '</strong> ' . ($stage_url ? '<a target="_blank" rel="noopener" href="' . esc_url($stage_url) . '">' . esc_html__('View current', 'vms') . '</a>' : esc_html__('None uploaded', 'vms')) . '</li>';
-        echo '<li><strong>' . esc_html__('Input List:', 'vms') . '</strong> ' . ($input_url ? '<a target="_blank" rel="noopener" href="' . esc_url($input_url) . '">' . esc_html__('View current', 'vms') . '</a>' : esc_html__('None uploaded', 'vms')) . '</li>';
+        echo '<li><strong>' . esc_html__('Stage Plot:', 'backstage-venue-manager') . '</strong> ' . ($stage_url ? '<a target="_blank" rel="noopener" href="' . esc_url($stage_url) . '">' . esc_html__('View current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
+        echo '<li><strong>' . esc_html__('Input List:', 'backstage-venue-manager') . '</strong> ' . ($input_url ? '<a target="_blank" rel="noopener" href="' . esc_url($input_url) . '">' . esc_html__('View current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
         echo '</ul>';
         echo '</div>';
 
@@ -7041,16 +7041,16 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
         wp_nonce_field('vms_techdocs_save', 'vms_techdocs_nonce');
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Upload / Replace Stage Plot', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Upload / Replace Stage Plot', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="file" name="vms_stage_plot" accept=".pdf,.png,.jpg,.jpeg,.webp">';
         echo '</div>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Upload / Replace Input List', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Upload / Replace Input List', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="file" name="vms_input_list" accept=".pdf,.png,.jpg,.jpeg,.webp">';
         echo '</div>';
 
-        echo '<p class="vms-m0"><button type="submit" name="vms_techdocs_save" class="button button-primary">' . esc_html__('Save Tech Docs', 'vms') . '</button></p>';
+        echo '<p class="vms-m0"><button type="submit" name="vms_techdocs_save" class="button button-primary">' . esc_html__('Save Tech Docs', 'backstage-venue-manager') . '</button></p>';
         echo '</form>';
         echo '</div>';
     }
@@ -7062,7 +7062,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         $vendor_id = (int) $vendor_id;
 
         if ($vendor_id <= 0) {
-            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'vms')));
+            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'backstage-venue-manager')));
             return;
         }
 
@@ -7096,7 +7096,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_vendor_profile_save'])) {
 
             if (!isset($_POST['vms_vendor_profile_nonce']) || !wp_verify_nonce($_POST['vms_vendor_profile_nonce'], 'vms_vendor_profile_save')) {
-                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'vms')));
+                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
             } else {
 
                 $display_name  = isset($_POST['vms_vendor_display_name']) ? sanitize_text_field((string) $_POST['vms_vendor_display_name']) : '';
@@ -7130,7 +7130,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                         set_post_thumbnail($vendor_id, (int) $attach_id);
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Logo upload failed: %s', 'vms'), $attach_id->get_error_message())));
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Logo upload failed: %s', 'backstage-venue-manager'), $attach_id->get_error_message())));
                     }
                 }
 
@@ -7148,7 +7148,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                     $r = wp_update_post($update, true);
                     if (is_wp_error($r)) {
                         /* translators: %s: WordPress post update error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Profile save failed: %s', 'vms'), $r->get_error_message())));
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Profile save failed: %s', 'backstage-venue-manager'), $r->get_error_message())));
                     }
                 }
 
@@ -7187,7 +7187,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                             }
                         } else {
                             /* translators: 1: gallery slot number, 2: media upload error message. */
-                            echo wp_kses_post(vms_portal_notice('error', sprintf(__('Gallery photo %1$d upload failed: %2$s', 'vms'), $i, $attach_id->get_error_message())));
+                            echo wp_kses_post(vms_portal_notice('error', sprintf(__('Gallery photo %1$d upload failed: %2$s', 'backstage-venue-manager'), $i, $attach_id->get_error_message())));
                         }
                     }
 
@@ -7203,7 +7203,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                     vms_vendor_flag_vendor_update($vendor_id, 'profile');
                 }
 
-                echo wp_kses_post(vms_portal_notice('success', __('Profile saved.', 'vms')));
+                echo wp_kses_post(vms_portal_notice('success', __('Profile saved.', 'backstage-venue-manager')));
             }
         }
 
@@ -7257,7 +7257,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         $thumb_id  = get_post_thumbnail_id($vendor_id);
         $thumb_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'medium') : '';
 
-        echo '<h3>' . esc_html__('Profile', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Profile', 'backstage-venue-manager') . '</h3>';
 
         echo '<form method="post" enctype="multipart/form-data">';
         wp_nonce_field('vms_vendor_profile_save', 'vms_vendor_profile_nonce');
@@ -7265,16 +7265,16 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         echo '<div class="vms-portal-card">';
 
         // LOGO
-        echo '<h4 class="vms-mt-0">' . esc_html__('Logo', 'vms') . '</h4>';
+        echo '<h4 class="vms-mt-0">' . esc_html__('Logo', 'backstage-venue-manager') . '</h4>';
 
         if ($thumb_url) {
             echo '<p><img src="' . esc_url($thumb_url) . '" alt="Vendor Logo" class="vms-portal-logo-thumb"></p>';
         } else {
-            echo '<p><em>' . esc_html__('No logo uploaded yet.', 'vms') . '</em></p>';
+            echo '<p><em>' . esc_html__('No logo uploaded yet.', 'backstage-venue-manager') . '</em></p>';
         }
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Upload / Replace Logo', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Upload / Replace Logo', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="file" name="vms_vendor_logo" accept=".png,.jpg,.jpeg,.webp">';
         echo '</div>';
 
@@ -7283,57 +7283,57 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         echo '<div class="vms-portal-card">';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Display Name', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Display Name', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="text" name="vms_vendor_display_name" value="' . esc_attr($display_name) . '">';
         echo '</div>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('About / Bio', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('About / Bio', 'backstage-venue-manager') . '</strong></label>';
         echo '<textarea name="vms_vendor_about" rows="7">' . esc_textarea($about) . '</textarea>';
-        echo '<div class="description">' . esc_html__('This appears on your public profile.', 'vms') . '</div>';
+        echo '<div class="description">' . esc_html__('This appears on your public profile.', 'backstage-venue-manager') . '</div>';
         echo '</div>';
 
         echo '</div>';
 
         echo '<div class="vms-portal-card">';
 
-        echo '<h4 class="vms-mt-0">' . esc_html__('Contact', 'vms') . '</h4>';
+        echo '<h4 class="vms-mt-0">' . esc_html__('Contact', 'backstage-venue-manager') . '</h4>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Primary Contact Name (optional)', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Primary Contact Name (optional)', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="text" name="vms_contact_name" value="' . esc_attr($contact_name) . '">';
         echo '</div>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Primary Contact Email', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Primary Contact Email', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="email" name="vms_primary_email" value="' . esc_attr($primary_email) . '">';
         echo '</div>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Primary Contact Phone', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Primary Contact Phone', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="tel" name="vms_primary_phone" id="vms_primary_phone" inputmode="tel" autocomplete="tel" placeholder="(###) ###-####" maxlength="14" value="' . esc_attr($primary_phone) . '">';
         echo '</div>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Website URL', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Website URL', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="url" name="vms_website_url" value="' . esc_attr($website_url) . '">';
         echo '</div>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('City', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('City', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="text" name="vms_city" value="' . esc_attr($city) . '">';
         echo '</div>';
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('State', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('State', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="text" name="vms_state" value="' . esc_attr($state) . '">';
         echo '</div>';
 
         echo '</div>';
 
         echo '<div class="vms-portal-card">';
-        echo '<h4 class="vms-mt-0">' . esc_html__('Public Profile', 'vms') . '</h4>';
-        echo '<p class="description">' . esc_html__('These items appear on your public profile page when the venue has enabled your public profile.', 'vms') . '</p>';
+        echo '<h4 class="vms-mt-0">' . esc_html__('Public Profile', 'backstage-venue-manager') . '</h4>';
+        echo '<p class="description">' . esc_html__('These items appear on your public profile page when the venue has enabled your public profile.', 'backstage-venue-manager') . '</p>';
 
         foreach ($social_meta_map as $social_slug => $social_meta_key) {
             $social_label = ucfirst($social_slug);
@@ -7351,25 +7351,25 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         }
 
         echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Featured video URL', 'vms') . '</strong></label>';
+        echo '<label><strong>' . esc_html__('Featured video URL', 'backstage-venue-manager') . '</strong></label>';
         echo '<input type="url" name="vms_vendor_featured_video_url" value="' . esc_attr($featured_video_url) . '" placeholder="https://www.youtube.com/watch?v=...">';
-        echo '<div class="description">' . esc_html__('YouTube works best. Facebook video links may work depending on your site setup.', 'vms') . '</div>';
+        echo '<div class="description">' . esc_html__('YouTube works best. Facebook video links may work depending on your site setup.', 'backstage-venue-manager') . '</div>';
         echo '</div>';
 
-        echo '<h4>' . esc_html__('Gallery Photos', 'vms') . '</h4>';
-        echo '<p class="description">' . esc_html__('Upload up to 5 photos for your public profile. You can also paste an image URL instead.', 'vms') . '</p>';
+        echo '<h4>' . esc_html__('Gallery Photos', 'backstage-venue-manager') . '</h4>';
+        echo '<p class="description">' . esc_html__('Upload up to 5 photos for your public profile. You can also paste an image URL instead.', 'backstage-venue-manager') . '</p>';
         for ($i = 1; $i <= 5; $i++) {
             $photo_number = (string) $i;
             echo '<div class="vms-field">';
             echo '<label><strong>' . sprintf(
                 /* translators: %s: gallery photo slot number. */
-                esc_html__('Photo %s', 'vms'),
+                esc_html__('Photo %s', 'backstage-venue-manager'),
                 esc_html($photo_number)
             ) . '</strong></label>';
             if (!empty($gallery_values_current[$i])) {
                 echo '<div class="vms-portal-gallery-preview"><img src="' . esc_url($gallery_values_current[$i]) . '" alt="' . esc_attr(sprintf(
                     /* translators: %s: gallery photo slot number. */
-                    __('Photo %s preview', 'vms'),
+                    __('Photo %s preview', 'backstage-venue-manager'),
                     $photo_number
                 )) . '"></div>';
             }
@@ -7378,7 +7378,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
             echo '</div>';
         }
 
-        echo '<p class="vms-m0"><button type="submit" name="vms_vendor_profile_save" class="button button-primary">' . esc_html__('Save Profile', 'vms') . '</button></p>';
+        echo '<p class="vms-m0"><button type="submit" name="vms_vendor_profile_save" class="button button-primary">' . esc_html__('Save Profile', 'backstage-venue-manager') . '</button></p>';
         echo '</div>';
 
         echo '</form>';

@@ -14,7 +14,7 @@ add_action('add_meta_boxes', function () {
     foreach ($screens as $screen) {
         add_meta_box(
             'vms_tax_profile_admin_box',
-            __('Tax Profile (Admin)', 'vms'),
+            __('Tax Profile (Admin)', 'backstage-venue-manager'),
             'vms_render_tax_profile_admin_metabox',
             $screen,
             'normal',
@@ -180,22 +180,22 @@ function vms_render_tax_profile_admin_metabox($post)
     if ($is_staff_employee) {
         $missing_emp = function_exists('vms_staff_employee_packet_missing_items')
             ? (array) vms_staff_employee_packet_missing_items($id)
-            : array(__('W-4 received', 'vms'), __('I-9 verified', 'vms'));
+            : array(__('W-4 received', 'backstage-venue-manager'), __('I-9 verified', 'backstage-venue-manager'));
 
         $emp_complete = empty($missing_emp);
 
         echo '<p class="vms-tax-profile-status">';
         echo $emp_complete
-            ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Employee packet complete', 'vms') . '</span>'
-            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Employee packet incomplete', 'vms') . '</span>';
+            ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Employee packet complete', 'backstage-venue-manager') . '</span>'
+            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Employee packet incomplete', 'backstage-venue-manager') . '</span>';
         echo '</p>';
 
-        echo '<div class="vms-note"><strong>' . esc_html__('W-2 employee:', 'vms') . '</strong> ' .
-            esc_html__('Use the Employee Packet checklist in the sidebar (W-4 + I-9). No SSN is entered into WordPress.', 'vms') .
+        echo '<div class="vms-note"><strong>' . esc_html__('W-2 employee:', 'backstage-venue-manager') . '</strong> ' .
+            esc_html__('Use the Employee Packet checklist in the sidebar (W-4 + I-9). No SSN is entered into WordPress.', 'backstage-venue-manager') .
             '</div>';
 
         if (!$emp_complete) {
-            echo '<p class="description">' . esc_html__('Missing required items:', 'vms') . '</p>';
+            echo '<p class="description">' . esc_html__('Missing required items:', 'backstage-venue-manager') . '</p>';
             echo '<ul class="vms-missing">';
             foreach ($missing_emp as $m) {
                 echo '<li>' . esc_html((string) $m) . '</li>';
@@ -207,15 +207,15 @@ function vms_render_tax_profile_admin_metabox($post)
 
 
     $entity_types = [
-        ''            => __('— Select —', 'vms'),
-        'individual'  => __('Individual / Sole Proprietor', 'vms'),
-        'single_llc'  => __('Single-member LLC', 'vms'),
-        'llc'         => __('LLC (multi-member)', 'vms'),
-        'partnership' => __('Partnership', 'vms'),
-        's_corp'      => __('S-Corp', 'vms'),
-        'c_corp'      => __('C-Corp', 'vms'),
-        'nonprofit'   => __('Nonprofit / Exempt', 'vms'),
-        'other'       => __('Other', 'vms'),
+        ''            => __('— Select —', 'backstage-venue-manager'),
+        'individual'  => __('Individual / Sole Proprietor', 'backstage-venue-manager'),
+        'single_llc'  => __('Single-member LLC', 'backstage-venue-manager'),
+        'llc'         => __('LLC (multi-member)', 'backstage-venue-manager'),
+        'partnership' => __('Partnership', 'backstage-venue-manager'),
+        's_corp'      => __('S-Corp', 'backstage-venue-manager'),
+        'c_corp'      => __('C-Corp', 'backstage-venue-manager'),
+        'nonprofit'   => __('Nonprofit / Exempt', 'backstage-venue-manager'),
+        'other'       => __('Other', 'backstage-venue-manager'),
     ];
 
     wp_nonce_field('vms_tax_admin_save', 'vms_tax_admin_nonce');
@@ -237,41 +237,41 @@ function vms_render_tax_profile_admin_metabox($post)
 
     echo '<p class="vms-tax-profile-status">';
     if ($is_complete) {
-        echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';
     } elseif ($provider !== 'upload' && $attested_at > 0) {
-        echo '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'backstage-venue-manager') . '</span>';
     } else {
-        echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>';
     }
     echo '</p>';
 
-    echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'vms') . '</strong> ' . esc_html($provider_label) . '</div>';
-    echo '<div class="vms-note"><strong>' . esc_html__('Privacy note:', 'vms') . '</strong> ' .
-        esc_html__('Do NOT type SSN/EIN into WordPress.', 'vms') .
+    echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'backstage-venue-manager') . '</strong> ' . esc_html($provider_label) . '</div>';
+    echo '<div class="vms-note"><strong>' . esc_html__('Privacy note:', 'backstage-venue-manager') . '</strong> ' .
+        esc_html__('Do NOT type SSN/EIN into WordPress.', 'backstage-venue-manager') .
         '</div>';
 
     if ($provider !== 'upload') {
-        echo '<p class="description">' . esc_html__('This record uses the secure off-site workflow as the W-9 source of truth. Use the Tax Profile Status box in the sidebar to confirm or clear admin completion without using the temporary bypass.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('This record uses the secure off-site workflow as the W-9 source of truth. Use the Tax Profile Status box in the sidebar to confirm or clear admin completion without using the temporary bypass.', 'backstage-venue-manager') . '</p>';
         if ($attested_at > 0 && $done_at <= 0) {
-            echo '<p class="description">' . esc_html__('Staff/vendor has already indicated they completed the off-site step and is waiting on admin confirmation.', 'vms') . '</p>';
+            echo '<p class="description">' . esc_html__('Staff/vendor has already indicated they completed the off-site step and is waiting on admin confirmation.', 'backstage-venue-manager') . '</p>';
         }
     }
 
-    echo '<h3 class="vms-tax-profile-subhead vms-tax-profile-subhead-first">' . esc_html__('Payee & Entity', 'vms') . '</h3>';
+    echo '<h3 class="vms-tax-profile-subhead vms-tax-profile-subhead-first">' . esc_html__('Payee & Entity', 'backstage-venue-manager') . '</h3>';
 
     echo '<div class="vms-grid">';
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_payee_legal_name">' . esc_html__('Legal / Payee Name (as on W-9)', 'vms') . '</label>';
+    echo '<label for="vms_payee_legal_name">' . esc_html__('Legal / Payee Name (as on W-9)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_payee_legal_name" name="vms_payee_legal_name" value="' . esc_attr($payee_legal) . '" required>';
     echo '</div>';
 
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_payee_dba">' . esc_html__('Business Name / DBA (optional)', 'vms') . '</label>';
+    echo '<label for="vms_payee_dba">' . esc_html__('Business Name / DBA (optional)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_payee_dba" name="vms_payee_dba" value="' . esc_attr($dba) . '">';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_entity_type">' . esc_html__('Entity Type', 'vms') . '</label>';
+    echo '<label for="vms_entity_type">' . esc_html__('Entity Type', 'backstage-venue-manager') . '</label>';
     echo '<select id="vms_entity_type" name="vms_entity_type" required>';
     foreach ($entity_types as $k => $label) {
         echo '<option value="' . esc_attr($k) . '" ' . selected($entity, $k, false) . '>' . esc_html($label) . '</option>';
@@ -280,66 +280,66 @@ function vms_render_tax_profile_admin_metabox($post)
     echo '</div>';
     echo '</div>';
 
-    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('Mailing Address', 'vms') . '</h3>';
+    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('Mailing Address', 'backstage-venue-manager') . '</h3>';
 
     echo '<div class="vms-grid">';
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_addr1">' . esc_html__('Address Line 1', 'vms') . '</label>';
+    echo '<label for="vms_addr1">' . esc_html__('Address Line 1', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_addr1" name="vms_addr1" value="' . esc_attr($addr1) . '" required>';
     echo '</div>';
 
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_addr2">' . esc_html__('Address Line 2 (optional)', 'vms') . '</label>';
+    echo '<label for="vms_addr2">' . esc_html__('Address Line 2 (optional)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_addr2" name="vms_addr2" value="' . esc_attr($addr2) . '">';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_city">' . esc_html__('City', 'vms') . '</label>';
+    echo '<label for="vms_city">' . esc_html__('City', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_city" name="vms_city" value="' . esc_attr($city) . '" required>';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_state">' . esc_html__('State', 'vms') . '</label>';
+    echo '<label for="vms_state">' . esc_html__('State', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_state" name="vms_state" value="' . esc_attr($state) . '" maxlength="2" placeholder="TX" required>';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_zip">' . esc_html__('ZIP', 'vms') . '</label>';
+    echo '<label for="vms_zip">' . esc_html__('ZIP', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_zip" name="vms_zip" value="' . esc_attr($zip) . '" required>';
     echo '</div>';
     echo '</div>';
 
-    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('W-9', 'vms') . ' (' . esc_html($provider_label) . ')</h3>';
+    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('W-9', 'backstage-venue-manager') . ' (' . esc_html($provider_label) . ')</h3>';
 
     if ($w9_upload_id > 0 && $w9_url) {
         echo '<p class="description vms-tax-profile-upload-note">' .
-            esc_html__('On file:', 'vms') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' .
-            esc_html($w9_label ? $w9_label : __('View uploaded W-9', 'vms')) .
+            esc_html__('On file:', 'backstage-venue-manager') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' .
+            esc_html($w9_label ? $w9_label : __('View uploaded W-9', 'backstage-venue-manager')) .
             '</a></p>';
     }
 
     if ($provider === 'upload') {
         if (!($w9_upload_id > 0 && $w9_url)) {
             echo '<p class="description vms-tax-profile-upload-note">' .
-                esc_html__('No W-9 uploaded yet. Upload a signed W-9 PDF/image.', 'vms') .
+                esc_html__('No W-9 uploaded yet. Upload a signed W-9 PDF/image.', 'backstage-venue-manager') .
                 '</p>';
         }
         echo '<p class="vms-tax-profile-upload-field">';
         echo '<input type="file" name="vms_w9_upload" accept="application/pdf,image/jpeg,image/png,image/webp">';
-        echo '<div class="vms-help">' . esc_html__('Accepted: PDF, JPG, PNG, WEBP.', 'vms') . '</div>';
+        echo '<div class="vms-help">' . esc_html__('Accepted: PDF, JPG, PNG, WEBP.', 'backstage-venue-manager') . '</div>';
         echo '</p>';
     } else {
-        echo '<p class="description">' . esc_html__('Primary workflow is off-site. Uploading a file here is optional and is not the source of truth for this mode.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('Primary workflow is off-site. Uploading a file here is optional and is not the source of truth for this mode.', 'backstage-venue-manager') . '</p>';
         if ($attested_at > 0) {
-            echo '<p class="description">' . esc_html__('Portal confirmation recorded:', 'vms') . ' ' . esc_html(wp_date('M j, Y g:ia', $attested_at, wp_timezone())) . '</p>';
+            echo '<p class="description">' . esc_html__('Portal confirmation recorded:', 'backstage-venue-manager') . ' ' . esc_html(wp_date('M j, Y g:ia', $attested_at, wp_timezone())) . '</p>';
         }
         if ($done_at > 0) {
-            echo '<p class="description">' . esc_html__('Completion recorded:', 'vms') . ' ' . esc_html(wp_date('M j, Y g:ia', $done_at, wp_timezone())) . '</p>';
+            echo '<p class="description">' . esc_html__('Completion recorded:', 'backstage-venue-manager') . ' ' . esc_html(wp_date('M j, Y g:ia', $done_at, wp_timezone())) . '</p>';
         }
     }
 
     echo '<p class="description">' .
-        esc_html__('Save/Update the post to store changes.', 'vms') .
+        esc_html__('Save/Update the post to store changes.', 'backstage-venue-manager') .
         '</p>';
     echo '</div>';
 }

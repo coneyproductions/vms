@@ -42,13 +42,13 @@ if (!function_exists('vms_ticket_revenue_available_statuses')) {
         }
         if (empty($out)) {
             $out = array(
-                'pending' => __('Pending payment', 'vms'),
-                'processing' => __('Processing', 'vms'),
-                'completed' => __('Completed', 'vms'),
-                'on-hold' => __('On hold', 'vms'),
-                'cancelled' => __('Cancelled', 'vms'),
-                'refunded' => __('Refunded', 'vms'),
-                'failed' => __('Failed', 'vms'),
+                'pending' => __('Pending payment', 'backstage-venue-manager'),
+                'processing' => __('Processing', 'backstage-venue-manager'),
+                'completed' => __('Completed', 'backstage-venue-manager'),
+                'on-hold' => __('On hold', 'backstage-venue-manager'),
+                'cancelled' => __('Cancelled', 'backstage-venue-manager'),
+                'refunded' => __('Refunded', 'backstage-venue-manager'),
+                'failed' => __('Failed', 'backstage-venue-manager'),
             );
         }
         return $out;
@@ -934,7 +934,7 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
             ? VMS_Ticket_Revenue_Service::get_sales_result($resolver_args)
             : array(
                 'rows' => array(),
-                'warnings' => array(__('Ticket sales resolver is unavailable.', 'vms')),
+                'warnings' => array(__('Ticket sales resolver is unavailable.', 'backstage-venue-manager')),
                 'counts' => array(),
             );
 

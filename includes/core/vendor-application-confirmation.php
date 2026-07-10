@@ -21,9 +21,9 @@ if (!function_exists('vms_vendor_app_confirmation_states')) {
     function vms_vendor_app_confirmation_states(): array
     {
         return array(
-            'unconfirmed' => __('Awaiting Email Confirmation', 'vms'),
-            'confirmed' => __('Confirmed', 'vms'),
-            'expired' => __('Confirmation Expired', 'vms'),
+            'unconfirmed' => __('Awaiting Email Confirmation', 'backstage-venue-manager'),
+            'confirmed' => __('Confirmed', 'backstage-venue-manager'),
+            'expired' => __('Confirmation Expired', 'backstage-venue-manager'),
         );
     }
 }
@@ -33,7 +33,7 @@ if (!function_exists('vms_vendor_app_confirmation_state_label')) {
     {
         $all = vms_vendor_app_confirmation_states();
         $state = sanitize_key($state);
-        return (string) ($all[$state] ?? __('Confirmed', 'vms'));
+        return (string) ($all[$state] ?? __('Confirmed', 'backstage-venue-manager'));
     }
 }
 
@@ -463,12 +463,12 @@ if (!function_exists('vms_vendor_app_create_confirmation_token')) {
 
         $app_id = (int) $app_id;
         if ($app_id <= 0) {
-            return new WP_Error('vms_vendor_app_confirm_app_missing', __('Invalid application.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_app_missing', __('Invalid application.', 'backstage-venue-manager'));
         }
 
         $email = sanitize_email((string) ($args['email'] ?? vms_vendor_app_get_confirmation_email($app_id)));
         if ($email === '' || !is_email($email)) {
-            return new WP_Error('vms_vendor_app_confirm_email_invalid', __('A valid application email is required before sending confirmation.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_email_invalid', __('A valid application email is required before sending confirmation.', 'backstage-venue-manager'));
         }
 
         vms_vendor_app_invalidate_open_confirmation_tokens($app_id, (string) ($args['invalidate_reason'] ?? 'rotated'));
@@ -499,7 +499,7 @@ if (!function_exists('vms_vendor_app_create_confirmation_token')) {
         );
 
         if (!$inserted) {
-            return new WP_Error('vms_vendor_app_confirm_token_create_failed', __('The confirmation token could not be created.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_token_create_failed', __('The confirmation token could not be created.', 'backstage-venue-manager'));
         }
 
         return array(
@@ -639,12 +639,12 @@ if (!function_exists('vms_vendor_app_can_send_confirmation_email')) {
     {
         $app_id = (int) $app_id;
         if ($app_id <= 0) {
-            return new WP_Error('vms_vendor_app_confirm_invalid_app', __('Invalid application.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_invalid_app', __('Invalid application.', 'backstage-venue-manager'));
         }
 
         $state = vms_vendor_app_get_confirmation_state($app_id);
         if ($state === 'confirmed') {
-            return new WP_Error('vms_vendor_app_confirm_already_confirmed', __('This application is already confirmed and ready for review.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_already_confirmed', __('This application is already confirmed and ready for review.', 'backstage-venue-manager'));
         }
 
         $last_sent_key = vms_vendor_app_meta_key('confirmation_last_sent_at') ?: '_vms_app_confirmation_last_sent_at';
@@ -657,7 +657,7 @@ if (!function_exists('vms_vendor_app_can_send_confirmation_email')) {
         if ($last_sent_at !== '') {
             $last_sent_ts = vms_vendor_app_local_mysql_to_utc_timestamp($last_sent_at);
             if ($last_sent_ts !== false && ((time() - $last_sent_ts) < vms_vendor_app_confirmation_cooldown_seconds())) {
-                return new WP_Error('vms_vendor_app_confirm_cooldown', __('We recently sent a confirmation email. Please wait a few minutes before requesting another one.', 'vms'));
+                return new WP_Error('vms_vendor_app_confirm_cooldown', __('We recently sent a confirmation email. Please wait a few minutes before requesting another one.', 'backstage-venue-manager'));
             }
         }
 
@@ -665,11 +665,11 @@ if (!function_exists('vms_vendor_app_can_send_confirmation_email')) {
         $window_ts = vms_vendor_app_local_mysql_to_utc_timestamp($window_started_at);
         $send_count = absint(get_post_meta($app_id, $count_key, true));
         if ($window_ts !== false && ((time() - $window_ts) < DAY_IN_SECONDS) && $send_count >= vms_vendor_app_confirmation_daily_send_cap()) {
-            return new WP_Error('vms_vendor_app_confirm_daily_cap', __('We have already sent the maximum number of confirmation emails for this application today. Please try again later.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_daily_cap', __('We have already sent the maximum number of confirmation emails for this application today. Please try again later.', 'backstage-venue-manager'));
         }
 
         if (vms_vendor_app_confirmation_ip_rate_limited($app_id)) {
-            return new WP_Error('vms_vendor_app_confirm_ip_throttle', __('Too many confirmation email requests came from this connection. Please wait and try again later.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_ip_throttle', __('Too many confirmation email requests came from this connection. Please wait and try again later.', 'backstage-venue-manager'));
         }
 
         return true;
@@ -681,7 +681,7 @@ if (!function_exists('vms_vendor_app_send_confirmation_email')) {
     {
         $app_id = (int) $app_id;
         if ($app_id <= 0) {
-            return new WP_Error('vms_vendor_app_confirm_invalid_app', __('Invalid application.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_invalid_app', __('Invalid application.', 'backstage-venue-manager'));
         }
 
         $allowed = vms_vendor_app_can_send_confirmation_email($app_id);
@@ -706,29 +706,29 @@ if (!function_exists('vms_vendor_app_send_confirmation_email')) {
         $portal_url = function_exists('vms_vendor_app_get_portal_page_url')
             ? vms_vendor_app_get_portal_page_url()
             : home_url('/vendor-portal/');
-        $subject = __('Confirm your vendor application email', 'vms');
+        $subject = __('Confirm your vendor application email', 'backstage-venue-manager');
         if ($name !== '') {
-            $subject = sprintf(__('Confirm your vendor application for %s', 'vms'), $name);
+            $subject = sprintf(__('Confirm your vendor application for %s', 'backstage-venue-manager'), $name);
         }
 
         $body_lines = array(
-            __('Please confirm your email to submit your vendor application for review.', 'vms'),
+            __('Please confirm your email to submit your vendor application for review.', 'backstage-venue-manager'),
             '',
-            __('Your application will not be reviewed until this step is complete.', 'vms'),
-            __('Confirm your email here:', 'vms'),
+            __('Your application will not be reviewed until this step is complete.', 'backstage-venue-manager'),
+            __('Confirm your email here:', 'backstage-venue-manager'),
             (string) ($token['confirm_url'] ?? ''),
             '',
-            __('If you already have a website account with this email, we will attach the application to that account after confirmation.', 'vms'),
-            __('If you do not have a website account yet, we will prepare one for this email after confirmation and you can use the normal password reset flow later if needed.', 'vms'),
+            __('If you already have a website account with this email, we will attach the application to that account after confirmation.', 'backstage-venue-manager'),
+            __('If you do not have a website account yet, we will prepare one for this email after confirmation and you can use the normal password reset flow later if needed.', 'backstage-venue-manager'),
             '',
-            sprintf(__('Vendor Portal: %s', 'vms'), $portal_url),
-            __('Please also check your spam or junk folder if you do not see future updates.', 'vms'),
+            sprintf(__('Vendor Portal: %s', 'backstage-venue-manager'), $portal_url),
+            __('Please also check your spam or junk folder if you do not see future updates.', 'backstage-venue-manager'),
         );
 
         $sent = wp_mail($email, $subject, implode("\n", $body_lines));
         if (!$sent) {
             vms_vendor_app_invalidate_confirmation_token((int) ($token['token_id'] ?? 0), 'mail_failed');
-            return new WP_Error('vms_vendor_app_confirm_mail_failed', __('We saved the application, but the confirmation email could not be sent right now.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_mail_failed', __('We saved the application, but the confirmation email could not be sent right now.', 'backstage-venue-manager'));
         }
 
         vms_vendor_app_mark_confirmation_token_sent((int) ($token['token_id'] ?? 0));
@@ -863,7 +863,7 @@ if (!function_exists('vms_vendor_app_resolve_or_create_user_for_email')) {
     {
         $email = sanitize_email($email);
         if ($email === '' || !is_email($email)) {
-            return new WP_Error('vms_vendor_app_confirm_email_invalid', __('A valid email address is required.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_email_invalid', __('A valid email address is required.', 'backstage-venue-manager'));
         }
 
         $existing_user = get_user_by('email', $email);
@@ -880,7 +880,7 @@ if (!function_exists('vms_vendor_app_resolve_or_create_user_for_email')) {
 
         $user = get_user_by('id', (int) $created);
         if (!($user instanceof WP_User)) {
-            return new WP_Error('vms_vendor_app_confirm_user_missing', __('The website account could not be loaded after creation.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_user_missing', __('The website account could not be loaded after creation.', 'backstage-venue-manager'));
         }
 
         $display_name = trim((string) get_post_meta($app_id, vms_vendor_app_meta_key('contact_name') ?: '_vms_app_contact_name', true));
@@ -911,34 +911,34 @@ if (!function_exists('vms_vendor_app_send_review_ready_admin_notification')) {
         $email = vms_vendor_app_get_confirmation_email($app_id);
         $name = trim((string) get_the_title($app_id));
         if ($name === '') {
-            $name = sprintf(__('Application #%d', 'vms'), $app_id);
+            $name = sprintf(__('Application #%d', 'backstage-venue-manager'), $app_id);
         }
 
         $to = apply_filters('vms_vendor_app_notify_email', get_option('admin_email'));
-        $subject = sprintf(__('Vendor Application Ready for Review: %s', 'vms'), $name);
+        $subject = sprintf(__('Vendor Application Ready for Review: %s', 'backstage-venue-manager'), $name);
         $vendor_type = sanitize_key((string) get_post_meta($app_id, '_vms_app_vendor_type', true));
         $contact_name = trim((string) get_post_meta($app_id, vms_vendor_app_meta_key('contact_name') ?: '_vms_app_contact_name', true));
         $submitted_user_id = vms_vendor_app_get_submitting_user_id($app_id);
         $submitted_user = $submitted_user_id > 0 ? get_userdata($submitted_user_id) : null;
 
         $body_lines = array(
-            __('A vendor application is now ready for operator review.', 'vms'),
+            __('A vendor application is now ready for operator review.', 'backstage-venue-manager'),
             '',
-            sprintf(__('Name: %s', 'vms'), $name),
-            sprintf(__('Type: %s', 'vms'), vms_vendor_app_vendor_type_label($vendor_type)),
-            sprintf(__('Email: %s', 'vms'), $email),
-            sprintf(__('Confirmation State: %s', 'vms'), vms_vendor_app_confirmation_state_label(vms_vendor_app_get_confirmation_state($app_id))),
+            sprintf(__('Name: %s', 'backstage-venue-manager'), $name),
+            sprintf(__('Type: %s', 'backstage-venue-manager'), vms_vendor_app_vendor_type_label($vendor_type)),
+            sprintf(__('Email: %s', 'backstage-venue-manager'), $email),
+            sprintf(__('Confirmation State: %s', 'backstage-venue-manager'), vms_vendor_app_confirmation_state_label(vms_vendor_app_get_confirmation_state($app_id))),
         );
 
         if ($contact_name !== '') {
-            $body_lines[] = sprintf(__('Primary Contact: %s', 'vms'), $contact_name);
+            $body_lines[] = sprintf(__('Primary Contact: %s', 'backstage-venue-manager'), $contact_name);
         }
         if ($submitted_user instanceof WP_User) {
-            $body_lines[] = sprintf(__('Resolved Website User: %s (#%d)', 'vms'), $submitted_user->user_login, (int) $submitted_user->ID);
+            $body_lines[] = sprintf(__('Resolved Website User: %s (#%d)', 'backstage-venue-manager'), $submitted_user->user_login, (int) $submitted_user->ID);
         }
 
         $body_lines[] = '';
-        $body_lines[] = __('Admin link:', 'vms') . ' ' . admin_url('post.php?post=' . $app_id . '&action=edit');
+        $body_lines[] = __('Admin link:', 'backstage-venue-manager') . ' ' . admin_url('post.php?post=' . $app_id . '&action=edit');
 
         $sent = wp_mail($to, $subject, implode("\n", $body_lines));
         if (!$sent) {
@@ -1016,31 +1016,31 @@ if (!function_exists('vms_vendor_app_validate_confirmation_token')) {
     {
         $raw_token = trim($raw_token);
         if ($raw_token === '') {
-            return new WP_Error('vms_vendor_app_confirm_token_missing', __('The confirmation link is missing or incomplete.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_token_missing', __('The confirmation link is missing or incomplete.', 'backstage-venue-manager'));
         }
 
         $row = vms_vendor_app_get_confirmation_token_row_by_hash(vms_vendor_app_hash_confirmation_token($raw_token));
         if (!is_array($row)) {
-            return new WP_Error('vms_vendor_app_confirm_token_invalid', __('This confirmation link is invalid.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_token_invalid', __('This confirmation link is invalid.', 'backstage-venue-manager'));
         }
 
         $app_id = absint($row['application_id'] ?? 0);
         if ($app_id <= 0) {
-            $error = new WP_Error('vms_vendor_app_confirm_app_missing', __('This confirmation link is no longer valid.', 'vms'));
+            $error = new WP_Error('vms_vendor_app_confirm_app_missing', __('This confirmation link is no longer valid.', 'backstage-venue-manager'));
             $error->add_data(array('app_id' => 0));
             return $error;
         }
 
         $consumed_at = trim((string) ($row['consumed_at'] ?? ''));
         if ($consumed_at !== '' && $consumed_at !== '0000-00-00 00:00:00') {
-            $error = new WP_Error('vms_vendor_app_confirm_token_used', __('This confirmation link has already been used.', 'vms'));
+            $error = new WP_Error('vms_vendor_app_confirm_token_used', __('This confirmation link has already been used.', 'backstage-venue-manager'));
             $error->add_data(array('app_id' => $app_id));
             return $error;
         }
 
         $invalidated_at = trim((string) ($row['invalidated_at'] ?? ''));
         if ($invalidated_at !== '' && $invalidated_at !== '0000-00-00 00:00:00') {
-            $error = new WP_Error('vms_vendor_app_confirm_token_invalidated', __('This confirmation link is no longer active.', 'vms'));
+            $error = new WP_Error('vms_vendor_app_confirm_token_invalidated', __('This confirmation link is no longer active.', 'backstage-venue-manager'));
             $error->add_data(array(
                 'app_id' => $app_id,
                 'reason' => sanitize_key((string) ($row['invalidated_reason'] ?? '')),
@@ -1052,7 +1052,7 @@ if (!function_exists('vms_vendor_app_validate_confirmation_token')) {
         $expires_ts = $expires_at !== '' ? strtotime($expires_at . ' UTC') : false;
         if ($expires_ts === false || $expires_ts < time()) {
             update_post_meta($app_id, vms_vendor_app_meta_key('confirmation_state') ?: '_vms_app_confirmation_state', 'expired');
-            $error = new WP_Error('vms_vendor_app_confirm_token_expired', __('This confirmation link has expired.', 'vms'));
+            $error = new WP_Error('vms_vendor_app_confirm_token_expired', __('This confirmation link has expired.', 'backstage-venue-manager'));
             $error->add_data(array('app_id' => $app_id));
             return $error;
         }
@@ -1069,7 +1069,7 @@ if (!function_exists('vms_vendor_app_process_confirmation')) {
     function vms_vendor_app_process_confirmation(string $raw_token)
     {
         if (vms_vendor_app_confirmation_attempt_rate_limited($raw_token)) {
-            return new WP_Error('vms_vendor_app_confirm_rate_limited', __('Too many failed confirmation attempts came from this connection. Please wait a few minutes and try again.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_rate_limited', __('Too many failed confirmation attempts came from this connection. Please wait a few minutes and try again.', 'backstage-venue-manager'));
         }
 
         $validation = vms_vendor_app_validate_confirmation_token($raw_token);
@@ -1083,7 +1083,7 @@ if (!function_exists('vms_vendor_app_process_confirmation')) {
         $token_row = (array) ($validation['token_row'] ?? array());
         if ($app_id <= 0 || $email === '') {
             vms_vendor_app_note_confirmation_attempt_failure($raw_token);
-            return new WP_Error('vms_vendor_app_confirm_invalid_context', __('The confirmation link is no longer valid.', 'vms'));
+            return new WP_Error('vms_vendor_app_confirm_invalid_context', __('The confirmation link is no longer valid.', 'backstage-venue-manager'));
         }
 
         $had_existing_user = get_user_by('email', $email) instanceof WP_User;
@@ -1309,7 +1309,7 @@ if (!function_exists('vms_vendor_app_render_resend_confirmation_form')) {
             $return_url = vms_vendor_app_public_state_url('confirm_pending', $app_id);
         }
         $app_ref = vms_vendor_app_get_public_lookup_key($app_id);
-        $button_label = $button_label !== '' ? $button_label : __('Resend confirmation email', 'vms');
+        $button_label = $button_label !== '' ? $button_label : __('Resend confirmation email', 'backstage-venue-manager');
 
         ob_start();
         ?>
@@ -1330,7 +1330,7 @@ if (!function_exists('vms_vendor_apply_render_confirmation_pending_screen')) {
     {
         $app_id = (int) $app_id;
         if ($app_id <= 0) {
-            return vms_vendor_apply_render_notice('error', __('We could not find that application.', 'vms'), __('Please submit the form again if needed.', 'vms'));
+            return vms_vendor_apply_render_notice('error', __('We could not find that application.', 'backstage-venue-manager'), __('Please submit the form again if needed.', 'backstage-venue-manager'));
         }
 
         $notice_key = sanitize_key((string) ($args['notice'] ?? 'sent'));
@@ -1342,25 +1342,25 @@ if (!function_exists('vms_vendor_apply_render_confirmation_pending_screen')) {
             ? vms_vendor_app_get_application_page_url()
             : home_url('/vendor-application/');
 
-        $notice_headline = __('Check your email to continue.', 'vms');
-        $notice_body = __('We sent a confirmation link to the email address on the application.', 'vms');
+        $notice_headline = __('Check your email to continue.', 'backstage-venue-manager');
+        $notice_body = __('We sent a confirmation link to the email address on the application.', 'backstage-venue-manager');
         if ($notice_key === 'resent') {
-            $notice_body = __('We sent a new confirmation link to the email address on the application.', 'vms');
+            $notice_body = __('We sent a new confirmation link to the email address on the application.', 'backstage-venue-manager');
         } elseif ($notice_key === 'cooldown') {
-            $notice_headline = __('A confirmation email was sent recently.', 'vms');
-            $notice_body = __('Please wait a few minutes before requesting another confirmation email.', 'vms');
+            $notice_headline = __('A confirmation email was sent recently.', 'backstage-venue-manager');
+            $notice_body = __('Please wait a few minutes before requesting another confirmation email.', 'backstage-venue-manager');
         } elseif ($notice_key === 'daily_cap') {
-            $notice_headline = __('Confirmation email limit reached.', 'vms');
-            $notice_body = __('We have already sent the maximum number of confirmation emails for this application today. Please try again later.', 'vms');
+            $notice_headline = __('Confirmation email limit reached.', 'backstage-venue-manager');
+            $notice_body = __('We have already sent the maximum number of confirmation emails for this application today. Please try again later.', 'backstage-venue-manager');
         } elseif ($notice_key === 'ip_throttle') {
-            $notice_headline = __('Too many confirmation requests came from this connection.', 'vms');
-            $notice_body = __('Please wait and try again later.', 'vms');
+            $notice_headline = __('Too many confirmation requests came from this connection.', 'backstage-venue-manager');
+            $notice_body = __('Please wait and try again later.', 'backstage-venue-manager');
         } elseif ($notice_key === 'mail_failed') {
-            $notice_headline = __('We saved the application, but the confirmation email could not be sent.', 'vms');
-            $notice_body = __('Please try the resend button below, or contact us if the message still does not arrive.', 'vms');
+            $notice_headline = __('We saved the application, but the confirmation email could not be sent.', 'backstage-venue-manager');
+            $notice_body = __('Please try the resend button below, or contact us if the message still does not arrive.', 'backstage-venue-manager');
         } elseif ($notice_key === 'expired' || $state === 'expired') {
-            $notice_headline = __('That confirmation link has expired.', 'vms');
-            $notice_body = __('Please request a new confirmation email below so we can move your application into review.', 'vms');
+            $notice_headline = __('That confirmation link has expired.', 'backstage-venue-manager');
+            $notice_body = __('Please request a new confirmation email below so we can move your application into review.', 'backstage-venue-manager');
         }
 
         ob_start();
@@ -1372,18 +1372,18 @@ if (!function_exists('vms_vendor_apply_render_confirmation_pending_screen')) {
             </div>
 
             <div class="vms-vendor-apply-confirmation__card">
-                <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('One more step', 'vms'); ?></span>
-                <h2><?php echo esc_html__('Confirm your email to submit your vendor application for review', 'vms'); ?></h2>
-                <p><?php echo esc_html__('Your application will not be reviewed until you confirm the email address entered on the form.', 'vms'); ?></p>
+                <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('One more step', 'backstage-venue-manager'); ?></span>
+                <h2><?php echo esc_html__('Confirm your email to submit your vendor application for review', 'backstage-venue-manager'); ?></h2>
+                <p><?php echo esc_html__('Your application will not be reviewed until you confirm the email address entered on the form.', 'backstage-venue-manager'); ?></p>
                 <ol class="vms-vendor-apply-confirmation__steps">
-                    <li><?php echo esc_html__('Open the confirmation email and click the confirmation link.', 'vms'); ?></li>
-                    <li><?php echo esc_html__('Watch your spam or junk folder if the message does not show up right away.', 'vms'); ?></li>
-                    <li><?php echo esc_html__('After confirmation, the application moves into the real operator review queue. This does not mean approved.', 'vms'); ?></li>
+                    <li><?php echo esc_html__('Open the confirmation email and click the confirmation link.', 'backstage-venue-manager'); ?></li>
+                    <li><?php echo esc_html__('Watch your spam or junk folder if the message does not show up right away.', 'backstage-venue-manager'); ?></li>
+                    <li><?php echo esc_html__('After confirmation, the application moves into the real operator review queue. This does not mean approved.', 'backstage-venue-manager'); ?></li>
                 </ol>
                 <div class="vms-vendor-apply-confirmation__actions">
-                    <?php echo vms_vendor_app_render_resend_confirmation_form($app_id, vms_vendor_app_public_state_url('confirm_pending', $app_id), __('Resend confirmation email', 'vms')); ?>
-                    <a class="button" href="<?php echo esc_url($apply_url); ?>"><?php echo esc_html__('View Application Form', 'vms'); ?></a>
-                    <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'vms'); ?></a>
+                    <?php echo vms_vendor_app_render_resend_confirmation_form($app_id, vms_vendor_app_public_state_url('confirm_pending', $app_id), __('Resend confirmation email', 'backstage-venue-manager')); ?>
+                    <a class="button" href="<?php echo esc_url($apply_url); ?>"><?php echo esc_html__('View Application Form', 'backstage-venue-manager'); ?></a>
+                    <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'backstage-venue-manager'); ?></a>
                 </div>
             </div>
         </section>
@@ -1404,15 +1404,15 @@ if (!function_exists('vms_vendor_apply_render_existing_status_screen')) {
             ? vms_vendor_app_get_application_page_url()
             : home_url('/vendor-application/');
 
-        $headline = __('We already have your application.', 'vms');
-        $body = __('Please watch your email for updates.', 'vms');
+        $headline = __('We already have your application.', 'backstage-venue-manager');
+        $body = __('Please watch your email for updates.', 'backstage-venue-manager');
         if ($kind === 'pending') {
-            $body = __('We already have this vendor application and it is pending operator review.', 'vms');
+            $body = __('We already have this vendor application and it is pending operator review.', 'backstage-venue-manager');
         } elseif ($kind === 'holding') {
-            $body = __('We already have this vendor application on file. Please watch your email for any follow-up.', 'vms');
+            $body = __('We already have this vendor application on file. Please watch your email for any follow-up.', 'backstage-venue-manager');
         } elseif ($kind === 'approved') {
-            $headline = __('We already have an approved application for this business.', 'vms');
-            $body = __('If you already have Vendor Portal access, use the Vendor Portal. If your portal access is not connected yet, please reply to the most recent onboarding email or contact us for help.', 'vms');
+            $headline = __('We already have an approved application for this business.', 'backstage-venue-manager');
+            $body = __('If you already have Vendor Portal access, use the Vendor Portal. If your portal access is not connected yet, please reply to the most recent onboarding email or contact us for help.', 'backstage-venue-manager');
         }
 
         ob_start();
@@ -1423,12 +1423,12 @@ if (!function_exists('vms_vendor_apply_render_existing_status_screen')) {
                 <p><?php echo esc_html($body); ?></p>
             </div>
             <div class="vms-vendor-apply-confirmation__card">
-                <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('Current status', 'vms'); ?></span>
-                <h2><?php echo esc_html(vms_vendor_app_statuses()[vms_vendor_app_get_status($app_id)] ?? __('Application', 'vms')); ?></h2>
-                <p><?php echo esc_html__('Vendor tools live in the Vendor Portal. WooCommerce My Account can still show customer or ticket information and is not the vendor workflow screen.', 'vms'); ?></p>
+                <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('Current status', 'backstage-venue-manager'); ?></span>
+                <h2><?php echo esc_html(vms_vendor_app_statuses()[vms_vendor_app_get_status($app_id)] ?? __('Application', 'backstage-venue-manager')); ?></h2>
+                <p><?php echo esc_html__('Vendor tools live in the Vendor Portal. WooCommerce My Account can still show customer or ticket information and is not the vendor workflow screen.', 'backstage-venue-manager'); ?></p>
                 <div class="vms-vendor-apply-confirmation__actions">
-                    <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'vms'); ?></a>
-                    <a class="button button-secondary" href="<?php echo esc_url($apply_url); ?>"><?php echo esc_html__('Back to Application Form', 'vms'); ?></a>
+                    <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'backstage-venue-manager'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($apply_url); ?>"><?php echo esc_html__('Back to Application Form', 'backstage-venue-manager'); ?></a>
                 </div>
             </div>
         </section>
@@ -1455,23 +1455,23 @@ if (!function_exists('vms_vendor_app_render_portal_applicant_panel')) {
         echo '<div class="vms-portal-auth-wrap">';
         echo '<div class="vms-portal-auth-col vms-portal-auth-apply vms-vendor-applicant-state">';
         if ($state['kind'] === 'unconfirmed') {
-            echo '<span class="vms-portal-auth-eyebrow">' . esc_html__('Application awaiting confirmation', 'vms') . '</span>';
-            echo '<h2>' . esc_html__('Confirm your email before we can review your application', 'vms') . '</h2>';
-            echo '<p class="vms-portal-auth-copy">' . esc_html__('Your application is saved, but it does not enter the operator review queue until you confirm the email address used on the form.', 'vms') . '</p>';
-            echo '<p class="vms-portal-auth-hint">' . esc_html__('Please check your inbox, spam, and junk folders. If needed, request another confirmation email below.', 'vms') . '</p>';
+            echo '<span class="vms-portal-auth-eyebrow">' . esc_html__('Application awaiting confirmation', 'backstage-venue-manager') . '</span>';
+            echo '<h2>' . esc_html__('Confirm your email before we can review your application', 'backstage-venue-manager') . '</h2>';
+            echo '<p class="vms-portal-auth-copy">' . esc_html__('Your application is saved, but it does not enter the operator review queue until you confirm the email address used on the form.', 'backstage-venue-manager') . '</p>';
+            echo '<p class="vms-portal-auth-hint">' . esc_html__('Please check your inbox, spam, and junk folders. If needed, request another confirmation email below.', 'backstage-venue-manager') . '</p>';
             echo '<div class="vms-vendor-apply-confirmation__actions">';
-            echo vms_vendor_app_render_resend_confirmation_form($app_id, $return_url, __('Resend confirmation email', 'vms'));
-            echo '<a class="button" href="' . esc_url($portal_url) . '">' . esc_html__('Vendor Portal Home', 'vms') . '</a>';
+            echo vms_vendor_app_render_resend_confirmation_form($app_id, $return_url, __('Resend confirmation email', 'backstage-venue-manager'));
+            echo '<a class="button" href="' . esc_url($portal_url) . '">' . esc_html__('Vendor Portal Home', 'backstage-venue-manager') . '</a>';
             echo '</div>';
         } elseif ($state['kind'] === 'pending_review') {
-            echo '<span class="vms-portal-auth-eyebrow">' . esc_html__('Application in review', 'vms') . '</span>';
-            echo '<h2>' . esc_html__('Application pending review', 'vms') . '</h2>';
-            echo '<p class="vms-portal-auth-copy">' . esc_html__('Your email is confirmed and the application is now in the operator review queue. This does not mean approved yet.', 'vms') . '</p>';
-            echo '<p class="vms-portal-auth-hint">' . esc_html__('Please watch your email for the review outcome and next-step instructions.', 'vms') . '</p>';
+            echo '<span class="vms-portal-auth-eyebrow">' . esc_html__('Application in review', 'backstage-venue-manager') . '</span>';
+            echo '<h2>' . esc_html__('Application pending review', 'backstage-venue-manager') . '</h2>';
+            echo '<p class="vms-portal-auth-copy">' . esc_html__('Your email is confirmed and the application is now in the operator review queue. This does not mean approved yet.', 'backstage-venue-manager') . '</p>';
+            echo '<p class="vms-portal-auth-hint">' . esc_html__('Please watch your email for the review outcome and next-step instructions.', 'backstage-venue-manager') . '</p>';
         } elseif ($state['kind'] === 'holding') {
-            echo '<span class="vms-portal-auth-eyebrow">' . esc_html__('Application on file', 'vms') . '</span>';
-            echo '<h2>' . esc_html__('Application currently on file', 'vms') . '</h2>';
-            echo '<p class="vms-portal-auth-copy">' . esc_html__('We still have your application on file. Please watch your email for any future follow-up from the venue.', 'vms') . '</p>';
+            echo '<span class="vms-portal-auth-eyebrow">' . esc_html__('Application on file', 'backstage-venue-manager') . '</span>';
+            echo '<h2>' . esc_html__('Application currently on file', 'backstage-venue-manager') . '</h2>';
+            echo '<p class="vms-portal-auth-copy">' . esc_html__('We still have your application on file. Please watch your email for any future follow-up from the venue.', 'backstage-venue-manager') . '</p>';
         }
         echo '</div>';
         echo '</div>';
@@ -1491,15 +1491,15 @@ if (!function_exists('vms_vendor_app_redirect_after_resend')) {
             $user_id = get_current_user_id();
             if ($user_id > 0) {
                 $default_messages = array(
-                    'resent' => __('We sent a new confirmation email. Please check your inbox, spam, or junk folders.', 'vms'),
-                    'cooldown' => __('A confirmation email was sent recently. Please wait a few minutes before trying again.', 'vms'),
-                    'daily_cap' => __('We already sent the maximum number of confirmation emails for this application today. Please try again later.', 'vms'),
-                    'ip_throttle' => __('Too many confirmation requests came from this connection. Please wait and try again later.', 'vms'),
-                    'mail_failed' => __('We could not send the confirmation email right now. Please try again later.', 'vms'),
-                    'already_confirmed' => __('This application is already confirmed and ready for review.', 'vms'),
+                    'resent' => __('We sent a new confirmation email. Please check your inbox, spam, or junk folders.', 'backstage-venue-manager'),
+                    'cooldown' => __('A confirmation email was sent recently. Please wait a few minutes before trying again.', 'backstage-venue-manager'),
+                    'daily_cap' => __('We already sent the maximum number of confirmation emails for this application today. Please try again later.', 'backstage-venue-manager'),
+                    'ip_throttle' => __('Too many confirmation requests came from this connection. Please wait and try again later.', 'backstage-venue-manager'),
+                    'mail_failed' => __('We could not send the confirmation email right now. Please try again later.', 'backstage-venue-manager'),
+                    'already_confirmed' => __('This application is already confirmed and ready for review.', 'backstage-venue-manager'),
                 );
                 if ($message === '') {
-                    $message = (string) ($default_messages[$notice_key] ?? __('Confirmation email status updated.', 'vms'));
+                    $message = (string) ($default_messages[$notice_key] ?? __('Confirmation email status updated.', 'backstage-venue-manager'));
                 }
                 vms_vendor_portal_set_flash($user_id, array('type' => $type, 'message' => $message));
                 wp_safe_redirect($return_url);
@@ -1525,7 +1525,7 @@ if (!function_exists('vms_vendor_app_handle_resend_confirmation')) {
         $return_url = isset($_REQUEST['return_url']) ? esc_url_raw((string) wp_unslash($_REQUEST['return_url'])) : '';
 
         if ($app_ref === '' || !$nonce || !wp_verify_nonce($nonce, 'vms_vendor_app_resend_confirmation_' . $app_ref)) {
-            wp_die(esc_html__('Security check failed.', 'vms'));
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
         $app_id = vms_vendor_app_find_application_by_public_lookup_key($app_ref);
@@ -1616,11 +1616,11 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
         }
 
         $token = isset($_GET['token']) ? sanitize_text_field((string) wp_unslash($_GET['token'])) : '';
-        $title = __('Vendor Application Confirmation', 'vms');
+        $title = __('Vendor Application Confirmation', 'backstage-venue-manager');
         $content = '';
 
         if ($token === '') {
-            $content = vms_vendor_apply_render_notice('error', __('This confirmation link is incomplete.', 'vms'), __('Please use the latest confirmation email or request another confirmation link from the application screen.', 'vms'));
+            $content = vms_vendor_apply_render_notice('error', __('This confirmation link is incomplete.', 'backstage-venue-manager'), __('Please use the latest confirmation email or request another confirmation link from the application screen.', 'backstage-venue-manager'));
             vms_vendor_app_render_confirmation_shell($title, $content);
         }
 
@@ -1639,16 +1639,16 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
                 ?>
                 <section class="vms-vendor-apply-confirmation">
                     <div class="vms-vendor-apply-confirmation__notice vms-notice vms-notice-success">
-                        <p><strong><?php echo esc_html__('That email is already confirmed.', 'vms'); ?></strong></p>
-                        <p><?php echo esc_html__('Your application has already passed the email confirmation step. This does not mean approved yet.', 'vms'); ?></p>
+                        <p><strong><?php echo esc_html__('That email is already confirmed.', 'backstage-venue-manager'); ?></strong></p>
+                        <p><?php echo esc_html__('Your application has already passed the email confirmation step. This does not mean approved yet.', 'backstage-venue-manager'); ?></p>
                     </div>
                     <div class="vms-vendor-apply-confirmation__card">
-                        <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('Next steps', 'vms'); ?></span>
-                        <h2><?php echo esc_html__('Application already confirmed', 'vms'); ?></h2>
-                        <p><?php echo esc_html__('You can sign in to the Vendor Portal to check for pending-review messaging, or use the normal password reset flow if needed.', 'vms'); ?></p>
+                        <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('Next steps', 'backstage-venue-manager'); ?></span>
+                        <h2><?php echo esc_html__('Application already confirmed', 'backstage-venue-manager'); ?></h2>
+                        <p><?php echo esc_html__('You can sign in to the Vendor Portal to check for pending-review messaging, or use the normal password reset flow if needed.', 'backstage-venue-manager'); ?></p>
                         <div class="vms-vendor-apply-confirmation__actions">
-                            <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'vms'); ?></a>
-                            <a class="button button-secondary" href="<?php echo esc_url($reset_url); ?>"><?php echo esc_html__('Reset Password', 'vms'); ?></a>
+                            <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'backstage-venue-manager'); ?></a>
+                            <a class="button button-secondary" href="<?php echo esc_url($reset_url); ?>"><?php echo esc_html__('Reset Password', 'backstage-venue-manager'); ?></a>
                         </div>
                     </div>
                 </section>
@@ -1657,7 +1657,7 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
             } elseif ($code === 'vms_vendor_app_confirm_token_invalidated' && $app_id > 0) {
                 $content = vms_vendor_apply_render_confirmation_pending_screen($app_id, array('notice' => 'expired'));
             } else {
-                $content = vms_vendor_apply_render_notice('error', __('This confirmation link is not valid.', 'vms'), $result->get_error_message());
+                $content = vms_vendor_apply_render_notice('error', __('This confirmation link is not valid.', 'backstage-venue-manager'), $result->get_error_message());
             }
 
             vms_vendor_app_render_confirmation_shell($title, $content);
@@ -1673,25 +1673,25 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
         ?>
         <section class="vms-vendor-apply-confirmation">
             <div class="vms-vendor-apply-confirmation__notice vms-notice vms-notice-success">
-                <p><strong><?php echo esc_html__('Email confirmed. Your application is now ready for review.', 'vms'); ?></strong></p>
-                <p><?php echo esc_html__('This confirms the email step only. It does not mean approved yet.', 'vms'); ?></p>
+                <p><strong><?php echo esc_html__('Email confirmed. Your application is now ready for review.', 'backstage-venue-manager'); ?></strong></p>
+                <p><?php echo esc_html__('This confirms the email step only. It does not mean approved yet.', 'backstage-venue-manager'); ?></p>
             </div>
 
             <div class="vms-vendor-apply-confirmation__card">
-                <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('Review queue', 'vms'); ?></span>
-                <h2><?php echo esc_html__('Application ready for review', 'vms'); ?></h2>
-                <p><?php echo esc_html__('The application is now in the operator review queue. Please watch your email, including spam or junk folders, for the review outcome and next-step instructions.', 'vms'); ?></p>
+                <span class="vms-vendor-apply-confirmation__kicker"><?php echo esc_html__('Review queue', 'backstage-venue-manager'); ?></span>
+                <h2><?php echo esc_html__('Application ready for review', 'backstage-venue-manager'); ?></h2>
+                <p><?php echo esc_html__('The application is now in the operator review queue. Please watch your email, including spam or junk folders, for the review outcome and next-step instructions.', 'backstage-venue-manager'); ?></p>
                 <ol class="vms-vendor-apply-confirmation__steps">
                     <?php if ($had_existing_user) : ?>
-                        <li><?php echo esc_html__('Use your existing website account for this email if you want to sign in to the Vendor Portal while the application is under review.', 'vms'); ?></li>
+                        <li><?php echo esc_html__('Use your existing website account for this email if you want to sign in to the Vendor Portal while the application is under review.', 'backstage-venue-manager'); ?></li>
                     <?php else : ?>
-                        <li><?php echo esc_html__('A website account was prepared for this email. Use the normal password reset flow below the first time you want to sign in to the Vendor Portal.', 'vms'); ?></li>
+                        <li><?php echo esc_html__('A website account was prepared for this email. Use the normal password reset flow below the first time you want to sign in to the Vendor Portal.', 'backstage-venue-manager'); ?></li>
                     <?php endif; ?>
-                    <li><?php echo esc_html__('Vendor tools live in the Vendor Portal after approval. WooCommerce My Account can still show customer or ticket information.', 'vms'); ?></li>
+                    <li><?php echo esc_html__('Vendor tools live in the Vendor Portal after approval. WooCommerce My Account can still show customer or ticket information.', 'backstage-venue-manager'); ?></li>
                 </ol>
                 <div class="vms-vendor-apply-confirmation__actions">
-                    <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'vms'); ?></a>
-                    <a class="button button-secondary" href="<?php echo esc_url($reset_url); ?>"><?php echo esc_html__('Reset Password', 'vms'); ?></a>
+                    <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'backstage-venue-manager'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($reset_url); ?>"><?php echo esc_html__('Reset Password', 'backstage-venue-manager'); ?></a>
                 </div>
             </div>
         </section>

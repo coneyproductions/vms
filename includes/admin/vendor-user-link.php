@@ -85,7 +85,7 @@ function vms_vendor_user_links_metabox_render($post): void
 	if (current_user_can('manage_options') && function_exists('vms_vendor_portal_admin_preview_url')) {
 		$preview_url = (string) vms_vendor_portal_admin_preview_url($vendor_id);
 		if ($preview_url !== '') {
-			echo '<p><a class="button button-secondary button-small" href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' . esc_html__('Preview Vendor Portal', 'vms') . '</a></p>';
+			echo '<p><a class="button button-secondary button-small" href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' . esc_html__('Preview Vendor Portal', 'backstage-venue-manager') . '</a></p>';
 		}
 	}
 
@@ -372,7 +372,7 @@ add_filter('post_row_actions', function (array $actions, WP_Post $post): array {
 
 	$actions['vms_vendor_portal_preview'] =
 		'<a href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' .
-		esc_html__('Preview Portal', 'vms') .
+		esc_html__('Preview Portal', 'backstage-venue-manager') .
 		'</a>';
 
 	return $actions;

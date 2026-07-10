@@ -13,8 +13,8 @@ if (!function_exists('vms_status_notice_register_cpt')) {
 	{
 		register_post_type(vms_status_notice_post_type(), array(
 			'labels' => array(
-				'name' => __('Status Notices', 'vms'),
-				'singular_name' => __('Status Notice', 'vms'),
+				'name' => __('Status Notices', 'backstage-venue-manager'),
+				'singular_name' => __('Status Notice', 'backstage-venue-manager'),
 			),
 			'public' => false,
 			'show_ui' => false,

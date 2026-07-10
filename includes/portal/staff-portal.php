@@ -79,13 +79,13 @@ if (!function_exists('vms_staff_portal_tax_status')) {
 
         if ($done_at > 0) {
             $stage = 'complete';
-            $label = __('Complete', 'vms');
+            $label = __('Complete', 'backstage-venue-manager');
         } elseif ($effective_provider !== 'upload' && $attested_at > 0) {
             $stage = 'submitted';
-            $label = __('Submitted', 'vms');
+            $label = __('Submitted', 'backstage-venue-manager');
         } else {
             $stage = 'incomplete';
-            $label = __('Incomplete', 'vms');
+            $label = __('Incomplete', 'backstage-venue-manager');
         }
 
         return array(
@@ -110,12 +110,12 @@ if (!function_exists('vms_staff_portal_badge_html')) {
     {
         $stage = sanitize_key($stage);
         if ($stage === 'complete') {
-            return '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>';
+            return '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';
         }
         if ($stage === 'submitted') {
-            return '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'vms') . '</span>';
+            return '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'backstage-venue-manager') . '</span>';
         }
-        return '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>';
+        return '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>';
     }
 }
 
@@ -202,16 +202,16 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             return '';
         }
         if (empty($_POST['vms_staff_certification_nonce']) || !wp_verify_nonce((string) wp_unslash($_POST['vms_staff_certification_nonce']), 'vms_staff_certification_submit')) {
-            return vms_staff_portal_notice_html('error', __('Could not verify the certification upload. Please refresh and try again.', 'vms'));
+            return vms_staff_portal_notice_html('error', __('Could not verify the certification upload. Please refresh and try again.', 'backstage-venue-manager'));
         }
 
         $name = isset($_POST['vms_certification_name']) ? vms_staffing_normalize_qualification_name((string) wp_unslash($_POST['vms_certification_name'])) : '';
         if ($name === '') {
-            return vms_staff_portal_notice_html('error', __('Please choose or enter the certification type before uploading.', 'vms'));
+            return vms_staff_portal_notice_html('error', __('Please choose or enter the certification type before uploading.', 'backstage-venue-manager'));
         }
 
         if (empty($_FILES['vms_staff_certification_file']['name'])) {
-            return vms_staff_portal_notice_html('error', __('Please choose a certificate file to upload.', 'vms'));
+            return vms_staff_portal_notice_html('error', __('Please choose a certificate file to upload.', 'backstage-venue-manager'));
         }
 
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -221,7 +221,7 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
         $attachment_id = media_handle_upload('vms_staff_certification_file', $staff_id);
         if (is_wp_error($attachment_id)) {
             /* translators: %s: upload error message from WordPress media handling. */
-            return vms_staff_portal_notice_html('error', sprintf(__('Upload failed: %s', 'vms'), $attachment_id->get_error_message()));
+            return vms_staff_portal_notice_html('error', sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $attachment_id->get_error_message()));
         }
 
         $authority = isset($_POST['vms_certification_authority']) ? sanitize_text_field((string) wp_unslash($_POST['vms_certification_authority'])) : '';
@@ -241,13 +241,13 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
 
         $result = function_exists('vms_staffing_add_staff_qualification_submission')
             ? vms_staffing_add_staff_qualification_submission($staff_id, $row, get_current_user_id())
-            : array('ok' => false, 'message' => __('Certification upload saved, but the qualification workflow is unavailable.', 'vms'));
+            : array('ok' => false, 'message' => __('Certification upload saved, but the qualification workflow is unavailable.', 'backstage-venue-manager'));
 
         if (empty($result['ok'])) {
-            return vms_staff_portal_notice_html('error', (string) ($result['message'] ?? __('Could not save the certification submission.', 'vms')));
+            return vms_staff_portal_notice_html('error', (string) ($result['message'] ?? __('Could not save the certification submission.', 'backstage-venue-manager')));
         }
 
-        return vms_staff_portal_notice_html('success', __('Certificate uploaded. It is pending review, and you will receive an email when it is approved or if it needs correction.', 'vms'));
+        return vms_staff_portal_notice_html('success', __('Certificate uploaded. It is pending review, and you will receive an email when it is approved or if it needs correction.', 'backstage-venue-manager'));
     }
 }
 
@@ -257,7 +257,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
     {
         $staff_id = absint($staff_id);
         if ($staff_id <= 0) {
-            echo '<p>' . esc_html__('Staff profile not found.', 'vms') . '</p>';
+            echo '<p>' . esc_html__('Staff profile not found.', 'backstage-venue-manager') . '</p>';
             return;
         }
 
@@ -272,12 +272,12 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
         $suggestions = is_array($suggestions) ? array_values(array_filter(array_map('sanitize_text_field', $suggestions))) : array();
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Upload a Certification', 'vms') . '</h3>';
-        echo '<p class="vms-muted">' . esc_html__('Upload proof of a certification, license, or permit. New uploads stay Pending Review until an admin approves them.', 'vms') . '</p>';
+        echo '<h3>' . esc_html__('Upload a Certification', 'backstage-venue-manager') . '</h3>';
+        echo '<p class="vms-muted">' . esc_html__('Upload proof of a certification, license, or permit. New uploads stay Pending Review until an admin approves them.', 'backstage-venue-manager') . '</p>';
         echo '<form method="post" enctype="multipart/form-data" class="vms-staff-certification-form">';
         wp_nonce_field('vms_staff_certification_submit', 'vms_staff_certification_nonce');
         echo '<div class="vms-portal-grid vms-staff-certification-grid">';
-        echo '<label class="vms-field"><span>' . esc_html__('Certification type', 'vms') . '</span><input type="text" name="vms_certification_name" list="vms-staff-certification-types" value="" placeholder="' . esc_attr__('Example: TABC', 'vms') . '"></label>';
+        echo '<label class="vms-field"><span>' . esc_html__('Certification type', 'backstage-venue-manager') . '</span><input type="text" name="vms_certification_name" list="vms-staff-certification-types" value="" placeholder="' . esc_attr__('Example: TABC', 'backstage-venue-manager') . '"></label>';
         if (!empty($suggestions)) {
             echo '<datalist id="vms-staff-certification-types">';
             foreach ($suggestions as $suggestion) {
@@ -288,20 +288,20 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             }
             echo '</datalist>';
         }
-        echo '<label class="vms-field"><span>' . esc_html__('Issuing organization', 'vms') . '</span><input type="text" name="vms_certification_authority" value="" placeholder="' . esc_attr__('Optional', 'vms') . '"></label>';
-        echo '<label class="vms-field"><span>' . esc_html__('Credential #', 'vms') . '</span><input type="text" name="vms_certification_number" value="" placeholder="' . esc_attr__('Optional', 'vms') . '"></label>';
-        echo '<label class="vms-field"><span>' . esc_html__('Issue date', 'vms') . '</span><input type="date" name="vms_certification_issue_date" value=""></label>';
-        echo '<label class="vms-field"><span>' . esc_html__('Expiration date', 'vms') . '</span><input type="date" name="vms_certification_expiration_date" value=""></label>';
-        echo '<label class="vms-field vms-staff-certification-file"><span>' . esc_html__('Certificate file', 'vms') . '</span><input type="file" name="vms_staff_certification_file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif"></label>';
+        echo '<label class="vms-field"><span>' . esc_html__('Issuing organization', 'backstage-venue-manager') . '</span><input type="text" name="vms_certification_authority" value="" placeholder="' . esc_attr__('Optional', 'backstage-venue-manager') . '"></label>';
+        echo '<label class="vms-field"><span>' . esc_html__('Credential #', 'backstage-venue-manager') . '</span><input type="text" name="vms_certification_number" value="" placeholder="' . esc_attr__('Optional', 'backstage-venue-manager') . '"></label>';
+        echo '<label class="vms-field"><span>' . esc_html__('Issue date', 'backstage-venue-manager') . '</span><input type="date" name="vms_certification_issue_date" value=""></label>';
+        echo '<label class="vms-field"><span>' . esc_html__('Expiration date', 'backstage-venue-manager') . '</span><input type="date" name="vms_certification_expiration_date" value=""></label>';
+        echo '<label class="vms-field vms-staff-certification-file"><span>' . esc_html__('Certificate file', 'backstage-venue-manager') . '</span><input type="file" name="vms_staff_certification_file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif"></label>';
         echo '</div>';
-        echo '<p><button type="submit" class="button" name="vms_staff_certification_submit" value="1">' . esc_html__('Upload for Review', 'vms') . '</button></p>';
+        echo '<p><button type="submit" class="button" name="vms_staff_certification_submit" value="1">' . esc_html__('Upload for Review', 'backstage-venue-manager') . '</button></p>';
         echo '</form>';
         echo '</div>';
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('My Certifications', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('My Certifications', 'backstage-venue-manager') . '</h3>';
         if (empty($rows)) {
-            echo '<p class="vms-muted">' . esc_html__('No certifications have been uploaded yet.', 'vms') . '</p>';
+            echo '<p class="vms-muted">' . esc_html__('No certifications have been uploaded yet.', 'backstage-venue-manager') . '</p>';
             echo '</div>';
             return;
         }
@@ -311,7 +311,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             if (!is_array($row)) {
                 continue;
             }
-            $name = isset($row['name']) ? (string) $row['name'] : __('Certification', 'vms');
+            $name = isset($row['name']) ? (string) $row['name'] : __('Certification', 'backstage-venue-manager');
             $status = isset($row['effective_status']) ? sanitize_key((string) $row['effective_status']) : sanitize_key((string) ($row['status'] ?? 'inactive'));
             $authority = !empty($row['authority']) ? (string) $row['authority'] : '';
             $credential_number = !empty($row['credential_number']) ? (string) $row['credential_number'] : '';
@@ -329,36 +329,36 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             $details = array();
             if ($authority !== '') {
                 /* translators: %s: certification issuing organization. */
-                $details[] = sprintf(__('Issued by %s', 'vms'), $authority);
+                $details[] = sprintf(__('Issued by %s', 'backstage-venue-manager'), $authority);
             }
             if ($credential_number !== '') {
                 /* translators: %s: certification or license number. */
-                $details[] = sprintf(__('Credential #%s', 'vms'), $credential_number);
+                $details[] = sprintf(__('Credential #%s', 'backstage-venue-manager'), $credential_number);
             }
             if ($issue_date !== '') {
                 /* translators: %s: certification issue date. */
-                $details[] = sprintf(__('Issued %s', 'vms'), $issue_date);
+                $details[] = sprintf(__('Issued %s', 'backstage-venue-manager'), $issue_date);
             }
             if ($expiration_date !== '') {
                 /* translators: %s: certification expiration date. */
-                $details[] = sprintf(__('Expires %s', 'vms'), $expiration_date);
+                $details[] = sprintf(__('Expires %s', 'backstage-venue-manager'), $expiration_date);
             }
             if ($submitted_at > 0) {
                 /* translators: %s: localized certification submission timestamp. */
-                $details[] = sprintf(__('Submitted %s', 'vms'), vms_staff_portal_format_ts($submitted_at));
+                $details[] = sprintf(__('Submitted %s', 'backstage-venue-manager'), vms_staff_portal_format_ts($submitted_at));
             }
             if ($reviewed_at > 0) {
                 /* translators: %s: localized certification review timestamp. */
-                $details[] = sprintf(__('Reviewed %s', 'vms'), vms_staff_portal_format_ts($reviewed_at));
+                $details[] = sprintf(__('Reviewed %s', 'backstage-venue-manager'), vms_staff_portal_format_ts($reviewed_at));
             }
-            echo esc_html(!empty($details) ? implode(' · ', $details) : __('Details pending review.', 'vms'));
+            echo esc_html(!empty($details) ? implode(' · ', $details) : __('Details pending review.', 'backstage-venue-manager'));
             echo '</p>';
             if ($notes !== '' && in_array($status, array('rejected', 'inactive'), true)) {
-                echo '<p class="vms-muted"><strong>' . esc_html__('Review note:', 'vms') . '</strong> ' . esc_html($notes) . '</p>';
+                echo '<p class="vms-muted"><strong>' . esc_html__('Review note:', 'backstage-venue-manager') . '</strong> ' . esc_html($notes) . '</p>';
             }
             echo '</div>';
             if ($proof_url !== '') {
-                echo '<div class="vms-staff-certification-actions"><a class="button" href="' . esc_url($proof_url) . '" target="_blank" rel="noopener">' . esc_html__('View File', 'vms') . '</a></div>';
+                echo '<div class="vms-staff-certification-actions"><a class="button" href="' . esc_url($proof_url) . '" target="_blank" rel="noopener">' . esc_html__('View File', 'backstage-venue-manager') . '</a></div>';
             }
             echo '</div>';
         }
@@ -371,9 +371,9 @@ if (!function_exists('vms_staff_portal_assignment_status_label')) {
     function vms_staff_portal_assignment_status_label(string $status): string
     {
         $status = sanitize_key($status);
-        if ($status === 'confirmed') return __('Confirmed', 'vms');
-        if ($status === 'proposed') return __('Proposed', 'vms');
-        return __('Scheduled', 'vms');
+        if ($status === 'confirmed') return __('Confirmed', 'backstage-venue-manager');
+        if ($status === 'proposed') return __('Proposed', 'backstage-venue-manager');
+        return __('Scheduled', 'backstage-venue-manager');
     }
 }
 
@@ -462,7 +462,7 @@ if (!function_exists('vms_staff_portal_assignment_event_payload')) {
 
         $title = trim((string) ($event['title'] ?? ($assignment['event_title'] ?? '')));
         if ($title === '') {
-            $title = __('Event Plan', 'vms');
+            $title = __('Event Plan', 'backstage-venue-manager');
         }
 
         $date_label = trim((string) ($assignment['date_label'] ?? ''));
@@ -670,17 +670,17 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
         foreach ($vendor_ids as $vendor_id) {
             $vendor_name = trim((string) get_the_title($vendor_id));
             if ($vendor_name === '') {
-                $vendor_name = __('Vendor', 'vms');
+                $vendor_name = __('Vendor', 'backstage-venue-manager');
             }
 
             $pairs = array(
                 'stage_plot' => array(
                     'attachment_id' => absint(get_post_meta($vendor_id, '_vms_stage_plot_attachment_id', true)),
-                    'label' => __('Stage plot', 'vms'),
+                    'label' => __('Stage plot', 'backstage-venue-manager'),
                 ),
                 'input_list' => array(
                     'attachment_id' => absint(get_post_meta($vendor_id, '_vms_input_list_attachment_id', true)),
-                    'label' => __('Input list', 'vms'),
+                    'label' => __('Input list', 'backstage-venue-manager'),
                 ),
             );
 
@@ -699,7 +699,7 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
                     'vendor_id' => $vendor_id,
                     'vendor_name' => $vendor_name,
                     'doc_key' => $doc_key,
-                    'label' => (string) ($doc['label'] ?? __('Document', 'vms')),
+                    'label' => (string) ($doc['label'] ?? __('Document', 'backstage-venue-manager')),
                     'url' => (string) $url,
                 );
             }
@@ -771,7 +771,7 @@ if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
             $name = trim((string) get_the_title($staff_id));
             if ($name === '') {
                 /* translators: %d: staff post ID. */
-                $name = sprintf(__('Staff #%d', 'vms'), $staff_id);
+                $name = sprintf(__('Staff #%d', 'backstage-venue-manager'), $staff_id);
             }
 
             $role_id = absint($row['role_id'] ?? 0);
@@ -780,7 +780,7 @@ if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
                 $role_label = (string) $role_map[$role_id]['name'];
             }
             if ($role_label === '') {
-                $role_label = __('Shift', 'vms');
+                $role_label = __('Shift', 'backstage-venue-manager');
             }
 
             $start_ts = isset($row['shift_start_ts']) && $row['shift_start_ts'] !== null ? (int) $row['shift_start_ts'] : 0;
@@ -959,7 +959,7 @@ if (!function_exists('vms_staff_portal_group_assignments_by_event')) {
                     $line = $line !== '' ? ($line . ' · ' . $shift_label) : $shift_label;
                 }
                 if ($line === '') {
-                    $line = __('Shift', 'vms');
+                    $line = __('Shift', 'backstage-venue-manager');
                 }
                 if (!in_array($line, $lines, true)) {
                     $lines[] = $line;
@@ -1007,7 +1007,7 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
         }
 
         echo '<div class="vms-staff-shift-section">';
-        echo '<h3>' . esc_html__('Assigned Events', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Assigned Events', 'backstage-venue-manager') . '</h3>';
         echo '<div class="vms-staff-shift-cards">';
 
         foreach ($event_groups as $group) {
@@ -1030,7 +1030,7 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
 
             $title = trim((string) ($group['event_title'] ?? ($event['title'] ?? '')));
             if ($title === '') {
-                $title = __('Event Plan', 'vms');
+                $title = __('Event Plan', 'backstage-venue-manager');
             }
 
             $date_label = trim((string) ($group['date_label'] ?? ($event['date_label'] ?? '')));
@@ -1038,10 +1038,10 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
             $venue_name = trim((string) ($event['venue_name'] ?? ''));
             $image_url = trim((string) ($event['image_url'] ?? ''));
             $ticket_summary = ($ticket_qty === null)
-                ? __('Tickets sold: —', 'vms')
+                ? __('Tickets sold: —', 'backstage-venue-manager')
                 : sprintf(
                     /* translators: %d: total tickets sold for the event. */
-                    __('Tickets sold: %d', 'vms'),
+                    __('Tickets sold: %d', 'backstage-venue-manager'),
                     (int) $ticket_qty
                 );
             $event_status = sanitize_key((string) ($group['event_status'] ?? ($primary_assignment['event_status'] ?? '')));
@@ -1069,15 +1069,15 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
             echo '<div class="vms-staff-shift-meta vms-staff-shift-meta--tickets">' . esc_html($ticket_summary) . '</div>';
             echo '</div>';
 
-            echo '<span class="vms-staff-shift-expand">' . esc_html__('Details', 'vms') . '</span>';
+            echo '<span class="vms-staff-shift-expand">' . esc_html__('Details', 'backstage-venue-manager') . '</span>';
             echo '</summary>';
 
             echo '<div class="vms-staff-shift-body">';
             echo '<div class="vms-staff-shift-kpis">';
-            echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Tickets sold', 'vms') . '</b><span>' . esc_html($ticket_qty === null ? '—' : (string) (int) $ticket_qty) . '</span></div>';
-            echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Staff assigned', 'vms') . '</b><span>' . esc_html((string) count($staff_rows)) . '</span></div>';
+            echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Tickets sold', 'backstage-venue-manager') . '</b><span>' . esc_html($ticket_qty === null ? '—' : (string) (int) $ticket_qty) . '</span></div>';
+            echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Staff assigned', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count($staff_rows)) . '</span></div>';
             if ($can_view_docs) {
-                echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Tech docs', 'vms') . '</b><span>' . esc_html((string) count($docs)) . '</span></div>';
+                echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Tech docs', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count($docs)) . '</span></div>';
             }
             echo '</div>';
 
@@ -1087,7 +1087,7 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
             }
             if ($event_status_label !== '') {
                 /* translators: %s: event status label. */
-                $body_meta[] = sprintf(__('Status: %s', 'vms'), $event_status_label);
+                $body_meta[] = sprintf(__('Status: %s', 'backstage-venue-manager'), $event_status_label);
             }
             if (!empty($body_meta)) {
                 echo '<p class="vms-muted vms-m0">' . esc_html(implode(' · ', $body_meta)) . '</p>';
@@ -1110,7 +1110,7 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
             echo '<div class="vms-staff-shift-detail-grid">';
 
             echo '<div class="vms-staff-shift-panel">';
-            echo '<h4>' . esc_html__('Staff on this event', 'vms') . '</h4>';
+            echo '<h4>' . esc_html__('Staff on this event', 'backstage-venue-manager') . '</h4>';
             if (!empty($staff_rows)) {
                 echo '<ul class="vms-staff-shift-list">';
                 foreach ($staff_rows as $staff_row) {
@@ -1119,10 +1119,10 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
                     }
                     $name = trim((string) ($staff_row['name'] ?? ''));
                     if ($name === '') {
-                        $name = __('Assigned staff', 'vms');
+                        $name = __('Assigned staff', 'backstage-venue-manager');
                     }
                     if (absint($staff_row['staff_id'] ?? 0) === $staff_id) {
-                        $name .= ' ' . __('(You)', 'vms');
+                        $name .= ' ' . __('(You)', 'backstage-venue-manager');
                     }
 
                     $parts = array();
@@ -1148,27 +1148,27 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
                 }
                 echo '</ul>';
             } else {
-                echo '<p class="vms-muted vms-m0">' . esc_html__('No other staff assignments are visible yet.', 'vms') . '</p>';
+                echo '<p class="vms-muted vms-m0">' . esc_html__('No other staff assignments are visible yet.', 'backstage-venue-manager') . '</p>';
             }
             echo '</div>';
 
             if ($can_view_docs) {
                 echo '<div class="vms-staff-shift-panel">';
-                echo '<h4>' . esc_html__('Event docs', 'vms') . '</h4>';
+                echo '<h4>' . esc_html__('Event docs', 'backstage-venue-manager') . '</h4>';
                 if (!empty($docs)) {
                     echo '<ul class="vms-staff-shift-list">';
                     foreach ($docs as $doc) {
                         if (!is_array($doc)) {
                             continue;
                         }
-                        $label = trim((string) ($doc['label'] ?? __('Document', 'vms')));
+                        $label = trim((string) ($doc['label'] ?? __('Document', 'backstage-venue-manager')));
                         $vendor_name = trim((string) ($doc['vendor_name'] ?? ''));
                         $doc_text = $vendor_name !== '' ? ($vendor_name . ' · ' . $label) : $label;
                         echo '<li><a href="' . esc_url((string) ($doc['url'] ?? '')) . '" target="_blank" rel="noopener">' . esc_html($doc_text) . '</a></li>';
                     }
                     echo '</ul>';
                 } else {
-                    echo '<p class="vms-muted vms-m0">' . esc_html__('No stage plot or input list has been uploaded yet.', 'vms') . '</p>';
+                    echo '<p class="vms-muted vms-m0">' . esc_html__('No stage plot or input list has been uploaded yet.', 'backstage-venue-manager') . '</p>';
                 }
                 echo '</div>';
             }
@@ -1298,7 +1298,7 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
                 $role_label = (string) $role_map[$role_id]['name'];
             }
             if ($role_label === '') {
-                $role_label = __('Shift', 'vms');
+                $role_label = __('Shift', 'backstage-venue-manager');
             }
 
             $status_key = sanitize_key((string) ($row['assignment_status'] ?? ''));
@@ -1307,7 +1307,7 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
             $rows[] = array(
                 'assignment_id' => isset($row['assignment_id']) ? absint($row['assignment_id']) : 0,
                 'event_plan_id' => $plan_id,
-                'event_title' => (string) ($plan['title'] ?? __('Event Plan', 'vms')),
+                'event_title' => (string) ($plan['title'] ?? __('Event Plan', 'backstage-venue-manager')),
                 'event_date' => $event_date,
                 'date_label' => function_exists('vms_format_local_ymd') ? vms_format_local_ymd($event_date, 'D, M j, Y') : $event_date,
                 'short_date_label' => function_exists('vms_format_local_ymd') ? vms_format_local_ymd($event_date, 'M j') : $event_date,
@@ -1490,10 +1490,10 @@ if (!function_exists('vms_staff_portal_availability_source_label')) {
 
         $reason = sanitize_key($reason);
         $map = array(
-            'manual' => __('Manual', 'vms'),
-            'pattern' => __('Pattern', 'vms'),
-            'ics' => __('ICS', 'vms'),
-            'no_response' => __('No response', 'vms'),
+            'manual' => __('Manual', 'backstage-venue-manager'),
+            'pattern' => __('Pattern', 'backstage-venue-manager'),
+            'ics' => __('ICS', 'backstage-venue-manager'),
+            'no_response' => __('No response', 'backstage-venue-manager'),
         );
 
         return isset($map[$reason]) ? (string) $map[$reason] : ucfirst(str_replace('_', ' ', $reason));
@@ -1522,7 +1522,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
         if ($staff_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             return array(
                 'state' => 'no-response',
-                'label' => __('Unset', 'vms'),
+                'label' => __('Unset', 'backstage-venue-manager'),
                 'visual_state' => '',
                 'reason' => 'invalid',
                 'source' => vms_staff_portal_availability_source_label('no_response'),
@@ -1535,7 +1535,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
         if ($manual_state === 'available') {
             return array(
                 'state' => 'available',
-                'label' => __('Available', 'vms'),
+                'label' => __('Available', 'backstage-venue-manager'),
                 'visual_state' => 'available',
                 'reason' => 'manual',
                 'source' => vms_staff_portal_availability_source_label('manual'),
@@ -1545,7 +1545,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
         if ($manual_state === 'unavailable') {
             return array(
                 'state' => 'unavailable',
-                'label' => __('Unavailable', 'vms'),
+                'label' => __('Unavailable', 'backstage-venue-manager'),
                 'visual_state' => 'unavailable',
                 'reason' => 'manual',
                 'source' => vms_staff_portal_availability_source_label('manual'),
@@ -1561,7 +1561,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
             if (!in_array($dow, $pattern_days, true)) {
                 return array(
                     'state' => 'unavailable',
-                    'label' => __('Unavailable', 'vms'),
+                    'label' => __('Unavailable', 'backstage-venue-manager'),
                     'visual_state' => 'unavailable',
                     'reason' => 'pattern',
                     'source' => vms_staff_portal_availability_source_label('pattern'),
@@ -1575,7 +1575,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
         if (isset($ics_lookup[$date])) {
             return array(
                 'state' => 'unavailable',
-                'label' => __('Unavailable', 'vms'),
+                'label' => __('Unavailable', 'backstage-venue-manager'),
                 'visual_state' => 'unavailable',
                 'reason' => 'ics',
                 'source' => vms_staff_portal_availability_source_label('ics'),
@@ -1586,7 +1586,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
         if ($pattern_matches) {
             return array(
                 'state' => 'available',
-                'label' => __('Available', 'vms'),
+                'label' => __('Available', 'backstage-venue-manager'),
                 'visual_state' => 'available',
                 'reason' => 'pattern',
                 'source' => vms_staff_portal_availability_source_label('pattern'),
@@ -1596,7 +1596,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
 
         return array(
             'state' => 'no-response',
-            'label' => __('Unset', 'vms'),
+            'label' => __('Unset', 'backstage-venue-manager'),
             'visual_state' => '',
             'reason' => 'no_response',
             'source' => vms_staff_portal_availability_source_label('no_response'),
@@ -1648,7 +1648,7 @@ if (!function_exists('vms_staff_portal_day_visual_state')) {
             ? vms_staff_portal_effective_availability_for_date($staff_id, $date)
             : array(
                 'state' => (isset($manual[$date]) ? sanitize_key((string) $manual[$date]) : 'no-response'),
-                'label' => __('Unset', 'vms'),
+                'label' => __('Unset', 'backstage-venue-manager'),
                 'visual_state' => '',
                 'reason' => 'no_response',
                 'source' => vms_staff_portal_availability_source_label('no_response'),
@@ -1661,13 +1661,13 @@ if (!function_exists('vms_staff_portal_day_visual_state')) {
         $base_state = sanitize_key((string) ($base['state'] ?? 'no-response'));
         $base_src = sanitize_key((string) ($base['reason'] ?? ''));
         $base_visual = sanitize_key((string) ($base['visual_state'] ?? ''));
-        $base_label = (string) ($base['label'] ?? __('Unset', 'vms'));
+        $base_label = (string) ($base['label'] ?? __('Unset', 'backstage-venue-manager'));
 
         if ($has_assignments) {
             $conflict = ($base_state === 'unavailable' || $base_visual === 'unavailable');
             return array(
                 'status_key' => $conflict ? 'conflict' : 'working',
-                'status_label' => $conflict ? __('Conflict', 'vms') : __('Working', 'vms'),
+                'status_label' => $conflict ? __('Conflict', 'backstage-venue-manager') : __('Working', 'backstage-venue-manager'),
                 'visual_state' => $conflict ? 'unavailable' : 'available',
                 'manual_state' => $manual_state,
                 'assignments' => $assignments,
@@ -1724,7 +1724,7 @@ function vms_staff_portal_shortcode()
 
     if (!is_user_logged_in()) {
         ob_start();
-        echo '<p>' . esc_html__('Please log in to access the staff portal.', 'vms') . '</p>';
+        echo '<p>' . esc_html__('Please log in to access the staff portal.', 'backstage-venue-manager') . '</p>';
         echo wp_login_form(array('echo' => false, 'redirect' => esc_url(get_permalink())));
         return ob_get_clean();
     }
@@ -1733,12 +1733,12 @@ function vms_staff_portal_shortcode()
     $staff_id = (int) get_user_meta($user_id, '_vms_staff_id', true);
 
     if (!$staff_id) {
-        return '<p>' . esc_html__('Your account is not linked to a staff profile yet. Please contact the admin.', 'vms') . '</p>';
+        return '<p>' . esc_html__('Your account is not linked to a staff profile yet. Please contact the admin.', 'backstage-venue-manager') . '</p>';
     }
 
     $staff = get_post($staff_id);
     if (!$staff || $staff->post_type !== 'vms_staff') {
-        return '<p>' . esc_html__('Your linked staff profile could not be found. Please contact the admin.', 'vms') . '</p>';
+        return '<p>' . esc_html__('Your linked staff profile could not be found. Please contact the admin.', 'backstage-venue-manager') . '</p>';
     }
 
     $worker_type = function_exists('vms_staff_get_worker_type') ? (string) vms_staff_get_worker_type($staff_id) : '';
@@ -1749,7 +1749,7 @@ function vms_staff_portal_shortcode()
     }
 
     $tax_tab_slug  = ($worker_type === 'employee') ? 'employee-packet' : 'tax-profile';
-    $tax_tab_label = ($worker_type === 'employee') ? __('Employee Packet', 'vms') : __('Tax Profile', 'vms');
+    $tax_tab_label = ($worker_type === 'employee') ? __('Employee Packet', 'backstage-venue-manager') : __('Tax Profile', 'backstage-venue-manager');
     $url_tax_tab   = add_query_arg('tab', $tax_tab_slug, $base_url);
 
     $tab = filter_input(INPUT_GET, 'tab', FILTER_UNSAFE_RAW);
@@ -1761,13 +1761,13 @@ function vms_staff_portal_shortcode()
     ob_start();
 
     echo '<div class="vms-portal" id="vms-portal-root">';
-    echo '<h2>' . esc_html__('Staff Portal:', 'vms') . ' ' . esc_html($staff->post_title) . '</h2>';
+    echo '<h2>' . esc_html__('Staff Portal:', 'backstage-venue-manager') . ' ' . esc_html($staff->post_title) . '</h2>';
 
     echo '<nav class="vms-portal-nav">';
-    echo '<a class="' . ($tab === 'dashboard' ? 'is-active' : '') . '" href="' . esc_url($url_dashboard) . '">' . esc_html__('Dashboard', 'vms') . '</a>';
+    echo '<a class="' . ($tab === 'dashboard' ? 'is-active' : '') . '" href="' . esc_url($url_dashboard) . '">' . esc_html__('Dashboard', 'backstage-venue-manager') . '</a>';
     echo '<a class="' . ($tab === $tax_tab_slug ? 'is-active' : '') . '" href="' . esc_url($url_tax_tab) . '">' . esc_html($tax_tab_label) . '</a>';
-    echo '<a class="' . ($tab === 'certifications' ? 'is-active' : '') . '" href="' . esc_url($url_certifications) . '">' . esc_html__('Certifications', 'vms') . '</a>';
-    echo '<a class="' . ($tab === 'availability' ? 'is-active' : '') . '" href="' . esc_url($url_availability) . '">' . esc_html__('Availability', 'vms') . '</a>';
+    echo '<a class="' . ($tab === 'certifications' ? 'is-active' : '') . '" href="' . esc_url($url_certifications) . '">' . esc_html__('Certifications', 'backstage-venue-manager') . '</a>';
+    echo '<a class="' . ($tab === 'availability' ? 'is-active' : '') . '" href="' . esc_url($url_availability) . '">' . esc_html__('Availability', 'backstage-venue-manager') . '</a>';
     echo '</nav>';
 
     if ($tab === 'dashboard') {
@@ -1781,7 +1781,7 @@ function vms_staff_portal_shortcode()
     } elseif ($tab === 'availability') {
         vms_staff_portal_render_availability_manual($staff_id);
     } else {
-        echo '<p>' . esc_html__('Unknown tab.', 'vms') . '</p>';
+        echo '<p>' . esc_html__('Unknown tab.', 'backstage-venue-manager') . '</p>';
     }
 
     echo '</div>';
@@ -1800,12 +1800,12 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
         if ($worker_type === 'employee') {
             $missing = vms_staff_portal_employee_packet_missing_items($staff_id);
             $tax_stage = empty($missing) ? 'complete' : 'incomplete';
-            $tax_provider_label = __('Employee packet workflow', 'vms');
+            $tax_provider_label = __('Employee packet workflow', 'backstage-venue-manager');
         } else {
             $tax_status = vms_staff_portal_tax_status($staff_id);
             $missing = isset($tax_status['missing']) ? (array) $tax_status['missing'] : array();
             $tax_stage = isset($tax_status['stage']) ? (string) $tax_status['stage'] : 'incomplete';
-            $tax_provider_label = isset($tax_status['provider_label']) ? (string) $tax_status['provider_label'] : __('Upload', 'vms');
+            $tax_provider_label = isset($tax_status['provider_label']) ? (string) $tax_status['provider_label'] : __('Upload', 'backstage-venue-manager');
         }
 
         $manual = get_post_meta($staff_id, '_vms_availability_manual', true);
@@ -1831,7 +1831,7 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
 
         echo '<div>';
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Next Shift', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Next Shift', 'backstage-venue-manager') . '</h3>';
         if (!empty($next_shift)) {
             $next_ticket_qty = $next_shift_glance['ticket_qty'] ?? null;
             $next_docs = isset($next_shift_glance['docs']) && is_array($next_shift_glance['docs']) ? (array) $next_shift_glance['docs'] : array();
@@ -1839,28 +1839,28 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
 
             echo '<div class="vms-portal-hero-value">' . esc_html((string) ($next_shift['date_label'] ?? '')) . '</div>';
             echo '<div class="vms-muted vms-mt-8"><strong>' . esc_html((string) ($next_shift['event_title'] ?? '')) . '</strong></div>';
-            echo '<div class="vms-muted vms-mt-2">' . esc_html((string) ($next_shift['role_label'] ?? __('Shift', 'vms'))) . '</div>';
+            echo '<div class="vms-muted vms-mt-2">' . esc_html((string) ($next_shift['role_label'] ?? __('Shift', 'backstage-venue-manager'))) . '</div>';
             if (!empty($next_shift['shift_label'])) {
                 echo '<div class="vms-muted vms-mt-2">' . esc_html((string) $next_shift['shift_label']) . '</div>';
             }
             echo '<div class="vms-mt-8">';
-            echo '<span class="vms-av-badge-status is-' . esc_attr((($next_shift['assignment_status'] ?? '') === 'confirmed') ? 'working' : 'submitted') . '">' . esc_html((string) ($next_shift['assignment_status_label'] ?? __('Scheduled', 'vms'))) . '</span>';
+            echo '<span class="vms-av-badge-status is-' . esc_attr((($next_shift['assignment_status'] ?? '') === 'confirmed') ? 'working' : 'submitted') . '">' . esc_html((string) ($next_shift['assignment_status_label'] ?? __('Scheduled', 'backstage-venue-manager'))) . '</span>';
             echo '</div>';
 
             echo '<div class="vms-dash-kpis vms-mt-10">';
-            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Tickets sold', 'vms') . '</b><span>' . esc_html($next_ticket_qty === null ? '—' : (string) (int) $next_ticket_qty) . '</span></div>';
-            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Staff assigned', 'vms') . '</b><span>' . esc_html((string) count(vms_staff_portal_consolidate_crew_rows($next_crew))) . '</span></div>';
+            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Tickets sold', 'backstage-venue-manager') . '</b><span>' . esc_html($next_ticket_qty === null ? '—' : (string) (int) $next_ticket_qty) . '</span></div>';
+            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Staff assigned', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count(vms_staff_portal_consolidate_crew_rows($next_crew))) . '</span></div>';
             if (!empty($next_shift_glance['can_view_docs'])) {
-                echo '<div class="vms-dash-kpi"><b>' . esc_html__('Tech docs', 'vms') . '</b><span>' . esc_html((string) count($next_docs)) . '</span></div>';
+                echo '<div class="vms-dash-kpi"><b>' . esc_html__('Tech docs', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count($next_docs)) . '</span></div>';
             }
             echo '</div>';
         } else {
-            echo '<p class="vms-muted vms-m0">' . esc_html__('No upcoming shifts are assigned yet.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-m0">' . esc_html__('No upcoming shifts are assigned yet.', 'backstage-venue-manager') . '</p>';
         }
         echo '</div>';
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Upcoming Schedule', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Upcoming Schedule', 'backstage-venue-manager') . '</h3>';
         if (!empty($assignments)) {
             echo '<ul class="vms-dash-list">';
             foreach (array_slice($assignments, 0, 6) as $assignment) {
@@ -1868,18 +1868,18 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
                 if (!empty($assignment['shift_label'])) {
                     $line .= ' @ ' . (string) $assignment['shift_label'];
                 }
-                echo '<li><strong>' . esc_html($line) . '</strong> <span class="vms-muted">— ' . esc_html((string) ($assignment['event_title'] ?? '')) . ' · ' . esc_html((string) ($assignment['role_label'] ?? __('Shift', 'vms'))) . '</span></li>';
+                echo '<li><strong>' . esc_html($line) . '</strong> <span class="vms-muted">— ' . esc_html((string) ($assignment['event_title'] ?? '')) . ' · ' . esc_html((string) ($assignment['role_label'] ?? __('Shift', 'backstage-venue-manager'))) . '</span></li>';
             }
             echo '</ul>';
         } else {
-            echo '<p class="vms-muted vms-m0">' . esc_html__('Nothing is scheduled yet.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-m0">' . esc_html__('Nothing is scheduled yet.', 'backstage-venue-manager') . '</p>';
         }
         echo '<div class="vms-dash-actions">';
-        echo '<a class="button button-primary" href="' . esc_url($url_availability) . '">' . esc_html__('Update Availability', 'vms') . '</a>';
+        echo '<a class="button button-primary" href="' . esc_url($url_availability) . '">' . esc_html__('Update Availability', 'backstage-venue-manager') . '</a>';
         if ($url_certifications !== '') {
-            echo '<a class="button" href="' . esc_url($url_certifications) . '">' . esc_html__('Upload Certifications', 'vms') . '</a>';
+            echo '<a class="button" href="' . esc_url($url_certifications) . '">' . esc_html__('Upload Certifications', 'backstage-venue-manager') . '</a>';
         }
-        echo '<a class="button" href="' . esc_url($url_tax_tab) . '">' . esc_html__('Open ', 'vms') . esc_html($tax_tab_label) . '</a>';
+        echo '<a class="button" href="' . esc_url($url_tax_tab) . '">' . esc_html__('Open ', 'backstage-venue-manager') . esc_html($tax_tab_label) . '</a>';
         echo '</div>';
         echo '</div>';
         echo '</div>';
@@ -1889,29 +1889,29 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
         echo '<h3>' . esc_html($tax_tab_label) . '</h3>';
         echo '<p class="vms-tax-profile-status">' . vms_staff_portal_safe_html(vms_staff_portal_badge_html($tax_stage)) . '</p>';
         echo '<div class="vms-dash-kpis">';
-        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Workflow', 'vms') . '</b><span>' . esc_html($tax_provider_label) . '</span></div>';
+        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Workflow', 'backstage-venue-manager') . '</b><span>' . esc_html($tax_provider_label) . '</span></div>';
         if ($worker_type !== 'employee' && !empty($tax_status['attested_at']) && empty($tax_status['is_complete'])) {
-            echo '<div class="vms-dash-kpi"><b>' . esc_html__('You submitted', 'vms') . '</b><span>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['attested_at'], 'M j, Y')) . '</span></div>';
+            echo '<div class="vms-dash-kpi"><b>' . esc_html__('You submitted', 'backstage-venue-manager') . '</b><span>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['attested_at'], 'M j, Y')) . '</span></div>';
         }
         if ($worker_type !== 'employee' && !empty($tax_status['done_at'])) {
-            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Confirmed', 'vms') . '</b><span>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['done_at'], 'M j, Y')) . '</span></div>';
+            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Confirmed', 'backstage-venue-manager') . '</b><span>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['done_at'], 'M j, Y')) . '</span></div>';
         }
         echo '</div>';
         if (!empty($missing)) {
-            echo '<p class="vms-muted vms-mt-10">' . esc_html__('Still needed:', 'vms') . ' ' . esc_html(implode(', ', array_map('strval', $missing))) . '</p>';
+            echo '<p class="vms-muted vms-mt-10">' . esc_html__('Still needed:', 'backstage-venue-manager') . ' ' . esc_html(implode(', ', array_map('strval', $missing))) . '</p>';
         } elseif ($worker_type !== 'employee' && !empty($tax_status['is_complete'])) {
-            echo '<p class="vms-muted vms-mt-10">' . esc_html__('You are cleared for tax/payment processing.', 'vms') . '</p>';
+            echo '<p class="vms-muted vms-mt-10">' . esc_html__('You are cleared for tax/payment processing.', 'backstage-venue-manager') . '</p>';
         }
         echo '</div>';
 
         echo '<div class="vms-portal-card">';
-        echo '<h3>' . esc_html__('Availability Snapshot', 'vms') . '</h3>';
+        echo '<h3>' . esc_html__('Availability Snapshot', 'backstage-venue-manager') . '</h3>';
         echo '<div class="vms-dash-kpis">';
-        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Manual dates', 'vms') . '</b><span>' . esc_html((string) $manual_future) . '</span></div>';
-        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Available', 'vms') . '</b><span>' . esc_html((string) $manual_available) . '</span></div>';
-        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Unavailable', 'vms') . '</b><span>' . esc_html((string) $manual_unavailable) . '</span></div>';
+        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Manual dates', 'backstage-venue-manager') . '</b><span>' . esc_html((string) $manual_future) . '</span></div>';
+        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Available', 'backstage-venue-manager') . '</b><span>' . esc_html((string) $manual_available) . '</span></div>';
+        echo '<div class="vms-dash-kpi"><b>' . esc_html__('Unavailable', 'backstage-venue-manager') . '</b><span>' . esc_html((string) $manual_unavailable) . '</span></div>';
         echo '</div>';
-        echo '<div class="vms-muted vms-mt-10">' . esc_html__('Your dashboard shows upcoming assigned shifts. Your Availability tab is where you manage future working dates.', 'vms') . '</div>';
+        echo '<div class="vms-muted vms-mt-10">' . esc_html__('Your dashboard shows upcoming assigned shifts. Your Availability tab is where you manage future working dates.', 'backstage-venue-manager') . '</div>';
         echo '</div>';
         echo '</div>';
 
@@ -1932,8 +1932,8 @@ function vms_staff_portal_employee_packet_missing_items(int $staff_id): array
     $w4 = (int) get_post_meta($staff_id, '_vms_employee_w4_received', true) ? 1 : 0;
     $i9 = (int) get_post_meta($staff_id, '_vms_employee_i9_verified', true) ? 1 : 0;
 
-    if (!$w4) $missing[] = __('W-4 received', 'vms');
-    if (!$i9) $missing[] = __('I-9 verified', 'vms');
+    if (!$w4) $missing[] = __('W-4 received', 'backstage-venue-manager');
+    if (!$i9) $missing[] = __('I-9 verified', 'backstage-venue-manager');
 
     return $missing;
 }
@@ -1952,7 +1952,7 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_employee_packet_ack'])) {
         if (empty($_POST['vms_employee_packet_nonce']) || !wp_verify_nonce($_POST['vms_employee_packet_nonce'], 'vms_employee_packet_ack')) {
-            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
+            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
         } else {
             $now = time();
             $ack_w4 = isset($_POST['vms_ack_w4']) ? 1 : 0;
@@ -1965,19 +1965,19 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
 
             update_post_meta($staff_id, '_vms_employee_packet_attested_at', $now);
 
-            echo vms_staff_portal_notice_html('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'vms'));
+            echo vms_staff_portal_notice_html('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'backstage-venue-manager'));
         }
     }
 
     echo '<div class="vms-portal-card">';
-    echo '<h3 class="vms-mt-0">' . esc_html__('Employee Packet', 'vms') . '</h3>';
-    echo '<p class="vms-tax-profile-status">' . ($is_complete ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>' : '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>') . '</p>';
-    echo '<p>' . esc_html__('W-2 employees must provide onboarding paperwork. This portal does not collect SSN or identity documents.', 'vms') . '</p>';
+    echo '<h3 class="vms-mt-0">' . esc_html__('Employee Packet', 'backstage-venue-manager') . '</h3>';
+    echo '<p class="vms-tax-profile-status">' . ($is_complete ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>' : '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>') . '</p>';
+    echo '<p>' . esc_html__('W-2 employees must provide onboarding paperwork. This portal does not collect SSN or identity documents.', 'backstage-venue-manager') . '</p>';
     echo '</div>';
 
     if (!$is_complete) {
         echo '<div class="vms-portal-card">';
-        echo '<h4 class="vms-mt-0">' . esc_html__('Missing items (admin verification)', 'vms') . '</h4>';
+        echo '<h4 class="vms-mt-0">' . esc_html__('Missing items (admin verification)', 'backstage-venue-manager') . '</h4>';
         echo '<ul>';
         foreach ($missing as $m) {
             echo '<li>' . esc_html((string) $m) . '</li>';
@@ -1989,18 +1989,18 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
     $attested_at = (int) get_post_meta($staff_id, '_vms_employee_packet_attested_at', true);
     if ($attested_at > 0 && !$is_complete) {
         echo '<div class="vms-portal-card">';
-        echo '<p class="vms-muted">' . esc_html__('Submission recorded. Waiting on admin verification.', 'vms') . '</p>';
+        echo '<p class="vms-muted">' . esc_html__('Submission recorded. Waiting on admin verification.', 'backstage-venue-manager') . '</p>';
         echo '</div>';
     }
 
     echo '<div class="vms-portal-card">';
-    echo '<h4 class="vms-mt-0">' . esc_html__('Tell the admin you submitted your packet', 'vms') . '</h4>';
+    echo '<h4 class="vms-mt-0">' . esc_html__('Tell the admin you submitted your packet', 'backstage-venue-manager') . '</h4>';
     echo '<form method="post">';
     wp_nonce_field('vms_employee_packet_ack', 'vms_employee_packet_nonce');
-    echo '<label class="vms-portal-check"><input type="checkbox" name="vms_ack_w4" value="1"> ' . esc_html__('I submitted my W-4', 'vms') . '</label>';
-    echo '<label class="vms-portal-check"><input type="checkbox" name="vms_ack_i9" value="1"> ' . esc_html__('I completed my I-9 verification', 'vms') . '</label>';
-    echo '<label class="vms-portal-check"><input type="checkbox" name="vms_ack_dd" value="1"> ' . esc_html__('I submitted direct deposit info (if used)', 'vms') . '</label>';
-    echo '<p><button class="button button-primary" type="submit" name="vms_employee_packet_ack" value="1">' . esc_html__('Submit', 'vms') . '</button></p>';
+    echo '<label class="vms-portal-check"><input type="checkbox" name="vms_ack_w4" value="1"> ' . esc_html__('I submitted my W-4', 'backstage-venue-manager') . '</label>';
+    echo '<label class="vms-portal-check"><input type="checkbox" name="vms_ack_i9" value="1"> ' . esc_html__('I completed my I-9 verification', 'backstage-venue-manager') . '</label>';
+    echo '<label class="vms-portal-check"><input type="checkbox" name="vms_ack_dd" value="1"> ' . esc_html__('I submitted direct deposit info (if used)', 'backstage-venue-manager') . '</label>';
+    echo '<p><button class="button button-primary" type="submit" name="vms_employee_packet_ack" value="1">' . esc_html__('Submit', 'backstage-venue-manager') . '</button></p>';
     echo '</form>';
     echo '</div>';
 }
@@ -2029,7 +2029,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_staff_tax_save'])) {
         if (empty($_POST['vms_staff_tax_nonce']) || !wp_verify_nonce($_POST['vms_staff_tax_nonce'], 'vms_staff_tax_save')) {
-            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
+            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
         } else {
             $t = static function ($key) {
                 return isset($_POST[$key]) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
@@ -2062,11 +2062,11 @@ function vms_staff_portal_render_tax_profile($staff_id)
                     $allowed = array('application/pdf', 'image/jpeg', 'image/png', 'image/webp');
                     $type = isset($_FILES['vms_w9_upload']['type']) ? (string) $_FILES['vms_w9_upload']['type'] : '';
                     if ($type && !in_array($type, $allowed, true)) {
-                        echo vms_staff_portal_notice_html('error', __('Upload must be a PDF or image (JPG/PNG/WEBP).', 'vms'));
+                        echo vms_staff_portal_notice_html('error', __('Upload must be a PDF or image (JPG/PNG/WEBP).', 'backstage-venue-manager'));
                     } else {
                         $attach_id = media_handle_upload('vms_w9_upload', 0);
                         if (is_wp_error($attach_id)) {
-                            echo vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'vms') . $attach_id->get_error_message());
+                            echo vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $attach_id->get_error_message());
                         } else {
                             update_post_meta($staff_id, '_vms_w9_upload_id', (int) $attach_id);
                             update_post_meta($staff_id, '_vms_w9_received_date', wp_date('Y-m-d', time(), wp_timezone()));
@@ -2097,7 +2097,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
                 }
             }
 
-            echo vms_staff_portal_notice_html('success', __('Tax Profile saved.', 'vms'));
+            echo vms_staff_portal_notice_html('success', __('Tax Profile saved.', 'backstage-venue-manager'));
         }
     }
 
@@ -2125,71 +2125,71 @@ function vms_staff_portal_render_tax_profile($staff_id)
     $attested_checked = !empty($tax_status['attested_at']);
 
     $entity_types = array(
-        ''            => __('— Select —', 'vms'),
-        'individual'  => __('Individual / Sole Proprietor', 'vms'),
-        'single_llc'  => __('Single-member LLC', 'vms'),
-        'llc'         => __('LLC (multi-member)', 'vms'),
-        'partnership' => __('Partnership', 'vms'),
-        's_corp'      => __('S-Corp', 'vms'),
-        'c_corp'      => __('C-Corp', 'vms'),
-        'nonprofit'   => __('Nonprofit / Exempt', 'vms'),
-        'other'       => __('Other', 'vms'),
+        ''            => __('— Select —', 'backstage-venue-manager'),
+        'individual'  => __('Individual / Sole Proprietor', 'backstage-venue-manager'),
+        'single_llc'  => __('Single-member LLC', 'backstage-venue-manager'),
+        'llc'         => __('LLC (multi-member)', 'backstage-venue-manager'),
+        'partnership' => __('Partnership', 'backstage-venue-manager'),
+        's_corp'      => __('S-Corp', 'backstage-venue-manager'),
+        'c_corp'      => __('C-Corp', 'backstage-venue-manager'),
+        'nonprofit'   => __('Nonprofit / Exempt', 'backstage-venue-manager'),
+        'other'       => __('Other', 'backstage-venue-manager'),
     );
 
     echo '<div class="vms-portal-card">';
-    echo '<h3 class="vms-mt-0">' . esc_html__('Tax Profile', 'vms') . '</h3>';
+    echo '<h3 class="vms-mt-0">' . esc_html__('Tax Profile', 'backstage-venue-manager') . '</h3>';
     echo '<p class="vms-tax-profile-status">' . vms_staff_portal_safe_html(vms_staff_portal_badge_html((string) ($tax_status['stage'] ?? 'incomplete'))) . '</p>';
-    echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'vms') . '</strong> ' . esc_html($provider_label) . '</div>';
+    echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'backstage-venue-manager') . '</strong> ' . esc_html($provider_label) . '</div>';
     if ($provider !== 'upload') {
-        echo '<p class="vms-muted vms-mt-10">' . esc_html__('Complete your W-9/tax step through the secure off-site workflow, then return here to confirm you completed it. The venue will review and mark it complete after verification.', 'vms') . '</p>';
+        echo '<p class="vms-muted vms-mt-10">' . esc_html__('Complete your W-9/tax step through the secure off-site workflow, then return here to confirm you completed it. The venue will review and mark it complete after verification.', 'backstage-venue-manager') . '</p>';
         if (!empty($tax_status['attested_at']) && empty($tax_status['is_complete'])) {
-            echo '<p class="vms-muted">' . esc_html__('You confirmed completion on', 'vms') . ' <strong>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['attested_at'])) . '</strong>.</p>';
+            echo '<p class="vms-muted">' . esc_html__('You confirmed completion on', 'backstage-venue-manager') . ' <strong>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['attested_at'])) . '</strong>.</p>';
         }
         if (!empty($tax_status['done_at'])) {
-            echo '<p class="vms-muted">' . esc_html__('Admin confirmed on', 'vms') . ' <strong>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['done_at'])) . '</strong>.</p>';
+            echo '<p class="vms-muted">' . esc_html__('Admin confirmed on', 'backstage-venue-manager') . ' <strong>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['done_at'])) . '</strong>.</p>';
         }
     }
     echo '</div>';
 
     echo '<details class="vms-panel" open>';
     echo '<summary class="vms-panel-summary">';
-    echo '<span>' . esc_html__('Tax Profile (Required)', 'vms') . '</span>';
+    echo '<span>' . esc_html__('Tax Profile (Required)', 'backstage-venue-manager') . '</span>';
     echo $is_complete
-        ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>'
+        ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>'
         : (!empty($tax_status['attested_at']) && $provider !== 'upload'
-            ? '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'vms') . '</span>'
-            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>');
+            ? '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'backstage-venue-manager') . '</span>'
+            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>');
     echo '</summary>';
 
     echo '<div class="vms-staff-tax-body">';
 
     if (!empty($missing)) {
-        echo '<div class="vms-note"><strong>' . esc_html__('Still needed:', 'vms') . '</strong> ' . esc_html(implode(', ', $missing)) . '</div>';
+        echo '<div class="vms-note"><strong>' . esc_html__('Still needed:', 'backstage-venue-manager') . '</strong> ' . esc_html(implode(', ', $missing)) . '</div>';
     }
 
     echo '<p class="description vms-staff-tax-intro">' .
-        esc_html__('Please complete this once so we have everything needed for year-end 1099 processing. For security, do NOT enter SSN/EIN on this website.', 'vms') .
+        esc_html__('Please complete this once so we have everything needed for year-end 1099 processing. For security, do NOT enter SSN/EIN on this website.', 'backstage-venue-manager') .
         '</p>';
 
     echo '<form method="post" enctype="multipart/form-data">';
     wp_nonce_field('vms_staff_tax_save', 'vms_staff_tax_nonce');
 
-    echo '<div class="vms-note"><strong>' . esc_html__('Privacy note:', 'vms') . '</strong> ' .
-        esc_html__('Do not type SSN/EIN here.', 'vms') .
+    echo '<div class="vms-note"><strong>' . esc_html__('Privacy note:', 'backstage-venue-manager') . '</strong> ' .
+        esc_html__('Do not type SSN/EIN here.', 'backstage-venue-manager') .
         '</div>';
 
-    echo '<h3 class="vms-staff-tax-subhead vms-staff-tax-subhead-first">' . esc_html__('Payee & Entity', 'vms') . '</h3>';
+    echo '<h3 class="vms-staff-tax-subhead vms-staff-tax-subhead-first">' . esc_html__('Payee & Entity', 'backstage-venue-manager') . '</h3>';
     echo '<div class="vms-grid vms-vtp-grid">';
     echo '<div class="vms-field vms-vtp-full">';
-    echo '<label for="vms_payee_legal_name">' . esc_html__('Legal / Payee Name (as on W-9)', 'vms') . ' *</label>';
+    echo '<label for="vms_payee_legal_name">' . esc_html__('Legal / Payee Name (as on W-9)', 'backstage-venue-manager') . ' *</label>';
     echo '<input type="text" id="vms_payee_legal_name" name="vms_payee_legal_name" value="' . esc_attr($payee_legal) . '" required>';
     echo '</div>';
     echo '<div class="vms-field vms-vtp-full">';
-    echo '<label for="vms_payee_dba">' . esc_html__('Business Name / DBA (optional)', 'vms') . '</label>';
+    echo '<label for="vms_payee_dba">' . esc_html__('Business Name / DBA (optional)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_payee_dba" name="vms_payee_dba" value="' . esc_attr($dba) . '">';
     echo '</div>';
     echo '<div class="vms-field vms-vtp-full">';
-    echo '<label for="vms_entity_type">' . esc_html__('Entity Type', 'vms') . ' *</label>';
+    echo '<label for="vms_entity_type">' . esc_html__('Entity Type', 'backstage-venue-manager') . ' *</label>';
     echo '<select id="vms_entity_type" name="vms_entity_type" required>';
     foreach ($entity_types as $k => $label) {
         echo '<option value="' . esc_attr($k) . '" ' . selected($entity, $k, false) . '>' . esc_html($label) . '</option>';
@@ -2198,31 +2198,31 @@ function vms_staff_portal_render_tax_profile($staff_id)
     echo '</div>';
     echo '</div>';
 
-    echo '<h3 class="vms-staff-tax-subhead">' . esc_html__('Mailing Address', 'vms') . '</h3>';
+    echo '<h3 class="vms-staff-tax-subhead">' . esc_html__('Mailing Address', 'backstage-venue-manager') . '</h3>';
     echo '<div class="vms-grid vms-vtp-grid">';
     echo '<div class="vms-field vms-vtp-full">';
-    echo '<label for="vms_addr1">' . esc_html__('Address Line 1', 'vms') . ' *</label>';
+    echo '<label for="vms_addr1">' . esc_html__('Address Line 1', 'backstage-venue-manager') . ' *</label>';
     echo '<input type="text" id="vms_addr1" name="vms_addr1" value="' . esc_attr($addr1) . '" required>';
     echo '</div>';
     echo '<div class="vms-field vms-vtp-full">';
-    echo '<label for="vms_addr2">' . esc_html__('Address Line 2 (optional)', 'vms') . '</label>';
+    echo '<label for="vms_addr2">' . esc_html__('Address Line 2 (optional)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_addr2" name="vms_addr2" value="' . esc_attr($addr2) . '">';
     echo '</div>';
     echo '<div class="vms-field">';
-    echo '<label for="vms_city">' . esc_html__('City', 'vms') . ' *</label>';
+    echo '<label for="vms_city">' . esc_html__('City', 'backstage-venue-manager') . ' *</label>';
     echo '<input type="text" id="vms_city" name="vms_city" value="' . esc_attr($city) . '" required>';
     echo '</div>';
     echo '<div class="vms-field">';
-    echo '<label for="vms_state">' . esc_html__('State', 'vms') . ' *</label>';
+    echo '<label for="vms_state">' . esc_html__('State', 'backstage-venue-manager') . ' *</label>';
     echo '<input type="text" id="vms_state" name="vms_state" value="' . esc_attr($state) . '" maxlength="2" placeholder="TX" required>';
     echo '</div>';
     echo '<div class="vms-field">';
-    echo '<label for="vms_zip">' . esc_html__('ZIP', 'vms') . ' *</label>';
+    echo '<label for="vms_zip">' . esc_html__('ZIP', 'backstage-venue-manager') . ' *</label>';
     echo '<input type="text" id="vms_zip" name="vms_zip" value="' . esc_attr($zip) . '" required>';
     echo '</div>';
     echo '</div>';
 
-    echo '<h3 class="vms-staff-tax-subhead">' . esc_html__('W-9', 'vms') . ' (' . esc_html($provider_label) . ')</h3>';
+    echo '<h3 class="vms-staff-tax-subhead">' . esc_html__('W-9', 'backstage-venue-manager') . ' (' . esc_html($provider_label) . ')</h3>';
     if (function_exists('vms_tax_provider_instructions')) {
         echo '<div class="vms-note vms-vtp-provider-note">' . esc_html(vms_tax_provider_instructions($provider)) . '</div>';
     }
@@ -2230,28 +2230,28 @@ function vms_staff_portal_render_tax_profile($staff_id)
     if ($provider === 'upload') {
         if ($w9_upload_id > 0 && $w9_url) {
             echo '<p class="description vms-staff-tax-upload-note">' .
-                esc_html__('On file:', 'vms') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' .
-                esc_html($w9_label ? $w9_label : __('View uploaded W-9', 'vms')) . '</a></p>';
+                esc_html__('On file:', 'backstage-venue-manager') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' .
+                esc_html($w9_label ? $w9_label : __('View uploaded W-9', 'backstage-venue-manager')) . '</a></p>';
         } else {
             echo '<p class="description vms-staff-tax-upload-note">' .
-                esc_html__('No W-9 uploaded yet. Please upload a signed W-9 PDF/image.', 'vms') . '</p>';
+                esc_html__('No W-9 uploaded yet. Please upload a signed W-9 PDF/image.', 'backstage-venue-manager') . '</p>';
         }
 
         echo '<p class="vms-staff-tax-upload-field">';
         echo '<input type="file" name="vms_w9_upload" accept="application/pdf,image/jpeg,image/png,image/webp">';
-        echo '<div class="vms-help">' . esc_html__('Accepted: PDF, JPG, PNG, WEBP.', 'vms') . '</div>';
+        echo '<div class="vms-help">' . esc_html__('Accepted: PDF, JPG, PNG, WEBP.', 'backstage-venue-manager') . '</div>';
         echo '</p>';
     } else {
         echo '<div class="vms-field vms-vtp-field-wide">';
         echo '<label class="vms-vtp-attest-label">';
         echo '<input type="checkbox" name="vms_w9_offsite_attest" value="1"' . checked($attested_checked, true, false) . '>';
-        echo '<span>' . esc_html__('I completed my W-9/tax information using the secure off-site request and understand the venue still needs to review it.', 'vms') . '</span>';
+        echo '<span>' . esc_html__('I completed my W-9/tax information using the secure off-site request and understand the venue still needs to review it.', 'backstage-venue-manager') . '</span>';
         echo '</label>';
         echo '</div>';
     }
 
     echo '<p class="vms-m0 vms-mt-14">';
-    echo '<button type="submit" class="button button-primary" name="vms_staff_tax_save" value="1">' . esc_html__('Save Tax Profile', 'vms') . '</button>';
+    echo '<button type="submit" class="button button-primary" name="vms_staff_tax_save" value="1">' . esc_html__('Save Tax Profile', 'backstage-venue-manager') . '</button>';
     echo '</p>';
     echo '</form>';
     echo '</div></details>';
@@ -2283,18 +2283,18 @@ function vms_staff_portal_render_availability_manual($staff_id)
     }
 
     $ics_unavailable = vms_staff_portal_normalize_ics_unavailable($staff_id);
-    $ics_meta = __('Not connected', 'vms');
+    $ics_meta = __('Not connected', 'backstage-venue-manager');
     if ($ics_url !== '') {
-        $ics_meta = __('Connected', 'vms');
+        $ics_meta = __('Connected', 'backstage-venue-manager');
         if ($ics_autosync) {
-            $ics_meta .= ' | ' . __('Auto-sync on', 'vms');
+            $ics_meta .= ' | ' . __('Auto-sync on', 'backstage-venue-manager');
         }
         if ($ics_last > 0) {
             $ics_meta .= ' | ' . wp_date('M j', $ics_last, wp_timezone());
         }
     }
 
-    $pattern_meta = __('Off', 'vms');
+    $pattern_meta = __('Off', 'backstage-venue-manager');
     if ($pattern_enabled && !empty($pattern_days)) {
         $labels = array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
         $picked = array();
@@ -2303,13 +2303,13 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 $picked[] = $labels[(int) $d];
             }
         }
-        $pattern_meta = __('Enabled', 'vms') . ' | ' . implode(', ', $picked);
+        $pattern_meta = __('Enabled', 'backstage-venue-manager') . ' | ' . implode(', ', $picked);
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['vms_save_staff_ics_settings'])) {
             if (empty($_POST['vms_staff_ics_nonce']) || !wp_verify_nonce($_POST['vms_staff_ics_nonce'], 'vms_staff_ics_settings')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
             } else {
                 $new_url = isset($_POST['vms_staff_ics_url']) ? esc_url_raw(trim((string) $_POST['vms_staff_ics_url'])) : '';
                 $new_autosync = !empty($_POST['vms_staff_ics_autosync']) ? 1 : 0;
@@ -2319,40 +2319,40 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 $ics_url = $new_url;
                 $ics_autosync = (int) $new_autosync;
                 $preferred = 'ics';
-                $ics_meta = ($ics_url !== '') ? __('Connected', 'vms') : __('Not connected', 'vms');
+                $ics_meta = ($ics_url !== '') ? __('Connected', 'backstage-venue-manager') : __('Not connected', 'backstage-venue-manager');
                 if ($ics_url !== '' && $ics_autosync) {
-                    $ics_meta .= ' | ' . __('Auto-sync on', 'vms');
+                    $ics_meta .= ' | ' . __('Auto-sync on', 'backstage-venue-manager');
                 }
-                echo vms_staff_portal_notice_html('success', __('Calendar settings saved.', 'vms'));
+                echo vms_staff_portal_notice_html('success', __('Calendar settings saved.', 'backstage-venue-manager'));
             }
         }
 
         if (isset($_POST['vms_sync_staff_ics_now'])) {
             if (empty($_POST['vms_staff_ics_nonce']) || !wp_verify_nonce($_POST['vms_staff_ics_nonce'], 'vms_staff_ics_settings')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
             } else {
                 update_post_meta($staff_id, '_vms_availability_preferred_method', 'ics');
                 $preferred = 'ics';
                 if ($ics_url === '') {
-                    echo vms_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'vms'));
+                    echo vms_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager'));
                 } elseif (!function_exists('vms_vendor_ics_sync_now')) {
-                    echo vms_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'vms'));
+                    echo vms_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'backstage-venue-manager'));
                 } else {
                     $result = (array) vms_vendor_ics_sync_now($staff_id, $active_dates);
                     if (!empty($result['ok'])) {
                         $ics_last = time();
                         update_post_meta($staff_id, '_vms_ics_last_sync', $ics_last);
                         $ics_unavailable = vms_staff_portal_normalize_ics_unavailable($staff_id);
-                        $ics_meta = __('Connected', 'vms');
+                        $ics_meta = __('Connected', 'backstage-venue-manager');
                         if ($ics_autosync) {
-                            $ics_meta .= ' | ' . __('Auto-sync on', 'vms');
+                            $ics_meta .= ' | ' . __('Auto-sync on', 'backstage-venue-manager');
                         }
                         $ics_meta .= ' | ' . wp_date('M j', $ics_last, wp_timezone());
                         $count = count($ics_unavailable);
                         /* translators: %d: number of unavailable dates imported from the ICS feed. */
-                        echo vms_staff_portal_notice_html('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'vms'), $count));
+                        echo vms_staff_portal_notice_html('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count));
                     } else {
-                        $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'vms');
+                        $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'backstage-venue-manager');
                         echo vms_staff_portal_notice_html('error', $msg);
                     }
                 }
@@ -2361,7 +2361,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
         if (isset($_POST['vms_save_staff_pattern'])) {
             if (empty($_POST['vms_staff_pattern_nonce']) || !wp_verify_nonce($_POST['vms_staff_pattern_nonce'], 'vms_staff_pattern_settings')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
             } else {
                 $days = array();
                 if (isset($_POST['vms_staff_pattern_days']) && is_array($_POST['vms_staff_pattern_days'])) {
@@ -2386,7 +2386,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 $pattern_enabled = $enabled;
                 $pattern_days = vms_staff_portal_normalize_pattern_days($staff_id);
                 $preferred = 'pattern';
-                $pattern_meta = __('Off', 'vms');
+                $pattern_meta = __('Off', 'backstage-venue-manager');
                 if ($pattern_enabled && !empty($pattern_days)) {
                     $labels = array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
                     $picked = array();
@@ -2395,9 +2395,9 @@ function vms_staff_portal_render_availability_manual($staff_id)
                             $picked[] = $labels[(int) $d];
                         }
                     }
-                    $pattern_meta = __('Enabled', 'vms') . ' | ' . implode(', ', $picked);
+                    $pattern_meta = __('Enabled', 'backstage-venue-manager') . ' | ' . implode(', ', $picked);
                 }
-                echo vms_staff_portal_notice_html('success', __('Pattern availability saved.', 'vms'));
+                echo vms_staff_portal_notice_html('success', __('Pattern availability saved.', 'backstage-venue-manager'));
             }
         }
 
@@ -2407,7 +2407,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
         if ($has_manual_submission) {
             if (empty($_POST['vms_staff_avail_nonce']) || !wp_verify_nonce($_POST['vms_staff_avail_nonce'], 'vms_staff_save_availability')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'vms'));
+                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
             } else {
                 $incoming = isset($_POST['vms_availability']) && is_array($_POST['vms_availability']) ? $_POST['vms_availability'] : array();
                 $clean = array();
@@ -2428,13 +2428,13 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 $preferred = 'manual';
 
                 /* translators: %d: number of manual availability dates saved. */
-                echo vms_staff_portal_notice_html('success', sprintf(__('Availability saved. %d manual date(s) active.', 'vms'), count($manual)));
+                echo vms_staff_portal_notice_html('success', sprintf(__('Availability saved. %d manual date(s) active.', 'backstage-venue-manager'), count($manual)));
             }
         }
     }
 
     if (empty($active_dates)) {
-        echo '<p>' . esc_html__('No season dates are configured yet.', 'vms') . '</p>';
+        echo '<p>' . esc_html__('No season dates are configured yet.', 'backstage-venue-manager') . '</p>';
         return;
     }
 
@@ -2469,31 +2469,31 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
     echo '<details class="vms-av-method" data-method="ics"' . ($preferred === 'ics' ? ' open' : '') . '>';
     echo '<summary>';
-    echo '<span>' . esc_html__('Calendar Sync (ICS)', 'vms') . '</span>';
+    echo '<span>' . esc_html__('Calendar Sync (ICS)', 'backstage-venue-manager') . '</span>';
     echo '<span class="vms-av-summarymeta" data-summarymeta="ics">' . esc_html($ics_meta) . '</span>';
     echo '</summary>';
     echo '<div class="vms-pt-12">';
     echo '<form method="post" class="vms-av-row">';
     wp_nonce_field('vms_staff_ics_settings', 'vms_staff_ics_nonce');
     echo '<div class="field">';
-    echo '<label><strong>' . esc_html__('ICS Feed URL', 'vms') . '</strong></label><br>';
+    echo '<label><strong>' . esc_html__('ICS Feed URL', 'backstage-venue-manager') . '</strong></label><br>';
     echo '<input type="url" name="vms_staff_ics_url" value="' . esc_attr($ics_url) . '" class="vms-w-100">';
     echo '</div>';
     echo '<div class="field vms-field-tight">';
     echo '<label class="vms-label-block">';
     echo '<input type="checkbox" name="vms_staff_ics_autosync" value="1" ' . checked(1, $ics_autosync, false) . '> ';
-    echo esc_html__('Auto-sync this calendar periodically (optional)', 'vms');
+    echo esc_html__('Auto-sync this calendar periodically (optional)', 'backstage-venue-manager');
     echo '</label>';
     echo '<div class="vms-av-actions">';
-    echo '<button class="button button-primary" type="submit" name="vms_save_staff_ics_settings">' . esc_html__('Save Calendar Settings', 'vms') . '</button>';
-    echo '<button class="button" type="submit" name="vms_sync_staff_ics_now">' . esc_html__('Sync Now', 'vms') . '</button>';
+    echo '<button class="button button-primary" type="submit" name="vms_save_staff_ics_settings">' . esc_html__('Save Calendar Settings', 'backstage-venue-manager') . '</button>';
+    echo '<button class="button" type="submit" name="vms_sync_staff_ics_now">' . esc_html__('Sync Now', 'backstage-venue-manager') . '</button>';
     echo '</div>';
     if ($ics_last > 0) {
-        echo '<div class="vms-av-muted vms-mt-8">' . esc_html__('Last sync:', 'vms') . ' ' . esc_html(wp_date('M j, Y g:ia', $ics_last, wp_timezone())) . '</div>';
+        echo '<div class="vms-av-muted vms-mt-8">' . esc_html__('Last sync:', 'backstage-venue-manager') . ' ' . esc_html(wp_date('M j, Y g:ia', $ics_last, wp_timezone())) . '</div>';
     }
     if (!empty($ics_unavailable)) {
         /* translators: %d: number of dates currently blocked by the connected ICS feed. */
-        echo '<div class="vms-av-muted vms-mt-8">' . esc_html(sprintf(_n('%d date currently blocked by ICS.', '%d dates currently blocked by ICS.', count($ics_unavailable), 'vms'), count($ics_unavailable))) . '</div>';
+        echo '<div class="vms-av-muted vms-mt-8">' . esc_html(sprintf(_n('%d date currently blocked by ICS.', '%d dates currently blocked by ICS.', count($ics_unavailable), 'backstage-venue-manager'), count($ics_unavailable))) . '</div>';
     }
     echo '</div>';
     echo '</form>';
@@ -2501,29 +2501,29 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
     echo '<details class="vms-av-method" data-method="pattern"' . ($preferred === 'pattern' ? ' open' : '') . '>';
     echo '<summary>';
-    echo '<span>' . esc_html__('Pattern Availability', 'vms') . '</span>';
+    echo '<span>' . esc_html__('Pattern Availability', 'backstage-venue-manager') . '</span>';
     echo '<span class="vms-av-summarymeta" data-summarymeta="pattern">' . esc_html($pattern_meta) . '</span>';
     echo '</summary>';
     echo '<div class="vms-av-card vms-av-card--plain">';
     echo '<p class="vms-av-muted vms-m0 vms-mb-10">';
-    echo esc_html__('Choose the days you are usually available. All other active dates will read as unavailable until you override them.', 'vms');
+    echo esc_html__('Choose the days you are usually available. All other active dates will read as unavailable until you override them.', 'backstage-venue-manager');
     echo '<br>';
-    echo esc_html__('Manual date changes always win over pattern and ICS.', 'vms');
+    echo esc_html__('Manual date changes always win over pattern and ICS.', 'backstage-venue-manager');
     echo '</p>';
     echo '<form method="post">';
     wp_nonce_field('vms_staff_pattern_settings', 'vms_staff_pattern_nonce');
     echo '<label class="vms-flex vms-gap-8 vms-ai-center vms-m0 vms-mb-12">';
     echo '<input type="checkbox" name="vms_staff_pattern_enabled" value="1" ' . checked(1, $pattern_enabled, false) . '>';
-    echo '<strong>' . esc_html__('Enable pattern availability', 'vms') . '</strong>';
+    echo '<strong>' . esc_html__('Enable pattern availability', 'backstage-venue-manager') . '</strong>';
     echo '</label>';
     $dows = array(
-        0 => __('Sun', 'vms'),
-        1 => __('Mon', 'vms'),
-        2 => __('Tue', 'vms'),
-        3 => __('Wed', 'vms'),
-        4 => __('Thu', 'vms'),
-        5 => __('Fri', 'vms'),
-        6 => __('Sat', 'vms'),
+        0 => __('Sun', 'backstage-venue-manager'),
+        1 => __('Mon', 'backstage-venue-manager'),
+        2 => __('Tue', 'backstage-venue-manager'),
+        3 => __('Wed', 'backstage-venue-manager'),
+        4 => __('Thu', 'backstage-venue-manager'),
+        5 => __('Fri', 'backstage-venue-manager'),
+        6 => __('Sat', 'backstage-venue-manager'),
     );
     echo '<div class="vms-flex vms-gap-10 vms-wrap vms-m0 vms-mb-12">';
     foreach ($dows as $i => $lbl) {
@@ -2534,26 +2534,26 @@ function vms_staff_portal_render_availability_manual($staff_id)
         echo '</label>';
     }
     echo '</div>';
-    echo '<button class="button button-primary" type="submit" name="vms_save_staff_pattern">' . esc_html__('Save Pattern', 'vms') . '</button>';
+    echo '<button class="button button-primary" type="submit" name="vms_save_staff_pattern">' . esc_html__('Save Pattern', 'backstage-venue-manager') . '</button>';
     echo '</form>';
     echo '</div></details>';
 
     echo '<details class="vms-av-method" data-method="manual"' . ($preferred === 'manual' ? ' open' : '') . '>';
     echo '<summary>';
-    echo '<span>' . esc_html__('Manual Availability', 'vms') . '</span>';
+    echo '<span>' . esc_html__('Manual Availability', 'backstage-venue-manager') . '</span>';
     echo '<span class="vms-av-summarymeta" data-summarymeta="manual"></span>';
     echo '</summary>';
     echo '<div class="vms-pt-12">';
     echo '<div class="vms-av-card vms-staff-av-card">';
-    echo '<p class="vms-av-help">' . esc_html__('Tap a date to toggle: Unset > Available > Unavailable. Assigned shifts stay locked, and event cards show your role and shift.', 'vms') . '</p>';
-    echo '<div class="vms-av-legend" role="note" aria-label="' . esc_attr__('Availability legend', 'vms') . '">';
-    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-available"></span>' . esc_html__('Available', 'vms') . '</span>';
-    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-unavailable"></span>' . esc_html__('Unavailable', 'vms') . '</span>';
-    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-working"></span>' . esc_html__('Working', 'vms') . '</span>';
-    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-conflict"></span>' . esc_html__('Conflict', 'vms') . '</span>';
+    echo '<p class="vms-av-help">' . esc_html__('Tap a date to toggle: Unset > Available > Unavailable. Assigned shifts stay locked, and event cards show your role and shift.', 'backstage-venue-manager') . '</p>';
+    echo '<div class="vms-av-legend" role="note" aria-label="' . esc_attr__('Availability legend', 'backstage-venue-manager') . '">';
+    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-available"></span>' . esc_html__('Available', 'backstage-venue-manager') . '</span>';
+    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-unavailable"></span>' . esc_html__('Unavailable', 'backstage-venue-manager') . '</span>';
+    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-working"></span>' . esc_html__('Working', 'backstage-venue-manager') . '</span>';
+    echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-conflict"></span>' . esc_html__('Conflict', 'backstage-venue-manager') . '</span>';
     echo '</div>';
     if (!vms_staff_portal_has_availability_setup($staff_id)) {
-        echo vms_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'vms'));
+        echo vms_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager'));
     }
     echo '<form method="post" class="vms-staff-av-form">';
     wp_nonce_field('vms_staff_save_availability', 'vms_staff_avail_nonce');
@@ -2593,13 +2593,13 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
         echo '<summary>';
         echo '<span class="vms-av-monthlabel">';
         echo '<span class="vms-av-monthname">' . esc_html($month_label) . '</span>';
-        echo '<span class="vms-av-howto">' . esc_html__('Tap days to toggle availability', 'vms') . '</span>';
+        echo '<span class="vms-av-howto">' . esc_html__('Tap days to toggle availability', 'backstage-venue-manager') . '</span>';
         echo '</span>';
         echo '<span class="vms-av-counts vms-av-muted" data-active="' . esc_attr((string) $cnt_active) . '">' . esc_html(sprintf('%d active | %d U | %d A | %d W', $cnt_active, $cnt_unavailable, $cnt_available, $cnt_working)) . '</span>';
         echo '</summary>';
         echo '<table class="vms-av-grid">';
         echo '<thead><tr class="vms-av-dow">';
-        foreach (array(__('Sun', 'vms'), __('Mon', 'vms'), __('Tue', 'vms'), __('Wed', 'vms'), __('Thu', 'vms'), __('Fri', 'vms'), __('Sat', 'vms')) as $lbl) {
+        foreach (array(__('Sun', 'backstage-venue-manager'), __('Mon', 'backstage-venue-manager'), __('Tue', 'backstage-venue-manager'), __('Wed', 'backstage-venue-manager'), __('Thu', 'backstage-venue-manager'), __('Fri', 'backstage-venue-manager'), __('Sat', 'backstage-venue-manager')) as $lbl) {
             echo '<th scope="col">' . esc_html($lbl) . '</th>';
         }
         echo '</tr></thead><tbody>';
@@ -2618,7 +2618,7 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
                 $is_past = ($date < $today);
                 $state = vms_staff_portal_day_visual_state($date, $manual, $assignments_by_date, $staff_id);
                 $status_key = sanitize_key((string) ($state['status_key'] ?? 'unset'));
-                $status_label = (string) ($state['status_label'] ?? __('Unset', 'vms'));
+                $status_label = (string) ($state['status_label'] ?? __('Unset', 'backstage-venue-manager'));
                 $visual_state = sanitize_key((string) ($state['visual_state'] ?? ''));
                 $manual_state = sanitize_key((string) ($state['manual_state'] ?? ''));
                 $base_src = sanitize_key((string) ($state['base_src'] ?? ''));
@@ -2646,7 +2646,7 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
                         $assignment_status = sanitize_key((string) ($assignment['assignment_status'] ?? 'confirmed'));
                         $status_copy = (string) ($assignment['assignment_status_label'] ?? vms_staff_portal_assignment_status_label($assignment_status));
                         $event_payload = vms_staff_portal_assignment_event_payload($assignment, $assignment_event_map);
-                        $event_title = (string) ($event_payload['title'] ?? ($assignment['event_title'] ?? __('Event Plan', 'vms')));
+                        $event_title = (string) ($event_payload['title'] ?? ($assignment['event_title'] ?? __('Event Plan', 'backstage-venue-manager')));
                         $event_icon = trim((string) ($event_payload['icon'] ?? ''));
                         $event_view_url = trim((string) ($event_payload['view_url'] ?? ''));
                         $popover_date = (string) ($event_payload['date_label'] ?? (string) ($assignment['date_label'] ?? ''));
@@ -2712,7 +2712,7 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
                             $assignment_markup .= '<div class="vms-cal-pop-excerpt">' . esc_html($popover_excerpt) . '</div>';
                         }
                         if ($event_view_url !== '') {
-                            $assignment_markup .= '<div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="' . esc_url($event_view_url) . '">' . esc_html__('View Event Page', 'vms') . '</a></div>';
+                            $assignment_markup .= '<div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="' . esc_url($event_view_url) . '">' . esc_html__('View Event Page', 'backstage-venue-manager') . '</a></div>';
                         }
                         $assignment_markup .= '</div>';
                         $assignment_markup .= '</div>';
@@ -2723,7 +2723,7 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
                         }
                     }
                     if (count($assignments_for_day) > 1) {
-                        $assignment_markup .= '<span class="vms-av-meta-more">+' . esc_html((string) (count($assignments_for_day) - 1)) . ' ' . esc_html__('more', 'vms') . '</span>';
+                        $assignment_markup .= '<span class="vms-av-meta-more">+' . esc_html((string) (count($assignments_for_day) - 1)) . ' ' . esc_html__('more', 'backstage-venue-manager') . '</span>';
                     }
                     $assignment_markup .= '</div>';
                 }
@@ -2771,8 +2771,8 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
         echo '</div>';
     }
 
-    echo '<p class="vms-m0 vms-mt-14 vms-av-muted">' . esc_html__('Changes save automatically when you tap a date.', 'vms') . '</p>';
-    echo '<p class="vms-m0 vms-mt-8"><button type="submit" class="button" name="vms_staff_save_availability" value="1">' . esc_html__('Fallback Save', 'vms') . '</button></p>';
+    echo '<p class="vms-m0 vms-mt-14 vms-av-muted">' . esc_html__('Changes save automatically when you tap a date.', 'backstage-venue-manager') . '</p>';
+    echo '<p class="vms-m0 vms-mt-8"><button type="submit" class="button" name="vms_staff_save_availability" value="1">' . esc_html__('Fallback Save', 'backstage-venue-manager') . '</button></p>';
     echo '</form>';
     echo '</div>';
     echo '</div>';

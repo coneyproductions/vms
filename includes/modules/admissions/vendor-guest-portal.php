@@ -283,8 +283,8 @@ if (!function_exists('vms_admission_vendor_guest_internal_comp_product_id')) {
 		$product_post = array(
 			'post_type' => 'product',
 			'post_status' => 'private',
-			'post_title' => __('Complimentary Admission', 'vms'),
-			'post_excerpt' => __('Internal scanner-native comp admission product used by VMS for non-public guest passes.', 'vms'),
+			'post_title' => __('Complimentary Admission', 'backstage-venue-manager'),
+			'post_excerpt' => __('Internal scanner-native comp admission product used by VMS for non-public guest passes.', 'backstage-venue-manager'),
 			'post_content' => '',
 			'post_author' => get_current_user_id() ?: 1,
 		);
@@ -293,7 +293,7 @@ if (!function_exists('vms_admission_vendor_guest_internal_comp_product_id')) {
 			return 0;
 		}
 		$product = new WC_Product_Simple($product_id);
-		$product->set_name(__('Complimentary Admission', 'vms'));
+		$product->set_name(__('Complimentary Admission', 'backstage-venue-manager'));
 		$product->set_regular_price('0');
 		$product->set_price('0');
 		$product->set_virtual(true);
@@ -338,26 +338,26 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 	function vms_admission_vendor_guest_bridge_create(int $event_plan_id, int $vendor_id, string $guest_name, string $guest_email, string $phone, int $party_size, string $notes, int $user_id)
 	{
 		if (!function_exists('wc_create_order') || !function_exists('wc_get_product')) {
-			return new WP_Error('vms_vendor_guest_bridge_wc_missing', __('WooCommerce is required to issue scanner-native complimentary admissions.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_wc_missing', __('WooCommerce is required to issue scanner-native complimentary admissions.', 'backstage-venue-manager'));
 		}
 		if (!class_exists('Tribe__Tickets_Plus__Commerce__WooCommerce__Main')) {
-			return new WP_Error('vms_vendor_guest_bridge_tec_missing', __('Event Tickets Plus (WooCommerce tickets) is required to issue scanner-native complimentary admissions.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_tec_missing', __('Event Tickets Plus (WooCommerce tickets) is required to issue scanner-native complimentary admissions.', 'backstage-venue-manager'));
 		}
 		$tec_event_id = (int) get_post_meta($event_plan_id, '_vms_tec_event_id', true);
 		if ($tec_event_id <= 0) {
-			return new WP_Error('vms_vendor_guest_bridge_no_event', __('This event plan is not connected to a TEC event yet, so a scannable complimentary admission cannot be issued.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_no_event', __('This event plan is not connected to a TEC event yet, so a scannable complimentary admission cannot be issued.', 'backstage-venue-manager'));
 		}
 		$product_id = vms_admission_vendor_guest_internal_comp_product_id();
 		if ($product_id <= 0) {
-			return new WP_Error('vms_vendor_guest_bridge_no_product', __('Could not prepare the internal complimentary admission product.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_no_product', __('Could not prepare the internal complimentary admission product.', 'backstage-venue-manager'));
 		}
 		$product = wc_get_product($product_id);
 		if (!$product) {
-			return new WP_Error('vms_vendor_guest_bridge_bad_product', __('The internal complimentary admission product is unavailable.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_bad_product', __('The internal complimentary admission product is unavailable.', 'backstage-venue-manager'));
 		}
 		$provider = Tribe__Tickets_Plus__Commerce__WooCommerce__Main::get_instance();
 		if (!is_object($provider)) {
-			return new WP_Error('vms_vendor_guest_bridge_no_provider', __('The WooCommerce ticket provider could not be loaded.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_no_provider', __('The WooCommerce ticket provider could not be loaded.', 'backstage-venue-manager'));
 		}
 		$name = vms_admission_vendor_guest_split_name($guest_name);
 		$order = wc_create_order(array(
@@ -365,7 +365,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 			'customer_id' => 0,
 		));
 		if (is_wp_error($order) || !is_object($order)) {
-			return new WP_Error('vms_vendor_guest_bridge_order_failed', __('Could not create the complimentary admission order.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_order_failed', __('Could not create the complimentary admission order.', 'backstage-venue-manager'));
 		}
 		$order->set_billing_first_name($name['first']);
 		$order->set_billing_last_name($name['last']);
@@ -387,7 +387,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 		}
 		$item = new WC_Order_Item_Product();
 		$item->set_product($product);
-		$item->set_name(sprintf(__('Complimentary Admission — %s', 'vms'), $guest_name));
+		$item->set_name(sprintf(__('Complimentary Admission — %s', 'backstage-venue-manager'), $guest_name));
 		$item->set_quantity(max(1, $party_size));
 		$item->set_subtotal(0);
 		$item->set_total(0);
@@ -402,7 +402,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 		$order_id = (int) $order->get_id();
 		$order_item_id = (int) $item->get_id();
 		if ($order_id <= 0 || $order_item_id <= 0) {
-			return new WP_Error('vms_vendor_guest_bridge_order_item_failed', __('Could not finalize the complimentary admission order item.', 'vms'));
+			return new WP_Error('vms_vendor_guest_bridge_order_item_failed', __('Could not finalize the complimentary admission order item.', 'backstage-venue-manager'));
 		}
 		$currency_symbol = function_exists('get_woocommerce_currency_symbol') ? (string) get_woocommerce_currency_symbol() : '$';
 		$attendee_ids = array();
@@ -419,8 +419,8 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 				vms_admission_vendor_guest_bridge_cancel(array(
 					'order_id' => $order_id,
 					'attendee_ids' => $attendee_ids,
-				), __('Bridge cleanup after attendee creation failure.', 'vms'));
-				return new WP_Error('vms_vendor_guest_bridge_attendee_failed', __('Could not create the scanner attendee record.', 'vms'));
+				), __('Bridge cleanup after attendee creation failure.', 'backstage-venue-manager'));
+				return new WP_Error('vms_vendor_guest_bridge_attendee_failed', __('Could not create the scanner attendee record.', 'backstage-venue-manager'));
 			}
 			$security_code = method_exists($provider, 'generate_security_code')
 				? (string) $provider->generate_security_code($order_id, $attendee_id)
@@ -831,38 +831,38 @@ if (!function_exists('vms_admission_render_vendor_guest_config')) {
 				array(
 					'id' => 'vendor_guest_help',
 					'selector' => '[data-vms-tour="vendor-guest.help"]',
-					'title' => __('What This Does', 'vms'),
-					'html' => wp_kses_post(__('Use this section when you want a vendor to bring a controlled number of their own guests without opening a public free-for-all.', 'vms')),
+					'title' => __('What This Does', 'backstage-venue-manager'),
+					'html' => wp_kses_post(__('Use this section when you want a vendor to bring a controlled number of their own guests without opening a public free-for-all.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'vendor_guest_config',
 					'selector' => '[data-vms-tour="vendor-guest.config"]',
-					'title' => __('Turn The Program On Per Event', 'vms'),
-					'html' => wp_kses_post(__('Enable the program only for events where you want vendors to add guest names themselves from the portal.', 'vms')),
+					'title' => __('Turn The Program On Per Event', 'backstage-venue-manager'),
+					'html' => wp_kses_post(__('Enable the program only for events where you want vendors to add guest names themselves from the portal.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'vendor_guest_table',
 					'selector' => '[data-vms-tour="vendor-guest.table"]',
-					'title' => __('Cap Each Assigned Vendor', 'vms'),
-					'html' => wp_kses_post(__('Give each assigned vendor their own headcount cap and repeat-guest rule so promo partners can stay first-time-only while primary acts can reuse their guest list when needed.', 'vms')),
+					'title' => __('Cap Each Assigned Vendor', 'backstage-venue-manager'),
+					'html' => wp_kses_post(__('Give each assigned vendor their own headcount cap and repeat-guest rule so promo partners can stay first-time-only while primary acts can reuse their guest list when needed.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 			),
 		);
 		$fallback_attr = esc_attr(wp_json_encode($fallback_tour));
 		echo '<div class="vms-adm-vendor-guest-config" data-vms-tour="vendor-guest.config">';
-		echo '<p class="vms-adm-vendor-guest-help" data-vms-tour="vendor-guest.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.event_plan.vendor_guest" data-vms-tour-fallback="' . $fallback_attr . '" data-vms-tour="vendor-guest.help-action">' . esc_html__('Start Guided Tour', 'vms') . '</button></p>';
-		echo '<h3>' . esc_html__('Vendor-Managed Guest Admissions', 'vms') . '</h3>';
-		echo '<p class="description">' . esc_html__('Let assigned vendors add their own complimentary guests from the vendor portal while you keep control of caps and each vendor’s repeat-guest policy.', 'vms') . '</p>';
-		echo '<p><label><input type="checkbox" name="vms_vendor_guest_rules[enabled]" value="1" ' . checked(!empty($rules['enabled']), true, false) . '> ' . esc_html__('Enable vendor-managed guest admissions for this event', 'vms') . '</label></p>';
+		echo '<p class="vms-adm-vendor-guest-help" data-vms-tour="vendor-guest.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.event_plan.vendor_guest" data-vms-tour-fallback="' . $fallback_attr . '" data-vms-tour="vendor-guest.help-action">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button></p>';
+		echo '<h3>' . esc_html__('Vendor-Managed Guest Admissions', 'backstage-venue-manager') . '</h3>';
+		echo '<p class="description">' . esc_html__('Let assigned vendors add their own complimentary guests from the vendor portal while you keep control of caps and each vendor’s repeat-guest policy.', 'backstage-venue-manager') . '</p>';
+		echo '<p><label><input type="checkbox" name="vms_vendor_guest_rules[enabled]" value="1" ' . checked(!empty($rules['enabled']), true, false) . '> ' . esc_html__('Enable vendor-managed guest admissions for this event', 'backstage-venue-manager') . '</label></p>';
 		if (empty($vendors)) {
-			echo '<p class="description vms-adm-vendor-guest-empty">' . esc_html__('Assign at least one vendor to this event plan before enabling vendor-managed guest admissions.', 'vms') . '</p>';
+			echo '<p class="description vms-adm-vendor-guest-empty">' . esc_html__('Assign at least one vendor to this event plan before enabling vendor-managed guest admissions.', 'backstage-venue-manager') . '</p>';
 			echo '</div>';
 			return;
 		}
-		echo '<table class="vms-adm-vendor-guest-table" data-vms-tour="vendor-guest.table"><thead><tr><th>' . esc_html__('Vendor', 'vms') . '</th><th>' . esc_html__('Allow Portal Entries', 'vms') . '</th><th>' . esc_html__('Guest Headcount Cap', 'vms') . '</th><th>' . esc_html__('First-Time Guests Only', 'vms') . '</th></tr></thead><tbody>';
+		echo '<table class="vms-adm-vendor-guest-table" data-vms-tour="vendor-guest.table"><thead><tr><th>' . esc_html__('Vendor', 'backstage-venue-manager') . '</th><th>' . esc_html__('Allow Portal Entries', 'backstage-venue-manager') . '</th><th>' . esc_html__('Guest Headcount Cap', 'backstage-venue-manager') . '</th><th>' . esc_html__('First-Time Guests Only', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 		foreach ($vendors as $vendor) {
 			$vendor_id = (int) ($vendor['id'] ?? 0);
 			$vendor_rule = vms_admission_vendor_guest_get_vendor_rule($event_plan_id, $vendor_id);
@@ -870,9 +870,9 @@ if (!function_exists('vms_admission_render_vendor_guest_config')) {
 			$control_state = $row_enabled ? '' : ' disabled';
 			echo '<tr data-vms-vendor-guest-row>';
 			echo '<td>' . esc_html((string) ($vendor['title'] ?? '')) . '</td>';
-			echo '<td><label><input type="checkbox" name="vms_vendor_guest_rules[vendors][' . esc_attr((string) $vendor_id) . '][enabled]" value="1" ' . checked($row_enabled, true, false) . ' data-vms-vendor-guest-toggle> ' . esc_html__('Yes', 'vms') . '</label></td>';
+			echo '<td><label><input type="checkbox" name="vms_vendor_guest_rules[vendors][' . esc_attr((string) $vendor_id) . '][enabled]" value="1" ' . checked($row_enabled, true, false) . ' data-vms-vendor-guest-toggle> ' . esc_html__('Yes', 'backstage-venue-manager') . '</label></td>';
 			echo '<td><input type="number" min="0" step="1" name="vms_vendor_guest_rules[vendors][' . esc_attr((string) $vendor_id) . '][allotment]" value="' . esc_attr((string) max(0, absint($vendor_rule['allotment'] ?? 0))) . '" data-vms-vendor-guest-control="allotment"' . $control_state . '></td>';
-			echo '<td><label><input type="checkbox" name="vms_vendor_guest_rules[vendors][' . esc_attr((string) $vendor_id) . '][first_time_only]" value="1" ' . checked(!empty($vendor_rule['first_time_only']), true, false) . ' data-vms-vendor-guest-control="first_time_only"' . $control_state . '> ' . esc_html__('Yes', 'vms') . '</label></td>';
+			echo '<td><label><input type="checkbox" name="vms_vendor_guest_rules[vendors][' . esc_attr((string) $vendor_id) . '][first_time_only]" value="1" ' . checked(!empty($vendor_rule['first_time_only']), true, false) . ' data-vms-vendor-guest-control="first_time_only"' . $control_state . '> ' . esc_html__('Yes', 'backstage-venue-manager') . '</label></td>';
 			echo '</tr>';
 		}
 		echo '</tbody></table>';
@@ -953,7 +953,7 @@ if (!function_exists('vms_admission_vendor_guest_add_nav_link')) {
 	function vms_admission_vendor_guest_add_nav_link(string $tab, array $portal_context): void
 	{
 		$url = vms_admission_vendor_guest_portal_url($portal_context);
-		echo '<a class="' . ($tab === 'guest-list' ? 'is-active' : '') . '" href="' . esc_url($url) . '">' . esc_html__('Guest List', 'vms') . '</a>';
+		echo '<a class="' . ($tab === 'guest-list' ? 'is-active' : '') . '" href="' . esc_url($url) . '">' . esc_html__('Guest List', 'backstage-venue-manager') . '</a>';
 	}
 }
 add_action('vms_vendor_portal_nav_links', 'vms_admission_vendor_guest_add_nav_link', 20, 2);
@@ -978,44 +978,44 @@ if (!function_exists('vms_admission_vendor_guest_register_tours')) {
 	{
 		$tours[] = array(
 			'id' => 'vms.event_plan.vendor_guest',
-			'title' => __('Vendor-Managed Guest Admissions', 'vms'),
+			'title' => __('Vendor-Managed Guest Admissions', 'backstage-venue-manager'),
 			'screen' => 'admin:vms_event_plan',
 			'version' => '1.0.0',
 			'level' => 'beginner',
-			'description' => __('Control how many complimentary guests each assigned vendor can add from their portal.', 'vms'),
+			'description' => __('Control how many complimentary guests each assigned vendor can add from their portal.', 'backstage-venue-manager'),
 			'auto_run' => false,
 			'priority' => 20,
 			'steps' => array(
 				array(
 					'id' => 'vendor_guest_help',
 					'selector' => '[data-vms-tour="vendor-guest.help"]',
-					'title' => __('What This Does', 'vms'),
-					'body' => wp_kses_post(__('Use this section when you want a vendor to bring a controlled number of their own guests without opening a public free-for-all.', 'vms')),
+					'title' => __('What This Does', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Use this section when you want a vendor to bring a controlled number of their own guests without opening a public free-for-all.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'vendor_guest_config',
 					'selector' => '[data-vms-tour="vendor-guest.config"]',
-					'title' => __('Turn The Program On Per Event', 'vms'),
-					'body' => wp_kses_post(__('Enable the program only for events where you want vendors to add guest names themselves from the portal.', 'vms')),
+					'title' => __('Turn The Program On Per Event', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Enable the program only for events where you want vendors to add guest names themselves from the portal.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'vendor_guest_table',
 					'selector' => '[data-vms-tour="vendor-guest.table"]',
-					'title' => __('Cap Each Assigned Vendor', 'vms'),
-					'body' => wp_kses_post(__('Give each assigned vendor their own headcount cap and repeat-guest rule so promo partners can stay first-time-only while primary acts can reuse their guest list when needed.', 'vms')),
+					'title' => __('Cap Each Assigned Vendor', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Give each assigned vendor their own headcount cap and repeat-guest rule so promo partners can stay first-time-only while primary acts can reuse their guest list when needed.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 			),
 		);
 		$tours[] = array(
 			'id' => 'vms.vendor.portal.guest_list',
-			'title' => __('Vendor Portal Guest List', 'vms'),
+			'title' => __('Vendor Portal Guest List', 'backstage-venue-manager'),
 			'screen' => 'frontend:vms-vendor-portal-guest-list',
 			'version' => '1.0.0',
 			'level' => 'beginner',
-			'description' => __('Show vendors how to add their own hosted guests without breaking event rules.', 'vms'),
+			'description' => __('Show vendors how to add their own hosted guests without breaking event rules.', 'backstage-venue-manager'),
 			'priority' => 12,
 			'auto_run' => true,
 			'auto_run_delay_ms' => 700,
@@ -1023,22 +1023,22 @@ if (!function_exists('vms_admission_vendor_guest_register_tours')) {
 				array(
 					'id' => 'vendor_guest_portal_help',
 					'selector' => '[data-vms-tour="vendor-portal-guest.help"]',
-					'title' => __('Stay Inside The Cap', 'vms'),
-					'body' => wp_kses_post(__('This page shows how many complimentary guests you are allowed to add for each upcoming event and how many spots remain.', 'vms')),
+					'title' => __('Stay Inside The Cap', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('This page shows how many complimentary guests you are allowed to add for each upcoming event and how many spots remain.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'vendor_guest_portal_card',
 					'selector' => '[data-vms-tour="vendor-portal-guest.card"]',
-					'title' => __('One Card Per Event', 'vms'),
-					'body' => wp_kses_post(__('Each event card shows the current cap, the remaining room, and the rules the venue is enforcing for those guest entries.', 'vms')),
+					'title' => __('One Card Per Event', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Each event card shows the current cap, the remaining room, and the rules the venue is enforcing for those guest entries.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'vendor_guest_portal_form',
 					'selector' => '[data-vms-tour="vendor-portal-guest.form"]',
-					'title' => __('Add Real Guest Info', 'vms'),
-					'body' => wp_kses_post(__('Enter the guest’s real contact info so the venue can check for prior comps, prior ticket purchases, and same-event duplicates before admitting them for free.', 'vms')),
+					'title' => __('Add Real Guest Info', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Enter the guest’s real contact info so the venue can check for prior comps, prior ticket purchases, and same-event duplicates before admitting them for free.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 			),
@@ -1060,19 +1060,19 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 		$flash = vms_admission_vendor_guest_pull_flash($user_id);
 		$events = vms_admission_vendor_guest_portal_events($vendor_id);
 		echo '<div class="vms-vendor-guest-root">';
-		echo '<div class="vms-vendor-guest-tour" data-vms-tour="vendor-portal-guest.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor.portal.guest_list">' . esc_html__('Start Guided Tour', 'vms') . '</button></div>';
-		echo '<p class="vms-vendor-guest-help">' . esc_html__('Use this page to add the complimentary guests the venue has allowed for your upcoming events. Every entry is checked against the current door list and paid customer history before it is accepted.', 'vms') . '</p>';
+		echo '<div class="vms-vendor-guest-tour" data-vms-tour="vendor-portal-guest.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor.portal.guest_list">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button></div>';
+		echo '<p class="vms-vendor-guest-help">' . esc_html__('Use this page to add the complimentary guests the venue has allowed for your upcoming events. Every entry is checked against the current door list and paid customer history before it is accepted.', 'backstage-venue-manager') . '</p>';
 		if (!empty($flash['message']) && function_exists('vms_portal_notice')) {
 			echo vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']);
 		}
 		if ($is_preview && function_exists('vms_portal_notice')) {
-			echo vms_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'vms'));
+			echo vms_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'backstage-venue-manager'));
 		}
 		if (empty($events)) {
 			if (function_exists('vms_portal_notice')) {
-				echo vms_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'vms'));
+				echo vms_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager'));
 			} else {
-				echo '<p>' . esc_html__('No upcoming events currently allow this vendor account to add complimentary guests.', 'vms') . '</p>';
+				echo '<p>' . esc_html__('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager') . '</p>';
 			}
 			echo '</div>';
 			return true;
@@ -1084,7 +1084,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 			$event_plan_id = (int) ($event['event_plan_id'] ?? 0);
 			$card_attr = ($selected_event === $event_plan_id || $event_index === 0) ? ' data-vms-tour="vendor-portal-guest.card"' : '';
 			echo '<section class="vms-vendor-guest-card"' . $card_attr . '>';
-			echo '<div class="vms-vendor-guest-topline"><div><h3>' . esc_html((string) ($event['title'] ?? '')) . '</h3></div><span class="vms-vendor-guest-pill">' . esc_html(sprintf(__('Remaining: %1$d of %2$d', 'vms'), (int) ($event['remaining'] ?? 0), (int) ($event['allotment'] ?? 0))) . '</span></div>';
+			echo '<div class="vms-vendor-guest-topline"><div><h3>' . esc_html((string) ($event['title'] ?? '')) . '</h3></div><span class="vms-vendor-guest-pill">' . esc_html(sprintf(__('Remaining: %1$d of %2$d', 'backstage-venue-manager'), (int) ($event['remaining'] ?? 0), (int) ($event['allotment'] ?? 0))) . '</span></div>';
 			$meta = array();
 			if (!empty($event['event_date'])) {
 				$meta[] = esc_html((string) $event['event_date']);
@@ -1092,9 +1092,9 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 			if (!empty($event['venue_name'])) {
 				$meta[] = esc_html((string) $event['venue_name']);
 			}
-			$meta[] = esc_html(sprintf(__('Used headcount: %d', 'vms'), (int) ($event['used'] ?? 0)));
+			$meta[] = esc_html(sprintf(__('Used headcount: %d', 'backstage-venue-manager'), (int) ($event['used'] ?? 0)));
 			if (!empty($event['first_time_only'])) {
-				$meta[] = esc_html__('First-time guests only', 'vms');
+				$meta[] = esc_html__('First-time guests only', 'backstage-venue-manager');
 			}
 			echo '<div class="vms-vendor-guest-meta"><span>' . implode('</span><span>', $meta) . '</span></div>';
 			if (!$is_preview) {
@@ -1111,31 +1111,31 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 				wp_nonce_field('vms_vendor_guest_portal_submit', '_vms_vendor_guest_nonce');
 				echo '<div class="vms-vendor-guest-party-list">';
 				echo '<fieldset class="vms-vendor-guest-person is-primary" data-vms-guest-slot="1">';
-				echo '<legend data-vms-guest-legend>' . esc_html__('Guest Pass', 'vms') . '</legend>';
+				echo '<legend data-vms-guest-legend>' . esc_html__('Guest Pass', 'backstage-venue-manager') . '</legend>';
 				echo '<div class="vms-vendor-guest-person-grid">';
-				echo '<label class="vms-vendor-guest-person-grid__party-size">' . esc_html__('Party Size', 'vms') . '<span class="vms-vendor-guest-qty" data-vms-guest-qty><button type="button" class="button button-secondary vms-vendor-guest-qty__button" data-vms-guest-qty-decrease aria-label="' . esc_attr__('Decrease party size', 'vms') . '">−</button><input type="number" name="party_size" min="1" max="' . esc_attr((string) $max_party) . '" step="1" value="1" inputmode="numeric" pattern="[0-9]*" data-vms-guest-party-size><button type="button" class="button button-secondary vms-vendor-guest-qty__button" data-vms-guest-qty-increase aria-label="' . esc_attr__('Increase party size', 'vms') . '">+</button></span><p class="vms-vendor-guest-person-help vms-vendor-guest-person-help--party">' . esc_html__('Increase party size to open connected guest slots below.', 'vms') . '</p></label>';
-				echo '<label>' . esc_html__('Full Name', 'vms') . ' <span class="vms-vendor-guest-required-marker">*</span><input type="text" name="guest_names[1]" autocomplete="name" data-vms-guest-anchor-name></label>';
-				echo '<div class="vms-vendor-guest-contact-group"><span class="vms-vendor-guest-contact-group__label">' . esc_html__('Contact Info', 'vms') . ' <span class="vms-vendor-guest-required-marker">*</span></span><div class="vms-vendor-guest-contact-group__grid"><label>' . esc_html__('Email', 'vms') . '<input type="email" name="guest_emails[1]" autocomplete="email"></label><label>' . esc_html__('Phone', 'vms') . '<input type="text" name="guest_phones[1]" autocomplete="tel"></label></div><p class="vms-vendor-guest-person-help">' . esc_html__('Add at least one: email or phone.', 'vms') . '</p></div>';
+				echo '<label class="vms-vendor-guest-person-grid__party-size">' . esc_html__('Party Size', 'backstage-venue-manager') . '<span class="vms-vendor-guest-qty" data-vms-guest-qty><button type="button" class="button button-secondary vms-vendor-guest-qty__button" data-vms-guest-qty-decrease aria-label="' . esc_attr__('Decrease party size', 'backstage-venue-manager') . '">−</button><input type="number" name="party_size" min="1" max="' . esc_attr((string) $max_party) . '" step="1" value="1" inputmode="numeric" pattern="[0-9]*" data-vms-guest-party-size><button type="button" class="button button-secondary vms-vendor-guest-qty__button" data-vms-guest-qty-increase aria-label="' . esc_attr__('Increase party size', 'backstage-venue-manager') . '">+</button></span><p class="vms-vendor-guest-person-help vms-vendor-guest-person-help--party">' . esc_html__('Increase party size to open connected guest slots below.', 'backstage-venue-manager') . '</p></label>';
+				echo '<label>' . esc_html__('Full Name', 'backstage-venue-manager') . ' <span class="vms-vendor-guest-required-marker">*</span><input type="text" name="guest_names[1]" autocomplete="name" data-vms-guest-anchor-name></label>';
+				echo '<div class="vms-vendor-guest-contact-group"><span class="vms-vendor-guest-contact-group__label">' . esc_html__('Contact Info', 'backstage-venue-manager') . ' <span class="vms-vendor-guest-required-marker">*</span></span><div class="vms-vendor-guest-contact-group__grid"><label>' . esc_html__('Email', 'backstage-venue-manager') . '<input type="email" name="guest_emails[1]" autocomplete="email"></label><label>' . esc_html__('Phone', 'backstage-venue-manager') . '<input type="text" name="guest_phones[1]" autocomplete="tel"></label></div><p class="vms-vendor-guest-person-help">' . esc_html__('Add at least one: email or phone.', 'backstage-venue-manager') . '</p></div>';
 				echo '</div>';
 				echo '<div class="vms-vendor-guest-companion-list">';
 				for ($slot = 2; $slot <= $max_party; $slot++) {
 					$card_hidden = ' hidden';
 					$card_disabled = ' disabled';
-					$label = sprintf(__('Guest Pass +%d', 'vms'), $slot - 1);
+					$label = sprintf(__('Guest Pass +%d', 'backstage-venue-manager'), $slot - 1);
 					echo '<fieldset class="vms-vendor-guest-person is-companion" data-vms-guest-slot="' . esc_attr((string) $slot) . '"' . $card_hidden . '>';
 					echo '<legend data-vms-guest-legend>' . esc_html($label) . '</legend>';
 					echo '<div class="vms-vendor-guest-person-grid">';
-					echo '<label>' . esc_html__('Full Name', 'vms') . ' <span class="vms-vendor-guest-required-marker">*</span><input type="text" name="guest_names[' . esc_attr((string) $slot) . ']" autocomplete="name"' . $card_disabled . '></label>';
-					echo '<div class="vms-vendor-guest-contact-group"><span class="vms-vendor-guest-contact-group__label">' . esc_html__('Contact Info', 'vms') . ' <span class="vms-vendor-guest-required-marker">*</span></span><div class="vms-vendor-guest-contact-group__grid"><label>' . esc_html__('Email', 'vms') . '<input type="email" name="guest_emails[' . esc_attr((string) $slot) . ']" autocomplete="email"' . $card_disabled . '></label><label>' . esc_html__('Phone', 'vms') . '<input type="text" name="guest_phones[' . esc_attr((string) $slot) . ']" autocomplete="tel"' . $card_disabled . '></label></div><p class="vms-vendor-guest-person-help">' . esc_html__('Add at least one: email or phone.', 'vms') . '</p></div>';
+					echo '<label>' . esc_html__('Full Name', 'backstage-venue-manager') . ' <span class="vms-vendor-guest-required-marker">*</span><input type="text" name="guest_names[' . esc_attr((string) $slot) . ']" autocomplete="name"' . $card_disabled . '></label>';
+					echo '<div class="vms-vendor-guest-contact-group"><span class="vms-vendor-guest-contact-group__label">' . esc_html__('Contact Info', 'backstage-venue-manager') . ' <span class="vms-vendor-guest-required-marker">*</span></span><div class="vms-vendor-guest-contact-group__grid"><label>' . esc_html__('Email', 'backstage-venue-manager') . '<input type="email" name="guest_emails[' . esc_attr((string) $slot) . ']" autocomplete="email"' . $card_disabled . '></label><label>' . esc_html__('Phone', 'backstage-venue-manager') . '<input type="text" name="guest_phones[' . esc_attr((string) $slot) . ']" autocomplete="tel"' . $card_disabled . '></label></div><p class="vms-vendor-guest-person-help">' . esc_html__('Add at least one: email or phone.', 'backstage-venue-manager') . '</p></div>';
 					echo '</div>';
 					echo '</fieldset>';
 				}
 				echo '</div>';
 				echo '<div class="vms-vendor-guest-person-footer">';
 				echo '<div class="vms-vendor-guest-form-grid">';
-				echo '<label class="vms-vendor-guest-form-grid__notes">' . esc_html__('Notes', 'vms') . '<textarea name="notes" rows="2"></textarea></label>';
+				echo '<label class="vms-vendor-guest-form-grid__notes">' . esc_html__('Notes', 'backstage-venue-manager') . '<textarea name="notes" rows="2"></textarea></label>';
 				echo '</div>';
-				echo '<div class="vms-vendor-guest-form-actions"><button type="submit" class="button button-primary">' . esc_html__('Add Guest Passes', 'vms') . '</button></div>';
+				echo '<div class="vms-vendor-guest-form-actions"><button type="submit" class="button button-primary">' . esc_html__('Add Guest Passes', 'backstage-venue-manager') . '</button></div>';
 				echo '</div>';
 				echo '</fieldset>';
 				echo '</div>';
@@ -1156,7 +1156,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 					if (!empty($row['phone'])) {
 						$entry_meta[] = esc_html((string) $row['phone']);
 					}
-					$entry_meta[] = esc_html(sprintf(__('Party Size: %d', 'vms'), max(1, (int) ($row['party_size'] ?? 1))));
+					$entry_meta[] = esc_html(sprintf(__('Party Size: %d', 'backstage-venue-manager'), max(1, (int) ($row['party_size'] ?? 1))));
 					if (!empty($row['notes'])) {
 						$entry_meta[] = esc_html((string) $row['notes']);
 					}
@@ -1170,7 +1170,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 						echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
 						echo '<input type="hidden" name="return_url" value="' . esc_attr(vms_admission_vendor_guest_portal_url($portal_context, $event_plan_id)) . '">';
 						wp_nonce_field('vms_vendor_guest_portal_submit', '_vms_vendor_guest_nonce');
-						echo '<button type="submit" class="button">' . esc_html__('Remove Guest', 'vms') . '</button>';
+						echo '<button type="submit" class="button">' . esc_html__('Remove Guest', 'backstage-venue-manager') . '</button>';
 						echo '</form></div>';
 					}
 					echo '</article>';
@@ -1190,11 +1190,11 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 	function vms_admission_vendor_guest_handle_submit(): void
 	{
 		if (!is_user_logged_in()) {
-			wp_die(esc_html__('Please log in to manage guest entries.', 'vms'));
+			wp_die(esc_html__('Please log in to manage guest entries.', 'backstage-venue-manager'));
 		}
 		$nonce = isset($_POST['_vms_vendor_guest_nonce']) ? (string) wp_unslash($_POST['_vms_vendor_guest_nonce']) : '';
 		if (!wp_verify_nonce($nonce, 'vms_vendor_guest_portal_submit')) {
-			wp_die(esc_html__('Security check failed.', 'vms'));
+			wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
 		}
 		$user_id = get_current_user_id();
 		$mode = isset($_POST['mode']) ? sanitize_key((string) wp_unslash($_POST['mode'])) : 'add';
@@ -1205,7 +1205,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 			$return_url = home_url('/vendor-portal/?tab=guest-list');
 		}
 		$flash_type = 'success';
-		$flash_message = __('Guest list updated.', 'vms');
+		$flash_message = __('Guest list updated.', 'backstage-venue-manager');
 		if ($mode === 'cancel') {
 			$entry_id = isset($_POST['entry_id']) ? absint((string) wp_unslash($_POST['entry_id'])) : 0;
 			global $wpdb;
@@ -1213,17 +1213,17 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 			$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
 			if (!is_array($row)) {
 				$flash_type = 'error';
-				$flash_message = __('That guest entry could not be found.', 'vms');
+				$flash_message = __('That guest entry could not be found.', 'backstage-venue-manager');
 			} elseif ((int) ($row['owner_vendor_id'] ?? 0) !== $vendor_id || (int) ($row['event_plan_id'] ?? 0) !== $event_plan_id || (string) ($row['source'] ?? '') !== 'vendor_portal') {
 				$flash_type = 'error';
-				$flash_message = __('You cannot remove that guest entry.', 'vms');
+				$flash_message = __('You cannot remove that guest entry.', 'backstage-venue-manager');
 			} elseif (!vms_admission_vendor_guest_event_plan_can_vendor_manage($event_plan_id, $vendor_id, $user_id)) {
 				$flash_type = 'error';
-				$flash_message = __('This event is not currently open for vendor-managed guest entries.', 'vms');
+				$flash_message = __('This event is not currently open for vendor-managed guest entries.', 'backstage-venue-manager');
 			} else {
 				$claim_meta = $row['claim_meta'] ?? '';
 				$bridge = vms_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta);
-				vms_admission_vendor_guest_bridge_cancel($bridge, __('Vendor guest entry removed before check-in.', 'vms'));
+				vms_admission_vendor_guest_bridge_cancel($bridge, __('Vendor guest entry removed before check-in.', 'backstage-venue-manager'));
 				$updated = $wpdb->update(
 					$table,
 					array(
@@ -1237,19 +1237,19 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 				);
 				if ($updated === false) {
 					$flash_type = 'error';
-					$flash_message = __('Could not remove that guest entry.', 'vms');
+					$flash_message = __('Could not remove that guest entry.', 'backstage-venue-manager');
 				} else {
 					vms_admission_audit_log($event_plan_id, $entry_id, 'vendor_portal_cancel', $user_id, 'vendor_portal', array(
 						'vendor_id' => $vendor_id,
 						'bridge' => $bridge,
 					));
-					$flash_message = __('Guest entry removed.', 'vms');
+					$flash_message = __('Guest entry removed.', 'backstage-venue-manager');
 				}
 			}
 		} else {
 			if (!vms_admission_vendor_guest_event_plan_can_vendor_manage($event_plan_id, $vendor_id, $user_id)) {
 				$flash_type = 'error';
-				$flash_message = __('This event is not currently open for vendor-managed guest entries.', 'vms');
+				$flash_message = __('This event is not currently open for vendor-managed guest entries.', 'backstage-venue-manager');
 			} else {
 				$notes = sanitize_textarea_field((string) wp_unslash($_POST['notes'] ?? ''));
 				$party_size = max(1, absint((string) wp_unslash($_POST['party_size'] ?? '1')));
@@ -1264,7 +1264,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 				$allotment = (int) ($rule['allotment'] ?? 0);
 				if (($used + $party_size) > $allotment) {
 					$flash_type = 'error';
-					$flash_message = sprintf(__('This guest group would exceed your allowed headcount cap for this event. Remaining spots: %d.', 'vms'), max(0, $allotment - $used));
+					$flash_message = sprintf(__('This guest group would exceed your allowed headcount cap for this event. Remaining spots: %d.', 'backstage-venue-manager'), max(0, $allotment - $used));
 				} else {
 					$seen_names = array();
 					$seen_emails = array();
@@ -1276,20 +1276,20 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						$guest_email = (string) ($guest_row['email'] ?? '');
 						$guest_email_raw = (string) ($guest_row['email_raw'] ?? '');
 						$phone = (string) ($guest_row['phone'] ?? '');
-						$guest_label = $slot === 1 ? __('the primary guest', 'vms') : sprintf(__('guest %d', 'vms'), $slot);
+						$guest_label = $slot === 1 ? __('the primary guest', 'backstage-venue-manager') : sprintf(__('guest %d', 'backstage-venue-manager'), $slot);
 						if (!vms_admission_vendor_guest_has_full_name($guest_name)) {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('Please enter a real first and last name for %s.', 'vms'), $guest_label);
+							$flash_message = sprintf(__('Please enter a real first and last name for %s.', 'backstage-venue-manager'), $guest_label);
 							break;
 						}
 						if ($guest_email_raw !== '' && $guest_email === '') {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('Please enter a valid email address for %s.', 'vms'), $guest_label);
+							$flash_message = sprintf(__('Please enter a valid email address for %s.', 'backstage-venue-manager'), $guest_label);
 							break;
 						}
 						if ($guest_email === '' && trim($phone) === '') {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('Please add an email or phone number for %s.', 'vms'), $guest_label);
+							$flash_message = sprintf(__('Please add an email or phone number for %s.', 'backstage-venue-manager'), $guest_label);
 							break;
 						}
 						$name_norm = vms_admission_normalize_name($guest_name);
@@ -1297,31 +1297,31 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						$phone_norm = vms_admission_normalize_phone($phone);
 						if ($name_norm !== '' && isset($seen_names[$name_norm])) {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('You entered %1$s more than once in this guest group. Each person needs their own named pass.', 'vms'), $guest_name);
+							$flash_message = sprintf(__('You entered %1$s more than once in this guest group. Each person needs their own named pass.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
 						if ($email_norm !== '' && isset($seen_emails[$email_norm])) {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('Each guest needs their own contact info. The email for %s is already being used in this guest group.', 'vms'), $guest_name);
+							$flash_message = sprintf(__('Each guest needs their own contact info. The email for %s is already being used in this guest group.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
 						if ($phone_norm !== '' && isset($seen_phones[$phone_norm])) {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('Each guest needs their own contact info. The phone number for %s is already being used in this guest group.', 'vms'), $guest_name);
+							$flash_message = sprintf(__('Each guest needs their own contact info. The phone number for %s is already being used in this guest group.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
 						$report = vms_admission_vendor_guest_validation_report($event_plan_id, $guest_name, $guest_email, $phone);
 						if (!empty($report['duplicate_count'])) {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('%s is already on the list for this event.', 'vms'), $guest_name);
+							$flash_message = sprintf(__('%s is already on the list for this event.', 'backstage-venue-manager'), $guest_name);
 							break;
 						} elseif (!empty($report['same_event_paid'])) {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('%s already appears to have a paid ticket for this event.', 'vms'), $guest_name);
+							$flash_message = sprintf(__('%s already appears to have a paid ticket for this event.', 'backstage-venue-manager'), $guest_name);
 							break;
 						} elseif (!empty($rule['first_time_only']) && (!empty($report['prior_comp_count']) || !empty($report['any_paid']))) {
 							$flash_type = 'error';
-							$flash_message = sprintf(__('%s does not qualify for this event’s first-time-only free pass rule.', 'vms'), $guest_name);
+							$flash_message = sprintf(__('%s does not qualify for this event’s first-time-only free pass rule.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
 						$seen_names[$name_norm] = true;
@@ -1393,9 +1393,9 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 								array('%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s')
 							);
 							if ($insert === false) {
-								vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge cleanup after admission row insert failure.', 'vms'));
+								vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge cleanup after admission row insert failure.', 'backstage-venue-manager'));
 								$flash_type = 'error';
-								$flash_message = __('Could not add that guest right now.', 'vms');
+								$flash_message = __('Could not add that guest right now.', 'backstage-venue-manager');
 								$insert_failed = true;
 								break;
 							}
@@ -1418,7 +1418,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						}
 						if ($insert_failed) {
 							foreach ($created_bridges as $bridge) {
-								vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge rollback after partial vendor guest failure.', 'vms'));
+								vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge rollback after partial vendor guest failure.', 'backstage-venue-manager'));
 							}
 							foreach ($created_rows as $entry_id) {
 								$wpdb->delete($table, array('id' => $entry_id), array('%d'));
@@ -1426,11 +1426,11 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						} else {
 							$total_added = count($validated_guests);
 							if ($email_count > 0 && $email_count === $total_added) {
-								$flash_message = sprintf(_n('%d guest pass added and emailed for scanner check-in.', '%d guest passes added and emailed for scanner check-in.', $total_added, 'vms'), $total_added);
+								$flash_message = sprintf(_n('%d guest pass added and emailed for scanner check-in.', '%d guest passes added and emailed for scanner check-in.', $total_added, 'backstage-venue-manager'), $total_added);
 							} elseif ($email_count > 0) {
-								$flash_message = sprintf(_n('%1$d guest pass added. %2$d pass email was sent and the rest are ready in the scanner.', '%1$d guest passes added. %2$d pass emails were sent and the rest are ready in the scanner.', $total_added, 'vms'), $total_added, $email_count);
+								$flash_message = sprintf(_n('%1$d guest pass added. %2$d pass email was sent and the rest are ready in the scanner.', '%1$d guest passes added. %2$d pass emails were sent and the rest are ready in the scanner.', $total_added, 'backstage-venue-manager'), $total_added, $email_count);
 							} else {
-								$flash_message = sprintf(_n('%d guest pass added and ready in the scanner.', '%d guest passes added and ready in the scanner.', $total_added, 'vms'), $total_added);
+								$flash_message = sprintf(_n('%d guest pass added and ready in the scanner.', '%d guest passes added and ready in the scanner.', $total_added, 'backstage-venue-manager'), $total_added);
 							}
 						}
 					}

@@ -11,16 +11,16 @@ $manual_ticket_pids = isset($manual_ticket_pids) && is_array($manual_ticket_pids
 ?>
 <?php if (!post_type_exists('tribe_events')) : ?>
     <details class="vms-ticketing__legacy" open>
-        <summary><strong><?php esc_html_e('Legacy / Imported Ticketing Integration', 'vms'); ?></strong></summary>
-        <p class="description"><?php esc_html_e('The Events Calendar (TEC) is not active, so ticketing links are unavailable.', 'vms'); ?></p>
+        <summary><strong><?php esc_html_e('Legacy / Imported Ticketing Integration', 'backstage-venue-manager'); ?></strong></summary>
+        <p class="description"><?php esc_html_e('The Events Calendar (TEC) is not active, so ticketing links are unavailable.', 'backstage-venue-manager'); ?></p>
     </details>
 <?php else : ?>
     <details class="vms-ticketing__legacy" <?php echo ($linked_tec_id <= 0 ? 'open' : ''); ?>>
-        <summary><strong><?php esc_html_e('Legacy / Imported Ticketing Integration', 'vms'); ?></strong></summary>
+        <summary><strong><?php esc_html_e('Legacy / Imported Ticketing Integration', 'backstage-venue-manager'); ?></strong></summary>
 
         <?php if ($linked_tec_id > 0) : ?>
             <p class="vms-ticketing__linked">
-                <strong><?php esc_html_e('Linked TEC event:', 'vms'); ?></strong>
+                <strong><?php esc_html_e('Linked TEC event:', 'backstage-venue-manager'); ?></strong>
                 <span>WP #<?php echo (int) $linked_tec_id; ?></span>
                 <?php if ($linked_tec_legacy_str !== '') : ?>
                     <span class="vms-ticketing__linked-legacy"><?php echo esc_html($linked_tec_legacy_str); ?></span>
@@ -49,12 +49,12 @@ $manual_ticket_pids = isset($manual_ticket_pids) && is_array($manual_ticket_pids
                     }
                 ?>
 
-                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Ticket products:', 'vms'); ?></strong> <?php echo $ticket_pids_meta_exists ? (int) count($ticket_pids) : esc_html__('Not refreshed', 'vms'); ?></div>
-                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Sold:', 'vms'); ?></strong> <?php echo ($qty === null) ? esc_html__('Not refreshed', 'vms') : (int) $qty; ?></div>
-                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Revenue:', 'vms'); ?></strong> <?php echo ($rev === null) ? esc_html__('Not refreshed', 'vms') : esc_html($rev_str); ?></div>
-                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Source:', 'vms'); ?></strong> <?php echo esc_html($provider_label); ?></div>
+                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Ticket products:', 'backstage-venue-manager'); ?></strong> <?php echo $ticket_pids_meta_exists ? (int) count($ticket_pids) : esc_html__('Not refreshed', 'backstage-venue-manager'); ?></div>
+                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Sold:', 'backstage-venue-manager'); ?></strong> <?php echo ($qty === null) ? esc_html__('Not refreshed', 'backstage-venue-manager') : (int) $qty; ?></div>
+                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Revenue:', 'backstage-venue-manager'); ?></strong> <?php echo ($rev === null) ? esc_html__('Not refreshed', 'backstage-venue-manager') : esc_html($rev_str); ?></div>
+                <div class="vms-ticketing__stat"><strong><?php esc_html_e('Source:', 'backstage-venue-manager'); ?></strong> <?php echo esc_html($provider_label); ?></div>
                 <?php if ($computed_str) : ?>
-                    <div class="vms-ticketing__stat"><strong><?php esc_html_e('Last updated:', 'vms'); ?></strong> <?php echo esc_html($computed_str); ?></div>
+                    <div class="vms-ticketing__stat"><strong><?php esc_html_e('Last updated:', 'backstage-venue-manager'); ?></strong> <?php echo esc_html($computed_str); ?></div>
                 <?php endif; ?>
                 <?php if ($label) : ?>
                     <div class="description"><?php echo esc_html($label); ?></div>
@@ -62,35 +62,35 @@ $manual_ticket_pids = isset($manual_ticket_pids) && is_array($manual_ticket_pids
             </div>
 
             <p>
-                <button type="button" class="button" id="vms-ticketing-unlink-btn" data-vms-link-sensitive="1"><?php esc_html_e('Unlink TEC event', 'vms'); ?></button>
-                <button type="button" class="button button-secondary" id="vms-ticketing-refresh-btn" data-vms-link-sensitive="1"><?php esc_html_e('Refresh ticket stats', 'vms'); ?></button>
+                <button type="button" class="button" id="vms-ticketing-unlink-btn" data-vms-link-sensitive="1"><?php esc_html_e('Unlink TEC event', 'backstage-venue-manager'); ?></button>
+                <button type="button" class="button button-secondary" id="vms-ticketing-refresh-btn" data-vms-link-sensitive="1"><?php esc_html_e('Refresh ticket stats', 'backstage-venue-manager'); ?></button>
             </p>
         <?php else : ?>
-            <p class="description"><?php esc_html_e('Optional: link an existing (legacy/imported) TEC event. For brand new Event Plans, you can ignore this section. Ticketing below can create and link a calendar event automatically.', 'vms'); ?></p>
-            <p class="description"><em><?php esc_html_e('Tip: If the Link button does not respond, click “Save Draft” first (Draft is fine), then try again.', 'vms'); ?></em></p>
+            <p class="description"><?php esc_html_e('Optional: link an existing (legacy/imported) TEC event. For brand new Event Plans, you can ignore this section. Ticketing below can create and link a calendar event automatically.', 'backstage-venue-manager'); ?></p>
+            <p class="description"><em><?php esc_html_e('Tip: If the Link button does not respond, click “Save Draft” first (Draft is fine), then try again.', 'backstage-venue-manager'); ?></em></p>
         <?php endif; ?>
 
         <div class="vms-ticketing__search">
-            <label for="vms-ticketing-search"><strong><?php esc_html_e('Search TEC events to link:', 'vms'); ?></strong></label>
-            <input type="text" id="vms-ticketing-search" class="regular-text" placeholder="<?php esc_attr_e('Type at least 2 characters…', 'vms'); ?>" />
+            <label for="vms-ticketing-search"><strong><?php esc_html_e('Search TEC events to link:', 'backstage-venue-manager'); ?></strong></label>
+            <input type="text" id="vms-ticketing-search" class="regular-text" placeholder="<?php esc_attr_e('Type at least 2 characters…', 'backstage-venue-manager'); ?>" />
             <div id="vms-ticketing-results"></div>
             <p>
-                <button type="button" class="button button-primary" id="vms-ticketing-link-btn" data-vms-link-sensitive="1" disabled="disabled"><?php esc_html_e('Link selected TEC event', 'vms'); ?></button>
+                <button type="button" class="button button-primary" id="vms-ticketing-link-btn" data-vms-link-sensitive="1" disabled="disabled"><?php esc_html_e('Link selected TEC event', 'backstage-venue-manager'); ?></button>
             </p>
             <div id="vms-ticketing-msg" class="vms-ticketing__msg vms-notice" aria-live="polite"></div>
         </div>
         <div class="vms-ticketing__manual">
             <hr />
-            <h5><?php esc_html_e('WooCommerce products (legacy “Woo-only” tickets)', 'vms'); ?></h5>
+            <h5><?php esc_html_e('WooCommerce products (legacy “Woo-only” tickets)', 'backstage-venue-manager'); ?></h5>
 
             <?php if (!class_exists('WooCommerce')) : ?>
-                <p class="description"><?php esc_html_e('WooCommerce is not active, so product-based ticket stats are unavailable.', 'vms'); ?></p>
+                <p class="description"><?php esc_html_e('WooCommerce is not active, so product-based ticket stats are unavailable.', 'backstage-venue-manager'); ?></p>
             <?php else : ?>
-                <p class="description"><?php esc_html_e('If your legacy tickets were sold as normal Woo products (not created inside TEC), attach those products here so VMS can calculate sold + revenue.', 'vms'); ?></p>
+                <p class="description"><?php esc_html_e('If your legacy tickets were sold as normal Woo products (not created inside TEC), attach those products here so VMS can calculate sold + revenue.', 'backstage-venue-manager'); ?></p>
 
                 <div id="vms-ticketing-manual-list">
                     <?php if (empty($manual_ticket_pids)) : ?>
-                        <p class="description"><?php esc_html_e('No Woo products attached.', 'vms'); ?></p>
+                        <p class="description"><?php esc_html_e('No Woo products attached.', 'backstage-venue-manager'); ?></p>
                     <?php else : ?>
                         <ul class="vms-ticketing__manual-list">
                             <?php foreach ($manual_ticket_pids as $pid) : ?>
@@ -103,7 +103,7 @@ $manual_ticket_pids = isset($manual_ticket_pids) && is_array($manual_ticket_pids
                                     <span class="vms-ticketing__pid">#<?php echo (int) $pid; ?></span>
                                     <span class="vms-ticketing__pname"><?php echo esc_html($p->get_name()); ?></span>
                                     <span class="vms-ticketing__pprice"><?php echo wp_kses_post(wc_price((float) $p->get_price())); ?></span>
-                                    <button type="button" class="button button-small" data-vms-ticketing-detach="<?php echo (int) $pid; ?>"><?php esc_html_e('Remove', 'vms'); ?></button>
+                                    <button type="button" class="button button-small" data-vms-ticketing-detach="<?php echo (int) $pid; ?>"><?php esc_html_e('Remove', 'backstage-venue-manager'); ?></button>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -111,14 +111,14 @@ $manual_ticket_pids = isset($manual_ticket_pids) && is_array($manual_ticket_pids
                 </div>
 
                 <div class="vms-ticketing__product-search">
-                    <label for="vms-ticketing-product-search"><strong><?php esc_html_e('Search Woo products to attach:', 'vms'); ?></strong></label>
-                    <input type="text" id="vms-ticketing-product-search" class="regular-text" placeholder="<?php esc_attr_e('Type at least 2 characters…', 'vms'); ?>" />
+                    <label for="vms-ticketing-product-search"><strong><?php esc_html_e('Search Woo products to attach:', 'backstage-venue-manager'); ?></strong></label>
+                    <input type="text" id="vms-ticketing-product-search" class="regular-text" placeholder="<?php esc_attr_e('Type at least 2 characters…', 'backstage-venue-manager'); ?>" />
                     <div id="vms-ticketing-product-results"></div>
                 </div>
 
                 <?php if ($linked_tec_id <= 0) : ?>
                     <p>
-                        <button type="button" class="button button-secondary" id="vms-ticketing-refresh-btn" data-vms-link-sensitive="1" <?php echo empty($manual_ticket_pids) ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Refresh ticket stats', 'vms'); ?></button>
+                        <button type="button" class="button button-secondary" id="vms-ticketing-refresh-btn" data-vms-link-sensitive="1" <?php echo empty($manual_ticket_pids) ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Refresh ticket stats', 'backstage-venue-manager'); ?></button>
                     </p>
                 <?php endif; ?>
             <?php endif; ?>

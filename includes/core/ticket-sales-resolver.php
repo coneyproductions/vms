@@ -636,7 +636,7 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
         );
 
         if (!function_exists('wc_get_orders') || !class_exists('WooCommerce')) {
-            $result['warnings'][] = __('WooCommerce is not active; ticket sales resolver cannot run.', 'vms');
+            $result['warnings'][] = __('WooCommerce is not active; ticket sales resolver cannot run.', 'backstage-venue-manager');
             return $result;
         }
 
@@ -700,7 +700,7 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
 
         if ($result['counts']['line_items_unresolved'] > 0) {
             $result['warnings'][] = sprintf(
-                __('%d ticket-related Woo line item(s) were returned with unresolved event context. Review the diagnostic fields before relying on the final totals.', 'vms'),
+                __('%d ticket-related Woo line item(s) were returned with unresolved event context. Review the diagnostic fields before relying on the final totals.', 'backstage-venue-manager'),
                 (int) $result['counts']['line_items_unresolved']
             );
         }

@@ -7,7 +7,7 @@ if (!class_exists('VMS_Addons_Installer')) {
 		public static function install_zip(array $file)
 		{
 			if (empty($file['tmp_name']) || empty($file['name'])) {
-				return new WP_Error('missing_zip', __('No ZIP file was uploaded.', 'vms'));
+				return new WP_Error('missing_zip', __('No ZIP file was uploaded.', 'backstage-venue-manager'));
 			}
 
 			if (!class_exists('Plugin_Upgrader')) {
@@ -18,7 +18,7 @@ if (!class_exists('VMS_Addons_Installer')) {
 
 			$check = wp_check_filetype((string) $file['name']);
 			if (($check['ext'] ?? '') !== 'zip') {
-				return new WP_Error('invalid_zip', __('Only ZIP files are supported for add-on installation.', 'vms'));
+				return new WP_Error('invalid_zip', __('Only ZIP files are supported for add-on installation.', 'backstage-venue-manager'));
 			}
 
 			$upgrader = new Plugin_Upgrader(new Automatic_Upgrader_Skin());
@@ -27,7 +27,7 @@ if (!class_exists('VMS_Addons_Installer')) {
 				return $result;
 			}
 			if (!$result) {
-				return new WP_Error('install_failed', __('Plugin installation failed. Check filesystem permissions.', 'vms'));
+				return new WP_Error('install_failed', __('Plugin installation failed. Check filesystem permissions.', 'backstage-venue-manager'));
 			}
 
 			$plugin_file = '';
@@ -67,7 +67,7 @@ if (!class_exists('VMS_Addons_Installer')) {
 				return $result;
 			}
 			if ($result === false) {
-				return new WP_Error('update_failed', __('Update failed. Check filesystem credentials and plugin package integrity.', 'vms'));
+				return new WP_Error('update_failed', __('Update failed. Check filesystem credentials and plugin package integrity.', 'backstage-venue-manager'));
 			}
 			return true;
 		}

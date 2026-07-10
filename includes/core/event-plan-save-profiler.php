@@ -300,14 +300,14 @@ add_action('transition_post_status', 'vms_event_plan_save_profiler_capture_statu
 function vms_event_plan_save_profiler_modules(): array
 {
     return array(
-        'core' => __('Core Event Details', 'vms'),
-        'tickets' => __('Tickets & Add-ons', 'vms'),
-        'vendors' => __('Lineup & Vendors', 'vms'),
-        'staffing' => __('Staffing', 'vms'),
-        'finance' => __('Compensation / Finance', 'vms'),
-        'marketing' => __('Marketing / Promo', 'vms'),
-        'agreements' => __('Agreements', 'vms'),
-        'ops' => __('Ops / Guest List', 'vms'),
+        'core' => __('Core Event Details', 'backstage-venue-manager'),
+        'tickets' => __('Tickets & Add-ons', 'backstage-venue-manager'),
+        'vendors' => __('Lineup & Vendors', 'backstage-venue-manager'),
+        'staffing' => __('Staffing', 'backstage-venue-manager'),
+        'finance' => __('Compensation / Finance', 'backstage-venue-manager'),
+        'marketing' => __('Marketing / Promo', 'backstage-venue-manager'),
+        'agreements' => __('Agreements', 'backstage-venue-manager'),
+        'ops' => __('Ops / Guest List', 'backstage-venue-manager'),
     );
 }
 
@@ -1387,10 +1387,10 @@ function vms_event_plan_save_profiler_changed_modules_label(array $profile): str
 
     $labels = array_values(array_unique(array_filter($labels)));
     if (empty($labels)) {
-        return __('None detected', 'vms');
+        return __('None detected', 'backstage-venue-manager');
     }
     if (count($labels) === 1 && $labels[0] === ($modules['core'] ?? 'Core Event Details')) {
-        return __('Core only', 'vms');
+        return __('Core only', 'backstage-venue-manager');
     }
 
     return implode(', ', $labels);
@@ -1438,7 +1438,7 @@ function vms_event_plan_save_profiler_add_meta_box(): void
 
     add_meta_box(
         'vms_event_plan_save_profile',
-        __('VMS Save Profile', 'vms'),
+        __('VMS Save Profile', 'backstage-venue-manager'),
         'vms_event_plan_save_profiler_render_meta_box',
         'vms_event_plan',
         'side',
@@ -1451,8 +1451,8 @@ function vms_event_plan_save_profiler_render_meta_box(WP_Post $post): void
 {
     $profile = get_post_meta((int) $post->ID, '_vms_last_save_profile', true);
     if (!is_array($profile) || empty($profile)) {
-        echo '<p>' . esc_html__('No Event Plan save profile has been recorded yet.', 'vms') . '</p>';
-        echo '<p class="description">' . esc_html__('Save this Event Plan once to record the module dirty map and heavy-work skip/trigger summary.', 'vms') . '</p>';
+        echo '<p>' . esc_html__('No Event Plan save profile has been recorded yet.', 'backstage-venue-manager') . '</p>';
+        echo '<p class="description">' . esc_html__('Save this Event Plan once to record the module dirty map and heavy-work skip/trigger summary.', 'backstage-venue-manager') . '</p>';
         return;
     }
 
@@ -1465,56 +1465,56 @@ function vms_event_plan_save_profiler_render_meta_box(WP_Post $post): void
     $save_type = sanitize_key((string) ($profile['save_type'] ?? ''));
     $heavy_summary = vms_event_plan_save_profiler_heavy_action_summary($profile);
 
-    echo '<p><strong>' . esc_html__('Last Event Plan save', 'vms') . '</strong></p>';
+    echo '<p><strong>' . esc_html__('Last Event Plan save', 'backstage-venue-manager') . '</strong></p>';
     echo '<ul style="margin-left:1em;list-style:disc;">';
-    echo '<li>' . esc_html(sprintf(__('Type: %s', 'vms'), $save_type ?: '-')) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('Changed: %s', 'vms'), vms_event_plan_save_profiler_changed_modules_label($profile))) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('Elapsed: %d ms', 'vms'), $elapsed)) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Type: %s', 'backstage-venue-manager'), $save_type ?: '-')) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Changed: %s', 'backstage-venue-manager'), vms_event_plan_save_profiler_changed_modules_label($profile))) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Elapsed: %d ms', 'backstage-venue-manager'), $elapsed)) . '</li>';
     if ($recorded !== '') {
-        echo '<li>' . esc_html(sprintf(__('Recorded GMT: %s', 'vms'), $recorded)) . '</li>';
+        echo '<li>' . esc_html(sprintf(__('Recorded GMT: %s', 'backstage-venue-manager'), $recorded)) . '</li>';
     }
-    echo '<li>' . esc_html(sprintf(__('Status: %s → %s', 'vms'), $status_start ?: '-', $status_end ?: '-')) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Status: %s → %s', 'backstage-venue-manager'), $status_start ?: '-', $status_end ?: '-')) . '</li>';
     $post_field_changes = is_array($profile['post_field_changes'] ?? null) ? array_values(array_filter(array_map('sanitize_key', $profile['post_field_changes']))) : array();
     if (!empty($post_field_changes)) {
-        echo '<li>' . esc_html(sprintf(__('Post fields changed: %s', 'vms'), implode(', ', $post_field_changes))) . '</li>';
+        echo '<li>' . esc_html(sprintf(__('Post fields changed: %s', 'backstage-venue-manager'), implode(', ', $post_field_changes))) . '</li>';
     }
-    echo '<li>' . esc_html(sprintf(__('Request action: %s', 'vms'), $request_action ?: '-')) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('WP action: %s', 'vms'), $wp_action ?: '-')) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('Meta writes: %d', 'vms'), absint($profile['meta_writes'] ?? 0))) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('Meta update attempts: %d', 'vms'), absint($profile['meta_update_attempts'] ?? 0))) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('No-op meta update attempts: %d', 'vms'), absint($profile['noop_meta_update_attempts'] ?? 0))) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('Ticket config writes: %d', 'vms'), absint($profile['ticket_config_writes'] ?? 0))) . '</li>';
-    echo '<li>' . esc_html(sprintf(__('Ticket sync writes: %d', 'vms'), absint($profile['ticket_sync_writes'] ?? 0))) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Request action: %s', 'backstage-venue-manager'), $request_action ?: '-')) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('WP action: %s', 'backstage-venue-manager'), $wp_action ?: '-')) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Meta writes: %d', 'backstage-venue-manager'), absint($profile['meta_writes'] ?? 0))) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Meta update attempts: %d', 'backstage-venue-manager'), absint($profile['meta_update_attempts'] ?? 0))) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('No-op meta update attempts: %d', 'backstage-venue-manager'), absint($profile['noop_meta_update_attempts'] ?? 0))) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Ticket config writes: %d', 'backstage-venue-manager'), absint($profile['ticket_config_writes'] ?? 0))) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Ticket sync writes: %d', 'backstage-venue-manager'), absint($profile['ticket_sync_writes'] ?? 0))) . '</li>';
     echo '</ul>';
 
     if (!empty($heavy_summary['triggered']) || !empty($heavy_summary['skipped'])) {
-        echo '<details open><summary>' . esc_html__('Heavy work summary', 'vms') . '</summary><ul style="margin-left:1em;list-style:disc;">';
+        echo '<details open><summary>' . esc_html__('Heavy work summary', 'backstage-venue-manager') . '</summary><ul style="margin-left:1em;list-style:disc;">';
         if (!empty($heavy_summary['triggered'])) {
-            echo '<li>' . esc_html(sprintf(__('Triggered: %s', 'vms'), implode(', ', $heavy_summary['triggered']))) . '</li>';
+            echo '<li>' . esc_html(sprintf(__('Triggered: %s', 'backstage-venue-manager'), implode(', ', $heavy_summary['triggered']))) . '</li>';
         }
         if (!empty($heavy_summary['skipped'])) {
-            echo '<li>' . esc_html(sprintf(__('Skipped: %s', 'vms'), implode(', ', $heavy_summary['skipped']))) . '</li>';
+            echo '<li>' . esc_html(sprintf(__('Skipped: %s', 'backstage-venue-manager'), implode(', ', $heavy_summary['skipped']))) . '</li>';
         }
         echo '</ul></details>';
     }
 
     $notes = is_array($profile['notes'] ?? null) ? $profile['notes'] : array();
     if (!empty($notes)) {
-        echo '<details><summary>' . esc_html__('Queue / hook notes', 'vms') . '</summary><pre style="white-space:pre-wrap;max-height:180px;overflow:auto;">';
+        echo '<details><summary>' . esc_html__('Queue / hook notes', 'backstage-venue-manager') . '</summary><pre style="white-space:pre-wrap;max-height:180px;overflow:auto;">';
         echo esc_html(wp_json_encode($notes, JSON_PRETTY_PRINT));
         echo '</pre></details>';
     }
 
     $top_meta = is_array($profile['top_meta_keys'] ?? null) ? $profile['top_meta_keys'] : array();
     if (!empty($top_meta)) {
-        echo '<details><summary>' . esc_html__('Top meta keys touched', 'vms') . '</summary><pre style="white-space:pre-wrap;max-height:180px;overflow:auto;">';
+        echo '<details><summary>' . esc_html__('Top meta keys touched', 'backstage-venue-manager') . '</summary><pre style="white-space:pre-wrap;max-height:180px;overflow:auto;">';
         echo esc_html(wp_json_encode($top_meta, JSON_PRETTY_PRINT));
         echo '</pre></details>';
     }
 
     $noop_meta = is_array($profile['noop_meta_update_keys'] ?? null) ? $profile['noop_meta_update_keys'] : array();
     if (!empty($noop_meta)) {
-        echo '<details><summary>' . esc_html__('No-op meta update attempts', 'vms') . '</summary><pre style="white-space:pre-wrap;max-height:180px;overflow:auto;">';
+        echo '<details><summary>' . esc_html__('No-op meta update attempts', 'backstage-venue-manager') . '</summary><pre style="white-space:pre-wrap;max-height:180px;overflow:auto;">';
         echo esc_html(wp_json_encode($noop_meta, JSON_PRETTY_PRINT));
         echo '</pre></details>';
     }
@@ -1525,8 +1525,8 @@ function vms_event_plan_save_profiler_render_hub_summary(int $post_id): void
     $profile = get_post_meta(absint($post_id), '_vms_last_save_profile', true);
     if (!is_array($profile) || empty($profile)) {
         echo '<div class="vms-ep-save-profile vms-ep-save-profile--empty">';
-        echo '<h4>' . esc_html__('Last Event Plan Save', 'vms') . '</h4>';
-        echo '<p>' . esc_html__('No save profile has been recorded yet. Save the Event Plan once to show what changed and what heavy work was skipped or triggered.', 'vms') . '</p>';
+        echo '<h4>' . esc_html__('Last Event Plan Save', 'backstage-venue-manager') . '</h4>';
+        echo '<p>' . esc_html__('No save profile has been recorded yet. Save the Event Plan once to show what changed and what heavy work was skipped or triggered.', 'backstage-venue-manager') . '</p>';
         echo '</div>';
         return;
     }
@@ -1539,38 +1539,38 @@ function vms_event_plan_save_profiler_render_hub_summary(int $post_id): void
 
     echo '<div class="vms-ep-save-profile">';
     echo '<div class="vms-ep-save-profile__header">';
-    echo '<div><h4>' . esc_html__('Last Event Plan Save', 'vms') . '</h4>';
-    echo '<p>' . esc_html__('Module-aware diagnostics for the most recent Event Plan/module save.', 'vms') . '</p></div>';
+    echo '<div><h4>' . esc_html__('Last Event Plan Save', 'backstage-venue-manager') . '</h4>';
+    echo '<p>' . esc_html__('Module-aware diagnostics for the most recent Event Plan/module save.', 'backstage-venue-manager') . '</p></div>';
     echo '<span class="vms-cc-chip vms-cc-chip--info">' . esc_html($save_type) . '</span>';
     echo '</div>';
     echo '<div class="vms-ep-save-profile__facts">';
-    echo '<span><strong>' . esc_html__('Changed:', 'vms') . '</strong> ' . esc_html($changed) . '</span>';
-    echo '<span><strong>' . esc_html__('Duration:', 'vms') . '</strong> ' . esc_html(sprintf(__('%d ms', 'vms'), $elapsed)) . '</span>';
+    echo '<span><strong>' . esc_html__('Changed:', 'backstage-venue-manager') . '</strong> ' . esc_html($changed) . '</span>';
+    echo '<span><strong>' . esc_html__('Duration:', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(__('%d ms', 'backstage-venue-manager'), $elapsed)) . '</span>';
     if ($recorded !== '') {
-        echo '<span><strong>' . esc_html__('Recorded GMT:', 'vms') . '</strong> ' . esc_html($recorded) . '</span>';
+        echo '<span><strong>' . esc_html__('Recorded GMT:', 'backstage-venue-manager') . '</strong> ' . esc_html($recorded) . '</span>';
     }
     $status_start = sanitize_key((string) ($profile['status_at_start'] ?? ''));
     $status_end = sanitize_key((string) ($profile['status_at_end'] ?? ''));
     if ($status_start !== '' && $status_end !== '' && $status_start !== $status_end) {
-        echo '<span><strong>' . esc_html__('Status:', 'vms') . '</strong> ' . esc_html($status_start . ' → ' . $status_end) . '</span>';
+        echo '<span><strong>' . esc_html__('Status:', 'backstage-venue-manager') . '</strong> ' . esc_html($status_start . ' → ' . $status_end) . '</span>';
     }
     $post_field_changes = is_array($profile['post_field_changes'] ?? null) ? array_values(array_filter(array_map('sanitize_key', $profile['post_field_changes']))) : array();
     if (!empty($post_field_changes)) {
-        echo '<span><strong>' . esc_html__('Post fields:', 'vms') . '</strong> ' . esc_html(implode(', ', $post_field_changes)) . '</span>';
+        echo '<span><strong>' . esc_html__('Post fields:', 'backstage-venue-manager') . '</strong> ' . esc_html(implode(', ', $post_field_changes)) . '</span>';
     }
     $noop_attempts = absint($profile['noop_meta_update_attempts'] ?? 0);
     if ($noop_attempts > 0) {
-        echo '<span><strong>' . esc_html__('No-op meta attempts:', 'vms') . '</strong> ' . esc_html((string) $noop_attempts) . '</span>';
+        echo '<span><strong>' . esc_html__('No-op meta attempts:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $noop_attempts) . '</span>';
     }
     echo '</div>';
 
     if (!empty($heavy_summary['triggered']) || !empty($heavy_summary['skipped'])) {
         echo '<div class="vms-ep-save-profile__heavy">';
         if (!empty($heavy_summary['triggered'])) {
-            echo '<p class="vms-ep-save-profile__triggered"><strong>' . esc_html__('Triggered:', 'vms') . '</strong> ' . esc_html(implode(', ', $heavy_summary['triggered'])) . '</p>';
+            echo '<p class="vms-ep-save-profile__triggered"><strong>' . esc_html__('Triggered:', 'backstage-venue-manager') . '</strong> ' . esc_html(implode(', ', $heavy_summary['triggered'])) . '</p>';
         }
         if (!empty($heavy_summary['skipped'])) {
-            echo '<p class="vms-ep-save-profile__skipped"><strong>' . esc_html__('Skipped:', 'vms') . '</strong> ' . esc_html(implode(', ', $heavy_summary['skipped'])) . '</p>';
+            echo '<p class="vms-ep-save-profile__skipped"><strong>' . esc_html__('Skipped:', 'backstage-venue-manager') . '</strong> ' . esc_html(implode(', ', $heavy_summary['skipped'])) . '</p>';
         }
         echo '</div>';
     }

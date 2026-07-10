@@ -252,7 +252,7 @@ function vms_add_template_metabox(): void
 {
     add_meta_box(
         'vms_venue_template_box',
-        __('Venue Template', 'vms'),
+        __('Venue Template', 'backstage-venue-manager'),
         'vms_render_template_metabox',
         'vms_venue',
         'side',

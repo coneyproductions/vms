@@ -78,7 +78,7 @@ if (!function_exists('vms_events_photo_overlay_context')) {
 
         $is_rescheduled = $is_cancelled && !empty($rescheduled['url']);
         $overlay_label = $is_cancelled
-            ? ($is_rescheduled ? __('Rescheduled', 'vms') : __('Cancelled', 'vms'))
+            ? ($is_rescheduled ? __('Rescheduled', 'backstage-venue-manager') : __('Cancelled', 'backstage-venue-manager'))
             : '';
 
         return array(
@@ -109,7 +109,7 @@ if (!function_exists('vms_events_photo_title_for_event')) {
         }
 
         if ($title === '') {
-            $title = __('Event', 'vms');
+            $title = __('Event', 'backstage-venue-manager');
         }
 
         return $title;
@@ -143,17 +143,17 @@ if (!function_exists('vms_events_photo_cta_context')) {
     function vms_events_photo_cta_context(array $event, array $overlay): array
     {
         $event_url = trim((string) ($event['public_url'] ?? ''));
-        $label = __('Get Tickets', 'vms');
+        $label = __('Get Tickets', 'backstage-venue-manager');
         $url = $event_url;
 
         $replacement = isset($overlay['replacement']) && is_array($overlay['replacement']) ? $overlay['replacement'] : array();
         $replacement_url = trim((string) ($replacement['url'] ?? ''));
 
         if (!empty($overlay['is_rescheduled']) && $replacement_url !== '') {
-            $label = __('View New Date', 'vms');
+            $label = __('View New Date', 'backstage-venue-manager');
             $url = $replacement_url;
         } elseif (!empty($overlay['is_cancelled'])) {
-            $label = __('View Details', 'vms');
+            $label = __('View Details', 'backstage-venue-manager');
         }
 
         return array(
@@ -193,10 +193,10 @@ if (!function_exists('vms_events_photo_shortcode')) {
             'show_venue' => '0',
             'show_excerpt' => '0',
             'more_link' => '0',
-            'more_label' => __('View Full Concert Calendar', 'vms'),
+            'more_label' => __('View Full Concert Calendar', 'backstage-venue-manager'),
             'more_url' => '',
             'class' => '',
-            'empty_message' => __('No upcoming events found.', 'vms'),
+            'empty_message' => __('No upcoming events found.', 'backstage-venue-manager'),
         ), $atts, 'vms_events_photo');
 
         $limit = max(1, absint($atts['limit']));
@@ -312,7 +312,7 @@ if (!function_exists('vms_events_photo_shortcode')) {
         }
         $more_label = trim((string) $atts['more_label']);
         if ($more_label === '') {
-            $more_label = __('View Full Concert Calendar', 'vms');
+            $more_label = __('View Full Concert Calendar', 'backstage-venue-manager');
         }
 
         ob_start();
@@ -388,13 +388,13 @@ if (!function_exists('vms_events_photo_shortcode')) {
                 echo '</div>';
             }
             if (!empty($cta['url'])) {
-                echo '<a class="vms-events-photo-card__cta" href="' . esc_url((string) $cta['url']) . '">' . esc_html((string) ($cta['label'] ?? __('Get Tickets', 'vms'))) . '</a>';
+                echo '<a class="vms-events-photo-card__cta" href="' . esc_url((string) $cta['url']) . '">' . esc_html((string) ($cta['label'] ?? __('Get Tickets', 'backstage-venue-manager'))) . '</a>';
             }
 
             if (!empty($overlay['is_rescheduled']) && $replacement_date !== '') {
-                echo '<div class="vms-events-photo-card__status-note">' . esc_html(sprintf(__('Rescheduled to %s', 'vms'), $replacement_date)) . '</div>';
+                echo '<div class="vms-events-photo-card__status-note">' . esc_html(sprintf(__('Rescheduled to %s', 'backstage-venue-manager'), $replacement_date)) . '</div>';
             } elseif (!empty($overlay['is_cancelled'])) {
-                echo '<div class="vms-events-photo-card__status-note">' . esc_html__('Cancelled', 'vms') . '</div>';
+                echo '<div class="vms-events-photo-card__status-note">' . esc_html__('Cancelled', 'backstage-venue-manager') . '</div>';
             }
 
             if ($show_excerpt && $excerpt !== '') {

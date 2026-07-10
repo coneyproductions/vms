@@ -17,25 +17,25 @@ if ($issue === 'missing_vendor') {
     $k_vt = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_vendor_title') : '_vms_integrity_vendor_title';
     $vendor_title = (string) get_post_meta($post->ID, $k_vt, true);
     if ($vendor_title === '') {
-        $vendor_title = __('(unknown vendor)', 'vms');
+        $vendor_title = __('(unknown vendor)', 'backstage-venue-manager');
     }
 
     echo '<div class="notice notice-error inline vms-notice vms-notice--critical"><p>' .
-        esc_html__('🚩 This event plan lost its vendor (the vendor was deleted) and needs attention.', 'vms') .
-        ' ' . sprintf(esc_html__('Previous vendor: %s', 'vms'), esc_html($vendor_title)) .
-        ' ' . esc_html__('Select a new Primary Vendor, then mark Ready again.', 'vms') .
+        esc_html__('🚩 This event plan lost its vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+        ' ' . sprintf(esc_html__('Previous vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
+        ' ' . esc_html__('Select a new Primary Vendor, then mark Ready again.', 'backstage-venue-manager') .
         '</p></div>';
 } elseif ($issue === 'missing_secondary_vendor') {
     $k_vt = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_vendor_title') : '_vms_integrity_vendor_title';
     $vendor_title = (string) get_post_meta($post->ID, $k_vt, true);
     if ($vendor_title === '') {
-        $vendor_title = __('(unknown vendor)', 'vms');
+        $vendor_title = __('(unknown vendor)', 'backstage-venue-manager');
     }
 
     echo '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p>' .
-        esc_html__('🚩 This event plan lost a secondary vendor (the vendor was deleted) and needs attention.', 'vms') .
-        ' ' . sprintf(esc_html__('Removed vendor: %s', 'vms'), esc_html($vendor_title)) .
-        ' ' . esc_html__('Review the Secondary Vendors section below, then mark Ready again if needed.', 'vms') .
+        esc_html__('🚩 This event plan lost a secondary vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+        ' ' . sprintf(esc_html__('Removed vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
+        ' ' . esc_html__('Review the Secondary Vendors section below, then mark Ready again if needed.', 'backstage-venue-manager') .
         '</p></div>';
 }
 
@@ -46,7 +46,7 @@ if ($post->post_status === 'auto-draft' && isset($_GET['vms_prefill_vendor_id'],
     if ($prefill_vendor_id > 0) {
         $resolved_vendor_label = $prefill_vendor_label !== '' ? $prefill_vendor_label : (string) get_the_title($prefill_vendor_id);
         if ($resolved_vendor_label === '') {
-            $resolved_vendor_label = __('Selected vendor', 'vms');
+            $resolved_vendor_label = __('Selected vendor', 'backstage-venue-manager');
         }
 
         if ($prefill_mode === 'secondary') {
@@ -66,11 +66,11 @@ if ($post->post_status === 'auto-draft' && isset($_GET['vms_prefill_vendor_id'],
             }
 
             $secondary_message = ($prefill_type_label !== '')
-                ? sprintf(__('Booking prefill: %1$s was added as a secondary vendor (%2$s). Review the Secondary Vendors section below, then save the Event Plan.', 'vms'), $resolved_vendor_label, $prefill_type_label)
-                : sprintf(__('Booking prefill: %s was added as a secondary vendor. Review the Secondary Vendors section below, then save the Event Plan.', 'vms'), $resolved_vendor_label);
+                ? sprintf(__('Booking prefill: %1$s was added as a secondary vendor (%2$s). Review the Secondary Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label, $prefill_type_label)
+                : sprintf(__('Booking prefill: %s was added as a secondary vendor. Review the Secondary Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
             echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($secondary_message) . '</p></div>';
         } elseif ($prefill_mode === 'primary') {
-            $primary_message = sprintf(__('Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.', 'vms'), $resolved_vendor_label);
+            $primary_message = sprintf(__('Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
             echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($primary_message) . '</p></div>';
         }
     }
@@ -79,21 +79,21 @@ if ($post->post_status === 'auto-draft' && isset($_GET['vms_prefill_vendor_id'],
 
 <div class="vms-ep-basic-grid">
     <p class="vms-ep-basic-item">
-        <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'vms'); ?></strong></label><br />
+        <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'backstage-venue-manager'); ?></strong></label><br />
         <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>" />
     </p>
 
     <p class="vms-ep-basic-item">
-        <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'vms'); ?></strong></label><br />
+        <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'backstage-venue-manager'); ?></strong></label><br />
         <select id="vms_venue_id" name="vms_venue_id" class="vms-ep-select-md" required>
-            <option value=""><?php esc_html_e('-- Select a Venue --', 'vms'); ?></option>
+            <option value=""><?php esc_html_e('-- Select a Venue --', 'backstage-venue-manager'); ?></option>
             <?php foreach ($venues as $venue): ?>
                 <option value="<?php echo esc_attr($venue->ID); ?>" <?php selected($venue_id_effective, $venue->ID); ?>>
                     <?php echo esc_html($venue->post_title); ?>
                 </option>
             <?php endforeach; ?>
         </select>
-        <br /><span class="description"><?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'vms'); ?></span>
+        <br /><span class="description"><?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'backstage-venue-manager'); ?></span>
     </p>
 
     <?php
@@ -103,18 +103,18 @@ if ($post->post_status === 'auto-draft' && isset($_GET['vms_prefill_vendor_id'],
     }
     ?>
     <div class="vms-ep-basic-item vms-ep-basic-span">
-        <h4><?php esc_html_e('Holiday', 'vms'); ?></h4>
+        <h4><?php esc_html_e('Holiday', 'backstage-venue-manager'); ?></h4>
         <div class="vms-ep-holiday-card">
             <?php if ($venue_id_effective <= 0 || !$event_date): ?>
-                <p class="description vms-m0"><?php esc_html_e('Select a Venue and Event Date to see holiday status.', 'vms'); ?></p>
+                <p class="description vms-m0"><?php esc_html_e('Select a Venue and Event Date to see holiday status.', 'backstage-venue-manager'); ?></p>
             <?php elseif (!$holiday): ?>
-                <p class="description vms-m0"><?php esc_html_e('No holiday is configured for this venue on the selected date.', 'vms'); ?></p>
-                <p class="description vms-mt-8 vms-mb-0"><?php esc_html_e('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'vms'); ?></p>
+                <p class="description vms-m0"><?php esc_html_e('No holiday is configured for this venue on the selected date.', 'backstage-venue-manager'); ?></p>
+                <p class="description vms-mt-8 vms-mb-0"><?php esc_html_e('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'backstage-venue-manager'); ?></p>
             <?php else: ?>
                 <?php $badge_class = (($holiday['status'] ?? '') === 'closed') ? 'vms-ep-badge vms-ep-badge--closed' : 'vms-ep-badge vms-ep-badge--open'; ?>
                 <p class="vms-m0 vms-mb-8">
                     <span class="<?php echo esc_attr($badge_class); ?>">
-                        <?php echo (($holiday['status'] ?? '') === 'closed') ? esc_html__('CLOSED', 'vms') : esc_html__('OPEN', 'vms'); ?>
+                        <?php echo (($holiday['status'] ?? '') === 'closed') ? esc_html__('CLOSED', 'backstage-venue-manager') : esc_html__('OPEN', 'backstage-venue-manager'); ?>
                     </span>
                     <?php
                     $holiday_name = trim((string) ($holiday['name'] ?? ''));
@@ -124,9 +124,9 @@ if ($post->post_status === 'auto-draft' && isset($_GET['vms_prefill_vendor_id'],
                     ?>
                 </p>
                 <?php if (($holiday['status'] ?? '') === 'closed'): ?>
-                    <p class="description vms-m0"><?php esc_html_e('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'vms'); ?></p>
+                    <p class="description vms-m0"><?php esc_html_e('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'backstage-venue-manager'); ?></p>
                 <?php else: ?>
-                    <p class="description vms-m0"><?php esc_html_e('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'vms'); ?></p>
+                    <p class="description vms-m0"><?php esc_html_e('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'backstage-venue-manager'); ?></p>
                 <?php endif; ?>
             <?php endif; ?>
         </div>

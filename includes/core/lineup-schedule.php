@@ -65,11 +65,11 @@ if (!function_exists('vms_lineup_schedule_minutes_to_label')) {
         $parts = array();
         if ($hours > 0) {
             /* translators: %d: Number of hours. */
-            $parts[] = sprintf(_n('%d hr', '%d hrs', $hours, 'vms'), $hours);
+            $parts[] = sprintf(_n('%d hr', '%d hrs', $hours, 'backstage-venue-manager'), $hours);
         }
         if ($mins > 0 || empty($parts)) {
             /* translators: %d: Number of minutes. */
-            $parts[] = sprintf(_n('%d min', '%d mins', $mins, 'vms'), $mins);
+            $parts[] = sprintf(_n('%d min', '%d mins', $mins, 'backstage-venue-manager'), $mins);
         }
 
         return implode(' ', $parts);
@@ -355,7 +355,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 $display_name = $vendor_title;
             }
             if ($display_name === '') {
-                $display_name = __('Unassigned lineup entry', 'vms');
+                $display_name = __('Unassigned lineup entry', 'backstage-venue-manager');
             }
 
             $set_start = vms_lineup_schedule_sanitize_time((string) ($entry['set_start'] ?? ''));
@@ -372,7 +372,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                     $push_warning(
                         'duplicate_vendor',
                         /* translators: %s: Lineup entry display name. */
-                        sprintf(__('The same lineup vendor is assigned more than once: %s.', 'vms'), $display_name),
+                        sprintf(__('The same lineup vendor is assigned more than once: %s.', 'backstage-venue-manager'), $display_name),
                         $row_id
                     );
                 }
@@ -383,7 +383,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 $push_warning(
                     'missing_time',
                     /* translators: %s: Lineup entry display name. */
-                    sprintf(__('Set time is incomplete for %s.', 'vms'), $display_name),
+                    sprintf(__('Set time is incomplete for %s.', 'backstage-venue-manager'), $display_name),
                     $row_id
                 );
             }
@@ -393,7 +393,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                     $push_warning(
                         'end_before_start',
                         /* translators: %s: Lineup entry display name. */
-                        sprintf(__('Set end is not after set start for %s.', 'vms'), $display_name),
+                        sprintf(__('Set end is not after set start for %s.', 'backstage-venue-manager'), $display_name),
                         $row_id,
                         'error'
                     );
@@ -406,14 +406,14 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                         $push_warning(
                             'short_duration',
                             /* translators: %s: Lineup entry display name. */
-                            sprintf(__('The set for %s looks unusually short.', 'vms'), $display_name),
+                            sprintf(__('The set for %s looks unusually short.', 'backstage-venue-manager'), $display_name),
                             $row_id
                         );
                     } elseif ($duration_minutes > 240) {
                         $push_warning(
                             'long_duration',
                             /* translators: %s: Lineup entry display name. */
-                            sprintf(__('The set for %s looks unusually long.', 'vms'), $display_name),
+                            sprintf(__('The set for %s looks unusually long.', 'backstage-venue-manager'), $display_name),
                             $row_id
                         );
                     }
@@ -424,7 +424,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 $push_warning(
                     'outside_event_bounds',
                     /* translators: %s: Lineup entry display name. */
-                    sprintf(__('The lineup starts before the event start for %s.', 'vms'), $display_name),
+                    sprintf(__('The lineup starts before the event start for %s.', 'backstage-venue-manager'), $display_name),
                     $row_id
                 );
             }
@@ -432,7 +432,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 $push_warning(
                     'outside_event_bounds',
                     /* translators: %s: Lineup entry display name. */
-                    sprintf(__('The lineup ends after the event end for %s.', 'vms'), $display_name),
+                    sprintf(__('The lineup ends after the event end for %s.', 'backstage-venue-manager'), $display_name),
                     $row_id
                 );
             }
@@ -464,7 +464,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             $push_warning(
                 'primary_not_last',
                 /* translators: %s: Primary lineup entry display name. */
-                sprintf(__('The primary lineup entry is not scheduled last: %s.', 'vms'), (string) ($primary_entry['display_name'] ?? __('Primary', 'vms'))),
+                sprintf(__('The primary lineup entry is not scheduled last: %s.', 'backstage-venue-manager'), (string) ($primary_entry['display_name'] ?? __('Primary', 'backstage-venue-manager'))),
                 sanitize_key((string) ($primary_entry['row_id'] ?? ''))
             );
         }
@@ -475,7 +475,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             $row_id = sanitize_key((string) ($entry['row_id'] ?? ''));
             $start_minutes = $entry['start_minutes'];
             $end_minutes = $entry['end_minutes'];
-            $display_name = (string) ($entry['display_name'] ?? __('Lineup entry', 'vms'));
+            $display_name = (string) ($entry['display_name'] ?? __('Lineup entry', 'backstage-venue-manager'));
 
             if ($index > 0 && $start_minutes !== null && $last_end_minutes !== null) {
                 $delta = $start_minutes - $last_end_minutes;
@@ -483,7 +483,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                     $push_warning(
                         'overlap',
                         /* translators: 1: Previous lineup entry display name, 2: Current lineup entry display name. */
-                        sprintf(__('There is a schedule overlap between %1$s and %2$s.', 'vms'), $last_label, $display_name),
+                        sprintf(__('There is a schedule overlap between %1$s and %2$s.', 'backstage-venue-manager'), $last_label, $display_name),
                         $row_id,
                         'error'
                     );
@@ -494,7 +494,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                         $push_warning(
                             'large_gap',
                             /* translators: %s: Lineup entry display name. */
-                            sprintf(__('There is a large gap before %s.', 'vms'), $display_name),
+                            sprintf(__('There is a large gap before %s.', 'backstage-venue-manager'), $display_name),
                             $row_id
                         );
                     }
@@ -524,7 +524,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
 
         $summary = array(
             'primary_vendor_id' => $primary_vendor_id,
-            'primary_vendor_label' => $primary_vendor_id > 0 ? trim((string) get_the_title($primary_vendor_id)) : __('Unassigned primary vendor', 'vms'),
+            'primary_vendor_label' => $primary_vendor_id > 0 ? trim((string) get_the_title($primary_vendor_id)) : __('Unassigned primary vendor', 'backstage-venue-manager'),
             'supporting_count' => max(0, count($entries) - 1),
             'earliest_start' => $earliest_start !== null ? vms_lineup_schedule_format_time_label(sprintf('%02d:%02d', (int) floor($earliest_start / 60), (int) ($earliest_start % 60))) : '',
             'primary_start' => $primary_start,

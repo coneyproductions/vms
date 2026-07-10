@@ -63,14 +63,14 @@ function vms_budget_calculator_default_cost_items(): array
   // NOTE: Keep this list short and obvious. More rows can be added by the operator.
   // Tip: If you enable auto-scaling staffing rules below, keep any lump-sum staffing row OFF to avoid double counting.
   return array(
-    array('enabled' => 1, 'label' => __('Venue overhead (utilities, misc.)', 'vms'), 'amount' => 200.00, 'type' => 'fixed'),
-    array('enabled' => 0, 'label' => __('Staffing (lump sum — turn off if using auto-staff rules)', 'vms'), 'amount' => 250.00, 'type' => 'fixed'),
-    array('enabled' => 0, 'label' => __('Facebook / Instagram ads', 'vms'), 'amount' => 75.00, 'type' => 'fixed'),
-    array('enabled' => 0, 'label' => __('Radio / local media', 'vms'), 'amount' => 150.00, 'type' => 'fixed'),
-    array('enabled' => 0, 'label' => __('Print (flyers, posters)', 'vms'), 'amount' => 35.00, 'type' => 'fixed'),
-    array('enabled' => 0, 'label' => __('Production add-ons', 'vms'), 'amount' => 0.00, 'type' => 'fixed'),
-    array('enabled' => 0, 'label' => __('Per-ticket cost (wristband, stub, etc.)', 'vms'), 'amount' => 0.00, 'type' => 'per_ticket'),
-    array('enabled' => 0, 'label' => __('Other cost', 'vms'), 'amount' => 0.00, 'type' => 'fixed'),
+    array('enabled' => 1, 'label' => __('Venue overhead (utilities, misc.)', 'backstage-venue-manager'), 'amount' => 200.00, 'type' => 'fixed'),
+    array('enabled' => 0, 'label' => __('Staffing (lump sum — turn off if using auto-staff rules)', 'backstage-venue-manager'), 'amount' => 250.00, 'type' => 'fixed'),
+    array('enabled' => 0, 'label' => __('Facebook / Instagram ads', 'backstage-venue-manager'), 'amount' => 75.00, 'type' => 'fixed'),
+    array('enabled' => 0, 'label' => __('Radio / local media', 'backstage-venue-manager'), 'amount' => 150.00, 'type' => 'fixed'),
+    array('enabled' => 0, 'label' => __('Print (flyers, posters)', 'backstage-venue-manager'), 'amount' => 35.00, 'type' => 'fixed'),
+    array('enabled' => 0, 'label' => __('Production add-ons', 'backstage-venue-manager'), 'amount' => 0.00, 'type' => 'fixed'),
+    array('enabled' => 0, 'label' => __('Per-ticket cost (wristband, stub, etc.)', 'backstage-venue-manager'), 'amount' => 0.00, 'type' => 'per_ticket'),
+    array('enabled' => 0, 'label' => __('Other cost', 'backstage-venue-manager'), 'amount' => 0.00, 'type' => 'fixed'),
   );
 }
 
@@ -79,11 +79,11 @@ function vms_budget_calculator_default_autoscale_items(): array
   // These are optional and OFF by default.
   // Unit cost should represent the total cost per staff member for the event (e.g., hourly * hours).
   return array(
-    array('enabled' => 0, 'label' => __('Bartender', 'vms'), 'unit_cost' => 160.00, 'per_n' => 100, 'min_units' => 1, 'max_units' => 0),
-    array('enabled' => 0, 'label' => __('Security', 'vms'), 'unit_cost' => 200.00, 'per_n' => 150, 'min_units' => 1, 'max_units' => 0),
-    array('enabled' => 0, 'label' => __('Door / ticketing', 'vms'), 'unit_cost' => 140.00, 'per_n' => 200, 'min_units' => 1, 'max_units' => 0),
-    array('enabled' => 0, 'label' => __('Cleanup', 'vms'), 'unit_cost' => 120.00, 'per_n' => 200, 'min_units' => 1, 'max_units' => 0),
-    array('enabled' => 0, 'label' => __('Sound tech', 'vms'), 'unit_cost' => 250.00, 'per_n' => 999999, 'min_units' => 1, 'max_units' => 1),
+    array('enabled' => 0, 'label' => __('Bartender', 'backstage-venue-manager'), 'unit_cost' => 160.00, 'per_n' => 100, 'min_units' => 1, 'max_units' => 0),
+    array('enabled' => 0, 'label' => __('Security', 'backstage-venue-manager'), 'unit_cost' => 200.00, 'per_n' => 150, 'min_units' => 1, 'max_units' => 0),
+    array('enabled' => 0, 'label' => __('Door / ticketing', 'backstage-venue-manager'), 'unit_cost' => 140.00, 'per_n' => 200, 'min_units' => 1, 'max_units' => 0),
+    array('enabled' => 0, 'label' => __('Cleanup', 'backstage-venue-manager'), 'unit_cost' => 120.00, 'per_n' => 200, 'min_units' => 1, 'max_units' => 0),
+    array('enabled' => 0, 'label' => __('Sound tech', 'backstage-venue-manager'), 'unit_cost' => 250.00, 'per_n' => 999999, 'min_units' => 1, 'max_units' => 1),
   );
 }
 
@@ -120,21 +120,21 @@ function vms_budget_calculator_cost_profiles(): array
   unset($it);
 
   $festival = array(
-    array('enabled' => 1, 'label' => __('Venue overhead (utilities, misc.)', 'vms'), 'amount' => 500.00, 'type' => 'fixed'),
-    array('enabled' => 0, 'label' => __('Staffing (lump sum — turn off if using auto-staff rules)', 'vms'), 'amount' => 0.00, 'type' => 'fixed'),
-    array('enabled' => 1, 'label' => __('Facebook / Instagram ads', 'vms'), 'amount' => 250.00, 'type' => 'fixed'),
-    array('enabled' => 1, 'label' => __('Radio / local media', 'vms'), 'amount' => 250.00, 'type' => 'fixed'),
-    array('enabled' => 1, 'label' => __('Production add-ons', 'vms'), 'amount' => 800.00, 'type' => 'fixed'),
-    array('enabled' => 1, 'label' => __('Per-ticket cost (wristband, stub, etc.)', 'vms'), 'amount' => 0.50, 'type' => 'per_ticket'),
-    array('enabled' => 1, 'label' => __('Other cost', 'vms'), 'amount' => 200.00, 'type' => 'fixed'),
+    array('enabled' => 1, 'label' => __('Venue overhead (utilities, misc.)', 'backstage-venue-manager'), 'amount' => 500.00, 'type' => 'fixed'),
+    array('enabled' => 0, 'label' => __('Staffing (lump sum — turn off if using auto-staff rules)', 'backstage-venue-manager'), 'amount' => 0.00, 'type' => 'fixed'),
+    array('enabled' => 1, 'label' => __('Facebook / Instagram ads', 'backstage-venue-manager'), 'amount' => 250.00, 'type' => 'fixed'),
+    array('enabled' => 1, 'label' => __('Radio / local media', 'backstage-venue-manager'), 'amount' => 250.00, 'type' => 'fixed'),
+    array('enabled' => 1, 'label' => __('Production add-ons', 'backstage-venue-manager'), 'amount' => 800.00, 'type' => 'fixed'),
+    array('enabled' => 1, 'label' => __('Per-ticket cost (wristband, stub, etc.)', 'backstage-venue-manager'), 'amount' => 0.50, 'type' => 'per_ticket'),
+    array('enabled' => 1, 'label' => __('Other cost', 'backstage-venue-manager'), 'amount' => 200.00, 'type' => 'fixed'),
   );
 
   return array(
-    'custom'    => array('label' => __('Custom', 'vms'), 'items' => $base),
-    'no_promo'  => array('label' => __('No Promo', 'vms'), 'items' => $no_promo),
-    'light'     => array('label' => __('Light Promo', 'vms'), 'items' => $light),
-    'full'      => array('label' => __('Full Promo', 'vms'), 'items' => $full),
-    'festival'  => array('label' => __('Festival', 'vms'), 'items' => $festival),
+    'custom'    => array('label' => __('Custom', 'backstage-venue-manager'), 'items' => $base),
+    'no_promo'  => array('label' => __('No Promo', 'backstage-venue-manager'), 'items' => $no_promo),
+    'light'     => array('label' => __('Light Promo', 'backstage-venue-manager'), 'items' => $light),
+    'full'      => array('label' => __('Full Promo', 'backstage-venue-manager'), 'items' => $full),
+    'festival'  => array('label' => __('Festival', 'backstage-venue-manager'), 'items' => $festival),
   );
 }
 
@@ -453,18 +453,18 @@ function vms_budget_calculator_resolve_plan_band_pay(int $plan_id, string $event
 
 function vms_budget_calculator_band_pay_source_label(string $source): string
 {
-  if ($source === 'event_plan_base_pay') return __('Event Plan base pay', 'vms');
-  if ($source === 'event_plan_flat_fee') return __('Event Plan flat fee', 'vms');
-  if ($source === 'venue_default_base_pay') return __('Venue default base pay', 'vms');
-  if ($source === 'venue_default_flat_fee') return __('Venue default flat fee', 'vms');
-  return __('Calculator assumption', 'vms');
+  if ($source === 'event_plan_base_pay') return __('Event Plan base pay', 'backstage-venue-manager');
+  if ($source === 'event_plan_flat_fee') return __('Event Plan flat fee', 'backstage-venue-manager');
+  if ($source === 'venue_default_base_pay') return __('Venue default base pay', 'backstage-venue-manager');
+  if ($source === 'venue_default_flat_fee') return __('Venue default flat fee', 'backstage-venue-manager');
+  return __('Calculator assumption', 'backstage-venue-manager');
 }
 
 function vms_budget_calculator_ticket_source_label(string $source): string
 {
-  if ($source === 'actual_ticket_stats') return __('Actual ticket stats', 'vms');
-  if ($source === 'modeled_past') return __('Modeled (no past stats)', 'vms');
-  return __('Modeled forecast', 'vms');
+  if ($source === 'actual_ticket_stats') return __('Actual ticket stats', 'backstage-venue-manager');
+  if ($source === 'modeled_past') return __('Modeled (no past stats)', 'backstage-venue-manager');
+  return __('Modeled forecast', 'backstage-venue-manager');
 }
 
 function vms_budget_calculator_progress_pct(float $value, float $goal): ?float
@@ -1127,10 +1127,10 @@ function vms_budget_calculator_render_cost_items(array $items): void
 
   echo '<table class="widefat striped">';
   echo '<thead><tr>';
-  echo '<th>' . esc_html__('Use', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Cost item', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Amount', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Type', 'vms') . '</th>';
+  echo '<th>' . esc_html__('Use', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Cost item', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Amount', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Type', 'backstage-venue-manager') . '</th>';
   echo '</tr></thead>';
   echo '<tbody>';
 
@@ -1143,12 +1143,12 @@ function vms_budget_calculator_render_cost_items(array $items): void
 
     echo '<tr>';
     echo '<td><input type="checkbox" name="cost_enabled[' . esc_attr((string) $i) . ']" value="1" ' . checked(1, $enabled, false) . '></td>';
-    echo '<td><input class="regular-text" type="text" name="cost_label[' . esc_attr((string) $i) . ']" value="' . esc_attr($label) . '" placeholder="' . esc_attr__('e.g., Facebook ads', 'vms') . '"></td>';
+    echo '<td><input class="regular-text" type="text" name="cost_label[' . esc_attr((string) $i) . ']" value="' . esc_attr($label) . '" placeholder="' . esc_attr__('e.g., Facebook ads', 'backstage-venue-manager') . '"></td>';
     echo '<td><input class="small-text" type="text" name="cost_amount[' . esc_attr((string) $i) . ']" value="' . esc_attr((string) $amount) . '"></td>';
     echo '<td>';
     echo '<select name="cost_type[' . esc_attr((string) $i) . ']">';
-    echo '<option value="fixed"' . selected('fixed', $type, false) . '>' . esc_html__('Fixed (per event)', 'vms') . '</option>';
-    echo '<option value="per_ticket"' . selected('per_ticket', $type, false) . '>' . esc_html__('Per ticket', 'vms') . '</option>';
+    echo '<option value="fixed"' . selected('fixed', $type, false) . '>' . esc_html__('Fixed (per event)', 'backstage-venue-manager') . '</option>';
+    echo '<option value="per_ticket"' . selected('per_ticket', $type, false) . '>' . esc_html__('Per ticket', 'backstage-venue-manager') . '</option>';
     echo '</select>';
     echo '</td>';
     echo '</tr>';
@@ -1157,7 +1157,7 @@ function vms_budget_calculator_render_cost_items(array $items): void
   echo '</tbody>';
   echo '</table>';
 
-  echo '<p class="description">' . esc_html__('Tip: Uncheck items that do not apply. “Per ticket” items scale with tickets sold.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Tip: Uncheck items that do not apply. “Per ticket” items scale with tickets sold.', 'backstage-venue-manager') . '</p>';
 }
 
 function vms_budget_calculator_render_autoscale_items(array $items): void
@@ -1169,12 +1169,12 @@ function vms_budget_calculator_render_autoscale_items(array $items): void
 
   echo '<table class="widefat striped">';
   echo '<thead><tr>';
-  echo '<th>' . esc_html__('Use', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Role / line item', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Unit cost (per staff)', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Heads per 1', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Min #', 'vms') . '</th>';
-  echo '<th>' . esc_html__('Max #', 'vms') . '</th>';
+  echo '<th>' . esc_html__('Use', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Role / line item', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Unit cost (per staff)', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Heads per 1', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Min #', 'backstage-venue-manager') . '</th>';
+  echo '<th>' . esc_html__('Max #', 'backstage-venue-manager') . '</th>';
   echo '</tr></thead>';
   echo '<tbody>';
 
@@ -1188,7 +1188,7 @@ function vms_budget_calculator_render_autoscale_items(array $items): void
 
     echo '<tr>';
     echo '<td><input type="checkbox" name="auto_enabled[' . esc_attr((string) $i) . ']" value="1" ' . checked(1, $enabled, false) . '></td>';
-    echo '<td><input class="regular-text" type="text" name="auto_label[' . esc_attr((string) $i) . ']" value="' . esc_attr($label) . '" placeholder="' . esc_attr__('e.g., Bartender', 'vms') . '"></td>';
+    echo '<td><input class="regular-text" type="text" name="auto_label[' . esc_attr((string) $i) . ']" value="' . esc_attr($label) . '" placeholder="' . esc_attr__('e.g., Bartender', 'backstage-venue-manager') . '"></td>';
     echo '<td><input class="small-text" type="text" name="auto_unit_cost[' . esc_attr((string) $i) . ']" value="' . esc_attr((string) $unit) . '"></td>';
     echo '<td><input class="small-text" type="number" min="0" max="1000000" name="auto_per_n[' . esc_attr((string) $i) . ']" value="' . esc_attr((string) $per_n) . '"></td>';
     echo '<td><input class="small-text" type="number" min="0" max="1000" name="auto_min_units[' . esc_attr((string) $i) . ']" value="' . esc_attr((string) $min_u) . '"></td>';
@@ -1199,13 +1199,13 @@ function vms_budget_calculator_render_autoscale_items(array $items): void
   echo '</tbody>';
   echo '</table>';
 
-  echo '<p class="description">' . esc_html__('How it works: staff count = ceil(headcount ÷ “Heads per 1”), then clamped to Min/Max. Set Max # to 0 for no cap.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('How it works: staff count = ceil(headcount ÷ “Heads per 1”), then clamped to Min/Max. Set Max # to 0 for no cap.', 'backstage-venue-manager') . '</p>';
 }
 
 function vms_render_budget_calculator_page(): void
 {
   if (!current_user_can('manage_options')) {
-    wp_die(esc_html__('You do not have permission to access this page.', 'vms'));
+    wp_die(esc_html__('You do not have permission to access this page.', 'backstage-venue-manager'));
   }
 
   $defaults = vms_budget_calculator_defaults();
@@ -1237,84 +1237,84 @@ function vms_render_budget_calculator_page(): void
   foreach ($profiles as $k => $p) $profile_options[$k] = $p['label'];
 
   echo '<div class="wrap vms-bcalc">';
-  echo '<h1>' . esc_html__('Budget Calculator', 'vms') . '</h1>';
-  echo '<p class="description">' . esc_html__('Decision-support only. Use this to sanity-check band pay and ticket pricing before committing.', 'vms') . '</p>';
+  echo '<h1>' . esc_html__('Budget Calculator', 'backstage-venue-manager') . '</h1>';
+  echo '<p class="description">' . esc_html__('Decision-support only. Use this to sanity-check band pay and ticket pricing before committing.', 'backstage-venue-manager') . '</p>';
 
   echo '<form method="post" action="' . esc_url(admin_url('admin.php?page=vms-budget-calculator')) . '">';
   wp_nonce_field('vms_budget_calc');
 
-  echo '<h2 class="title">' . esc_html__('Inputs', 'vms') . '</h2>';
+  echo '<h2 class="title">' . esc_html__('Inputs', 'backstage-venue-manager') . '</h2>';
 
-  echo '<h3>' . esc_html__('Scope', 'vms') . '</h3>';
+  echo '<h3>' . esc_html__('Scope', 'backstage-venue-manager') . '</h3>';
   echo '<p>';
-  echo '<label><input type="radio" name="mode" value="single" ' . checked('single', $in['mode'], false) . '> ' . esc_html__('Single Event', 'vms') . '</label>';
+  echo '<label><input type="radio" name="mode" value="single" ' . checked('single', $in['mode'], false) . '> ' . esc_html__('Single Event', 'backstage-venue-manager') . '</label>';
   echo '&nbsp;&nbsp;';
-  echo '<label><input type="radio" name="mode" value="period" ' . checked('period', $in['mode'], false) . '> ' . esc_html__('Multiple Events (same assumptions)', 'vms') . '</label>';
+  echo '<label><input type="radio" name="mode" value="period" ' . checked('period', $in['mode'], false) . '> ' . esc_html__('Multiple Events (same assumptions)', 'backstage-venue-manager') . '</label>';
   echo '</p>';
 
   echo '<p>';
-  echo '<label for="events_count"><strong>' . esc_html__('Events (if multiple):', 'vms') . '</strong></label><br>';
+  echo '<label for="events_count"><strong>' . esc_html__('Events (if multiple):', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<input class="small-text" type="number" min="1" max="365" id="events_count" name="events_count" value="' . esc_attr((string) $in['events_count']) . '">';
   echo '</p>';
 
   echo '<hr>';
 
-  echo '<h3>' . esc_html__('Revenue assumptions', 'vms') . '</h3>';
-  vms_budget_calculator_field_int('tickets_sold', __('Tickets sold (estimate)', 'vms'), $in['tickets_sold'], 0, 1000000);
-  vms_budget_calculator_field_money('ticket_price', __('Ticket price', 'vms'), $in['ticket_price']);
+  echo '<h3>' . esc_html__('Revenue assumptions', 'backstage-venue-manager') . '</h3>';
+  vms_budget_calculator_field_int('tickets_sold', __('Tickets sold (estimate)', 'backstage-venue-manager'), $in['tickets_sold'], 0, 1000000);
+  vms_budget_calculator_field_money('ticket_price', __('Ticket price', 'backstage-venue-manager'), $in['ticket_price']);
 
   echo '<p>';
-  echo '<label for="attendance_percent"><strong>' . esc_html__('Expected attendance % (vs tickets sold)', 'vms') . '</strong></label><br>';
+  echo '<label for="attendance_percent"><strong>' . esc_html__('Expected attendance % (vs tickets sold)', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<input class="small-text" type="number" min="0" max="200" step="0.1" id="attendance_percent" name="attendance_percent" value="' . esc_attr((string) $in['attendance_percent']) . '"> ';
-  echo '<span class="description">' . esc_html__('Example: 95 means expect 95 people for 100 tickets sold.', 'vms') . '</span>';
+  echo '<span class="description">' . esc_html__('Example: 95 means expect 95 people for 100 tickets sold.', 'backstage-venue-manager') . '</span>';
   echo '</p>';
 
-  vms_budget_calculator_field_money('bar_per_head', __('Bar revenue per head', 'vms'), $in['bar_per_head']);
-  vms_budget_calculator_field_money('other_revenue', __('Other revenue (per event)', 'vms'), $in['other_revenue']);
+  vms_budget_calculator_field_money('bar_per_head', __('Bar revenue per head', 'backstage-venue-manager'), $in['bar_per_head']);
+  vms_budget_calculator_field_money('other_revenue', __('Other revenue (per event)', 'backstage-venue-manager'), $in['other_revenue']);
 
   echo '<hr>';
 
-  echo '<h3>' . esc_html__('Music Vendor / talent', 'vms') . '</h3>';
-  vms_budget_calculator_field_money('band_pay', __('Music Vendor pay (per event)', 'vms'), $in['band_pay']);
-  vms_budget_calculator_field_money('target_profit', __('Target profit (per event)', 'vms'), $in['target_profit']);
+  echo '<h3>' . esc_html__('Music Vendor / talent', 'backstage-venue-manager') . '</h3>';
+  vms_budget_calculator_field_money('band_pay', __('Music Vendor pay (per event)', 'backstage-venue-manager'), $in['band_pay']);
+  vms_budget_calculator_field_money('target_profit', __('Target profit (per event)', 'backstage-venue-manager'), $in['target_profit']);
 
   echo '<hr>';
 
-  echo '<h3>' . esc_html__('Fees (ticket revenue only)', 'vms') . '</h3>';
-  vms_budget_calculator_field_money('fee_fixed', __('Fee per ticket', 'vms'), $in['fee_fixed']);
-  vms_budget_calculator_field_money('fee_percent', __('Fee percent (e.g., 2.9)', 'vms'), $in['fee_percent']);
+  echo '<h3>' . esc_html__('Fees (ticket revenue only)', 'backstage-venue-manager') . '</h3>';
+  vms_budget_calculator_field_money('fee_fixed', __('Fee per ticket', 'backstage-venue-manager'), $in['fee_fixed']);
+  vms_budget_calculator_field_money('fee_percent', __('Fee percent (e.g., 2.9)', 'backstage-venue-manager'), $in['fee_percent']);
 
   echo '<hr>';
 
-  echo '<h3>' . esc_html__('Annual goals + live forecast', 'vms') . '</h3>';
-  vms_budget_calculator_field_int('forecast_year', __('Forecast year', 'vms'), $in['forecast_year'], 2000, 2100);
-  vms_budget_calculator_field_money('annual_goal_revenue', __('Annual revenue goal', 'vms'), $in['annual_goal_revenue']);
-  vms_budget_calculator_field_money('annual_goal_profit', __('Annual net profit goal', 'vms'), $in['annual_goal_profit']);
+  echo '<h3>' . esc_html__('Annual goals + live forecast', 'backstage-venue-manager') . '</h3>';
+  vms_budget_calculator_field_int('forecast_year', __('Forecast year', 'backstage-venue-manager'), $in['forecast_year'], 2000, 2100);
+  vms_budget_calculator_field_money('annual_goal_revenue', __('Annual revenue goal', 'backstage-venue-manager'), $in['annual_goal_revenue']);
+  vms_budget_calculator_field_money('annual_goal_profit', __('Annual net profit goal', 'backstage-venue-manager'), $in['annual_goal_profit']);
 
   echo '<p>';
-  echo '<label><input type="checkbox" name="annual_include_drafts" value="1" ' . checked(1, !empty($in['annual_include_drafts']) ? 1 : 0, false) . '> ' . esc_html__('Include Draft/Ready/Tentative/Confirmed Event Plans in annual forecast', 'vms') . '</label>';
+  echo '<label><input type="checkbox" name="annual_include_drafts" value="1" ' . checked(1, !empty($in['annual_include_drafts']) ? 1 : 0, false) . '> ' . esc_html__('Include Draft/Ready/Tentative/Confirmed Event Plans in annual forecast', 'backstage-venue-manager') . '</label>';
   echo '</p>';
-  echo '<p class="description">' . esc_html__('Forecast uses canonical financial inclusion behavior and current Event Plan data (status/date/pay). Decision-support only: no automatic payment or money actions are performed.', 'vms') . '</p>';
+  echo '<p class="description">' . esc_html__('Forecast uses canonical financial inclusion behavior and current Event Plan data (status/date/pay). Decision-support only: no automatic payment or money actions are performed.', 'backstage-venue-manager') . '</p>';
 
   echo '<hr>';
 
-  echo '<h3>' . esc_html__('Cost components', 'vms') . '</h3>';
-  vms_budget_calculator_field_select('cost_profile', __('Cost profile (preset)', 'vms'), $in['cost_profile'], $profile_options);
+  echo '<h3>' . esc_html__('Cost components', 'backstage-venue-manager') . '</h3>';
+  vms_budget_calculator_field_select('cost_profile', __('Cost profile (preset)', 'backstage-venue-manager'), $in['cost_profile'], $profile_options);
 
   echo '<p>';
-  echo '<button class="button" type="submit" name="vms_budget_action" value="apply_profile">' . esc_html__('Apply profile', 'vms') . '</button>';
+  echo '<button class="button" type="submit" name="vms_budget_action" value="apply_profile">' . esc_html__('Apply profile', 'backstage-venue-manager') . '</button>';
   echo '</p>';
 
   vms_budget_calculator_render_cost_items($in['cost_items']);
 
   echo '<details>';
-  echo '<summary><strong>' . esc_html__('Advanced: Auto-scaling costs (staff steps up with headcount)', 'vms') . '</strong></summary>';
-  echo '<p class="description">' . esc_html__('Use this when you want staffing to auto-increment with headcount (e.g., 1 bartender per 100 people). Unit cost should represent total pay per staff member for the event.', 'vms') . '</p>';
+  echo '<summary><strong>' . esc_html__('Advanced: Auto-scaling costs (staff steps up with headcount)', 'backstage-venue-manager') . '</strong></summary>';
+  echo '<p class="description">' . esc_html__('Use this when you want staffing to auto-increment with headcount (e.g., 1 bartender per 100 people). Unit cost should represent total pay per staff member for the event.', 'backstage-venue-manager') . '</p>';
   vms_budget_calculator_render_autoscale_items($in['autoscale_items']);
   echo '</details>';
 
   echo '<p>';
-  echo '<button class="button button-primary" type="submit" name="vms_budget_action" value="calculate">' . esc_html__('Calculate', 'vms') . '</button>';
+  echo '<button class="button button-primary" type="submit" name="vms_budget_action" value="calculate">' . esc_html__('Calculate', 'backstage-venue-manager') . '</button>';
   echo '</p>';
 
   echo '</form>';
@@ -1324,31 +1324,31 @@ function vms_render_budget_calculator_page(): void
     $headcount = (int) $results['headcount'];
 
     echo '<hr>';
-    echo '<h2 class="title">' . esc_html__('Results', 'vms') . '</h2>';
+    echo '<h2 class="title">' . esc_html__('Results', 'backstage-venue-manager') . '</h2>';
 
-    echo '<p><strong>' . esc_html__('Expected headcount:', 'vms') . '</strong> ' . esc_html(vms_budget_fmt_int($headcount)) . '</p>';
+    echo '<p><strong>' . esc_html__('Expected headcount:', 'backstage-venue-manager') . '</strong> ' . esc_html(vms_budget_fmt_int($headcount)) . '</p>';
 
     // Per-event summary
-    echo '<h3>' . esc_html__('Per event', 'vms') . '</h3>';
+    echo '<h3>' . esc_html__('Per event', 'backstage-venue-manager') . '</h3>';
     echo '<table class="widefat striped">';
     echo '<tbody>';
-    echo '<tr><th>' . esc_html__('Gross revenue', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['gross_revenue'])) . '</td></tr>';
-    echo '<tr><th>' . esc_html__('Fees (estimated)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['fee_percent_amt'] + $results['fee_fixed_amt'])) . '</td></tr>';
-    echo '<tr><th>' . esc_html__('Other costs (fixed)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['fixed_costs_other'])) . '</td></tr>';
-    echo '<tr><th>' . esc_html__('Other costs (per-ticket)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['variable_costs'])) . '</td></tr>';
-    echo '<tr><th>' . esc_html__('Auto-scaling costs (staff rules)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['autoscale_costs'])) . '</td></tr>';
-    echo '<tr><th>' . esc_html__('Music Vendor pay', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($in['band_pay'])) . '</td></tr>';
-    echo '<tr><th>' . esc_html__('Net profit', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['net_profit'])) . '</strong></td></tr>';
+    echo '<tr><th>' . esc_html__('Gross revenue', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['gross_revenue'])) . '</td></tr>';
+    echo '<tr><th>' . esc_html__('Fees (estimated)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['fee_percent_amt'] + $results['fee_fixed_amt'])) . '</td></tr>';
+    echo '<tr><th>' . esc_html__('Other costs (fixed)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['fixed_costs_other'])) . '</td></tr>';
+    echo '<tr><th>' . esc_html__('Other costs (per-ticket)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['variable_costs'])) . '</td></tr>';
+    echo '<tr><th>' . esc_html__('Auto-scaling costs (staff rules)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['autoscale_costs'])) . '</td></tr>';
+    echo '<tr><th>' . esc_html__('Music Vendor pay', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($in['band_pay'])) . '</td></tr>';
+    echo '<tr><th>' . esc_html__('Net profit', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['net_profit'])) . '</strong></td></tr>';
     echo '</tbody>';
     echo '</table>';
 
     if (!empty($results['autoscale_rows'])) {
-      echo '<h4>' . esc_html__('Auto-scaling breakdown', 'vms') . '</h4>';
+      echo '<h4>' . esc_html__('Auto-scaling breakdown', 'backstage-venue-manager') . '</h4>';
       echo '<table class="widefat striped"><thead><tr>';
-      echo '<th>' . esc_html__('Line item', 'vms') . '</th>';
-      echo '<th>' . esc_html__('# staff', 'vms') . '</th>';
-      echo '<th>' . esc_html__('Unit cost', 'vms') . '</th>';
-      echo '<th>' . esc_html__('Total', 'vms') . '</th>';
+      echo '<th>' . esc_html__('Line item', 'backstage-venue-manager') . '</th>';
+      echo '<th>' . esc_html__('# staff', 'backstage-venue-manager') . '</th>';
+      echo '<th>' . esc_html__('Unit cost', 'backstage-venue-manager') . '</th>';
+      echo '<th>' . esc_html__('Total', 'backstage-venue-manager') . '</th>';
       echo '</tr></thead><tbody>';
 
       foreach ($results['autoscale_rows'] as $r) {
@@ -1367,51 +1367,51 @@ function vms_render_budget_calculator_page(): void
     if ($in['mode'] === 'period' && $in['events_count'] > 1) {
       $k = (int) $in['events_count'];
       /* translators: %d: number of events in the period. */
-      $period_totals_label = sprintf(__('Period totals (%d events)', 'vms'), $k);
+      $period_totals_label = sprintf(__('Period totals (%d events)', 'backstage-venue-manager'), $k);
       echo '<h3>' . esc_html($period_totals_label) . '</h3>';
       echo '<table class="widefat striped"><tbody>';
-      echo '<tr><th>' . esc_html__('Gross revenue', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['gross_revenue'] * $k)) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Fees (estimated)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money(($results['fee_percent_amt'] + $results['fee_fixed_amt']) * $k)) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Other costs (fixed)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['fixed_costs_other'] * $k)) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Other costs (per-ticket)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['variable_costs'] * $k)) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Auto-scaling costs (staff rules)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['autoscale_costs'] * $k)) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Music Vendor pay', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($in['band_pay'] * $k)) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Net profit', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['net_profit'] * $k)) . '</strong></td></tr>';
+      echo '<tr><th>' . esc_html__('Gross revenue', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['gross_revenue'] * $k)) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Fees (estimated)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money(($results['fee_percent_amt'] + $results['fee_fixed_amt']) * $k)) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Other costs (fixed)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['fixed_costs_other'] * $k)) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Other costs (per-ticket)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['variable_costs'] * $k)) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Auto-scaling costs (staff rules)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['autoscale_costs'] * $k)) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Music Vendor pay', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($in['band_pay'] * $k)) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Net profit', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['net_profit'] * $k)) . '</strong></td></tr>';
       echo '</tbody></table>';
     }
 
     // Decision helpers
-    echo '<h3>' . esc_html__('Decision helpers', 'vms') . '</h3>';
+    echo '<h3>' . esc_html__('Decision helpers', 'backstage-venue-manager') . '</h3>';
     echo '<table class="widefat striped"><tbody>';
 
-    echo '<tr><th>' . esc_html__('Max Music Vendor pay (still hits target profit)', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['max_band_pay_for_target'])) . '</strong></td></tr>';
+    echo '<tr><th>' . esc_html__('Max Music Vendor pay (still hits target profit)', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['max_band_pay_for_target'])) . '</strong></td></tr>';
 
     if ($results['ticket_price_needed'] !== null) {
-      echo '<tr><th>' . esc_html__('Ticket price needed (hits target profit, at this ticket count)', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['ticket_price_needed'])) . '</strong></td></tr>';
+      echo '<tr><th>' . esc_html__('Ticket price needed (hits target profit, at this ticket count)', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_money($results['ticket_price_needed'])) . '</strong></td></tr>';
     } else {
-      echo '<tr><th>' . esc_html__('Ticket price needed (hits target profit)', 'vms') . '</th><td>' . esc_html__('Not possible (fee percent is 100% or higher)', 'vms') . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Ticket price needed (hits target profit)', 'backstage-venue-manager') . '</th><td>' . esc_html__('Not possible (fee percent is 100% or higher)', 'backstage-venue-manager') . '</td></tr>';
     }
 
     if ($results['break_even_price'] !== null) {
-      echo '<tr><th>' . esc_html__('Break-even ticket price (at this ticket count)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money($results['break_even_price'])) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Break-even ticket price (at this ticket count)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money($results['break_even_price'])) . '</td></tr>';
     }
 
     if ($results['tickets_needed_target'] !== null) {
-      echo '<tr><th>' . esc_html__('Tickets needed (hits target profit, at this ticket price)', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_int((int) $results['tickets_needed_target'])) . '</strong></td></tr>';
+      echo '<tr><th>' . esc_html__('Tickets needed (hits target profit, at this ticket price)', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_int((int) $results['tickets_needed_target'])) . '</strong></td></tr>';
     } else {
-      echo '<tr><th>' . esc_html__('Tickets needed (hits target profit)', 'vms') . '</th><td>' . esc_html__('Not found within search limit (raise your ticket price or lower costs)', 'vms') . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Tickets needed (hits target profit)', 'backstage-venue-manager') . '</th><td>' . esc_html__('Not found within search limit (raise your ticket price or lower costs)', 'backstage-venue-manager') . '</td></tr>';
     }
 
     if ($results['tickets_needed_be'] !== null) {
-      echo '<tr><th>' . esc_html__('Break-even tickets (at this ticket price)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_int((int) $results['tickets_needed_be'])) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Break-even tickets (at this ticket price)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_int((int) $results['tickets_needed_be'])) . '</td></tr>';
     } else {
-      echo '<tr><th>' . esc_html__('Break-even tickets', 'vms') . '</th><td>' . esc_html__('Not found within search limit (raise your ticket price or lower costs)', 'vms') . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Break-even tickets', 'backstage-venue-manager') . '</th><td>' . esc_html__('Not found within search limit (raise your ticket price or lower costs)', 'backstage-venue-manager') . '</td></tr>';
     }
 
     echo '</tbody></table>';
 
     // Quick ladder
-    echo '<h3>' . esc_html__('Quick scenarios (ticket count ladder)', 'vms') . '</h3>';
+    echo '<h3>' . esc_html__('Quick scenarios (ticket count ladder)', 'backstage-venue-manager') . '</h3>';
     $ladder = array(
       array('label' => '50%',  'mult' => 0.50),
       array('label' => '75%',  'mult' => 0.75),
@@ -1421,10 +1421,10 @@ function vms_render_budget_calculator_page(): void
 
     echo '<table class="widefat striped">';
     echo '<thead><tr>';
-    echo '<th>' . esc_html__('Tickets', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Expected heads', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Profit', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Ticket price to hit target profit', 'vms') . '</th>';
+    echo '<th>' . esc_html__('Tickets', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Expected heads', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Profit', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Ticket price to hit target profit', 'backstage-venue-manager') . '</th>';
     echo '</tr></thead>';
     echo '<tbody>';
 
@@ -1442,7 +1442,7 @@ function vms_render_budget_calculator_page(): void
       echo '<td>' . esc_html($row['label'] . ' = ' . (string) $t) . '</td>';
       echo '<td>' . esc_html(vms_budget_fmt_int($heads)) . '</td>';
       echo '<td><strong>' . esc_html(vms_budget_fmt_money($r['net_profit'])) . '</strong></td>';
-      echo '<td>' . ($p_need === null ? esc_html__('Not possible', 'vms') : esc_html(vms_budget_fmt_money($p_need))) . '</td>';
+      echo '<td>' . ($p_need === null ? esc_html__('Not possible', 'backstage-venue-manager') : esc_html(vms_budget_fmt_money($p_need))) . '</td>';
       echo '</tr>';
     }
 
@@ -1473,86 +1473,86 @@ function vms_render_budget_calculator_page(): void
       $rev_gap = $annual_results['revenue_goal_gap'] ?? null;
       $profit_gap = $annual_results['profit_goal_gap'] ?? null;
 
-      $rev_gap_text = __('No goal set', 'vms');
+      $rev_gap_text = __('No goal set', 'backstage-venue-manager');
       if ($rev_gap !== null) {
         $rev_gap_f = (float) $rev_gap;
         /* translators: %s: currency amount remaining to hit the revenue goal. */
-        if ($rev_gap_f > 0) $rev_gap_text = sprintf(__('Need %s more', 'vms'), vms_budget_fmt_money($rev_gap_f));
+        if ($rev_gap_f > 0) $rev_gap_text = sprintf(__('Need %s more', 'backstage-venue-manager'), vms_budget_fmt_money($rev_gap_f));
         /* translators: %s: currency amount above the revenue goal. */
-        else $rev_gap_text = sprintf(__('Goal met (+%s)', 'vms'), vms_budget_fmt_money(abs($rev_gap_f)));
+        else $rev_gap_text = sprintf(__('Goal met (+%s)', 'backstage-venue-manager'), vms_budget_fmt_money(abs($rev_gap_f)));
       }
 
-      $profit_gap_text = __('No goal set', 'vms');
+      $profit_gap_text = __('No goal set', 'backstage-venue-manager');
       if ($profit_gap !== null) {
         $profit_gap_f = (float) $profit_gap;
         /* translators: %s: currency amount remaining to hit the profit goal. */
-        if ($profit_gap_f > 0) $profit_gap_text = sprintf(__('Need %s more', 'vms'), vms_budget_fmt_money($profit_gap_f));
+        if ($profit_gap_f > 0) $profit_gap_text = sprintf(__('Need %s more', 'backstage-venue-manager'), vms_budget_fmt_money($profit_gap_f));
         /* translators: %s: currency amount above the profit goal. */
-        else $profit_gap_text = sprintf(__('Goal met (+%s)', 'vms'), vms_budget_fmt_money(abs($profit_gap_f)));
+        else $profit_gap_text = sprintf(__('Goal met (+%s)', 'backstage-venue-manager'), vms_budget_fmt_money(abs($profit_gap_f)));
       }
 
-      echo '<h3>' . esc_html__('Annual goals + progress + forecast', 'vms') . '</h3>';
+      echo '<h3>' . esc_html__('Annual goals + progress + forecast', 'backstage-venue-manager') . '</h3>';
       /* translators: %d: forecast year. */
-      $live_forecast_description = sprintf(__('Live forecast for %d from current Event Plan rows. Past ticket revenue uses explicit ticket-stats snapshots when available.', 'vms'), $year);
+      $live_forecast_description = sprintf(__('Live forecast for %d from current Event Plan rows. Past ticket revenue uses explicit ticket-stats snapshots when available.', 'backstage-venue-manager'), $year);
       echo '<p class="description">' . esc_html($live_forecast_description) . '</p>';
-      echo '<p class="description">' . (!empty($annual_results['include_drafts']) ? esc_html__('Inclusion mode: includes Draft/Ready/Tentative/Confirmed + Published (Cancelled excluded).', 'vms') : esc_html__('Inclusion mode: Published-only (Cancelled excluded).', 'vms')) . '</p>';
+      echo '<p class="description">' . (!empty($annual_results['include_drafts']) ? esc_html__('Inclusion mode: includes Draft/Ready/Tentative/Confirmed + Published (Cancelled excluded).', 'backstage-venue-manager') : esc_html__('Inclusion mode: Published-only (Cancelled excluded).', 'backstage-venue-manager')) . '</p>';
 
       echo '<div class="vms-bcalc-progress-grid">';
       echo '<div class="vms-bcalc-progress-card ' . esc_attr($rev_state) . '">';
-      echo '<div class="vms-bcalc-progress-label">' . esc_html__('Revenue Goal Progress', 'vms') . '</div>';
+      echo '<div class="vms-bcalc-progress-label">' . esc_html__('Revenue Goal Progress', 'backstage-venue-manager') . '</div>';
       echo '<div class="vms-bcalc-progress-value"><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_gross_revenue'] ?? 0.0))) . '</strong>';
       echo ' / ' . esc_html(vms_budget_fmt_money((float) ($annual_results['goal_revenue'] ?? 0.0))) . '</div>';
       echo '<progress class="vms-bcalc-progress-bar" max="100" value="' . esc_attr(number_format((float) $rev_fill, 2, '.', '')) . '"></progress>';
-      echo '<div class="vms-bcalc-progress-meta">' . esc_html($rev_pct === null ? __('No revenue goal entered', 'vms') : (number_format((float) $rev_pct, 1) . '%')) . ' · ' . esc_html($rev_gap_text) . '</div>';
+      echo '<div class="vms-bcalc-progress-meta">' . esc_html($rev_pct === null ? __('No revenue goal entered', 'backstage-venue-manager') : (number_format((float) $rev_pct, 1) . '%')) . ' · ' . esc_html($rev_gap_text) . '</div>';
       echo '</div>';
 
       echo '<div class="vms-bcalc-progress-card ' . esc_attr($profit_state) . '">';
-      echo '<div class="vms-bcalc-progress-label">' . esc_html__('Profit Goal Progress', 'vms') . '</div>';
+      echo '<div class="vms-bcalc-progress-label">' . esc_html__('Profit Goal Progress', 'backstage-venue-manager') . '</div>';
       echo '<div class="vms-bcalc-progress-value"><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_net_profit'] ?? 0.0))) . '</strong>';
       echo ' / ' . esc_html(vms_budget_fmt_money((float) ($annual_results['goal_profit'] ?? 0.0))) . '</div>';
       echo '<progress class="vms-bcalc-progress-bar" max="100" value="' . esc_attr(number_format((float) $profit_fill, 2, '.', '')) . '"></progress>';
-      echo '<div class="vms-bcalc-progress-meta">' . esc_html($profit_pct === null ? __('No profit goal entered', 'vms') : (number_format((float) $profit_pct, 1) . '%')) . ' · ' . esc_html($profit_gap_text) . '</div>';
+      echo '<div class="vms-bcalc-progress-meta">' . esc_html($profit_pct === null ? __('No profit goal entered', 'backstage-venue-manager') : (number_format((float) $profit_pct, 1) . '%')) . ' · ' . esc_html($profit_gap_text) . '</div>';
       echo '</div>';
       echo '</div>';
 
       echo '<table class="widefat striped"><tbody>';
-      echo '<tr><th>' . esc_html__('Included Event Plans', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['event_count'] ?? 0))) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Past / future plans', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['past_event_count'] ?? 0)) . ' / ' . vms_budget_fmt_int((int) ($annual_results['future_event_count'] ?? 0))) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Projected gross revenue', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_gross_revenue'] ?? 0.0))) . '</strong></td></tr>';
-      echo '<tr><th>' . esc_html__('Projected total costs', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_total_costs'] ?? 0.0))) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Projected net profit', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_net_profit'] ?? 0.0))) . '</strong></td></tr>';
-      echo '<tr><th>' . esc_html__('Music Vendor pay using Event Plan values', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['events_using_plan_band_pay'] ?? 0))) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Included Event Plans', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['event_count'] ?? 0))) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Past / future plans', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['past_event_count'] ?? 0)) . ' / ' . vms_budget_fmt_int((int) ($annual_results['future_event_count'] ?? 0))) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Projected gross revenue', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_gross_revenue'] ?? 0.0))) . '</strong></td></tr>';
+      echo '<tr><th>' . esc_html__('Projected total costs', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_total_costs'] ?? 0.0))) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Projected net profit', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['forecast_net_profit'] ?? 0.0))) . '</strong></td></tr>';
+      echo '<tr><th>' . esc_html__('Music Vendor pay using Event Plan values', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['events_using_plan_band_pay'] ?? 0))) . '</td></tr>';
       echo '</tbody></table>';
 
-      echo '<h4>' . esc_html__('Past revenue context', 'vms') . '</h4>';
+      echo '<h4>' . esc_html__('Past revenue context', 'backstage-venue-manager') . '</h4>';
       echo '<table class="widefat striped"><tbody>';
-      echo '<tr><th>' . esc_html__('Past ticket revenue (actual snapshots)', 'vms') . '</th><td><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['past_actual_ticket_revenue'] ?? 0.0))) . '</strong></td></tr>';
-      echo '<tr><th>' . esc_html__('Past events with actual ticket stats', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['past_actual_ticket_events'] ?? 0))) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Past events missing ticket stats', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['past_missing_ticket_stats_events'] ?? 0))) . '</td></tr>';
-      echo '<tr><th>' . esc_html__('Prior year actual ticket revenue (full year)', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money((float) ($annual_results['prior_year_actual_ticket_revenue'] ?? 0.0))) . ' (' . esc_html(vms_budget_fmt_int((int) ($annual_results['prior_year_actual_ticket_events'] ?? 0))) . '/' . esc_html(vms_budget_fmt_int((int) ($annual_results['prior_year_total_events'] ?? 0))) . ' ' . esc_html__('events with stats', 'vms') . ')</td></tr>';
+      echo '<tr><th>' . esc_html__('Past ticket revenue (actual snapshots)', 'backstage-venue-manager') . '</th><td><strong>' . esc_html(vms_budget_fmt_money((float) ($annual_results['past_actual_ticket_revenue'] ?? 0.0))) . '</strong></td></tr>';
+      echo '<tr><th>' . esc_html__('Past events with actual ticket stats', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['past_actual_ticket_events'] ?? 0))) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Past events missing ticket stats', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_int((int) ($annual_results['past_missing_ticket_stats_events'] ?? 0))) . '</td></tr>';
+      echo '<tr><th>' . esc_html__('Prior year actual ticket revenue (full year)', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money((float) ($annual_results['prior_year_actual_ticket_revenue'] ?? 0.0))) . ' (' . esc_html(vms_budget_fmt_int((int) ($annual_results['prior_year_actual_ticket_events'] ?? 0))) . '/' . esc_html(vms_budget_fmt_int((int) ($annual_results['prior_year_total_events'] ?? 0))) . ' ' . esc_html__('events with stats', 'backstage-venue-manager') . ')</td></tr>';
       if ($year === (int) wp_date('Y')) {
-        echo '<tr><th>' . esc_html__('Prior year to-date ticket revenue', 'vms') . '</th><td>' . esc_html(vms_budget_fmt_money((float) ($annual_results['prior_year_to_date_actual_ticket_revenue'] ?? 0.0))) . ' (' . esc_html(vms_budget_fmt_int((int) ($annual_results['prior_year_to_date_actual_ticket_events'] ?? 0))) . ' ' . esc_html__('events with stats', 'vms') . ')</td></tr>';
+        echo '<tr><th>' . esc_html__('Prior year to-date ticket revenue', 'backstage-venue-manager') . '</th><td>' . esc_html(vms_budget_fmt_money((float) ($annual_results['prior_year_to_date_actual_ticket_revenue'] ?? 0.0))) . ' (' . esc_html(vms_budget_fmt_int((int) ($annual_results['prior_year_to_date_actual_ticket_events'] ?? 0))) . ' ' . esc_html__('events with stats', 'backstage-venue-manager') . ')</td></tr>';
       }
       echo '</tbody></table>';
-      echo '<p class="description">' . esc_html__('Past ticket revenue context depends on explicit "Refresh ticket stats" snapshots on Event Plans. Missing snapshots fall back to modeled assumptions in forecast lines.', 'vms') . '</p>';
+      echo '<p class="description">' . esc_html__('Past ticket revenue context depends on explicit "Refresh ticket stats" snapshots on Event Plans. Missing snapshots fall back to modeled assumptions in forecast lines.', 'backstage-venue-manager') . '</p>';
 
       $forecast_rows = isset($annual_results['rows']) && is_array($annual_results['rows']) ? $annual_results['rows'] : array();
       if (!empty($forecast_rows)) {
-        echo '<h4>' . esc_html__('Live Event Plan forecast details', 'vms') . '</h4>';
+        echo '<h4>' . esc_html__('Live Event Plan forecast details', 'backstage-venue-manager') . '</h4>';
         echo '<table class="widefat striped"><thead><tr>';
-        echo '<th>' . esc_html__('Date', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Event Plan', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Status', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Music Vendor pay', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Ticket revenue source', 'vms') . '</th>';
-        echo '<th>' . esc_html__('Forecast net', 'vms') . '</th>';
+        echo '<th>' . esc_html__('Date', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Event Plan', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Music Vendor pay', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Ticket revenue source', 'backstage-venue-manager') . '</th>';
+        echo '<th>' . esc_html__('Forecast net', 'backstage-venue-manager') . '</th>';
         echo '</tr></thead><tbody>';
 
         foreach ($forecast_rows as $row) {
           $plan_label = (string) ($row['title'] ?? '');
           if ($plan_label === '') {
             /* translators: %d: event plan post ID. */
-            $plan_label = sprintf(__('Event Plan #%d', 'vms'), (int) ($row['plan_id'] ?? 0));
+            $plan_label = sprintf(__('Event Plan #%d', 'backstage-venue-manager'), (int) ($row['plan_id'] ?? 0));
           }
           $date_label = (string) ($row['event_date'] ?? '');
           $edit_link = (string) ($row['edit_link'] ?? '');
@@ -1575,11 +1575,11 @@ function vms_render_budget_calculator_page(): void
         $rows_hidden = (int) ($annual_results['rows_hidden'] ?? 0);
         if ($rows_hidden > 0) {
           /* translators: 1: number of visible plans, 2: number of additional plans included in totals. */
-          $rows_hidden_text = sprintf(__('Showing first %1$d plans. %2$d additional plans are included in totals.', 'vms'), count($forecast_rows), $rows_hidden);
+          $rows_hidden_text = sprintf(__('Showing first %1$d plans. %2$d additional plans are included in totals.', 'backstage-venue-manager'), count($forecast_rows), $rows_hidden);
           echo '<p class="description">' . esc_html($rows_hidden_text) . '</p>';
         }
       } else {
-        echo '<div class="notice notice-info"><p>' . esc_html__('No Event Plans matched this annual forecast window and inclusion mode.', 'vms') . '</p></div>';
+        echo '<div class="notice notice-info"><p>' . esc_html__('No Event Plans matched this annual forecast window and inclusion mode.', 'backstage-venue-manager') . '</p></div>';
       }
     }
   }

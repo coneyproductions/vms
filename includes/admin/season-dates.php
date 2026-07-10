@@ -160,33 +160,33 @@ function vms_sd_has_duplicates(array $rules): bool
 function vms_sd_notice_text(string $code): string
 {
 	$map = [
-		'rules_saved'        => __('Rules saved. Active dates were not regenerated.', 'vms'),
-		'rule_deleted'       => __('Rule deleted. Active dates were not regenerated.', 'vms'),
-		'open_window_added'  => __('Open window added. Active dates were not regenerated.', 'vms'),
-		'open_window_exists' => __('That open window already exists for this venue (no duplicate added).', 'vms'),
-		'blackout_added'     => __('Blackout date added. Active dates were not regenerated.', 'vms'),
-		'blackout_exists'    => __('That blackout date already exists for this venue (no duplicate added).', 'vms'),
-		'blackout_range_added'  => __('Blackout range added. Active dates were not regenerated.', 'vms'),
-		'blackout_range_exists' => __('That blackout range already exists for this venue (no duplicate added).', 'vms'),
-		'generated'          => __('Active dates generated and saved for this venue.', 'vms'),
-		'cleared'            => __('Generated dates cleared for this venue.', 'vms'),
+		'rules_saved'        => __('Rules saved. Active dates were not regenerated.', 'backstage-venue-manager'),
+		'rule_deleted'       => __('Rule deleted. Active dates were not regenerated.', 'backstage-venue-manager'),
+		'open_window_added'  => __('Open window added. Active dates were not regenerated.', 'backstage-venue-manager'),
+		'open_window_exists' => __('That open window already exists for this venue (no duplicate added).', 'backstage-venue-manager'),
+		'blackout_added'     => __('Blackout date added. Active dates were not regenerated.', 'backstage-venue-manager'),
+		'blackout_exists'    => __('That blackout date already exists for this venue (no duplicate added).', 'backstage-venue-manager'),
+		'blackout_range_added'  => __('Blackout range added. Active dates were not regenerated.', 'backstage-venue-manager'),
+		'blackout_range_exists' => __('That blackout range already exists for this venue (no duplicate added).', 'backstage-venue-manager'),
+		'generated'          => __('Active dates generated and saved for this venue.', 'backstage-venue-manager'),
+		'cleared'            => __('Generated dates cleared for this venue.', 'backstage-venue-manager'),
 	];
-	return $map[$code] ?? __('Saved.', 'vms');
+	return $map[$code] ?? __('Saved.', 'backstage-venue-manager');
 }
 
 function vms_sd_error_text(string $code): string
 {
 	$map = [
-		'bad_nonce'        => __('Security check failed. Please try again.', 'vms'),
-		'confirm_required' => __('Confirmation checkbox required for this action.', 'vms'),
-		'add_rule_failed'  => __('Rule could not be added (invalid inputs).', 'vms'),
-		'save_failed'      => __('Rules could not be saved.', 'vms'),
-		'duplicates_found' => __('Duplicate rules detected. Remove duplicates and try again.', 'vms'),
-		'missing_core'     => __('Missing core season functions. Check includes.', 'vms'),
-		'unknown_action'   => __('Unknown action.', 'vms'),
-		'headers_sent'     => __('Redirect failed because output started early (headers already sent).', 'vms'),
+		'bad_nonce'        => __('Security check failed. Please try again.', 'backstage-venue-manager'),
+		'confirm_required' => __('Confirmation checkbox required for this action.', 'backstage-venue-manager'),
+		'add_rule_failed'  => __('Rule could not be added (invalid inputs).', 'backstage-venue-manager'),
+		'save_failed'      => __('Rules could not be saved.', 'backstage-venue-manager'),
+		'duplicates_found' => __('Duplicate rules detected. Remove duplicates and try again.', 'backstage-venue-manager'),
+		'missing_core'     => __('Missing core season functions. Check includes.', 'backstage-venue-manager'),
+		'unknown_action'   => __('Unknown action.', 'backstage-venue-manager'),
+		'headers_sent'     => __('Redirect failed because output started early (headers already sent).', 'backstage-venue-manager'),
 	];
-	return $map[$code] ?? __('An error occurred.', 'vms');
+	return $map[$code] ?? __('An error occurred.', 'backstage-venue-manager');
 }
 
 function vms_sd_maybe_handle_post(): void
@@ -514,7 +514,7 @@ function vms_render_season_dates_page(): void
 {
 	$cap = apply_filters('vms_admin_capability', 'manage_options');
 	if (!current_user_can($cap)) {
-		wp_die(esc_html__('You do not have permission to access this page.', 'vms'));
+		wp_die(esc_html__('You do not have permission to access this page.', 'backstage-venue-manager'));
 	}
 
 	vms_sd_require_engine();
@@ -593,7 +593,7 @@ function vms_render_season_dates_page(): void
 	$error  = isset($_GET['vms_error']) ? sanitize_key((string)$_GET['vms_error']) : '';
 
 	echo '<div class="wrap vms-season-dates-admin">';
-	echo '<h1>' . esc_html__('Season Dates', 'vms') . '</h1>';
+	echo '<h1>' . esc_html__('Season Dates', 'backstage-venue-manager') . '</h1>';
 
 	if ($error === 'headers_sent' && !empty($GLOBALS['vms_sd_headers_sent'])) {
 		[$f, $ln] = $GLOBALS['vms_sd_headers_sent'];
@@ -611,24 +611,24 @@ function vms_render_season_dates_page(): void
 	}
 
 	if (empty($venue_ids)) {
-		echo '<div class="notice notice-warning"><p>' . esc_html__('No venues found. Add a venue first, then return here.', 'vms') . '</p></div>';
+		echo '<div class="notice notice-warning"><p>' . esc_html__('No venues found. Add a venue first, then return here.', 'backstage-venue-manager') . '</p></div>';
 		echo '</div>';
 		return;
 	}
 
 	if ($has_rules && !$has_generated_dates) {
 		echo '<div class="notice notice-warning"><p><strong>'
-			. esc_html__('Heads up:', 'vms')
+			. esc_html__('Heads up:', 'backstage-venue-manager')
 			. '</strong> '
-			. esc_html__('You have season rules, but no active dates have been generated yet. Use Generate Active Dates below to apply your rules.', 'vms')
+			. esc_html__('You have season rules, but no active dates have been generated yet. Use Generate Active Dates below to apply your rules.', 'backstage-venue-manager')
 			. '</p></div>';
 	}
 
 	if ($active_is_stale) {
 		echo '<div class="notice notice-warning"><p><strong>'
-			. esc_html__('Heads up:', 'vms')
+			. esc_html__('Heads up:', 'backstage-venue-manager')
 			. '</strong> '
-			. esc_html__('Season rules have changed since active dates were last generated. Regenerate active dates to apply your updates.', 'vms')
+			. esc_html__('Season rules have changed since active dates were last generated. Regenerate active dates to apply your updates.', 'backstage-venue-manager')
 			. '</p></div>';
 	}
 
@@ -637,7 +637,7 @@ function vms_render_season_dates_page(): void
 	echo '<form method="get" action="' . esc_url(admin_url('admin.php')) . '">';
 	echo '<input type="hidden" name="page" value="' . esc_attr($page_slug) . '">';
 	echo '<table class="form-table" role="presentation"><tr><th scope="row">';
-	echo '<label for="venue_id">' . esc_html__('Venue', 'vms') . '</label></th><td>';
+	echo '<label for="venue_id">' . esc_html__('Venue', 'backstage-venue-manager') . '</label></th><td>';
 	echo '<select name="venue_id" id="venue_id" onchange="this.form.submit()">';
 	foreach ($venue_ids as $vid) {
 		$title = get_the_title($vid);
@@ -647,15 +647,15 @@ function vms_render_season_dates_page(): void
 	echo '</select></td></tr></table></form>';
 
 	echo '<p class="vms-sd-stats">';
-	echo '<strong>' . esc_html__('Season rules:', 'vms') . '</strong> ' . esc_html((string)count($rules));
+	echo '<strong>' . esc_html__('Season rules:', 'backstage-venue-manager') . '</strong> ' . esc_html((string)count($rules));
 	echo ' &nbsp;|&nbsp; ';
-	echo '<strong>' . esc_html__('Active dates generated:', 'vms') . '</strong> ' . esc_html((string)$dates_count);
+	echo '<strong>' . esc_html__('Active dates generated:', 'backstage-venue-manager') . '</strong> ' . esc_html((string)$dates_count);
 	echo '</p>';
 
 	$rules_action_url = remove_query_arg(['vms_notice', 'vms_error'], add_query_arg(['venue_id' => $selected_venue_id], $base_url));
 
 	// Rules table (single form; no nested forms)
-	echo '<hr><h2>' . esc_html__('Season Rules', 'vms') . '</h2>';
+	echo '<hr><h2>' . esc_html__('Season Rules', 'backstage-venue-manager') . '</h2>';
 
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
 	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
@@ -663,11 +663,11 @@ function vms_render_season_dates_page(): void
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
 	echo '<table class="widefat striped"><thead><tr>';
-	echo '<th class="vms-sd-col-enabled">' . esc_html__('Enabled', 'vms') . '</th>';
-	echo '<th class="vms-sd-col-type">' . esc_html__('Type', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Rule', 'vms') . '</th>';
-	echo '<th class="vms-sd-col-note">' . esc_html__('Note', 'vms') . '</th>';
-	echo '<th class="vms-sd-col-delete">' . esc_html__('Delete', 'vms') . '</th>';
+	echo '<th class="vms-sd-col-enabled">' . esc_html__('Enabled', 'backstage-venue-manager') . '</th>';
+	echo '<th class="vms-sd-col-type">' . esc_html__('Type', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Rule', 'backstage-venue-manager') . '</th>';
+	echo '<th class="vms-sd-col-note">' . esc_html__('Note', 'backstage-venue-manager') . '</th>';
+	echo '<th class="vms-sd-col-delete">' . esc_html__('Delete', 'backstage-venue-manager') . '</th>';
 	echo '</tr></thead><tbody>';
 
 	if (!empty($rules)) {
@@ -684,10 +684,10 @@ function vms_render_season_dates_page(): void
 
 			echo '<td><strong>' . esc_html(
 				$type === 'open_window'
-					? __('Open window', 'vms')
+					? __('Open window', 'backstage-venue-manager')
 					: ($type === 'blackout_date'
-						? __('Blackout date', 'vms')
-						: ($type === 'blackout_range' ? __('Blackout range', 'vms') : __('Unknown', 'vms')))
+						? __('Blackout date', 'backstage-venue-manager')
+						: ($type === 'blackout_range' ? __('Blackout range', 'backstage-venue-manager') : __('Unknown', 'backstage-venue-manager')))
 			) . '</strong>';
 			echo '<input type="hidden" name="rules[' . esc_attr($id) . '][id]" value="' . esc_attr($id) . '">';
 			echo '<input type="hidden" name="rules[' . esc_attr($id) . '][type]" value="' . esc_attr($type) . '">';
@@ -697,124 +697,124 @@ function vms_render_season_dates_page(): void
 			if ($type === 'open_window') {
 				$start = (string)($r['start_mmdd'] ?? '');
 				$end   = (string)($r['end_mmdd'] ?? '');
-				echo esc_html__('Open window:', 'vms') . ' ';
+				echo esc_html__('Open window:', 'backstage-venue-manager') . ' ';
 				echo '<input type="text" class="regular-text vms-sd-mmdd-input" name="rules[' . esc_attr($id) . '][start_mmdd]" value="' . esc_attr($start) . '" placeholder="MM-DD"> ';
-				echo esc_html__('to', 'vms') . ' ';
+				echo esc_html__('to', 'backstage-venue-manager') . ' ';
 				echo '<input type="text" class="regular-text vms-sd-mmdd-input" name="rules[' . esc_attr($id) . '][end_mmdd]" value="' . esc_attr($end) . '" placeholder="MM-DD">';
 
 				$mask = isset($r['days_w']) ? (int)$r['days_w'] : 0;
 				$checked = vms_sd_days_from_mask($mask);
 
 				echo '<div class="vms-sd-pattern-row">';
-				echo '<span class="vms-sd-pattern-label">' . esc_html__('Pattern:', 'vms') . '</span>';
+				echo '<span class="vms-sd-pattern-label">' . esc_html__('Pattern:', 'backstage-venue-manager') . '</span>';
 				for ($i = 0; $i <= 6; $i++) {
 					$day_attr = checked(in_array($i, $checked, true), true, false);
 					echo '<label class="vms-sd-day-option">';
 					echo '<input type="checkbox" name="rules[' . esc_attr($id) . '][days_w_days][]" value="' . esc_attr((string)$i) . '" ' . $day_attr . '> ';
 					echo esc_html($names[$i]) . '</label>';
 				}
-				echo '<div class="description vms-sd-pattern-help">' . esc_html__('Leave blank for all days.', 'vms') . '</div>';
+				echo '<div class="description vms-sd-pattern-help">' . esc_html__('Leave blank for all days.', 'backstage-venue-manager') . '</div>';
 				echo '</div>';
 			} elseif ($type === 'blackout_date') {
 				$date = (string)($r['date_ymd'] ?? '');
-				echo esc_html__('Blackout date:', 'vms') . ' ';
+				echo esc_html__('Blackout date:', 'backstage-venue-manager') . ' ';
 				echo '<input type="date" name="rules[' . esc_attr($id) . '][date_ymd]" value="' . esc_attr($date) . '">';
 			} elseif ($type === 'blackout_range') {
 				$start = (string)($r['start_ymd'] ?? '');
 				$end   = (string)($r['end_ymd'] ?? '');
-				echo esc_html__('Blackout range:', 'vms') . ' ';
+				echo esc_html__('Blackout range:', 'backstage-venue-manager') . ' ';
 				echo '<input type="date" name="rules[' . esc_attr($id) . '][start_ymd]" value="' . esc_attr($start) . '"> ';
-				echo esc_html__('to', 'vms') . ' ';
+				echo esc_html__('to', 'backstage-venue-manager') . ' ';
 				echo '<input type="date" name="rules[' . esc_attr($id) . '][end_ymd]" value="' . esc_attr($end) . '">';
 			} else {
-				echo esc_html__('Unknown rule type', 'vms');
+				echo esc_html__('Unknown rule type', 'backstage-venue-manager');
 			}
 			echo '</td>';
 
-			echo '<td><input type="text" class="regular-text vms-sd-note-input" name="rules[' . esc_attr($id) . '][note]" value="' . esc_attr($note) . '" placeholder="' . esc_attr__('Optional note', 'vms') . '"></td>';
+			echo '<td><input type="text" class="regular-text vms-sd-note-input" name="rules[' . esc_attr($id) . '][note]" value="' . esc_attr($note) . '" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '"></td>';
 
 			echo '<td>';
-			echo '<button type="submit" class="button button-secondary" name="delete_rule_id" value="' . esc_attr($id) . '" onclick="return confirm(\'' . esc_js(__('Delete this rule?', 'vms')) . '\');">';
-			echo esc_html__('Delete', 'vms') . '</button>';
+			echo '<button type="submit" class="button button-secondary" name="delete_rule_id" value="' . esc_attr($id) . '" onclick="return confirm(\'' . esc_js(__('Delete this rule?', 'backstage-venue-manager')) . '\');">';
+			echo esc_html__('Delete', 'backstage-venue-manager') . '</button>';
 			echo '</td>';
 
 			echo '</tr>';
 		}
 	} else {
-		echo '<tr><td colspan="5">' . esc_html__('No rules yet. Add your first rule below.', 'vms') . '</td></tr>';
+		echo '<tr><td colspan="5">' . esc_html__('No rules yet. Add your first rule below.', 'backstage-venue-manager') . '</td></tr>';
 	}
 
 	echo '</tbody></table>';
-	echo '<p class="vms-sd-save-row"><button type="submit" class="button button-primary">' . esc_html__('Save Rules', 'vms') . '</button></p>';
-	echo '<p class="description">' . esc_html__('Saving rules does not regenerate active dates. Use Generate Active Dates below to apply changes.', 'vms') . '</p>';
+	echo '<p class="vms-sd-save-row"><button type="submit" class="button button-primary">' . esc_html__('Save Rules', 'backstage-venue-manager') . '</button></p>';
+	echo '<p class="description">' . esc_html__('Saving rules does not regenerate active dates. Use Generate Active Dates below to apply changes.', 'backstage-venue-manager') . '</p>';
 	echo '</form>';
 
 	// Add Open Window
-	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Open Window', 'vms') . '</h3>';
+	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Open Window', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
 	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="add_open_window">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
 	echo '<table class="form-table" role="presentation">';
-	echo '<tr><th scope="row">' . esc_html__('Open window', 'vms') . '</th><td>';
+	echo '<tr><th scope="row">' . esc_html__('Open window', 'backstage-venue-manager') . '</th><td>';
 	echo '<input type="text" name="new_start_mmdd" class="regular-text vms-sd-mmdd-input" placeholder="MM-DD"> ';
-	echo esc_html__('to', 'vms') . ' ';
+	echo esc_html__('to', 'backstage-venue-manager') . ' ';
 	echo '<input type="text" name="new_end_mmdd" class="regular-text vms-sd-mmdd-input" placeholder="MM-DD">';
 	echo '</td></tr>';
 
-	echo '<tr><th scope="row">' . esc_html__('Pattern (optional)', 'vms') . '</th><td><div class="vms-sd-pattern-row vms-sd-pattern-row--tight">';
+	echo '<tr><th scope="row">' . esc_html__('Pattern (optional)', 'backstage-venue-manager') . '</th><td><div class="vms-sd-pattern-row vms-sd-pattern-row--tight">';
 	for ($i = 0; $i <= 6; $i++) {
 		echo '<label class="vms-sd-day-option">';
 		echo '<input type="checkbox" name="new_days_w_days[]" value="' . esc_attr((string)$i) . '"> ' . esc_html($names[$i]) . '</label>';
 	}
-	echo '</div><p class="description vms-sd-pattern-help">' . esc_html__('Leave blank for all days.', 'vms') . '</p></td></tr>';
+	echo '</div><p class="description vms-sd-pattern-help">' . esc_html__('Leave blank for all days.', 'backstage-venue-manager') . '</p></td></tr>';
 
-	echo '<tr><th scope="row">' . esc_html__('Note', 'vms') . '</th><td>';
-	echo '<input type="text" class="regular-text vms-sd-note-input--wide" name="new_note" placeholder="' . esc_attr__('Optional note', 'vms') . '">';
+	echo '<tr><th scope="row">' . esc_html__('Note', 'backstage-venue-manager') . '</th><td>';
+	echo '<input type="text" class="regular-text vms-sd-note-input--wide" name="new_note" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '">';
 	echo '</td></tr>';
 	echo '</table>';
 
-	submit_button(__('Add Open Window', 'vms'));
+	submit_button(__('Add Open Window', 'backstage-venue-manager'));
 	echo '</form>';
 
 	// Add Blackout
-	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Blackout Date', 'vms') . '</h3>';
+	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Blackout Date', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
 	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="add_blackout">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
 	echo '<table class="form-table" role="presentation">';
-	echo '<tr><th scope="row">' . esc_html__('Blackout date', 'vms') . '</th><td><input type="date" name="new_blackout_ymd"></td></tr>';
-	echo '<tr><th scope="row">' . esc_html__('Note', 'vms') . '</th><td>';
-	echo '<input type="text" class="regular-text vms-sd-note-input--wide" name="new_note" placeholder="' . esc_attr__('Optional note', 'vms') . '">';
+	echo '<tr><th scope="row">' . esc_html__('Blackout date', 'backstage-venue-manager') . '</th><td><input type="date" name="new_blackout_ymd"></td></tr>';
+	echo '<tr><th scope="row">' . esc_html__('Note', 'backstage-venue-manager') . '</th><td>';
+	echo '<input type="text" class="regular-text vms-sd-note-input--wide" name="new_note" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '">';
 	echo '</td></tr>';
 	echo '</table>';
 
-	echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Add Blackout Date', 'vms') . '</button></p>';
+	echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Add Blackout Date', 'backstage-venue-manager') . '</button></p>';
 	echo '</form>';
 
 	// Add Blackout Range
-	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Blackout Range', 'vms') . '</h3>';
+	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Blackout Range', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
 	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="add_blackout_range">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
 	echo '<table class="form-table" role="presentation">';
-	echo '<tr><th scope="row">' . esc_html__('From', 'vms') . '</th><td><input type="date" name="new_blackout_start_ymd"></td></tr>';
-	echo '<tr><th scope="row">' . esc_html__('To', 'vms') . '</th><td><input type="date" name="new_blackout_end_ymd"></td></tr>';
-	echo '<tr><th scope="row">' . esc_html__('Note', 'vms') . '</th><td>';
-	echo '<input type="text" class="regular-text vms-sd-note-input--wide" name="new_note" placeholder="' . esc_attr__('Optional note', 'vms') . '">';
+	echo '<tr><th scope="row">' . esc_html__('From', 'backstage-venue-manager') . '</th><td><input type="date" name="new_blackout_start_ymd"></td></tr>';
+	echo '<tr><th scope="row">' . esc_html__('To', 'backstage-venue-manager') . '</th><td><input type="date" name="new_blackout_end_ymd"></td></tr>';
+	echo '<tr><th scope="row">' . esc_html__('Note', 'backstage-venue-manager') . '</th><td>';
+	echo '<input type="text" class="regular-text vms-sd-note-input--wide" name="new_note" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '">';
 	echo '</td></tr>';
 	echo '</table>';
 
-	echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Add Blackout Range', 'vms') . '</button></p>';
+	echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Add Blackout Range', 'backstage-venue-manager') . '</button></p>';
 	echo '</form>';
 
 	// Generate + Clear
-	echo '<hr><h2>' . esc_html__('Generate Active Dates', 'vms') . '</h2>';
+	echo '<hr><h2>' . esc_html__('Generate Active Dates', 'backstage-venue-manager') . '</h2>';
 
 	$default_from = gmdate('Y') . '-01-01';
 	$default_to   = gmdate('Y') . '-12-31';
@@ -825,22 +825,22 @@ function vms_render_season_dates_page(): void
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
 	echo '<table class="form-table" role="presentation">';
-	echo '<tr><th scope="row">' . esc_html__('From', 'vms') . '</th><td><input type="date" name="gen_from_ymd" value="' . esc_attr($default_from) . '"></td></tr>';
-	echo '<tr><th scope="row">' . esc_html__('To', 'vms') . '</th><td><input type="date" name="gen_to_ymd" value="' . esc_attr($default_to) . '"></td></tr>';
-	echo '<tr><th scope="row">' . esc_html__('Confirm', 'vms') . '</th><td>';
-	echo '<label><input type="checkbox" name="gen_confirm_replace" value="1"> ' . esc_html__('I understand this will replace existing generated dates for this venue.', 'vms') . '</label>';
+	echo '<tr><th scope="row">' . esc_html__('From', 'backstage-venue-manager') . '</th><td><input type="date" name="gen_from_ymd" value="' . esc_attr($default_from) . '"></td></tr>';
+	echo '<tr><th scope="row">' . esc_html__('To', 'backstage-venue-manager') . '</th><td><input type="date" name="gen_to_ymd" value="' . esc_attr($default_to) . '"></td></tr>';
+	echo '<tr><th scope="row">' . esc_html__('Confirm', 'backstage-venue-manager') . '</th><td>';
+	echo '<label><input type="checkbox" name="gen_confirm_replace" value="1"> ' . esc_html__('I understand this will replace existing generated dates for this venue.', 'backstage-venue-manager') . '</label>';
 	echo '</td></tr></table>';
 
-	echo '<p><button type="submit" class="button button-primary">' . esc_html__('Generate Active Dates', 'vms') . '</button></p>';
+	echo '<p><button type="submit" class="button button-primary">' . esc_html__('Generate Active Dates', 'backstage-venue-manager') . '</button></p>';
 	echo '</form>';
 
-	echo '<h3 class="vms-sd-subhead-gap-sm">' . esc_html__('Clear Generated Dates', 'vms') . '</h3>';
+	echo '<h3 class="vms-sd-subhead-gap-sm">' . esc_html__('Clear Generated Dates', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
 	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="clear_generated">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
-	echo '<p><label><input type="checkbox" name="clear_confirm" value="1"> ' . esc_html__('I understand this will delete generated dates for this venue.', 'vms') . '</label></p>';
-	echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Clear Generated Dates', 'vms') . '</button></p>';
+	echo '<p><label><input type="checkbox" name="clear_confirm" value="1"> ' . esc_html__('I understand this will delete generated dates for this venue.', 'backstage-venue-manager') . '</label></p>';
+	echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Clear Generated Dates', 'backstage-venue-manager') . '</button></p>';
 	echo '</form>';
 
 	echo '</div>';

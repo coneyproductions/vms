@@ -141,10 +141,10 @@ if (!function_exists('vms_event_plan_review_source_label')) {
     {
         $source = sanitize_key($source);
         $map = array(
-            'event_plan_editor' => __('Event Plan editor', 'vms'),
-            'fill_dates' => __('Fill Dates', 'vms'),
-            'importer' => __('Importer', 'vms'),
-            'unknown' => __('Unknown', 'vms'),
+            'event_plan_editor' => __('Event Plan editor', 'backstage-venue-manager'),
+            'fill_dates' => __('Fill Dates', 'backstage-venue-manager'),
+            'importer' => __('Importer', 'backstage-venue-manager'),
+            'unknown' => __('Unknown', 'backstage-venue-manager'),
         );
 
         return $map[$source] ?? ucwords(str_replace(array('_', '-'), ' ', $source));
@@ -156,12 +156,12 @@ if (!function_exists('vms_event_plan_review_vendor_label')) {
     {
         $vendor_id = absint($vendor_id);
         if ($vendor_id <= 0) {
-            return __('None', 'vms');
+            return __('None', 'backstage-venue-manager');
         }
 
         $title = trim((string) get_the_title($vendor_id));
         /* translators: %d: vendor post ID. */
-        return $title !== '' ? $title : sprintf(__('Vendor #%d', 'vms'), $vendor_id);
+        return $title !== '' ? $title : sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id);
     }
 }
 
@@ -172,7 +172,7 @@ if (!function_exists('vms_event_plan_review_term_label')) {
             ? vms_vendor_type_normalize_slug($slug)
             : sanitize_key($slug);
         if ($slug === '') {
-            return __('Not set', 'vms');
+            return __('Not set', 'backstage-venue-manager');
         }
 
         $term = function_exists('vms_vendor_type_get_term')
@@ -191,12 +191,12 @@ if (!function_exists('vms_event_plan_review_venue_label')) {
     {
         $venue_id = absint($venue_id);
         if ($venue_id <= 0) {
-            return __('Unassigned venue', 'vms');
+            return __('Unassigned venue', 'backstage-venue-manager');
         }
 
         $title = trim((string) get_the_title($venue_id));
         /* translators: %d: venue post ID. */
-        return $title !== '' ? $title : sprintf(__('Venue #%d', 'vms'), $venue_id);
+        return $title !== '' ? $title : sprintf(__('Venue #%d', 'backstage-venue-manager'), $venue_id);
     }
 }
 
@@ -254,7 +254,7 @@ if (!function_exists('vms_event_plan_review_format_date')) {
     {
         $date = trim($date);
         if ($date === '') {
-            return __('Not set', 'vms');
+            return __('Not set', 'backstage-venue-manager');
         }
 
         $timezone = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
@@ -272,7 +272,7 @@ if (!function_exists('vms_event_plan_review_format_time')) {
     {
         $time = trim($time);
         if ($time === '') {
-            return __('Not set', 'vms');
+            return __('Not set', 'backstage-venue-manager');
         }
 
         $timezone = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
@@ -407,30 +407,30 @@ if (!function_exists('vms_event_plan_review_lineup_summary')) {
         $parts = array();
         if (!empty($added)) {
             /* translators: %s: comma-separated vendor names added to the lineup. */
-            $parts[] = sprintf(__('added %s', 'vms'), implode(', ', vms_event_plan_review_secondary_vendor_labels($added)));
+            $parts[] = sprintf(__('added %s', 'backstage-venue-manager'), implode(', ', vms_event_plan_review_secondary_vendor_labels($added)));
         }
         if (!empty($removed)) {
             /* translators: %s: comma-separated vendor names removed from the lineup. */
-            $parts[] = sprintf(__('removed %s', 'vms'), implode(', ', vms_event_plan_review_secondary_vendor_labels($removed)));
+            $parts[] = sprintf(__('removed %s', 'backstage-venue-manager'), implode(', ', vms_event_plan_review_secondary_vendor_labels($removed)));
         }
         if (!empty($timing_changed)) {
             /* translators: %s: comma-separated vendor names with changed set times. */
-            $parts[] = sprintf(__('set times changed for %s', 'vms'), implode(', ', $timing_changed));
+            $parts[] = sprintf(__('set times changed for %s', 'backstage-venue-manager'), implode(', ', $timing_changed));
         }
         if (!empty($fee_changed)) {
             /* translators: %s: comma-separated vendor names with changed compensation. */
-            $parts[] = sprintf(__('supporting compensation changed for %s', 'vms'), implode(', ', $fee_changed));
+            $parts[] = sprintf(__('supporting compensation changed for %s', 'backstage-venue-manager'), implode(', ', $fee_changed));
         }
         if ($order_changed) {
-            $parts[] = __('lineup order changed', 'vms');
+            $parts[] = __('lineup order changed', 'backstage-venue-manager');
         }
 
         if (empty($parts)) {
-            $parts[] = __('lineup details changed', 'vms');
+            $parts[] = __('lineup details changed', 'backstage-venue-manager');
         }
 
         /* translators: %s: semicolon-separated lineup change summaries. */
-        return sprintf(__('Lineup & schedule updated: %s', 'vms'), implode('; ', $parts));
+        return sprintf(__('Lineup & schedule updated: %s', 'backstage-venue-manager'), implode('; ', $parts));
     }
 }
 
@@ -440,12 +440,12 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
         $changes = array();
 
         $string_fields = array(
-            'title' => __('Plan title', 'vms'),
-            'event_date' => __('Event date', 'vms'),
-            'start_time' => __('Start time', 'vms'),
-            'end_time' => __('End time', 'vms'),
-            'status' => __('Plan status', 'vms'),
-            'secondary_vendor_type' => __('Secondary vendor type', 'vms'),
+            'title' => __('Plan title', 'backstage-venue-manager'),
+            'event_date' => __('Event date', 'backstage-venue-manager'),
+            'start_time' => __('Start time', 'backstage-venue-manager'),
+            'end_time' => __('End time', 'backstage-venue-manager'),
+            'status' => __('Plan status', 'backstage-venue-manager'),
+            'secondary_vendor_type' => __('Secondary vendor type', 'backstage-venue-manager'),
         );
 
         foreach ($string_fields as $field => $label) {
@@ -468,8 +468,8 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
                 $before_label = vms_event_plan_review_term_label($before);
                 $after_label = vms_event_plan_review_term_label($after);
             } else {
-                $before_label = ($before !== '') ? $before : __('Not set', 'vms');
-                $after_label = ($after !== '') ? $after : __('Not set', 'vms');
+                $before_label = ($before !== '') ? $before : __('Not set', 'backstage-venue-manager');
+                $after_label = ($after !== '') ? $after : __('Not set', 'backstage-venue-manager');
             }
 
             $change = array(
@@ -480,7 +480,7 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
                 'before_label' => $before_label,
                 'after_label' => $after_label,
                 /* translators: 1: field label, 2: previous value, 3: current value. */
-                'summary' => sprintf(__('%1$s changed from %2$s to %3$s', 'vms'), $label, $before_label, $after_label),
+                'summary' => sprintf(__('%1$s changed from %2$s to %3$s', 'backstage-venue-manager'), $label, $before_label, $after_label),
             );
             if (function_exists('vms_event_plan_review_change_is_noop') && vms_event_plan_review_change_is_noop($change)) {
                 continue;
@@ -494,14 +494,14 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
         if ($before_venue !== $after_venue) {
             $changes[] = array(
                 'field' => 'venue_id',
-                'label' => __('Venue', 'vms'),
+                'label' => __('Venue', 'backstage-venue-manager'),
                 'before' => $before_venue,
                 'after' => $after_venue,
                 'before_label' => vms_event_plan_review_venue_label($before_venue),
                 'after_label' => vms_event_plan_review_venue_label($after_venue),
                 'summary' => sprintf(
                     /* translators: 1: previous venue label, 2: current venue label. */
-                    __('Venue changed from %1$s to %2$s', 'vms'),
+                    __('Venue changed from %1$s to %2$s', 'backstage-venue-manager'),
                     vms_event_plan_review_venue_label($before_venue),
                     vms_event_plan_review_venue_label($after_venue)
                 ),
@@ -513,14 +513,14 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
         if ($before_primary !== $after_primary) {
             $changes[] = array(
                 'field' => 'primary_vendor_id',
-                'label' => __('Primary vendor', 'vms'),
+                'label' => __('Primary vendor', 'backstage-venue-manager'),
                 'before' => $before_primary,
                 'after' => $after_primary,
                 'before_label' => vms_event_plan_review_vendor_label($before_primary),
                 'after_label' => vms_event_plan_review_vendor_label($after_primary),
                 'summary' => sprintf(
                     /* translators: 1: previous primary vendor label, 2: current primary vendor label. */
-                    __('Primary vendor changed from %1$s to %2$s', 'vms'),
+                    __('Primary vendor changed from %1$s to %2$s', 'backstage-venue-manager'),
                     vms_event_plan_review_vendor_label($before_primary),
                     vms_event_plan_review_vendor_label($after_primary)
                 ),
@@ -537,22 +537,22 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
             $parts = array();
             if (!empty($added)) {
                 /* translators: %s: comma-separated vendor names added to the secondary vendor list. */
-                $parts[] = sprintf(__('added %s', 'vms'), implode(', ', vms_event_plan_review_secondary_vendor_labels($added)));
+                $parts[] = sprintf(__('added %s', 'backstage-venue-manager'), implode(', ', vms_event_plan_review_secondary_vendor_labels($added)));
             }
             if (!empty($removed)) {
                 /* translators: %s: comma-separated vendor names removed from the secondary vendor list. */
-                $parts[] = sprintf(__('removed %s', 'vms'), implode(', ', vms_event_plan_review_secondary_vendor_labels($removed)));
+                $parts[] = sprintf(__('removed %s', 'backstage-venue-manager'), implode(', ', vms_event_plan_review_secondary_vendor_labels($removed)));
             }
             if (empty($parts)) {
-                $parts[] = __('secondary vendor selections changed', 'vms');
+                $parts[] = __('secondary vendor selections changed', 'backstage-venue-manager');
             }
             $changes[] = array(
                 'field' => 'secondary_vendor_ids',
-                'label' => __('Secondary vendors', 'vms'),
+                'label' => __('Secondary vendors', 'backstage-venue-manager'),
                 'before' => $before_secondary,
                 'after' => $after_secondary,
                 /* translators: %s: semicolon-separated secondary vendor change summaries. */
-                'summary' => sprintf(__('Secondary vendors updated: %s', 'vms'), implode('; ', $parts)),
+                'summary' => sprintf(__('Secondary vendors updated: %s', 'backstage-venue-manager'), implode('; ', $parts)),
             );
         }
 
@@ -561,12 +561,12 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
         if (function_exists('vms_event_plan_review_lineup_signature') && vms_event_plan_review_lineup_signature($before_lineup) !== vms_event_plan_review_lineup_signature($after_lineup)) {
             $changes[] = array(
                 'field' => 'lineup_rows',
-                'label' => __('Lineup & schedule', 'vms'),
+                'label' => __('Lineup & schedule', 'backstage-venue-manager'),
                 'before' => $before_lineup,
                 'after' => $after_lineup,
                 'summary' => function_exists('vms_event_plan_review_lineup_summary')
                     ? vms_event_plan_review_lineup_summary($before_lineup, $after_lineup)
-                    : __('Lineup & schedule changed.', 'vms'),
+                    : __('Lineup & schedule changed.', 'backstage-venue-manager'),
             );
         }
 
@@ -616,20 +616,20 @@ if (!function_exists('vms_event_plan_review_compact_summary')) {
                 } else {
                 $summary = sprintf(
                     /* translators: 1: previous secondary vendor type label, 2: current secondary vendor type label. */
-                    __('Secondary vendor type changed from %1$s to %2$s', 'vms'),
+                    __('Secondary vendor type changed from %1$s to %2$s', 'backstage-venue-manager'),
                     $before_label,
                     $after_label
                 );
 
                 $extras = array();
                 if (!empty($by_field['secondary_vendor_ids'])) {
-                    $extras[] = __('secondary vendor selections were updated to match', 'vms');
+                    $extras[] = __('secondary vendor selections were updated to match', 'backstage-venue-manager');
                 }
                 if (!empty($by_field['status'])) {
                     $before_status = sanitize_key((string) ($by_field['status']['before'] ?? ''));
                     $after_status = sanitize_key((string) ($by_field['status']['after'] ?? ''));
                     if ($before_status === 'published' && $after_status === 'draft') {
-                        $extras[] = __('plan returned to Draft for review', 'vms');
+                        $extras[] = __('plan returned to Draft for review', 'backstage-venue-manager');
                     }
                 }
 
@@ -778,20 +778,20 @@ if (!function_exists('vms_event_plan_review_render_banner')) {
         $meta_bits = array();
         if ($changed_at !== '') {
             /* translators: %s: timestamp when the tracked changes were last updated. */
-            $meta_bits[] = sprintf(__('Updated: %s', 'vms'), $changed_at);
+            $meta_bits[] = sprintf(__('Updated: %s', 'backstage-venue-manager'), $changed_at);
         }
         if ($user_name !== '') {
             /* translators: %s: display name of the user who made the tracked changes. */
-            $meta_bits[] = sprintf(__('By: %s', 'vms'), $user_name);
+            $meta_bits[] = sprintf(__('By: %s', 'backstage-venue-manager'), $user_name);
         }
         if ($changed_source !== '') {
             /* translators: %s: source label for the tracked changes. */
-            $meta_bits[] = sprintf(__('Source: %s', 'vms'), vms_event_plan_review_source_label($changed_source));
+            $meta_bits[] = sprintf(__('Source: %s', 'backstage-venue-manager'), vms_event_plan_review_source_label($changed_source));
         }
 
         echo '<div class="notice notice-warning inline">';
         /* translators: %d: number of unpublished tracked changes since the last publish. */
-        echo '<p><strong>' . esc_html__('Needs Review', 'vms') . '</strong> ' . esc_html(sprintf(_n('%d unpublished change since last publish.', '%d unpublished changes since last publish.', $count, 'vms'), $count)) . '</p>';
+        echo '<p><strong>' . esc_html__('Needs Review', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(_n('%d unpublished change since last publish.', '%d unpublished changes since last publish.', $count, 'backstage-venue-manager'), $count)) . '</p>';
         if (!empty($meta_bits)) {
             echo '<p class="description">' . esc_html(implode(' | ', $meta_bits)) . '</p>';
         }
@@ -804,7 +804,7 @@ if (!function_exists('vms_event_plan_review_render_banner')) {
             echo '<li>' . esc_html(vms_event_plan_review_clean_text($summary)) . '</li>';
         }
         echo '</ul>';
-        echo '<p><em>' . esc_html__('Review the plan, then click Publish Now again to make the current version the new baseline.', 'vms') . '</em></p>';
+        echo '<p><em>' . esc_html__('Review the plan, then click Publish Now again to make the current version the new baseline.', 'backstage-venue-manager') . '</em></p>';
         echo '</div>';
     }
 }
@@ -821,10 +821,10 @@ if (!function_exists('vms_event_plan_review_render_status_note')) {
         $count = max(0, (int) ($changes['count'] ?? 0));
         $first = vms_event_plan_review_compact_summary((array) ($changes['changes'] ?? array()));
 
-        echo '<div class="description vms-review-status-note"><strong>' . esc_html__('Needs Review', 'vms') . '</strong>';
+        echo '<div class="description vms-review-status-note"><strong>' . esc_html__('Needs Review', 'backstage-venue-manager') . '</strong>';
         if ($count > 0) {
             /* translators: %d: number of tracked changes. */
-            echo ' | ' . esc_html(sprintf(_n('%d tracked change', '%d tracked changes', $count, 'vms'), $count));
+            echo ' | ' . esc_html(sprintf(_n('%d tracked change', '%d tracked changes', $count, 'backstage-venue-manager'), $count));
         }
         echo '</div>';
         if ($first !== '') {

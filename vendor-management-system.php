@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: VMS – Venue Management System
+ * Plugin Name: Backstage Venue Manager
  * Plugin URI: https://coneyproductions.booklivetalent.com/vms/
  * Description: Manage venue operations, event plans, vendor records, and optional ticketing workflows from WordPress.
  * Version: 1.0.0
@@ -10,7 +10,7 @@
  * Author URI: https://coneyproductions.booklivetalent.com/
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: vms
+ * Text Domain: backstage-venue-manager
  */
 
 defined('ABSPATH') || exit;

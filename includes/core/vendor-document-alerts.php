@@ -51,11 +51,11 @@ if (!function_exists('vms_vendor_submission_recipient_mode_options')) {
     function vms_vendor_submission_recipient_mode_options(): array
     {
         return array(
-            'site_admin' => __('Site admin email', 'vms'),
-            'user' => __('Specific WordPress user', 'vms'),
-            'role' => __('All users in a WordPress role', 'vms'),
-            'capability' => __('All users with a capability', 'vms'),
-            'none' => __('Do not email anyone', 'vms'),
+            'site_admin' => __('Site admin email', 'backstage-venue-manager'),
+            'user' => __('Specific WordPress user', 'backstage-venue-manager'),
+            'role' => __('All users in a WordPress role', 'backstage-venue-manager'),
+            'capability' => __('All users with a capability', 'backstage-venue-manager'),
+            'none' => __('Do not email anyone', 'backstage-venue-manager'),
         );
     }
 }
@@ -64,10 +64,10 @@ if (!function_exists('vms_vendor_submission_context_labels')) {
     function vms_vendor_submission_context_labels(): array
     {
         return array(
-            'tech_docs' => __('Tech docs upload', 'vms'),
-            'headliner_promo_video' => __('Promo video upload', 'vms'),
-            'tax_w9_upload' => __('W-9 upload', 'vms'),
-            'tax_w9_offsite_attest' => __('Off-site tax step confirmed', 'vms'),
+            'tech_docs' => __('Tech docs upload', 'backstage-venue-manager'),
+            'headliner_promo_video' => __('Promo video upload', 'backstage-venue-manager'),
+            'tax_w9_upload' => __('W-9 upload', 'backstage-venue-manager'),
+            'tax_w9_offsite_attest' => __('Off-site tax step confirmed', 'backstage-venue-manager'),
         );
     }
 }
@@ -89,7 +89,7 @@ if (!function_exists('vms_vendor_submission_context_label')) {
             return (string) $labels[$context];
         }
         if ($context === '') {
-            return __('General update', 'vms');
+            return __('General update', 'backstage-venue-manager');
         }
         $context = str_replace(array('-', '_'), ' ', $context);
         return ucwords(trim($context));
@@ -196,10 +196,10 @@ if (!function_exists('vms_vendor_submission_build_notification_payload')) {
         $vendor_name = get_the_title($vendor_id);
         if ($vendor_name === '') {
             /* translators: %d: Vendor post ID. */
-            $vendor_name = sprintf(__('Vendor #%d', 'vms'), $vendor_id);
+            $vendor_name = sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id);
         }
 
-        $submitted_by_label = __('Vendor portal user', 'vms');
+        $submitted_by_label = __('Vendor portal user', 'backstage-venue-manager');
         $submitted_by_user_id = absint($meta['submitted_by_user_id'] ?? get_current_user_id());
         if ($submitted_by_user_id > 0) {
             $user = get_userdata($submitted_by_user_id);
@@ -291,28 +291,28 @@ if (!function_exists('vms_vendor_submission_dispatch_alert')) {
 
         $site_name = wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES);
         /* translators: 1: Site name. 2: Vendor name. */
-        $subject = sprintf(__('[%1$s] Vendor document submitted: %2$s', 'vms'), $site_name !== '' ? $site_name : 'VMS', (string) $payload['vendor_name']);
+        $subject = sprintf(__('[%1$s] Vendor document submitted: %2$s', 'backstage-venue-manager'), $site_name !== '' ? $site_name : 'VMS', (string) $payload['vendor_name']);
 
         $lines = array(
-            __('A vendor submitted a document in VMS.', 'vms'),
+            __('A vendor submitted a document in VMS.', 'backstage-venue-manager'),
             '',
             /* translators: %s: Vendor name. */
-            sprintf(__('Vendor: %s', 'vms'), (string) $payload['vendor_name']),
+            sprintf(__('Vendor: %s', 'backstage-venue-manager'), (string) $payload['vendor_name']),
             /* translators: %s: Submission context label. */
-            sprintf(__('Submission: %s', 'vms'), (string) $payload['context_label']),
+            sprintf(__('Submission: %s', 'backstage-venue-manager'), (string) $payload['context_label']),
         );
         if (!empty($payload['event_title'])) {
             /* translators: %s: Event title. */
-            $lines[] = sprintf(__('Event: %s', 'vms'), (string) $payload['event_title']);
+            $lines[] = sprintf(__('Event: %s', 'backstage-venue-manager'), (string) $payload['event_title']);
         }
         /* translators: %s: User display name or fallback label. */
-        $lines[] = sprintf(__('Submitted by: %s', 'vms'), (string) $payload['submitted_by_label']);
+        $lines[] = sprintf(__('Submitted by: %s', 'backstage-venue-manager'), (string) $payload['submitted_by_label']);
         /* translators: %s: Localized submission timestamp. */
-        $lines[] = sprintf(__('Submitted: %s', 'vms'), (string) $payload['submitted_at']);
+        $lines[] = sprintf(__('Submitted: %s', 'backstage-venue-manager'), (string) $payload['submitted_at']);
         $lines[] = '';
-        $lines[] = __('The vendor is already flagged as Needs review in the Vendors list.', 'vms');
+        $lines[] = __('The vendor is already flagged as Needs review in the Vendors list.', 'backstage-venue-manager');
         /* translators: %s: Vendor edit admin URL. */
-        $lines[] = sprintf(__('Review: %s', 'vms'), (string) $payload['vendor_edit_url']);
+        $lines[] = sprintf(__('Review: %s', 'backstage-venue-manager'), (string) $payload['vendor_edit_url']);
         $body_text = implode("\n", $lines);
         $body_html = '';
         foreach ($lines as $line) {
@@ -324,10 +324,10 @@ if (!function_exists('vms_vendor_submission_dispatch_alert')) {
                 $body_html .= '<p><a href="' . esc_url($line) . '">' . esc_html($line) . '</a></p>';
                 continue;
             }
-            if (strpos($line, __('Review:', 'vms')) === 0) {
+            if (strpos($line, __('Review:', 'backstage-venue-manager')) === 0) {
                 $parts = explode(': ', $line, 2);
                 $url = $parts[1] ?? '';
-                $body_html .= '<p><strong>' . esc_html__('Review:', 'vms') . '</strong> <a href="' . esc_url($url) . '">' . esc_html__('Open vendor record', 'vms') . '</a></p>';
+                $body_html .= '<p><strong>' . esc_html__('Review:', 'backstage-venue-manager') . '</strong> <a href="' . esc_url($url) . '">' . esc_html__('Open vendor record', 'backstage-venue-manager') . '</a></p>';
                 continue;
             }
             $body_html .= '<p>' . esc_html($line) . '</p>';

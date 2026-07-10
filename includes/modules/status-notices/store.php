@@ -87,7 +87,7 @@ if (!function_exists('vms_status_notice_sanitize_payload')) {
 
 		$title = sanitize_text_field((string) ($raw['title'] ?? ''));
 		if ($title === '') {
-			$title = __('Untitled Status Notice', 'vms');
+			$title = __('Untitled Status Notice', 'backstage-venue-manager');
 		}
 
 		$enabled = !empty($raw['enabled']) ? 1 : 0;
@@ -279,7 +279,7 @@ if (!function_exists('vms_status_notice_build_audience_summary')) {
 			}
 			$parts[] = implode(', ', $labels);
 		} else {
-			$parts[] = __('All pages', 'vms');
+			$parts[] = __('All pages', 'backstage-venue-manager');
 		}
 
 		$device = (string) ($notice['device_mode'] ?? 'any');
@@ -308,19 +308,19 @@ if (!function_exists('vms_status_notice_build_audience_summary')) {
 		$user_mode = (string) ($notice['user_mode'] ?? 'everyone');
 		switch ($user_mode) {
 			case 'logged_in':
-				$parts[] = __('Logged-in users', 'vms');
+				$parts[] = __('Logged-in users', 'backstage-venue-manager');
 				break;
 			case 'logged_out':
-				$parts[] = __('Logged-out users', 'vms');
+				$parts[] = __('Logged-out users', 'backstage-venue-manager');
 				break;
 			case 'roles_include':
-				$parts[] = __('Specific roles', 'vms');
+				$parts[] = __('Specific roles', 'backstage-venue-manager');
 				break;
 			case 'roles_exclude':
-				$parts[] = __('Exclude roles', 'vms');
+				$parts[] = __('Exclude roles', 'backstage-venue-manager');
 				break;
 			default:
-				$parts[] = __('Everyone', 'vms');
+				$parts[] = __('Everyone', 'backstage-venue-manager');
 		}
 
 		return implode(' • ', array_values(array_filter($parts)));

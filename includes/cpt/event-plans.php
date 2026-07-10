@@ -86,9 +86,9 @@ function vms_register_event_plan_cpt(): void
 {
     register_post_type('vms_event_plan', array(
         'labels' => array(
-            'name'          => __('Event Plans', 'vms'),
-            'singular_name' => __('Event Plan', 'vms'),
-            'menu_name'     => __('Event Plans', 'vms'),
+            'name'          => __('Event Plans', 'backstage-venue-manager'),
+            'singular_name' => __('Event Plan', 'backstage-venue-manager'),
+            'menu_name'     => __('Event Plans', 'backstage-venue-manager'),
         ),
         'public'          => false,
         'show_ui'         => true,
@@ -366,7 +366,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
             return array(
                 'ok' => false,
                 'error' => 'invalid_source',
-                'error_message' => __('The cancelled Event Plan could not be found.', 'vms'),
+                'error_message' => __('The cancelled Event Plan could not be found.', 'backstage-venue-manager'),
             );
         }
 
@@ -375,7 +375,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
             return array(
                 'ok' => false,
                 'error' => 'invalid_source',
-                'error_message' => __('The cancelled Event Plan could not be found.', 'vms'),
+                'error_message' => __('The cancelled Event Plan could not be found.', 'backstage-venue-manager'),
             );
         }
 
@@ -383,7 +383,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
             return array(
                 'ok' => false,
                 'error' => 'forbidden',
-                'error_message' => __('You do not have permission to reschedule this Event Plan.', 'vms'),
+                'error_message' => __('You do not have permission to reschedule this Event Plan.', 'backstage-venue-manager'),
             );
         }
 
@@ -398,7 +398,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
             return array(
                 'ok' => false,
                 'error' => 'source_not_cancelled',
-                'error_message' => __('Only cancelled Event Plans can create a rescheduled draft.', 'vms'),
+                'error_message' => __('Only cancelled Event Plans can create a rescheduled draft.', 'backstage-venue-manager'),
             );
         }
 
@@ -407,13 +407,13 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
             return array(
                 'ok' => false,
                 'error' => 'missing_replacement_date',
-                'error_message' => __('Enter a valid replacement date before creating the rescheduled draft.', 'vms'),
+                'error_message' => __('Enter a valid replacement date before creating the rescheduled draft.', 'backstage-venue-manager'),
             );
         }
 
         $title = trim((string) ($args['post_title'] ?? $source->post_title));
         if ($title === '') {
-            $title = sprintf(__('Event Plan #%d', 'vms'), $source_post_id);
+            $title = sprintf(__('Event Plan #%d', 'backstage-venue-manager'), $source_post_id);
         }
 
         $new_post_id = 0;
@@ -429,7 +429,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
             return array(
                 'ok' => false,
                 'error' => 'duplicate_failed',
-                'error_message' => __('VMS could not create the replacement Event Plan draft.', 'vms'),
+                'error_message' => __('VMS could not create the replacement Event Plan draft.', 'backstage-venue-manager'),
             );
         }
 
@@ -583,7 +583,7 @@ class VMS_Admin_Event_Plans
         try {
             add_meta_box(
                 'vms_event_plan_details',
-                __('Event Plan Details', 'vms'),
+                __('Event Plan Details', 'backstage-venue-manager'),
                 array($this, 'render_event_plan_details_meta_box'),
                 'vms_event_plan',
                 'normal',
@@ -592,7 +592,7 @@ class VMS_Admin_Event_Plans
 
             add_meta_box(
                 'vms_event_plan_ticketing_v2',
-                __('Ticketing', 'vms'),
+                __('Ticketing', 'backstage-venue-manager'),
                 array($this, 'render_event_plan_ticketing_v2_host_meta_box'),
                 'vms_event_plan',
                 'normal',
@@ -601,7 +601,7 @@ class VMS_Admin_Event_Plans
 
             add_meta_box(
                 'vms_event_plan_advanced_controls',
-                __('Advanced Controls', 'vms'),
+                __('Advanced Controls', 'backstage-venue-manager'),
                 array($this, 'render_event_plan_advanced_controls_host_meta_box'),
                 'vms_event_plan',
                 'normal',
@@ -728,10 +728,10 @@ class VMS_Admin_Event_Plans
                 $summary_bits[] = $type_name !== '' ? $type_name : $type_slug;
             }
         } elseif ($group_count > 1) {
-            $summary_bits[] = sprintf(_n('%d group', '%d groups', $group_count, 'vms'), $group_count);
+            $summary_bits[] = sprintf(_n('%d group', '%d groups', $group_count, 'backstage-venue-manager'), $group_count);
         }
-        $summary_bits[] = sprintf(_n('%d selected', '%d selected', count((array) $secondary_vendor_ids), 'vms'), count((array) $secondary_vendor_ids));
-        $summary_bits[] = sprintf(_n('%d warning', '%d warnings', $warning_count, 'vms'), $warning_count);
+        $summary_bits[] = sprintf(_n('%d selected', '%d selected', count((array) $secondary_vendor_ids), 'backstage-venue-manager'), count((array) $secondary_vendor_ids));
+        $summary_bits[] = sprintf(_n('%d warning', '%d warnings', $warning_count, 'backstage-venue-manager'), $warning_count);
 
         return array(
             'html' => $html,
@@ -1879,14 +1879,14 @@ class VMS_Admin_Event_Plans
                         : !array_key_exists('open_for_dispatch', $assignment) || !empty($assignment['open_for_dispatch']);
                     $open_slots = $slot_limit_value === null ? null : max(0, $slot_limit_value - $selected_count);
                     $occupancy_label = $slot_limit_value === null
-                        ? sprintf(_n('%d selected', '%d selected', $selected_count, 'vms'), $selected_count)
-                        : sprintf(__('%1$d of %2$d filled', 'vms'), $selected_count, $slot_limit_value);
+                        ? sprintf(_n('%d selected', '%d selected', $selected_count, 'backstage-venue-manager'), $selected_count)
+                        : sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $selected_count, $slot_limit_value);
 
                     $assignment_groups[] = array(
                         'type_slug' => $type_slug,
                         'type_name' => $type_name,
                         'mode' => sanitize_key((string) ($assignment['mode'] ?? 'standard')),
-                        'mode_label' => (string) (vms_event_plan_secondary_vendor_mode_options()[sanitize_key((string) ($assignment['mode'] ?? 'standard'))] ?? __('Standard', 'vms')),
+                        'mode_label' => (string) (vms_event_plan_secondary_vendor_mode_options()[sanitize_key((string) ($assignment['mode'] ?? 'standard'))] ?? __('Standard', 'backstage-venue-manager')),
                         'slot_limit' => $slot_limit_value,
                         'slot_limit_display' => $slot_limit_value === null ? '' : (string) $slot_limit_value,
                         'needed_slots' => $needed_slots,
@@ -2060,15 +2060,15 @@ class VMS_Admin_Event_Plans
     {
         $issue = sanitize_key($issue);
         $labels = array(
-            'missing_vendor' => __('Primary vendor missing', 'vms'),
-            'missing_secondary_vendor' => __('Secondary vendor missing', 'vms'),
-            'trashed_vendor' => __('Primary vendor trashed', 'vms'),
-            'trashed_secondary_vendor' => __('Secondary vendor trashed', 'vms'),
-            'calendar_event_unpublished' => __('Linked calendar event unpublished', 'vms'),
-            'missing_calendar_event' => __('Linked calendar event missing', 'vms'),
-            'orphaned_calendar_event' => __('Linked calendar event orphaned', 'vms'),
-            'missing_venue' => __('Venue missing', 'vms'),
-            'trashed_venue' => __('Venue trashed', 'vms'),
+            'missing_vendor' => __('Primary vendor missing', 'backstage-venue-manager'),
+            'missing_secondary_vendor' => __('Secondary vendor missing', 'backstage-venue-manager'),
+            'trashed_vendor' => __('Primary vendor trashed', 'backstage-venue-manager'),
+            'trashed_secondary_vendor' => __('Secondary vendor trashed', 'backstage-venue-manager'),
+            'calendar_event_unpublished' => __('Linked calendar event unpublished', 'backstage-venue-manager'),
+            'missing_calendar_event' => __('Linked calendar event missing', 'backstage-venue-manager'),
+            'orphaned_calendar_event' => __('Linked calendar event orphaned', 'backstage-venue-manager'),
+            'missing_venue' => __('Venue missing', 'backstage-venue-manager'),
+            'trashed_venue' => __('Venue trashed', 'backstage-venue-manager'),
         );
 
         if (isset($labels[$issue]) && $labels[$issue] !== '') {
@@ -2076,7 +2076,7 @@ class VMS_Admin_Event_Plans
         }
 
         if ($issue === '' || $issue === 'none') {
-            return __('No integrity issue', 'vms');
+            return __('No integrity issue', 'backstage-venue-manager');
         }
 
         return ucwords(str_replace(array('-', '_'), ' ', $issue));
@@ -2118,42 +2118,42 @@ class VMS_Admin_Event_Plans
             $warning_items[] = $this->get_event_plan_integrity_issue_label($integrity_issue);
         }
         if (!empty($secondary_missing)) {
-            $warning_items[] = sprintf(_n('%d selected secondary vendor is missing or trashed.', '%d selected secondary vendors are missing or trashed.', count($secondary_missing), 'vms'), count($secondary_missing));
+            $warning_items[] = sprintf(_n('%d selected secondary vendor is missing or trashed.', '%d selected secondary vendors are missing or trashed.', count($secondary_missing), 'backstage-venue-manager'), count($secondary_missing));
         }
         if (!empty($secondary_mismatch)) {
-            $warning_items[] = sprintf(_n('%d selected secondary vendor no longer matches the chosen vendor type.', '%d selected secondary vendors no longer match the chosen vendor type.', count($secondary_mismatch), 'vms'), count($secondary_mismatch));
+            $warning_items[] = sprintf(_n('%d selected secondary vendor no longer matches the chosen vendor type.', '%d selected secondary vendors no longer match the chosen vendor type.', count($secondary_mismatch), 'backstage-venue-manager'), count($secondary_mismatch));
         }
         if (!empty($secondary_unqualified)) {
-            $warning_items[] = sprintf(_n('%d selected secondary vendor needs profile qualification fixes.', '%d selected secondary vendors need profile qualification fixes.', count($secondary_unqualified), 'vms'), count($secondary_unqualified));
+            $warning_items[] = sprintf(_n('%d selected secondary vendor needs profile qualification fixes.', '%d selected secondary vendors need profile qualification fixes.', count($secondary_unqualified), 'backstage-venue-manager'), count($secondary_unqualified));
         }
 
         $linked_tec_label = !empty($linked_tec_summary['linked_tec_id'])
             ? sprintf(
-                __('Linked (%1$s)', 'vms'),
+                __('Linked (%1$s)', 'backstage-venue-manager'),
                 $this->get_event_plan_integrity_issue_label((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft'))
             )
-            : __('Not linked', 'vms');
+            : __('Not linked', 'backstage-venue-manager');
 
         $summary_rows = array(
             array(
-                'label' => __('Publish-blocking warnings', 'vms'),
+                'label' => __('Publish-blocking warnings', 'backstage-venue-manager'),
                 'value' => absint($readiness_boot_summary['blocking_issue_count'] ?? 0),
                 'state' => !empty($readiness_boot_summary['publish_blocking_warning']) ? 'warning' : 'ok',
             ),
             array(
-                'label' => __('Vendor warnings', 'vms'),
+                'label' => __('Vendor warnings', 'backstage-venue-manager'),
                 'value' => absint($readiness_boot_summary['secondary_vendor_warning_count'] ?? 0),
                 'state' => !empty($readiness_boot_summary['secondary_vendor_warning_count']) ? 'warning' : 'ok',
             ),
             array(
-                'label' => __('Linked TEC status', 'vms'),
+                'label' => __('Linked TEC status', 'backstage-venue-manager'),
                 'value' => !empty($linked_tec_summary['linked_tec_id'])
-                    ? sprintf(__('Linked (%s)', 'vms'), strtoupper((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft')))
-                    : __('Not linked', 'vms'),
+                    ? sprintf(__('Linked (%s)', 'backstage-venue-manager'), strtoupper((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft')))
+                    : __('Not linked', 'backstage-venue-manager'),
                 'state' => !empty($linked_tec_summary['linked_tec_id']) ? 'ok' : 'info',
             ),
             array(
-                'label' => __('Configured tickets', 'vms'),
+                'label' => __('Configured tickets', 'backstage-venue-manager'),
                 'value' => absint($ticketing_summary['effective_ticket_count'] ?? 0),
                 'state' => !empty($ticketing_summary['effective_ticket_count']) ? 'ok' : 'info',
             ),
@@ -2162,7 +2162,7 @@ class VMS_Admin_Event_Plans
         return array(
             'summary_rows' => $summary_rows,
             'warning_items' => $warning_items,
-            'status_label' => !empty($readiness_boot_summary['publish_blocking_warning']) ? __('Blocking warnings present', 'vms') : __('No blocking publish warnings', 'vms'),
+            'status_label' => !empty($readiness_boot_summary['publish_blocking_warning']) ? __('Blocking warnings present', 'backstage-venue-manager') : __('No blocking publish warnings', 'backstage-venue-manager'),
             'secondary_vendor_type_name' => (string) ($secondary_vendor_boot_summary['secondary_type_name'] ?? ''),
             'integrity_issue_label' => $this->get_event_plan_integrity_issue_label($integrity_issue),
             'linked_tec_status_label' => $linked_tec_label,
@@ -2222,7 +2222,7 @@ class VMS_Admin_Event_Plans
             'integrity_summary' => $integrity_summary,
             'summary_rows' => isset($summary_context['summary_rows']) && is_array($summary_context['summary_rows']) ? $summary_context['summary_rows'] : array(),
             'warning_items' => isset($summary_context['warning_items']) && is_array($summary_context['warning_items']) ? $summary_context['warning_items'] : array(),
-            'status_label' => (string) ($summary_context['status_label'] ?? __('No blocking publish warnings', 'vms')),
+            'status_label' => (string) ($summary_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager')),
             'secondary_vendor_type_name' => (string) ($summary_context['secondary_vendor_type_name'] ?? ''),
             'integrity_issue_label' => (string) ($summary_context['integrity_issue_label'] ?? ''),
             'linked_tec_status_label' => (string) ($summary_context['linked_tec_status_label'] ?? ''),
@@ -2513,7 +2513,7 @@ class VMS_Admin_Event_Plans
 
         $result = function_exists('vms_event_plan_save_secondary_vendors_module')
             ? vms_event_plan_save_secondary_vendors_module($post_id, (array) $_POST)
-            : new WP_Error('vms_secondary_vendor_save_unavailable', __('Additional Vendors save helper is unavailable.', 'vms'));
+            : new WP_Error('vms_secondary_vendor_save_unavailable', __('Additional Vendors save helper is unavailable.', 'backstage-venue-manager'));
         if (is_wp_error($result)) {
             $error_code = (string) $result->get_error_code();
             wp_send_json_error(array(
@@ -2533,8 +2533,8 @@ class VMS_Admin_Event_Plans
             'repair_reasons' => array_values(array_unique(array_map('sanitize_key', (array) ($result['repair_reasons'] ?? array())))),
             'queued_calendar_maintenance' => !empty($result['queued_calendar_maintenance']) ? 1 : 0,
             'message' => !empty($result['changed'])
-                ? __('Additional Vendors saved.', 'vms')
-                : __('No Additional Vendor changes to save.', 'vms'),
+                ? __('Additional Vendors saved.', 'backstage-venue-manager')
+                : __('No Additional Vendor changes to save.', 'backstage-venue-manager'),
         ));
     }
 
@@ -2653,8 +2653,8 @@ class VMS_Admin_Event_Plans
             'changed_fields' => array_values(array_unique(array_map('sanitize_key', (array) ($result['changed_fields'] ?? array())))),
             'values' => is_array($result['values']) ? $result['values'] : array(),
             'message' => !empty($result['changed'])
-                ? __('Public UI overrides saved.', 'vms')
-                : __('No public UI override changes to save.', 'vms'),
+                ? __('Public UI overrides saved.', 'backstage-venue-manager')
+                : __('No public UI override changes to save.', 'backstage-venue-manager'),
         ));
     }
 
@@ -2706,8 +2706,8 @@ class VMS_Admin_Event_Plans
             'changed' => !empty($result['changed']) ? 1 : 0,
             'suppressed' => !empty($result['suppressed']) ? 1 : 0,
             'message' => $suppress
-                ? __('Unpublished calendar warning suppressor saved.', 'vms')
-                : __('Unpublished calendar warning suppressor cleared.', 'vms'),
+                ? __('Unpublished calendar warning suppressor saved.', 'backstage-venue-manager')
+                : __('Unpublished calendar warning suppressor cleared.', 'backstage-venue-manager'),
         ));
     }
 
@@ -2866,7 +2866,7 @@ class VMS_Admin_Event_Plans
 
     private function render_event_plan_primary_vendor_option_html(array $rows, int $selected_id): string
     {
-        $html = '<option value="">' . esc_html__('-- Select Primary Vendor --', 'vms') . '</option>';
+        $html = '<option value="">' . esc_html__('-- Select Primary Vendor --', 'backstage-venue-manager') . '</option>';
 
         foreach ($rows as $row) {
             if (!is_array($row)) {
@@ -2895,7 +2895,7 @@ class VMS_Admin_Event_Plans
 
     private function render_event_plan_primary_vendor_selected_option_html(array $rows, int $selected_id): string
     {
-        $html = '<option value="">' . esc_html__('-- Select Primary Vendor --', 'vms') . '</option>';
+        $html = '<option value="">' . esc_html__('-- Select Primary Vendor --', 'backstage-venue-manager') . '</option>';
         if ($selected_id <= 0) {
             return $html;
         }
@@ -2926,7 +2926,7 @@ class VMS_Admin_Event_Plans
 
         $fallback_title = trim((string) get_the_title($selected_id));
         if ($fallback_title === '') {
-            $fallback_title = __('Assigned primary vendor', 'vms');
+            $fallback_title = __('Assigned primary vendor', 'backstage-venue-manager');
         }
 
         $html .= '<option value="' . esc_attr((string) $selected_id) . '" selected="selected" data-vendor-title="' . esc_attr($fallback_title) . '" data-tax-ok="0" data-tax-bypass-active="0" data-tax-bypass-until="" data-tax-bypass-reason="" data-tax-missing="">'
@@ -2938,7 +2938,7 @@ class VMS_Admin_Event_Plans
 
     private function render_event_plan_supporting_vendor_option_html(array $rows, int $selected_id): string
     {
-        $html = '<option value="">' . esc_html__('-- Select a Vendor --', 'vms') . '</option>';
+        $html = '<option value="">' . esc_html__('-- Select a Vendor --', 'backstage-venue-manager') . '</option>';
 
         foreach ($rows as $row) {
             if (!is_array($row)) {
@@ -2970,7 +2970,7 @@ class VMS_Admin_Event_Plans
 
     private function render_event_plan_supporting_vendor_selected_option_html(array $rows, int $selected_id): string
     {
-        $html = '<option value="">' . esc_html__('-- Select a Vendor --', 'vms') . '</option>';
+        $html = '<option value="">' . esc_html__('-- Select a Vendor --', 'backstage-venue-manager') . '</option>';
         if ($selected_id <= 0) {
             return $html;
         }
@@ -3004,7 +3004,7 @@ class VMS_Admin_Event_Plans
 
         $fallback_title = trim((string) get_the_title($selected_id));
         if ($fallback_title === '') {
-            $fallback_title = __('Assigned vendor', 'vms');
+            $fallback_title = __('Assigned vendor', 'backstage-venue-manager');
         }
 
         $html .= '<option value="' . esc_attr((string) $selected_id) . '" selected="selected" data-vendor-title="' . esc_attr($fallback_title) . '">'
@@ -3085,9 +3085,9 @@ class VMS_Admin_Event_Plans
         $html = '';
 
         $html .= '<div class="vms-comp-opt-row">';
-        $html .= '<div class="vms-comp-opt-row__title"><strong>' . esc_html__('Defaults', 'vms') . '</strong></div>';
+        $html .= '<div class="vms-comp-opt-row__title"><strong>' . esc_html__('Defaults', 'backstage-venue-manager') . '</strong></div>';
         if ($scale_count > 1) {
-            $html .= '<div class="description vms-comp-opt-scale-legend">' . esc_html__('Color scale: lower guaranteed pay -> higher guaranteed pay.', 'vms') . '</div>';
+            $html .= '<div class="description vms-comp-opt-scale-legend">' . esc_html__('Color scale: lower guaranteed pay -> higher guaranteed pay.', 'backstage-venue-manager') . '</div>';
         }
         $html .= '<div class="vms-comp-opt-tiles vms-comp-opt-tiles--defaults">';
 
@@ -3139,7 +3139,7 @@ class VMS_Admin_Event_Plans
             $html .= '<div class="vms-comp-opt-tile__title">' . esc_html($title) . '</div>';
             $html .= '<div class="vms-comp-opt-tile__value">' . ($enabled ? esc_html($fmt_money($g)) : '—') . '</div>';
             $html .= '<div class="vms-comp-opt-tile__sub">' . esc_html($sub) . '</div>';
-            $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'vms') . '</div>';
+            $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'backstage-venue-manager') . '</div>';
             $html .= '</button>';
         }
 
@@ -3147,13 +3147,13 @@ class VMS_Admin_Event_Plans
         $html .= '</div>';
 
         $html .= '<div class="vms-comp-opt-row vms-comp-opt-row--packages">';
-        $html .= '<div class="vms-comp-opt-row__title"><strong>' . esc_html__('Packages (Optional presets)', 'vms') . '</strong></div>';
+        $html .= '<div class="vms-comp-opt-row__title"><strong>' . esc_html__('Packages (Optional presets)', 'backstage-venue-manager') . '</strong></div>';
  
         if (empty($packages)) {
             if (!$venue_selected) {
-                $html .= '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><em>' . esc_html__('Select a Venue above to load packages.', 'vms') . '</em></p></div>';
+                $html .= '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><em>' . esc_html__('Select a Venue above to load packages.', 'backstage-venue-manager') . '</em></p></div>';
             } else {
-                $html .= '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><strong>' . esc_html__('No Comp Packages are available for the selected venue yet.', 'vms') . '</strong></p></div>';
+                $html .= '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><strong>' . esc_html__('No Comp Packages are available for the selected venue yet.', 'backstage-venue-manager') . '</strong></p></div>';
             }
         } else {
             $html .= '<div class="vms-comp-opt-tiles vms-comp-opt-tiles--packages">';
@@ -3207,7 +3207,7 @@ class VMS_Admin_Event_Plans
                 $html .= '<div class="vms-comp-opt-tile__title">' . esc_html($title) . '</div>';
                 $html .= '<div class="vms-comp-opt-tile__value">' . ($enabled ? esc_html($fmt_money($g)) : '—') . '</div>';
                 $html .= '<div class="vms-comp-opt-tile__sub">' . esc_html($sub) . '</div>';
-                $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'vms') . '</div>';
+                $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'backstage-venue-manager') . '</div>';
                 $html .= '</button>';
             }
  
@@ -3222,17 +3222,17 @@ class VMS_Admin_Event_Plans
     private function get_lock_pay_required_basics_labels(): array
     {
         return array(
-            __('Date', 'vms'),
-            __('Venue', 'vms'),
-            __('Start Time', 'vms'),
-            __('End Time', 'vms'),
-            __('Primary Vendor', 'vms'),
+            __('Date', 'backstage-venue-manager'),
+            __('Venue', 'backstage-venue-manager'),
+            __('Start Time', 'backstage-venue-manager'),
+            __('End Time', 'backstage-venue-manager'),
+            __('Primary Vendor', 'backstage-venue-manager'),
         );
     }
 
     private function get_lock_pay_basics_notice_copy(): string
     {
-        return __('Save the basic Event Plan details first before locking pay. Required: Date, Venue, Start Time, End Time, and Primary Vendor.', 'vms');
+        return __('Save the basic Event Plan details first before locking pay. Required: Date, Venue, Start Time, End Time, and Primary Vendor.', 'backstage-venue-manager');
     }
 
     private function get_lock_pay_basics_state(int $post_id, array $request = array()): array
@@ -3348,21 +3348,21 @@ class VMS_Admin_Event_Plans
     private function get_cancellation_notification_kind_labels(): array
     {
         return array(
-            'vendor_primary' => __('Primary Vendor', 'vms'),
-            'vendor_secondary' => __('Secondary Vendor', 'vms'),
-            'vendor_lineup' => __('Vendor', 'vms'),
-            'assigned_vendor' => __('Vendor', 'vms'),
-            'staff' => __('Staff', 'vms'),
+            'vendor_primary' => __('Primary Vendor', 'backstage-venue-manager'),
+            'vendor_secondary' => __('Secondary Vendor', 'backstage-venue-manager'),
+            'vendor_lineup' => __('Vendor', 'backstage-venue-manager'),
+            'assigned_vendor' => __('Vendor', 'backstage-venue-manager'),
+            'staff' => __('Staff', 'backstage-venue-manager'),
         );
     }
 
     private function get_cancellation_notification_group_labels(): array
     {
         return array(
-            'vendor' => __('Vendors', 'vms'),
-            'secondary_vendor' => __('Secondary vendors', 'vms'),
-            'staff' => __('Staff', 'vms'),
-            'other' => __('Other recipients', 'vms'),
+            'vendor' => __('Vendors', 'backstage-venue-manager'),
+            'secondary_vendor' => __('Secondary vendors', 'backstage-venue-manager'),
+            'staff' => __('Staff', 'backstage-venue-manager'),
+            'other' => __('Other recipients', 'backstage-venue-manager'),
         );
     }
 
@@ -3496,15 +3496,15 @@ class VMS_Admin_Event_Plans
         }
         $alias_labels = array_values(array_unique(array_filter($alias_labels, 'strlen')));
         $alias_suffix = !empty($alias_labels)
-            ? sprintf(__(' (also %s)', 'vms'), implode(', ', $alias_labels))
+            ? sprintf(__(' (also %s)', 'backstage-venue-manager'), implode(', ', $alias_labels))
             : '';
 
         if ($kind_label !== '' || $display_name !== '') {
-            $subject_label = $display_name !== '' ? $display_name : ($email !== '' ? $email : __('Unknown recipient', 'vms'));
+            $subject_label = $display_name !== '' ? $display_name : ($email !== '' ? $email : __('Unknown recipient', 'backstage-venue-manager'));
             $line = sprintf(
-                __('%1$s: %2$s - %3$s', 'vms'),
+                __('%1$s: %2$s - %3$s', 'backstage-venue-manager'),
                 $status_label,
-                $kind_label !== '' ? $kind_label : __('Recipient', 'vms'),
+                $kind_label !== '' ? $kind_label : __('Recipient', 'backstage-venue-manager'),
                 $subject_label
             );
             if ($email !== '' && strtolower($subject_label) !== strtolower($email)) {
@@ -3521,19 +3521,19 @@ class VMS_Admin_Event_Plans
         }
 
         if ($status === 'failed') {
-            return sprintf(__('Failed: %1$s (%2$s)', 'vms'), $email, $error !== '' ? $error : 'send_failed');
+            return sprintf(__('Failed: %1$s (%2$s)', 'backstage-venue-manager'), $email, $error !== '' ? $error : 'send_failed');
         }
         if ($status === 'skipped') {
             if ($reason !== '' && $email !== '') {
-                return sprintf(__('Skipped: %1$s (%2$s)', 'vms'), $email, $reason);
+                return sprintf(__('Skipped: %1$s (%2$s)', 'backstage-venue-manager'), $email, $reason);
             }
             if ($reason !== '') {
-                return sprintf(__('Skipped: %s', 'vms'), $reason);
+                return sprintf(__('Skipped: %s', 'backstage-venue-manager'), $reason);
             }
-            return sprintf(__('Skipped: %s', 'vms'), $email);
+            return sprintf(__('Skipped: %s', 'backstage-venue-manager'), $email);
         }
 
-        return sprintf(__('Sent: %s', 'vms'), $email);
+        return sprintf(__('Sent: %s', 'backstage-venue-manager'), $email);
     }
 
     private function render_cancellation_step_data(string $step_key, array $data): void
@@ -3547,8 +3547,8 @@ class VMS_Admin_Event_Plans
             $failed = isset($data['failed_products']) && is_array($data['failed_products']) ? count($data['failed_products']) : 0;
             ?>
             <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Updated products: %d', 'vms'), (int) $updated)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Failed products: %d', 'vms'), (int) $failed)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Updated products: %d', 'backstage-venue-manager'), (int) $updated)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Failed products: %d', 'backstage-venue-manager'), (int) $failed)); ?></span>
             </div>
             <?php if (!empty($data['failed_products']) && is_array($data['failed_products'])) : ?>
                 <ul class="vms-cancel-job-list">
@@ -3557,7 +3557,7 @@ class VMS_Admin_Event_Plans
                         $product_id = absint($row['product_id'] ?? 0);
                         $error = sanitize_text_field((string) ($row['error'] ?? 'unknown_error'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Product #%1$d failed: %2$s', 'vms'), $product_id, $error)); ?></li>
+                        <li><?php echo esc_html(sprintf(__('Product #%1$d failed: %2$s', 'backstage-venue-manager'), $product_id, $error)); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
@@ -3572,10 +3572,10 @@ class VMS_Admin_Event_Plans
             $manual_review_count = absint($data['manual_review_count'] ?? 0);
             ?>
             <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Candidate orders: %d', 'vms'), (int) $candidate_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Orders scanned: %d', 'vms'), absint($data['orders_scanned'] ?? 0))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Auto-eligible: %d', 'vms'), $eligible_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Manual review: %d', 'vms'), $manual_review_count)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Candidate orders: %d', 'backstage-venue-manager'), (int) $candidate_count)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Orders scanned: %d', 'backstage-venue-manager'), absint($data['orders_scanned'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Auto-eligible: %d', 'backstage-venue-manager'), $eligible_count)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Manual review: %d', 'backstage-venue-manager'), $manual_review_count)); ?></span>
             </div>
             <?php if (!empty($candidates)) : ?>
                 <ul class="vms-cancel-job-list">
@@ -3588,17 +3588,17 @@ class VMS_Admin_Event_Plans
                         $detail_bits = array();
                         $estimated_refund_total = (float) ($cand['estimated_refund_total'] ?? 0.0);
                         if ($estimated_refund_total > 0) {
-                            $detail_bits[] = sprintf(__('Est. refund: $%s', 'vms'), number_format_i18n($estimated_refund_total, 2));
+                            $detail_bits[] = sprintf(__('Est. refund: $%s', 'backstage-venue-manager'), number_format_i18n($estimated_refund_total, 2));
                         }
                         if (!empty($cand['auto_refund_eligible'])) {
-                            $detail_bits[] = __('auto-refund eligible', 'vms');
+                            $detail_bits[] = __('auto-refund eligible', 'backstage-venue-manager');
                         } else {
                             $reason = sanitize_text_field((string) ($cand['manual_review_reason'] ?? 'manual_review_required'));
-                            $detail_bits[] = sprintf(__('manual review: %s', 'vms'), ucwords(str_replace(array('_', '-'), ' ', $reason)));
+                            $detail_bits[] = sprintf(__('manual review: %s', 'backstage-venue-manager'), ucwords(str_replace(array('_', '-'), ' ', $reason)));
                         }
                         ?>
                         <li>
-                            <?php echo esc_html(sprintf(__('Order #%1$s (%2$d items)', 'vms'), $order_no, $line_count)); ?><?php echo !empty($detail_bits) ? esc_html(' — ' . implode(' • ', $detail_bits)) : ''; ?>
+                            <?php echo esc_html(sprintf(__('Order #%1$s (%2$d items)', 'backstage-venue-manager'), $order_no, $line_count)); ?><?php echo !empty($detail_bits) ? esc_html(' — ' . implode(' • ', $detail_bits)) : ''; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -3613,10 +3613,10 @@ class VMS_Admin_Event_Plans
             $skipped = isset($data['skipped_orders']) && is_array($data['skipped_orders']) ? $data['skipped_orders'] : array();
             ?>
             <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Queued: %d', 'vms'), count($queued))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Refunds sent: %d', 'vms'), count($created))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Failed: %d', 'vms'), count($failed))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'vms'), count($skipped))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Queued: %d', 'backstage-venue-manager'), count($queued))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Refunds sent: %d', 'backstage-venue-manager'), count($created))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Failed: %d', 'backstage-venue-manager'), count($failed))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'backstage-venue-manager'), count($skipped))); ?></span>
             </div>
             <?php if (!empty($created)) : ?>
                 <ul class="vms-cancel-job-list">
@@ -3626,7 +3626,7 @@ class VMS_Admin_Event_Plans
                         $refund_id = absint($row['refund_id'] ?? 0);
                         $amount = number_format_i18n((float) ($row['amount'] ?? 0), 2);
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Order #%1$d refunded (%2$s, refund #%3$d)', 'vms'), $order_id, '$' . $amount, $refund_id)); ?></li>
+                        <li><?php echo esc_html(sprintf(__('Order #%1$d refunded (%2$s, refund #%3$d)', 'backstage-venue-manager'), $order_id, '$' . $amount, $refund_id)); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3638,7 +3638,7 @@ class VMS_Admin_Event_Plans
                         $order_no = (string) ($row['order_number'] ?? (string) $order_id);
                         $reason = sanitize_text_field((string) ($row['reason'] ?? 'manual_review_required'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Queued for manual review: order #%1$s (%2$s)', 'vms'), $order_no, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
+                        <li><?php echo esc_html(sprintf(__('Queued for manual review: order #%1$s (%2$s)', 'backstage-venue-manager'), $order_no, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3649,7 +3649,7 @@ class VMS_Admin_Event_Plans
                         $order_id = absint($row['order_id'] ?? 0);
                         $error = sanitize_text_field((string) ($row['error'] ?? 'unknown_error'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Order #%1$d failed: %2$s', 'vms'), $order_id, $error)); ?></li>
+                        <li><?php echo esc_html(sprintf(__('Order #%1$d failed: %2$s', 'backstage-venue-manager'), $order_id, $error)); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3660,7 +3660,7 @@ class VMS_Admin_Event_Plans
                         $order_id = absint($row['order_id'] ?? 0);
                         $reason = sanitize_text_field((string) ($row['reason'] ?? 'skipped'));
                         ?>
-                        <li><?php echo esc_html(sprintf(__('Order #%1$d skipped: %2$s', 'vms'), $order_id, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
+                        <li><?php echo esc_html(sprintf(__('Order #%1$d skipped: %2$s', 'backstage-venue-manager'), $order_id, ucwords(str_replace(array('_', '-'), ' ', $reason)))); ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif;
@@ -3689,15 +3689,15 @@ class VMS_Admin_Event_Plans
             $missing_email_count = absint($skip_reasons['missing_email'] ?? 0);
             ?>
             <div class="vms-cancel-job-step__meta">
-                <span><?php echo esc_html(sprintf(__('Recipients discovered: %d', 'vms'), $recipient_count)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Recipients discovered: %d', 'backstage-venue-manager'), $recipient_count)); ?></span>
                 <?php if ($deliverable_count !== $recipient_count) : ?>
-                    <span><?php echo esc_html(sprintf(__('Deliverable: %d', 'vms'), $deliverable_count)); ?></span>
+                    <span><?php echo esc_html(sprintf(__('Deliverable: %d', 'backstage-venue-manager'), $deliverable_count)); ?></span>
                 <?php endif; ?>
-                <span><?php echo esc_html(sprintf(__('Sent: %d', 'vms'), $sent_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Failed: %d', 'vms'), $failed_count)); ?></span>
-                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'vms'), $skipped_count)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Sent: %d', 'backstage-venue-manager'), $sent_count)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Failed: %d', 'backstage-venue-manager'), $failed_count)); ?></span>
+                <span><?php echo esc_html(sprintf(__('Skipped: %d', 'backstage-venue-manager'), $skipped_count)); ?></span>
                 <?php if ($missing_email_count > 0) : ?>
-                    <span><?php echo esc_html(sprintf(__('Missing email skips: %d', 'vms'), $missing_email_count)); ?></span>
+                    <span><?php echo esc_html(sprintf(__('Missing email skips: %d', 'backstage-venue-manager'), $missing_email_count)); ?></span>
                 <?php endif; ?>
             </div>
             <?php
@@ -3714,7 +3714,7 @@ class VMS_Admin_Event_Plans
                         <span>
                             <?php
                             echo esc_html(sprintf(
-                                __('%1$s: sent %2$d, failed %3$d, skipped %4$d', 'vms'),
+                                __('%1$s: sent %2$d, failed %3$d, skipped %4$d', 'backstage-venue-manager'),
                                 $label,
                                 absint($group_row['sent'] ?? 0),
                                 absint($group_row['failed'] ?? 0),
@@ -3795,7 +3795,7 @@ class VMS_Admin_Event_Plans
                 }
                 $steps = isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array();
                 if (!empty($repair['created'])) {
-                    $backfill_notice = __('Legacy cancelled plan auto-backfilled into a safe no-op cancellation job envelope.', 'vms');
+                    $backfill_notice = __('Legacy cancelled plan auto-backfilled into a safe no-op cancellation job envelope.', 'backstage-venue-manager');
                 }
             }
         }
@@ -3856,30 +3856,30 @@ class VMS_Admin_Event_Plans
         }
         ?>
         <div class="vms-cancel-job-panel">
-            <h4><?php esc_html_e('Cancellation Job', 'vms'); ?></h4>
+            <h4><?php esc_html_e('Cancellation Job', 'backstage-venue-manager'); ?></h4>
             <?php if ($backfill_notice !== '') : ?>
                 <p class="description"><?php echo esc_html($backfill_notice); ?></p>
             <?php endif; ?>
 
             <?php if ($job_id === '') : ?>
-                <p class="description"><?php esc_html_e('No cancellation job has been created for this Event Plan yet.', 'vms'); ?></p>
+                <p class="description"><?php esc_html_e('No cancellation job has been created for this Event Plan yet.', 'backstage-venue-manager'); ?></p>
             <?php else : ?>
                 <div class="vms-cancel-job-summary">
                     <span class="vms-status-pill vms-cancel-job-state vms-cancel-job-state--<?php echo esc_attr($job_state ?: 'queued'); ?>">
                         <?php echo esc_html($job_state_label); ?>
                     </span>
-                    <span><strong><?php esc_html_e('Job ID:', 'vms'); ?></strong> <?php echo esc_html($job_id); ?></span>
+                    <span><strong><?php esc_html_e('Job ID:', 'backstage-venue-manager'); ?></strong> <?php echo esc_html($job_id); ?></span>
                     <?php if ($policy !== '') : ?>
-                        <span><strong><?php esc_html_e('Policy:', 'vms'); ?></strong> <?php echo esc_html($policy_label); ?></span>
+                        <span><strong><?php esc_html_e('Policy:', 'backstage-venue-manager'); ?></strong> <?php echo esc_html($policy_label); ?></span>
                     <?php endif; ?>
                     <?php if ($reason !== '') : ?>
-                        <span><strong><?php esc_html_e('Reason:', 'vms'); ?></strong> <?php echo esc_html($reason_label); ?></span>
+                        <span><strong><?php esc_html_e('Reason:', 'backstage-venue-manager'); ?></strong> <?php echo esc_html($reason_label); ?></span>
                     <?php endif; ?>
                     <?php if ($created !== '') : ?>
-                        <span><strong><?php esc_html_e('Created:', 'vms'); ?></strong> <?php echo esc_html($created); ?></span>
+                        <span><strong><?php esc_html_e('Created:', 'backstage-venue-manager'); ?></strong> <?php echo esc_html($created); ?></span>
                     <?php endif; ?>
                     <span class="<?php echo $requires_review ? 'vms-cancel-job-review is-on' : 'vms-cancel-job-review'; ?>">
-                        <?php echo $requires_review ? esc_html__('Operator review required', 'vms') : esc_html__('No operator review required', 'vms'); ?>
+                        <?php echo $requires_review ? esc_html__('Operator review required', 'backstage-venue-manager') : esc_html__('No operator review required', 'backstage-venue-manager'); ?>
                     </span>
                 </div>
                 <?php if ($retry_allowed && $has_retryable_steps && function_exists('vms_cancellation_retry_all_failed_steps')) : ?>
@@ -3891,7 +3891,7 @@ class VMS_Admin_Event_Plans
                             class="button button-secondary"
                             data-vms-requires-refund-confirm="<?php echo $has_refund_execution_retryable ? '1' : '0'; ?>"
                         >
-                            <?php esc_html_e('Retry All Failed/Blocked Steps', 'vms'); ?>
+                            <?php esc_html_e('Retry All Failed/Blocked Steps', 'backstage-venue-manager'); ?>
                         </button>
                     </p>
                     <input type="hidden" name="vms_cancel_bulk_retry_confirm" id="vms_cancel_bulk_retry_confirm" value="0" />
@@ -3945,14 +3945,14 @@ class VMS_Admin_Event_Plans
                             id="vms_run_live_refunds_now_button"
                             href="<?php echo esc_url($live_refund_url); ?>"
                         >
-                            <?php esc_html_e('Run Live Refunds Now', 'vms'); ?>
+                            <?php esc_html_e('Run Live Refunds Now', 'backstage-venue-manager'); ?>
                         </a>
                     </p>
-                    <p class="description"><?php esc_html_e('Runs as a standalone refund action without saving this Event Plan. Re-scans the cancelled event, attempts LIVE WooCommerce gateway refunds for remaining eligible ticket orders, and skips anything unsafe into manual review. Already refunded lines are not refunded twice.', 'vms'); ?></p>
+                    <p class="description"><?php esc_html_e('Runs as a standalone refund action without saving this Event Plan. Re-scans the cancelled event, attempts LIVE WooCommerce gateway refunds for remaining eligible ticket orders, and skips anything unsafe into manual review. Already refunded lines are not refunded twice.', 'backstage-venue-manager'); ?></p>
                 <?php endif; ?>
 
                 <?php if (empty($steps)) : ?>
-                    <p class="description"><?php esc_html_e('Job summary is present but no step data is available yet.', 'vms'); ?></p>
+                    <p class="description"><?php esc_html_e('Job summary is present but no step data is available yet.', 'backstage-venue-manager'); ?></p>
                 <?php else : ?>
                     <div class="vms-cancel-job-steps">
                         <?php foreach ($steps as $step) :
@@ -3979,7 +3979,7 @@ class VMS_Admin_Event_Plans
                                 <?php endif; ?>
                                 <?php if ($updated !== '') : ?>
                                     <p class="vms-cancel-job-step__updated">
-                                        <?php echo esc_html(sprintf(__('Updated: %s', 'vms'), $updated)); ?>
+                                        <?php echo esc_html(sprintf(__('Updated: %s', 'backstage-venue-manager'), $updated)); ?>
                                     </p>
                                 <?php endif; ?>
 
@@ -3993,7 +3993,7 @@ class VMS_Admin_Event_Plans
                                             value="<?php echo esc_attr('retry_cancellation_step:' . $step_key); ?>"
                                             class="button button-secondary button-small"
                                         >
-                                            <?php esc_html_e('Retry Step', 'vms'); ?>
+                                            <?php esc_html_e('Retry Step', 'backstage-venue-manager'); ?>
                                         </button>
                                     </p>
                                 <?php endif; ?>
@@ -4138,8 +4138,8 @@ class VMS_Admin_Event_Plans
             }
 
             if ($bypass_active) {
-                $until_txt = $bypass_until !== '' ? esc_html($bypass_until) : esc_html__('(date unknown)', 'vms');
-                return '<span class="vms-ep-tax-badge vms-ep-tax-badge--bypass" aria-label="Tax profile bypass active">TB</span><span class="vms-ep-tax-badge-note">' . sprintf(esc_html__('until %s', 'vms'), $until_txt) . '</span>';
+                $until_txt = $bypass_until !== '' ? esc_html($bypass_until) : esc_html__('(date unknown)', 'backstage-venue-manager');
+                return '<span class="vms-ep-tax-badge vms-ep-tax-badge--bypass" aria-label="Tax profile bypass active">TB</span><span class="vms-ep-tax-badge-note">' . sprintf(esc_html__('until %s', 'backstage-venue-manager'), $until_txt) . '</span>';
             }
 
             return '<span class="vms-ep-tax-badge vms-ep-tax-badge--missing" aria-label="Tax profile missing items">T⚠</span>';
@@ -4171,10 +4171,10 @@ class VMS_Admin_Event_Plans
             : array();
         $staff_headcount_context = function_exists('vms_staffing_get_event_plan_headcount_context')
             ? (array) vms_staffing_get_event_plan_headcount_context($post_id)
-            : array('wired' => false, 'headcount' => 0, 'label' => __('Attendance not wired yet', 'vms'));
+            : array('wired' => false, 'headcount' => 0, 'label' => __('Attendance not wired yet', 'backstage-venue-manager'));
         $staff_headcount_wired = !empty($staff_headcount_context['wired']);
         $staff_current_headcount = max(0, (int) ($staff_headcount_context['headcount'] ?? 0));
-        $staff_headcount_label = isset($staff_headcount_context['label']) ? (string) $staff_headcount_context['label'] : __('Attendance not wired yet', 'vms');
+        $staff_headcount_label = isset($staff_headcount_context['label']) ? (string) $staff_headcount_context['label'] : __('Attendance not wired yet', 'backstage-venue-manager');
         $staffing_templates = function_exists('vms_staffing_get_templates')
             ? (array) vms_staffing_get_templates(array('is_active' => 1))
             : array();
@@ -4399,14 +4399,14 @@ class VMS_Admin_Event_Plans
                     return rtrim(rtrim((string) $vms_norm_num($raw), '0'), '.') . '%';
                 case 'attendance_bonus_mode':
                     return match ((string) $raw) {
-                        'step' => __('Step', 'vms'),
-                        'continuous' => __('Continuous', 'vms'),
+                        'step' => __('Step', 'backstage-venue-manager'),
+                        'continuous' => __('Continuous', 'backstage-venue-manager'),
                         default => (string) $raw,
                     };
                 case 'commission_mode':
                     return ((string) $raw === 'gross')
-                        ? __('Based on gross / settlement', 'vms')
-                        : __('Added on top of vendor pay', 'vms');
+                        ? __('Based on gross / settlement', 'backstage-venue-manager')
+                        : __('Added on top of vendor pay', 'backstage-venue-manager');
                 case 'flat_fee_amount':
                 case 'attendance_bonus_step_bonus':
                 case 'attendance_bonus_per_ticket_rate':
@@ -4505,42 +4505,42 @@ class VMS_Admin_Event_Plans
 
             $vms_vendor_default_source_rows = array(
                 array(
-                    'label' => __('Global vendor defaults', 'vms'),
+                    'label' => __('Global vendor defaults', 'backstage-venue-manager'),
                     'summary' => !empty($vms_vendor_global_terms) && function_exists('vms_snapshot_summary_line')
                         ? (string) vms_snapshot_summary_line($vms_vendor_global_terms)
-                        : __('Not configured', 'vms'),
-                    'is_active' => ($vms_vendor_default_subtitle === __('Global vendor defaults', 'vms')),
+                        : __('Not configured', 'backstage-venue-manager'),
+                    'is_active' => ($vms_vendor_default_subtitle === __('Global vendor defaults', 'backstage-venue-manager')),
                 ),
                 array(
-                    'label' => __('Venue-specific defaults', 'vms'),
+                    'label' => __('Venue-specific defaults', 'backstage-venue-manager'),
                     'summary' => !empty($vms_vendor_venue_terms) && function_exists('vms_snapshot_summary_line')
                         ? (string) vms_snapshot_summary_line($vms_vendor_venue_terms)
-                        : __('Not configured for this venue', 'vms'),
-                    'is_active' => ($vms_vendor_default_subtitle === __('Venue-specific defaults', 'vms')),
+                        : __('Not configured for this venue', 'backstage-venue-manager'),
+                    'is_active' => ($vms_vendor_default_subtitle === __('Venue-specific defaults', 'backstage-venue-manager')),
                 ),
                 array(
-                    'label' => __('Venue + day defaults', 'vms'),
+                    'label' => __('Venue + day defaults', 'backstage-venue-manager'),
                     'summary' => !empty($vms_vendor_venue_dow_terms) && function_exists('vms_snapshot_summary_line')
                         ? (string) vms_snapshot_summary_line($vms_vendor_venue_dow_terms)
-                        : __('Not configured for this venue/day', 'vms'),
-                    'is_active' => ($vms_vendor_default_subtitle === __('Venue + day defaults', 'vms')),
+                        : __('Not configured for this venue/day', 'backstage-venue-manager'),
+                    'is_active' => ($vms_vendor_default_subtitle === __('Venue + day defaults', 'backstage-venue-manager')),
                 ),
             );
         }
 
         $vms_vendor_default_diff_rows = array();
         $vms_diff_field_labels = array(
-            'structure' => __('Comp structure', 'vms'),
-            'flat_fee_amount' => __('Base / flat amount', 'vms'),
-            'door_split_percent' => __('Door split %', 'vms'),
-            'attendance_bonus_mode' => __('Bonus style', 'vms'),
-            'attendance_bonus_start_count' => __('Starts after attendance', 'vms'),
-            'attendance_bonus_step_size' => __('Step size', 'vms'),
-            'attendance_bonus_step_bonus' => __('Bonus per step', 'vms'),
-            'attendance_bonus_per_ticket_rate' => __('Per-ticket bonus rate', 'vms'),
-            'attendance_bonus_max_bonus' => __('Bonus cap', 'vms'),
-            'commission_percent' => __('Agent fee %', 'vms'),
-            'commission_mode' => __('Agent fee basis', 'vms'),
+            'structure' => __('Comp structure', 'backstage-venue-manager'),
+            'flat_fee_amount' => __('Base / flat amount', 'backstage-venue-manager'),
+            'door_split_percent' => __('Door split %', 'backstage-venue-manager'),
+            'attendance_bonus_mode' => __('Bonus style', 'backstage-venue-manager'),
+            'attendance_bonus_start_count' => __('Starts after attendance', 'backstage-venue-manager'),
+            'attendance_bonus_step_size' => __('Step size', 'backstage-venue-manager'),
+            'attendance_bonus_step_bonus' => __('Bonus per step', 'backstage-venue-manager'),
+            'attendance_bonus_per_ticket_rate' => __('Per-ticket bonus rate', 'backstage-venue-manager'),
+            'attendance_bonus_max_bonus' => __('Bonus cap', 'backstage-venue-manager'),
+            'commission_percent' => __('Agent fee %', 'backstage-venue-manager'),
+            'commission_mode' => __('Agent fee basis', 'backstage-venue-manager'),
         );
         if ($vms_vendor_default_has_terms) {
             $vms_vendor_terms_for_compare = $vms_comp_terms_for_compare($vms_vendor_default_terms);
@@ -4790,16 +4790,16 @@ class VMS_Admin_Event_Plans
             : (string) ($deposit_terms['deposit_paid_date'] ?? '');
         $deposit_notes = isset($deposit_terms['deposit_notes']) ? (string) $deposit_terms['deposit_notes'] : '';
         $deposit_status_options = function_exists('vms_comp_deposit_status_options') ? vms_comp_deposit_status_options() : array(
-            'not_required' => __('Not required', 'vms'),
-            'unpaid' => __('Unpaid', 'vms'),
-            'paid' => __('Paid', 'vms'),
-            'waived' => __('Waived', 'vms'),
-            'refunded' => __('Refunded', 'vms'),
+            'not_required' => __('Not required', 'backstage-venue-manager'),
+            'unpaid' => __('Unpaid', 'backstage-venue-manager'),
+            'paid' => __('Paid', 'backstage-venue-manager'),
+            'waived' => __('Waived', 'backstage-venue-manager'),
+            'refunded' => __('Refunded', 'backstage-venue-manager'),
         );
         $deposit_treatment_options = function_exists('vms_comp_deposit_treatment_options') ? vms_comp_deposit_treatment_options() : array(
-            'creditable' => __('Applies toward total payment', 'vms'),
-            'refundable' => __('Refundable', 'vms'),
-            'nonrefundable' => __('Non-refundable', 'vms'),
+            'creditable' => __('Applies toward total payment', 'backstage-venue-manager'),
+            'refundable' => __('Refundable', 'backstage-venue-manager'),
+            'nonrefundable' => __('Non-refundable', 'backstage-venue-manager'),
         );
 
         $final_payment_terms = function_exists('vms_get_event_plan_final_payment_terms')
@@ -4820,22 +4820,22 @@ class VMS_Admin_Event_Plans
             : (string) ($final_payment_terms['final_payment_method'] ?? 'not_set');
         $final_payment_method_other = isset($final_payment_terms['final_payment_method_other']) ? (string) $final_payment_terms['final_payment_method_other'] : '';
         $final_payment_timing_options = function_exists('vms_comp_final_payment_timing_options') ? vms_comp_final_payment_timing_options() : array(
-            'not_set' => __('Not set', 'vms'),
-            'in_advance' => __('In advance', 'vms'),
-            'day_of_event' => __('Day of event', 'vms'),
-            'days_after' => __('N days after event', 'vms'),
-            'fixed_date' => __('Specific date', 'vms'),
-            'custom' => __('Custom timing', 'vms'),
+            'not_set' => __('Not set', 'backstage-venue-manager'),
+            'in_advance' => __('In advance', 'backstage-venue-manager'),
+            'day_of_event' => __('Day of event', 'backstage-venue-manager'),
+            'days_after' => __('N days after event', 'backstage-venue-manager'),
+            'fixed_date' => __('Specific date', 'backstage-venue-manager'),
+            'custom' => __('Custom timing', 'backstage-venue-manager'),
         );
         $final_payment_method_options = function_exists('vms_comp_final_payment_method_options') ? vms_comp_final_payment_method_options() : array(
-            'not_set' => __('Not set', 'vms'),
-            'check' => __('Check', 'vms'),
-            'cash' => __('Cash', 'vms'),
-            'ach_direct_deposit' => __('ACH / Direct Deposit', 'vms'),
-            'zelle' => __('Zelle', 'vms'),
-            'venmo' => __('Venmo', 'vms'),
-            'paypal' => __('PayPal', 'vms'),
-            'other' => __('Other', 'vms'),
+            'not_set' => __('Not set', 'backstage-venue-manager'),
+            'check' => __('Check', 'backstage-venue-manager'),
+            'cash' => __('Cash', 'backstage-venue-manager'),
+            'ach_direct_deposit' => __('ACH / Direct Deposit', 'backstage-venue-manager'),
+            'zelle' => __('Zelle', 'backstage-venue-manager'),
+            'venmo' => __('Venmo', 'backstage-venue-manager'),
+            'paypal' => __('PayPal', 'backstage-venue-manager'),
+            'other' => __('Other', 'backstage-venue-manager'),
         );
 
         // Current package selection
@@ -4907,10 +4907,10 @@ class VMS_Admin_Event_Plans
 
         $cancel_policy_options = function_exists('vms_cancellation_policy_options')
             ? (array) vms_cancellation_policy_options()
-            : array('status_only' => __('Status only', 'vms'));
+            : array('status_only' => __('Status only', 'backstage-venue-manager'));
         $cancel_reason_options = function_exists('vms_cancellation_reason_options')
             ? (array) vms_cancellation_reason_options()
-            : array('other' => __('Other', 'vms'));
+            : array('other' => __('Other', 'backstage-venue-manager'));
 
         if ($cancel_policy === '' || !array_key_exists($cancel_policy, $cancel_policy_options)) {
             $cancel_policy = 'status_only';
@@ -5197,7 +5197,7 @@ class VMS_Admin_Event_Plans
         }
 
         $lineup_primary_vendor_id = absint($lineup_primary_entry['vendor_id'] ?? $selected_band_id);
-        $lineup_primary_vendor_label = $lineup_primary_vendor_id > 0 ? (string) get_the_title($lineup_primary_vendor_id) : __('Unassigned primary vendor', 'vms');
+        $lineup_primary_vendor_label = $lineup_primary_vendor_id > 0 ? (string) get_the_title($lineup_primary_vendor_id) : __('Unassigned primary vendor', 'backstage-venue-manager');
         $lineup_primary_time_label = trim(implode(' – ', array_filter(array(
             (string) ($lineup_primary_entry['set_start_label'] ?? ''),
             (string) ($lineup_primary_entry['set_end_label'] ?? ''),
@@ -5206,14 +5206,14 @@ class VMS_Admin_Event_Plans
         $lineup_primary_warning_count = (int) ($lineup_primary_entry['warning_count'] ?? 0);
         $lineup_primary_pay_summary = '';
         if ($comp_structure === 'door_split') {
-            $lineup_primary_pay_summary = ($door_split_percent !== '') ? sprintf(__('Door split: %s%%', 'vms'), rtrim(rtrim((string) $door_split_percent, '0'), '.')) : __('Door split', 'vms');
+            $lineup_primary_pay_summary = ($door_split_percent !== '') ? sprintf(__('Door split: %s%%', 'backstage-venue-manager'), rtrim(rtrim((string) $door_split_percent, '0'), '.')) : __('Door split', 'backstage-venue-manager');
         } elseif ($comp_structure === 'flat_fee_door_split') {
-            $fee_label = ($flat_fee_amount !== '') ? function_exists('vms_format_currency') ? vms_format_currency((float) $flat_fee_amount) : ('$' . number_format((float) $flat_fee_amount, 2)) : __('No guarantee set', 'vms');
-            $split_label = ($door_split_percent !== '') ? rtrim(rtrim((string) $door_split_percent, '0'), '.') . '%' : __('door split', 'vms');
-            $lineup_primary_pay_summary = sprintf(__('%1$s + %2$s door', 'vms'), $fee_label, $split_label);
+            $fee_label = ($flat_fee_amount !== '') ? function_exists('vms_format_currency') ? vms_format_currency((float) $flat_fee_amount) : ('$' . number_format((float) $flat_fee_amount, 2)) : __('No guarantee set', 'backstage-venue-manager');
+            $split_label = ($door_split_percent !== '') ? rtrim(rtrim((string) $door_split_percent, '0'), '.') . '%' : __('door split', 'backstage-venue-manager');
+            $lineup_primary_pay_summary = sprintf(__('%1$s + %2$s door', 'backstage-venue-manager'), $fee_label, $split_label);
         } elseif ($comp_structure === 'attendance_bonus') {
-            $fee_label = ($flat_fee_amount !== '') ? function_exists('vms_format_currency') ? vms_format_currency((float) $flat_fee_amount) : ('$' . number_format((float) $flat_fee_amount, 2)) : __('No base fee set', 'vms');
-            $lineup_primary_pay_summary = sprintf(__('Attendance bonus | Base %s', 'vms'), $fee_label);
+            $fee_label = ($flat_fee_amount !== '') ? function_exists('vms_format_currency') ? vms_format_currency((float) $flat_fee_amount) : ('$' . number_format((float) $flat_fee_amount, 2)) : __('No base fee set', 'backstage-venue-manager');
+            $lineup_primary_pay_summary = sprintf(__('Attendance bonus | Base %s', 'backstage-venue-manager'), $fee_label);
         } else {
             if ($flat_fee_amount !== '') {
                 $lineup_primary_pay_summary = function_exists('vms_format_currency') ? vms_format_currency((float) $flat_fee_amount) : ('$' . number_format((float) $flat_fee_amount, 2));
@@ -5410,22 +5410,22 @@ class VMS_Admin_Event_Plans
             if ($issue === 'missing_vendor') {
                 $k_vt = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_vendor_title') : '_vms_integrity_vendor_title';
                 $vendor_title = (string) get_post_meta($post->ID, $k_vt, true);
-                if ($vendor_title === '') $vendor_title = __('(unknown vendor)', 'vms');
+                if ($vendor_title === '') $vendor_title = __('(unknown vendor)', 'backstage-venue-manager');
 
                 echo '<div class="notice notice-error inline vms-notice vms-notice--critical"><p>' .
-                    esc_html__('🚩 This event plan lost its vendor (the vendor was deleted) and needs attention.', 'vms') .
-                    ' ' . sprintf(esc_html__('Previous vendor: %s', 'vms'), esc_html($vendor_title)) .
-                    ' ' . esc_html__('Select a new Primary Vendor, then mark Ready again.', 'vms') .
+                    esc_html__('🚩 This event plan lost its vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+                    ' ' . sprintf(esc_html__('Previous vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
+                    ' ' . esc_html__('Select a new Primary Vendor, then mark Ready again.', 'backstage-venue-manager') .
                     '</p></div>';
             } elseif ($issue === 'missing_secondary_vendor') {
                 $k_vt = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_vendor_title') : '_vms_integrity_vendor_title';
                 $vendor_title = (string) get_post_meta($post->ID, $k_vt, true);
-                if ($vendor_title === '') $vendor_title = __('(unknown vendor)', 'vms');
+                if ($vendor_title === '') $vendor_title = __('(unknown vendor)', 'backstage-venue-manager');
 
                 echo '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p>' .
-                    esc_html__('🚩 This event plan lost a secondary vendor (the vendor was deleted) and needs attention.', 'vms') .
-                    ' ' . sprintf(esc_html__('Removed vendor: %s', 'vms'), esc_html($vendor_title)) .
-                    ' ' . esc_html__('Review the Additional Vendors section below, then mark Ready again if needed.', 'vms') .
+                    esc_html__('🚩 This event plan lost a secondary vendor (the vendor was deleted) and needs attention.', 'backstage-venue-manager') .
+                    ' ' . sprintf(esc_html__('Removed vendor: %s', 'backstage-venue-manager'), esc_html($vendor_title)) .
+                    ' ' . esc_html__('Review the Additional Vendors section below, then mark Ready again if needed.', 'backstage-venue-manager') .
                     '</p></div>';
             }
         ?>
@@ -5438,7 +5438,7 @@ class VMS_Admin_Event_Plans
                 if ($prefill_vendor_id > 0) {
                     $resolved_vendor_label = $prefill_vendor_label !== '' ? $prefill_vendor_label : (string) get_the_title($prefill_vendor_id);
                     if ($resolved_vendor_label === '') {
-                        $resolved_vendor_label = __('Selected vendor', 'vms');
+                        $resolved_vendor_label = __('Selected vendor', 'backstage-venue-manager');
                     }
 
                     if ($prefill_mode === 'secondary') {
@@ -5458,11 +5458,11 @@ class VMS_Admin_Event_Plans
                         }
 
                         $secondary_message = ($prefill_type_label !== '')
-                            ? sprintf(__('Booking prefill: %1$s was added as a secondary vendor (%2$s). Review the Additional Vendors section below, then save the Event Plan.', 'vms'), $resolved_vendor_label, $prefill_type_label)
-                            : sprintf(__('Booking prefill: %s was added as a secondary vendor. Review the Additional Vendors section below, then save the Event Plan.', 'vms'), $resolved_vendor_label);
+                            ? sprintf(__('Booking prefill: %1$s was added as a secondary vendor (%2$s). Review the Additional Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label, $prefill_type_label)
+                            : sprintf(__('Booking prefill: %s was added as a secondary vendor. Review the Additional Vendors section below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
                         echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($secondary_message) . '</p></div>';
                     } elseif ($prefill_mode === 'primary') {
-                        $primary_message = sprintf(__('Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.', 'vms'), $resolved_vendor_label);
+                        $primary_message = sprintf(__('Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.', 'backstage-venue-manager'), $resolved_vendor_label);
                         echo '<div class="notice notice-info inline vms-notice"><p>' . esc_html($primary_message) . '</p></div>';
                     }
                 }
@@ -5471,21 +5471,21 @@ class VMS_Admin_Event_Plans
 
         <div class="vms-ep-basic-grid">
         <p class="vms-ep-basic-item">
-            <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'vms'); ?></strong></label><br />
+            <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>" />
         </p>
 
         <p class="vms-ep-basic-item">
-            <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'vms'); ?></strong></label><br />
+            <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'backstage-venue-manager'); ?></strong></label><br />
             <select id="vms_venue_id" name="vms_venue_id" class="vms-ep-select-md" required>
-                <option value=""><?php esc_html_e('-- Select a Venue --', 'vms'); ?></option>
+                <option value=""><?php esc_html_e('-- Select a Venue --', 'backstage-venue-manager'); ?></option>
                 <?php foreach ($venues as $venue): ?>
                     <option value="<?php echo esc_attr($venue->ID); ?>" <?php selected($venue_id_effective, $venue->ID); ?>>
                         <?php echo esc_html($venue->post_title); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
-            <br /><span class="description"><?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'vms'); ?></span>
+            <br /><span class="description"><?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'backstage-venue-manager'); ?></span>
         </p>
 
         <?php
@@ -5496,20 +5496,20 @@ class VMS_Admin_Event_Plans
         }
 
         echo '<div class="vms-ep-basic-item vms-ep-basic-span">';
-        echo '<h4>' . esc_html__('Holiday', 'vms') . '</h4>';
+        echo '<h4>' . esc_html__('Holiday', 'backstage-venue-manager') . '</h4>';
         echo '<div class="vms-ep-holiday-card">';
 
         if ($venue_id_effective <= 0 || !$event_date) {
-            echo '<p class="description vms-m0">' . esc_html__('Select a Venue and Event Date to see holiday status.', 'vms') . '</p>';
+            echo '<p class="description vms-m0">' . esc_html__('Select a Venue and Event Date to see holiday status.', 'backstage-venue-manager') . '</p>';
         } elseif (!$holiday) {
-            echo '<p class="description vms-m0">' . esc_html__('No holiday is configured for this venue on the selected date.', 'vms') . '</p>';
-            echo '<p class="description vms-mt-8 vms-mb-0">' . esc_html__('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'vms') . '</p>';
+            echo '<p class="description vms-m0">' . esc_html__('No holiday is configured for this venue on the selected date.', 'backstage-venue-manager') . '</p>';
+            echo '<p class="description vms-mt-8 vms-mb-0">' . esc_html__('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'backstage-venue-manager') . '</p>';
         } else {
             $badge_class = (($holiday['status'] ?? '') === 'closed') ? 'vms-ep-badge vms-ep-badge--closed' : 'vms-ep-badge vms-ep-badge--open';
 
             echo '<p class="vms-m0 vms-mb-8">';
             echo '<span class="' . esc_attr($badge_class) . '">';
-            echo (($holiday['status'] ?? '') === 'closed') ? esc_html__('CLOSED', 'vms') : esc_html__('OPEN', 'vms');
+            echo (($holiday['status'] ?? '') === 'closed') ? esc_html__('CLOSED', 'backstage-venue-manager') : esc_html__('OPEN', 'backstage-venue-manager');
             echo '</span>';
 
             $name = trim((string)($holiday['name'] ?? ''));
@@ -5519,9 +5519,9 @@ class VMS_Admin_Event_Plans
             echo '</p>';
 
             if (($holiday['status'] ?? '') === 'closed') {
-                echo '<p class="description vms-m0">' . esc_html__('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'vms') . '</p>';
+                echo '<p class="description vms-m0">' . esc_html__('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'backstage-venue-manager') . '</p>';
             } else {
-                echo '<p class="description vms-m0">' . esc_html__('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'vms') . '</p>';
+                echo '<p class="description vms-m0">' . esc_html__('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'backstage-venue-manager') . '</p>';
             }
         }
 
@@ -5628,10 +5628,10 @@ class VMS_Admin_Event_Plans
                 $vms_secondary_summary_bits[] = $vms_secondary_type_name !== '' ? $vms_secondary_type_name : $vms_secondary_type_slug;
             }
         } elseif ($vms_secondary_group_count > 1) {
-            $vms_secondary_summary_bits[] = sprintf(_n('%d group', '%d groups', $vms_secondary_group_count, 'vms'), $vms_secondary_group_count);
+            $vms_secondary_summary_bits[] = sprintf(_n('%d group', '%d groups', $vms_secondary_group_count, 'backstage-venue-manager'), $vms_secondary_group_count);
         }
-        $vms_secondary_summary_bits[] = sprintf(_n('%d selected', '%d selected', count((array) $secondary_vendor_ids), 'vms'), count((array) $secondary_vendor_ids));
-        $vms_secondary_summary_bits[] = sprintf(_n('%d warning', '%d warnings', $vms_secondary_warning_count, 'vms'), $vms_secondary_warning_count);
+        $vms_secondary_summary_bits[] = sprintf(_n('%d selected', '%d selected', count((array) $secondary_vendor_ids), 'backstage-venue-manager'), count((array) $secondary_vendor_ids));
+        $vms_secondary_summary_bits[] = sprintf(_n('%d warning', '%d warnings', $vms_secondary_warning_count, 'backstage-venue-manager'), $vms_secondary_warning_count);
     ?>
     <?php if ($secondary_vendor_lazy_enabled) : ?>
         <?php
@@ -5669,13 +5669,13 @@ class VMS_Admin_Event_Plans
         >
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
-                <span class="vms-collapsible-label"><?php esc_html_e('Additional Vendors', 'vms'); ?></span>
+                <span class="vms-collapsible-label"><?php esc_html_e('Additional Vendors', 'backstage-venue-manager'); ?></span>
                 <span class="vms-collapsible-meta"><?php echo esc_html(implode(' • ', array_filter($vms_secondary_summary_bits))); ?></span>
-                <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'vms'); ?></span>
+                <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'backstage-venue-manager'); ?></span>
             </button>
             <div class="vms-collapsible-body" hidden>
                 <div class="vms-ep-card vms-ep-card--white vms-ep-card--secondary-vendors" data-vms-section-has-data="<?php echo $vms_secondary_has_data ? '1' : '0'; ?>">
-                    <p class="description"><?php esc_html_e('Expand this section to load vendor availability, qualification warnings, and editable additional-vendor rows.', 'vms'); ?></p>
+                    <p class="description"><?php esc_html_e('Expand this section to load vendor availability, qualification warnings, and editable additional-vendor rows.', 'backstage-venue-manager'); ?></p>
                     <input type="hidden" name="vms_secondary_vendors_lazy_unloaded" value="1" />
                     <p class="description vms-m0"><?php echo esc_html(implode(' • ', array_filter($vms_secondary_summary_bits))); ?></p>
                 </div>
@@ -5692,7 +5692,7 @@ class VMS_Admin_Event_Plans
         <?php else : ?>
         <?php $vms_secondary_vendors_html = $this->capture_event_plan_partial('secondary-vendors', get_defined_vars()); ?>
         <?php if (!empty($vms_secondary_vendors_html)): ?>
-        <h4 id="vms-additional-vendors" class="vms-collapsible-title" data-section-key="secondary_vendors" data-section-has-data="<?php echo $vms_secondary_has_data ? '1' : '0'; ?>"><?php esc_html_e('Additional Vendors', 'vms'); ?></h4>
+        <h4 id="vms-additional-vendors" class="vms-collapsible-title" data-section-key="secondary_vendors" data-section-has-data="<?php echo $vms_secondary_has_data ? '1' : '0'; ?>"><?php esc_html_e('Additional Vendors', 'backstage-venue-manager'); ?></h4>
         <div class="vms-ep-card vms-ep-card--white vms-ep-card--secondary-vendors" data-vms-section-has-data="<?php echo $vms_secondary_has_data ? '1' : '0'; ?>">
             <?php echo $vms_secondary_vendors_html; ?>
         </div>
@@ -5734,14 +5734,14 @@ class VMS_Admin_Event_Plans
         >
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
-                <span class="vms-collapsible-label"><?php esc_html_e('Staff', 'vms'); ?></span>
-                <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'vms'); ?></span>
+                <span class="vms-collapsible-label"><?php esc_html_e('Staff', 'backstage-venue-manager'); ?></span>
+                <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'backstage-venue-manager'); ?></span>
             </button>
             <div class="vms-collapsible-body" hidden>
                 <div class="vms-ep-card vms-ep-card--white vms-ep-card--staff" data-vms-section-has-data="<?php echo $vms_staff_has_data_hint ? '1' : '0'; ?>">
-                    <p class="description"><?php esc_html_e('Expand this section to load the staffing editor, assignments, and shift windows.', 'vms'); ?></p>
+                    <p class="description"><?php esc_html_e('Expand this section to load the staffing editor, assignments, and shift windows.', 'backstage-venue-manager'); ?></p>
                     <input type="hidden" name="vms_staffing_lazy_unloaded" value="1" />
-                    <p class="description vms-m0"><?php esc_html_e('The staffing editor is deferred on initial load to reduce Event Plan open time.', 'vms'); ?></p>
+                    <p class="description vms-m0"><?php esc_html_e('The staffing editor is deferred on initial load to reduce Event Plan open time.', 'backstage-venue-manager'); ?></p>
                 </div>
             </div>
         </section>
@@ -5805,8 +5805,8 @@ class VMS_Admin_Event_Plans
         ), 'readiness_summary');
     } ?>
     <div class="vms-ep-card vms-ep-card--white vms-ep-card--readiness-summary" data-vms-collapsible-break="1">
-        <h4><?php esc_html_e('Readiness Summary', 'vms'); ?></h4>
-        <p class="description"><?php echo esc_html((string) ($vms_readiness_summary_context['status_label'] ?? __('No blocking publish warnings', 'vms'))); ?></p>
+        <h4><?php esc_html_e('Readiness Summary', 'backstage-venue-manager'); ?></h4>
+        <p class="description"><?php echo esc_html((string) ($vms_readiness_summary_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager'))); ?></p>
         <?php if (!empty($vms_readiness_summary_rows)) : ?>
             <ul class="vms-ep-inline-list">
                 <?php foreach ($vms_readiness_summary_rows as $vms_readiness_row) : ?>
@@ -5819,7 +5819,7 @@ class VMS_Admin_Event_Plans
             </ul>
         <?php endif; ?>
         <?php if (!empty($vms_readiness_warning_items)) : ?>
-            <p class="description"><?php echo esc_html(sprintf(_n('%d warning needs attention. Expand Readiness details below for the full list.', '%d warnings need attention. Expand Readiness details below for the full list.', count($vms_readiness_warning_items), 'vms'), count($vms_readiness_warning_items))); ?></p>
+            <p class="description"><?php echo esc_html(sprintf(_n('%d warning needs attention. Expand Readiness details below for the full list.', '%d warnings need attention. Expand Readiness details below for the full list.', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items))); ?></p>
         <?php endif; ?>
     </div>
     <?php if (function_exists('vms_event_plan_perf_memory_checkpoint')) {
@@ -5854,13 +5854,13 @@ class VMS_Admin_Event_Plans
         >
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
-                <span class="vms-collapsible-label"><?php esc_html_e('Readiness details', 'vms'); ?></span>
-                <span class="vms-collapsible-meta"><?php echo esc_html(sprintf(_n('%d blocking issue', '%d blocking issues', absint($readiness_boot_summary['blocking_issue_count'] ?? 0), 'vms'), absint($readiness_boot_summary['blocking_issue_count'] ?? 0)) . ' • ' . sprintf(_n('%d warning', '%d warnings', count($vms_readiness_warning_items), 'vms'), count($vms_readiness_warning_items))); ?></span>
-                <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'vms'); ?></span>
+                <span class="vms-collapsible-label"><?php esc_html_e('Readiness details', 'backstage-venue-manager'); ?></span>
+                <span class="vms-collapsible-meta"><?php echo esc_html(sprintf(_n('%d blocking issue', '%d blocking issues', absint($readiness_boot_summary['blocking_issue_count'] ?? 0), 'backstage-venue-manager'), absint($readiness_boot_summary['blocking_issue_count'] ?? 0)) . ' • ' . sprintf(_n('%d warning', '%d warnings', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items))); ?></span>
+                <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'backstage-venue-manager'); ?></span>
             </button>
             <div class="vms-collapsible-body" hidden>
                 <div class="vms-ep-card vms-ep-card--white">
-                    <p class="description"><?php esc_html_e('Expand this section to load detailed readiness reasons, vendor warning categories, and linked ticket/calendar status.', 'vms'); ?></p>
+                    <p class="description"><?php esc_html_e('Expand this section to load detailed readiness reasons, vendor warning categories, and linked ticket/calendar status.', 'backstage-venue-manager'); ?></p>
                 </div>
             </div>
         </section>
@@ -6866,7 +6866,7 @@ class VMS_Admin_Event_Plans
                 section.classList.add('is-loading');
                 body.innerHTML =
                     '<div class="vms-ep-card vms-ep-card--white">' +
-                    '<p class="description"><?php echo esc_js(__('Loading section editor…', 'vms')); ?></p>' +
+                    '<p class="description"><?php echo esc_js(__('Loading section editor…', 'backstage-venue-manager')); ?></p>' +
                     '</div>';
 
                 const params = new URLSearchParams();
@@ -6911,7 +6911,7 @@ class VMS_Admin_Event_Plans
                     delete section.dataset.vmsLazyLoading;
 	                    body.innerHTML =
 	                        '<div class="notice notice-error inline vms-notice vms-notice--warning">' +
-	                        '<p><?php echo esc_js(__('Unable to load this editor section right now. Refresh and try again.', 'vms')); ?></p>' +
+	                        '<p><?php echo esc_js(__('Unable to load this editor section right now. Refresh and try again.', 'backstage-venue-manager')); ?></p>' +
 	                        '</div>';
 	                    setCollapsed(section, false);
 	                    return false;
@@ -8863,7 +8863,7 @@ class VMS_Admin_Event_Plans
             : '';
         if ($detached_editor_action === 'resync_to_calendar') {
             if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Re-sync to Calendar now uses a dedicated saved-state action. Reload the Event Plan and use the Advanced Controls Re-sync button.', 'vms'), 'warning');
+                vms_add_admin_notice(__('Re-sync to Calendar now uses a dedicated saved-state action. Reload the Event Plan and use the Advanced Controls Re-sync button.', 'backstage-venue-manager'), 'warning');
             }
             return;
         }
@@ -8875,8 +8875,8 @@ class VMS_Admin_Event_Plans
             if (function_exists('vms_add_admin_notice')) {
                 vms_add_admin_notice(
                     !empty($ticket_ui_override_result['changed'])
-                        ? __('Public UI overrides saved.', 'vms')
-                        : __('No public UI override changes to save.', 'vms'),
+                        ? __('Public UI overrides saved.', 'backstage-venue-manager')
+                        : __('No public UI override changes to save.', 'backstage-venue-manager'),
                     'success'
                 );
             }
@@ -8997,7 +8997,7 @@ class VMS_Admin_Event_Plans
                     continue;
                 }
 
-                $role_name = $staff_roles_index[$staff_role_id] ?? sprintf(__('Role #%d', 'vms'), $staff_role_id);
+                $role_name = $staff_roles_index[$staff_role_id] ?? sprintf(__('Role #%d', 'backstage-venue-manager'), $staff_role_id);
                 $headcount_value = isset($staffing_headcounts[$staff_role_id]) ? max(0, absint($staffing_headcounts[$staff_role_id])) : 0;
                 $assigned_staff = isset($staffing_raw_assignments[$staff_role_id]) && is_array($staffing_raw_assignments[$staff_role_id])
                     ? array_values(array_unique(array_filter(array_map('absint', $staffing_raw_assignments[$staff_role_id]), function ($v) {
@@ -9080,10 +9080,10 @@ class VMS_Admin_Event_Plans
                     }
                     $issues = array();
                     if (!empty($qual_check['missing'])) {
-                        $issues[] = sprintf(__('missing %s', 'vms'), implode(', ', array_map('sanitize_text_field', (array) $qual_check['missing'])));
+                        $issues[] = sprintf(__('missing %s', 'backstage-venue-manager'), implode(', ', array_map('sanitize_text_field', (array) $qual_check['missing'])));
                     }
                     if (!empty($qual_check['expired'])) {
-                        $issues[] = sprintf(__('expired %s', 'vms'), implode(', ', array_map('sanitize_text_field', (array) $qual_check['expired'])));
+                        $issues[] = sprintf(__('expired %s', 'backstage-venue-manager'), implode(', ', array_map('sanitize_text_field', (array) $qual_check['expired'])));
                     }
                     if (!empty($issues)) {
                         $staffing_role_assignment_warnings[] = trim((string) $staff_name) . ' → ' . $role_name . ' (' . implode('; ', $issues) . ')';
@@ -9131,7 +9131,7 @@ class VMS_Admin_Event_Plans
 	                    'change_type' => 'event_save_sync',
 	                    'source_function' => 'save_event_plan_meta',
 	                    'source_hook' => sanitize_key((string) current_filter()),
-	                    'summary_text' => __('Saved ticketing enabled override from the Event Plan editor.', 'vms'),
+	                    'summary_text' => __('Saved ticketing enabled override from the Event Plan editor.', 'backstage-venue-manager'),
 	                ));
 	                $ticketing_override_audit_pushed = true;
 	            }
@@ -9178,7 +9178,7 @@ class VMS_Admin_Event_Plans
                         if (function_exists('vms_add_admin_notice')) {
                             $msg = $this->get_lock_pay_basics_notice_copy();
                             if (!$saved_basics_ready && $request_basics_ready) {
-                                $msg .= ' ' . __('Your details were saved. Review them, then click Lock Draft Pay again.', 'vms');
+                                $msg .= ' ' . __('Your details were saved. Review them, then click Lock Draft Pay again.', 'backstage-venue-manager');
                             }
                             vms_add_admin_notice($msg, 'error');
                         }
@@ -9310,7 +9310,7 @@ class VMS_Admin_Event_Plans
 
                 $attendance_invalid_message = '';
 	                if ($comp_structure === 'attendance_bonus' && $attendance_bonus_mode === 'step' && trim($attendance_bonus_step_size_raw) !== '' && $attendance_bonus_step_size === '') {
-	                    $attendance_invalid_message = __('Step Size must be at least 1 for Base + Attendance Bonus step mode.', 'vms');
+	                    $attendance_invalid_message = __('Step Size must be at least 1 for Base + Attendance Bonus step mode.', 'backstage-venue-manager');
 	                }
 	                if ($attendance_invalid_message !== '' && function_exists('vms_add_admin_notice')) {
 	                    vms_add_admin_notice($attendance_invalid_message, 'error');
@@ -9460,10 +9460,10 @@ if (function_exists('vms_add_admin_notice')) {
                                 $verb = 'Lock Draft Pay';
                             }
                             $msg = 'Draft Pay differs from ' . $label . '. Acknowledge the difference before ' . $verb . '. Your edits were saved, but the status action was blocked.';
-                            vms_add_admin_notice(__($msg, 'vms'), 'error');
+                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'error');
                         } else {
                             $msg = 'Draft Pay differs from ' . $label . '. You can keep saving Draft changes, but you must acknowledge before Mark Ready, Publish, or Lock Draft Pay.';
-                            vms_add_admin_notice(__($msg, 'vms'), 'warning');
+                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'warning');
                         }
                     }
 
@@ -9514,10 +9514,10 @@ if (function_exists('vms_add_admin_notice')) {
                             }
 
                             $msg = 'Draft Pay has a lower guaranteed payout (' . $sel . ') than the highest guaranteed option (' . $max . '). Acknowledge this choice before ' . $verb . '. Your edits were saved, but the status action was blocked.';
-                            vms_add_admin_notice(__($msg, 'vms'), 'error');
+                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'error');
                         } else {
                             $msg = 'Draft Pay has a lower guaranteed payout (' . $sel . ') than the highest guaranteed option (' . $max . '). You can keep saving Draft changes, but you must acknowledge before Mark Ready, Publish, or Lock Draft Pay.';
-                            vms_add_admin_notice(__($msg, 'vms'), 'warning');
+                            vms_add_admin_notice(__($msg, 'backstage-venue-manager'), 'warning');
                         }
                     }
 
@@ -9808,7 +9808,7 @@ if (function_exists('vms_add_admin_notice')) {
 
                     $write_result = function_exists('vms_event_plan_write_secondary_vendor_assignments')
                         ? vms_event_plan_write_secondary_vendor_assignments($post_id, $proposed_assignments)
-                        : new WP_Error('vms_secondary_vendor_write_unavailable', __('Additional Vendor save helper is unavailable.', 'vms'));
+                        : new WP_Error('vms_secondary_vendor_write_unavailable', __('Additional Vendor save helper is unavailable.', 'backstage-venue-manager'));
 
                     $written_secondary_type = $proposed_secondary_type;
                     $written_secondary_ids = $proposed_secondary_ids;
@@ -10316,7 +10316,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_absolute_time_warning_roles) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
-                                __('Absolute staff shift times are missing for: %s. When Time mode is Absolute and the role is in use, enter Shift start plus Shift end or Duration.', 'vms'),
+                                __('Absolute staff shift times are missing for: %s. When Time mode is Absolute and the role is in use, enter Shift start plus Shift end or Duration.', 'backstage-venue-manager'),
                                 implode(', ', array_map('sanitize_text_field', array_unique($staffing_absolute_time_warning_roles)))
                             ),
                             'warning'
@@ -10326,7 +10326,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_required_now_gap_roles) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
-                                __('Current attendance has activated these staff requirements, but they are still not fully assigned: %s.', 'vms'),
+                                __('Current attendance has activated these staff requirements, but they are still not fully assigned: %s.', 'backstage-venue-manager'),
                                 implode(', ', array_map('sanitize_text_field', array_unique($staffing_required_now_gap_roles)))
                             ),
                             'warning'
@@ -10336,7 +10336,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_role_assignment_warnings) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
-                                __('Staff assignment review needed: %s.', 'vms'),
+                                __('Staff assignment review needed: %s.', 'backstage-venue-manager'),
                                 implode(' | ', array_map('sanitize_text_field', array_unique($staffing_role_assignment_warnings)))
                             ),
                             'warning'
@@ -10345,7 +10345,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (!empty($staffing_role_assignment_blocked) && function_exists('vms_add_admin_notice')) {
                         vms_add_admin_notice(
                             sprintf(
-                                __('Invalid staff assignments were blocked because those staff are not currently eligible for the selected roles: %s.', 'vms'),
+                                __('Invalid staff assignments were blocked because those staff are not currently eligible for the selected roles: %s.', 'backstage-venue-manager'),
                                 implode(' | ', array_map('sanitize_text_field', array_unique($staffing_role_assignment_blocked)))
                             ),
                             'error'
@@ -10356,7 +10356,7 @@ if (function_exists('vms_add_admin_notice')) {
                         if (!empty($template_apply_result['ok']) && function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Staffing template applied. Seeded %1$d role slots and skipped %2$d existing role slots.', 'vms'),
+                                    __('Staffing template applied. Seeded %1$d role slots and skipped %2$d existing role slots.', 'backstage-venue-manager'),
                                     (int) ($template_apply_result['seeded'] ?? 0),
                                     (int) ($template_apply_result['skipped'] ?? 0)
                                 ),
@@ -10365,7 +10365,7 @@ if (function_exists('vms_add_admin_notice')) {
                         } elseif (function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Staffing template apply failed: %s.', 'vms'),
+                                    __('Staffing template apply failed: %s.', 'backstage-venue-manager'),
                                     sanitize_text_field((string) ($template_apply_result['error'] ?? 'unknown_error'))
                                 ),
                                 'error'
@@ -10548,7 +10548,7 @@ if (function_exists('vms_add_admin_notice')) {
                         if ($tec_post_now && is_object($tec_post_now) && $tec_post_now->post_type === 'tribe_events' && $tec_status_now !== 'trash') {
                             $new_status = in_array($tec_status_now, array('publish', 'future'), true) ? 'published' : 'ready';
                             if (function_exists('vms_add_admin_notice')) {
-                                vms_add_admin_notice(__('Detected a legacy Draft status mismatch and auto-repaired Event Plan status.', 'vms'), 'warning');
+                                vms_add_admin_notice(__('Detected a legacy Draft status mismatch and auto-repaired Event Plan status.', 'backstage-venue-manager'), 'warning');
                             }
                         }
                     }
@@ -10559,7 +10559,7 @@ if (function_exists('vms_add_admin_notice')) {
                     switch ($action) {
                     case 'save_draft':
                         $new_status = 'draft';
-                        vms_add_admin_notice(__('Event plan saved as Draft.', 'vms'), 'success');
+                        vms_add_admin_notice(__('Event plan saved as Draft.', 'backstage-venue-manager'), 'success');
                         break;
 
                     case 'mark_ready':
@@ -10567,22 +10567,22 @@ if (function_exists('vms_add_admin_notice')) {
                         if (empty($errors)) {
                             vms_maybe_autoset_event_plan_title($post_id);
                             $new_status = 'ready';
-                            vms_add_admin_notice(__('Event plan marked Ready.', 'vms'), 'success');
+                            vms_add_admin_notice(__('Event plan marked Ready.', 'backstage-venue-manager'), 'success');
                         } else {
                             $new_status = 'draft';
-                            vms_add_admin_notice(__('Cannot mark Ready:', 'vms') . ' ' . implode(' ', $errors), 'error');
+                            vms_add_admin_notice(__('Cannot mark Ready:', 'backstage-venue-manager') . ' ' . implode(' ', $errors), 'error');
                         }
                         break;
 
                     case 'publish_now':
                         if (!in_array($current_status, array('ready', 'published'), true)) {
-                            vms_add_admin_notice(__('Event must be Ready before publishing.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Event must be Ready before publishing.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
                         $errors = vms_validate_event_plan($post_id);
                         if (!empty($errors)) {
-                            vms_add_admin_notice(__('Cannot publish:', 'vms') . ' ' . implode(' ', $errors), 'error');
+                            vms_add_admin_notice(__('Cannot publish:', 'backstage-venue-manager') . ' ' . implode(' ', $errors), 'error');
                             break;
                         }
 
@@ -10595,14 +10595,14 @@ if (function_exists('vms_add_admin_notice')) {
                                 $published = vms_event_plan_schedule_deferred_calendar_publish($post_id, 'publish_now');
                                 if ($published) {
                                     $new_status = 'published';
-                                    vms_add_admin_notice(__('Event Plan marked Published. Calendar sync has been queued so the editor request stays light.', 'vms'), 'success');
-                                    vms_add_admin_notice(__('The public calendar event will stay hidden until the linked TEC event is fully published and clickable. Use Re-sync to Calendar for an immediate manual sync if needed.', 'vms'), 'info');
+                                    vms_add_admin_notice(__('Event Plan marked Published. Calendar sync has been queued so the editor request stays light.', 'backstage-venue-manager'), 'success');
+                                    vms_add_admin_notice(__('The public calendar event will stay hidden until the linked TEC event is fully published and clickable. Use Re-sync to Calendar for an immediate manual sync if needed.', 'backstage-venue-manager'), 'info');
                                 }
                             } else {
                             $published = vms_publish_event_to_calendar($post_id, $post);
                             if ($published) {
                                 $new_status = 'published';
-                                vms_add_admin_notice(__('Event published successfully.', 'vms'), 'success');
+                                vms_add_admin_notice(__('Event published successfully.', 'backstage-venue-manager'), 'success');
                             }
                         }
 
@@ -10622,18 +10622,18 @@ if (function_exists('vms_add_admin_notice')) {
                                 : ($action === 'publish_now');
 
                             if (!$auto_money_allowed) {
-                                vms_add_admin_notice(__('Woo product auto-publish skipped. Money-impacting product actions are disabled on Draft/Ready save paths.', 'vms'), 'warning');
+                                vms_add_admin_notice(__('Woo product auto-publish skipped. Money-impacting product actions are disabled on Draft/Ready save paths.', 'backstage-venue-manager'), 'warning');
                             } elseif (!($tec_id_for_ticketing > 0 && $mode_v2 !== '' && $mode_v2 !== 'none')) {
-                                vms_add_admin_notice(__('Legacy Woo product auto-publish is retired. Use Ticketing Preview → Commit for all ticket/product creation and updates.', 'vms'), 'warning');
+                                vms_add_admin_notice(__('Legacy Woo product auto-publish is retired. Use Ticketing Preview → Commit for all ticket/product creation and updates.', 'backstage-venue-manager'), 'warning');
                             }
                         } else {
-                            vms_add_admin_notice(__('Failed to queue/publish event to calendar. Please check settings.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Failed to queue/publish event to calendar. Please check settings.', 'backstage-venue-manager'), 'error');
                         }
                         break;
 
                     case 'mark_cancelled':
                         if ($replacement_date_requested !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $replacement_date_requested)) {
-                            vms_add_admin_notice(__('Enter a valid replacement date before cancelling with automatic reschedule.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Enter a valid replacement date before cancelling with automatic reschedule.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
@@ -10661,23 +10661,23 @@ if (function_exists('vms_add_admin_notice')) {
                         if ($replacement_date_requested !== '') {
                             $queue_rescheduled_draft_after_cancel = true;
                         }
-                        vms_add_admin_notice(__('Event plan marked Cancelled.', 'vms'), 'success');
+                        vms_add_admin_notice(__('Event plan marked Cancelled.', 'backstage-venue-manager'), 'success');
                         if ($queue_rescheduled_draft_after_cancel) {
-                            vms_add_admin_notice(__('Replacement date captured. VMS will create a linked Draft Event Plan after this cancellation save completes.', 'vms'), 'info');
+                            vms_add_admin_notice(__('Replacement date captured. VMS will create a linked Draft Event Plan after this cancellation save completes.', 'backstage-venue-manager'), 'info');
                         }
                         if ($cancel_policy_post !== 'status_only') {
-                            vms_add_admin_notice(__('Cancellation job captured. Review the Cancellation Job panel for step outcomes and refund activity.', 'vms'), 'warning');
+                            vms_add_admin_notice(__('Cancellation job captured. Review the Cancellation Job panel for step outcomes and refund activity.', 'backstage-venue-manager'), 'warning');
                         }
                         break;
 
                     case 'run_live_refunds_now':
                         $new_status = 'cancelled';
                         if ($cancel_manual_live_refund_confirm_post !== '1') {
-                            vms_add_admin_notice(__('Live refund run was not confirmed. No refunds were attempted.', 'vms'), 'warning');
+                            vms_add_admin_notice(__('Live refund run was not confirmed. No refunds were attempted.', 'backstage-venue-manager'), 'warning');
                             break;
                         }
                         if (!function_exists('vms_cancellation_request_live_refund_run')) {
-                            vms_add_admin_notice(__('Live refund helper is unavailable.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Live refund helper is unavailable.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
@@ -10687,7 +10687,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ));
                         if (empty($live_refund['ok'])) {
                             $err = sanitize_text_field((string) ($live_refund['error'] ?? 'manual_live_refund_failed'));
-                            vms_add_admin_notice(__('Unable to run live refunds:', 'vms') . ' ' . $err, 'error');
+                            vms_add_admin_notice(__('Unable to run live refunds:', 'backstage-venue-manager') . ' ' . $err, 'error');
                             break;
                         }
 
@@ -10714,7 +10714,7 @@ if (function_exists('vms_add_admin_notice')) {
 
                         vms_add_admin_notice(
                             sprintf(
-                                __('Live refund batch submitted. Policy: %1$s. Refunded: %2$d. Queued for manual review: %3$d. Failed: %4$d.', 'vms'),
+                                __('Live refund batch submitted. Policy: %1$s. Refunded: %2$d. Queued for manual review: %3$d. Failed: %4$d.', 'backstage-venue-manager'),
                                 sanitize_text_field($target_policy_label),
                                 (int) $created_count,
                                 (int) $queued_count,
@@ -10723,21 +10723,21 @@ if (function_exists('vms_add_admin_notice')) {
                             ($failed_count > 0 ? 'warning' : 'success')
                         );
                         if (!empty($live_refund['policy_changed'])) {
-                            vms_add_admin_notice(__('Cancellation policy was upgraded to a live auto-refund policy for this already-cancelled plan before running refunds.', 'vms'), 'info');
+                            vms_add_admin_notice(__('Cancellation policy was upgraded to a live auto-refund policy for this already-cancelled plan before running refunds.', 'backstage-venue-manager'), 'info');
                         }
                         if ($queued_count > 0 || $failed_count > 0 || $live_state !== 'completed') {
-                            vms_add_admin_notice(__('Review the Cancellation Job panel for any orders that still require manual follow-up.', 'vms'), 'warning');
+                            vms_add_admin_notice(__('Review the Cancellation Job panel for any orders that still require manual follow-up.', 'backstage-venue-manager'), 'warning');
                         }
                         break;
 
                     case 'retry_cancellation_step':
                         $new_status = 'cancelled';
                         if ($retry_step_key === '') {
-                            vms_add_admin_notice(__('Retry request is missing a step key.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Retry request is missing a step key.', 'backstage-venue-manager'), 'error');
                             break;
                         }
                         if (!function_exists('vms_cancellation_retry_step')) {
-                            vms_add_admin_notice(__('Cancellation retry helper is unavailable.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Cancellation retry helper is unavailable.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
@@ -10746,7 +10746,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ));
                         if (empty($retry['ok'])) {
                             $err = sanitize_text_field((string) ($retry['error'] ?? 'retry_failed'));
-                            vms_add_admin_notice(__('Unable to retry cancellation step:', 'vms') . ' ' . $err, 'error');
+                            vms_add_admin_notice(__('Unable to retry cancellation step:', 'backstage-venue-manager') . ' ' . $err, 'error');
                             break;
                         }
 
@@ -10757,21 +10757,21 @@ if (function_exists('vms_add_admin_notice')) {
                             $run_state_label = isset($state_labels[$run_state]) ? (string) $state_labels[$run_state] : strtoupper($run_state ?: 'queued');
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Cancellation step retried: %1$s. Job state: %2$s.', 'vms'),
+                                    __('Cancellation step retried: %1$s. Job state: %2$s.', 'backstage-venue-manager'),
                                     sanitize_text_field($retry_step_key),
                                     $run_state_label
                                 ),
                                 'success'
                             );
                         } else {
-                            vms_add_admin_notice(__('Cancellation step retry queued. Run the cancellation job to process pending steps.', 'vms'), 'warning');
+                            vms_add_admin_notice(__('Cancellation step retry queued. Run the cancellation job to process pending steps.', 'backstage-venue-manager'), 'warning');
                         }
                         break;
 
                     case 'create_rescheduled_draft':
                         $new_status = 'cancelled';
                         if ($current_status !== 'cancelled') {
-                            vms_add_admin_notice(__('Only cancelled Event Plans can create a rescheduled draft.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Only cancelled Event Plans can create a rescheduled draft.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
@@ -10780,7 +10780,7 @@ if (function_exists('vms_add_admin_notice')) {
                             : '';
 
                         if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
-                            vms_add_admin_notice(__('Reschedule helper is unavailable in this build.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Reschedule helper is unavailable in this build.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
@@ -10790,7 +10790,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ));
 
                         if (empty($created['ok'])) {
-                            $err = (string) ($created['error_message'] ?? __('VMS could not create the rescheduled draft.', 'vms'));
+                            $err = (string) ($created['error_message'] ?? __('VMS could not create the rescheduled draft.', 'backstage-venue-manager'));
                             vms_add_admin_notice(sanitize_text_field($err), 'error');
                             break;
                         }
@@ -10802,8 +10802,8 @@ if (function_exists('vms_add_admin_notice')) {
                             ));
                         }
 
-                        vms_add_admin_notice(__('Rescheduled draft created. Review the replacement plan and publish it when ready.', 'vms'), 'success');
-                        vms_add_admin_notice(__('The cancelled Event Plan was preserved and linked to the new draft for audit history.', 'vms'), 'info');
+                        vms_add_admin_notice(__('Rescheduled draft created. Review the replacement plan and publish it when ready.', 'backstage-venue-manager'), 'success');
+                        vms_add_admin_notice(__('The cancelled Event Plan was preserved and linked to the new draft for audit history.', 'backstage-venue-manager'), 'info');
                         break;
 
                     case 'retry_cancellation_all':
@@ -10828,12 +10828,12 @@ if (function_exists('vms_add_admin_notice')) {
                         }
                         $bulk_confirm = isset($_POST['vms_cancel_bulk_retry_confirm']) ? sanitize_text_field((string) $_POST['vms_cancel_bulk_retry_confirm']) : '0';
                         if ($requires_bulk_confirm && $bulk_confirm !== '1') {
-                            vms_add_admin_notice(__('Bulk retry requires confirmation because Refund execution is failed/blocked. Confirm and retry again.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Bulk retry requires confirmation because Refund execution is failed/blocked. Confirm and retry again.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
                         if (!function_exists('vms_cancellation_retry_all_failed_steps')) {
-                            vms_add_admin_notice(__('Cancellation bulk retry helper is unavailable.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Cancellation bulk retry helper is unavailable.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
@@ -10842,7 +10842,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ));
                         if (empty($retry_all['ok'])) {
                             $err = sanitize_text_field((string) ($retry_all['error'] ?? 'retry_failed'));
-                            vms_add_admin_notice(__('Unable to retry cancellation steps:', 'vms') . ' ' . $err, 'error');
+                            vms_add_admin_notice(__('Unable to retry cancellation steps:', 'backstage-venue-manager') . ' ' . $err, 'error');
                             break;
                         }
 
@@ -10854,14 +10854,14 @@ if (function_exists('vms_add_admin_notice')) {
                             $retried = isset($retry_all['retried_steps']) && is_array($retry_all['retried_steps']) ? count($retry_all['retried_steps']) : 0;
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Cancellation bulk retry queued for %1$d step(s). Job state: %2$s.', 'vms'),
+                                    __('Cancellation bulk retry queued for %1$d step(s). Job state: %2$s.', 'backstage-venue-manager'),
                                     $retried,
                                     $run_state_label
                                 ),
                                 'success'
                             );
                         } else {
-                            vms_add_admin_notice(__('Cancellation bulk retry queued. Run the cancellation job to process pending steps.', 'vms'), 'warning');
+                            vms_add_admin_notice(__('Cancellation bulk retry queued. Run the cancellation job to process pending steps.', 'backstage-venue-manager'), 'warning');
                         }
                         break;
 
@@ -10881,13 +10881,13 @@ if (function_exists('vms_add_admin_notice')) {
                         }
 
                         if ($vendor_id_for_apply <= 0) {
-                            vms_add_admin_notice(__('Select a Primary Vendor first.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Select a Primary Vendor first.', 'backstage-venue-manager'), 'error');
                             vms_admin_scroll_to_compensation($post_id);
                             break;
                         }
 
                         if (!function_exists('vms_get_vendor_default_comp_terms') || !function_exists('vms_event_plan_apply_comp_terms')) {
-                            vms_add_admin_notice(__('Vendor default helper is missing.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Vendor default helper is missing.', 'backstage-venue-manager'), 'error');
                             vms_admin_scroll_to_compensation($post_id);
                             break;
                         }
@@ -10901,14 +10901,14 @@ if (function_exists('vms_add_admin_notice')) {
                         }
 
                         if (empty($vendor_terms) || empty($vendor_terms['structure'])) {
-                            vms_add_admin_notice(__('No current Primary Vendor default is configured for this Event Plan context.', 'vms'), 'error');
+                            vms_add_admin_notice(__('No current Primary Vendor default is configured for this Event Plan context.', 'backstage-venue-manager'), 'error');
                             vms_admin_scroll_to_compensation($post_id);
                             break;
                         }
 
                         $applied_vendor_defaults = vms_event_plan_apply_comp_terms($post_id, $vendor_terms);
                         if (!$applied_vendor_defaults) {
-                            vms_add_admin_notice(__('Could not apply the current Primary Vendor default to Draft Pay.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Could not apply the current Primary Vendor default to Draft Pay.', 'backstage-venue-manager'), 'error');
                             vms_admin_scroll_to_compensation($post_id);
                             break;
                         }
@@ -10919,7 +10919,7 @@ if (function_exists('vms_add_admin_notice')) {
                             ? (vms_meta_key('event_plan', 'comp_selected_option') ?: '_vms_comp_selected_option')
                             : '_vms_comp_selected_option';
                         update_post_meta($post_id, $k_comp_selected_option, 'default:vendor');
-                        vms_add_admin_notice(__('Current Primary Vendor default applied to Draft Pay.', 'vms'), 'success');
+                        vms_add_admin_notice(__('Current Primary Vendor default applied to Draft Pay.', 'backstage-venue-manager'), 'success');
                         vms_admin_scroll_to_compensation($post_id);
                         break;
 
@@ -10928,24 +10928,24 @@ if (function_exists('vms_add_admin_notice')) {
                         $event_date = isset($_POST['vms_event_date']) ? sanitize_text_field($_POST['vms_event_date']) : '';
 
                         if ($venue_id <= 0 || !$event_date) {
-                            vms_add_admin_notice(__('Select a Venue and Event Date first.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Select a Venue and Event Date first.', 'backstage-venue-manager'), 'error');
                             break;
                         }
                         if (!function_exists('vms_get_event_plan_effective_comp_default')) {
-                            vms_add_admin_notice(__('Effective defaults helper is missing.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Effective defaults helper is missing.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
                         $resolved = (array) vms_get_event_plan_effective_comp_default($venue_id, $event_date);
                         if (empty($resolved['has_default']) || empty($resolved['structure'])) {
-                            vms_add_admin_notice(__('No date defaults found for that date/day.', 'vms'), 'error');
+                            vms_add_admin_notice(__('No date defaults found for that date/day.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
                         if (function_exists('vms_event_plan_apply_comp_terms')) {
                             $applied = vms_event_plan_apply_comp_terms($post_id, $resolved);
                             if (!$applied) {
-                                vms_add_admin_notice(__('Could not apply date defaults because the resolved compensation terms were invalid.', 'vms'), 'error');
+                                vms_add_admin_notice(__('Could not apply date defaults because the resolved compensation terms were invalid.', 'backstage-venue-manager'), 'error');
                                 break;
                             }
                         } else {
@@ -10999,32 +10999,32 @@ if (function_exists('vms_add_admin_notice')) {
                         update_post_meta($post_id, '_vms_comp_needs_snapshot', '1');
                         $applied_label = isset($resolved['label']) ? trim((string) $resolved['label']) : '';
                         if ($applied_label === '') {
-                            $applied_label = __('Date defaults', 'vms');
+                            $applied_label = __('Date defaults', 'backstage-venue-manager');
                         }
                         $applied_label = sanitize_text_field($applied_label);
-                        vms_add_admin_notice(sprintf(__('%s applied for this date.', 'vms'), $applied_label), 'success');
+                        vms_add_admin_notice(sprintf(__('%s applied for this date.', 'backstage-venue-manager'), $applied_label), 'success');
                         vms_admin_scroll_to_compensation($post_id);
                         break;
 
                     case 'apply_comp_package':
                         if ($venue_id <= 0) {
-                            vms_add_admin_notice(__('Please select a Venue first, then apply the package.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Please select a Venue first, then apply the package.', 'backstage-venue-manager'), 'error');
                             break;
                         }
                         if ($comp_package_id <= 0) {
-                            vms_add_admin_notice(__('Please select a comp package first.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Please select a comp package first.', 'backstage-venue-manager'), 'error');
                             break;
                         }
                         if (!function_exists('vms_apply_comp_package_to_plan')) {
-                            vms_add_admin_notice(__('Package apply helper is missing (vms_apply_comp_package_to_plan).', 'vms'), 'error');
+                            vms_add_admin_notice(__('Package apply helper is missing (vms_apply_comp_package_to_plan).', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
                         $ok = vms_apply_comp_package_to_plan($post_id, $comp_package_id);
                         vms_admin_scroll_to_compensation($post_id);
 
-                        if ($ok) vms_add_admin_notice(__('Comp package applied and snapshotted for this event plan.', 'vms'), 'success');
-                        else vms_add_admin_notice(__('Failed to Apply Package. (Check package type/meta.)', 'vms'), 'error');
+                        if ($ok) vms_add_admin_notice(__('Comp package applied and snapshotted for this event plan.', 'backstage-venue-manager'), 'success');
+                        else vms_add_admin_notice(__('Failed to Apply Package. (Check package type/meta.)', 'backstage-venue-manager'), 'error');
                         break;
 
                     case 'lock_draft_pay':
@@ -11055,38 +11055,38 @@ if (function_exists('vms_add_admin_notice')) {
                         $commission_percent = ($commission_percent === '' || $commission_percent === null) ? null : max(0, (float) $commission_percent);
 
                         if (in_array($structure, array('flat_fee', 'flat_fee_door_split'), true) && ($flat === null || $flat <= 0)) {
-                            vms_add_admin_notice(__('Cannot lock Draft Pay: Flat Fee Amount is required for this structure.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Cannot lock Draft Pay: Flat Fee Amount is required for this structure.', 'backstage-venue-manager'), 'error');
                             break;
                         }
                         if (in_array($structure, array('door_split', 'flat_fee_door_split'), true) && ($split === null || $split <= 0 || $split > 100)) {
-                            vms_add_admin_notice(__('Cannot lock Draft Pay: Door Split % must be between 1 and 100 for this structure.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Cannot lock Draft Pay: Door Split % must be between 1 and 100 for this structure.', 'backstage-venue-manager'), 'error');
                             break;
                         }
                         if ($structure === 'attendance_bonus') {
                             if ($flat === null || $flat < 0) {
-                                vms_add_admin_notice(__('Cannot lock Draft Pay: Base Pay is required for Base + Attendance Bonus.', 'vms'), 'error');
+                                vms_add_admin_notice(__('Cannot lock Draft Pay: Base Pay is required for Base + Attendance Bonus.', 'backstage-venue-manager'), 'error');
                                 break;
                             }
                             if (!in_array($bonus_mode, array('step', 'continuous'), true)) {
-                                vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Style is required for Base + Attendance Bonus.', 'vms'), 'error');
+                                vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Style is required for Base + Attendance Bonus.', 'backstage-venue-manager'), 'error');
                                 break;
                             }
                             if ($bonus_start_count === null || $bonus_start_count < 0) {
-                                vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Starts After is required for Base + Attendance Bonus.', 'vms'), 'error');
+                                vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Starts After is required for Base + Attendance Bonus.', 'backstage-venue-manager'), 'error');
                                 break;
                             }
                             if ($bonus_mode === 'step') {
                                 if ($bonus_step_size === null || $bonus_step_size < 1) {
-                                    vms_add_admin_notice(__('Cannot lock Draft Pay: Step Size must be at least 1 for step attendance bonus mode.', 'vms'), 'error');
+                                    vms_add_admin_notice(__('Cannot lock Draft Pay: Step Size must be at least 1 for step attendance bonus mode.', 'backstage-venue-manager'), 'error');
                                     break;
                                 }
                                 if ($bonus_step_bonus === null || $bonus_step_bonus < 0) {
-                                    vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Per Step is required for step attendance bonus mode.', 'vms'), 'error');
+                                    vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Per Step is required for step attendance bonus mode.', 'backstage-venue-manager'), 'error');
                                     break;
                                 }
                             } else {
                                 if ($bonus_per_ticket_rate === null || $bonus_per_ticket_rate < 0) {
-                                    vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Per Ticket is required for continuous attendance bonus mode.', 'vms'), 'error');
+                                    vms_add_admin_notice(__('Cannot lock Draft Pay: Bonus Per Ticket is required for continuous attendance bonus mode.', 'backstage-venue-manager'), 'error');
                                     break;
                                 }
                             }
@@ -11129,7 +11129,7 @@ if (function_exists('vms_add_admin_notice')) {
                         update_post_meta($post_id, '_vms_comp_snapshot', $snapshot);
                         delete_post_meta($post_id, '_vms_comp_needs_snapshot');
 
-                        vms_add_admin_notice(__('Draft Pay locked for this event (snapshot created).', 'vms'), 'success');
+                        vms_add_admin_notice(__('Draft Pay locked for this event (snapshot created).', 'backstage-venue-manager'), 'success');
                         vms_admin_scroll_to_compensation($post_id);
                         break;
                 }
@@ -11188,7 +11188,7 @@ if (function_exists('vms_add_admin_notice')) {
                     && $replacement_date_requested !== ''
                 ) {
                     if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
-                        vms_add_admin_notice(__('Reschedule helper is unavailable in this build.', 'vms'), 'error');
+                        vms_add_admin_notice(__('Reschedule helper is unavailable in this build.', 'backstage-venue-manager'), 'error');
                     } else {
                         $created = (array) vms_event_plan_create_rescheduled_draft($post_id, array(
                             'replacement_date' => $replacement_date_requested,
@@ -11196,7 +11196,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ));
 
                         if (empty($created['ok'])) {
-                            $err = (string) ($created['error_message'] ?? __('VMS could not create the rescheduled draft.', 'vms'));
+                            $err = (string) ($created['error_message'] ?? __('VMS could not create the rescheduled draft.', 'backstage-venue-manager'));
                             vms_add_admin_notice(sanitize_text_field($err), 'error');
                         } else {
                             $new_plan_id = absint($created['new_post_id'] ?? 0);
@@ -11205,8 +11205,8 @@ if (function_exists('vms_add_admin_notice')) {
                                     'vms_rescheduled_from' => $post_id,
                                 ));
                             }
-                            vms_add_admin_notice(__('Linked rescheduled draft created. Review the replacement plan and publish it when ready.', 'vms'), 'success');
-                            vms_add_admin_notice(__('The cancelled Event Plan was preserved and linked to the new draft for audit history.', 'vms'), 'info');
+                            vms_add_admin_notice(__('Linked rescheduled draft created. Review the replacement plan and publish it when ready.', 'backstage-venue-manager'), 'success');
+                            vms_add_admin_notice(__('The cancelled Event Plan was preserved and linked to the new draft for audit history.', 'backstage-venue-manager'), 'info');
                         }
                     }
                 }
@@ -11370,15 +11370,15 @@ if (function_exists('vms_add_admin_notice')) {
 
                 echo '<label class="vms-ep-list-toggle" data-vms-tour="event-plans.include-drafts">';
                 echo '<input type="checkbox" name="include_drafts" value="1"' . checked(true, $checked, false) . '>';
-                echo ' ' . esc_html__('Include Draft/Ready (what-if)', 'vms');
+                echo ' ' . esc_html__('Include Draft/Ready (what-if)', 'backstage-venue-manager');
                 echo '</label>';
 
-                $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.event_plan.list.basics" data-vms-tour="event-plans.help">' . esc_html__('Start Guided Tour', 'vms') . '</button>';
+                $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.event_plan.list.basics" data-vms-tour="event-plans.help">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
                 if (function_exists('vms_render_help_button')) {
                     $tour_button = vms_render_help_button(array(
                         'tour_id' => 'vms.event_plan.list.basics',
                         'anchor' => 'event-plans.help',
-                        'label' => __('Start Guided Tour', 'vms'),
+                        'label' => __('Start Guided Tour', 'backstage-venue-manager'),
                         'class' => 'button-secondary',
                     ));
                 }
@@ -11553,22 +11553,22 @@ if (function_exists('vms_add_admin_notice')) {
             $start_time = (string) get_post_meta($post_id, '_vms_start_time', true);
             $end_time   = (string) get_post_meta($post_id, '_vms_end_time', true);
 
-            if ($event_date === '') $errors[] = __('Event date is required.', 'vms');
+            if ($event_date === '') $errors[] = __('Event date is required.', 'backstage-venue-manager');
 
             if ($start_time === '' || $end_time === '') {
-                $errors[] = __('Start time and end time are required.', 'vms');
+                $errors[] = __('Start time and end time are required.', 'backstage-venue-manager');
         	} else {
         	    $start_ts = strtotime($event_date . ' ' . $start_time);
         	    $end_ts   = strtotime($event_date . ' ' . $end_time);
 
         	    if (!$start_ts || !$end_ts) {
-        	        $errors[] = __('Start time or end time is not a valid time.', 'vms');
+			$errors[] = __('Start time or end time is not a valid time.', 'backstage-venue-manager');
         	    } elseif ($end_ts <= $start_ts) {
         	        // If the end time is earlier than the start time, assume the event crosses midnight.
         	        $bump = defined('DAY_IN_SECONDS') ? (int) DAY_IN_SECONDS : 86400;
         	        $end_ts = $end_ts + $bump;
         	        if ($end_ts <= $start_ts) {
-        	            $errors[] = __('End time must be after start time.', 'vms');
+			    $errors[] = __('End time must be after start time.', 'backstage-venue-manager');
         	        }
         	    }
         	}
@@ -11586,82 +11586,82 @@ if (function_exists('vms_add_admin_notice')) {
             $attendance_bonus_max_bonus = get_post_meta($post_id, '_vms_attendance_bonus_max_bonus', true);
 
             if (in_array($comp_structure, array('flat_fee', 'flat_fee_door_split'), true)) {
-                if ($flat_fee_amount === '' || $flat_fee_amount === null) $errors[] = __('Flat fee amount is required for this compensation structure.', 'vms');
-                elseif (!is_numeric($flat_fee_amount) || (float)$flat_fee_amount <= 0) $errors[] = __('Flat fee amount must be a positive number.', 'vms');
+                if ($flat_fee_amount === '' || $flat_fee_amount === null) $errors[] = __('Flat fee amount is required for this compensation structure.', 'backstage-venue-manager');
+                elseif (!is_numeric($flat_fee_amount) || (float)$flat_fee_amount <= 0) $errors[] = __('Flat fee amount must be a positive number.', 'backstage-venue-manager');
             }
 
             if ($comp_structure === 'attendance_bonus') {
                 if ($flat_fee_amount === '' || $flat_fee_amount === null) {
-                    $errors[] = __('Base Pay is required for Base + Attendance Bonus.', 'vms');
+                    $errors[] = __('Base Pay is required for Base + Attendance Bonus.', 'backstage-venue-manager');
                 } elseif (!is_numeric($flat_fee_amount) || (float) $flat_fee_amount < 0) {
-                    $errors[] = __('Base Pay must be a non-negative number.', 'vms');
+                    $errors[] = __('Base Pay must be a non-negative number.', 'backstage-venue-manager');
                 }
 
                 if (!in_array($attendance_bonus_mode, array('step', 'continuous'), true)) {
-                    $errors[] = __('Bonus Style is required for Base + Attendance Bonus.', 'vms');
+                    $errors[] = __('Bonus Style is required for Base + Attendance Bonus.', 'backstage-venue-manager');
                 }
 
                 if ($attendance_bonus_start_count === '' || $attendance_bonus_start_count === null) {
-                    $errors[] = __('Bonus Starts After is required for Base + Attendance Bonus.', 'vms');
+                    $errors[] = __('Bonus Starts After is required for Base + Attendance Bonus.', 'backstage-venue-manager');
                 } elseif (!is_numeric($attendance_bonus_start_count) || (float) $attendance_bonus_start_count < 0 || floor((float) $attendance_bonus_start_count) !== (float) $attendance_bonus_start_count) {
-                    $errors[] = __('Bonus Starts After must be a whole number that is 0 or greater.', 'vms');
+                    $errors[] = __('Bonus Starts After must be a whole number that is 0 or greater.', 'backstage-venue-manager');
                 }
 
                 if ($attendance_bonus_mode === 'step') {
                     if ($attendance_bonus_step_size === '' || $attendance_bonus_step_size === null) {
-                        $errors[] = __('Step Size is required for step attendance bonus mode.', 'vms');
+                        $errors[] = __('Step Size is required for step attendance bonus mode.', 'backstage-venue-manager');
                     } elseif (!is_numeric($attendance_bonus_step_size) || (float) $attendance_bonus_step_size < 1 || floor((float) $attendance_bonus_step_size) !== (float) $attendance_bonus_step_size) {
-                        $errors[] = __('Step Size must be a whole number that is at least 1.', 'vms');
+                        $errors[] = __('Step Size must be a whole number that is at least 1.', 'backstage-venue-manager');
                     }
 
                     if ($attendance_bonus_step_bonus === '' || $attendance_bonus_step_bonus === null) {
-                        $errors[] = __('Bonus Per Step is required for step attendance bonus mode.', 'vms');
+                        $errors[] = __('Bonus Per Step is required for step attendance bonus mode.', 'backstage-venue-manager');
                     } elseif (!is_numeric($attendance_bonus_step_bonus) || (float) $attendance_bonus_step_bonus < 0) {
-                        $errors[] = __('Bonus Per Step must be a non-negative number.', 'vms');
+                        $errors[] = __('Bonus Per Step must be a non-negative number.', 'backstage-venue-manager');
                     }
                 } elseif ($attendance_bonus_mode === 'continuous') {
                     if ($attendance_bonus_per_ticket_rate === '' || $attendance_bonus_per_ticket_rate === null) {
-                        $errors[] = __('Bonus Per Ticket is required for continuous attendance bonus mode.', 'vms');
+                        $errors[] = __('Bonus Per Ticket is required for continuous attendance bonus mode.', 'backstage-venue-manager');
                     } elseif (!is_numeric($attendance_bonus_per_ticket_rate) || (float) $attendance_bonus_per_ticket_rate < 0) {
-                        $errors[] = __('Bonus Per Ticket must be a non-negative number.', 'vms');
+                        $errors[] = __('Bonus Per Ticket must be a non-negative number.', 'backstage-venue-manager');
                     }
                 }
 
                 if ($attendance_bonus_max_bonus !== '' && $attendance_bonus_max_bonus !== null) {
                     if (!is_numeric($attendance_bonus_max_bonus) || (float) $attendance_bonus_max_bonus < 0) {
-                        $errors[] = __('Max Bonus must be a non-negative number when provided.', 'vms');
+                        $errors[] = __('Max Bonus must be a non-negative number when provided.', 'backstage-venue-manager');
                     }
                 }
             }
 
             if (in_array($comp_structure, array('door_split', 'flat_fee_door_split'), true)) {
-                if ($door_split_percent === '' || $door_split_percent === null) $errors[] = __('Door split percentage is required for this compensation structure.', 'vms');
-                elseif (!is_numeric($door_split_percent)) $errors[] = __('Door split percentage must be a number.', 'vms');
+                if ($door_split_percent === '' || $door_split_percent === null) $errors[] = __('Door split percentage is required for this compensation structure.', 'backstage-venue-manager');
+                elseif (!is_numeric($door_split_percent)) $errors[] = __('Door split percentage must be a number.', 'backstage-venue-manager');
                 else {
                     $pct = (float) $door_split_percent;
-                    if ($pct <= 0 || $pct > 100) $errors[] = __('Door split percentage must be between 1 and 100.', 'vms');
+                    if ($pct <= 0 || $pct > 100) $errors[] = __('Door split percentage must be between 1 and 100.', 'backstage-venue-manager');
                 }
             }
 
             // Band required
             $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
             if (!$band_id) {
-                $errors[] = __('A Primary Vendor must be selected before marking this event Ready.', 'vms');
+                $errors[] = __('A Primary Vendor must be selected before marking this event Ready.', 'backstage-venue-manager');
                 return $errors;
             }
 
             // Band exists (guard against deleted vendor IDs lingering on published plans)
             if (function_exists('vms_event_plan_vendor_exists') && !vms_event_plan_vendor_exists((int) $band_id)) {
-                $errors[] = __('Selected Primary Vendor no longer exists (it was deleted). Select a new Primary Vendor before marking Ready.', 'vms');
+                $errors[] = __('Selected Primary Vendor no longer exists (it was deleted). Select a new Primary Vendor before marking Ready.', 'backstage-venue-manager');
                 return $errors;
             }
 
             if ($event_date && function_exists('vms_get_vendor_availability_for_date')) {
                 $availability = vms_get_vendor_availability_for_date($band_id, $event_date);
                 if ($availability === 'unavailable') {
-                    $band_name = get_the_title($band_id) ?: __('Selected Primary Vendor', 'vms');
+                    $band_name = get_the_title($band_id) ?: __('Selected Primary Vendor', 'backstage-venue-manager');
                     $nice_date = date_i18n('M j, Y', strtotime($event_date));
-                    $errors[] = sprintf(__('%s is marked Not Available on %s.', 'vms'), $band_name, $nice_date);
+                    $errors[] = sprintf(__('%s is marked Not Available on %s.', 'backstage-venue-manager'), $band_name, $nice_date);
                 }
             }
 
@@ -11673,7 +11673,7 @@ if (function_exists('vms_add_admin_notice')) {
                         if (function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Tax profile bypass active for "%s" until %s. Ready/Publish allowed, but W-9 is still required.', 'vms'),
+                                    __('Tax profile bypass active for "%s" until %s. Ready/Publish allowed, but W-9 is still required.', 'backstage-venue-manager'),
                                     get_the_title($band_id),
                                     (string) get_post_meta($band_id, '_vms_tax_bypass_until', true)
                                 ),
@@ -11685,7 +11685,7 @@ if (function_exists('vms_add_admin_notice')) {
                             $vendor_name = get_the_title($band_id);
                             vms_add_admin_notice(
                                 sprintf(
-                                    __('Primary Vendor "%s" is missing required Tax Profile items: %s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'vms'),
+                                    __('Primary Vendor "%s" is missing required Tax Profile items: %s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'backstage-venue-manager'),
                                     $vendor_name ? $vendor_name : '#' . $band_id,
                                     implode(', ', $missing)
                                 ),
@@ -11711,7 +11711,7 @@ if (function_exists('vms_add_admin_notice')) {
                                 if (function_exists('vms_add_admin_notice')) {
                                     vms_add_admin_notice(
                                         sprintf(
-                                            __('Tax profile bypass active for staff "%s" until %s. Ready/Publish allowed, but W-9 is still required.', 'vms'),
+                                            __('Tax profile bypass active for staff "%s" until %s. Ready/Publish allowed, but W-9 is still required.', 'backstage-venue-manager'),
                                             get_the_title($sid),
                                             (string) get_post_meta($sid, '_vms_tax_bypass_until', true)
                                         ),
@@ -11723,7 +11723,7 @@ if (function_exists('vms_add_admin_notice')) {
                                     $staff_name = get_the_title($sid);
                                     vms_add_admin_notice(
                                         sprintf(
-                                            __('Staff "%s" is missing required Tax Profile items: %s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'vms'),
+                                            __('Staff "%s" is missing required Tax Profile items: %s. Ready/Publish allowed with warning, but payouts and tax reporting may be blocked.', 'backstage-venue-manager'),
                                             $staff_name ? $staff_name : '#' . $sid,
                                             implode(', ', $missing)
                                         ),
@@ -11746,11 +11746,11 @@ if (function_exists('vms_add_admin_notice')) {
                 if ($reason === 'holiday_closed') {
                     $holiday_name = trim((string) ($venue_closed_context['holiday_name'] ?? ''));
                     if ($holiday_name === '') {
-                        $holiday_name = __('Holiday', 'vms');
+                        $holiday_name = __('Holiday', 'backstage-venue-manager');
                     }
-                    $errors[] = sprintf(__('Venue is CLOSED for "%s" on %s.', 'vms'), $holiday_name, $event_date);
+                    $errors[] = sprintf(__('Venue is CLOSED for "%s" on %s.', 'backstage-venue-manager'), $holiday_name, $event_date);
                 } else {
-                    $errors[] = sprintf(__('Venue is CLOSED by Season Dates rules on %s.', 'vms'), $event_date);
+                    $errors[] = sprintf(__('Venue is CLOSED by Season Dates rules on %s.', 'backstage-venue-manager'), $event_date);
                 }
             }
 
@@ -11799,7 +11799,7 @@ if (function_exists('vms_add_admin_notice')) {
 
             vms_event_plan_perf_wp_update_post($autoset_postarr, 'event_plan_autoset_title_action', $post_id);
 
-            vms_add_admin_notice(sprintf(__('Event title set to "%s".', 'vms'), $new_title), 'success');
+            vms_add_admin_notice(sprintf(__('Event title set to "%s".', 'backstage-venue-manager'), $new_title), 'success');
         }
 
         /**
@@ -11902,35 +11902,35 @@ if (function_exists('vms_add_admin_notice')) {
 
                 $post = ($post_id > 0) ? get_post($post_id) : null;
                 if (!($post instanceof WP_Post) || $post->post_type !== 'vms_event_plan') {
-                    $result['notice_message'] = __('Invalid Event Plan for calendar re-sync.', 'vms');
+                    $result['notice_message'] = __('Invalid Event Plan for calendar re-sync.', 'backstage-venue-manager');
                 } elseif (!current_user_can('edit_post', $post_id)) {
-                    $result['notice_message'] = __('You do not have permission to re-sync this Event Plan.', 'vms');
+                    $result['notice_message'] = __('You do not have permission to re-sync this Event Plan.', 'backstage-venue-manager');
                 } else {
                     $result['redirect_url'] = $redirect_url !== ''
                         ? $redirect_url
                         : vms_event_plan_edit_screen_url($post_id);
                     $nonce = isset($request['_vms_resync_calendar_nonce']) ? (string) wp_unslash($request['_vms_resync_calendar_nonce']) : '';
                     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_resync_calendar')) {
-                        $result['notice_message'] = __('Calendar re-sync request could not be verified. Please reload the Event Plan and try again.', 'vms');
+                        $result['notice_message'] = __('Calendar re-sync request could not be verified. Please reload the Event Plan and try again.', 'backstage-venue-manager');
                     } else {
                         $tec_key_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
                         $existing_tec_id = (int) get_post_meta($post_id, $tec_key_id, true);
                         $result['tec_event_id'] = $existing_tec_id;
 
                         if ($existing_tec_id <= 0) {
-                            $result['notice_message'] = __('No linked calendar event found. Use “Publish Now” first.', 'vms');
+                            $result['notice_message'] = __('No linked calendar event found. Use “Publish Now” first.', 'backstage-venue-manager');
                         } else {
                             $errors = vms_validate_event_plan($post_id);
                             if (!empty($errors)) {
-                                $result['notice_message'] = __('Cannot re-sync:', 'vms') . ' ' . implode(' ', $errors);
+                                $result['notice_message'] = __('Cannot re-sync:', 'backstage-venue-manager') . ' ' . implode(' ', $errors);
                             } else {
                                 $ok = vms_resync_event_to_calendar($post_id, $post, $existing_tec_id);
                                 if ($ok) {
                                     $result['ok'] = true;
                                     $result['notice_type'] = 'success';
-                                    $result['notice_message'] = __('Calendar event re-synced successfully.', 'vms');
+                                    $result['notice_message'] = __('Calendar event re-synced successfully.', 'backstage-venue-manager');
                                 } else {
-                                    $result['notice_message'] = __('Failed to re-sync calendar event. Please check settings.', 'vms');
+                                    $result['notice_message'] = __('Failed to re-sync calendar event. Please check settings.', 'backstage-venue-manager');
                                 }
                             }
                         }
@@ -12051,11 +12051,11 @@ if (function_exists('vms_add_admin_notice')) {
                     if (function_exists('vms_add_admin_notice')) {
                         $received_type = $request_candidate_id > 0 ? sanitize_key((string) get_post_type($request_candidate_id)) : '';
                         $debug_context = sprintf(
-                            __('Received ID %1$d (%2$s).', 'vms'),
+                            __('Received ID %1$d (%2$s).', 'backstage-venue-manager'),
                             (int) $request_candidate_id,
-                            $received_type !== '' ? $received_type : __('unknown type', 'vms')
+                            $received_type !== '' ? $received_type : __('unknown type', 'backstage-venue-manager')
                         );
-                        vms_add_admin_notice(__('Invalid Event Plan for live refund action.', 'vms') . ' ' . $debug_context, 'error');
+                        vms_add_admin_notice(__('Invalid Event Plan for live refund action.', 'backstage-venue-manager') . ' ' . $debug_context, 'error');
                     }
                     wp_safe_redirect($redirect_url);
                     exit;
@@ -12063,7 +12063,7 @@ if (function_exists('vms_add_admin_notice')) {
 
                 if (!current_user_can('edit_post', $post_id)) {
                     if (function_exists('vms_add_admin_notice')) {
-                        vms_add_admin_notice(__('You do not have permission to run live refunds for this Event Plan.', 'vms'), 'error');
+                        vms_add_admin_notice(__('You do not have permission to run live refunds for this Event Plan.', 'backstage-venue-manager'), 'error');
                     }
                     wp_safe_redirect($redirect_url);
                     exit;
@@ -12079,7 +12079,7 @@ if (function_exists('vms_add_admin_notice')) {
                 }
                 if (!$nonce_ok) {
                     if (function_exists('vms_add_admin_notice')) {
-                        vms_add_admin_notice(__('Live refund request could not be verified. Please reload the Event Plan and try again.', 'vms'), 'error');
+                        vms_add_admin_notice(__('Live refund request could not be verified. Please reload the Event Plan and try again.', 'backstage-venue-manager'), 'error');
                     }
                     wp_safe_redirect($redirect_url);
                     exit;
@@ -12087,7 +12087,7 @@ if (function_exists('vms_add_admin_notice')) {
 
                 if (!function_exists('vms_cancellation_request_live_refund_run')) {
                     if (function_exists('vms_add_admin_notice')) {
-                        vms_add_admin_notice(__('Live refund helper is unavailable.', 'vms'), 'error');
+                        vms_add_admin_notice(__('Live refund helper is unavailable.', 'backstage-venue-manager'), 'error');
                     }
                     wp_safe_redirect($redirect_url);
                     exit;
@@ -12100,7 +12100,7 @@ if (function_exists('vms_add_admin_notice')) {
                 if (empty($live_refund['ok'])) {
                     $err = sanitize_text_field((string) ($live_refund['error'] ?? 'manual_live_refund_failed'));
                     if (function_exists('vms_add_admin_notice')) {
-                        vms_add_admin_notice(__('Unable to run live refunds:', 'vms') . ' ' . $err, 'error');
+                        vms_add_admin_notice(__('Unable to run live refunds:', 'backstage-venue-manager') . ' ' . $err, 'error');
                     }
                     wp_safe_redirect($redirect_url);
                     exit;
@@ -12130,7 +12130,7 @@ if (function_exists('vms_add_admin_notice')) {
                 if (function_exists('vms_add_admin_notice')) {
                     vms_add_admin_notice(
                         sprintf(
-                            __('Live refund batch submitted. Policy: %1$s. Refunded: %2$d. Queued for manual review: %3$d. Failed: %4$d.', 'vms'),
+                            __('Live refund batch submitted. Policy: %1$s. Refunded: %2$d. Queued for manual review: %3$d. Failed: %4$d.', 'backstage-venue-manager'),
                             sanitize_text_field($target_policy_label),
                             (int) $created_count,
                             (int) $queued_count,
@@ -12139,10 +12139,10 @@ if (function_exists('vms_add_admin_notice')) {
                         ($failed_count > 0 ? 'warning' : 'success')
                     );
                     if (!empty($live_refund['policy_changed'])) {
-                        vms_add_admin_notice(__('Cancellation policy was upgraded to a live auto-refund policy for this already-cancelled plan before running refunds.', 'vms'), 'info');
+                        vms_add_admin_notice(__('Cancellation policy was upgraded to a live auto-refund policy for this already-cancelled plan before running refunds.', 'backstage-venue-manager'), 'info');
                     }
                     if ($queued_count > 0 || $failed_count > 0 || $live_state !== 'completed') {
-                        vms_add_admin_notice(__('Review the Cancellation Job panel for any orders that still require manual follow-up.', 'vms'), 'warning');
+                        vms_add_admin_notice(__('Review the Cancellation Job panel for any orders that still require manual follow-up.', 'backstage-venue-manager'), 'warning');
                     }
                 }
 
@@ -12542,7 +12542,7 @@ if (function_exists('vms_add_admin_notice')) {
             {
                 $post_id = absint($post_id);
                 if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan') {
-                    return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for secondary-vendor assignment.', 'vms'));
+                    return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for secondary-vendor assignment.', 'backstage-venue-manager'));
                 }
 
                 $k_secondary_ids     = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
@@ -12659,7 +12659,7 @@ if (function_exists('vms_add_admin_notice')) {
             {
                 $post_id = absint($post_id);
                 if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan') {
-                    return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for Additional Vendors save.', 'vms'));
+                    return new WP_Error('vms_event_plan_invalid', __('Event Plan could not be found for Additional Vendors save.', 'backstage-venue-manager'));
                 }
 
                 $current_vendor_state = function_exists('vms_event_plan_get_secondary_vendor_state')
@@ -13560,7 +13560,7 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 if (function_exists('vms_add_admin_notice')) {
-                    vms_add_admin_notice(__('🚩 The selected Primary Vendor was deleted. This event plan was reverted to Draft. Review the event and choose a new Primary Vendor.', 'vms'), 'error');
+                    vms_add_admin_notice(__('🚩 The selected Primary Vendor was deleted. This event plan was reverted to Draft. Review the event and choose a new Primary Vendor.', 'backstage-venue-manager'), 'error');
                 }
             }
 
@@ -13609,7 +13609,7 @@ if (function_exists('vms_add_admin_notice')) {
                     }
 
                     if (function_exists('vms_add_admin_notice')) {
-                        vms_add_admin_notice(__('🚩 A secondary vendor was deleted. This event plan was reverted to Draft. Review Additional Vendors and reassign as needed.', 'vms'), 'error');
+                        vms_add_admin_notice(__('🚩 A secondary vendor was deleted. This event plan was reverted to Draft. Review Additional Vendors and reassign as needed.', 'backstage-venue-manager'), 'error');
                     }
                 }
             }
@@ -13623,10 +13623,10 @@ if (function_exists('vms_add_admin_notice')) {
         {
             $new = array();
             foreach ($columns as $key => $label) {
-                if ($key === 'date') $new['vms_plan_status'] = __('Plan Status', 'vms');
+                if ($key === 'date') $new['vms_plan_status'] = __('Plan Status', 'backstage-venue-manager');
                 $new[$key] = $label;
             }
-            if (!isset($new['vms_plan_status'])) $new['vms_plan_status'] = __('Plan Status', 'vms');
+            if (!isset($new['vms_plan_status'])) $new['vms_plan_status'] = __('Plan Status', 'backstage-venue-manager');
             return $new;
         }
 
@@ -13660,13 +13660,13 @@ if (function_exists('vms_add_admin_notice')) {
             $new = array();
             foreach ($columns as $key => $label) {
                 if ($key === 'date') {
-                    $new['vms_event_date'] = __('Event Date', 'vms');
+                    $new['vms_event_date'] = __('Event Date', 'backstage-venue-manager');
                 }
                 $new[$key] = $label;
             }
 
             if (!isset($new['vms_event_date'])) {
-                $new['vms_event_date'] = __('Event Date', 'vms');
+                $new['vms_event_date'] = __('Event Date', 'backstage-venue-manager');
             }
 
             return $new;
@@ -13829,10 +13829,10 @@ if (function_exists('vms_add_admin_notice')) {
             foreach ($columns as $key => $label) {
                 $new[$key] = $label;
                 if ($key === 'vms_plan_status') {
-                    $new['vms_plan_tax'] = __('Payment', 'vms');
+                    $new['vms_plan_tax'] = __('Payment', 'backstage-venue-manager');
                 }
             }
-            if (!isset($new['vms_plan_tax'])) $new['vms_plan_tax'] = __('Payment', 'vms');
+            if (!isset($new['vms_plan_tax'])) $new['vms_plan_tax'] = __('Payment', 'backstage-venue-manager');
             return $new;
         }
 
@@ -13874,10 +13874,10 @@ if (function_exists('vms_add_admin_notice')) {
             $class = '';
 
             if ($tax_missing && !$bypass_active) {
-                $label = __('Payment blocked', 'vms');
+                $label = __('Payment blocked', 'backstage-venue-manager');
                 $class = 'vms-pill-pay-blocked';
             } elseif ($bypass_active) {
-                $label = sprintf(__('Bypass until %s', 'vms'), ($bypass_until !== '' ? $bypass_until : '—'));
+                $label = sprintf(__('Bypass until %s', 'backstage-venue-manager'), ($bypass_until !== '' ? $bypass_until : '—'));
                 $class = 'vms-pill-bypass';
             }
 
@@ -14722,7 +14722,7 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 if (!function_exists('tribe_create_event') || !function_exists('tribe_update_event')) {
-                    vms_add_admin_notice(__('The Events Calendar functions are not available. Is the plugin active?', 'vms'), 'error');
+                    vms_add_admin_notice(__('The Events Calendar functions are not available. Is the plugin active?', 'backstage-venue-manager'), 'error');
                     return false;
                 }
 
@@ -14734,7 +14734,7 @@ if (function_exists('vms_add_admin_notice')) {
 
                 $args = vms_build_tec_event_args($post_id, $existing_tec_id);
                 if (empty($args)) {
-                    vms_add_admin_notice(__('Unable to build event data for The Events Calendar.', 'vms'), 'error');
+                    vms_add_admin_notice(__('Unable to build event data for The Events Calendar.', 'backstage-venue-manager'), 'error');
                     return false;
                 }
 
@@ -14769,7 +14769,7 @@ if (function_exists('vms_add_admin_notice')) {
                         if ($updated_id && !is_wp_error($updated_id)) {
                             $tec_event_id = (int) $updated_id;
                         } else {
-                            vms_add_admin_notice(__('Failed to update existing Events Calendar event. Will attempt to create a new one.', 'vms'), 'error');
+                            vms_add_admin_notice(__('Failed to update existing Events Calendar event. Will attempt to create a new one.', 'backstage-venue-manager'), 'error');
                         }
                     }
                 }
@@ -14780,7 +14780,7 @@ if (function_exists('vms_add_admin_notice')) {
                         $tec_event_id = (int) $created_id;
                         update_post_meta($post_id, $tec_key_id, $tec_event_id);
                     } else {
-                        vms_add_admin_notice(__('Failed to create event in The Events Calendar.', 'vms'), 'error');
+                        vms_add_admin_notice(__('Failed to create event in The Events Calendar.', 'backstage-venue-manager'), 'error');
                         return false;
                     }
                 }
@@ -15068,7 +15068,7 @@ if (function_exists('vms_add_admin_notice')) {
                 $vendors[] = array(
                     'vendor_id' => $band_id,
                     'source' => 'primary',
-                    'source_label' => __('Primary Vendor', 'vms'),
+                    'source_label' => __('Primary Vendor', 'backstage-venue-manager'),
                     'type_slug' => function_exists('vms_vendor_primary_type_slug') ? vms_vendor_primary_type_slug($band_id) : '',
                 );
             }
@@ -15106,7 +15106,7 @@ if (function_exists('vms_add_admin_notice')) {
 
                 $category_label = function_exists('vms_vendor_category_label_for_type')
                     ? vms_vendor_category_label_for_type($type_slug)
-                    : __('Category', 'vms');
+                    : __('Category', 'backstage-venue-manager');
 
                 $terms = function_exists('vms_vendor_get_category_terms')
                     ? vms_vendor_get_category_terms($vendor_id)
@@ -15144,7 +15144,7 @@ if (function_exists('vms_add_admin_notice')) {
                     'vendor_id' => $vendor_id,
                     'vendor_title' => (string) get_the_title($vendor_id),
                     'source' => (string) ($vendor_row['source'] ?? ''),
-                    'source_label' => (string) ($vendor_row['source_label'] ?? __('Vendor', 'vms')),
+                    'source_label' => (string) ($vendor_row['source_label'] ?? __('Vendor', 'backstage-venue-manager')),
                     'type_slug' => $type_slug,
                     'category_label' => $category_label,
                     'term_ids' => array_values(array_unique(array_filter(array_map('absint', $row_term_ids)))),
@@ -15466,7 +15466,7 @@ if (function_exists('vms_add_admin_notice')) {
             if ($tec_url) {
                 $actions['vms_view_tec'] =
                     '<a href="' . esc_url($tec_url) . '" target="_blank" rel="noopener">' .
-                    esc_html__('View in Calendar', 'vms') .
+                    esc_html__('View in Calendar', 'backstage-venue-manager') .
                     '</a>';
             }
             return $actions;
@@ -15809,7 +15809,7 @@ function vms_upsert_plan_product(int $plan_id, int $existing_product_id, array $
                 $new_stock = max(0, (int) ($desired - $sold));
                 $reason_text = sprintf(
                     /* translators: 1: desired capacity, 2: sold quantity, 3: remaining quantity */
-                    __('Legacy plan-product upsert recalculated Woo stock from desired capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'vms'),
+                    __('Legacy plan-product upsert recalculated Woo stock from desired capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'backstage-venue-manager'),
                     $desired,
                     $sold,
                     $new_stock
@@ -15817,7 +15817,7 @@ function vms_upsert_plan_product(int $plan_id, int $existing_product_id, array $
                 if (!empty($sold_result['ignored_total_sales'])) {
                     $reason_text .= ' ' . sprintf(
                         /* translators: %d: Woo total_sales value */
-                        __('Woo total_sales reported %d for this product, but the legacy upsert ignored that stale lifetime counter and trusted the paid-order scan instead.', 'vms'),
+                        __('Woo total_sales reported %d for this product, but the legacy upsert ignored that stale lifetime counter and trusted the paid-order scan instead.', 'backstage-venue-manager'),
                         max(0, absint($sold_result['meta_total_sales'] ?? 0))
                     );
                 }
@@ -15844,7 +15844,7 @@ function vms_upsert_plan_product(int $plan_id, int $existing_product_id, array $
                     'derivation_source' => 'authoritative_config',
                     'confidence_level' => 'authoritative',
                     'expected_effect' => 'preserve',
-                    'reason_text' => __('Legacy plan-product upsert disabled Woo manage-stock for this product because no stock-managed capacity was configured.', 'vms'),
+                    'reason_text' => __('Legacy plan-product upsert disabled Woo manage-stock for this product because no stock-managed capacity was configured.', 'backstage-venue-manager'),
                     'writer_branch' => 'legacy_plan_product_non_stock_branch',
                     'result_health' => 'manual_review',
                 );

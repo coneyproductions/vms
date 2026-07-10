@@ -115,32 +115,32 @@ if (!function_exists('vms_tasks_recurrence_label')) {
 	{
 		$pattern = vms_tasks_sanitize_recurrence_pattern($pattern);
 		if ($pattern === 'daily') {
-			return __('Daily', 'vms');
+			return __('Daily', 'backstage-venue-manager');
 		}
 		if ($pattern === 'every_n_days') {
 			$days = (int) vms_tasks_normalize_recurrence_every_n_days($pattern, $every_n_days);
 			return sprintf(
 				/* translators: %d is a number of days. */
-				__('Every %d days', 'vms'),
+				__('Every %d days', 'backstage-venue-manager'),
 				$days
 			);
 		}
 		if ($pattern === 'weekly') {
-			return __('Weekly', 'vms');
+			return __('Weekly', 'backstage-venue-manager');
 		}
 		if ($pattern === 'monthly') {
-			return __('Monthly', 'vms');
+			return __('Monthly', 'backstage-venue-manager');
 		}
 		if ($pattern === 'quarterly') {
-			return __('Quarterly', 'vms');
+			return __('Quarterly', 'backstage-venue-manager');
 		}
 		if ($pattern === 'semi_annual') {
-			return __('Semi-annually', 'vms');
+			return __('Semi-annually', 'backstage-venue-manager');
 		}
 		if ($pattern === 'annual') {
-			return __('Annually', 'vms');
+			return __('Annually', 'backstage-venue-manager');
 		}
-		return __('Does not repeat', 'vms');
+		return __('Does not repeat', 'backstage-venue-manager');
 	}
 }
 
@@ -313,12 +313,12 @@ if (!function_exists('vms_tasks_upsert_task_template')) {
 		global $wpdb;
 		$table = vms_tasks_table_name('task_templates');
 		if ($table === '') {
-			return new WP_Error('vms_tasks_table_missing', __('Task template table is unavailable.', 'vms'));
+			return new WP_Error('vms_tasks_table_missing', __('Task template table is unavailable.', 'backstage-venue-manager'));
 		}
 
 		$title = sanitize_text_field((string) ($payload['title'] ?? ''));
 		if ($title === '') {
-			return new WP_Error('vms_tasks_template_title_required', __('Task template title is required.', 'vms'));
+			return new WP_Error('vms_tasks_template_title_required', __('Task template title is required.', 'backstage-venue-manager'));
 		}
 
 		$instructions = wp_kses_post((string) ($payload['instructions'] ?? ''));
@@ -366,7 +366,7 @@ if (!function_exists('vms_tasks_upsert_task_template')) {
 		if ($template_id > 0) {
 			$ok = $wpdb->update($table, $data, array('id' => $template_id), $formats, array('%d'));
 			if ($ok === false) {
-				return new WP_Error('vms_tasks_template_update_failed', __('Failed to update task template.', 'vms'));
+				return new WP_Error('vms_tasks_template_update_failed', __('Failed to update task template.', 'backstage-venue-manager'));
 			}
 			return $template_id;
 		}
@@ -375,7 +375,7 @@ if (!function_exists('vms_tasks_upsert_task_template')) {
 		$formats[] = '%s';
 		$ok = $wpdb->insert($table, $data, $formats);
 		if ($ok !== 1) {
-			return new WP_Error('vms_tasks_template_insert_failed', __('Failed to create task template.', 'vms'));
+			return new WP_Error('vms_tasks_template_insert_failed', __('Failed to create task template.', 'backstage-venue-manager'));
 		}
 		return (int) $wpdb->insert_id;
 	}
@@ -443,12 +443,12 @@ if (!function_exists('vms_tasks_upsert_checklist_template')) {
 		global $wpdb;
 		$table = vms_tasks_table_name('checklist_templates');
 		if ($table === '') {
-			return new WP_Error('vms_tasks_table_missing', __('Checklist template table is unavailable.', 'vms'));
+			return new WP_Error('vms_tasks_table_missing', __('Checklist template table is unavailable.', 'backstage-venue-manager'));
 		}
 
 		$name = sanitize_text_field((string) ($payload['name'] ?? ''));
 		if ($name === '') {
-			return new WP_Error('vms_tasks_checklist_name_required', __('Checklist name is required.', 'vms'));
+			return new WP_Error('vms_tasks_checklist_name_required', __('Checklist name is required.', 'backstage-venue-manager'));
 		}
 
 		$apply_mode = vms_tasks_sanitize_apply_mode((string) ($payload['apply_mode'] ?? 'default_all_events'));
@@ -462,10 +462,10 @@ if (!function_exists('vms_tasks_upsert_checklist_template')) {
 		}
 
 		if ($apply_mode === 'by_venue' && $venue_id <= 0) {
-			return new WP_Error('vms_tasks_checklist_venue_required', __('Venue is required for venue-based checklists.', 'vms'));
+			return new WP_Error('vms_tasks_checklist_venue_required', __('Venue is required for venue-based checklists.', 'backstage-venue-manager'));
 		}
 		if ($apply_mode === 'by_event_type' && $event_type === '') {
-			return new WP_Error('vms_tasks_checklist_event_type_required', __('Event type key is required for event-type checklists.', 'vms'));
+			return new WP_Error('vms_tasks_checklist_event_type_required', __('Event type key is required for event-type checklists.', 'backstage-venue-manager'));
 		}
 
 		if ($apply_mode !== 'by_venue') {
@@ -491,7 +491,7 @@ if (!function_exists('vms_tasks_upsert_checklist_template')) {
 		if ($checklist_id > 0) {
 			$ok = $wpdb->update($table, $data, array('id' => $checklist_id), $formats, array('%d'));
 			if ($ok === false) {
-				return new WP_Error('vms_tasks_checklist_update_failed', __('Failed to update checklist template.', 'vms'));
+				return new WP_Error('vms_tasks_checklist_update_failed', __('Failed to update checklist template.', 'backstage-venue-manager'));
 			}
 			return $checklist_id;
 		}
@@ -500,7 +500,7 @@ if (!function_exists('vms_tasks_upsert_checklist_template')) {
 		$formats[] = '%s';
 		$ok = $wpdb->insert($table, $data, $formats);
 		if ($ok !== 1) {
-			return new WP_Error('vms_tasks_checklist_insert_failed', __('Failed to create checklist template.', 'vms'));
+			return new WP_Error('vms_tasks_checklist_insert_failed', __('Failed to create checklist template.', 'backstage-venue-manager'));
 		}
 		return (int) $wpdb->insert_id;
 	}
@@ -517,7 +517,7 @@ if (!function_exists('vms_tasks_replace_checklist_items')) {
 		$table = vms_tasks_table_name('checklist_items');
 		$checklist_id = absint($checklist_id);
 		if ($table === '' || $checklist_id <= 0) {
-			return new WP_Error('vms_tasks_checklist_items_invalid', __('Checklist items are unavailable.', 'vms'));
+			return new WP_Error('vms_tasks_checklist_items_invalid', __('Checklist items are unavailable.', 'backstage-venue-manager'));
 		}
 		$checklist = vms_tasks_get_checklist_template($checklist_id);
 		$checklist_scope = vms_tasks_sanitize_scope((string) ($checklist['scope'] ?? 'event'));
@@ -904,12 +904,12 @@ if (!function_exists('vms_tasks_insert_instance')) {
 		global $wpdb;
 		$table = vms_tasks_table_name('task_instances');
 		if ($table === '') {
-			return new WP_Error('vms_tasks_instances_table_missing', __('Task instances table is unavailable.', 'vms'));
+			return new WP_Error('vms_tasks_instances_table_missing', __('Task instances table is unavailable.', 'backstage-venue-manager'));
 		}
 
 		$title = sanitize_text_field((string) ($payload['title'] ?? ''));
 		if ($title === '') {
-			return new WP_Error('vms_tasks_instance_title_required', __('Task instance title is required.', 'vms'));
+			return new WP_Error('vms_tasks_instance_title_required', __('Task instance title is required.', 'backstage-venue-manager'));
 		}
 
 		$event_id = !empty($payload['event_id']) ? absint($payload['event_id']) : null;
@@ -931,7 +931,7 @@ if (!function_exists('vms_tasks_insert_instance')) {
 			$recurrence_root_instance_id = null;
 		}
 		if ($recurrence_pattern !== 'none' && $due_at_local === null) {
-			return new WP_Error('vms_tasks_recurrence_due_required', __('Recurring tasks require a due date/time.', 'vms'));
+			return new WP_Error('vms_tasks_recurrence_due_required', __('Recurring tasks require a due date/time.', 'backstage-venue-manager'));
 		}
 
 		$now = vms_tasks_now_utc_mysql();
@@ -969,7 +969,7 @@ if (!function_exists('vms_tasks_insert_instance')) {
 			array('%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%s')
 		);
 		if ($ok !== 1) {
-			return new WP_Error('vms_tasks_instance_insert_failed', __('Failed to create task instance.', 'vms'));
+			return new WP_Error('vms_tasks_instance_insert_failed', __('Failed to create task instance.', 'backstage-venue-manager'));
 		}
 		return (int) $wpdb->insert_id;
 	}
@@ -1061,17 +1061,17 @@ if (!function_exists('vms_tasks_set_instance_assignment')) {
 	{
 		$instance_id = absint($instance_id);
 		if ($instance_id <= 0) {
-			return new WP_Error('vms_tasks_instance_invalid', __('Task instance is invalid.', 'vms'));
+			return new WP_Error('vms_tasks_instance_invalid', __('Task instance is invalid.', 'backstage-venue-manager'));
 		}
 
 		$row = vms_tasks_get_instance($instance_id);
 		if (!is_array($row)) {
-			return new WP_Error('vms_tasks_instance_missing', __('Task instance was not found.', 'vms'));
+			return new WP_Error('vms_tasks_instance_missing', __('Task instance was not found.', 'backstage-venue-manager'));
 		}
 
 		$status = vms_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
 		if ($status === 'superseded') {
-			return new WP_Error('vms_tasks_instance_superseded', __('Superseded tasks are read-only.', 'vms'));
+			return new WP_Error('vms_tasks_instance_superseded', __('Superseded tasks are read-only.', 'backstage-venue-manager'));
 		}
 
 		if ($actor_user_id === null) {
@@ -1097,7 +1097,7 @@ if (!function_exists('vms_tasks_set_instance_assignment')) {
 				$effective_role_key = '';
 			}
 			if (in_array($mode, array('role', 'scheduled_role'), true) && $effective_role_key === '') {
-				return new WP_Error('vms_tasks_role_required', __('Role is required for role-based assignments.', 'vms'));
+				return new WP_Error('vms_tasks_role_required', __('Role is required for role-based assignments.', 'backstage-venue-manager'));
 			}
 		}
 
@@ -1110,7 +1110,7 @@ if (!function_exists('vms_tasks_set_instance_assignment')) {
 			$effective_role_key
 		);
 		if (!$ok) {
-			return new WP_Error('vms_tasks_assignment_update_failed', __('Failed to update task assignment.', 'vms'));
+			return new WP_Error('vms_tasks_assignment_update_failed', __('Failed to update task assignment.', 'backstage-venue-manager'));
 		}
 
 		return true;
@@ -1125,12 +1125,12 @@ if (!function_exists('vms_tasks_transition_instance_status')) {
 		$table = vms_tasks_table_name('task_instances');
 		$instance_id = absint($instance_id);
 		if ($table === '' || $instance_id <= 0) {
-			return new WP_Error('vms_tasks_instance_invalid', __('Task instance is invalid.', 'vms'));
+			return new WP_Error('vms_tasks_instance_invalid', __('Task instance is invalid.', 'backstage-venue-manager'));
 		}
 
 		$row = vms_tasks_get_instance($instance_id);
 		if (!is_array($row)) {
-			return new WP_Error('vms_tasks_instance_missing', __('Task instance was not found.', 'vms'));
+			return new WP_Error('vms_tasks_instance_missing', __('Task instance was not found.', 'backstage-venue-manager'));
 		}
 
 		$current = vms_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
@@ -1140,10 +1140,10 @@ if (!function_exists('vms_tasks_transition_instance_status')) {
 			return true;
 		}
 		if ($current === 'superseded') {
-			return new WP_Error('vms_tasks_instance_superseded', __('Superseded tasks are read-only.', 'vms'));
+			return new WP_Error('vms_tasks_instance_superseded', __('Superseded tasks are read-only.', 'backstage-venue-manager'));
 		}
 		if (!in_array($new_status, array('open', 'done', 'skipped', 'canceled'), true)) {
-			return new WP_Error('vms_tasks_status_invalid', __('Invalid status transition.', 'vms'));
+			return new WP_Error('vms_tasks_status_invalid', __('Invalid status transition.', 'backstage-venue-manager'));
 		}
 
 		$allowed = false;
@@ -1154,11 +1154,11 @@ if (!function_exists('vms_tasks_transition_instance_status')) {
 			$allowed = true;
 		}
 		if (!$allowed) {
-			return new WP_Error('vms_tasks_status_forbidden', __('This status transition is not allowed.', 'vms'));
+			return new WP_Error('vms_tasks_status_forbidden', __('This status transition is not allowed.', 'backstage-venue-manager'));
 		}
 
 		if (in_array($new_status, array('skipped', 'canceled'), true) && $reason === '') {
-			return new WP_Error('vms_tasks_reason_required', __('A reason is required for skipped or canceled tasks.', 'vms'));
+			return new WP_Error('vms_tasks_reason_required', __('A reason is required for skipped or canceled tasks.', 'backstage-venue-manager'));
 		}
 
 		if ($actor_user_id === null) {
@@ -1196,7 +1196,7 @@ if (!function_exists('vms_tasks_transition_instance_status')) {
 
 		$ok = $wpdb->update($table, $data, array('id' => $instance_id), $formats, array('%d'));
 		if ($ok === false) {
-			return new WP_Error('vms_tasks_status_update_failed', __('Failed to update task status.', 'vms'));
+			return new WP_Error('vms_tasks_status_update_failed', __('Failed to update task status.', 'backstage-venue-manager'));
 		}
 
 		$action = 'status_changed';
@@ -1261,13 +1261,13 @@ if (!function_exists('vms_tasks_spawn_next_recurrence_instance')) {
 
 		$due_at_local = sanitize_text_field((string) ($row['due_at_local'] ?? ''));
 		if ($due_at_local === '') {
-			return new WP_Error('vms_tasks_recurrence_due_missing', __('Recurring task is missing its due date/time.', 'vms'));
+			return new WP_Error('vms_tasks_recurrence_due_missing', __('Recurring task is missing its due date/time.', 'backstage-venue-manager'));
 		}
 
 		$every_n_days = vms_tasks_normalize_recurrence_every_n_days($pattern, $row['recurrence_every_n_days'] ?? 0);
 		$next_due = vms_tasks_recurrence_next_due_local($due_at_local, $pattern, $every_n_days);
 		if ($next_due === null) {
-			return new WP_Error('vms_tasks_recurrence_compute_failed', __('Failed to compute next recurring due date/time.', 'vms'));
+			return new WP_Error('vms_tasks_recurrence_compute_failed', __('Failed to compute next recurring due date/time.', 'backstage-venue-manager'));
 		}
 
 		$root_id = absint($row['recurrence_root_instance_id'] ?? 0);

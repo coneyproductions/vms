@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) exit;
 add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_user_link',
-        __('Portal User', 'vms'),
+        __('Portal User', 'backstage-venue-manager'),
         'vms_staff_user_link_metabox_render',
         'vms_staff',
         'side',
@@ -44,7 +44,7 @@ function vms_staff_user_link_metabox_render($post): void
 
     wp_nonce_field('vms_staff_user_link_save', 'vms_staff_user_link_nonce');
 
-    echo '<p class="description">' . esc_html__('Pick the WordPress user account that logs in as this staff member (Ops Console, Staff Portal, alerts).', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Pick the WordPress user account that logs in as this staff member (Ops Console, Staff Portal, alerts).', 'backstage-venue-manager') . '</p>';
 
     $users = get_users(array(
         'orderby' => 'display_name',
@@ -53,7 +53,7 @@ function vms_staff_user_link_metabox_render($post): void
     ));
 
     echo '<select name="vms_linked_user_id" style="width:100%;">';
-    echo '<option value="0">— ' . esc_html__('Not linked', 'vms') . ' —</option>';
+    echo '<option value="0">— ' . esc_html__('Not linked', 'backstage-venue-manager') . ' —</option>';
     foreach ($users as $u) {
         $label = (string) $u->display_name;
         if (!empty($u->user_email)) {
@@ -72,7 +72,7 @@ function vms_staff_user_link_metabox_render($post): void
         $user = get_user_by('id', $linked_user_id);
         if ($user) {
             echo '<p style="margin-top:10px;" class="description">' .
-                esc_html__('Currently linked:', 'vms') . ' <strong>' . esc_html($user->display_name) . '</strong>' .
+                esc_html__('Currently linked:', 'backstage-venue-manager') . ' <strong>' . esc_html($user->display_name) . '</strong>' .
                 '</p>';
         }
     }

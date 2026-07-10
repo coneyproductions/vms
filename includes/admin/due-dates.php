@@ -589,7 +589,7 @@ function vms_render_due_dates_admin_page(): void {
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
-        'title' => __('Due Dates', 'vms'),
+        'title' => __('Due Dates', 'backstage-venue-manager'),
       ),
       'vms_render_due_dates_admin_page_content'
     );

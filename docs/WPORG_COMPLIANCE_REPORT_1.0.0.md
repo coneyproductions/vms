@@ -46,7 +46,7 @@ Date: 2026-06-22
 
 - PASS: plugin header `Version`, `VMS_VERSION`, `vms-build.txt`, and `readme.txt` stable tag all resolve to `1.0.0`.
 - PASS: header license, `readme.txt` license, and root `LICENSE.txt` are aligned on `GPLv2 or later`.
-- PASS: slug and text domain remain `vms`.
+- PASS: requested WordPress.org slug/text-domain metadata now use `backstage-venue-manager`, while internal `vms` identifiers remain unchanged.
 - PASS: root `readme.txt` and root `LICENSE.txt` remain packaged.
 
 Current rebuilt RC:

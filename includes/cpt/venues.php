@@ -33,17 +33,17 @@ function vms_register_venue_cpt()
 {
 
     $labels = array(
-        'name'               => __('Venues', 'vms'),
-        'singular_name'      => __('Venue', 'vms'),
-        'menu_name'          => __('Venues', 'vms'),
-        'add_new'            => __('Add New', 'vms'),
-        'add_new_item'       => __('Add New Venue', 'vms'),
-        'edit_item'          => __('Edit Venue', 'vms'),
-        'new_item'           => __('New Venue', 'vms'),
-        'view_item'          => __('View Venue', 'vms'),
-        'search_items'       => __('Search Venues', 'vms'),
-        'not_found'          => __('No venues found', 'vms'),
-        'not_found_in_trash' => __('No venues found in Trash', 'vms'),
+        'name'               => __('Venues', 'backstage-venue-manager'),
+        'singular_name'      => __('Venue', 'backstage-venue-manager'),
+        'menu_name'          => __('Venues', 'backstage-venue-manager'),
+        'add_new'            => __('Add New', 'backstage-venue-manager'),
+        'add_new_item'       => __('Add New Venue', 'backstage-venue-manager'),
+        'edit_item'          => __('Edit Venue', 'backstage-venue-manager'),
+        'new_item'           => __('New Venue', 'backstage-venue-manager'),
+        'view_item'          => __('View Venue', 'backstage-venue-manager'),
+        'search_items'       => __('Search Venues', 'backstage-venue-manager'),
+        'not_found'          => __('No venues found', 'backstage-venue-manager'),
+        'not_found_in_trash' => __('No venues found in Trash', 'backstage-venue-manager'),
     );
 
     $args = array(
@@ -176,7 +176,7 @@ if (!function_exists('vms_sync_tec_venue_from_vms_venue')) {
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_location',
-        __('Venue Location', 'vms'),
+        __('Venue Location', 'backstage-venue-manager'),
         'vms_render_venue_location_box',
         'vms_venue',
         'normal',
@@ -203,55 +203,55 @@ function vms_render_venue_location_box($post)
 
     echo '<div class="vms-venue-location-admin">';
     echo '<p class="description vms-venue-location-admin__intro">' .
-        esc_html__('Store the real physical venue address here. Meta Ads uses this for radius targeting, and VMS can also sync it to the linked TEC venue record.', 'vms') .
+        esc_html__('Store the real physical venue address here. Meta Ads uses this for radius targeting, and VMS can also sync it to the linked TEC venue record.', 'backstage-venue-manager') .
     '</p>';
 
     echo '<div class="vms-venue-location-admin__grid">';
 
     echo '<p class="vms-venue-location-admin__field vms-venue-location-admin__field--full">';
-    echo '<label for="vms_venue_address"><strong>' . esc_html__('Address Line 1', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_address"><strong>' . esc_html__('Address Line 1', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_address" name="vms_venue_address" value="' . esc_attr((string) ($location['address'] ?? '')) . '" class="widefat" placeholder="4021 S State Hwy 161">';
     echo '</p>';
 
     echo '<p class="vms-venue-location-admin__field vms-venue-location-admin__field--full">';
-    echo '<label for="vms_venue_address_2"><strong>' . esc_html__('Address Line 2 (optional)', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_address_2"><strong>' . esc_html__('Address Line 2 (optional)', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_address_2" name="vms_venue_address_2" value="' . esc_attr((string) ($location['address_2'] ?? '')) . '" class="widefat" placeholder="Suite, gate, entrance note, etc.">';
     echo '</p>';
 
     echo '<p class="vms-venue-location-admin__field">';
-    echo '<label for="vms_venue_city"><strong>' . esc_html__('City', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_city"><strong>' . esc_html__('City', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_city" name="vms_venue_city" value="' . esc_attr((string) ($location['city'] ?? '')) . '" class="widefat" placeholder="Tyler">';
     echo '</p>';
 
     echo '<p class="vms-venue-location-admin__field">';
-    echo '<label for="vms_venue_state"><strong>' . esc_html__('State', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_state"><strong>' . esc_html__('State', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_state" name="vms_venue_state" value="' . esc_attr((string) ($location['state'] ?? '')) . '" class="widefat" maxlength="2" placeholder="TX">';
     echo '</p>';
 
     echo '<p class="vms-venue-location-admin__field">';
-    echo '<label for="vms_venue_zip"><strong>' . esc_html__('ZIP', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_zip"><strong>' . esc_html__('ZIP', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_zip" name="vms_venue_zip" value="' . esc_attr((string) ($location['zip'] ?? '')) . '" class="widefat" placeholder="75701">';
     echo '</p>';
 
     echo '<p class="vms-venue-location-admin__field">';
-    echo '<label for="vms_venue_country"><strong>' . esc_html__('Country', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_country"><strong>' . esc_html__('Country', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_country" name="vms_venue_country" value="' . esc_attr((string) ($location['country'] ?? 'US')) . '" class="widefat" maxlength="2" placeholder="US">';
     echo '</p>';
 
     echo '<p class="vms-venue-location-admin__field">';
-    echo '<label for="vms_venue_latitude"><strong>' . esc_html__('Latitude (optional)', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_latitude"><strong>' . esc_html__('Latitude (optional)', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_latitude" name="vms_venue_latitude" value="' . esc_attr((string) ($location['latitude'] ?? '')) . '" class="widefat" placeholder="32.123456">';
     echo '</p>';
 
     echo '<p class="vms-venue-location-admin__field">';
-    echo '<label for="vms_venue_longitude"><strong>' . esc_html__('Longitude (optional)', 'vms') . '</strong></label>';
+    echo '<label for="vms_venue_longitude"><strong>' . esc_html__('Longitude (optional)', 'backstage-venue-manager') . '</strong></label>';
     echo '<input type="text" id="vms_venue_longitude" name="vms_venue_longitude" value="' . esc_attr((string) ($location['longitude'] ?? '')) . '" class="widefat" placeholder="-95.123456">';
     echo '</p>';
 
     echo '</div>';
 
     echo '<p class="description vms-venue-location-admin__tip">' .
-        esc_html__('Use a real street address whenever possible. City/state alone is too weak for reliable Meta radius targeting.', 'vms') .
+        esc_html__('Use a real street address whenever possible. City/state alone is too weak for reliable Meta radius targeting.', 'backstage-venue-manager') .
     '</p>';
     echo '</div>';
 }
@@ -330,7 +330,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_default_times',
-        __('Default Event Times', 'vms'),
+        __('Default Event Times', 'backstage-venue-manager'),
         'vms_render_venue_default_times_box',
         'vms_venue',
         'side',
@@ -348,23 +348,23 @@ function vms_render_venue_default_times_box($post) {
     echo '<div class="vms-venue-default-times-admin">';
 
     echo '<p class="description vms-venue-times-desc">' .
-        esc_html__('Used to pre-fill Start/End time when creating a new Event Plan for this venue.', 'vms') .
+        esc_html__('Used to pre-fill Start/End time when creating a new Event Plan for this venue.', 'backstage-venue-manager') .
     '</p>';
 
     echo '<p class="vms-venue-times-field">';
-    echo '<label for="vms_default_start_time"><strong>' . esc_html__('Default Start', 'vms') . '</strong></label><br>';
+    echo '<label for="vms_default_start_time"><strong>' . esc_html__('Default Start', 'backstage-venue-manager') . '</strong></label><br>';
     echo '<input type="time" id="vms_default_start_time" name="vms_default_start_time" value="' . esc_attr($start) . '" class="vms-venue-times-input">';
     echo '</p>';
 
     echo '<p class="vms-venue-times-field">';
-    echo '<label for="vms_default_duration_min"><strong>' . esc_html__('Default Duration (minutes)', 'vms') . '</strong></label><br>';
+    echo '<label for="vms_default_duration_min"><strong>' . esc_html__('Default Duration (minutes)', 'backstage-venue-manager') . '</strong></label><br>';
     echo '<input type="number" min="0" step="1" id="vms_default_duration_min" name="vms_default_duration_min" value="' . esc_attr($dur) . '" class="vms-venue-times-input" placeholder="120">';
     echo '</p>';
 
     echo '<p class="vms-venue-times-field">';
-    echo '<label for="vms_default_end_time"><strong>' . esc_html__('Default End (optional)', 'vms') . '</strong></label><br>';
+    echo '<label for="vms_default_end_time"><strong>' . esc_html__('Default End (optional)', 'backstage-venue-manager') . '</strong></label><br>';
     echo '<input type="time" id="vms_default_end_time" name="vms_default_end_time" value="' . esc_attr($end) . '" class="vms-venue-times-input">';
-    echo '<span class="description">' . esc_html__('If set, this overrides duration-based end time defaults.', 'vms') . '</span>';
+    echo '<span class="description">' . esc_html__('If set, this overrides duration-based end time defaults.', 'backstage-venue-manager') . '</span>';
     echo '</p>';
 
     echo '</div>';
@@ -413,7 +413,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_schedule',
-        __('Venue Schedule', 'vms'),
+        __('Venue Schedule', 'backstage-venue-manager'),
         'vms_render_venue_schedule_box',
         'vms_venue',
         'normal',
@@ -447,22 +447,22 @@ function vms_render_venue_schedule_box($post)
     }
 
     $days = array(
-        0 => __('Sunday', 'vms'),
-        1 => __('Monday', 'vms'),
-        2 => __('Tuesday', 'vms'),
-        3 => __('Wednesday', 'vms'),
-        4 => __('Thursday', 'vms'),
-        5 => __('Friday', 'vms'),
-        6 => __('Saturday', 'vms'),
+        0 => __('Sunday', 'backstage-venue-manager'),
+        1 => __('Monday', 'backstage-venue-manager'),
+        2 => __('Tuesday', 'backstage-venue-manager'),
+        3 => __('Wednesday', 'backstage-venue-manager'),
+        4 => __('Thursday', 'backstage-venue-manager'),
+        5 => __('Friday', 'backstage-venue-manager'),
+        6 => __('Saturday', 'backstage-venue-manager'),
     );
 
     echo '<div class="vms-venue-schedule-layout">';
 
     // Open Days
     echo '<div>';
-    echo '<h3 class="vms-venue-schedule-subhead">' . esc_html__('Weekly Open Days', 'vms') . '</h3>';
+    echo '<h3 class="vms-venue-schedule-subhead">' . esc_html__('Weekly Open Days', 'backstage-venue-manager') . '</h3>';
     echo '<p class="description vms-venue-schedule-help">' .
-        esc_html__('Select the days this venue is normally open. If no days are selected, the venue is treated as closed until configured.', 'vms') .
+        esc_html__('Select the days this venue is normally open. If no days are selected, the venue is treated as closed until configured.', 'backstage-venue-manager') .
     '</p>';
 
     echo '<div class="vms-venue-open-days-grid">';
@@ -478,8 +478,8 @@ function vms_render_venue_schedule_box($post)
     echo '<div class="vms-venue-year-round-wrap">';
     echo '<label class="vms-venue-year-round-label">';
     echo '<input type="checkbox" name="vms_venue_open_year_round" value="1" ' . checked(1, $year_round, false) . '>';
-    echo '<span><strong>' . esc_html__('Open year-round', 'vms') . '</strong><br>';
-    echo '<span class="description">' . esc_html__('If enabled, seasons are ignored.', 'vms') . '</span></span>';
+    echo '<span><strong>' . esc_html__('Open year-round', 'backstage-venue-manager') . '</strong><br>';
+    echo '<span class="description">' . esc_html__('If enabled, seasons are ignored.', 'backstage-venue-manager') . '</span></span>';
     echo '</label>';
     echo '</div>';
 
@@ -487,9 +487,9 @@ function vms_render_venue_schedule_box($post)
 
     // Seasons
     echo '<div>';
-    echo '<h3 class="vms-venue-schedule-subhead">' . esc_html__('Optional Seasons', 'vms') . '</h3>';
+    echo '<h3 class="vms-venue-schedule-subhead">' . esc_html__('Optional Seasons', 'backstage-venue-manager') . '</h3>';
     echo '<p class="description vms-venue-schedule-help">' .
-        esc_html__('If Open year-round is off, you can optionally limit booking to one or two date ranges. Leave blank for year-round scheduling (based on Open Days).', 'vms') .
+        esc_html__('If Open year-round is off, you can optionally limit booking to one or two date ranges. Leave blank for year-round scheduling (based on Open Days).', 'backstage-venue-manager') .
     '</p>';
 
     for ($i = 0; $i < 2; $i++) {
@@ -498,16 +498,16 @@ function vms_render_venue_schedule_box($post)
         $end   = $slots[$i]['end'];
 
         echo '<div class="vms-venue-season-card">';
-        echo '<div class="vms-venue-season-title">' . esc_html(sprintf(__('Season %d', 'vms'), $idx)) . '</div>';
+        echo '<div class="vms-venue-season-title">' . esc_html(sprintf(__('Season %d', 'backstage-venue-manager'), $idx)) . '</div>';
         echo '<div class="vms-venue-season-row">';
 
         echo '<div class="vms-venue-season-field">';
-        echo '<label><strong>' . esc_html__('Start', 'vms') . '</strong></label><br>';
+        echo '<label><strong>' . esc_html__('Start', 'backstage-venue-manager') . '</strong></label><br>';
         echo '<input type="date" name="vms_venue_season_start[' . esc_attr($i) . ']" value="' . esc_attr($start) . '" class="vms-venue-season-date">';
         echo '</div>';
 
         echo '<div class="vms-venue-season-field">';
-        echo '<label><strong>' . esc_html__('End', 'vms') . '</strong></label><br>';
+        echo '<label><strong>' . esc_html__('End', 'backstage-venue-manager') . '</strong></label><br>';
         echo '<input type="date" name="vms_venue_season_end[' . esc_attr($i) . ']" value="' . esc_attr($end) . '" class="vms-venue-season-date">';
         echo '</div>';
 
@@ -516,7 +516,7 @@ function vms_render_venue_schedule_box($post)
     }
 
     echo '<p class="description vms-venue-schedule-tip">' .
-        esc_html__('Tip: Use the Schedule page to mark individual exceptions (open/closed) once we add overrides.', 'vms') .
+        esc_html__('Tip: Use the Schedule page to mark individual exceptions (open/closed) once we add overrides.', 'backstage-venue-manager') .
     '</p>';
 
     echo '</div>';
@@ -647,7 +647,7 @@ add_action('admin_notices', function () {
     delete_transient($key);
 
     echo '<div class="notice notice-warning is-dismissible">';
-    echo '<p><strong>' . esc_html__('Venue not published.', 'vms') . '</strong> ' . esc_html__('Select at least one Weekly Open Day in Venue Schedule, then publish again.', 'vms') . '</p>';
+    echo '<p><strong>' . esc_html__('Venue not published.', 'backstage-venue-manager') . '</strong> ' . esc_html__('Select at least one Weekly Open Day in Venue Schedule, then publish again.', 'backstage-venue-manager') . '</p>';
     echo '</div>';
 });
 
@@ -710,8 +710,8 @@ add_action('admin_notices', function () {
     delete_transient($key);
 
     echo '<div class="notice notice-info is-dismissible">';
-    echo '<p><strong>' . esc_html__('Venue restored.', 'vms') . '</strong> ' . sprintf(
-        esc_html__('Status was restored to "%s" (pre-trash state).', 'vms'),
+    echo '<p><strong>' . esc_html__('Venue restored.', 'backstage-venue-manager') . '</strong> ' . sprintf(
+        esc_html__('Status was restored to "%s" (pre-trash state).', 'backstage-venue-manager'),
         esc_html($prev)
     ) . '</p>';
     echo '</div>';
@@ -744,7 +744,7 @@ add_filter('display_post_states', function (array $states, $post): array {
             }
         }
 
-        $states['vms_not_ready'] = __('NOT READY — Draft', 'vms');
+        $states['vms_not_ready'] = __('NOT READY — Draft', 'backstage-venue-manager');
     }
 
     return $states;
@@ -758,13 +758,13 @@ add_filter('manage_vms_venue_posts_columns', function (array $cols): array {
         $out[$k] = $v;
 
         if ($k === 'title') {
-            $out['vms_readiness'] = __('Readiness', 'vms');
+            $out['vms_readiness'] = __('Readiness', 'backstage-venue-manager');
         }
     }
 
     // Fallback: if title column was missing (unexpected), append at end.
     if (!isset($out['vms_readiness'])) {
-        $out['vms_readiness'] = __('Readiness', 'vms');
+        $out['vms_readiness'] = __('Readiness', 'backstage-venue-manager');
     }
 
     return $out;

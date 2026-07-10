@@ -67,7 +67,7 @@ if (!function_exists('vms_admission_add_event_plan_metabox')) {
 	{
 		add_meta_box(
 			'vms_guest_list_comp_admission',
-			__('Guest List / Comp Admission', 'vms'),
+			__('Guest List / Comp Admission', 'backstage-venue-manager'),
 			'vms_admission_render_event_plan_metabox',
 			'vms_event_plan',
 			'normal',
@@ -81,24 +81,24 @@ if (!function_exists('vms_admission_render_event_plan_metabox')) {
 	function vms_admission_render_event_plan_metabox(WP_Post $post): void
 	{
 		if (!current_user_can(vms_admission_manage_capability())) {
-			echo '<p>' . esc_html__('You do not have permission to manage Guest List entries.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('You do not have permission to manage Guest List entries.', 'backstage-venue-manager') . '</p>';
 			return;
 		}
 
 		echo '<div class="vms-adm-box" data-event-plan-id="' . esc_attr((string) $post->ID) . '">';
-		echo '<p class="vms-adm-row">' . esc_html__('Add and manage comp entries for this event plan.', 'vms') . '</p>';
+		echo '<p class="vms-adm-row">' . esc_html__('Add and manage comp entries for this event plan.', 'backstage-venue-manager') . '</p>';
 		echo '<div class="vms-adm-grid">';
 		// Important: do not use HTML5 required attributes inside the Event Plan edit form.
 		// Those can block saving the Event Plan even when the Guest List UI is unused.
-		echo '<label>' . esc_html__('Guest Name', 'vms') . '<input type="text" id="vms-adm-guest-name" autocomplete="off"></label>';
-		echo '<label>' . esc_html__('Guest Email', 'vms') . '<input type="text" id="vms-adm-guest-email" autocomplete="email"></label>';
-		echo '<label>' . esc_html__('Party Size', 'vms') . '<input type="text" id="vms-adm-party-size" inputmode="numeric" pattern="[0-9]*" value="1"></label>';
-		echo '<label>' . esc_html__('Phone', 'vms') . '<input type="text" id="vms-adm-phone"></label>';
-		echo '<label>' . esc_html__('Notes', 'vms') . '<input type="text" id="vms-adm-notes"></label>';
+		echo '<label>' . esc_html__('Guest Name', 'backstage-venue-manager') . '<input type="text" id="vms-adm-guest-name" autocomplete="off"></label>';
+		echo '<label>' . esc_html__('Guest Email', 'backstage-venue-manager') . '<input type="text" id="vms-adm-guest-email" autocomplete="email"></label>';
+		echo '<label>' . esc_html__('Party Size', 'backstage-venue-manager') . '<input type="text" id="vms-adm-party-size" inputmode="numeric" pattern="[0-9]*" value="1"></label>';
+		echo '<label>' . esc_html__('Phone', 'backstage-venue-manager') . '<input type="text" id="vms-adm-phone"></label>';
+		echo '<label>' . esc_html__('Notes', 'backstage-venue-manager') . '<input type="text" id="vms-adm-notes"></label>';
 		echo '</div>';
 		echo '<p class="vms-adm-actions">';
-		echo '<button type="button" class="button button-primary" id="vms-adm-add-entry">' . esc_html__('Add Comp Entry', 'vms') . '</button> ';
-		echo '<a class="button" id="vms-adm-export-csv" href="#">' . esc_html__('Export Door List CSV', 'vms') . '</a>';
+		echo '<button type="button" class="button button-primary" id="vms-adm-add-entry">' . esc_html__('Add Comp Entry', 'backstage-venue-manager') . '</button> ';
+		echo '<a class="button" id="vms-adm-export-csv" href="#">' . esc_html__('Export Door List CSV', 'backstage-venue-manager') . '</a>';
 		echo '</p>';
 		echo '<p id="vms-adm-feedback" class="vms-adm-feedback" aria-live="polite"></p>';
 		echo '<div id="vms-adm-summary" class="vms-adm-summary"></div>';
@@ -115,18 +115,18 @@ if (!function_exists('vms_admission_export_csv')) {
 	{
 		$event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
 		if (!current_user_can(vms_admission_manage_capability())) {
-			wp_die(esc_html__('Access denied.', 'vms'));
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		if ($event_plan_id <= 0) {
-			wp_die(esc_html__('Missing event plan.', 'vms'));
+			wp_die(esc_html__('Missing event plan.', 'backstage-venue-manager'));
 		}
 		if (!wp_verify_nonce((string) ($_GET['_wpnonce'] ?? ''), 'vms_admissions_export_csv_' . $event_plan_id)) {
-			wp_die(esc_html__('Invalid request.', 'vms'));
+			wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
 		}
 
 		$plan = vms_admission_event_plan_context($event_plan_id);
 		if (!$plan) {
-			wp_die(esc_html__('Event plan not found.', 'vms'));
+			wp_die(esc_html__('Event plan not found.', 'backstage-venue-manager'));
 		}
 
 		global $wpdb;
@@ -142,7 +142,7 @@ if (!function_exists('vms_admission_export_csv')) {
 
 		$fh = fopen('php://output', 'w');
 		if ($fh === false) {
-			wp_die(esc_html__('Could not export CSV.', 'vms'));
+			wp_die(esc_html__('Could not export CSV.', 'backstage-venue-manager'));
 		}
 
 		fputcsv($fh, array('Guest Name', 'Guest Email', 'Party Size', 'Phone', 'Notes', 'Status', 'Source', 'Owner Vendor'));

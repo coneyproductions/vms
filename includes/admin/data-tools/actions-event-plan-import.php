@@ -5,7 +5,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 	function vms_event_plan_import_handle_preview_action(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Access denied.', 'vms'));
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
 		check_admin_referer('vms_event_plan_import_preview');
@@ -16,7 +16,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$source_name = isset($file['name']) ? (string) $file['name'] : '';
 
 		if ($error_code !== UPLOAD_ERR_OK || $tmp_name === '' || !is_uploaded_file($tmp_name)) {
-			vms_event_plan_import_set_notice('error', __('Please choose a valid CSV file to preview.', 'vms'));
+			vms_event_plan_import_set_notice('error', __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
@@ -32,7 +32,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$target_path = trailingslashit((string) $root['dir']) . $token . '-source.csv';
 		$moved = @move_uploaded_file($tmp_name, $target_path);
 		if (!$moved) {
-			vms_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'vms'));
+			vms_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
@@ -55,7 +55,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$summary = isset($preview['summary']) && is_array($preview['summary']) ? $preview['summary'] : array();
 		$message = sprintf(
 			/* translators: 1: create count, 2: update count, 3: skip count, 4: error count */
-			__('Preview ready. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.', 'vms'),
+			__('Preview ready. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.', 'backstage-venue-manager'),
 			(int) ($summary['create'] ?? 0),
 			(int) ($summary['update'] ?? 0),
 			(int) ($summary['skip'] ?? 0),
@@ -73,21 +73,21 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 	function vms_event_plan_import_handle_commit_action(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Access denied.', 'vms'));
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
 		check_admin_referer('vms_event_plan_import_commit');
 
 		$token = isset($_POST['preview_token']) ? sanitize_key((string) $_POST['preview_token']) : '';
 		if ($token === '') {
-			vms_event_plan_import_set_notice('error', __('Missing preview token. Please run Preview again.', 'vms'));
+			vms_event_plan_import_set_notice('error', __('Missing preview token. Please run Preview again.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
 
 		$preview = vms_event_plan_import_get_preview_payload($token);
 		if (empty($preview)) {
-			vms_event_plan_import_set_notice('error', __('Preview has expired or is missing. Please run Preview again.', 'vms'));
+			vms_event_plan_import_set_notice('error', __('Preview has expired or is missing. Please run Preview again.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
@@ -100,7 +100,7 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 		})));
 
 		if ($commit_scope === 'selected' && empty($selected_rows)) {
-			vms_event_plan_import_set_notice('error', __('Select at least one eligible row before committing selected rows.', 'vms'));
+			vms_event_plan_import_set_notice('error', __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url(array('preview_token' => $token)));
 			exit;
 		}
@@ -121,7 +121,7 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 		$summary = isset($result['summary']) && is_array($result['summary']) ? $result['summary'] : array();
 		$message = sprintf(
 			/* translators: 1: create count, 2: update count, 3: skip count, 4: error count */
-			__('Import committed. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.', 'vms'),
+			__('Import committed. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.', 'backstage-venue-manager'),
 			(int) ($summary['create'] ?? 0),
 			(int) ($summary['update'] ?? 0),
 			(int) ($summary['skip'] ?? 0),
@@ -132,14 +132,14 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 		if ($template_not_applied > 0) {
 			$message .= ' ' . sprintf(
 				/* translators: %d: plans count */
-				__('Ticketing template not applied on %d plan(s).', 'vms'),
+				__('Ticketing template not applied on %d plan(s).', 'backstage-venue-manager'),
 				$template_not_applied
 			);
 		}
 		if ($commit_scope === 'selected') {
 			$message .= ' ' . sprintf(
 				/* translators: %d: selected rows committed */
-				__('Selected rows committed: %d.', 'vms'),
+				__('Selected rows committed: %d.', 'backstage-venue-manager'),
 				(int) ($summary['selected_rows_committed'] ?? 0)
 			);
 		}
@@ -155,27 +155,27 @@ if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
 	function vms_event_plan_import_handle_download_report_action(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Access denied.', 'vms'));
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
 		$token = isset($_REQUEST['preview_token']) ? sanitize_key((string) $_REQUEST['preview_token']) : '';
 		if ($token === '') {
-			wp_die(esc_html__('Missing preview token.', 'vms'));
+			wp_die(esc_html__('Missing preview token.', 'backstage-venue-manager'));
 		}
 
 		$nonce = isset($_REQUEST['_wpnonce']) ? (string) $_REQUEST['_wpnonce'] : '';
 		if (!wp_verify_nonce($nonce, 'vms_event_plan_import_download_report_' . $token)) {
-			wp_die(esc_html__('Invalid request nonce.', 'vms'));
+			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
 
 		$preview = vms_event_plan_import_get_preview_payload($token);
 		if (empty($preview) || !is_array($preview)) {
-			wp_die(esc_html__('Preview report is no longer available. Run Preview again.', 'vms'));
+			wp_die(esc_html__('Preview report is no longer available. Run Preview again.', 'backstage-venue-manager'));
 		}
 
 		$path = trim((string) ($preview['report_csv_path'] ?? ''));
 		if ($path === '' || !file_exists($path) || !vms_event_plan_import_path_is_safe($path)) {
-			wp_die(esc_html__('Preview report file is missing.', 'vms'));
+			wp_die(esc_html__('Preview report file is missing.', 'backstage-venue-manager'));
 		}
 
 		$filename = 'vms-event-plan-import-preview-' . gmdate('Ymd-His') . '.csv';
@@ -192,7 +192,7 @@ if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
 	function vms_event_plan_import_handle_revert_last_action(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Access denied.', 'vms'));
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
 		check_admin_referer('vms_event_plan_import_revert_last');
@@ -207,7 +207,7 @@ if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
 
 		$message = sprintf(
 			/* translators: 1: restored count, 2: failed count */
-			__('Revert complete. Restored: %1$d, Failed: %2$d.', 'vms'),
+			__('Revert complete. Restored: %1$d, Failed: %2$d.', 'backstage-venue-manager'),
 			(int) ($result['restored'] ?? 0),
 			(int) ($result['failed'] ?? 0)
 		);
@@ -222,7 +222,7 @@ if (!function_exists('vms_event_plan_import_handle_download_sample_csv')) {
 	function vms_event_plan_import_handle_download_sample_csv(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Access denied.', 'vms'));
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
 		check_admin_referer('vms_event_plan_import_download_sample_csv');
@@ -234,7 +234,7 @@ if (!function_exists('vms_event_plan_import_handle_download_sample_csv')) {
 
 		$out = fopen('php://output', 'wb');
 		if (!is_resource($out)) {
-			wp_die(esc_html__('Could not open output stream.', 'vms'));
+			wp_die(esc_html__('Could not open output stream.', 'backstage-venue-manager'));
 		}
 
 		fputcsv($out, array(

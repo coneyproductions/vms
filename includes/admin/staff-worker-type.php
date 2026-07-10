@@ -31,7 +31,7 @@ function vms_staff_get_worker_type(int $staff_id): string
 add_action('add_meta_boxes', function () {
 	add_meta_box(
 		'vms_staff_worker_type',
-		__('Employment Type', 'vms'),
+		__('Employment Type', 'backstage-venue-manager'),
 		'vms_render_staff_worker_type_metabox',
 		'vms_staff',
 		'side',
@@ -48,20 +48,20 @@ function vms_render_staff_worker_type_metabox($post): void
 
 	wp_nonce_field('vms_staff_worker_type_save', 'vms_staff_worker_type_nonce');
 
-	echo '<p class="description">' . esc_html__('Choose how this person is paid for compliance flows.', 'vms') . '</p>';
+	echo '<p class="description">' . esc_html__('Choose how this person is paid for compliance flows.', 'backstage-venue-manager') . '</p>';
 
 	echo '<select name="vms_staff_worker_type" style="width:100%;">';
-	echo '<option value="contractor" ' . selected($current, 'contractor', false) . '>' . esc_html__('Contractor (1099 / W-9)', 'vms') . '</option>';
-	echo '<option value="employee" ' . selected($current, 'employee', false) . '>' . esc_html__('Employee (W-2)', 'vms') . '</option>';
+	echo '<option value="contractor" ' . selected($current, 'contractor', false) . '>' . esc_html__('Contractor (1099 / W-9)', 'backstage-venue-manager') . '</option>';
+	echo '<option value="employee" ' . selected($current, 'employee', false) . '>' . esc_html__('Employee (W-2)', 'backstage-venue-manager') . '</option>';
 	echo '</select>';
 
 	if ($current === 'employee') {
 		echo '<p class="description" style="margin-top:10px;">' .
-			esc_html__('W-9 is not required for W-2 employees. Do not upload W-4/I-9 into WordPress.', 'vms') .
+			esc_html__('W-9 is not required for W-2 employees. Do not upload W-4/I-9 into WordPress.', 'backstage-venue-manager') .
 			'</p>';
 	} else {
 		echo '<p class="description" style="margin-top:10px;">' .
-			esc_html__('1099 contractors must complete a Tax Profile (W-9 upload or off-site workflow).', 'vms') .
+			esc_html__('1099 contractors must complete a Tax Profile (W-9 upload or off-site workflow).', 'backstage-venue-manager') .
 			'</p>';
 	}
 }

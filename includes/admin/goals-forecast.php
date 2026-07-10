@@ -85,8 +85,8 @@ function vms_goals_admin_menu(): void
 {
 	add_submenu_page(
 		'vms-dashboard',
-		__('Goals & Forecasting', 'vms'),
-		__('Goals & Forecasting', 'vms'),
+		__('Goals & Forecasting', 'backstage-venue-manager'),
+		__('Goals & Forecasting', 'backstage-venue-manager'),
 		'manage_options',
 		'vms-goals-forecast',
 		'vms_goals_render_admin_page'
@@ -345,13 +345,13 @@ if (!function_exists('vms_goals_render_admin_page')) {
 		$edit_goal = ($edit_goal_id > 0) ? vms_goals_get_goal($edit_goal_id) : array();
 
 		echo '<div class="wrap vms-goals-admin">';
-		echo '<h1>' . esc_html__('Goals & Forecasting', 'vms') . '</h1>';
+		echo '<h1>' . esc_html__('Goals & Forecasting', 'backstage-venue-manager') . '</h1>';
 		vms_goals_render_admin_notice();
 
 		echo '<h2 class="nav-tab-wrapper">';
-		echo '<a class="nav-tab ' . ($tab === 'goals' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'goals'))) . '">' . esc_html__('Goals', 'vms') . '</a>';
-		echo '<a class="nav-tab ' . ($tab === 'overhead-rules' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'overhead-rules'))) . '">' . esc_html__('Overhead Rules', 'vms') . '</a>';
-		echo '<a class="nav-tab ' . ($tab === 'forecast-defaults' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'forecast-defaults'))) . '">' . esc_html__('Forecast Defaults', 'vms') . '</a>';
+		echo '<a class="nav-tab ' . ($tab === 'goals' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'goals'))) . '">' . esc_html__('Goals', 'backstage-venue-manager') . '</a>';
+		echo '<a class="nav-tab ' . ($tab === 'overhead-rules' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'overhead-rules'))) . '">' . esc_html__('Overhead Rules', 'backstage-venue-manager') . '</a>';
+		echo '<a class="nav-tab ' . ($tab === 'forecast-defaults' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'forecast-defaults'))) . '">' . esc_html__('Forecast Defaults', 'backstage-venue-manager') . '</a>';
 		echo '</h2>';
 
 		if ($tab === 'goals') {
@@ -371,17 +371,17 @@ if (!function_exists('vms_goals_render_goals_tab')) {
 	{
 		echo '<div class="vms-goals-grid">';
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html__('Goals', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Goals', 'backstage-venue-manager') . '</h2>';
 		if (empty($goals)) {
-			echo '<p>' . esc_html__('No goals created yet.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('No goals created yet.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped"><thead><tr>';
-			echo '<th>' . esc_html__('Name', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Metric', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Period', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Target', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Active', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Name', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Metric', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Period', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Target', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Active', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 			foreach ($goals as $goal) {
 				$goal_id = (int) ($goal['id'] ?? 0);
@@ -406,13 +406,13 @@ if (!function_exists('vms_goals_render_goals_tab')) {
 				echo '<td><code>' . esc_html($metric) . '</code></td>';
 				echo '<td>' . esc_html($period) . '</td>';
 				echo '<td>' . esc_html($target) . '</td>';
-				echo '<td>' . ($is_active ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+				echo '<td>' . ($is_active ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
 				echo '<td>';
-				echo '<a class="button button-small" href="' . esc_url($edit_url) . '">' . esc_html__('Edit', 'vms') . '</a> ';
+				echo '<a class="button button-small" href="' . esc_url($edit_url) . '">' . esc_html__('Edit', 'backstage-venue-manager') . '</a> ';
 				if (!$is_active) {
-					echo '<a class="button button-small" href="' . esc_url($activate_url) . '">' . esc_html__('Set Active', 'vms') . '</a> ';
+					echo '<a class="button button-small" href="' . esc_url($activate_url) . '">' . esc_html__('Set Active', 'backstage-venue-manager') . '</a> ';
 				}
-				echo '<a class="button button-small" href="' . esc_url($delete_url) . '" onclick="return confirm(\'Delete this goal?\');">' . esc_html__('Delete', 'vms') . '</a>';
+				echo '<a class="button button-small" href="' . esc_url($delete_url) . '" onclick="return confirm(\'Delete this goal?\');">' . esc_html__('Delete', 'backstage-venue-manager') . '</a>';
 				echo '</td>';
 				echo '</tr>';
 			}
@@ -434,56 +434,56 @@ if (!function_exists('vms_goals_render_goals_tab')) {
 		$is_active = !empty($goal['is_active']);
 
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html($goal_id > 0 ? __('Edit Goal', 'vms') : __('Add Goal', 'vms')) . '</h2>';
+		echo '<h2>' . esc_html($goal_id > 0 ? __('Edit Goal', 'backstage-venue-manager') : __('Add Goal', 'backstage-venue-manager')) . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
 		wp_nonce_field('vms_goals_save_goal');
 		echo '<input type="hidden" name="action" value="vms_goals_save_goal" />';
 		echo '<input type="hidden" name="goal_id" value="' . (int) $goal_id . '" />';
 
-		echo '<label><strong>' . esc_html__('Name', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Name', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="name" value="' . esc_attr($name) . '" required />';
 
-		echo '<label><strong>' . esc_html__('Metric', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Metric', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="metric">';
-		echo '<option value="true_profit" ' . selected($metric, 'true_profit', false) . '>' . esc_html__('True Profit', 'vms') . '</option>';
-		echo '<option value="event_profit" ' . selected($metric, 'event_profit', false) . '>' . esc_html__('Event Profit', 'vms') . '</option>';
-		echo '<option value="gross_revenue" ' . selected($metric, 'gross_revenue', false) . '>' . esc_html__('Gross Revenue', 'vms') . '</option>';
+		echo '<option value="true_profit" ' . selected($metric, 'true_profit', false) . '>' . esc_html__('True Profit', 'backstage-venue-manager') . '</option>';
+		echo '<option value="event_profit" ' . selected($metric, 'event_profit', false) . '>' . esc_html__('Event Profit', 'backstage-venue-manager') . '</option>';
+		echo '<option value="gross_revenue" ' . selected($metric, 'gross_revenue', false) . '>' . esc_html__('Gross Revenue', 'backstage-venue-manager') . '</option>';
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Period Type', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Period Type', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="period_type">';
 		foreach (array('year', 'quarter', 'month', 'week', 'custom') as $type) {
 			echo '<option value="' . esc_attr($type) . '" ' . selected($period_type, $type, false) . '>' . esc_html(ucfirst($type)) . '</option>';
 		}
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Custom Start (used only for custom)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Custom Start (used only for custom)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="period_start_local" value="' . esc_attr($period_start) . '" placeholder="YYYY-MM-DD HH:MM:SS" />';
-		echo '<label><strong>' . esc_html__('Custom End (used only for custom)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Custom End (used only for custom)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="period_end_local" value="' . esc_attr($period_end) . '" placeholder="YYYY-MM-DD HH:MM:SS" />';
 
-		echo '<label><strong>' . esc_html__('Target Amount', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Target Amount', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="target_amount" value="' . esc_attr(number_format($target_cents / 100, 2, '.', '')) . '" placeholder="50000.00" />';
 
-		echo '<label><strong>' . esc_html__('Allocation Mode', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Allocation Mode', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="allocation_mode">';
-		echo '<option value="even" ' . selected($allocation_mode, 'even', false) . '>' . esc_html__('Even', 'vms') . '</option>';
-		echo '<option value="weighted" ' . selected($allocation_mode, 'weighted', false) . '>' . esc_html__('Weighted', 'vms') . '</option>';
+		echo '<option value="even" ' . selected($allocation_mode, 'even', false) . '>' . esc_html__('Even', 'backstage-venue-manager') . '</option>';
+		echo '<option value="weighted" ' . selected($allocation_mode, 'weighted', false) . '>' . esc_html__('Weighted', 'backstage-venue-manager') . '</option>';
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Weight Mode', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Weight Mode', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="weight_mode">';
 		echo '<option value="none" ' . selected($weight_mode, 'none', false) . '>None</option>';
 		echo '<option value="forecast_headcount" ' . selected($weight_mode, 'forecast_headcount', false) . '>Forecast Headcount</option>';
 		echo '<option value="forecast_revenue" ' . selected($weight_mode, 'forecast_revenue', false) . '>Forecast Revenue</option>';
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Venue ID (optional)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Venue ID (optional)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="number" min="0" step="1" name="venue_id" value="' . (int) $venue_id . '" />';
 
-		echo '<label><input type="checkbox" name="is_active" value="1" ' . checked($is_active, true, false) . ' /> ' . esc_html__('Set as active goal', 'vms') . '</label>';
+		echo '<label><input type="checkbox" name="is_active" value="1" ' . checked($is_active, true, false) . ' /> ' . esc_html__('Set as active goal', 'backstage-venue-manager') . '</label>';
 
-		echo '<p><button class="button button-primary">' . esc_html__('Save Goal', 'vms') . '</button></p>';
+		echo '<p><button class="button button-primary">' . esc_html__('Save Goal', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 		echo '</section>';
 
@@ -496,28 +496,28 @@ if (!function_exists('vms_goals_render_overhead_tab')) {
 	{
 		$overhead = isset($settings['overhead_rules']) && is_array($settings['overhead_rules']) ? $settings['overhead_rules'] : array();
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html__('Overhead Rules', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Overhead Rules', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
 		wp_nonce_field('vms_goals_save_settings');
 		echo '<input type="hidden" name="action" value="vms_goals_save_settings" />';
 		echo '<input type="hidden" name="tab" value="overhead-rules" />';
 
-		echo '<label><strong>' . esc_html__('Mode', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Mode', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="overhead_mode">';
 		foreach (array('flat_per_event', 'per_attendee', 'percent_of_gross', 'hybrid') as $mode) {
 			echo '<option value="' . esc_attr($mode) . '" ' . selected((string) ($overhead['mode'] ?? ''), $mode, false) . '>' . esc_html($mode) . '</option>';
 		}
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Flat per event ($)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Flat per event ($)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="overhead_flat_per_event" value="' . esc_attr(number_format(((int) ($overhead['flat_per_event_cents'] ?? 0)) / 100, 2, '.', '')) . '" />';
-		echo '<label><strong>' . esc_html__('Per attendee ($)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Per attendee ($)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="overhead_per_attendee" value="' . esc_attr(number_format(((int) ($overhead['per_attendee_cents'] ?? 0)) / 100, 2, '.', '')) . '" />';
-		echo '<label><strong>' . esc_html__('Percent of gross (basis points)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Percent of gross (basis points)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="number" min="0" max="10000" step="1" name="overhead_percent_bps" value="' . (int) ($overhead['percent_of_gross_bps'] ?? 0) . '" />';
 		echo '<p class="description">250 bps = 2.50%</p>';
 
-		echo '<p><button class="button button-primary">' . esc_html__('Save Overhead Rules', 'vms') . '</button></p>';
+		echo '<p><button class="button button-primary">' . esc_html__('Save Overhead Rules', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 		echo '</section>';
 	}
@@ -538,7 +538,7 @@ if (!function_exists('vms_goals_render_forecast_defaults_tab')) {
 		}
 
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html__('Forecast Defaults', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Forecast Defaults', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
 		wp_nonce_field('vms_goals_save_settings');
 		echo '<input type="hidden" name="action" value="vms_goals_save_settings" />';
@@ -621,7 +621,7 @@ function vms_goals_event_plan_add_metabox(): void
 {
 	add_meta_box(
 		'vms_event_plan_goals_finance',
-		__('Finance: Goal Impact + Profitability', 'vms'),
+		__('Finance: Goal Impact + Profitability', 'backstage-venue-manager'),
 		'vms_goals_event_plan_metabox_html',
 		'vms_event_plan',
 		'normal',
@@ -713,7 +713,7 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 			echo '<p>No active goal selected. Configure one in <a href="' . esc_url(vms_goals_admin_url(array('tab' => 'goals'))) . '">Goals &amp; Forecasting</a>.</p>';
 		} else {
 			if (!empty($goal_progress['is_truncated'])) {
-				echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal calculations are performance-capped for this period. Narrow date range for full precision.', 'vms') . '</p></div>';
+				echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal calculations are performance-capped for this period. Narrow date range for full precision.', 'backstage-venue-manager') . '</p></div>';
 			}
 			echo '<p><strong>Active Goal:</strong> ' . esc_html((string) ($active_goal['name'] ?? '')) . '</p>';
 			echo '<p><strong>Required contribution for this event:</strong> ' . esc_html(vms_goals_fmt_money($required_for_this_event)) . '</p>';
@@ -907,7 +907,7 @@ if (!function_exists('vms_goals_render_dashboard_panel')) {
 		}
 		echo '<div class="vms-panel-body vms-goals-dashboard-body">';
 		if (!empty($progress['is_truncated'])) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal metrics are performance-capped; narrow the goal period for full precision.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal metrics are performance-capped; narrow the goal period for full precision.', 'backstage-venue-manager') . '</p></div>';
 		}
 		echo '<p><strong>Goal:</strong> ' . esc_html((string) ($active_goal['name'] ?? '')) . '</p>';
 		echo '<p><strong>Target:</strong> ' . esc_html(vms_goals_fmt_money((int) ($progress['target_cents'] ?? 0))) . '</p>';

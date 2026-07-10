@@ -4,20 +4,20 @@ defined('ABSPATH') || exit;
 add_action('init', function (): void {
 
 	$labels = [
-		'name'                       => __('Vendor Categories', 'vms'),
-		'singular_name'              => __('Vendor Category', 'vms'),
-		'search_items'               => __('Search Vendor Categories', 'vms'),
-		'popular_items'              => __('Popular Vendor Categories', 'vms'),
-		'all_items'                  => __('All Vendor Categories', 'vms'),
-		'edit_item'                  => __('Edit Vendor Category', 'vms'),
-		'update_item'                => __('Update Vendor Category', 'vms'),
-		'add_new_item'               => __('Add New Vendor Category', 'vms'),
-		'new_item_name'              => __('New Vendor Category Name', 'vms'),
-		'separate_items_with_commas' => __('Separate vendor categories with commas', 'vms'),
-		'add_or_remove_items'        => __('Add or remove vendor categories', 'vms'),
-		'choose_from_most_used'      => __('Choose from the most used vendor categories', 'vms'),
-		'not_found'                  => __('No vendor categories found.', 'vms'),
-		'menu_name'                  => __('Vendor Categories', 'vms'),
+		'name'                       => __('Vendor Categories', 'backstage-venue-manager'),
+		'singular_name'              => __('Vendor Category', 'backstage-venue-manager'),
+		'search_items'               => __('Search Vendor Categories', 'backstage-venue-manager'),
+		'popular_items'              => __('Popular Vendor Categories', 'backstage-venue-manager'),
+		'all_items'                  => __('All Vendor Categories', 'backstage-venue-manager'),
+		'edit_item'                  => __('Edit Vendor Category', 'backstage-venue-manager'),
+		'update_item'                => __('Update Vendor Category', 'backstage-venue-manager'),
+		'add_new_item'               => __('Add New Vendor Category', 'backstage-venue-manager'),
+		'new_item_name'              => __('New Vendor Category Name', 'backstage-venue-manager'),
+		'separate_items_with_commas' => __('Separate vendor categories with commas', 'backstage-venue-manager'),
+		'add_or_remove_items'        => __('Add or remove vendor categories', 'backstage-venue-manager'),
+		'choose_from_most_used'      => __('Choose from the most used vendor categories', 'backstage-venue-manager'),
+		'not_found'                  => __('No vendor categories found.', 'backstage-venue-manager'),
+		'menu_name'                  => __('Vendor Categories', 'backstage-venue-manager'),
 	];
 
 	$args = [
@@ -40,27 +40,27 @@ if (!function_exists('vms_vendor_category_default_label_map')) {
 	function vms_vendor_category_default_label_map(): array
 	{
 		return [
-			'band'              => __('Genre', 'vms'),
-			'bands'             => __('Genre', 'vms'),
-			'artist'            => __('Genre', 'vms'),
-			'performer'         => __('Genre', 'vms'),
-			'solo-musician'     => __('Genre', 'vms'),
-			'solo_musician'     => __('Genre', 'vms'),
-			'musician'          => __('Genre', 'vms'),
-			'dj'                => __('Genre', 'vms'),
-			'food-truck'        => __('Cuisine', 'vms'),
-			'food_truck'        => __('Cuisine', 'vms'),
-			'foodtruck'         => __('Cuisine', 'vms'),
-			'caterer'           => __('Cuisine', 'vms'),
-			'bar'               => __('Style', 'vms'),
-			'bartender'         => __('Service', 'vms'),
-			'photographer'      => __('Style', 'vms'),
-			'videographer'      => __('Style', 'vms'),
-			'florist'           => __('Style', 'vms'),
-			'contractor'        => __('Service', 'vms'),
-			'security'          => __('Service', 'vms'),
-			'sound'             => __('Service', 'vms'),
-			'lighting'          => __('Service', 'vms'),
+			'band'              => __('Genre', 'backstage-venue-manager'),
+			'bands'             => __('Genre', 'backstage-venue-manager'),
+			'artist'            => __('Genre', 'backstage-venue-manager'),
+			'performer'         => __('Genre', 'backstage-venue-manager'),
+			'solo-musician'     => __('Genre', 'backstage-venue-manager'),
+			'solo_musician'     => __('Genre', 'backstage-venue-manager'),
+			'musician'          => __('Genre', 'backstage-venue-manager'),
+			'dj'                => __('Genre', 'backstage-venue-manager'),
+			'food-truck'        => __('Cuisine', 'backstage-venue-manager'),
+			'food_truck'        => __('Cuisine', 'backstage-venue-manager'),
+			'foodtruck'         => __('Cuisine', 'backstage-venue-manager'),
+			'caterer'           => __('Cuisine', 'backstage-venue-manager'),
+			'bar'               => __('Style', 'backstage-venue-manager'),
+			'bartender'         => __('Service', 'backstage-venue-manager'),
+			'photographer'      => __('Style', 'backstage-venue-manager'),
+			'videographer'      => __('Style', 'backstage-venue-manager'),
+			'florist'           => __('Style', 'backstage-venue-manager'),
+			'contractor'        => __('Service', 'backstage-venue-manager'),
+			'security'          => __('Service', 'backstage-venue-manager'),
+			'sound'             => __('Service', 'backstage-venue-manager'),
+			'lighting'          => __('Service', 'backstage-venue-manager'),
 		];
 	}
 }
@@ -106,7 +106,7 @@ if (!function_exists('vms_vendor_category_label_for_type')) {
 			return $defaults[$slug];
 		}
 
-		return __('Category', 'vms');
+		return __('Category', 'backstage-venue-manager');
 	}
 }
 
@@ -238,9 +238,9 @@ if (!function_exists('vms_vendor_categories_seed_from_legacy_meta')) {
 add_action('vms_vendor_type_add_form_fields', function () {
 	?>
 	<div class="form-field">
-		<label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'vms'); ?></label>
+		<label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'backstage-venue-manager'); ?></label>
 		<input type="text" id="vms_vendor_type_category_label" name="vms_vendor_type_category_label" value="">
-		<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service. Leave blank to use the default Category label.', 'vms'); ?></p>
+		<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service. Leave blank to use the default Category label.', 'backstage-venue-manager'); ?></p>
 	</div>
 	<?php
 });
@@ -251,11 +251,11 @@ add_action('vms_vendor_type_edit_form_fields', function ($term) {
 	$resolved = vms_vendor_category_label_for_type($term);
 	?>
 	<tr class="form-field">
-		<th scope="row"><label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'vms'); ?></label></th>
+		<th scope="row"><label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'backstage-venue-manager'); ?></label></th>
 		<td>
 			<input type="text" id="vms_vendor_type_category_label" name="vms_vendor_type_category_label" value="<?php echo esc_attr($value); ?>">
-			<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service.', 'vms'); ?></p>
-			<p class="description"><?php printf(esc_html__('Current resolved label: %s', 'vms'), esc_html($resolved)); ?></p>
+			<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service.', 'backstage-venue-manager'); ?></p>
+			<p class="description"><?php printf(esc_html__('Current resolved label: %s', 'backstage-venue-manager'), esc_html($resolved)); ?></p>
 		</td>
 	</tr>
 	<?php

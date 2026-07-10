@@ -164,13 +164,13 @@ function vms_render_integrity_calendar_reconcile_page(): void
   $settings_url = function_exists('vms_admin_ui_page_url')
     ? vms_admin_ui_page_url('vms-settings')
     : admin_url('admin.php?page=vms-settings');
-  $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'vms') . '</a>';
-  $actions_html .= '<a class="button button-primary" href="' . esc_url($settings_url) . '">' . esc_html__('Settings & Scan', 'vms') . '</a>';
+  $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
+  $actions_html .= '<a class="button button-primary" href="' . esc_url($settings_url) . '">' . esc_html__('Settings & Scan', 'backstage-venue-manager') . '</a>';
 
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
-        'title' => __('Integrity: Calendar Links', 'vms'),
+        'title' => __('Integrity: Calendar Links', 'backstage-venue-manager'),
         'actions_html' => $actions_html,
         'content_class' => 'vms-admin-shell__content--integrity',
       ),
@@ -179,7 +179,7 @@ function vms_render_integrity_calendar_reconcile_page(): void
     return;
   }
 
-  echo '<div class="wrap"><h1>' . esc_html__('Integrity: Calendar Links', 'vms') . '</h1>';
+  echo '<div class="wrap"><h1>' . esc_html__('Integrity: Calendar Links', 'backstage-venue-manager') . '</h1>';
   vms_render_integrity_calendar_reconcile_page_content();
   echo '</div>';
 }
@@ -231,7 +231,7 @@ function vms_render_integrity_calendar_reconcile_page_content(): void
   } else {
     echo '<table class="widefat striped">';
     echo '<thead><tr>';
-    echo '<th class="check-column"><input type="checkbox" data-vms-select-all="plan_ids[]" aria-label="' . esc_attr__('Select all Event Plans', 'vms') . '" /></th>';
+    echo '<th class="check-column"><input type="checkbox" data-vms-select-all="plan_ids[]" aria-label="' . esc_attr__('Select all Event Plans', 'backstage-venue-manager') . '" /></th>';
     echo '<th>Event Plan</th>';
     echo '<th>TEC Event (in Trash)</th>';
     echo '<th>TEC ID</th>';

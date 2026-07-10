@@ -39,17 +39,17 @@ add_filter('manage_vms_vendor_posts_columns', function ($columns) {
         $new[$key] = $label;
 
         if ($key === 'title') {
-            $new['vms_payee']   = __('Payee (Legal)', 'vms');
-            $new['vms_w9']      = __('W-9', 'vms');
-            $new['vms_1099']    = __('1099', 'vms');
+            $new['vms_payee']   = __('Payee (Legal)', 'backstage-venue-manager');
+            $new['vms_w9']      = __('W-9', 'backstage-venue-manager');
+            $new['vms_1099']    = __('1099', 'backstage-venue-manager');
         }
     }
 
     // If for some reason title didn't exist, append
     if (!isset($new['vms_w9'])) {
-        $new['vms_payee'] = __('Payee (Legal)', 'vms');
-        $new['vms_w9']    = __('W-9', 'vms');
-        $new['vms_1099']  = __('1099', 'vms');
+        $new['vms_payee'] = __('Payee (Legal)', 'backstage-venue-manager');
+        $new['vms_w9']    = __('W-9', 'backstage-venue-manager');
+        $new['vms_1099']  = __('1099', 'backstage-venue-manager');
     }
 
     return $new;
@@ -126,13 +126,13 @@ add_filter('manage_vms_vendor_posts_columns', function ($cols) {
         $new[$k] = $label;
 
         if ($k === 'title') {
-            $new['vms_tax_status'] = __('Tax Status', 'vms');
+            $new['vms_tax_status'] = __('Tax Status', 'backstage-venue-manager');
         }
     }
 
     // Fallback if title wasn't found for any reason
     if (!isset($new['vms_tax_status'])) {
-        $new['vms_tax_status'] = __('Tax Status', 'vms');
+        $new['vms_tax_status'] = __('Tax Status', 'backstage-venue-manager');
     }
 
     return $new;
@@ -150,7 +150,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
 
     if ($complete) {
         $markup = '<span class="vms-vendor-tax-pill vms-vendor-tax-pill-complete">✅ ' .
-            esc_html__('Complete', 'vms') .
+            esc_html__('Complete', 'backstage-venue-manager') .
         '</span>';
         echo wp_kses($markup, vms_vendor_list_columns_pill_allowed_html());
     } else {
@@ -159,11 +159,11 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
             : [];
 
         $title = !empty($missing)
-            ? esc_attr__('Missing: ', 'vms') . esc_attr(implode(', ', $missing))
-            : esc_attr__('Incomplete', 'vms');
+            ? esc_attr__('Missing: ', 'backstage-venue-manager') . esc_attr(implode(', ', $missing))
+            : esc_attr__('Incomplete', 'backstage-venue-manager');
 
         $markup = '<span title="' . $title . '" class="vms-vendor-tax-pill vms-vendor-tax-pill-incomplete">⚠️ ' .
-            esc_html__('Incomplete', 'vms') .
+            esc_html__('Incomplete', 'backstage-venue-manager') .
         '</span>';
         echo wp_kses($markup, vms_vendor_list_columns_pill_allowed_html());
     }
@@ -185,12 +185,12 @@ add_action('restrict_manage_posts', function () {
     $r1099 = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_requires_1099'));
 
     $w9_opts = [
-        ''              => __('All W-9 statuses', 'vms'),
-        'not_requested' => __('W-9: Not Requested', 'vms'),
-        'requested'     => __('W-9: Requested', 'vms'),
-        'received'      => __('W-9: Received', 'vms'),
-        'on_file'       => __('W-9: On File', 'vms'),
-        'exempt'        => __('W-9: Exempt', 'vms'),
+        ''              => __('All W-9 statuses', 'backstage-venue-manager'),
+        'not_requested' => __('W-9: Not Requested', 'backstage-venue-manager'),
+        'requested'     => __('W-9: Requested', 'backstage-venue-manager'),
+        'received'      => __('W-9: Received', 'backstage-venue-manager'),
+        'on_file'       => __('W-9: On File', 'backstage-venue-manager'),
+        'exempt'        => __('W-9: Exempt', 'backstage-venue-manager'),
     ];
 
     echo '<select name="vms_w9_status" class="vms-vendor-filter-w9-status">';
@@ -205,10 +205,10 @@ add_action('restrict_manage_posts', function () {
     echo '</select>';
 
     $r_opts = [
-        ''        => __('All 1099 flags', 'vms'),
-        'unknown' => __('1099: Unknown', 'vms'),
-        'yes'     => __('1099: Yes', 'vms'),
-        'no'      => __('1099: No', 'vms'),
+        ''        => __('All 1099 flags', 'backstage-venue-manager'),
+        'unknown' => __('1099: Unknown', 'backstage-venue-manager'),
+        'yes'     => __('1099: Yes', 'backstage-venue-manager'),
+        'no'      => __('1099: No', 'backstage-venue-manager'),
     ];
 
     echo '&nbsp;<select name="vms_requires_1099" class="vms-vendor-filter-1099">';

@@ -63,7 +63,7 @@ if (!class_exists('VMS_Addons_Licensing')) {
 			$product_id = absint($manifest_entry['freemius']['product_id'] ?? 0);
 			$license_key = (string) ($entry['license_key'] ?? '');
 			if ($product_id < 1 || $license_key === '') {
-				return new WP_Error('missing_license_data', __('Product ID or license key is missing.', 'vms'));
+				return new WP_Error('missing_license_data', __('Product ID or license key is missing.', 'backstage-venue-manager'));
 			}
 
 			$url = sprintf('https://api.freemius.com/v1/products/%d/licenses/activate.json', $product_id);
@@ -90,7 +90,7 @@ if (!class_exists('VMS_Addons_Licensing')) {
 			$license_key = (string) ($entry['license_key'] ?? '');
 			$install_id = absint($entry['install_id'] ?? 0);
 			if ($product_id < 1 || $license_key === '' || $install_id < 1) {
-				return new WP_Error('missing_license_data', __('Product ID, install ID, or license key is missing.', 'vms'));
+				return new WP_Error('missing_license_data', __('Product ID, install ID, or license key is missing.', 'backstage-venue-manager'));
 			}
 
 			$url = sprintf(
@@ -110,7 +110,7 @@ if (!class_exists('VMS_Addons_Licensing')) {
 			$license_key = (string) ($entry['license_key'] ?? '');
 			$install_id = absint($entry['install_id'] ?? 0);
 			if ($product_id < 1 || $license_key === '' || $install_id < 1) {
-				return new WP_Error('missing_license_data', __('Product ID, install ID, or license key is missing.', 'vms'));
+				return new WP_Error('missing_license_data', __('Product ID, install ID, or license key is missing.', 'backstage-venue-manager'));
 			}
 
 			$url = sprintf(
@@ -127,33 +127,33 @@ if (!class_exists('VMS_Addons_Licensing')) {
 		private static function parse_freemius_response($response, string $op)
 		{
 			if (is_wp_error($response)) {
-				return new WP_Error('freemius_unreachable', __('Could not reach licensing server.', 'vms'));
+				return new WP_Error('freemius_unreachable', __('Could not reach licensing server.', 'backstage-venue-manager'));
 			}
 
 			$code = (int) wp_remote_retrieve_response_code($response);
 			$body = json_decode((string) wp_remote_retrieve_body($response), true);
 			if ($code < 200 || $code >= 300) {
-				$message = is_array($body) && !empty($body['error']['message']) ? (string) $body['error']['message'] : __('Licensing request failed.', 'vms');
+				$message = is_array($body) && !empty($body['error']['message']) ? (string) $body['error']['message'] : __('Licensing request failed.', 'backstage-venue-manager');
 				return new WP_Error('freemius_error', sanitize_text_field($message));
 			}
 
 			$status = 'active';
-			$status_message = __('License is active.', 'vms');
+			$status_message = __('License is active.', 'backstage-venue-manager');
 			$install_id = absint($body['install_id'] ?? $body['install']['id'] ?? 0);
 
 			if ($op === 'deactivate') {
 				$status = 'missing';
-				$status_message = __('License deactivated.', 'vms');
+				$status_message = __('License deactivated.', 'backstage-venue-manager');
 			}
 			if ($op === 'validate') {
 				$is_active = (bool) ($body['is_active'] ?? $body['license']['is_active'] ?? true);
 				$expired = (bool) ($body['is_expired'] ?? $body['license']['is_expired'] ?? false);
 				if ($expired) {
 					$status = 'expired';
-					$status_message = __('License is expired.', 'vms');
+					$status_message = __('License is expired.', 'backstage-venue-manager');
 				} elseif (!$is_active) {
 					$status = 'missing';
-					$status_message = __('License is not active.', 'vms');
+					$status_message = __('License is not active.', 'backstage-venue-manager');
 				}
 			}
 

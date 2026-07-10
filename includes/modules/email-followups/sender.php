@@ -56,7 +56,7 @@ if (!function_exists('vms_email_followups_customer_greeting')) {
 	function vms_email_followups_customer_greeting(array $recipient = array()): string
 	{
 		$first_name = vms_email_followups_customer_first_name($recipient);
-		return $first_name !== '' ? sprintf(__('Hi %s,', 'vms'), $first_name) : __('Hi there,', 'vms');
+		return $first_name !== '' ? sprintf(__('Hi %s,', 'backstage-venue-manager'), $first_name) : __('Hi there,', 'backstage-venue-manager');
 	}
 }
 
@@ -135,12 +135,12 @@ if (!function_exists('vms_email_followups_send_test')) {
 		$email_key = sanitize_key($email_key);
 		$to = sanitize_email($to);
 		if (!is_email($to)) {
-			return array('ok' => false, 'message' => __('Invalid test recipient.', 'vms'));
+			return array('ok' => false, 'message' => __('Invalid test recipient.', 'backstage-venue-manager'));
 		}
-		$rendered = vms_email_followups_render_message($email_key, $event_plan_id, array('email' => $to, 'name' => __('Test Recipient', 'vms')));
+		$rendered = vms_email_followups_render_message($email_key, $event_plan_id, array('email' => $to, 'name' => __('Test Recipient', 'backstage-venue-manager')));
 		list($allowed, $reason) = vms_email_followups_context_allows_send((array) ($rendered['context'] ?? array()));
 		if (!$allowed) {
-			return array('ok' => false, 'message' => sprintf(__('Test blocked: %s', 'vms'), $reason));
+			return array('ok' => false, 'message' => sprintf(__('Test blocked: %s', 'backstage-venue-manager'), $reason));
 		}
 		$ok = wp_mail($to, '[TEST] ' . (string) $rendered['subject'], (string) $rendered['body_html'], vms_email_followups_headers());
 		vms_email_followups_log(array(
@@ -151,7 +151,7 @@ if (!function_exists('vms_email_followups_send_test')) {
 			'status' => $ok ? 'sent' : 'error',
 			'message' => $ok ? 'Test email sent.' : 'wp_mail returned false for test email.',
 		));
-		return array('ok' => (bool) $ok, 'message' => $ok ? __('Test email sent.', 'vms') : __('WordPress email returned an error for this test.', 'vms'));
+		return array('ok' => (bool) $ok, 'message' => $ok ? __('Test email sent.', 'backstage-venue-manager') : __('WordPress email returned an error for this test.', 'backstage-venue-manager'));
 	}
 }
 

@@ -32,7 +32,7 @@ function vms_staff_linked_vendor_meta_key(): string
 add_action('add_meta_boxes', function (): void {
 	add_meta_box(
 		'vms_vendor_staff_link',
-		__('Also Works as Staff', 'vms'),
+		__('Also Works as Staff', 'backstage-venue-manager'),
 		'vms_vendor_staff_link_metabox_render',
 		'vms_vendor',
 		'side',
@@ -49,7 +49,7 @@ function vms_vendor_staff_link_metabox_render($post): void
 
 	wp_nonce_field('vms_vendor_staff_link_save', 'vms_vendor_staff_link_nonce');
 
-	echo '<p class="description">' . esc_html__('Link this vendor to a Staff profile so they can be assigned Staff Roles and use staff-only console areas.', 'vms') . '</p>';
+	echo '<p class="description">' . esc_html__('Link this vendor to a Staff profile so they can be assigned Staff Roles and use staff-only console areas.', 'backstage-venue-manager') . '</p>';
 
 	$staff_posts = get_posts(array(
 		'post_type'      => 'vms_staff',
@@ -62,7 +62,7 @@ function vms_vendor_staff_link_metabox_render($post): void
 	));
 
 	echo '<select name="vms_linked_staff_id" style="width:100%;">';
-	echo '<option value="0">— ' . esc_html__('Not linked', 'vms') . ' —</option>';
+	echo '<option value="0">— ' . esc_html__('Not linked', 'backstage-venue-manager') . ' —</option>';
 
 	foreach ($staff_posts as $sid) {
 		$sid = (int) $sid;
@@ -83,7 +83,7 @@ function vms_vendor_staff_link_metabox_render($post): void
 		$edit_staff = get_edit_post_link($current_staff_id, '');
 		if ($edit_staff) {
 			echo '<p style="margin-top:10px;">';
-			echo '<a class="button button-secondary" href="' . esc_url($edit_staff) . '">' . esc_html__('Edit linked staff', 'vms') . '</a>';
+			echo '<a class="button button-secondary" href="' . esc_url($edit_staff) . '">' . esc_html__('Edit linked staff', 'backstage-venue-manager') . '</a>';
 			echo '</p>';
 		}
 	} else {
@@ -91,12 +91,12 @@ function vms_vendor_staff_link_metabox_render($post): void
 		$action_url = wp_nonce_url($action_url, 'vms_create_staff_from_vendor_' . (string) $vendor_id);
 
 		echo '<p style="margin-top:10px;">';
-		echo '<a class="button button-primary" href="' . esc_url($action_url) . '">' . esc_html__('Create staff profile from this vendor', 'vms') . '</a>';
+		echo '<a class="button button-primary" href="' . esc_url($action_url) . '">' . esc_html__('Create staff profile from this vendor', 'backstage-venue-manager') . '</a>';
 		echo '</p>';
 	}
 
 	echo '<p class="description" style="margin-top:10px;">' .
-		esc_html__('Tip: Staff Roles live on the Staff profile (Bar, Ticket Checker, Cleanup, etc). Vendor category (music vendor, food vendor, contractor) stays on the Vendor.', 'vms') .
+		esc_html__('Tip: Staff Roles live on the Staff profile (Bar, Ticket Checker, Cleanup, etc). Vendor category (music vendor, food vendor, contractor) stays on the Vendor.', 'backstage-venue-manager') .
 		'</p>';
 }
 
@@ -184,7 +184,7 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 	}
 
 	if (!current_user_can('edit_post', $vendor_id)) {
-		wp_die(esc_html__('You do not have permission to do that.', 'vms'));
+		wp_die(esc_html__('You do not have permission to do that.', 'backstage-venue-manager'));
 	}
 
 	check_admin_referer('vms_create_staff_from_vendor_' . (string) $vendor_id);
@@ -216,7 +216,7 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 
 	if (is_wp_error($staff_id) || !$staff_id) {
 		if (function_exists('vms_add_admin_notice')) {
-			vms_add_admin_notice(__('Failed to create staff profile from vendor.', 'vms'), 'error');
+			vms_add_admin_notice(__('Failed to create staff profile from vendor.', 'backstage-venue-manager'), 'error');
 		}
 		wp_safe_redirect(admin_url('post.php?post=' . (string) $vendor_id . '&action=edit'));
 		exit;
@@ -247,7 +247,7 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 	update_post_meta($staff_id, $k_staff_vendor, $vendor_id);
 
 	if (function_exists('vms_add_admin_notice')) {
-		vms_add_admin_notice(__('Staff profile created and linked to this vendor.', 'vms'), 'success');
+		vms_add_admin_notice(__('Staff profile created and linked to this vendor.', 'backstage-venue-manager'), 'success');
 	}
 
 	$edit_staff = get_edit_post_link($staff_id, '');

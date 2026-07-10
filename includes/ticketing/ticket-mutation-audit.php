@@ -550,13 +550,13 @@ function vms_ticket_mutation_audit_origin_label(string $classification): string
 {
 	switch (sanitize_key($classification)) {
 		case 'vms_native':
-			return __('VMS-native', 'vms');
+			return __('VMS-native', 'backstage-venue-manager');
 		case 'imported_legacy':
-			return __('Imported legacy', 'vms');
+			return __('Imported legacy', 'backstage-venue-manager');
 		case 'mixed_or_reconciled':
-			return __('Mixed / reconciled', 'vms');
+			return __('Mixed / reconciled', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
@@ -564,15 +564,15 @@ function vms_ticket_mutation_audit_result_label(string $result_status): string
 {
 	switch (sanitize_key($result_status)) {
 		case 'success':
-			return __('Success', 'vms');
+			return __('Success', 'backstage-venue-manager');
 		case 'no_op':
-			return __('No changes', 'vms');
+			return __('No changes', 'backstage-venue-manager');
 		case 'partial':
-			return __('Partial', 'vms');
+			return __('Partial', 'backstage-venue-manager');
 		case 'failed':
-			return __('Failed', 'vms');
+			return __('Failed', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
@@ -580,23 +580,23 @@ function vms_ticket_mutation_audit_trigger_label(string $trigger_source): string
 {
 	switch (sanitize_key($trigger_source)) {
 		case 'manual_action':
-			return __('Manual action', 'vms');
+			return __('Manual action', 'backstage-venue-manager');
 		case 'cron':
-			return __('Scheduled scan', 'vms');
+			return __('Scheduled scan', 'backstage-venue-manager');
 		case 'save_hook':
-			return __('Save hook', 'vms');
+			return __('Save hook', 'backstage-venue-manager');
 		case 'publish_transition':
-			return __('Publish transition', 'vms');
+			return __('Publish transition', 'backstage-venue-manager');
 		case 'import':
-			return __('Import', 'vms');
+			return __('Import', 'backstage-venue-manager');
 		case 'preview_commit':
-			return __('Preview / Commit', 'vms');
+			return __('Preview / Commit', 'backstage-venue-manager');
 		case 'rebuild':
-			return __('Rebuild Ticket Config', 'vms');
+			return __('Rebuild Ticket Config', 'backstage-venue-manager');
 		case 'reconciliation':
-			return __('Reconciliation', 'vms');
+			return __('Reconciliation', 'backstage-venue-manager');
 		default:
-			return __('Unknown / internal', 'vms');
+			return __('Unknown / internal', 'backstage-venue-manager');
 	}
 }
 
@@ -604,27 +604,27 @@ function vms_ticket_mutation_audit_change_type_label(string $change_type): strin
 {
 	switch (sanitize_key($change_type)) {
 		case 'ticket_config_saved':
-			return __('Ticket config saved', 'vms');
+			return __('Ticket config saved', 'backstage-venue-manager');
 		case 'ticket_template_applied':
-			return __('Ticket template applied', 'vms');
+			return __('Ticket template applied', 'backstage-venue-manager');
 		case 'ticket_config_cleared':
-			return __('Ticket config cleared', 'vms');
+			return __('Ticket config cleared', 'backstage-venue-manager');
 		case 'preview_commit_applied':
-			return __('Preview / Commit applied', 'vms');
+			return __('Preview / Commit applied', 'backstage-venue-manager');
 		case 'ticket_map_rebuilt':
-			return __('Rebuild Ticket Config', 'vms');
+			return __('Rebuild Ticket Config', 'backstage-venue-manager');
 		case 'legacy_map_normalized':
-			return __('Legacy mapping normalized', 'vms');
+			return __('Legacy mapping normalized', 'backstage-venue-manager');
 		case 'event_save_sync':
-			return __('Event save sync', 'vms');
+			return __('Event save sync', 'backstage-venue-manager');
 		case 'tec_ticket_reconciliation':
-			return __('Ticket reconciliation', 'vms');
+			return __('Ticket reconciliation', 'backstage-venue-manager');
 		case 'sync_map_updated':
-			return __('Sync map updated', 'vms');
+			return __('Sync map updated', 'backstage-venue-manager');
 		case 'legacy_conflict_detected':
-			return __('Legacy conflict detected', 'vms');
+			return __('Legacy conflict detected', 'backstage-venue-manager');
 		default:
-			return __('Ticket mutation', 'vms');
+			return __('Ticket mutation', 'backstage-venue-manager');
 	}
 }
 
@@ -697,7 +697,7 @@ function vms_ticket_mutation_audit_build_summary(string $change_type, string $re
 	}
 
 	if ($result_status === 'no_op') {
-		return trim($summary . ' ' . __('No mapping snapshot change was recorded.', 'vms'));
+		return trim($summary . ' ' . __('No mapping snapshot change was recorded.', 'backstage-venue-manager'));
 	}
 
 	$parts = array($summary);
@@ -705,19 +705,19 @@ function vms_ticket_mutation_audit_build_summary(string $change_type, string $re
 	$before_mapped = count((array) ($before_snapshot['sync_map']['mapped_product_ids'] ?? array()));
 	$after_mapped = count((array) ($after_snapshot['sync_map']['mapped_product_ids'] ?? array()));
 	if ($before_mapped !== $after_mapped) {
-		$parts[] = sprintf(__('Mapped products %1$d -> %2$d.', 'vms'), $before_mapped, $after_mapped);
+		$parts[] = sprintf(__('Mapped products %1$d -> %2$d.', 'backstage-venue-manager'), $before_mapped, $after_mapped);
 	}
 
 	$before_leftovers = count((array) ($before_snapshot['legacy_leftover_ids'] ?? array()));
 	$after_leftovers = count((array) ($after_snapshot['legacy_leftover_ids'] ?? array()));
 	if ($before_leftovers !== $after_leftovers) {
-		$parts[] = sprintf(__('Legacy leftovers %1$d -> %2$d.', 'vms'), $before_leftovers, $after_leftovers);
+		$parts[] = sprintf(__('Legacy leftovers %1$d -> %2$d.', 'backstage-venue-manager'), $before_leftovers, $after_leftovers);
 	}
 
 	$before_origin = sanitize_key((string) ($before_snapshot['origin']['classification'] ?? ''));
 	$after_origin = sanitize_key((string) ($after_snapshot['origin']['classification'] ?? ''));
 	if ($before_origin !== '' && $after_origin !== '' && $before_origin !== $after_origin) {
-		$parts[] = sprintf(__('Origin now reads as %s.', 'vms'), vms_ticket_mutation_audit_origin_label($after_origin));
+		$parts[] = sprintf(__('Origin now reads as %s.', 'backstage-venue-manager'), vms_ticket_mutation_audit_origin_label($after_origin));
 	}
 
 	return implode(' ', array_filter(array_map('trim', $parts)));
@@ -1180,16 +1180,16 @@ function vms_ticket_mutation_audit_classify_snapshot(array $snapshot): array
 	$classification = 'unknown';
 	$reasons = array();
 	if ($import_key !== '') {
-		$reasons[] = __('Event Plan carries an import key.', 'vms');
+		$reasons[] = __('Event Plan carries an import key.', 'backstage-venue-manager');
 	}
 	if (!empty($legacy_identifiers)) {
-		$reasons[] = __('Linked calendar event carries legacy import identifiers.', 'vms');
+		$reasons[] = __('Linked calendar event carries legacy import identifiers.', 'backstage-venue-manager');
 	}
 	if ($has_legacy_leftovers) {
-		$reasons[] = __('Legacy-looking ticket products are still attached to the calendar event.', 'vms');
+		$reasons[] = __('Legacy-looking ticket products are still attached to the calendar event.', 'backstage-venue-manager');
 	}
 	if ($has_untracked_products) {
-		$reasons[] = __('Extra ticket products are attached without a current VMS mapping.', 'vms');
+		$reasons[] = __('Extra ticket products are attached without a current VMS mapping.', 'backstage-venue-manager');
 	}
 
 	if ($has_import_signal || $has_legacy_leftovers || $has_untracked_products) {
@@ -1335,8 +1335,8 @@ function vms_ticket_mutation_audit_detect_repeated_drift(int $plan_id, array $is
 
 	$severity = !empty($post_repair_mutation) ? 'red' : 'yellow';
 	$message = !empty($post_repair_mutation)
-		? __('This event developed mapping problems again after a prior repair, and a later non-manual process appears to have touched ticket relationships.', 'vms')
-		: __('This event has required repeated repair attempts and is still showing mapping drift.', 'vms');
+		? __('This event developed mapping problems again after a prior repair, and a later non-manual process appears to have touched ticket relationships.', 'backstage-venue-manager')
+		: __('This event has required repeated repair attempts and is still showing mapping drift.', 'backstage-venue-manager');
 
 	return array(
 		'flagged' => true,
@@ -1373,15 +1373,15 @@ function vms_ticket_mutation_audit_build_event_diagnostics(int $plan_id, array $
 	$mapped_tickets = array_values((array) ($snapshot['config']['ticket_rows'] ?? array()));
 	$public_path_healthy = empty(function_exists('vms_ticket_integrity_open_issues') ? vms_ticket_integrity_open_issues($issues) : $issues);
 
-	$recommended_action = __('Review the latest mutation record before running another repair.', 'vms');
+	$recommended_action = __('Review the latest mutation record before running another repair.', 'backstage-venue-manager');
 	if (!empty($repeated_drift['flagged'])) {
-		$recommended_action = __('This event is showing repeat drift. Watch the next non-manual mutation entry after repair to find the writer that is reintroducing the problem.', 'vms');
+		$recommended_action = __('This event is showing repeat drift. Watch the next non-manual mutation entry after repair to find the writer that is reintroducing the problem.', 'backstage-venue-manager');
 	} elseif (sanitize_key((string) ($origin['classification'] ?? '')) === 'vms_native') {
-		$recommended_action = __('This looks like a current mapping bug rather than imported residue. Start with the latest mutation source and compare before/after snapshots.', 'vms');
+		$recommended_action = __('This looks like a current mapping bug rather than imported residue. Start with the latest mutation source and compare before/after snapshots.', 'backstage-venue-manager');
 	} elseif (!empty($legacy_leftovers) || !empty($untracked_products)) {
-		$recommended_action = __('Treat this as a legacy cleanup case. Rebuild can normalize active mappings, but keep legacy leftovers under review instead of deleting them blindly.', 'vms');
+		$recommended_action = __('Treat this as a legacy cleanup case. Rebuild can normalize active mappings, but keep legacy leftovers under review instead of deleting them blindly.', 'backstage-venue-manager');
 	} elseif (!empty($last_repair) && sanitize_key((string) ($last_repair['result_status'] ?? '')) === 'no_op') {
-		$recommended_action = __('No mapping changes were applied during the last rebuild. Review the mutation history to see which save or sync path last touched this event.', 'vms');
+		$recommended_action = __('No mapping changes were applied during the last rebuild. Review the mutation history to see which save or sync path last touched this event.', 'backstage-venue-manager');
 	}
 
 	return array(

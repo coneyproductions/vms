@@ -1001,7 +1001,7 @@ if (!function_exists('vms_render_help_button')) {
 	{
 		$tour_id = sanitize_key((string) ($args['tour_id'] ?? ''));
 		$anchor = vms_tours_sanitize_anchor_token((string) ($args['anchor'] ?? ''));
-		$label = sanitize_text_field((string) ($args['label'] ?? __('Help', 'vms')));
+		$label = sanitize_text_field((string) ($args['label'] ?? __('Help', 'backstage-venue-manager')));
 		$class = sanitize_html_class((string) ($args['class'] ?? ''));
 
 		$wrapper_class = 'vms-help-menu';
@@ -1014,10 +1014,10 @@ if (!function_exists('vms_render_help_button')) {
 		$html .= '<summary class="button button-secondary" style="list-style:none;cursor:pointer;">' . esc_html($label) . '</summary>';
 		$html .= '<div class="vms-help-menu__panel" style="position:absolute;right:0;z-index:1000;margin-top:6px;padding:8px;border:1px solid #ccd0d4;background:#fff;box-shadow:0 8px 18px rgba(0,0,0,.12);display:flex;gap:6px;flex-wrap:wrap;min-width:320px;">';
 		if ($tour_id !== '') {
-			$html .= '<button type="button" class="button button-secondary" data-vms-tour-start="' . esc_attr($tour_id) . '">' . esc_html__('Start Guided Tour', 'vms') . '</button>';
+			$html .= '<button type="button" class="button button-secondary" data-vms-tour-start="' . esc_attr($tour_id) . '">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
 		}
-		$html .= '<button type="button" class="button" data-vms-help-action="quick_tips">' . esc_html__('Quick Tips', 'vms') . '</button>';
-		$html .= '<button type="button" class="button" data-vms-help-action="whats_new">' . esc_html__('What\'s New', 'vms') . '</button>';
+		$html .= '<button type="button" class="button" data-vms-help-action="quick_tips">' . esc_html__('Quick Tips', 'backstage-venue-manager') . '</button>';
+		$html .= '<button type="button" class="button" data-vms-help-action="whats_new">' . esc_html__('What\'s New', 'backstage-venue-manager') . '</button>';
 		$html .= '</div>';
 		$html .= '</details>';
 

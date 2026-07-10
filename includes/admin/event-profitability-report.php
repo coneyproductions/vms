@@ -42,8 +42,8 @@ function vms_event_profitability_admin_menu(): void
 {
 	add_submenu_page(
 		'vms-dashboard',
-		__('Reporting: Event Profitability', 'vms'),
-		__('Reporting: Event Profitability', 'vms'),
+		__('Reporting: Event Profitability', 'backstage-venue-manager'),
+		__('Reporting: Event Profitability', 'backstage-venue-manager'),
 		'manage_options',
 		'vms-event-profitability',
 		'vms_event_profitability_render_admin_page'
@@ -75,10 +75,10 @@ if (!function_exists('vms_event_profitability_readable_status')) {
 			return (string) $labels[$status];
 		}
 		if ($status === 'cancelled') {
-			return __('Cancelled', 'vms');
+			return __('Cancelled', 'backstage-venue-manager');
 		}
 		if ($status === '') {
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 		}
 		return ucwords(str_replace('_', ' ', $status));
 	}
@@ -113,20 +113,20 @@ if (!function_exists('vms_event_profitability_stage_label')) {
 	{
 		$status = sanitize_key($status);
 		if ($status === 'cancelled') {
-			return __('Cancelled', 'vms');
+			return __('Cancelled', 'backstage-venue-manager');
 		}
 
 		$today = wp_date('Y-m-d');
 		$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
 		if ($event_date === $today) {
-			return __('Live', 'vms');
+			return __('Live', 'backstage-venue-manager');
 		}
 
 		if ($event_ts > time()) {
-			return __('Projected', 'vms');
+			return __('Projected', 'backstage-venue-manager');
 		}
 
-		return __('Final', 'vms');
+		return __('Final', 'backstage-venue-manager');
 	}
 }
 
@@ -136,27 +136,27 @@ if (!function_exists('vms_event_profitability_badge')) {
 		$status = sanitize_key($status);
 		if ($status === 'cancelled') {
 			return array(
-				'label' => __('Cancelled', 'vms'),
+				'label' => __('Cancelled', 'backstage-venue-manager'),
 				'class' => 'is-cancelled',
 			);
 		}
 
 		if ($total_contribution_cents >= 50000) {
 			return array(
-				'label' => __('Good', 'vms'),
+				'label' => __('Good', 'backstage-venue-manager'),
 				'class' => 'is-good',
 			);
 		}
 
 		if ($total_contribution_cents >= 0) {
 			return array(
-				'label' => __('Decent', 'vms'),
+				'label' => __('Decent', 'backstage-venue-manager'),
 				'class' => 'is-decent',
 			);
 		}
 
 		return array(
-			'label' => __('Bust', 'vms'),
+			'label' => __('Bust', 'backstage-venue-manager'),
 			'class' => 'is-bust',
 		);
 	}
@@ -302,7 +302,7 @@ if (!function_exists('vms_event_profitability_get_rows')) {
 				'title' => $title,
 				'event_ts' => $event_ts,
 				'event_date_raw' => $event_date,
-				'event_date_label' => $event_date !== '' ? wp_date(get_option('date_format'), strtotime($event_date . ' 12:00:00')) : __('Date TBD', 'vms'),
+				'event_date_label' => $event_date !== '' ? wp_date(get_option('date_format'), strtotime($event_date . ' 12:00:00')) : __('Date TBD', 'backstage-venue-manager'),
 				'start_time_label' => (string) get_post_meta($event_plan_id, '_vms_start_time', true),
 				'is_past' => $is_past,
 				'status' => $status,
@@ -392,22 +392,22 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 		$margin_pct = (int) ($data['concession_margin_pct'] ?? 65);
 
 		echo '<div class="wrap vms-event-profitability-admin">';
-		echo '<h1>' . esc_html__('Reporting: Event Profitability', 'vms') . '</h1>';
-		echo '<p class="vms-event-profitability-intro">' . esc_html__('Mobile-first event scorecard for a fast read on whether a night looks good, decent, or like a bust. Core Profit excludes concessions. Night Score adds an estimated bar contribution so you can see the bigger picture on the fly.', 'vms') . '</p>';
+		echo '<h1>' . esc_html__('Reporting: Event Profitability', 'backstage-venue-manager') . '</h1>';
+		echo '<p class="vms-event-profitability-intro">' . esc_html__('Mobile-first event scorecard for a fast read on whether a night looks good, decent, or like a bust. Core Profit excludes concessions. Night Score adds an estimated bar contribution so you can see the bigger picture on the fly.', 'backstage-venue-manager') . '</p>';
 
 		echo '<div class="vms-event-profitability-note-grid">';
-		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Core Profit', 'vms') . '</strong><span>' . esc_html__('Ticket revenue − vendor cost − labor OH', 'vms') . '</span></div>';
+		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Core Profit', 'backstage-venue-manager') . '</strong><span>' . esc_html__('Ticket revenue − vendor cost − labor OH', 'backstage-venue-manager') . '</span></div>';
 		/* translators: %d: estimated bar profit margin percentage. */
-		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Night Score', 'vms') . '</strong><span>' . esc_html(sprintf(__('Core Profit + estimated bar profit at %d%% margin', 'vms'), $margin_pct)) . '</span></div>';
+		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Night Score', 'backstage-venue-manager') . '</strong><span>' . esc_html(sprintf(__('Core Profit + estimated bar profit at %d%% margin', 'backstage-venue-manager'), $margin_pct)) . '</span></div>';
 		echo '</div>';
 
 		echo '<form method="get" class="vms-event-profitability-filters">';
 		echo '<input type="hidden" name="page" value="vms-event-profitability" />';
 		echo '<div class="vms-event-profitability-view-tabs">';
 		$views = array(
-			'all' => __('All', 'vms'),
-			'future' => __('Future + Live', 'vms'),
-			'past' => __('Past', 'vms'),
+			'all' => __('All', 'backstage-venue-manager'),
+			'future' => __('Future + Live', 'backstage-venue-manager'),
+			'past' => __('Past', 'backstage-venue-manager'),
 		);
 		foreach ($views as $key => $label) {
 			$class = ($view === $key) ? 'is-active' : '';
@@ -415,26 +415,26 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 		}
 		echo '</div>';
 		echo '<div class="vms-event-profitability-search-row">';
-		echo '<label class="screen-reader-text" for="vms-event-profitability-search">' . esc_html__('Search events', 'vms') . '</label>';
-		echo '<input id="vms-event-profitability-search" type="search" name="s" value="' . esc_attr($search) . '" placeholder="' . esc_attr__('Search events', 'vms') . '" />';
-		echo '<button type="submit" class="button button-primary">' . esc_html__('Filter', 'vms') . '</button>';
+		echo '<label class="screen-reader-text" for="vms-event-profitability-search">' . esc_html__('Search events', 'backstage-venue-manager') . '</label>';
+		echo '<input id="vms-event-profitability-search" type="search" name="s" value="' . esc_attr($search) . '" placeholder="' . esc_attr__('Search events', 'backstage-venue-manager') . '" />';
+		echo '<button type="submit" class="button button-primary">' . esc_html__('Filter', 'backstage-venue-manager') . '</button>';
 		if ($search !== '') {
-			echo '<a class="button button-secondary" href="' . esc_url(vms_event_profitability_admin_url(array('profit_view' => $view))) . '">' . esc_html__('Clear', 'vms') . '</a>';
+			echo '<a class="button button-secondary" href="' . esc_url(vms_event_profitability_admin_url(array('profit_view' => $view))) . '">' . esc_html__('Clear', 'backstage-venue-manager') . '</a>';
 		}
 		echo '</div>';
 		echo '</form>';
 
 		echo '<section class="vms-event-profitability-summary">';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Events', 'vms') . '</span><strong>' . esc_html((string) (int) ($summary['count'] ?? 0)) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Ticket Revenue', 'vms') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['ticket_revenue_cents'] ?? 0))) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Concession Sales', 'vms') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['concessions_cents'] ?? 0))) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Labor OH', 'vms') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['labor_cents'] ?? 0))) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Core Profit', 'vms') . '</span><strong class="' . esc_attr(vms_event_profitability_money_class((int) ($summary['core_profit_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['core_profit_cents'] ?? 0))) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Night Score', 'vms') . '</span><strong class="' . esc_attr(vms_event_profitability_money_class((int) ($summary['total_contribution_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['total_contribution_cents'] ?? 0))) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Events', 'backstage-venue-manager') . '</span><strong>' . esc_html((string) (int) ($summary['count'] ?? 0)) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Ticket Revenue', 'backstage-venue-manager') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['ticket_revenue_cents'] ?? 0))) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Concession Sales', 'backstage-venue-manager') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['concessions_cents'] ?? 0))) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Labor OH', 'backstage-venue-manager') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['labor_cents'] ?? 0))) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Core Profit', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(vms_event_profitability_money_class((int) ($summary['core_profit_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['core_profit_cents'] ?? 0))) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Night Score', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(vms_event_profitability_money_class((int) ($summary['total_contribution_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['total_contribution_cents'] ?? 0))) . '</strong></article>';
 		echo '</section>';
 
 		if (empty($rows)) {
-			echo '<div class="notice notice-info"><p>' . esc_html__('No event plans matched this filter.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-info"><p>' . esc_html__('No event plans matched this filter.', 'backstage-venue-manager') . '</p></div>';
 			echo '</div>';
 			return;
 		}
@@ -474,27 +474,27 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 
 			echo '<div class="vms-event-profitability-core">';
 			echo '<div class="vms-event-profitability-big-metric">';
-			echo '<span class="label">' . esc_html__('Core Profit', 'vms') . '</span>';
+			echo '<span class="label">' . esc_html__('Core Profit', 'backstage-venue-manager') . '</span>';
 			echo '<strong class="' . esc_attr(vms_event_profitability_money_class((int) ($row['core_profit_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($row['core_profit_cents'] ?? 0))) . '</strong>';
 			echo '</div>';
 			echo '<div class="vms-event-profitability-big-metric">';
-			echo '<span class="label">' . esc_html__('Night Score', 'vms') . '</span>';
+			echo '<span class="label">' . esc_html__('Night Score', 'backstage-venue-manager') . '</span>';
 			echo '<strong class="' . esc_attr(vms_event_profitability_money_class((int) ($row['total_contribution_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($row['total_contribution_cents'] ?? 0))) . '</strong>';
 			echo '</div>';
 			echo '</div>';
 
 			echo '<dl class="vms-event-profitability-metrics">';
-			echo '<div><dt>' . esc_html__('Tickets Sold', 'vms') . '</dt><dd>' . esc_html((string) (int) ($row['ticket_qty'] ?? 0)) . '</dd></div>';
-			echo '<div><dt>' . esc_html__('Ticket Revenue', 'vms') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['ticket_revenue_cents'] ?? 0))) . '</dd></div>';
-			echo '<div><dt>' . esc_html__('Concession Sales', 'vms') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['concessions_cents'] ?? 0))) . '</dd></div>';
-			echo '<div><dt>' . esc_html__('Vendor Cost', 'vms') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['vendor_cost_cents'] ?? 0))) . '</dd></div>';
-			echo '<div><dt>' . esc_html__('Labor OH', 'vms') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['labor_cents'] ?? 0))) . '</dd></div>';
-			echo '<div><dt>' . esc_html__('Est. Bar Profit', 'vms') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['estimated_bar_profit_cents'] ?? 0))) . '</dd></div>';
+			echo '<div><dt>' . esc_html__('Tickets Sold', 'backstage-venue-manager') . '</dt><dd>' . esc_html((string) (int) ($row['ticket_qty'] ?? 0)) . '</dd></div>';
+			echo '<div><dt>' . esc_html__('Ticket Revenue', 'backstage-venue-manager') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['ticket_revenue_cents'] ?? 0))) . '</dd></div>';
+			echo '<div><dt>' . esc_html__('Concession Sales', 'backstage-venue-manager') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['concessions_cents'] ?? 0))) . '</dd></div>';
+			echo '<div><dt>' . esc_html__('Vendor Cost', 'backstage-venue-manager') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['vendor_cost_cents'] ?? 0))) . '</dd></div>';
+			echo '<div><dt>' . esc_html__('Labor OH', 'backstage-venue-manager') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['labor_cents'] ?? 0))) . '</dd></div>';
+			echo '<div><dt>' . esc_html__('Est. Bar Profit', 'backstage-venue-manager') . '</dt><dd>' . esc_html(vms_goals_fmt_money((int) ($row['estimated_bar_profit_cents'] ?? 0))) . '</dd></div>';
 			echo '</dl>';
 
 			echo '<div class="vms-event-profitability-card-actions">';
 			if ($edit_link !== '') {
-				echo '<a class="button button-secondary" href="' . esc_url($edit_link) . '">' . esc_html__('Open Event Plan', 'vms') . '</a>';
+				echo '<a class="button button-secondary" href="' . esc_url($edit_link) . '">' . esc_html__('Open Event Plan', 'backstage-venue-manager') . '</a>';
 			}
 			echo '</div>';
 			echo '</article>';

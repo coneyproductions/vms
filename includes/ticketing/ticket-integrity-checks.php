@@ -708,8 +708,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'missing_plan',
 				'red',
 				'event',
-				__('Event Plan is missing', 'vms'),
-				__('The monitor could not load the source Event Plan record for this scan target.', 'vms')
+				__('Event Plan is missing', 'backstage-venue-manager'),
+				__('The monitor could not load the source Event Plan record for this scan target.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -721,8 +721,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'missing_calendar_event',
 				'red',
 				'event',
-				__('Linked calendar event is missing', 'vms'),
-				__('This Event Plan no longer has a valid published TEC event to sell against, so customers cannot reliably see live tickets.', 'vms')
+				__('Linked calendar event is missing', 'backstage-venue-manager'),
+				__('This Event Plan no longer has a valid published TEC event to sell against, so customers cannot reliably see live tickets.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -734,8 +734,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'event_not_public',
 				'red',
 				'event',
-				__('Linked event is not public', 'vms'),
-				__('The linked calendar event is not published, so the public ticket path is blocked even if products still exist.', 'vms')
+				__('Linked event is not public', 'backstage-venue-manager'),
+				__('The linked calendar event is not published, so the public ticket path is blocked even if products still exist.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -747,8 +747,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'event_time_unresolved',
 				'yellow',
 				'event',
-				__('Event time could not be resolved cleanly', 'vms'),
-				__('The monitor could not confidently resolve the event start date/time from the WordPress-side records, which makes upcoming-window decisions less reliable.', 'vms')
+				__('Event time could not be resolved cleanly', 'backstage-venue-manager'),
+				__('The monitor could not confidently resolve the event start date/time from the WordPress-side records, which makes upcoming-window decisions less reliable.', 'backstage-venue-manager')
 			)
 		);
 	} elseif ((int) $context['event_timestamp'] <= $now) {
@@ -758,8 +758,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'event_not_upcoming',
 				'informational',
 				'event',
-				__('Event is no longer upcoming', 'vms'),
-				__('This event is outside the normal “published upcoming events” monitoring window, so any remaining ticket residue is informational unless you explicitly include inactive events.', 'vms')
+				__('Event is no longer upcoming', 'backstage-venue-manager'),
+				__('This event is outside the normal “published upcoming events” monitoring window, so any remaining ticket residue is informational unless you explicitly include inactive events.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -771,8 +771,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'event_cancelled',
 				'informational',
 				'event',
-				__('Event is cancelled', 'vms'),
-				__('This event is cancelled, so closed sales are expected unless you are deliberately reviewing inactive-event residue.', 'vms')
+				__('Event is cancelled', 'backstage-venue-manager'),
+				__('This event is cancelled, so closed sales are expected unless you are deliberately reviewing inactive-event residue.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -780,15 +780,15 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 	if (empty($context['ticketing_enabled'])) {
 		$severity = (!empty($context['attached_product_ids']) || !empty($context['mapped_all_product_ids'])) ? 'yellow' : 'informational';
 		$details = ($severity === 'yellow')
-			? __('Ticketing is disabled for this event, but linked ticket products or mappings still exist. Review whether this is intentional inactive residue or a disabled live path.', 'vms')
-			: __('Ticketing is disabled for this event, so the monitor is treating missing public ticket output as intentional unless live ticket objects still exist.', 'vms');
+			? __('Ticketing is disabled for this event, but linked ticket products or mappings still exist. Review whether this is intentional inactive residue or a disabled live path.', 'backstage-venue-manager')
+			: __('Ticketing is disabled for this event, so the monitor is treating missing public ticket output as intentional unless live ticket objects still exist.', 'backstage-venue-manager');
 		vms_ticket_integrity_add_issue(
 			$issues,
 			vms_ticket_integrity_issue(
 				'ticketing_disabled',
 				$severity,
 				'event',
-				__('Ticketing is disabled for this event', 'vms'),
+				__('Ticketing is disabled for this event', 'backstage-venue-manager'),
 				$details
 			)
 		);
@@ -801,8 +801,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'no_saved_v2_config',
 				'informational',
 				'structure',
-				__('No saved Ticketing v2 config is present', 'vms'),
-				__('Live ticket products exist, but this Event Plan does not currently store a saved Ticketing v2 config. The monitor is treating the attached products as the live source of truth and the config side as potentially legacy or partial.', 'vms')
+				__('No saved Ticketing v2 config is present', 'backstage-venue-manager'),
+				__('Live ticket products exist, but this Event Plan does not currently store a saved Ticketing v2 config. The monitor is treating the attached products as the live source of truth and the config side as potentially legacy or partial.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -825,8 +825,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'recon_missing_products',
 					'red',
 					'mapping',
-					__('Mapped ticket products are missing', 'vms'),
-					__('One or more products still referenced by the active VMS ticket map no longer exist. Customers may lose the intended live ticket path until the mapping is rebuilt.', 'vms'),
+					__('Mapped ticket products are missing', 'backstage-venue-manager'),
+					__('One or more products still referenced by the active VMS ticket map no longer exist. Customers may lose the intended live ticket path until the mapping is rebuilt.', 'backstage-venue-manager'),
 					array('product_ids' => array_values(array_map('absint', (array) $recon['mapped_missing_product_ids'])))
 				)
 			);
@@ -839,8 +839,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'recon_trashed_products',
 					'red',
 					'mapping',
-					__('Mapped ticket products are in Trash', 'vms'),
-					__('The active VMS sync map still points at products in Trash. This is a live-risk condition, not harmless history, because the current mapping still references those objects.', 'vms'),
+					__('Mapped ticket products are in Trash', 'backstage-venue-manager'),
+					__('The active VMS sync map still points at products in Trash. This is a live-risk condition, not harmless history, because the current mapping still references those objects.', 'backstage-venue-manager'),
 					array('product_ids' => array_values(array_map('absint', (array) $recon['mapped_trashed_product_ids'])))
 				)
 			);
@@ -853,8 +853,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'recon_not_products',
 					'red',
 					'mapping',
-					__('Mapped IDs are not Woo products', 'vms'),
-					__('The active ticket map points at posts that are not WooCommerce products, so the current live ticket identity is not trustworthy.', 'vms'),
+					__('Mapped IDs are not Woo products', 'backstage-venue-manager'),
+					__('The active ticket map points at posts that are not WooCommerce products, so the current live ticket identity is not trustworthy.', 'backstage-venue-manager'),
 					array('product_ids' => array_values(array_map('absint', (array) $recon['mapped_not_product_ids'])))
 				)
 			);
@@ -868,8 +868,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'recon_marker_mismatch',
 					$severity,
 					'mapping',
-					__('Mapped products have marker mismatches', 'vms'),
-					__('At least one mapped product carries plan/event markers that disagree with the current Event Plan. That often signals drift after a partial commit, migration, or manual reassignment.', 'vms'),
+					__('Mapped products have marker mismatches', 'backstage-venue-manager'),
+					__('At least one mapped product carries plan/event markers that disagree with the current Event Plan. That often signals drift after a partial commit, migration, or manual reassignment.', 'backstage-venue-manager'),
 					array('product_ids' => array_values(array_map('absint', (array) $recon['mapped_marker_mismatch_product_ids'])))
 				)
 			);
@@ -890,17 +890,17 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 			}
 
 			$severity = 'yellow';
-			$title = __('Extra ticket products are attached to the event', 'vms');
-			$details = __('The linked TEC event contains ticket products that are not tracked in the current VMS sync map. Review whether they are harmless leftovers or a conflicting live path.', 'vms');
+			$title = __('Extra ticket products are attached to the event', 'backstage-venue-manager');
+			$details = __('The linked TEC event contains ticket products that are not tracked in the current VMS sync map. Review whether they are harmless leftovers or a conflicting live path.', 'backstage-venue-manager');
 
 			if ($history_only && empty($public_unmapped)) {
 				$severity = 'informational';
-				$title = __('Legacy ticket residue detected', 'vms');
-				$details = __('Extra ticket products exist, but they currently read as historical-only residue rather than the active customer-facing path.', 'vms');
+				$title = __('Legacy ticket residue detected', 'backstage-venue-manager');
+				$details = __('Extra ticket products exist, but they currently read as historical-only residue rather than the active customer-facing path.', 'backstage-venue-manager');
 			} elseif (empty($context['mapped_ticket_product_ids']) && count($public_unmapped) > 1) {
 				$severity = 'red';
-				$title = __('Current live ticket path is ambiguous', 'vms');
-				$details = __('Multiple public ticket products are attached to the event, but VMS does not currently have a clear authoritative active mapping. Manual cleanup is not recommended until the mapping is rebuilt.', 'vms');
+				$title = __('Current live ticket path is ambiguous', 'backstage-venue-manager');
+				$details = __('Multiple public ticket products are attached to the event, but VMS does not currently have a clear authoritative active mapping. Manual cleanup is not recommended until the mapping is rebuilt.', 'backstage-venue-manager');
 			}
 
 			vms_ticket_integrity_add_issue(
@@ -979,8 +979,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'duplicate_live_ticket_products_attached',
 				'red',
 				'mapping',
-				__('Duplicate live ticket products are still attached to the event', 'vms'),
-				__('One or more extra public ticket products still match the active VMS ticket titles or ticket keys. Customers can see duplicate admission options until the leftover live products are retired or detached.', 'vms'),
+				__('Duplicate live ticket products are still attached to the event', 'backstage-venue-manager'),
+				__('One or more extra public ticket products still match the active VMS ticket titles or ticket keys. Customers can see duplicate admission options until the leftover live products are retired or detached.', 'backstage-venue-manager'),
 				array('product_ids' => $product_ids)
 			)
 		);
@@ -992,8 +992,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'extra_public_ticket_products_attached',
 				'yellow',
 				'mapping',
-				__('Extra public ticket products are still attached to the event', 'vms'),
-				__('Public-facing ticket products exist outside the active VMS map. Even when titles do not collide cleanly, they can still reopen an unintended customer-facing ticket path.', 'vms'),
+				__('Extra public ticket products are still attached to the event', 'backstage-venue-manager'),
+				__('Public-facing ticket products exist outside the active VMS map. Even when titles do not collide cleanly, they can still reopen an unintended customer-facing ticket path.', 'backstage-venue-manager'),
 				array('product_ids' => $product_ids)
 			)
 		);
@@ -1031,8 +1031,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 		}));
 		$severity = count($ticket_roles) > 1 ? 'red' : 'yellow';
 		$details = count($ticket_roles) > 1
-			? __('A single product is currently mapped to multiple ticket rows, which makes the active live ticket identity ambiguous.', 'vms')
-			: __('A single product is currently reused across ticket/add-on roles. Review whether that is an intentional shortcut or a drifted mapping.', 'vms');
+			? __('A single product is currently mapped to multiple ticket rows, which makes the active live ticket identity ambiguous.', 'backstage-venue-manager')
+			: __('A single product is currently reused across ticket/add-on roles. Review whether that is an intentional shortcut or a drifted mapping.', 'backstage-venue-manager');
 
 		vms_ticket_integrity_add_issue(
 			$issues,
@@ -1040,7 +1040,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'duplicate_mapping_' . $product_id,
 				$severity,
 				'structure',
-				__('A product is mapped to multiple active roles', 'vms'),
+				__('A product is mapped to multiple active roles', 'backstage-venue-manager'),
 				$details,
 				array('product_id' => $product_id, 'roles' => $roles)
 			)
@@ -1058,8 +1058,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'duplicate_ticket_titles_' . sanitize_key($title_token),
 				'yellow',
 				'structure',
-				__('Multiple enabled tickets share the same public title', 'vms'),
-				__('Enabled ticket rows currently share the same visible title. That can confuse operators during reconciliation and customers if multiple similar live objects remain attached to the event.', 'vms')
+				__('Multiple enabled tickets share the same public title', 'backstage-venue-manager'),
+				__('Enabled ticket rows currently share the same visible title. That can confuse operators during reconciliation and customers if multiple similar live objects remain attached to the event.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -1079,8 +1079,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_unmapped_' . $ticket_key,
 					$severity,
 					'mapping',
-					sprintf(__('Enabled ticket "%s" has no mapped product', 'vms'), $title),
-					__('This ticket row is enabled, but VMS does not currently have a linked Woo/TEC product for it. If this is supposed to be part of the live public path, customers are at risk.', 'vms')
+					sprintf(__('Enabled ticket "%s" has no mapped product', 'backstage-venue-manager'), $title),
+					__('This ticket row is enabled, but VMS does not currently have a linked Woo/TEC product for it. If this is supposed to be part of the live public path, customers are at risk.', 'backstage-venue-manager')
 				)
 			);
 		} elseif ((string) ($ticket_snapshot['mapping_state'] ?? '') !== 'ok') {
@@ -1090,8 +1090,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_mapping_problem_' . $ticket_key,
 					'red',
 					'mapping',
-					sprintf(__('Enabled ticket "%s" points to an invalid product object', 'vms'), $title),
-					__('The mapped product is missing, trashed, not a product, or linked to the wrong event. The current customer-facing path is not trustworthy until this mapping is repaired.', 'vms')
+					sprintf(__('Enabled ticket "%s" points to an invalid product object', 'backstage-venue-manager'), $title),
+					__('The mapped product is missing, trashed, not a product, or linked to the wrong event. The current customer-facing path is not trustworthy until this mapping is repaired.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1104,8 +1104,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_hidden_status_' . $ticket_key,
 						'red',
 						'visibility',
-						sprintf(__('Enabled ticket "%s" is unpublished', 'vms'), $title),
-						__('The mapped ticket product exists but is not publicly published, so customers may not be able to purchase it.', 'vms')
+						sprintf(__('Enabled ticket "%s" is unpublished', 'backstage-venue-manager'), $title),
+						__('The mapped ticket product exists but is not publicly published, so customers may not be able to purchase it.', 'backstage-venue-manager')
 					)
 				);
 			}
@@ -1117,8 +1117,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_hidden_catalog_' . $ticket_key,
 						'red',
 						'visibility',
-						sprintf(__('Enabled ticket "%s" is hidden from catalog visibility', 'vms'), $title),
-						__('The mapped ticket product is marked hidden, which can suppress the public purchase path even when the ticket should be on sale.', 'vms')
+						sprintf(__('Enabled ticket "%s" is hidden from catalog visibility', 'backstage-venue-manager'), $title),
+						__('The mapped ticket product is marked hidden, which can suppress the public purchase path even when the ticket should be on sale.', 'backstage-venue-manager')
 					)
 				);
 			}
@@ -1130,8 +1130,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_negative_stock_' . $ticket_key,
 						'red',
 						'inventory',
-						sprintf(__('Enabled ticket "%s" has negative stock state', 'vms'), $title),
-						__('The mapped product reports a negative stock quantity, which is a malformed live inventory state.', 'vms')
+						sprintf(__('Enabled ticket "%s" has negative stock state', 'backstage-venue-manager'), $title),
+						__('The mapped product reports a negative stock quantity, which is a malformed live inventory state.', 'backstage-venue-manager')
 					)
 				);
 			}
@@ -1143,8 +1143,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_zero_stock_mismatch_' . $ticket_key,
 						'red',
 						'inventory',
-						sprintf(__('Enabled ticket "%s" looks sold out unexpectedly', 'vms'), $title),
-						__('The Event Plan config still suggests sellable capacity, but the mapped product currently reports zero stock.', 'vms')
+						sprintf(__('Enabled ticket "%s" looks sold out unexpectedly', 'backstage-venue-manager'), $title),
+						__('The Event Plan config still suggests sellable capacity, but the mapped product currently reports zero stock.', 'backstage-venue-manager')
 					)
 				);
 			}
@@ -1157,8 +1157,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_outofstock_' . $ticket_key,
 						$severity,
 						'inventory',
-						sprintf(__('Enabled ticket "%s" is currently out of stock', 'vms'), $title),
-						__('The mapped product is reporting out-of-stock while the customer-facing config still reads as active. This can create a false sold-out condition or an unexpectedly closed path.', 'vms')
+						sprintf(__('Enabled ticket "%s" is currently out of stock', 'backstage-venue-manager'), $title),
+						__('The mapped product is reporting out-of-stock while the customer-facing config still reads as active. This can create a false sold-out condition or an unexpectedly closed path.', 'backstage-venue-manager')
 					)
 				);
 			}
@@ -1170,8 +1170,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					$total = absint($inventory_signal['total'] ?? 0);
 					$percent = is_numeric($inventory_signal['percent_remaining'] ?? null) ? number_format((float) $inventory_signal['percent_remaining'], 1) : '0.0';
 					$details = ($total > 0)
-						? sprintf(__('Remaining inventory is %1$d of %2$d (%3$s%%).', 'vms'), $remaining, $total, $percent)
-						: sprintf(__('Remaining inventory is %1$d tickets.', 'vms'), $remaining);
+						? sprintf(__('Remaining inventory is %1$d of %2$d (%3$s%%).', 'backstage-venue-manager'), $remaining, $total, $percent)
+						: sprintf(__('Remaining inventory is %1$d tickets.', 'backstage-venue-manager'), $remaining);
 
 					vms_ticket_integrity_add_issue(
 						$issues,
@@ -1179,7 +1179,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 							'ticket_low_inventory_' . $ticket_key,
 							(string) ($inventory_signal['severity'] ?? 'yellow'),
 							'inventory',
-							sprintf(__('Ticket "%s" is running low', 'vms'), $title),
+							sprintf(__('Ticket "%s" is running low', 'backstage-venue-manager'), $title),
 							$details,
 							array(
 								'issue_kind' => 'low_inventory',
@@ -1199,8 +1199,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_price_mismatch_' . $ticket_key,
 						'red',
 						'data',
-						sprintf(__('Enabled ticket "%s" is missing a live price', 'vms'), $title),
-						__('The Event Plan config still expects this to be a paid ticket, but the mapped product price is blank or zero.', 'vms')
+						sprintf(__('Enabled ticket "%s" is missing a live price', 'backstage-venue-manager'), $title),
+						__('The Event Plan config still expects this to be a paid ticket, but the mapped product price is blank or zero.', 'backstage-venue-manager')
 					)
 				);
 			}
@@ -1213,8 +1213,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_bad_start_' . $ticket_key,
 					'red',
 					'sale_window',
-					sprintf(__('Enabled ticket "%s" has a malformed sale start', 'vms'), $title),
-					__('The configured sale-start value could not be parsed with WordPress timezone semantics, so the public open/closed state may be wrong.', 'vms')
+					sprintf(__('Enabled ticket "%s" has a malformed sale start', 'backstage-venue-manager'), $title),
+					__('The configured sale-start value could not be parsed with WordPress timezone semantics, so the public open/closed state may be wrong.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1226,8 +1226,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_bad_end_' . $ticket_key,
 					'red',
 					'sale_window',
-					sprintf(__('Enabled ticket "%s" has a malformed sale end', 'vms'), $title),
-					__('The configured sale-end value could not be parsed with WordPress timezone semantics, so the public open/closed state may be wrong.', 'vms')
+					sprintf(__('Enabled ticket "%s" has a malformed sale end', 'backstage-venue-manager'), $title),
+					__('The configured sale-end value could not be parsed with WordPress timezone semantics, so the public open/closed state may be wrong.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1239,8 +1239,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_window_reversed_' . $ticket_key,
 					'red',
 					'sale_window',
-					sprintf(__('Enabled ticket "%s" has a reversed sale window', 'vms'), $title),
-					__('The sale end is earlier than the sale start, which is a hard customer-facing risk.', 'vms')
+					sprintf(__('Enabled ticket "%s" has a reversed sale window', 'backstage-venue-manager'), $title),
+					__('The sale end is earlier than the sale start, which is a hard customer-facing risk.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1252,8 +1252,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'ticket_window_drift_' . $ticket_key,
 					'red',
 					'sale_window',
-					sprintf(__('Enabled ticket "%s" appears closed by live product dates', 'vms'), $title),
-					__('The Event Plan config reads as currently on sale, but the mapped product carries start/end dates that currently close the product. This is a strong false sold-out / early-close signal.', 'vms')
+					sprintf(__('Enabled ticket "%s" appears closed by live product dates', 'backstage-venue-manager'), $title),
+					__('The Event Plan config reads as currently on sale, but the mapped product carries start/end dates that currently close the product. This is a strong false sold-out / early-close signal.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1268,8 +1268,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 						'ticket_verified_invalid_' . $ticket_key,
 						'red',
 						'verified',
-						sprintf(__('Verified ticket "%s" has no valid qualification rule', 'vms'), $title),
-						__('This ticket is gated as a verified-only path, but no credential program or direct-grant rule is currently configured for it.', 'vms')
+						sprintf(__('Verified ticket "%s" has no valid qualification rule', 'backstage-venue-manager'), $title),
+						__('This ticket is gated as a verified-only path, but no credential program or direct-grant rule is currently configured for it.', 'backstage-venue-manager')
 					)
 				);
 			} else {
@@ -1281,8 +1281,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 							'ticket_verified_program_missing_' . $ticket_key,
 							'red',
 							'verified',
-							sprintf(__('Verified ticket "%s" references missing programs', 'vms'), $title),
-							__('One or more verification programs referenced by this ticket no longer exist in the current program registry.', 'vms'),
+							sprintf(__('Verified ticket "%s" references missing programs', 'backstage-venue-manager'), $title),
+							__('One or more verification programs referenced by this ticket no longer exist in the current program registry.', 'backstage-venue-manager'),
 							array('programs' => $missing_programs)
 						)
 					);
@@ -1302,8 +1302,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'no_public_ticket_path',
 				'red',
 				'render',
-				__('No public ticket path is currently usable', 'vms'),
-				__('At least one customer-facing ticket appears intended to be on sale now, but the linked live products do not currently present a usable public purchase path.', 'vms')
+				__('No public ticket path is currently usable', 'backstage-venue-manager'),
+				__('At least one customer-facing ticket appears intended to be on sale now, but the linked live products do not currently present a usable public purchase path.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -1319,7 +1319,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 		$out_of_stock = (($product['is_in_stock'] ?? null) === false || (string) ($product['stock_status'] ?? '') === 'outofstock');
 		$product_closed = !empty($sales_state['product_window_present']) && empty($sales_state['product_is_open']);
 		if ($out_of_stock || $product_closed) {
-			$false_sold_out_ticket_labels[] = (string) ($ticket_snapshot['title'] ?? __('Unnamed ticket', 'vms'));
+			$false_sold_out_ticket_labels[] = (string) ($ticket_snapshot['title'] ?? __('Unnamed ticket', 'backstage-venue-manager'));
 		}
 	}
 
@@ -1330,8 +1330,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'possible_false_sold_out',
 				'red',
 				'render',
-				__('Possible false sold-out state detected', 'vms'),
-				__('One or more tickets still read as sellable from the Event Plan side, but the live product state currently closes or sells them out. That can surface to customers as a false sold-out state.', 'vms'),
+				__('Possible false sold-out state detected', 'backstage-venue-manager'),
+				__('One or more tickets still read as sellable from the Event Plan side, but the live product state currently closes or sells them out. That can surface to customers as a false sold-out state.', 'backstage-venue-manager'),
 				array('tickets' => array_values(array_unique($false_sold_out_ticket_labels)))
 			)
 		);
@@ -1362,8 +1362,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'entitlement_mapping_problem_' . $entitlement_id,
 					'yellow',
 					'addons',
-					sprintf(__('Add-on "%s" points to an invalid product object', 'vms'), $label),
-					__('This add-on is enabled in config, but its linked Woo product is missing, trashed, or not a product. Core ticket sales may still work, but the add-on path is not healthy.', 'vms')
+					sprintf(__('Add-on "%s" points to an invalid product object', 'backstage-venue-manager'), $label),
+					__('This add-on is enabled in config, but its linked Woo product is missing, trashed, or not a product. Core ticket sales may still work, but the add-on path is not healthy.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1375,8 +1375,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'entitlement_no_parent_' . $entitlement_id,
 					'red',
 					'addons',
-					sprintf(__('Add-on "%s" has no qualifying ticket path', 'vms'), $label),
-					__('This add-on still requires qualifying tickets, but the current Event Plan does not have any enabled qualifying ticket rows that can unlock it.', 'vms')
+					sprintf(__('Add-on "%s" has no qualifying ticket path', 'backstage-venue-manager'), $label),
+					__('This add-on still requires qualifying tickets, but the current Event Plan does not have any enabled qualifying ticket rows that can unlock it.', 'backstage-venue-manager')
 				)
 			);
 		} elseif ($requires_qualifying && !empty($product['is_public']) && empty($qualifying_live_tickets)) {
@@ -1386,8 +1386,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'entitlement_parent_closed_' . $entitlement_id,
 					'red',
 					'addons',
-					sprintf(__('Add-on "%s" has no live qualifying ticket path', 'vms'), $label),
-					__('This add-on is still live, but the qualifying customer-facing ticket path currently is not sellable. That can leave the add-on path effectively broken.', 'vms')
+					sprintf(__('Add-on "%s" has no live qualifying ticket path', 'backstage-venue-manager'), $label),
+					__('This add-on is still live, but the qualifying customer-facing ticket path currently is not sellable. That can leave the add-on path effectively broken.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1402,8 +1402,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 					'entitlements_render_empty',
 					'yellow',
 					'render',
-					__('Expected add-on block did not render', 'vms'),
-					__('Enabled add-ons and a qualifying ticket path exist, but the server-side add-on render returned empty output during the integrity check.', 'vms')
+					__('Expected add-on block did not render', 'backstage-venue-manager'),
+					__('Enabled add-ons and a qualifying ticket path exist, but the server-side add-on render returned empty output during the integrity check.', 'backstage-venue-manager')
 				)
 			);
 		}
@@ -1448,10 +1448,10 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 	}
 
 	if (!empty($inventory_diagnostics['zero_available_mismatch'])) {
-		$details = __('TEC is calculating zero available tickets even though the event still has remaining capacity.', 'vms');
+		$details = __('TEC is calculating zero available tickets even though the event still has remaining capacity.', 'backstage-venue-manager');
 		$cause_label = trim((string) ($inventory_diagnostics['suspected_cause_label'] ?? ''));
 		if ($cause_label !== '' && $cause_label !== vms_ticket_inventory_forensics_cause_label('healthy')) {
-			$details .= ' ' . sprintf(__('Likely pattern: %s.', 'vms'), $cause_label);
+			$details .= ' ' . sprintf(__('Likely pattern: %s.', 'backstage-venue-manager'), $cause_label);
 		}
 
 		vms_ticket_integrity_add_issue(
@@ -1460,7 +1460,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'tec_zero_available_despite_capacity',
 				'red',
 				'inventory',
-				__('TEC is resolving zero available tickets despite remaining event capacity', 'vms'),
+				__('TEC is resolving zero available tickets despite remaining event capacity', 'backstage-venue-manager'),
 				$details
 			)
 		);
@@ -1473,8 +1473,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'woo_inventory_mismatch',
 				'red',
 				'inventory',
-				__('Woo inventory disagrees with the intended sellability state', 'vms'),
-				__('At least one mapped ticket or add-on still disagrees with the intended Woo sellability state. Review the Woo-first verification rows before running another repair.', 'vms')
+				__('Woo inventory disagrees with the intended sellability state', 'backstage-venue-manager'),
+				__('At least one mapped ticket or add-on still disagrees with the intended Woo sellability state. Review the Woo-first verification rows before running another repair.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -1486,21 +1486,21 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'inventory_role_divergence',
 				'yellow',
 				'inventory',
-				__('Add-ons and admission tickets are diverging in a suspicious way', 'vms'),
-				__('Admission tickets are resolving to zero while one or more add-ons still appear available. That usually points to role-specific repair or inventory logic drift.', 'vms')
+				__('Add-ons and admission tickets are diverging in a suspicious way', 'backstage-venue-manager'),
+				__('Admission tickets are resolving to zero while one or more add-ons still appear available. That usually points to role-specific repair or inventory logic drift.', 'backstage-venue-manager')
 			)
 		);
 	}
 
 	if (!empty($inventory_diagnostics['woo_recorruption_detected'])) {
-		$details = trim((string) ($inventory_diagnostics['woo_recorruption']['message'] ?? __('Woo inventory was repaired into a sellable state, but a later write closed it again.', 'vms')));
+		$details = trim((string) ($inventory_diagnostics['woo_recorruption']['message'] ?? __('Woo inventory was repaired into a sellable state, but a later write closed it again.', 'backstage-venue-manager')));
 		vms_ticket_integrity_add_issue(
 			$issues,
 			vms_ticket_integrity_issue(
 				'woo_recorruption_detected',
 				'red',
 				'inventory',
-				__('Woo re-corruption detected after repair', 'vms'),
+				__('Woo re-corruption detected after repair', 'backstage-venue-manager'),
 				$details
 			)
 		);
@@ -1513,8 +1513,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'tec_followup_required',
 				'yellow',
 				'inventory',
-				__('Woo now matches intent, but TEC still disagrees', 'vms'),
-				__('At least one mapped product now matches the intended Woo sellability state, but TEC availability still resolves differently. Review the Woo/TEC verification rows before rewriting Woo again.', 'vms')
+				__('Woo now matches intent, but TEC still disagrees', 'backstage-venue-manager'),
+				__('At least one mapped product now matches the intended Woo sellability state, but TEC availability still resolves differently. Review the Woo/TEC verification rows before rewriting Woo again.', 'backstage-venue-manager')
 			)
 		);
 	}
@@ -1527,8 +1527,8 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'repeated_inventory_drift_detected',
 				'red',
 				'inventory',
-				__('Repeated inventory drift detected', 'vms'),
-				trim((string) ($repeated_inventory_drift['message'] ?? __('Inventory drift returned after a prior rebuild.', 'vms')))
+				__('Repeated inventory drift detected', 'backstage-venue-manager'),
+				trim((string) ($repeated_inventory_drift['message'] ?? __('Inventory drift returned after a prior rebuild.', 'backstage-venue-manager')))
 			)
 		);
 	}
@@ -1538,7 +1538,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 		$severity = sanitize_key((string) ($repeated_drift['severity'] ?? 'yellow'));
 		$message = trim((string) ($repeated_drift['message'] ?? ''));
 		if ($message === '') {
-			$message = __('This event has developed the same mapping problem again after a prior repair. Another process may still be rewriting ticket relationships.', 'vms');
+			$message = __('This event has developed the same mapping problem again after a prior repair. Another process may still be rewriting ticket relationships.', 'backstage-venue-manager');
 		}
 
 		vms_ticket_integrity_add_issue(
@@ -1547,7 +1547,7 @@ function vms_ticket_integrity_scan_event_record(int $plan_id, array $args = arra
 				'repeated_drift_detected',
 				$severity,
 				'mapping',
-				__('Repeated drift detected', 'vms'),
+				__('Repeated drift detected', 'backstage-venue-manager'),
 				$message
 			)
 		);

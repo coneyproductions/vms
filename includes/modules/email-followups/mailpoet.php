@@ -22,7 +22,7 @@ if (!function_exists('vms_email_followups_mailpoet_status')) {
 			'available' => false,
 			'setup_complete' => null,
 			'lists' => array(),
-			'message' => __('MailPoet API is not available. VMS can still use WordPress email delivery for tests/manual sends.', 'vms'),
+			'message' => __('MailPoet API is not available. VMS can still use WordPress email delivery for tests/manual sends.', 'backstage-venue-manager'),
 		);
 
 		$api = vms_email_followups_mailpoet_api();
@@ -31,7 +31,7 @@ if (!function_exists('vms_email_followups_mailpoet_status')) {
 		}
 
 		$status['available'] = true;
-		$status['message'] = __('MailPoet API detected. Subscriber/list sync can be used after you choose a list.', 'vms');
+		$status['message'] = __('MailPoet API detected. Subscriber/list sync can be used after you choose a list.', 'backstage-venue-manager');
 
 		try {
 			if (method_exists($api, 'isSetupComplete')) {

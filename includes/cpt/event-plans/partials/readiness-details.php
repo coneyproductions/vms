@@ -21,7 +21,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
     : array();
 ?>
 <div class="vms-ep-card vms-ep-card--white vms-ep-card--readiness-details">
-    <p class="description"><?php echo esc_html((string) ($vms_readiness_detail_context['status_label'] ?? __('No blocking publish warnings', 'vms'))); ?></p>
+    <p class="description"><?php echo esc_html((string) ($vms_readiness_detail_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager'))); ?></p>
 
     <?php if (!empty($summary_rows)) : ?>
         <ul class="vms-ep-inline-list">
@@ -37,7 +37,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
 
     <?php if (!empty($warning_items)) : ?>
         <div class="notice notice-warning inline vms-notice vms-notice--warning">
-            <p><strong><?php esc_html_e('Current warning details', 'vms'); ?></strong></p>
+            <p><strong><?php esc_html_e('Current warning details', 'backstage-venue-manager'); ?></strong></p>
             <ul>
                 <?php foreach ($warning_items as $warning_item) : ?>
                     <li><?php echo esc_html((string) $warning_item); ?></li>
@@ -46,7 +46,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
         </div>
     <?php else : ?>
         <div class="notice notice-success inline vms-notice">
-            <p><?php esc_html_e('No blocking or vendor-warning details are currently flagged in this summary view.', 'vms'); ?></p>
+            <p><?php esc_html_e('No blocking or vendor-warning details are currently flagged in this summary view.', 'backstage-venue-manager'); ?></p>
         </div>
     <?php endif; ?>
 
@@ -55,19 +55,19 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
             $linked_tec_id = absint($linked_tec_summary['linked_tec_id'] ?? 0);
             if ($linked_tec_id > 0) {
                 printf(
-                    esc_html__('Linked TEC event: %1$s (%2$s).', 'vms'),
-                    esc_html((string) ($linked_tec_summary['linked_tec_title'] ?? sprintf(__('Event #%d', 'vms'), $linked_tec_id))),
+                    esc_html__('Linked TEC event: %1$s (%2$s).', 'backstage-venue-manager'),
+                    esc_html((string) ($linked_tec_summary['linked_tec_title'] ?? sprintf(__('Event #%d', 'backstage-venue-manager'), $linked_tec_id))),
                     esc_html(strtoupper((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft')))
                 );
             } else {
-                esc_html_e('Linked TEC event: not linked.', 'vms');
+                esc_html_e('Linked TEC event: not linked.', 'backstage-venue-manager');
             }
         ?>
     </p>
     <p class="description">
         <?php
             printf(
-                esc_html__('Configured tickets: %1$d. Configured add-ons: %2$d.', 'vms'),
+                esc_html__('Configured tickets: %1$d. Configured add-ons: %2$d.', 'backstage-venue-manager'),
                 absint($ticketing_summary['effective_ticket_count'] ?? 0),
                 absint($vms_readiness_detail_context['add_on_summary']['enabled_add_on_count'] ?? 0)
             );
@@ -76,7 +76,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
     <p class="description">
         <?php
             printf(
-                esc_html__('Secondary vendor warnings: %1$d. Selected secondary vendors: %2$d.', 'vms'),
+                esc_html__('Secondary vendor warnings: %1$d. Selected secondary vendors: %2$d.', 'backstage-venue-manager'),
                 count((array) ($secondary_vendor_boot_summary['secondary_missing'] ?? array()))
                     + count((array) ($secondary_vendor_boot_summary['secondary_mismatch'] ?? array()))
                     + count((array) ($secondary_vendor_boot_summary['secondary_unqualified'] ?? array())),

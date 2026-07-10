@@ -156,7 +156,7 @@ function vms_continuity_binder_render_nav($sections, $base_url) {
     }
 
     echo '<div class="vms-cb-nav">';
-    echo '<div class="vms-cb-nav-title">' . esc_html__('Jump to:', 'vms') . '</div>';
+    echo '<div class="vms-cb-nav-title">' . esc_html__('Jump to:', 'backstage-venue-manager') . '</div>';
     echo '<ul class="vms-cb-nav-list">';
 
     foreach ($sections as $section_id => $section) {
@@ -177,21 +177,21 @@ function vms_render_continuity_binder_page() {
     if (function_exists('vms_admin_ui_render_shell')) {
         vms_admin_ui_render_shell(
             array(
-                'title' => __('Continuity Binder', 'vms'),
+                'title' => __('Continuity Binder', 'backstage-venue-manager'),
             ),
             'vms_render_continuity_binder_page_content'
         );
         return;
     }
 
-    echo '<div class="wrap"><h1>' . esc_html__('Continuity Binder', 'vms') . '</h1>';
+    echo '<div class="wrap"><h1>' . esc_html__('Continuity Binder', 'backstage-venue-manager') . '</h1>';
     vms_render_continuity_binder_page_content();
     echo '</div>';
 }
 
 function vms_render_continuity_binder_page_content() {
     if (!current_user_can('manage_options')) {
-        wp_die(esc_html__('You do not have permission to view this page.', 'vms'));
+        wp_die(esc_html__('You do not have permission to view this page.', 'backstage-venue-manager'));
     }
 
     $data      = vms_continuity_binder_get_data();
@@ -202,18 +202,18 @@ function vms_render_continuity_binder_page_content() {
     echo '<div class="vms-continuity-binder">';
 
     if (isset($_GET['updated']) && $_GET['updated'] === '1') {
-        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Binder updated.', 'vms') . '</p></div>';
+        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Binder updated.', 'backstage-venue-manager') . '</p></div>';
     }
 
-    echo '<div class="notice notice-warning"><p><strong>' . esc_html__('Security note:', 'vms') . '</strong> ' .
-        esc_html__('Do not store passwords, full SSNs, or full EINs here.', 'vms') . '</p></div>';
+    echo '<div class="notice notice-warning"><p><strong>' . esc_html__('Security note:', 'backstage-venue-manager') . '</strong> ' .
+        esc_html__('Do not store passwords, full SSNs, or full EINs here.', 'backstage-venue-manager') . '</p></div>';
 
     $base_url = admin_url('admin.php?page=' . $page_slug);
     $edit_url = add_query_arg('edit', '1', $base_url);
 
     if ($is_edit) {
         echo '<div class="vms-cb-actions">';
-        echo '<a class="button" href="' . esc_url($base_url) . '">' . esc_html__('Back to View Mode', 'vms') . '</a>';
+        echo '<a class="button" href="' . esc_url($base_url) . '">' . esc_html__('Back to View Mode', 'backstage-venue-manager') . '</a>';
         echo '</div>';
 
         vms_continuity_binder_render_nav($data['sections'], $edit_url);
@@ -223,7 +223,7 @@ function vms_render_continuity_binder_page_content() {
         wp_nonce_field('vms_save_continuity_binder', '_vms_cb_nonce');
 
         echo '<div class="vms-cb-form-actions">';
-        echo get_submit_button(__('Save Binder', 'vms'), 'primary', 'submit', false);
+        echo get_submit_button(__('Save Binder', 'backstage-venue-manager'), 'primary', 'submit', false);
         echo '</div>';
 
         foreach ($data['sections'] as $section_id => $section) {
@@ -236,16 +236,16 @@ function vms_render_continuity_binder_page_content() {
             echo '<h2 class="hndle"><span>' . esc_html($section['title']) . '</span></h2>';
             echo '<div class="inside">';
 
-            echo '<p><label><strong>' . esc_html__('Section Title', 'vms') . '</strong></label><br />';
+            echo '<p><label><strong>' . esc_html__('Section Title', 'backstage-venue-manager') . '</strong></label><br />';
             echo '<input type="text" class="regular-text" name="' . esc_attr($title_name) . '" value="' . esc_attr($section['title']) . '" /></p>';
 
-            echo '<p><label><strong>' . esc_html__('Section Content', 'vms') . '</strong></label><br />';
+            echo '<p><label><strong>' . esc_html__('Section Content', 'backstage-venue-manager') . '</strong></label><br />';
             echo '<textarea class="large-text" rows="10" name="' . esc_attr($content_name) . '">' . esc_textarea($section['content']) . '</textarea></p>';
 
             echo '</div></div>';
         }
 
-        submit_button(__('Save Binder', 'vms'));
+        submit_button(__('Save Binder', 'backstage-venue-manager'));
         echo '</form>';
 
         echo '</div>';
@@ -253,7 +253,7 @@ function vms_render_continuity_binder_page_content() {
     }
 
     echo '<div class="vms-cb-actions">';
-    echo '<a class="button button-primary" href="' . esc_url($edit_url) . '">' . esc_html__('Edit Binder', 'vms') . '</a>';
+    echo '<a class="button button-primary" href="' . esc_url($edit_url) . '">' . esc_html__('Edit Binder', 'backstage-venue-manager') . '</a>';
     echo '</div>';
 
     vms_continuity_binder_render_nav($data['sections'], $base_url);
@@ -261,11 +261,11 @@ function vms_render_continuity_binder_page_content() {
     if ($is_saved) {
         $updated_at = wp_date('Y-m-d H:i', (int) $data['updated_at'], wp_timezone());
         $user       = $data['updated_by'] ? get_userdata((int) $data['updated_by']) : null;
-        $who        = ($user && !empty($user->display_name)) ? $user->display_name : __('Unknown', 'vms');
+        $who        = ($user && !empty($user->display_name)) ? $user->display_name : __('Unknown', 'backstage-venue-manager');
 
-        echo '<p><em>' . esc_html(sprintf(__('Last updated: %s by %s', 'vms'), $updated_at, $who)) . '</em></p>';
+        echo '<p><em>' . esc_html(sprintf(__('Last updated: %s by %s', 'backstage-venue-manager'), $updated_at, $who)) . '</em></p>';
     } else {
-        echo '<p><em>' . esc_html__('Currently showing defaults (not yet saved). Click “Edit Binder” to customize and save.', 'vms') . '</em></p>';
+        echo '<p><em>' . esc_html__('Currently showing defaults (not yet saved). Click “Edit Binder” to customize and save.', 'backstage-venue-manager') . '</em></p>';
     }
 
     foreach ($data['sections'] as $section_id => $section) {
@@ -282,11 +282,11 @@ function vms_render_continuity_binder_page_content() {
 
 function vms_admin_post_save_continuity_binder() {
     if (!current_user_can('manage_options')) {
-        wp_die(esc_html__('Unauthorized.', 'vms'));
+        wp_die(esc_html__('Unauthorized.', 'backstage-venue-manager'));
     }
 
     if (!isset($_POST['_vms_cb_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_vms_cb_nonce'])), 'vms_save_continuity_binder')) {
-        wp_die(esc_html__('Invalid nonce.', 'vms'));
+        wp_die(esc_html__('Invalid nonce.', 'backstage-venue-manager'));
     }
 
     $incoming = isset($_POST['sections']) && is_array($_POST['sections']) ? $_POST['sections'] : array();

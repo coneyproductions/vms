@@ -344,14 +344,14 @@ function vms_render_schedule_page(): void
         ? vms_admin_ui_post_type_url('vms_event_plan')
         : admin_url('edit.php?post_type=vms_event_plan');
     $new_event_plan_url = admin_url('post-new.php?post_type=vms_event_plan');
-    $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'vms') . '</a>';
-    $actions_html .= '<a class="button button-primary" href="' . esc_url($new_event_plan_url) . '">' . esc_html__('New Event Plan', 'vms') . '</a>';
+    $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
+    $actions_html .= '<a class="button button-primary" href="' . esc_url($new_event_plan_url) . '">' . esc_html__('New Event Plan', 'backstage-venue-manager') . '</a>';
 
     if (function_exists('vms_admin_ui_render_shell')) {
         vms_admin_ui_render_shell(
             array(
-                'title' => __('Schedule', 'vms'),
-                'subtitle' => __('Plan dates, venues, and event readiness from a single calendar command center.', 'vms'),
+                'title' => __('Schedule', 'backstage-venue-manager'),
+                'subtitle' => __('Plan dates, venues, and event readiness from a single calendar command center.', 'backstage-venue-manager'),
                 'actions_html' => $actions_html,
                 'content_class' => 'vms-admin-shell__content--schedule',
             ),
@@ -523,14 +523,14 @@ function vms_render_schedule_page_content(): void
     }
     // Persisted what-if default (unchecked=0).
     echo '<input type="hidden" name="include_drafts" value="0">';
-    echo '<label for="vms-sch-lb">' . esc_html__('Show past:', 'vms') . '</label>';
+    echo '<label for="vms-sch-lb">' . esc_html__('Show past:', 'backstage-venue-manager') . '</label>';
     echo '<select id="vms-sch-lb" name="lb" class="vms-js-auto-submit-field">';
-    echo '<option value="0"' . selected(0, $months_back, false) . '>' . esc_html__('None', 'vms') . '</option>';
-    echo '<option value="1"' . selected(1, $months_back, false) . '>' . esc_html__('1 month', 'vms') . '</option>';
-    echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'vms') . '</option>';
+    echo '<option value="0"' . selected(0, $months_back, false) . '>' . esc_html__('None', 'backstage-venue-manager') . '</option>';
+    echo '<option value="1"' . selected(1, $months_back, false) . '>' . esc_html__('1 month', 'backstage-venue-manager') . '</option>';
+    echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'backstage-venue-manager') . '</option>';
     echo '</select>';
-    echo '<span class="vms-sch-muted">' . esc_html__('Past months are view-only.', 'vms') . '</span>';
-    echo '<label class="vms-sch-whatif"><input type="checkbox" name="include_drafts" value="1" class="vms-js-auto-submit-field"' . checked($include_drafts, true, false) . '> ' . esc_html__('Include Draft/Ready', 'vms') . '</label>';
+    echo '<span class="vms-sch-muted">' . esc_html__('Past months are view-only.', 'backstage-venue-manager') . '</span>';
+    echo '<label class="vms-sch-whatif"><input type="checkbox" name="include_drafts" value="1" class="vms-js-auto-submit-field"' . checked($include_drafts, true, false) . '> ' . esc_html__('Include Draft/Ready', 'backstage-venue-manager') . '</label>';
     echo '</form>';
 
     // Single-venue guardrail: if the only venue exists but is not published, call it out loudly.
@@ -558,13 +558,13 @@ function vms_render_schedule_page_content(): void
             $edit = admin_url('post.php?post=' . (int) $only_unpublished_id . '&action=edit');
         }
 
-        echo '<div class="notice notice-error"><p><strong>' . esc_html__('Action required:', 'vms') . '</strong> ';
-        echo esc_html__('Your only venue is not published, so Schedule cannot load availability.', 'vms') . ' ';
+        echo '<div class="notice notice-error"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';
+        echo esc_html__('Your only venue is not published, so Schedule cannot load availability.', 'backstage-venue-manager') . ' ';
         if ($title !== '') {
             echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
         }
         echo '<span class="vms-muted">(' . esc_html($only_unpublished_status) . ')</span>';
-        echo '</p><p><a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'vms') . '</a></p></div>';
+        echo '</p><p><a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a></p></div>';
 
         // Stop here to avoid a confusing blank calendar when the only venue is unpublished.
         echo '</div>';
@@ -581,13 +581,13 @@ function vms_render_schedule_page_content(): void
                 $edit = admin_url('post.php?post=' . (int) $venue_id . '&action=edit');
             }
 
-            echo '<div class="notice notice-error"><p><strong>' . esc_html__('Venue is not published:', 'vms') . '</strong> ';
+            echo '<div class="notice notice-error"><p><strong>' . esc_html__('Venue is not published:', 'backstage-venue-manager') . '</strong> ';
             if ($title !== '') {
                 echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
             }
             echo '<span class="vms-muted">(' . esc_html($selected_status) . ')</span> ';
-            echo esc_html__('Publish this venue to enable schedule availability.', 'vms') . '</p><p>';
-            echo '<a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'vms') . '</a>';
+            echo esc_html__('Publish this venue to enable schedule availability.', 'backstage-venue-manager') . '</p><p>';
+            echo '<a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a>';
             echo '</p></div>';
 
             echo '</div>';

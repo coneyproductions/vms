@@ -144,13 +144,13 @@ if (!function_exists('vms_event_plan_import_upload_root')) {
 		$base_dir = isset($upload['basedir']) ? trim((string) $upload['basedir']) : '';
 		$base_url = isset($upload['baseurl']) ? trim((string) $upload['baseurl']) : '';
 		if ($base_dir === '' || $base_url === '') {
-			return new WP_Error('upload_dir_missing', __('Upload directory is unavailable.', 'vms'));
+			return new WP_Error('upload_dir_missing', __('Upload directory is unavailable.', 'backstage-venue-manager'));
 		}
 
 		$dir = trailingslashit($base_dir) . 'vms-event-plan-imports';
 		$url = trailingslashit($base_url) . 'vms-event-plan-imports';
 		if (!wp_mkdir_p($dir)) {
-			return new WP_Error('upload_dir_create_failed', __('Could not create import directory in uploads.', 'vms'));
+			return new WP_Error('upload_dir_create_failed', __('Could not create import directory in uploads.', 'backstage-venue-manager'));
 		}
 
 		return array(
@@ -342,7 +342,7 @@ if (!function_exists('vms_event_plan_import_parse_numeric')) {
 
 		$sanitized = preg_replace('/[^0-9.\-]/', '', $value);
 		if ($sanitized === '' || $sanitized === '-' || $sanitized === '.' || $sanitized === '-.') {
-			return array('ok' => false, 'value' => 0.0, 'message' => __('Not a numeric value.', 'vms'));
+			return array('ok' => false, 'value' => 0.0, 'message' => __('Not a numeric value.', 'backstage-venue-manager'));
 		}
 
 		$numeric = (float) $sanitized;
@@ -358,15 +358,15 @@ if (!function_exists('vms_event_plan_import_parse_nonnegative_int')) {
 	{
 		$parsed = vms_event_plan_import_parse_numeric($value);
 		if (empty($parsed['ok'])) {
-			return array('ok' => false, 'value' => 0, 'message' => (string) ($parsed['message'] ?? __('Not a numeric value.', 'vms')));
+			return array('ok' => false, 'value' => 0, 'message' => (string) ($parsed['message'] ?? __('Not a numeric value.', 'backstage-venue-manager')));
 		}
 
 		$numeric = (float) ($parsed['value'] ?? 0);
 		if ($numeric < $min) {
-			return array('ok' => false, 'value' => 0, 'message' => __('Value is below the minimum.', 'vms'));
+			return array('ok' => false, 'value' => 0, 'message' => __('Value is below the minimum.', 'backstage-venue-manager'));
 		}
 		if (floor($numeric) !== $numeric) {
-			return array('ok' => false, 'value' => 0, 'message' => __('Value must be a whole number.', 'vms'));
+			return array('ok' => false, 'value' => 0, 'message' => __('Value must be a whole number.', 'backstage-venue-manager'));
 		}
 
 		return array('ok' => true, 'value' => (int) $numeric, 'message' => '');
@@ -554,7 +554,7 @@ if (!function_exists('vms_event_plan_import_resolve_vendor_type')) {
 					'term_id' => (int) $by_slug[$name_slug],
 					'message' => sprintf(
 						/* translators: %s: vendor type input */
-						__('Vendor type "%s" matched by name.', 'vms'),
+						__('Vendor type "%s" matched by name.', 'backstage-venue-manager'),
 						$raw
 					),
 				);
@@ -566,7 +566,7 @@ if (!function_exists('vms_event_plan_import_resolve_vendor_type')) {
 			'term_id' => 0,
 			'message' => sprintf(
 				/* translators: %s: vendor type input */
-				__('Vendor type "%s" was not found.', 'vms'),
+				__('Vendor type "%s" was not found.', 'backstage-venue-manager'),
 				$raw
 			),
 		);
@@ -597,7 +597,7 @@ if (!function_exists('vms_event_plan_import_resolve_vendor_id')) {
 	{
 		$name = trim($name);
 		if ($name === '') {
-			return array('id' => 0, 'match' => '', 'message' => __('Vendor name is blank.', 'vms'));
+			return array('id' => 0, 'match' => '', 'message' => __('Vendor name is blank.', 'backstage-venue-manager'));
 		}
 
 		$found = vms_event_plan_import_lookup_title_ids($lookup, $name);
@@ -618,7 +618,7 @@ if (!function_exists('vms_event_plan_import_resolve_vendor_id')) {
 					if (count($ids) > 1) {
 						$message = sprintf(
 							/* translators: %s: vendor name */
-							__('Multiple vendors matched "%s"; using the first vendor matching the selected type.', 'vms'),
+							__('Multiple vendors matched "%s"; using the first vendor matching the selected type.', 'backstage-venue-manager'),
 							$name
 						);
 					}
@@ -631,7 +631,7 @@ if (!function_exists('vms_event_plan_import_resolve_vendor_id')) {
 				'match' => $match,
 				'message' => sprintf(
 					/* translators: %s: vendor name */
-					__('Vendor "%s" exists but does not match the selected vendor type.', 'vms'),
+					__('Vendor "%s" exists but does not match the selected vendor type.', 'backstage-venue-manager'),
 					$name
 				),
 			);
@@ -642,7 +642,7 @@ if (!function_exists('vms_event_plan_import_resolve_vendor_id')) {
 		if (count($ids) > 1) {
 			$message = sprintf(
 				/* translators: %s: vendor name */
-				__('Multiple vendors matched "%s"; using the first match by ID.', 'vms'),
+				__('Multiple vendors matched "%s"; using the first match by ID.', 'backstage-venue-manager'),
 				$name
 			);
 		}
@@ -780,18 +780,18 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 	{
 		$csv_path = trim($csv_path);
 		if ($csv_path === '' || !file_exists($csv_path)) {
-			return new WP_Error('csv_missing', __('Uploaded CSV file is missing.', 'vms'));
+			return new WP_Error('csv_missing', __('Uploaded CSV file is missing.', 'backstage-venue-manager'));
 		}
 
 		$fh = fopen($csv_path, 'rb');
 		if (!is_resource($fh)) {
-			return new WP_Error('csv_open_failed', __('Could not open CSV file for preview.', 'vms'));
+			return new WP_Error('csv_open_failed', __('Could not open CSV file for preview.', 'backstage-venue-manager'));
 		}
 
 		$raw_headers = fgetcsv($fh);
 		if (!is_array($raw_headers) || empty($raw_headers)) {
 			fclose($fh);
-			return new WP_Error('csv_header_missing', __('CSV header row is missing.', 'vms'));
+			return new WP_Error('csv_header_missing', __('CSV header row is missing.', 'backstage-venue-manager'));
 		}
 
 		$normalized_headers = array_map(static function ($header): string {
@@ -811,7 +811,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				'csv_required_missing',
 				sprintf(
 					/* translators: %s: comma-separated headers */
-					__('CSV is missing required columns: %s', 'vms'),
+					__('CSV is missing required columns: %s', 'backstage-venue-manager'),
 					implode(', ', $missing)
 				)
 			);
@@ -865,7 +865,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 					'event_key' => '',
 					'plan_id' => 0,
 					'action' => 'skip',
-					'messages' => array(__('Blank row skipped.', 'vms')),
+					'messages' => array(__('Blank row skipped.', 'backstage-venue-manager')),
 				);
 				$summary['skip'] += 1;
 				continue;
@@ -878,11 +878,11 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 
 			$event_key = trim((string) ($row_data['event_key'] ?? ''));
 			if ($event_key === '') {
-				$errors[] = __('event_key is required.', 'vms');
+				$errors[] = __('event_key is required.', 'backstage-venue-manager');
 			} elseif (isset($seen_event_keys[$event_key])) {
 				$errors[] = sprintf(
 					/* translators: %1$s: event key, %2$d: row number */
-					__('Duplicate event_key "%1$s" already appeared on row %2$d.', 'vms'),
+					__('Duplicate event_key "%1$s" already appeared on row %2$d.', 'backstage-venue-manager'),
 					$event_key,
 					(int) $seen_event_keys[$event_key]
 				);
@@ -892,27 +892,27 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 
 			$event_date = vms_event_plan_import_parse_date((string) ($row_data['event_date'] ?? ''));
 			if ($event_date === '') {
-				$errors[] = __('event_date must be in YYYY-MM-DD format.', 'vms');
+				$errors[] = __('event_date must be in YYYY-MM-DD format.', 'backstage-venue-manager');
 			}
 
 			$start_time = vms_event_plan_import_parse_time((string) ($row_data['start_time'] ?? ''), '19:00');
 			if ($start_time === '') {
-				$errors[] = __('start_time must be HH:MM in 24-hour format.', 'vms');
+				$errors[] = __('start_time must be HH:MM in 24-hour format.', 'backstage-venue-manager');
 			}
 
 			$end_time = vms_event_plan_import_parse_time((string) ($row_data['end_time'] ?? ''), '22:00');
 			if ($end_time === '') {
-				$errors[] = __('end_time must be HH:MM in 24-hour format.', 'vms');
+				$errors[] = __('end_time must be HH:MM in 24-hour format.', 'backstage-venue-manager');
 			}
 
 			$venue_name = trim((string) ($row_data['venue_name'] ?? ''));
 			if ($venue_name === '') {
-				$errors[] = __('venue_name is required.', 'vms');
+				$errors[] = __('venue_name is required.', 'backstage-venue-manager');
 			}
 
 			$primary_vendor_name = trim((string) ($row_data['primary_vendor_name'] ?? ''));
 			if ($primary_vendor_name === '') {
-				$errors[] = __('primary_vendor_name is required.', 'vms');
+				$errors[] = __('primary_vendor_name is required.', 'backstage-venue-manager');
 			}
 
 			$event_title = trim((string) ($row_data['event_title'] ?? ''));
@@ -920,7 +920,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				$event_title = $primary_vendor_name;
 			}
 			if ($event_title === '') {
-				$event_title = __('Untitled Event Plan', 'vms');
+				$event_title = __('Untitled Event Plan', 'backstage-venue-manager');
 			}
 
 			$agenda_text = (string) ($row_data['agenda_text'] ?? '');
@@ -941,7 +941,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				$action = 'skip';
 				$messages[] = sprintf(
 					/* translators: %s: status */
-					__('Existing plan is %s and updates are disabled.', 'vms'),
+					__('Existing plan is %s and updates are disabled.', 'backstage-venue-manager'),
 					$current_status
 				);
 			}
@@ -954,14 +954,14 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 					if (count((array) $venue_match['ids']) > 1) {
 						$warnings[] = sprintf(
 							/* translators: %s: venue name */
-							__('Multiple venues matched "%s"; using the first match.', 'vms'),
+							__('Multiple venues matched "%s"; using the first match.', 'backstage-venue-manager'),
 							$venue_name
 						);
 					}
 					} else {
 						$errors[] = sprintf(
 							/* translators: %s: venue name */
-							__('Venue "%s" was not found in VMS Venues.', 'vms'),
+							__('Venue "%s" was not found in VMS Venues.', 'backstage-venue-manager'),
 							$venue_name
 						);
 					}
@@ -982,13 +982,13 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 						$create_primary_vendor = true;
 						$warnings[] = sprintf(
 							/* translators: %s: vendor name */
-							__('Primary vendor "%s" will be auto-created during commit.', 'vms'),
+							__('Primary vendor "%s" will be auto-created during commit.', 'backstage-venue-manager'),
 							$primary_vendor_name
 						);
 					} else {
 						$errors[] = sprintf(
 							/* translators: %s: vendor name */
-							__('Primary vendor "%s" was not found.', 'vms'),
+							__('Primary vendor "%s" was not found.', 'backstage-venue-manager'),
 							$primary_vendor_name
 						);
 					}
@@ -1001,7 +1001,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($comp_structure !== '' && !in_array($comp_structure, vms_event_plan_import_allowed_comp_structures(), true)) {
 					$errors[] = sprintf(
 						/* translators: %s: comp structure */
-						__('Unsupported comp_structure "%s".', 'vms'),
+						__('Unsupported comp_structure "%s".', 'backstage-venue-manager'),
 						$comp_structure
 					);
 				}
@@ -1013,7 +1013,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($flat_raw !== '') {
 					$parsed_flat = vms_event_plan_import_parse_numeric($flat_raw);
 					if (empty($parsed_flat['ok'])) {
-						$errors[] = __('flat_fee_amount must be numeric.', 'vms');
+						$errors[] = __('flat_fee_amount must be numeric.', 'backstage-venue-manager');
 					} else {
 						$flat_fee_amount = (float) $parsed_flat['value'];
 					}
@@ -1026,11 +1026,11 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($split_raw !== '') {
 					$parsed_split = vms_event_plan_import_parse_numeric($split_raw);
 					if (empty($parsed_split['ok'])) {
-						$errors[] = __('door_split_percent must be numeric.', 'vms');
+						$errors[] = __('door_split_percent must be numeric.', 'backstage-venue-manager');
 					} else {
 						$door_split_percent = (float) $parsed_split['value'];
 						if ($door_split_percent < 0 || $door_split_percent > 100) {
-							$errors[] = __('door_split_percent must be between 0 and 100.', 'vms');
+							$errors[] = __('door_split_percent must be between 0 and 100.', 'backstage-venue-manager');
 						}
 					}
 				}
@@ -1042,7 +1042,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($attendance_bonus_mode !== '' && !in_array($attendance_bonus_mode, array('step', 'continuous'), true)) {
 					$errors[] = sprintf(
 						/* translators: %s: progression mode */
-						__('Unsupported attendance_bonus_mode "%s".', 'vms'),
+						__('Unsupported attendance_bonus_mode "%s".', 'backstage-venue-manager'),
 						$attendance_bonus_mode
 					);
 				}
@@ -1054,7 +1054,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($bonus_start_raw !== '') {
 					$parsed_bonus_start = vms_event_plan_import_parse_nonnegative_int($bonus_start_raw, 0);
 					if (empty($parsed_bonus_start['ok'])) {
-						$errors[] = __('attendance_bonus_start_count must be a whole number that is 0 or greater.', 'vms');
+						$errors[] = __('attendance_bonus_start_count must be a whole number that is 0 or greater.', 'backstage-venue-manager');
 					} else {
 						$attendance_bonus_start_count = (int) $parsed_bonus_start['value'];
 					}
@@ -1067,7 +1067,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($bonus_step_size_raw !== '') {
 					$parsed_bonus_step_size = vms_event_plan_import_parse_nonnegative_int($bonus_step_size_raw, 1);
 					if (empty($parsed_bonus_step_size['ok'])) {
-						$errors[] = __('attendance_bonus_step_size must be a whole number that is at least 1.', 'vms');
+						$errors[] = __('attendance_bonus_step_size must be a whole number that is at least 1.', 'backstage-venue-manager');
 					} else {
 						$attendance_bonus_step_size = (int) $parsed_bonus_step_size['value'];
 					}
@@ -1080,11 +1080,11 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($bonus_step_bonus_raw !== '') {
 					$parsed_bonus_step_bonus = vms_event_plan_import_parse_numeric($bonus_step_bonus_raw);
 					if (empty($parsed_bonus_step_bonus['ok'])) {
-						$errors[] = __('attendance_bonus_step_bonus must be numeric.', 'vms');
+						$errors[] = __('attendance_bonus_step_bonus must be numeric.', 'backstage-venue-manager');
 					} else {
 						$attendance_bonus_step_bonus = (float) $parsed_bonus_step_bonus['value'];
 						if ($attendance_bonus_step_bonus < 0) {
-							$errors[] = __('attendance_bonus_step_bonus must be 0 or greater.', 'vms');
+							$errors[] = __('attendance_bonus_step_bonus must be 0 or greater.', 'backstage-venue-manager');
 						}
 					}
 				}
@@ -1096,11 +1096,11 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($bonus_per_ticket_raw !== '') {
 					$parsed_bonus_per_ticket = vms_event_plan_import_parse_numeric($bonus_per_ticket_raw);
 					if (empty($parsed_bonus_per_ticket['ok'])) {
-						$errors[] = __('attendance_bonus_per_ticket_rate must be numeric.', 'vms');
+						$errors[] = __('attendance_bonus_per_ticket_rate must be numeric.', 'backstage-venue-manager');
 					} else {
 						$attendance_bonus_per_ticket_rate = (float) $parsed_bonus_per_ticket['value'];
 						if ($attendance_bonus_per_ticket_rate < 0) {
-							$errors[] = __('attendance_bonus_per_ticket_rate must be 0 or greater.', 'vms');
+							$errors[] = __('attendance_bonus_per_ticket_rate must be 0 or greater.', 'backstage-venue-manager');
 						}
 					}
 				}
@@ -1112,11 +1112,11 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($bonus_max_raw !== '') {
 					$parsed_bonus_max = vms_event_plan_import_parse_numeric($bonus_max_raw);
 					if (empty($parsed_bonus_max['ok'])) {
-						$errors[] = __('attendance_bonus_max_bonus must be numeric.', 'vms');
+						$errors[] = __('attendance_bonus_max_bonus must be numeric.', 'backstage-venue-manager');
 					} else {
 						$attendance_bonus_max_bonus = (float) $parsed_bonus_max['value'];
 						if ($attendance_bonus_max_bonus < 0) {
-							$errors[] = __('attendance_bonus_max_bonus must be 0 or greater.', 'vms');
+							$errors[] = __('attendance_bonus_max_bonus must be 0 or greater.', 'backstage-venue-manager');
 						}
 					}
 				}
@@ -1132,34 +1132,34 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 			);
 
 			if ($has_attendance_bonus_values && $comp_structure !== 'attendance_bonus') {
-				$errors[] = __('Attendance bonus import columns require comp_structure=attendance_bonus.', 'vms');
+				$errors[] = __('Attendance bonus import columns require comp_structure=attendance_bonus.', 'backstage-venue-manager');
 			}
 
 			if ($comp_structure === 'attendance_bonus') {
 				if ($flat_fee_amount === null) {
-					$errors[] = __('flat_fee_amount is required for attendance_bonus comp_structure.', 'vms');
+					$errors[] = __('flat_fee_amount is required for attendance_bonus comp_structure.', 'backstage-venue-manager');
 				} elseif ($flat_fee_amount < 0) {
-					$errors[] = __('flat_fee_amount must be 0 or greater for attendance_bonus comp_structure.', 'vms');
+					$errors[] = __('flat_fee_amount must be 0 or greater for attendance_bonus comp_structure.', 'backstage-venue-manager');
 				}
 
 				if ($attendance_bonus_mode === '') {
-					$errors[] = __('attendance_bonus_mode is required for attendance_bonus comp_structure.', 'vms');
+					$errors[] = __('attendance_bonus_mode is required for attendance_bonus comp_structure.', 'backstage-venue-manager');
 				}
 
 				if ($attendance_bonus_start_count === null) {
-					$errors[] = __('attendance_bonus_start_count is required for attendance_bonus comp_structure.', 'vms');
+					$errors[] = __('attendance_bonus_start_count is required for attendance_bonus comp_structure.', 'backstage-venue-manager');
 				}
 
 				if ($attendance_bonus_mode === 'step') {
 					if ($attendance_bonus_step_size === null) {
-						$errors[] = __('attendance_bonus_step_size is required for step attendance bonus mode.', 'vms');
+						$errors[] = __('attendance_bonus_step_size is required for step attendance bonus mode.', 'backstage-venue-manager');
 					}
 					if ($attendance_bonus_step_bonus === null) {
-						$errors[] = __('attendance_bonus_step_bonus is required for step attendance bonus mode.', 'vms');
+						$errors[] = __('attendance_bonus_step_bonus is required for step attendance bonus mode.', 'backstage-venue-manager');
 					}
 				} elseif ($attendance_bonus_mode === 'continuous') {
 					if ($attendance_bonus_per_ticket_rate === null) {
-						$errors[] = __('attendance_bonus_per_ticket_rate is required for continuous attendance bonus mode.', 'vms');
+						$errors[] = __('attendance_bonus_per_ticket_rate is required for continuous attendance bonus mode.', 'backstage-venue-manager');
 					}
 				}
 			}
@@ -1187,9 +1187,9 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 
 			if (!empty($secondary_names) && $secondary_type_slug === '') {
 				if ($secondary_type_raw === '') {
-					$warnings[] = __('Secondary vendor names were provided without secondary_vendor_type. Names will be ignored.', 'vms');
+					$warnings[] = __('Secondary vendor names were provided without secondary_vendor_type. Names will be ignored.', 'backstage-venue-manager');
 				} else {
-					$warnings[] = $secondary_type_message !== '' ? $secondary_type_message : __('Secondary vendor type was not recognized. Secondary names will be ignored.', 'vms');
+					$warnings[] = $secondary_type_message !== '' ? $secondary_type_message : __('Secondary vendor type was not recognized. Secondary names will be ignored.', 'backstage-venue-manager');
 				}
 				$secondary_names = array();
 			}
@@ -1216,13 +1216,13 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 						$secondary_vendor_create_names[] = $secondary_name;
 						$warnings[] = sprintf(
 							/* translators: %s: vendor name */
-							__('Secondary vendor "%s" will be auto-created during commit.', 'vms'),
+							__('Secondary vendor "%s" will be auto-created during commit.', 'backstage-venue-manager'),
 							$secondary_name
 						);
 					} else {
 						$warnings[] = sprintf(
 							/* translators: %s: vendor name */
-							__('Secondary vendor "%s" was not found and will be skipped.', 'vms'),
+							__('Secondary vendor "%s" was not found and will be skipped.', 'backstage-venue-manager'),
 							$secondary_name
 						);
 					}
@@ -1244,7 +1244,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				if ($plan_id > 0 && $is_locked && $allow_update_locked) {
 					$warnings[] = sprintf(
 						/* translators: %s: status */
-						__('Existing plan is %s and will be updated because override is enabled.', 'vms'),
+						__('Existing plan is %s and will be updated because override is enabled.', 'backstage-venue-manager'),
 						$current_status
 					);
 				}
@@ -1324,12 +1324,12 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 		);
 		$json_written = file_put_contents($rows_json_path, wp_json_encode($json_payload, JSON_PRETTY_PRINT));
 		if ($json_written === false) {
-			return new WP_Error('rows_json_write_failed', __('Could not write preview row cache.', 'vms'));
+			return new WP_Error('rows_json_write_failed', __('Could not write preview row cache.', 'backstage-venue-manager'));
 		}
 
 		$report_fh = fopen($report_csv_path, 'wb');
 		if (!is_resource($report_fh)) {
-			return new WP_Error('report_csv_write_failed', __('Could not write preview report CSV.', 'vms'));
+			return new WP_Error('report_csv_write_failed', __('Could not write preview report CSV.', 'backstage-venue-manager'));
 		}
 		fputcsv($report_fh, array('row_number', 'event_key', 'plan_id', 'action', 'messages'));
 		foreach ($report_rows as $report_row) {
@@ -1370,20 +1370,20 @@ if (!function_exists('vms_event_plan_import_read_rows_json')) {
 	{
 		$rows_json_path = trim($rows_json_path);
 		if ($rows_json_path === '' || !file_exists($rows_json_path)) {
-			return new WP_Error('rows_json_missing', __('Preview rows cache is missing. Please run Preview again.', 'vms'));
+			return new WP_Error('rows_json_missing', __('Preview rows cache is missing. Please run Preview again.', 'backstage-venue-manager'));
 		}
 		if (!vms_event_plan_import_path_is_safe($rows_json_path)) {
-			return new WP_Error('rows_json_unsafe', __('Preview rows cache path is invalid.', 'vms'));
+			return new WP_Error('rows_json_unsafe', __('Preview rows cache path is invalid.', 'backstage-venue-manager'));
 		}
 
 		$raw = file_get_contents($rows_json_path);
 		if (!is_string($raw) || $raw === '') {
-			return new WP_Error('rows_json_empty', __('Preview rows cache is empty.', 'vms'));
+			return new WP_Error('rows_json_empty', __('Preview rows cache is empty.', 'backstage-venue-manager'));
 		}
 
 		$decoded = json_decode($raw, true);
 		if (!is_array($decoded)) {
-			return new WP_Error('rows_json_invalid', __('Preview rows cache is not valid JSON.', 'vms'));
+			return new WP_Error('rows_json_invalid', __('Preview rows cache is not valid JSON.', 'backstage-venue-manager'));
 		}
 
 		return $decoded;
@@ -1627,7 +1627,7 @@ if (!function_exists('vms_event_plan_import_resolve_or_create_vendor')) {
 	{
 		$vendor_name = trim($vendor_name);
 		if ($vendor_name === '') {
-			return array('id' => 0, 'message' => __('Vendor name is blank.', 'vms'));
+			return array('id' => 0, 'message' => __('Vendor name is blank.', 'backstage-venue-manager'));
 		}
 
 		$resolved = vms_event_plan_import_resolve_vendor_id($vendor_name, $vendor_lookup, $type_slug);
@@ -1637,7 +1637,7 @@ if (!function_exists('vms_event_plan_import_resolve_or_create_vendor')) {
 			return array('id' => $vendor_id, 'message' => $note);
 		}
 		if (!$auto_create) {
-			return array('id' => 0, 'message' => $note !== '' ? $note : sprintf(__('Vendor "%s" was not found.', 'vms'), $vendor_name));
+			return array('id' => 0, 'message' => $note !== '' ? $note : sprintf(__('Vendor "%s" was not found.', 'backstage-venue-manager'), $vendor_name));
 		}
 
 		$new_vendor_id = wp_insert_post(array(
@@ -1650,7 +1650,7 @@ if (!function_exists('vms_event_plan_import_resolve_or_create_vendor')) {
 				'id' => 0,
 				'message' => sprintf(
 					/* translators: %1$s: vendor name, %2$s: error */
-					__('Could not auto-create vendor "%1$s": %2$s', 'vms'),
+					__('Could not auto-create vendor "%1$s": %2$s', 'backstage-venue-manager'),
 					$vendor_name,
 					$new_vendor_id->get_error_message()
 				),
@@ -1663,7 +1663,7 @@ if (!function_exists('vms_event_plan_import_resolve_or_create_vendor')) {
 				'id' => 0,
 				'message' => sprintf(
 					/* translators: %s: vendor name */
-					__('Could not auto-create vendor "%s".', 'vms'),
+					__('Could not auto-create vendor "%s".', 'backstage-venue-manager'),
 					$vendor_name
 				),
 			);
@@ -1678,7 +1678,7 @@ if (!function_exists('vms_event_plan_import_resolve_or_create_vendor')) {
 			'id' => $new_vendor_id,
 			'message' => sprintf(
 				/* translators: %s: vendor name */
-				__('Auto-created vendor "%s".', 'vms'),
+				__('Auto-created vendor "%s".', 'backstage-venue-manager'),
 				$vendor_name
 			),
 		);
@@ -1820,7 +1820,7 @@ if (!function_exists('vms_event_plan_import_apply_default_template_if_needed')) 
 		if (!function_exists('vms_ticketing_v2_get_default_template_id') || !function_exists('vms_ticketing_v2_templates_apply_to_plan')) {
 			return array(
 				'applied' => false,
-				'warning' => __('Ticketing template not applied (template helpers unavailable).', 'vms'),
+				'warning' => __('Ticketing template not applied (template helpers unavailable).', 'backstage-venue-manager'),
 			);
 		}
 
@@ -1828,7 +1828,7 @@ if (!function_exists('vms_event_plan_import_apply_default_template_if_needed')) 
 		if ($template_id === '') {
 			return array(
 				'applied' => false,
-				'warning' => __('Ticketing template not applied (no default template is set).', 'vms'),
+				'warning' => __('Ticketing template not applied (no default template is set).', 'backstage-venue-manager'),
 			);
 		}
 
@@ -1839,7 +1839,7 @@ if (!function_exists('vms_event_plan_import_apply_default_template_if_needed')) 
 				'applied' => false,
 				'warning' => sprintf(
 					/* translators: %s: error key */
-					__('Ticketing template not applied (%s).', 'vms'),
+					__('Ticketing template not applied (%s).', 'backstage-venue-manager'),
 					$message
 				),
 			);
@@ -1923,7 +1923,7 @@ if (!function_exists('vms_event_plan_import_run_commit')) {
 		$selected_row_lookup = array_fill_keys($selected_row_numbers, true);
 
 		if ($commit_scope === 'selected' && empty($selected_row_lookup)) {
-			return new WP_Error('no_rows_selected', __('No rows were selected for commit.', 'vms'));
+			return new WP_Error('no_rows_selected', __('No rows were selected for commit.', 'backstage-venue-manager'));
 		}
 
 		$vendor_lookup = vms_event_plan_import_build_post_title_lookup('vms_vendor');
@@ -2023,7 +2023,7 @@ if (!function_exists('vms_event_plan_import_run_commit')) {
 
 			$event_title = trim((string) ($row['event_title'] ?? ''));
 			if ($event_title === '') {
-				$event_title = $primary_vendor_name !== '' ? $primary_vendor_name : __('Untitled Event Plan', 'vms');
+				$event_title = $primary_vendor_name !== '' ? $primary_vendor_name : __('Untitled Event Plan', 'backstage-venue-manager');
 			}
 
 			$apply_agenda = !empty($columns['has_agenda_text']);
@@ -2299,31 +2299,31 @@ if (!function_exists('vms_event_plan_import_revert_last_run')) {
 	{
 		$run = vms_event_plan_import_latest_revertible_run();
 		if (empty($run)) {
-			return new WP_Error('revert_nothing', __('No import run with a reversible snapshot was found.', 'vms'));
+			return new WP_Error('revert_nothing', __('No import run with a reversible snapshot was found.', 'backstage-venue-manager'));
 		}
 
 		$run_id = (string) ($run['run_id'] ?? '');
 		$snapshot_path = trim((string) ($run['snapshot_path'] ?? ''));
 		if ($snapshot_path === '' || !file_exists($snapshot_path)) {
-			return new WP_Error('snapshot_missing', __('Snapshot file for the latest import is missing.', 'vms'));
+			return new WP_Error('snapshot_missing', __('Snapshot file for the latest import is missing.', 'backstage-venue-manager'));
 		}
 		if (!vms_event_plan_import_path_is_safe($snapshot_path)) {
-			return new WP_Error('snapshot_unsafe', __('Snapshot file path is not allowed.', 'vms'));
+			return new WP_Error('snapshot_unsafe', __('Snapshot file path is not allowed.', 'backstage-venue-manager'));
 		}
 
 		$raw = file_get_contents($snapshot_path);
 		if (!is_string($raw) || $raw === '') {
-			return new WP_Error('snapshot_read_failed', __('Could not read snapshot file.', 'vms'));
+			return new WP_Error('snapshot_read_failed', __('Could not read snapshot file.', 'backstage-venue-manager'));
 		}
 
 		$decoded = json_decode($raw, true);
 		if (!is_array($decoded)) {
-			return new WP_Error('snapshot_invalid', __('Snapshot file is invalid JSON.', 'vms'));
+			return new WP_Error('snapshot_invalid', __('Snapshot file is invalid JSON.', 'backstage-venue-manager'));
 		}
 
 		$entries = isset($decoded['entries']) && is_array($decoded['entries']) ? $decoded['entries'] : array();
 		if (empty($entries)) {
-			return new WP_Error('snapshot_empty', __('Snapshot file does not contain any restorable entries.', 'vms'));
+			return new WP_Error('snapshot_empty', __('Snapshot file does not contain any restorable entries.', 'backstage-venue-manager'));
 		}
 
 		$restored = 0;

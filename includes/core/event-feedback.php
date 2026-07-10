@@ -16,8 +16,8 @@ if (!function_exists('vms_register_feedback_response_cpt')) {
 	{
 		register_post_type(VMS_CPT_FEEDBACK_RESPONSE, array(
 			'labels' => array(
-				'name' => __('Event Feedback', 'vms'),
-				'singular_name' => __('Event Feedback Response', 'vms'),
+				'name' => __('Event Feedback', 'backstage-venue-manager'),
+				'singular_name' => __('Event Feedback Response', 'backstage-venue-manager'),
 			),
 			'public' => false,
 			'show_ui' => false,
@@ -271,7 +271,7 @@ if (!function_exists('vms_feedback_get_event_context')) {
 			$secondary_vendors[] = array(
 				'id' => $vendor_id,
 				'name' => get_the_title($vendor_id),
-				'type_label' => vms_feedback_vendor_type_label($vendor_id, __('Vendor', 'vms')),
+				'type_label' => vms_feedback_vendor_type_label($vendor_id, __('Vendor', 'backstage-venue-manager')),
 			);
 		}
 
@@ -284,7 +284,7 @@ if (!function_exists('vms_feedback_get_event_context')) {
 			'primary_vendor' => $primary_vendor_id > 0 ? array(
 				'id' => $primary_vendor_id,
 				'name' => get_the_title($primary_vendor_id),
-				'type_label' => vms_feedback_vendor_type_label($primary_vendor_id, __('Primary vendor', 'vms')),
+				'type_label' => vms_feedback_vendor_type_label($primary_vendor_id, __('Primary vendor', 'backstage-venue-manager')),
 			) : null,
 			'secondary_vendors' => $secondary_vendors,
 		);
@@ -298,11 +298,11 @@ if (!function_exists('vms_feedback_rating_options')) {
 	function vms_feedback_rating_options(): array
 	{
 		return array(
-			5 => __('Excellent', 'vms'),
-			4 => __('Good', 'vms'),
-			3 => __('Okay', 'vms'),
-			2 => __('Needs work', 'vms'),
-			1 => __('Poor', 'vms'),
+			5 => __('Excellent', 'backstage-venue-manager'),
+			4 => __('Good', 'backstage-venue-manager'),
+			3 => __('Okay', 'backstage-venue-manager'),
+			2 => __('Needs work', 'backstage-venue-manager'),
+			1 => __('Poor', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -314,9 +314,9 @@ if (!function_exists('vms_feedback_yes_maybe_no_options')) {
 	function vms_feedback_yes_maybe_no_options(): array
 	{
 		return array(
-			'yes' => __('Yes', 'vms'),
-			'maybe' => __('Maybe', 'vms'),
-			'no' => __('No', 'vms'),
+			'yes' => __('Yes', 'backstage-venue-manager'),
+			'maybe' => __('Maybe', 'backstage-venue-manager'),
+			'no' => __('No', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -328,10 +328,10 @@ if (!function_exists('vms_feedback_secondary_vendor_order_options')) {
 	function vms_feedback_secondary_vendor_order_options(): array
 	{
 		return array(
-			'yes' => __('Yes', 'vms'),
-			'no' => __('No', 'vms'),
-			'wanted_to_but_did_not' => __('I wanted to, but did not', 'vms'),
-			'not_sure' => __("I'm not sure / don't remember", 'vms'),
+			'yes' => __('Yes', 'backstage-venue-manager'),
+			'no' => __('No', 'backstage-venue-manager'),
+			'wanted_to_but_did_not' => __('I wanted to, but did not', 'backstage-venue-manager'),
+			'not_sure' => __("I'm not sure / don't remember", 'backstage-venue-manager'),
 		);
 	}
 }
@@ -343,10 +343,10 @@ if (!function_exists('vms_feedback_website_usage_options')) {
 	function vms_feedback_website_usage_options(): array
 	{
 		return array(
-			'bought_online' => __('Yes, I bought tickets online', 'vms'),
-			'tried_issue' => __('I tried, but had an issue', 'vms'),
-			'looked_bought_door' => __('I looked online but bought at the door', 'vms'),
-			'did_not_use' => __('No, I did not use the website', 'vms'),
+			'bought_online' => __('Yes, I bought tickets online', 'backstage-venue-manager'),
+			'tried_issue' => __('I tried, but had an issue', 'backstage-venue-manager'),
+			'looked_bought_door' => __('I looked online but bought at the door', 'backstage-venue-manager'),
+			'did_not_use' => __('No, I did not use the website', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -358,12 +358,12 @@ if (!function_exists('vms_feedback_website_payment_issue_options')) {
 	function vms_feedback_website_payment_issue_options(): array
 	{
 		return array(
-			'no_issues' => __('No issues', 'vms'),
-			'apple_pay_issue' => __('Apple Pay issue', 'vms'),
-			'card_payment_issue' => __('Card/payment issue', 'vms'),
-			'page_slow_or_stuck' => __('Page was slow or stuck', 'vms'),
-			'ticket_selection_or_cart_issue' => __('Ticket selection/cart issue', 'vms'),
-			'other' => __('Other', 'vms'),
+			'no_issues' => __('No issues', 'backstage-venue-manager'),
+			'apple_pay_issue' => __('Apple Pay issue', 'backstage-venue-manager'),
+			'card_payment_issue' => __('Card/payment issue', 'backstage-venue-manager'),
+			'page_slow_or_stuck' => __('Page was slow or stuck', 'backstage-venue-manager'),
+			'ticket_selection_or_cart_issue' => __('Ticket selection/cart issue', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -421,17 +421,17 @@ if (!function_exists('vms_feedback_bar_detail_options')) {
 	function vms_feedback_bar_detail_options(): array
 	{
 		return array(
-			'fast_service' => __('Fast service / short wait', 'vms'),
-			'slow_service' => __('Long wait / slow service', 'vms'),
-			'friendly_staff' => __('Friendly bar staff', 'vms'),
-			'less_friendly_staff' => __('Staff could have been friendlier', 'vms'),
-			'good_selection' => __('Good drink selection', 'vms'),
-			'limited_selection' => __('Limited drink selection', 'vms'),
-			'fair_pricing' => __('Fair pricing / good value', 'vms'),
-			'high_pricing' => __('Pricing felt high', 'vms'),
-			'easy_ordering_payment' => __('Easy ordering / payment', 'vms'),
-			'confusing_ordering_payment' => __('Ordering or payment was confusing', 'vms'),
-			'other_bar_feedback' => __('Other bar feedback', 'vms'),
+			'fast_service' => __('Fast service / short wait', 'backstage-venue-manager'),
+			'slow_service' => __('Long wait / slow service', 'backstage-venue-manager'),
+			'friendly_staff' => __('Friendly bar staff', 'backstage-venue-manager'),
+			'less_friendly_staff' => __('Staff could have been friendlier', 'backstage-venue-manager'),
+			'good_selection' => __('Good drink selection', 'backstage-venue-manager'),
+			'limited_selection' => __('Limited drink selection', 'backstage-venue-manager'),
+			'fair_pricing' => __('Fair pricing / good value', 'backstage-venue-manager'),
+			'high_pricing' => __('Pricing felt high', 'backstage-venue-manager'),
+			'easy_ordering_payment' => __('Easy ordering / payment', 'backstage-venue-manager'),
+			'confusing_ordering_payment' => __('Ordering or payment was confusing', 'backstage-venue-manager'),
+			'other_bar_feedback' => __('Other bar feedback', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -441,12 +441,12 @@ if (!function_exists('vms_feedback_legacy_bar_detail_options')) {
 	function vms_feedback_legacy_bar_detail_options(): array
 	{
 		return array(
-			'wait_time' => __('Wait time', 'vms'),
-			'friendliness' => __('Friendliness', 'vms'),
-			'selection' => __('Selection', 'vms'),
-			'pricing' => __('Pricing / value', 'vms'),
-			'payment' => __('Payment / ordering', 'vms'),
-			'other' => __('Other', 'vms'),
+			'wait_time' => __('Wait time', 'backstage-venue-manager'),
+			'friendliness' => __('Friendliness', 'backstage-venue-manager'),
+			'selection' => __('Selection', 'backstage-venue-manager'),
+			'pricing' => __('Pricing / value', 'backstage-venue-manager'),
+			'payment' => __('Payment / ordering', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -464,17 +464,17 @@ if (!function_exists('vms_feedback_bathroom_detail_options')) {
 	function vms_feedback_bathroom_detail_options(): array
 	{
 		return array(
-			'clean_and_well_kept' => __('Clean and well-kept', 'vms'),
-			'needed_cleaning' => __('Needed cleaning', 'vms'),
-			'supplies_stocked' => __('Supplies were stocked', 'vms'),
-			'supplies_low_or_missing' => __('Supplies were low or missing', 'vms'),
-			'lighting_good' => __('Lighting was good', 'vms'),
-			'lighting_needed_attention' => __('Lighting needed attention', 'vms'),
-			'easy_to_find_access' => __('Easy to find / access', 'vms'),
-			'hard_to_find_access' => __('Hard to find / access', 'vms'),
-			'little_or_no_wait' => __('Little or no wait', 'vms'),
-			'long_line_wait' => __('Long line / wait', 'vms'),
-			'other_bathroom_feedback' => __('Other bathroom feedback', 'vms'),
+			'clean_and_well_kept' => __('Clean and well-kept', 'backstage-venue-manager'),
+			'needed_cleaning' => __('Needed cleaning', 'backstage-venue-manager'),
+			'supplies_stocked' => __('Supplies were stocked', 'backstage-venue-manager'),
+			'supplies_low_or_missing' => __('Supplies were low or missing', 'backstage-venue-manager'),
+			'lighting_good' => __('Lighting was good', 'backstage-venue-manager'),
+			'lighting_needed_attention' => __('Lighting needed attention', 'backstage-venue-manager'),
+			'easy_to_find_access' => __('Easy to find / access', 'backstage-venue-manager'),
+			'hard_to_find_access' => __('Hard to find / access', 'backstage-venue-manager'),
+			'little_or_no_wait' => __('Little or no wait', 'backstage-venue-manager'),
+			'long_line_wait' => __('Long line / wait', 'backstage-venue-manager'),
+			'other_bathroom_feedback' => __('Other bathroom feedback', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -484,12 +484,12 @@ if (!function_exists('vms_feedback_legacy_bathroom_detail_options')) {
 	function vms_feedback_legacy_bathroom_detail_options(): array
 	{
 		return array(
-			'cleanliness' => __('Cleanliness', 'vms'),
-			'supplies' => __('Supplies stocked', 'vms'),
-			'lighting' => __('Lighting', 'vms'),
-			'access' => __('Location / access', 'vms'),
-			'line' => __('Line / wait', 'vms'),
-			'other' => __('Other', 'vms'),
+			'cleanliness' => __('Cleanliness', 'backstage-venue-manager'),
+			'supplies' => __('Supplies stocked', 'backstage-venue-manager'),
+			'lighting' => __('Lighting', 'backstage-venue-manager'),
+			'access' => __('Location / access', 'backstage-venue-manager'),
+			'line' => __('Line / wait', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -507,14 +507,14 @@ if (!function_exists('vms_feedback_vendor_wait_cause_options')) {
 	function vms_feedback_vendor_wait_cause_options(): array
 	{
 		return array(
-			'line_before_ordering' => __('Long line before ordering', 'vms'),
-			'after_ordering' => __('Long wait after ordering', 'vms'),
-			'understaffed' => __('Seemed understaffed', 'vms'),
-			'payment_ordering' => __('Ordering / payment was slow', 'vms'),
-			'menu_complexity' => __('Menu seemed complicated', 'vms'),
-			'ran_out' => __('They ran out of items', 'vms'),
-			'not_sure' => __('Not sure', 'vms'),
-			'other' => __('Other', 'vms'),
+			'line_before_ordering' => __('Long line before ordering', 'backstage-venue-manager'),
+			'after_ordering' => __('Long wait after ordering', 'backstage-venue-manager'),
+			'understaffed' => __('Seemed understaffed', 'backstage-venue-manager'),
+			'payment_ordering' => __('Ordering / payment was slow', 'backstage-venue-manager'),
+			'menu_complexity' => __('Menu seemed complicated', 'backstage-venue-manager'),
+			'ran_out' => __('They ran out of items', 'backstage-venue-manager'),
+			'not_sure' => __('Not sure', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -620,35 +620,35 @@ if (!function_exists('vms_feedback_send_new_submission_notification')) {
 			$event_title = get_the_title($event_plan_id);
 		}
 		if ($event_title === '') {
-			$event_title = __('an event', 'vms');
+			$event_title = __('an event', 'backstage-venue-manager');
 		}
 		$attendee_name = trim((string) ($attendee['name'] ?? ''));
 		$attendee_email = trim((string) ($attendee['email'] ?? ''));
 		$overall_rating = vms_feedback_payload_rating($payload, 'overall.event_rating');
 		$admin_url = vms_feedback_response_admin_url($event_plan_id, $response_id);
-		$subject = sprintf(__('New event feedback: %s', 'vms'), wp_strip_all_tags($event_title));
+		$subject = sprintf(__('New event feedback: %s', 'backstage-venue-manager'), wp_strip_all_tags($event_title));
 		$lines = array(
-			sprintf(__('A new private Event Feedback response was submitted for %s.', 'vms'), wp_strip_all_tags($event_title)),
+			sprintf(__('A new private Event Feedback response was submitted for %s.', 'backstage-venue-manager'), wp_strip_all_tags($event_title)),
 			'',
-			sprintf(__('Submitted by: %s', 'vms'), $attendee_name !== '' ? $attendee_name : __('Anonymous', 'vms')),
+			sprintf(__('Submitted by: %s', 'backstage-venue-manager'), $attendee_name !== '' ? $attendee_name : __('Anonymous', 'backstage-venue-manager')),
 		);
 		if ($attendee_email !== '') {
-			$lines[] = sprintf(__('Email: %s', 'vms'), $attendee_email);
+			$lines[] = sprintf(__('Email: %s', 'backstage-venue-manager'), $attendee_email);
 		}
 		if ($overall_rating > 0) {
-			$lines[] = sprintf(__('Overall rating: %d/5', 'vms'), $overall_rating);
+			$lines[] = sprintf(__('Overall rating: %d/5', 'backstage-venue-manager'), $overall_rating);
 		}
 		$final_comment = trim((string) ($payload['final_comment'] ?? ''));
 		if ($final_comment !== '') {
 			$lines[] = '';
-			$lines[] = __('Final comment:', 'vms');
+			$lines[] = __('Final comment:', 'backstage-venue-manager');
 			$lines[] = wp_strip_all_tags($final_comment);
 		}
 		$lines[] = '';
-		$lines[] = __('Review privately in VMS:', 'vms');
+		$lines[] = __('Review privately in VMS:', 'backstage-venue-manager');
 		$lines[] = $admin_url;
 		$lines[] = '';
-		$lines[] = __('Reminder: keep raw comments private unless you intentionally curate or anonymize them.', 'vms');
+		$lines[] = __('Reminder: keep raw comments private unless you intentionally curate or anonymize them.', 'backstage-venue-manager');
 
 		return wp_mail($settings['recipients'], $subject, implode("\n", $lines));
 	}

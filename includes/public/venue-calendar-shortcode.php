@@ -284,7 +284,7 @@ if (!function_exists('vms_public_calendar_join_label_list')) {
 		$last = array_pop($parts);
 		return sprintf(
 			/* translators: 1: leading list items, 2: final list item */
-			__('%1$s & %2$s', 'vms'),
+			__('%1$s & %2$s', 'backstage-venue-manager'),
 			implode(', ', $parts),
 			(string) $last
 		);
@@ -326,7 +326,7 @@ if (!function_exists('vms_public_calendar_compact_range_title')) {
 			}, $month_keys);
 			return sprintf(
 				/* translators: 1: month list, 2: year */
-				__('%1$s %2$s', 'vms'),
+				__('%1$s %2$s', 'backstage-venue-manager'),
 				vms_public_calendar_join_label_list($month_names),
 				$year
 			);
@@ -500,7 +500,7 @@ if (!function_exists('vms_public_calendar_build_compact_context')) {
 			$prev_months = vms_public_calendar_collect_event_months_backward($anchor_ym, $limit, $feed_args);
 			return array(
 				'months' => array(),
-				'title' => __('No Upcoming Events', 'vms'),
+				'title' => __('No Upcoming Events', 'backstage-venue-manager'),
 				'prev_ym' => isset($prev_months[0]['ym']) ? (string) $prev_months[0]['ym'] : '',
 				'prev_label' => vms_public_calendar_compact_range_title($prev_months),
 				'next_ym' => '',
@@ -654,7 +654,7 @@ if (!function_exists('vms_public_calendar_vendor_slots')) {
 		$event_url = trim((string) ($event['public_url'] ?? ''));
 		$title_fallback = trim((string) ($event['title'] ?? ''));
 		if ($title_fallback === '') {
-			$title_fallback = __('Event', 'vms');
+			$title_fallback = __('Event', 'backstage-venue-manager');
 		}
 
 		$icon_map = function_exists('vms_calendar_vendor_type_icons')
@@ -764,7 +764,7 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 	function vms_public_calendar_render_list_view(array $events, bool $show_vendors, bool $show_images, bool $show_open_closed): string
 	{
 		if (empty($events)) {
-			return '<p class="vms-public-cal-empty">' . esc_html__('No events found for this range.', 'vms') . '</p>';
+			return '<p class="vms-public-cal-empty">' . esc_html__('No events found for this range.', 'backstage-venue-manager') . '</p>';
 		}
 
 		ob_start();
@@ -776,7 +776,7 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 			$excerpt = trim((string) ($event['excerpt'] ?? ''));
 			$title = trim((string) ($event['title'] ?? ''));
 			if ($title === '') {
-				$title = __('Event', 'vms');
+				$title = __('Event', 'backstage-venue-manager');
 			}
 
 			$start_label = vms_public_calendar_time_label((string) ($event['start_local'] ?? ''));
@@ -857,7 +857,7 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 				echo '<p class="vms-public-cal-rich-excerpt">' . esc_html($excerpt) . '</p>';
 			}
 			if ($event_url !== '' && !$is_past_event) {
-				$action_label = $is_cancelled ? __('View Details', 'vms') : __('Get Tickets', 'vms');
+				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager');
 				echo '<div class="vms-public-cal-rich-actions"><a class="vms-public-cal-rich-ticket" href="' . esc_url($event_url) . '">' . esc_html($action_label) . '</a></div>';
 			}
 			echo '</div>';
@@ -889,7 +889,7 @@ if (!function_exists('vms_public_calendar_build_month_days')) {
 
 			$title = trim((string) ($event['title'] ?? ''));
 			if ($title === '') {
-				$title = __('Event', 'vms');
+				$title = __('Event', 'backstage-venue-manager');
 			}
 
 			$sort_time = '';
@@ -1061,7 +1061,7 @@ if (!function_exists('vms_public_calendar_render_day_entries')) {
 		foreach ($entries as $ev) {
 			$title = trim((string) ($ev['title'] ?? ''));
 			if ($title === '') {
-				$title = __('Event', 'vms');
+				$title = __('Event', 'backstage-venue-manager');
 			}
 			$vendors = isset($ev['vendors']) && is_array($ev['vendors']) ? $ev['vendors'] : array();
 			if (empty($vendors)) {
@@ -1162,7 +1162,7 @@ if (!function_exists('vms_public_calendar_render_day_entries')) {
 				echo '<div class="vms-cal-pop-excerpt">' . esc_html($excerpt) . '</div>';
 			}
 			if ($view_url !== '' && !$is_past_event) {
-				$action_label = $is_cancelled ? __('View Details', 'vms') : __('Get Tickets', 'vms');
+				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager');
 				echo '<div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="' . esc_url($view_url) . '">' . esc_html($action_label) . '</a></div>';
 			}
 			echo '</div></div>';
@@ -1180,13 +1180,13 @@ if (!function_exists('vms_public_calendar_compact_weekday_labels')) {
 	function vms_public_calendar_compact_weekday_labels(): array
 	{
 		return array(
-			0 => __('Sun', 'vms'),
-			1 => __('Mon', 'vms'),
-			2 => __('Tue', 'vms'),
-			3 => __('Wed', 'vms'),
-			4 => __('Thu', 'vms'),
-			5 => __('Fri', 'vms'),
-			6 => __('Sat', 'vms'),
+			0 => __('Sun', 'backstage-venue-manager'),
+			1 => __('Mon', 'backstage-venue-manager'),
+			2 => __('Tue', 'backstage-venue-manager'),
+			3 => __('Wed', 'backstage-venue-manager'),
+			4 => __('Thu', 'backstage-venue-manager'),
+			5 => __('Fri', 'backstage-venue-manager'),
+			6 => __('Sat', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -1272,7 +1272,7 @@ if (!function_exists('vms_public_calendar_render_compact_view')) {
 	function vms_public_calendar_render_compact_view(array $months, array $events, int $state_venue_id, bool $show_open_closed): string
 	{
 		if (empty($months)) {
-			return '<p class="vms-public-cal-empty">' . esc_html__('No upcoming public events are currently scheduled. Please check back soon.', 'vms') . '</p>';
+			return '<p class="vms-public-cal-empty">' . esc_html__('No upcoming public events are currently scheduled. Please check back soon.', 'backstage-venue-manager') . '</p>';
 		}
 
 		$weekday_labels = vms_public_calendar_compact_weekday_labels();
@@ -1334,7 +1334,7 @@ if (!function_exists('vms_public_calendar_render_compact_view')) {
 		}
 
 		if ($rendered_count === 0) {
-			echo '<p class="vms-public-cal-empty">' . esc_html__('No upcoming public events are currently scheduled. Please check back soon.', 'vms') . '</p>';
+			echo '<p class="vms-public-cal-empty">' . esc_html__('No upcoming public events are currently scheduled. Please check back soon.', 'backstage-venue-manager') . '</p>';
 		}
 
 		echo '</div>';
@@ -1458,7 +1458,7 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		}
 
 		if ($is_legacy && empty($venues)) {
-			return '<div>' . esc_html__('No venues found.', 'vms') . '</div>';
+			return '<div>' . esc_html__('No venues found.', 'backstage-venue-manager') . '</div>';
 		}
 
 		$settings = function_exists('vms_calendar_settings') ? (array) vms_calendar_settings() : (array) get_option('vms_settings', array());
@@ -1566,10 +1566,10 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		<div class="vms-public-cal vms-public-cal--view-<?php echo esc_attr($effective_view); ?>" data-vms-effective-view="<?php echo esc_attr($effective_view); ?>">
 			<form method="get" class="vms-public-cal-filters">
 				<?php if ($show_venue_selector): ?>
-					<label class="vms-public-cal-label"><?php echo esc_html__('Venue', 'vms'); ?></label>
+					<label class="vms-public-cal-label"><?php echo esc_html__('Venue', 'backstage-venue-manager'); ?></label>
 					<select name="venue_id" class="vms-public-cal-venue">
 						<?php if (!$is_legacy): ?>
-							<option value="all" <?php selected($selected_venue, 'all'); ?>><?php echo esc_html__('All Venues', 'vms'); ?></option>
+							<option value="all" <?php selected($selected_venue, 'all'); ?>><?php echo esc_html__('All Venues', 'backstage-venue-manager'); ?></option>
 						<?php endif; ?>
 						<?php foreach ($venues as $v): ?>
 							<option value="<?php echo esc_attr((string) $v->ID); ?>" <?php selected($selected_venue, (string) $v->ID); ?>>
@@ -1581,26 +1581,26 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 					<input type="hidden" name="venue_id" value="<?php echo esc_attr($selected_venue); ?>" />
 				<?php endif; ?>
 
-				<label class="vms-public-cal-label vms-public-cal-label-month"><?php echo esc_html__('Month', 'vms'); ?></label>
+				<label class="vms-public-cal-label vms-public-cal-label-month"><?php echo esc_html__('Month', 'backstage-venue-manager'); ?></label>
 				<input type="month" name="ym" class="vms-public-cal-month" value="<?php echo esc_attr($month['ym']); ?>" />
 
 				<?php if (!$is_legacy): ?>
-					<label class="vms-public-cal-label vms-public-cal-label-view"><?php echo esc_html__('View', 'vms'); ?></label>
+					<label class="vms-public-cal-label vms-public-cal-label-view"><?php echo esc_html__('View', 'backstage-venue-manager'); ?></label>
 					<select name="view" class="vms-public-cal-view">
-						<option value="auto" <?php selected($view, 'auto'); ?>><?php echo esc_html__('Auto', 'vms'); ?></option>
-						<option value="month" <?php selected($view, 'month'); ?>><?php echo esc_html__('Month', 'vms'); ?></option>
-						<option value="compact" <?php selected($view, 'compact'); ?>><?php echo esc_html__('Compact', 'vms'); ?></option>
-						<option value="list" <?php selected($view, 'list'); ?>><?php echo esc_html__('List', 'vms'); ?></option>
+						<option value="auto" <?php selected($view, 'auto'); ?>><?php echo esc_html__('Auto', 'backstage-venue-manager'); ?></option>
+						<option value="month" <?php selected($view, 'month'); ?>><?php echo esc_html__('Month', 'backstage-venue-manager'); ?></option>
+						<option value="compact" <?php selected($view, 'compact'); ?>><?php echo esc_html__('Compact', 'backstage-venue-manager'); ?></option>
+						<option value="list" <?php selected($view, 'list'); ?>><?php echo esc_html__('List', 'backstage-venue-manager'); ?></option>
 					</select>
 				<?php else: ?>
 					<input type="hidden" name="view" value="month" />
 				<?php endif; ?>
 
-				<button type="submit" class="vms-public-cal-submit"><?php echo esc_html__('Go', 'vms'); ?></button>
+				<button type="submit" class="vms-public-cal-submit"><?php echo esc_html__('Go', 'backstage-venue-manager'); ?></button>
 			</form>
 
 			<?php if ($effective_view === 'compact'): ?>
-				<p class="vms-public-cal-compact-note"><?php echo esc_html__('Compact view shows up to three event-bearing months in weekend-focused chunks and skips empty months.', 'vms'); ?></p>
+				<p class="vms-public-cal-compact-note"><?php echo esc_html__('Compact view shows up to three event-bearing months in weekend-focused chunks and skips empty months.', 'backstage-venue-manager'); ?></p>
 			<?php endif; ?>
 
 				<?php echo wp_kses($nav_markup, vms_public_calendar_allowed_html()); ?>
@@ -1619,7 +1619,7 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 					$state_venue_id = ($selected_venue !== 'all') ? absint($selected_venue) : 0;
 					$day_states = vms_public_calendar_build_day_states($month, $state_venue_id, $show_open_closed);
 						echo wp_kses(vms_public_calendar_render_month_grid($month, $days, $day_states), vms_public_calendar_allowed_html());
-						echo '<div class="vms-public-cal-mobile-list-fallback" aria-label="' . esc_attr__('Mobile and tablet list view', 'vms') . '">' . wp_kses($list_markup, vms_public_calendar_allowed_html()) . '</div>';
+						echo '<div class="vms-public-cal-mobile-list-fallback" aria-label="' . esc_attr__('Mobile and tablet list view', 'backstage-venue-manager') . '">' . wp_kses($list_markup, vms_public_calendar_allowed_html()) . '</div>';
 					}
 					echo wp_kses($nav_markup, vms_public_calendar_allowed_html());
 				?>

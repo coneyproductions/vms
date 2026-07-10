@@ -253,7 +253,7 @@ function vms_ticket_integrity_daily_report_status_snapshot(): array
 		'hook' => $hook,
 		'expected_local_time' => $expected_local_time,
 		'next_scheduled_run_at' => $next_run,
-		'next_scheduled_run_local' => $next_run > 0 ? vms_ticket_integrity_format_datetime($next_run) : __('Never', 'vms'),
+		'next_scheduled_run_local' => $next_run > 0 ? vms_ticket_integrity_format_datetime($next_run) : __('Never', 'backstage-venue-manager'),
 		'scheduled_hook_count' => $hook_count,
 		'scheduled_timestamps' => $times,
 		'state' => $state,
@@ -735,7 +735,7 @@ function vms_ticket_integrity_build_state_of_range_event_row(array $event, int $
 	}
 
 	return array(
-		'event_title' => vms_ticket_integrity_plain_text((string) ($event['event_title'] ?? __('Untitled event', 'vms'))),
+		'event_title' => vms_ticket_integrity_plain_text((string) ($event['event_title'] ?? __('Untitled event', 'backstage-venue-manager'))),
 		'event_date_local' => (string) ($event['event_date_local'] ?? ''),
 		'event_timestamp' => absint($event['event_timestamp'] ?? 0),
 		'days_to_event' => vms_ticket_integrity_days_to_event(absint($event['event_timestamp'] ?? 0), $reference_timestamp),
@@ -822,42 +822,42 @@ function vms_ticket_integrity_build_state_of_range_payment_gateway_lines(array $
 	$square = is_array($health['square'] ?? null) ? $health['square'] : array();
 	$apple_pay = is_array($health['apple_pay'] ?? null) ? $health['apple_pay'] : array();
 
-	$lines[] = __('Payment Gateway Health', 'vms');
-	$lines[] = '- ' . sprintf(__('Status: %s', 'vms'), $status);
-	$lines[] = '- ' . sprintf(__('Last checked: %s', 'vms'), vms_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? 0)));
-	$lines[] = '- ' . sprintf(__('Checkout methods available: %d', 'vms'), absint($checkout['available_count'] ?? 0));
+	$lines[] = __('Payment Gateway Health', 'backstage-venue-manager');
+	$lines[] = '- ' . sprintf(__('Status: %s', 'backstage-venue-manager'), $status);
+	$lines[] = '- ' . sprintf(__('Last checked: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? 0)));
+	$lines[] = '- ' . sprintf(__('Checkout methods available: %d', 'backstage-venue-manager'), absint($checkout['available_count'] ?? 0));
 
 	$available_titles = (array) ($checkout['available_gateway_titles'] ?? array());
 	if (!empty($available_titles)) {
-		$lines[] = '- ' . sprintf(__('Available methods: %s', 'vms'), implode(', ', $available_titles));
+		$lines[] = '- ' . sprintf(__('Available methods: %s', 'backstage-venue-manager'), implode(', ', $available_titles));
 	} else {
-		$lines[] = '- ' . __('Available methods: none', 'vms');
+		$lines[] = '- ' . __('Available methods: none', 'backstage-venue-manager');
 	}
 
 	if (!empty($square['plugin_active']) || !empty($square['expected'])) {
 		$lines[] = '- ' . sprintf(
-			__('Square: %1$s | Gateway %2$s | %3$s', 'vms'),
-			!empty($square['connection_present']) ? __('Connected', 'vms') : __('Disconnected', 'vms'),
-			!empty($square['gateway_enabled']) ? __('enabled', 'vms') : __('disabled', 'vms'),
-			(string) ($square['environment_label'] ?? __('Unknown', 'vms'))
+			__('Square: %1$s | Gateway %2$s | %3$s', 'backstage-venue-manager'),
+			!empty($square['connection_present']) ? __('Connected', 'backstage-venue-manager') : __('Disconnected', 'backstage-venue-manager'),
+			!empty($square['gateway_enabled']) ? __('enabled', 'backstage-venue-manager') : __('disabled', 'backstage-venue-manager'),
+			(string) ($square['environment_label'] ?? __('Unknown', 'backstage-venue-manager'))
 		);
 	}
 
 	if (!empty($apple_pay['failed'])) {
-		$lines[] = '- ' . __('Apple Pay: domain registration failed', 'vms');
+		$lines[] = '- ' . __('Apple Pay: domain registration failed', 'backstage-venue-manager');
 	} elseif (!empty($apple_pay['enabled']) && !empty($apple_pay['domain_registered'])) {
-		$lines[] = '- ' . __('Apple Pay: domain registered', 'vms');
+		$lines[] = '- ' . __('Apple Pay: domain registered', 'backstage-venue-manager');
 	}
 
 	$summary = trim((string) ($health['summary'] ?? ''));
 	if ($summary !== '') {
-		$lines[] = '- ' . sprintf(__('Summary: %s', 'vms'), $summary);
+		$lines[] = '- ' . sprintf(__('Summary: %s', 'backstage-venue-manager'), $summary);
 	}
 
 	$incident = is_array($health['incident'] ?? null) ? $health['incident'] : array();
 	if (!empty($incident['active'])) {
 		$lines[] = '- ' . sprintf(
-			__('Current incident since: %s', 'vms'),
+			__('Current incident since: %s', 'backstage-venue-manager'),
 			vms_ticket_integrity_format_datetime(absint($incident['first_detected_failure_gmt'] ?? 0))
 		);
 	}
@@ -865,7 +865,7 @@ function vms_ticket_integrity_build_state_of_range_payment_gateway_lines(array $
 	$last_incident = is_array($health['last_incident'] ?? null) ? $health['last_incident'] : array();
 	if (empty($incident['active']) && !empty($last_incident['resolved_at_gmt'])) {
 		$lines[] = '- ' . sprintf(
-			__('Most recent incident resolved: %s', 'vms'),
+			__('Most recent incident resolved: %s', 'backstage-venue-manager'),
 			vms_ticket_integrity_format_datetime(absint($last_incident['resolved_at_gmt'] ?? 0))
 		);
 	}
@@ -893,27 +893,27 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 		? vms_ticket_integrity_sort_events(array_values((array) ($store['events'] ?? array())))
 		: array_values((array) ($store['events'] ?? array()));
 	$site_name = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
-	$subject = sprintf('[%s] %s', $site_name, __('State of the Range', 'vms'));
+	$subject = sprintf('[%s] %s', $site_name, __('State of the Range', 'backstage-venue-manager'));
 	$last_scan = is_array($store['last_scan'] ?? null) ? $store['last_scan'] : array();
 	$report_generated_at = vms_ticket_integrity_state_of_range_generated_at($store);
 	$events = vms_ticket_integrity_filter_state_of_range_events($events, $report_generated_at);
 	$summary = vms_ticket_integrity_state_of_range_summary($events);
 
 	$lines = array();
-	$lines[] = __('State of the Range', 'vms');
+	$lines[] = __('State of the Range', 'backstage-venue-manager');
 	$lines[] = str_repeat('=', 18);
-	$lines[] = sprintf(__('Generated: %s', 'vms'), function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime($report_generated_at) : wp_date('Y-m-d g:i a', $report_generated_at));
-	$lines[] = sprintf(__('Last integrity scan: %s', 'vms'), function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime(absint($last_scan['completed_at_gmt'] ?? 0)) : wp_date('Y-m-d g:i a'));
+	$lines[] = sprintf(__('Generated: %s', 'backstage-venue-manager'), function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime($report_generated_at) : wp_date('Y-m-d g:i a', $report_generated_at));
+	$lines[] = sprintf(__('Last integrity scan: %s', 'backstage-venue-manager'), function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime(absint($last_scan['completed_at_gmt'] ?? 0)) : wp_date('Y-m-d g:i a'));
 	$report_meta = is_array($store['report_meta'] ?? null) ? $store['report_meta'] : array();
 	if (!empty($report_meta['used_stale_snapshot'])) {
 		$lines[] = sprintf(
 			!empty($report_meta['refresh_failed'])
-				? __('Warning: today\'s integrity refresh failed, so this email is using the last successful snapshot from %s.', 'vms')
-				: __('Warning: this email is using the last available integrity snapshot from %s. Run a fresh integrity scan to update the data.', 'vms'),
+				? __('Warning: today\'s integrity refresh failed, so this email is using the last successful snapshot from %s.', 'backstage-venue-manager')
+				: __('Warning: this email is using the last available integrity snapshot from %s. Run a fresh integrity scan to update the data.', 'backstage-venue-manager'),
 			function_exists('vms_ticket_integrity_format_datetime') ? vms_ticket_integrity_format_datetime(absint($last_scan['completed_at_gmt'] ?? 0)) : wp_date('Y-m-d g:i a', absint($last_scan['completed_at_gmt'] ?? 0))
 		);
 	} elseif (!empty($report_meta['refresh_failed'])) {
-		$lines[] = __('Warning: today\'s integrity refresh failed and no usable snapshot was available for the report.', 'vms');
+		$lines[] = __('Warning: today\'s integrity refresh failed and no usable snapshot was available for the report.', 'backstage-venue-manager');
 	}
 	$lines[] = '';
 
@@ -950,69 +950,69 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 		}
 
 		if (($row['status'] ?? '') === 'red' || !empty($row['low_inventory'])) {
-			$urgent = '- ' . (string) ($row['event_title'] ?? __('Untitled event', 'vms'));
+			$urgent = '- ' . (string) ($row['event_title'] ?? __('Untitled event', 'backstage-venue-manager'));
 			if (!empty($row['low_inventory'])) {
 				$low_names = array();
 				foreach ((array) $row['low_inventory'] as $signal) {
-					$low_names[] = (string) ($signal['ticket_title'] ?? __('Ticket', 'vms'));
+					$low_names[] = (string) ($signal['ticket_title'] ?? __('Ticket', 'backstage-venue-manager'));
 				}
-				$urgent .= ': ' . sprintf(__('Low inventory on %s', 'vms'), implode(', ', array_slice(array_unique($low_names), 0, 3)));
+				$urgent .= ': ' . sprintf(__('Low inventory on %s', 'backstage-venue-manager'), implode(', ', array_slice(array_unique($low_names), 0, 3)));
 			} else {
-				$urgent .= ': ' . (string) ($row['issue_summary'] ?? __('Needs review', 'vms'));
+				$urgent .= ': ' . (string) ($row['issue_summary'] ?? __('Needs review', 'backstage-venue-manager'));
 			}
 			$urgent_lines[] = $urgent;
 		}
 	}
 
-	$lines[] = __('Morning snapshot', 'vms');
-	$lines[] = '- ' . sprintf(__('Events scanned: %d', 'vms'), absint($summary['events_scanned'] ?? count($rows)));
-	$lines[] = '- ' . sprintf(__('Shows this week: %d', 'vms'), $shows_this_week);
-	$lines[] = '- ' . sprintf(__('Tickets sold (tracked upcoming events): %d', 'vms'), $total_sold);
-	$lines[] = '- ' . sprintf(__('Gross sales (tracked upcoming events): %s', 'vms'), vms_ticket_integrity_money_string($total_gross));
-	$lines[] = '- ' . sprintf(__('Events needing attention: %d', 'vms'), $attention_count);
-	$lines[] = '- ' . sprintf(__('Low inventory warnings: %d', 'vms'), $low_inventory_count);
-	$lines[] = '- ' . sprintf(__('Integrity summary — Red: %1$d, Yellow: %2$d, Green: %3$d', 'vms'), absint($summary['red'] ?? 0), absint($summary['yellow'] ?? 0), absint($summary['green'] ?? 0));
+	$lines[] = __('Morning snapshot', 'backstage-venue-manager');
+	$lines[] = '- ' . sprintf(__('Events scanned: %d', 'backstage-venue-manager'), absint($summary['events_scanned'] ?? count($rows)));
+	$lines[] = '- ' . sprintf(__('Shows this week: %d', 'backstage-venue-manager'), $shows_this_week);
+	$lines[] = '- ' . sprintf(__('Tickets sold (tracked upcoming events): %d', 'backstage-venue-manager'), $total_sold);
+	$lines[] = '- ' . sprintf(__('Gross sales (tracked upcoming events): %s', 'backstage-venue-manager'), vms_ticket_integrity_money_string($total_gross));
+	$lines[] = '- ' . sprintf(__('Events needing attention: %d', 'backstage-venue-manager'), $attention_count);
+	$lines[] = '- ' . sprintf(__('Low inventory warnings: %d', 'backstage-venue-manager'), $low_inventory_count);
+	$lines[] = '- ' . sprintf(__('Integrity summary — Red: %1$d, Yellow: %2$d, Green: %3$d', 'backstage-venue-manager'), absint($summary['red'] ?? 0), absint($summary['yellow'] ?? 0), absint($summary['green'] ?? 0));
 	$lines[] = '';
 
 	if (!empty($urgent_lines)) {
-		$lines[] = __('Urgent / notable items', 'vms');
+		$lines[] = __('Urgent / notable items', 'backstage-venue-manager');
 		foreach ($urgent_lines as $line) {
 			$lines[] = $line;
 		}
 		$lines[] = '';
 	}
 
-	$lines[] = __('Upcoming events', 'vms');
+	$lines[] = __('Upcoming events', 'backstage-venue-manager');
 	foreach ($rows as $row) {
 		$days = $row['days_to_event'];
-		$days_text = ($days === null) ? __('n/a', 'vms') : (string) $days;
-		$tickets_left = ($row['tickets_left'] === null) ? __('n/a', 'vms') : (string) $row['tickets_left'];
+		$days_text = ($days === null) ? __('n/a', 'backstage-venue-manager') : (string) $days;
+		$tickets_left = ($row['tickets_left'] === null) ? __('n/a', 'backstage-venue-manager') : (string) $row['tickets_left'];
 		$lines[] = sprintf(
 			'- %1$s — %2$s',
-			(string) ($row['event_title'] ?? __('Untitled event', 'vms')),
-			(string) ($row['event_date_local'] ?? __('No event date', 'vms'))
+			(string) ($row['event_title'] ?? __('Untitled event', 'backstage-venue-manager')),
+			(string) ($row['event_date_local'] ?? __('No event date', 'backstage-venue-manager'))
 		);
 			$lines[] = sprintf(
 				'  %1$s | %2$s | %3$s | %4$s | %5$s',
-				sprintf(__('Days: %s', 'vms'), $days_text),
-				sprintf(__('Sold: %d', 'vms'), absint($row['tickets_sold'] ?? 0)),
-				sprintf(__('Gross: %s', 'vms'), vms_ticket_integrity_money_string((float) ($row['gross_sales'] ?? 0))),
-				sprintf(__('Available inventory: %s', 'vms'), $tickets_left),
-				sprintf(__('Status: %s', 'vms'), strtoupper((string) ($row['status'] ?? 'green')))
+				sprintf(__('Days: %s', 'backstage-venue-manager'), $days_text),
+				sprintf(__('Sold: %d', 'backstage-venue-manager'), absint($row['tickets_sold'] ?? 0)),
+				sprintf(__('Gross: %s', 'backstage-venue-manager'), vms_ticket_integrity_money_string((float) ($row['gross_sales'] ?? 0))),
+				sprintf(__('Available inventory: %s', 'backstage-venue-manager'), $tickets_left),
+				sprintf(__('Status: %s', 'backstage-venue-manager'), strtoupper((string) ($row['status'] ?? 'green')))
 			);
 			$lines[] = sprintf(
 				'  %1$s | %2$s | %3$s',
-				sprintf(__('Ticket capacity: %d', 'vms'), absint($row['total_capacity'] ?? 0)),
-				sprintf(__('Paid sold: %d', 'vms'), absint($row['paid_tickets_sold'] ?? 0)),
-				sprintf(__('Free/qualified sold: %d', 'vms'), absint($row['free_tickets_sold'] ?? 0))
+				sprintf(__('Ticket capacity: %d', 'backstage-venue-manager'), absint($row['total_capacity'] ?? 0)),
+				sprintf(__('Paid sold: %d', 'backstage-venue-manager'), absint($row['paid_tickets_sold'] ?? 0)),
+				sprintf(__('Free/qualified sold: %d', 'backstage-venue-manager'), absint($row['free_tickets_sold'] ?? 0))
 			);
 		if (!empty($row['low_inventory'])) {
 			foreach ((array) $row['low_inventory'] as $signal) {
 				$lines[] = sprintf(
 					'  %1$s',
 					sprintf(
-						__('Low inventory: %1$s has %2$d left (%3$s%%).', 'vms'),
-						(string) ($signal['ticket_title'] ?? __('Ticket', 'vms')),
+						__('Low inventory: %1$s has %2$d left (%3$s%%).', 'backstage-venue-manager'),
+						(string) ($signal['ticket_title'] ?? __('Ticket', 'backstage-venue-manager')),
 						absint($signal['remaining'] ?? 0),
 						number_format((float) ($signal['percent_remaining'] ?? 0), 1)
 					)
@@ -1020,12 +1020,12 @@ function vms_ticket_integrity_build_state_of_range_email(array $store): array
 			}
 		}
 		if (!empty($row['issue_summary']) && ($row['status'] ?? '') !== 'green') {
-			$lines[] = '  ' . sprintf(__('Issues: %s', 'vms'), (string) $row['issue_summary']);
+			$lines[] = '  ' . sprintf(__('Issues: %s', 'backstage-venue-manager'), (string) $row['issue_summary']);
 		}
 		$lines[] = '';
 	}
 
-	$lines[] = sprintf(__('Review the full monitor: %s', 'vms'), function_exists('vms_ticket_integrity_admin_url') ? vms_ticket_integrity_admin_url() : admin_url());
+	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), function_exists('vms_ticket_integrity_admin_url') ? vms_ticket_integrity_admin_url() : admin_url());
 
 	return array(
 		'subject' => vms_ticket_integrity_plain_text($subject),
@@ -1071,13 +1071,13 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 		if (function_exists('vms_ticket_integrity_log_event')) {
 			vms_ticket_integrity_log_event(
 				'daily_report_failed',
-				__('State of the Range could not start because no recipient is configured.', 'vms'),
+				__('State of the Range could not start because no recipient is configured.', 'backstage-venue-manager'),
 				array(
 					'trigger' => sanitize_key($trigger),
 				)
 			);
 		}
-		return array('ok' => false, 'message' => __('No daily report recipient is configured.', 'vms'));
+		return array('ok' => false, 'message' => __('No daily report recipient is configured.', 'backstage-venue-manager'));
 	}
 
 	$guard_id = function_exists('vms_ticket_integrity_begin_fatal_guard')
@@ -1094,7 +1094,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 	if (function_exists('vms_ticket_integrity_log_event')) {
 		vms_ticket_integrity_log_event(
 			'daily_report_started',
-			__('State of the Range started.', 'vms'),
+			__('State of the Range started.', 'backstage-venue-manager'),
 			array(
 				'trigger' => sanitize_key($trigger),
 				'recipient' => $recipient,
@@ -1150,7 +1150,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 				if (!empty($payload['refresh_attempted'])) {
 					vms_ticket_integrity_log_event(
 						'daily_report_skipped_scan_failed',
-						__('State of the Range was skipped because the required refresh scan failed.', 'vms'),
+						__('State of the Range was skipped because the required refresh scan failed.', 'backstage-venue-manager'),
 						array(
 							'trigger' => sanitize_key($trigger),
 							'recipient' => $recipient,
@@ -1160,7 +1160,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 				} else {
 					vms_ticket_integrity_log_event(
 						'daily_report_skipped_no_snapshot',
-						__('State of the Range was skipped because no usable integrity snapshot was available.', 'vms'),
+						__('State of the Range was skipped because no usable integrity snapshot was available.', 'backstage-venue-manager'),
 						array(
 							'trigger' => sanitize_key($trigger),
 							'recipient' => $recipient,
@@ -1170,8 +1170,8 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 				vms_ticket_integrity_log_event(
 					'daily_report_failed',
 					!empty($payload['refresh_attempted'])
-						? __('State of the Range failed because a fresh scan could not be completed.', 'vms')
-						: __('State of the Range failed because no usable integrity snapshot was available.', 'vms'),
+						? __('State of the Range failed because a fresh scan could not be completed.', 'backstage-venue-manager')
+						: __('State of the Range failed because no usable integrity snapshot was available.', 'backstage-venue-manager'),
 					array(
 						'trigger' => sanitize_key($trigger),
 						'recipient' => $recipient,
@@ -1183,13 +1183,13 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 			return array(
 				'ok' => false,
 				'message' => !empty($payload['refresh_attempted'])
-					? __('A fresh integrity scan failed and no prior snapshot was available for the daily report.', 'vms')
-					: __('No usable integrity snapshot is available for the daily report.', 'vms'),
+					? __('A fresh integrity scan failed and no prior snapshot was available for the daily report.', 'backstage-venue-manager')
+					: __('No usable integrity snapshot is available for the daily report.', 'backstage-venue-manager'),
 			);
 		}
 
 		$email = vms_ticket_integrity_build_state_of_range_email($store);
-		$subject = (string) ($email['subject'] ?? __('State of the Range', 'vms'));
+		$subject = (string) ($email['subject'] ?? __('State of the Range', 'backstage-venue-manager'));
 		$body = (string) ($email['body'] ?? '');
 		vms_ticket_integrity_patch_daily_report_state(
 			array(
@@ -1219,7 +1219,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 			if (function_exists('vms_ticket_integrity_log_event')) {
 				vms_ticket_integrity_log_event(
 					'daily_report_failed',
-					__('State of the Range email body was empty.', 'vms'),
+					__('State of the Range email body was empty.', 'backstage-venue-manager'),
 					array(
 						'trigger' => sanitize_key($trigger),
 						'recipient' => $recipient,
@@ -1227,7 +1227,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 				);
 			}
 
-			return array('ok' => false, 'message' => __('The daily report body was empty.', 'vms'));
+			return array('ok' => false, 'message' => __('The daily report body was empty.', 'backstage-venue-manager'));
 		}
 
 		if ($dry_run) {
@@ -1246,7 +1246,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 			if (function_exists('vms_ticket_integrity_log_event')) {
 				vms_ticket_integrity_log_event(
 					'daily_report_dry_run',
-					__('State of the Range dry run rendered successfully.', 'vms'),
+					__('State of the Range dry run rendered successfully.', 'backstage-venue-manager'),
 					array(
 						'trigger' => sanitize_key($trigger),
 						'mode' => $mode,
@@ -1258,7 +1258,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 
 			return array(
 				'ok' => true,
-				'message' => __('State of the Range dry run rendered successfully.', 'vms'),
+				'message' => __('State of the Range dry run rendered successfully.', 'backstage-venue-manager'),
 				'mode' => $mode,
 				'email' => $email,
 			);
@@ -1303,7 +1303,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 		if (function_exists('vms_ticket_integrity_log_event')) {
 			vms_ticket_integrity_log_event(
 				$sent ? 'daily_report_sent' : 'daily_report_failed',
-				$sent ? __('State of the Range email sent.', 'vms') : __('State of the Range email failed to send.', 'vms'),
+				$sent ? __('State of the Range email sent.', 'backstage-venue-manager') : __('State of the Range email failed to send.', 'backstage-venue-manager'),
 				array(
 					'recipient' => $recipient,
 					'mode' => $mode,
@@ -1320,7 +1320,7 @@ function vms_ticket_integrity_send_state_of_range_report(string $trigger = 'manu
 
 		return array(
 			'ok' => (bool) $sent,
-			'message' => $sent ? __('State of the Range email sent.', 'vms') : __('wp_mail returned false while sending the daily report.', 'vms'),
+			'message' => $sent ? __('State of the Range email sent.', 'backstage-venue-manager') : __('wp_mail returned false while sending the daily report.', 'backstage-venue-manager'),
 			'mode' => $mode,
 			'email' => $email,
 		);

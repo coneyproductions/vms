@@ -25,7 +25,7 @@ if (!function_exists('vms_express_bar_shortcode')) {
     function vms_express_bar_shortcode(array $atts = array()): string
     {
         if (!class_exists('WooCommerce')) {
-            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar requires WooCommerce.', 'vms') . '</p></div>';
+            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar requires WooCommerce.', 'backstage-venue-manager') . '</p></div>';
         }
 
         $atts = shortcode_atts(array(
@@ -41,7 +41,7 @@ if (!function_exists('vms_express_bar_shortcode')) {
         }
 
         if ($event_plan_id <= 0 || get_post_type($event_plan_id) !== 'vms_event_plan') {
-            return '<div class="vms-express-bar"><p>' . esc_html__('Invalid Event Plan.', 'vms') . '</p></div>';
+            return '<div class="vms-express-bar"><p>' . esc_html__('Invalid Event Plan.', 'backstage-venue-manager') . '</p></div>';
         }
 
         $cfg = vms_express_bar_get_event_meta($event_plan_id);
@@ -51,7 +51,7 @@ if (!function_exists('vms_express_bar_shortcode')) {
 
         $product_ids = (array) ($cfg['product_ids'] ?? array());
         if (empty($product_ids)) {
-            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar is enabled, but no products have been selected yet.', 'vms') . '</p></div>';
+            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar is enabled, but no products have been selected yet.', 'backstage-venue-manager') . '</p></div>';
         }
 
         $event_title = get_the_title($event_plan_id);
@@ -93,17 +93,17 @@ if (!function_exists('vms_express_bar_shortcode')) {
                             <input type="hidden" name="vms_express_bar_redirect" value="<?php echo esc_url($permalink ?: ''); ?>" />
                             <?php wp_nonce_field('vms_express_bar_add_' . $product_id, 'vms_express_bar_nonce'); ?>
                             <label>
-                                <span><?php echo esc_html__('Quantity', 'vms'); ?></span><br />
+                                <span><?php echo esc_html__('Quantity', 'backstage-venue-manager'); ?></span><br />
                                 <input type="number" name="vms_express_bar_quantity" min="1" max="20" step="1" value="1" inputmode="numeric" />
                             </label>
                             <p>
                                 <label>
-                                    <span><?php echo esc_html__('Pickup name (optional)', 'vms'); ?></span><br />
+                                    <span><?php echo esc_html__('Pickup name (optional)', 'backstage-venue-manager'); ?></span><br />
                                     <input type="text" name="vms_express_bar_pickup_name" value="" maxlength="120" />
                                 </label>
                             </p>
                             <p>
-                                <button type="submit" class="button alt"><?php echo esc_html__('Add to cart', 'vms'); ?></button>
+                                <button type="submit" class="button alt"><?php echo esc_html__('Add to cart', 'backstage-venue-manager'); ?></button>
                             </p>
                         </form>
                     </div>
@@ -172,7 +172,7 @@ if (!function_exists('vms_express_bar_validate_add_to_cart')) {
         $event_plan_id = absint($_POST['vms_express_bar_event_plan_id']);
         $cfg = vms_express_bar_get_event_meta($event_plan_id);
         if (empty($cfg['enabled']) || !in_array($product_id, (array) $cfg['product_ids'], true)) {
-            wc_add_notice(__('That product is not enabled for this event’s Express Bar menu.', 'vms'), 'error');
+            wc_add_notice(__('That product is not enabled for this event’s Express Bar menu.', 'backstage-venue-manager'), 'error');
             return false;
         }
 
@@ -198,13 +198,13 @@ if (!function_exists('vms_express_bar_cart_item_data')) {
     {
         if (!empty($cart_item['_vms_express_bar_event_plan_title'])) {
             $item_data[] = array(
-                'name' => __('Express Bar Event', 'vms'),
+                'name' => __('Express Bar Event', 'backstage-venue-manager'),
                 'value' => wc_clean((string) $cart_item['_vms_express_bar_event_plan_title']),
             );
         }
         if (!empty($cart_item['_vms_express_bar_pickup_name'])) {
             $item_data[] = array(
-                'name' => __('Pickup Name', 'vms'),
+                'name' => __('Pickup Name', 'backstage-venue-manager'),
                 'value' => wc_clean((string) $cart_item['_vms_express_bar_pickup_name']),
             );
         }

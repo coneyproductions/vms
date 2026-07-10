@@ -5,7 +5,7 @@ get_header();
 
 $vendor = isset($GLOBALS['vms_vendor_profile_post']) ? $GLOBALS['vms_vendor_profile_post'] : null;
 if (!($vendor instanceof WP_Post)) {
-    echo '<main class="vms-vendor-profile"><div class="vms-vp-card"><p>' . esc_html__('Vendor not found.', 'vms') . '</p></div></main>';
+    echo '<main class="vms-vendor-profile"><div class="vms-vp-card"><p>' . esc_html__('Vendor not found.', 'backstage-venue-manager') . '</p></div></main>';
     wp_reset_postdata();
     get_footer();
     return;
@@ -76,7 +76,7 @@ $video_embed = '';
 if ($video_url !== '') {
     $video_embed = wp_oembed_get($video_url, array('width' => 960));
     if ($video_embed === false || $video_embed === '') {
-        $video_embed = '<p><a href="' . esc_url($video_url) . '" target="_blank" rel="noopener">' . esc_html__('Watch featured video', 'vms') . '</a></p>';
+        $video_embed = '<p><a href="' . esc_url($video_url) . '" target="_blank" rel="noopener">' . esc_html__('Watch featured video', 'backstage-venue-manager') . '</a></p>';
     }
 }
 
@@ -175,15 +175,15 @@ foreach ($social_icon_allowed_html as $tag => $attrs) {
 
             <div class="vms-vp-actions">
                 <?php if ($show_phone && $phone !== '') : ?>
-                    <a class="vms-vp-btn" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $phone)); ?>"><?php echo esc_html__('Call', 'vms'); ?></a>
+                    <a class="vms-vp-btn" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $phone)); ?>"><?php echo esc_html__('Call', 'backstage-venue-manager'); ?></a>
                 <?php endif; ?>
 
                 <?php if ($show_email && $email !== '') : ?>
-                    <a class="vms-vp-btn" href="<?php echo esc_url('mailto:' . sanitize_email($email)); ?>"><?php echo esc_html__('Email', 'vms'); ?></a>
+                    <a class="vms-vp-btn" href="<?php echo esc_url('mailto:' . sanitize_email($email)); ?>"><?php echo esc_html__('Email', 'backstage-venue-manager'); ?></a>
                 <?php endif; ?>
 
                 <?php if ($show_website && $website !== '') : ?>
-                    <a class="vms-vp-btn" href="<?php echo esc_url($website); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Website', 'vms'); ?></a>
+                    <a class="vms-vp-btn" href="<?php echo esc_url($website); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Website', 'backstage-venue-manager'); ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -195,7 +195,7 @@ foreach ($social_icon_allowed_html as $tag => $attrs) {
 
     <?php if (trim((string) $vendor->post_content) !== '') : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('About', 'vms'); ?></h2>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('About', 'backstage-venue-manager'); ?></h2>
             <div class="vms-vp-content">
                 <?php echo wp_kses(apply_filters('the_content', $vendor->post_content), $profile_markup_allowed_html); ?>
             </div>
@@ -204,14 +204,14 @@ foreach ($social_icon_allowed_html as $tag => $attrs) {
 
     <?php if ($video_embed !== '') : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('Featured video', 'vms'); ?></h2>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('Featured video', 'backstage-venue-manager'); ?></h2>
             <div class="vms-vp-video"><?php echo wp_kses($video_embed, $profile_markup_allowed_html); ?></div>
         </section>
     <?php endif; ?>
 
     <?php if (!empty($gallery_images)) : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('Photos', 'vms'); ?></h2>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('Photos', 'backstage-venue-manager'); ?></h2>
             <div class="vms-vp-gallery">
                 <?php foreach ($gallery_images as $image_url) : ?>
                     <a class="vms-vp-gallery__item" href="<?php echo esc_url($image_url); ?>" target="_blank" rel="noopener">
@@ -224,25 +224,25 @@ foreach ($social_icon_allowed_html as $tag => $attrs) {
 
     <?php if (($show_email && $email !== '') || ($show_phone && $phone !== '') || ($show_website && $website !== '')) : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('Contact', 'vms'); ?></h2>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('Contact', 'backstage-venue-manager'); ?></h2>
             <div class="vms-vp-contact">
                 <?php if ($show_phone && $phone !== '') : ?>
                     <div class="vms-vp-contact-row">
-                        <span class="vms-vp-contact-label"><?php echo esc_html__('Phone', 'vms'); ?></span>
+                        <span class="vms-vp-contact-label"><?php echo esc_html__('Phone', 'backstage-venue-manager'); ?></span>
                         <a class="vms-vp-contact-value" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $phone)); ?>"><?php echo esc_html($phone); ?></a>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($show_email && $email !== '') : ?>
                     <div class="vms-vp-contact-row">
-                        <span class="vms-vp-contact-label"><?php echo esc_html__('Email', 'vms'); ?></span>
+                        <span class="vms-vp-contact-label"><?php echo esc_html__('Email', 'backstage-venue-manager'); ?></span>
                         <a class="vms-vp-contact-value" href="<?php echo esc_url('mailto:' . sanitize_email($email)); ?>"><?php echo esc_html($email); ?></a>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($show_website && $website !== '') : ?>
                     <div class="vms-vp-contact-row">
-                        <span class="vms-vp-contact-label"><?php echo esc_html__('Website', 'vms'); ?></span>
+                        <span class="vms-vp-contact-label"><?php echo esc_html__('Website', 'backstage-venue-manager'); ?></span>
                         <a class="vms-vp-contact-value" href="<?php echo esc_url($website); ?>" target="_blank" rel="noopener"><?php echo esc_html($website); ?></a>
                     </div>
                 <?php endif; ?>

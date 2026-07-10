@@ -36,8 +36,8 @@ if (!class_exists('VMS_Admin_Addons')) {
 		{
 			add_submenu_page(
 				'vms-dashboard',
-				__('Premium Add-ons', 'vms'),
-				__('Add-ons', 'vms'),
+				__('Premium Add-ons', 'backstage-venue-manager'),
+				__('Add-ons', 'backstage-venue-manager'),
 				self::required_capability(),
 				self::PAGE_SLUG,
 				array(__CLASS__, 'render_page')
@@ -86,7 +86,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 		private static function authorize(): void
 		{
 			if (!current_user_can(self::required_capability())) {
-				wp_die(esc_html__('Insufficient permissions.', 'vms'));
+				wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 			}
 		}
 
@@ -100,7 +100,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 		{
 			$slug = isset($_POST['slug']) ? sanitize_key((string) $_POST['slug']) : '';
 			if ($slug === '' || !VMS_Addons_Manifest::by_slug($slug)) {
-				wp_send_json_error(array('message' => __('Unknown add-on slug.', 'vms')), 400);
+				wp_send_json_error(array('message' => __('Unknown add-on slug.', 'backstage-venue-manager')), 400);
 			}
 			return $slug;
 		}
@@ -172,14 +172,14 @@ if (!class_exists('VMS_Admin_Addons')) {
 			$slug = self::read_slug();
 			$manifest = VMS_Addons_Manifest::by_slug($slug);
 			if (($manifest['install']['method'] ?? '') !== 'zip_upload') {
-				wp_send_json_error(array('message' => __('This add-on does not support ZIP install in Phase 1.', 'vms')), 400);
+				wp_send_json_error(array('message' => __('This add-on does not support ZIP install in Phase 1.', 'backstage-venue-manager')), 400);
 			}
 			$result = VMS_Addons_Installer::install_zip($_FILES['zip_file'] ?? array());
 			if (is_wp_error($result)) {
 				VMS_Addons_Logger::log('error', 'install_zip', $result->get_error_message(), $slug);
 				wp_send_json_error(array('message' => $result->get_error_message()), 500);
 			}
-			VMS_Addons_Logger::log('info', 'install_zip', __('ZIP installation completed.', 'vms'), $slug, $result);
+			VMS_Addons_Logger::log('info', 'install_zip', __('ZIP installation completed.', 'backstage-venue-manager'), $slug, $result);
 			if (!empty($_POST['activate_after'])) {
 				$plugin_file = (string) ($manifest['plugin_file'] ?? $result['plugin_file'] ?? '');
 				if ($plugin_file !== '') {
@@ -202,7 +202,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 				VMS_Addons_Logger::log('error', 'activate', $result->get_error_message(), $slug);
 				wp_send_json_error(array('message' => $result->get_error_message()), 500);
 			}
-			VMS_Addons_Logger::log('info', 'activate', __('Add-on activated.', 'vms'), $slug);
+			VMS_Addons_Logger::log('info', 'activate', __('Add-on activated.', 'backstage-venue-manager'), $slug);
 			wp_send_json_success(array('state' => self::build_state()));
 		}
 
@@ -212,7 +212,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 			$slug = self::read_slug();
 			$entry = VMS_Addons_Manifest::by_slug($slug);
 			VMS_Addons_Installer::deactivate((string) $entry['plugin_file']);
-			VMS_Addons_Logger::log('info', 'deactivate', __('Add-on deactivated.', 'vms'), $slug);
+			VMS_Addons_Logger::log('info', 'deactivate', __('Add-on deactivated.', 'backstage-venue-manager'), $slug);
 			wp_send_json_success(array('state' => self::build_state()));
 		}
 
@@ -223,7 +223,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 			$key = sanitize_text_field((string) ($_POST['license_key'] ?? ''));
 			$status = ($key === '') ? 'missing' : 'unknown';
 			$entry = VMS_Addons_Licensing::save_entry($slug, array('license_key' => $key, 'status' => $status, 'status_message' => ''));
-			VMS_Addons_Logger::log('info', 'license_save', __('License key saved.', 'vms'), $slug, array('license_key_tail' => substr($key, -4)));
+			VMS_Addons_Logger::log('info', 'license_save', __('License key saved.', 'backstage-venue-manager'), $slug, array('license_key_tail' => substr($key, -4)));
 			wp_send_json_success(array('entry' => $entry, 'state' => self::build_state()));
 		}
 
@@ -252,7 +252,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 			$store = VMS_Addons_Licensing::store();
 			$current = (array) ($store[$slug] ?? array());
 			if (empty($manifest['freemius']['product_id'])) {
-				wp_send_json_error(array('message' => __('This add-on does not define Freemius product metadata.', 'vms')), 400);
+				wp_send_json_error(array('message' => __('This add-on does not define Freemius product metadata.', 'backstage-venue-manager')), 400);
 			}
 
 			if ($operation === 'activate') {
@@ -270,7 +270,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 			}
 
 			VMS_Addons_Licensing::save_entry($slug, $result);
-			VMS_Addons_Logger::log('info', 'license_' . $operation, __('License operation completed.', 'vms'), $slug);
+			VMS_Addons_Logger::log('info', 'license_' . $operation, __('License operation completed.', 'backstage-venue-manager'), $slug);
 			wp_send_json_success(array('state' => self::build_state()));
 		}
 
@@ -278,7 +278,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 		{
 			self::ajax_authorize();
 			wp_update_plugins();
-			VMS_Addons_Logger::log('info', 'updates_refresh', __('Plugin updates refreshed.', 'vms'));
+			VMS_Addons_Logger::log('info', 'updates_refresh', __('Plugin updates refreshed.', 'backstage-venue-manager'));
 			wp_send_json_success(array('state' => self::build_state()));
 		}
 
@@ -293,7 +293,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 				wp_send_json_error(array('message' => $result->get_error_message()), 500);
 			}
 			wp_update_plugins();
-			VMS_Addons_Logger::log('info', 'update_run', __('Update completed.', 'vms'), $slug);
+			VMS_Addons_Logger::log('info', 'update_run', __('Update completed.', 'backstage-venue-manager'), $slug);
 			wp_send_json_success(array('state' => self::build_state()));
 		}
 
@@ -301,7 +301,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 		{
 			self::ajax_authorize();
 			$health = VMS_Addons_Health::check();
-			VMS_Addons_Logger::log('info', 'support_healthcheck', __('Health check completed.', 'vms'));
+			VMS_Addons_Logger::log('info', 'support_healthcheck', __('Health check completed.', 'backstage-venue-manager'));
 			wp_send_json_success(array('health' => $health, 'state' => self::build_state()));
 		}
 
@@ -310,7 +310,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 			self::ajax_authorize();
 			$state = self::build_state();
 			$payload = VMS_Addons_Health::export_payload($state);
-			VMS_Addons_Logger::log('info', 'support_export', __('Diagnostics export generated.', 'vms'));
+			VMS_Addons_Logger::log('info', 'support_export', __('Diagnostics export generated.', 'backstage-venue-manager'));
 			wp_send_json_success(array(
 				'filename' => 'vms-addons-diagnostics-' . gmdate('Ymd-His') . '.json',
 				'contents' => wp_json_encode($payload, JSON_PRETTY_PRINT),
@@ -321,7 +321,7 @@ if (!class_exists('VMS_Admin_Addons')) {
 		{
 			self::ajax_authorize();
 			$new_uid = VMS_Addons_Licensing::reset_uid();
-			VMS_Addons_Logger::log('warn', 'support_reset_uid', __('Site UID reset by admin.', 'vms'));
+			VMS_Addons_Logger::log('warn', 'support_reset_uid', __('Site UID reset by admin.', 'backstage-venue-manager'));
 			wp_send_json_success(array('uid' => $new_uid, 'state' => self::build_state()));
 		}
 	}

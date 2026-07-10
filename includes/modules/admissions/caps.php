@@ -58,7 +58,7 @@ if (!function_exists('vms_admission_ensure_capability_mapping')) {
 		if (!$door_role_found) {
 			$existing = get_role('vms_door_staff');
 			if (!($existing instanceof WP_Role)) {
-				add_role('vms_door_staff', __('VMS Door Staff', 'vms'), array(
+				add_role('vms_door_staff', __('VMS Door Staff', 'backstage-venue-manager'), array(
 					'read' => true,
 					$door_cap => true,
 				));

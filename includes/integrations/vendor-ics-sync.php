@@ -19,7 +19,7 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
     $ics_url = trim($ics_url);
 
     if ($ics_url === '') {
-        return array('ok' => false, 'error' => __('No ICS URL saved for this vendor.', 'vms'));
+        return array('ok' => false, 'error' => __('No ICS URL saved for this vendor.', 'backstage-venue-manager'));
     }
 
     $response = wp_remote_get($ics_url, array(
@@ -34,12 +34,12 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
 
     $code = (int) wp_remote_retrieve_response_code($response);
     if ($code < 200 || $code >= 300) {
-        return array('ok' => false, 'error' => sprintf(__('ICS fetch failed (HTTP %d).', 'vms'), $code));
+        return array('ok' => false, 'error' => sprintf(__('ICS fetch failed (HTTP %d).', 'backstage-venue-manager'), $code));
     }
 
     $raw = (string) wp_remote_retrieve_body($response);
     if ($raw === '') {
-        return array('ok' => false, 'error' => __('ICS feed returned empty content.', 'vms'));
+        return array('ok' => false, 'error' => __('ICS feed returned empty content.', 'backstage-venue-manager'));
     }
 
     $events = vms_vendor_ics_extract_events($raw, $active_dates);

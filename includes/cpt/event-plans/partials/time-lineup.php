@@ -4,10 +4,10 @@
                 ? vms_event_plan_perf_span_start('event_plan_time_lineup_summary_render', (int) $post->ID, array('section' => 'time_lineup_summary'))
                 : '';
         ?>
-        <h4 class="vms-ep-basic-span"><?php esc_html_e('Time + Lineup & Schedule', 'vms'); ?></h4>
+        <h4 class="vms-ep-basic-span"><?php esc_html_e('Time + Lineup & Schedule', 'backstage-venue-manager'); ?></h4>
 
         <div class="vms-ep-basic-item">
-            <label for="vms_start_time"><strong><?php esc_html_e('Event Start / End', 'vms'); ?></strong></label><br />
+            <label for="vms_start_time"><strong><?php esc_html_e('Event Start / End', 'backstage-venue-manager'); ?></strong></label><br />
             <div class="vms-ep-time-row">
                 <select id="vms_start_time" name="vms_start_time" class="vms-ep-time-select">
                     <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
@@ -16,7 +16,7 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <span class="vms-ep-time-sep"><?php esc_html_e('to', 'vms'); ?></span>
+                <span class="vms-ep-time-sep"><?php esc_html_e('to', 'backstage-venue-manager'); ?></span>
                 <select id="vms_end_time" name="vms_end_time" class="vms-ep-time-select">
                     <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                         <option value="<?php echo esc_attr($time_value); ?>" <?php selected($end_time_current, (string) $time_value); ?>>
@@ -25,7 +25,7 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-            <span class="description"><?php esc_html_e('Event-level bounds stay operator-controlled. Lineup times below are checked against these bounds and warnings are shown instead of silently rewriting anything.', 'vms'); ?></span>
+            <span class="description"><?php esc_html_e('Event-level bounds stay operator-controlled. Lineup times below are checked against these bounds and warnings are shown instead of silently rewriting anything.', 'backstage-venue-manager'); ?></span>
         </div>
 
         <div class="vms-ep-basic-item vms-ep-basic-span">
@@ -40,27 +40,27 @@
             >
                 <div class="vms-lineup-summary">
                     <div class="vms-lineup-summary__item">
-                        <span class="vms-lineup-summary__label"><?php esc_html_e('Primary vendor', 'vms'); ?></span>
+                        <span class="vms-lineup-summary__label"><?php esc_html_e('Primary vendor', 'backstage-venue-manager'); ?></span>
                         <strong class="vms-lineup-summary__value" id="vms-lineup-summary-primary"><?php echo esc_html($lineup_primary_vendor_label); ?></strong>
                     </div>
                     <div class="vms-lineup-summary__item">
-                        <span class="vms-lineup-summary__label"><?php esc_html_e('Supporting vendors', 'vms'); ?></span>
+                        <span class="vms-lineup-summary__label"><?php esc_html_e('Supporting vendors', 'backstage-venue-manager'); ?></span>
                         <strong class="vms-lineup-summary__value" id="vms-lineup-summary-supporting"><?php echo esc_html((string) ((int) ($lineup_summary['supporting_count'] ?? count($lineup_supporting_entries)))); ?></strong>
                     </div>
                     <div class="vms-lineup-summary__item">
-                        <span class="vms-lineup-summary__label"><?php esc_html_e('Earliest start', 'vms'); ?></span>
+                        <span class="vms-lineup-summary__label"><?php esc_html_e('Earliest start', 'backstage-venue-manager'); ?></span>
                         <strong class="vms-lineup-summary__value" id="vms-lineup-summary-earliest"><?php echo esc_html((string) ($lineup_summary['earliest_start'] ?? '')); ?></strong>
                     </div>
                     <div class="vms-lineup-summary__item">
-                        <span class="vms-lineup-summary__label"><?php esc_html_e('Primary start', 'vms'); ?></span>
+                        <span class="vms-lineup-summary__label"><?php esc_html_e('Primary start', 'backstage-venue-manager'); ?></span>
                         <strong class="vms-lineup-summary__value" id="vms-lineup-summary-primary-start"><?php echo esc_html((string) ($lineup_summary['primary_start'] ?? $lineup_primary_time_label)); ?></strong>
                     </div>
                     <div class="vms-lineup-summary__item">
-                        <span class="vms-lineup-summary__label"><?php esc_html_e('Total runtime', 'vms'); ?></span>
+                        <span class="vms-lineup-summary__label"><?php esc_html_e('Total runtime', 'backstage-venue-manager'); ?></span>
                         <strong class="vms-lineup-summary__value" id="vms-lineup-summary-runtime"><?php echo esc_html((string) ($lineup_summary['total_runtime_label'] ?? '')); ?></strong>
                     </div>
                     <div class="vms-lineup-summary__item">
-                        <span class="vms-lineup-summary__label"><?php esc_html_e('Warnings', 'vms'); ?></span>
+                        <span class="vms-lineup-summary__label"><?php esc_html_e('Warnings', 'backstage-venue-manager'); ?></span>
                         <strong class="vms-lineup-summary__value" id="vms-lineup-summary-warnings"><?php echo esc_html((string) ((int) ($lineup_summary['warning_count'] ?? count($lineup_warning_messages)))); ?></strong>
                     </div>
                 </div>
@@ -79,9 +79,9 @@
                 ?>
 
                 <div class="vms-lineup-actions">
-                    <button type="button" class="button button-secondary" id="vms-lineup-add-supporting"><?php esc_html_e('Add Supporting Vendor', 'vms'); ?></button>
-                    <button type="button" class="button button-secondary" id="vms-lineup-expand-all"><?php esc_html_e('Expand All', 'vms'); ?></button>
-                    <button type="button" class="button button-secondary" id="vms-lineup-collapse-all"><?php esc_html_e('Collapse All', 'vms'); ?></button>
+                    <button type="button" class="button button-secondary" id="vms-lineup-add-supporting"><?php esc_html_e('Add Supporting Vendor', 'backstage-venue-manager'); ?></button>
+                    <button type="button" class="button button-secondary" id="vms-lineup-expand-all"><?php esc_html_e('Expand All', 'backstage-venue-manager'); ?></button>
+                    <button type="button" class="button button-secondary" id="vms-lineup-collapse-all"><?php esc_html_e('Collapse All', 'backstage-venue-manager'); ?></button>
                 </div>
 
                 <div class="vms-lineup-editor">
@@ -89,12 +89,12 @@
                         <summary class="vms-lineup-row__summary">
                             <span class="vms-lineup-row__summary-main">
                                 <span class="vms-lineup-row__title-wrap">
-                                    <span class="vms-lineup-row__eyebrow"><?php esc_html_e('Primary Vendor', 'vms'); ?></span>
+                                    <span class="vms-lineup-row__eyebrow"><?php esc_html_e('Primary Vendor', 'backstage-venue-manager'); ?></span>
                                     <span class="vms-lineup-row__title" id="vms-lineup-primary-summary-title"><?php echo esc_html($lineup_primary_vendor_label); ?></span>
                                 </span>
                             </span>
                             <span class="vms-lineup-row__summary-meta">
-                                <span class="vms-lineup-row__pill vms-lineup-row__pill--primary"><?php esc_html_e('Primary', 'vms'); ?></span>
+                                <span class="vms-lineup-row__pill vms-lineup-row__pill--primary"><?php esc_html_e('Primary', 'backstage-venue-manager'); ?></span>
                                 <span class="vms-lineup-row__meta vms-lineup-row__meta--time" id="vms-lineup-primary-summary-time"><?php echo esc_html($lineup_primary_time_label); ?></span>
                                 <span class="vms-lineup-row__meta vms-lineup-row__meta--duration" id="vms-lineup-primary-summary-duration"><?php echo esc_html($lineup_primary_duration_label); ?></span>
                                 <span class="vms-lineup-row__meta vms-lineup-row__meta--downtime" id="vms-lineup-primary-summary-downtime"><?php echo esc_html((string) ($lineup_primary_entry['downtime_before_label'] ?? '')); ?></span>
@@ -113,7 +113,7 @@
 
 	                            <div class="vms-lineup-row__fields vms-lineup-row__fields--primary">
 	                                <p class="vms-lineup-field vms-lineup-field--vendor">
-	                                    <label class="vms-lineup-field__label" for="vms_band_vendor_id"><strong><?php esc_html_e('Primary Vendor', 'vms'); ?></strong></label>
+	                                    <label class="vms-lineup-field__label" for="vms_band_vendor_id"><strong><?php esc_html_e('Primary Vendor', 'backstage-venue-manager'); ?></strong></label>
                                     <select id="vms_band_vendor_id" name="vms_band_vendor_id" class="vms-ep-select-md" data-lineup-primary-vendor-select>
                                         <?php $render_primary_vendor_select_options($selected_band_id); ?>
                                     </select>
@@ -126,63 +126,63 @@
                                     ?>
 	                                    <span class="vms-lineup-field__actions vms-ep-vendor-actions">
 	                                        <a class="button button-secondary button-small" href="<?php echo esc_url($add_primary_vendor_url); ?>" target="_blank" rel="noopener">
-	                                            <?php esc_html_e('Add new vendor', 'vms'); ?>
+	                                            <?php esc_html_e('Add new vendor', 'backstage-venue-manager'); ?>
 	                                        </a>
 	                                        <button type="button" class="button button-secondary button-small" id="vms-clear-primary-vendor-button">
-	                                            <?php esc_html_e('Clear primary vendor', 'vms'); ?>
+	                                            <?php esc_html_e('Clear primary vendor', 'backstage-venue-manager'); ?>
 	                                        </button>
 	                                        <?php if ($selected_band_id > 0): ?>
 	                                            <?php $edit_vendor_url = admin_url('post.php?post=' . $selected_band_id . '&action=edit'); ?>
 	                                            <a class="button button-secondary button-small" href="<?php echo esc_url($edit_vendor_url); ?>">
-	                                                <?php esc_html_e('Edit vendor profile', 'vms'); ?>
+	                                                <?php esc_html_e('Edit vendor profile', 'backstage-venue-manager'); ?>
                                             </a>
                                         <?php endif; ?>
                                     </span>
                                 </p>
                                 <p class="vms-lineup-field vms-lineup-field--name">
-                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Public name override', 'vms'); ?></strong></label>
+                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Public name override', 'backstage-venue-manager'); ?></strong></label>
                                     <input type="text" name="vms_lineup_entries[primary][public_name_override]" value="<?php echo esc_attr((string) ($lineup_primary_entry['public_name_override'] ?? '')); ?>" class="regular-text" />
                                 </p>
                                 <p class="vms-lineup-field vms-lineup-field--time">
-                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set start', 'vms'); ?></strong></label>
+                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set start', 'backstage-venue-manager'); ?></strong></label>
                                     <select name="vms_lineup_entries[primary][set_start]" class="vms-ep-time-select vms-lineup-time-select" data-lineup-primary-start>
-                                        <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                                        <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                                         <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                                             <option value="<?php echo esc_attr($time_value); ?>" <?php selected((string) ($lineup_primary_entry['set_start'] ?? ''), (string) $time_value); ?>><?php echo esc_html((string) $time_label); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </p>
                                 <p class="vms-lineup-field vms-lineup-field--time">
-                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set end', 'vms'); ?></strong></label>
+                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set end', 'backstage-venue-manager'); ?></strong></label>
                                     <select name="vms_lineup_entries[primary][set_end]" class="vms-ep-time-select vms-lineup-time-select" data-lineup-primary-end>
-                                        <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                                        <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                                         <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                                             <option value="<?php echo esc_attr($time_value); ?>" <?php selected((string) ($lineup_primary_entry['set_end'] ?? ''), (string) $time_value); ?>><?php echo esc_html((string) $time_label); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </p>
                                 <div class="vms-lineup-field vms-lineup-field--flags">
-                                    <span class="vms-lineup-field__label"><strong><?php esc_html_e('Visibility', 'vms'); ?></strong></span>
-                                    <label><input type="checkbox" name="vms_lineup_entries[primary][show_public]" value="1" <?php checked((string) ($lineup_primary_entry['show_public'] ?? '1'), '1'); ?> /> <?php esc_html_e('Show publicly', 'vms'); ?></label>
-                                    <label><input type="checkbox" name="vms_lineup_entries[primary][show_portal]" value="1" <?php checked((string) ($lineup_primary_entry['show_portal'] ?? '1'), '1'); ?> /> <?php esc_html_e('Show in portal', 'vms'); ?></label>
+                                    <span class="vms-lineup-field__label"><strong><?php esc_html_e('Visibility', 'backstage-venue-manager'); ?></strong></span>
+                                    <label><input type="checkbox" name="vms_lineup_entries[primary][show_public]" value="1" <?php checked((string) ($lineup_primary_entry['show_public'] ?? '1'), '1'); ?> /> <?php esc_html_e('Show publicly', 'backstage-venue-manager'); ?></label>
+                                    <label><input type="checkbox" name="vms_lineup_entries[primary][show_portal]" value="1" <?php checked((string) ($lineup_primary_entry['show_portal'] ?? '1'), '1'); ?> /> <?php esc_html_e('Show in portal', 'backstage-venue-manager'); ?></label>
                                 </div>
                                 <div class="vms-lineup-field vms-lineup-field--status">
-                                    <span class="vms-lineup-field__label"><strong><?php esc_html_e('Status', 'vms'); ?></strong></span>
+                                    <span class="vms-lineup-field__label"><strong><?php esc_html_e('Status', 'backstage-venue-manager'); ?></strong></span>
                                     <div class="vms-lineup-status">
                                         <div class="vms-lineup-status__item">
-                                            <span class="vms-lineup-status__label"><?php esc_html_e('Fee summary', 'vms'); ?></span>
+                                            <span class="vms-lineup-status__label"><?php esc_html_e('Fee summary', 'backstage-venue-manager'); ?></span>
                                             <strong><?php echo esc_html($lineup_primary_pay_summary); ?></strong>
                                         </div>
                                         <div class="vms-lineup-status__item">
-                                            <span class="vms-lineup-status__label"><?php esc_html_e('Duration', 'vms'); ?></span>
+                                            <span class="vms-lineup-status__label"><?php esc_html_e('Duration', 'backstage-venue-manager'); ?></span>
                                             <strong id="vms-lineup-primary-derived-duration"><?php echo esc_html((string) ($lineup_primary_entry['duration_label'] ?? '')); ?></strong>
                                         </div>
                                         <div class="vms-lineup-status__item">
-                                            <span class="vms-lineup-status__label"><?php esc_html_e('Downtime', 'vms'); ?></span>
+                                            <span class="vms-lineup-status__label"><?php esc_html_e('Downtime', 'backstage-venue-manager'); ?></span>
                                             <strong id="vms-lineup-primary-derived-downtime"><?php echo esc_html((string) ($lineup_primary_entry['downtime_before_label'] ?? '')); ?></strong>
                                         </div>
                                         <div class="vms-lineup-status__item">
-                                            <span class="vms-lineup-status__label"><?php esc_html_e('Warnings', 'vms'); ?></span>
+                                            <span class="vms-lineup-status__label"><?php esc_html_e('Warnings', 'backstage-venue-manager'); ?></span>
                                             <strong class="vms-lineup-status__value<?php echo ((int) $lineup_primary_warning_count) > 0 ? '' : ' is-clear'; ?>" id="vms-lineup-primary-derived-warning"><?php echo esc_html((string) $lineup_primary_warning_count); ?></strong>
                                         </div>
                                     </div>
@@ -191,15 +191,15 @@
 
                             <div class="vms-lineup-row__notes">
                                 <p class="vms-lineup-field vms-lineup-field--notes">
-                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Schedule notes', 'vms'); ?></strong></label>
+                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Schedule notes', 'backstage-venue-manager'); ?></strong></label>
                                     <textarea name="vms_lineup_entries[primary][schedule_notes]" rows="2" class="large-text"><?php echo esc_textarea((string) ($lineup_primary_entry['schedule_notes'] ?? '')); ?></textarea>
                                 </p>
                                 <p class="vms-lineup-field vms-lineup-field--notes">
-                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Pay notes', 'vms'); ?></strong></label>
+                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Pay notes', 'backstage-venue-manager'); ?></strong></label>
                                     <textarea name="vms_lineup_entries[primary][pay_notes]" rows="2" class="large-text"><?php echo esc_textarea((string) ($lineup_primary_entry['pay_notes'] ?? '')); ?></textarea>
                                 </p>
                                 <p class="vms-lineup-field vms-lineup-field--notes">
-                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Internal notes', 'vms'); ?></strong></label>
+                                    <label class="vms-lineup-field__label"><strong><?php esc_html_e('Internal notes', 'backstage-venue-manager'); ?></strong></label>
                                     <textarea name="vms_lineup_entries[primary][internal_notes]" rows="2" class="large-text"><?php echo esc_textarea((string) ($lineup_primary_entry['internal_notes'] ?? '')); ?></textarea>
                                 </p>
                             </div>
@@ -211,14 +211,14 @@
                                     <p class="description vms-lineup-row__aux-copy">
                                         <?php
                                         printf(
-                                            esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'vms'),
+                                            esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'backstage-venue-manager'),
                                             esc_html($nice)
                                         );
                                         ?>
                                     </p>
                                     <div id="vms-tax-status"></div>
                                 <?php else: ?>
-                                    <p class="description vms-lineup-row__aux-copy"><?php esc_html_e('Set the Event Date to see vendor availability hints here.', 'vms'); ?></p>
+                                    <p class="description vms-lineup-row__aux-copy"><?php esc_html_e('Set the Event Date to see vendor availability hints here.', 'backstage-venue-manager'); ?></p>
                                     <div id="vms-tax-status"></div>
                                 <?php endif; ?>
 
@@ -232,18 +232,18 @@
                                      data-nonce="<?php echo esc_attr(wp_create_nonce('vms_tax_bypass_ajax')); ?>"
                                      data-default-until="<?php echo esc_attr($tax_bypass_default_until); ?>">
                                     <p class="description vms-mt-8">
-                                        <?php esc_html_e('Tax bypass (temporary): set an expiration + reason for the selected vendor without leaving this page.', 'vms'); ?>
+                                        <?php esc_html_e('Tax bypass (temporary): set an expiration + reason for the selected vendor without leaving this page.', 'backstage-venue-manager'); ?>
                                     </p>
                                     <div class="vms-tax-bypass-inline__controls">
-                                        <span id="vms-tax-bypass-active-flag" class="vms-tax-bypass-inline__flag vms-hidden"><?php esc_html_e('Active bypass', 'vms'); ?></span>
-                                        <label for="vms-tax-bypass-until"><strong><?php esc_html_e('Until', 'vms'); ?></strong></label>
+                                        <span id="vms-tax-bypass-active-flag" class="vms-tax-bypass-inline__flag vms-hidden"><?php esc_html_e('Active bypass', 'backstage-venue-manager'); ?></span>
+                                        <label for="vms-tax-bypass-until"><strong><?php esc_html_e('Until', 'backstage-venue-manager'); ?></strong></label>
                                         <input type="date" id="vms-tax-bypass-until" class="vms-tax-bypass-inline__until" />
 
-                                        <label for="vms-tax-bypass-reason"><strong><?php esc_html_e('Reason', 'vms'); ?></strong></label>
-                                        <input type="text" id="vms-tax-bypass-reason" class="regular-text vms-tax-bypass-inline__reason" placeholder="<?php esc_attr_e('Required reason', 'vms'); ?>" />
+                                        <label for="vms-tax-bypass-reason"><strong><?php esc_html_e('Reason', 'backstage-venue-manager'); ?></strong></label>
+                                        <input type="text" id="vms-tax-bypass-reason" class="regular-text vms-tax-bypass-inline__reason" placeholder="<?php esc_attr_e('Required reason', 'backstage-venue-manager'); ?>" />
 
-                                        <button type="button" class="button button-secondary" id="vms-tax-bypass-set"><?php esc_html_e('Apply bypass', 'vms'); ?></button>
-                                        <button type="button" class="button" id="vms-tax-bypass-clear"><?php esc_html_e('Clear bypass', 'vms'); ?></button>
+                                        <button type="button" class="button button-secondary" id="vms-tax-bypass-set"><?php esc_html_e('Apply bypass', 'backstage-venue-manager'); ?></button>
+                                        <button type="button" class="button" id="vms-tax-bypass-clear"><?php esc_html_e('Clear bypass', 'backstage-venue-manager'); ?></button>
                                     </div>
                                     <div id="vms-tax-bypass-msg" class="description vms-mt-6" aria-live="polite"></div>
                                 </div>
@@ -280,7 +280,7 @@
                                 $lineup_support_vendor_id = (int) ($lineup_support_entry['vendor_id'] ?? 0);
                                 $lineup_support_name = trim((string) ($lineup_support_entry['display_name'] ?? ($lineup_support_entry['vendor_title'] ?? '')));
                                 if ($lineup_support_name === '') {
-                                    $lineup_support_name = __('Unassigned supporting vendor', 'vms');
+                                    $lineup_support_name = __('Unassigned supporting vendor', 'backstage-venue-manager');
                                 }
                                 $lineup_support_time = trim(implode(' – ', array_filter(array(
                                     (string) ($lineup_support_entry['set_start_label'] ?? ''),
@@ -297,20 +297,20 @@
                                 }
                                 $lineup_support_fee_label = ($lineup_support_fee !== '' && is_numeric($lineup_support_fee))
                                     ? (function_exists('vms_format_currency') ? vms_format_currency((float) $lineup_support_fee) : ('$' . number_format((float) $lineup_support_fee, 2)))
-                                    : __('No fee set', 'vms');
+                                    : __('No fee set', 'backstage-venue-manager');
                                 $lineup_support_warning_count = (int) ($lineup_support_entry['warning_count'] ?? 0);
                             ?>
                             <details class="vms-lineup-row vms-lineup-row--supporting" data-lineup-row data-lineup-role="supporting" draggable="true" open>
                                 <summary class="vms-lineup-row__summary">
                                     <span class="vms-lineup-row__summary-main">
-                                        <span class="vms-lineup-row__handle" title="<?php esc_attr_e('Drag to reorder', 'vms'); ?>">↕</span>
+                                        <span class="vms-lineup-row__handle" title="<?php esc_attr_e('Drag to reorder', 'backstage-venue-manager'); ?>">↕</span>
                                         <span class="vms-lineup-row__title-wrap">
-                                            <span class="vms-lineup-row__eyebrow"><?php esc_html_e('Supporting Vendor', 'vms'); ?></span>
+                                            <span class="vms-lineup-row__eyebrow"><?php esc_html_e('Supporting Vendor', 'backstage-venue-manager'); ?></span>
                                             <span class="vms-lineup-row__title" data-lineup-summary-title><?php echo esc_html($lineup_support_name); ?></span>
                                         </span>
                                     </span>
                                     <span class="vms-lineup-row__summary-meta">
-                                        <span class="vms-lineup-row__pill"><?php esc_html_e('Supporting', 'vms'); ?></span>
+                                        <span class="vms-lineup-row__pill"><?php esc_html_e('Supporting', 'backstage-venue-manager'); ?></span>
                                         <span class="vms-lineup-row__meta vms-lineup-row__meta--time" data-lineup-summary-time><?php echo esc_html($lineup_support_time); ?></span>
                                         <span class="vms-lineup-row__meta vms-lineup-row__meta--duration" data-lineup-summary-duration><?php echo esc_html((string) ($lineup_support_entry['duration_label'] ?? '')); ?></span>
                                         <span class="vms-lineup-row__meta vms-lineup-row__meta--downtime" data-lineup-summary-downtime><?php echo esc_html((string) ($lineup_support_entry['downtime_before_label'] ?? '')); ?></span>
@@ -326,56 +326,56 @@
 
                                     <div class="vms-lineup-row__fields">
                                         <p class="vms-lineup-field vms-lineup-field--vendor">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Primary Vendor', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Primary Vendor', 'backstage-venue-manager'); ?></strong></label>
                                             <select name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][vendor_id]" class="vms-ep-select-md vms-lineup-vendor-select" data-lineup-vendor-select>
                                                 <?php $render_lineup_vendor_select_options($lineup_support_vendor_id); ?>
                                             </select>
                                         </p>
                                         <p class="vms-lineup-field vms-lineup-field--name">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Public name override', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Public name override', 'backstage-venue-manager'); ?></strong></label>
                                             <input type="text" name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][public_name_override]" value="<?php echo esc_attr((string) ($lineup_support_entry['public_name_override'] ?? '')); ?>" class="regular-text" />
                                         </p>
                                         <p class="vms-lineup-field vms-lineup-field--time">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set start', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set start', 'backstage-venue-manager'); ?></strong></label>
                                             <select name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][set_start]" class="vms-ep-time-select vms-lineup-time-select" data-lineup-start>
-                                                <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                                                <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                                                 <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                                                     <option value="<?php echo esc_attr($time_value); ?>" <?php selected((string) ($lineup_support_entry['set_start'] ?? ''), (string) $time_value); ?>><?php echo esc_html((string) $time_label); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </p>
                                         <p class="vms-lineup-field vms-lineup-field--time">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set end', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set end', 'backstage-venue-manager'); ?></strong></label>
                                             <select name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][set_end]" class="vms-ep-time-select vms-lineup-time-select" data-lineup-end>
-                                                <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                                                <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                                                 <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                                                     <option value="<?php echo esc_attr($time_value); ?>" <?php selected((string) ($lineup_support_entry['set_end'] ?? ''), (string) $time_value); ?>><?php echo esc_html((string) $time_label); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </p>
                                         <p class="vms-lineup-field vms-lineup-field--fee">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Compensation (Guaranteed fee)', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Compensation (Guaranteed fee)', 'backstage-venue-manager'); ?></strong></label>
                                             <input type="text" name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][guaranteed_fee]" value="<?php echo esc_attr((string) $lineup_support_fee); ?>" class="regular-text" data-lineup-fee data-lineup-fee-auto="<?php echo $lineup_support_fee_auto ? '1' : '0'; ?>" />
-                                            <span class="description"><?php esc_html_e('Auto-fills from the vendor default when available. Change it here anytime for this event.', 'vms'); ?></span>
+                                            <span class="description"><?php esc_html_e('Auto-fills from the vendor default when available. Change it here anytime for this event.', 'backstage-venue-manager'); ?></span>
                                         </p>
                                         <div class="vms-lineup-field vms-lineup-field--flags">
-                                            <span class="vms-lineup-field__label"><strong><?php esc_html_e('Visibility', 'vms'); ?></strong></span>
-                                            <label><input type="checkbox" name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][show_public]" value="1" <?php checked((string) ($lineup_support_entry['show_public'] ?? ''), '1'); ?> /> <?php esc_html_e('Show publicly', 'vms'); ?></label>
-                                            <label><input type="checkbox" name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][show_portal]" value="1" <?php checked((string) ($lineup_support_entry['show_portal'] ?? ''), '1'); ?> /> <?php esc_html_e('Show in portal', 'vms'); ?></label>
+                                            <span class="vms-lineup-field__label"><strong><?php esc_html_e('Visibility', 'backstage-venue-manager'); ?></strong></span>
+                                            <label><input type="checkbox" name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][show_public]" value="1" <?php checked((string) ($lineup_support_entry['show_public'] ?? ''), '1'); ?> /> <?php esc_html_e('Show publicly', 'backstage-venue-manager'); ?></label>
+                                            <label><input type="checkbox" name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][show_portal]" value="1" <?php checked((string) ($lineup_support_entry['show_portal'] ?? ''), '1'); ?> /> <?php esc_html_e('Show in portal', 'backstage-venue-manager'); ?></label>
                                         </div>
                                         <div class="vms-lineup-field vms-lineup-field--status">
-                                            <span class="vms-lineup-field__label"><strong><?php esc_html_e('Status', 'vms'); ?></strong></span>
+                                            <span class="vms-lineup-field__label"><strong><?php esc_html_e('Status', 'backstage-venue-manager'); ?></strong></span>
                                             <div class="vms-lineup-status">
                                                 <div class="vms-lineup-status__item">
-                                                    <span class="vms-lineup-status__label"><?php esc_html_e('Duration', 'vms'); ?></span>
+                                                    <span class="vms-lineup-status__label"><?php esc_html_e('Duration', 'backstage-venue-manager'); ?></span>
                                                     <strong data-lineup-derived-duration><?php echo esc_html((string) ($lineup_support_entry['duration_label'] ?? '')); ?></strong>
                                                 </div>
                                                 <div class="vms-lineup-status__item">
-                                                    <span class="vms-lineup-status__label"><?php esc_html_e('Downtime', 'vms'); ?></span>
+                                                    <span class="vms-lineup-status__label"><?php esc_html_e('Downtime', 'backstage-venue-manager'); ?></span>
                                                     <strong data-lineup-derived-downtime><?php echo esc_html((string) ($lineup_support_entry['downtime_before_label'] ?? '')); ?></strong>
                                                 </div>
                                                 <div class="vms-lineup-status__item">
-                                                    <span class="vms-lineup-status__label"><?php esc_html_e('Warnings', 'vms'); ?></span>
+                                                    <span class="vms-lineup-status__label"><?php esc_html_e('Warnings', 'backstage-venue-manager'); ?></span>
                                                     <strong class="vms-lineup-status__value<?php echo $lineup_support_warning_count > 0 ? '' : ' is-clear'; ?>" data-lineup-derived-warning><?php echo esc_html((string) $lineup_support_warning_count); ?></strong>
                                                 </div>
                                             </div>
@@ -384,21 +384,21 @@
 
                                     <div class="vms-lineup-row__notes">
                                         <p class="vms-lineup-field vms-lineup-field--notes">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Schedule notes', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Schedule notes', 'backstage-venue-manager'); ?></strong></label>
                                             <textarea name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][schedule_notes]" rows="2" class="large-text"><?php echo esc_textarea((string) ($lineup_support_entry['schedule_notes'] ?? '')); ?></textarea>
                                         </p>
                                         <p class="vms-lineup-field vms-lineup-field--notes">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Pay notes', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Pay notes', 'backstage-venue-manager'); ?></strong></label>
                                             <textarea name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][pay_notes]" rows="2" class="large-text"><?php echo esc_textarea((string) ($lineup_support_entry['pay_notes'] ?? '')); ?></textarea>
                                         </p>
                                         <p class="vms-lineup-field vms-lineup-field--notes">
-                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Internal notes', 'vms'); ?></strong></label>
+                                            <label class="vms-lineup-field__label"><strong><?php esc_html_e('Internal notes', 'backstage-venue-manager'); ?></strong></label>
                                             <textarea name="vms_lineup_entries[<?php echo esc_attr((string) $lineup_support_index); ?>][internal_notes]" rows="2" class="large-text"><?php echo esc_textarea((string) ($lineup_support_entry['internal_notes'] ?? '')); ?></textarea>
                                         </p>
                                     </div>
 
                                     <div class="vms-lineup-row__footer">
-                                        <button type="button" class="button button-secondary vms-lineup-remove"><?php esc_html_e('Remove entry', 'vms'); ?></button>
+                                        <button type="button" class="button button-secondary vms-lineup-remove"><?php esc_html_e('Remove entry', 'backstage-venue-manager'); ?></button>
                                     </div>
                                 </div>
                             </details>
@@ -418,18 +418,18 @@
                         <details class="vms-lineup-row vms-lineup-row--supporting" data-lineup-row data-lineup-role="supporting" draggable="true" open>
                             <summary class="vms-lineup-row__summary">
                                 <span class="vms-lineup-row__summary-main">
-                                    <span class="vms-lineup-row__handle" title="<?php esc_attr_e('Drag to reorder', 'vms'); ?>">↕</span>
+                                    <span class="vms-lineup-row__handle" title="<?php esc_attr_e('Drag to reorder', 'backstage-venue-manager'); ?>">↕</span>
                                     <span class="vms-lineup-row__title-wrap">
-                                        <span class="vms-lineup-row__eyebrow"><?php esc_html_e('Supporting Vendor', 'vms'); ?></span>
-                                        <span class="vms-lineup-row__title" data-lineup-summary-title><?php esc_html_e('Unassigned supporting vendor', 'vms'); ?></span>
+                                        <span class="vms-lineup-row__eyebrow"><?php esc_html_e('Supporting Vendor', 'backstage-venue-manager'); ?></span>
+                                        <span class="vms-lineup-row__title" data-lineup-summary-title><?php esc_html_e('Unassigned supporting vendor', 'backstage-venue-manager'); ?></span>
                                     </span>
                                 </span>
                                 <span class="vms-lineup-row__summary-meta">
-                                    <span class="vms-lineup-row__pill"><?php esc_html_e('Supporting', 'vms'); ?></span>
+                                    <span class="vms-lineup-row__pill"><?php esc_html_e('Supporting', 'backstage-venue-manager'); ?></span>
                                     <span class="vms-lineup-row__meta vms-lineup-row__meta--time" data-lineup-summary-time></span>
                                     <span class="vms-lineup-row__meta vms-lineup-row__meta--duration" data-lineup-summary-duration></span>
                                     <span class="vms-lineup-row__meta vms-lineup-row__meta--downtime" data-lineup-summary-downtime></span>
-                                    <span class="vms-lineup-row__meta vms-lineup-row__meta--fee" data-lineup-summary-fee><?php esc_html_e('No fee set', 'vms'); ?></span>
+                                    <span class="vms-lineup-row__meta vms-lineup-row__meta--fee" data-lineup-summary-fee><?php esc_html_e('No fee set', 'backstage-venue-manager'); ?></span>
                                     <span class="vms-lineup-row__warning is-clear" data-lineup-summary-warning>0</span>
                                     <span class="vms-lineup-row__toggle" aria-hidden="true"></span>
                                 </span>
@@ -440,56 +440,56 @@
                                 <input type="hidden" name="vms_lineup_entries[__INDEX__][sort_order]" value="0" data-lineup-sort-order />
                                 <div class="vms-lineup-row__fields">
                                     <p class="vms-lineup-field vms-lineup-field--vendor">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Primary Vendor', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Primary Vendor', 'backstage-venue-manager'); ?></strong></label>
                                         <select name="vms_lineup_entries[__INDEX__][vendor_id]" class="vms-ep-select-md vms-lineup-vendor-select" data-lineup-vendor-select>
                                             <?php $render_lineup_vendor_select_options(0); ?>
                                         </select>
                                     </p>
                                     <p class="vms-lineup-field vms-lineup-field--name">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Public name override', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Public name override', 'backstage-venue-manager'); ?></strong></label>
                                         <input type="text" name="vms_lineup_entries[__INDEX__][public_name_override]" value="" class="regular-text" />
                                     </p>
                                     <p class="vms-lineup-field vms-lineup-field--time">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set start', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set start', 'backstage-venue-manager'); ?></strong></label>
                                         <select name="vms_lineup_entries[__INDEX__][set_start]" class="vms-ep-time-select vms-lineup-time-select" data-lineup-start>
-                                            <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                                            <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                                             <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                                                 <option value="<?php echo esc_attr($time_value); ?>"><?php echo esc_html((string) $time_label); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </p>
                                     <p class="vms-lineup-field vms-lineup-field--time">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set end', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Set end', 'backstage-venue-manager'); ?></strong></label>
                                         <select name="vms_lineup_entries[__INDEX__][set_end]" class="vms-ep-time-select vms-lineup-time-select" data-lineup-end>
-                                            <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                                            <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                                             <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                                                 <option value="<?php echo esc_attr($time_value); ?>"><?php echo esc_html((string) $time_label); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </p>
                                     <p class="vms-lineup-field vms-lineup-field--fee">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Compensation (Guaranteed fee)', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Compensation (Guaranteed fee)', 'backstage-venue-manager'); ?></strong></label>
                                         <input type="text" name="vms_lineup_entries[__INDEX__][guaranteed_fee]" value="" class="regular-text" data-lineup-fee data-lineup-fee-auto="0" />
-                                        <span class="description"><?php esc_html_e('Auto-fills from the vendor default when available. Change it here anytime for this event.', 'vms'); ?></span>
+                                        <span class="description"><?php esc_html_e('Auto-fills from the vendor default when available. Change it here anytime for this event.', 'backstage-venue-manager'); ?></span>
                                     </p>
                                     <div class="vms-lineup-field vms-lineup-field--flags">
-                                        <span class="vms-lineup-field__label"><strong><?php esc_html_e('Visibility', 'vms'); ?></strong></span>
-                                        <label><input type="checkbox" name="vms_lineup_entries[__INDEX__][show_public]" value="1" /> <?php esc_html_e('Show publicly', 'vms'); ?></label>
-                                        <label><input type="checkbox" name="vms_lineup_entries[__INDEX__][show_portal]" value="1" /> <?php esc_html_e('Show in portal', 'vms'); ?></label>
+                                        <span class="vms-lineup-field__label"><strong><?php esc_html_e('Visibility', 'backstage-venue-manager'); ?></strong></span>
+                                        <label><input type="checkbox" name="vms_lineup_entries[__INDEX__][show_public]" value="1" /> <?php esc_html_e('Show publicly', 'backstage-venue-manager'); ?></label>
+                                        <label><input type="checkbox" name="vms_lineup_entries[__INDEX__][show_portal]" value="1" /> <?php esc_html_e('Show in portal', 'backstage-venue-manager'); ?></label>
                                     </div>
                                     <div class="vms-lineup-field vms-lineup-field--status">
-                                        <span class="vms-lineup-field__label"><strong><?php esc_html_e('Status', 'vms'); ?></strong></span>
+                                        <span class="vms-lineup-field__label"><strong><?php esc_html_e('Status', 'backstage-venue-manager'); ?></strong></span>
                                         <div class="vms-lineup-status">
                                             <div class="vms-lineup-status__item">
-                                                <span class="vms-lineup-status__label"><?php esc_html_e('Duration', 'vms'); ?></span>
+                                                <span class="vms-lineup-status__label"><?php esc_html_e('Duration', 'backstage-venue-manager'); ?></span>
                                                 <strong data-lineup-derived-duration></strong>
                                             </div>
                                             <div class="vms-lineup-status__item">
-                                                <span class="vms-lineup-status__label"><?php esc_html_e('Downtime', 'vms'); ?></span>
+                                                <span class="vms-lineup-status__label"><?php esc_html_e('Downtime', 'backstage-venue-manager'); ?></span>
                                                 <strong data-lineup-derived-downtime></strong>
                                             </div>
                                             <div class="vms-lineup-status__item">
-                                                <span class="vms-lineup-status__label"><?php esc_html_e('Warnings', 'vms'); ?></span>
+                                                <span class="vms-lineup-status__label"><?php esc_html_e('Warnings', 'backstage-venue-manager'); ?></span>
                                                 <strong class="vms-lineup-status__value is-clear" data-lineup-derived-warning>0</strong>
                                             </div>
                                         </div>
@@ -497,20 +497,20 @@
                                 </div>
                                 <div class="vms-lineup-row__notes">
                                     <p class="vms-lineup-field vms-lineup-field--notes">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Schedule notes', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Schedule notes', 'backstage-venue-manager'); ?></strong></label>
                                         <textarea name="vms_lineup_entries[__INDEX__][schedule_notes]" rows="2" class="large-text"></textarea>
                                     </p>
                                     <p class="vms-lineup-field vms-lineup-field--notes">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Pay notes', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Pay notes', 'backstage-venue-manager'); ?></strong></label>
                                         <textarea name="vms_lineup_entries[__INDEX__][pay_notes]" rows="2" class="large-text"></textarea>
                                     </p>
                                     <p class="vms-lineup-field vms-lineup-field--notes">
-                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Internal notes', 'vms'); ?></strong></label>
+                                        <label class="vms-lineup-field__label"><strong><?php esc_html_e('Internal notes', 'backstage-venue-manager'); ?></strong></label>
                                         <textarea name="vms_lineup_entries[__INDEX__][internal_notes]" rows="2" class="large-text"></textarea>
                                     </p>
                                 </div>
                                 <div class="vms-lineup-row__footer">
-                                    <button type="button" class="button button-secondary vms-lineup-remove"><?php esc_html_e('Remove entry', 'vms'); ?></button>
+                                    <button type="button" class="button button-secondary vms-lineup-remove"><?php esc_html_e('Remove entry', 'backstage-venue-manager'); ?></button>
                                 </div>
                             </div>
                         </details>
@@ -525,18 +525,18 @@
                 <div class="vms-lineup-insights">
                     <div class="vms-lineup-timeline">
                         <div class="vms-lineup-timeline__heading">
-                            <strong><?php esc_html_e('Timeline preview', 'vms'); ?></strong>
+                            <strong><?php esc_html_e('Timeline preview', 'backstage-venue-manager'); ?></strong>
                         </div>
                         <div id="vms-lineup-timeline-list" class="vms-lineup-timeline__list">
                             <?php foreach ($lineup_entries as $timeline_entry) : ?>
                                 <?php if (!empty($timeline_entry['downtime_before_label'])) : ?>
                                     <div class="vms-lineup-timeline__gap">
-                                        <span><?php esc_html_e('Changeover / gap', 'vms'); ?></span>
+                                        <span><?php esc_html_e('Changeover / gap', 'backstage-venue-manager'); ?></span>
                                         <strong><?php echo esc_html((string) $timeline_entry['downtime_before_label']); ?></strong>
                                     </div>
                                 <?php endif; ?>
                                 <div class="vms-lineup-timeline__entry <?php echo (sanitize_key((string) ($timeline_entry['role'] ?? '')) === 'primary') ? 'is-primary' : ''; ?>">
-                                    <span class="vms-lineup-timeline__name"><?php echo esc_html((string) ($timeline_entry['display_name'] ?? __('Lineup entry', 'vms'))); ?></span>
+                                    <span class="vms-lineup-timeline__name"><?php echo esc_html((string) ($timeline_entry['display_name'] ?? __('Lineup entry', 'backstage-venue-manager'))); ?></span>
                                     <span class="vms-lineup-timeline__time"><?php echo esc_html(trim(implode(' – ', array_filter(array((string) ($timeline_entry['set_start_label'] ?? ''), (string) ($timeline_entry['set_end_label'] ?? '')))))); ?></span>
                                     <span class="vms-lineup-timeline__duration"><?php echo esc_html((string) ($timeline_entry['duration_label'] ?? '')); ?></span>
                                 </div>
@@ -558,7 +558,7 @@
 
                     <div class="vms-lineup-health">
                         <div class="vms-lineup-health__heading">
-                            <strong><?php esc_html_e('Schedule Health', 'vms'); ?></strong>
+                            <strong><?php esc_html_e('Schedule Health', 'backstage-venue-manager'); ?></strong>
                         </div>
                         <ul id="vms-lineup-health-list" class="vms-lineup-health__list">
                             <?php if (!empty($lineup_warning_messages)) : ?>
@@ -566,7 +566,7 @@
                                     <li><?php echo esc_html((string) $lineup_warning_message); ?></li>
                                 <?php endforeach; ?>
                             <?php else : ?>
-                                <li><?php esc_html_e('No lineup warnings right now.', 'vms'); ?></li>
+                                <li><?php esc_html_e('No lineup warnings right now.', 'backstage-venue-manager'); ?></li>
                             <?php endif; ?>
                         </ul>
                     </div>

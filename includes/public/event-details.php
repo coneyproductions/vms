@@ -215,7 +215,7 @@ if (!function_exists('vms_event_details_render_card')) {
             return '';
         }
 
-        $heading = $heading_override !== '' ? $heading_override : (string) apply_filters('vms_event_details_card_heading', __('Event Details', 'vms'), $event_id, $ctx);
+        $heading = $heading_override !== '' ? $heading_override : (string) apply_filters('vms_event_details_card_heading', __('Event Details', 'backstage-venue-manager'), $event_id, $ctx);
         $event_status = sanitize_key((string) ($ctx['status'] ?? 'scheduled'));
         $is_cancelled = ($event_status === 'cancelled');
 
@@ -248,18 +248,18 @@ if (!function_exists('vms_event_details_render_card')) {
             <dl class="vms-event-details-card__list">
                 <?php if ($date_label !== '' || $time_label !== '' || $gates_label !== '') : ?>
                     <div class="vms-event-details-card__row vms-event-details-card__row--time">
-                        <dt class="vms-event-details-card__label"><?php esc_html_e('Date & Time', 'vms'); ?></dt>
+                        <dt class="vms-event-details-card__label"><?php esc_html_e('Date & Time', 'backstage-venue-manager'); ?></dt>
                         <dd class="vms-event-details-card__value">
                             <?php if ($date_label !== '') : ?><span class="vms-event-details-card__strong"><?php echo esc_html($date_label); ?></span><?php endif; ?>
                             <?php if ($time_label !== '') : ?><span><?php echo esc_html($time_label); ?></span><?php endif; ?>
-                            <?php if ($gates_label !== '') : ?><span><?php echo esc_html(sprintf(__('Gates open %s', 'vms'), $gates_label)); ?></span><?php endif; ?>
+                            <?php if ($gates_label !== '') : ?><span><?php echo esc_html(sprintf(__('Gates open %s', 'backstage-venue-manager'), $gates_label)); ?></span><?php endif; ?>
                         </dd>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($venue_name !== '' || !empty($address_lines)) : ?>
                     <div class="vms-event-details-card__row vms-event-details-card__row--location">
-                        <dt class="vms-event-details-card__label"><?php esc_html_e('Location', 'vms'); ?></dt>
+                        <dt class="vms-event-details-card__label"><?php esc_html_e('Location', 'backstage-venue-manager'); ?></dt>
                         <dd class="vms-event-details-card__value">
                             <?php if ($venue_name !== '') : ?><span class="vms-event-details-card__strong"><?php echo esc_html($venue_name); ?></span><?php endif; ?>
                             <?php foreach ($address_lines as $line) : ?>
@@ -267,7 +267,7 @@ if (!function_exists('vms_event_details_render_card')) {
                                 <span><?php echo esc_html($line); ?></span>
                             <?php endforeach; ?>
                             <?php if ($directions_url !== '') : ?>
-                                <a class="vms-event-details-card__inline-link" href="<?php echo esc_url($directions_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Get directions', 'vms'); ?></a>
+                                <a class="vms-event-details-card__inline-link" href="<?php echo esc_url($directions_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Get directions', 'backstage-venue-manager'); ?></a>
                             <?php endif; ?>
                         </dd>
                     </div>
@@ -275,15 +275,15 @@ if (!function_exists('vms_event_details_render_card')) {
 
                 <?php if ($ticket_label !== '') : ?>
                     <div class="vms-event-details-card__row vms-event-details-card__row--tickets">
-                        <dt class="vms-event-details-card__label"><?php esc_html_e('Tickets', 'vms'); ?></dt>
+                        <dt class="vms-event-details-card__label"><?php esc_html_e('Tickets', 'backstage-venue-manager'); ?></dt>
                         <dd class="vms-event-details-card__value"><span class="vms-event-details-card__strong"><?php echo esc_html($ticket_label); ?></span></dd>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($questions_url !== '') : ?>
                     <div class="vms-event-details-card__row vms-event-details-card__row--questions">
-                        <dt class="vms-event-details-card__label"><?php esc_html_e('Questions', 'vms'); ?></dt>
-                        <dd class="vms-event-details-card__value"><a class="vms-event-details-card__inline-link" href="<?php echo esc_url($questions_url); ?>"><?php esc_html_e('View common questions', 'vms'); ?></a></dd>
+                        <dt class="vms-event-details-card__label"><?php esc_html_e('Questions', 'backstage-venue-manager'); ?></dt>
+                        <dd class="vms-event-details-card__value"><a class="vms-event-details-card__inline-link" href="<?php echo esc_url($questions_url); ?>"><?php esc_html_e('View common questions', 'backstage-venue-manager'); ?></a></dd>
                     </div>
                 <?php endif; ?>
             </dl>
@@ -531,7 +531,7 @@ if (!function_exists('vms_event_details_ticket_context')) {
     function vms_event_details_ticket_context(int $event_id, int $plan_id = 0): array
     {
         if (function_exists('vms_tec_is_cancelled_event') && vms_tec_is_cancelled_event($event_id)) {
-            return array('label' => __('Ticket sales are closed for this cancelled event.', 'vms'), 'min_price' => null, 'free_labels' => array());
+            return array('label' => __('Ticket sales are closed for this cancelled event.', 'backstage-venue-manager'), 'min_price' => null, 'free_labels' => array());
         }
 
         $paid_prices = array();
@@ -577,9 +577,9 @@ if (!function_exists('vms_event_details_ticket_context')) {
         }, $free_labels))));
 
         if ($min_price !== null && $min_price > 0) {
-            $label = sprintf(__('From %s online', 'vms'), function_exists('wc_price') ? wp_strip_all_tags(wc_price($min_price)) : '$' . number_format_i18n($min_price, 2));
+            $label = sprintf(__('From %s online', 'backstage-venue-manager'), function_exists('wc_price') ? wp_strip_all_tags(wc_price($min_price)) : '$' . number_format_i18n($min_price, 2));
         } else {
-            $label = __('Tickets are available on this page.', 'vms');
+            $label = __('Tickets are available on this page.', 'backstage-venue-manager');
         }
 
         $label = (string) apply_filters('vms_event_details_ticket_label', $label, $event_id, $plan_id, $min_price, $free_labels);

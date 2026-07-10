@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) { exit; }
 
 function vms_admin_reference_keys_map_page() {
   if (!current_user_can('manage_options')) {
-    wp_die(esc_html__('You do not have permission to view this page.', 'vms'));
+    wp_die(esc_html__('You do not have permission to view this page.', 'backstage-venue-manager'));
   }
 
   // Load registry
@@ -36,13 +36,13 @@ function vms_admin_reference_keys_map_page() {
   $out .= "Timestamp: " . gmdate('Y-m-d H:i') . " UTC\n";
   ?>
   <div class="wrap">
-    <h1><?php echo esc_html__('VMS Reference: Keys + Identifiers', 'vms'); ?></h1>
+    <h1><?php echo esc_html__('VMS Reference: Keys + Identifiers', 'backstage-venue-manager'); ?></h1>
 
-    <p><?php echo esc_html__('Admin-only. Naming and key identifiers only. No runtime values are printed.', 'vms'); ?></p>
+    <p><?php echo esc_html__('Admin-only. Naming and key identifiers only. No runtime values are printed.', 'backstage-venue-manager'); ?></p>
 
     <p>
       <button class="button button-primary" type="button" id="vms-copy-keys-map">
-        <?php echo esc_html__('Copy to clipboard', 'vms'); ?>
+        <?php echo esc_html__('Copy to clipboard', 'backstage-venue-manager'); ?>
       </button>
     </p>
 

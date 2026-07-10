@@ -272,7 +272,7 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 					)
 				);
 				vms_approvals_queue_add_admin_notice(
-					__('Approvals count refresh failed for one queue. Check logs for details.', 'vms'),
+					__('Approvals count refresh failed for one queue. Check logs for details.', 'backstage-venue-manager'),
 					'warning'
 				);
 				return 0;
@@ -288,7 +288,7 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 				)
 			);
 			vms_approvals_queue_add_admin_notice(
-				__('Approvals count refresh failed for one queue. Check logs for details.', 'vms'),
+				__('Approvals count refresh failed for one queue. Check logs for details.', 'backstage-venue-manager'),
 				'warning'
 			);
 		}
@@ -473,7 +473,7 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 				}
 				$menu[$index] = vms_approvals_queue_update_menu_entry(
 					$item,
-					__('VMS', 'vms'),
+					__('VMS', 'backstage-venue-manager'),
 					$total_pending
 				);
 				break;
@@ -509,7 +509,7 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 			if ($slug === 'vms-approvals') {
 				$submenu['vms-dashboard'][$index] = vms_approvals_queue_update_menu_entry(
 					$item,
-					__('Approvals', 'vms'),
+					__('Approvals', 'backstage-venue-manager'),
 					$total_pending
 				);
 				continue;
@@ -542,8 +542,8 @@ if (!function_exists('vms_approvals_queue_register_menu')) {
 
 		add_submenu_page(
 			'vms-dashboard',
-			__('Approvals', 'vms'),
-			__('Approvals', 'vms'),
+			__('Approvals', 'backstage-venue-manager'),
+			__('Approvals', 'backstage-venue-manager'),
 			'read',
 			'vms-approvals',
 			'vms_approvals_queue_render_page'
@@ -620,11 +620,11 @@ if (!function_exists('vms_approvals_queue_verification_summary')) {
 				$name = trim((string) $user->display_name);
 			} else {
 				/* translators: %d: verification request user ID. */
-				$name = sprintf(__('User #%d', 'vms'), $user_id);
+				$name = sprintf(__('User #%d', 'backstage-venue-manager'), $user_id);
 			}
 			if ($name === '') {
 				/* translators: %d: verification request post ID. */
-				$name = sprintf(__('Request #%d', 'vms'), $request_id);
+				$name = sprintf(__('Request #%d', 'backstage-venue-manager'), $request_id);
 			}
 
 			$program_label = function_exists('vms_ticketing_verification_program_label')
@@ -699,7 +699,7 @@ if (!function_exists('vms_approvals_queue_vendor_summary')) {
 			$title = get_the_title($app_id);
 			if (!is_string($title) || trim($title) === '') {
 				/* translators: %d: vendor application post ID. */
-				$title = sprintf(__('Application #%d', 'vms'), $app_id);
+				$title = sprintf(__('Application #%d', 'backstage-venue-manager'), $app_id);
 			}
 			$email = sanitize_email((string) get_post_meta($app_id, '_vms_app_email', true));
 			$created = mysql2date(get_option('date_format') . ' ' . get_option('time_format'), (string) $post->post_date, true);
@@ -723,10 +723,10 @@ if (!function_exists('vms_approvals_queue_register_default_providers')) {
 		vms_approvals_queue_register_provider(
 			'credential_access',
 			array(
-				'label' => __('Credential / Special Ticket Access Applications', 'vms'),
-				'menu_label' => __('Eligibility Approvals', 'vms'),
-				'section_label' => __('Credential / Special Ticket Access Applications', 'vms'),
-				'description' => __('Review submissions for veteran, teacher, and other verified-eligibility ticket programs.', 'vms'),
+				'label' => __('Credential / Special Ticket Access Applications', 'backstage-venue-manager'),
+				'menu_label' => __('Eligibility Approvals', 'backstage-venue-manager'),
+				'section_label' => __('Credential / Special Ticket Access Applications', 'backstage-venue-manager'),
+				'description' => __('Review submissions for veteran, teacher, and other verified-eligibility ticket programs.', 'backstage-venue-manager'),
 				'capability' => $verification_cap,
 				'pending_count_callback' => 'vms_approvals_queue_verification_pending_count',
 				'summary_callback' => 'vms_approvals_queue_verification_summary',
@@ -750,10 +750,10 @@ if (!function_exists('vms_approvals_queue_register_default_providers')) {
 		vms_approvals_queue_register_provider(
 			'vendor_applications',
 			array(
-				'label' => __('Vendor Applications', 'vms'),
-				'menu_label' => __('Vendor Applications', 'vms'),
-				'section_label' => __('Vendor Applications', 'vms'),
-				'description' => __('Approve or reject incoming vendor submissions before they move into active vendor records.', 'vms'),
+				'label' => __('Vendor Applications', 'backstage-venue-manager'),
+				'menu_label' => __('Vendor Applications', 'backstage-venue-manager'),
+				'section_label' => __('Vendor Applications', 'backstage-venue-manager'),
+				'description' => __('Approve or reject incoming vendor submissions before they move into active vendor records.', 'backstage-venue-manager'),
 				'capability' => 'edit_posts',
 				'pending_count_callback' => 'vms_approvals_queue_vendor_pending_count',
 				'summary_callback' => 'vms_approvals_queue_vendor_summary',
@@ -894,7 +894,7 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 	function vms_approvals_queue_render_page(): void
 	{
 		if (!vms_approvals_queue_current_user_can_any_provider()) {
-			wp_die(esc_html__('You do not have permission to access approvals.', 'vms'));
+			wp_die(esc_html__('You do not have permission to access approvals.', 'backstage-venue-manager'));
 		}
 
 		$snapshot = vms_approvals_queue_collect_snapshot(true);
@@ -904,19 +904,19 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 		$help_button = vms_approvals_queue_render_help_button(
 			'vms.approvals.queue',
 			'approvals.queue.help',
-			__('Start Guided Tour', 'vms')
+			__('Start Guided Tour', 'backstage-venue-manager')
 		);
 
 		echo '<div class="wrap vms-approvals-page" data-vms-tour="approvals.queue.root">';
-		echo '<h1>' . esc_html__('Approvals', 'vms') . '</h1>';
-		echo '<p class="description">' . esc_html__('Use this queue first whenever pending badges appear. It consolidates approval work across credential and vendor workflows so submissions are not missed.', 'vms') . '</p>';
+		echo '<h1>' . esc_html__('Approvals', 'backstage-venue-manager') . '</h1>';
+		echo '<p class="description">' . esc_html__('Use this queue first whenever pending badges appear. It consolidates approval work across credential and vendor workflows so submissions are not missed.', 'backstage-venue-manager') . '</p>';
 		echo '<p data-vms-tour="approvals.queue.help">' . wp_kses($help_button, vms_approvals_queue_allowed_help_html()) . '</p>';
 
 		echo '<section class="vms-approvals-overview" data-vms-tour="approvals.queue.total">';
-		echo '<h2>' . esc_html__('Pending Review Items', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Pending Review Items', 'backstage-venue-manager') . '</h2>';
 		echo '<p class="vms-approvals-total">';
 		echo '<strong>' . esc_html((string) $total_pending) . '</strong> ';
-		echo esc_html(_n('item pending', 'items pending', $total_pending, 'vms'));
+		echo esc_html(_n('item pending', 'items pending', $total_pending, 'backstage-venue-manager'));
 		echo '</p>';
 		echo '</section>';
 
@@ -941,14 +941,14 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 				echo '<p class="description">' . esc_html($description) . '</p>';
 			}
 			if ($pending_count > 0) {
-				echo '<p><strong>' . esc_html__('Action needed now:', 'vms') . '</strong> ' . esc_html__('These submissions are waiting for an operator decision.', 'vms') . '</p>';
+				echo '<p><strong>' . esc_html__('Action needed now:', 'backstage-venue-manager') . '</strong> ' . esc_html__('These submissions are waiting for an operator decision.', 'backstage-venue-manager') . '</p>';
 			} else {
-				echo '<p>' . esc_html__('Queue is clear. New submissions will appear here immediately when created.', 'vms') . '</p>';
+				echo '<p>' . esc_html__('Queue is clear. New submissions will appear here immediately when created.', 'backstage-venue-manager') . '</p>';
 			}
 			if ($screen_url !== '') {
-				echo '<p><a class="button button-primary" href="' . esc_url($screen_url) . '">' . esc_html__('Open Review Screen', 'vms') . '</a></p>';
+				echo '<p><a class="button button-primary" href="' . esc_url($screen_url) . '">' . esc_html__('Open Review Screen', 'backstage-venue-manager') . '</a></p>';
 			} else {
-				echo '<p class="description">' . esc_html__('Destination screen is unavailable right now. Check logs for provider URL errors.', 'vms') . '</p>';
+				echo '<p class="description">' . esc_html__('Destination screen is unavailable right now. Check logs for provider URL errors.', 'backstage-venue-manager') . '</p>';
 			}
 
 			if (!empty($summary_items)) {
@@ -975,18 +975,18 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 		echo '</div>';
 
 		echo '<section class="vms-approvals-audit" data-vms-tour="approvals.queue.audit">';
-		echo '<h2>' . esc_html__('Recent Approval Audit Trail', 'vms') . '</h2>';
-		echo '<p class="description">' . esc_html__('Review recent status transitions when operators need to confirm who approved or rejected a submission.', 'vms') . '</p>';
+		echo '<h2>' . esc_html__('Recent Approval Audit Trail', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description">' . esc_html__('Review recent status transitions when operators need to confirm who approved or rejected a submission.', 'backstage-venue-manager') . '</p>';
 		if (empty($audit_rows)) {
-			echo '<p>' . esc_html__('No approval transitions have been recorded yet.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('No approval transitions have been recorded yet.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped">';
 			echo '<thead><tr>';
-			echo '<th>' . esc_html__('When', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Queue', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Item', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Transition', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Operator', 'vms') . '</th>';
+			echo '<th>' . esc_html__('When', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Queue', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Item', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Transition', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Operator', 'backstage-venue-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 			foreach ($audit_rows as $row) {
 				if (!is_array($row)) {
@@ -999,12 +999,12 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 				$to_status = sanitize_key((string) ($row['to_status'] ?? ''));
 				$actor_id = absint($row['actor_id'] ?? 0);
 				$actor = ($actor_id > 0) ? get_userdata($actor_id) : null;
-				$actor_label = ($actor instanceof WP_User) ? (string) $actor->display_name : __('System', 'vms');
+				$actor_label = ($actor instanceof WP_User) ? (string) $actor->display_name : __('System', 'backstage-venue-manager');
 				echo '<tr>';
 				echo '<td>' . esc_html($ts) . '</td>';
 				echo '<td>' . esc_html($queue_id) . '</td>';
 				echo '<td>#' . esc_html((string) $item_id) . '</td>';
-				echo '<td>' . esc_html(($from_status !== '' ? $from_status : __('unknown', 'vms')) . ' -> ' . $to_status) . '</td>';
+				echo '<td>' . esc_html(($from_status !== '' ? $from_status : __('unknown', 'backstage-venue-manager')) . ' -> ' . $to_status) . '</td>';
 				echo '<td>' . esc_html($actor_label) . '</td>';
 				echo '</tr>';
 			}
@@ -1031,9 +1031,9 @@ if (!function_exists('vms_approvals_queue_render_dashboard_card')) {
 		$total_pending = max(0, absint($snapshot['total_pending'] ?? 0));
 		$queue_url = admin_url('admin.php?page=vms-approvals');
 		echo '<section id="vms-dashboard-approvals" class="vms-dashboard-approvals-card" data-vms-tour="dashboard.approvals.card">';
-		echo '<h2>' . esc_html__('Pending Approvals', 'vms') . '</h2>';
-		echo '<p>' . esc_html__('Start here after login so no submitted application is missed.', 'vms') . '</p>';
-		echo '<p class="vms-dashboard-approvals-card__total"><strong>' . esc_html((string) $total_pending) . '</strong> ' . esc_html(_n('item pending', 'items pending', $total_pending, 'vms')) . '</p>';
+		echo '<h2>' . esc_html__('Pending Approvals', 'backstage-venue-manager') . '</h2>';
+		echo '<p>' . esc_html__('Start here after login so no submitted application is missed.', 'backstage-venue-manager') . '</p>';
+		echo '<p class="vms-dashboard-approvals-card__total"><strong>' . esc_html((string) $total_pending) . '</strong> ' . esc_html(_n('item pending', 'items pending', $total_pending, 'backstage-venue-manager')) . '</p>';
 		echo '<ul class="vms-dashboard-approvals-card__list">';
 		foreach ($providers as $provider) {
 			$label = sanitize_text_field((string) ($provider['menu_label'] ?? $provider['label'] ?? ''));
@@ -1049,7 +1049,7 @@ if (!function_exists('vms_approvals_queue_render_dashboard_card')) {
 			echo '</li>';
 		}
 		echo '</ul>';
-		echo '<p data-vms-tour="dashboard.approvals.open"><a class="button button-primary" href="' . esc_url($queue_url) . '">' . esc_html__('Open Approvals Queue', 'vms') . '</a></p>';
+		echo '<p data-vms-tour="dashboard.approvals.open"><a class="button button-primary" href="' . esc_url($queue_url) . '">' . esc_html__('Open Approvals Queue', 'backstage-venue-manager') . '</a></p>';
 		echo '</section>';
 	}
 }
@@ -1106,10 +1106,10 @@ if (!function_exists('vms_approvals_queue_render_vendor_list_tour_launcher')) {
 		$button = vms_approvals_queue_render_help_button(
 			'vms.approvals.vendor_applications',
 			'approvals.vendor.help',
-			__('Start Guided Tour', 'vms')
+			__('Start Guided Tour', 'backstage-venue-manager')
 		);
-		echo '<div class="notice notice-info" data-vms-tour="approvals.vendor.help"><p><strong>' . esc_html__('Vendor approvals live on this table.', 'vms') . '</strong> ';
-		echo esc_html__('Review pending applications promptly so approved vendors are not blocked from onboarding workflows.', 'vms');
+		echo '<div class="notice notice-info" data-vms-tour="approvals.vendor.help"><p><strong>' . esc_html__('Vendor approvals live on this table.', 'backstage-venue-manager') . '</strong> ';
+		echo esc_html__('Review pending applications promptly so approved vendors are not blocked from onboarding workflows.', 'backstage-venue-manager');
 		echo '</p><p>' . wp_kses($button, vms_approvals_queue_allowed_help_html()) . '</p></div>';
 	}
 }
@@ -1131,11 +1131,11 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.approvals.queue',
-			'title' => __('Approvals Queue', 'vms'),
+			'title' => __('Approvals Queue', 'backstage-venue-manager'),
 			'screen' => 'admin:vms-approvals',
 			'version' => '1.0.0',
 			'level' => 'beginner',
-			'description' => __('Understand what is pending, why badges appear, and where to start reviewing.', 'vms'),
+			'description' => __('Understand what is pending, why badges appear, and where to start reviewing.', 'backstage-venue-manager'),
 			'audience' => $audience,
 			'auto_run' => true,
 			'priority' => 8,
@@ -1143,32 +1143,32 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 				array(
 					'id' => 'queue_total',
 					'selector' => '[data-vms-tour="approvals.queue.total"]',
-					'title' => __('Pending Total', 'vms'),
-					'body' => wp_kses_post(__('This total is the combined pending workload; it drives the red admin badges so operators notice approvals immediately.', 'vms')),
+					'title' => __('Pending Total', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('This total is the combined pending workload; it drives the red admin badges so operators notice approvals immediately.', 'backstage-venue-manager')),
 					'placement' => 'bottom',
 					'guard' => array('type' => 'element_exists'),
 				),
 				array(
 					'id' => 'queue_credentials',
 					'selector' => '[data-vms-tour="approvals.queue.section-credential_access"]',
-					'title' => __('Credential Applications', 'vms'),
-					'body' => wp_kses_post(__('Review these first when verification-dependent tickets are on sale. Approve to unlock eligibility, or reject when proof does not meet policy.', 'vms')),
+					'title' => __('Credential Applications', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Review these first when verification-dependent tickets are on sale. Approve to unlock eligibility, or reject when proof does not meet policy.', 'backstage-venue-manager')),
 					'placement' => 'top',
 					'guard' => array('type' => 'element_exists'),
 				),
 				array(
 					'id' => 'queue_vendor_apps',
 					'selector' => '[data-vms-tour="approvals.queue.section-vendor_applications"]',
-					'title' => __('Vendor Applications', 'vms'),
-					'body' => wp_kses_post(__('These requests stay visible here until reviewed, which prevents vendor onboarding submissions from sitting unnoticed.', 'vms')),
+					'title' => __('Vendor Applications', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('These requests stay visible here until reviewed, which prevents vendor onboarding submissions from sitting unnoticed.', 'backstage-venue-manager')),
 					'placement' => 'top',
 					'guard' => array('type' => 'element_exists'),
 				),
 				array(
 					'id' => 'queue_audit',
 					'selector' => '[data-vms-tour="approvals.queue.audit"]',
-					'title' => __('Audit Trail', 'vms'),
-					'body' => wp_kses_post(__('Use this history to confirm who changed a status and when, especially during dispute resolution or missed-submission investigations.', 'vms')),
+					'title' => __('Audit Trail', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Use this history to confirm who changed a status and when, especially during dispute resolution or missed-submission investigations.', 'backstage-venue-manager')),
 					'placement' => 'top',
 					'guard' => array('type' => 'element_exists'),
 				),
@@ -1177,11 +1177,11 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.approvals.credentials',
-			'title' => __('Eligibility Approvals', 'vms'),
+			'title' => __('Eligibility Approvals', 'backstage-venue-manager'),
 			'screen' => 'admin:vms-verifications',
 			'version' => '1.0.0',
 			'level' => 'beginner',
-			'description' => __('Process credential access requests without missing pending submissions.', 'vms'),
+			'description' => __('Process credential access requests without missing pending submissions.', 'backstage-venue-manager'),
 			'audience' => $audience,
 			'auto_run' => true,
 			'priority' => 9,
@@ -1189,32 +1189,32 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 				array(
 					'id' => 'credentials_help',
 					'selector' => '[data-vms-tour="approvals.credentials.help"]',
-					'title' => __('Why This Screen Exists', 'vms'),
-					'body' => wp_kses_post(__('This queue controls access to eligibility-based tickets. Pending requests stay here until you decide, so approvals are never hidden in raw records.', 'vms')),
+					'title' => __('Why This Screen Exists', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('This queue controls access to eligibility-based tickets. Pending requests stay here until you decide, so approvals are never hidden in raw records.', 'backstage-venue-manager')),
 					'placement' => 'bottom',
 					'guard' => array('type' => 'element_exists'),
 				),
 				array(
 					'id' => 'credentials_filters',
 					'selector' => '[data-vms-tour="approvals.credentials.filters"]',
-					'title' => __('Filter and Search', 'vms'),
-					'body' => wp_kses_post(__('Use status, program, and search filters to narrow the queue quickly before taking decisions.', 'vms')),
+					'title' => __('Filter and Search', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Use status, program, and search filters to narrow the queue quickly before taking decisions.', 'backstage-venue-manager')),
 					'placement' => 'bottom',
 					'guard' => array('type' => 'element_exists'),
 				),
 				array(
 					'id' => 'credentials_table',
 					'selector' => '[data-vms-tour="approvals.credentials.table"]',
-					'title' => __('Decision Table', 'vms'),
-					'body' => wp_kses_post(__('Each row shows submitter context, status, and proof controls so you can decide without opening hidden meta screens.', 'vms')),
+					'title' => __('Decision Table', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Each row shows submitter context, status, and proof controls so you can decide without opening hidden meta screens.', 'backstage-venue-manager')),
 					'placement' => 'top',
 					'guard' => array('type' => 'element_exists'),
 				),
 				array(
 					'id' => 'credentials_actions',
 					'selector' => '[data-vms-tour="approvals.credentials.actions"]',
-					'title' => __('Approve vs Deny', 'vms'),
-					'body' => wp_kses_post(__('Approving grants the program and removes stored proof; denying keeps an explicit decision record so unresolved requests do not linger as pending.', 'vms')),
+					'title' => __('Approve vs Deny', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Approving grants the program and removes stored proof; denying keeps an explicit decision record so unresolved requests do not linger as pending.', 'backstage-venue-manager')),
 					'placement' => 'left',
 					'guard' => array('type' => 'element_exists'),
 				),
@@ -1225,24 +1225,24 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 			array(
 				'id' => 'vendor_intro',
 				'selector' => '[data-vms-tour="approvals.vendor.help"]',
-				'title' => __('Vendor Approval Queue', 'vms'),
-				'body' => wp_kses_post(__('This list is the operator gate for vendor applications. Reviewing it regularly prevents onboarding delays.', 'vms')),
+				'title' => __('Vendor Approval Queue', 'backstage-venue-manager'),
+				'body' => wp_kses_post(__('This list is the operator gate for vendor applications. Reviewing it regularly prevents onboarding delays.', 'backstage-venue-manager')),
 				'placement' => 'bottom',
 				'guard' => array('type' => 'element_exists'),
 			),
 			array(
 				'id' => 'vendor_search',
 				'selector' => '#post-search-input',
-				'title' => __('Search Applications', 'vms'),
-				'body' => wp_kses_post(__('Search by applicant details when a submitter asks for status, so you can respond without scanning the full table.', 'vms')),
+				'title' => __('Search Applications', 'backstage-venue-manager'),
+				'body' => wp_kses_post(__('Search by applicant details when a submitter asks for status, so you can respond without scanning the full table.', 'backstage-venue-manager')),
 				'placement' => 'bottom',
 				'guard' => array('type' => 'element_exists'),
 			),
 			array(
 				'id' => 'vendor_table',
 				'selector' => '.wp-list-table.posts',
-				'title' => __('Review Rows', 'vms'),
-				'body' => wp_kses_post(__('Status, contact info, and row actions are visible together so approvals and rejections are fast and traceable.', 'vms')),
+				'title' => __('Review Rows', 'backstage-venue-manager'),
+				'body' => wp_kses_post(__('Status, contact info, and row actions are visible together so approvals and rejections are fast and traceable.', 'backstage-venue-manager')),
 				'placement' => 'top',
 				'guard' => array('type' => 'element_exists'),
 			),
@@ -1250,11 +1250,11 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.approvals.vendor_applications',
-			'title' => __('Vendor Applications Queue', 'vms'),
+			'title' => __('Vendor Applications Queue', 'backstage-venue-manager'),
 			'screen' => 'admin:edit-vms_vendor_app',
 			'version' => '1.0.0',
 			'level' => 'beginner',
-			'description' => __('Review vendor applications in one predictable queue.', 'vms'),
+			'description' => __('Review vendor applications in one predictable queue.', 'backstage-venue-manager'),
 			'audience' => $audience,
 			'auto_run' => true,
 			'priority' => 9,
@@ -1263,11 +1263,11 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.approvals.vendor_applications_legacy',
-			'title' => __('Vendor Applications Queue (Legacy Slug)', 'vms'),
+			'title' => __('Vendor Applications Queue (Legacy Slug)', 'backstage-venue-manager'),
 			'screen' => 'admin:edit-vms_vendor_application',
 			'version' => '1.0.0',
 			'level' => 'beginner',
-			'description' => __('Review vendor applications in one predictable queue.', 'vms'),
+			'description' => __('Review vendor applications in one predictable queue.', 'backstage-venue-manager'),
 			'audience' => $audience,
 			'auto_run' => true,
 			'priority' => 9,
@@ -1276,11 +1276,11 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.dashboard.approvals',
-			'title' => __('Dashboard Pending Approvals Card', 'vms'),
+			'title' => __('Dashboard Pending Approvals Card', 'backstage-venue-manager'),
 			'screen' => 'admin:vms-dashboard',
 			'version' => '1.0.0',
 			'level' => 'beginner',
-			'description' => __('Spot pending approvals immediately from the dashboard.', 'vms'),
+			'description' => __('Spot pending approvals immediately from the dashboard.', 'backstage-venue-manager'),
 			'audience' => $audience,
 			'auto_run' => true,
 			'priority' => 15,
@@ -1288,16 +1288,16 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 				array(
 					'id' => 'dashboard_card',
 					'selector' => '[data-vms-tour="dashboard.approvals.card"]',
-					'title' => __('Pending Approvals Card', 'vms'),
-					'body' => wp_kses_post(__('This card answers "Do I have anything pending?" immediately after login so approvals are never buried.', 'vms')),
+					'title' => __('Pending Approvals Card', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('This card answers "Do I have anything pending?" immediately after login so approvals are never buried.', 'backstage-venue-manager')),
 					'placement' => 'bottom',
 					'guard' => array('type' => 'element_exists'),
 				),
 				array(
 					'id' => 'dashboard_card_open',
 					'selector' => '[data-vms-tour="dashboard.approvals.open"]',
-					'title' => __('Open Queue First', 'vms'),
-					'body' => wp_kses_post(__('Use this button to jump directly into the unified queue before handling other admin tasks.', 'vms')),
+					'title' => __('Open Queue First', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Use this button to jump directly into the unified queue before handling other admin tasks.', 'backstage-venue-manager')),
 					'placement' => 'left',
 					'guard' => array('type' => 'element_exists'),
 				),

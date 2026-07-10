@@ -6,8 +6,8 @@ if (!function_exists('vms_email_followups_builtin_template_definitions')) {
 	{
 		return array(
 			'know_before' => array(
-				'label' => __('Know Before You Go', 'vms'),
-				'description' => __('Default reminder sent before an event. Scheduled from the show date, not purchase date.', 'vms'),
+				'label' => __('Know Before You Go', 'backstage-venue-manager'),
+				'description' => __('Default reminder sent before an event. Scheduled from the show date, not purchase date.', 'backstage-venue-manager'),
 				'offset_days' => -3,
 				'send_hour' => 9,
 				'hour_key' => 'send_hour',
@@ -15,8 +15,8 @@ if (!function_exists('vms_email_followups_builtin_template_definitions')) {
 				'custom' => false,
 			),
 			'day_of' => array(
-				'label' => __('Day-of Reminder', 'vms'),
-				'description' => __('Morning-of reminder with simple arrival and venue details.', 'vms'),
+				'label' => __('Day-of Reminder', 'backstage-venue-manager'),
+				'description' => __('Morning-of reminder with simple arrival and venue details.', 'backstage-venue-manager'),
 				'offset_days' => 0,
 				'send_hour' => 9,
 				'hour_key' => 'send_hour',
@@ -24,8 +24,8 @@ if (!function_exists('vms_email_followups_builtin_template_definitions')) {
 				'custom' => false,
 			),
 			'post_event' => array(
-				'label' => __('Post-Event Thank You', 'vms'),
-				'description' => __('Follow-up after the show with a private feedback survey link when Event Feedback is available.', 'vms'),
+				'label' => __('Post-Event Thank You', 'backstage-venue-manager'),
+				'description' => __('Follow-up after the show with a private feedback survey link when Event Feedback is available.', 'backstage-venue-manager'),
 				'offset_days' => 1,
 				'send_hour' => 10,
 				'hour_key' => 'post_event_hour',
@@ -33,8 +33,8 @@ if (!function_exists('vms_email_followups_builtin_template_definitions')) {
 				'custom' => false,
 			),
 			'weather_update' => array(
-				'label' => __('Weather / Event Update', 'vms'),
-				'description' => __('Manual-only message for event-specific updates.', 'vms'),
+				'label' => __('Weather / Event Update', 'backstage-venue-manager'),
+				'description' => __('Manual-only message for event-specific updates.', 'backstage-venue-manager'),
 				'offset_days' => 0,
 				'send_hour' => 9,
 				'hour_key' => 'send_hour',
@@ -74,7 +74,7 @@ if (!function_exists('vms_email_followups_template_definitions')) {
 			}
 			$label = sanitize_text_field((string) ($def['label'] ?? ''));
 			if ($label === '') {
-				$label = __('Custom Follow-Up', 'vms');
+				$label = __('Custom Follow-Up', 'backstage-venue-manager');
 			}
 			$defs[$key] = array(
 				'label' => $label,
@@ -119,20 +119,20 @@ if (!function_exists('vms_email_followups_tokens_help')) {
 	function vms_email_followups_tokens_help(): array
 	{
 		return array(
-			'{event_name}' => __('Event title', 'vms'),
-			'{event_date}' => __('Formatted event date', 'vms'),
-			'{start_time}' => __('Event start time', 'vms'),
-			'{end_time}' => __('Event end time', 'vms'),
-			'{gates_time}' => __('One hour before event start when possible', 'vms'),
-			'{venue_name}' => __('Linked venue name or site name fallback', 'vms'),
-			'{event_url}' => __('Public event URL when available', 'vms'),
-			'{feedback_url}' => __('Private Event Feedback survey URL when available', 'vms'),
-			'{site_url}' => __('Site home URL', 'vms'),
-			'{site_name}' => __('Site name', 'vms'),
-			'{signature}' => __('Global signature from the Overview tab; blank when no signature is configured', 'vms'),
-			'{customer_name}' => __('Recipient/customer full name when known', 'vms'),
-			'{customer_first_name}' => __('Recipient/customer first name only when known; blank if unavailable', 'vms'),
-			'{customer_greeting}' => __('Safe greeting: "Hi First," when known or "Hi there," when no first name is available', 'vms'),
+			'{event_name}' => __('Event title', 'backstage-venue-manager'),
+			'{event_date}' => __('Formatted event date', 'backstage-venue-manager'),
+			'{start_time}' => __('Event start time', 'backstage-venue-manager'),
+			'{end_time}' => __('Event end time', 'backstage-venue-manager'),
+			'{gates_time}' => __('One hour before event start when possible', 'backstage-venue-manager'),
+			'{venue_name}' => __('Linked venue name or site name fallback', 'backstage-venue-manager'),
+			'{event_url}' => __('Public event URL when available', 'backstage-venue-manager'),
+			'{feedback_url}' => __('Private Event Feedback survey URL when available', 'backstage-venue-manager'),
+			'{site_url}' => __('Site home URL', 'backstage-venue-manager'),
+			'{site_name}' => __('Site name', 'backstage-venue-manager'),
+			'{signature}' => __('Global signature from the Overview tab; blank when no signature is configured', 'backstage-venue-manager'),
+			'{customer_name}' => __('Recipient/customer full name when known', 'backstage-venue-manager'),
+			'{customer_first_name}' => __('Recipient/customer first name only when known; blank if unavailable', 'backstage-venue-manager'),
+			'{customer_greeting}' => __('Safe greeting: "Hi First," when known or "Hi there," when no first name is available', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -166,14 +166,14 @@ if (!function_exists('vms_email_followups_template_timing_label')) {
 		}
 		$time = sprintf('%d:00%s', $display_hour, $hour < 12 ? 'am' : 'pm');
 		if ($mode === 'manual') {
-			return __('Manual only', 'vms');
+			return __('Manual only', 'backstage-venue-manager');
 		}
 		if ($mode === 'day_of') {
-			return sprintf(__('Day of event at %s', 'vms'), $time);
+			return sprintf(__('Day of event at %s', 'backstage-venue-manager'), $time);
 		}
 		if ($mode === 'after') {
-			return sprintf(_n('%1$d day after event at %2$s', '%1$d days after event at %2$s', max(1, $days), 'vms'), max(1, $days), $time);
+			return sprintf(_n('%1$d day after event at %2$s', '%1$d days after event at %2$s', max(1, $days), 'backstage-venue-manager'), max(1, $days), $time);
 		}
-		return sprintf(_n('%1$d day before event at %2$s', '%1$d days before event at %2$s', max(1, $days), 'vms'), max(1, $days), $time);
+		return sprintf(_n('%1$d day before event at %2$s', '%1$d days before event at %2$s', max(1, $days), 'backstage-venue-manager'), max(1, $days), $time);
 	}
 }

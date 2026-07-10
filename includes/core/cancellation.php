@@ -12,11 +12,11 @@ if (!function_exists('vms_cancellation_policy_options')) {
 	function vms_cancellation_policy_options(): array
 	{
 		return array(
-			'status_only' => __('Status only', 'vms'),
-			'stop_sales' => __('Stop sales', 'vms'),
-			'stop_sales_queue_refunds' => __('Stop sales + queue refunds', 'vms'),
-			'stop_sales_auto_refund' => __('Stop sales + auto refund', 'vms'),
-			'stop_sales_auto_refund_remove_attendees' => __('Stop sales + auto refund + attendee cleanup', 'vms'),
+			'status_only' => __('Status only', 'backstage-venue-manager'),
+			'stop_sales' => __('Stop sales', 'backstage-venue-manager'),
+			'stop_sales_queue_refunds' => __('Stop sales + queue refunds', 'backstage-venue-manager'),
+			'stop_sales_auto_refund' => __('Stop sales + auto refund', 'backstage-venue-manager'),
+			'stop_sales_auto_refund_remove_attendees' => __('Stop sales + auto refund + attendee cleanup', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -25,13 +25,13 @@ if (!function_exists('vms_cancellation_reason_options')) {
 	function vms_cancellation_reason_options(): array
 	{
 		return array(
-			'weather' => __('Weather', 'vms'),
-			'low_sales' => __('Low sales', 'vms'),
-			'artist_cancelled' => __('Artist cancelled', 'vms'),
-			'venue_issue' => __('Venue issue', 'vms'),
-			'logistics' => __('Logistics issue', 'vms'),
-			'compliance' => __('Compliance issue', 'vms'),
-			'other' => __('Other', 'vms'),
+			'weather' => __('Weather', 'backstage-venue-manager'),
+			'low_sales' => __('Low sales', 'backstage-venue-manager'),
+			'artist_cancelled' => __('Artist cancelled', 'backstage-venue-manager'),
+			'venue_issue' => __('Venue issue', 'backstage-venue-manager'),
+			'logistics' => __('Logistics issue', 'backstage-venue-manager'),
+			'compliance' => __('Compliance issue', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -40,11 +40,11 @@ if (!function_exists('vms_cancellation_job_statuses')) {
 	function vms_cancellation_job_statuses(): array
 	{
 		return array(
-			'queued' => __('Queued', 'vms'),
-			'running' => __('Running', 'vms'),
-			'completed' => __('Completed', 'vms'),
-			'completed_with_errors' => __('Completed with errors', 'vms'),
-			'failed' => __('Failed', 'vms'),
+			'queued' => __('Queued', 'backstage-venue-manager'),
+			'running' => __('Running', 'backstage-venue-manager'),
+			'completed' => __('Completed', 'backstage-venue-manager'),
+			'completed_with_errors' => __('Completed with errors', 'backstage-venue-manager'),
+			'failed' => __('Failed', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -53,11 +53,11 @@ if (!function_exists('vms_cancellation_step_statuses')) {
 	function vms_cancellation_step_statuses(): array
 	{
 		return array(
-			'pending' => __('Pending', 'vms'),
-			'running' => __('Running', 'vms'),
-			'done' => __('Done', 'vms'),
-			'failed' => __('Failed', 'vms'),
-			'blocked' => __('Blocked', 'vms'),
+			'pending' => __('Pending', 'backstage-venue-manager'),
+			'running' => __('Running', 'backstage-venue-manager'),
+			'done' => __('Done', 'backstage-venue-manager'),
+			'failed' => __('Failed', 'backstage-venue-manager'),
+			'blocked' => __('Blocked', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -66,11 +66,11 @@ if (!function_exists('vms_cancellation_step_labels')) {
 	function vms_cancellation_step_labels(): array
 	{
 		return array(
-			'policy_capture' => __('Policy capture', 'vms'),
-			'provider_sales_stop' => __('Provider sales stop', 'vms'),
-			'refund_discovery' => __('Refund discovery', 'vms'),
-			'refund_execution' => __('Refund execution', 'vms'),
-			'notifications' => __('Notifications', 'vms'),
+			'policy_capture' => __('Policy capture', 'backstage-venue-manager'),
+			'provider_sales_stop' => __('Provider sales stop', 'backstage-venue-manager'),
+			'refund_discovery' => __('Refund discovery', 'backstage-venue-manager'),
+			'refund_execution' => __('Refund execution', 'backstage-venue-manager'),
+			'notifications' => __('Notifications', 'backstage-venue-manager'),
 		);
 	}
 }

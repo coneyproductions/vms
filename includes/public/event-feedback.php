@@ -51,7 +51,7 @@ if (!function_exists('vms_feedback_render_rating_field')) {
 		echo '<div class="vms-feedback-field vms-feedback-field--rating">';
 		echo '<label for="' . esc_attr($field_id) . '">' . esc_html($label) . '</label>';
 		echo '<select id="' . esc_attr($field_id) . '" name="' . esc_attr($name) . '"' . ($required ? ' required' : '') . '>';
-		echo '<option value="">' . esc_html__('Choose...', 'vms') . '</option>';
+		echo '<option value="">' . esc_html__('Choose...', 'backstage-venue-manager') . '</option>';
 		foreach ($options as $rating => $rating_label) {
 			echo '<option value="' . esc_attr((string) $rating) . '"' . selected($value, (int) $rating, false) . '>' . esc_html((string) $rating . ' - ' . $rating_label) . '</option>';
 		}
@@ -67,7 +67,7 @@ if (!function_exists('vms_feedback_render_choice_field')) {
 		echo '<div class="vms-feedback-field">';
 		echo '<label for="' . esc_attr($field_id) . '">' . esc_html($label) . '</label>';
 		echo '<select id="' . esc_attr($field_id) . '" name="' . esc_attr($name) . '">';
-		echo '<option value="">' . esc_html__('Choose...', 'vms') . '</option>';
+		echo '<option value="">' . esc_html__('Choose...', 'backstage-venue-manager') . '</option>';
 		foreach ($options as $option_value => $option_label) {
 			echo '<option value="' . esc_attr((string) $option_value) . '"' . selected($value, (string) $option_value, false) . '>' . esc_html((string) $option_label) . '</option>';
 		}
@@ -109,7 +109,7 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 	{
 		$context = vms_feedback_get_event_context($event_plan_id);
 		if (empty($context) || !vms_feedback_verify_public_token($event_plan_id, $token)) {
-			echo '<main class="vms-feedback-page"><section class="vms-feedback-card"><h1>' . esc_html__('Feedback link unavailable', 'vms') . '</h1><p>' . esc_html__('This feedback link is not valid. Please use the survey link provided by the venue.', 'vms') . '</p></section></main>';
+			echo '<main class="vms-feedback-page"><section class="vms-feedback-card"><h1>' . esc_html__('Feedback link unavailable', 'backstage-venue-manager') . '</h1><p>' . esc_html__('This feedback link is not valid. Please use the survey link provided by the venue.', 'backstage-venue-manager') . '</p></section></main>';
 			return;
 		}
 
@@ -126,18 +126,18 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 		echo '<main class="vms-feedback-page">';
 		echo '<section class="vms-feedback-card">';
 		if ($submitted) {
-			echo '<div class="vms-feedback-success"><h1>' . esc_html__('Thank you for the feedback!', 'vms') . '</h1><p>' . esc_html__('Your response was submitted privately and will help us improve future events.', 'vms') . '</p></div>';
+			echo '<div class="vms-feedback-success"><h1>' . esc_html__('Thank you for the feedback!', 'backstage-venue-manager') . '</h1><p>' . esc_html__('Your response was submitted privately and will help us improve future events.', 'backstage-venue-manager') . '</p></div>';
 			echo '</section></main>';
 			return;
 		}
 
 		echo '<header class="vms-feedback-header">';
-		echo '<p class="vms-feedback-eyebrow">' . esc_html__('Private post-event survey', 'vms') . '</p>';
-		echo '<h1>' . esc_html(sprintf(__('How was your night at %s?', 'vms'), $venue_title)) . '</h1>';
+		echo '<p class="vms-feedback-eyebrow">' . esc_html__('Private post-event survey', 'backstage-venue-manager') . '</p>';
+		echo '<h1>' . esc_html(sprintf(__('How was your night at %s?', 'backstage-venue-manager'), $venue_title)) . '</h1>';
 		if ($event_title !== '') {
 			echo '<p class="vms-feedback-event-title">' . esc_html($event_title . ($date_label !== '' ? ' · ' . $date_label : '')) . '</p>';
 		}
-		echo '<p class="vms-feedback-intro">' . esc_html__('This should take less than 2 minutes. Your feedback is private and helps us make future nights better.', 'vms') . '</p>';
+		echo '<p class="vms-feedback-intro">' . esc_html__('This should take less than 2 minutes. Your feedback is private and helps us make future nights better.', 'backstage-venue-manager') . '</p>';
 		echo '</header>';
 
 		echo '<form class="vms-feedback-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -158,51 +158,51 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 		wp_nonce_field('vms_feedback_submit_' . $event_plan_id, 'vms_feedback_nonce');
 
 		echo '<section class="vms-feedback-section">';
-		echo '<h2>' . esc_html__('Quick info', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Quick info', 'backstage-venue-manager') . '</h2>';
 		echo '<div class="vms-feedback-grid">';
-		echo '<div class="vms-feedback-field"><label for="vms-feedback-name">' . esc_html__('Name (optional)', 'vms') . '</label><input id="vms-feedback-name" type="text" name="attendee_name" autocomplete="name"></div>';
-		echo '<div class="vms-feedback-field"><label for="vms-feedback-email">' . esc_html__('Email (optional)', 'vms') . '</label><input id="vms-feedback-email" type="email" name="attendee_email" autocomplete="email"></div>';
+		echo '<div class="vms-feedback-field"><label for="vms-feedback-name">' . esc_html__('Name (optional)', 'backstage-venue-manager') . '</label><input id="vms-feedback-name" type="text" name="attendee_name" autocomplete="name"></div>';
+		echo '<div class="vms-feedback-field"><label for="vms-feedback-email">' . esc_html__('Email (optional)', 'backstage-venue-manager') . '</label><input id="vms-feedback-email" type="email" name="attendee_email" autocomplete="email"></div>';
 		echo '</div>';
-		vms_feedback_render_rating_field('overall[event_rating]', __('Overall, how was your night?', 'vms'), 0, true);
+		vms_feedback_render_rating_field('overall[event_rating]', __('Overall, how was your night?', 'backstage-venue-manager'), 0, true);
 		echo '<div class="vms-feedback-grid">';
-		vms_feedback_render_choice_field('overall[attend_again]', __('Would you attend another event here?', 'vms'), vms_feedback_yes_maybe_no_options());
-		vms_feedback_render_choice_field('overall[recommend]', __('Would you recommend this event/venue to a friend?', 'vms'), vms_feedback_yes_maybe_no_options());
+		vms_feedback_render_choice_field('overall[attend_again]', __('Would you attend another event here?', 'backstage-venue-manager'), vms_feedback_yes_maybe_no_options());
+		vms_feedback_render_choice_field('overall[recommend]', __('Would you recommend this event/venue to a friend?', 'backstage-venue-manager'), vms_feedback_yes_maybe_no_options());
 		echo '</div>';
 		echo '</section>';
 
 		echo '<section class="vms-feedback-section">';
 		echo '<h2>' . esc_html($venue_title) . '</h2>';
-		echo '<p class="vms-feedback-section-note">' . esc_html__('Quick ratings first. Add details only where you want to.', 'vms') . '</p>';
+		echo '<p class="vms-feedback-section-note">' . esc_html__('Quick ratings first. Add details only where you want to.', 'backstage-venue-manager') . '</p>';
 		echo '<div class="vms-feedback-grid">';
-		vms_feedback_render_rating_field('venue[overall]', __('Overall venue experience', 'vms'));
-		vms_feedback_render_rating_field('venue[bar]', __('Bar experience', 'vms'));
-		vms_feedback_render_rating_field('venue[bathrooms]', __('Bathrooms', 'vms'));
-		vms_feedback_render_rating_field('venue[arrival]', __('Arrival / check-in', 'vms'));
-		vms_feedback_render_rating_field('venue[sound]', __('Sound quality', 'vms'));
+		vms_feedback_render_rating_field('venue[overall]', __('Overall venue experience', 'backstage-venue-manager'));
+		vms_feedback_render_rating_field('venue[bar]', __('Bar experience', 'backstage-venue-manager'));
+		vms_feedback_render_rating_field('venue[bathrooms]', __('Bathrooms', 'backstage-venue-manager'));
+		vms_feedback_render_rating_field('venue[arrival]', __('Arrival / check-in', 'backstage-venue-manager'));
+		vms_feedback_render_rating_field('venue[sound]', __('Sound quality', 'backstage-venue-manager'));
 		echo '</div>';
-		echo '<details class="vms-feedback-details"><summary>' . esc_html__('Additional bar feedback', 'vms') . '</summary>';
-		vms_feedback_render_checkbox_group('venue[bar_details]', __('What stood out about the bar? Select anything that applies.', 'vms'), vms_feedback_bar_detail_options());
-		vms_feedback_render_textarea_field('venue[bar_comment]', __('Bar comments', 'vms'), __('Anything we should know about bar service, selection, pricing, or ordering?', 'vms'));
+		echo '<details class="vms-feedback-details"><summary>' . esc_html__('Additional bar feedback', 'backstage-venue-manager') . '</summary>';
+		vms_feedback_render_checkbox_group('venue[bar_details]', __('What stood out about the bar? Select anything that applies.', 'backstage-venue-manager'), vms_feedback_bar_detail_options());
+		vms_feedback_render_textarea_field('venue[bar_comment]', __('Bar comments', 'backstage-venue-manager'), __('Anything we should know about bar service, selection, pricing, or ordering?', 'backstage-venue-manager'));
 		echo '</details>';
-		echo '<details class="vms-feedback-details"><summary>' . esc_html__('Additional bathroom feedback', 'vms') . '</summary>';
-		vms_feedback_render_checkbox_group('venue[bathroom_details]', __('What stood out about the bathrooms? Select anything that applies.', 'vms'), vms_feedback_bathroom_detail_options());
-		vms_feedback_render_textarea_field('venue[bathroom_comment]', __('Bathroom comments', 'vms'), __('Anything we should know about cleanliness, supplies, access, or lines?', 'vms'));
+		echo '<details class="vms-feedback-details"><summary>' . esc_html__('Additional bathroom feedback', 'backstage-venue-manager') . '</summary>';
+		vms_feedback_render_checkbox_group('venue[bathroom_details]', __('What stood out about the bathrooms? Select anything that applies.', 'backstage-venue-manager'), vms_feedback_bathroom_detail_options());
+		vms_feedback_render_textarea_field('venue[bathroom_comment]', __('Bathroom comments', 'backstage-venue-manager'), __('Anything we should know about cleanliness, supplies, access, or lines?', 'backstage-venue-manager'));
 		echo '</details>';
 		echo '</section>';
 
 		echo '<section class="vms-feedback-section" data-vms-feedback-role="website">';
-		echo '<h2>' . esc_html__('Website / Ticket Purchase Experience', 'vms') . '</h2>';
-		echo '<p class="vms-feedback-section-note">' . esc_html__('Only answer this section if you used the website for this event.', 'vms') . '</p>';
-		vms_feedback_render_choice_field('website[website_used]', __('Did you use our website to buy or attempt to buy tickets for this event?', 'vms'), vms_feedback_website_usage_options());
+		echo '<h2>' . esc_html__('Website / Ticket Purchase Experience', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="vms-feedback-section-note">' . esc_html__('Only answer this section if you used the website for this event.', 'backstage-venue-manager') . '</p>';
+		vms_feedback_render_choice_field('website[website_used]', __('Did you use our website to buy or attempt to buy tickets for this event?', 'backstage-venue-manager'), vms_feedback_website_usage_options());
 		echo '<div class="vms-feedback-conditional-block" data-vms-feedback-website-details="1" hidden>';
 		echo '<div class="vms-feedback-grid">';
-		vms_feedback_render_rating_field('website[website_find_event]', __('How easy was it to find this event on the website?', 'vms'));
-		vms_feedback_render_rating_field('website[website_ticket_selection]', __('How clear was the ticket selection process?', 'vms'));
-		vms_feedback_render_rating_field('website[website_checkout_smoothness]', __('How smooth was checkout/payment?', 'vms'));
-		vms_feedback_render_rating_field('website[website_confirmation]', __('Were your confirmation email / tickets easy to understand and access?', 'vms'));
+		vms_feedback_render_rating_field('website[website_find_event]', __('How easy was it to find this event on the website?', 'backstage-venue-manager'));
+		vms_feedback_render_rating_field('website[website_ticket_selection]', __('How clear was the ticket selection process?', 'backstage-venue-manager'));
+		vms_feedback_render_rating_field('website[website_checkout_smoothness]', __('How smooth was checkout/payment?', 'backstage-venue-manager'));
+		vms_feedback_render_rating_field('website[website_confirmation]', __('Were your confirmation email / tickets easy to understand and access?', 'backstage-venue-manager'));
 		echo '</div>';
-		vms_feedback_render_choice_field('website[website_payment_issues]', __('Did you experience any issues with Apple Pay, card payment, loading, or checkout?', 'vms'), vms_feedback_website_payment_issue_options());
-		vms_feedback_render_textarea_field('website[website_comments]', __('Website / checkout comments', 'vms'), __('Tell us what worked well or what caused trouble.', 'vms'));
+		vms_feedback_render_choice_field('website[website_payment_issues]', __('Did you experience any issues with Apple Pay, card payment, loading, or checkout?', 'backstage-venue-manager'), vms_feedback_website_payment_issue_options());
+		vms_feedback_render_textarea_field('website[website_comments]', __('Website / checkout comments', 'backstage-venue-manager'), __('Tell us what worked well or what caused trouble.', 'backstage-venue-manager'));
 		echo '</div>';
 		echo '</section>';
 
@@ -210,13 +210,13 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 		if ($primary && !empty($primary['id'])) {
 			echo '<section class="vms-feedback-section">';
 			echo '<h2>' . esc_html((string) $primary['name']) . '</h2>';
-			echo '<p class="vms-feedback-section-note">' . esc_html__('Performance / primary vendor feedback.', 'vms') . '</p>';
+			echo '<p class="vms-feedback-section-note">' . esc_html__('Performance / primary vendor feedback.', 'backstage-venue-manager') . '</p>';
 			echo '<input type="hidden" name="primary_vendor[id]" value="' . esc_attr((string) absint($primary['id'])) . '">';
 			echo '<div class="vms-feedback-grid">';
-			vms_feedback_render_rating_field('primary_vendor[performance]', __('How was the performance?', 'vms'));
-			vms_feedback_render_choice_field('primary_vendor[bring_back]', __('Would you like to see them return?', 'vms'), vms_feedback_yes_maybe_no_options());
+			vms_feedback_render_rating_field('primary_vendor[performance]', __('How was the performance?', 'backstage-venue-manager'));
+			vms_feedback_render_choice_field('primary_vendor[bring_back]', __('Would you like to see them return?', 'backstage-venue-manager'), vms_feedback_yes_maybe_no_options());
 			echo '</div>';
-			vms_feedback_render_textarea_field('primary_vendor[comment]', __('Any comments about the performance?', 'vms'), __('What did you like, or what could have been better?', 'vms'));
+			vms_feedback_render_textarea_field('primary_vendor[comment]', __('Any comments about the performance?', 'backstage-venue-manager'), __('What did you like, or what could have been better?', 'backstage-venue-manager'));
 			echo '</section>';
 		}
 
@@ -227,36 +227,36 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 				continue;
 			}
 			$vendor_name = (string) ($vendor['name'] ?? get_the_title($vendor_id));
-			$type_label = (string) ($vendor['type_label'] ?? __('Vendor', 'vms'));
+			$type_label = (string) ($vendor['type_label'] ?? __('Vendor', 'backstage-venue-manager'));
 			echo '<section class="vms-feedback-section" data-vms-feedback-role="secondary-vendor">';
 			echo '<h2>' . esc_html($vendor_name) . '</h2>';
-			echo '<p class="vms-feedback-section-note">' . esc_html(sprintf(__('Feedback for this %s.', 'vms'), strtolower($type_label))) . '</p>';
+			echo '<p class="vms-feedback-section-note">' . esc_html(sprintf(__('Feedback for this %s.', 'backstage-venue-manager'), strtolower($type_label))) . '</p>';
 			echo '<input type="hidden" name="secondary_vendors[' . esc_attr((string) $vendor_id) . '][id]" value="' . esc_attr((string) $vendor_id) . '">';
-			vms_feedback_render_choice_field('secondary_vendors[' . $vendor_id . '][did_order]', __('Did you order from them?', 'vms'), vms_feedback_secondary_vendor_order_options());
+			vms_feedback_render_choice_field('secondary_vendors[' . $vendor_id . '][did_order]', __('Did you order from them?', 'backstage-venue-manager'), vms_feedback_secondary_vendor_order_options());
 			echo '<div class="vms-feedback-conditional-block" data-vms-feedback-vendor-details="1" hidden>';
 			echo '<div class="vms-feedback-grid">';
-			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][wait_time]', __('Wait time / speed', 'vms'));
-			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][friendliness]', __('Friendliness', 'vms'));
-			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][selection]', __('Menu / selection', 'vms'));
-			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][value]', __('Price / value', 'vms'));
-			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][quality]', __('Quality', 'vms'));
-			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][accuracy]', __('Order accuracy', 'vms'));
+			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][wait_time]', __('Wait time / speed', 'backstage-venue-manager'));
+			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][friendliness]', __('Friendliness', 'backstage-venue-manager'));
+			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][selection]', __('Menu / selection', 'backstage-venue-manager'));
+			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][value]', __('Price / value', 'backstage-venue-manager'));
+			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][quality]', __('Quality', 'backstage-venue-manager'));
+			vms_feedback_render_rating_field('secondary_vendors[' . $vendor_id . '][accuracy]', __('Order accuracy', 'backstage-venue-manager'));
 			echo '</div>';
-			vms_feedback_render_choice_field('secondary_vendors[' . $vendor_id . '][bring_back]', __('Would you like us to bring them back?', 'vms'), vms_feedback_yes_maybe_no_options());
-			echo '<details class="vms-feedback-details"><summary>' . esc_html__('If there was a wait, what seemed to cause it?', 'vms') . '</summary>';
-			vms_feedback_render_checkbox_group('secondary_vendors[' . $vendor_id . '][wait_causes]', __('Select any that apply', 'vms'), vms_feedback_vendor_wait_cause_options());
+			vms_feedback_render_choice_field('secondary_vendors[' . $vendor_id . '][bring_back]', __('Would you like us to bring them back?', 'backstage-venue-manager'), vms_feedback_yes_maybe_no_options());
+			echo '<details class="vms-feedback-details"><summary>' . esc_html__('If there was a wait, what seemed to cause it?', 'backstage-venue-manager') . '</summary>';
+			vms_feedback_render_checkbox_group('secondary_vendors[' . $vendor_id . '][wait_causes]', __('Select any that apply', 'backstage-venue-manager'), vms_feedback_vendor_wait_cause_options());
 			echo '</details>';
-			vms_feedback_render_textarea_field('secondary_vendors[' . $vendor_id . '][comment]', __('Vendor comments', 'vms'), __('What was good, and what could have been better?', 'vms'));
+			vms_feedback_render_textarea_field('secondary_vendors[' . $vendor_id . '][comment]', __('Vendor comments', 'backstage-venue-manager'), __('What was good, and what could have been better?', 'backstage-venue-manager'));
 			echo '</div>';
 			echo '</section>';
 		}
 
 		echo '<section class="vms-feedback-section">';
-		echo '<h2>' . esc_html__('Anything else?', 'vms') . '</h2>';
-		vms_feedback_render_textarea_field('final_comment', __('Final comments', 'vms'), __('Anything else we should know about your night?', 'vms'));
+		echo '<h2>' . esc_html__('Anything else?', 'backstage-venue-manager') . '</h2>';
+		vms_feedback_render_textarea_field('final_comment', __('Final comments', 'backstage-venue-manager'), __('Anything else we should know about your night?', 'backstage-venue-manager'));
 		echo '</section>';
 
-		echo '<div class="vms-feedback-submit-row"><button type="submit" class="vms-feedback-submit" data-vms-feedback-submit="1" data-vms-submitting-label="' . esc_attr__('Submitting…', 'vms') . '">' . esc_html__('Submit private feedback', 'vms') . '</button></div>';
+		echo '<div class="vms-feedback-submit-row"><button type="submit" class="vms-feedback-submit" data-vms-feedback-submit="1" data-vms-submitting-label="' . esc_attr__('Submitting…', 'backstage-venue-manager') . '">' . esc_html__('Submit private feedback', 'backstage-venue-manager') . '</button></div>';
 		echo '</form>';
 		echo '</section>';
 		echo '</main>';
@@ -302,10 +302,10 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		$redirect = $event_plan_id > 0 ? vms_feedback_survey_url($event_plan_id) : home_url('/');
 
 		if ($event_plan_id <= 0 || !vms_feedback_verify_public_token($event_plan_id, $token)) {
-			wp_die(esc_html__('Invalid feedback link.', 'vms'));
+			wp_die(esc_html__('Invalid feedback link.', 'backstage-venue-manager'));
 		}
 		if (!isset($_POST['vms_feedback_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_nonce'])), 'vms_feedback_submit_' . $event_plan_id)) {
-			wp_die(esc_html__('Feedback form expired. Please refresh and try again.', 'vms'));
+			wp_die(esc_html__('Feedback form expired. Please refresh and try again.', 'backstage-venue-manager'));
 		}
 		$honeypot = isset($_POST['vms_feedback_company']) ? trim((string) wp_unslash($_POST['vms_feedback_company'])) : '';
 		if ($honeypot !== '') {
@@ -315,7 +315,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 
 		$context = vms_feedback_get_event_context($event_plan_id);
 		if (empty($context)) {
-			wp_die(esc_html__('Event feedback form unavailable.', 'vms'));
+			wp_die(esc_html__('Event feedback form unavailable.', 'backstage-venue-manager'));
 		}
 
 		$allowed_yes_maybe_no = vms_feedback_yes_maybe_no_options();
@@ -461,7 +461,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		}
 
 		$title = sprintf(
-			__('Feedback: %1$s - %2$s', 'vms'),
+			__('Feedback: %1$s - %2$s', 'backstage-venue-manager'),
 			(string) ($context['event_title'] ?? ('Event Plan #' . $event_plan_id)),
 			wp_date('M j, Y g:i a')
 		);
@@ -478,7 +478,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 					vms_feedback_release_submission_lock($lock_key);
 				}
 			}
-			wp_die(esc_html__('Feedback could not be saved. Please try again.', 'vms'));
+			wp_die(esc_html__('Feedback could not be saved. Please try again.', 'backstage-venue-manager'));
 		}
 
 		$response_id = absint($response_id);

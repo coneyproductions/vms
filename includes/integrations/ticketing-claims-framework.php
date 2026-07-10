@@ -280,10 +280,10 @@ if (!function_exists('vms_ticketing_claims_grant_type_labels')) {
 	function vms_ticketing_claims_grant_type_labels(): array
 	{
 		return array(
-			'event_ticket_eligibility' => __('Event Ticket Eligibility', 'vms'),
-			'event_free_admit' => __('Free Admission', 'vms'),
-			'credential_benefit_override' => __('Credential Benefit Override', 'vms'),
-			'event_grant' => __('Event Grant', 'vms'),
+			'event_ticket_eligibility' => __('Event Ticket Eligibility', 'backstage-venue-manager'),
+			'event_free_admit' => __('Free Admission', 'backstage-venue-manager'),
+			'credential_benefit_override' => __('Credential Benefit Override', 'backstage-venue-manager'),
+			'event_grant' => __('Event Grant', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -305,11 +305,11 @@ if (!function_exists('vms_ticketing_claims_grant_status_label')) {
 	{
 		$status = sanitize_key($status);
 		$labels = array(
-			'active' => __('Active', 'vms'),
-			'reserved' => __('Reserved', 'vms'),
-			'used' => __('Used', 'vms'),
-			'expired' => __('Expired', 'vms'),
-			'revoked' => __('Revoked', 'vms'),
+			'active' => __('Active', 'backstage-venue-manager'),
+			'reserved' => __('Reserved', 'backstage-venue-manager'),
+			'used' => __('Used', 'backstage-venue-manager'),
+			'expired' => __('Expired', 'backstage-venue-manager'),
+			'revoked' => __('Revoked', 'backstage-venue-manager'),
 		);
 		return $labels[$status] ?? ucwords(str_replace('_', ' ', $status));
 	}
@@ -320,13 +320,13 @@ if (!function_exists('vms_ticketing_claims_grant_status_explanation')) {
 	{
 		$status = sanitize_key($status);
 		$map = array(
-			'active' => __('Available to use for a qualifying ticket.', 'vms'),
-			'reserved' => __('Temporarily held in a pending cart and can be released if checkout is abandoned.', 'vms'),
-			'used' => __('Already consumed for this event benefit.', 'vms'),
-			'expired' => __('No longer valid because the grant expired.', 'vms'),
-			'revoked' => __('Disabled by an operator and unavailable for future use.', 'vms'),
+			'active' => __('Available to use for a qualifying ticket.', 'backstage-venue-manager'),
+			'reserved' => __('Temporarily held in a pending cart and can be released if checkout is abandoned.', 'backstage-venue-manager'),
+			'used' => __('Already consumed for this event benefit.', 'backstage-venue-manager'),
+			'expired' => __('No longer valid because the grant expired.', 'backstage-venue-manager'),
+			'revoked' => __('Disabled by an operator and unavailable for future use.', 'backstage-venue-manager'),
 		);
-		return $map[$status] ?? __('Status explanation unavailable.', 'vms');
+		return $map[$status] ?? __('Status explanation unavailable.', 'backstage-venue-manager');
 	}
 }
 
@@ -568,7 +568,7 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 			'matched_rule_path' => '',
 			'matched_program' => '',
 			'matched_grant_id' => 0,
-			'message' => __('This account is not eligible for this ticket.', 'vms'),
+			'message' => __('This account is not eligible for this ticket.', 'backstage-venue-manager'),
 			'diagnostics' => array(
 				'user_id' => $user_id,
 				'event_id' => $event_id,
@@ -582,13 +582,13 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 
 		if ($user_id <= 0) {
 			$result['reason_code'] = 'login_required';
-			$result['message'] = __('Please log in to claim this ticket.', 'vms');
+			$result['message'] = __('Please log in to claim this ticket.', 'backstage-venue-manager');
 			return $result;
 		}
 
 		if (empty($allowed_programs) && !$allow_direct_grants) {
 			$result['reason_code'] = 'no_rule_path';
-			$result['message'] = __('No credential rule is configured for this ticket.', 'vms');
+			$result['message'] = __('No credential rule is configured for this ticket.', 'backstage-venue-manager');
 			return $result;
 		}
 
@@ -600,7 +600,7 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 					$result['reason_code'] = 'ok';
 					$result['matched_rule_path'] = 'credential_program';
 					$result['matched_program'] = $program;
-					$result['message'] = __('Eligible via approved credential.', 'vms');
+					$result['message'] = __('Eligible via approved credential.', 'backstage-venue-manager');
 					return $result;
 				}
 			}
@@ -620,7 +620,7 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 				$result['reason_code'] = 'ok';
 				$result['matched_rule_path'] = 'event_direct_grant';
 				$result['matched_grant_id'] = absint($grant['id']);
-				$result['message'] = __('Eligible via direct event grant.', 'vms');
+				$result['message'] = __('Eligible via direct event grant.', 'backstage-venue-manager');
 				return $result;
 			}
 		}
@@ -643,22 +643,22 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 				$result['matched_rule_path'] = 'event_direct_grant';
 				if ($resolved_status === 'revoked') {
 					$result['reason_code'] = 'grant_revoked';
-					$result['message'] = __('This event grant was revoked by an operator.', 'vms');
+					$result['message'] = __('This event grant was revoked by an operator.', 'backstage-venue-manager');
 					return $result;
 				}
 				if ($resolved_status === 'expired') {
 					$result['reason_code'] = 'grant_expired';
-					$result['message'] = __('This event grant is expired and no longer available.', 'vms');
+					$result['message'] = __('This event grant is expired and no longer available.', 'backstage-venue-manager');
 					return $result;
 				}
 				if ($resolved_status === 'reserved') {
 					$result['reason_code'] = 'grant_reserved';
-					$result['message'] = __('This benefit is currently reserved in another pending cart.', 'vms');
+					$result['message'] = __('This benefit is currently reserved in another pending cart.', 'backstage-venue-manager');
 					return $result;
 				}
 				if ($resolved_status === 'used') {
 					$result['reason_code'] = 'grant_used';
-					$result['message'] = __('This account has already used its benefit for this event.', 'vms');
+					$result['message'] = __('This account has already used its benefit for this event.', 'backstage-venue-manager');
 					return $result;
 				}
 			}
@@ -666,20 +666,20 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 
 		if (!empty($allowed_programs) && !$allow_direct_grants) {
 			$labels = vms_ticketing_claims_program_labels($allowed_programs);
-			$label_text = !empty($labels) ? implode(', ', $labels) : __('required credential', 'vms');
+			$label_text = !empty($labels) ? implode(', ', $labels) : __('required credential', 'backstage-venue-manager');
 			$result['reason_code'] = 'credential_not_approved';
-			$result['message'] = sprintf(__('This account is not approved for %s.', 'vms'), $label_text);
+			$result['message'] = sprintf(__('This account is not approved for %s.', 'backstage-venue-manager'), $label_text);
 			return $result;
 		}
 
 		if (empty($allowed_programs) && $allow_direct_grants) {
 			$result['reason_code'] = 'direct_grant_missing';
-			$result['message'] = __('No active direct grant was found for this account and event.', 'vms');
+			$result['message'] = __('No active direct grant was found for this account and event.', 'backstage-venue-manager');
 			return $result;
 		}
 
 		$result['reason_code'] = 'credential_or_grant_missing';
-		$result['message'] = __('This account is not approved for the required credential and has no active direct grant for this event.', 'vms');
+		$result['message'] = __('This account is not approved for the required credential and has no active direct grant for this event.', 'backstage-venue-manager');
 		return $result;
 	}
 }
@@ -1225,31 +1225,31 @@ if (!function_exists('vms_ticketing_claims_friendly_reason')) {
 		}
 
 		$map = array(
-			'ok' => __('Validation successful.', 'vms'),
-			'login_required' => __('Email must belong to a logged-in account.', 'vms'),
-			'no_rule_path' => __('No credential rule is configured for this ticket.', 'vms'),
-			'credential_not_approved' => __('Registered account exists but is not approved for this credential type.', 'vms'),
-			'direct_grant_missing' => __('No active direct event grant was found for this account.', 'vms'),
-			'grant_used' => __('This account has already used its benefit for this event.', 'vms'),
-			'grant_reserved' => __('This benefit is currently reserved in another pending cart.', 'vms'),
-			'grant_expired' => __('This event grant is expired and no longer available.', 'vms'),
-			'grant_revoked' => __('This event grant was revoked by an operator.', 'vms'),
-			'credential_or_grant_missing' => __('This account is not approved and has no direct grant for this event.', 'vms'),
-			'not_eligible' => __('This account is not eligible for this ticket.', 'vms'),
-			'grant_created' => __('Event benefit grant created.', 'vms'),
-			'grant_updated' => __('Event benefit grant updated.', 'vms'),
-			'grant_consumed' => __('Event benefit grant marked used.', 'vms'),
-			'grant_repaired_restored' => __('Event benefit grant restored to active.', 'vms'),
-			'grant_reopened' => __('Direct event grant reopened.', 'vms'),
-			'grant_note_updated' => __('Grant note updated.', 'vms'),
-			'self_apply_attempt' => __('Customer attempted to apply their own benefit.', 'vms'),
-			'recent_claim_helper_used' => __('Customer reused a recent claimant email helper.', 'vms'),
-			'reservation_created' => __('Reservation created.', 'vms'),
-			'reservation_released' => __('Reservation released.', 'vms'),
-			'consumption_completed' => __('Consumption completed.', 'vms'),
-			'manual_repair' => __('Manual repair action applied.', 'vms'),
+			'ok' => __('Validation successful.', 'backstage-venue-manager'),
+			'login_required' => __('Email must belong to a logged-in account.', 'backstage-venue-manager'),
+			'no_rule_path' => __('No credential rule is configured for this ticket.', 'backstage-venue-manager'),
+			'credential_not_approved' => __('Registered account exists but is not approved for this credential type.', 'backstage-venue-manager'),
+			'direct_grant_missing' => __('No active direct event grant was found for this account.', 'backstage-venue-manager'),
+			'grant_used' => __('This account has already used its benefit for this event.', 'backstage-venue-manager'),
+			'grant_reserved' => __('This benefit is currently reserved in another pending cart.', 'backstage-venue-manager'),
+			'grant_expired' => __('This event grant is expired and no longer available.', 'backstage-venue-manager'),
+			'grant_revoked' => __('This event grant was revoked by an operator.', 'backstage-venue-manager'),
+			'credential_or_grant_missing' => __('This account is not approved and has no direct grant for this event.', 'backstage-venue-manager'),
+			'not_eligible' => __('This account is not eligible for this ticket.', 'backstage-venue-manager'),
+			'grant_created' => __('Event benefit grant created.', 'backstage-venue-manager'),
+			'grant_updated' => __('Event benefit grant updated.', 'backstage-venue-manager'),
+			'grant_consumed' => __('Event benefit grant marked used.', 'backstage-venue-manager'),
+			'grant_repaired_restored' => __('Event benefit grant restored to active.', 'backstage-venue-manager'),
+			'grant_reopened' => __('Direct event grant reopened.', 'backstage-venue-manager'),
+			'grant_note_updated' => __('Grant note updated.', 'backstage-venue-manager'),
+			'self_apply_attempt' => __('Customer attempted to apply their own benefit.', 'backstage-venue-manager'),
+			'recent_claim_helper_used' => __('Customer reused a recent claimant email helper.', 'backstage-venue-manager'),
+			'reservation_created' => __('Reservation created.', 'backstage-venue-manager'),
+			'reservation_released' => __('Reservation released.', 'backstage-venue-manager'),
+			'consumption_completed' => __('Consumption completed.', 'backstage-venue-manager'),
+			'manual_repair' => __('Manual repair action applied.', 'backstage-venue-manager'),
 		);
-		return $map[$reason_code] ?? ($reason_code !== '' ? ucwords(str_replace('_', ' ', $reason_code)) : __('No reason provided.', 'vms'));
+		return $map[$reason_code] ?? ($reason_code !== '' ? ucwords(str_replace('_', ' ', $reason_code)) : __('No reason provided.', 'backstage-venue-manager'));
 	}
 }
 

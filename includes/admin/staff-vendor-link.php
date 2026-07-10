@@ -36,7 +36,7 @@ if (!function_exists('vms_staff_linked_vendor_meta_key')) {
 add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_vendor_link',
-        __('Linked Vendor', 'vms'),
+        __('Linked Vendor', 'backstage-venue-manager'),
         'vms_staff_vendor_link_metabox_render',
         'vms_staff',
         'side',
@@ -53,7 +53,7 @@ function vms_staff_vendor_link_metabox_render($post): void
 
     wp_nonce_field('vms_staff_vendor_link_save', 'vms_staff_vendor_link_nonce');
 
-    echo '<p class="description">' . esc_html__('Link this staff profile to a Vendor record when the same person is also a payee (contractor, performer, vendor account).', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Link this staff profile to a Vendor record when the same person is also a payee (contractor, performer, vendor account).', 'backstage-venue-manager') . '</p>';
 
     $vendor_posts = get_posts(array(
         'post_type'      => 'vms_vendor',
@@ -66,7 +66,7 @@ function vms_staff_vendor_link_metabox_render($post): void
     ));
 
     echo '<select name="vms_linked_vendor_id" style="width:100%;">';
-    echo '<option value="0">— ' . esc_html__('Not linked', 'vms') . ' —</option>';
+    echo '<option value="0">— ' . esc_html__('Not linked', 'backstage-venue-manager') . ' —</option>';
 
     foreach ($vendor_posts as $vid) {
         $vid = (int) $vid;
@@ -87,7 +87,7 @@ function vms_staff_vendor_link_metabox_render($post): void
         $edit_vendor = get_edit_post_link($current_vendor_id, '');
         if ($edit_vendor) {
             echo '<p style="margin-top:10px;">';
-            echo '<a class="button button-secondary" href="' . esc_url($edit_vendor) . '">' . esc_html__('Edit linked vendor', 'vms') . '</a>';
+            echo '<a class="button button-secondary" href="' . esc_url($edit_vendor) . '">' . esc_html__('Edit linked vendor', 'backstage-venue-manager') . '</a>';
             echo '</p>';
         }
     }

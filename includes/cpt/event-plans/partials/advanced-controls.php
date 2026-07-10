@@ -82,13 +82,13 @@
 
     <details id="vms-advanced-controls" class="vms-advanced-controls" data-vms-plan-id="<?php echo (int) $post->ID; ?>" data-vms-stable-draft="<?php echo $has_stable_draft ? '1' : '0'; ?>" <?php echo ((int)$linked_tec_id <= 0 ? 'open' : ''); ?>>
         <summary>
-            <strong><?php esc_html_e('Advanced Controls', 'vms'); ?></strong>
-            <span class="description"><?php esc_html_e('Calendar link + troubleshooting', 'vms'); ?></span>
+            <strong><?php esc_html_e('Advanced Controls', 'backstage-venue-manager'); ?></strong>
+            <span class="description"><?php esc_html_e('Calendar link + troubleshooting', 'backstage-venue-manager'); ?></span>
         </summary>
 
         <div class="vms-advanced-controls__body">
 
-            <p class="description"><?php esc_html_e('Most operators can ignore this section. Use it only if you are troubleshooting calendar links or you have been instructed to change these settings.', 'vms'); ?></p>
+            <p class="description"><?php esc_html_e('Most operators can ignore this section. Use it only if you are troubleshooting calendar links or you have been instructed to change these settings.', 'backstage-venue-manager'); ?></p>
 
             <?php
                 do_action('vms_event_plan_advanced_controls_after_intro', $post, array(
@@ -101,8 +101,8 @@
             <?php if ($is_autodraft) : ?>
                 <div class="notice notice-warning inline vms-notice vms-notice--warning">
                     <p>
-                        <strong><?php esc_html_e('Save Draft first.', 'vms'); ?></strong>
-                        <?php esc_html_e('These advanced tools are disabled until this Event Plan has been saved at least once. This prevents losing information you have entered.', 'vms'); ?>
+                        <strong><?php esc_html_e('Save Draft first.', 'backstage-venue-manager'); ?></strong>
+                        <?php esc_html_e('These advanced tools are disabled until this Event Plan has been saved at least once. This prevents losing information you have entered.', 'backstage-venue-manager'); ?>
                     </p>
                 </div>
             <?php else : ?>
@@ -111,23 +111,23 @@
                 <button type="submit" form="<?php echo esc_attr($resync_form_id); ?>" class="button button-secondary"
                     data-vms-link-sensitive="1"
                     <?php echo ($linked_tec_id > 0) ? '' : ' disabled="disabled"'; ?>>
-                    <?php esc_html_e('Re-sync to Calendar', 'vms'); ?>
+                    <?php esc_html_e('Re-sync to Calendar', 'backstage-venue-manager'); ?>
                 </button>
 
                 <?php if ($linked_tec_id > 0 && $linked_tec_url) : ?>
                     <a class="button" href="<?php echo esc_url($linked_tec_url); ?>" target="_blank" rel="noopener noreferrer">
-                        <?php esc_html_e('View in Calendar', 'vms'); ?>
+                        <?php esc_html_e('View in Calendar', 'backstage-venue-manager'); ?>
                     </a>
                 <?php endif; ?>
 
                 <?php if ($linked_tec_id > 0 && $tec_admin_edit_url) : ?>
                     <a class="button" href="<?php echo esc_url($tec_admin_edit_url); ?>" target="_blank" rel="noopener noreferrer">
-                        <?php esc_html_e('Edit Calendar Event', 'vms'); ?>
+                        <?php esc_html_e('Edit Calendar Event', 'backstage-venue-manager'); ?>
                     </a>
                 <?php endif; ?>
             </p>
 
-            <p class="description"><?php esc_html_e('Re-sync uses saved Event Plan data only. Click Update first if you need unsaved edits included.', 'vms'); ?></p>
+            <p class="description"><?php esc_html_e('Re-sync uses saved Event Plan data only. Click Update first if you need unsaved edits included.', 'backstage-venue-manager'); ?></p>
 
             <div class="vms-ticketing" data-vms-stable-draft="<?php echo $has_stable_draft ? '1' : '0'; ?>">
 
@@ -145,10 +145,10 @@
                 ?> 
 
 						<?php if ($vms_ticketing_v2_render_mode === 'omit') : ?>
-							<p class="description"><?php esc_html_e('The full GA attendance + entitlements editor now opens in the Ticketing metabox above. This panel keeps the legacy link tools and calendar troubleshooting controls.', 'vms'); ?></p>
+							<p class="description"><?php esc_html_e('The full GA attendance + entitlements editor now opens in the Ticketing metabox above. This panel keeps the legacy link tools and calendar troubleshooting controls.', 'backstage-venue-manager'); ?></p>
 						<?php else : ?>
 						<div id="vms-ticketing-v2-source" class="vms-ticketing__managed vms-ticketing__managed-v2">
-							<h5><?php esc_html_e('GA attendance + entitlements', 'vms'); ?></h5>
+							<h5><?php esc_html_e('GA attendance + entitlements', 'backstage-venue-manager'); ?></h5>
 
 							<?php
 								$v2_lookup_trace = function_exists('vms_event_plan_perf_span_start')
@@ -185,16 +185,16 @@
 								$global_ticketing_default = !empty($settings['ticketing_enabled_default']);
 								$ticketing_override = (string) get_post_meta($post->ID, '_vms_ticketing_enabled_override', true);
 								$ticketing_effective = function_exists('vms_event_plan_is_ticketing_enabled') ? vms_event_plan_is_ticketing_enabled((int) $post->ID) : $global_ticketing_default;
-								$ticketing_global_label = $global_ticketing_default ? __('ON', 'vms') : __('OFF', 'vms');
+								$ticketing_global_label = $global_ticketing_default ? __('ON', 'backstage-venue-manager') : __('OFF', 'backstage-venue-manager');
 								$ticket_ui_settings = (array) get_option('vms_settings', array());
 								$ticket_ui_global_layout = isset($ticket_ui_settings['ticket_ui_layout']) ? sanitize_key((string) $ticket_ui_settings['ticket_ui_layout']) : 'classic';
 								if (!in_array($ticket_ui_global_layout, array('classic', 'v2', 'progressive'), true)) {
 									$ticket_ui_global_layout = 'classic';
 								}
 								$ticket_ui_global_labels = array(
-									'classic' => __('Safe Mode / legacy TEC', 'vms'),
-									'v2' => __('V2 unified', 'vms'),
-									'progressive' => __('Progressive', 'vms'),
+									'classic' => __('Safe Mode / legacy TEC', 'backstage-venue-manager'),
+									'v2' => __('V2 unified', 'backstage-venue-manager'),
+									'progressive' => __('Progressive', 'backstage-venue-manager'),
 								);
 								$ticket_ui_layout_override = sanitize_key((string) get_post_meta($post->ID, '_vms_ticket_ui_layout_override', true));
 								if (!in_array($ticket_ui_layout_override, array('', 'classic', 'v2', 'progressive'), true)) {
@@ -220,18 +220,18 @@
 							?>
 
 						<?php if (!$ticketing_effective) : ?>
-							<p class="description"><?php esc_html_e('Ticketing is disabled for this event. Set “Tickets for this event” to On to configure and create tickets.', 'vms'); ?></p>
+							<p class="description"><?php esc_html_e('Ticketing is disabled for this event. Set “Tickets for this event” to On to configure and create tickets.', 'backstage-venue-manager'); ?></p>
 						<?php elseif (!$can_phase_b) : ?>
-							<p class="description"><?php esc_html_e('Event Tickets (WooCommerce) is not available. Activate Event Tickets, Event Tickets Plus, and WooCommerce.', 'vms'); ?></p>
+							<p class="description"><?php esc_html_e('Event Tickets (WooCommerce) is not available. Activate Event Tickets, Event Tickets Plus, and WooCommerce.', 'backstage-venue-manager'); ?></p>
 						<?php elseif ($linked_tec_id <= 0) : ?>
-							<p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and VMS will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'vms'); ?></p>
+							<p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and VMS will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'backstage-venue-manager'); ?></p>
 						<?php else : ?>
-							<p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by VMS.', 'vms'); ?></p>
+							<p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by VMS.', 'backstage-venue-manager'); ?></p>
 						<?php endif; ?>
 
 						<?php if (!empty($recon_v2_warnings)) : ?>
 							<div class="notice notice-warning inline vms-notice vms-notice--warning">
-								<p><strong><?php esc_html_e('Ticketing reconciliation found mismatches.', 'vms'); ?></strong></p>
+								<p><strong><?php esc_html_e('Ticketing reconciliation found mismatches.', 'backstage-venue-manager'); ?></strong></p>
 								<?php foreach ($recon_v2_warnings as $rw) : ?>
 									<p class="vms-m0"><?php echo esc_html($rw); ?></p>
 								<?php endforeach; ?>
@@ -240,7 +240,7 @@
 
 						<?php if ($mode_v2 === 'vms_managed' && $stats_stale_after_commit) : ?>
 							<div class="notice notice-info inline vms-notice vms-notice--info">
-								<p><?php esc_html_e('Ticketing was committed after the last stats refresh. Click “Refresh ticket stats” to update sold/revenue totals for this Event Plan.', 'vms'); ?></p>
+								<p><?php esc_html_e('Ticketing was committed after the last stats refresh. Click “Refresh ticket stats” to update sold/revenue totals for this Event Plan.', 'backstage-venue-manager'); ?></p>
 							</div>
 						<?php endif; ?>
 
@@ -251,10 +251,10 @@
 							$ticket_addons_subtext_override = trim(html_entity_decode((string) get_post_meta($post->ID, '_vms_ticket_ui_addons_subtext_override', true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 							$ticket_addons_heading_placeholder = function_exists('vms_ticketing_ui_addons_section_heading')
 								? (string) vms_ticketing_ui_addons_section_heading()
-								: __('Fire Pits & Tables', 'vms');
+								: __('Fire Pits & Tables', 'backstage-venue-manager');
 							$ticket_addons_subtext_placeholder = function_exists('vms_ticketing_ui_addons_section_subtext')
 								? (string) vms_ticketing_ui_addons_section_subtext()
-								: __('Click here to add a fire pit or table to your order.', 'vms');
+								: __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager');
 							$ticket_help_tickets_placeholder = function_exists('vms_ticketing_ui_help_global_text')
 								? (string) vms_ticketing_ui_help_global_text('tickets')
 								: '';
@@ -263,46 +263,46 @@
 								: '';
 						?>
 						<div class="vms-ticketing__togglebar">
-							<strong><?php esc_html_e('Tickets for this event:', 'vms'); ?></strong>
+							<strong><?php esc_html_e('Tickets for this event:', 'backstage-venue-manager'); ?></strong>
 							<select name="vms_ticketing_enabled_override" id="vms-ticketing-enabled-override">
-								<option value="" <?php selected($ticketing_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'vms'), $ticketing_global_label)); ?></option>
-								<option value="on" <?php selected($ticketing_override, 'on'); ?>><?php esc_html_e('On', 'vms'); ?></option>
-								<option value="off" <?php selected($ticketing_override, 'off'); ?>><?php esc_html_e('Off', 'vms'); ?></option>
+								<option value="" <?php selected($ticketing_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), $ticketing_global_label)); ?></option>
+								<option value="on" <?php selected($ticketing_override, 'on'); ?>><?php esc_html_e('On', 'backstage-venue-manager'); ?></option>
+								<option value="off" <?php selected($ticketing_override, 'off'); ?>><?php esc_html_e('Off', 'backstage-venue-manager'); ?></option>
 							</select>
 							<?php if (!$ticketing_effective): ?>
-								<span class="description vms-ml-10"><?php esc_html_e('Ticketing is currently disabled for this event.', 'vms'); ?></span>
+								<span class="description vms-ml-10"><?php esc_html_e('Ticketing is currently disabled for this event.', 'backstage-venue-manager'); ?></span>
 							<?php endif; ?>
 						</div>
 
 						<div class="vms-ticketing__togglebar" data-vms-tour="ticketing-ui.event-override">
-							<strong><?php esc_html_e('Public ticket UI:', 'vms'); ?></strong>
+							<strong><?php esc_html_e('Public ticket UI:', 'backstage-venue-manager'); ?></strong>
 							<select name="vms_ticket_ui_layout_override" id="vms-ticket-ui-layout-override">
-								<option value="" <?php selected($ticket_ui_layout_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'vms'), (string) ($ticket_ui_global_labels[$ticket_ui_global_layout] ?? $ticket_ui_global_layout))); ?></option>
-								<option value="progressive" <?php selected($ticket_ui_layout_override, 'progressive'); ?>><?php esc_html_e('Force Progressive', 'vms'); ?></option>
-								<option value="v2" <?php selected($ticket_ui_layout_override, 'v2'); ?>><?php esc_html_e('Force V2 Unified', 'vms'); ?></option>
-								<option value="classic" <?php selected($ticket_ui_layout_override, 'classic'); ?>><?php esc_html_e('Force Legacy / Safe Mode', 'vms'); ?></option>
+								<option value="" <?php selected($ticket_ui_layout_override, ''); ?>><?php echo esc_html(sprintf(__('Inherit (Global: %s)', 'backstage-venue-manager'), (string) ($ticket_ui_global_labels[$ticket_ui_global_layout] ?? $ticket_ui_global_layout))); ?></option>
+								<option value="progressive" <?php selected($ticket_ui_layout_override, 'progressive'); ?>><?php esc_html_e('Force Progressive', 'backstage-venue-manager'); ?></option>
+								<option value="v2" <?php selected($ticket_ui_layout_override, 'v2'); ?>><?php esc_html_e('Force V2 Unified', 'backstage-venue-manager'); ?></option>
+								<option value="classic" <?php selected($ticket_ui_layout_override, 'classic'); ?>><?php esc_html_e('Force Legacy / Safe Mode', 'backstage-venue-manager'); ?></option>
 							</select>
-							<span class="description vms-ml-10"><?php esc_html_e('Use this for per-event rollback or testing without changing the global setting.', 'vms'); ?></span>
+							<span class="description vms-ml-10"><?php esc_html_e('Use this for per-event rollback or testing without changing the global setting.', 'backstage-venue-manager'); ?></span>
 						</div>
 
 						<div class="vms-ticketing__box vms-ticketing__helpcopy-box">
-							<h4 class="vms-ticketing__box-title"><?php esc_html_e('Public help copy overrides', 'vms'); ?></h4>
-							<p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from VMS Settings.', 'vms'); ?></p>
+							<h4 class="vms-ticketing__box-title"><?php esc_html_e('Public help copy overrides', 'backstage-venue-manager'); ?></h4>
+							<p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from VMS Settings.', 'backstage-venue-manager'); ?></p>
 							<div class="vms-ticketing__help-label-grid">
 								<p>
-									<label for="vms_ticket_ui_addons_heading_override"><strong><?php esc_html_e('Add-on section heading override', 'vms'); ?></strong></label><br />
+									<label for="vms_ticket_ui_addons_heading_override"><strong><?php esc_html_e('Add-on section heading override', 'backstage-venue-manager'); ?></strong></label><br />
 									<input id="vms_ticket_ui_addons_heading_override" type="text" class="regular-text" name="vms_ticket_ui_addons_heading_override" value="<?php echo esc_attr($ticket_addons_heading_override); ?>" placeholder="<?php echo esc_attr($ticket_addons_heading_placeholder); ?>" />
-									<span class="description"><?php esc_html_e('Example: Fire Pits & Tables. Leave blank to inherit the global heading.', 'vms'); ?></span>
+									<span class="description"><?php esc_html_e('Example: Fire Pits & Tables. Leave blank to inherit the global heading.', 'backstage-venue-manager'); ?></span>
 								</p>
 								<p>
-									<label for="vms_ticket_ui_addons_subtext_override"><strong><?php esc_html_e('Add-on section subtext override', 'vms'); ?></strong></label><br />
+									<label for="vms_ticket_ui_addons_subtext_override"><strong><?php esc_html_e('Add-on section subtext override', 'backstage-venue-manager'); ?></strong></label><br />
 									<input id="vms_ticket_ui_addons_subtext_override" type="text" class="large-text" name="vms_ticket_ui_addons_subtext_override" value="<?php echo esc_attr($ticket_addons_subtext_override); ?>" placeholder="<?php echo esc_attr($ticket_addons_subtext_placeholder); ?>" />
-									<span class="description"><?php esc_html_e('Shown under the collapsed Progressive add-on heading.', 'vms'); ?></span>
+									<span class="description"><?php esc_html_e('Shown under the collapsed Progressive add-on heading.', 'backstage-venue-manager'); ?></span>
 								</p>
 							</div>
 							<p>
-								<label><strong><?php esc_html_e('Ticket help override', 'vms'); ?></strong></label><br />
-								<span class="description"><?php echo esc_html($ticket_help_tickets_placeholder !== '' ? __('Leave blank to inherit the global ticket help copy. Current global copy shown below this editor.', 'vms') : __('Leave blank to inherit the global ticket help copy.', 'vms')); ?></span>
+								<label><strong><?php esc_html_e('Ticket help override', 'backstage-venue-manager'); ?></strong></label><br />
+								<span class="description"><?php echo esc_html($ticket_help_tickets_placeholder !== '' ? __('Leave blank to inherit the global ticket help copy. Current global copy shown below this editor.', 'backstage-venue-manager') : __('Leave blank to inherit the global ticket help copy.', 'backstage-venue-manager')); ?></span>
 								<?php
 								wp_editor(
 									$ticket_help_tickets_override,
@@ -322,8 +322,8 @@
 								?>
 							</p>
 							<p>
-								<label><strong><?php esc_html_e('Add-on help override', 'vms'); ?></strong></label><br />
-								<span class="description"><?php echo esc_html($ticket_help_addons_placeholder !== '' ? __('Leave blank to inherit the global add-on help copy. Current global copy shown below this editor.', 'vms') : __('Leave blank to inherit the global add-on help copy.', 'vms')); ?></span>
+								<label><strong><?php esc_html_e('Add-on help override', 'backstage-venue-manager'); ?></strong></label><br />
+								<span class="description"><?php echo esc_html($ticket_help_addons_placeholder !== '' ? __('Leave blank to inherit the global add-on help copy. Current global copy shown below this editor.', 'backstage-venue-manager') : __('Leave blank to inherit the global add-on help copy.', 'backstage-venue-manager')); ?></span>
 								<?php
 								wp_editor(
 									$ticket_help_addons_override,
@@ -345,9 +345,9 @@
 						</div>
  
 						<div class="vms-ticketing__tplbar">
-							<strong><?php esc_html_e('Templates:', 'vms'); ?></strong>
+							<strong><?php esc_html_e('Templates:', 'backstage-venue-manager'); ?></strong>
 							<select id="vms-ticketing-v2-template-select" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>>
-								<option value=""><?php esc_html_e('Select a template…', 'vms'); ?></option>
+								<option value=""><?php esc_html_e('Select a template…', 'backstage-venue-manager'); ?></option>
 								<?php foreach ($templates_v2 as $tid => $t) : ?>
 									<?php
 										$tpl_label = (string) (($t['name'] ?? '') ?: $tid);
@@ -361,30 +361,30 @@
 									<option value="<?php echo esc_attr($tid); ?>" data-sales-end-guardrail="<?php echo esc_attr(wp_json_encode($tpl_guardrail)); ?>"><?php echo esc_html($tpl_label); ?></option>
 								<?php endforeach; ?>
 							</select>
-							<button type="button" class="button" id="vms-ticketing-v2-apply-template-btn" disabled="disabled"><?php esc_html_e('Apply', 'vms'); ?></button>
-							<button type="button" class="button button-secondary" id="vms-ticketing-v2-set-default-template-btn" disabled="disabled"><?php esc_html_e('Set as default', 'vms'); ?></button>
-							<button type="button" class="button-link vms-ml-6" id="vms-ticketing-v2-clear-default-template-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Clear default', 'vms'); ?></button>
+							<button type="button" class="button" id="vms-ticketing-v2-apply-template-btn" disabled="disabled"><?php esc_html_e('Apply', 'backstage-venue-manager'); ?></button>
+							<button type="button" class="button button-secondary" id="vms-ticketing-v2-set-default-template-btn" disabled="disabled"><?php esc_html_e('Set as default', 'backstage-venue-manager'); ?></button>
+							<button type="button" class="button-link vms-ml-6" id="vms-ticketing-v2-clear-default-template-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Clear default', 'backstage-venue-manager'); ?></button>
 							<span id="vms-ticketing-v2-default-template-label" class="description vms-ml-10"><?php echo esc_html($default_tpl_name ? ('Default: ' . $default_tpl_name) : 'Default: none'); ?></span>
-								<button type="button" class="button button-secondary" id="vms-ticketing-v2-init-legacy-btn" disabled="disabled"><?php esc_html_e('Initialize from legacy add-ons (Retired)', 'vms'); ?></button>
-							<button type="button" class="button" id="vms-ticketing-v2-clear-config-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Clear config', 'vms'); ?></button>
+								<button type="button" class="button button-secondary" id="vms-ticketing-v2-init-legacy-btn" disabled="disabled"><?php esc_html_e('Initialize from legacy add-ons (Retired)', 'backstage-venue-manager'); ?></button>
+							<button type="button" class="button" id="vms-ticketing-v2-clear-config-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Clear config', 'backstage-venue-manager'); ?></button>
 						</div>
 
 						<div class="vms-ticketing__tplsave">
-							<input type="text" id="vms-ticketing-v2-template-name" class="regular-text" placeholder="<?php esc_attr_e('New template name…', 'vms'); ?>" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?> />
-							<button type="button" class="button" id="vms-ticketing-v2-save-template-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Save current as template', 'vms'); ?></button>
+							<input type="text" id="vms-ticketing-v2-template-name" class="regular-text" placeholder="<?php esc_attr_e('New template name…', 'backstage-venue-manager'); ?>" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?> />
+							<button type="button" class="button" id="vms-ticketing-v2-save-template-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Save current as template', 'backstage-venue-manager'); ?></button>
 						</div>
 
 						<div id="vms-ticketing-v2-config-note" class="vms-ticketing__msg vms-notice vms-notice--info vms-ticketing__msg--info vms-hidden" aria-live="polite"></div>
 						<div id="vms-ticketing-v2-template-guardrail" class="vms-ticketing__guardrail vms-hidden" aria-live="polite"></div>
 						<div id="vms-ticketing-v2-sales-end-warning" class="vms-ticketing__guardrail vms-hidden" aria-live="polite"></div>
-						<p class="description"><?php esc_html_e('Templates update only this Event Plan’s saved Ticketing config. Nothing is created in TEC/Woo until Preview → Commit. Applying a template overwrites the saved config for this plan.', 'vms'); ?></p>
+						<p class="description"><?php esc_html_e('Templates update only this Event Plan’s saved Ticketing config. Nothing is created in TEC/Woo until Preview → Commit. Applying a template overwrites the saved config for this plan.', 'backstage-venue-manager'); ?></p>
 
 						<div class="vms-ticketing__managed-mode">
-							<strong><?php esc_html_e('Mode:', 'vms'); ?></strong>
+							<strong><?php esc_html_e('Mode:', 'backstage-venue-manager'); ?></strong>
 							<select id="vms-ticketing-v2-mode" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>>
-								<option value="none" <?php selected($mode_v2, 'none'); ?>><?php esc_html_e('None', 'vms'); ?></option>
-								<option value="read_only" <?php selected($mode_v2, 'read_only'); ?>><?php esc_html_e('Read-only', 'vms'); ?></option>
-								<option value="vms_managed" <?php selected($mode_v2, 'vms_managed'); ?>><?php esc_html_e('VMS-managed', 'vms'); ?></option>
+								<option value="none" <?php selected($mode_v2, 'none'); ?>><?php esc_html_e('None', 'backstage-venue-manager'); ?></option>
+								<option value="read_only" <?php selected($mode_v2, 'read_only'); ?>><?php esc_html_e('Read-only', 'backstage-venue-manager'); ?></option>
+								<option value="vms_managed" <?php selected($mode_v2, 'vms_managed'); ?>><?php esc_html_e('VMS-managed', 'backstage-venue-manager'); ?></option>
 							</select>
 							<?php if ($last_commit_at) : ?>
 								<span class="description vms-ml-8"><?php echo esc_html('Last commit: ' . $last_commit_at); ?></span>
@@ -404,9 +404,9 @@
 						<div id="vms-ticketing-v2-editor" data-initial-config="<?php echo esc_attr(wp_json_encode($cfg_v2)); ?>" data-initial-sync="<?php echo esc_attr(wp_json_encode($sync_v2)); ?>" data-tec-event-id="<?php echo (int) $linked_tec_id; ?>" data-plan-id="<?php echo (int) $post->ID; ?>" data-config-exists="<?php echo esc_attr($cfg_v2_exists); ?>" data-default-template-id="<?php echo esc_attr($default_tpl_id); ?>" data-default-template-name="<?php echo esc_attr($default_tpl_name); ?>" data-ticketing-effective="<?php echo $ticketing_effective ? 1 : 0; ?>" data-plan-image-id="<?php echo esc_attr((string) $plan_image_id); ?>" data-plan-image-url="<?php echo esc_attr($plan_image_url); ?>"></div>
 
 						<p>
-							<button type="button" class="button button-secondary" id="vms-ticketing-v2-save-config-btn"><?php esc_html_e('Save config', 'vms'); ?></button>
-							<button type="button" class="button" id="vms-ticketing-v2-preview-sync-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Preview sync', 'vms'); ?></button>
-							<button type="button" class="button button-primary" id="vms-ticketing-v2-commit-sync-btn" disabled="disabled"><?php esc_html_e('Commit sync', 'vms'); ?></button>
+							<button type="button" class="button button-secondary" id="vms-ticketing-v2-save-config-btn"><?php esc_html_e('Save config', 'backstage-venue-manager'); ?></button>
+							<button type="button" class="button" id="vms-ticketing-v2-preview-sync-btn" <?php echo $preview_disabled ? 'disabled="disabled"' : ''; ?>><?php esc_html_e('Preview sync', 'backstage-venue-manager'); ?></button>
+							<button type="button" class="button button-primary" id="vms-ticketing-v2-commit-sync-btn" disabled="disabled"><?php esc_html_e('Commit sync', 'backstage-venue-manager'); ?></button>
 						</p>
 
 						<div id="vms-ticketing-v2-sync-preview" class="vms-ticketing__sync-preview vms-hidden"></div>
@@ -416,7 +416,7 @@
 						</div>
 							<?php endif; ?>
 
-						<p class="description"><?php esc_html_e('Linking does not modify the calendar event. Use “Re-sync to Calendar” if you want VMS to update it.', 'vms'); ?></p>
+						<p class="description"><?php esc_html_e('Linking does not modify the calendar event. Use “Re-sync to Calendar” if you want VMS to update it.', 'backstage-venue-manager'); ?></p>
             </div>
 
             <?php
@@ -437,21 +437,21 @@
             >
                 <label>
                     <input type="checkbox" id="vms-calendar-unpublished-suppress" value="1" <?php checked($sup_checked); ?> />
-                    <strong><?php esc_html_e('Allow linked calendar event to remain unpublished', 'vms'); ?></strong>
+                    <strong><?php esc_html_e('Allow linked calendar event to remain unpublished', 'backstage-venue-manager'); ?></strong>
                     <?php
                         if (function_exists('vms_help_icon')) {
-                            vms_help_icon(__('When enabled, this Event Plan will not show “calendar event is not published” as Needs attention. Missing or trashed calendar links are still flagged.', 'vms'));
+                            vms_help_icon(__('When enabled, this Event Plan will not show “calendar event is not published” as Needs attention. Missing or trashed calendar links are still flagged.', 'backstage-venue-manager'));
                         }
                     ?>
                 </label>
-                <button type="button" class="button button-secondary vms-ml-10" id="vms-calendar-unpublished-suppress-save" disabled="disabled"><?php esc_html_e('Save warning setting', 'vms'); ?></button>
+                <button type="button" class="button button-secondary vms-ml-10" id="vms-calendar-unpublished-suppress-save" disabled="disabled"><?php esc_html_e('Save warning setting', 'backstage-venue-manager'); ?></button>
                 <span id="vms-calendar-unpublished-suppress-status" class="description vms-ml-10" aria-live="polite"></span>
             </div>
 
-            <p class="description"><?php esc_html_e('This only suppresses the “calendar event is not published” warning for this Event Plan. Missing or trashed calendar links are still flagged.', 'vms'); ?></p>
-            <p class="description"><?php esc_html_e('This setting now saves separately and does not update any other Event Plan fields.', 'vms'); ?></p>
+            <p class="description"><?php esc_html_e('This only suppresses the “calendar event is not published” warning for this Event Plan. Missing or trashed calendar links are still flagged.', 'backstage-venue-manager'); ?></p>
+            <p class="description"><?php esc_html_e('This setting now saves separately and does not update any other Event Plan fields.', 'backstage-venue-manager'); ?></p>
 
-            <p class="description"><?php esc_html_e('“Re-sync to Calendar” updates the existing calendar event and will not create a duplicate.', 'vms'); ?></p>
+            <p class="description"><?php esc_html_e('“Re-sync to Calendar” updates the existing calendar event and will not create a duplicate.', 'backstage-venue-manager'); ?></p>
 
             <?php endif; ?>
 

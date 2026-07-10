@@ -21,13 +21,13 @@ function vms_ticket_integrity_payment_gateway_health_defaults(): array
 	return array(
 		'version' => 1,
 		'status' => 'unknown',
-		'status_label' => __('Unknown', 'vms'),
+		'status_label' => __('Unknown', 'backstage-venue-manager'),
 		'summary' => '',
 		'diagnostic_message' => '',
 		'last_checked_gmt' => 0,
-		'last_checked_local' => __('Never', 'vms'),
+		'last_checked_local' => __('Never', 'backstage-venue-manager'),
 		'status_changed_gmt' => 0,
-		'status_changed_local' => __('Never', 'vms'),
+		'status_changed_local' => __('Never', 'backstage-venue-manager'),
 		'trigger' => '',
 		'site_environment' => array(),
 		'checkout' => array(),
@@ -48,13 +48,13 @@ function vms_ticket_integrity_payment_gateway_status_label(string $status): stri
 	$status = sanitize_key($status);
 	switch ($status) {
 		case 'ok':
-			return __('OK', 'vms');
+			return __('OK', 'backstage-venue-manager');
 		case 'warning':
-			return __('Warning', 'vms');
+			return __('Warning', 'backstage-venue-manager');
 		case 'critical':
-			return __('Critical', 'vms');
+			return __('Critical', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
@@ -132,7 +132,7 @@ function vms_ticket_integrity_payment_gateway_descriptor($gateway): array
 		$title = trim(wp_strip_all_tags((string) $gateway->method_title));
 	}
 	if ($title === '') {
-		$title = $id !== '' ? $id : __('Payment gateway', 'vms');
+		$title = $id !== '' ? $id : __('Payment gateway', 'backstage-venue-manager');
 	}
 
 	$enabled = false;
@@ -221,7 +221,7 @@ function vms_ticket_integrity_payment_gateway_objects(): array
 	} catch (Throwable $error) {
 		vms_ticket_integrity_log_event(
 			'payment_gateway_health_error',
-			__('Payment gateway health could not load WooCommerce gateways.', 'vms'),
+			__('Payment gateway health could not load WooCommerce gateways.', 'backstage-venue-manager'),
 			array(
 				'error' => $error->getMessage(),
 			)
@@ -272,7 +272,7 @@ function vms_ticket_integrity_checkout_gateway_snapshot(array $gateways): array
 	if (!$checkout_list_obtained && !empty($enabled_gateways)) {
 		$available_gateways = $enabled_gateways;
 		$source = 'enabled_gateway_fallback';
-		$warning = __('WooCommerce did not return a live checkout gateway list in this context, so checkout availability was inferred from enabled gateway configuration.', 'vms');
+		$warning = __('WooCommerce did not return a live checkout gateway list in this context, so checkout availability was inferred from enabled gateway configuration.', 'backstage-venue-manager');
 	}
 
 	return array(
@@ -390,7 +390,7 @@ function vms_ticket_integrity_payment_gateway_site_environment(): array
 		'is_live' => $is_live,
 		'home_url' => esc_url_raw($home_url),
 		'host' => $host,
-		'label' => $is_live ? __('Live / Production', 'vms') : __('Non-production', 'vms'),
+		'label' => $is_live ? __('Live / Production', 'backstage-venue-manager') : __('Non-production', 'backstage-venue-manager'),
 	);
 }
 
@@ -447,7 +447,7 @@ function vms_ticket_integrity_square_gateway_snapshot(array $gateways, array $ch
 		} catch (Throwable $error) {
 			vms_ticket_integrity_log_event(
 				'payment_gateway_health_error',
-				__('Payment gateway health could not inspect the Square settings handler.', 'vms'),
+				__('Payment gateway health could not inspect the Square settings handler.', 'backstage-venue-manager'),
 				array(
 					'error' => $error->getMessage(),
 				)
@@ -506,15 +506,15 @@ function vms_ticket_integrity_square_gateway_snapshot(array $gateways, array $ch
 	}
 
 	$environment_label = ($environment === 'sandbox')
-		? __('Sandbox', 'vms')
-		: (($environment === 'production') ? __('Production', 'vms') : __('Unknown', 'vms'));
+		? __('Sandbox', 'backstage-venue-manager')
+		: (($environment === 'production') ? __('Production', 'backstage-venue-manager') : __('Unknown', 'backstage-venue-manager'));
 
 	return array(
 		'plugin_active' => $plugin_active,
 		'plugin_version' => $plugin_version,
 		'gateway_present' => !empty($gateway_descriptor) || !empty($gateway_settings),
 		'gateway_id' => (string) ($gateway_descriptor['id'] ?? ''),
-		'gateway_title' => (string) ($gateway_descriptor['title'] ?? __('Square', 'vms')),
+		'gateway_title' => (string) ($gateway_descriptor['title'] ?? __('Square', 'backstage-venue-manager')),
 		'gateway_enabled' => $gateway_enabled,
 		'connection_present' => ($has_access_token && $location_id_present),
 		'authenticated' => $has_access_token,
@@ -719,7 +719,7 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 		if (function_exists('vms_ticket_integrity_log_event')) {
 			vms_ticket_integrity_log_event(
 				'payment_gateway_health_critical',
-				__('Payment gateway health entered a critical state.', 'vms'),
+				__('Payment gateway health entered a critical state.', 'backstage-venue-manager'),
 				array(
 					'status' => $current_status,
 					'message' => (string) ($health['summary'] ?? ''),
@@ -730,7 +730,7 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 	} elseif ($current_status === 'ok' && $previous_status === 'critical' && function_exists('vms_ticket_integrity_log_event')) {
 		vms_ticket_integrity_log_event(
 			'payment_gateway_health_recovered',
-			__('Payment gateway health recovered to OK.', 'vms'),
+			__('Payment gateway health recovered to OK.', 'backstage-venue-manager'),
 			array(
 				'message' => (string) ($health['summary'] ?? ''),
 			)
@@ -773,21 +773,21 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 	}
 
 	$site_name = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
-	$subject = sprintf('[%s] %s', $site_name, __('Payment Gateway Health CRITICAL', 'vms'));
+	$subject = sprintf('[%s] %s', $site_name, __('Payment Gateway Health CRITICAL', 'backstage-venue-manager'));
 
 	$lines = array();
-	$lines[] = __('Payment Gateway Health', 'vms');
+	$lines[] = __('Payment Gateway Health', 'backstage-venue-manager');
 	$lines[] = str_repeat('=', 22);
-	$lines[] = sprintf(__('Detected: %s', 'vms'), vms_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? time())));
-	$lines[] = sprintf(__('Status: %s', 'vms'), vms_ticket_integrity_payment_gateway_status_label((string) ($health['status'] ?? 'critical')));
+	$lines[] = sprintf(__('Detected: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? time())));
+	$lines[] = sprintf(__('Status: %s', 'backstage-venue-manager'), vms_ticket_integrity_payment_gateway_status_label((string) ($health['status'] ?? 'critical')));
 	$lines[] = '';
-	$lines[] = sanitize_text_field((string) ($health['summary'] ?? __('Payment gateway health is critical.', 'vms')));
+	$lines[] = sanitize_text_field((string) ($health['summary'] ?? __('Payment gateway health is critical.', 'backstage-venue-manager')));
 	$diagnostic = trim((string) ($health['diagnostic_message'] ?? ''));
 	if ($diagnostic !== '') {
 		$lines[] = $diagnostic;
 	}
 	$lines[] = '';
-	$lines[] = __('Failed checks:', 'vms');
+	$lines[] = __('Failed checks:', 'backstage-venue-manager');
 	foreach ((array) ($health['failed_checks'] ?? array()) as $check) {
 		if (!is_array($check)) {
 			continue;
@@ -799,7 +799,7 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 		);
 	}
 	$lines[] = '';
-	$lines[] = sprintf(__('Review the full monitor: %s', 'vms'), vms_ticket_integrity_admin_url());
+	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), vms_ticket_integrity_admin_url());
 
 	$body_text = implode("\n", $lines);
 	$result = function_exists('vms_notify_provider_core_email_send')
@@ -841,7 +841,7 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 	if (function_exists('vms_ticket_integrity_log_event')) {
 		vms_ticket_integrity_log_event(
 			!empty($result['success']) ? 'payment_gateway_health_email_sent' : 'payment_gateway_health_email_failed',
-			!empty($result['success']) ? __('Payment gateway health critical email sent.', 'vms') : __('Payment gateway health critical email failed to send.', 'vms'),
+			!empty($result['success']) ? __('Payment gateway health critical email sent.', 'backstage-venue-manager') : __('Payment gateway health critical email failed to send.', 'backstage-venue-manager'),
 			array(
 				'recipient' => $recipient,
 				'status' => (string) ($health['status'] ?? 'critical'),
@@ -866,18 +866,18 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	if (empty($checkout['available_count'])) {
 		$checks[] = vms_ticket_integrity_payment_gateway_check(
 			'woocommerce_payment_methods',
-			__('WooCommerce payment methods available', 'vms'),
+			__('WooCommerce payment methods available', 'backstage-venue-manager'),
 			'critical',
-			__('No payment methods are currently available at checkout.', 'vms')
+			__('No payment methods are currently available at checkout.', 'backstage-venue-manager')
 		);
 	} else {
 		$checks[] = vms_ticket_integrity_payment_gateway_check(
 			'woocommerce_payment_methods',
-			__('WooCommerce payment methods available', 'vms'),
+			__('WooCommerce payment methods available', 'backstage-venue-manager'),
 			'ok',
 			sprintf(
 				/* translators: 1: count, 2: gateway titles */
-				__('Checkout currently has %1$d payment method(s): %2$s.', 'vms'),
+				__('Checkout currently has %1$d payment method(s): %2$s.', 'backstage-venue-manager'),
 				absint($checkout['available_count']),
 				implode(', ', array_slice((array) ($checkout['available_gateway_titles'] ?? array()), 0, 5))
 			)
@@ -885,65 +885,65 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	}
 
 	$square_gateway_status = 'ok';
-	$square_gateway_message = __('WooCommerce Square is active and the card gateway is enabled.', 'vms');
+	$square_gateway_message = __('WooCommerce Square is active and the card gateway is enabled.', 'backstage-venue-manager');
 	if (!empty($square['expected']) && empty($square['plugin_active'])) {
 		$square_gateway_status = 'critical';
-		$square_gateway_message = __('WooCommerce Square appears to be expected on this site, but the plugin is not active.', 'vms');
+		$square_gateway_message = __('WooCommerce Square appears to be expected on this site, but the plugin is not active.', 'backstage-venue-manager');
 	} elseif (!empty($square['plugin_active']) && !$square['gateway_enabled']) {
 		if (absint($checkout['available_count'] ?? 0) === 0) {
 			$square_gateway_status = 'critical';
-			$square_gateway_message = __('Square is disabled and checkout does not currently have any fallback payment methods.', 'vms');
+			$square_gateway_message = __('Square is disabled and checkout does not currently have any fallback payment methods.', 'backstage-venue-manager');
 		} elseif (!empty($square['expected'])) {
 			$square_gateway_status = 'warning';
-			$square_gateway_message = __('Square is disabled, but other payment methods are still configured.', 'vms');
+			$square_gateway_message = __('Square is disabled, but other payment methods are still configured.', 'backstage-venue-manager');
 		} else {
-			$square_gateway_message = __('Square is installed but its card gateway is disabled.', 'vms');
+			$square_gateway_message = __('Square is installed but its card gateway is disabled.', 'backstage-venue-manager');
 		}
 	} elseif (empty($square['plugin_active'])) {
-		$square_gateway_message = __('WooCommerce Square is not active on this site.', 'vms');
+		$square_gateway_message = __('WooCommerce Square is not active on this site.', 'backstage-venue-manager');
 	}
 	$checks[] = vms_ticket_integrity_payment_gateway_check(
 		'square_gateway_status',
-		__('Square gateway status', 'vms'),
+		__('Square gateway status', 'backstage-venue-manager'),
 		$square_gateway_status,
 		$square_gateway_message
 	);
 
 	$square_connection_status = 'ok';
-	$square_connection_message = __('Square is connected, authenticated, and using Production.', 'vms');
+	$square_connection_message = __('Square is connected, authenticated, and using Production.', 'backstage-venue-manager');
 	if (!empty($square['expected']) && (!$square['authenticated'] || !$square['has_location_id'] || !$square['connection_present'])) {
 		$square_connection_status = 'critical';
-		$square_connection_message = __('Square appears disconnected or missing required authentication/location data.', 'vms');
+		$square_connection_message = __('Square appears disconnected or missing required authentication/location data.', 'backstage-venue-manager');
 	} elseif (!empty($square['is_live_sandbox'])) {
 		$square_connection_status = 'critical';
-		$square_connection_message = __('This live site is using Square Sandbox instead of Production.', 'vms');
+		$square_connection_message = __('This live site is using Square Sandbox instead of Production.', 'backstage-venue-manager');
 	} elseif (!empty($square['gateway_enabled']) && empty($square['available_at_checkout']) && !empty($checkout['available_count'])) {
 		$square_connection_status = 'warning';
-		$square_connection_message = __('Square is enabled but is not currently one of the checkout payment methods being offered.', 'vms');
+		$square_connection_message = __('Square is enabled but is not currently one of the checkout payment methods being offered.', 'backstage-venue-manager');
 	} elseif (($square['environment'] ?? '') === 'sandbox') {
-		$square_connection_message = __('Square is connected and using Sandbox on a non-production environment.', 'vms');
+		$square_connection_message = __('Square is connected and using Sandbox on a non-production environment.', 'backstage-venue-manager');
 	}
 	$checks[] = vms_ticket_integrity_payment_gateway_check(
 		'square_connection_health',
-		__('Square connection health', 'vms'),
+		__('Square connection health', 'backstage-venue-manager'),
 		$square_connection_status,
 		$square_connection_message
 	);
 
 	$apple_pay_status = 'ok';
-	$apple_pay_message = __('Apple Pay domain registration is healthy or not enabled.', 'vms');
+	$apple_pay_message = __('Apple Pay domain registration is healthy or not enabled.', 'backstage-venue-manager');
 	if (!empty($apple_pay['failed']) && !empty($checkout['available_count'])) {
 		$apple_pay_status = 'warning';
-		$apple_pay_message = __('Apple Pay domain registration failed, but regular checkout payment methods are still available.', 'vms');
+		$apple_pay_message = __('Apple Pay domain registration failed, but regular checkout payment methods are still available.', 'backstage-venue-manager');
 	} elseif (!empty($apple_pay['failed'])) {
 		$apple_pay_status = 'warning';
-		$apple_pay_message = __('Apple Pay domain registration failed.', 'vms');
+		$apple_pay_message = __('Apple Pay domain registration failed.', 'backstage-venue-manager');
 	} elseif (!empty($apple_pay['enabled']) && empty($apple_pay['domain_registered']) && empty($apple_pay['registration_attempted'])) {
-		$apple_pay_message = __('Apple Pay is enabled, but the domain registration has not been attempted yet.', 'vms');
+		$apple_pay_message = __('Apple Pay is enabled, but the domain registration has not been attempted yet.', 'backstage-venue-manager');
 	}
 	$checks[] = vms_ticket_integrity_payment_gateway_check(
 		'apple_pay_registration',
-		__('Apple Pay registration', 'vms'),
+		__('Apple Pay registration', 'backstage-venue-manager'),
 		$apple_pay_status,
 		$apple_pay_message
 	);
@@ -961,18 +961,18 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	if ($overall_status === 'critical') {
 		$summary = vms_ticket_integrity_payment_gateway_summarize_failures($checks);
 		if ($summary === '') {
-			$summary = __('Payment gateway health is in a critical state.', 'vms');
+			$summary = __('Payment gateway health is in a critical state.', 'backstage-venue-manager');
 		}
-		$diagnostic_message = __('Investigate the Square connection, enabled payment gateways, and checkout payment method availability immediately.', 'vms');
+		$diagnostic_message = __('Investigate the Square connection, enabled payment gateways, and checkout payment method availability immediately.', 'backstage-venue-manager');
 	} elseif ($overall_status === 'warning') {
 		$summary = vms_ticket_integrity_payment_gateway_summarize_failures($checks);
 		if ($summary === '') {
-			$summary = __('Payment gateway health has warnings.', 'vms');
+			$summary = __('Payment gateway health has warnings.', 'backstage-venue-manager');
 		}
-		$diagnostic_message = __('Checkout can still take payment, but one or more payment gateway checks need attention.', 'vms');
+		$diagnostic_message = __('Checkout can still take payment, but one or more payment gateway checks need attention.', 'backstage-venue-manager');
 	} else {
-		$summary = __('Checkout has at least one available payment method and Square is connected.', 'vms');
-		$diagnostic_message = __('Square is connected, enabled, and the checkout payment gateway list is healthy.', 'vms');
+		$summary = __('Checkout has at least one available payment method and Square is connected.', 'backstage-venue-manager');
+		$diagnostic_message = __('Square is connected, enabled, and the checkout payment gateway list is healthy.', 'backstage-venue-manager');
 	}
 
 	if (!empty($checkout['warning'])) {
@@ -1036,17 +1036,17 @@ function vms_ticket_integrity_render_payment_gateway_admin_notice(): void
 
 	$message = trim((string) ($notice['message'] ?? ''));
 	if ($message === '') {
-		$message = __('Payment gateway health is critical.', 'vms');
+		$message = __('Payment gateway health is critical.', 'backstage-venue-manager');
 	}
 
 	$first_detected = absint($notice['first_detected_failure_gmt'] ?? 0);
 
 	echo '<div class="notice notice-error">';
-	echo '<p><strong>' . esc_html__('Payment Gateway Health:', 'vms') . '</strong> ' . esc_html($message) . '</p>';
+	echo '<p><strong>' . esc_html__('Payment Gateway Health:', 'backstage-venue-manager') . '</strong> ' . esc_html($message) . '</p>';
 	if ($first_detected > 0) {
-		echo '<p>' . esc_html(sprintf(__('First detected: %s', 'vms'), vms_ticket_integrity_format_datetime($first_detected))) . '</p>';
+		echo '<p>' . esc_html(sprintf(__('First detected: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime($first_detected))) . '</p>';
 	}
-	echo '<p><a class="button button-secondary" href="' . esc_url(vms_ticket_integrity_admin_url()) . '">' . esc_html__('Open Ticket Integrity', 'vms') . '</a></p>';
+	echo '<p><a class="button button-secondary" href="' . esc_url(vms_ticket_integrity_admin_url()) . '">' . esc_html__('Open Ticket Integrity', 'backstage-venue-manager') . '</a></p>';
 	echo '</div>';
 }
 add_action('admin_notices', 'vms_ticket_integrity_render_payment_gateway_admin_notice', 18);

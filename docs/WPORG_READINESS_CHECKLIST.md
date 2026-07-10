@@ -97,8 +97,8 @@ Scope: `WPORG-01B` metadata alignment, `WPORG-02` compliance gates, `WPORG-03` b
 
 ## Policy State For `1.0.0`
 
-- [x] Public name: `VMS – Venue Management System`
-- [x] Public slug / text domain: `vms`
+- [x] Public name: `Backstage Venue Manager`
+- [x] Requested slug / text domain: `backstage-venue-manager`
 - [x] Public version: `1.0.0`
 - [x] Minimum WordPress version: `6.8`
 - [x] Minimum PHP version: `8.3`

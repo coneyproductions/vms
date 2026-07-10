@@ -418,7 +418,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 									'derivation_source' => 'authoritative_zero_capacity',
 									'confidence_level' => 'authoritative',
 									'expected_effect' => 'close',
-									'reason_text' => __('Cancellation closeout intentionally hid this Woo event product and forced stock to 0 / outofstock.', 'vms'),
+									'reason_text' => __('Cancellation closeout intentionally hid this Woo event product and forced stock to 0 / outofstock.', 'backstage-venue-manager'),
 									'writer_branch' => 'cancellation_closeout',
 									'result_health' => 'expected_closed_state',
 								));
@@ -429,7 +429,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 									'derivation_source' => 'authoritative_zero_capacity',
 									'confidence_level' => 'authoritative',
 									'expected_effect' => 'close',
-									'reason_text' => __('Cancellation closeout intentionally hid this Woo event product and forced stock to 0 / outofstock.', 'vms'),
+									'reason_text' => __('Cancellation closeout intentionally hid this Woo event product and forced stock to 0 / outofstock.', 'backstage-venue-manager'),
 									'writer_branch' => 'cancellation_closeout',
 									'result_health' => 'expected_closed_state',
 								));
@@ -1215,16 +1215,16 @@ if (!function_exists('vms_cancellation_notification_kind_label')) {
 		$kind = sanitize_key($kind);
 		switch ($kind) {
 			case 'vendor_primary':
-				return __('Primary Vendor', 'vms');
+				return __('Primary Vendor', 'backstage-venue-manager');
 			case 'vendor_secondary':
-				return __('Secondary Vendor', 'vms');
+				return __('Secondary Vendor', 'backstage-venue-manager');
 			case 'vendor_lineup':
 			case 'assigned_vendor':
-				return __('Vendor', 'vms');
+				return __('Vendor', 'backstage-venue-manager');
 			case 'staff':
-				return __('Staff', 'vms');
+				return __('Staff', 'backstage-venue-manager');
 			default:
-				return __('Recipient', 'vms');
+				return __('Recipient', 'backstage-venue-manager');
 		}
 	}
 }
@@ -1395,7 +1395,7 @@ if (!function_exists('vms_cancellation_resolve_staff_notification_recipient')) {
 		$user_label = ($user instanceof WP_User) ? trim((string) $user->display_name) : '';
 		$label = $user_label !== '' ? $user_label : $post_title;
 		if ($label === '') {
-			$label = sprintf(__('Staff #%d', 'vms'), $staff_id);
+			$label = sprintf(__('Staff #%d', 'backstage-venue-manager'), $staff_id);
 		}
 
 		$candidates = array(
@@ -1453,10 +1453,10 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 	$skipped_row_index = array();
 	$discoverable_missing_email_count = 0;
 	$group_labels = array(
-		'vendor' => __('Vendors', 'vms'),
-		'secondary_vendor' => __('Secondary vendors', 'vms'),
-		'staff' => __('Staff', 'vms'),
-		'other' => __('Other recipients', 'vms'),
+		'vendor' => __('Vendors', 'backstage-venue-manager'),
+		'secondary_vendor' => __('Secondary vendors', 'backstage-venue-manager'),
+		'staff' => __('Staff', 'backstage-venue-manager'),
+		'other' => __('Other recipients', 'backstage-venue-manager'),
 	);
 
 	$build_row = static function (string $kind, int $entity_id, string $label, string $email, array $extra = array()): array {
@@ -1474,7 +1474,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		if ($kind_label === '') {
 			$kind_label = function_exists('vms_cancellation_notification_kind_label')
 				? vms_cancellation_notification_kind_label($kind)
-				: __('Recipient', 'vms');
+				: __('Recipient', 'backstage-venue-manager');
 		}
 		$recipient_type = isset($extra['recipient_type']) ? sanitize_key((string) $extra['recipient_type']) : '';
 		if ($recipient_type === '') {

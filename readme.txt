@@ -1,4 +1,4 @@
-=== VMS – Venue Management System ===
+=== Backstage Venue Manager ===
 Contributors: coneyproductions
 Tags: event management, venue management, vendor management, ticketing, woocommerce
 Requires at least: 6.8
@@ -12,16 +12,16 @@ Manage venue operations, event plans, vendor records, and optional ticketing wor
 
 == Description ==
 
-VMS helps venue operators manage event plans, vendor records, and related venue workflows from WordPress.
+Backstage Venue Manager helps venue operators manage event plans, vendor records, and related venue workflows from WordPress.
 
-Some features work on a baseline install. Other features are intentionally feature-gated behind optional integrations such as WooCommerce, The Events Calendar, or Event Tickets. When an optional dependency is missing, VMS is intended to keep loading while the dependent feature stays unavailable.
+Some features work on a baseline install. Other features are intentionally feature-gated behind optional integrations such as WooCommerce, The Events Calendar, or Event Tickets. When an optional dependency is missing, Backstage Venue Manager is intended to keep loading while the dependent feature stays unavailable.
 
-VMS 1.0.0 was runtime-tested on WordPress 6.8 and 7.0. Packaging, repo-root release tests, and direct WordPress boot smoke were also revalidated under PHP 8.3 during this release-candidate pass.
+Backstage Venue Manager 1.0.0 was runtime-tested on WordPress 6.8 and 7.0. Packaging, repo-root release tests, and direct WordPress boot smoke were also revalidated under PHP 8.3 during this release-candidate pass.
 
 == Installation ==
 
 1. Upload the plugin folder or ZIP to your WordPress site.
-2. Activate `VMS – Venue Management System`.
+2. Activate `Backstage Venue Manager`.
 3. Open the `VMS` admin menu and review the available modules for your site.
 4. Install WooCommerce only if you need commerce, admissions, or ticketing-related workflows that depend on it.
 5. Install The Events Calendar and Event Tickets only if you need event-linked ticketing workflows that depend on them.
@@ -30,33 +30,33 @@ VMS 1.0.0 was runtime-tested on WordPress 6.8 and 7.0. Packaging, repo-root rele
 
 == Frequently Asked Questions ==
 
-= Does VMS require WooCommerce? =
+= Does Backstage Venue Manager require WooCommerce? =
 
 No for baseline plugin loading. Commerce, admissions, and some ticketing workflows depend on WooCommerce.
 
-= Does VMS require The Events Calendar or Event Tickets? =
+= Does Backstage Venue Manager require The Events Calendar or Event Tickets? =
 
 No for baseline plugin loading. Event-linked ticketing workflows depend on those plugins when that feature set is in use.
 
 = What happens if optional dependencies are missing? =
 
-VMS is intended to keep loading. Features that depend on the missing plugin should fail closed instead of being treated as globally available.
+Backstage Venue Manager is intended to keep loading. Features that depend on the missing plugin should fail closed instead of being treated as globally available.
 
-= Does VMS send passive telemetry? =
+= Does Backstage Venue Manager send passive telemetry? =
 
-No. VMS does not include passive telemetry in the WordPress.org core plugin. External calls happen only when an operator enables or uses a feature that needs them.
+No. Backstage Venue Manager does not include passive telemetry in the WordPress.org core plugin. External calls happen only when an operator enables or uses a feature that needs them.
 
 = What happens on uninstall? =
 
-VMS retains operational data by default. The plugin ships with a safe uninstall routine that does not automatically remove stored data.
+Backstage Venue Manager retains operational data by default. The plugin ships with a safe uninstall routine that does not automatically remove stored data.
 
-= Does VMS support multisite? =
+= Does Backstage Venue Manager support multisite? =
 
 Multisite is not officially supported or verified for 1.0.0.
 
 = How are privacy export and erasure requests handled? =
 
-VMS 1.0.0 does not add dedicated exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
+Backstage Venue Manager 1.0.0 does not add dedicated exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
 
 = Where do I get support? =
 
@@ -68,18 +68,18 @@ Email coneyproductionsllc@gmail.com.
 
 == Screenshots ==
 
-1. VMS dashboard and top-level navigation.
+1. Backstage Venue Manager dashboard and top-level navigation.
 2. Event plan editing and venue operations workflow.
 3. Vendor records and vendor application workflow.
 4. Admissions and ticketing-related operator tools.
 
 == External Services ==
 
-VMS can connect to third-party services only when the corresponding feature is enabled or configured.
+Backstage Venue Manager can connect to third-party services only when the corresponding feature is enabled or configured.
 
 1. Cloudflare Turnstile
 Used by: vendor application anti-spam verification, when enabled.
-When enabled and configured with a site key, VMS loads Cloudflare's Turnstile client script on the vendor application form to render the verification widget.
+When enabled and configured with a site key, Backstage Venue Manager loads Cloudflare's Turnstile client script on the vendor application form to render the verification widget.
 Data sent: the Turnstile token and visitor IP address during server-side verification.
 Service docs and privacy: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/ and https://www.cloudflare.com/turnstile-privacy-policy/
 
@@ -95,7 +95,7 @@ Service terms and privacy: https://freemius.com/terms/ and https://freemius.com/
 
 4. Vendor-provided ICS calendar URLs
 Used by: vendor availability ICS sync, when an operator or vendor configures an ICS URL.
-Data sent: VMS fetches the configured ICS URL directly from the remote calendar host.
+Data sent: Backstage Venue Manager fetches the configured ICS URL directly from the remote calendar host.
 Service terms and privacy: depend on the configured calendar host.
 
 5. Operator-configured webhook endpoints
@@ -105,13 +105,13 @@ Service terms and privacy: depend on the configured webhook destination selected
 
 == Privacy / Data Retention ==
 
-VMS retains operational data by default on uninstall to reduce the risk of accidental data loss.
+Backstage Venue Manager retains operational data by default on uninstall to reduce the risk of accidental data loss.
 
-Depending on the modules in use, retained data can include settings, venue and vendor records, event-planning records, ticketing-related operational data, and related logs or status metadata. VMS 1.0.0 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
+Depending on the modules in use, retained data can include settings, venue and vendor records, event-planning records, ticketing-related operational data, and related logs or status metadata. Backstage Venue Manager 1.0.0 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
 
 == Optional Integrations / Dependencies ==
 
-WooCommerce, The Events Calendar, and Event Tickets are optional integrations for 1.0.0. VMS should continue loading without them, but dependent features will remain unavailable until the required plugin stack is installed.
+WooCommerce, The Events Calendar, and Event Tickets are optional integrations for 1.0.0. Backstage Venue Manager should continue loading without them, but dependent features will remain unavailable until the required plugin stack is installed.
 
 Optional add-ons are distributed as separate plugins. Installation, activation, and licensing actions are operator-initiated. The WordPress.org core plugin does not include remote code delivery.
 
@@ -127,8 +127,8 @@ Private security reports: coneyproductionsllc@gmail.com
 
 = 1.0.0 =
 
-* First public WordPress.org release for VMS.
-* Applied the approved public plugin name, author metadata, licensing metadata, and public-facing readme.
+* First public WordPress.org release for Backstage Venue Manager.
+* Applied the selected public plugin name, author metadata, licensing metadata, and public-facing readme.
 * Documented optional dependency boundaries, external-service disclosures, privacy notes, and uninstall data-retention behavior.
 
 == Upgrade Notice ==

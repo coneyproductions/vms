@@ -214,15 +214,15 @@ if (!function_exists('vms_tasks_generate_for_event')) {
 	{
 		$event_id = absint($event_id);
 		if ($event_id <= 0) {
-			return new WP_Error('vms_tasks_event_invalid', __('Event is invalid for task generation.', 'vms'));
+			return new WP_Error('vms_tasks_event_invalid', __('Event is invalid for task generation.', 'backstage-venue-manager'));
 		}
 		if (!vms_tasks_db_ready()) {
-			return new WP_Error('vms_tasks_db_not_ready', __('Task tables are not available. Tasks generation is disabled until schema setup succeeds.', 'vms'));
+			return new WP_Error('vms_tasks_db_not_ready', __('Task tables are not available. Tasks generation is disabled until schema setup succeeds.', 'backstage-venue-manager'));
 		}
 
 		$event_context = vms_tasks_get_event_context($event_id);
 		if (!is_array($event_context)) {
-			return new WP_Error('vms_tasks_event_context_missing', __('Event context is incomplete for task generation.', 'vms'));
+			return new WP_Error('vms_tasks_event_context_missing', __('Event context is incomplete for task generation.', 'backstage-venue-manager'));
 		}
 
 		$settings = vms_tasks_get_settings();
@@ -279,7 +279,7 @@ if (!function_exists('vms_tasks_generate_for_event')) {
 			if (!is_array($template)) {
 				$summary['warnings'][] = sprintf(
 					/* translators: %d is a task template id. */
-					__('Task template #%d is missing and was skipped.', 'vms'),
+					__('Task template #%d is missing and was skipped.', 'backstage-venue-manager'),
 					(int) $entry['template_id']
 				);
 				continue;

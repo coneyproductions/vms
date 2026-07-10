@@ -53,6 +53,6 @@ if (!function_exists('vms_social_require_manage_capability')) {
 			return;
 		}
 
-		wp_die(esc_html__('You do not have permission to manage social sharing.', 'vms'));
+		wp_die(esc_html__('You do not have permission to manage social sharing.', 'backstage-venue-manager'));
 	}
 }

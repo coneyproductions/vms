@@ -1239,7 +1239,7 @@ function vms_ticketing_b_apply_update_to_product(int $product_id, array $tier, i
         'derivation_source' => 'authoritative_config',
         'confidence_level' => 'authoritative',
         'expected_effect' => 'preserve',
-        'reason_text' => __('Ticket inventory was updated from the authoritative ticket configuration.', 'vms'),
+        'reason_text' => __('Ticket inventory was updated from the authoritative ticket configuration.', 'backstage-venue-manager'),
         'writer_branch' => 'ticket_inventory_update',
         'result_health' => 'manual_review',
         'result_health_label' => vms_ticketing_v2_inventory_result_health_label('manual_review'),
@@ -1258,7 +1258,7 @@ function vms_ticketing_b_apply_update_to_product(int $product_id, array $tier, i
             $remaining = max(0, $cap - $sold_qty);
             $reason_text = sprintf(
                 /* translators: 1: capacity, 2: sold quantity, 3: remaining quantity */
-                __('Ticket stock was recalculated from capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'vms'),
+                __('Ticket stock was recalculated from capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'backstage-venue-manager'),
                 $cap,
                 $sold_qty,
                 $remaining
@@ -1266,7 +1266,7 @@ function vms_ticketing_b_apply_update_to_product(int $product_id, array $tier, i
             if (!empty($sold_res['ignored_total_sales'])) {
                 $reason_text .= ' ' . sprintf(
                     /* translators: %d: Woo total_sales value */
-                    __('Woo total_sales reported %d for this product, but rebuild ignored that stale lifetime counter and trusted the paid-order scan instead.', 'vms'),
+                    __('Woo total_sales reported %d for this product, but rebuild ignored that stale lifetime counter and trusted the paid-order scan instead.', 'backstage-venue-manager'),
                     max(0, absint($sold_res['meta_total_sales'] ?? 0))
                 );
             }
@@ -1324,7 +1324,7 @@ function vms_ticketing_b_apply_update_to_product(int $product_id, array $tier, i
             // Do NOT touch _stock, so we don't accidentally expand inventory.
             // Still set basic constraints (capacity + no backorders) so Woo won't oversell.
             if ($cap <= 0) {
-                $reason_text = __('Ticket stock was set to 0 because the authoritative configured capacity is 0.', 'vms');
+                $reason_text = __('Ticket stock was set to 0 because the authoritative configured capacity is 0.', 'backstage-venue-manager');
                 vms_ticketing_v2_push_inventory_write_context(array(
                     'source_function' => 'vms_ticketing_b_apply_update_to_product',
                     'derivation_source' => 'authoritative_zero_capacity',
@@ -1374,7 +1374,7 @@ function vms_ticketing_b_apply_update_to_product(int $product_id, array $tier, i
                 $existing_stock = absint(get_post_meta($product_id, '_stock', true));
                 $reason_text = sprintf(
                     /* translators: 1: existing stock quantity */
-                    __('Sold quantity could not be derived safely, so rebuild preserved the existing stock quantity of %1$d and only normalized constraints and stock status.', 'vms'),
+                    __('Sold quantity could not be derived safely, so rebuild preserved the existing stock quantity of %1$d and only normalized constraints and stock status.', 'backstage-venue-manager'),
                     $existing_stock
                 );
                 vms_ticketing_v2_push_inventory_write_context(array(
@@ -1424,7 +1424,7 @@ function vms_ticketing_b_apply_update_to_product(int $product_id, array $tier, i
             }
         }
     } else {
-        $reason_text = __('Ticket inventory is unlimited for this branch, so manage-stock was disabled and stock status was forced open.', 'vms');
+        $reason_text = __('Ticket inventory is unlimited for this branch, so manage-stock was disabled and stock status was forced open.', 'backstage-venue-manager');
         vms_ticketing_v2_push_inventory_write_context(array(
             'source_function' => 'vms_ticketing_b_apply_update_to_product',
             'derivation_source' => 'authoritative_config',
@@ -2640,7 +2640,7 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
 
     try {
     if ($plan_id <= 0) {
-        return array('ok' => false, 'message' => __('Invalid event plan.', 'vms'));
+        return array('ok' => false, 'message' => __('Invalid event plan.', 'backstage-venue-manager'));
     }
 
     $k_id  = vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
@@ -2665,14 +2665,14 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
     if (!function_exists('tribe_create_event')) {
         return array(
             'ok'      => false,
-            'message' => __('The Events Calendar is required to create an event for tickets. Please install/activate The Events Calendar and try again.', 'vms'),
+            'message' => __('The Events Calendar is required to create an event for tickets. Please install/activate The Events Calendar and try again.', 'backstage-venue-manager'),
         );
     }
 
     if (!function_exists('vms_build_tec_event_args')) {
         return array(
             'ok'      => false,
-            'message' => __('VMS could not build the calendar event payload (internal missing function).', 'vms'),
+            'message' => __('VMS could not build the calendar event payload (internal missing function).', 'backstage-venue-manager'),
         );
     }
 
@@ -2680,7 +2680,7 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
     if (empty($args) || empty($args['EventStartDate']) || empty($args['EventEndDate'])) {
         return array(
             'ok'      => false,
-            'message' => __('Save the Event Date and Times first, then try again.', 'vms'),
+            'message' => __('Save the Event Date and Times first, then try again.', 'backstage-venue-manager'),
         );
     }
 
@@ -2695,7 +2695,7 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
         $msg = is_wp_error($new_id) ? $new_id->get_error_message() : 'Unknown error';
         return array(
             'ok'      => false,
-            'message' => sprintf(__('Failed to create the calendar event: %s', 'vms'), $msg),
+            'message' => sprintf(__('Failed to create the calendar event: %s', 'backstage-venue-manager'), $msg),
         );
     }
 
@@ -3323,31 +3323,31 @@ function vms_ticketing_v2_reconcile_event_plan_ticket_cache(int $plan_id, int $t
     $warnings = array();
     if (!empty($mapped_missing)) {
         $warnings[] = sprintf(
-            __('Mapped ticket products are missing: %s. Run Preview → Commit to repair mappings.', 'vms'),
+            __('Mapped ticket products are missing: %s. Run Preview → Commit to repair mappings.', 'backstage-venue-manager'),
             $format_ids($mapped_missing)
         );
     }
     if (!empty($mapped_trashed)) {
         $warnings[] = sprintf(
-            __('Mapped ticket products are in Trash: %s. Run Preview → Commit to repair mappings.', 'vms'),
+            __('Mapped ticket products are in Trash: %s. Run Preview → Commit to repair mappings.', 'backstage-venue-manager'),
             $format_ids($mapped_trashed)
         );
     }
     if (!empty($mapped_not_product)) {
         $warnings[] = sprintf(
-            __('Mapped ticket IDs are not Woo products: %s. Run Preview → Commit to repair mappings.', 'vms'),
+            __('Mapped ticket IDs are not Woo products: %s. Run Preview → Commit to repair mappings.', 'backstage-venue-manager'),
             $format_ids($mapped_not_product)
         );
     }
     if (!empty($mapped_marker_mismatch)) {
         $warnings[] = sprintf(
-            __('Mapped ticket products have marker mismatches: %s. Run Preview → Commit to restamp canonical IDs.', 'vms'),
+            __('Mapped ticket products have marker mismatches: %s. Run Preview → Commit to restamp canonical IDs.', 'backstage-venue-manager'),
             $format_ids($mapped_marker_mismatch)
         );
     }
     if (!empty($detected_unmapped)) {
         $warnings[] = sprintf(
-            __('Linked TEC event has ticket products not tracked in VMS sync map: %s. Preview before commit to reconcile.', 'vms'),
+            __('Linked TEC event has ticket products not tracked in VMS sync map: %s. Preview before commit to reconcile.', 'backstage-venue-manager'),
             $format_ids($detected_unmapped)
         );
     }
@@ -3371,12 +3371,12 @@ function vms_ticketing_v2_reconcile_event_plan_ticket_cache(int $plan_id, int $t
         'detected_unmapped_product_ids' => $detected_unmapped,
         'warnings' => $warnings,
         'computed_at_gmt' => $computed_at,
-        'note' => __('Ticket IDs were reconciled from Ticketing v2 sync. Click “Refresh ticket stats” to update sold/revenue totals.', 'vms'),
+        'note' => __('Ticket IDs were reconciled from Ticketing v2 sync. Click “Refresh ticket stats” to update sold/revenue totals.', 'backstage-venue-manager'),
     );
 
     $stats_v1 = array(
         'provider' => 'pending_refresh',
-        'revenue_label' => __('Ticket IDs were reconciled from Ticketing v2 sync. Click “Refresh ticket stats” to update sold/revenue totals.', 'vms'),
+        'revenue_label' => __('Ticket IDs were reconciled from Ticketing v2 sync. Click “Refresh ticket stats” to update sold/revenue totals.', 'backstage-venue-manager'),
         'currency' => function_exists('get_woocommerce_currency') ? (string) get_woocommerce_currency() : '',
         'computed_at_gmt' => $computed_at,
         'sync_status' => $sync_status,
@@ -3418,7 +3418,7 @@ function vms_ticketing_v2_reconcile_event_plan_ticket_cache(int $plan_id, int $t
         if (!$persist_ok) {
             $persist_failures = array_values(array_unique(array_filter(array_map('sanitize_key', $persist_failures))));
             $warnings[] = sprintf(
-                __('Ticket reconciliation was applied, but persistence verification failed for: %s. Refresh this page and verify canonical ticket IDs.', 'vms'),
+                __('Ticket reconciliation was applied, but persistence verification failed for: %s. Refresh this page and verify canonical ticket IDs.', 'backstage-venue-manager'),
                 implode(', ', $persist_failures)
             );
             $sync_status = 'mismatch';
@@ -3517,7 +3517,7 @@ function vms_ticketing_v2_enabled_entitlement_sequence_warnings(array $entitleme
         $sample = array_slice($missing, 0, 5);
         $more = count($missing) > 5 ? ' +' . (count($missing) - 5) . ' more' : '';
         $warnings[] = sprintf(
-            __('Enabled add-on labels appear to skip %1$s #%2$s%3$s. Review the saved config before committing if those add-ons should exist.', 'vms'),
+            __('Enabled add-on labels appear to skip %1$s #%2$s%3$s. Review the saved config before committing if those add-ons should exist.', 'backstage-venue-manager'),
             (string) ($group['prefix'] ?? 'Add-on'),
             implode(', #', $sample),
             $more
@@ -4503,7 +4503,7 @@ function vms_ticketing_v2_templates_apply_to_plan(int $plan_id, string $template
         vms_ticket_mutation_audit_push_context(array(
             'trigger_source' => 'manual_action',
             'change_type' => 'ticket_template_applied',
-            'summary_text' => __('Applied a saved ticket template to this event.', 'vms'),
+            'summary_text' => __('Applied a saved ticket template to this event.', 'backstage-venue-manager'),
             'source_function' => 'vms_ticketing_v2_templates_apply_to_plan',
             'source_hook' => sanitize_key((string) current_filter()),
             'requested_result_status' => 'success',
@@ -6623,17 +6623,17 @@ function vms_ticketing_v2_read_product_inventory_state(int $product_id): array {
 function vms_ticketing_v2_inventory_result_health_label(string $health): string {
     switch (sanitize_key($health)) {
         case 'expected_sellable_state':
-            return __('Write produced a sellable state', 'vms');
+            return __('Write produced a sellable state', 'backstage-venue-manager');
         case 'expected_closed_state':
-            return __('Write produced a valid closed state', 'vms');
+            return __('Write produced a valid closed state', 'backstage-venue-manager');
         case 'fallback_state_applied':
-            return __('Write completed from a fallback branch', 'vms');
+            return __('Write completed from a fallback branch', 'backstage-venue-manager');
         case 'fallback_closed_state':
-            return __('Fallback branch left the product closed', 'vms');
+            return __('Fallback branch left the product closed', 'backstage-venue-manager');
         case 'unexpected_closed_state':
-            return __('Write completed but left the product unexpectedly closed', 'vms');
+            return __('Write completed but left the product unexpectedly closed', 'backstage-venue-manager');
         default:
-            return __('Manual review required', 'vms');
+            return __('Manual review required', 'backstage-venue-manager');
     }
 }
 
@@ -7085,7 +7085,7 @@ function vms_ticketing_v2_upsert_entitlement_product(int $plan_id, int $tec_even
         'derivation_source' => 'entitlement_capacity_seed',
         'confidence_level' => 'authoritative',
         'expected_effect' => ($capacity > 0) ? 'reopen' : 'close',
-        'reason_text' => __('Add-on inventory was seeded from the authoritative entitlement configuration.', 'vms'),
+        'reason_text' => __('Add-on inventory was seeded from the authoritative entitlement configuration.', 'backstage-venue-manager'),
         'writer_branch' => 'entitlement_capacity_seed',
         'result_health' => ($capacity > 0) ? 'expected_sellable_state' : 'expected_closed_state',
         'result_health_label' => vms_ticketing_v2_inventory_result_health_label(($capacity > 0) ? 'expected_sellable_state' : 'expected_closed_state'),
@@ -7097,7 +7097,7 @@ function vms_ticketing_v2_upsert_entitlement_product(int $plan_id, int $tec_even
 
     $seed_reason = sprintf(
         /* translators: %d: configured entitlement capacity */
-        __('Add-on stock was seeded from configured capacity %d before sold-count reconciliation.', 'vms'),
+        __('Add-on stock was seeded from configured capacity %d before sold-count reconciliation.', 'backstage-venue-manager'),
         $capacity
     );
     vms_ticketing_v2_push_inventory_write_context(array(
@@ -7155,7 +7155,7 @@ function vms_ticketing_v2_upsert_entitlement_product(int $plan_id, int $tec_even
             $remaining = max(0, $capacity - $sold_qty);
             $reason_text = sprintf(
                 /* translators: 1: capacity, 2: sold quantity, 3: remaining quantity */
-                __('Add-on stock was recalculated from capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'vms'),
+                __('Add-on stock was recalculated from capacity %1$d minus sold quantity %2$d, leaving %3$d remaining.', 'backstage-venue-manager'),
                 $capacity,
                 $sold_qty,
                 $remaining
@@ -7163,7 +7163,7 @@ function vms_ticketing_v2_upsert_entitlement_product(int $plan_id, int $tec_even
             if (!empty($sold_res['ignored_total_sales_count'])) {
                 $reason_text .= ' ' . sprintf(
                     /* translators: %d: number of products */
-                    __('Rebuild ignored stale Woo total_sales counters on %d related add-on product(s) and trusted the paid-order scan instead.', 'vms'),
+                    __('Rebuild ignored stale Woo total_sales counters on %d related add-on product(s) and trusted the paid-order scan instead.', 'backstage-venue-manager'),
                     absint($sold_res['ignored_total_sales_count'])
                 );
             }
@@ -7234,7 +7234,7 @@ function vms_ticketing_v2_upsert_entitlement_product(int $plan_id, int $tec_even
             );
         } else {
             if ($capacity <= 0) {
-                $reason_text = __('Add-on stock was set to 0 because the authoritative configured capacity is 0.', 'vms');
+                $reason_text = __('Add-on stock was set to 0 because the authoritative configured capacity is 0.', 'backstage-venue-manager');
                 vms_ticketing_v2_push_inventory_write_context(array(
                     'source_function' => 'vms_ticketing_v2_upsert_entitlement_product',
                     'derivation_source' => 'authoritative_zero_capacity',
@@ -7300,7 +7300,7 @@ function vms_ticketing_v2_upsert_entitlement_product(int $plan_id, int $tec_even
                 $fallback_status = ($fallback_stock > 0) ? 'instock' : 'outofstock';
                 $reason_text = sprintf(
                     /* translators: %d: preserved stock quantity */
-                    __('Add-on sold quantity could not be derived safely, so rebuild preserved the existing stock quantity of %d and only normalized stock constraints.', 'vms'),
+                    __('Add-on sold quantity could not be derived safely, so rebuild preserved the existing stock quantity of %d and only normalized stock constraints.', 'backstage-venue-manager'),
                     $fallback_stock
                 );
                 vms_ticketing_v2_push_inventory_write_context(array(
@@ -7870,7 +7870,7 @@ function vms_ticketing_v2_preview_sync(int $plan_id): array {
         $warnings = array_merge($warnings, $reconciliation['warnings']);
     }
     if ($mode === 'vms_managed' && $tec_event_id <= 0) {
-        $warnings[] = __('Commit will create and link a draft TEC event shell before applying ticket and add-on changes.', 'vms');
+        $warnings[] = __('Commit will create and link a draft TEC event shell before applying ticket and add-on changes.', 'backstage-venue-manager');
     }
     $warnings = array_values(array_unique(array_filter(array_map('strval', $warnings))));
 
@@ -7995,30 +7995,30 @@ function vms_ticketing_v2_commit_error_summary(string $code): string {
     $code = sanitize_key($code);
     switch ($code) {
         case 'invalid_payload':
-            return __('VMS could not start the commit because the request payload was incomplete.', 'vms');
+            return __('VMS could not start the commit because the request payload was incomplete.', 'backstage-venue-manager');
         case 'forbidden':
-            return __('Your account does not have permission to commit ticket changes for this Event Plan.', 'vms');
+            return __('Your account does not have permission to commit ticket changes for this Event Plan.', 'backstage-venue-manager');
         case 'missing_preview':
-            return __('VMS could not find the Preview snapshot for this commit. The preview may have expired or never finished saving.', 'vms');
+            return __('VMS could not find the Preview snapshot for this commit. The preview may have expired or never finished saving.', 'backstage-venue-manager');
         case 'preview_owner_mismatch':
-            return __('The Preview snapshot belongs to a different user session, so VMS refused to apply it.', 'vms');
+            return __('The Preview snapshot belongs to a different user session, so VMS refused to apply it.', 'backstage-venue-manager');
         case 'preview_blocked':
-            return __('The last Preview is still blocked by one or more ticketing issues, so Commit was stopped on purpose.', 'vms');
+            return __('The last Preview is still blocked by one or more ticketing issues, so Commit was stopped on purpose.', 'backstage-venue-manager');
         case 'preview_not_managed':
         case 'not_managed_mode':
-            return __('Ticketing is not in VMS-managed mode, so Commit cannot create or update ticket products.', 'vms');
+            return __('Ticketing is not in VMS-managed mode, so Commit cannot create or update ticket products.', 'backstage-venue-manager');
         case 'stale_config':
-            return __('The ticketing settings changed after the last Preview, so that Preview is no longer safe to commit.', 'vms');
+            return __('The ticketing settings changed after the last Preview, so that Preview is no longer safe to commit.', 'backstage-venue-manager');
         case 'ticket_product_mapping_conflict':
-            return __('Two or more ticket rows are trying to control the same Woo ticket product, so Commit was stopped to protect existing sales.', 'vms');
+            return __('Two or more ticket rows are trying to control the same Woo ticket product, so Commit was stopped to protect existing sales.', 'backstage-venue-manager');
         case 'missing_tec_link':
-            return __('No linked TEC event was available for this commit, so VMS had nowhere safe to attach the tickets.', 'vms');
+            return __('No linked TEC event was available for this commit, so VMS had nowhere safe to attach the tickets.', 'backstage-venue-manager');
         case 'commit_not_ready_to_finalize':
-            return __('Commit batching had not finished preparing all ticket actions, so VMS refused to finalize a partial sync.', 'vms');
+            return __('Commit batching had not finished preparing all ticket actions, so VMS refused to finalize a partial sync.', 'backstage-venue-manager');
         case 'event_tickets_woo_unavailable':
-            return __('Event Tickets (WooCommerce) is not available right now, so VMS cannot create or sync tickets.', 'vms');
+            return __('Event Tickets (WooCommerce) is not available right now, so VMS cannot create or sync tickets.', 'backstage-venue-manager');
         default:
-            return __('Commit failed before VMS could safely apply the ticket changes.', 'vms');
+            return __('Commit failed before VMS could safely apply the ticket changes.', 'backstage-venue-manager');
     }
 }
 
@@ -8028,49 +8028,49 @@ function vms_ticketing_v2_commit_error_steps(string $code, array $diagnostics = 
 
     switch ($code) {
         case 'missing_preview':
-            $steps[] = __('Click “Preview sync” again to generate a fresh snapshot, then try Commit again.', 'vms');
+            $steps[] = __('Click “Preview sync” again to generate a fresh snapshot, then try Commit again.', 'backstage-venue-manager');
             break;
         case 'preview_blocked':
-            $steps[] = __('Review the blocked issues shown in Preview, fix them, then run “Preview sync” again.', 'vms');
+            $steps[] = __('Review the blocked issues shown in Preview, fix them, then run “Preview sync” again.', 'backstage-venue-manager');
             break;
         case 'preview_not_managed':
         case 'not_managed_mode':
-            $steps[] = __('Set Mode to “VMS-managed”, click “Save config”, then run “Preview sync” again before committing.', 'vms');
+            $steps[] = __('Set Mode to “VMS-managed”, click “Save config”, then run “Preview sync” again before committing.', 'backstage-venue-manager');
             break;
         case 'stale_config':
-            $steps[] = __('Run “Preview sync” again so VMS can compare the current config before committing.', 'vms');
+            $steps[] = __('Run “Preview sync” again so VMS can compare the current config before committing.', 'backstage-venue-manager');
             break;
         case 'ticket_product_mapping_conflict':
-            $steps[] = __('Review the ticket Preview for duplicate product IDs, then save/preview again after each ticket row points to its own product or has no mapped product.', 'vms');
+            $steps[] = __('Review the ticket Preview for duplicate product IDs, then save/preview again after each ticket row points to its own product or has no mapped product.', 'backstage-venue-manager');
             break;
         case 'missing_tec_link':
-            $steps[] = __('Run “Preview sync” again so VMS can create or relink the TEC event before committing.', 'vms');
+            $steps[] = __('Run “Preview sync” again so VMS can create or relink the TEC event before committing.', 'backstage-venue-manager');
             break;
         case 'commit_not_ready_to_finalize':
-            $steps[] = __('Run “Preview sync” again to rebuild the action list, then retry Commit from the beginning.', 'vms');
+            $steps[] = __('Run “Preview sync” again to rebuild the action list, then retry Commit from the beginning.', 'backstage-venue-manager');
             break;
         case 'event_tickets_woo_unavailable':
-            $steps[] = __('Activate Event Tickets, Event Tickets Plus, and WooCommerce, then try Preview → Commit again.', 'vms');
+            $steps[] = __('Activate Event Tickets, Event Tickets Plus, and WooCommerce, then try Preview → Commit again.', 'backstage-venue-manager');
             break;
         case 'preview_owner_mismatch':
-            $steps[] = __('Generate a fresh Preview in your current browser session, then commit that new Preview.', 'vms');
+            $steps[] = __('Generate a fresh Preview in your current browser session, then commit that new Preview.', 'backstage-venue-manager');
             break;
         case 'forbidden':
-            $steps[] = __('Use an account that can edit this Event Plan, or ask an authorized admin to run the commit.', 'vms');
+            $steps[] = __('Use an account that can edit this Event Plan, or ask an authorized admin to run the commit.', 'backstage-venue-manager');
             break;
     }
 
     $untracked = is_array($diagnostics['untracked_event_ticket_product_ids'] ?? null) ? array_values(array_filter(array_map('absint', $diagnostics['untracked_event_ticket_product_ids']))) : array();
     if (!empty($untracked)) {
         $steps[] = sprintf(
-            __('This linked TEC event already has ticket products VMS is not tracking: %s. VMS will not delete them automatically.', 'vms'),
+            __('This linked TEC event already has ticket products VMS is not tracking: %s. VMS will not delete them automatically.', 'backstage-venue-manager'),
             '#' . implode(', #', $untracked)
         );
     }
 
     $verified_issues = is_array($diagnostics['verified_ticket_rule_issues'] ?? null) ? array_values(array_filter(array_map('strval', $diagnostics['verified_ticket_rule_issues']))) : array();
     if (!empty($verified_issues)) {
-        $steps[] = __('At least one qualified ticket is missing its credential rule, so qualification enforcement may not work until you fix that row and preview again.', 'vms');
+        $steps[] = __('At least one qualified ticket is missing its credential rule, so qualification enforcement may not work until you fix that row and preview again.', 'backstage-venue-manager');
     }
 
     return array_values(array_unique(array_filter(array_map('strval', $steps))));
@@ -8128,7 +8128,7 @@ function vms_ticketing_v2_build_commit_failure_diagnostics(int $plan_id, array $
         }
         $ticket_label = trim((string) ($ticket_row['title'] ?? $ticket_row['ticket_key'] ?? 'Verified ticket'));
         $verified_ticket_rule_issues[] = sprintf(
-            __('%s is set to require credentials, but no credential program or direct-grant rule is configured.', 'vms'),
+            __('%s is set to require credentials, but no credential program or direct-grant rule is configured.', 'backstage-venue-manager'),
             $ticket_label
         );
     }
@@ -9337,7 +9337,7 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
                 'finished' => true,
                 'commit_interrupted' => true,
                 'results' => $results,
-                'warnings' => array(__('Some items failed. Fix the errors and run Preview sync again before continuing.', 'vms')),
+                'warnings' => array(__('Some items failed. Fix the errors and run Preview sync again before continuing.', 'backstage-venue-manager')),
                 'sync' => $partial_sync_out,
                 'total_actions' => $total_actions,
                 'batch_count' => (int) ($batch_meta['batch_count'] ?? 0),
@@ -9421,7 +9421,7 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
     if (is_array($legacy_cleanup) && !empty($legacy_cleanup['retired']) && is_array($legacy_cleanup['retired']) && function_exists('vms_add_admin_notice')) {
         $count = count($legacy_cleanup['retired']);
         if ($count > 0) {
-            vms_add_admin_notice(sprintf(__('Retired %d legacy SR-prefixed duplicate products for this event.', 'vms'), $count), 'warning');
+            vms_add_admin_notice(sprintf(__('Retired %d legacy SR-prefixed duplicate products for this event.', 'backstage-venue-manager'), $count), 'warning');
         }
     }
     if (is_array($legacy_cleanup) && !empty($legacy_cleanup['warnings']) && is_array($legacy_cleanup['warnings'])) {
@@ -9482,7 +9482,7 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
         && (string) ($saved_sync['config_hash'] ?? '') === $cfg_hash_now
     );
     if (!$sync_persist_ok) {
-        $recon_warnings[] = __('Commit completed, but VMS could not verify sync persistence. Refresh this page and run Preview again before any further Commit.', 'vms');
+        $recon_warnings[] = __('Commit completed, but VMS could not verify sync persistence. Refresh this page and run Preview again before any further Commit.', 'backstage-venue-manager');
         $recon_warnings = array_values(array_unique(array_filter(array_map('strval', $recon_warnings))));
         $reconciliation['warnings'] = $recon_warnings;
         $reconciliation['sync_status'] = 'mismatch';
@@ -9496,13 +9496,13 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
     if (function_exists('vms_add_admin_notice')) {
         if (!empty($recon_warnings)) {
             $sample = array_slice($recon_warnings, 0, 2);
-            $msg = __('Ticketing sync committed, but reconciliation found mismatches:', 'vms') . ' ' . implode(' ', $sample);
+            $msg = __('Ticketing sync committed, but reconciliation found mismatches:', 'backstage-venue-manager') . ' ' . implode(' ', $sample);
             if (count($recon_warnings) > 2) {
-                $msg .= ' ' . sprintf(__('(+%d more)', 'vms'), count($recon_warnings) - 2);
+                $msg .= ' ' . sprintf(__('(+%d more)', 'backstage-venue-manager'), count($recon_warnings) - 2);
             }
             vms_add_admin_notice($msg, 'warning');
         } else {
-            vms_add_admin_notice(__('Ticketing sync committed and canonical ticket IDs were reconciled. Click “Refresh ticket stats” to update sold/revenue totals.', 'vms'), 'success');
+            vms_add_admin_notice(__('Ticketing sync committed and canonical ticket IDs were reconciled. Click “Refresh ticket stats” to update sold/revenue totals.', 'backstage-venue-manager'), 'success');
         }
     }
 
@@ -9639,7 +9639,7 @@ function vms_ticketing_v2_ajax_save_config(): void {
             vms_ticket_mutation_audit_push_context(array(
                 'trigger_source' => 'manual_action',
                 'change_type' => 'ticket_config_saved',
-                'summary_text' => __('Saved Ticketing v2 settings for this event.', 'vms'),
+                'summary_text' => __('Saved Ticketing v2 settings for this event.', 'backstage-venue-manager'),
                 'source_function' => 'vms_ticketing_v2_ajax_save_config',
                 'source_hook' => sanitize_key((string) current_filter()),
                 'requested_result_status' => 'success',
@@ -9784,7 +9784,7 @@ function vms_ticketing_v2_ajax_clear_config(): void {
         vms_ticket_mutation_audit_push_context(array(
             'trigger_source' => 'manual_action',
             'change_type' => 'ticket_config_cleared',
-            'summary_text' => __('Cleared the saved Ticketing v2 config for this event.', 'vms'),
+            'summary_text' => __('Cleared the saved Ticketing v2 config for this event.', 'backstage-venue-manager'),
             'source_function' => 'vms_ticketing_v2_ajax_clear_config',
             'source_hook' => sanitize_key((string) current_filter()),
             'requested_result_status' => 'success',
@@ -9817,7 +9817,7 @@ function vms_ticketing_v2_ajax_init_from_legacy(): void {
 
     wp_send_json_error(array(
         'message' => 'legacy_init_retired',
-        'detail' => __('Legacy Ticketing initializer is retired. Configure Ticketing v2 directly and use Preview → Commit.', 'vms'),
+        'detail' => __('Legacy Ticketing initializer is retired. Configure Ticketing v2 directly and use Preview → Commit.', 'backstage-venue-manager'),
     ), 400);
 }
 add_action('wp_ajax_vms_ticketing_v2_save_config', 'vms_ticketing_v2_ajax_save_config');
@@ -9934,7 +9934,7 @@ function vms_ticketing_v2_ajax_commit_sync(): void {
         vms_ticket_mutation_audit_push_context(array(
             'trigger_source' => 'preview_commit',
             'change_type' => 'preview_commit_applied',
-            'summary_text' => __('Applied Preview / Commit changes for this event.', 'vms'),
+            'summary_text' => __('Applied Preview / Commit changes for this event.', 'backstage-venue-manager'),
             'source_function' => 'vms_ticketing_v2_ajax_commit_sync',
             'source_hook' => sanitize_key((string) current_filter()),
             'requested_result_status' => 'success',

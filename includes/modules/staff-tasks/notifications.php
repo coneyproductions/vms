@@ -30,7 +30,7 @@ if (!function_exists('vms_tasks_notification_context')) {
 			if ($event_label === '') {
 				$event_label = sprintf(
 					/* translators: %d is an event id. */
-					__('Event #%d', 'vms'),
+					__('Event #%d', 'backstage-venue-manager'),
 					$event_id
 				);
 			}
@@ -334,7 +334,7 @@ if (!function_exists('vms_tasks_notifications_register_cron_schedules')) {
 		if (!isset($schedules['vms_tasks_fifteen_minutes'])) {
 			$schedules['vms_tasks_fifteen_minutes'] = array(
 				'interval' => 15 * MINUTE_IN_SECONDS,
-				'display' => vms_i18n_runtime('Every 15 Minutes (VMS Staff Tasks)', 'vms'),
+				'display' => vms_i18n_runtime('Every 15 Minutes (VMS Staff Tasks)', 'backstage-venue-manager'),
 			);
 		}
 		return $schedules;

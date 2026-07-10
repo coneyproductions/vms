@@ -148,16 +148,16 @@ if (!function_exists('vms_safety_store_private_upload')) {
 	function vms_safety_store_private_upload(array $upload, array $context = array())
 	{
 		if (empty($upload['tmp_name']) || empty($upload['name'])) {
-			return new WP_Error('vms_safety_upload_missing', __('Missing upload payload.', 'vms'));
+			return new WP_Error('vms_safety_upload_missing', __('Missing upload payload.', 'backstage-venue-manager'));
 		}
 		if (!empty($upload['error']) && (int) $upload['error'] !== UPLOAD_ERR_OK) {
-			return new WP_Error('vms_safety_upload_error', __('Upload failed.', 'vms'));
+			return new WP_Error('vms_safety_upload_error', __('Upload failed.', 'backstage-venue-manager'));
 		}
 		if (!is_uploaded_file((string) $upload['tmp_name'])) {
-			return new WP_Error('vms_safety_upload_invalid', __('Invalid upload source.', 'vms'));
+			return new WP_Error('vms_safety_upload_invalid', __('Invalid upload source.', 'backstage-venue-manager'));
 		}
 		if (!vms_safety_private_files_ensure_dir()) {
-			return new WP_Error('vms_safety_upload_dir', __('Could not create private upload directory.', 'vms'));
+			return new WP_Error('vms_safety_upload_dir', __('Could not create private upload directory.', 'backstage-venue-manager'));
 		}
 
 		$filename = sanitize_file_name((string) $upload['name']);
@@ -172,7 +172,7 @@ if (!function_exists('vms_safety_store_private_upload')) {
 		$path = vms_safety_private_file_path($stored);
 
 		if (!@move_uploaded_file((string) $upload['tmp_name'], $path)) {
-			return new WP_Error('vms_safety_upload_move', __('Could not store uploaded file.', 'vms'));
+			return new WP_Error('vms_safety_upload_move', __('Could not store uploaded file.', 'backstage-venue-manager'));
 		}
 
 		$mime = wp_check_filetype($filename);
@@ -199,7 +199,7 @@ if (!function_exists('vms_safety_store_private_upload')) {
 		);
 		if (!$inserted) {
 			@unlink($path);
-			return new WP_Error('vms_safety_upload_db', __('Could not register uploaded file.', 'vms'));
+			return new WP_Error('vms_safety_upload_db', __('Could not register uploaded file.', 'backstage-venue-manager'));
 		}
 
 		$file_id = (int) $wpdb->insert_id;
@@ -212,23 +212,23 @@ if (!function_exists('vms_safety_private_file_download_handler')) {
 	function vms_safety_private_file_download_handler(): void
 	{
 		if (!current_user_can(vms_safety_view_capability())) {
-			wp_die(esc_html__('You do not have permission to download this file.', 'vms'));
+			wp_die(esc_html__('You do not have permission to download this file.', 'backstage-venue-manager'));
 		}
 
 		$file_id = isset($_GET['file_id']) ? absint($_GET['file_id']) : 0;
 		if ($file_id <= 0) {
-			wp_die(esc_html__('Invalid file id.', 'vms'));
+			wp_die(esc_html__('Invalid file id.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_private_file_download_' . $file_id);
 
 		$row = vms_safety_private_file_get($file_id);
 		if (!$row) {
-			wp_die(esc_html__('File not found.', 'vms'));
+			wp_die(esc_html__('File not found.', 'backstage-venue-manager'));
 		}
 
 		$path = vms_safety_private_file_path((string) $row['stored_filename']);
 		if (!file_exists($path)) {
-			wp_die(esc_html__('Stored file is missing.', 'vms'));
+			wp_die(esc_html__('Stored file is missing.', 'backstage-venue-manager'));
 		}
 
 		$size = (int) filesize($path);

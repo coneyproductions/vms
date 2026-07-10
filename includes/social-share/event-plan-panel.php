@@ -343,11 +343,11 @@ if (!function_exists('vms_social_event_panel_markup')) {
 		ob_start();
 		wp_nonce_field('vms_social_event_panel_save', 'vms_social_event_panel_nonce');
 
-		echo '<p class="description">' . esc_html__('Phase 1 manual toolkit: copy caption/link and open share dialogs. Queue actions currently use the Phase 0 provider framework.', 'vms') . '</p>';
-		echo '<p><label><input type="checkbox" name="vms_social_do_not_post" value="1" ' . checked(true, $do_not_post, false) . ' /> ' . esc_html__('Do not post this event', 'vms') . '</label></p>';
+		echo '<p class="description">' . esc_html__('Phase 1 manual toolkit: copy caption/link and open share dialogs. Queue actions currently use the Phase 0 provider framework.', 'backstage-venue-manager') . '</p>';
+		echo '<p><label><input type="checkbox" name="vms_social_do_not_post" value="1" ' . checked(true, $do_not_post, false) . ' /> ' . esc_html__('Do not post this event', 'backstage-venue-manager') . '</label></p>';
 
 		if ($flag_unpublished) {
-			echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__('Unpublished after social post', 'vms') . '</strong> ' . esc_html__('This event is now Draft but has at least one previously posted social queue item.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__('Unpublished after social post', 'backstage-venue-manager') . '</strong> ' . esc_html__('This event is now Draft but has at least one previously posted social queue item.', 'backstage-venue-manager') . '</p></div>';
 		}
 
 		echo '<div class="vms-social-platform-grid">';
@@ -369,51 +369,51 @@ if (!function_exists('vms_social_event_panel_markup')) {
 
 			echo '<section class="vms-social-platform-card">';
 			echo '<h4>' . esc_html(ucfirst($platform)) . '</h4>';
-			echo '<p><label><input type="checkbox" name="vms_social_enabled[' . esc_attr($platform) . ']" value="1" ' . checked(1, (int) ($platform_enabled[$platform] ?? 1), false) . ' /> ' . esc_html__('Enabled for this event', 'vms') . '</label></p>';
-			echo '<p><label>' . esc_html__('Template', 'vms') . ' <select name="vms_social_template[' . esc_attr($platform) . ']">';
-			echo '<option value="0" ' . selected(0, $selected_template_id, false) . '>' . esc_html__('Default', 'vms') . '</option>';
+			echo '<p><label><input type="checkbox" name="vms_social_enabled[' . esc_attr($platform) . ']" value="1" ' . checked(1, (int) ($platform_enabled[$platform] ?? 1), false) . ' /> ' . esc_html__('Enabled for this event', 'backstage-venue-manager') . '</label></p>';
+			echo '<p><label>' . esc_html__('Template', 'backstage-venue-manager') . ' <select name="vms_social_template[' . esc_attr($platform) . ']">';
+			echo '<option value="0" ' . selected(0, $selected_template_id, false) . '>' . esc_html__('Default', 'backstage-venue-manager') . '</option>';
 			foreach ($platform_templates as $tpl) {
 				echo '<option value="' . (int) $tpl['id'] . '" ' . selected($selected_template_id, (int) $tpl['id'], false) . '>#' . (int) $tpl['id'] . ' - ' . esc_html((string) $tpl['name']) . '</option>';
 			}
 			echo '</select></label></p>';
 
 			echo '<div class="vms-social-manual-tools">';
-			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr($caption) . '">' . esc_html__('Copy Caption', 'vms') . '</button> ';
-			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr($final_url) . '">' . esc_html__('Copy Link', 'vms') . '</button> ';
+			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr($caption) . '">' . esc_html__('Copy Caption', 'backstage-venue-manager') . '</button> ';
+			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr($final_url) . '">' . esc_html__('Copy Link', 'backstage-venue-manager') . '</button> ';
 			if ($share_url !== '') {
-				echo '<a class="button button-secondary" href="' . esc_url($share_url) . '" target="_blank" rel="noopener">' . esc_html__('Open Share Dialog', 'vms') . '</a>';
+				echo '<a class="button button-secondary" href="' . esc_url($share_url) . '" target="_blank" rel="noopener">' . esc_html__('Open Share Dialog', 'backstage-venue-manager') . '</a>';
 			}
 			echo '</div>';
-			echo '<p class="description"><strong>' . esc_html__('Preview:', 'vms') . '</strong> ' . esc_html(vms_social_trim_preview($caption, 180)) . '</p>';
+			echo '<p class="description"><strong>' . esc_html__('Preview:', 'backstage-venue-manager') . '</strong> ' . esc_html(vms_social_trim_preview($caption, 180)) . '</p>';
 			echo '</section>';
 		}
 		echo '</div>';
 
 		echo '<hr />';
-		echo '<h4>' . esc_html__('Queue Actions', 'vms') . '</h4>';
+		echo '<h4>' . esc_html__('Queue Actions', 'backstage-venue-manager') . '</h4>';
 		if (is_array($last_queue)) {
-			echo '<p><strong>' . esc_html__('Latest queue item:', 'vms') . '</strong> #' . (int) $last_queue['id'] . ' | ' . esc_html((string) $last_queue['status']) . ' | ' . esc_html((string) $last_queue['platform']) . '</p>';
+			echo '<p><strong>' . esc_html__('Latest queue item:', 'backstage-venue-manager') . '</strong> #' . (int) $last_queue['id'] . ' | ' . esc_html((string) $last_queue['status']) . ' | ' . esc_html((string) $last_queue['platform']) . '</p>';
 			if (!empty($last_queue['last_error_message'])) {
 				echo '<p class="description">' . esc_html((string) $last_queue['last_error_message']) . '</p>';
 			}
 		}
 
 		echo '<div class="vms-social-event-queue-form">';
-		echo '<p><label>' . esc_html__('Queue Platform', 'vms') . ' <select name="platform" form="' . esc_attr($queue_form_id) . '">';
+		echo '<p><label>' . esc_html__('Queue Platform', 'backstage-venue-manager') . ' <select name="platform" form="' . esc_attr($queue_form_id) . '">';
 		foreach (array('mock', 'webhook', 'facebook', 'linkedin', 'x') as $platform) {
 			echo '<option value="' . esc_attr($platform) . '">' . esc_html($platform) . '</option>';
 		}
 		echo '</select></label></p>';
-		echo '<p><label>' . esc_html__('Template ID (optional override)', 'vms') . ' <input type="number" min="0" step="1" name="template_id" value="0" form="' . esc_attr($queue_form_id) . '" /></label></p>';
-		echo '<p><label>' . esc_html__('Destination ID (optional override)', 'vms') . ' <input type="text" name="destination_id" value="" class="regular-text" form="' . esc_attr($queue_form_id) . '" /></label></p>';
-		echo '<p><label>' . esc_html__('Schedule (optional, local timezone)', 'vms') . ' <input type="datetime-local" name="scheduled_at_local" value="" form="' . esc_attr($queue_form_id) . '" /></label></p>';
-		echo '<p><button type="submit" class="button button-primary" form="' . esc_attr($queue_form_id) . '">' . esc_html__('Queue / Schedule', 'vms') . '</button></p>';
+		echo '<p><label>' . esc_html__('Template ID (optional override)', 'backstage-venue-manager') . ' <input type="number" min="0" step="1" name="template_id" value="0" form="' . esc_attr($queue_form_id) . '" /></label></p>';
+		echo '<p><label>' . esc_html__('Destination ID (optional override)', 'backstage-venue-manager') . ' <input type="text" name="destination_id" value="" class="regular-text" form="' . esc_attr($queue_form_id) . '" /></label></p>';
+		echo '<p><label>' . esc_html__('Schedule (optional, local timezone)', 'backstage-venue-manager') . ' <input type="datetime-local" name="scheduled_at_local" value="" form="' . esc_attr($queue_form_id) . '" /></label></p>';
+		echo '<p><button type="submit" class="button button-primary" form="' . esc_attr($queue_form_id) . '">' . esc_html__('Queue / Schedule', 'backstage-venue-manager') . '</button></p>';
 		echo '</div>';
 
 		if (is_array($last_queue)) {
 			echo '<div class="vms-social-event-queue-ops">';
-			echo '<button type="submit" class="button" form="' . esc_attr($queue_cancel_form_id) . '">' . esc_html__('Cancel Latest', 'vms') . '</button> ';
-			echo '<button type="submit" class="button button-secondary" form="' . esc_attr($queue_retry_form_id) . '">' . esc_html__('Retry Latest', 'vms') . '</button>';
+			echo '<button type="submit" class="button" form="' . esc_attr($queue_cancel_form_id) . '">' . esc_html__('Cancel Latest', 'backstage-venue-manager') . '</button> ';
+			echo '<button type="submit" class="button button-secondary" form="' . esc_attr($queue_retry_form_id) . '">' . esc_html__('Retry Latest', 'backstage-venue-manager') . '</button>';
 			echo '</div>';
 		}
 
@@ -429,7 +429,7 @@ if (!function_exists('vms_social_add_event_panel')) {
 	{
 		add_meta_box(
 			'vms_social_promotion',
-			__('Promotion (Social Sharing)', 'vms'),
+			__('Promotion (Social Sharing)', 'backstage-venue-manager'),
 			'vms_social_render_event_panel',
 			'vms_event_plan',
 			'normal',
@@ -443,14 +443,14 @@ if (!function_exists('vms_social_render_event_panel')) {
 	function vms_social_render_event_panel(WP_Post $post): void
 	{
 		if (!vms_social_current_user_can_manage()) {
-			echo '<p>' . esc_html__('You do not have permission to manage social sharing.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('You do not have permission to manage social sharing.', 'backstage-venue-manager') . '</p>';
 			return;
 		}
 
 		$event_plan_id = (int) $post->ID;
 		if (vms_social_event_panel_is_collapsed_for_user($post)) {
 			echo '<div class="vms-social-event-panel-shell" data-vms-social-lazy="1" data-vms-social-post-id="' . esc_attr((string) $event_plan_id) . '" data-vms-social-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-vms-social-nonce="' . esc_attr(wp_create_nonce('vms_social_load_event_panel')) . '">';
-			echo '<p class="description">' . esc_html__('Open this panel to load social templates, previews, and queue actions.', 'vms') . '</p>';
+			echo '<p class="description">' . esc_html__('Open this panel to load social templates, previews, and queue actions.', 'backstage-venue-manager') . '</p>';
 			echo '</div>';
 			return;
 		}
@@ -560,12 +560,12 @@ if (!function_exists('vms_social_handle_event_queue')) {
 
 		$event_plan_id = absint(vms_social_post_value('event_plan_id'));
 		if ($event_plan_id <= 0) {
-			wp_die(esc_html__('Invalid event plan.', 'vms'));
+			wp_die(esc_html__('Invalid event plan.', 'backstage-venue-manager'));
 		}
 
 		$do_not_post = (int) get_post_meta($event_plan_id, vms_social_event_panel_meta_key('do_not_post'), true) === 1;
 		if ($do_not_post) {
-			vms_social_redirect_event_edit($event_plan_id, __('Queue blocked: this event is marked Do Not Post.', 'vms'), 'warning');
+			vms_social_redirect_event_edit($event_plan_id, __('Queue blocked: this event is marked Do Not Post.', 'backstage-venue-manager'), 'warning');
 		}
 
 		$platform = sanitize_key(vms_social_post_value('platform'));
@@ -622,7 +622,7 @@ if (!function_exists('vms_social_handle_event_queue')) {
 		), $queue_id, $platform, get_current_user_id());
 
 		/* translators: %d: queued social post ID. */
-		vms_social_redirect_event_edit($event_plan_id, sprintf(__('Queue item #%d created.', 'vms'), $queue_id), 'success');
+		vms_social_redirect_event_edit($event_plan_id, sprintf(__('Queue item #%d created.', 'backstage-venue-manager'), $queue_id), 'success');
 	}
 }
 add_action('admin_post_vms_social_event_queue', 'vms_social_handle_event_queue');

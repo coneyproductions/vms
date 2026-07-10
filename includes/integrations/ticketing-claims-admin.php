@@ -143,51 +143,51 @@ if (!function_exists('vms_ticketing_claims_admin_notice_messages')) {
 		return array(
 			'grant_created' => array(
 				'type' => 'success',
-				'message' => __('Direct event grant created.', 'vms'),
+				'message' => __('Direct event grant created.', 'backstage-venue-manager'),
 			),
 			'grant_create_failed' => array(
 				'type' => 'error',
-				'message' => __('Could not create direct event grant.', 'vms'),
+				'message' => __('Could not create direct event grant.', 'backstage-venue-manager'),
 			),
 			'grant_note_saved' => array(
 				'type' => 'success',
-				'message' => __('Grant note updated.', 'vms'),
+				'message' => __('Grant note updated.', 'backstage-venue-manager'),
 			),
 			'grant_note_failed' => array(
 				'type' => 'error',
-				'message' => __('Could not update grant note.', 'vms'),
+				'message' => __('Could not update grant note.', 'backstage-venue-manager'),
 			),
 			'grant_status_saved' => array(
 				'type' => 'success',
-				'message' => __('Grant status updated.', 'vms'),
+				'message' => __('Grant status updated.', 'backstage-venue-manager'),
 			),
 			'grant_status_failed' => array(
 				'type' => 'error',
-				'message' => __('Could not update grant status.', 'vms'),
+				'message' => __('Could not update grant status.', 'backstage-venue-manager'),
 			),
 			'user_not_found' => array(
 				'type' => 'error',
-				'message' => __('No matching account was found for that search.', 'vms'),
+				'message' => __('No matching account was found for that search.', 'backstage-venue-manager'),
 			),
 			'event_missing' => array(
 				'type' => 'warning',
-				'message' => __('A linked calendar event is required before direct event grants can be created.', 'vms'),
+				'message' => __('A linked calendar event is required before direct event grants can be created.', 'backstage-venue-manager'),
 			),
 			'invalid_request' => array(
 				'type' => 'error',
-				'message' => __('Invalid request. Please try again.', 'vms'),
+				'message' => __('Invalid request. Please try again.', 'backstage-venue-manager'),
 			),
 			'confirm_used_required' => array(
 				'type' => 'error',
-				'message' => __('This grant already has usage history. Please confirm before disabling it.', 'vms'),
+				'message' => __('This grant already has usage history. Please confirm before disabling it.', 'backstage-venue-manager'),
 			),
 			'reservation_released' => array(
 				'type' => 'success',
-				'message' => __('Reservation released.', 'vms'),
+				'message' => __('Reservation released.', 'backstage-venue-manager'),
 			),
 			'reservation_release_failed' => array(
 				'type' => 'error',
-				'message' => __('Could not release reservation.', 'vms'),
+				'message' => __('Could not release reservation.', 'backstage-venue-manager'),
 			),
 		);
 	}
@@ -296,7 +296,7 @@ if (!function_exists('vms_ticketing_claims_user_display')) {
 				return $display;
 			}
 		}
-		return trim($fallback) !== '' ? $fallback : __('Unknown account', 'vms');
+		return trim($fallback) !== '' ? $fallback : __('Unknown account', 'backstage-venue-manager');
 	}
 }
 
@@ -305,7 +305,7 @@ if (!function_exists('vms_ticketing_claims_ticket_context_label')) {
 	{
 		$ticket_product_id = absint($ticket_product_id);
 		$ticket_key = sanitize_key($ticket_key);
-		$label = __('Any ticket', 'vms');
+		$label = __('Any ticket', 'backstage-venue-manager');
 		if ($ticket_product_id > 0) {
 			$title = trim((string) get_the_title($ticket_product_id));
 			$label = $title !== '' ? $title : ('#' . $ticket_product_id);
@@ -460,10 +460,10 @@ if (!function_exists('vms_ticketing_claims_grant_type_options')) {
 		}
 
 		return array(
-			'event_ticket_eligibility' => __('Event Ticket Eligibility', 'vms'),
-			'event_free_admit' => __('Free Admission', 'vms'),
-			'credential_benefit_override' => __('Credential Benefit Override', 'vms'),
-			'event_grant' => __('Event Grant', 'vms'),
+			'event_ticket_eligibility' => __('Event Ticket Eligibility', 'backstage-venue-manager'),
+			'event_free_admit' => __('Free Admission', 'backstage-venue-manager'),
+			'credential_benefit_override' => __('Credential Benefit Override', 'backstage-venue-manager'),
+			'event_grant' => __('Event Grant', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -540,13 +540,13 @@ if (!function_exists('vms_ticketing_claims_grant_status_change_message')) {
 	{
 		$status = sanitize_key($status);
 		$map = array(
-			'active' => __('Direct event grant restored to active status by operator.', 'vms'),
-			'reserved' => __('Direct event grant marked reserved by operator.', 'vms'),
-			'used' => __('Direct event grant marked used by operator.', 'vms'),
-			'expired' => __('Direct event grant marked expired by operator.', 'vms'),
-			'revoked' => __('Direct event grant revoked by operator.', 'vms'),
+			'active' => __('Direct event grant restored to active status by operator.', 'backstage-venue-manager'),
+			'reserved' => __('Direct event grant marked reserved by operator.', 'backstage-venue-manager'),
+			'used' => __('Direct event grant marked used by operator.', 'backstage-venue-manager'),
+			'expired' => __('Direct event grant marked expired by operator.', 'backstage-venue-manager'),
+			'revoked' => __('Direct event grant revoked by operator.', 'backstage-venue-manager'),
 		);
-		return $map[$status] ?? __('Direct event grant updated by operator.', 'vms');
+		return $map[$status] ?? __('Direct event grant updated by operator.', 'backstage-venue-manager');
 	}
 }
 
@@ -668,7 +668,7 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 	function vms_ticketing_claims_render_event_plan_metabox(WP_Post $post): void
 	{
 		if (!vms_ticketing_claims_current_user_can_manage()) {
-			echo '<p>' . esc_html__('You do not have permission to manage credential claims.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('You do not have permission to manage credential claims.', 'backstage-venue-manager') . '</p>';
 			return;
 		}
 
@@ -760,30 +760,30 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 		);
 
 		echo '<div class="vms-claims-admin" data-vms-tour="claims.grants.help">';
-		echo '<p class="description">' . esc_html__('Create and manage direct event grants for eligible accounts, with auditable status changes.', 'vms') . '</p>';
+		echo '<p class="description">' . esc_html__('Create and manage direct event grants for eligible accounts, with auditable status changes.', 'backstage-venue-manager') . '</p>';
 
 		if ($event_id <= 0) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__('This Event Plan is not linked to a calendar event yet. Link or create the event before managing direct grants.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__('This Event Plan is not linked to a calendar event yet. Link or create the event before managing direct grants.', 'backstage-venue-manager') . '</p></div>';
 		} else {
 			$event_label = $event_title !== '' ? $event_title : ('#' . $event_id);
-			echo '<p><strong>' . esc_html__('Linked Event:', 'vms') . '</strong> ' . esc_html($event_label) . ' <span class="vms-claims-meta">(' . esc_html__('Event ID', 'vms') . ': ' . esc_html((string) $event_id) . ')</span></p>';
+			echo '<p><strong>' . esc_html__('Linked Event:', 'backstage-venue-manager') . '</strong> ' . esc_html($event_label) . ' <span class="vms-claims-meta">(' . esc_html__('Event ID', 'backstage-venue-manager') . ': ' . esc_html((string) $event_id) . ')</span></p>';
 		}
 
 		echo '<hr />';
-		echo '<h4 data-vms-tour="claims.grants.lookup">' . esc_html__('Find Eligible Account', 'vms') . '</h4>';
+		echo '<h4 data-vms-tour="claims.grants.lookup">' . esc_html__('Find Eligible Account', 'backstage-venue-manager') . '</h4>';
 		echo '<p>';
-		echo '<input type="text" class="regular-text" name="vms_claim_lookup" value="' . esc_attr($search_q) . '" placeholder="' . esc_attr__('Search by email, login, or name', 'vms') . '" form="' . esc_attr($lookup_form_id) . '" />';
-		echo ' <button type="submit" class="button" form="' . esc_attr($lookup_form_id) . '">' . esc_html__('Search', 'vms') . '</button>';
+		echo '<input type="text" class="regular-text" name="vms_claim_lookup" value="' . esc_attr($search_q) . '" placeholder="' . esc_attr__('Search by email, login, or name', 'backstage-venue-manager') . '" form="' . esc_attr($lookup_form_id) . '" />';
+		echo ' <button type="submit" class="button" form="' . esc_attr($lookup_form_id) . '">' . esc_html__('Search', 'backstage-venue-manager') . '</button>';
 		if ($search_q !== '' || $selected_user) {
 			$clear_url = vms_ticketing_claims_event_edit_url((int) $post->ID);
-			echo ' <a class="button-link" href="' . esc_url($clear_url) . '">' . esc_html__('Clear', 'vms') . '</a>';
+			echo ' <a class="button-link" href="' . esc_url($clear_url) . '">' . esc_html__('Clear', 'backstage-venue-manager') . '</a>';
 		}
 		echo '</p>';
 
 		if ($search_q !== '') {
 			if (!empty($search_results)) {
 				echo '<table class="widefat striped vms-claims-search-table">';
-				echo '<thead><tr><th>' . esc_html__('Account', 'vms') . '</th><th>' . esc_html__('Email', 'vms') . '</th><th>' . esc_html__('Action', 'vms') . '</th></tr></thead><tbody>';
+				echo '<thead><tr><th>' . esc_html__('Account', 'backstage-venue-manager') . '</th><th>' . esc_html__('Email', 'backstage-venue-manager') . '</th><th>' . esc_html__('Action', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 				foreach ($search_results as $candidate) {
 					$pick_url = vms_ticketing_claims_event_edit_url((int) $post->ID, array(
 						'vms_claim_lookup' => $search_q,
@@ -792,29 +792,29 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 					echo '<tr>';
 					echo '<td>' . esc_html((string) $candidate->display_name) . ' <span class="vms-claims-meta">#' . esc_html((string) $candidate->ID) . '</span></td>';
 					echo '<td>' . esc_html((string) $candidate->user_email) . '</td>';
-					echo '<td><a class="button button-small" href="' . esc_url($pick_url) . '">' . esc_html__('Use Account', 'vms') . '</a></td>';
+					echo '<td><a class="button button-small" href="' . esc_url($pick_url) . '">' . esc_html__('Use Account', 'backstage-venue-manager') . '</a></td>';
 					echo '</tr>';
 				}
 				echo '</tbody></table>';
 			} else {
-				echo '<p class="vms-claims-empty">' . esc_html__('No matching account was found.', 'vms') . '</p>';
+				echo '<p class="vms-claims-empty">' . esc_html__('No matching account was found.', 'backstage-venue-manager') . '</p>';
 			}
 		}
 
 		echo '<hr />';
-		echo '<h4 data-vms-tour="claims.grants.create">' . esc_html__('Create Event Benefit Grant', 'vms') . '</h4>';
+		echo '<h4 data-vms-tour="claims.grants.create">' . esc_html__('Create Event Benefit Grant', 'backstage-venue-manager') . '</h4>';
 		if ($selected_user instanceof WP_User) {
-			echo '<p><strong>' . esc_html__('Selected account:', 'vms') . '</strong> ' . esc_html((string) $selected_user->display_name) . ' &lt;' . esc_html((string) $selected_user->user_email) . '&gt; <span class="vms-claims-meta">#' . esc_html((string) $selected_user->ID) . '</span></p>';
+			echo '<p><strong>' . esc_html__('Selected account:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $selected_user->display_name) . ' &lt;' . esc_html((string) $selected_user->user_email) . '&gt; <span class="vms-claims-meta">#' . esc_html((string) $selected_user->ID) . '</span></p>';
 		} else {
-			echo '<p class="description">' . esc_html__('Select an account above, or enter an exact account email/login below.', 'vms') . '</p>';
+			echo '<p class="description">' . esc_html__('Select an account above, or enter an exact account email/login below.', 'backstage-venue-manager') . '</p>';
 		}
 
 		echo '<div class="vms-claims-grant-form" data-vms-tour="claims.grants.form">';
 		echo '<table class="form-table" role="presentation"><tbody>';
 		if (!($selected_user instanceof WP_User)) {
-			echo '<tr><th scope="row"><label for="vms-claim-user-identity">' . esc_html__('Account Email or Login', 'vms') . '</label></th><td><input type="text" id="vms-claim-user-identity" name="user_identity" class="regular-text" required form="' . esc_attr($grant_form_id) . '"></td></tr>';
+			echo '<tr><th scope="row"><label for="vms-claim-user-identity">' . esc_html__('Account Email or Login', 'backstage-venue-manager') . '</label></th><td><input type="text" id="vms-claim-user-identity" name="user_identity" class="regular-text" required form="' . esc_attr($grant_form_id) . '"></td></tr>';
 		}
-		echo '<tr><th scope="row"><label for="vms-claim-grant-type">' . esc_html__('Grant Type', 'vms') . '</label></th><td><select id="vms-claim-grant-type" name="grant_type" form="' . esc_attr($grant_form_id) . '">';
+		echo '<tr><th scope="row"><label for="vms-claim-grant-type">' . esc_html__('Grant Type', 'backstage-venue-manager') . '</label></th><td><select id="vms-claim-grant-type" name="grant_type" form="' . esc_attr($grant_form_id) . '">';
 			foreach (vms_ticketing_claims_grant_type_options() as $grant_type_key => $grant_type_label) {
 				$grant_type_key = sanitize_key((string) $grant_type_key);
 				if ($grant_type_key === '') {
@@ -823,8 +823,8 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 				echo '<option value="' . esc_attr($grant_type_key) . '"' . selected($grant_type_key, 'event_grant', false) . '>' . esc_html((string) $grant_type_label) . '</option>';
 			}
 		echo '</select></td></tr>';
-		echo '<tr><th scope="row"><label for="vms-claim-ticket-product">' . esc_html__('Ticket Restriction', 'vms') . '</label></th><td><select id="vms-claim-ticket-product" name="ticket_product_id" form="' . esc_attr($grant_form_id) . '">';
-		echo '<option value="0">' . esc_html__('Any qualifying ticket for this event', 'vms') . '</option>';
+		echo '<tr><th scope="row"><label for="vms-claim-ticket-product">' . esc_html__('Ticket Restriction', 'backstage-venue-manager') . '</label></th><td><select id="vms-claim-ticket-product" name="ticket_product_id" form="' . esc_attr($grant_form_id) . '">';
+		echo '<option value="0">' . esc_html__('Any qualifying ticket for this event', 'backstage-venue-manager') . '</option>';
 		foreach ($ticket_options as $ticket) {
 			$product_id = absint($ticket['product_id'] ?? 0);
 			if ($product_id <= 0) {
@@ -836,8 +836,8 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 			echo '<option value="' . esc_attr((string) $product_id) . '">' . esc_html($label . $suffix) . '</option>';
 		}
 		echo '</select></td></tr>';
-		echo '<tr><th scope="row"><label for="vms-claim-program">' . esc_html__('Credential Type Restriction', 'vms') . '</label></th><td><select id="vms-claim-program" name="credential_program" form="' . esc_attr($grant_form_id) . '">';
-		echo '<option value="">' . esc_html__('Any approved credential type', 'vms') . '</option>';
+		echo '<tr><th scope="row"><label for="vms-claim-program">' . esc_html__('Credential Type Restriction', 'backstage-venue-manager') . '</label></th><td><select id="vms-claim-program" name="credential_program" form="' . esc_attr($grant_form_id) . '">';
+		echo '<option value="">' . esc_html__('Any approved credential type', 'backstage-venue-manager') . '</option>';
 		foreach ($program_options as $program_key => $program_label) {
 			$key = sanitize_key((string) $program_key);
 			if ($key === '') {
@@ -846,7 +846,7 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 			echo '<option value="' . esc_attr($key) . '">' . esc_html((string) $program_label) . '</option>';
 		}
 		echo '</select></td></tr>';
-		echo '<tr><th scope="row"><label for="vms-claim-initial-status">' . esc_html__('Initial Status', 'vms') . '</label></th><td><select id="vms-claim-initial-status" name="initial_status" form="' . esc_attr($grant_form_id) . '">';
+		echo '<tr><th scope="row"><label for="vms-claim-initial-status">' . esc_html__('Initial Status', 'backstage-venue-manager') . '</label></th><td><select id="vms-claim-initial-status" name="initial_status" form="' . esc_attr($grant_form_id) . '">';
 		foreach (vms_ticketing_claims_grant_status_options() as $status_key => $status_label) {
 			$status_key = sanitize_key((string) $status_key);
 			if ($status_key === '') {
@@ -855,48 +855,48 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 			echo '<option value="' . esc_attr($status_key) . '"' . selected($status_key, 'active', false) . '>' . esc_html((string) $status_label) . '</option>';
 		}
 		echo '</select></td></tr>';
-		echo '<tr><th scope="row"><label for="vms-claim-expiration-behavior">' . esc_html__('Expiration Behavior', 'vms') . '</label></th><td><select id="vms-claim-expiration-behavior" name="expiration_behavior" form="' . esc_attr($grant_form_id) . '">';
-		echo '<option value="none">' . esc_html__('No automatic expiration', 'vms') . '</option>';
-		echo '<option value="event_end">' . esc_html__('Expire after event end (operator reminder only)', 'vms') . '</option>';
+		echo '<tr><th scope="row"><label for="vms-claim-expiration-behavior">' . esc_html__('Expiration Behavior', 'backstage-venue-manager') . '</label></th><td><select id="vms-claim-expiration-behavior" name="expiration_behavior" form="' . esc_attr($grant_form_id) . '">';
+		echo '<option value="none">' . esc_html__('No automatic expiration', 'backstage-venue-manager') . '</option>';
+		echo '<option value="event_end">' . esc_html__('Expire after event end (operator reminder only)', 'backstage-venue-manager') . '</option>';
 		echo '</select></td></tr>';
-		echo '<tr><th scope="row"><label for="vms-claim-qty-limit">' . esc_html__('Usage Limit', 'vms') . '</label></th><td><input type="number" min="0" step="1" id="vms-claim-qty-limit" name="qty_limit" value="1" class="small-text" form="' . esc_attr($grant_form_id) . '"> <span class="description">' . esc_html__('Use 0 for unlimited.', 'vms') . '</span></td></tr>';
-		echo '<tr><th scope="row"><label for="vms-claim-note">' . esc_html__('Operator Note / Reason', 'vms') . '</label></th><td><input type="text" id="vms-claim-note" name="note" class="regular-text" maxlength="190" form="' . esc_attr($grant_form_id) . '"></td></tr>';
+		echo '<tr><th scope="row"><label for="vms-claim-qty-limit">' . esc_html__('Usage Limit', 'backstage-venue-manager') . '</label></th><td><input type="number" min="0" step="1" id="vms-claim-qty-limit" name="qty_limit" value="1" class="small-text" form="' . esc_attr($grant_form_id) . '"> <span class="description">' . esc_html__('Use 0 for unlimited.', 'backstage-venue-manager') . '</span></td></tr>';
+		echo '<tr><th scope="row"><label for="vms-claim-note">' . esc_html__('Operator Note / Reason', 'backstage-venue-manager') . '</label></th><td><input type="text" id="vms-claim-note" name="note" class="regular-text" maxlength="190" form="' . esc_attr($grant_form_id) . '"></td></tr>';
 		echo '</tbody></table>';
-		echo '<p><button type="submit" class="button button-primary" form="' . esc_attr($grant_form_id) . '" ' . ($event_id <= 0 ? 'disabled="disabled"' : '') . '>' . esc_html__('Create Benefit Grant', 'vms') . '</button></p>';
+		echo '<p><button type="submit" class="button button-primary" form="' . esc_attr($grant_form_id) . '" ' . ($event_id <= 0 ? 'disabled="disabled"' : '') . '>' . esc_html__('Create Benefit Grant', 'backstage-venue-manager') . '</button></p>';
 		echo '</div>';
 
 		echo '<hr />';
-		echo '<h4 data-vms-tour="claims.grants.browser">' . esc_html__('Current Event Grants', 'vms') . '</h4>';
+		echo '<h4 data-vms-tour="claims.grants.browser">' . esc_html__('Current Event Grants', 'backstage-venue-manager') . '</h4>';
 
 		if (empty($grants)) {
-			echo '<p class="vms-claims-empty">' . esc_html__('No direct grants found for this event yet.', 'vms') . '</p>';
+			echo '<p class="vms-claims-empty">' . esc_html__('No direct grants found for this event yet.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped vms-claims-grants-table">';
 			echo '<thead><tr>';
-			echo '<th>' . esc_html__('Account', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Grant Type', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Ticket Context', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Quantity / Used', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Status', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Created', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Created By', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Internal Note', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Account', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Grant Type', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Ticket Context', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Quantity / Used', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Created', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Created By', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Internal Note', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 
 			foreach ($grants as $grant) {
 				$grant_id = absint($grant['id'] ?? 0);
 				$user_id = absint($grant['user_id'] ?? 0);
 				$user = $user_id > 0 ? get_user_by('id', $user_id) : null;
-				$user_name = ($user instanceof WP_User) ? (string) $user->display_name : __('Unknown account', 'vms');
+				$user_name = ($user instanceof WP_User) ? (string) $user->display_name : __('Unknown account', 'backstage-venue-manager');
 				$user_email = ($user instanceof WP_User) ? (string) $user->user_email : '';
 				$grant_type = sanitize_key((string) ($grant['grant_type'] ?? 'event_ticket_eligibility'));
 				$grant_type_label = function_exists('vms_ticketing_claims_grant_type_label')
 					? vms_ticketing_claims_grant_type_label($grant_type)
-					: (($grant_type === 'event_free_admit') ? __('Free Admission', 'vms') : __('Event Grant', 'vms'));
+					: (($grant_type === 'event_free_admit') ? __('Free Admission', 'backstage-venue-manager') : __('Event Grant', 'backstage-venue-manager'));
 				$ticket_product_id = absint($grant['ticket_product_id'] ?? 0);
 				$ticket_key = sanitize_key((string) ($grant['ticket_key'] ?? ''));
-				$ticket_label = $ticket_product_id > 0 ? sanitize_text_field((string) get_the_title($ticket_product_id)) : __('Any ticket', 'vms');
+				$ticket_label = $ticket_product_id > 0 ? sanitize_text_field((string) get_the_title($ticket_product_id)) : __('Any ticket', 'backstage-venue-manager');
 				$ticket_suffix = $ticket_key !== '' ? (' [' . $ticket_key . ']') : '';
 				$qty_limit = max(0, absint($grant['qty_limit'] ?? 0));
 				$qty_used = max(0, absint($grant['qty_used'] ?? 0));
@@ -906,14 +906,14 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 					: sanitize_key((string) ($grant['status'] ?? 'active'));
 				$status_label = function_exists('vms_ticketing_claims_grant_status_label')
 					? vms_ticketing_claims_grant_status_label($status)
-					: ($status !== '' ? ucwords(str_replace('_', ' ', $status)) : __('Unknown', 'vms'));
+					: ($status !== '' ? ucwords(str_replace('_', ' ', $status)) : __('Unknown', 'backstage-venue-manager'));
 				$status_help = function_exists('vms_ticketing_claims_grant_status_explanation')
 					? vms_ticketing_claims_grant_status_explanation($status)
 					: '';
 				$created_at = sanitize_text_field((string) ($grant['created_at'] ?? ''));
 				$created_by = absint($grant['created_by'] ?? 0);
 				$created_by_user = $created_by > 0 ? get_user_by('id', $created_by) : null;
-				$created_by_label = ($created_by_user instanceof WP_User) ? (string) $created_by_user->display_name : ($created_by > 0 ? ('#' . $created_by) : __('System', 'vms'));
+				$created_by_label = ($created_by_user instanceof WP_User) ? (string) $created_by_user->display_name : ($created_by > 0 ? ('#' . $created_by) : __('System', 'backstage-venue-manager'));
 				$note = sanitize_text_field((string) ($grant['note'] ?? ''));
 				$res_state = array();
 				foreach ($res_counts as $res_status => $cnt) {
@@ -955,7 +955,7 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 				);
 				echo '<div class="vms-claims-note-form">';
 				echo '<input type="text" name="note" value="' . esc_attr($note) . '" class="regular-text" maxlength="190" form="' . esc_attr($note_form_id) . '" />';
-				echo '<button type="submit" class="button button-small" form="' . esc_attr($note_form_id) . '">' . esc_html__('Save Note', 'vms') . '</button>';
+				echo '<button type="submit" class="button button-small" form="' . esc_attr($note_form_id) . '">' . esc_html__('Save Note', 'backstage-venue-manager') . '</button>';
 				echo '</div>';
 				echo '</td>';
 				echo '<td>';
@@ -982,7 +982,7 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 					echo '<option value="' . esc_attr($status_key) . '" ' . selected($status, $status_key, false) . '>' . esc_html((string) $status_option_label) . '</option>';
 				}
 				echo '</select> ';
-				echo '<button type="submit" class="button button-small" form="' . esc_attr($status_form_id) . '">' . esc_html__('Update Status', 'vms') . '</button>';
+				echo '<button type="submit" class="button button-small" form="' . esc_attr($status_form_id) . '">' . esc_html__('Update Status', 'backstage-venue-manager') . '</button>';
 				echo '</div>';
 				echo '</td>';
 				echo '</tr>';
@@ -992,36 +992,36 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 		}
 
 		echo '<hr />';
-		echo '<h4>' . esc_html__('Reservation Repair Queue', 'vms') . '</h4>';
+		echo '<h4>' . esc_html__('Reservation Repair Queue', 'backstage-venue-manager') . '</h4>';
 		echo '<div class="vms-claims-inline-filters">';
-		echo '<label>' . esc_html__('Status', 'vms') . ' ';
+		echo '<label>' . esc_html__('Status', 'backstage-venue-manager') . ' ';
 		echo '<select name="vms_claim_res_status" form="' . esc_attr($reservation_filter_form_id) . '">';
 		$status_options = array(
-			'reserved' => __('Reserved', 'vms'),
-			'released' => __('Released', 'vms'),
-			'consumed' => __('Consumed', 'vms'),
-			'any' => __('Any', 'vms'),
+			'reserved' => __('Reserved', 'backstage-venue-manager'),
+			'released' => __('Released', 'backstage-venue-manager'),
+			'consumed' => __('Consumed', 'backstage-venue-manager'),
+			'any' => __('Any', 'backstage-venue-manager'),
 		);
 		foreach ($status_options as $status_key => $status_label) {
 			echo '<option value="' . esc_attr($status_key) . '" ' . selected($reservation_filter_status, $status_key, false) . '>' . esc_html($status_label) . '</option>';
 		}
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Assignee Email', 'vms') . ' <input type="text" name="vms_claim_res_email" value="' . esc_attr($reservation_filter_email) . '" class="regular-text" form="' . esc_attr($reservation_filter_form_id) . '"></label> ';
-		echo '<button type="submit" class="button" form="' . esc_attr($reservation_filter_form_id) . '">' . esc_html__('Filter', 'vms') . '</button>';
+		echo '<label>' . esc_html__('Assignee Email', 'backstage-venue-manager') . ' <input type="text" name="vms_claim_res_email" value="' . esc_attr($reservation_filter_email) . '" class="regular-text" form="' . esc_attr($reservation_filter_form_id) . '"></label> ';
+		echo '<button type="submit" class="button" form="' . esc_attr($reservation_filter_form_id) . '">' . esc_html__('Filter', 'backstage-venue-manager') . '</button>';
 		echo '</div>';
 
 		if (empty($reservations)) {
-			echo '<p class="vms-claims-empty">' . esc_html__('No reservations found for the current filter.', 'vms') . '</p>';
+			echo '<p class="vms-claims-empty">' . esc_html__('No reservations found for the current filter.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped vms-claims-reservations-table">';
 			echo '<thead><tr>';
-			echo '<th>' . esc_html__('Created', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Assignee', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Buyer', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Ticket Context', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Status', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Order/Cart Context', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Created', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Assignee', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Buyer', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Ticket Context', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Order/Cart Context', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 
 			foreach ($reservations as $reservation) {
@@ -1044,10 +1044,10 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 				echo '<td>' . esc_html(vms_ticketing_claims_ticket_context_label($ticket_product_id, $ticket_key)) . '</td>';
 				echo '<td><span class="vms-claims-status vms-claims-status-' . esc_attr($reservation_status) . '">' . esc_html(ucwords(str_replace('_', ' ', $reservation_status))) . '</span></td>';
 				echo '<td>';
-				echo '<span class="vms-claims-meta">' . esc_html__('Order', 'vms') . ':</span> ' . esc_html($order_id > 0 ? ('#' . $order_id) : '—');
-				echo '<br><span class="vms-claims-meta">' . esc_html__('Cart', 'vms') . ':</span> ' . esc_html($cart_item_key !== '' ? $cart_item_key : '—');
-				echo '<br><span class="vms-claims-meta">' . esc_html__('Session', 'vms') . ':</span> ' . esc_html($session_key !== '' ? $session_key : '—');
-				echo '<br><span class="vms-claims-meta">' . esc_html__('Token', 'vms') . ':</span> ' . esc_html($token !== '' ? $token : '—');
+				echo '<span class="vms-claims-meta">' . esc_html__('Order', 'backstage-venue-manager') . ':</span> ' . esc_html($order_id > 0 ? ('#' . $order_id) : '—');
+				echo '<br><span class="vms-claims-meta">' . esc_html__('Cart', 'backstage-venue-manager') . ':</span> ' . esc_html($cart_item_key !== '' ? $cart_item_key : '—');
+				echo '<br><span class="vms-claims-meta">' . esc_html__('Session', 'backstage-venue-manager') . ':</span> ' . esc_html($session_key !== '' ? $session_key : '—');
+				echo '<br><span class="vms-claims-meta">' . esc_html__('Token', 'backstage-venue-manager') . ':</span> ' . esc_html($token !== '' ? $token : '—');
 				echo '</td>';
 				echo '<td>';
 				if ($reservation_status === 'reserved') {
@@ -1064,10 +1064,10 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 						)
 					);
 					echo '<div class="vms-claims-action-form">';
-					echo '<button type="submit" class="button button-small" form="' . esc_attr($release_form_id) . '" onclick="return confirm(' . esc_attr(wp_json_encode(__('Release this reservation? History will be preserved in the activity log.', 'vms'))) . ');">' . esc_html__('Release Reservation', 'vms') . '</button>';
+					echo '<button type="submit" class="button button-small" form="' . esc_attr($release_form_id) . '" onclick="return confirm(' . esc_attr(wp_json_encode(__('Release this reservation? History will be preserved in the activity log.', 'backstage-venue-manager'))) . ');">' . esc_html__('Release Reservation', 'backstage-venue-manager') . '</button>';
 					echo '</div>';
 				} else {
-					echo '<span class="vms-claims-meta">' . esc_html__('No repair action available.', 'vms') . '</span>';
+					echo '<span class="vms-claims-meta">' . esc_html__('No repair action available.', 'backstage-venue-manager') . '</span>';
 				}
 				echo '</td>';
 				echo '</tr>';
@@ -1077,38 +1077,38 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 		}
 
 		echo '<hr />';
-		echo '<h4>' . esc_html__('Event Claim Activity', 'vms') . '</h4>';
+		echo '<h4>' . esc_html__('Event Claim Activity', 'backstage-venue-manager') . '</h4>';
 		echo '<div class="vms-claims-inline-filters">';
-		echo '<label>' . esc_html__('Result', 'vms') . ' ';
+		echo '<label>' . esc_html__('Result', 'backstage-venue-manager') . ' ';
 		echo '<select name="vms_claim_log_result" form="' . esc_attr($log_filter_form_id) . '">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
-		echo '<option value="success" ' . selected($log_filter_result, 'success', false) . '>' . esc_html__('Success', 'vms') . '</option>';
-		echo '<option value="failure" ' . selected($log_filter_result, 'failure', false) . '>' . esc_html__('Failure', 'vms') . '</option>';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
+		echo '<option value="success" ' . selected($log_filter_result, 'success', false) . '>' . esc_html__('Success', 'backstage-venue-manager') . '</option>';
+		echo '<option value="failure" ' . selected($log_filter_result, 'failure', false) . '>' . esc_html__('Failure', 'backstage-venue-manager') . '</option>';
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Assignee Email', 'vms') . ' <input type="text" name="vms_claim_log_email" value="' . esc_attr($log_filter_email) . '" class="regular-text" form="' . esc_attr($log_filter_form_id) . '"></label> ';
-		echo '<label>' . esc_html__('Rule Path', 'vms') . ' ';
+		echo '<label>' . esc_html__('Assignee Email', 'backstage-venue-manager') . ' <input type="text" name="vms_claim_log_email" value="' . esc_attr($log_filter_email) . '" class="regular-text" form="' . esc_attr($log_filter_form_id) . '"></label> ';
+		echo '<label>' . esc_html__('Rule Path', 'backstage-venue-manager') . ' ';
 		echo '<select name="vms_claim_log_rule" form="' . esc_attr($log_filter_form_id) . '">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
-		echo '<option value="credential_program" ' . selected($log_filter_rule_path, 'credential_program', false) . '>' . esc_html__('Credential Program', 'vms') . '</option>';
-		echo '<option value="event_direct_grant" ' . selected($log_filter_rule_path, 'event_direct_grant', false) . '>' . esc_html__('Direct Grant', 'vms') . '</option>';
-		echo '<option value="admin_action" ' . selected($log_filter_rule_path, 'admin_action', false) . '>' . esc_html__('Manual Operator Action', 'vms') . '</option>';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
+		echo '<option value="credential_program" ' . selected($log_filter_rule_path, 'credential_program', false) . '>' . esc_html__('Credential Program', 'backstage-venue-manager') . '</option>';
+		echo '<option value="event_direct_grant" ' . selected($log_filter_rule_path, 'event_direct_grant', false) . '>' . esc_html__('Direct Grant', 'backstage-venue-manager') . '</option>';
+		echo '<option value="admin_action" ' . selected($log_filter_rule_path, 'admin_action', false) . '>' . esc_html__('Manual Operator Action', 'backstage-venue-manager') . '</option>';
 		echo '</select></label> ';
-		echo '<button type="submit" class="button" form="' . esc_attr($log_filter_form_id) . '">' . esc_html__('Filter', 'vms') . '</button>';
+		echo '<button type="submit" class="button" form="' . esc_attr($log_filter_form_id) . '">' . esc_html__('Filter', 'backstage-venue-manager') . '</button>';
 		echo '</div>';
 
 		if (empty($logs)) {
-			echo '<p class="vms-claims-empty">' . esc_html__('No claim activity found for this event and filter.', 'vms') . '</p>';
+			echo '<p class="vms-claims-empty">' . esc_html__('No claim activity found for this event and filter.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped vms-claims-logs-table">';
 			echo '<thead><tr>';
-			echo '<th>' . esc_html__('Timestamp (UTC)', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Assignee', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Buyer/Actor', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Ticket', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Rule Path', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Result', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Reason', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Source', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Timestamp (UTC)', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Assignee', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Buyer/Actor', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Ticket', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Rule Path', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Result', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Reason', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Source', 'backstage-venue-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 			foreach ($logs as $log_row) {
 				$assignee_user_id = absint($log_row['assignee_user_id'] ?? 0);
@@ -1141,7 +1141,7 @@ if (!function_exists('vms_ticketing_claims_render_event_plan_metabox')) {
 			echo '</tbody></table>';
 		}
 
-		echo '<p><a class="button" href="' . esc_url(vms_ticketing_claims_admin_page_url(array('event_id' => $event_id))) . '">' . esc_html__('Open Full Claims Activity Screen', 'vms') . '</a></p>';
+		echo '<p><a class="button" href="' . esc_url(vms_ticketing_claims_admin_page_url(array('event_id' => $event_id))) . '">' . esc_html__('Open Full Claims Activity Screen', 'backstage-venue-manager') . '</a></p>';
 
 		echo '</div>';
 	}
@@ -1152,7 +1152,7 @@ if (!function_exists('vms_ticketing_claims_add_event_plan_metabox')) {
 	{
 		add_meta_box(
 			'vms_ticketing_claims_ops',
-			__('Credential Grants', 'vms'),
+			__('Credential Grants', 'backstage-venue-manager'),
 			'vms_ticketing_claims_render_event_plan_metabox',
 			'vms_event_plan',
 			'normal',
@@ -1182,7 +1182,7 @@ if (!function_exists('vms_ticketing_claims_handle_create_grant')) {
 	function vms_ticketing_claims_handle_create_grant(): void
 	{
 		if (!vms_ticketing_claims_current_user_can_manage()) {
-			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_ticketing_claims_create_grant');
 
@@ -1260,7 +1260,7 @@ if (!function_exists('vms_ticketing_claims_handle_create_grant')) {
 				'target_user_id' => (int) $user->ID,
 				'assignee_email' => (string) $user->user_email,
 				'reason_code' => 'grant_created',
-				'message' => __('Direct event grant created by operator.', 'vms'),
+				'message' => __('Direct event grant created by operator.', 'backstage-venue-manager'),
 				'context' => array(
 					'event_plan_id' => $event_plan_id,
 					'previous_status' => '',
@@ -1286,7 +1286,7 @@ if (!function_exists('vms_ticketing_claims_handle_update_grant_note')) {
 	function vms_ticketing_claims_handle_update_grant_note(): void
 	{
 		if (!vms_ticketing_claims_current_user_can_manage()) {
-			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
@@ -1316,7 +1316,7 @@ if (!function_exists('vms_ticketing_claims_handle_update_grant_note')) {
 				'direct_grant_id' => $grant_id,
 				'target_user_id' => absint($grant['user_id'] ?? 0),
 				'reason_code' => 'grant_note_updated',
-				'message' => __('Grant note updated by operator.', 'vms'),
+				'message' => __('Grant note updated by operator.', 'backstage-venue-manager'),
 				'context' => array(
 					'event_plan_id' => $event_plan_id,
 					'previous_status' => sanitize_key((string) ($grant['status'] ?? '')),
@@ -1339,7 +1339,7 @@ if (!function_exists('vms_ticketing_claims_handle_set_grant_status')) {
 	function vms_ticketing_claims_handle_set_grant_status(): void
 	{
 		if (!vms_ticketing_claims_current_user_can_manage()) {
-			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
@@ -1429,7 +1429,7 @@ if (!function_exists('vms_ticketing_claims_handle_release_reservation')) {
 	function vms_ticketing_claims_handle_release_reservation(): void
 	{
 		if (!vms_ticketing_claims_current_user_can_manage()) {
-			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
@@ -1460,7 +1460,7 @@ if (!function_exists('vms_ticketing_claims_handle_release_reservation')) {
 			'target_user_id' => absint($reservation['assignee_user_id'] ?? 0),
 			'assignee_email' => sanitize_email((string) ($reservation['assignee_email'] ?? '')),
 			'reason_code' => 'reservation_released',
-			'message' => __('Reservation released by operator.', 'vms'),
+			'message' => __('Reservation released by operator.', 'backstage-venue-manager'),
 			'context' => array(
 				'event_plan_id' => $event_plan_id,
 				'reservation_id' => $reservation_id,
@@ -1487,8 +1487,8 @@ if (!function_exists('vms_ticketing_claims_register_admin_menu')) {
 		}
 		add_submenu_page(
 			'vms-dashboard',
-			__('Credential Claims', 'vms'),
-			__('Credential Claims', 'vms'),
+			__('Credential Claims', 'backstage-venue-manager'),
+			__('Credential Claims', 'backstage-venue-manager'),
 			vms_ticketing_claims_manage_capability(),
 			vms_ticketing_claims_menu_slug(),
 			'vms_ticketing_claims_render_admin_page'
@@ -1654,7 +1654,7 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 	function vms_ticketing_claims_render_admin_page(): void
 	{
 		if (!vms_ticketing_claims_current_user_can_manage()) {
-			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
 		$event_id = isset($_GET['event_id']) ? absint($_GET['event_id']) : 0;
@@ -1768,31 +1768,31 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 		$inspector_payload = ($inspector_email !== '') ? vms_ticketing_claims_build_inspector_payload($inspector_email, $inspector_event_id) : array();
 
 		echo '<div class="wrap vms-claims-admin-page" data-vms-tour="claims.browser.help">';
-		echo '<h1>' . esc_html__('Credential Claims Activity', 'vms') . '</h1>';
-		echo '<p class="description">' . esc_html__('Search claims, inspect results, and run safe repair actions without touching raw tables.', 'vms') . '</p>';
+		echo '<h1>' . esc_html__('Credential Claims Activity', 'backstage-venue-manager') . '</h1>';
+		echo '<p class="description">' . esc_html__('Search claims, inspect results, and run safe repair actions without touching raw tables.', 'backstage-venue-manager') . '</p>';
 
 		echo '<form method="get" action="" class="vms-claims-global-filters">';
 		echo '<input type="hidden" name="page" value="' . esc_attr(vms_ticketing_claims_menu_slug()) . '" />';
 		echo '<p>';
-		echo '<label>' . esc_html__('Event ID', 'vms') . ' <input type="number" min="0" step="1" name="event_id" value="' . esc_attr((string) $event_id) . '" class="small-text"></label> ';
-		echo '<label>' . esc_html__('Result', 'vms') . ' <select name="result">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
-		echo '<option value="success" ' . selected($result_filter, 'success', false) . '>' . esc_html__('Success', 'vms') . '</option>';
-		echo '<option value="failure" ' . selected($result_filter, 'failure', false) . '>' . esc_html__('Failure', 'vms') . '</option>';
+		echo '<label>' . esc_html__('Event ID', 'backstage-venue-manager') . ' <input type="number" min="0" step="1" name="event_id" value="' . esc_attr((string) $event_id) . '" class="small-text"></label> ';
+		echo '<label>' . esc_html__('Result', 'backstage-venue-manager') . ' <select name="result">';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
+		echo '<option value="success" ' . selected($result_filter, 'success', false) . '>' . esc_html__('Success', 'backstage-venue-manager') . '</option>';
+		echo '<option value="failure" ' . selected($result_filter, 'failure', false) . '>' . esc_html__('Failure', 'backstage-venue-manager') . '</option>';
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Assignee Email', 'vms') . ' <input type="text" name="assignee_email" value="' . esc_attr($assignee_email) . '" class="regular-text"></label> ';
-		echo '<label>' . esc_html__('Buyer Email', 'vms') . ' <input type="text" name="buyer_email" value="' . esc_attr($buyer_email) . '" class="regular-text"></label>';
+		echo '<label>' . esc_html__('Assignee Email', 'backstage-venue-manager') . ' <input type="text" name="assignee_email" value="' . esc_attr($assignee_email) . '" class="regular-text"></label> ';
+		echo '<label>' . esc_html__('Buyer Email', 'backstage-venue-manager') . ' <input type="text" name="buyer_email" value="' . esc_attr($buyer_email) . '" class="regular-text"></label>';
 		echo '</p><p>';
-		echo '<label>' . esc_html__('Ticket Product ID', 'vms') . ' <input type="number" min="0" step="1" name="ticket_product_id" value="' . esc_attr((string) $ticket_product_id) . '" class="small-text"></label> ';
-		echo '<label>' . esc_html__('Ticket Key', 'vms') . ' <input type="text" name="ticket_key" value="' . esc_attr($ticket_key) . '" class="small-text"></label> ';
-		echo '<label>' . esc_html__('Rule Path', 'vms') . ' <select name="rule_path">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
-		echo '<option value="credential_program" ' . selected($rule_path, 'credential_program', false) . '>' . esc_html__('Credential Program', 'vms') . '</option>';
-		echo '<option value="event_direct_grant" ' . selected($rule_path, 'event_direct_grant', false) . '>' . esc_html__('Direct Grant', 'vms') . '</option>';
-		echo '<option value="admin_action" ' . selected($rule_path, 'admin_action', false) . '>' . esc_html__('Manual Operator Action', 'vms') . '</option>';
+		echo '<label>' . esc_html__('Ticket Product ID', 'backstage-venue-manager') . ' <input type="number" min="0" step="1" name="ticket_product_id" value="' . esc_attr((string) $ticket_product_id) . '" class="small-text"></label> ';
+		echo '<label>' . esc_html__('Ticket Key', 'backstage-venue-manager') . ' <input type="text" name="ticket_key" value="' . esc_attr($ticket_key) . '" class="small-text"></label> ';
+		echo '<label>' . esc_html__('Rule Path', 'backstage-venue-manager') . ' <select name="rule_path">';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
+		echo '<option value="credential_program" ' . selected($rule_path, 'credential_program', false) . '>' . esc_html__('Credential Program', 'backstage-venue-manager') . '</option>';
+		echo '<option value="event_direct_grant" ' . selected($rule_path, 'event_direct_grant', false) . '>' . esc_html__('Direct Grant', 'backstage-venue-manager') . '</option>';
+		echo '<option value="admin_action" ' . selected($rule_path, 'admin_action', false) . '>' . esc_html__('Manual Operator Action', 'backstage-venue-manager') . '</option>';
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Credential Type', 'vms') . ' <select name="credential_program">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
+		echo '<label>' . esc_html__('Credential Type', 'backstage-venue-manager') . ' <select name="credential_program">';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
 		foreach ($program_options as $program_key => $program_label) {
 			$program_key = sanitize_key((string) $program_key);
 			if ($program_key === '') {
@@ -1801,32 +1801,32 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 			echo '<option value="' . esc_attr($program_key) . '" ' . selected($credential_program, $program_key, false) . '>' . esc_html((string) $program_label) . '</option>';
 		}
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Reservation Status', 'vms') . ' <select name="reservation_status">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
-		echo '<option value="reserved" ' . selected($reservation_status, 'reserved', false) . '>' . esc_html__('Reserved', 'vms') . '</option>';
-		echo '<option value="released" ' . selected($reservation_status, 'released', false) . '>' . esc_html__('Released', 'vms') . '</option>';
-		echo '<option value="consumed" ' . selected($reservation_status, 'consumed', false) . '>' . esc_html__('Consumed', 'vms') . '</option>';
+		echo '<label>' . esc_html__('Reservation Status', 'backstage-venue-manager') . ' <select name="reservation_status">';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
+		echo '<option value="reserved" ' . selected($reservation_status, 'reserved', false) . '>' . esc_html__('Reserved', 'backstage-venue-manager') . '</option>';
+		echo '<option value="released" ' . selected($reservation_status, 'released', false) . '>' . esc_html__('Released', 'backstage-venue-manager') . '</option>';
+		echo '<option value="consumed" ' . selected($reservation_status, 'consumed', false) . '>' . esc_html__('Consumed', 'backstage-venue-manager') . '</option>';
 		echo '</select></label> ';
-		echo '<label><input type="checkbox" name="direct_grant_only" value="1" ' . checked($direct_grant_only, 1, false) . '> ' . esc_html__('Direct grant results only', 'vms') . '</label> ';
-		echo '<button type="submit" class="button button-primary">' . esc_html__('Apply Filters', 'vms') . '</button> ';
-		echo '<a class="button" href="' . esc_url(vms_ticketing_claims_admin_page_url()) . '">' . esc_html__('Reset', 'vms') . '</a>';
+		echo '<label><input type="checkbox" name="direct_grant_only" value="1" ' . checked($direct_grant_only, 1, false) . '> ' . esc_html__('Direct grant results only', 'backstage-venue-manager') . '</label> ';
+		echo '<button type="submit" class="button button-primary">' . esc_html__('Apply Filters', 'backstage-venue-manager') . '</button> ';
+		echo '<a class="button" href="' . esc_url(vms_ticketing_claims_admin_page_url()) . '">' . esc_html__('Reset', 'backstage-venue-manager') . '</a>';
 		echo '</p></form>';
 
 		if ($buyer_lookup_missing) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__('No buyer account matched the buyer email filter, so claim log results are empty.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__('No buyer account matched the buyer email filter, so claim log results are empty.', 'backstage-venue-manager') . '</p></div>';
 		}
 		if ($grant_lookup_missing) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__('No account matched the benefit browser account filter, so benefit results are empty.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__('No account matched the benefit browser account filter, so benefit results are empty.', 'backstage-venue-manager') . '</p></div>';
 		}
 
-		echo '<h2 data-vms-tour="claims.browser">' . esc_html__('Benefit Browser', 'vms') . '</h2>';
-		echo '<p class="description">' . esc_html__('Search event-linked benefits by account, source, status, credential type, and created/updated dates.', 'vms') . '</p>';
+		echo '<h2 data-vms-tour="claims.browser">' . esc_html__('Benefit Browser', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description">' . esc_html__('Search event-linked benefits by account, source, status, credential type, and created/updated dates.', 'backstage-venue-manager') . '</p>';
 		echo '<form method="get" action="" class="vms-claims-global-filters" data-vms-tour="claims.browser.filters">';
 		echo '<input type="hidden" name="page" value="' . esc_attr(vms_ticketing_claims_menu_slug()) . '" />';
-		echo '<label>' . esc_html__('Event ID', 'vms') . ' <input type="number" min="0" step="1" name="event_id" value="' . esc_attr((string) $event_id) . '" class="small-text"></label> ';
-		echo '<label>' . esc_html__('Account (email/login/id)', 'vms') . ' <input type="text" name="grant_account" value="' . esc_attr($grant_account) . '" class="regular-text"></label> ';
-		echo '<label>' . esc_html__('Status', 'vms') . ' <select name="grant_status">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
+		echo '<label>' . esc_html__('Event ID', 'backstage-venue-manager') . ' <input type="number" min="0" step="1" name="event_id" value="' . esc_attr((string) $event_id) . '" class="small-text"></label> ';
+		echo '<label>' . esc_html__('Account (email/login/id)', 'backstage-venue-manager') . ' <input type="text" name="grant_account" value="' . esc_attr($grant_account) . '" class="regular-text"></label> ';
+		echo '<label>' . esc_html__('Status', 'backstage-venue-manager') . ' <select name="grant_status">';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
 		foreach (vms_ticketing_claims_grant_status_options() as $status_key => $status_label) {
 			$status_key = sanitize_key((string) $status_key);
 			if ($status_key === '') {
@@ -1835,8 +1835,8 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 			echo '<option value="' . esc_attr($status_key) . '" ' . selected($grant_status_filter, $status_key, false) . '>' . esc_html((string) $status_label) . '</option>';
 		}
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Grant Source', 'vms') . ' <select name="grant_source">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
+		echo '<label>' . esc_html__('Grant Source', 'backstage-venue-manager') . ' <select name="grant_source">';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
 		foreach (vms_ticketing_claims_grant_type_options() as $grant_type_key => $grant_type_label) {
 			$grant_type_key = sanitize_key((string) $grant_type_key);
 			if ($grant_type_key === '') {
@@ -1845,8 +1845,8 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 			echo '<option value="' . esc_attr($grant_type_key) . '" ' . selected($grant_source_filter, $grant_type_key, false) . '>' . esc_html((string) $grant_type_label) . '</option>';
 		}
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Credential Type', 'vms') . ' <select name="credential_program">';
-		echo '<option value="">' . esc_html__('Any', 'vms') . '</option>';
+		echo '<label>' . esc_html__('Credential Type', 'backstage-venue-manager') . ' <select name="credential_program">';
+		echo '<option value="">' . esc_html__('Any', 'backstage-venue-manager') . '</option>';
 		foreach ($program_options as $program_key => $program_label) {
 			$program_key = sanitize_key((string) $program_key);
 			if ($program_key === '') {
@@ -1855,35 +1855,35 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 			echo '<option value="' . esc_attr($program_key) . '" ' . selected($credential_program, $program_key, false) . '>' . esc_html((string) $program_label) . '</option>';
 		}
 		echo '</select></label> ';
-		echo '<label>' . esc_html__('Created After', 'vms') . ' <input type="date" name="grant_created_after" value="' . esc_attr($grant_created_after) . '"></label> ';
-		echo '<label>' . esc_html__('Created Before', 'vms') . ' <input type="date" name="grant_created_before" value="' . esc_attr($grant_created_before) . '"></label> ';
-		echo '<label>' . esc_html__('Updated After', 'vms') . ' <input type="date" name="grant_updated_after" value="' . esc_attr($grant_updated_after) . '"></label> ';
-		echo '<label>' . esc_html__('Updated Before', 'vms') . ' <input type="date" name="grant_updated_before" value="' . esc_attr($grant_updated_before) . '"></label> ';
-		echo '<button type="submit" class="button button-primary">' . esc_html__('Apply Benefit Filters', 'vms') . '</button> ';
-		echo '<a class="button" href="' . esc_url(vms_ticketing_claims_admin_page_url(array('event_id' => $event_id))) . '">' . esc_html__('Reset Benefits', 'vms') . '</a>';
+		echo '<label>' . esc_html__('Created After', 'backstage-venue-manager') . ' <input type="date" name="grant_created_after" value="' . esc_attr($grant_created_after) . '"></label> ';
+		echo '<label>' . esc_html__('Created Before', 'backstage-venue-manager') . ' <input type="date" name="grant_created_before" value="' . esc_attr($grant_created_before) . '"></label> ';
+		echo '<label>' . esc_html__('Updated After', 'backstage-venue-manager') . ' <input type="date" name="grant_updated_after" value="' . esc_attr($grant_updated_after) . '"></label> ';
+		echo '<label>' . esc_html__('Updated Before', 'backstage-venue-manager') . ' <input type="date" name="grant_updated_before" value="' . esc_attr($grant_updated_before) . '"></label> ';
+		echo '<button type="submit" class="button button-primary">' . esc_html__('Apply Benefit Filters', 'backstage-venue-manager') . '</button> ';
+		echo '<a class="button" href="' . esc_url(vms_ticketing_claims_admin_page_url(array('event_id' => $event_id))) . '">' . esc_html__('Reset Benefits', 'backstage-venue-manager') . '</a>';
 		echo '</form>';
 
 		if (empty($direct_grants)) {
-			echo '<p class="vms-claims-empty">' . esc_html__('No benefits matched the current browser filters.', 'vms') . '</p>';
+			echo '<p class="vms-claims-empty">' . esc_html__('No benefits matched the current browser filters.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped vms-claims-grants-table" data-vms-tour="claims.browser.table">';
-			echo '<thead><tr><th>' . esc_html__('Event', 'vms') . '</th><th>' . esc_html__('Account', 'vms') . '</th><th>' . esc_html__('Benefit Source', 'vms') . '</th><th>' . esc_html__('Eligibility Basis', 'vms') . '</th><th>' . esc_html__('Ticket Context', 'vms') . '</th><th>' . esc_html__('Qty / Used', 'vms') . '</th><th>' . esc_html__('Status', 'vms') . '</th><th>' . esc_html__('Created', 'vms') . '</th><th>' . esc_html__('Updated', 'vms') . '</th><th>' . esc_html__('Notes', 'vms') . '</th><th>' . esc_html__('Quick Actions', 'vms') . '</th></tr></thead><tbody>';
+			echo '<thead><tr><th>' . esc_html__('Event', 'backstage-venue-manager') . '</th><th>' . esc_html__('Account', 'backstage-venue-manager') . '</th><th>' . esc_html__('Benefit Source', 'backstage-venue-manager') . '</th><th>' . esc_html__('Eligibility Basis', 'backstage-venue-manager') . '</th><th>' . esc_html__('Ticket Context', 'backstage-venue-manager') . '</th><th>' . esc_html__('Qty / Used', 'backstage-venue-manager') . '</th><th>' . esc_html__('Status', 'backstage-venue-manager') . '</th><th>' . esc_html__('Created', 'backstage-venue-manager') . '</th><th>' . esc_html__('Updated', 'backstage-venue-manager') . '</th><th>' . esc_html__('Notes', 'backstage-venue-manager') . '</th><th>' . esc_html__('Quick Actions', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 			foreach ($direct_grants as $grant_row) {
 				$grant_id = absint($grant_row['id'] ?? 0);
 				$grant_event_id = absint($grant_row['event_id'] ?? 0);
 				$event_title = $grant_event_id > 0 ? sanitize_text_field((string) get_the_title($grant_event_id)) : '';
-				$account_label = vms_ticketing_claims_user_display(absint($grant_row['user_id'] ?? 0), __('Unknown account', 'vms'));
+				$account_label = vms_ticketing_claims_user_display(absint($grant_row['user_id'] ?? 0), __('Unknown account', 'backstage-venue-manager'));
 				$grant_type = sanitize_key((string) ($grant_row['grant_type'] ?? ''));
 				$grant_type_label = function_exists('vms_ticketing_claims_grant_type_label')
 					? vms_ticketing_claims_grant_type_label($grant_type)
-					: ($grant_type !== '' ? ucwords(str_replace('_', ' ', $grant_type)) : __('Unknown', 'vms'));
+					: ($grant_type !== '' ? ucwords(str_replace('_', ' ', $grant_type)) : __('Unknown', 'backstage-venue-manager'));
 				$credential_basis = sanitize_key((string) ($grant_row['credential_program'] ?? ''));
 				if ($credential_basis !== '' && function_exists('vms_ticketing_verification_program_label')) {
 					$credential_basis = sanitize_text_field((string) vms_ticketing_verification_program_label($credential_basis));
 				} elseif ($credential_basis !== '') {
 					$credential_basis = ucwords(str_replace('_', ' ', $credential_basis));
 				} else {
-					$credential_basis = __('Any credential / direct benefit', 'vms');
+					$credential_basis = __('Any credential / direct benefit', 'backstage-venue-manager');
 				}
 				$res_counts = function_exists('vms_ticketing_claims_grant_reservation_counts')
 					? vms_ticketing_claims_grant_reservation_counts($grant_id)
@@ -1927,7 +1927,7 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 				}
 				echo '</select> ';
 				wp_nonce_field('vms_ticketing_claims_set_grant_status_' . $grant_id);
-				echo '<button type="submit" class="button button-small">' . esc_html__('Apply', 'vms') . '</button>';
+				echo '<button type="submit" class="button button-small">' . esc_html__('Apply', 'backstage-venue-manager') . '</button>';
 				echo '</form>';
 				echo '</td>';
 				echo '</tr>';
@@ -1935,12 +1935,12 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 			echo '</tbody></table>';
 		}
 
-		echo '<h2 data-vms-tour="claims.log">' . esc_html__('Claim Log', 'vms') . '</h2>';
+		echo '<h2 data-vms-tour="claims.log">' . esc_html__('Claim Log', 'backstage-venue-manager') . '</h2>';
 		if (empty($logs)) {
-			echo '<p class="vms-claims-empty">' . esc_html__('No claim log entries matched the current filters.', 'vms') . '</p>';
+			echo '<p class="vms-claims-empty">' . esc_html__('No claim log entries matched the current filters.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped vms-claims-logs-table">';
-			echo '<thead><tr><th>' . esc_html__('Timestamp (UTC)', 'vms') . '</th><th>' . esc_html__('Event', 'vms') . '</th><th>' . esc_html__('Assignee', 'vms') . '</th><th>' . esc_html__('Buyer/Actor', 'vms') . '</th><th>' . esc_html__('Ticket', 'vms') . '</th><th>' . esc_html__('Rule Path', 'vms') . '</th><th>' . esc_html__('Result', 'vms') . '</th><th>' . esc_html__('Reason', 'vms') . '</th><th>' . esc_html__('Source', 'vms') . '</th></tr></thead><tbody>';
+			echo '<thead><tr><th>' . esc_html__('Timestamp (UTC)', 'backstage-venue-manager') . '</th><th>' . esc_html__('Event', 'backstage-venue-manager') . '</th><th>' . esc_html__('Assignee', 'backstage-venue-manager') . '</th><th>' . esc_html__('Buyer/Actor', 'backstage-venue-manager') . '</th><th>' . esc_html__('Ticket', 'backstage-venue-manager') . '</th><th>' . esc_html__('Rule Path', 'backstage-venue-manager') . '</th><th>' . esc_html__('Result', 'backstage-venue-manager') . '</th><th>' . esc_html__('Reason', 'backstage-venue-manager') . '</th><th>' . esc_html__('Source', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 			foreach ($logs as $row) {
 				$context = function_exists('vms_ticketing_claims_decode_context_json')
 					? vms_ticketing_claims_decode_context_json((string) ($row['context_json'] ?? ''))
@@ -1970,12 +1970,12 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 			echo '</tbody></table>';
 		}
 
-		echo '<h2 data-vms-tour="claims.repair">' . esc_html__('Reservation Repair', 'vms') . '</h2>';
+		echo '<h2 data-vms-tour="claims.repair">' . esc_html__('Reservation Repair', 'backstage-venue-manager') . '</h2>';
 		if (empty($reservations)) {
-			echo '<p class="vms-claims-empty">' . esc_html__('No reservations matched the current filters.', 'vms') . '</p>';
+			echo '<p class="vms-claims-empty">' . esc_html__('No reservations matched the current filters.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped vms-claims-reservations-table">';
-			echo '<thead><tr><th>' . esc_html__('Created', 'vms') . '</th><th>' . esc_html__('Event', 'vms') . '</th><th>' . esc_html__('Assignee', 'vms') . '</th><th>' . esc_html__('Buyer', 'vms') . '</th><th>' . esc_html__('Ticket Context', 'vms') . '</th><th>' . esc_html__('Status', 'vms') . '</th><th>' . esc_html__('Order/Cart Context', 'vms') . '</th><th>' . esc_html__('Actions', 'vms') . '</th></tr></thead><tbody>';
+			echo '<thead><tr><th>' . esc_html__('Created', 'backstage-venue-manager') . '</th><th>' . esc_html__('Event', 'backstage-venue-manager') . '</th><th>' . esc_html__('Assignee', 'backstage-venue-manager') . '</th><th>' . esc_html__('Buyer', 'backstage-venue-manager') . '</th><th>' . esc_html__('Ticket Context', 'backstage-venue-manager') . '</th><th>' . esc_html__('Status', 'backstage-venue-manager') . '</th><th>' . esc_html__('Order/Cart Context', 'backstage-venue-manager') . '</th><th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 			foreach ($reservations as $row) {
 				$reservation_id = absint($row['id'] ?? 0);
 				$status = sanitize_key((string) ($row['status'] ?? ''));
@@ -1989,9 +1989,9 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 				echo '<td>' . esc_html(vms_ticketing_claims_ticket_context_label(absint($row['ticket_product_id'] ?? 0), sanitize_key((string) ($row['ticket_key'] ?? '')))) . '</td>';
 				echo '<td><span class="vms-claims-status vms-claims-status-' . esc_attr($status) . '">' . esc_html($status !== '' ? ucwords(str_replace('_', ' ', $status)) : '—') . '</span></td>';
 				echo '<td>';
-				echo '<span class="vms-claims-meta">' . esc_html__('Order', 'vms') . ':</span> ' . esc_html(absint($row['order_id'] ?? 0) > 0 ? ('#' . absint($row['order_id'] ?? 0)) : '—');
-				echo '<br><span class="vms-claims-meta">' . esc_html__('Cart', 'vms') . ':</span> ' . esc_html((string) ($row['cart_item_key'] ?? '') !== '' ? (string) $row['cart_item_key'] : '—');
-				echo '<br><span class="vms-claims-meta">' . esc_html__('Session', 'vms') . ':</span> ' . esc_html((string) ($row['session_key'] ?? '') !== '' ? (string) $row['session_key'] : '—');
+				echo '<span class="vms-claims-meta">' . esc_html__('Order', 'backstage-venue-manager') . ':</span> ' . esc_html(absint($row['order_id'] ?? 0) > 0 ? ('#' . absint($row['order_id'] ?? 0)) : '—');
+				echo '<br><span class="vms-claims-meta">' . esc_html__('Cart', 'backstage-venue-manager') . ':</span> ' . esc_html((string) ($row['cart_item_key'] ?? '') !== '' ? (string) $row['cart_item_key'] : '—');
+				echo '<br><span class="vms-claims-meta">' . esc_html__('Session', 'backstage-venue-manager') . ':</span> ' . esc_html((string) ($row['session_key'] ?? '') !== '' ? (string) $row['session_key'] : '—');
 				echo '</td>';
 				echo '<td>';
 				if ($status === 'reserved') {
@@ -2000,10 +2000,10 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 					echo '<input type="hidden" name="event_plan_id" value="0" />';
 					echo '<input type="hidden" name="reservation_id" value="' . esc_attr((string) $reservation_id) . '" />';
 					wp_nonce_field('vms_ticketing_claims_release_reservation_' . $reservation_id);
-					echo '<button type="submit" class="button button-small" onclick="return confirm(' . esc_attr(wp_json_encode(__('Release this reservation? History will be preserved in the activity log.', 'vms'))) . ');">' . esc_html__('Release Reservation', 'vms') . '</button>';
+					echo '<button type="submit" class="button button-small" onclick="return confirm(' . esc_attr(wp_json_encode(__('Release this reservation? History will be preserved in the activity log.', 'backstage-venue-manager'))) . ');">' . esc_html__('Release Reservation', 'backstage-venue-manager') . '</button>';
 					echo '</form>';
 				} else {
-					echo '<span class="vms-claims-meta">' . esc_html__('No repair action available.', 'vms') . '</span>';
+					echo '<span class="vms-claims-meta">' . esc_html__('No repair action available.', 'backstage-venue-manager') . '</span>';
 				}
 				echo '</td>';
 				echo '</tr>';
@@ -2011,19 +2011,19 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 			echo '</tbody></table>';
 		}
 
-		echo '<h2 data-vms-tour="claims.inspector">' . esc_html__('Eligibility Inspector', 'vms') . '</h2>';
-		echo '<p class="description">' . esc_html__('Paste an email to inspect credential approvals, event grants, and recent claim usage in plain language.', 'vms') . '</p>';
+		echo '<h2 data-vms-tour="claims.inspector">' . esc_html__('Eligibility Inspector', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description">' . esc_html__('Paste an email to inspect credential approvals, event grants, and recent claim usage in plain language.', 'backstage-venue-manager') . '</p>';
 		echo '<form method="get" action="" class="vms-claims-global-filters" data-vms-tour="claims.inspector.form">';
 		echo '<input type="hidden" name="page" value="' . esc_attr(vms_ticketing_claims_menu_slug()) . '" />';
-		echo '<label>' . esc_html__('Account Email', 'vms') . ' <input type="text" name="inspector_email" class="regular-text" value="' . esc_attr($inspector_email) . '" required></label> ';
-		echo '<label>' . esc_html__('Event ID (optional)', 'vms') . ' <input type="number" min="0" step="1" name="inspector_event_id" class="small-text" value="' . esc_attr((string) $inspector_event_id) . '"></label> ';
-		echo '<button type="submit" class="button button-primary">' . esc_html__('Inspect Account', 'vms') . '</button>';
+		echo '<label>' . esc_html__('Account Email', 'backstage-venue-manager') . ' <input type="text" name="inspector_email" class="regular-text" value="' . esc_attr($inspector_email) . '" required></label> ';
+		echo '<label>' . esc_html__('Event ID (optional)', 'backstage-venue-manager') . ' <input type="number" min="0" step="1" name="inspector_event_id" class="small-text" value="' . esc_attr((string) $inspector_event_id) . '"></label> ';
+		echo '<button type="submit" class="button button-primary">' . esc_html__('Inspect Account', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
 
 		if ($inspector_email !== '') {
 			$user = $inspector_payload['user'] ?? null;
 			if (!($user instanceof WP_User)) {
-				echo '<div class="notice notice-warning inline"><p>' . esc_html__('No registered account matched that email.', 'vms') . '</p></div>';
+				echo '<div class="notice notice-warning inline"><p>' . esc_html__('No registered account matched that email.', 'backstage-venue-manager') . '</p></div>';
 			} else {
 				$verified_programs = (array) ($inspector_payload['verified_programs'] ?? array());
 				$direct_grants = (array) ($inspector_payload['direct_grants'] ?? array());
@@ -2052,30 +2052,30 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 				}
 
 				echo '<div class="vms-claims-inspector-card">';
-				echo '<p><strong>' . esc_html__('Account', 'vms') . ':</strong> ' . esc_html((string) $user->display_name) . ' &lt;' . esc_html((string) $user->user_email) . '&gt; <span class="vms-claims-meta">#' . esc_html((string) $user->ID) . '</span></p>';
-				echo '<p><strong>' . esc_html__('Credential types approved', 'vms') . ':</strong> ' . (!empty($program_labels) ? esc_html(implode(', ', $program_labels)) : esc_html__('None', 'vms')) . '</p>';
+				echo '<p><strong>' . esc_html__('Account', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) $user->display_name) . ' &lt;' . esc_html((string) $user->user_email) . '&gt; <span class="vms-claims-meta">#' . esc_html((string) $user->ID) . '</span></p>';
+				echo '<p><strong>' . esc_html__('Credential types approved', 'backstage-venue-manager') . ':</strong> ' . (!empty($program_labels) ? esc_html(implode(', ', $program_labels)) : esc_html__('None', 'backstage-venue-manager')) . '</p>';
 				if (!empty($reservation_counts)) {
 					$chunks = array();
 					foreach ($reservation_counts as $status_key => $count) {
 						$chunks[] = ucwords(str_replace('_', ' ', $status_key)) . ': ' . absint($count);
 					}
-					echo '<p><strong>' . esc_html__('Event usage state', 'vms') . ':</strong> ' . esc_html(implode(' | ', $chunks)) . '</p>';
+					echo '<p><strong>' . esc_html__('Event usage state', 'backstage-venue-manager') . ':</strong> ' . esc_html(implode(' | ', $chunks)) . '</p>';
 				}
 				echo '</div>';
 
-					echo '<h3 data-vms-tour="claims.inspector.grants">' . esc_html__('Event-Specific Grants', 'vms') . '</h3>';
+					echo '<h3 data-vms-tour="claims.inspector.grants">' . esc_html__('Event-Specific Grants', 'backstage-venue-manager') . '</h3>';
 				if (empty($direct_grants)) {
-					echo '<p class="vms-claims-empty">' . esc_html__('No direct event grants found for this account and filter.', 'vms') . '</p>';
+					echo '<p class="vms-claims-empty">' . esc_html__('No direct event grants found for this account and filter.', 'backstage-venue-manager') . '</p>';
 				} else {
 					echo '<table class="widefat striped vms-claims-grants-table">';
-					echo '<thead><tr><th>' . esc_html__('Event ID', 'vms') . '</th><th>' . esc_html__('Grant Type', 'vms') . '</th><th>' . esc_html__('Ticket Context', 'vms') . '</th><th>' . esc_html__('Qty / Used', 'vms') . '</th><th>' . esc_html__('Status', 'vms') . '</th><th>' . esc_html__('Created', 'vms') . '</th></tr></thead><tbody>';
+					echo '<thead><tr><th>' . esc_html__('Event ID', 'backstage-venue-manager') . '</th><th>' . esc_html__('Grant Type', 'backstage-venue-manager') . '</th><th>' . esc_html__('Ticket Context', 'backstage-venue-manager') . '</th><th>' . esc_html__('Qty / Used', 'backstage-venue-manager') . '</th><th>' . esc_html__('Status', 'backstage-venue-manager') . '</th><th>' . esc_html__('Created', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 					foreach ($direct_grants as $grant_row) {
 						echo '<tr>';
 						echo '<td>' . esc_html((string) absint($grant_row['event_id'] ?? 0)) . '</td>';
 							$grant_type_key = sanitize_key((string) ($grant_row['grant_type'] ?? ''));
 							$grant_type_label = function_exists('vms_ticketing_claims_grant_type_label')
 								? vms_ticketing_claims_grant_type_label($grant_type_key)
-								: ($grant_type_key !== '' ? ucwords(str_replace('_', ' ', $grant_type_key)) : __('Unknown', 'vms'));
+								: ($grant_type_key !== '' ? ucwords(str_replace('_', ' ', $grant_type_key)) : __('Unknown', 'backstage-venue-manager'));
 							echo '<td>' . esc_html($grant_type_label) . '</td>';
 						echo '<td>' . esc_html(vms_ticketing_claims_ticket_context_label(absint($grant_row['ticket_product_id'] ?? 0), sanitize_key((string) ($grant_row['ticket_key'] ?? '')))) . '</td>';
 						echo '<td>' . esc_html((string) absint($grant_row['qty_limit'] ?? 0)) . ' / ' . esc_html((string) absint($grant_row['qty_used'] ?? 0)) . '</td>';
@@ -2096,12 +2096,12 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 				}
 
 				if ($inspector_event_id > 0) {
-					echo '<h3>' . esc_html__('Event Eligibility Checks', 'vms') . '</h3>';
+					echo '<h3>' . esc_html__('Event Eligibility Checks', 'backstage-venue-manager') . '</h3>';
 					if (empty($eligibility_checks)) {
-						echo '<p class="vms-claims-empty">' . esc_html__('No verified ticket contexts were found for that event.', 'vms') . '</p>';
+						echo '<p class="vms-claims-empty">' . esc_html__('No verified ticket contexts were found for that event.', 'backstage-venue-manager') . '</p>';
 					} else {
 						echo '<table class="widefat striped vms-claims-eligibility-table">';
-						echo '<thead><tr><th>' . esc_html__('Ticket', 'vms') . '</th><th>' . esc_html__('Eligible', 'vms') . '</th><th>' . esc_html__('Rule Path', 'vms') . '</th><th>' . esc_html__('Reason', 'vms') . '</th></tr></thead><tbody>';
+						echo '<thead><tr><th>' . esc_html__('Ticket', 'backstage-venue-manager') . '</th><th>' . esc_html__('Eligible', 'backstage-venue-manager') . '</th><th>' . esc_html__('Rule Path', 'backstage-venue-manager') . '</th><th>' . esc_html__('Reason', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 						foreach ($eligibility_checks as $check_row) {
 							$eligibility = isset($check_row['eligibility']) && is_array($check_row['eligibility']) ? $check_row['eligibility'] : array();
 							$is_eligible = !empty($eligibility['eligible']);
@@ -2112,7 +2112,7 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 								: ($message !== '' ? $message : $reason_code);
 							echo '<tr>';
 							echo '<td>' . esc_html(vms_ticketing_claims_ticket_context_label(absint($check_row['product_id'] ?? 0), sanitize_key((string) ($check_row['ticket_key'] ?? '')))) . '</td>';
-							echo '<td>' . esc_html($is_eligible ? __('Yes', 'vms') : __('No', 'vms')) . '</td>';
+							echo '<td>' . esc_html($is_eligible ? __('Yes', 'backstage-venue-manager') : __('No', 'backstage-venue-manager')) . '</td>';
 							echo '<td>' . esc_html(sanitize_key((string) ($eligibility['matched_rule_path'] ?? '')) ?: '—') . '</td>';
 							echo '<td>' . esc_html($reason_label) . '</td>';
 							echo '</tr>';
@@ -2121,12 +2121,12 @@ if (!function_exists('vms_ticketing_claims_render_admin_page')) {
 					}
 				}
 
-				echo '<h3>' . esc_html__('Recent Claim History', 'vms') . '</h3>';
+				echo '<h3>' . esc_html__('Recent Claim History', 'backstage-venue-manager') . '</h3>';
 				if (empty($recent_logs)) {
-					echo '<p class="vms-claims-empty">' . esc_html__('No claim history found for this account and filter.', 'vms') . '</p>';
+					echo '<p class="vms-claims-empty">' . esc_html__('No claim history found for this account and filter.', 'backstage-venue-manager') . '</p>';
 				} else {
 					echo '<table class="widefat striped vms-claims-logs-table">';
-					echo '<thead><tr><th>' . esc_html__('Timestamp (UTC)', 'vms') . '</th><th>' . esc_html__('Event', 'vms') . '</th><th>' . esc_html__('Ticket', 'vms') . '</th><th>' . esc_html__('Result', 'vms') . '</th><th>' . esc_html__('Reason', 'vms') . '</th></tr></thead><tbody>';
+					echo '<thead><tr><th>' . esc_html__('Timestamp (UTC)', 'backstage-venue-manager') . '</th><th>' . esc_html__('Event', 'backstage-venue-manager') . '</th><th>' . esc_html__('Ticket', 'backstage-venue-manager') . '</th><th>' . esc_html__('Result', 'backstage-venue-manager') . '</th><th>' . esc_html__('Reason', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 					foreach ($recent_logs as $log_row) {
 						$result = sanitize_key((string) ($log_row['result'] ?? ''));
 						$reason_code = sanitize_key((string) ($log_row['reason_code'] ?? ''));
@@ -2192,21 +2192,21 @@ if (!function_exists('vms_ticketing_claims_render_user_profile_summary')) {
 			'inspector_email' => (string) $user->user_email,
 		));
 
-		echo '<h2>' . esc_html__('VMS Eligibility Summary', 'vms') . '</h2>';
-		echo '<p class="description">' . esc_html__('Credential approvals, event-specific grants, and recent claim activity for this account.', 'vms') . '</p>';
-		echo '<p><strong>' . esc_html__('Approved credential types', 'vms') . ':</strong> ' . (!empty($program_labels) ? esc_html(implode(', ', $program_labels)) : esc_html__('None', 'vms')) . '</p>';
-		echo '<p><a class="button" href="' . esc_url($inspector_url) . '">' . esc_html__('Open Full Eligibility Inspector', 'vms') . '</a></p>';
+		echo '<h2>' . esc_html__('VMS Eligibility Summary', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description">' . esc_html__('Credential approvals, event-specific grants, and recent claim activity for this account.', 'backstage-venue-manager') . '</p>';
+		echo '<p><strong>' . esc_html__('Approved credential types', 'backstage-venue-manager') . ':</strong> ' . (!empty($program_labels) ? esc_html(implode(', ', $program_labels)) : esc_html__('None', 'backstage-venue-manager')) . '</p>';
+		echo '<p><a class="button" href="' . esc_url($inspector_url) . '">' . esc_html__('Open Full Eligibility Inspector', 'backstage-venue-manager') . '</a></p>';
 
-		echo '<h3>' . esc_html__('Event-Specific Grants', 'vms') . '</h3>';
+		echo '<h3>' . esc_html__('Event-Specific Grants', 'backstage-venue-manager') . '</h3>';
 		if (empty($grants)) {
-			echo '<p class="description">' . esc_html__('No direct event grants found.', 'vms') . '</p>';
+			echo '<p class="description">' . esc_html__('No direct event grants found.', 'backstage-venue-manager') . '</p>';
 		} else {
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Event ID', 'vms') . '</th><th>' . esc_html__('Grant Type', 'vms') . '</th><th>' . esc_html__('Ticket Context', 'vms') . '</th><th>' . esc_html__('Qty / Used', 'vms') . '</th><th>' . esc_html__('Status', 'vms') . '</th></tr></thead><tbody>';
+			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Event ID', 'backstage-venue-manager') . '</th><th>' . esc_html__('Grant Type', 'backstage-venue-manager') . '</th><th>' . esc_html__('Ticket Context', 'backstage-venue-manager') . '</th><th>' . esc_html__('Qty / Used', 'backstage-venue-manager') . '</th><th>' . esc_html__('Status', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 			foreach ($grants as $grant_row) {
 				$grant_type_key = sanitize_key((string) ($grant_row['grant_type'] ?? ''));
 				$grant_type_label = function_exists('vms_ticketing_claims_grant_type_label')
 					? vms_ticketing_claims_grant_type_label($grant_type_key)
-					: ($grant_type_key !== '' ? ucwords(str_replace('_', ' ', $grant_type_key)) : __('Unknown', 'vms'));
+					: ($grant_type_key !== '' ? ucwords(str_replace('_', ' ', $grant_type_key)) : __('Unknown', 'backstage-venue-manager'));
 				$grant_res_counts = function_exists('vms_ticketing_claims_grant_reservation_counts')
 					? vms_ticketing_claims_grant_reservation_counts(absint($grant_row['id'] ?? 0))
 					: array();
@@ -2227,11 +2227,11 @@ if (!function_exists('vms_ticketing_claims_render_user_profile_summary')) {
 			echo '</tbody></table>';
 		}
 
-		echo '<h3>' . esc_html__('Recent Claim Activity', 'vms') . '</h3>';
+		echo '<h3>' . esc_html__('Recent Claim Activity', 'backstage-venue-manager') . '</h3>';
 		if (empty($recent_logs)) {
-			echo '<p class="description">' . esc_html__('No recent claim activity found.', 'vms') . '</p>';
+			echo '<p class="description">' . esc_html__('No recent claim activity found.', 'backstage-venue-manager') . '</p>';
 		} else {
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Timestamp (UTC)', 'vms') . '</th><th>' . esc_html__('Event', 'vms') . '</th><th>' . esc_html__('Ticket', 'vms') . '</th><th>' . esc_html__('Result', 'vms') . '</th><th>' . esc_html__('Reason', 'vms') . '</th></tr></thead><tbody>';
+			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Timestamp (UTC)', 'backstage-venue-manager') . '</th><th>' . esc_html__('Event', 'backstage-venue-manager') . '</th><th>' . esc_html__('Ticket', 'backstage-venue-manager') . '</th><th>' . esc_html__('Result', 'backstage-venue-manager') . '</th><th>' . esc_html__('Reason', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 			foreach ($recent_logs as $log_row) {
 				$result = sanitize_key((string) ($log_row['result'] ?? ''));
 				$reason_code = sanitize_key((string) ($log_row['reason_code'] ?? ''));

@@ -120,7 +120,7 @@ if (!function_exists('vms_asset_version')) {
 }
 
 if (!defined('VMS_TEXTDOMAIN')) { // USED IN statuses.php
-	define('VMS_TEXTDOMAIN', 'vms');
+	define('VMS_TEXTDOMAIN', 'backstage-venue-manager');
 }
 
 if (!defined('VMS_REST_NAMESPACE')) {

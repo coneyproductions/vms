@@ -41,24 +41,24 @@ if (!class_exists('VMS_Settings_Tours')) {
 
 			add_settings_section(
 				'vms_tours_section',
-				__('Guided Tours', 'vms'),
+				__('Guided Tours', 'backstage-venue-manager'),
 				array(__CLASS__, 'render_section_intro'),
 				'vms-settings'
 			);
 
-			add_settings_field('vms_tours_enabled', __('Tours Enabled', 'vms'), array(__CLASS__, 'render_enabled_field'), 'vms-settings', 'vms_tours_section');
-			add_settings_field('vms_tours_autostart', __('Auto-launch Tours On First Visit', 'vms'), array(__CLASS__, 'render_autostart_field'), 'vms-settings', 'vms_tours_section');
-			add_settings_field('vms_tours_drift_notice_enabled', __('Drift Notice Enabled', 'vms'), array(__CLASS__, 'render_notice_field'), 'vms-settings', 'vms_tours_section');
-			add_settings_field('vms_tours_drift_badge_enabled', __('Menu Badge Enabled', 'vms'), array(__CLASS__, 'render_badge_field'), 'vms-settings', 'vms_tours_section');
-			add_settings_field('vms_tours_auto_scan_on_update', __('Auto Scan On Update', 'vms'), array(__CLASS__, 'render_autoscan_field'), 'vms-settings', 'vms_tours_section');
-			add_settings_field('vms_tours_reset_current_user', __('Reset Tours For Current User', 'vms'), array(__CLASS__, 'render_reset_field'), 'vms-settings', 'vms_tours_section');
+			add_settings_field('vms_tours_enabled', __('Tours Enabled', 'backstage-venue-manager'), array(__CLASS__, 'render_enabled_field'), 'vms-settings', 'vms_tours_section');
+			add_settings_field('vms_tours_autostart', __('Auto-launch Tours On First Visit', 'backstage-venue-manager'), array(__CLASS__, 'render_autostart_field'), 'vms-settings', 'vms_tours_section');
+			add_settings_field('vms_tours_drift_notice_enabled', __('Drift Notice Enabled', 'backstage-venue-manager'), array(__CLASS__, 'render_notice_field'), 'vms-settings', 'vms_tours_section');
+			add_settings_field('vms_tours_drift_badge_enabled', __('Menu Badge Enabled', 'backstage-venue-manager'), array(__CLASS__, 'render_badge_field'), 'vms-settings', 'vms_tours_section');
+			add_settings_field('vms_tours_auto_scan_on_update', __('Auto Scan On Update', 'backstage-venue-manager'), array(__CLASS__, 'render_autoscan_field'), 'vms-settings', 'vms_tours_section');
+			add_settings_field('vms_tours_reset_current_user', __('Reset Tours For Current User', 'backstage-venue-manager'), array(__CLASS__, 'render_reset_field'), 'vms-settings', 'vms_tours_section');
 		}
 
 		public static function render_section_intro(): void
 		{
 			echo '<p>Controls for VMS guided tours and drift health surfacing.</p>';
 			if (!empty($_GET['vms_tours_reset'])) {
-				echo '<p><strong>' . esc_html__('Tour progress reset for current user.', 'vms') . '</strong></p>';
+				echo '<p><strong>' . esc_html__('Tour progress reset for current user.', 'backstage-venue-manager') . '</strong></p>';
 			}
 		}
 
@@ -93,14 +93,14 @@ if (!class_exists('VMS_Settings_Tours')) {
 				admin_url('admin-post.php?action=vms_tours_reset_current_user'),
 				'vms_tours_reset_current_user'
 			);
-			echo '<a class="button button-secondary" href="' . esc_url($url) . '">' . esc_html__('Reset Tour Progress', 'vms') . '</a>';
-			echo '<p class="description">' . esc_html__('Clears current user tour progress and version-seen state so tours can auto-launch again.', 'vms') . '</p>';
+			echo '<a class="button button-secondary" href="' . esc_url($url) . '">' . esc_html__('Reset Tour Progress', 'backstage-venue-manager') . '</a>';
+			echo '<p class="description">' . esc_html__('Clears current user tour progress and version-seen state so tours can auto-launch again.', 'backstage-venue-manager') . '</p>';
 		}
 
 		public static function handle_reset_current_user(): void
 		{
 			if (!current_user_can('manage_options')) {
-				wp_die(esc_html__('Insufficient permissions.', 'vms'));
+				wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 			}
 			check_admin_referer('vms_tours_reset_current_user');
 

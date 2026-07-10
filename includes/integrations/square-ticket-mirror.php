@@ -123,11 +123,11 @@ function vms_square_ticket_mirror_event_plan_meta_key(string $which): string
 function vms_square_ticket_mirror_status_labels(): array
 {
     return array(
-        'not_mirrored' => __('Not mirrored', 'vms'),
-        'mirrored' => __('Mirrored', 'vms'),
-        'mirror_stale' => __('Mirror stale', 'vms'),
-        'mirror_retired' => __('Mirror retired', 'vms'),
-        'mirror_error' => __('Mirror error', 'vms'),
+        'not_mirrored' => __('Not mirrored', 'backstage-venue-manager'),
+        'mirrored' => __('Mirrored', 'backstage-venue-manager'),
+        'mirror_stale' => __('Mirror stale', 'backstage-venue-manager'),
+        'mirror_retired' => __('Mirror retired', 'backstage-venue-manager'),
+        'mirror_error' => __('Mirror error', 'backstage-venue-manager'),
     );
 }
 
@@ -328,7 +328,7 @@ function vms_square_ticket_mirror_square_error_rows($response_or_data): array
             'code_key' => sanitize_key($code !== '' ? $code : 'square_error'),
             'category' => $category,
             'field' => $field,
-            'detail' => $detail !== '' ? $detail : __('Square API error', 'vms'),
+            'detail' => $detail !== '' ? $detail : __('Square API error', 'backstage-venue-manager'),
         );
     };
 
@@ -378,7 +378,7 @@ function vms_square_ticket_mirror_square_error_summary($response_or_data): array
     if (!empty($rows)) {
         return array(
             'code' => (string) ($rows[0]['code'] ?? 'SQUARE_ERROR'),
-            'message' => (string) ($rows[0]['detail'] ?? __('Square API error', 'vms')),
+            'message' => (string) ($rows[0]['detail'] ?? __('Square API error', 'backstage-venue-manager')),
             'category' => (string) ($rows[0]['category'] ?? ''),
             'field' => (string) ($rows[0]['field'] ?? ''),
             'rows' => $rows,
@@ -577,7 +577,7 @@ function vms_square_ticket_mirror_get_square_context(bool $with_locations = fals
 
     if (!function_exists('wc_square')) {
         $context['error_code'] = 'square_plugin_missing';
-        $context['error_message'] = __('WooCommerce Square is not loaded.', 'vms');
+        $context['error_message'] = __('WooCommerce Square is not loaded.', 'backstage-venue-manager');
         return $context;
     }
 
@@ -589,14 +589,14 @@ function vms_square_ticket_mirror_get_square_context(bool $with_locations = fals
 
     if (!is_object($plugin) || !method_exists($plugin, 'get_settings_handler')) {
         $context['error_code'] = 'square_plugin_unavailable';
-        $context['error_message'] = __('WooCommerce Square is unavailable.', 'vms');
+        $context['error_message'] = __('WooCommerce Square is unavailable.', 'backstage-venue-manager');
         return $context;
     }
 
     $settings = $plugin->get_settings_handler();
     if (!is_object($settings)) {
         $context['error_code'] = 'square_settings_unavailable';
-        $context['error_message'] = __('WooCommerce Square settings are unavailable.', 'vms');
+        $context['error_message'] = __('WooCommerce Square settings are unavailable.', 'backstage-venue-manager');
         return $context;
     }
 
@@ -607,13 +607,13 @@ function vms_square_ticket_mirror_get_square_context(bool $with_locations = fals
 
     if (!method_exists($settings, 'is_connected') || !$settings->is_connected()) {
         $context['error_code'] = 'square_not_connected';
-        $context['error_message'] = __('WooCommerce Square is not connected.', 'vms');
+        $context['error_message'] = __('WooCommerce Square is not connected.', 'backstage-venue-manager');
         return $context;
     }
 
     if ($context['location_id'] === '') {
         $context['error_code'] = 'square_location_missing';
-        $context['error_message'] = __('WooCommerce Square does not have a configured location.', 'vms');
+        $context['error_message'] = __('WooCommerce Square does not have a configured location.', 'backstage-venue-manager');
         return $context;
     }
 
@@ -639,7 +639,7 @@ function vms_square_ticket_mirror_get_square_context(bool $with_locations = fals
     $context['ok'] = is_object($context['api']);
     if (!$context['ok']) {
         $context['error_code'] = 'square_api_unavailable';
-        $context['error_message'] = __('WooCommerce Square API is unavailable.', 'vms');
+        $context['error_message'] = __('WooCommerce Square API is unavailable.', 'backstage-venue-manager');
     }
 
     return $context;
@@ -765,7 +765,7 @@ function vms_square_ticket_mirror_find_remote_category_by_name($api, string $tar
         'square_id' => '',
         'square_version' => 0,
         'error_code' => 'square_category_not_found',
-        'error_message' => __('Square category was not found.', 'vms'),
+        'error_message' => __('Square category was not found.', 'backstage-venue-manager'),
     );
 }
 
@@ -778,7 +778,7 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
             'square_id' => '',
             'square_version' => 0,
             'error_code' => 'square_category_not_found',
-            'error_message' => __('Square category was not found.', 'vms'),
+            'error_message' => __('Square category was not found.', 'backstage-venue-manager'),
         );
     }
 
@@ -793,7 +793,7 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
             'square_id' => '',
             'square_version' => 0,
             'error_code' => (string) ($first['code'] ?? 'square_category_retrieve_failed'),
-            'error_message' => (string) ($first['detail'] ?? ($exception['message'] ?? __('Square category could not be retrieved.', 'vms'))),
+            'error_message' => (string) ($first['detail'] ?? ($exception['message'] ?? __('Square category could not be retrieved.', 'backstage-venue-manager'))),
             'response_json' => vms_square_ticket_mirror_json_encode($exception),
         );
     }
@@ -820,7 +820,7 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
             'square_id' => '',
             'square_version' => 0,
             'error_code' => 'square_category_not_found',
-            'error_message' => __('Square category was not found.', 'vms'),
+            'error_message' => __('Square category was not found.', 'backstage-venue-manager'),
             'response_json' => vms_square_ticket_mirror_json_encode(array(
                 'object' => vms_square_ticket_mirror_catalog_object_debug_shape($object),
             )),
@@ -886,7 +886,7 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
         return array_merge($result, array(
             'ok' => false,
             'error_code' => (string) ($square['error_code'] ?? 'square_unavailable'),
-            'error_message' => (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'vms')),
+            'error_message' => (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'backstage-venue-manager')),
         ));
     }
 
@@ -966,7 +966,7 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
         return array_merge($result, array(
             'ok' => false,
             'error_code' => 'square_category_missing_id',
-            'error_message' => __('Square did not return a category ID.', 'vms'),
+            'error_message' => __('Square did not return a category ID.', 'backstage-venue-manager'),
             'request_json' => $request_json,
             'response_json' => vms_square_ticket_mirror_json_encode(array(
                 'object' => vms_square_ticket_mirror_catalog_object_debug_shape($remote_object),
@@ -1034,7 +1034,7 @@ function vms_square_ticket_mirror_resolve_location(int $event_plan_id = 0, bool 
 
     if ($location_id === '') {
         $result['error_code'] = 'square_location_missing';
-        $result['error_message'] = __('No Square location could be resolved.', 'vms');
+        $result['error_message'] = __('No Square location could be resolved.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1181,21 +1181,21 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
 
     if ($product_id <= 0) {
         $result['reason_code'] = 'invalid_product';
-        $result['reason_message'] = __('Product ID is invalid.', 'vms');
+        $result['reason_message'] = __('Product ID is invalid.', 'backstage-venue-manager');
         return $result;
     }
 
     $post_type = (string) get_post_type($product_id);
     if ($post_type !== 'product') {
         $result['reason_code'] = 'not_product';
-        $result['reason_message'] = __('Product is not a WooCommerce product.', 'vms');
+        $result['reason_message'] = __('Product is not a WooCommerce product.', 'backstage-venue-manager');
         return $result;
     }
 
     $post_status = (string) get_post_status($product_id);
     if (in_array($post_status, array('draft', 'trash', 'auto-draft', 'pending'), true)) {
         $result['reason_code'] = 'product_inactive';
-        $result['reason_message'] = __('Ticket product is inactive.', 'vms');
+        $result['reason_message'] = __('Ticket product is inactive.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1203,7 +1203,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
     $result['role'] = $role;
     if (!in_array($role, vms_square_ticket_mirror_included_roles(), true)) {
         $result['reason_code'] = 'role_excluded';
-        $result['reason_message'] = __('Only paid public online ticket products are mirrored in Phase 1.', 'vms');
+        $result['reason_message'] = __('Only paid public online ticket products are mirrored in Phase 1.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1218,7 +1218,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
     $result['verified_program'] = sanitize_key((string) ($visibility['program'] ?? ''));
     if ($visibility_mode !== 'public') {
         $result['reason_code'] = 'visibility_excluded';
-        $result['reason_message'] = __('Only public ticket products are mirrored in Phase 1.', 'vms');
+        $result['reason_message'] = __('Only public ticket products are mirrored in Phase 1.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1240,7 +1240,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
 
     if ($result['event_plan_id'] <= 0 || $result['tec_event_id'] <= 0) {
         $result['reason_code'] = 'missing_event_linkage';
-        $result['reason_message'] = __('Ticket product is missing valid event linkage.', 'vms');
+        $result['reason_message'] = __('Ticket product is missing valid event linkage.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1248,7 +1248,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
         $disabled = (array) vms_ticketing_v2_disabled_ticket_config_for_product($product_id, $result['event_plan_id']);
         if (!empty($disabled['disabled'])) {
             $result['reason_code'] = 'ticket_disabled_pending_sync';
-            $result['reason_message'] = __('Ticket is disabled in saved config and pending retirement.', 'vms');
+            $result['reason_message'] = __('Ticket is disabled in saved config and pending retirement.', 'backstage-venue-manager');
             return $result;
         }
     }
@@ -1264,7 +1264,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
     $result['sku'] = $sku;
     if ($sku === '') {
         $result['reason_code'] = 'missing_sku';
-        $result['reason_message'] = __('Ticket product does not have a SKU.', 'vms');
+        $result['reason_message'] = __('Ticket product does not have a SKU.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1272,19 +1272,19 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
     $result['ticket_label'] = $ticket_label;
     if ($ticket_label === '') {
         $result['reason_code'] = 'missing_ticket_label';
-        $result['reason_message'] = __('Ticket label could not be resolved.', 'vms');
+        $result['reason_message'] = __('Ticket label could not be resolved.', 'backstage-venue-manager');
         return $result;
     }
 
     if (vms_square_ticket_mirror_is_excluded_label($ticket_label)) {
         $result['reason_code'] = 'label_excluded';
-        $result['reason_message'] = __('Ticket label matches a Phase 1 exclusion rule.', 'vms');
+        $result['reason_message'] = __('Ticket label matches a Phase 1 exclusion rule.', 'backstage-venue-manager');
         return $result;
     }
 
     if ((string) get_post_meta($product_id, '_vms_is_rsvp', true) === 'yes') {
         $result['reason_code'] = 'rsvp_excluded';
-        $result['reason_message'] = __('RSVP / free public tickets are excluded from Phase 1 mirrors.', 'vms');
+        $result['reason_message'] = __('RSVP / free public tickets are excluded from Phase 1 mirrors.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1294,7 +1294,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
     $result['currency'] = (string) ($price_context['currency'] ?? $result['currency']);
     if ($result['price_cents'] <= 0) {
         $result['reason_code'] = 'price_excluded';
-        $result['reason_message'] = __('Free, comp, and zero-price tickets are excluded from Phase 1 mirrors.', 'vms');
+        $result['reason_message'] = __('Free, comp, and zero-price tickets are excluded from Phase 1 mirrors.', 'backstage-venue-manager');
         return $result;
     }
 
@@ -1572,7 +1572,7 @@ function vms_square_ticket_mirror_retrieve_remote_item(string $item_id): array
         return array(
             'ok' => false,
             'error_code' => 'missing_item_id',
-            'error_message' => __('Square item ID is missing.', 'vms'),
+            'error_message' => __('Square item ID is missing.', 'backstage-venue-manager'),
         );
     }
 
@@ -1581,7 +1581,7 @@ function vms_square_ticket_mirror_retrieve_remote_item(string $item_id): array
         return array(
             'ok' => false,
             'error_code' => (string) ($square['error_code'] ?? 'square_unavailable'),
-            'error_message' => (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'vms')),
+            'error_message' => (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'backstage-venue-manager')),
         );
     }
 
@@ -1617,7 +1617,7 @@ function vms_square_ticket_mirror_retrieve_remote_item(string $item_id): array
         return array(
             'ok' => false,
             'error_code' => 'square_item_missing',
-            'error_message' => __('Square mirror item was not found.', 'vms'),
+            'error_message' => __('Square mirror item was not found.', 'backstage-venue-manager'),
             'response_json' => vms_square_ticket_mirror_catalog_object_debug_json($object),
         );
     }
@@ -1716,7 +1716,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
     $eligibility = (array) ($before['eligibility'] ?? array());
 
     if (empty($eligibility['eligible'])) {
-        $message = (string) ($eligibility['reason_message'] ?? __('Ticket is not eligible for Square mirroring.', 'vms'));
+        $message = (string) ($eligibility['reason_message'] ?? __('Ticket is not eligible for Square mirroring.', 'backstage-venue-manager'));
         vms_square_ticket_mirror_log($product_id, 'mirror_skip', array(
             'status_before' => (string) ($before['status'] ?? ''),
             'status_after' => (string) ($before['status'] ?? ''),
@@ -1742,7 +1742,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
         return vms_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($category['error_code'] ?? 'square_category_unavailable')),
-            (string) ($category['error_message'] ?? __('Square category could not be resolved.', 'vms')),
+            (string) ($category['error_message'] ?? __('Square category could not be resolved.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
                 'request_json' => vms_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
@@ -1757,7 +1757,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
         return vms_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($location['error_code'] ?? 'square_location_unavailable')),
-            (string) ($location['error_message'] ?? __('Square location could not be resolved.', 'vms')),
+            (string) ($location['error_message'] ?? __('Square location could not be resolved.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
                 'request_json' => vms_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
@@ -1787,7 +1787,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
                 return vms_square_ticket_mirror_set_error_state(
                     $product_id,
                     sanitize_key((string) ($retrieved_remote_state['error_code'] ?? 'square_retrieve_failed')),
-                    (string) ($retrieved_remote_state['error_message'] ?? __('Square mirror item could not be retrieved.', 'vms')),
+                    (string) ($retrieved_remote_state['error_message'] ?? __('Square mirror item could not be retrieved.', 'backstage-venue-manager')),
                     array(
                         'action' => 'mirror_error',
                         'item_id' => $stored_item_id,
@@ -1808,7 +1808,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
         return vms_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($square['error_code'] ?? 'square_unavailable')),
-            (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'vms')),
+            (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
                 'request_json' => vms_square_ticket_mirror_json_encode($source_model),
@@ -1866,7 +1866,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
         return vms_square_ticket_mirror_set_error_state(
             $product_id,
             'square_missing_ids',
-            __('Square did not return both item and variation IDs for the ticket mirror.', 'vms'),
+            __('Square did not return both item and variation IDs for the ticket mirror.', 'backstage-venue-manager'),
             array(
                 'action' => 'mirror_error',
                 'request_json' => $request_json,
@@ -1924,7 +1924,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
             'ok' => false,
             'product_id' => $product_id,
             'error_code' => 'missing_item_id',
-            'error_message' => __('Square mirror item ID is missing.', 'vms'),
+            'error_message' => __('Square mirror item ID is missing.', 'backstage-venue-manager'),
         );
     }
 
@@ -1939,7 +1939,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
         return vms_square_ticket_mirror_set_error_state(
             $product_id,
             'square_location_missing',
-            __('Square mirror location is missing.', 'vms'),
+            __('Square mirror location is missing.', 'backstage-venue-manager'),
             array(
                 'action' => 'mirror_error',
                 'item_id' => $item_id,
@@ -1954,7 +1954,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
         return vms_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($square['error_code'] ?? 'square_unavailable')),
-            (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'vms')),
+            (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
                 'item_id' => $item_id,
@@ -1979,7 +1979,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
             'variation_id' => (string) ($before['variation_id'] ?? ''),
             'location_id' => $location_id,
             'error_code' => sanitize_key((string) ($remote_state['error_code'] ?? 'square_item_missing')),
-            'error_message' => (string) ($remote_state['error_message'] ?? __('Square mirror item was already absent.', 'vms')),
+            'error_message' => (string) ($remote_state['error_message'] ?? __('Square mirror item was already absent.', 'backstage-venue-manager')),
             'response_json' => isset($remote_state['response_json']) ? (string) $remote_state['response_json'] : '',
             'source_model' => $before['source_model'] ?? array(),
         ));
@@ -1998,7 +1998,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
         return vms_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($remote_state['error_code'] ?? 'square_retrieve_failed')),
-            (string) ($remote_state['error_message'] ?? __('Square mirror item could not be retrieved.', 'vms')),
+            (string) ($remote_state['error_message'] ?? __('Square mirror item could not be retrieved.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
                 'item_id' => $item_id,
@@ -2152,20 +2152,20 @@ function vms_square_ticket_mirror_order_item_stamp_decision(int $product_id, str
 
     if ($product_id <= 0) {
         $decision['reason_code'] = 'invalid_product';
-        $decision['reason_message'] = __('Order item does not resolve to a product.', 'vms');
+        $decision['reason_message'] = __('Order item does not resolve to a product.', 'backstage-venue-manager');
         return $decision;
     }
 
     if (empty($eligibility['eligible'])) {
         $decision['reason_code'] = sanitize_key((string) ($eligibility['reason_code'] ?? 'not_eligible'));
-        $decision['reason_message'] = (string) ($eligibility['reason_message'] ?? __('Product is not eligible for ticket mirroring.', 'vms'));
+        $decision['reason_message'] = (string) ($eligibility['reason_message'] ?? __('Product is not eligible for ticket mirroring.', 'backstage-venue-manager'));
         return $decision;
     }
 
     if ((string) ($state['status'] ?? '') !== 'mirrored') {
         $decision['reason_code'] = 'mirror_status_' . sanitize_key((string) ($state['status'] ?? 'not_mirrored'));
         $decision['reason_message'] = sprintf(
-            __('Mirror status is %s, so the order item was not stamped.', 'vms'),
+            __('Mirror status is %s, so the order item was not stamped.', 'backstage-venue-manager'),
             vms_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored'))
         );
         return $decision;
@@ -2173,13 +2173,13 @@ function vms_square_ticket_mirror_order_item_stamp_decision(int $product_id, str
 
     if ($decision['mirror_variation_id'] === '') {
         $decision['reason_code'] = 'missing_variation_id';
-        $decision['reason_message'] = __('Mirror variation ID is missing.', 'vms');
+        $decision['reason_message'] = __('Mirror variation ID is missing.', 'backstage-venue-manager');
         return $decision;
     }
 
     if ($existing_square_variation_id !== '' && $existing_square_variation_id === $decision['mirror_variation_id']) {
         $decision['reason_code'] = 'already_stamped';
-        $decision['reason_message'] = __('Order item already carries the correct Square variation ID.', 'vms');
+        $decision['reason_message'] = __('Order item already carries the correct Square variation ID.', 'backstage-venue-manager');
         return $decision;
     }
 
@@ -2193,7 +2193,7 @@ function vms_square_ticket_mirror_maybe_stamp_checkout_item($item, array $contex
         return array(
             'applied' => false,
             'reason_code' => 'not_product_item',
-            'reason_message' => __('Order item is not a product line item.', 'vms'),
+            'reason_message' => __('Order item is not a product line item.', 'backstage-venue-manager'),
         );
     }
 
@@ -2242,7 +2242,7 @@ function vms_square_ticket_mirror_maybe_stamp_checkout_item($item, array $contex
                 'product_id' => $decision['product_id'],
             ))),
             'error_code' => (string) ($decision['reason_code'] ?? 'skip'),
-            'error_message' => (string) ($decision['reason_message'] ?? __('Order item was not stamped.', 'vms')),
+            'error_message' => (string) ($decision['reason_message'] ?? __('Order item was not stamped.', 'backstage-venue-manager')),
             'source_model' => $decision['source_model'] ?? array(),
         ));
     }
@@ -2322,7 +2322,7 @@ function vms_square_ticket_mirror_stamp_new_order_item($item_id, $item, $order_i
                 'product_id' => $decision['product_id'],
             )),
             'error_code' => (string) ($decision['reason_code'] ?? 'skip'),
-            'error_message' => (string) ($decision['reason_message'] ?? __('Order item was not stamped.', 'vms')),
+            'error_message' => (string) ($decision['reason_message'] ?? __('Order item was not stamped.', 'backstage-venue-manager')),
             'source_model' => $decision['source_model'] ?? array(),
         ));
     }

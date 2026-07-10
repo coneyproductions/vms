@@ -417,7 +417,7 @@ if (!function_exists('vms_calendar_vendor_primary_type')) {
 		static $cache = array();
 		$vendor_id = absint($vendor_id);
 		if ($vendor_id <= 0) {
-			return array('slug' => 'untyped', 'name' => __('Other', 'vms'));
+			return array('slug' => 'untyped', 'name' => __('Other', 'backstage-venue-manager'));
 		}
 
 		if (isset($cache[$vendor_id])) {
@@ -426,7 +426,7 @@ if (!function_exists('vms_calendar_vendor_primary_type')) {
 
 		$terms = wp_get_post_terms($vendor_id, 'vms_vendor_type');
 		if (is_wp_error($terms) || empty($terms)) {
-			$cache[$vendor_id] = array('slug' => 'untyped', 'name' => __('Other', 'vms'));
+			$cache[$vendor_id] = array('slug' => 'untyped', 'name' => __('Other', 'backstage-venue-manager'));
 			return $cache[$vendor_id];
 		}
 
@@ -437,7 +437,7 @@ if (!function_exists('vms_calendar_vendor_primary_type')) {
 			$slug = 'untyped';
 		}
 		if ($name === '') {
-			$name = __('Other', 'vms');
+			$name = __('Other', 'backstage-venue-manager');
 		}
 
 		$cache[$vendor_id] = array('slug' => $slug, 'name' => $name);
@@ -450,7 +450,7 @@ if (!function_exists('vms_calendar_vendor_type_label')) {
 	{
 		$type_slug = sanitize_key($type_slug);
 		if ($type_slug === '') {
-			return __('Other', 'vms');
+			return __('Other', 'backstage-venue-manager');
 		}
 
 		if (function_exists('vms_vendor_type_label')) {
@@ -728,7 +728,7 @@ if (!function_exists('vms_calendar_prepare_vendor_groups')) {
 
 			$display_name = (string) get_the_title($vendor_id);
 			if ($display_name === '') {
-				$display_name = __('(Vendor)', 'vms');
+				$display_name = __('(Vendor)', 'backstage-venue-manager');
 			}
 
 			$vendor_url = vms_calendar_vendor_display_url($vendor_id);
@@ -1100,7 +1100,7 @@ if (!function_exists('vms_get_calendar_events')) {
 
 			$title = (string) get_the_title($plan_id);
 			if ($title === '') {
-				$title = __('Event', 'vms');
+				$title = __('Event', 'backstage-venue-manager');
 			}
 
 			$excerpt = '';

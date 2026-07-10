@@ -266,13 +266,13 @@ if (!function_exists('vms_notify_provider_core_email_send')) {
 		if (!is_email($to)) {
 			return array(
 				'success' => false,
-				'error_message' => __('Recipient email is invalid.', 'vms'),
+				'error_message' => __('Recipient email is invalid.', 'backstage-venue-manager'),
 			);
 		}
 
 		$subject = sanitize_text_field((string) ($message['subject'] ?? ''));
 		if ($subject === '') {
-			$subject = __('Notification', 'vms');
+			$subject = __('Notification', 'backstage-venue-manager');
 		}
 
 		$body_text = trim((string) ($message['body_text'] ?? ''));
@@ -280,7 +280,7 @@ if (!function_exists('vms_notify_provider_core_email_send')) {
 		if ($body_text === '' && $body_html === '') {
 			return array(
 				'success' => false,
-				'error_message' => __('Message body is empty.', 'vms'),
+				'error_message' => __('Message body is empty.', 'backstage-venue-manager'),
 			);
 		}
 
@@ -295,7 +295,7 @@ if (!function_exists('vms_notify_provider_core_email_send')) {
 		return array(
 			'success' => $sent,
 			'provider_message_id' => null,
-			'error_message' => $sent ? '' : __('wp_mail reported failure.', 'vms'),
+			'error_message' => $sent ? '' : __('wp_mail reported failure.', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -512,7 +512,7 @@ if (!function_exists('vms_notify_resolve_template_payload')) {
 			return $fallback;
 		}
 
-		return new WP_Error('vms_notify_template_missing', __('Notification template is missing.', 'vms'));
+		return new WP_Error('vms_notify_template_missing', __('Notification template is missing.', 'backstage-venue-manager'));
 	}
 }
 
@@ -604,7 +604,7 @@ if (!function_exists('vms_notify_user')) {
 				'payload' => $vars,
 				'provider' => 'core_email',
 				'status' => 'skipped',
-				'error_message' => __('All user notification channels are disabled.', 'vms'),
+				'error_message' => __('All user notification channels are disabled.', 'backstage-venue-manager'),
 			));
 			return array(
 				'ok' => false,
@@ -627,7 +627,7 @@ if (!function_exists('vms_notify_user')) {
 
 			if ($recipient === '') {
 				$skipped++;
-				$error = __('Recipient address is missing for this channel.', 'vms');
+				$error = __('Recipient address is missing for this channel.', 'backstage-venue-manager');
 				vms_notify_insert_log(array(
 					'source' => (string) ($payload['source'] ?? 'vms_module'),
 					'event_key' => $event_key,
@@ -647,7 +647,7 @@ if (!function_exists('vms_notify_user')) {
 
 			if ($provider_key === '' || !isset($providers[$provider_key])) {
 				$skipped++;
-				$error = __('Channel provider is not installed.', 'vms');
+				$error = __('Channel provider is not installed.', 'backstage-venue-manager');
 				vms_notify_insert_log(array(
 					'source' => (string) ($payload['source'] ?? 'vms_module'),
 					'event_key' => $event_key,
@@ -682,7 +682,7 @@ if (!function_exists('vms_notify_user')) {
 			$provider_result = call_user_func($providers[$provider_key], $message);
 			$provider_ok = is_array($provider_result) && !empty($provider_result['success']);
 			$provider_msg_id = is_array($provider_result) ? sanitize_text_field((string) ($provider_result['provider_message_id'] ?? '')) : '';
-			$error_message = is_array($provider_result) ? sanitize_textarea_field((string) ($provider_result['error_message'] ?? '')) : __('Provider returned an invalid response.', 'vms');
+			$error_message = is_array($provider_result) ? sanitize_textarea_field((string) ($provider_result['error_message'] ?? '')) : __('Provider returned an invalid response.', 'backstage-venue-manager');
 
 			if ($provider_ok) {
 				$sent++;
@@ -715,7 +715,7 @@ if (!function_exists('vms_notify_user')) {
 					'provider' => $provider_key,
 					'provider_message_id' => $provider_msg_id,
 					'status' => 'failed',
-					'error_message' => $error_message !== '' ? $error_message : __('Provider send failed.', 'vms'),
+					'error_message' => $error_message !== '' ? $error_message : __('Provider send failed.', 'backstage-venue-manager'),
 				));
 				$results[] = array('channel' => $channel, 'status' => 'failed', 'provider' => $provider_key, 'error' => $error_message);
 			}

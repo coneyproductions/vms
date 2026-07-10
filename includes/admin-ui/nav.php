@@ -459,7 +459,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 
 			if ($has_quick_menu) {
 				/* translators: %s: top navigation item label. */
-				$quick_menu_label = sprintf(__('%s quick menu', 'vms'), $label);
+				$quick_menu_label = sprintf(__('%s quick menu', 'backstage-venue-manager'), $label);
 				echo '<div class="vms-admin-topnav__quick-menu" id="' . esc_attr($quick_menu_id) . '" role="menu" aria-label="' . esc_attr($quick_menu_label) . '">';
 				foreach ($items as $quick_item) {
 					$quick_label = isset($quick_item['label']) ? (string) $quick_item['label'] : '';
@@ -554,8 +554,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 
 		add_submenu_page(
 			'vms-dashboard',
-			__('Marketing & Social', 'vms'),
-			__('Marketing & Social', 'vms'),
+			__('Marketing & Social', 'backstage-venue-manager'),
+			__('Marketing & Social', 'backstage-venue-manager'),
 			$capability,
 			'vms-marketing-social',
 			'vms_admin_ui_render_marketing_social_hub_page'
@@ -564,8 +564,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 		if (vms_admin_ui_current_user_can_data_tools()) {
 			add_submenu_page(
 				'vms-dashboard',
-				__('Data Tools', 'vms'),
-				__('Data Tools', 'vms'),
+				__('Data Tools', 'backstage-venue-manager'),
+				__('Data Tools', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-data-tools',
 				'vms_admin_ui_render_data_tools_page'
@@ -582,8 +582,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 
 			add_submenu_page(
 				'vms-dashboard',
-				__('VMS Ops Console', 'vms'),
-				__('VMS Ops Console', 'vms'),
+				__('VMS Ops Console', 'backstage-venue-manager'),
+				__('VMS Ops Console', 'backstage-venue-manager'),
 				$menu_cap,
 				$ops_slug,
 				$ops_callback
@@ -591,8 +591,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 
 			add_submenu_page(
 				'vms-dashboard',
-				__('Teams', 'vms'),
-				__('Teams', 'vms'),
+				__('Teams', 'backstage-venue-manager'),
+				__('Teams', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-teams',
 				'vms_admin_ui_render_teams_page'
@@ -600,8 +600,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 
 			add_submenu_page(
 				'vms-dashboard',
-				__('Alert Presets', 'vms'),
-				__('Alert Presets', 'vms'),
+				__('Alert Presets', 'backstage-venue-manager'),
+				__('Alert Presets', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-alert-presets',
 				'vms_admin_ui_render_alert_presets_page'
@@ -611,8 +611,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 			if (function_exists('vms_ops_admin_render_settings_page')) {
 				add_submenu_page(
 					'vms-dashboard',
-					__('VMS Ops Console Hub', 'vms'),
-					__('VMS Ops Console Hub', 'vms'),
+					__('VMS Ops Console Hub', 'backstage-venue-manager'),
+					__('VMS Ops Console Hub', 'backstage-venue-manager'),
 					$menu_cap,
 					'vms-ops-console-hub',
 					'vms_admin_ui_render_ops_console_page'
@@ -778,13 +778,13 @@ if (!function_exists('vms_admin_ui_grouped_left_menu_default_clusters')) {
 
 		if (empty($clusters)) {
 			$clusters = array(
-				'dashboard' => array('key' => 'dashboard', 'label' => vms_i18n_runtime('Dashboard', 'vms'), 'sections' => array('dashboard'), 'slugs' => array('vms-dashboard'), 'pages' => array()),
-				'planning' => array('key' => 'planning', 'label' => vms_i18n_runtime('Planning', 'vms'), 'sections' => array('events_schedule', 'tickets_admissions'), 'slugs' => array('vms-schedule', 'edit.php?post_type=vms_event_plan'), 'pages' => array()),
-				'vendors_staff' => array('key' => 'vendors_staff', 'label' => vms_i18n_runtime('Vendors & Staff', 'vms'), 'sections' => array('vendors_staff'), 'slugs' => array('vms-vendor-command-center'), 'pages' => array()),
-				'marketing_social' => array('key' => 'marketing_social', 'label' => vms_i18n_runtime('Marketing & Social', 'vms'), 'sections' => array('marketing_sales'), 'slugs' => array('vms-marketing-social'), 'pages' => array()),
-				'venues' => array('key' => 'venues', 'label' => vms_i18n_runtime('Venues', 'vms'), 'sections' => array('venue_setup'), 'slugs' => array('edit.php?post_type=vms_venue'), 'pages' => array()),
-				'settings' => array('key' => 'settings', 'label' => vms_i18n_runtime('Settings', 'vms'), 'sections' => array('settings_addons'), 'slugs' => array('vms-settings'), 'pages' => array()),
-				'tools' => array('key' => 'tools', 'label' => vms_i18n_runtime('Tools', 'vms'), 'sections' => array('reports_finance', 'tools_integrity'), 'slugs' => array('vms-admin-pages'), 'pages' => array()),
+				'dashboard' => array('key' => 'dashboard', 'label' => vms_i18n_runtime('Dashboard', 'backstage-venue-manager'), 'sections' => array('dashboard'), 'slugs' => array('vms-dashboard'), 'pages' => array()),
+				'planning' => array('key' => 'planning', 'label' => vms_i18n_runtime('Planning', 'backstage-venue-manager'), 'sections' => array('events_schedule', 'tickets_admissions'), 'slugs' => array('vms-schedule', 'edit.php?post_type=vms_event_plan'), 'pages' => array()),
+				'vendors_staff' => array('key' => 'vendors_staff', 'label' => vms_i18n_runtime('Vendors & Staff', 'backstage-venue-manager'), 'sections' => array('vendors_staff'), 'slugs' => array('vms-vendor-command-center'), 'pages' => array()),
+				'marketing_social' => array('key' => 'marketing_social', 'label' => vms_i18n_runtime('Marketing & Social', 'backstage-venue-manager'), 'sections' => array('marketing_sales'), 'slugs' => array('vms-marketing-social'), 'pages' => array()),
+				'venues' => array('key' => 'venues', 'label' => vms_i18n_runtime('Venues', 'backstage-venue-manager'), 'sections' => array('venue_setup'), 'slugs' => array('edit.php?post_type=vms_venue'), 'pages' => array()),
+				'settings' => array('key' => 'settings', 'label' => vms_i18n_runtime('Settings', 'backstage-venue-manager'), 'sections' => array('settings_addons'), 'slugs' => array('vms-settings'), 'pages' => array()),
+				'tools' => array('key' => 'tools', 'label' => vms_i18n_runtime('Tools', 'backstage-venue-manager'), 'sections' => array('reports_finance', 'tools_integrity'), 'slugs' => array('vms-admin-pages'), 'pages' => array()),
 			);
 		}
 
@@ -1148,13 +1148,13 @@ if (!function_exists('vms_admin_ui_render_marketing_social_hub_page')) {
 
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
-				array('title' => __('Marketing & Social', 'vms')),
+				array('title' => __('Marketing & Social', 'backstage-venue-manager')),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('Marketing & Social', 'vms') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('Marketing & Social', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}
@@ -1175,8 +1175,8 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 			if (function_exists('vms_admin_ui_render_shell')) {
 				vms_admin_ui_render_shell(
 					array(
-						'title' => __('Data Tools', 'vms'),
-						'subtitle' => __('Importers, reports, reconciliation, and maintenance tools inside the VMS admin shell.', 'vms'),
+						'title' => __('Data Tools', 'backstage-venue-manager'),
+						'subtitle' => __('Importers, reports, reconciliation, and maintenance tools inside the VMS admin shell.', 'backstage-venue-manager'),
 						'shell_id' => 'vms-data-tools-wrap',
 					),
 					$render_content
@@ -1201,13 +1201,13 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
-				array('title' => __('Data Tools', 'vms')),
+				array('title' => __('Data Tools', 'backstage-venue-manager')),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('Data Tools', 'vms') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('Data Tools', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}
@@ -1235,13 +1235,13 @@ if (!function_exists('vms_admin_ui_render_teams_page')) {
 
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
-				array('title' => __('Teams', 'vms')),
+				array('title' => __('Teams', 'backstage-venue-manager')),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('Teams', 'vms') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('Teams', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}
@@ -1269,13 +1269,13 @@ if (!function_exists('vms_admin_ui_render_alert_presets_page')) {
 
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
-				array('title' => __('Alert Presets', 'vms')),
+				array('title' => __('Alert Presets', 'backstage-venue-manager')),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('Alert Presets', 'vms') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('Alert Presets', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}
@@ -1300,13 +1300,13 @@ if (!function_exists('vms_admin_ui_render_ops_console_page')) {
 
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
-				array('title' => __('VMS Ops Console', 'vms')),
+				array('title' => __('VMS Ops Console', 'backstage-venue-manager')),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('VMS Ops Console', 'vms') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('VMS Ops Console', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}

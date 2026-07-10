@@ -1,4 +1,4 @@
-VMS – Venue Management System
+Backstage Venue Manager
 Copyright (C) 2026 Coney Productions
 
 This program is free software; you can redistribute it and/or modify it under

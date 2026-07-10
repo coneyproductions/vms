@@ -61,7 +61,7 @@ if (!function_exists('vms_render_help_button')) {
 		}
 
 		$anchor = isset($args['anchor']) ? vms_tours_sanitize_anchor_token((string) $args['anchor']) : '';
-		$label = isset($args['label']) ? sanitize_text_field((string) $args['label']) : vms_i18n_runtime('Help', 'vms');
+		$label = isset($args['label']) ? sanitize_text_field((string) $args['label']) : vms_i18n_runtime('Help', 'backstage-venue-manager');
 		$class = isset($args['class']) ? sanitize_html_class((string) $args['class']) : '';
 
 		$classes = trim('button button-secondary vms-tour-help-trigger ' . $class);

@@ -89,13 +89,13 @@ if (!function_exists('vms_staff_tax_status_context')) {
             : array();
 
         $stage = 'incomplete';
-        $badge_label = __('Incomplete', 'vms');
+        $badge_label = __('Incomplete', 'backstage-venue-manager');
         if ($done_at > 0) {
             $stage = 'complete';
-            $badge_label = __('Complete', 'vms');
+            $badge_label = __('Complete', 'backstage-venue-manager');
         } elseif ($effective_provider !== 'upload' && $attested_at > 0) {
             $stage = 'submitted';
-            $badge_label = __('Submitted', 'vms');
+            $badge_label = __('Submitted', 'backstage-venue-manager');
         }
 
         return array(
@@ -185,16 +185,16 @@ add_action('admin_notices', function (): void {
 
     $notice = sanitize_key((string) wp_unslash($_GET['vms_staff_tax_notice']));
     if ($notice === 'complete') {
-        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Staff tax profile marked complete.', 'vms') . '</p></div>';
+        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Staff tax profile marked complete.', 'backstage-venue-manager') . '</p></div>';
     } elseif ($notice === 'cleared') {
-        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Staff admin completion was cleared.', 'vms') . '</p></div>';
+        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Staff admin completion was cleared.', 'backstage-venue-manager') . '</p></div>';
     }
 });
 
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_staff_tax_status',
-        __('Tax Profile Status', 'vms'),
+        __('Tax Profile Status', 'backstage-venue-manager'),
         'vms_render_staff_tax_status_metabox',
         'vms_staff',
         'side',
@@ -225,14 +225,14 @@ function vms_render_staff_tax_status_metabox($post)
 
         echo '<p class="vms-staff-tax-badge-row">';
         echo $is_complete
-            ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Employee packet complete', 'vms') . '</span>'
-            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Employee packet incomplete', 'vms') . '</span>';
+            ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Employee packet complete', 'backstage-venue-manager') . '</span>'
+            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Employee packet incomplete', 'backstage-venue-manager') . '</span>';
         echo '</p>';
 
-        echo '<p class="vms-mini">' . esc_html__('W-2 employees still need onboarding paperwork. Track it here (no SSN entered into WordPress).', 'vms') . '</p>';
+        echo '<p class="vms-mini">' . esc_html__('W-2 employees still need onboarding paperwork. Track it here (no SSN entered into WordPress).', 'backstage-venue-manager') . '</p>';
 
         if (!$is_complete) {
-            echo '<p class="vms-mini">' . esc_html__('Missing required items:', 'vms') . '</p>';
+            echo '<p class="vms-mini">' . esc_html__('Missing required items:', 'backstage-venue-manager') . '</p>';
             echo '<ul class="vms-missing">';
             foreach ($missing as $m) {
                 echo '<li>' . esc_html($m) . '</li>';
@@ -245,19 +245,19 @@ function vms_render_staff_tax_status_metabox($post)
         $dd = (int) get_post_meta($staff_id, vms_staff_employee_direct_deposit_received_key(), true) ? 1 : 0;
 
         echo '<div class="vms-mini">';
-        echo '<label class="vms-admin-tax-check"><input type="checkbox" name="vms_emp_w4" value="1" ' . checked($w4, 1, false) . '> ' . esc_html__('W-4 received', 'vms') . '</label>';
-        echo '<label class="vms-admin-tax-check"><input type="checkbox" name="vms_emp_i9" value="1" ' . checked($i9, 1, false) . '> ' . esc_html__('I-9 verified', 'vms') . '</label>';
-        echo '<label class="vms-admin-tax-check"><input type="checkbox" name="vms_emp_dd" value="1" ' . checked($dd, 1, false) . '> ' . esc_html__('Direct deposit info received (optional)', 'vms') . '</label>';
+        echo '<label class="vms-admin-tax-check"><input type="checkbox" name="vms_emp_w4" value="1" ' . checked($w4, 1, false) . '> ' . esc_html__('W-4 received', 'backstage-venue-manager') . '</label>';
+        echo '<label class="vms-admin-tax-check"><input type="checkbox" name="vms_emp_i9" value="1" ' . checked($i9, 1, false) . '> ' . esc_html__('I-9 verified', 'backstage-venue-manager') . '</label>';
+        echo '<label class="vms-admin-tax-check"><input type="checkbox" name="vms_emp_dd" value="1" ' . checked($dd, 1, false) . '> ' . esc_html__('Direct deposit info received (optional)', 'backstage-venue-manager') . '</label>';
         echo '</div>';
 
-        echo '<p class="vms-mini">' . esc_html__('Saved when you click Update.', 'vms') . '</p>';
+        echo '<p class="vms-mini">' . esc_html__('Saved when you click Update.', 'backstage-venue-manager') . '</p>';
         return;
     }
 
     $ctx = vms_staff_tax_status_context($staff_id);
     $stage = (string) ($ctx['stage'] ?? 'incomplete');
     $provider = (string) ($ctx['provider'] ?? 'upload');
-    $provider_label = (string) ($ctx['provider_label'] ?? __('Upload', 'vms'));
+    $provider_label = (string) ($ctx['provider_label'] ?? __('Upload', 'backstage-venue-manager'));
     $done_at = (int) ($ctx['done_at'] ?? 0);
     $attested_at = (int) ($ctx['attested_at'] ?? 0);
     $admin_confirmed_at = (int) ($ctx['admin_confirmed_at'] ?? 0);
@@ -267,40 +267,40 @@ function vms_render_staff_tax_status_metabox($post)
 
     echo '<p class="vms-staff-tax-badge-row">';
     if ($stage === 'complete') {
-        echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';
     } elseif ($stage === 'submitted') {
-        echo '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'backstage-venue-manager') . '</span>';
     } else {
-        echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>';
     }
     echo '</p>';
 
-    echo '<p class="vms-mini"><strong>' . esc_html__('W-9 source of truth:', 'vms') . '</strong> ' . esc_html($provider_label) . '</p>';
+    echo '<p class="vms-mini"><strong>' . esc_html__('W-9 source of truth:', 'backstage-venue-manager') . '</strong> ' . esc_html($provider_label) . '</p>';
 
     if ($provider !== 'upload') {
-        echo '<p class="vms-mini">' . esc_html__('This staff member should complete their W-9/tax step through the secure off-site workflow. Use the buttons below to confirm or clear admin completion in VMS.', 'vms') . '</p>';
+        echo '<p class="vms-mini">' . esc_html__('This staff member should complete their W-9/tax step through the secure off-site workflow. Use the buttons below to confirm or clear admin completion in VMS.', 'backstage-venue-manager') . '</p>';
     }
 
     if ($attested_at > 0) {
-        echo '<p class="vms-mini"><strong>' . esc_html__('Staff confirmed:', 'vms') . '</strong> ' . esc_html(wp_date('M j, Y g:ia', $attested_at, wp_timezone())) . '</p>';
+        echo '<p class="vms-mini"><strong>' . esc_html__('Staff confirmed:', 'backstage-venue-manager') . '</strong> ' . esc_html(wp_date('M j, Y g:ia', $attested_at, wp_timezone())) . '</p>';
     }
 
     if ($admin_confirmed_at > 0) {
-        echo '<p class="vms-mini"><strong>' . esc_html__('Admin confirmed:', 'vms') . '</strong> ' . esc_html(wp_date('M j, Y g:ia', $admin_confirmed_at, wp_timezone()));
+        echo '<p class="vms-mini"><strong>' . esc_html__('Admin confirmed:', 'backstage-venue-manager') . '</strong> ' . esc_html(wp_date('M j, Y g:ia', $admin_confirmed_at, wp_timezone()));
         if ($admin_confirmed_by_name !== '') {
-            echo '<br><strong>' . esc_html__('By:', 'vms') . '</strong> ' . esc_html($admin_confirmed_by_name);
+            echo '<br><strong>' . esc_html__('By:', 'backstage-venue-manager') . '</strong> ' . esc_html($admin_confirmed_by_name);
         }
         echo '</p>';
     } elseif ($done_at > 0) {
-        echo '<p class="vms-mini"><strong>' . esc_html__('Completed:', 'vms') . '</strong> ' . esc_html(wp_date('M j, Y g:ia', $done_at, wp_timezone())) . '</p>';
+        echo '<p class="vms-mini"><strong>' . esc_html__('Completed:', 'backstage-venue-manager') . '</strong> ' . esc_html(wp_date('M j, Y g:ia', $done_at, wp_timezone())) . '</p>';
     }
 
     if ($upload_url) {
-        echo '<p class="vms-mini"><strong>' . esc_html__('W-9 file:', 'vms') . '</strong> <a href="' . esc_url($upload_url) . '" target="_blank" rel="noopener">' . esc_html__('View', 'vms') . '</a></p>';
+        echo '<p class="vms-mini"><strong>' . esc_html__('W-9 file:', 'backstage-venue-manager') . '</strong> <a href="' . esc_url($upload_url) . '" target="_blank" rel="noopener">' . esc_html__('View', 'backstage-venue-manager') . '</a></p>';
     }
 
     if (!empty($missing)) {
-        echo '<p class="vms-mini">' . esc_html__('Still needed:', 'vms') . '</p>';
+        echo '<p class="vms-mini">' . esc_html__('Still needed:', 'backstage-venue-manager') . '</p>';
         echo '<ul class="vms-missing">';
         foreach ($missing as $m) {
             echo '<li>' . esc_html((string) $m) . '</li>';
@@ -309,15 +309,15 @@ function vms_render_staff_tax_status_metabox($post)
     }
 
     $complete_label = ($provider === 'quickbooks_email')
-        ? __('Mark QuickBooks complete', 'vms')
-        : (($provider === 'tax1099_email') ? __('Mark Tax1099 complete', 'vms') : __('Mark complete', 'vms'));
+        ? __('Mark QuickBooks complete', 'backstage-venue-manager')
+        : (($provider === 'tax1099_email') ? __('Mark Tax1099 complete', 'backstage-venue-manager') : __('Mark complete', 'backstage-venue-manager'));
 
     echo '<p><a class="button button-primary" href="' . esc_url(vms_staff_tax_mark_complete_url($staff_id)) . '">' . esc_html($complete_label) . '</a></p>';
     if ($stage === 'complete') {
-        echo '<p><a class="button" href="' . esc_url(vms_staff_tax_clear_complete_url($staff_id)) . '">' . esc_html__('Clear admin completion', 'vms') . '</a></p>';
+        echo '<p><a class="button" href="' . esc_url(vms_staff_tax_clear_complete_url($staff_id)) . '">' . esc_html__('Clear admin completion', 'backstage-venue-manager') . '</a></p>';
     }
 
-    echo '<p class="vms-mini vms-staff-tax-tip">' . esc_html__('Tip: staff can complete their side from the Staff Portal. This box reflects the active source of truth and lets admin confirm it without using the temporary bypass.', 'vms') . '</p>';
+    echo '<p class="vms-mini vms-staff-tax-tip">' . esc_html__('Tip: staff can complete their side from the Staff Portal. This box reflects the active source of truth and lets admin confirm it without using the temporary bypass.', 'backstage-venue-manager') . '</p>';
 }
 
 /**
@@ -358,8 +358,8 @@ function vms_staff_employee_packet_missing_items(int $staff_id): array
     $w4 = (int) get_post_meta($staff_id, vms_staff_employee_w4_received_key(), true) ? 1 : 0;
     $i9 = (int) get_post_meta($staff_id, vms_staff_employee_i9_verified_key(), true) ? 1 : 0;
 
-    if (!$w4) $missing[] = __('W-4 received', 'vms');
-    if (!$i9) $missing[] = __('I-9 verified', 'vms');
+    if (!$w4) $missing[] = __('W-4 received', 'backstage-venue-manager');
+    if (!$i9) $missing[] = __('I-9 verified', 'backstage-venue-manager');
 
     return $missing;
 }

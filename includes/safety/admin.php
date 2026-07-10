@@ -56,11 +56,11 @@ if (!function_exists('vms_safety_admin_tabs')) {
 	function vms_safety_admin_tabs(): array
 	{
 		$tabs = array(
-			'incidents' => __('Incident Reports', 'vms'),
-			'documents' => __('Documents', 'vms'),
-			'checklists' => __('Checklists', 'vms'),
-			'settings' => __('Settings', 'vms'),
-			'help-tour' => __('Help Tour', 'vms'),
+			'incidents' => __('Incident Reports', 'backstage-venue-manager'),
+			'documents' => __('Documents', 'backstage-venue-manager'),
+			'checklists' => __('Checklists', 'backstage-venue-manager'),
+			'settings' => __('Settings', 'backstage-venue-manager'),
+			'help-tour' => __('Help Tour', 'backstage-venue-manager'),
 		);
 		return (array) apply_filters('vms_safety_admin_tabs', $tabs);
 	}
@@ -129,8 +129,8 @@ if (!function_exists('vms_safety_register_admin_menu')) {
 	{
 		add_submenu_page(
 			'vms-dashboard',
-			__('Safety', 'vms'),
-			__('Safety', 'vms'),
+			__('Safety', 'backstage-venue-manager'),
+			__('Safety', 'backstage-venue-manager'),
 			vms_safety_menu_capability(),
 			'vms-safety',
 			'vms_safety_render_admin_page'
@@ -157,13 +157,13 @@ if (!function_exists('vms_safety_render_admin_page')) {
 	function vms_safety_render_admin_page(): void
 	{
 		if (!vms_safety_user_can_view()) {
-			wp_die(esc_html__('You do not have permission to access Safety.', 'vms'));
+			wp_die(esc_html__('You do not have permission to access Safety.', 'backstage-venue-manager'));
 		}
 
 		$actions = '';
 		if (function_exists('vms_render_help_button')) {
 			$actions = vms_render_help_button(array(
-				'label' => __('Launch Help Tour', 'vms'),
+				'label' => __('Launch Help Tour', 'backstage-venue-manager'),
 				'tour_id' => 'vms_safety_overview',
 				'anchor' => 'safety.help',
 			));
@@ -172,8 +172,8 @@ if (!function_exists('vms_safety_render_admin_page')) {
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
 				array(
-					'title' => __('Safety Toolkit', 'vms'),
-					'subtitle' => __('Incident reports, private document vault, and checklists.', 'vms'),
+					'title' => __('Safety Toolkit', 'backstage-venue-manager'),
+					'subtitle' => __('Incident reports, private document vault, and checklists.', 'backstage-venue-manager'),
 					'actions_html' => $actions,
 				),
 				'vms_safety_render_admin_page_content'
@@ -182,7 +182,7 @@ if (!function_exists('vms_safety_render_admin_page')) {
 		}
 
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('Safety Toolkit', 'vms') . '</h1>';
+		echo '<h1>' . esc_html__('Safety Toolkit', 'backstage-venue-manager') . '</h1>';
 		vms_safety_render_admin_page_content();
 		echo '</div>';
 	}
@@ -237,10 +237,10 @@ if (!function_exists('vms_safety_incident_status_options')) {
 	function vms_safety_incident_status_options(): array
 	{
 		return array(
-			'draft' => __('Draft', 'vms'),
-			'submitted' => __('Submitted', 'vms'),
-			'reviewed' => __('Reviewed', 'vms'),
-			'closed' => __('Closed', 'vms'),
+			'draft' => __('Draft', 'backstage-venue-manager'),
+			'submitted' => __('Submitted', 'backstage-venue-manager'),
+			'reviewed' => __('Reviewed', 'backstage-venue-manager'),
+			'closed' => __('Closed', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -252,9 +252,9 @@ if (!function_exists('vms_safety_incident_severity_options')) {
 	function vms_safety_incident_severity_options(): array
 	{
 		return array(
-			'low' => __('Low', 'vms'),
-			'medium' => __('Medium', 'vms'),
-			'high' => __('High', 'vms'),
+			'low' => __('Low', 'backstage-venue-manager'),
+			'medium' => __('Medium', 'backstage-venue-manager'),
+			'high' => __('High', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -268,8 +268,8 @@ if (!function_exists('vms_safety_render_incidents_tab')) {
 			$editing = null;
 		}
 
-		echo '<h2>' . esc_html__('Incident Reports', 'vms') . '</h2>';
-		echo '<p class="description">' . esc_html__('Document what happened, actions taken, witnesses, and supporting files.', 'vms') . '</p>';
+		echo '<h2>' . esc_html__('Incident Reports', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description">' . esc_html__('Document what happened, actions taken, witnesses, and supporting files.', 'backstage-venue-manager') . '</p>';
 
 		$incidents = get_posts(array(
 			'post_type' => 'vms_incident',
@@ -280,9 +280,9 @@ if (!function_exists('vms_safety_render_incidents_tab')) {
 		));
 
 		echo '<table class="widefat striped" data-vms-tour="safety.incidents.list">';
-		echo '<thead><tr><th>' . esc_html__('Incident', 'vms') . '</th><th>' . esc_html__('Date/Time', 'vms') . '</th><th>' . esc_html__('Severity', 'vms') . '</th><th>' . esc_html__('Status', 'vms') . '</th><th>' . esc_html__('Actions', 'vms') . '</th></tr></thead><tbody>';
+		echo '<thead><tr><th>' . esc_html__('Incident', 'backstage-venue-manager') . '</th><th>' . esc_html__('Date/Time', 'backstage-venue-manager') . '</th><th>' . esc_html__('Severity', 'backstage-venue-manager') . '</th><th>' . esc_html__('Status', 'backstage-venue-manager') . '</th><th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 		if (empty($incidents)) {
-			echo '<tr><td colspan="5">' . esc_html__('No incidents yet.', 'vms') . '</td></tr>';
+			echo '<tr><td colspan="5">' . esc_html__('No incidents yet.', 'backstage-venue-manager') . '</td></tr>';
 		}
 		foreach ($incidents as $incident) {
 			$iid = (int) $incident->ID;
@@ -298,14 +298,14 @@ if (!function_exists('vms_safety_render_incidents_tab')) {
 			echo '<td>' . esc_html(ucfirst($severity !== '' ? $severity : 'low')) . '</td>';
 			echo '<td>' . esc_html(ucfirst($status)) . '</td>';
 			echo '<td class="vms-safety-actions">';
-			echo '<a class="button button-small" href="' . esc_url(vms_safety_admin_url(array('tab' => 'incidents', 'incident_id' => $iid))) . '">' . esc_html__('Edit', 'vms') . '</a> ';
-			echo '<a class="button button-small" href="' . esc_url(wp_nonce_url(add_query_arg(array('action' => 'vms_safety_export_incident', 'incident_id' => $iid), admin_url('admin-post.php')), 'vms_safety_export_incident_' . $iid)) . '" target="_blank">' . esc_html__('Print', 'vms') . '</a> ';
+			echo '<a class="button button-small" href="' . esc_url(vms_safety_admin_url(array('tab' => 'incidents', 'incident_id' => $iid))) . '">' . esc_html__('Edit', 'backstage-venue-manager') . '</a> ';
+			echo '<a class="button button-small" href="' . esc_url(wp_nonce_url(add_query_arg(array('action' => 'vms_safety_export_incident', 'incident_id' => $iid), admin_url('admin-post.php')), 'vms_safety_export_incident_' . $iid)) . '" target="_blank">' . esc_html__('Print', 'backstage-venue-manager') . '</a> ';
 			if ($status !== 'closed') {
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-safety-inline-form">';
 				wp_nonce_field('vms_safety_close_incident_' . $iid);
 				echo '<input type="hidden" name="action" value="vms_safety_close_incident" />';
 				echo '<input type="hidden" name="incident_id" value="' . esc_attr((string) $iid) . '" />';
-				echo '<button type="submit" class="button button-small">' . esc_html__('Close', 'vms') . '</button>';
+				echo '<button type="submit" class="button button-small">' . esc_html__('Close', 'backstage-venue-manager') . '</button>';
 				echo '</form>';
 			}
 			echo '</td>';
@@ -313,7 +313,7 @@ if (!function_exists('vms_safety_render_incidents_tab')) {
 		}
 		echo '</tbody></table>';
 
-		$edit_title = $editing ? __('Edit Incident', 'vms') : __('New Incident', 'vms');
+		$edit_title = $editing ? __('Edit Incident', 'backstage-venue-manager') : __('New Incident', 'backstage-venue-manager');
 		$iid = $editing ? (int) $editing->ID : 0;
 		$incident_datetime = $editing ? (string) get_post_meta($iid, 'vms_incident_datetime', true) : '';
 		$incident_zone = $editing ? (string) get_post_meta($iid, 'vms_incident_zone', true) : '';
@@ -332,33 +332,33 @@ if (!function_exists('vms_safety_render_incidents_tab')) {
 		echo '<input type="hidden" name="incident_id" value="' . esc_attr((string) $iid) . '" />';
 
 		echo '<div class="vms-safety-grid">';
-		echo '<p><label>' . esc_html__('Title', 'vms') . '<br /><input type="text" name="incident_title" required class="regular-text" value="' . esc_attr($editing ? get_the_title($editing) : '') . '" /></label></p>';
-		echo '<p><label>' . esc_html__('Date/Time (Y-m-d H:i)', 'vms') . '<br /><input type="text" name="incident_datetime" class="regular-text" value="' . esc_attr($incident_datetime) . '" placeholder="2026-03-04 19:00" /></label></p>';
-		echo '<p><label>' . esc_html__('Location/Zone', 'vms') . '<br /><input type="text" name="incident_zone" class="regular-text" value="' . esc_attr($incident_zone) . '" /></label></p>';
-		echo '<p><label>' . esc_html__('Severity', 'vms') . '<br /><select name="incident_severity">';
+		echo '<p><label>' . esc_html__('Title', 'backstage-venue-manager') . '<br /><input type="text" name="incident_title" required class="regular-text" value="' . esc_attr($editing ? get_the_title($editing) : '') . '" /></label></p>';
+		echo '<p><label>' . esc_html__('Date/Time (Y-m-d H:i)', 'backstage-venue-manager') . '<br /><input type="text" name="incident_datetime" class="regular-text" value="' . esc_attr($incident_datetime) . '" placeholder="2026-03-04 19:00" /></label></p>';
+		echo '<p><label>' . esc_html__('Location/Zone', 'backstage-venue-manager') . '<br /><input type="text" name="incident_zone" class="regular-text" value="' . esc_attr($incident_zone) . '" /></label></p>';
+		echo '<p><label>' . esc_html__('Severity', 'backstage-venue-manager') . '<br /><select name="incident_severity">';
 		foreach (vms_safety_incident_severity_options() as $sev => $label) {
 			echo '<option value="' . esc_attr($sev) . '" ' . selected($incident_severity, $sev, false) . '>' . esc_html($label) . '</option>';
 		}
 		echo '</select></label></p>';
-		echo '<p><label>' . esc_html__('Status', 'vms') . '<br /><select name="incident_status">';
+		echo '<p><label>' . esc_html__('Status', 'backstage-venue-manager') . '<br /><select name="incident_status">';
 		foreach (vms_safety_incident_status_options() as $st => $label) {
 			echo '<option value="' . esc_attr($st) . '" ' . selected($incident_status, $st, false) . '>' . esc_html($label) . '</option>';
 		}
 		echo '</select></label></p>';
-		echo '<p><label>' . esc_html__('Linked Event Plan ID (optional)', 'vms') . '<br /><input type="number" min="0" name="incident_event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" /></label></p>';
+		echo '<p><label>' . esc_html__('Linked Event Plan ID (optional)', 'backstage-venue-manager') . '<br /><input type="number" min="0" name="incident_event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" /></label></p>';
 		echo '</div>';
 
-		echo '<p><label>' . esc_html__('What happened', 'vms') . '<br /><textarea name="incident_description" rows="4" class="large-text">' . esc_textarea($editing ? (string) $editing->post_content : '') . '</textarea></label></p>';
-		echo '<p><label>' . esc_html__('Actions taken', 'vms') . '<br /><textarea name="incident_actions_taken" rows="3" class="large-text">' . esc_textarea($actions_taken) . '</textarea></label></p>';
-		echo '<p><label>' . esc_html__('Witnesses (optional)', 'vms') . '<br /><textarea name="incident_witnesses" rows="3" class="large-text">' . esc_textarea($witnesses) . '</textarea></label></p>';
-		echo '<p><label>' . esc_html__('Internal notes (admin only)', 'vms') . '<br /><textarea name="incident_internal_notes" rows="3" class="large-text">' . esc_textarea($internal_notes) . '</textarea></label></p>';
-		echo '<p><label>' . esc_html__('Attachments/photos', 'vms') . '<br /><input type="file" name="incident_attachments[]" multiple /></label></p>';
+		echo '<p><label>' . esc_html__('What happened', 'backstage-venue-manager') . '<br /><textarea name="incident_description" rows="4" class="large-text">' . esc_textarea($editing ? (string) $editing->post_content : '') . '</textarea></label></p>';
+		echo '<p><label>' . esc_html__('Actions taken', 'backstage-venue-manager') . '<br /><textarea name="incident_actions_taken" rows="3" class="large-text">' . esc_textarea($actions_taken) . '</textarea></label></p>';
+		echo '<p><label>' . esc_html__('Witnesses (optional)', 'backstage-venue-manager') . '<br /><textarea name="incident_witnesses" rows="3" class="large-text">' . esc_textarea($witnesses) . '</textarea></label></p>';
+		echo '<p><label>' . esc_html__('Internal notes (admin only)', 'backstage-venue-manager') . '<br /><textarea name="incident_internal_notes" rows="3" class="large-text">' . esc_textarea($internal_notes) . '</textarea></label></p>';
+		echo '<p><label>' . esc_html__('Attachments/photos', 'backstage-venue-manager') . '<br /><input type="file" name="incident_attachments[]" multiple /></label></p>';
 
 		if ($editing) {
 			$attachments = get_post_meta($iid, 'vms_incident_attachments', true);
 			$attachments = is_array($attachments) ? $attachments : array();
 			if (!empty($attachments)) {
-				echo '<p><strong>' . esc_html__('Existing attachments', 'vms') . ':</strong><br />';
+				echo '<p><strong>' . esc_html__('Existing attachments', 'backstage-venue-manager') . ':</strong><br />';
 				$links = array();
 				foreach ($attachments as $file_id) {
 					$row = vms_safety_private_file_get((int) $file_id);
@@ -373,7 +373,7 @@ if (!function_exists('vms_safety_render_incidents_tab')) {
 		}
 
 		echo '<div class="vms-safety-sticky-save" data-vms-tour="safety.savebar">';
-		echo '<button type="submit" class="button button-primary">' . esc_html__('Save Incident', 'vms') . '</button>';
+		echo '<button type="submit" class="button button-primary">' . esc_html__('Save Incident', 'backstage-venue-manager') . '</button>';
 		echo '</div>';
 		echo '</form>';
 	}
@@ -405,7 +405,7 @@ if (!function_exists('vms_safety_handle_save_incident')) {
 	function vms_safety_handle_save_incident(): void
 	{
 		if (!vms_safety_user_can_manage()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_safety_save_incident');
 
@@ -414,7 +414,7 @@ if (!function_exists('vms_safety_handle_save_incident')) {
 		$title = isset($_POST['incident_title']) ? sanitize_text_field(wp_unslash((string) $_POST['incident_title'])) : '';
 		$content = isset($_POST['incident_description']) ? wp_kses_post(wp_unslash((string) $_POST['incident_description'])) : '';
 		if ($title === '') {
-			vms_safety_admin_notice(__('Incident title is required.', 'vms'), 'error');
+			vms_safety_admin_notice(__('Incident title is required.', 'backstage-venue-manager'), 'error');
 		}
 
 		$postarr = array(
@@ -429,7 +429,7 @@ if (!function_exists('vms_safety_handle_save_incident')) {
 
 		$result = $is_update ? wp_update_post($postarr, true) : wp_insert_post($postarr, true);
 		if (is_wp_error($result) || !$result) {
-			vms_safety_admin_notice(__('Could not save incident.', 'vms'), 'error');
+			vms_safety_admin_notice(__('Could not save incident.', 'backstage-venue-manager'), 'error');
 		}
 
 		$incident_id = (int) $result;
@@ -470,7 +470,7 @@ if (!function_exists('vms_safety_handle_save_incident')) {
 		update_post_meta($incident_id, 'vms_incident_attachments', array_values(array_unique(array_map('absint', $attachment_ids))));
 
 		vms_safety_audit_log($is_update ? 'incident_updated' : 'incident_created', array('incident_id' => $incident_id, 'status' => $status));
-		vms_safety_admin_redirect(array('tab' => 'incidents', 'incident_id' => $incident_id, 'vms_safety_notice' => rawurlencode(__('Incident saved.', 'vms')), 'vms_safety_notice_type' => 'success'));
+		vms_safety_admin_redirect(array('tab' => 'incidents', 'incident_id' => $incident_id, 'vms_safety_notice' => rawurlencode(__('Incident saved.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'success'));
 	}
 }
 add_action('admin_post_vms_safety_save_incident', 'vms_safety_handle_save_incident');
@@ -479,17 +479,17 @@ if (!function_exists('vms_safety_handle_close_incident')) {
 	function vms_safety_handle_close_incident(): void
 	{
 		if (!vms_safety_user_can_manage()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		$incident_id = isset($_POST['incident_id']) ? absint($_POST['incident_id']) : 0;
 		if ($incident_id <= 0) {
-			vms_safety_admin_notice(__('Missing incident id.', 'vms'), 'error');
+			vms_safety_admin_notice(__('Missing incident id.', 'backstage-venue-manager'), 'error');
 		}
 		check_admin_referer('vms_safety_close_incident_' . $incident_id);
 
 		update_post_meta($incident_id, 'vms_incident_status', 'closed');
 		vms_safety_audit_log('incident_closed', array('incident_id' => $incident_id));
-		vms_safety_admin_redirect(array('tab' => 'incidents', 'vms_safety_notice' => rawurlencode(__('Incident closed.', 'vms'))));
+		vms_safety_admin_redirect(array('tab' => 'incidents', 'vms_safety_notice' => rawurlencode(__('Incident closed.', 'backstage-venue-manager'))));
 	}
 }
 add_action('admin_post_vms_safety_close_incident', 'vms_safety_handle_close_incident');
@@ -510,23 +510,23 @@ if (!function_exists('vms_safety_handle_export_incident')) {
 	function vms_safety_handle_export_incident(): void
 	{
 		if (!vms_safety_user_can_export()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		$incident_id = isset($_GET['incident_id']) ? absint($_GET['incident_id']) : 0;
 		check_admin_referer('vms_safety_export_incident_' . $incident_id);
 		$incident = $incident_id > 0 ? get_post($incident_id) : null;
 		if (!$incident instanceof WP_Post || $incident->post_type !== 'vms_incident') {
-			wp_die(esc_html__('Incident not found.', 'vms'));
+			wp_die(esc_html__('Incident not found.', 'backstage-venue-manager'));
 		}
 
 		$settings = vms_safety_get_settings();
 		$status = (string) get_post_meta($incident_id, 'vms_incident_status', true);
 		if (!empty($settings['require_submitted_before_export']) && !in_array($status, array('submitted', 'reviewed', 'closed'), true)) {
-			wp_die(esc_html__('Incident must be submitted before export.', 'vms'));
+			wp_die(esc_html__('Incident must be submitted before export.', 'backstage-venue-manager'));
 		}
 
 		$html = '<h1>' . esc_html(get_the_title($incident_id)) . '</h1>';
-		$html .= '<p class="muted">' . esc_html__('Sample operational report. Not legal advice.', 'vms') . '</p>';
+		$html .= '<p class="muted">' . esc_html__('Sample operational report. Not legal advice.', 'backstage-venue-manager') . '</p>';
 		$html .= '<div class="block"><strong>Date/Time:</strong> ' . esc_html((string) get_post_meta($incident_id, 'vms_incident_datetime', true)) . '</div>';
 		$html .= '<div class="block"><strong>Zone:</strong> ' . esc_html((string) get_post_meta($incident_id, 'vms_incident_zone', true)) . '</div>';
 		$html .= '<div class="block"><strong>Severity:</strong> ' . esc_html((string) get_post_meta($incident_id, 'vms_incident_severity', true)) . '</div>';
@@ -563,10 +563,10 @@ if (!function_exists('vms_safety_doc_category_options')) {
 	function vms_safety_doc_category_options(): array
 	{
 		return array(
-			'plan' => __('Plans', 'vms'),
-			'agreement' => __('Agreements', 'vms'),
-			'insurance' => __('Insurance', 'vms'),
-			'other' => __('Other', 'vms'),
+			'plan' => __('Plans', 'backstage-venue-manager'),
+			'agreement' => __('Agreements', 'backstage-venue-manager'),
+			'insurance' => __('Insurance', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -574,8 +574,8 @@ if (!function_exists('vms_safety_doc_category_options')) {
 if (!function_exists('vms_safety_render_documents_tab')) {
 	function vms_safety_render_documents_tab(): void
 	{
-		echo '<h2>' . esc_html__('Document Vault', 'vms') . '</h2>';
-		echo '<p class="description" data-vms-tour="safety.documents.upload">' . esc_html__('Private storage with secure download links, version references, and review dates.', 'vms') . '</p>';
+		echo '<h2>' . esc_html__('Document Vault', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description" data-vms-tour="safety.documents.upload">' . esc_html__('Private storage with secure download links, version references, and review dates.', 'backstage-venue-manager') . '</p>';
 
 		$docs = get_posts(array(
 			'post_type' => 'vms_doc',
@@ -586,9 +586,9 @@ if (!function_exists('vms_safety_render_documents_tab')) {
 		));
 
 		echo '<table class="widefat striped" data-vms-tour="safety.documents.list">';
-		echo '<thead><tr><th>' . esc_html__('Title', 'vms') . '</th><th>' . esc_html__('Category', 'vms') . '</th><th>' . esc_html__('Last Reviewed', 'vms') . '</th><th>' . esc_html__('Next Review', 'vms') . '</th><th>' . esc_html__('Actions', 'vms') . '</th></tr></thead><tbody>';
+		echo '<thead><tr><th>' . esc_html__('Title', 'backstage-venue-manager') . '</th><th>' . esc_html__('Category', 'backstage-venue-manager') . '</th><th>' . esc_html__('Last Reviewed', 'backstage-venue-manager') . '</th><th>' . esc_html__('Next Review', 'backstage-venue-manager') . '</th><th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 		if (empty($docs)) {
-			echo '<tr><td colspan="5">' . esc_html__('No safety documents yet.', 'vms') . '</td></tr>';
+			echo '<tr><td colspan="5">' . esc_html__('No safety documents yet.', 'backstage-venue-manager') . '</td></tr>';
 		}
 		foreach ($docs as $doc) {
 			$doc_id = (int) $doc->ID;
@@ -603,34 +603,34 @@ if (!function_exists('vms_safety_render_documents_tab')) {
 			echo '<td>' . esc_html($next !== '' ? $next : '—') . '</td>';
 			echo '<td class="vms-safety-actions">';
 			if ($file_id > 0) {
-				echo '<a class="button button-small" href="' . esc_url(vms_safety_private_file_download_url($file_id)) . '">' . esc_html__('Download', 'vms') . '</a> ';
+				echo '<a class="button button-small" href="' . esc_url(vms_safety_private_file_download_url($file_id)) . '">' . esc_html__('Download', 'backstage-venue-manager') . '</a> ';
 			}
-			echo '<a class="button button-small" target="_blank" href="' . esc_url(wp_nonce_url(add_query_arg(array('action' => 'vms_safety_export_doc', 'doc_id' => $doc_id), admin_url('admin-post.php')), 'vms_safety_export_doc_' . $doc_id)) . '">' . esc_html__('Print', 'vms') . '</a>';
+			echo '<a class="button button-small" target="_blank" href="' . esc_url(wp_nonce_url(add_query_arg(array('action' => 'vms_safety_export_doc', 'doc_id' => $doc_id), admin_url('admin-post.php')), 'vms_safety_export_doc_' . $doc_id)) . '">' . esc_html__('Print', 'backstage-venue-manager') . '</a>';
 			echo '</td>';
 			echo '</tr>';
 		}
 		echo '</tbody></table>';
 
 		echo '<hr />';
-		echo '<h3>' . esc_html__('Upload Document', 'vms') . '</h3>';
+		echo '<h3>' . esc_html__('Upload Document', 'backstage-venue-manager') . '</h3>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data" class="vms-safety-form" data-vms-safety-sticky-form="1">';
 		wp_nonce_field('vms_safety_save_doc');
 		echo '<input type="hidden" name="action" value="vms_safety_save_doc" />';
 		echo '<div class="vms-safety-grid">';
-		echo '<p><label>' . esc_html__('Title', 'vms') . '<br /><input type="text" class="regular-text" name="doc_title" required /></label></p>';
-		echo '<p><label>' . esc_html__('Category', 'vms') . '<br /><select name="doc_category">';
+		echo '<p><label>' . esc_html__('Title', 'backstage-venue-manager') . '<br /><input type="text" class="regular-text" name="doc_title" required /></label></p>';
+		echo '<p><label>' . esc_html__('Category', 'backstage-venue-manager') . '<br /><select name="doc_category">';
 		foreach (vms_safety_doc_category_options() as $key => $label) {
 			echo '<option value="' . esc_attr($key) . '">' . esc_html($label) . '</option>';
 		}
 		echo '</select></label></p>';
-		echo '<p><label>' . esc_html__('Last Reviewed', 'vms') . '<br /><input type="date" name="doc_last_reviewed" /></label></p>';
-		echo '<p><label>' . esc_html__('Next Review', 'vms') . '<br /><input type="date" name="doc_next_review" /></label></p>';
-		echo '<p><label>' . esc_html__('Related Event Plan ID (optional)', 'vms') . '<br /><input type="number" min="0" name="doc_related_event_plan_id" /></label></p>';
-		echo '<p><label>' . esc_html__('Related Vendor ID (optional)', 'vms') . '<br /><input type="number" min="0" name="doc_related_vendor_id" /></label></p>';
-		echo '<p><label>' . esc_html__('Version parent Doc ID (optional)', 'vms') . '<br /><input type="number" min="0" name="doc_version_parent" /></label></p>';
+		echo '<p><label>' . esc_html__('Last Reviewed', 'backstage-venue-manager') . '<br /><input type="date" name="doc_last_reviewed" /></label></p>';
+		echo '<p><label>' . esc_html__('Next Review', 'backstage-venue-manager') . '<br /><input type="date" name="doc_next_review" /></label></p>';
+		echo '<p><label>' . esc_html__('Related Event Plan ID (optional)', 'backstage-venue-manager') . '<br /><input type="number" min="0" name="doc_related_event_plan_id" /></label></p>';
+		echo '<p><label>' . esc_html__('Related Vendor ID (optional)', 'backstage-venue-manager') . '<br /><input type="number" min="0" name="doc_related_vendor_id" /></label></p>';
+		echo '<p><label>' . esc_html__('Version parent Doc ID (optional)', 'backstage-venue-manager') . '<br /><input type="number" min="0" name="doc_version_parent" /></label></p>';
 		echo '</div>';
-		echo '<p><label>' . esc_html__('File', 'vms') . '<br /><input type="file" name="doc_file" required /></label></p>';
-		echo '<div class="vms-safety-sticky-save"><button type="submit" class="button button-primary">' . esc_html__('Save Document', 'vms') . '</button></div>';
+		echo '<p><label>' . esc_html__('File', 'backstage-venue-manager') . '<br /><input type="file" name="doc_file" required /></label></p>';
+		echo '<div class="vms-safety-sticky-save"><button type="submit" class="button button-primary">' . esc_html__('Save Document', 'backstage-venue-manager') . '</button></div>';
 		echo '</form>';
 	}
 }
@@ -639,17 +639,17 @@ if (!function_exists('vms_safety_handle_save_doc')) {
 	function vms_safety_handle_save_doc(): void
 	{
 		if (!vms_safety_user_can_manage()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_safety_save_doc');
 
 		$title = sanitize_text_field((string) ($_POST['doc_title'] ?? ''));
 		if ($title === '') {
-			vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Document title is required.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Document title is required.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 
 		if (!isset($_FILES['doc_file']) || !is_array($_FILES['doc_file'])) {
-			vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Please upload a file.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Please upload a file.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 
 		$doc_id = wp_insert_post(array(
@@ -658,7 +658,7 @@ if (!function_exists('vms_safety_handle_save_doc')) {
 			'post_title' => $title,
 		), true);
 		if (is_wp_error($doc_id) || !$doc_id) {
-			vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Could not create document record.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Could not create document record.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 		$doc_id = (int) $doc_id;
 
@@ -678,7 +678,7 @@ if (!function_exists('vms_safety_handle_save_doc')) {
 
 		$version_parent = (int) get_post_meta($doc_id, 'vms_doc_version_parent', true);
 		vms_safety_audit_log($version_parent > 0 ? 'doc_versioned' : 'doc_uploaded', array('doc_id' => $doc_id, 'file_id' => (int) $file_id));
-		vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Document saved.', 'vms'))));
+		vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Document saved.', 'backstage-venue-manager'))));
 	}
 }
 add_action('admin_post_vms_safety_save_doc', 'vms_safety_handle_save_doc');
@@ -687,17 +687,17 @@ if (!function_exists('vms_safety_handle_export_doc')) {
 	function vms_safety_handle_export_doc(): void
 	{
 		if (!vms_safety_user_can_export()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		$doc_id = isset($_GET['doc_id']) ? absint($_GET['doc_id']) : 0;
 		check_admin_referer('vms_safety_export_doc_' . $doc_id);
 		$doc = $doc_id > 0 ? get_post($doc_id) : null;
 		if (!$doc instanceof WP_Post || $doc->post_type !== 'vms_doc') {
-			wp_die(esc_html__('Document not found.', 'vms'));
+			wp_die(esc_html__('Document not found.', 'backstage-venue-manager'));
 		}
 
 		$html = '<h1>' . esc_html(get_the_title($doc_id)) . '</h1>';
-		$html .= '<p class="muted">' . esc_html__('Sample template for operational use. Not legal advice. Local requirements vary. Have your insurer and attorney review.', 'vms') . '</p>';
+		$html .= '<p class="muted">' . esc_html__('Sample template for operational use. Not legal advice. Local requirements vary. Have your insurer and attorney review.', 'backstage-venue-manager') . '</p>';
 		$html .= '<div class="block"><strong>Category:</strong> ' . esc_html((string) get_post_meta($doc_id, 'vms_doc_category', true)) . '</div>';
 		$html .= '<div class="block"><strong>Last reviewed:</strong> ' . esc_html((string) get_post_meta($doc_id, 'vms_doc_last_reviewed', true)) . '</div>';
 		$html .= '<div class="block"><strong>Next review:</strong> ' . esc_html((string) get_post_meta($doc_id, 'vms_doc_next_review', true)) . '</div>';
@@ -743,8 +743,8 @@ if (!function_exists('vms_safety_parse_checklist_lines')) {
 if (!function_exists('vms_safety_render_checklists_tab')) {
 	function vms_safety_render_checklists_tab(): void
 	{
-		echo '<h2>' . esc_html__('Checklists', 'vms') . '</h2>';
-		echo '<p class="description" data-vms-tour="safety.checklists.templates">' . esc_html__('Create reusable templates and spin up event-linked or general checklist instances.', 'vms') . '</p>';
+		echo '<h2>' . esc_html__('Checklists', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description" data-vms-tour="safety.checklists.templates">' . esc_html__('Create reusable templates and spin up event-linked or general checklist instances.', 'backstage-venue-manager') . '</p>';
 
 		$templates = get_posts(array(
 			'post_type' => 'vms_checklist_tpl',
@@ -763,40 +763,40 @@ if (!function_exists('vms_safety_render_checklists_tab')) {
 
 		echo '<div class="vms-safety-grid">';
 		echo '<div>';
-		echo '<h3>' . esc_html__('New Checklist Template', 'vms') . '</h3>';
+		echo '<h3>' . esc_html__('New Checklist Template', 'backstage-venue-manager') . '</h3>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-safety-form">';
 		wp_nonce_field('vms_safety_save_checklist_tpl');
 		echo '<input type="hidden" name="action" value="vms_safety_save_checklist_tpl" />';
-		echo '<p><label>' . esc_html__('Template title', 'vms') . '<br /><input type="text" class="regular-text" name="tpl_title" required /></label></p>';
-		echo '<p><label>' . esc_html__('Applies to', 'vms') . '<br /><select name="tpl_applies_to"><option value="event">Event</option><option value="general">General</option><option value="both">Both</option></select></label></p>';
-		echo '<p><label>' . esc_html__('Auto-create on event status (optional)', 'vms') . '<br /><input type="text" class="regular-text" name="tpl_autocreate_on_event_status" placeholder="published" /></label></p>';
-		echo '<p><label>' . esc_html__('Checklist items (one per line)', 'vms') . '<br /><textarea name="tpl_items" class="large-text" rows="8" required></textarea></label></p>';
-		echo '<p><button type="submit" class="button button-primary">' . esc_html__('Save Template', 'vms') . '</button></p>';
+		echo '<p><label>' . esc_html__('Template title', 'backstage-venue-manager') . '<br /><input type="text" class="regular-text" name="tpl_title" required /></label></p>';
+		echo '<p><label>' . esc_html__('Applies to', 'backstage-venue-manager') . '<br /><select name="tpl_applies_to"><option value="event">Event</option><option value="general">General</option><option value="both">Both</option></select></label></p>';
+		echo '<p><label>' . esc_html__('Auto-create on event status (optional)', 'backstage-venue-manager') . '<br /><input type="text" class="regular-text" name="tpl_autocreate_on_event_status" placeholder="published" /></label></p>';
+		echo '<p><label>' . esc_html__('Checklist items (one per line)', 'backstage-venue-manager') . '<br /><textarea name="tpl_items" class="large-text" rows="8" required></textarea></label></p>';
+		echo '<p><button type="submit" class="button button-primary">' . esc_html__('Save Template', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 		echo '</div>';
 
 		echo '<div>';
-		echo '<h3>' . esc_html__('Create Checklist Instance', 'vms') . '</h3>';
+		echo '<h3>' . esc_html__('Create Checklist Instance', 'backstage-venue-manager') . '</h3>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-safety-form">';
 		wp_nonce_field('vms_safety_create_checklist');
 		echo '<input type="hidden" name="action" value="vms_safety_create_checklist" />';
-		echo '<p><label>' . esc_html__('Title', 'vms') . '<br /><input type="text" class="regular-text" name="checklist_title" required /></label></p>';
-		echo '<p><label>' . esc_html__('Template', 'vms') . '<br /><select name="template_id" required>';
-		echo '<option value="">' . esc_html__('Select template', 'vms') . '</option>';
+		echo '<p><label>' . esc_html__('Title', 'backstage-venue-manager') . '<br /><input type="text" class="regular-text" name="checklist_title" required /></label></p>';
+		echo '<p><label>' . esc_html__('Template', 'backstage-venue-manager') . '<br /><select name="template_id" required>';
+		echo '<option value="">' . esc_html__('Select template', 'backstage-venue-manager') . '</option>';
 		foreach ($templates as $tpl) {
 			echo '<option value="' . esc_attr((string) $tpl->ID) . '">' . esc_html($tpl->post_title) . '</option>';
 		}
 		echo '</select></label></p>';
-		echo '<p><label>' . esc_html__('Linked Event Plan ID (optional)', 'vms') . '<br /><input type="number" min="0" name="checklist_event_plan_id" /></label></p>';
-		echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Create Checklist', 'vms') . '</button></p>';
+		echo '<p><label>' . esc_html__('Linked Event Plan ID (optional)', 'backstage-venue-manager') . '<br /><input type="number" min="0" name="checklist_event_plan_id" /></label></p>';
+		echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Create Checklist', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 		echo '</div>';
 		echo '</div>';
 
-		echo '<h3>' . esc_html__('Templates', 'vms') . '</h3>';
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Template', 'vms') . '</th><th>' . esc_html__('Applies To', 'vms') . '</th><th>' . esc_html__('Items', 'vms') . '</th></tr></thead><tbody>';
+		echo '<h3>' . esc_html__('Templates', 'backstage-venue-manager') . '</h3>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Template', 'backstage-venue-manager') . '</th><th>' . esc_html__('Applies To', 'backstage-venue-manager') . '</th><th>' . esc_html__('Items', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 		if (empty($templates)) {
-			echo '<tr><td colspan="3">' . esc_html__('No checklist templates yet.', 'vms') . '</td></tr>';
+			echo '<tr><td colspan="3">' . esc_html__('No checklist templates yet.', 'backstage-venue-manager') . '</td></tr>';
 		}
 		foreach ($templates as $tpl) {
 			$items = get_post_meta((int) $tpl->ID, 'vms_chk_tpl_items', true);
@@ -805,9 +805,9 @@ if (!function_exists('vms_safety_render_checklists_tab')) {
 		}
 		echo '</tbody></table>';
 
-		echo '<h3 data-vms-tour="safety.checklists.instances">' . esc_html__('Checklist Instances', 'vms') . '</h3>';
+		echo '<h3 data-vms-tour="safety.checklists.instances">' . esc_html__('Checklist Instances', 'backstage-venue-manager') . '</h3>';
 		if (empty($instances)) {
-			echo '<p>' . esc_html__('No checklist instances yet.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('No checklist instances yet.', 'backstage-venue-manager') . '</p>';
 		}
 		foreach ($instances as $instance) {
 			$cid = (int) $instance->ID;
@@ -819,10 +819,10 @@ if (!function_exists('vms_safety_render_checklists_tab')) {
 			}
 			echo '<article class="vms-safety-card">';
 			echo '<header><strong>' . esc_html(get_the_title($cid)) . '</strong> <span class="vms-safety-chip">' . esc_html(strtoupper($status)) . '</span> ';
-			echo '<a class="button button-small" target="_blank" href="' . esc_url(wp_nonce_url(add_query_arg(array('action' => 'vms_safety_export_checklist', 'checklist_id' => $cid), admin_url('admin-post.php')), 'vms_safety_export_checklist_' . $cid)) . '">' . esc_html__('Print', 'vms') . '</a>';
+			echo '<a class="button button-small" target="_blank" href="' . esc_url(wp_nonce_url(add_query_arg(array('action' => 'vms_safety_export_checklist', 'checklist_id' => $cid), admin_url('admin-post.php')), 'vms_safety_export_checklist_' . $cid)) . '">' . esc_html__('Print', 'backstage-venue-manager') . '</a>';
 			echo '</header>';
 			if (empty($items)) {
-				echo '<p>' . esc_html__('No items.', 'vms') . '</p>';
+				echo '<p>' . esc_html__('No items.', 'backstage-venue-manager') . '</p>';
 			} else {
 				echo '<ul class="vms-safety-checklist">';
 				foreach ($items as $idx => $item) {
@@ -834,7 +834,7 @@ if (!function_exists('vms_safety_render_checklists_tab')) {
 					echo '<input type="hidden" name="action" value="vms_safety_toggle_checklist_item" />';
 					echo '<input type="hidden" name="checklist_id" value="' . esc_attr((string) $cid) . '" />';
 					echo '<input type="hidden" name="item_index" value="' . esc_attr((string) $idx) . '" />';
-					echo '<button type="submit" class="button button-small">' . esc_html($done ? __('Mark Open', 'vms') : __('Mark Done', 'vms')) . '</button> ';
+					echo '<button type="submit" class="button button-small">' . esc_html($done ? __('Mark Open', 'backstage-venue-manager') : __('Mark Done', 'backstage-venue-manager')) . '</button> ';
 					echo '<span>' . esc_html($label) . '</span>';
 					echo '</form>';
 					echo '</li>';
@@ -850,14 +850,14 @@ if (!function_exists('vms_safety_handle_save_checklist_tpl')) {
 	function vms_safety_handle_save_checklist_tpl(): void
 	{
 		if (!vms_safety_user_can_manage()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_safety_save_checklist_tpl');
 
 		$title = sanitize_text_field((string) ($_POST['tpl_title'] ?? ''));
 		$items_raw = sanitize_textarea_field((string) ($_POST['tpl_items'] ?? ''));
 		if ($title === '' || trim($items_raw) === '') {
-			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Template title and items are required.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Template title and items are required.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 
 		$tpl_id = wp_insert_post(array(
@@ -866,7 +866,7 @@ if (!function_exists('vms_safety_handle_save_checklist_tpl')) {
 			'post_title' => $title,
 		), true);
 		if (is_wp_error($tpl_id) || !$tpl_id) {
-			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Could not save template.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Could not save template.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 		$tpl_id = (int) $tpl_id;
 
@@ -877,7 +877,7 @@ if (!function_exists('vms_safety_handle_save_checklist_tpl')) {
 		update_post_meta($tpl_id, 'vms_chk_tpl_autocreate_on_event_status', sanitize_key((string) ($_POST['tpl_autocreate_on_event_status'] ?? '')));
 
 		vms_safety_audit_log('checklist_created', array('template_id' => $tpl_id, 'type' => 'template'));
-		vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist template saved.', 'vms'))));
+		vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist template saved.', 'backstage-venue-manager'))));
 	}
 }
 add_action('admin_post_vms_safety_save_checklist_tpl', 'vms_safety_handle_save_checklist_tpl');
@@ -886,18 +886,18 @@ if (!function_exists('vms_safety_handle_create_checklist')) {
 	function vms_safety_handle_create_checklist(): void
 	{
 		if (!vms_safety_user_can_manage()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_safety_create_checklist');
 
 		$template_id = absint($_POST['template_id'] ?? 0);
 		$title = sanitize_text_field((string) ($_POST['checklist_title'] ?? ''));
 		if ($template_id <= 0 || $title === '') {
-			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist title and template are required.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist title and template are required.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 		$template = get_post($template_id);
 		if (!$template instanceof WP_Post || $template->post_type !== 'vms_checklist_tpl') {
-			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Template not found.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Template not found.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 		$line_items = get_post_meta($template_id, 'vms_chk_tpl_items', true);
 		$line_items = is_array($line_items) ? $line_items : array();
@@ -918,7 +918,7 @@ if (!function_exists('vms_safety_handle_create_checklist')) {
 			'post_title' => $title,
 		), true);
 		if (is_wp_error($checklist_id) || !$checklist_id) {
-			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Could not create checklist.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Could not create checklist.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 		$checklist_id = (int) $checklist_id;
 
@@ -933,7 +933,7 @@ if (!function_exists('vms_safety_handle_create_checklist')) {
 		}
 
 		vms_safety_audit_log('checklist_created', array('checklist_id' => $checklist_id, 'template_id' => $template_id));
-		vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist created.', 'vms'))));
+		vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist created.', 'backstage-venue-manager'))));
 	}
 }
 add_action('admin_post_vms_safety_create_checklist', 'vms_safety_handle_create_checklist');
@@ -942,19 +942,19 @@ if (!function_exists('vms_safety_handle_toggle_checklist_item')) {
 	function vms_safety_handle_toggle_checklist_item(): void
 	{
 		if (!vms_safety_user_can_manage()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		$checklist_id = absint($_POST['checklist_id'] ?? 0);
 		$item_index = absint($_POST['item_index'] ?? -1);
 		check_admin_referer('vms_safety_toggle_checklist_item_' . $checklist_id . '_' . $item_index);
 		if ($checklist_id <= 0 || $item_index < 0) {
-			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Invalid checklist item.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Invalid checklist item.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 
 		$items = get_post_meta($checklist_id, 'vms_chk_items', true);
 		$items = is_array($items) ? $items : array();
 		if (!isset($items[$item_index]) || !is_array($items[$item_index])) {
-			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist item not found.', 'vms')), 'vms_safety_notice_type' => 'error'));
+			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist item not found.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
 
 		$current_done = !empty($items[$item_index]['done']);
@@ -974,7 +974,7 @@ if (!function_exists('vms_safety_handle_toggle_checklist_item')) {
 		update_post_meta($checklist_id, 'vms_chk_status', $all_done ? 'complete' : 'open');
 		vms_safety_audit_log($all_done ? 'checklist_completed' : 'checklist_item_checked', array('checklist_id' => $checklist_id, 'item_index' => $item_index));
 
-		vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist updated.', 'vms'))));
+		vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist updated.', 'backstage-venue-manager'))));
 	}
 }
 add_action('admin_post_vms_safety_toggle_checklist_item', 'vms_safety_handle_toggle_checklist_item');
@@ -983,24 +983,24 @@ if (!function_exists('vms_safety_handle_export_checklist')) {
 	function vms_safety_handle_export_checklist(): void
 	{
 		if (!vms_safety_user_can_export()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		$checklist_id = isset($_GET['checklist_id']) ? absint($_GET['checklist_id']) : 0;
 		check_admin_referer('vms_safety_export_checklist_' . $checklist_id);
 		$post = $checklist_id > 0 ? get_post($checklist_id) : null;
 		if (!$post instanceof WP_Post || $post->post_type !== 'vms_checklist') {
-			wp_die(esc_html__('Checklist not found.', 'vms'));
+			wp_die(esc_html__('Checklist not found.', 'backstage-venue-manager'));
 		}
 
 		$items = get_post_meta($checklist_id, 'vms_chk_items', true);
 		$items = is_array($items) ? $items : array();
 		$html = '<h1>' . esc_html(get_the_title($checklist_id)) . '</h1>';
-		$html .= '<p class="muted">' . esc_html__('Operational checklist completion report.', 'vms') . '</p>';
+		$html .= '<p class="muted">' . esc_html__('Operational checklist completion report.', 'backstage-venue-manager') . '</p>';
 		$html .= '<div class="block"><strong>Status:</strong> ' . esc_html((string) get_post_meta($checklist_id, 'vms_chk_status', true)) . '</div>';
 		$html .= '<div class="block"><strong>Items</strong><ol>';
 		foreach ($items as $item) {
 			$label = isset($item['label']) ? (string) $item['label'] : '';
-			$done = !empty($item['done']) ? __('Done', 'vms') : __('Open', 'vms');
+			$done = !empty($item['done']) ? __('Done', 'backstage-venue-manager') : __('Open', 'backstage-venue-manager');
 			$stamp = isset($item['timestamp']) ? (string) $item['timestamp'] : '';
 			$html .= '<li>' . esc_html($label . ' [' . $done . ']' . ($stamp !== '' ? ' - ' . $stamp : '')) . '</li>';
 		}
@@ -1017,21 +1017,21 @@ if (!function_exists('vms_safety_render_settings_tab')) {
 	function vms_safety_render_settings_tab(): void
 	{
 		$settings = vms_safety_get_settings();
-		echo '<h2>' . esc_html__('Safety Settings', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Safety Settings', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-safety-form">';
 		wp_nonce_field('vms_safety_save_settings');
 		echo '<input type="hidden" name="action" value="vms_safety_save_settings" />';
-		echo '<p><label><input type="checkbox" name="dashboard_cards_enabled" value="1" ' . checked(1, (int) $settings['dashboard_cards_enabled'], false) . ' /> ' . esc_html__('Enable dashboard safety cards', 'vms') . '</label></p>';
-		echo '<p><label><input type="checkbox" name="require_submitted_before_export" value="1" ' . checked(1, (int) $settings['require_submitted_before_export'], false) . ' /> ' . esc_html__('Require incident Submitted status before export', 'vms') . '</label></p>';
-		echo '<p><label><input type="checkbox" name="enable_checklist_auto_create" value="1" ' . checked(1, (int) $settings['enable_checklist_auto_create'], false) . ' /> ' . esc_html__('Enable checklist auto-create rules', 'vms') . '</label></p>';
-		echo '<p class="description">' . esc_html__('File retention policy note: keep private files only as long as needed for operational and legal recordkeeping.', 'vms') . '</p>';
-		echo '<p><button type="submit" class="button button-primary">' . esc_html__('Save Settings', 'vms') . '</button></p>';
+		echo '<p><label><input type="checkbox" name="dashboard_cards_enabled" value="1" ' . checked(1, (int) $settings['dashboard_cards_enabled'], false) . ' /> ' . esc_html__('Enable dashboard safety cards', 'backstage-venue-manager') . '</label></p>';
+		echo '<p><label><input type="checkbox" name="require_submitted_before_export" value="1" ' . checked(1, (int) $settings['require_submitted_before_export'], false) . ' /> ' . esc_html__('Require incident Submitted status before export', 'backstage-venue-manager') . '</label></p>';
+		echo '<p><label><input type="checkbox" name="enable_checklist_auto_create" value="1" ' . checked(1, (int) $settings['enable_checklist_auto_create'], false) . ' /> ' . esc_html__('Enable checklist auto-create rules', 'backstage-venue-manager') . '</label></p>';
+		echo '<p class="description">' . esc_html__('File retention policy note: keep private files only as long as needed for operational and legal recordkeeping.', 'backstage-venue-manager') . '</p>';
+		echo '<p><button type="submit" class="button button-primary">' . esc_html__('Save Settings', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 
-		echo '<h3>' . esc_html__('Recent Activity', 'vms') . '</h3>';
+		echo '<h3>' . esc_html__('Recent Activity', 'backstage-venue-manager') . '</h3>';
 		$activity = vms_safety_recent_activity(15);
 		if (empty($activity)) {
-			echo '<p>' . esc_html__('No recent safety activity logged yet.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('No recent safety activity logged yet.', 'backstage-venue-manager') . '</p>';
 			return;
 		}
 		echo '<ul class="vms-safety-activity">';
@@ -1049,12 +1049,12 @@ if (!function_exists('vms_safety_handle_save_settings')) {
 	function vms_safety_handle_save_settings(): void
 	{
 		if (!vms_safety_user_can_manage()) {
-			wp_die(esc_html__('Not allowed.', 'vms'));
+			wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_safety_save_settings');
 		vms_safety_update_settings((array) $_POST);
 		vms_safety_audit_log('settings_updated', array('module' => 'safety'));
-		vms_safety_admin_redirect(array('tab' => 'settings', 'vms_safety_notice' => rawurlencode(__('Settings saved.', 'vms'))));
+		vms_safety_admin_redirect(array('tab' => 'settings', 'vms_safety_notice' => rawurlencode(__('Settings saved.', 'backstage-venue-manager'))));
 	}
 }
 add_action('admin_post_vms_safety_save_settings', 'vms_safety_handle_save_settings');
@@ -1062,11 +1062,11 @@ add_action('admin_post_vms_safety_save_settings', 'vms_safety_handle_save_settin
 if (!function_exists('vms_safety_render_help_tab')) {
 	function vms_safety_render_help_tab(): void
 	{
-		echo '<h2 data-vms-tour="safety.help">' . esc_html__('Guided Help Tour', 'vms') . '</h2>';
-		echo '<p>' . esc_html__('Use the button below to run the Safety module walkthrough.', 'vms') . '</p>';
+		echo '<h2 data-vms-tour="safety.help">' . esc_html__('Guided Help Tour', 'backstage-venue-manager') . '</h2>';
+		echo '<p>' . esc_html__('Use the button below to run the Safety module walkthrough.', 'backstage-venue-manager') . '</p>';
 		if (function_exists('vms_render_help_button')) {
 			echo vms_render_help_button(array(
-				'label' => __('Start Safety Tour', 'vms'),
+				'label' => __('Start Safety Tour', 'backstage-venue-manager'),
 				'tour_id' => 'vms_safety_overview',
 				'class' => 'button button-primary',
 			));

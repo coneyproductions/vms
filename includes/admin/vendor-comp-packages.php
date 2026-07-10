@@ -12,9 +12,9 @@ add_action('init', function () {
 
     register_post_type('vms_comp_package', array(
         'labels' => array(
-            'name'          => __('Comp Packages', 'vms'),
-            'singular_name' => __('Comp Package', 'vms'),
-            'menu_name'     => __('Comp Packages', 'vms'),
+            'name'          => __('Comp Packages', 'backstage-venue-manager'),
+            'singular_name' => __('Comp Package', 'backstage-venue-manager'),
+            'menu_name'     => __('Comp Packages', 'backstage-venue-manager'),
         ),
         'public'        => false,
         'show_ui'       => true,
@@ -29,7 +29,7 @@ add_action('init', function () {
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_comp_package_details',
-        __('Comp Package Details', 'vms'),
+        __('Comp Package Details', 'backstage-venue-manager'),
         'vms_render_comp_package_meta_box',
         'vms_comp_package',
         'normal',
@@ -86,26 +86,26 @@ function vms_render_comp_package_meta_box($post)
         'order'          => 'ASC',
     ));
 
-    $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.comp_package.editor.basics" data-vms-tour="comp-package.help-action">' . esc_html__('Start Guided Tour', 'vms') . '</button>';
+    $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.comp_package.editor.basics" data-vms-tour="comp-package.help-action">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
     if (function_exists('vms_render_help_button')) {
         $tour_button = vms_render_help_button(array(
             'tour_id' => 'vms.comp_package.editor.basics',
             'anchor' => 'comp-package.help-action',
-            'label' => __('Start Guided Tour', 'vms'),
+            'label' => __('Start Guided Tour', 'backstage-venue-manager'),
         ));
     }
     ?>
     <div class="vms-comp-package-admin">
     <p class="description vms-comp-package-help" data-vms-tour="comp-package.help">
-        <?php esc_html_e('Need a refresher on package setup?', 'vms'); ?>
+        <?php esc_html_e('Need a refresher on package setup?', 'backstage-venue-manager'); ?>
         <?php echo ' ' . $tour_button; ?>
     </p>
 
     <p data-vms-tour="comp-package.venue">
-        <label for="vms_venue_id"><strong><?php esc_html_e('Venue Scope', 'vms'); ?></strong></label><br />
+        <label for="vms_venue_id"><strong><?php esc_html_e('Venue Scope', 'backstage-venue-manager'); ?></strong></label><br />
         <select id="vms_venue_id" name="vms_venue_id" class="vms-comp-package-select-wide">
             <option value="0" <?php selected($venue_id, 0); ?>>
-                <?php esc_html_e('— Global Template (optional) —', 'vms'); ?>
+                <?php esc_html_e('— Global Template (optional) —', 'backstage-venue-manager'); ?>
             </option>
             <?php foreach ($venues as $v) : ?>
                 <option value="<?php echo esc_attr($v->ID); ?>" <?php selected($venue_id, (int)$v->ID); ?>>
@@ -114,63 +114,63 @@ function vms_render_comp_package_meta_box($post)
             <?php endforeach; ?>
         </select>
         <br><span class="description">
-            <?php esc_html_e('Typically set to a specific venue. Global templates are optional and can be ignored.', 'vms'); ?>
+            <?php esc_html_e('Typically set to a specific venue. Global templates are optional and can be ignored.', 'backstage-venue-manager'); ?>
         </span>
     </p>
 
     <hr />
 
     <p data-vms-tour="comp-package.type">
-        <label for="vms_comp_type"><strong><?php esc_html_e('Comp Type', 'vms'); ?></strong></label><br />
+        <label for="vms_comp_type"><strong><?php esc_html_e('Comp Type', 'backstage-venue-manager'); ?></strong></label><br />
         <select id="vms_comp_type" name="vms_comp_type" class="vms-comp-package-select-wide">
             <option value="flat" <?php selected($type, 'flat'); ?>>
-                <?php esc_html_e('Flat Fee', 'vms'); ?>
+                <?php esc_html_e('Flat Fee', 'backstage-venue-manager'); ?>
             </option>
             <option value="flat_plus_split" <?php selected($type, 'flat_plus_split'); ?>>
-                <?php esc_html_e('Flat Fee + Door Split', 'vms'); ?>
+                <?php esc_html_e('Flat Fee + Door Split', 'backstage-venue-manager'); ?>
             </option>
             <option value="door_split" <?php selected($type, 'door_split'); ?>>
-                <?php esc_html_e('Door Split Only', 'vms'); ?>
+                <?php esc_html_e('Door Split Only', 'backstage-venue-manager'); ?>
             </option>
             <option value="attendance_bonus" <?php selected($type, 'attendance_bonus'); ?>>
-                <?php esc_html_e('Base + Attendance Bonus', 'vms'); ?>
+                <?php esc_html_e('Base + Attendance Bonus', 'backstage-venue-manager'); ?>
             </option>
         </select>
     </p>
 
     <p data-vms-tour="comp-package.base-pay">
-        <label for="vms_flat_fee"><strong><span id="vms_flat_fee_label_text"><?php echo esc_html($type === 'attendance_bonus' ? __('Base Pay', 'vms') : __('Flat Fee Amount', 'vms')); ?></span></strong></label><br />
+        <label for="vms_flat_fee"><strong><span id="vms_flat_fee_label_text"><?php echo esc_html($type === 'attendance_bonus' ? __('Base Pay', 'backstage-venue-manager') : __('Flat Fee Amount', 'backstage-venue-manager')); ?></span></strong></label><br />
         <input type="number" step="0.01" id="vms_flat_fee" name="vms_flat_fee" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($flat_fee); ?>" />
         <br><span id="vms_flat_fee_help" class="description<?php echo ($type === 'attendance_bonus') ? '' : ' vms-hidden'; ?>">
-            <?php esc_html_e('The guaranteed amount paid before attendance bonuses are added.', 'vms'); ?>
+            <?php esc_html_e('The guaranteed amount paid before attendance bonuses are added.', 'backstage-venue-manager'); ?>
         </span>
     </p>
 
     <div class="vms-comp-package-block" data-show-when="flat_plus_split,door_split">
         <hr />
 
-        <h4 class="vms-comp-package-subhead"><?php esc_html_e('Door Split', 'vms'); ?></h4>
+        <h4 class="vms-comp-package-subhead"><?php esc_html_e('Door Split', 'backstage-venue-manager'); ?></h4>
 
         <p>
-            <label for="vms_split_basis"><strong><?php esc_html_e('Split Basis', 'vms'); ?></strong></label><br />
+            <label for="vms_split_basis"><strong><?php esc_html_e('Split Basis', 'backstage-venue-manager'); ?></strong></label><br />
             <select id="vms_split_basis" name="vms_split_basis" class="vms-comp-package-select-wide">
                 <option value="gross" <?php selected($split_basis, 'gross'); ?>>
-                    <?php esc_html_e('Gross (simpler)', 'vms'); ?>
+                    <?php esc_html_e('Gross (simpler)', 'backstage-venue-manager'); ?>
                 </option>
                 <option value="net" <?php selected($split_basis, 'net'); ?>>
-                    <?php esc_html_e('Net (more accurate)', 'vms'); ?>
+                    <?php esc_html_e('Net (more accurate)', 'backstage-venue-manager'); ?>
                 </option>
             </select>
         </p>
 
         <p>
-            <label for="vms_split_percent_artist"><strong><?php esc_html_e('Artist Split %', 'vms'); ?></strong></label><br />
+            <label for="vms_split_percent_artist"><strong><?php esc_html_e('Artist Split %', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="number" step="0.01" min="0" max="100"
                    id="vms_split_percent_artist" name="vms_split_percent_artist" class="vms-comp-package-input-money"
                    value="<?php echo esc_attr($split_percent_artist); ?>" /> %
             <br><span class="description">
-                <?php esc_html_e('Venue split is implicitly (100 - Artist%).', 'vms'); ?>
+                <?php esc_html_e('Venue split is implicitly (100 - Artist%).', 'backstage-venue-manager'); ?>
             </span>
         </p>
     </div>
@@ -178,122 +178,122 @@ function vms_render_comp_package_meta_box($post)
     <div class="vms-comp-package-block vms-comp-package-attendance" data-show-when="attendance_bonus" data-vms-tour="comp-package.attendance">
         <hr />
 
-        <h4 class="vms-comp-package-subhead"><?php esc_html_e('Attendance Bonus', 'vms'); ?></h4>
+        <h4 class="vms-comp-package-subhead"><?php esc_html_e('Attendance Bonus', 'backstage-venue-manager'); ?></h4>
 
         <p>
-            <label for="vms_attendance_bonus_mode"><strong><?php esc_html_e('Bonus Style', 'vms'); ?></strong></label><br />
+            <label for="vms_attendance_bonus_mode"><strong><?php esc_html_e('Bonus Style', 'backstage-venue-manager'); ?></strong></label><br />
             <select id="vms_attendance_bonus_mode" name="vms_attendance_bonus_mode" class="vms-comp-package-select-wide">
-                <option value="" <?php selected($attendance_bonus_mode, ''); ?>><?php esc_html_e('Select bonus style', 'vms'); ?></option>
-                <option value="step" <?php selected($attendance_bonus_mode, 'step'); ?>><?php esc_html_e('Step', 'vms'); ?></option>
-                <option value="continuous" <?php selected($attendance_bonus_mode, 'continuous'); ?>><?php esc_html_e('Continuous', 'vms'); ?></option>
+                <option value="" <?php selected($attendance_bonus_mode, ''); ?>><?php esc_html_e('Select bonus style', 'backstage-venue-manager'); ?></option>
+                <option value="step" <?php selected($attendance_bonus_mode, 'step'); ?>><?php esc_html_e('Step', 'backstage-venue-manager'); ?></option>
+                <option value="continuous" <?php selected($attendance_bonus_mode, 'continuous'); ?>><?php esc_html_e('Continuous', 'backstage-venue-manager'); ?></option>
             </select>
         </p>
 
         <p>
-            <label for="vms_attendance_bonus_start_count"><strong><?php esc_html_e('Bonus Starts After', 'vms'); ?></strong></label><br />
+            <label for="vms_attendance_bonus_start_count"><strong><?php esc_html_e('Bonus Starts After', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="number" step="1" min="0" id="vms_attendance_bonus_start_count" name="vms_attendance_bonus_start_count" class="vms-comp-package-input-money"
                    value="<?php echo esc_attr($attendance_bonus_start_count); ?>" />
             <br><span class="description">
-                <?php esc_html_e('No attendance bonus is earned until attendance goes above this number.', 'vms'); ?>
+                <?php esc_html_e('No attendance bonus is earned until attendance goes above this number.', 'backstage-venue-manager'); ?>
             </span>
         </p>
 
         <p class="vms-comp-package-mode-block" data-show-when-mode="step">
-            <label for="vms_attendance_bonus_step_size"><strong><?php esc_html_e('Step Size', 'vms'); ?></strong></label><br />
+            <label for="vms_attendance_bonus_step_size"><strong><?php esc_html_e('Step Size', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="number" step="1" min="1" id="vms_attendance_bonus_step_size" name="vms_attendance_bonus_step_size" class="vms-comp-package-input-money"
                    value="<?php echo esc_attr($attendance_bonus_step_size); ?>" />
             <br><span class="description">
-                <?php esc_html_e('How many additional tickets are needed to earn each bonus step.', 'vms'); ?>
+                <?php esc_html_e('How many additional tickets are needed to earn each bonus step.', 'backstage-venue-manager'); ?>
             </span>
         </p>
 
         <p class="vms-comp-package-mode-block" data-show-when-mode="step">
-            <label for="vms_attendance_bonus_step_bonus"><strong><?php esc_html_e('Bonus Per Step', 'vms'); ?></strong></label><br />
+            <label for="vms_attendance_bonus_step_bonus"><strong><?php esc_html_e('Bonus Per Step', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="number" step="0.01" min="0" id="vms_attendance_bonus_step_bonus" name="vms_attendance_bonus_step_bonus" class="vms-comp-package-input-money"
                    value="<?php echo esc_attr($attendance_bonus_step_bonus); ?>" />
             <br><span class="description">
-                <?php esc_html_e('The amount added each time a step is reached.', 'vms'); ?>
+                <?php esc_html_e('The amount added each time a step is reached.', 'backstage-venue-manager'); ?>
             </span>
         </p>
 
         <p class="vms-comp-package-mode-block" data-show-when-mode="continuous">
-            <label for="vms_attendance_bonus_per_ticket_rate"><strong><?php esc_html_e('Bonus Per Ticket', 'vms'); ?></strong></label><br />
+            <label for="vms_attendance_bonus_per_ticket_rate"><strong><?php esc_html_e('Bonus Per Ticket', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="number" step="0.01" min="0" id="vms_attendance_bonus_per_ticket_rate" name="vms_attendance_bonus_per_ticket_rate" class="vms-comp-package-input-money"
                    value="<?php echo esc_attr($attendance_bonus_per_ticket_rate); ?>" />
             <br><span class="description">
-                <?php esc_html_e('The amount added for each ticket above the starting count.', 'vms'); ?>
+                <?php esc_html_e('The amount added for each ticket above the starting count.', 'backstage-venue-manager'); ?>
             </span>
         </p>
 
         <p>
-            <label for="vms_attendance_bonus_max_bonus"><strong><?php esc_html_e('Max Bonus', 'vms'); ?></strong></label><br />
+            <label for="vms_attendance_bonus_max_bonus"><strong><?php esc_html_e('Max Bonus', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="number" step="0.01" min="0" id="vms_attendance_bonus_max_bonus" name="vms_attendance_bonus_max_bonus" class="vms-comp-package-input-money"
                    value="<?php echo esc_attr($attendance_bonus_max_bonus); ?>" />
             <br><span class="description">
-                <?php esc_html_e('Optional cap on the total attendance bonus. Leave blank for no cap.', 'vms'); ?>
+                <?php esc_html_e('Optional cap on the total attendance bonus. Leave blank for no cap.', 'backstage-venue-manager'); ?>
             </span>
         </p>
     </div>
 
     <hr />
 
-    <h4 class="vms-comp-package-subhead"><?php esc_html_e('Agency Commission (Abstract)', 'vms'); ?></h4>
+    <h4 class="vms-comp-package-subhead"><?php esc_html_e('Agency Commission (Abstract)', 'backstage-venue-manager'); ?></h4>
 
     <p>
-        <label for="vms_commission_mode"><strong><?php esc_html_e('Commission Mode', 'vms'); ?></strong></label><br />
+        <label for="vms_commission_mode"><strong><?php esc_html_e('Commission Mode', 'backstage-venue-manager'); ?></strong></label><br />
         <select id="vms_commission_mode" name="vms_commission_mode" class="vms-comp-package-select-wide">
             <option value="none" <?php selected($commission_mode, 'none'); ?>>
-                <?php esc_html_e('None', 'vms'); ?>
+                <?php esc_html_e('None', 'backstage-venue-manager'); ?>
             </option>
             <option value="add_on_top" <?php selected($commission_mode, 'add_on_top'); ?>>
-                <?php esc_html_e('Add on top (venue pays artist fee + commission)', 'vms'); ?>
+                <?php esc_html_e('Add on top (venue pays artist fee + commission)', 'backstage-venue-manager'); ?>
             </option>
             <option value="deduct_from_artist" <?php selected($commission_mode, 'deduct_from_artist'); ?>>
-                <?php esc_html_e('Deduct from artist (commission taken from payout)', 'vms'); ?>
+                <?php esc_html_e('Deduct from artist (commission taken from payout)', 'backstage-venue-manager'); ?>
             </option>
         </select>
     </p>
 
     <p>
-        <label for="vms_commission_percent"><strong><?php esc_html_e('Commission %', 'vms'); ?></strong></label><br />
+        <label for="vms_commission_percent"><strong><?php esc_html_e('Commission %', 'backstage-venue-manager'); ?></strong></label><br />
         <input type="number" step="0.01" min="0" max="100"
                id="vms_commission_percent" name="vms_commission_percent" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($commission_percent); ?>" /> %
     </p>
 
     <p>
-        <label for="vms_commission_base"><strong><?php esc_html_e('Commission Base', 'vms'); ?></strong></label><br />
+        <label for="vms_commission_base"><strong><?php esc_html_e('Commission Base', 'backstage-venue-manager'); ?></strong></label><br />
         <select id="vms_commission_base" name="vms_commission_base" class="vms-comp-package-select-wide">
             <option value="flat_fee" <?php selected($commission_base, 'flat_fee'); ?>>
-                <?php esc_html_e('Flat Fee', 'vms'); ?>
+                <?php esc_html_e('Flat Fee', 'backstage-venue-manager'); ?>
             </option>
             <option value="gross" <?php selected($commission_base, 'gross'); ?>>
-                <?php esc_html_e('Gross', 'vms'); ?>
+                <?php esc_html_e('Gross', 'backstage-venue-manager'); ?>
             </option>
             <option value="net" <?php selected($commission_base, 'net'); ?>>
-                <?php esc_html_e('Net', 'vms'); ?>
+                <?php esc_html_e('Net', 'backstage-venue-manager'); ?>
             </option>
         </select>
     </p>
 
     <hr />
 
-    <h4 class="vms-comp-package-subhead"><?php esc_html_e('Guardrails (Optional)', 'vms'); ?></h4>
+    <h4 class="vms-comp-package-subhead"><?php esc_html_e('Guardrails (Optional)', 'backstage-venue-manager'); ?></h4>
 
     <p>
-        <label for="vms_min_guarantee"><strong><?php esc_html_e('Minimum Guarantee', 'vms'); ?></strong></label><br />
+        <label for="vms_min_guarantee"><strong><?php esc_html_e('Minimum Guarantee', 'backstage-venue-manager'); ?></strong></label><br />
         <input type="number" step="0.01" id="vms_min_guarantee" name="vms_min_guarantee" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($min_guarantee); ?>" />
     </p>
 
     <p>
-        <label for="vms_cap_amount"><strong><?php esc_html_e('Cap Amount', 'vms'); ?></strong></label><br />
+        <label for="vms_cap_amount"><strong><?php esc_html_e('Cap Amount', 'backstage-venue-manager'); ?></strong></label><br />
         <input type="number" step="0.01" id="vms_cap_amount" name="vms_cap_amount" class="vms-comp-package-input-money"
                value="<?php echo esc_attr($cap_amount); ?>" />
     </p>
 
     <p>
-        <label for="vms_notes"><strong><?php esc_html_e('Internal Notes', 'vms'); ?></strong></label><br />
+        <label for="vms_notes"><strong><?php esc_html_e('Internal Notes', 'backstage-venue-manager'); ?></strong></label><br />
         <textarea id="vms_notes" name="vms_notes" rows="4" class="vms-comp-package-notes"><?php echo esc_textarea($notes); ?></textarea>
     </p>
     </div>

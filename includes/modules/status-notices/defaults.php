@@ -251,9 +251,9 @@ if (!function_exists('vms_status_notice_scope_labels')) {
 	function vms_status_notice_scope_labels(): array
 	{
 		return array(
-			'front' => __('Front-end', 'vms'),
-			'admin' => __('WP Admin', 'vms'),
-			'both' => __('Front + Admin', 'vms'),
+			'front' => __('Front-end', 'backstage-venue-manager'),
+			'admin' => __('WP Admin', 'backstage-venue-manager'),
+			'both' => __('Front + Admin', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -262,9 +262,9 @@ if (!function_exists('vms_status_notice_severity_labels')) {
 	function vms_status_notice_severity_labels(): array
 	{
 		return array(
-			'info' => __('Info', 'vms'),
-			'warning' => __('Warning', 'vms'),
-			'critical' => __('Critical', 'vms'),
+			'info' => __('Info', 'backstage-venue-manager'),
+			'warning' => __('Warning', 'backstage-venue-manager'),
+			'critical' => __('Critical', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -273,13 +273,13 @@ if (!function_exists('vms_status_notice_page_type_labels')) {
 	function vms_status_notice_page_type_labels(): array
 	{
 		return array(
-			'event' => __('Event pages', 'vms'),
-			'product' => __('Product pages', 'vms'),
-			'cart' => __('Cart page', 'vms'),
-			'checkout' => __('Checkout page', 'vms'),
-			'account' => __('Account page', 'vms'),
-			'ticketing' => __('Ticketing surfaces', 'vms'),
-			'generic' => __('Generic pages', 'vms'),
+			'event' => __('Event pages', 'backstage-venue-manager'),
+			'product' => __('Product pages', 'backstage-venue-manager'),
+			'cart' => __('Cart page', 'backstage-venue-manager'),
+			'checkout' => __('Checkout page', 'backstage-venue-manager'),
+			'account' => __('Account page', 'backstage-venue-manager'),
+			'ticketing' => __('Ticketing surfaces', 'backstage-venue-manager'),
+			'generic' => __('Generic pages', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -288,10 +288,10 @@ if (!function_exists('vms_status_notice_device_labels')) {
 	function vms_status_notice_device_labels(): array
 	{
 		return array(
-			'any' => __('Any device', 'vms'),
-			'mobile' => __('Mobile', 'vms'),
-			'tablet' => __('Tablet', 'vms'),
-			'desktop' => __('Desktop', 'vms'),
+			'any' => __('Any device', 'backstage-venue-manager'),
+			'mobile' => __('Mobile', 'backstage-venue-manager'),
+			'tablet' => __('Tablet', 'backstage-venue-manager'),
+			'desktop' => __('Desktop', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -300,12 +300,12 @@ if (!function_exists('vms_status_notice_browser_labels')) {
 	function vms_status_notice_browser_labels(): array
 	{
 		return array(
-			'safari_ios' => __('Safari (iOS)', 'vms'),
-			'safari_mac' => __('Safari (macOS)', 'vms'),
-			'chrome' => __('Chrome', 'vms'),
-			'firefox' => __('Firefox', 'vms'),
-			'edge' => __('Edge', 'vms'),
-			'other' => __('Other', 'vms'),
+			'safari_ios' => __('Safari (iOS)', 'backstage-venue-manager'),
+			'safari_mac' => __('Safari (macOS)', 'backstage-venue-manager'),
+			'chrome' => __('Chrome', 'backstage-venue-manager'),
+			'firefox' => __('Firefox', 'backstage-venue-manager'),
+			'edge' => __('Edge', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
@@ -314,12 +314,12 @@ if (!function_exists('vms_status_notice_os_labels')) {
 	function vms_status_notice_os_labels(): array
 	{
 		return array(
-			'ios' => __('iOS', 'vms'),
-			'android' => __('Android', 'vms'),
-			'windows' => __('Windows', 'vms'),
-			'macos' => __('macOS', 'vms'),
-			'linux' => __('Linux', 'vms'),
-			'other' => __('Other', 'vms'),
+			'ios' => __('iOS', 'backstage-venue-manager'),
+			'android' => __('Android', 'backstage-venue-manager'),
+			'windows' => __('Windows', 'backstage-venue-manager'),
+			'macos' => __('macOS', 'backstage-venue-manager'),
+			'linux' => __('Linux', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }

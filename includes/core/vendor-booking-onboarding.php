@@ -24,33 +24,33 @@ if (!function_exists('vms_vendor_booking_onboarding_default_settings')) {
             'video_soft_requirement' => true,
             'reminder_after_days' => 3,
             'reminder_before_days' => 7,
-            'subject' => __('You\'re booked: {event_title} at {venue_name} on {event_date}', 'vms'),
+            'subject' => __('You\'re booked: {event_title} at {venue_name} on {event_date}', 'backstage-venue-manager'),
             'body' => implode("\n", array(
-                __('Hi {contact_name},', 'vms'),
+                __('Hi {contact_name},', 'backstage-venue-manager'),
                 '',
-                __('We\'re excited to have {vendor_name} booked for {event_title}.', 'vms'),
-                __('Venue: {venue_name}', 'vms'),
-                __('Date: {event_date}', 'vms'),
-                __('Time: {event_time}', 'vms'),
-                __('Event page: {event_url}', 'vms'),
+                __('We\'re excited to have {vendor_name} booked for {event_title}.', 'backstage-venue-manager'),
+                __('Venue: {venue_name}', 'backstage-venue-manager'),
+                __('Date: {event_date}', 'backstage-venue-manager'),
+                __('Time: {event_time}', 'backstage-venue-manager'),
+                __('Event page: {event_url}', 'backstage-venue-manager'),
                 '',
-                __('Vendor portal: {vendor_portal_url}', 'vms'),
-                __('Website login: {website_login_url}', 'vms'),
+                __('Vendor portal: {vendor_portal_url}', 'backstage-venue-manager'),
+                __('Website login: {website_login_url}', 'backstage-venue-manager'),
                 '',
                 '{vendor_account_prompt}',
                 '',
-                __('What vendors need to know:', 'vms'),
-                __('Please review your event details, arrival timing, and any venue instructions in the vendor portal.', 'vms'),
+                __('What vendors need to know:', 'backstage-venue-manager'),
+                __('Please review your event details, arrival timing, and any venue instructions in the vendor portal.', 'backstage-venue-manager'),
                 '',
                 '{promo_video_request_block}',
                 '',
-                __('If anything looks off, reply to this email and we\'ll get it fixed.', 'vms'),
+                __('If anything looks off, reply to this email and we\'ll get it fixed.', 'backstage-venue-manager'),
                 '',
-                __('Thank you,', 'vms'),
+                __('Thank you,', 'backstage-venue-manager'),
                 '{site_name}',
                 '{contact_email}',
             )),
-            'promo_video_script' => __('Hey, this is {vendor_name}, and we\'re excited to be coming to {venue_name} on {event_date}. We hope you\'ll come out and join us for a great night at {event_title}.', 'vms'),
+            'promo_video_script' => __('Hey, this is {vendor_name}, and we\'re excited to be coming to {venue_name} on {event_date}. We hope you\'ll come out and join us for a great night at {event_title}.', 'backstage-venue-manager'),
         );
     }
 }
@@ -107,25 +107,25 @@ if (!function_exists('vms_vendor_booking_onboarding_placeholder_help')) {
     function vms_vendor_booking_onboarding_placeholder_help(): array
     {
         return array(
-            '{contact_name}' => __('Primary vendor contact name when available.', 'vms'),
-            '{vendor_name}' => __('Vendor profile title.', 'vms'),
-            '{vendor_type}' => __('Vendor type label such as Music Vendor, Food Vendor, or Vendor.', 'vms'),
-            '{vendor_role}' => __('How this vendor is scheduled on the plan, such as Headliner or Supporting act.', 'vms'),
-            '{site_name}' => __('Your site or venue name.', 'vms'),
-            '{venue_name}' => __('Venue linked to the Event Plan.', 'vms'),
-            '{event_title}' => __('Public event title when available; otherwise the Event Plan title.', 'vms'),
-            '{event_date}' => __('Formatted event date in the site timezone.', 'vms'),
-            '{event_day}' => __('Day of week for the event date.', 'vms'),
-            '{event_time}' => __('Formatted event time window when available.', 'vms'),
-            '{event_url}' => __('Public event page URL when available.', 'vms'),
-            '{vendor_portal_url}' => __('Vendor portal URL for this vendor.', 'vms'),
-            '{website_login_url}' => __('Website login or account page URL.', 'vms'),
-            '{contact_email}' => __('Operator/admin contact email.', 'vms'),
-            '{vendor_email}' => __('Resolved vendor recipient email.', 'vms'),
-            '{vendor_account_prompt}' => __('Context-aware account-linking instructions.', 'vms'),
-            '{promo_video_request_block}' => __('Promo-video request block. It auto-hides for non-headliners.', 'vms'),
-            '{promo_video_script}' => __('Suggested promo-video script.', 'vms'),
-            '{video_upload_url}' => __('Direct vendor portal dashboard URL for promo-video upload.', 'vms'),
+            '{contact_name}' => __('Primary vendor contact name when available.', 'backstage-venue-manager'),
+            '{vendor_name}' => __('Vendor profile title.', 'backstage-venue-manager'),
+            '{vendor_type}' => __('Vendor type label such as Music Vendor, Food Vendor, or Vendor.', 'backstage-venue-manager'),
+            '{vendor_role}' => __('How this vendor is scheduled on the plan, such as Headliner or Supporting act.', 'backstage-venue-manager'),
+            '{site_name}' => __('Your site or venue name.', 'backstage-venue-manager'),
+            '{venue_name}' => __('Venue linked to the Event Plan.', 'backstage-venue-manager'),
+            '{event_title}' => __('Public event title when available; otherwise the Event Plan title.', 'backstage-venue-manager'),
+            '{event_date}' => __('Formatted event date in the site timezone.', 'backstage-venue-manager'),
+            '{event_day}' => __('Day of week for the event date.', 'backstage-venue-manager'),
+            '{event_time}' => __('Formatted event time window when available.', 'backstage-venue-manager'),
+            '{event_url}' => __('Public event page URL when available.', 'backstage-venue-manager'),
+            '{vendor_portal_url}' => __('Vendor portal URL for this vendor.', 'backstage-venue-manager'),
+            '{website_login_url}' => __('Website login or account page URL.', 'backstage-venue-manager'),
+            '{contact_email}' => __('Operator/admin contact email.', 'backstage-venue-manager'),
+            '{vendor_email}' => __('Resolved vendor recipient email.', 'backstage-venue-manager'),
+            '{vendor_account_prompt}' => __('Context-aware account-linking instructions.', 'backstage-venue-manager'),
+            '{promo_video_request_block}' => __('Promo-video request block. It auto-hides for non-headliners.', 'backstage-venue-manager'),
+            '{promo_video_script}' => __('Suggested promo-video script.', 'backstage-venue-manager'),
+            '{video_upload_url}' => __('Direct vendor portal dashboard URL for promo-video upload.', 'backstage-venue-manager'),
         );
     }
 }
@@ -169,7 +169,7 @@ if (!function_exists('vms_vendor_booking_onboarding_contact_name')) {
             return html_entity_decode(wp_specialchars_decode($contact_name, ENT_QUOTES), ENT_QUOTES, (string) get_bloginfo('charset') ?: 'UTF-8');
         }
         $title = trim((string) get_the_title($vendor_id));
-        return $title !== '' ? $title : __('there', 'vms');
+        return $title !== '' ? $title : __('there', 'backstage-venue-manager');
     }
 }
 
@@ -250,7 +250,7 @@ if (!function_exists('vms_vendor_booking_onboarding_vendor_type_label')) {
             return (string) $terms[0]->name;
         }
 
-        return __('Vendor', 'vms');
+        return __('Vendor', 'backstage-venue-manager');
     }
 }
 
@@ -344,7 +344,7 @@ if (!function_exists('vms_vendor_booking_onboarding_plan_targets')) {
             $targets[$primary_vendor_id] = array(
                 'vendor_id' => $primary_vendor_id,
                 'role' => 'headliner',
-                'role_label' => __('Headliner', 'vms'),
+                'role_label' => __('Headliner', 'backstage-venue-manager'),
                 'is_headliner' => true,
             );
             $seen[$primary_vendor_id] = true;
@@ -359,7 +359,7 @@ if (!function_exists('vms_vendor_booking_onboarding_plan_targets')) {
                 $targets[$vendor_id] = array(
                     'vendor_id' => $vendor_id,
                     'role' => 'supporting',
-                    'role_label' => __('Supporting act', 'vms'),
+                    'role_label' => __('Supporting act', 'backstage-venue-manager'),
                     'is_headliner' => false,
                 );
                 $seen[$vendor_id] = true;
@@ -380,7 +380,7 @@ if (!function_exists('vms_vendor_booking_onboarding_plan_targets')) {
             $targets[$vendor_id] = array(
                 'vendor_id' => $vendor_id,
                 'role' => 'secondary',
-                'role_label' => __('Scheduled vendor', 'vms'),
+                'role_label' => __('Scheduled vendor', 'backstage-venue-manager'),
                 'is_headliner' => false,
             );
             $seen[$vendor_id] = true;
@@ -449,25 +449,25 @@ if (!function_exists('vms_vendor_booking_onboarding_get_vendor_plan_status')) {
         $video_uploaded = $video_required && vms_vendor_booking_onboarding_video_is_live($plan_id);
         $video_submitted = $video_required && !$video_uploaded && vms_vendor_booking_onboarding_video_is_submitted($plan_id);
         $video_status = 'not_applicable';
-        $video_label = __('No video needed', 'vms');
+        $video_label = __('No video needed', 'backstage-venue-manager');
         $video_tone = 'neutral';
 
         if ($video_required) {
             if ($video_uploaded) {
                 $video_status = 'uploaded';
-                $video_label = __('Video ready', 'vms');
+                $video_label = __('Video ready', 'backstage-venue-manager');
                 $video_tone = 'success';
             } elseif ($video_submitted) {
                 $video_status = 'submitted';
-                $video_label = __('Video submitted for review', 'vms');
+                $video_label = __('Video submitted for review', 'backstage-venue-manager');
                 $video_tone = 'warning';
             } elseif ($video_waived) {
                 $video_status = 'waived';
-                $video_label = __('Video waived', 'vms');
+                $video_label = __('Video waived', 'backstage-venue-manager');
                 $video_tone = 'neutral';
             } else {
                 $video_status = 'needed';
-                $video_label = __('Video needed', 'vms');
+                $video_label = __('Video needed', 'backstage-venue-manager');
                 $video_tone = 'warning';
             }
         }
@@ -516,12 +516,12 @@ if (!function_exists('vms_vendor_booking_onboarding_account_prompt')) {
     function vms_vendor_booking_onboarding_account_prompt(array $link_state): string
     {
         if (!empty($link_state['is_linked'])) {
-            return __('Your vendor account is already linked, so you can head straight to the vendor portal for details and updates.', 'vms');
+            return __('Your vendor account is already linked, so you can head straight to the vendor portal for details and updates.', 'backstage-venue-manager');
         }
         if (!empty($link_state['has_matching_account'])) {
-            return __('A website account already appears to exist for this email, but it is not linked to your vendor profile yet. Please sign in, open the vendor portal, and request the account link if it is not already connected.', 'vms');
+            return __('A website account already appears to exist for this email, but it is not linked to your vendor profile yet. Please sign in, open the vendor portal, and request the account link if it is not already connected.', 'backstage-venue-manager');
         }
-        return __('If you have not linked a vendor account yet, please create or sign in to your website account, then open the vendor portal so we can connect it to your vendor profile.', 'vms');
+        return __('If you have not linked a vendor account yet, please create or sign in to your website account, then open the vendor portal so we can connect it to your vendor profile.', 'backstage-venue-manager');
     }
 }
 
@@ -552,7 +552,7 @@ if (!function_exists('vms_vendor_booking_onboarding_build_tokens')) {
             '{contact_name}' => $contact_name,
             '{vendor_name}' => $vendor_name,
             '{vendor_type}' => $vendor_type,
-            '{vendor_role}' => (string) ($assignment['role_label'] ?? __('Scheduled vendor', 'vms')),
+            '{vendor_role}' => (string) ($assignment['role_label'] ?? __('Scheduled vendor', 'backstage-venue-manager')),
             '{site_name}' => $site_name,
             '{venue_name}' => $venue_name,
             '{event_title}' => $event_title,
@@ -573,12 +573,12 @@ if (!function_exists('vms_vendor_booking_onboarding_build_tokens')) {
         $promo_block = '';
         if (!empty($assignment['is_headliner']) && !empty($settings['video_soft_requirement'])) {
             $promo_block = implode("\n", array(
-                __('Promo video request (soft requirement):', 'vms'),
-                __('Please upload a short 30–60 second “we\'re coming to {venue_name}” clip for this show.', 'vms'),
-                __('Upload here: {video_upload_url}', 'vms'),
-                __('Suggested script:', 'vms'),
+                __('Promo video request (soft requirement):', 'backstage-venue-manager'),
+                __('Please upload a short 30–60 second “we\'re coming to {venue_name}” clip for this show.', 'backstage-venue-manager'),
+                __('Upload here: {video_upload_url}', 'backstage-venue-manager'),
+                __('Suggested script:', 'backstage-venue-manager'),
                 '{promo_video_script}',
-                __('If you cannot do it for this show, just reply and we can waive it. This helps us promote your date, but it does not block the booking.', 'vms'),
+                __('If you cannot do it for this show, just reply and we can waive it. This helps us promote your date, but it does not block the booking.', 'backstage-venue-manager'),
             ));
             $promo_block = vms_vendor_booking_onboarding_resolve_text($promo_block, $base_tokens);
         }
@@ -640,7 +640,7 @@ if (!function_exists('vms_vendor_booking_onboarding_log_email')) {
             'payload' => $payload,
             'provider' => 'core_email',
             'status' => !empty($result['success']) ? 'sent' : 'failed',
-            'error_message' => !empty($result['success']) ? '' : (string) ($result['error_message'] ?? __('wp_mail reported failure.', 'vms')),
+            'error_message' => !empty($result['success']) ? '' : (string) ($result['error_message'] ?? __('wp_mail reported failure.', 'backstage-venue-manager')),
         ));
     }
 }
@@ -651,19 +651,19 @@ if (!function_exists('vms_vendor_booking_onboarding_send_booked_email')) {
         $plan_id = absint($plan_id);
         $vendor_id = absint($vendor_id);
         if ($plan_id <= 0 || $vendor_id <= 0) {
-            return array('success' => false, 'error_message' => __('Missing Event Plan or vendor.', 'vms'));
+            return array('success' => false, 'error_message' => __('Missing Event Plan or vendor.', 'backstage-venue-manager'));
         }
 
         $targets = vms_vendor_booking_onboarding_plan_targets($plan_id);
         $assignment = isset($targets[$vendor_id]) && is_array($targets[$vendor_id]) ? $targets[$vendor_id] : array();
         if (empty($assignment)) {
-            return array('success' => false, 'error_message' => __('That vendor is not currently scheduled on this Event Plan.', 'vms'));
+            return array('success' => false, 'error_message' => __('That vendor is not currently scheduled on this Event Plan.', 'backstage-venue-manager'));
         }
 
         $settings = vms_vendor_booking_onboarding_get_settings();
         $vendor_email = vms_vendor_booking_onboarding_vendor_email($vendor_id);
         if ($vendor_email === '' || !is_email($vendor_email)) {
-            return array('success' => false, 'error_message' => __('No valid vendor email address was found.', 'vms'));
+            return array('success' => false, 'error_message' => __('No valid vendor email address was found.', 'backstage-venue-manager'));
         }
 
         $tokens = vms_vendor_booking_onboarding_build_tokens($plan_id, $vendor_id, $assignment, $settings);
@@ -774,21 +774,21 @@ if (!function_exists('vms_vendor_booking_onboarding_process_plan')) {
                 $results['failed'][] = array(
                     'vendor_id' => $vendor_id,
                     'vendor_name' => (string) get_the_title($vendor_id),
-                    'message' => (string) ($result['error_message'] ?? __('Email could not be sent.', 'vms')),
+                    'message' => (string) ($result['error_message'] ?? __('Email could not be sent.', 'backstage-venue-manager')),
                 );
             }
         }
 
         if ($allow_notices && function_exists('vms_add_admin_notice')) {
             if ($results['sent'] > 0) {
-                vms_add_admin_notice(sprintf(_n('%d booked-vendor email sent.', '%d booked-vendor emails sent.', $results['sent'], 'vms'), $results['sent']), 'success');
+                vms_add_admin_notice(sprintf(_n('%d booked-vendor email sent.', '%d booked-vendor emails sent.', $results['sent'], 'backstage-venue-manager'), $results['sent']), 'success');
             }
             if (!empty($results['failed'])) {
                 $labels = array();
                 foreach ($results['failed'] as $failure) {
-                    $labels[] = trim(((string) ($failure['vendor_name'] ?? __('Vendor', 'vms'))) . ': ' . (string) ($failure['message'] ?? ''));
+                    $labels[] = trim(((string) ($failure['vendor_name'] ?? __('Vendor', 'backstage-venue-manager'))) . ': ' . (string) ($failure['message'] ?? ''));
                 }
-                vms_add_admin_notice(__('Booked vendor email issue(s): ', 'vms') . implode(' | ', $labels), 'warning');
+                vms_add_admin_notice(__('Booked vendor email issue(s): ', 'backstage-venue-manager') . implode(' | ', $labels), 'warning');
             }
         }
 
@@ -829,29 +829,29 @@ if (!function_exists('vms_vendor_booking_onboarding_send_reminder')) {
         $targets = vms_vendor_booking_onboarding_plan_targets($plan_id);
         $assignment = isset($targets[$vendor_id]) && is_array($targets[$vendor_id]) ? $targets[$vendor_id] : array();
         if (empty($assignment) || empty($assignment['is_headliner']) || empty($settings['video_soft_requirement'])) {
-            return array('success' => false, 'error_message' => __('No reminder is needed for this vendor.', 'vms'));
+            return array('success' => false, 'error_message' => __('No reminder is needed for this vendor.', 'backstage-venue-manager'));
         }
 
         $status = vms_vendor_booking_onboarding_get_vendor_plan_status($plan_id, $vendor_id);
         if ($status['video_status'] !== 'needed') {
-            return array('success' => false, 'error_message' => __('Promo video is no longer needed.', 'vms'));
+            return array('success' => false, 'error_message' => __('Promo video is no longer needed.', 'backstage-venue-manager'));
         }
 
         $tokens = vms_vendor_booking_onboarding_build_tokens($plan_id, $vendor_id, $assignment, $settings);
         $vendor_email = (string) ($tokens['{vendor_email}'] ?? '');
         if ($vendor_email === '' || !is_email($vendor_email)) {
-            return array('success' => false, 'error_message' => __('No valid vendor email address was found.', 'vms'));
+            return array('success' => false, 'error_message' => __('No valid vendor email address was found.', 'backstage-venue-manager'));
         }
 
-        $subject = sprintf(__('Reminder: promo video for %s', 'vms'), (string) ($tokens['{event_title}'] ?? __('your upcoming show', 'vms')));
+        $subject = sprintf(__('Reminder: promo video for %s', 'backstage-venue-manager'), (string) ($tokens['{event_title}'] ?? __('your upcoming show', 'backstage-venue-manager')));
         $body = implode("\n", array(
-            sprintf(__('Hi %s,', 'vms'), (string) ($tokens['{contact_name}'] ?? __('there', 'vms'))),
+            sprintf(__('Hi %s,', 'backstage-venue-manager'), (string) ($tokens['{contact_name}'] ?? __('there', 'backstage-venue-manager'))),
             '',
-            __('This is a friendly reminder about the short promo clip for your upcoming show.', 'vms'),
+            __('This is a friendly reminder about the short promo clip for your upcoming show.', 'backstage-venue-manager'),
             '',
             (string) ($tokens['{promo_video_request_block}'] ?? ''),
             '',
-            __('Thank you,', 'vms'),
+            __('Thank you,', 'backstage-venue-manager'),
             (string) ($tokens['{site_name}'] ?? wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES)),
         ));
         $body = vms_vendor_booking_onboarding_resolve_text($body, $tokens);

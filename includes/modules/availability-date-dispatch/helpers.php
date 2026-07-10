@@ -187,12 +187,12 @@ if (!function_exists('vms_add_dispatch_type_label')) {
 		$fallbacks = function_exists('vms_event_plan_secondary_vendor_type_options')
 			? (array) vms_event_plan_secondary_vendor_type_options()
 			: array(
-				'band' => __('Music Vendor', 'vms'),
-				'food_truck' => __('Food Vendor', 'vms'),
-				'dessert_truck' => __('Dessert Vendor', 'vms'),
-				'drink_truck' => __('Drink Vendor', 'vms'),
-				'photographer' => __('Photographer', 'vms'),
-				'market_vendor' => __('Market Vendor', 'vms'),
+				'band' => __('Music Vendor', 'backstage-venue-manager'),
+				'food_truck' => __('Food Vendor', 'backstage-venue-manager'),
+				'dessert_truck' => __('Dessert Vendor', 'backstage-venue-manager'),
+				'drink_truck' => __('Drink Vendor', 'backstage-venue-manager'),
+				'photographer' => __('Photographer', 'backstage-venue-manager'),
+				'market_vendor' => __('Market Vendor', 'backstage-venue-manager'),
 			);
 		if (isset($fallbacks[$slug])) {
 			return (string) $fallbacks[$slug];
@@ -299,7 +299,7 @@ if (!function_exists('vms_add_dispatch_secondary_group_rows')) {
 			$is_open = false;
 			$over_capacity = false;
 			$status = 'full';
-			$status_label = __('Full', 'vms');
+			$status_label = __('Full', 'backstage-venue-manager');
 			$is_market_group = ($mode === 'market' || $type_slug === 'market_vendor');
 			$open_for_dispatch = vms_add_dispatch_assignment_bool_value($assignment, 'open_for_dispatch', true);
 			$needed_slots = vms_add_dispatch_assignment_int_value($assignment, array('needed_slots', 'target_slots', 'needed', 'target'));
@@ -315,7 +315,7 @@ if (!function_exists('vms_add_dispatch_secondary_group_rows')) {
 					$available_slots = 0;
 					$open_capacity = 0;
 					$status = 'over_capacity';
-					$status_label = __('Over capacity', 'vms');
+					$status_label = __('Over capacity', 'backstage-venue-manager');
 				} else {
 					$available_slots = max(0, (int) $slot_limit - $filled_slots);
 					$open_capacity = $available_slots;
@@ -326,10 +326,10 @@ if (!function_exists('vms_add_dispatch_secondary_group_rows')) {
 				$open_needed = max(0, $needed_slots - $filled_slots);
 				$is_open = $open_needed > 0;
 				$status = $is_open ? 'open' : 'full';
-				$status_label = $is_open ? __('Open', 'vms') : __('Full', 'vms');
+				$status_label = $is_open ? __('Open', 'backstage-venue-manager') : __('Full', 'backstage-venue-manager');
 			} elseif (!$over_capacity && !$open_for_dispatch) {
 				$status = 'excluded';
-				$status_label = __('Excluded', 'vms');
+				$status_label = __('Excluded', 'backstage-venue-manager');
 			}
 
 			$rows[] = array(
@@ -372,7 +372,7 @@ if (!function_exists('vms_add_dispatch_context_vendor_need_rows')) {
 			$rows[] = array(
 				'target_mode' => 'primary',
 				'type_slug' => 'band',
-				'label' => __('Primary Vendor', 'vms'),
+				'label' => __('Primary Vendor', 'backstage-venue-manager'),
 				'mode' => 'primary',
 				'filled_slots' => 0,
 				'needed_slots' => 1,
@@ -382,7 +382,7 @@ if (!function_exists('vms_add_dispatch_context_vendor_need_rows')) {
 				'open_spots' => 1,
 				'open_capacity' => 1,
 				'status' => 'open',
-				'status_label' => __('Open', 'vms'),
+				'status_label' => __('Open', 'backstage-venue-manager'),
 				'is_open' => true,
 			);
 		}
@@ -406,21 +406,21 @@ if (!function_exists('vms_add_dispatch_context_exclusion_reason')) {
 	function vms_add_dispatch_context_exclusion_reason(?array $context, array $options = array()): string
 	{
 		if (!$context) {
-			return __('Invalid Event Plan', 'vms');
+			return __('Invalid Event Plan', 'backstage-venue-manager');
 		}
 		$include_past = !empty($options['include_past_events']);
 		$include_cancelled = !empty($options['include_cancelled_events']);
 		if (trim((string) ($context['event_date'] ?? '')) === '') {
-			return __('Missing date', 'vms');
+			return __('Missing date', 'backstage-venue-manager');
 		}
 		if (!$include_past && !empty($context['is_past_event'])) {
-			return __('Past event', 'vms');
+			return __('Past event', 'backstage-venue-manager');
 		}
 		if (!$include_cancelled && in_array((string) ($context['event_status'] ?? ''), array('cancelled', 'archived'), true)) {
-			return __('Cancelled or archived', 'vms');
+			return __('Cancelled or archived', 'backstage-venue-manager');
 		}
 		if (empty(vms_add_dispatch_context_vendor_need_rows($context, false))) {
-			return __('No open vendor needs detected', 'vms');
+			return __('No open vendor needs detected', 'backstage-venue-manager');
 		}
 
 		return '';
@@ -603,7 +603,7 @@ if (!function_exists('vms_add_dispatch_default_message')) {
 			? vms_vendor_type_normalize_slug((string) ($builder_args['vendor_type'] ?? ''))
 			: sanitize_key(str_replace('-', '_', (string) ($builder_args['vendor_type'] ?? '')));
 		$role_label = $target_mode === 'primary'
-			? __('primary vendor', 'vms')
+			? __('primary vendor', 'backstage-venue-manager')
 			: strtolower((string) vms_add_dispatch_type_label($vendor_type));
 
 		$title = trim((string) ($context['event_title'] ?? ''));
@@ -612,11 +612,11 @@ if (!function_exists('vms_add_dispatch_default_message')) {
 
 		$message = sprintf(
 			/* translators: 1: role/type label, 2: event title, 3: event date, 4: venue */
-			__('We have an open %1$s slot for %2$s on %3$s at %4$s. Please let us know whether you are available.', 'vms'),
-			$role_label !== '' ? $role_label : __('vendor', 'vms'),
-			$title !== '' ? $title : __('this event', 'vms'),
-			$date_label !== '' ? $date_label : __('the scheduled date', 'vms'),
-			$venue !== '' ? $venue : __('the venue on file', 'vms')
+			__('We have an open %1$s slot for %2$s on %3$s at %4$s. Please let us know whether you are available.', 'backstage-venue-manager'),
+			$role_label !== '' ? $role_label : __('vendor', 'backstage-venue-manager'),
+			$title !== '' ? $title : __('this event', 'backstage-venue-manager'),
+			$date_label !== '' ? $date_label : __('the scheduled date', 'backstage-venue-manager'),
+			$venue !== '' ? $venue : __('the venue on file', 'backstage-venue-manager')
 		);
 
 		return $message;
@@ -697,7 +697,7 @@ if (!function_exists('vms_add_dispatch_get_event_plan_context')) {
 		$missing_slot_labels = array();
 		foreach ($missing_slots as $slot) {
 			if ($slot === 'primary') {
-				$missing_slot_labels[] = __('Primary vendor missing', 'vms');
+				$missing_slot_labels[] = __('Primary vendor missing', 'backstage-venue-manager');
 			}
 		}
 		foreach ($missing_secondary_groups as $group) {
@@ -705,12 +705,12 @@ if (!function_exists('vms_add_dispatch_get_event_plan_context')) {
 			if ($open_spots !== null && $open_spots !== '') {
 				$missing_slot_labels[] = sprintf(
 					/* translators: 1: vendor type label, 2: open slot count */
-					_n('%1$s: %2$d slot open', '%1$s: %2$d slots open', (int) $open_spots, 'vms'),
-					(string) ($group['label'] ?? __('Vendor', 'vms')),
+					_n('%1$s: %2$d slot open', '%1$s: %2$d slots open', (int) $open_spots, 'backstage-venue-manager'),
+					(string) ($group['label'] ?? __('Vendor', 'backstage-venue-manager')),
 					(int) $open_spots
 				);
 			} else {
-				$missing_slot_labels[] = sprintf(__('Additional vendor (%s) slot open', 'vms'), (string) ($group['label'] ?? __('Vendor', 'vms')));
+				$missing_slot_labels[] = sprintf(__('Additional vendor (%s) slot open', 'backstage-venue-manager'), (string) ($group['label'] ?? __('Vendor', 'backstage-venue-manager')));
 			}
 		}
 
@@ -786,7 +786,7 @@ if (!function_exists('vms_add_dispatch_parse_builder_args')) {
 if (!function_exists('vms_add_dispatch_no_response_explanation')) {
 	function vms_add_dispatch_no_response_explanation(): string
 	{
-		return __('We’re reaching out because your availability for this date is not currently marked unavailable in the vendor portal.', 'vms');
+		return __('We’re reaching out because your availability for this date is not currently marked unavailable in the vendor portal.', 'backstage-venue-manager');
 	}
 }
 
@@ -930,35 +930,35 @@ if (!function_exists('vms_add_dispatch_collect_recipient_candidates')) {
 
 			if (in_array($vendor_id, $assigned_ids, true)) {
 				$included = false;
-				$selection_reason = __('Already assigned to this Event Plan.', 'vms');
+				$selection_reason = __('Already assigned to this Event Plan.', 'backstage-venue-manager');
 			} elseif (!$contactable) {
 				$included = false;
-				$selection_reason = __('No vendor email on file.', 'vms');
+				$selection_reason = __('No vendor email on file.', 'backstage-venue-manager');
 			} elseif (in_array($state, array('current', 'booked', 'unavailable'), true)) {
 				$included = false;
-				$selection_reason = $detail !== '' ? $detail : __('Vendor is already unavailable or booked for this date.', 'vms');
+				$selection_reason = $detail !== '' ? $detail : __('Vendor is already unavailable or booked for this date.', 'backstage-venue-manager');
 			} elseif ($state === 'tentative' && empty($builder_args['include_tentative'])) {
 				$included = false;
-				$selection_reason = __('Tentative vendors are currently excluded by your filters.', 'vms');
+				$selection_reason = __('Tentative vendors are currently excluded by your filters.', 'backstage-venue-manager');
 			} elseif ($state === 'no-response' && empty($builder_args['include_unknown']) && empty($builder_args['include_no_response'])) {
 				$included = false;
-				$selection_reason = __('No-response vendors are excluded by the current filters.', 'vms');
+				$selection_reason = __('No-response vendors are excluded by the current filters.', 'backstage-venue-manager');
 			} elseif (!in_array($state, array('available', 'no-response', 'tentative'), true)) {
 				$included = false;
-				$selection_reason = $detail !== '' ? $detail : __('This vendor does not currently qualify for ADD outreach.', 'vms');
+				$selection_reason = $detail !== '' ? $detail : __('This vendor does not currently qualify for ADD outreach.', 'backstage-venue-manager');
 			} elseif ($previously_contacted && empty($builder_args['include_previously_contacted'])) {
 				$included = false;
-				$selection_reason = __('Previously contacted vendors are currently excluded by your filters.', 'vms');
+				$selection_reason = __('Previously contacted vendors are currently excluded by your filters.', 'backstage-venue-manager');
 			} else {
 				if ($state === 'available') {
-					$selection_reason = __('Ready to contact. Vendor currently shows as available.', 'vms');
+					$selection_reason = __('Ready to contact. Vendor currently shows as available.', 'backstage-venue-manager');
 				} elseif ($state === 'tentative') {
-					$selection_reason = __('Ready to contact because tentative vendors are included.', 'vms');
+					$selection_reason = __('Ready to contact because tentative vendors are included.', 'backstage-venue-manager');
 				} else {
-					$selection_reason = __('Ready to contact because no-response vendors and vendors without availability setup are included.', 'vms') . ' ' . vms_add_dispatch_no_response_explanation();
+					$selection_reason = __('Ready to contact because no-response vendors and vendors without availability setup are included.', 'backstage-venue-manager') . ' ' . vms_add_dispatch_no_response_explanation();
 				}
 				if ($previously_contacted) {
-					$selection_reason .= ' ' . __('This vendor was also contacted previously for this Event Plan.', 'vms');
+					$selection_reason .= ' ' . __('This vendor was also contacted previously for this Event Plan.', 'backstage-venue-manager');
 				}
 			}
 
@@ -967,7 +967,7 @@ if (!function_exists('vms_add_dispatch_collect_recipient_candidates')) {
 				'title' => (string) ($vendor['title'] ?? ''),
 				'email' => $email,
 				'state' => $state,
-				'label' => (string) ($resolved['label'] ?? __('No reply', 'vms')),
+				'label' => (string) ($resolved['label'] ?? __('No reply', 'backstage-venue-manager')),
 				'detail' => $detail,
 				'source' => (string) ($resolved['source'] ?? ''),
 				'reason' => (string) ($resolved['reason'] ?? ''),
@@ -1358,16 +1358,16 @@ if (!function_exists('vms_add_dispatch_create_request')) {
 		$event_plan_id = absint($event_plan_id);
 		$context = vms_add_dispatch_get_event_plan_context($event_plan_id);
 		if (!$context) {
-			return new WP_Error('add_dispatch_event_missing', __('The selected Event Plan could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_event_missing', __('The selected Event Plan could not be found.', 'backstage-venue-manager'));
 		}
 		if (empty($recipients)) {
-			return new WP_Error('add_dispatch_no_recipients', __('Choose at least one recipient before sending ADD.', 'vms'));
+			return new WP_Error('add_dispatch_no_recipients', __('Choose at least one recipient before sending ADD.', 'backstage-venue-manager'));
 		}
 
 		$requests_table = vms_add_dispatch_table_name('requests');
 		$responses_table = vms_add_dispatch_table_name('responses');
 		if ($requests_table === '' || $responses_table === '') {
-			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'vms'));
+			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'backstage-venue-manager'));
 		}
 
 		$now = vms_add_dispatch_now_mysql();
@@ -1397,7 +1397,7 @@ if (!function_exists('vms_add_dispatch_create_request')) {
 			array('%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%d', '%s')
 		);
 		if ($inserted !== 1) {
-			return new WP_Error('add_dispatch_request_insert_failed', __('The ADD request could not be created.', 'vms'));
+			return new WP_Error('add_dispatch_request_insert_failed', __('The ADD request could not be created.', 'backstage-venue-manager'));
 		}
 
 		$request_id = (int) $wpdb->insert_id;
@@ -1449,7 +1449,7 @@ if (!function_exists('vms_add_dispatch_create_request')) {
 
 		if (empty($responses)) {
 			$wpdb->delete($requests_table, array('id' => $request_id), array('%d'));
-			return new WP_Error('add_dispatch_response_insert_failed', __('The ADD request could not create any valid recipient rows.', 'vms'));
+			return new WP_Error('add_dispatch_response_insert_failed', __('The ADD request could not create any valid recipient rows.', 'backstage-venue-manager'));
 		}
 
 		$wpdb->update(
@@ -1478,7 +1478,7 @@ if (!function_exists('vms_add_dispatch_create_request')) {
 
 		$request = vms_add_dispatch_get_request($request_id);
 		if (!$request) {
-			return new WP_Error('add_dispatch_request_reload_failed', __('The ADD request was created but could not be reloaded.', 'vms'));
+			return new WP_Error('add_dispatch_request_reload_failed', __('The ADD request was created but could not be reloaded.', 'backstage-venue-manager'));
 		}
 
 		return array(
@@ -1495,25 +1495,25 @@ if (!function_exists('vms_add_dispatch_prepare_resend')) {
 		global $wpdb;
 		$responses_table = vms_add_dispatch_table_name('responses');
 		if ($responses_table === '') {
-			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'vms'));
+			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'backstage-venue-manager'));
 		}
 
 		$response = vms_add_dispatch_get_response($response_id);
 		if (!$response) {
-			return new WP_Error('add_dispatch_response_missing', __('The requested ADD response could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_response_missing', __('The requested ADD response could not be found.', 'backstage-venue-manager'));
 		}
 
 		$request = vms_add_dispatch_get_request((int) ($response['request_id'] ?? 0));
 		if (!$request) {
-			return new WP_Error('add_dispatch_request_missing', __('The parent ADD request could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_request_missing', __('The parent ADD request could not be found.', 'backstage-venue-manager'));
 		}
 		if (sanitize_key((string) ($request['status'] ?? '')) !== 'active') {
-			return new WP_Error('add_dispatch_request_closed', __('This ADD request is already closed.', 'vms'));
+			return new WP_Error('add_dispatch_request_closed', __('This ADD request is already closed.', 'backstage-venue-manager'));
 		}
 
 		$status = sanitize_key((string) ($response['response_status'] ?? 'requested'));
 		if (in_array($status, array('available', 'unavailable'), true)) {
-			return new WP_Error('add_dispatch_already_answered', __('This vendor has already responded.', 'vms'));
+			return new WP_Error('add_dispatch_already_answered', __('This vendor has already responded.', 'backstage-venue-manager'));
 		}
 
 		$now = vms_add_dispatch_now_mysql();
@@ -1531,12 +1531,12 @@ if (!function_exists('vms_add_dispatch_prepare_resend')) {
 			array('%d')
 		);
 		if ($updated === false) {
-			return new WP_Error('add_dispatch_resend_update_failed', __('The response could not be refreshed for resend.', 'vms'));
+			return new WP_Error('add_dispatch_resend_update_failed', __('The response could not be refreshed for resend.', 'backstage-venue-manager'));
 		}
 
 		$fresh = vms_add_dispatch_get_response($response_id);
 		if (!$fresh) {
-			return new WP_Error('add_dispatch_resend_reload_failed', __('The refreshed response could not be loaded.', 'vms'));
+			return new WP_Error('add_dispatch_resend_reload_failed', __('The refreshed response could not be loaded.', 'backstage-venue-manager'));
 		}
 
 		return array(
@@ -1553,12 +1553,12 @@ if (!function_exists('vms_add_dispatch_close_request')) {
 		global $wpdb;
 		$table = vms_add_dispatch_table_name('requests');
 		if ($table === '') {
-			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'vms'));
+			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'backstage-venue-manager'));
 		}
 
 		$request = vms_add_dispatch_get_request($request_id);
 		if (!$request) {
-			return new WP_Error('add_dispatch_request_missing', __('The ADD request could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_request_missing', __('The ADD request could not be found.', 'backstage-venue-manager'));
 		}
 
 		$updated = $wpdb->update(
@@ -1573,7 +1573,7 @@ if (!function_exists('vms_add_dispatch_close_request')) {
 			array('%d')
 		);
 		if ($updated === false) {
-			return new WP_Error('add_dispatch_close_failed', __('The ADD request could not be closed.', 'vms'));
+			return new WP_Error('add_dispatch_close_failed', __('The ADD request could not be closed.', 'backstage-venue-manager'));
 		}
 
 		vms_add_dispatch_log('request_closed', array(
@@ -1594,7 +1594,7 @@ if (!function_exists('vms_add_dispatch_write_vendor_availability')) {
 		$vendor_id = absint($vendor_id);
 		$new_value = sanitize_key($new_value);
 		if ($vendor_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date) || !in_array($new_value, array('available', 'unavailable'), true)) {
-			return new WP_Error('add_dispatch_invalid_write', __('The ADD availability write is invalid.', 'vms'));
+			return new WP_Error('add_dispatch_invalid_write', __('The ADD availability write is invalid.', 'backstage-venue-manager'));
 		}
 
 		$manual = function_exists('vms_vendor_normalize_manual_availability')
@@ -1624,7 +1624,7 @@ if (!function_exists('vms_add_dispatch_write_vendor_availability')) {
 				: (array) get_post_meta($vendor_id, '_vms_availability_manual', true);
 			$fresh_value = isset($fresh[$event_date]) ? sanitize_key((string) $fresh[$event_date]) : '';
 			if ($fresh_value !== $new_value) {
-				return new WP_Error('add_dispatch_write_failed', __('The vendor availability could not be updated.', 'vms'));
+				return new WP_Error('add_dispatch_write_failed', __('The vendor availability could not be updated.', 'backstage-venue-manager'));
 			}
 		}
 
@@ -1646,17 +1646,17 @@ if (!function_exists('vms_add_dispatch_record_public_response')) {
 		global $wpdb;
 		$responses_table = vms_add_dispatch_table_name('responses');
 		if ($responses_table === '') {
-			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'vms'));
+			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'backstage-venue-manager'));
 		}
 
 		$choice = sanitize_key($choice);
 		if (!in_array($choice, array('available', 'unavailable'), true)) {
-			return new WP_Error('add_dispatch_choice_invalid', __('The selected availability choice is invalid.', 'vms'));
+			return new WP_Error('add_dispatch_choice_invalid', __('The selected availability choice is invalid.', 'backstage-venue-manager'));
 		}
 
 		$response_id = (int) ($response_row['id'] ?? 0);
 		if ($response_id <= 0) {
-			return new WP_Error('add_dispatch_response_missing', __('The ADD response could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_response_missing', __('The ADD response could not be found.', 'backstage-venue-manager'));
 		}
 
 		$current_status = sanitize_key((string) ($response_row['response_status'] ?? 'requested'));
@@ -1669,7 +1669,7 @@ if (!function_exists('vms_add_dispatch_record_public_response')) {
 		}
 
 		if (vms_add_dispatch_response_expired($response_row)) {
-			return new WP_Error('add_dispatch_expired', __('This ADD response link has expired.', 'vms'));
+			return new WP_Error('add_dispatch_expired', __('This ADD response link has expired.', 'backstage-venue-manager'));
 		}
 
 		$write = vms_add_dispatch_write_vendor_availability(
@@ -1699,7 +1699,7 @@ if (!function_exists('vms_add_dispatch_record_public_response')) {
 			array('%d')
 		);
 		if ($updated === false) {
-			return new WP_Error('add_dispatch_response_update_failed', __('The ADD response record could not be updated.', 'vms'));
+			return new WP_Error('add_dispatch_response_update_failed', __('The ADD response record could not be updated.', 'backstage-venue-manager'));
 		}
 
 		vms_add_dispatch_log('availability_write', array(
@@ -1751,7 +1751,7 @@ if (!function_exists('vms_add_dispatch_resolve_vendor_interest_target')) {
 		if ($vendor_id <= 0) {
 			return array(
 				'ok' => false,
-				'reason' => __('That vendor record could not be found.', 'vms'),
+				'reason' => __('That vendor record could not be found.', 'backstage-venue-manager'),
 				'target_mode' => '',
 				'vendor_type' => '',
 			);
@@ -1762,7 +1762,7 @@ if (!function_exists('vms_add_dispatch_resolve_vendor_interest_target')) {
 		if ($viewer_type === '') {
 			return array(
 				'ok' => false,
-				'reason' => __('This vendor does not have a primary vendor type yet.', 'vms'),
+				'reason' => __('This vendor does not have a primary vendor type yet.', 'backstage-venue-manager'),
 				'target_mode' => '',
 				'vendor_type' => '',
 			);
@@ -1778,7 +1778,7 @@ if (!function_exists('vms_add_dispatch_resolve_vendor_interest_target')) {
 		if (in_array($vendor_id, $assigned_ids, true)) {
 			return array(
 				'ok' => false,
-				'reason' => __('You are already assigned to this Event Plan.', 'vms'),
+				'reason' => __('You are already assigned to this Event Plan.', 'backstage-venue-manager'),
 				'target_mode' => '',
 				'vendor_type' => $viewer_type,
 			);
@@ -1823,7 +1823,7 @@ if (!function_exists('vms_add_dispatch_resolve_vendor_interest_target')) {
 
 		return array(
 			'ok' => false,
-			'reason' => __('That opportunity is no longer open for this vendor type.', 'vms'),
+			'reason' => __('That opportunity is no longer open for this vendor type.', 'backstage-venue-manager'),
 			'target_mode' => '',
 			'vendor_type' => $viewer_type,
 		);
@@ -1926,17 +1926,17 @@ if (!function_exists('vms_add_dispatch_create_portal_interest')) {
 	function vms_add_dispatch_create_portal_interest(int $event_plan_id, int $vendor_id)
 	{
 		if (!vms_add_dispatch_enabled_by_settings()) {
-			return new WP_Error('add_dispatch_disabled', __('ADD is currently disabled in settings.', 'vms'));
+			return new WP_Error('add_dispatch_disabled', __('ADD is currently disabled in settings.', 'backstage-venue-manager'));
 		}
 
 		$event_plan_id = absint($event_plan_id);
 		$vendor_id = absint($vendor_id);
 		$context = vms_add_dispatch_get_event_plan_context($event_plan_id);
 		if (!$context) {
-			return new WP_Error('add_dispatch_event_missing', __('That Event Plan could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_event_missing', __('That Event Plan could not be found.', 'backstage-venue-manager'));
 		}
 		if (!empty($context['is_past_event'])) {
-			return new WP_Error('add_dispatch_event_past', __('That event date has already passed.', 'vms'));
+			return new WP_Error('add_dispatch_event_past', __('That event date has already passed.', 'backstage-venue-manager'));
 		}
 
 		$existing = vms_add_dispatch_get_portal_interest_response($event_plan_id, $vendor_id, true);
@@ -1970,7 +1970,7 @@ if (!function_exists('vms_add_dispatch_create_portal_interest')) {
 
 		$target = vms_add_dispatch_resolve_vendor_interest_target($context, $vendor_id);
 		if (empty($target['ok'])) {
-			return new WP_Error('add_dispatch_interest_closed', (string) ($target['reason'] ?? __('That opportunity is no longer open.', 'vms')));
+			return new WP_Error('add_dispatch_interest_closed', (string) ($target['reason'] ?? __('That opportunity is no longer open.', 'backstage-venue-manager')));
 		}
 
 		$recipient_email = vms_add_dispatch_vendor_email($vendor_id);
@@ -1993,7 +1993,7 @@ if (!function_exists('vms_add_dispatch_create_portal_interest')) {
 		$builder_args = array(
 			'target_mode' => (string) ($target['target_mode'] ?? 'secondary'),
 			'vendor_type' => (string) ($target['vendor_type'] ?? ''),
-			'message' => __('Vendor expressed interest through the vendor portal.', 'vms'),
+			'message' => __('Vendor expressed interest through the vendor portal.', 'backstage-venue-manager'),
 			'include_unknown' => 1,
 			'include_tentative' => 1,
 			'include_previously_contacted' => 1,
@@ -2007,7 +2007,7 @@ if (!function_exists('vms_add_dispatch_create_portal_interest')) {
 		$response = isset($created['responses'][0]) && is_array($created['responses'][0]) ? $created['responses'][0] : array();
 		$response_id = (int) ($response['id'] ?? 0);
 		if ($response_id <= 0) {
-			return new WP_Error('add_dispatch_response_missing', __('The interest response could not be created.', 'vms'));
+			return new WP_Error('add_dispatch_response_missing', __('The interest response could not be created.', 'backstage-venue-manager'));
 		}
 
 		$recorded = vms_add_dispatch_record_public_response($response, 'available', 'portal_interest');
@@ -2053,7 +2053,7 @@ if (!function_exists('vms_add_dispatch_restore_vendor_availability')) {
 		$vendor_id = absint($vendor_id);
 		$previous_value = sanitize_key($previous_value);
 		if ($vendor_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date)) {
-			return new WP_Error('add_dispatch_invalid_restore', __('The availability restore request is invalid.', 'vms'));
+			return new WP_Error('add_dispatch_invalid_restore', __('The availability restore request is invalid.', 'backstage-venue-manager'));
 		}
 
 		$manual = function_exists('vms_vendor_normalize_manual_availability')
@@ -2085,7 +2085,7 @@ if (!function_exists('vms_add_dispatch_restore_vendor_availability')) {
 				: (array) get_post_meta($vendor_id, '_vms_availability_manual', true);
 			$fresh_value = isset($fresh[$event_date]) ? sanitize_key((string) $fresh[$event_date]) : '';
 			if ($fresh_value !== $previous_value) {
-				return new WP_Error('add_dispatch_restore_failed', __('The vendor availability could not be restored.', 'vms'));
+				return new WP_Error('add_dispatch_restore_failed', __('The vendor availability could not be restored.', 'backstage-venue-manager'));
 			}
 		}
 
@@ -2104,12 +2104,12 @@ if (!function_exists('vms_add_dispatch_reactivate_portal_interest')) {
 		global $wpdb;
 		$responses_table = vms_add_dispatch_table_name('responses');
 		if ($responses_table === '') {
-			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'vms'));
+			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'backstage-venue-manager'));
 		}
 
 		$response_id = (int) ($response_row['id'] ?? 0);
 		if ($response_id <= 0) {
-			return new WP_Error('add_dispatch_response_missing', __('The ADD response could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_response_missing', __('The ADD response could not be found.', 'backstage-venue-manager'));
 		}
 
 		$write = vms_add_dispatch_write_vendor_availability(
@@ -2139,7 +2139,7 @@ if (!function_exists('vms_add_dispatch_reactivate_portal_interest')) {
 			array('%d')
 		);
 		if ($updated === false) {
-			return new WP_Error('add_dispatch_response_update_failed', __('The interest response could not be reactivated.', 'vms'));
+			return new WP_Error('add_dispatch_response_update_failed', __('The interest response could not be reactivated.', 'backstage-venue-manager'));
 		}
 
 		vms_add_dispatch_log('portal_interest_reactivated', array(
@@ -2163,15 +2163,15 @@ if (!function_exists('vms_add_dispatch_withdraw_portal_interest')) {
 		$requests_table = vms_add_dispatch_table_name('requests');
 		$responses_table = vms_add_dispatch_table_name('responses');
 		if ($requests_table === '' || $responses_table === '') {
-			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'vms'));
+			return new WP_Error('add_dispatch_schema_missing', __('ADD tables are not available yet.', 'backstage-venue-manager'));
 		}
 
 		$interest = vms_add_dispatch_get_portal_interest_response($event_plan_id, $vendor_id, false);
 		if (!is_array($interest)) {
-			return new WP_Error('add_dispatch_interest_missing', __('No saved request was found for this date.', 'vms'));
+			return new WP_Error('add_dispatch_interest_missing', __('No saved request was found for this date.', 'backstage-venue-manager'));
 		}
 		if (trim((string) ($interest['assigned_at'] ?? '')) !== '') {
-			return new WP_Error('add_dispatch_interest_assigned', __('This request has already been assigned and cannot be withdrawn here.', 'vms'));
+			return new WP_Error('add_dispatch_interest_assigned', __('This request has already been assigned and cannot be withdrawn here.', 'backstage-venue-manager'));
 		}
 		$current_status = sanitize_key((string) ($interest['response_status'] ?? 'requested'));
 		if ($current_status === 'unavailable') {
@@ -2202,7 +2202,7 @@ if (!function_exists('vms_add_dispatch_withdraw_portal_interest')) {
 			array('%d')
 		);
 		if ($updated === false) {
-			return new WP_Error('add_dispatch_withdraw_failed', __('The request could not be withdrawn.', 'vms'));
+			return new WP_Error('add_dispatch_withdraw_failed', __('The request could not be withdrawn.', 'backstage-venue-manager'));
 		}
 
 		vms_add_dispatch_log('portal_interest_withdrawn', array(
@@ -2248,7 +2248,7 @@ if (!function_exists('vms_add_dispatch_assign_vendor_to_plan')) {
 		}
 
 		$labels = array_values(array_unique($labels));
-		return !empty($labels) ? implode(', ', $labels) : __('No current vendor type', 'vms');
+		return !empty($labels) ? implode(', ', $labels) : __('No current vendor type', 'backstage-venue-manager');
 	}
 }
 
@@ -2256,21 +2256,21 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 	function vms_add_dispatch_assignment_review(int $response_id, string $selected_type = '') {
 		$response = vms_add_dispatch_get_response($response_id);
 		if (!$response) {
-			return new WP_Error('add_dispatch_response_missing', __('The selected ADD response could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_response_missing', __('The selected ADD response could not be found.', 'backstage-venue-manager'));
 		}
 
 		$request = vms_add_dispatch_get_request((int) ($response['request_id'] ?? 0));
 		if (!$request) {
-			return new WP_Error('add_dispatch_request_missing', __('The parent ADD request could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_request_missing', __('The parent ADD request could not be found.', 'backstage-venue-manager'));
 		}
 
 		$event_plan_id = (int) ($request['event_plan_id'] ?? $response['event_plan_id'] ?? 0);
 		$vendor_id = (int) ($response['vendor_id'] ?? 0);
 		if ($event_plan_id <= 0 || get_post_type($event_plan_id) !== 'vms_event_plan') {
-			return new WP_Error('add_dispatch_event_missing', __('The target Event Plan could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_event_missing', __('The target Event Plan could not be found.', 'backstage-venue-manager'));
 		}
 		if ($vendor_id <= 0 || get_post_type($vendor_id) !== 'vms_vendor') {
-			return new WP_Error('add_dispatch_vendor_missing', __('The selected vendor could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_vendor_missing', __('The selected vendor could not be found.', 'backstage-venue-manager'));
 		}
 
 		$target_mode = sanitize_key((string) ($request['target_mode'] ?? 'secondary'));
@@ -2345,18 +2345,18 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 				: !empty($assignment['allow_over_capacity']);
 			$warnings = array();
 			if ($primary_vendor_id > 0 && $primary_vendor_id === $vendor_id) {
-				$warnings[] = __('This vendor is already the Primary Vendor and cannot also be assigned as an Additional Vendor.', 'vms');
+				$warnings[] = __('This vendor is already the Primary Vendor and cannot also be assigned as an Additional Vendor.', 'backstage-venue-manager');
 			}
 			if (in_array($vendor_id, $vendor_ids, true)) {
-				$warnings[] = __('This vendor is already in this Additional Vendor group.', 'vms');
+				$warnings[] = __('This vendor is already in this Additional Vendor group.', 'backstage-venue-manager');
 			}
 			if ($slot_limit !== null && $filled >= (int) $slot_limit && !in_array($vendor_id, $vendor_ids, true)) {
 				$warnings[] = $allow_over_capacity
-					? __('This group is full, but over-capacity is already allowed for the group.', 'vms')
-					: __('This group is full. Confirming this assignment requires the over-capacity override.', 'vms');
+					? __('This group is full, but over-capacity is already allowed for the group.', 'backstage-venue-manager')
+					: __('This group is full. Confirming this assignment requires the over-capacity override.', 'backstage-venue-manager');
 			}
 			if ($slot_limit !== null && $filled > (int) $slot_limit) {
-				$warnings[] = sprintf(__('This group is already over capacity by %d.', 'vms'), $filled - (int) $slot_limit);
+				$warnings[] = sprintf(__('This group is already over capacity by %d.', 'backstage-venue-manager'), $filled - (int) $slot_limit);
 			}
 
 			$targets[$type_slug] = array(
@@ -2366,7 +2366,7 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 				'mode' => $mode,
 				'slot_limit' => $slot_limit,
 				'filled' => $filled,
-				'capacity_label' => $slot_limit === null ? __('No slot limit', 'vms') : sprintf(__('%1$d of %2$d filled', 'vms'), $filled, (int) $slot_limit),
+				'capacity_label' => $slot_limit === null ? __('No slot limit', 'backstage-venue-manager') : sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $filled, (int) $slot_limit),
 				'allow_over_capacity' => $allow_over_capacity,
 				'is_full' => $slot_limit !== null && $filled >= (int) $slot_limit,
 				'is_duplicate' => in_array($vendor_id, $vendor_ids, true),
@@ -2378,13 +2378,13 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 		$warnings = array();
 		if ($target_mode !== 'primary' && $original_type !== '' && !in_array($original_type, $current_types, true) && !empty($current_types)) {
 			$warnings[] = sprintf(
-				__('This vendor originally responded as %1$s, but their current vendor type is %2$s.', 'vms'),
+				__('This vendor originally responded as %1$s, but their current vendor type is %2$s.', 'backstage-venue-manager'),
 				vms_add_dispatch_type_label($original_type),
 				vms_add_dispatch_assign_vendor_type_label_list($current_types)
 			);
 		}
 		if (trim((string) ($response['assigned_at'] ?? '')) !== '') {
-			$warnings[] = __('This ADD response is already marked assigned.', 'vms');
+			$warnings[] = __('This ADD response is already marked assigned.', 'backstage-venue-manager');
 		}
 
 		return array(
@@ -2397,7 +2397,7 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 			'vendor_title' => (string) get_the_title($vendor_id),
 			'target_mode' => $target_mode,
 			'original_type' => $original_type,
-			'original_type_label' => $target_mode === 'primary' ? __('Primary Vendor', 'vms') : vms_add_dispatch_type_label($original_type),
+			'original_type_label' => $target_mode === 'primary' ? __('Primary Vendor', 'backstage-venue-manager') : vms_add_dispatch_type_label($original_type),
 			'current_types' => $current_types,
 			'current_type_labels' => vms_add_dispatch_assign_vendor_type_label_list($current_types),
 			'assignments' => $assignments,
@@ -2423,10 +2423,10 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 		$request = (array) ($review['request'] ?? array());
 
 		if (sanitize_key((string) ($response['response_status'] ?? '')) !== 'available') {
-			return new WP_Error('add_dispatch_vendor_not_available', __('Only vendors who responded Available can be assigned from ADD.', 'vms'));
+			return new WP_Error('add_dispatch_vendor_not_available', __('Only vendors who responded Available can be assigned from ADD.', 'backstage-venue-manager'));
 		}
 		if (trim((string) ($response['assigned_at'] ?? '')) !== '') {
-			return new WP_Error('add_dispatch_already_assigned', __('This ADD response is already marked assigned.', 'vms'));
+			return new WP_Error('add_dispatch_already_assigned', __('This ADD response is already marked assigned.', 'backstage-venue-manager'));
 		}
 
 		$event_plan_id = (int) ($review['event_plan_id'] ?? 0);
@@ -2437,17 +2437,17 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 			: sanitize_key($target_type);
 
 		if ($event_plan_id <= 0 || get_post_type($event_plan_id) !== 'vms_event_plan') {
-			return new WP_Error('add_dispatch_event_missing', __('The target Event Plan could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_event_missing', __('The target Event Plan could not be found.', 'backstage-venue-manager'));
 		}
 		if ($vendor_id <= 0 || get_post_type($vendor_id) !== 'vms_vendor') {
-			return new WP_Error('add_dispatch_vendor_missing', __('The selected vendor could not be found.', 'vms'));
+			return new WP_Error('add_dispatch_vendor_missing', __('The selected vendor could not be found.', 'backstage-venue-manager'));
 		}
 
 		if ($target_mode === 'primary') {
 			$primary_vendor_key = vms_add_dispatch_primary_vendor_key();
 			$current_primary = (int) get_post_meta($event_plan_id, $primary_vendor_key, true);
 			if ($current_primary > 0 && $current_primary !== $vendor_id) {
-				return new WP_Error('add_dispatch_primary_already_set', __('This Event Plan already has a primary vendor. Clear or replace it in the Event Plan editor before using ADD assignment.', 'vms'));
+				return new WP_Error('add_dispatch_primary_already_set', __('This Event Plan already has a primary vendor. Clear or replace it in the Event Plan editor before using ADD assignment.', 'backstage-venue-manager'));
 			}
 
 			update_post_meta($event_plan_id, $primary_vendor_key, $vendor_id);
@@ -2456,21 +2456,21 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 			}
 		} else {
 			if ($raw_target_type === '') {
-				return new WP_Error('add_dispatch_assignment_target_required', __('Review the ADD response and choose an Assign as target before confirming this assignment.', 'vms'));
+				return new WP_Error('add_dispatch_assignment_target_required', __('Review the ADD response and choose an Assign as target before confirming this assignment.', 'backstage-venue-manager'));
 			}
 			$targets = (array) ($review['targets'] ?? array());
 			if ($vendor_type === '' || !isset($targets[$vendor_type])) {
-				return new WP_Error('add_dispatch_invalid_target_type', __('Choose a current vendor type before assigning this ADD response.', 'vms'));
+				return new WP_Error('add_dispatch_invalid_target_type', __('Choose a current vendor type before assigning this ADD response.', 'backstage-venue-manager'));
 			}
 			$target = (array) $targets[$vendor_type];
 			if (!empty($target['is_primary_conflict'])) {
-				return new WP_Error('add_dispatch_primary_secondary_conflict', __('This vendor is already the Primary Vendor and cannot also be assigned as an Additional Vendor.', 'vms'));
+				return new WP_Error('add_dispatch_primary_secondary_conflict', __('This vendor is already the Primary Vendor and cannot also be assigned as an Additional Vendor.', 'backstage-venue-manager'));
 			}
 			if (!empty($target['is_duplicate'])) {
-				return new WP_Error('add_dispatch_duplicate_secondary_vendor', __('This vendor is already assigned to that Additional Vendor group.', 'vms'));
+				return new WP_Error('add_dispatch_duplicate_secondary_vendor', __('This vendor is already assigned to that Additional Vendor group.', 'backstage-venue-manager'));
 			}
 			if (!empty($target['is_full']) && empty($target['allow_over_capacity']) && !$allow_over_capacity) {
-				return new WP_Error('vms_secondary_vendor_over_capacity', __('This Additional Vendor group is full. Check the over-capacity override to confirm this assignment.', 'vms'));
+				return new WP_Error('vms_secondary_vendor_over_capacity', __('This Additional Vendor group is full. Check the over-capacity override to confirm this assignment.', 'backstage-venue-manager'));
 			}
 
 			$current_assignments = (array) ($review['assignments'] ?? array());
@@ -2499,7 +2499,7 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 
 			$assignment = function_exists('vms_event_plan_write_secondary_vendor_assignments')
 				? vms_event_plan_write_secondary_vendor_assignments($event_plan_id, $current_assignments)
-				: new WP_Error('add_dispatch_secondary_writer_missing', __('The Additional Vendors assignment writer is not available.', 'vms'));
+				: new WP_Error('add_dispatch_secondary_writer_missing', __('The Additional Vendors assignment writer is not available.', 'backstage-venue-manager'));
 			if (is_wp_error($assignment)) {
 				return $assignment;
 			}
@@ -2520,7 +2520,7 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 			array('%d')
 		);
 		if ($updated === false) {
-			return new WP_Error('add_dispatch_assign_update_failed', __('The ADD assignment marker could not be saved.', 'vms'));
+			return new WP_Error('add_dispatch_assign_update_failed', __('The ADD assignment marker could not be saved.', 'backstage-venue-manager'));
 		}
 
 		vms_add_dispatch_log('assignment_applied', array(

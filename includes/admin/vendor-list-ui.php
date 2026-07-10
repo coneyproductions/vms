@@ -339,7 +339,7 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
                 }
 
                 $edit_url = get_edit_post_link($staff_id, '');
-                echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'vms') . '</span>';
+                echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'backstage-venue-manager') . '</span>';
                 if (is_string($edit_url) && $edit_url !== '') {
                     echo ' <a href="' . esc_url($edit_url) . '">' . esc_html($label) . '</a>';
                 } else {

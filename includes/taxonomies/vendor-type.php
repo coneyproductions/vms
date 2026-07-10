@@ -6,27 +6,27 @@
  	{
  		$registry = [
  			'band' => [
- 				'label' => __('Music Vendor', 'vms'),
+				'label' => __('Music Vendor', 'backstage-venue-manager'),
  				'aliases' => ['band', 'bands', 'artist', 'artists', 'band_artist', 'band-artist', 'solo artist', 'solo', 'duo', 'performer', 'performers', 'musician', 'musicians', 'music vendor', 'music_vendor'],
  			],
  			'food_truck' => [
- 				'label' => __('Food Vendor', 'vms'),
+				'label' => __('Food Vendor', 'backstage-venue-manager'),
  				'aliases' => ['food_truck', 'food-truck', 'food truck', 'foodtruck', 'food vendor', 'food_vendor', 'food-vendor', 'mobile kitchen', 'mobile_kitchen', 'mobile-kitchen', 'truck', 'caterer'],
  			],
  			'dessert_truck' => [
- 				'label' => __('Dessert Vendor', 'vms'),
+				'label' => __('Dessert Vendor', 'backstage-venue-manager'),
  				'aliases' => ['dessert_truck', 'dessert-truck', 'dessert truck', 'dessert vendor', 'dessert_vendor'],
  			],
  			'drink_truck' => [
- 				'label' => __('Drink Vendor', 'vms'),
+				'label' => __('Drink Vendor', 'backstage-venue-manager'),
  				'aliases' => ['drink_truck', 'drink-truck', 'drink truck', 'drink vendor', 'drink_vendor'],
  			],
  			'photographer' => [
- 				'label' => __('Photographer', 'vms'),
+				'label' => __('Photographer', 'backstage-venue-manager'),
  				'aliases' => ['photographer', 'photo vendor', 'photo_vendor'],
  			],
  			'market_vendor' => [
- 				'label' => __('Market Vendor', 'vms'),
+				'label' => __('Market Vendor', 'backstage-venue-manager'),
  				'aliases' => ['market vendor', 'market_vendor', 'market-vendor', 'vendor market'],
  			],
  		];
@@ -291,15 +291,15 @@
  add_action('init', function (): void {
  
  	$labels = [
- 		'name'          => __('Vendor Types', 'vms'),
- 		'singular_name' => __('Vendor Type', 'vms'),
- 		'search_items'  => __('Search Vendor Types', 'vms'),
- 		'all_items'     => __('All Vendor Types', 'vms'),
- 		'edit_item'     => __('Edit Vendor Type', 'vms'),
- 		'update_item'   => __('Update Vendor Type', 'vms'),
- 		'add_new_item'  => __('Add New Vendor Type', 'vms'),
- 		'new_item_name' => __('New Vendor Type Name', 'vms'),
- 		'menu_name'     => __('Vendor Types', 'vms'),
+		'name'          => __('Vendor Types', 'backstage-venue-manager'),
+		'singular_name' => __('Vendor Type', 'backstage-venue-manager'),
+		'search_items'  => __('Search Vendor Types', 'backstage-venue-manager'),
+		'all_items'     => __('All Vendor Types', 'backstage-venue-manager'),
+		'edit_item'     => __('Edit Vendor Type', 'backstage-venue-manager'),
+		'update_item'   => __('Update Vendor Type', 'backstage-venue-manager'),
+		'add_new_item'  => __('Add New Vendor Type', 'backstage-venue-manager'),
+		'new_item_name' => __('New Vendor Type Name', 'backstage-venue-manager'),
+		'menu_name'     => __('Vendor Types', 'backstage-venue-manager'),
  	];
  
  	$args = [

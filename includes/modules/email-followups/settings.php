@@ -240,7 +240,7 @@ if (!function_exists('vms_email_followups_sanitize_settings')) {
 					$label = isset($incoming_meta['label']) ? sanitize_text_field(vms_email_followups_clean_template_text((string) wp_unslash($incoming_meta['label']))) : (string) ($def['label'] ?? '');
 					$description = isset($incoming_meta['description']) ? sanitize_text_field(vms_email_followups_clean_template_text((string) wp_unslash($incoming_meta['description']))) : (string) ($def['description'] ?? '');
 					if ($label === '') {
-						$label = __('Custom Follow-Up', 'vms');
+						$label = __('Custom Follow-Up', 'backstage-venue-manager');
 					}
 					$out['custom_templates'][$key] = array_merge($out['template_meta'][$key], array('label' => $label, 'description' => $description));
 				}
@@ -260,7 +260,7 @@ if (!function_exists('vms_email_followups_sanitize_settings')) {
 			$new_body = isset($new['body']) ? wp_kses_post(vms_email_followups_clean_template_text((string) wp_unslash($new['body']))) : '';
 			if ($new_requested && ($new_label !== '' || $new_subject !== '' || $new_body !== '')) {
 				if ($new_label === '') {
-					$new_label = __('Custom Follow-Up', 'vms');
+					$new_label = __('Custom Follow-Up', 'backstage-venue-manager');
 				}
 				$key = vms_email_followups_unique_custom_key($new_label, array_keys((array) $out['templates']));
 				$schedule = vms_email_followups_sanitize_template_schedule($new, array('kind' => 'manual', 'offset_days' => 0, 'send_hour' => 9));
@@ -484,9 +484,9 @@ if (!function_exists('vms_email_followups_migrate_duplicate_empty_custom_templat
 			$template = is_array($templates[$key] ?? null) ? (array) $templates[$key] : array();
 			$subject = trim((string) ($template['subject'] ?? ''));
 			$body = trim(str_replace(array("\r\n", "\r"), "\n", (string) ($template['body'] ?? '')));
-			$is_empty_placeholder = $label === __('Custom Follow-Up', 'vms')
+			$is_empty_placeholder = $label === __('Custom Follow-Up', 'backstage-venue-manager')
 				&& $description === ''
-				&& ($subject === '' || $subject === __('Custom Follow-Up', 'vms'))
+				&& ($subject === '' || $subject === __('Custom Follow-Up', 'backstage-venue-manager'))
 				&& ($body === '' || $body === "{customer_greeting}\n\n\n\n{signature}");
 			if (!$is_empty_placeholder) {
 				continue;

@@ -17,7 +17,7 @@ if (!function_exists('vms_express_bar_add_metabox')) {
     {
         add_meta_box(
             'vms_express_bar',
-            __('Express Bar', 'vms'),
+            __('Express Bar', 'backstage-venue-manager'),
             'vms_express_bar_render_metabox',
             'vms_event_plan',
             'normal',
@@ -39,28 +39,28 @@ if (!function_exists('vms_express_bar_render_metabox')) {
         <p>
             <label>
                 <input type="checkbox" name="vms_express_bar_enabled" value="1" <?php checked($enabled); ?> />
-                <?php echo esc_html__('Enable Express Bar for this event.', 'vms'); ?>
+                <?php echo esc_html__('Enable Express Bar for this event.', 'backstage-venue-manager'); ?>
             </label>
         </p>
         <p>
-            <label for="vms_express_bar_product_ids"><strong><?php echo esc_html__('Woo product IDs', 'vms'); ?></strong></label><br />
+            <label for="vms_express_bar_product_ids"><strong><?php echo esc_html__('Woo product IDs', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="text" class="widefat" id="vms_express_bar_product_ids" name="vms_express_bar_product_ids" value="<?php echo esc_attr($product_ids); ?>" placeholder="123, 456, 789" />
-            <small><?php echo esc_html__('Comma-separated WooCommerce product IDs allowed on this event’s Express Bar menu.', 'vms'); ?></small>
+            <small><?php echo esc_html__('Comma-separated WooCommerce product IDs allowed on this event’s Express Bar menu.', 'backstage-venue-manager'); ?></small>
         </p>
         <p>
-            <label for="vms_express_bar_headline"><strong><?php echo esc_html__('Customer headline', 'vms'); ?></strong></label><br />
+            <label for="vms_express_bar_headline"><strong><?php echo esc_html__('Customer headline', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="text" class="widefat" id="vms_express_bar_headline" name="vms_express_bar_headline" value="<?php echo esc_attr($headline); ?>" />
         </p>
         <p>
-            <label for="vms_express_bar_pickup_instructions"><strong><?php echo esc_html__('Pickup / ID instructions', 'vms'); ?></strong></label><br />
+            <label for="vms_express_bar_pickup_instructions"><strong><?php echo esc_html__('Pickup / ID instructions', 'backstage-venue-manager'); ?></strong></label><br />
             <textarea class="widefat" rows="4" id="vms_express_bar_pickup_instructions" name="vms_express_bar_pickup_instructions"><?php echo esc_textarea($pickup); ?></textarea>
         </p>
         <p>
-            <strong><?php echo esc_html__('Shortcode', 'vms'); ?></strong><br />
+            <strong><?php echo esc_html__('Shortcode', 'backstage-venue-manager'); ?></strong><br />
             <code><?php echo esc_html($shortcode); ?></code>
         </p>
         <p>
-            <?php echo esc_html__('Compliance reminder: this module is structured as pre-order + in-person handoff. Staff must verify ID in person before handing over alcohol.', 'vms'); ?>
+            <?php echo esc_html__('Compliance reminder: this module is structured as pre-order + in-person handoff. Staff must verify ID in person before handing over alcohol.', 'backstage-venue-manager'); ?>
         </p>
         <?php
     }
@@ -102,8 +102,8 @@ if (!function_exists('vms_express_bar_admin_menu')) {
     {
         add_submenu_page(
             'vms-dashboard',
-            __('Express Bar', 'vms'),
-            __('Express Bar', 'vms'),
+            __('Express Bar', 'backstage-venue-manager'),
+            __('Express Bar', 'backstage-venue-manager'),
             'manage_options',
             'vms-express-bar',
             'vms_express_bar_render_admin_page'
@@ -115,7 +115,7 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
     function vms_express_bar_render_admin_page(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You do not have permission to view this page.', 'vms'));
+            wp_die(esc_html__('You do not have permission to view this page.', 'backstage-venue-manager'));
         }
         if (!class_exists('WooCommerce')) {
             echo '<div class="wrap"><h1>Express Bar</h1><p>WooCommerce is required.</p></div>';
@@ -153,7 +153,7 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
             echo '<option value="' . (int) $plan->ID . '" ' . selected($selected_plan_id, (int) $plan->ID, false) . '>' . esc_html(get_the_title($plan->ID)) . ' (#' . (int) $plan->ID . ')</option>';
         }
         echo '</select> ';
-        submit_button(__('Filter', 'vms'), 'secondary', '', false);
+        submit_button(__('Filter', 'backstage-venue-manager'), 'secondary', '', false);
         echo '</form>';
 
         if (empty($orders)) {
@@ -231,9 +231,9 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
             echo '<td>' . esc_html(ucfirst($queue_status)) . '</td>';
             echo '<td>' . ($id_verified ? 'Yes' : 'No') . '</td>';
             echo '<td>';
-            echo vms_express_bar_action_form($order->get_id(), 'ready', __('Mark Ready', 'vms')) . ' ';
-            echo vms_express_bar_action_form($order->get_id(), 'completed', __('Mark Completed', 'vms')) . ' ';
-            echo vms_express_bar_action_form($order->get_id(), 'verify_id', $id_verified ? __('Undo ID Check', 'vms') : __('ID Verified', 'vms'));
+            echo vms_express_bar_action_form($order->get_id(), 'ready', __('Mark Ready', 'backstage-venue-manager')) . ' ';
+            echo vms_express_bar_action_form($order->get_id(), 'completed', __('Mark Completed', 'backstage-venue-manager')) . ' ';
+            echo vms_express_bar_action_form($order->get_id(), 'verify_id', $id_verified ? __('Undo ID Check', 'backstage-venue-manager') : __('ID Verified', 'backstage-venue-manager'));
             echo '</td>';
             echo '</tr>';
         }
@@ -269,18 +269,18 @@ if (!function_exists('vms_express_bar_handle_order_update')) {
     function vms_express_bar_handle_order_update(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('Not allowed.', 'vms'));
+            wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
         }
         $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
         $queue_action = isset($_POST['queue_action']) ? sanitize_key(wp_unslash($_POST['queue_action'])) : '';
         $nonce = isset($_POST['vms_express_bar_order_nonce']) ? sanitize_text_field(wp_unslash($_POST['vms_express_bar_order_nonce'])) : '';
         if ($order_id <= 0 || !wp_verify_nonce($nonce, 'vms_express_bar_update_order_' . $order_id . '_' . $queue_action)) {
-            wp_die(esc_html__('Invalid request.', 'vms'));
+            wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
         }
 
         $order = wc_get_order($order_id);
         if (!$order) {
-            wp_die(esc_html__('Order not found.', 'vms'));
+            wp_die(esc_html__('Order not found.', 'backstage-venue-manager'));
         }
 
         switch ($queue_action) {

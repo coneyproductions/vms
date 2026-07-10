@@ -1054,13 +1054,13 @@ function vms_ticketing_v2_resolve_qualifying_ticket_label(int $plan_id): string
 {
     $plan_id = absint($plan_id);
     if ($plan_id <= 0 || !function_exists('vms_ticketing_v2_get_sync')) {
-        return __('qualifying tickets', 'vms');
+        return __('qualifying tickets', 'backstage-venue-manager');
     }
 
     $sync = vms_ticketing_v2_get_sync($plan_id);
     $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     if (empty($map)) {
-        return __('qualifying tickets', 'vms');
+        return __('qualifying tickets', 'backstage-venue-manager');
     }
 
     $labels = array();
@@ -1108,7 +1108,7 @@ function vms_ticketing_v2_resolve_qualifying_ticket_label(int $plan_id): string
         return (string) $label_list[0];
     }
 
-    return __('qualifying tickets', 'vms');
+    return __('qualifying tickets', 'backstage-venue-manager');
 }
 
 function vms_ticketing_v2_qualifying_ticket_phrase(string $ticket_label, int $count = 2): string
@@ -1116,12 +1116,12 @@ function vms_ticketing_v2_qualifying_ticket_phrase(string $ticket_label, int $co
     $count = max(1, absint($count));
     $label = trim($ticket_label);
     if ($label === '') {
-        return ($count === 1) ? __('qualifying ticket', 'vms') : __('qualifying tickets', 'vms');
+        return ($count === 1) ? __('qualifying ticket', 'backstage-venue-manager') : __('qualifying tickets', 'backstage-venue-manager');
     }
 
     $normalized = function_exists('mb_strtolower') ? mb_strtolower($label) : strtolower($label);
     if ($normalized === 'qualifying ticket' || $normalized === 'qualifying tickets') {
-        return ($count === 1) ? __('qualifying ticket', 'vms') : __('qualifying tickets', 'vms');
+        return ($count === 1) ? __('qualifying ticket', 'backstage-venue-manager') : __('qualifying tickets', 'backstage-venue-manager');
     }
 
     if (stripos($label, 'ticket') !== false) {
@@ -1129,10 +1129,10 @@ function vms_ticketing_v2_qualifying_ticket_phrase(string $ticket_label, int $co
     }
 
     if ($count === 1) {
-        return sprintf(__('%s ticket', 'vms'), $label);
+        return sprintf(__('%s ticket', 'backstage-venue-manager'), $label);
     }
 
-    return sprintf(__('%s tickets', 'vms'), $label);
+    return sprintf(__('%s tickets', 'backstage-venue-manager'), $label);
 }
 
 function vms_ticketing_v2_enforce_cart_rules(): void {
@@ -1153,13 +1153,13 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
     $plan_ids = array_values(array_unique(array_map('absint', (array) $plan_ids)));
 
     if (count($plan_ids) > 1) {
-        wc_add_notice(__('You cannot purchase reserved items for multiple events in a single order. Please check out separately for each event.', 'vms'), 'error');
+        wc_add_notice(__('You cannot purchase reserved items for multiple events in a single order. Please check out separately for each event.', 'backstage-venue-manager'), 'error');
         return;
     }
 
     $plan_id = (int) ($plan_ids[0] ?? 0);
     if ($plan_id <= 0) {
-        wc_add_notice(__('Reserved items in your cart could not be validated. Please remove them and try again.', 'vms'), 'error');
+        wc_add_notice(__('Reserved items in your cart could not be validated. Please remove them and try again.', 'backstage-venue-manager'), 'error');
         return;
     }
 
@@ -1171,7 +1171,7 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
     // Align sale window: reserved add-ons should not be purchasable when GA tickets are not on sale.
     $is_admin_user = function_exists('current_user_can') ? current_user_can('manage_options') : false;
     if (!vms_ticketing_v2_ga_is_on_sale_now($cfg) && !$is_admin_user) {
-        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'vms'), 'error');
+        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'backstage-venue-manager'), 'error');
         return;
     }
     $ga_qty_raw = (int) (($scan['ga_qty_by_plan'][$plan_id] ?? 0));
@@ -1209,7 +1209,7 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
         // If config is present and this entitlement is explicitly disabled, block.
         if (is_array($ent_cfg) && empty($ent_cfg['enabled'])) {
             $label = (string) ($ent_cfg['label'] ?? (string) get_the_title($product_id));
-            wc_add_notice(sprintf(__('A reserved item in your cart is not available for this event: “%s”. Please remove it and try again.', 'vms'), $label), 'error');
+            wc_add_notice(sprintf(__('A reserved item in your cart is not available for this event: “%s”. Please remove it and try again.', 'backstage-venue-manager'), $label), 'error');
             continue;
         }
 
@@ -1247,14 +1247,14 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
         }
 
         if ($max_per_order > 0 && $qty > $max_per_order) {
-            wc_add_notice(sprintf(__('You can only purchase up to %d of “%s” per order.', 'vms'), $max_per_order, $label), 'error');
+            wc_add_notice(sprintf(__('You can only purchase up to %d of “%s” per order.', 'backstage-venue-manager'), $max_per_order, $label), 'error');
         }
 
         if (!$allow_without_ga && $min_per > 0) {
             $required = $min_per * $qty;
             if ($ga_qty < $required) {
                 $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $required);
-                wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'vms'), $label, $required, $ticket_phrase), 'error');
+                wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'backstage-venue-manager'), $label, $required, $ticket_phrase), 'error');
             }
         }
 
@@ -1262,13 +1262,13 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
             $allowed = $max_per_ga * $ga_qty;
             if ($qty > $allowed) {
                 $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, max(1, $ga_qty));
-                wc_add_notice(sprintf(__('“%1$s” exceeds what your current %2$s can support. Add more %2$s or remove this reservation.', 'vms'), $label, $ticket_phrase), 'error');
+                wc_add_notice(sprintf(__('“%1$s” exceeds what your current %2$s can support. Add more %2$s or remove this reservation.', 'backstage-venue-manager'), $label, $ticket_phrase), 'error');
             }
         }
 
         if (!$allow_without_ga && $ga_qty <= 0 && $min_per <= 0) {
             $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
-            wc_add_notice(sprintf(__('Add the required %2$s to reserve “%1$s”, or remove this reservation.', 'vms'), $label, $ticket_phrase), 'error');
+            wc_add_notice(sprintf(__('Add the required %2$s to reserve “%1$s”, or remove this reservation.', 'backstage-venue-manager'), $label, $ticket_phrase), 'error');
         }
     }
 
@@ -1295,13 +1295,13 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
                     $missing = max(0, $required_total - $ga_qty);
                     if ($missing > 0) {
                         $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $missing);
-                        wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'vms'), $missing, $ticket_phrase), 'error');
+                        wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'backstage-venue-manager'), $missing, $ticket_phrase), 'error');
                     } else {
                         $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
-                        wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'vms'), $ticket_phrase), 'error');
+                        wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'backstage-venue-manager'), $ticket_phrase), 'error');
                     }
                 } else {
-                    wc_add_notice(sprintf(__('Your selected add-ons in “%s” exceed the pool limit. Please reduce to %d.', 'vms'), $label, $allowed), 'error');
+                    wc_add_notice(sprintf(__('Your selected add-ons in “%s” exceed the pool limit. Please reduce to %d.', 'backstage-venue-manager'), $label, $allowed), 'error');
                 }
             }
         }
@@ -1356,7 +1356,7 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
 
         if ($mode === 'login') {
             if (!is_user_logged_in() && !$already_notified['login']) {
-                wc_add_notice(__('Your cart includes tickets that require login. Please log in to continue.', 'vms'), 'error');
+                wc_add_notice(__('Your cart includes tickets that require login. Please log in to continue.', 'backstage-venue-manager'), 'error');
                 $already_notified['login'] = true;
             }
             continue;
@@ -1388,13 +1388,13 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
             if (!$already_notified['verified_guest']) {
                 if (!empty($allowed_programs) && !$allow_direct_grants) {
                     $guest_message = sprintf(
-                        __('Your cart includes tickets that require %s verification. Please log in and submit verification to continue.', 'vms'),
+                        __('Your cart includes tickets that require %s verification. Please log in and submit verification to continue.', 'backstage-venue-manager'),
                         $program_label_text
                     );
                 } elseif (empty($allowed_programs) && $allow_direct_grants) {
-                    $guest_message = __('Your cart includes tickets that require event-specific account approval. Please log in to continue.', 'vms');
+                    $guest_message = __('Your cart includes tickets that require event-specific account approval. Please log in to continue.', 'backstage-venue-manager');
                 } else {
-                    $guest_message = __('Your cart includes restricted tickets. Please log in and verify your account to continue.', 'vms');
+                    $guest_message = __('Your cart includes restricted tickets. Please log in and verify your account to continue.', 'backstage-venue-manager');
                 }
                 wc_add_notice(
                     $guest_message,
@@ -1420,7 +1420,7 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
             $member_message = sanitize_text_field((string) ($eligibility['message'] ?? ''));
             if ($member_message === '') {
                 $member_message = sprintf(
-                    __('Your cart includes tickets that require %s verification. Submit your verification to continue.', 'vms'),
+                    __('Your cart includes tickets that require %s verification. Submit your verification to continue.', 'backstage-venue-manager'),
                     $program_label_text
                 );
             }
@@ -1437,7 +1437,7 @@ function vms_ticketing_v2_verified_ticket_program_label(string $program): string
 {
     $program = sanitize_key($program);
     if ($program === '') {
-        return __('Verified', 'vms');
+        return __('Verified', 'backstage-venue-manager');
     }
     if (function_exists('vms_ticketing_verification_program_label')) {
         return vms_ticketing_verification_program_label($program);
@@ -1545,11 +1545,11 @@ function vms_ticketing_v2_ratio_group_display_label(string $group): string
 {
     $group = trim($group);
     if ($group === '') {
-        return __('This ticket group', 'vms');
+        return __('This ticket group', 'backstage-venue-manager');
     }
     $label = trim(preg_replace('/[-_]+/', ' ', $group));
     if ($label === '') {
-        return __('This ticket group', 'vms');
+        return __('This ticket group', 'backstage-venue-manager');
     }
     return ucwords($label);
 }
@@ -1688,7 +1688,7 @@ function vms_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $c
             $ticket_label = vms_ticketing_v2_ratio_group_display_label($shared_group);
         } else {
             $labels = array_values(array_unique(array_filter(array_map('strval', (array) ($group['labels'] ?? array())))));
-            $ticket_label = !empty($labels) ? (string) $labels[0] : __('This ticket', 'vms');
+            $ticket_label = !empty($labels) ? (string) $labels[0] : __('This ticket', 'backstage-venue-manager');
         }
 
         $qualifying_label = vms_ticketing_v2_resolve_qualifying_ticket_label($plan_id);
@@ -1696,13 +1696,13 @@ function vms_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $c
 
         if ($qualifying_qty <= 0) {
             $message = sprintf(
-                __('%1$s requires at least one qualifying ticket in the cart. Add a %2$s or reduce the %1$s quantity.', 'vms'),
+                __('%1$s requires at least one qualifying ticket in the cart. Add a %2$s or reduce the %1$s quantity.', 'backstage-venue-manager'),
                 $ticket_label,
                 $qualifying_phrase
             );
         } else {
             $message = sprintf(
-                __('%1$s is limited to %2$d total per %3$s. You selected %4$d; your current cart allows %5$d.', 'vms'),
+                __('%1$s is limited to %2$d total per %3$s. You selected %4$d; your current cart allows %5$d.', 'backstage-venue-manager'),
                 $ticket_label,
                 $max_per,
                 $qualifying_phrase,
@@ -2013,9 +2013,9 @@ function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array
             continue;
         }
 
-        $label = vms_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? ($sync_row['title'] ?? __('this ticket', 'vms'))));
+        $label = vms_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? ($sync_row['title'] ?? __('this ticket', 'backstage-venue-manager'))));
         if ($label === '') {
-            $label = __('this ticket', 'vms');
+            $label = __('this ticket', 'backstage-venue-manager');
         }
 
         $ids = array(
@@ -2060,11 +2060,11 @@ function vms_ticketing_v2_disabled_ticket_notice_text(array $state): string
 {
     $label = trim((string) ($state['label'] ?? ''));
     if ($label === '') {
-        $label = __('this ticket', 'vms');
+        $label = __('this ticket', 'backstage-venue-manager');
     }
 
     return sprintf(
-        __('"%s" is no longer available for this event. Please remove it from your cart or refresh the event page.', 'vms'),
+        __('"%s" is no longer available for this event. Please remove it from your cart or refresh the event page.', 'backstage-venue-manager'),
         $label
     );
 }
@@ -3197,17 +3197,17 @@ function vms_ticketing_v2_claim_program_label_text(array $allowed_programs, stri
 
 function vms_ticketing_v2_claim_assignment_unknown_guest_message(): string
 {
-    return __("We couldn't find an approved qualified guest account for this email. The guest needs to register and be approved before this ticket can be claimed.", 'vms');
+    return __("We couldn't find an approved qualified guest account for this email. The guest needs to register and be approved before this ticket can be claimed.", 'backstage-venue-manager');
 }
 
 function vms_ticketing_v2_claim_assignment_unapproved_guest_message(): string
 {
-    return __('This email is not approved for this ticket yet. The guest needs to register and be approved before this ticket can be claimed.', 'vms');
+    return __('This email is not approved for this ticket yet. The guest needs to register and be approved before this ticket can be claimed.', 'backstage-venue-manager');
 }
 
 function vms_ticketing_v2_claim_assignment_duplicate_guest_message(): string
 {
-    return __('This guest email has already been added.', 'vms');
+    return __('This guest email has already been added.', 'backstage-venue-manager');
 }
 
 function vms_ticketing_v2_resolve_claim_eligibility_for_user(
@@ -3501,7 +3501,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if ($seat > $qty) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket assignment %d is out of range for this selection.', 'vms'), $seat),
+                'message' => sprintf(__('Ticket assignment %d is out of range for this selection.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'assignment_seat_invalid',
                 'assignments' => array(),
                 'context' => $context,
@@ -3510,7 +3510,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if (isset($seat_lookup[$seat])) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket %d has multiple email assignments. Keep only one email per ticket.', 'vms'), $seat),
+                'message' => sprintf(__('Ticket %d has multiple email assignments. Keep only one email per ticket.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'assignment_seat_duplicate',
                 'assignments' => array(),
                 'context' => $context,
@@ -3521,7 +3521,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if ($email === '' || !is_email($email)) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'vms'), $seat),
+                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'invalid_email',
                 'assignments' => array(),
                 'context' => $context,
@@ -3539,7 +3539,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
     if (count($normalized) > $qty) {
         return array(
             'ok' => false,
-            'message' => __('Too many email assignments were provided for the selected ticket quantity.', 'vms'),
+            'message' => __('Too many email assignments were provided for the selected ticket quantity.', 'backstage-venue-manager'),
             'reason_code' => 'assignment_count_excess',
             'assignments' => array(),
             'context' => $context,
@@ -3549,7 +3549,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
     if ($event_id <= 0 || $ticket_key === '') {
         return array(
             'ok' => false,
-            'message' => __('Could not validate ticket assignments for this ticket right now. Please refresh and try again.', 'vms'),
+            'message' => __('Could not validate ticket assignments for this ticket right now. Please refresh and try again.', 'backstage-venue-manager'),
             'reason_code' => 'context_missing',
             'assignments' => array(),
             'context' => $context,
@@ -3587,7 +3587,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
                     : array(
                         'eligible' => false,
                         'reason_code' => 'resolver_unavailable',
-                        'message' => __('Eligibility resolver is unavailable.', 'vms'),
+                        'message' => __('Eligibility resolver is unavailable.', 'backstage-venue-manager'),
                         'matched_rule_path' => '',
                         'matched_grant_id' => 0,
                     );
@@ -3641,10 +3641,10 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
 
     if (count($normalized) !== $qty) {
         $missing_qty = max(0, $qty - count($normalized));
-        $message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'vms');
+        $message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'backstage-venue-manager');
         if ($buyer_auto_fill_count > 0 && $missing_qty > 0) {
             $message = sprintf(
-                __('Your account automatically applied to %1$d ticket(s). Please enter %2$d additional approved guest email(s) to continue.', 'vms'),
+                __('Your account automatically applied to %1$d ticket(s). Please enter %2$d additional approved guest email(s) to continue.', 'backstage-venue-manager'),
                 $buyer_auto_fill_count,
                 $missing_qty
             );
@@ -3672,7 +3672,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if ($email === '' || !is_email($email)) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'vms'), $seat),
+                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'invalid_email',
                 'assignments' => array(),
                 'context' => $context,
@@ -3703,7 +3703,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
             }
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket %1$d: %2$s', 'vms'), $seat, vms_ticketing_v2_claim_assignment_unknown_guest_message()),
+                'message' => sprintf(__('Ticket %1$d: %2$s', 'backstage-venue-manager'), $seat, vms_ticketing_v2_claim_assignment_unknown_guest_message()),
                 'reason_code' => 'account_not_found',
                 'assignments' => array(),
                 'context' => $context,
@@ -3724,7 +3724,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
             : array(
                 'eligible' => false,
                 'reason_code' => 'resolver_unavailable',
-                'message' => __('Eligibility resolver is unavailable.', 'vms'),
+                'message' => __('Eligibility resolver is unavailable.', 'backstage-venue-manager'),
                 'matched_rule_path' => '',
                 'matched_grant_id' => 0,
             );
@@ -3760,7 +3760,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
             if (($current_count + 1) > $allowed_for_new_assignments) {
                 $eligible = false;
                 $reason_code = 'assignee_limit_reached';
-                $message = sprintf(__('This guest has already used the %d-ticket limit for this event.', 'vms'), $assignee_claims_per_assignee);
+                $message = sprintf(__('This guest has already used the %d-ticket limit for this event.', 'backstage-venue-manager'), $assignee_claims_per_assignee);
             }
         }
 
@@ -3787,7 +3787,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if (!$eligible) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket %1$d: %2$s', 'vms'), $seat, $message),
+                'message' => sprintf(__('Ticket %1$d: %2$s', 'backstage-venue-manager'), $seat, $message),
                 'reason_code' => $reason_code,
                 'assignments' => array(),
                 'context' => $context,
@@ -3839,15 +3839,15 @@ function vms_ticketing_v2_enforce_ticket_max_qty_for_add(int $product_id, int $r
 
     $remaining = max(0, $limit - $purchased_qty - $cart_qty);
     if ($request_qty > $remaining) {
-        $label = __('this ticket', 'vms');
+        $label = __('this ticket', 'backstage-venue-manager');
         if (!vms_ticketing_v2_public_ticket_qualification_removed() && sanitize_key((string) ($ctx['visibility_mode'] ?? '')) === 'verified') {
             $program = sanitize_key((string) ($ctx['program'] ?? ''));
             if ($program !== '') {
-                $label = sprintf(__('%s ticket', 'vms'), vms_ticketing_v2_verified_ticket_program_label($program));
+                $label = sprintf(__('%s ticket', 'backstage-venue-manager'), vms_ticketing_v2_verified_ticket_program_label($program));
             }
         }
         $message = sprintf(
-            __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'vms'),
+            __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'backstage-venue-manager'),
             $limit,
             $label,
             $remaining
@@ -3927,15 +3927,15 @@ function vms_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
         $allowed_in_cart = max(0, $limit - $purchased_qty);
         if ($cart_qty > $allowed_in_cart) {
             $remaining = 0;
-            $label = __('this ticket', 'vms');
+            $label = __('this ticket', 'backstage-venue-manager');
             if (!vms_ticketing_v2_public_ticket_qualification_removed() && sanitize_key((string) ($ctx['visibility_mode'] ?? '')) === 'verified') {
                 $program = sanitize_key((string) ($ctx['program'] ?? ''));
                 if ($program !== '') {
-                    $label = sprintf(__('%s ticket', 'vms'), vms_ticketing_v2_verified_ticket_program_label($program));
+                    $label = sprintf(__('%s ticket', 'backstage-venue-manager'), vms_ticketing_v2_verified_ticket_program_label($program));
                 }
             }
             $message = sprintf(
-                __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'vms'),
+                __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'backstage-venue-manager'),
                 $limit,
                 $label,
                 $remaining
@@ -3969,9 +3969,9 @@ function vms_ticketing_v2_cancelled_event_sales_notice(int $event_id = 0): strin
 {
     $title = $event_id > 0 ? trim((string) get_the_title($event_id)) : '';
     if ($title !== '') {
-        return sprintf(__('Ticket sales are closed because “%s” has been cancelled.', 'vms'), $title);
+        return sprintf(__('Ticket sales are closed because “%s” has been cancelled.', 'backstage-venue-manager'), $title);
     }
-    return __('Ticket sales are closed because this event has been cancelled.', 'vms');
+    return __('Ticket sales are closed because this event has been cancelled.', 'backstage-venue-manager');
 }
 
 function vms_ticketing_v2_linked_tec_event_id_for_plan(int $plan_id): int
@@ -4096,7 +4096,7 @@ function vms_ticketing_v2_sale_context_status_label(string $status): string
 {
     $status = sanitize_key($status);
     if ($status === '') {
-        return __('unavailable', 'vms');
+        return __('unavailable', 'backstage-venue-manager');
     }
     if (function_exists('vms_event_plan_status_label')) {
         return (string) vms_event_plan_status_label($status);
@@ -4128,36 +4128,36 @@ function vms_ticketing_v2_sale_context_message(string $code, int $plan_id = 0, i
             return vms_ticketing_v2_cancelled_event_sales_notice($event_id);
         case 'event_past':
             if ($title !== '') {
-                return sprintf(__('Ticket sales are closed because “%s” has already ended.', 'vms'), $title);
+                return sprintf(__('Ticket sales are closed because “%s” has already ended.', 'backstage-venue-manager'), $title);
             }
-            return __('Ticket sales are closed because this event has already ended.', 'vms');
+            return __('Ticket sales are closed because this event has already ended.', 'backstage-venue-manager');
         case 'product_detached':
             if ($product_label !== '') {
-                return sprintf(__('“%s” is no longer available for this event. Please remove it from your cart and refresh the event page.', 'vms'), $product_label);
+                return sprintf(__('“%s” is no longer available for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager'), $product_label);
             }
-            return __('This ticket is no longer available for this event. Please remove it from your cart and refresh the event page.', 'vms');
+            return __('This ticket is no longer available for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
         case 'ticketing_disabled':
             if ($title !== '') {
-                return sprintf(__('Ticket sales are currently unavailable for “%s”. Please remove it from your cart and refresh the event page.', 'vms'), $title);
+                return sprintf(__('Ticket sales are currently unavailable for “%s”. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager'), $title);
             }
-            return __('Ticket sales are currently unavailable for this event. Please remove it from your cart and refresh the event page.', 'vms');
+            return __('Ticket sales are currently unavailable for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
         case 'event_plan_unpublished':
         case 'event_unpublished':
         case 'event_missing':
         case 'invalid_event_plan':
             if ($title !== '') {
-                return sprintf(__('Ticket sales are not live for “%s”. Please remove it from your cart and refresh the event page.', 'vms'), $title);
+                return sprintf(__('Ticket sales are not live for “%s”. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager'), $title);
             }
-            return __('Ticket sales are not live for this event. Please remove it from your cart and refresh the event page.', 'vms');
+            return __('Ticket sales are not live for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
         case 'event_plan_not_live':
             $status_label = vms_ticketing_v2_sale_context_status_label($status);
             if ($title !== '') {
-                return sprintf(__('Ticket sales are closed because “%1$s” is currently %2$s.', 'vms'), $title, $status_label);
+                return sprintf(__('Ticket sales are closed because “%1$s” is currently %2$s.', 'backstage-venue-manager'), $title, $status_label);
             }
-            return sprintf(__('Ticket sales are closed because this event is currently %s.', 'vms'), $status_label);
+            return sprintf(__('Ticket sales are closed because this event is currently %s.', 'backstage-venue-manager'), $status_label);
     }
 
-    return __('This event can no longer be purchased. Please remove it from your cart and refresh the event page.', 'vms');
+    return __('This event can no longer be purchased. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
 }
 
 function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $plan_id = 0, int $tec_event_id = 0, string $role = ''): array
@@ -4443,18 +4443,18 @@ function vms_ticketing_v2_early_price_cap_notice(array $ctx, int $requested_qty 
 {
     $ticket = (isset($ctx['ticket']) && is_array($ctx['ticket'])) ? $ctx['ticket'] : array();
     $state = (isset($ctx['state']) && is_array($ctx['state'])) ? $ctx['state'] : array();
-    $label = trim(vms_ticketing_v2_plain_display_text($ticket['title'] ?? ($ticket['label'] ?? __('ticket', 'vms'))));
+    $label = trim(vms_ticketing_v2_plain_display_text($ticket['title'] ?? ($ticket['label'] ?? __('ticket', 'backstage-venue-manager'))));
     if ($label === '') {
-        $label = __('ticket', 'vms');
+        $label = __('ticket', 'backstage-venue-manager');
     }
     $remaining = (int) ($state['remaining_qty'] ?? 0);
 
     if ($remaining <= 0) {
-        return sprintf(__('Early Bird pricing for “%s” is sold out. Please refresh the event page to continue at the regular price.', 'vms'), $label);
+        return sprintf(__('Early Bird pricing for “%s” is sold out. Please refresh the event page to continue at the regular price.', 'backstage-venue-manager'), $label);
     }
 
     return sprintf(
-        _n('Only %1$d Early Bird ticket remains for “%2$s”. Please reduce that ticket quantity or refresh the event page.', 'Only %1$d Early Bird tickets remain for “%2$s”. Please reduce that ticket quantity or refresh the event page.', $remaining, 'vms'),
+        _n('Only %1$d Early Bird ticket remains for “%2$s”. Please reduce that ticket quantity or refresh the event page.', 'Only %1$d Early Bird tickets remain for “%2$s”. Please reduce that ticket quantity or refresh the event page.', $remaining, 'backstage-venue-manager'),
         $remaining,
         $label
     );
@@ -4655,7 +4655,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
     if (vms_ticketing_v2_role_supports_event_name_suffix($role)) {
         $sale_context = vms_ticketing_v2_validate_product_sale_context($pid, $plan_id, 0, $role);
         if (empty($sale_context['ok'])) {
-            wc_add_notice((string) ($sale_context['message'] ?? __('This event can no longer be purchased. Please refresh the event page and try again.', 'vms')), 'error');
+            wc_add_notice((string) ($sale_context['message'] ?? __('This event can no longer be purchased. Please refresh the event page and try again.', 'backstage-venue-manager')), 'error');
             return false;
         }
         $plan_id = absint($sale_context['plan_id'] ?? $plan_id);
@@ -4700,7 +4700,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
             }
 
             if ($visibility_mode === 'login' && !is_user_logged_in()) {
-                wc_add_notice(__('Please log in to purchase this ticket.', 'vms'), 'error');
+                wc_add_notice(__('Please log in to purchase this ticket.', 'backstage-venue-manager'), 'error');
                 return false;
             }
 
@@ -4710,10 +4710,10 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
 
                 if (!is_user_logged_in()) {
                     $guest_message = $program_label !== ''
-                        ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'vms'), $program_label)
-                        : __('This ticket requires account verification. Log in and submit verification first.', 'vms');
+                        ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'backstage-venue-manager'), $program_label)
+                        : __('This ticket requires account verification. Log in and submit verification first.', 'backstage-venue-manager');
                     if (empty($allowed_programs) && $allow_direct_grants) {
-                        $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'vms');
+                        $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'backstage-venue-manager');
                     }
                     wc_add_notice(
                         $guest_message,
@@ -4763,7 +4763,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                     $message = sanitize_text_field((string) ($eligibility['message'] ?? ''));
                     if ($message === '') {
                         $message = sprintf(
-                            __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'vms'),
+                            __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'backstage-venue-manager'),
                             $program_label
                         );
                     }
@@ -4790,7 +4790,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                     if (empty($assignment_result['ok'])) {
                         $assignment_message = sanitize_text_field((string) ($assignment_result['message'] ?? ''));
                         if ($assignment_message === '') {
-                            $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'vms');
+                            $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'backstage-venue-manager');
                         }
                         wc_add_notice($assignment_message, 'error');
                         return false;
@@ -4825,7 +4825,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
 
     $is_admin_user = function_exists('current_user_can') ? current_user_can('manage_options') : false;
     if (!vms_ticketing_v2_ga_is_on_sale_now($cfg) && !$is_admin_user) {
-        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'vms'), 'error');
+        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'backstage-venue-manager'), 'error');
         return;
     }
 
@@ -4834,7 +4834,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
     if ($ent_id !== '' && is_array($cfg) && !empty($cfg)) {
         $ent_cfg = vms_ticketing_v2_find_entitlement_cfg($cfg, $ent_id);
         if (is_array($ent_cfg) && empty($ent_cfg['enabled'])) {
-            wc_add_notice(__('That reserved add-on is not available for this event.', 'vms'), 'error');
+            wc_add_notice(__('That reserved add-on is not available for this event.', 'backstage-venue-manager'), 'error');
             return false;
         }
     }
@@ -4889,7 +4889,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
     if (!$allow_without_ga && $pool_min > 0 && $ga_qty < $pool_min) {
         $label = ucwords(str_replace('_', ' ', (string) $pool_key));
         $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $pool_min);
-        wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'vms'), $label, $pool_min, $ticket_phrase), 'error');
+        wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'backstage-venue-manager'), $label, $pool_min, $ticket_phrase), 'error');
         return false;
     }
 
@@ -4949,13 +4949,13 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
             $missing = max(0, $required_total - $ga_qty);
             if ($missing > 0) {
                 $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $missing);
-                wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'vms'), $missing, $ticket_phrase), 'error');
+                wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'backstage-venue-manager'), $missing, $ticket_phrase), 'error');
             } else {
                 $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
-                wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'vms'), $ticket_phrase), 'error');
+                wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'backstage-venue-manager'), $ticket_phrase), 'error');
             }
         } else {
-            wc_add_notice(sprintf(__('You can only select up to %d total add-ons in “%s”. Please choose fewer.', 'vms'), $allowed, $label), 'error');
+            wc_add_notice(sprintf(__('You can only select up to %d total add-ons in “%s”. Please choose fewer.', 'backstage-venue-manager'), $allowed, $label), 'error');
         }
         return false;
     }
@@ -5051,13 +5051,13 @@ function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
 
         $message = sanitize_text_field((string) ($assignment_result['message'] ?? ''));
         if ($message === '') {
-            $message = __('Please add one approved guest email per special-access ticket in your cart.', 'vms');
+            $message = __('Please add one approved guest email per special-access ticket in your cart.', 'backstage-venue-manager');
         }
 
         $product = function_exists('wc_get_product') ? wc_get_product($item_product_id) : null;
         $product_name = $product ? sanitize_text_field((string) $product->get_name()) : '';
         if ($product_name !== '') {
-            $message = sprintf(__('Ticket "%1$s": %2$s', 'vms'), $product_name, $message);
+            $message = sprintf(__('Ticket "%1$s": %2$s', 'backstage-venue-manager'), $product_name, $message);
         }
 
         if (isset($notices_seen[$message])) {
@@ -5637,14 +5637,14 @@ function vms_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $c
 
     if ($title !== '') {
         $item_data[] = array(
-            'key'   => __('Event', 'vms'),
+            'key'   => __('Event', 'backstage-venue-manager'),
             'value' => esc_html($title),
         );
     }
 
     if ($when !== '') {
         $item_data[] = array(
-            'key'   => __('When', 'vms'),
+            'key'   => __('When', 'backstage-venue-manager'),
             'value' => esc_html($when),
         );
     }
@@ -5658,7 +5658,7 @@ function vms_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $c
                 continue;
             }
             $item_data[] = array(
-                'key' => sprintf(__('Ticket %d Assignee', 'vms'), $seat),
+                'key' => sprintf(__('Ticket %d Assignee', 'backstage-venue-manager'), $seat),
                 'value' => esc_html($email),
             );
         }
@@ -5712,10 +5712,10 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
 
     // Optional human-facing meta.
     if ($title !== '') {
-        $item->add_meta_data(__('Event', 'vms'), $title, true);
+        $item->add_meta_data(__('Event', 'backstage-venue-manager'), $title, true);
     }
     if ($event_when !== '') {
-        $item->add_meta_data(__('When', 'vms'), $event_when, true);
+        $item->add_meta_data(__('When', 'backstage-venue-manager'), $event_when, true);
     }
 
     // Snapshot meta for stable cart/order/email line-item naming.
@@ -5753,7 +5753,7 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
             if ($email === '') {
                 continue;
             }
-            $item->add_meta_data(sprintf(__('Ticket %d Assignee', 'vms'), $seat), $email, true);
+            $item->add_meta_data(sprintf(__('Ticket %d Assignee', 'backstage-venue-manager'), $seat), $email, true);
             $assignment_snapshot[] = array(
                 'seat' => $seat,
                 'assignee_email' => $email,
@@ -6134,7 +6134,7 @@ function vms_ticketing_v2_sale_quantity_text(array $sale_state, array $ticket_ui
 
     if ($remaining <= $low_threshold) {
         return sprintf(
-            _n('Only %d Early Bird ticket left', 'Only %d Early Bird tickets left', $remaining, 'vms'),
+            _n('Only %d Early Bird ticket left', 'Only %d Early Bird tickets left', $remaining, 'backstage-venue-manager'),
             $remaining
         );
     }
@@ -6149,9 +6149,9 @@ function vms_ticketing_v2_sale_quantity_text(array $sale_state, array $ticket_ui
     }
 
     if ($price_text !== '') {
-        return sprintf(__('Early Bird: %1$d available at %2$s', 'vms'), $remaining, $price_text);
+        return sprintf(__('Early Bird: %1$d available at %2$s', 'backstage-venue-manager'), $remaining, $price_text);
     }
-    return sprintf(_n('Early Bird: %d available', 'Early Bird: %d available', $remaining, 'vms'), $remaining);
+    return sprintf(_n('Early Bird: %d available', 'Early Bird: %d available', $remaining, 'backstage-venue-manager'), $remaining);
 }
 
 function vms_ticketing_v2_enqueue_front_bundle(): void
@@ -6527,7 +6527,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
                 $verified_helper_copy = '';
                 if ($visibility_mode === 'verified') {
-                    $verified_helper_copy = __('Requires registration', 'vms');
+                    $verified_helper_copy = __('Requires registration', 'backstage-venue-manager');
                 }
 
                 $meta_flag = sanitize_key((string) get_post_meta($ticket_pid, '_vms_is_rsvp', true));
@@ -6704,7 +6704,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     $ticket_ui = vms_ticketing_v2_front_ui_settings((int) $plan_id_for_event);
     $ticket_ratio_qualifying_label = ($plan_id_for_event > 0 && function_exists('vms_ticketing_v2_resolve_qualifying_ticket_label'))
         ? (string) vms_ticketing_v2_resolve_qualifying_ticket_label((int) $plan_id_for_event)
-        : __('qualifying tickets', 'vms');
+        : __('qualifying tickets', 'backstage-venue-manager');
 
     wp_localize_script('vms-ticketing-front', 'vmsTicketingFront', array(
         'tecEventId' => (int) $tec_event_id,
@@ -6718,8 +6718,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'uiV2AdminPreview' => !empty($ticket_ui['admin_preview']) ? '1' : '0',
         'isAdminUser' => !empty($ticket_ui['is_admin_user']) ? '1' : '0',
         'uiSafeModeNotice' => !empty($ticket_ui['show_safe_mode_notice']) ? '1' : '0',
-        'uiSafeModeNoticeText' => __('Ticket UI Safe Mode is active on this site. You are viewing the TEC fallback layout, not the unified V2 purchase UI.', 'vms'),
-        'uiSafeModeServerControlsNoticeText' => __('Ticket UI Safe Mode is active on this site. This event is using the server-controls safety layout instead of the full unified V2 ticket UI.', 'vms'),
+        'uiSafeModeNoticeText' => __('Ticket UI Safe Mode is active on this site. You are viewing the TEC fallback layout, not the unified V2 purchase UI.', 'backstage-venue-manager'),
+        'uiSafeModeServerControlsNoticeText' => __('Ticket UI Safe Mode is active on this site. This event is using the server-controls safety layout instead of the full unified V2 ticket UI.', 'backstage-venue-manager'),
         'showTicketAvailability' => !empty($ticket_ui['show_availability']) ? 1 : 0,
         'ticketAvailabilityDisplay' => sanitize_key((string) ($ticket_ui['availability_display'] ?? 'low')),
         'ticketAvailabilityLowThreshold' => max(1, absint($ticket_ui['availability_low_threshold'] ?? 25)),
@@ -6730,8 +6730,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'ticketHelpStyle' => function_exists('vms_ticketing_ui_help_global_style') ? (array) vms_ticketing_ui_help_global_style('tickets') : array(),
         'addonHelpText' => (function_exists('vms_ticketing_ui_help_should_render') && !vms_ticketing_ui_help_should_render((int) $plan_id_for_event, 'addons')) ? '' : (function_exists('vms_ticketing_ui_help_effective_text') ? (string) vms_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'addons') : ''),
         'addonHelpStyle' => function_exists('vms_ticketing_ui_help_global_style') ? (array) vms_ticketing_ui_help_global_style('addons') : array(),
-        'addonSectionHeading' => function_exists('vms_ticketing_ui_addons_section_heading_effective') ? (string) vms_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_heading') ? (string) vms_ticketing_ui_addons_section_heading() : __('Fire Pits & Tables', 'vms')),
-        'addonSectionSubtext' => function_exists('vms_ticketing_ui_addons_section_subtext_effective') ? (string) vms_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_subtext') ? (string) vms_ticketing_ui_addons_section_subtext() : __('Click here to add a fire pit or table to your order.', 'vms')),
+        'addonSectionHeading' => function_exists('vms_ticketing_ui_addons_section_heading_effective') ? (string) vms_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_heading') ? (string) vms_ticketing_ui_addons_section_heading() : __('Fire Pits & Tables', 'backstage-venue-manager')),
+        'addonSectionSubtext' => function_exists('vms_ticketing_ui_addons_section_subtext_effective') ? (string) vms_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_subtext') ? (string) vms_ticketing_ui_addons_section_subtext() : __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager')),
         'ticketRatioQualifyingLabel' => $ticket_ratio_qualifying_label,
         'loginUrl'   => wp_login_url($redirect_after_login),
         'registerUrl' => function_exists('wp_registration_url') ? wp_registration_url() : wp_login_url($redirect_after_login),
@@ -6926,8 +6926,8 @@ function vms_tec_prepend_cancelled_notice(string $content): string
 
     $html  = "\n" . '<div class="vms-event-status-banner vms-event-status-banner--cancelled' . ($has_replacement_url ? ' vms-event-status-banner--rescheduled' : '') . '" role="status" aria-live="polite">';
     if ($has_replacement_url) {
-        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Rescheduled', 'vms') . '</div>';
-        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been rescheduled. Please see updated details below.', 'vms') . '</div>';
+        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Rescheduled', 'backstage-venue-manager') . '</div>';
+        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been rescheduled. Please see updated details below.', 'backstage-venue-manager') . '</div>';
         if ($replacement_title !== '' || $replacement_date !== '') {
             $replacement_meta = $replacement_title;
             if ($replacement_title !== '' && $replacement_date !== '') {
@@ -6936,12 +6936,12 @@ function vms_tec_prepend_cancelled_notice(string $content): string
                 $replacement_meta = $replacement_date;
             }
             if ($replacement_meta !== '') {
-                $html .= '<div class="vms-event-status-banner__meta"><strong>' . esc_html__('New date:', 'vms') . '</strong> ' . esc_html($replacement_meta) . '</div>';
+                $html .= '<div class="vms-event-status-banner__meta"><strong>' . esc_html__('New date:', 'backstage-venue-manager') . '</strong> ' . esc_html($replacement_meta) . '</div>';
             }
         }
     } else {
-        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Cancelled', 'vms') . '</div>';
-        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been cancelled. Ticket sales and RSVPs are closed.', 'vms') . '</div>';
+        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Cancelled', 'backstage-venue-manager') . '</div>';
+        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been cancelled. Ticket sales and RSVPs are closed.', 'backstage-venue-manager') . '</div>';
     }
 
     // Keep internal cancellation reason/notes private. Public pages should show only
@@ -6950,9 +6950,9 @@ function vms_tec_prepend_cancelled_notice(string $content): string
 
     $html .= '<div class="vms-event-status-banner__actions">';
     if ($has_replacement_url) {
-        $html .= '<a class="vms-event-status-banner__link vms-event-status-banner__link--primary" href="' . esc_url((string) $rescheduled['url']) . '">' . esc_html__('View New Date', 'vms') . '</a> ';
+        $html .= '<a class="vms-event-status-banner__link vms-event-status-banner__link--primary" href="' . esc_url((string) $rescheduled['url']) . '">' . esc_html__('View New Date', 'backstage-venue-manager') . '</a> ';
     }
-    $html .= '<a class="vms-event-status-banner__link" href="' . esc_url($events_url) . '">' . esc_html__('Browse upcoming events', 'vms') . '</a>';
+    $html .= '<a class="vms-event-status-banner__link" href="' . esc_url($events_url) . '">' . esc_html__('Browse upcoming events', 'backstage-venue-manager') . '</a>';
     $html .= '</div>';
     $html .= '</div>' . "\n";
 
@@ -6997,7 +6997,7 @@ function vms_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $po
         return $html;
     }
 
-    $label = $is_rescheduled ? __('Rescheduled', 'vms') : __('Cancelled', 'vms');
+    $label = $is_rescheduled ? __('Rescheduled', 'backstage-venue-manager') : __('Cancelled', 'backstage-venue-manager');
     $state_class = $is_rescheduled ? ' vms-cancelled-thumb--rescheduled' : ' vms-cancelled-thumb--cancelled';
     $label_class = $is_rescheduled ? ' vms-cancelled-thumb__label--rescheduled' : '';
 
@@ -7806,7 +7806,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
     <?php $addons_wrap_classes = array('vms-entitlements-block'); ?>
     <?php if (!empty($ticket_ui['effective_v2'])) { $addons_wrap_classes[] = 'vms-entitlements--compact'; } ?>
     <div id="vms-reserved-addons" class="<?php echo esc_attr(implode(' ', $addons_wrap_classes)); ?>" data-vms-tec-event-id="<?php echo esc_attr((string) $tec_event_id); ?>" data-vms-event-plan-id="<?php echo esc_attr((string) $plan_id); ?>" data-vms-ga-product-id="<?php echo esc_attr((string) $ga_pid); ?>" data-vms-qualifying-ticket-product-ids="<?php echo esc_attr(implode(',', $qualifying_ticket_pids)); ?>" data-vms-prior-qualifying-qty="<?php echo esc_attr((string) $prior_qualifying_qty); ?>" data-vms-prior-pool-qty="<?php echo esc_attr($prior_pool_qty_json); ?>" data-vms-cart-ga-qty="<?php echo esc_attr((string) $cart_ga_qty); ?>" data-vms-cart-pool-qty="<?php echo esc_attr($cart_pool_qty_json); ?>" data-vms-ui-layout="<?php echo esc_attr(!empty($ticket_ui['effective_v2']) ? 'v2' : 'classic'); ?>" data-vms-render-mode="server_controls" data-vms-inline-controller-owner="1">
-        <h3><?php echo esc_html__('Reserve Your Spot (Optional)', 'vms'); ?></h3>
+        <h3><?php echo esc_html__('Reserve Your Spot (Optional)', 'backstage-venue-manager'); ?></h3>
 
         <?php if ($items): ?>
             <ul class="vms-entitlements-list">
@@ -7838,7 +7838,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                     <?php endif; ?>
                                     <?php if (!empty($it['more_info'])): ?>
                                         <details class="vms-entitlements-more vms-ent-more">
-                                            <summary><?php echo esc_html__('More info', 'vms'); ?></summary>
+                                            <summary><?php echo esc_html__('More info', 'backstage-venue-manager'); ?></summary>
                                             <div class="vms-entitlements-more-body vms-ent-more-body"><?php echo wp_kses_post((string) $it['more_info']); ?></div>
                                         </details>
                                     <?php endif; ?>
@@ -7849,7 +7849,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                             <div class="vms-entitlements-price vms-ent-price"><?php echo wp_kses_post((string) $it['price']); ?></div>
                             <div class="vms-entitlements-qty vms-ent-qty">
                                 <?php if (!$it['in_stock']): ?>
-                                    <em class="vms-entitlements-soldout"><?php echo esc_html__('Sold out', 'vms'); ?></em>
+                                    <em class="vms-entitlements-soldout"><?php echo esc_html__('Sold out', 'backstage-venue-manager'); ?></em>
                                 <?php else: ?>
                                     <?php
                                     $server_max_qty = 0;
@@ -7858,7 +7858,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                     } elseif (!empty($it['pool_max_total'])) {
                                         $server_max_qty = (int) $it['pool_max_total'];
                                     }
-                                    $server_initial_note = empty($it['can_add']) ? __('Already in cart. Cart will be rechecked at add time.', 'vms') : '';
+                                    $server_initial_note = empty($it['can_add']) ? __('Already in cart. Cart will be rechecked at add time.', 'backstage-venue-manager') : '';
                                     ?>
                                     <?php $selector_mode = (string) ($it['selector_mode'] ?? 'stepper'); ?>
                                     <div class="vms-rw-stepper vms-addon-controls <?php echo ($selector_mode === 'checkbox') ? 'vms-addon-controls--checkbox' : 'vms-addon-controls--stepper'; ?>"
@@ -7881,14 +7881,14 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                                     value="1"
                                                     name="vms_addon_qty[<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>]"
                                                     data-vms-product-id="<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>"
-                                                    aria-label="<?php echo esc_attr(sprintf(__('Reserve %s', 'vms'), (string) $it['label'])); ?>"
+                                                    aria-label="<?php echo esc_attr(sprintf(__('Reserve %s', 'backstage-venue-manager'), (string) $it['label'])); ?>"
                                                 />
-                                                <span class="vms-addon-checkbox-label"><?php echo esc_html__('Reserve', 'vms'); ?></span>
+                                                <span class="vms-addon-checkbox-label"><?php echo esc_html__('Reserve', 'backstage-venue-manager'); ?></span>
                                             </label>
                                             <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--minus vms-addon-minus vms-hidden" tabindex="-1" aria-hidden="true">−</button>
                                             <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--plus vms-addon-plus vms-hidden" tabindex="-1" aria-hidden="true">+</button>
                                         <?php else : ?>
-                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--minus vms-addon-minus" aria-label="<?php echo esc_attr(sprintf(__('Decrease %s quantity', 'vms'), (string) $it['label'])); ?>">−</button>
+                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--minus vms-addon-minus" aria-label="<?php echo esc_attr(sprintf(__('Decrease %s quantity', 'backstage-venue-manager'), (string) $it['label'])); ?>">−</button>
                                             <input
                                                 type="number"
                                                 class="vms-rw-stepper__input vms-addon-input"
@@ -7899,9 +7899,9 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                                 value="0"
                                                 name="vms_addon_qty[<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>]"
                                                 data-vms-product-id="<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>"
-                                                aria-label="<?php echo esc_attr(sprintf(__('%s quantity', 'vms'), (string) $it['label'])); ?>"
+                                                aria-label="<?php echo esc_attr(sprintf(__('%s quantity', 'backstage-venue-manager'), (string) $it['label'])); ?>"
                                             />
-                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--plus vms-addon-plus" aria-label="<?php echo esc_attr(sprintf(__('Increase %s quantity', 'vms'), (string) $it['label'])); ?>">+</button>
+                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--plus vms-addon-plus" aria-label="<?php echo esc_attr(sprintf(__('Increase %s quantity', 'backstage-venue-manager'), (string) $it['label'])); ?>">+</button>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
@@ -8334,7 +8334,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
 
         <?php if ($is_admin_user && $debug): ?>
             <details class="vms-entitlements-debug">
-                <summary><?php echo esc_html__('Admin diagnostics', 'vms'); ?></summary>
+                <summary><?php echo esc_html__('Admin diagnostics', 'backstage-venue-manager'); ?></summary>
                 <ul class="vms-entitlements-debug-list">
                     <?php foreach ($debug as $d): ?>
                         <li>
@@ -8347,7 +8347,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                     <?php endforeach; ?>
                 </ul>
                 <p class="description">
-                    <?php echo esc_html__('If these should be purchasable, run Ticketing Preview then Commit from the linked Event Plan to create/adopt products and store the map.', 'vms'); ?>
+                    <?php echo esc_html__('If these should be purchasable, run Ticketing Preview then Commit from the linked Event Plan to create/adopt products and store the map.', 'backstage-venue-manager'); ?>
                 </p>
             </details>
         <?php endif; ?>
@@ -8792,7 +8792,7 @@ function vms_ticketing_v2_store_api_validate_add_to_cart($product, $request = ar
         }
     }
     if ($message === '') {
-        $message = __('This item could not be added to cart.', 'vms');
+        $message = __('This item could not be added to cart.', 'backstage-venue-manager');
     }
 
     throw new Exception($message);
@@ -8800,7 +8800,7 @@ function vms_ticketing_v2_store_api_validate_add_to_cart($product, $request = ar
 
 function vms_ticketing_v2_render_disabled_cart_checkout_button(): void
 {
-    echo '<button type="button" class="checkout-button button alt wc-forward" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout unavailable — fix cart items above', 'vms') . '</button>';
+    echo '<button type="button" class="checkout-button button alt wc-forward" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout unavailable — fix cart items above', 'backstage-venue-manager') . '</button>';
 }
 
 function vms_ticketing_v2_maybe_gate_cart_checkout_button(): void
@@ -8825,7 +8825,7 @@ function vms_ticketing_v2_filter_checkout_order_button_html(string $button_html)
         return $button_html;
     }
 
-    return '<button type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" value="' . esc_attr__('Checkout blocked — return to cart', 'vms') . '" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout blocked — return to cart', 'vms') . '</button>';
+    return '<button type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" value="' . esc_attr__('Checkout blocked — return to cart', 'backstage-venue-manager') . '" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout blocked — return to cart', 'backstage-venue-manager') . '</button>';
 }
 
 function vms_ticketing_v2_filter_available_payment_gateways(array $gateways): array
@@ -9199,10 +9199,10 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
             $claim_grant_type = sanitize_key((string) ($claim_context['claim_grant_type'] ?? 'event_ticket_eligibility'));
             if (!is_user_logged_in()) {
                 $guest_message = $claim_program_label !== ''
-                    ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'vms'), $claim_program_label)
-                    : __('This ticket requires account verification. Log in and submit verification first.', 'vms');
+                    ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'backstage-venue-manager'), $claim_program_label)
+                    : __('This ticket requires account verification. Log in and submit verification first.', 'backstage-venue-manager');
                 if (empty($claim_allowed_programs) && $claim_allow_direct_grants) {
-                    $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'vms');
+                    $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'backstage-venue-manager');
                 }
                 if (function_exists('wc_add_notice')) {
                     wc_add_notice($guest_message, 'error');
@@ -9231,7 +9231,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
                 $buyer_message = sanitize_text_field((string) ($buyer_eligibility['message'] ?? ''));
                 if ($buyer_message === '') {
                     $buyer_message = sprintf(
-                        __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'vms'),
+                        __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'backstage-venue-manager'),
                         $claim_program_label
                     );
                 }
@@ -9278,7 +9278,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
             if (empty($assignment_result['ok'])) {
                 $assignment_message = sanitize_text_field((string) ($assignment_result['message'] ?? ''));
                 if ($assignment_message === '') {
-                    $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'vms');
+                    $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'backstage-venue-manager');
                 }
                 if (function_exists('wc_add_notice')) {
                     wc_add_notice($assignment_message, 'error');
@@ -9387,7 +9387,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         vms_ticketing_v2_clear_success_notices();
         $message = !empty($notice_messages)
             ? (string) $notice_messages[0]
-            : __('Could not add all selected items to cart. Please review your selection and try again.', 'vms');
+            : __('Could not add all selected items to cart. Please review your selection and try again.', 'backstage-venue-manager');
         if (function_exists('wc_clear_notices')) {
             wc_clear_notices();
         }

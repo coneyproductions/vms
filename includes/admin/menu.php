@@ -110,7 +110,7 @@ add_action('admin_menu', function () {
 
   // Top-level menu → Dashboard
   add_menu_page(
-    __('Vendor Management System', 'vms'),
+    __('Vendor Management System', 'backstage-venue-manager'),
     (function_exists('vms_staff_certifications_pending_count') && function_exists('vms_staff_certifications_admin_badge_markup') ? 'VMS' . vms_staff_certifications_admin_badge_markup(vms_staff_certifications_pending_count()) : 'VMS'),
     $capability,
     $parent_slug,
@@ -122,8 +122,8 @@ add_action('admin_menu', function () {
   // Dashboard (must match parent slug)
   add_submenu_page(
     $parent_slug,
-    __('Dashboard', 'vms'),
-    __('Dashboard', 'vms'),
+    __('Dashboard', 'backstage-venue-manager'),
+    __('Dashboard', 'backstage-venue-manager'),
     $capability,
     $parent_slug,
     'vms_render_dashboard_page'
@@ -131,8 +131,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Dashboard: Operations', 'vms'),
-    __('Dashboard: Operations', 'vms'),
+    __('Dashboard: Operations', 'backstage-venue-manager'),
+    __('Dashboard: Operations', 'backstage-venue-manager'),
     $capability,
     'vms-dashboard-operations',
     'vms_render_dashboard_operations_page'
@@ -140,8 +140,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Dashboard: Finance', 'vms'),
-    __('Dashboard: Finance', 'vms'),
+    __('Dashboard: Finance', 'backstage-venue-manager'),
+    __('Dashboard: Finance', 'backstage-venue-manager'),
     $capability,
     'vms-dashboard-finance',
     'vms_render_dashboard_finance_page'
@@ -149,8 +149,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Dashboard: Onboarding & Health', 'vms'),
-    __('Dashboard: Onboarding & Health', 'vms'),
+    __('Dashboard: Onboarding & Health', 'backstage-venue-manager'),
+    __('Dashboard: Onboarding & Health', 'backstage-venue-manager'),
     $capability,
     'vms-dashboard-health',
     'vms_render_dashboard_health_page'
@@ -160,8 +160,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_render_budget_calculator_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Budget Calculator', 'vms'),
-      __('Budget Calculator', 'vms'),
+      __('Budget Calculator', 'backstage-venue-manager'),
+      __('Budget Calculator', 'backstage-venue-manager'),
       $capability,
       'vms-budget-calculator',
       'vms_render_budget_calculator_page'
@@ -173,8 +173,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_render_schedule_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Schedule', 'vms'),
-      __('Schedule', 'vms'),
+      __('Schedule', 'backstage-venue-manager'),
+      __('Schedule', 'backstage-venue-manager'),
       $capability,
       'vms-schedule',
       'vms_render_schedule_page'
@@ -183,16 +183,16 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Event Plans', 'vms'),
-    __('Event Plans', 'vms'),
+    __('Event Plans', 'backstage-venue-manager'),
+    __('Event Plans', 'backstage-venue-manager'),
     $capability,
     'edit.php?post_type=vms_event_plan'
   );
 
   add_submenu_page(
     $parent_slug,
-    __('Vendor Command Center', 'vms'),
-    __('Vendor Command Center', 'vms'),
+    __('Vendor Command Center', 'backstage-venue-manager'),
+    __('Vendor Command Center', 'backstage-venue-manager'),
     $capability,
     'vms-vendor-command-center',
     'vms_render_vendor_command_center_page'
@@ -200,8 +200,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Vendor Availability', 'vms'),
-    __('Vendor Availability', 'vms'),
+    __('Vendor Availability', 'backstage-venue-manager'),
+    __('Vendor Availability', 'backstage-venue-manager'),
     $capability,
     'vms-vendor-availability',
     'vms_render_vendor_availability_page'
@@ -210,16 +210,16 @@ add_action('admin_menu', function () {
   // CPT Lists (core objects)
   add_submenu_page(
     $parent_slug,
-    __('Vendors', 'vms'),
-    __('Vendors', 'vms'),
+    __('Vendors', 'backstage-venue-manager'),
+    __('Vendors', 'backstage-venue-manager'),
     $capability,
     'edit.php?post_type=vms_vendor'
   );
 
   add_submenu_page(
     $parent_slug,
-    __('Comp Packages', 'vms'),
-    __('Comp Packages', 'vms'),
+    __('Comp Packages', 'backstage-venue-manager'),
+    __('Comp Packages', 'backstage-venue-manager'),
     $capability,
     'edit.php?post_type=vms_comp_package'
   );
@@ -228,8 +228,8 @@ add_action('admin_menu', function () {
   if (post_type_exists('vms_rating')) {
     add_submenu_page(
       $parent_slug,
-      __('Ratings', 'vms'),
-      __('Ratings', 'vms'),
+      __('Ratings', 'backstage-venue-manager'),
+      __('Ratings', 'backstage-venue-manager'),
       $capability,
       'edit.php?post_type=vms_rating'
     );
@@ -237,8 +237,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Staff', 'vms'),
-    __('Staff', 'vms'),
+    __('Staff', 'backstage-venue-manager'),
+    __('Staff', 'backstage-venue-manager'),
     $capability,
     'edit.php?post_type=vms_staff'
   );
@@ -246,8 +246,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_render_staff_certifications_admin_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Staff Certifications', 'vms'),
-      function_exists('vms_staff_certifications_admin_menu_label') ? vms_staff_certifications_admin_menu_label(__('Staff Certifications', 'vms')) : __('Staff Certifications', 'vms'),
+      __('Staff Certifications', 'backstage-venue-manager'),
+      function_exists('vms_staff_certifications_admin_menu_label') ? vms_staff_certifications_admin_menu_label(__('Staff Certifications', 'backstage-venue-manager')) : __('Staff Certifications', 'backstage-venue-manager'),
       $capability,
       'vms-staff-certifications',
       'vms_render_staff_certifications_admin_page'
@@ -256,8 +256,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Venues', 'vms'),
-    __('Venues', 'vms'),
+    __('Venues', 'backstage-venue-manager'),
+    __('Venues', 'backstage-venue-manager'),
     $capability,
     'edit.php?post_type=vms_venue'
   );
@@ -266,8 +266,8 @@ add_action('admin_menu', function () {
   if ((defined('VMS_VENDOR_APP_CPT') && post_type_exists(VMS_VENDOR_APP_CPT)) || post_type_exists('vms_vendor_application')) {
     add_submenu_page(
       $parent_slug,
-      __('Vendor Applications', 'vms'),
-      __('Vendor Applications', 'vms'),
+      __('Vendor Applications', 'backstage-venue-manager'),
+      __('Vendor Applications', 'backstage-venue-manager'),
       $capability,
       defined('VMS_VENDOR_APP_CPT') ? ('edit.php?post_type=' . VMS_VENDOR_APP_CPT) : 'edit.php?post_type=vms_vendor_app'
     );
@@ -275,8 +275,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Season Dates', 'vms'),
-    __('Season Dates', 'vms'),
+    __('Season Dates', 'backstage-venue-manager'),
+    __('Season Dates', 'backstage-venue-manager'),
     $capability,
     'vms-season-dates',
     'vms_admin_render_season_dates_page'
@@ -284,8 +284,8 @@ add_action('admin_menu', function () {
 
   add_submenu_page(
     $parent_slug,
-    __('Holidays', 'vms'),
-    __('Holidays', 'vms'),
+    __('Holidays', 'backstage-venue-manager'),
+    __('Holidays', 'backstage-venue-manager'),
     $capability,
     'vms-holidays',
     'vms_admin_holidays_page'
@@ -294,8 +294,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_render_settings_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Settings', 'vms'),
-      __('Settings', 'vms'),
+      __('Settings', 'backstage-venue-manager'),
+      __('Settings', 'backstage-venue-manager'),
       $capability,
       'vms-settings',
       'vms_render_settings_page'
@@ -305,8 +305,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_status_notice_render_admin_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Status Notices', 'vms'),
-      __('Status Notices', 'vms'),
+      __('Status Notices', 'backstage-venue-manager'),
+      __('Status Notices', 'backstage-venue-manager'),
       $capability,
       'vms-status-notices',
       'vms_status_notice_render_admin_page'
@@ -316,8 +316,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_pass_claims_render_admin_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Guest Passes', 'vms'),
-      __('Guest Passes', 'vms'),
+      __('Guest Passes', 'backstage-venue-manager'),
+      __('Guest Passes', 'backstage-venue-manager'),
       $capability,
       'vms-passes',
       'vms_pass_claims_render_admin_page'
@@ -328,8 +328,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_render_integrity_venue_reconcile_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Integrity: Venue Links', 'vms'),
-      __('Integrity: Venue Links', 'vms'),
+      __('Integrity: Venue Links', 'backstage-venue-manager'),
+      __('Integrity: Venue Links', 'backstage-venue-manager'),
       $capability,
       'vms-integrity-venue-links',
       'vms_render_integrity_venue_reconcile_page'
@@ -341,8 +341,8 @@ add_action('admin_menu', function () {
   if (function_exists('vms_render_integrity_calendar_reconcile_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Integrity: Calendar Links', 'vms'),
-      __('Integrity: Calendar Links', 'vms'),
+      __('Integrity: Calendar Links', 'backstage-venue-manager'),
+      __('Integrity: Calendar Links', 'backstage-venue-manager'),
       $capability,
       'vms-integrity-calendar-links',
       'vms_render_integrity_calendar_reconcile_page'
@@ -350,8 +350,8 @@ add_action('admin_menu', function () {
   }
 add_submenu_page(
     $parent_slug, // Use your existing VMS parent slug variable/value here (same one used by other VMS submenus).
-    __('Continuity Binder', 'vms'),
-    __('Continuity Binder', 'vms'),
+    __('Continuity Binder', 'backstage-venue-manager'),
+    __('Continuity Binder', 'backstage-venue-manager'),
     'manage_options',
     'vms-continuity-binder',
     'vms_render_continuity_binder_page'
@@ -361,8 +361,8 @@ add_submenu_page(
   if (function_exists('vms_render_docs_admin_page')) {
     add_submenu_page(
       $parent_slug,
-      __('Docs', 'vms'),
-      __('Docs', 'vms'),
+      __('Docs', 'backstage-venue-manager'),
+      __('Docs', 'backstage-venue-manager'),
       $capability,
       'vms-docs',
       'vms_render_docs_admin_page'
@@ -371,8 +371,8 @@ add_submenu_page(
    
   add_submenu_page(
   'vms-dashboard',
-  __('Reference: Keys + Identifiers', 'vms'),
-  __('Reference: Keys + Identifiers', 'vms'),
+  __('Reference: Keys + Identifiers', 'backstage-venue-manager'),
+  __('Reference: Keys + Identifiers', 'backstage-venue-manager'),
   'manage_options',
   'vms-reference-keys-map',
   'vms_admin_reference_keys_map_page'
@@ -442,8 +442,8 @@ function vms_render_dashboard_page(): void
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
-        'title' => __('Dashboard', 'vms'),
-        'subtitle' => __('Operational overview and quick launch actions for planning, staffing, and finance.', 'vms'),
+        'title' => __('Dashboard', 'backstage-venue-manager'),
+        'subtitle' => __('Operational overview and quick launch actions for planning, staffing, and finance.', 'backstage-venue-manager'),
         'shell_id' => 'vms-dashboard-wrap',
       ),
       'vms_render_dashboard_page_content'
@@ -452,14 +452,14 @@ function vms_render_dashboard_page(): void
   }
 
   echo '<div class="wrap" id="vms-dashboard-wrap">';
-  echo '<h1>' . esc_html__('Dashboard', 'vms') . '</h1>';
+  echo '<h1>' . esc_html__('Dashboard', 'backstage-venue-manager') . '</h1>';
   vms_render_dashboard_page_content();
   echo '</div>';
 }
 
 function vms_render_dashboard_page_content(): void
 {
-  echo '<p class="vms-dashboard-welcome" data-vms-tour="dashboard_welcome">' . esc_html__('Welcome to the Venue Management System dashboard—tune the filters below before reviewing cards and tour health signals.', 'vms') . '</p>';
+  echo '<p class="vms-dashboard-welcome" data-vms-tour="dashboard_welcome">' . esc_html__('Welcome to the Venue Management System dashboard—tune the filters below before reviewing cards and tour health signals.', 'backstage-venue-manager') . '</p>';
 
   $user_id = (int) get_current_user_id();
   $has_inc_drafts = (function_exists('vms_user_pref_has_include_drafts'))
@@ -507,31 +507,31 @@ function vms_render_dashboard_page_content(): void
   $schedule_url = admin_url('admin.php?page=vms-schedule');
 
   echo '<div class="vms-dashboard-quick-actions" data-vms-tour="dashboard_quick_actions">';
-  echo '<h2>' . esc_html__('Quick Actions', 'vms') . '</h2>';
-  echo '<p class="description">' . esc_html__('Jump directly into the most common setup and planning workflows.', 'vms') . '</p>';
+  echo '<h2>' . esc_html__('Quick Actions', 'backstage-venue-manager') . '</h2>';
+  echo '<p class="description">' . esc_html__('Jump directly into the most common setup and planning workflows.', 'backstage-venue-manager') . '</p>';
   echo '<div class="vms-dashboard-quick-actions__buttons">';
-  echo '<a class="button button-primary" href="' . esc_url($start_event_plan_url) . '">' . esc_html__('Add Event Plan', 'vms') . '</a>';
-  echo '<a class="button" href="' . esc_url($schedule_url) . '">' . esc_html__('View Schedule', 'vms') . '</a>';
-  echo '<a class="button" href="' . esc_url($start_vendor_url) . '">' . esc_html__('Add Vendor', 'vms') . '</a>';
-  echo '<a class="button" href="' . esc_url($start_venue_url) . '" data-vms-tour="dashboard_start_venue">' . esc_html__('Add Venue', 'vms') . '</a>';
+  echo '<a class="button button-primary" href="' . esc_url($start_event_plan_url) . '">' . esc_html__('Add Event Plan', 'backstage-venue-manager') . '</a>';
+  echo '<a class="button" href="' . esc_url($schedule_url) . '">' . esc_html__('View Schedule', 'backstage-venue-manager') . '</a>';
+  echo '<a class="button" href="' . esc_url($start_vendor_url) . '">' . esc_html__('Add Vendor', 'backstage-venue-manager') . '</a>';
+  echo '<a class="button" href="' . esc_url($start_venue_url) . '" data-vms-tour="dashboard_start_venue">' . esc_html__('Add Venue', 'backstage-venue-manager') . '</a>';
   echo '</div>';
   echo '</div>';
 
   $guided_tours_url = admin_url('admin.php?page=vms-guided-tours');
-  $dashboard_tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.dashboard.basics" data-vms-tour="dashboard_help_start">' . esc_html__('Start Guided Tour', 'vms') . '</button>';
+  $dashboard_tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.dashboard.basics" data-vms-tour="dashboard_help_start">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
   if (function_exists('vms_render_help_button')) {
     $dashboard_tour_button = vms_render_help_button(array(
       'tour_id' => 'vms.dashboard.basics',
       'anchor' => 'dashboard_help_start',
-      'label' => __('Start Guided Tour', 'vms'),
+      'label' => __('Start Guided Tour', 'backstage-venue-manager'),
       'class' => 'button-secondary',
     ));
   }
   echo '<div class="vms-dashboard-health" data-vms-tour="dashboard_health">';
-  echo '<p>' . esc_html__('Need help on this page? Start the tour here or use the floating Help button.', 'vms') . '</p>';
+  echo '<p>' . esc_html__('Need help on this page? Start the tour here or use the floating Help button.', 'backstage-venue-manager') . '</p>';
   echo '<p data-vms-tour="dashboard_help_action">' . wp_kses($dashboard_tour_button, vms_admin_menu_allowed_help_html()) . '</p>';
   /* translators: %s: Guided Tours settings admin URL. */
-  echo '<p class="description">' . wp_kses_post(sprintf(__('Manage guided tour defaults and reset progress in <a href=\"%s\">Guided Tours settings</a>.', 'vms'), esc_url($guided_tours_url))) . '</p>';
+  echo '<p class="description">' . wp_kses_post(sprintf(__('Manage guided tour defaults and reset progress in <a href=\"%s\">Guided Tours settings</a>.', 'backstage-venue-manager'), esc_url($guided_tours_url))) . '</p>';
   echo '</div>';
 
   if (function_exists('vms_approvals_queue_render_dashboard_card')) {

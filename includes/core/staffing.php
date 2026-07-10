@@ -312,7 +312,7 @@ if (!function_exists('vms_staffing_staff_role_match_for_role')) {
 			return array(
 				'ok' => false,
 				'source' => 'invalid',
-				'reason' => __('Role eligibility could not be resolved.', 'vms'),
+				'reason' => __('Role eligibility could not be resolved.', 'backstage-venue-manager'),
 			);
 		}
 
@@ -321,7 +321,7 @@ if (!function_exists('vms_staffing_staff_role_match_for_role')) {
 			$role_term_cache[$role_id] = ($term instanceof WP_Term) ? $term : null;
 		}
 		$role_term = $role_term_cache[$role_id];
-		$role_name = $role_term instanceof WP_Term ? (string) $role_term->name : sprintf(__('Role #%d', 'vms'), $role_id);
+		$role_name = $role_term instanceof WP_Term ? (string) $role_term->name : sprintf(__('Role #%d', 'backstage-venue-manager'), $role_id);
 
 		if (!isset($staff_term_cache[$staff_id])) {
 			$term_ids = taxonomy_exists('vms_staff_role')
@@ -374,7 +374,7 @@ if (!function_exists('vms_staffing_staff_role_match_for_role')) {
 		return array(
 			'ok' => false,
 			'source' => 'none',
-			'reason' => sprintf(__('Not marked eligible for %s.', 'vms'), $role_name),
+			'reason' => sprintf(__('Not marked eligible for %s.', 'backstage-venue-manager'), $role_name),
 		);
 	}
 }
@@ -491,12 +491,12 @@ if (!function_exists('vms_staffing_staff_qualification_status_label')) {
 	function vms_staffing_staff_qualification_status_label(string $status): string
 	{
 		$status = sanitize_key($status);
-		if ($status === 'active') return __('Approved', 'vms');
-		if ($status === 'pending_verification') return __('Pending Review', 'vms');
-		if ($status === 'rejected') return __('Rejected', 'vms');
-		if ($status === 'expired') return __('Expired', 'vms');
-		if ($status === 'inactive') return __('Inactive', 'vms');
-		return __('Unknown', 'vms');
+		if ($status === 'active') return __('Approved', 'backstage-venue-manager');
+		if ($status === 'pending_verification') return __('Pending Review', 'backstage-venue-manager');
+		if ($status === 'rejected') return __('Rejected', 'backstage-venue-manager');
+		if ($status === 'expired') return __('Expired', 'backstage-venue-manager');
+		if ($status === 'inactive') return __('Inactive', 'backstage-venue-manager');
+		return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
@@ -762,33 +762,33 @@ if (!function_exists('vms_staffing_send_staff_qualification_submission_notificat
 		$staff_id = absint($staff_id);
 		$staff_name = get_the_title($staff_id);
 		if ($staff_name === '') {
-			$staff_name = __('Staff member', 'vms');
+			$staff_name = __('Staff member', 'backstage-venue-manager');
 		}
-		$qualification = isset($row['name']) ? (string) $row['name'] : __('Certification', 'vms');
-		$expiration = !empty($row['expiration_date']) ? (string) $row['expiration_date'] : __('Not provided', 'vms');
+		$qualification = isset($row['name']) ? (string) $row['name'] : __('Certification', 'backstage-venue-manager');
+		$expiration = !empty($row['expiration_date']) ? (string) $row['expiration_date'] : __('Not provided', 'backstage-venue-manager');
 		$review_url = vms_staffing_staff_qualification_review_url($staff_id);
 
 		$admin_body = vms_staffing_staff_qualification_mail_lines(array(
-			sprintf(__('A staff certification was submitted for review: %s', 'vms'), $qualification),
+			sprintf(__('A staff certification was submitted for review: %s', 'backstage-venue-manager'), $qualification),
 			'',
-			sprintf(__('Staff member: %s', 'vms'), $staff_name),
-			sprintf(__('Certification: %s', 'vms'), $qualification),
-			sprintf(__('Expiration: %s', 'vms'), $expiration),
-			sprintf(__('Review link: %s', 'vms'), $review_url),
+			sprintf(__('Staff member: %s', 'backstage-venue-manager'), $staff_name),
+			sprintf(__('Certification: %s', 'backstage-venue-manager'), $qualification),
+			sprintf(__('Expiration: %s', 'backstage-venue-manager'), $expiration),
+			sprintf(__('Review link: %s', 'backstage-venue-manager'), $review_url),
 		));
 		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, 'submitted') as $email) {
-			wp_mail($email, sprintf(__('[VMS] Staff certification pending review: %s', 'vms'), $qualification), $admin_body, vms_staffing_mail_headers());
+			wp_mail($email, sprintf(__('[VMS] Staff certification pending review: %s', 'backstage-venue-manager'), $qualification), $admin_body, vms_staffing_mail_headers());
 		}
 
 		$user = $submitter_user_id ? get_user_by('id', absint($submitter_user_id)) : vms_staffing_get_staff_user($staff_id);
 		if ($user instanceof WP_User && is_email($user->user_email)) {
 			$staff_body = vms_staffing_staff_qualification_mail_lines(array(
-				sprintf(__('We received your %s certificate.', 'vms'), $qualification),
+				sprintf(__('We received your %s certificate.', 'backstage-venue-manager'), $qualification),
 				'',
-				__('It is now pending review. We will notify you when it has been approved or if anything needs to be corrected.', 'vms'),
-				$expiration !== __('Not provided', 'vms') ? sprintf(__('Expiration date submitted: %s', 'vms'), $expiration) : '',
+				__('It is now pending review. We will notify you when it has been approved or if anything needs to be corrected.', 'backstage-venue-manager'),
+				$expiration !== __('Not provided', 'backstage-venue-manager') ? sprintf(__('Expiration date submitted: %s', 'backstage-venue-manager'), $expiration) : '',
 			));
-			wp_mail($user->user_email, sprintf(__('We received your %s certificate', 'vms'), $qualification), $staff_body, vms_staffing_mail_headers());
+			wp_mail($user->user_email, sprintf(__('We received your %s certificate', 'backstage-venue-manager'), $qualification), $staff_body, vms_staffing_mail_headers());
 		}
 	}
 }
@@ -800,23 +800,23 @@ if (!function_exists('vms_staffing_send_staff_qualification_review_notification'
 		if (!in_array($new_status, array('active', 'rejected'), true)) {
 			return;
 		}
-		$qualification = isset($row['name']) ? (string) $row['name'] : __('Certification', 'vms');
+		$qualification = isset($row['name']) ? (string) $row['name'] : __('Certification', 'backstage-venue-manager');
 		$expiration = !empty($row['expiration_date']) ? (string) $row['expiration_date'] : '';
 		$notes = isset($row['notes']) ? trim((string) $row['notes']) : '';
 		$status_event = $new_status === 'active' ? 'approved' : 'rejected';
 
 		if ($new_status === 'active') {
 			$lines = array(
-				sprintf(__('Your %s certificate has been approved.', 'vms'), $qualification),
-				$expiration !== '' ? sprintf(__('Expiration date on file: %s', 'vms'), $expiration) : '',
+				sprintf(__('Your %s certificate has been approved.', 'backstage-venue-manager'), $qualification),
+				$expiration !== '' ? sprintf(__('Expiration date on file: %s', 'backstage-venue-manager'), $expiration) : '',
 			);
-			$subject = sprintf(__('Your %s certificate was approved', 'vms'), $qualification);
+			$subject = sprintf(__('Your %s certificate was approved', 'backstage-venue-manager'), $qualification);
 		} else {
 			$lines = array(
-				sprintf(__('Your %s certificate could not be approved yet.', 'vms'), $qualification),
-				$notes !== '' ? sprintf(__('Reason: %s', 'vms'), $notes) : __('Please upload a replacement or contact the venue if you have questions.', 'vms'),
+				sprintf(__('Your %s certificate could not be approved yet.', 'backstage-venue-manager'), $qualification),
+				$notes !== '' ? sprintf(__('Reason: %s', 'backstage-venue-manager'), $notes) : __('Please upload a replacement or contact the venue if you have questions.', 'backstage-venue-manager'),
 			);
-			$subject = sprintf(__('Your %s certificate needs attention', 'vms'), $qualification);
+			$subject = sprintf(__('Your %s certificate needs attention', 'backstage-venue-manager'), $qualification);
 		}
 
 		$user = vms_staffing_get_staff_user($staff_id);
@@ -826,19 +826,19 @@ if (!function_exists('vms_staffing_send_staff_qualification_review_notification'
 
 		$staff_name = get_the_title($staff_id);
 		if ($staff_name === '') {
-			$staff_name = __('Staff member', 'vms');
+			$staff_name = __('Staff member', 'backstage-venue-manager');
 		}
 		$admin_lines = array(
-			sprintf(__('Staff certification %s: %s', 'vms'), $status_event, $qualification),
+			sprintf(__('Staff certification %s: %s', 'backstage-venue-manager'), $status_event, $qualification),
 			'',
-			sprintf(__('Staff member: %s', 'vms'), $staff_name),
-			sprintf(__('Certification: %s', 'vms'), $qualification),
-			$expiration !== '' ? sprintf(__('Expiration: %s', 'vms'), $expiration) : '',
-			($new_status === 'rejected' && $notes !== '') ? sprintf(__('Reason: %s', 'vms'), $notes) : '',
-			sprintf(__('Staff profile: %s', 'vms'), vms_staffing_staff_qualification_review_url($staff_id)),
+			sprintf(__('Staff member: %s', 'backstage-venue-manager'), $staff_name),
+			sprintf(__('Certification: %s', 'backstage-venue-manager'), $qualification),
+			$expiration !== '' ? sprintf(__('Expiration: %s', 'backstage-venue-manager'), $expiration) : '',
+			($new_status === 'rejected' && $notes !== '') ? sprintf(__('Reason: %s', 'backstage-venue-manager'), $notes) : '',
+			sprintf(__('Staff profile: %s', 'backstage-venue-manager'), vms_staffing_staff_qualification_review_url($staff_id)),
 		);
 		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, $status_event) as $email) {
-			wp_mail($email, sprintf(__('[VMS] Staff certification %s: %s', 'vms'), $status_event, $qualification), vms_staffing_staff_qualification_mail_lines($admin_lines), vms_staffing_mail_headers());
+			wp_mail($email, sprintf(__('[VMS] Staff certification %s: %s', 'backstage-venue-manager'), $status_event, $qualification), vms_staffing_staff_qualification_mail_lines($admin_lines), vms_staffing_mail_headers());
 		}
 	}
 }
@@ -849,7 +849,7 @@ if (!function_exists('vms_staffing_add_staff_qualification_submission')) {
 		$staff_id = absint($staff_id);
 		$submitter_user_id = absint($submitter_user_id);
 		if ($staff_id <= 0 || $submitter_user_id <= 0) {
-			return array('ok' => false, 'message' => __('Invalid staff certification submission.', 'vms'));
+			return array('ok' => false, 'message' => __('Invalid staff certification submission.', 'backstage-venue-manager'));
 		}
 		$row['id'] = isset($row['id']) ? sanitize_key((string) $row['id']) : vms_staffing_staff_qualification_generate_id();
 		$row['status'] = 'pending_verification';
@@ -858,7 +858,7 @@ if (!function_exists('vms_staffing_add_staff_qualification_submission')) {
 		$row['submitted_at'] = time();
 		$clean = vms_staffing_normalize_staff_qualification_row($row);
 		if (!is_array($clean)) {
-			return array('ok' => false, 'message' => __('Please enter the certification name before uploading.', 'vms'));
+			return array('ok' => false, 'message' => __('Please enter the certification name before uploading.', 'backstage-venue-manager'));
 		}
 		$rows = vms_staffing_get_staff_qualifications($staff_id);
 		$rows[] = $clean;
@@ -1097,18 +1097,18 @@ if (!function_exists('vms_staffing_staff_candidate_status_for_role')) {
 
 		$ineligibility_reason = '';
 		if (empty($role_match['ok'])) {
-			$ineligibility_reason = isset($role_match['reason']) ? (string) $role_match['reason'] : __('Not marked eligible for this role.', 'vms');
+			$ineligibility_reason = isset($role_match['reason']) ? (string) $role_match['reason'] : __('Not marked eligible for this role.', 'backstage-venue-manager');
 		} elseif ($hard_blocked) {
 			$parts = array();
 			if (!empty($qualification['missing'])) {
-				$parts[] = sprintf(__('missing %s', 'vms'), implode(', ', array_map('strval', (array) $qualification['missing'])));
+				$parts[] = sprintf(__('missing %s', 'backstage-venue-manager'), implode(', ', array_map('strval', (array) $qualification['missing'])));
 			}
 			if (!empty($qualification['expired'])) {
-				$parts[] = sprintf(__('expired %s', 'vms'), implode(', ', array_map('strval', (array) $qualification['expired'])));
+				$parts[] = sprintf(__('expired %s', 'backstage-venue-manager'), implode(', ', array_map('strval', (array) $qualification['expired'])));
 			}
 			$ineligibility_reason = !empty($parts)
-				? sprintf(__('Requires active qualifications: %s.', 'vms'), implode('; ', $parts))
-				: __('Requires an active hard-block qualification.', 'vms');
+				? sprintf(__('Requires active qualifications: %s.', 'backstage-venue-manager'), implode('; ', $parts))
+				: __('Requires an active hard-block qualification.', 'backstage-venue-manager');
 		}
 
 		return array(
@@ -1931,7 +1931,7 @@ if (!function_exists('vms_staffing_get_event_slots')) {
 			$sid = isset($s['slot_id']) ? absint($s['slot_id']) : 0;
 			$rid = isset($s['role_id']) ? absint($s['role_id']) : 0;
 			$s['assignments'] = isset($assign_by_slot[$sid]) ? $assign_by_slot[$sid] : array();
-			$s['role_name'] = isset($role_map[$rid]['name']) ? (string) $role_map[$rid]['name'] : __('Role', 'vms');
+			$s['role_name'] = isset($role_map[$rid]['name']) ? (string) $role_map[$rid]['name'] : __('Role', 'backstage-venue-manager');
 			$s['role_meta'] = isset($role_map[$rid]) ? $role_map[$rid] : array();
 		}
 		unset($s);
@@ -2361,7 +2361,7 @@ if (!function_exists('vms_staffing_get_event_plan_headcount_context')) {
 			'wired' => false,
 			'headcount' => 0,
 			'source' => 'none',
-			'label' => __('Anticipated guests', 'vms'),
+			'label' => __('Anticipated guests', 'backstage-venue-manager'),
 		);
 		if ($event_plan_id <= 0) {
 			return $context;
@@ -2396,7 +2396,7 @@ if (!function_exists('vms_staffing_get_event_plan_headcount_context')) {
 			$context['wired'] = true;
 			$context['headcount'] = $expected_total;
 			$context['source'] = 'anticipated_guests';
-			$context['label'] = __('Anticipated guests', 'vms');
+			$context['label'] = __('Anticipated guests', 'backstage-venue-manager');
 			return $context;
 		}
 
@@ -2410,7 +2410,7 @@ if (!function_exists('vms_staffing_get_event_plan_headcount_context')) {
 			$context['wired'] = true;
 			$context['headcount'] = $true_total;
 			$context['source'] = 'anticipated_guests';
-			$context['label'] = __('Anticipated guests', 'vms');
+			$context['label'] = __('Anticipated guests', 'backstage-venue-manager');
 		}
 
 		return $context;
@@ -3371,7 +3371,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 
 			$role_id = isset($slot['role_id']) ? absint($slot['role_id']) : 0;
 			$role_meta = isset($role_map[$role_id]) ? $role_map[$role_id] : array();
-			$role_name = isset($role_meta['name']) ? (string) $role_meta['name'] : __('Role', 'vms');
+			$role_name = isset($role_meta['name']) ? (string) $role_meta['name'] : __('Role', 'backstage-venue-manager');
 			$is_critical = !empty($role_meta['is_critical']);
 
 			$need = isset($slot['headcount_needed']) ? max(0, (int) $slot['headcount_needed']) : 0;
@@ -3408,7 +3408,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 								'type'       => 'unavailable_assigned',
 								'staff_id'   => $staff_id,
 								'staff_name' => (string) get_the_title($staff_id),
-								'summary'    => sprintf(__('Assigned while unavailable (%s)', 'vms'), $event_date),
+								'summary'    => sprintf(__('Assigned while unavailable (%s)', 'backstage-venue-manager'), $event_date),
 							);
 						}
 					}
@@ -3481,7 +3481,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 						'type'       => 'overlap_conflict',
 						'staff_id'   => $staff_id,
 						'staff_name' => (string) get_the_title($staff_id),
-						'summary'    => sprintf(__('Overlapping confirmed assignment (%d)', 'vms'), $cnt),
+						'summary'    => sprintf(__('Overlapping confirmed assignment (%d)', 'backstage-venue-manager'), $cnt),
 					);
 				}
 			}
@@ -3642,10 +3642,10 @@ if (!function_exists('vms_staffing_dashboard_readiness_label')) {
 	function vms_staffing_dashboard_readiness_label(string $status): string
 	{
 		$status = sanitize_key($status);
-		if ($status === 'ready') return __('Ready', 'vms');
-		if ($status === 'needs_staff') return __('Needs Staff', 'vms');
-		if ($status === 'red_flag') return __('Red Flag', 'vms');
-		return __('N/A', 'vms');
+		if ($status === 'ready') return __('Ready', 'backstage-venue-manager');
+		if ($status === 'needs_staff') return __('Needs Staff', 'backstage-venue-manager');
+		if ($status === 'red_flag') return __('Red Flag', 'backstage-venue-manager');
+		return __('N/A', 'backstage-venue-manager');
 	}
 }
 

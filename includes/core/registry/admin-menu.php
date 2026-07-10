@@ -17,7 +17,7 @@ if (!function_exists('vms_admin_menu_parent_slug')) {
 }
 
 if (!function_exists('vms_i18n_runtime')) {
-	function vms_i18n_runtime(string $text, string $domain = 'vms'): string
+	function vms_i18n_runtime(string $text, string $domain = 'backstage-venue-manager'): string
 	{
 		if ($text === '') {
 			return '';
@@ -78,60 +78,60 @@ if (!function_exists('vms_admin_menu_default_sections')) {
 		return array(
 			'dashboard' => array(
 				'section' => 'dashboard',
-				'label' => vms_i18n_runtime('Dashboard', 'vms'),
+				'label' => vms_i18n_runtime('Dashboard', 'backstage-venue-manager'),
 				'cluster' => 'dashboard',
 				'order' => 10,
 			),
 			'events_schedule' => array(
 				'section' => 'events_schedule',
-				'label' => vms_i18n_runtime('Events & Schedule', 'vms'),
+				'label' => vms_i18n_runtime('Events & Schedule', 'backstage-venue-manager'),
 				'cluster' => 'planning',
 				'order' => 20,
 			),
 			'tickets_admissions' => array(
 				'section' => 'tickets_admissions',
-				'label' => vms_i18n_runtime('Tickets & Admissions', 'vms'),
+				'label' => vms_i18n_runtime('Tickets & Admissions', 'backstage-venue-manager'),
 				'cluster' => 'planning',
 				'order' => 30,
 			),
 			'vendors_staff' => array(
 				'section' => 'vendors_staff',
-				'label' => vms_i18n_runtime('Vendors & Staff', 'vms'),
+				'label' => vms_i18n_runtime('Vendors & Staff', 'backstage-venue-manager'),
 				'cluster' => 'vendors_staff',
 				'order' => 40,
 			),
 			'marketing_sales' => array(
 				'section' => 'marketing_sales',
-				'label' => vms_i18n_runtime('Marketing & Sales', 'vms'),
+				'label' => vms_i18n_runtime('Marketing & Sales', 'backstage-venue-manager'),
 				'cluster' => 'marketing_social',
 				'order' => 50,
 			),
 			'reports_finance' => array(
 				'section' => 'reports_finance',
-				'label' => vms_i18n_runtime('Reports & Finance', 'vms'),
+				'label' => vms_i18n_runtime('Reports & Finance', 'backstage-venue-manager'),
 				'cluster' => 'tools',
 				'order' => 60,
 			),
 			'venue_setup' => array(
 				'section' => 'venue_setup',
-				'label' => vms_i18n_runtime('Venue Setup', 'vms'),
+				'label' => vms_i18n_runtime('Venue Setup', 'backstage-venue-manager'),
 				'cluster' => 'venues',
 				'order' => 70,
 			),
 			'tools_integrity' => array(
 				'section' => 'tools_integrity',
-				'label' => vms_i18n_runtime('Tools & Integrity', 'vms'),
+				'label' => vms_i18n_runtime('Tools & Integrity', 'backstage-venue-manager'),
 				'cluster' => 'tools',
 				'order' => 80,
 			),
 			'settings_addons' => array(
 				'section' => 'settings_addons',
-				'label' => vms_i18n_runtime('Settings & Add-ons', 'vms'),
+				'label' => vms_i18n_runtime('Settings & Add-ons', 'backstage-venue-manager'),
 				'cluster' => 'settings',
 				'order' => 90,
 			),
 			'unclassified' => array(
-				'label' => vms_i18n_runtime('Other / Unclassified', 'vms'),
+				'label' => vms_i18n_runtime('Other / Unclassified', 'backstage-venue-manager'),
 				'cluster' => 'tools',
 				'order' => 999,
 			),
@@ -169,49 +169,49 @@ if (!function_exists('vms_admin_menu_default_left_rail_specs')) {
 				'section' => 'dashboard',
 				'sections' => array('dashboard'),
 				'cluster' => 'dashboard',
-				'label' => vms_i18n_runtime('Dashboard', 'vms'),
+				'label' => vms_i18n_runtime('Dashboard', 'backstage-venue-manager'),
 				'slugs' => array('vms-dashboard'),
 			),
 			array(
 				'section' => 'planning',
 				'sections' => array('events_schedule', 'tickets_admissions'),
 				'cluster' => 'planning',
-				'label' => vms_i18n_runtime('Planning', 'vms'),
+				'label' => vms_i18n_runtime('Planning', 'backstage-venue-manager'),
 				'slugs' => array('vms-schedule', 'edit.php?post_type=vms_event_plan', 'vms-season-dates', 'vms-ticket-integrity', 'vms-passes'),
 			),
 			array(
 				'section' => 'vendors_staff',
 				'sections' => array('vendors_staff'),
 				'cluster' => 'vendors_staff',
-				'label' => vms_i18n_runtime('Vendors & Staff', 'vms'),
+				'label' => vms_i18n_runtime('Vendors & Staff', 'backstage-venue-manager'),
 				'slugs' => array('vms-vendor-command-center', 'vms-vendor-availability', 'edit.php?post_type=vms_vendor'),
 			),
 			array(
 				'section' => 'marketing_social',
 				'sections' => array('marketing_sales'),
 				'cluster' => 'marketing_social',
-				'label' => vms_i18n_runtime('Marketing & Social', 'vms'),
+				'label' => vms_i18n_runtime('Marketing & Social', 'backstage-venue-manager'),
 				'slugs' => array('vms-marketing-social', 'vms-social-sharing', 'vms-email-followups'),
 			),
 			array(
 				'section' => 'venues',
 				'sections' => array('venue_setup'),
 				'cluster' => 'venues',
-				'label' => vms_i18n_runtime('Venues', 'vms'),
+				'label' => vms_i18n_runtime('Venues', 'backstage-venue-manager'),
 				'slugs' => array('edit.php?post_type=vms_venue'),
 			),
 			array(
 				'section' => 'settings',
 				'sections' => array('settings_addons'),
 				'cluster' => 'settings',
-				'label' => vms_i18n_runtime('Settings', 'vms'),
+				'label' => vms_i18n_runtime('Settings', 'backstage-venue-manager'),
 				'slugs' => array('vms-settings', 'vms-addons'),
 			),
 			array(
 				'section' => 'tools',
 				'sections' => array('reports_finance', 'tools_integrity'),
 				'cluster' => 'tools',
-				'label' => vms_i18n_runtime('Tools', 'vms'),
+				'label' => vms_i18n_runtime('Tools', 'backstage-venue-manager'),
 				'slugs' => array('vms-admin-pages', 'vms-data-tools', 'vms-square-sync-protection', 'vms-ticket-integrity', 'vms-ops-console', 'vms-ops-console-hub'),
 			),
 		);
@@ -238,7 +238,7 @@ if (!function_exists('vms_admin_menu_section_label')) {
 		if (isset($sections[$section]['label']) && is_string($sections[$section]['label'])) {
 			return vms_safe_label($sections[$section]['label'], vms_admin_menu_default_label_from_slug($section, 'Other / Unclassified'));
 		}
-		return vms_i18n_runtime('Other / Unclassified', 'vms');
+		return vms_i18n_runtime('Other / Unclassified', 'backstage-venue-manager');
 	}
 }
 
@@ -386,14 +386,14 @@ if (!function_exists('vms_admin_menu_boot_registry')) {
 		vms_register_admin_page(array(
 			'id' => 'admin_pages',
 			'slug' => 'vms-admin-pages',
-			'page_title' => vms_i18n_runtime('All VMS Pages', 'vms'),
-			'menu_title' => vms_i18n_runtime('All VMS Pages', 'vms'),
+			'page_title' => vms_i18n_runtime('All VMS Pages', 'backstage-venue-manager'),
+			'menu_title' => vms_i18n_runtime('All VMS Pages', 'backstage-venue-manager'),
 			'section' => 'tools_integrity',
 			'capability' => 'manage_options',
 			'callback' => 'vms_admin_menu_render_page_directory',
 			'order' => 995,
 			'source' => 'vms-core',
-			'description' => vms_i18n_runtime('Discoverable directory and health check for VMS core and add-on admin pages.', 'vms'),
+			'description' => vms_i18n_runtime('Discoverable directory and health check for VMS core and add-on admin pages.', 'backstage-venue-manager'),
 			'left_menu' => true,
 		));
 
@@ -506,8 +506,8 @@ if (!function_exists('vms_admin_menu_render_missing_callback_page')) {
 	{
 		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html(vms_i18n_runtime('VMS Page Unavailable', 'vms')) . '</h1>';
-		echo '<p>' . esc_html(vms_i18n_runtime('This VMS admin page is registered, but its page renderer is not currently available.', 'vms')) . '</p>';
+		echo '<h1>' . esc_html(vms_i18n_runtime('VMS Page Unavailable', 'backstage-venue-manager')) . '</h1>';
+		echo '<p>' . esc_html(vms_i18n_runtime('This VMS admin page is registered, but its page renderer is not currently available.', 'backstage-venue-manager')) . '</p>';
 		if ($page !== '') {
 			echo '<p><code>' . esc_html($page) . '</code></p>';
 		}
@@ -735,43 +735,43 @@ if (!function_exists('vms_admin_menu_render_page_directory_content')) {
 			$unclassified += (isset($page['section']) && $page['section'] === 'unclassified') ? 1 : 0;
 		}
 
-		echo '<p>' . esc_html__('This directory is the safety net for VMS core pages and add-ons. A page does not have to appear in the left WordPress menu to remain discoverable here.', 'vms') . '</p>';
+		echo '<p>' . esc_html__('This directory is the safety net for VMS core pages and add-ons. A page does not have to appear in the left WordPress menu to remain discoverable here.', 'backstage-venue-manager') . '</p>';
 		echo '<div class="vms-admin-menu-health-cards">';
-		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $total) . '</strong><span>' . esc_html__('Registered/Detected Pages', 'vms') . '</span></div>';
-		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $hidden) . '</strong><span>' . esc_html__('Hidden from Left Menu', 'vms') . '</span></div>';
-		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $missing_callbacks) . '</strong><span>' . esc_html__('Missing Registry Callbacks', 'vms') . '</span></div>';
-		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $unclassified) . '</strong><span>' . esc_html__('Unclassified', 'vms') . '</span></div>';
+		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $total) . '</strong><span>' . esc_html__('Registered/Detected Pages', 'backstage-venue-manager') . '</span></div>';
+		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $hidden) . '</strong><span>' . esc_html__('Hidden from Left Menu', 'backstage-venue-manager') . '</span></div>';
+		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $missing_callbacks) . '</strong><span>' . esc_html__('Missing Registry Callbacks', 'backstage-venue-manager') . '</span></div>';
+		echo '<div class="vms-admin-menu-health-card"><strong>' . esc_html((string) $unclassified) . '</strong><span>' . esc_html__('Unclassified', 'backstage-venue-manager') . '</span></div>';
 		echo '</div>';
 
 		echo '<div class="vms-admin-menu-directory-tools">';
-		echo '<label for="vms-admin-menu-directory-search">' . esc_html__('Search VMS pages', 'vms') . '</label>';
-		echo '<input type="search" id="vms-admin-menu-directory-search" class="regular-text" placeholder="' . esc_attr__('Type a page name, section, source, or slug...', 'vms') . '" data-vms-admin-menu-directory-search>';
+		echo '<label for="vms-admin-menu-directory-search">' . esc_html__('Search VMS pages', 'backstage-venue-manager') . '</label>';
+		echo '<input type="search" id="vms-admin-menu-directory-search" class="regular-text" placeholder="' . esc_attr__('Type a page name, section, source, or slug...', 'backstage-venue-manager') . '" data-vms-admin-menu-directory-search>';
 		echo '</div>';
 
 		echo '<table class="widefat striped vms-admin-menu-directory" data-vms-admin-menu-directory>';
 		echo '<thead><tr>';
-		echo '<th>' . esc_html__('Page', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Section', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Source', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Menu Status', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Slug', 'vms') . '</th>';
+		echo '<th>' . esc_html__('Page', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Section', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Source', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Menu Status', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Slug', 'backstage-venue-manager') . '</th>';
 		echo '</tr></thead><tbody>';
 
 		if (empty($pages)) {
-			echo '<tr><td colspan="5">' . esc_html__('No VMS admin pages were detected.', 'vms') . '</td></tr>';
+			echo '<tr><td colspan="5">' . esc_html__('No VMS admin pages were detected.', 'backstage-venue-manager') . '</td></tr>';
 		} else {
 			foreach ($pages as $page) {
 				$label = (string) ($page['label'] ?? $page['slug'] ?? '');
 				$url = (string) ($page['url'] ?? '');
 				$section = vms_admin_menu_section_label((string) ($page['section'] ?? 'unclassified'));
-				$status = __('Visible in left menu', 'vms');
+				$status = __('Visible in left menu', 'backstage-venue-manager');
 				if (!empty($page['hidden_left_menu'])) {
-					$status = __('Directory/top-nav only', 'vms');
+					$status = __('Directory/top-nav only', 'backstage-venue-manager');
 				} elseif (empty($page['left_menu'])) {
-					$status = __('Directory only', 'vms');
+					$status = __('Directory only', 'backstage-venue-manager');
 				}
 				if (!empty($page['callback_missing'])) {
-					$status .= ' - ' . __('callback missing', 'vms');
+					$status .= ' - ' . __('callback missing', 'backstage-venue-manager');
 				}
 
 				$search_blob = strtolower(trim($label . ' ' . $section . ' ' . (string) ($page['source'] ?? '') . ' ' . (string) ($page['slug'] ?? '') . ' ' . $status));
@@ -798,21 +798,21 @@ if (!function_exists('vms_admin_menu_render_page_directory')) {
 	function vms_admin_menu_render_page_directory(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Insufficient permissions.', 'vms'));
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
 				array(
-					'title' => __('All VMS Pages', 'vms'),
-					'subtitle' => __('Discoverable safety net for VMS core pages, module pages, and add-on admin screens.', 'vms'),
+					'title' => __('All VMS Pages', 'backstage-venue-manager'),
+					'subtitle' => __('Discoverable safety net for VMS core pages, module pages, and add-on admin screens.', 'backstage-venue-manager'),
 				),
 				'vms_admin_menu_render_page_directory_content'
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('All VMS Pages', 'vms') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('All VMS Pages', 'backstage-venue-manager') . '</h1>';
 		vms_admin_menu_render_page_directory_content();
 		echo '</div>';
 	}

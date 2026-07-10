@@ -1223,7 +1223,7 @@ if (!function_exists('vms_render_resource_fingerprint_admin_screen')) {
 	function vms_render_resource_fingerprint_admin_screen(): void
 	{
 		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('You do not have permission to view this screen.', 'vms'));
+			wp_die(esc_html__('You do not have permission to view this screen.', 'backstage-venue-manager'));
 		}
 
 		$cleared = false;
@@ -1235,37 +1235,37 @@ if (!function_exists('vms_render_resource_fingerprint_admin_screen')) {
 
 		$entries = vms_resource_fingerprint_recent_entries(25);
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('VMS Resource Fingerprints', 'vms') . '</h1>';
-		echo '<p>' . esc_html__('Threshold-based request and task snapshots for slow/heavy admin, cron, Action Scheduler, ECC, and DT work.', 'vms') . '</p>';
+		echo '<h1>' . esc_html__('VMS Resource Fingerprints', 'backstage-venue-manager') . '</h1>';
+		echo '<p>' . esc_html__('Threshold-based request and task snapshots for slow/heavy admin, cron, Action Scheduler, ECC, and DT work.', 'backstage-venue-manager') . '</p>';
 		if ($cleared) {
-			echo '<div class="notice notice-success"><p>' . esc_html__('Resource fingerprints cleared.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-success"><p>' . esc_html__('Resource fingerprints cleared.', 'backstage-venue-manager') . '</p></div>';
 		}
 		echo '<p>';
 		echo esc_html(sprintf(
-			__('Logging threshold: %1$ss or %2$s MB peak memory. Slow/heavy request context also records WP-Cron, Action Scheduler, and calculation markers.', 'vms'),
+			__('Logging threshold: %1$ss or %2$s MB peak memory. Slow/heavy request context also records WP-Cron, Action Scheduler, and calculation markers.', 'backstage-venue-manager'),
 			number_format(vms_resource_fingerprint_threshold_seconds(), 1),
 			number_format(vms_resource_fingerprint_memory_threshold_bytes() / 1048576, 0)
 		));
 		echo '</p>';
 		echo '<form method="post" action="">';
 		wp_nonce_field('vms_clear_resource_fingerprints');
-		echo '<p><button type="submit" class="button" name="vms_clear_resource_fingerprints" value="1">' . esc_html__('Clear Log', 'vms') . '</button></p>';
+		echo '<p><button type="submit" class="button" name="vms_clear_resource_fingerprints" value="1">' . esc_html__('Clear Log', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 
 		if (empty($entries)) {
-			echo '<p>' . esc_html__('No fingerprint entries recorded yet.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('No fingerprint entries recorded yet.', 'backstage-venue-manager') . '</p>';
 			echo '</div>';
 			return;
 		}
 
 		echo '<table class="widefat striped">';
 		echo '<thead><tr>';
-		echo '<th>' . esc_html__('When', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Runtime', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Memory', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Context', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Request', 'vms') . '</th>';
-		echo '<th>' . esc_html__('Queues / Markers', 'vms') . '</th>';
+		echo '<th>' . esc_html__('When', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Runtime', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Memory', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Context', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Request', 'backstage-venue-manager') . '</th>';
+		echo '<th>' . esc_html__('Queues / Markers', 'backstage-venue-manager') . '</th>';
 		echo '</tr></thead><tbody>';
 
 		foreach ($entries as $entry) {
@@ -1291,15 +1291,15 @@ if (!function_exists('vms_render_resource_fingerprint_admin_screen')) {
 			echo '<td>' . esc_html(implode(', ', $context_bits)) . '</td>';
 			echo '<td><strong>' . esc_html((string) ($entry['admin_page'] ?? '')) . '</strong><br /><span class="description">' . esc_html((string) ($entry['request_uri'] ?? '')) . '</span></td>';
 			echo '<td>';
-			echo '<div><strong>' . esc_html__('WP-Cron due', 'vms') . ':</strong> ' . esc_html((string) absint($cron_counts['due_event_count'] ?? 0)) . '</div>';
+			echo '<div><strong>' . esc_html__('WP-Cron due', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) absint($cron_counts['due_event_count'] ?? 0)) . '</div>';
 			if (!empty($as_counts)) {
-				echo '<div><strong>' . esc_html__('AS pending/running', 'vms') . ':</strong> ' . esc_html((string) absint($as_counts['pending_count'] ?? 0)) . ' / ' . esc_html((string) absint($as_counts['running_count'] ?? 0)) . '</div>';
+				echo '<div><strong>' . esc_html__('AS pending/running', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) absint($as_counts['pending_count'] ?? 0)) . ' / ' . esc_html((string) absint($as_counts['running_count'] ?? 0)) . '</div>';
 			}
 			if (!empty($flags)) {
-				echo '<details><summary>' . esc_html__('Flags', 'vms') . '</summary><pre style="white-space:pre-wrap;">' . esc_html(wp_json_encode($flags, JSON_PRETTY_PRINT)) . '</pre></details>';
+				echo '<details><summary>' . esc_html__('Flags', 'backstage-venue-manager') . '</summary><pre style="white-space:pre-wrap;">' . esc_html(wp_json_encode($flags, JSON_PRETTY_PRINT)) . '</pre></details>';
 			}
 			if (!empty($markers)) {
-				echo '<details><summary>' . esc_html__('Markers', 'vms') . '</summary><pre style="white-space:pre-wrap;">' . esc_html(wp_json_encode($markers, JSON_PRETTY_PRINT)) . '</pre></details>';
+				echo '<details><summary>' . esc_html__('Markers', 'backstage-venue-manager') . '</summary><pre style="white-space:pre-wrap;">' . esc_html(wp_json_encode($markers, JSON_PRETTY_PRINT)) . '</pre></details>';
 			}
 			echo '</td>';
 			echo '</tr>';

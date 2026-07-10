@@ -18,11 +18,11 @@ if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
         $filename_base = sanitize_file_name($filename_base);
 
         if ($source_path === '' || !file_exists($source_path)) {
-            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'vms'));
+            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
         }
 
         if ($target_dir === '' || !is_dir($target_dir) || !is_writable($target_dir)) {
-            return new WP_Error('save_failed', __('Could not save the normalized image. Please try again.', 'vms'));
+            return new WP_Error('save_failed', __('Could not save the normalized image. Please try again.', 'backstage-venue-manager'));
         }
 
         if ($filename_base === '') {
@@ -43,31 +43,31 @@ if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
 
         $editor = wp_get_image_editor($source_path);
         if (is_wp_error($editor)) {
-            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'vms'));
+            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
         }
 
         if (method_exists($editor, 'maybe_exif_rotate')) {
             $rotated = $editor->maybe_exif_rotate();
             if (is_wp_error($rotated)) {
-                return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'vms'));
+                return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
             }
         }
 
         $size = $editor->get_size();
         if (is_wp_error($size) || !is_array($size)) {
-            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'vms'));
+            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
         }
 
         $width = isset($size['width']) ? (int) $size['width'] : 0;
         $height = isset($size['height']) ? (int) $size['height'] : 0;
         if ($width <= 0 || $height <= 0) {
-            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'vms'));
+            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
         }
 
         if ($width > $max_dimension || $height > $max_dimension) {
             $resized = $editor->resize($max_dimension, $max_dimension, false);
             if (is_wp_error($resized)) {
-                return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'vms'));
+                return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
             }
         }
 
@@ -79,7 +79,7 @@ if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
         $target_path = trailingslashit($target_dir) . $filename;
         $saved = $editor->save($target_path, 'image/jpeg');
         if (is_wp_error($saved) || empty($saved['path']) || !file_exists((string) $saved['path'])) {
-            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'vms'));
+            return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
         }
 
         $saved_path = (string) $saved['path'];
@@ -88,7 +88,7 @@ if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
         $filesize = (int) @filesize($saved_path);
         if ($max_output_bytes > 0 && $filesize > $max_output_bytes) {
             @unlink($saved_path);
-            return new WP_Error('file_too_large', __('This image is still too large after processing. Try a screenshot or smaller JPG/PNG.', 'vms'));
+            return new WP_Error('file_too_large', __('This image is still too large after processing. Try a screenshot or smaller JPG/PNG.', 'backstage-venue-manager'));
         }
 
         return array(

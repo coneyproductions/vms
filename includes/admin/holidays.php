@@ -176,7 +176,7 @@ function vms_admin_holidays_adminpost_delete(): void
 function vms_admin_holidays_adminpost_handle(string $expected_action): void
 {
 	if (!current_user_can('manage_options')) {
-		wp_die(esc_html__('You do not have permission to do that.', 'vms'));
+		wp_die(esc_html__('You do not have permission to do that.', 'backstage-venue-manager'));
 	}
 
 	// Read from REQUEST so this works for POST forms and GET delete links
@@ -186,7 +186,7 @@ function vms_admin_holidays_adminpost_handle(string $expected_action): void
 
 	$nonce_action = 'vms_holidays_' . $expected_action;
 	if (!$nonce || !wp_verify_nonce($nonce, $nonce_action)) {
-		wp_die(esc_html__('Security check failed.', 'vms'));
+		wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
 	}
 
 	$venue_id = isset($_REQUEST['venue_id'])
@@ -450,7 +450,7 @@ function vms_admin_holidays_apply_post(string $action): array
 function vms_admin_holidays_page(): void
 {
 	if (!current_user_can('manage_options')) {
-		wp_die(esc_html__('You do not have permission to access this page.', 'vms'));
+		wp_die(esc_html__('You do not have permission to access this page.', 'backstage-venue-manager'));
 	}
 
 	$venue_id = vms_holidays_get_effective_venue_id();
@@ -509,7 +509,7 @@ function vms_admin_holidays_page(): void
 
 	// Begin output
 		echo '<div class="wrap vms-holidays-admin">';
-	echo '<h1>' . esc_html__('Holidays', 'vms') . '</h1>';
+	echo '<h1>' . esc_html__('Holidays', 'backstage-venue-manager') . '</h1>';
 
 	// Notices (from redirects)
 	$notice_ok = vms_holidays_read_query_arg('vms_ok');
@@ -529,10 +529,10 @@ function vms_admin_holidays_page(): void
 		echo '<form id="vms_holidays_venue_form" class="vms-holidays-venue-form" method="get" action="' . esc_url(admin_url('admin.php')) . '">';
 	echo '<input type="hidden" name="page" value="vms-holidays" />';
 
-	echo '<label for="vms_holidays_venue_id"><strong>' . esc_html__('Venue', 'vms') . '</strong></label><br />';
+	echo '<label for="vms_holidays_venue_id"><strong>' . esc_html__('Venue', 'backstage-venue-manager') . '</strong></label><br />';
 
 		echo '<select id="vms_holidays_venue_id" class="vms-holidays-venue-select" name="venue_id" onchange="document.getElementById(\'vms_holidays_venue_form\').submit();">';
-	echo '<option value="0">' . esc_html__('-- Select a Venue --', 'vms') . '</option>';
+	echo '<option value="0">' . esc_html__('-- Select a Venue --', 'backstage-venue-manager') . '</option>';
 
 	foreach ($venues as $v) {
 		if (!is_object($v) || empty($v->ID)) {
@@ -547,18 +547,18 @@ function vms_admin_holidays_page(): void
 	}
 
 	echo '</select> ';
-	echo '<button type="submit" class="button">' . esc_html__('Load', 'vms') . '</button>';
+	echo '<button type="submit" class="button">' . esc_html__('Load', 'backstage-venue-manager') . '</button>';
 	echo '</form>';
 
 	if ($venue_id <= 0) {
-		echo '<p class="description">' . esc_html__('Select a venue to manage its holidays.', 'vms') . '</p>';
+		echo '<p class="description">' . esc_html__('Select a venue to manage its holidays.', 'backstage-venue-manager') . '</p>';
 		echo '</div>';
 		return;
 	}
 
 	// Editor card
 		echo '<div class="vms-holidays-editor-card">';
-		echo '<h2 class="vms-holidays-editor-title">' . esc_html($edit_row ? __('Edit Holiday', 'vms') : __('Add Holiday', 'vms')) . '</h2>';
+		echo '<h2 class="vms-holidays-editor-title">' . esc_html($edit_row ? __('Edit Holiday', 'backstage-venue-manager') : __('Add Holiday', 'backstage-venue-manager')) . '</h2>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
 	wp_nonce_field('vms_holidays_save', 'vms_holidays_nonce');
@@ -568,61 +568,61 @@ function vms_admin_holidays_page(): void
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr($venue_id) . '" />';
 
 		echo '<p class="vms-holidays-field">';
-	echo '<label for="vms_holiday_date"><strong>' . esc_html__('Date', 'vms') . '</strong></label><br />';
+	echo '<label for="vms_holiday_date"><strong>' . esc_html__('Date', 'backstage-venue-manager') . '</strong></label><br />';
 	echo '<input type="date" id="vms_holiday_date" name="holiday_date" value="' . esc_attr($edit_date) . '" required />';
 	echo '</p>';
 
 		echo '<p class="vms-holidays-field">';
-	echo '<label for="vms_holiday_name"><strong>' . esc_html__('Holiday Name', 'vms') . '</strong></label><br />';
-		echo '<input type="text" id="vms_holiday_name" class="vms-holidays-name-input" name="holiday_name" value="' . esc_attr($name) . '" placeholder="' . esc_attr__('Memorial Day', 'vms') . '" required />';
+	echo '<label for="vms_holiday_name"><strong>' . esc_html__('Holiday Name', 'backstage-venue-manager') . '</strong></label><br />';
+		echo '<input type="text" id="vms_holiday_name" class="vms-holidays-name-input" name="holiday_name" value="' . esc_attr($name) . '" placeholder="' . esc_attr__('Memorial Day', 'backstage-venue-manager') . '" required />';
 	echo '</p>';
 
 		echo '<p class="vms-holidays-field">';
-	echo '<label for="vms_holiday_status"><strong>' . esc_html__('Venue Status', 'vms') . '</strong></label><br />';
+	echo '<label for="vms_holiday_status"><strong>' . esc_html__('Venue Status', 'backstage-venue-manager') . '</strong></label><br />';
 		echo '<select id="vms_holiday_status" class="vms-holidays-status-select" name="holiday_status">';
-	echo '<option value="open" ' . selected($status, 'open', false) . '>' . esc_html__('Open', 'vms') . '</option>';
-	echo '<option value="closed" ' . selected($status, 'closed', false) . '>' . esc_html__('Closed', 'vms') . '</option>';
+	echo '<option value="open" ' . selected($status, 'open', false) . '>' . esc_html__('Open', 'backstage-venue-manager') . '</option>';
+	echo '<option value="closed" ' . selected($status, 'closed', false) . '>' . esc_html__('Closed', 'backstage-venue-manager') . '</option>';
 	echo '</select>';
-	echo '<br /><span class="description">' . esc_html__('If Closed, Event Plans should not be marked Ready or Published for this venue/date.', 'vms') . '</span>';
+	echo '<br /><span class="description">' . esc_html__('If Closed, Event Plans should not be marked Ready or Published for this venue/date.', 'backstage-venue-manager') . '</span>';
 	echo '</p>';
 
 		echo '<hr class="vms-holidays-divider" />';
-		echo '<h3 class="vms-holidays-subtitle">' . esc_html__('Vendor Pay Defaults (this holiday only)', 'vms') . '</h3>';
-		echo '<p class="description vms-holidays-help">' . esc_html__('These values override venue defaults for Event Plans on this date (when filled).', 'vms') . '</p>';
+		echo '<h3 class="vms-holidays-subtitle">' . esc_html__('Vendor Pay Defaults (this holiday only)', 'backstage-venue-manager') . '</h3>';
+		echo '<p class="description vms-holidays-help">' . esc_html__('These values override venue defaults for Event Plans on this date (when filled).', 'backstage-venue-manager') . '</p>';
 
 		echo '<p class="vms-holidays-field">';
-	echo '<label for="vms_vendor_structure"><strong>' . esc_html__('Structure', 'vms') . '</strong></label><br />';
+	echo '<label for="vms_vendor_structure"><strong>' . esc_html__('Structure', 'backstage-venue-manager') . '</strong></label><br />';
 		echo '<select id="vms_vendor_structure" class="vms-holidays-structure-select" name="vendor_structure">';
-	echo '<option value="">' . esc_html__('(No override)', 'vms') . '</option>';
-	echo '<option value="flat_fee" ' . selected($v_structure, 'flat_fee', false) . '>' . esc_html__('Flat Fee', 'vms') . '</option>';
-	echo '<option value="door_split" ' . selected($v_structure, 'door_split', false) . '>' . esc_html__('Door Split', 'vms') . '</option>';
-	echo '<option value="flat_fee_door_split" ' . selected($v_structure, 'flat_fee_door_split', false) . '>' . esc_html__('Flat Fee + Door Split', 'vms') . '</option>';
+	echo '<option value="">' . esc_html__('(No override)', 'backstage-venue-manager') . '</option>';
+	echo '<option value="flat_fee" ' . selected($v_structure, 'flat_fee', false) . '>' . esc_html__('Flat Fee', 'backstage-venue-manager') . '</option>';
+	echo '<option value="door_split" ' . selected($v_structure, 'door_split', false) . '>' . esc_html__('Door Split', 'backstage-venue-manager') . '</option>';
+	echo '<option value="flat_fee_door_split" ' . selected($v_structure, 'flat_fee_door_split', false) . '>' . esc_html__('Flat Fee + Door Split', 'backstage-venue-manager') . '</option>';
 	echo '</select>';
 	echo '</p>';
 
 		echo '<p class="vms-holidays-field">';
-	echo '<label for="vms_vendor_flat"><strong>' . esc_html__('Flat Fee Amount', 'vms') . '</strong></label><br />';
+	echo '<label for="vms_vendor_flat"><strong>' . esc_html__('Flat Fee Amount', 'backstage-venue-manager') . '</strong></label><br />';
 		echo '<input type="number" step="0.01" min="0" id="vms_vendor_flat" class="vms-holidays-number-input" name="vendor_flat_fee_amount" value="' . esc_attr($v_flat) . '" />';
 	echo '</p>';
 
 		echo '<p class="vms-holidays-field">';
-	echo '<label for="vms_vendor_split"><strong>' . esc_html__('Door Split Percent', 'vms') . '</strong></label><br />';
+	echo '<label for="vms_vendor_split"><strong>' . esc_html__('Door Split Percent', 'backstage-venue-manager') . '</strong></label><br />';
 		echo '<input type="number" step="0.01" min="0" max="100" id="vms_vendor_split" class="vms-holidays-number-input" name="vendor_door_split_percent" value="' . esc_attr($v_split) . '" /> %';
 	echo '</p>';
 
 		echo '<p class="vms-holidays-actions">';
-	echo '<button type="submit" class="button button-primary">' . esc_html($edit_row ? __('Update Holiday', 'vms') : __('Add Holiday', 'vms')) . '</button> ';
-	echo '<a class="button" href="' . esc_url(add_query_arg(array('page' => 'vms-holidays', 'venue_id' => $venue_id), admin_url('admin.php'))) . '">' . esc_html__('Clear', 'vms') . '</a>';
+	echo '<button type="submit" class="button button-primary">' . esc_html($edit_row ? __('Update Holiday', 'backstage-venue-manager') : __('Add Holiday', 'backstage-venue-manager')) . '</button> ';
+	echo '<a class="button" href="' . esc_url(add_query_arg(array('page' => 'vms-holidays', 'venue_id' => $venue_id), admin_url('admin.php'))) . '">' . esc_html__('Clear', 'backstage-venue-manager') . '</a>';
 	echo '</p>';
 
 	echo '</form>';
 	echo '</div>';
 
 	// List table
-		echo '<h2 class="vms-holidays-list-title">' . esc_html__('Holidays for this Venue', 'vms') . '</h2>';
+		echo '<h2 class="vms-holidays-list-title">' . esc_html__('Holidays for this Venue', 'backstage-venue-manager') . '</h2>';
 
 	if (empty($venue_holidays)) {
-		echo '<p class="description">' . esc_html__('No holidays configured for this venue yet.', 'vms') . '</p>';
+		echo '<p class="description">' . esc_html__('No holidays configured for this venue yet.', 'backstage-venue-manager') . '</p>';
 		echo '</div>';
 		return;
 	}
@@ -643,7 +643,7 @@ function vms_admin_holidays_page(): void
 	echo '<input type="hidden" name="confirm" value="1" />';
 
 		echo '<p class="vms-holidays-bulk-actions">';
-	echo '<button type="submit" class="button" onclick="return confirm(\'Delete selected holidays?\');">' . esc_html__('Delete Selected', 'vms') . '</button>';
+	echo '<button type="submit" class="button" onclick="return confirm(\'Delete selected holidays?\');">' . esc_html__('Delete Selected', 'backstage-venue-manager') . '</button>';
 	echo '</p>';
 
 	echo '<table class="widefat striped">';
@@ -651,11 +651,11 @@ function vms_admin_holidays_page(): void
 		echo '<th class="vms-holidays-col-check">';
 	echo '<input type="checkbox" id="vms_holidays_select_all" />';
 	echo '</th>';
-	echo '<th>' . esc_html__('Date', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Name', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Status', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Vendor Pay Override', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+	echo '<th>' . esc_html__('Date', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Name', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Vendor Pay Override', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
 	echo '</tr></thead>';
 	echo '<tbody>';
 
@@ -712,11 +712,11 @@ function vms_admin_holidays_page(): void
 		echo '<td><strong>' . esc_html($d) . '</strong></td>';
 		echo '<td>' . esc_html($r_name) . '</td>';
 		echo '<td>' . esc_html(strtoupper($r_status)) . '</td>';
-		echo '<td>' . esc_html($override_summary !== '' ? $override_summary : __('(none)', 'vms')) . '</td>';
+		echo '<td>' . esc_html($override_summary !== '' ? $override_summary : __('(none)', 'backstage-venue-manager')) . '</td>';
 
 		echo '<td>';
-		echo '<a class="button button-small" href="' . esc_url($edit_link) . '">' . esc_html__('Edit', 'vms') . '</a> ';
-		echo '<a class="button button-small" href="' . esc_url($delete_url) . '" onclick="return confirm(\'Delete this holiday?\');">' . esc_html__('Delete', 'vms') . '</a>';
+		echo '<a class="button button-small" href="' . esc_url($edit_link) . '">' . esc_html__('Edit', 'backstage-venue-manager') . '</a> ';
+		echo '<a class="button button-small" href="' . esc_url($delete_url) . '" onclick="return confirm(\'Delete this holiday?\');">' . esc_html__('Delete', 'backstage-venue-manager') . '</a>';
 		echo '</td>';
 
 		echo '</tr>';

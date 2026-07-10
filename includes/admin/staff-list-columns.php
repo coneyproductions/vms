@@ -81,15 +81,15 @@ add_filter('manage_edit-vms_staff_columns', function ($cols) {
     $new = [];
 
     if (isset($cols['cb'])) $new['cb'] = $cols['cb'];
-    $new['title'] = __('Staff', 'vms');
+    $new['title'] = __('Staff', 'backstage-venue-manager');
 
-    $new['vms_staff_role']   = __('Role', 'vms');
-    $new['vms_dualhat']      = __('Dual-Hat', 'vms');
-    $new['vms_tax']          = __('Tax Profile', 'vms');
-    $new['vms_certifications'] = __('Certifications', 'vms');
-    $new['vms_contact']      = __('Contact', 'vms');
-    $new['vms_linked_user']  = __('Portal User', 'vms');
-    $new['date']             = __('Date', 'vms');
+    $new['vms_staff_role']   = __('Role', 'backstage-venue-manager');
+    $new['vms_dualhat']      = __('Dual-Hat', 'backstage-venue-manager');
+    $new['vms_tax']          = __('Tax Profile', 'backstage-venue-manager');
+    $new['vms_certifications'] = __('Certifications', 'backstage-venue-manager');
+    $new['vms_contact']      = __('Contact', 'backstage-venue-manager');
+    $new['vms_linked_user']  = __('Portal User', 'backstage-venue-manager');
+    $new['date']             = __('Date', 'backstage-venue-manager');
 
     return $new;
 }, 20);
@@ -128,7 +128,7 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
             }
 
             $edit_url = get_edit_post_link($vendor_id, '');
-            echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'vms') . '</span>';
+            echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'backstage-venue-manager') . '</span>';
             if (is_string($edit_url) && $edit_url !== '') {
                 echo ' <a href="' . esc_url($edit_url) . '">' . esc_html($label) . '</a>';
             } else {
@@ -144,9 +144,9 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
                 $missing = vms_vendor_tax_profile_missing_items((int)$post_id);
 
                 if (empty($missing)) {
-                    echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>';
+                    echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';
                 } else {
-                    echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>';
+                    echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>';
                     echo '<div class="description vms-staff-tax-missing">' .
                         esc_html(implode(', ', $missing)) .
                         '</div>';
@@ -171,10 +171,10 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
 
             if ($pending > 0) {
                 /* translators: %d: number of staff certifications pending verification. */
-                echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(vms_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'vms'), $pending)) . '</a>';
+                echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(vms_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'backstage-venue-manager'), $pending)) . '</a>';
             } elseif ($approved > 0) {
                 /* translators: %d: number of approved staff certifications. */
-                echo '<span class="vms-badge vms-badge-ok">' . esc_html(sprintf(_n('%d Approved', '%d Approved', $approved, 'vms'), $approved)) . '</span>';
+                echo '<span class="vms-badge vms-badge-ok">' . esc_html(sprintf(_n('%d Approved', '%d Approved', $approved, 'backstage-venue-manager'), $approved)) . '</span>';
             } else {
                 echo '—';
             }
@@ -182,11 +182,11 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
             $meta_bits = array();
             if ($expired > 0) {
                 /* translators: %d: number of expired staff certifications. */
-                $meta_bits[] = sprintf(_n('%d expired', '%d expired', $expired, 'vms'), $expired);
+                $meta_bits[] = sprintf(_n('%d expired', '%d expired', $expired, 'backstage-venue-manager'), $expired);
             }
             if ($rejected > 0) {
                 /* translators: %d: number of rejected staff certifications. */
-                $meta_bits[] = sprintf(_n('%d rejected', '%d rejected', $rejected, 'vms'), $rejected);
+                $meta_bits[] = sprintf(_n('%d rejected', '%d rejected', $rejected, 'backstage-venue-manager'), $rejected);
             }
             if (!empty($meta_bits)) {
                 echo '<div class="description">' . esc_html(implode(' · ', $meta_bits)) . '</div>';

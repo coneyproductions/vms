@@ -14,8 +14,8 @@ if (!class_exists('VMS_Tours_Maintenance')) {
 		{
 			add_submenu_page(
 				'vms-dashboard',
-				__('Tour Maintenance', 'vms'),
-				__('Tour Maintenance', 'vms'),
+				__('Tour Maintenance', 'backstage-venue-manager'),
+				__('Tour Maintenance', 'backstage-venue-manager'),
 				'manage_options',
 				'vms-tour-maintenance',
 				array(__CLASS__, 'render_page')
@@ -31,7 +31,7 @@ if (!class_exists('VMS_Tours_Maintenance')) {
 			if (function_exists('vms_admin_ui_render_shell')) {
 				vms_admin_ui_render_shell(
 					array(
-						'title' => __('Tour Maintenance', 'vms'),
+						'title' => __('Tour Maintenance', 'backstage-venue-manager'),
 						'shell_id' => 'vms-tour-maintenance',
 					),
 					array(__CLASS__, 'render_page_content')

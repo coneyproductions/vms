@@ -2,14 +2,14 @@
 
 Date: 2026-06-19
 
-This file now records the approved WordPress.org decisions applied during `WPORG-01B`, plus the remaining items that are still validation gates rather than unresolved identity choices.
+This file now records the selected WordPress.org identity decisions currently applied in-repo, plus the remaining items that are still validation gates rather than unresolved identity choices.
 
-## Approved And Applied
+## Selected And Applied
 
-| Item | Approved Decision | Applied In Repo | Notes |
+| Item | Selected Value | Applied In Repo | Notes |
 | --- | --- | --- | --- |
-| Public plugin name | `VMS – Venue Management System` | Yes | Applied in `vendor-management-system.php` and root `readme.txt`. |
-| Preferred WordPress.org slug | `vms` | Yes | Slug and text domain remain `vms`. |
+| Public plugin name | `Backstage Venue Manager` | Yes | Applied in `vendor-management-system.php` and root `readme.txt`. |
+| Requested WordPress.org slug / text domain | `backstage-venue-manager` | Yes | Plugin header text domain and WordPress.org-facing identity docs now use `backstage-venue-manager`. Internal `vms` identifiers remain unchanged by request. |
 | First public version | `1.0.0` | Yes | Synced in `vendor-management-system.php`, `includes/core/registry/constants.php`, `vms-build.txt`, and root `readme.txt`. |
 | Author | `Coney Productions` | Yes | Retained in the plugin header and readme. |
 | Author URI | `https://coneyproductions.booklivetalent.com/` | Yes | Added to the plugin header. |
@@ -19,7 +19,7 @@ This file now records the approved WordPress.org decisions applied during `WPORG
 | License | `GPLv2 or later` | Yes | Added to the plugin header, root `readme.txt`, and root `LICENSE.txt`. |
 | Root license file | `LICENSE.txt` | Yes | Added at the plugin root. |
 | Dependencies | WooCommerce, The Events Calendar, and Event Tickets remain optional feature-gated integrations. | Yes | Documented in root `readme.txt` and readiness docs. |
-| Missing dependencies | VMS should continue loading; only dependent features fail closed. | Yes | Documented in root `readme.txt` and readiness docs. |
+| Missing dependencies | Backstage Venue Manager should continue loading; only dependent features fail closed. | Yes | Documented in root `readme.txt` and readiness docs. |
 | Multisite | Not officially supported or verified for `1.0.0`. | Yes | Documented in root `readme.txt` and readiness docs. |
 | Uninstall | Retain operational data by default and disclose clearly. | Yes | Documented in root `readme.txt`; runtime behavior unchanged. |
 | Privacy exporter / eraser | Manual handling for `1.0.0`; automation tracked separately. | Yes | Documented in root `readme.txt`; follow-up gate remains open. |
