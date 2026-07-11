@@ -194,6 +194,152 @@ if (!function_exists('vms_request_local_redirect')) {
 	}
 }
 
+if (!function_exists('vms_array_is_list_compat')) {
+	function vms_array_is_list_compat(array $value): bool
+	{
+		$index = 0;
+		foreach ($value as $key => $_unused) {
+			if ($key !== $index) {
+				return false;
+			}
+			$index++;
+		}
+
+		return true;
+	}
+}
+
+if (!function_exists('vms_json_top_level_token')) {
+	function vms_json_top_level_token(string $raw): string
+	{
+		$raw = ltrim($raw);
+		if ($raw === '') {
+			return '';
+		}
+
+		return substr($raw, 0, 1);
+	}
+}
+
+if (!function_exists('vms_json_decode_associative')) {
+	/**
+	 * @return array{ok:bool,value:mixed,error_code:int,error_message:string,top_level_token:string}
+	 */
+	function vms_json_decode_associative(string $raw, int $depth = 32): array
+	{
+		$top_level_token = vms_json_top_level_token($raw);
+		$raw = trim($raw);
+		if ($raw === '') {
+			return array(
+				'ok' => false,
+				'value' => null,
+				'error_code' => JSON_ERROR_SYNTAX,
+				'error_message' => 'Empty JSON payload.',
+				'top_level_token' => '',
+			);
+		}
+
+		$depth = max(1, min(128, $depth));
+		$decoded = json_decode($raw, true, $depth);
+		$json_error_code = json_last_error();
+		if ($json_error_code !== JSON_ERROR_NONE) {
+			return array(
+				'ok' => false,
+				'value' => null,
+				'error_code' => $json_error_code,
+				'error_message' => json_last_error_msg(),
+				'top_level_token' => $top_level_token,
+			);
+		}
+
+		return array(
+			'ok' => true,
+			'value' => $decoded,
+			'error_code' => JSON_ERROR_NONE,
+			'error_message' => '',
+			'top_level_token' => $top_level_token,
+		);
+	}
+}
+
+if (!function_exists('vms_json_decoded_is_list')) {
+	function vms_json_decoded_is_list(array $decoded, string $top_level_token): bool
+	{
+		if ($top_level_token !== '[') {
+			return false;
+		}
+
+		return empty($decoded) || vms_array_is_list_compat($decoded);
+	}
+}
+
+if (!function_exists('vms_json_decoded_is_object')) {
+	function vms_json_decoded_is_object(array $decoded, string $top_level_token): bool
+	{
+		if ($top_level_token !== '{') {
+			return false;
+		}
+
+		return empty($decoded) || !vms_array_is_list_compat($decoded);
+	}
+}
+
+if (!function_exists('vms_read_limited_stream')) {
+	/**
+	 * @return array{ok:bool,data:string,too_large:bool}
+	 */
+	function vms_read_limited_stream(string $stream_uri, int $max_bytes): array
+	{
+		$max_bytes = max(1, $max_bytes);
+		$handle = @fopen($stream_uri, 'rb');
+		if (!is_resource($handle)) {
+			return array(
+				'ok' => false,
+				'data' => '',
+				'too_large' => false,
+			);
+		}
+
+		$data = '';
+		$too_large = false;
+		while (!feof($handle)) {
+			$remaining = ($max_bytes + 1) - strlen($data);
+			if ($remaining <= 0) {
+				$too_large = true;
+				break;
+			}
+
+			$chunk = fread($handle, min(8192, $remaining));
+			if (!is_string($chunk)) {
+				fclose($handle);
+				return array(
+					'ok' => false,
+					'data' => '',
+					'too_large' => false,
+				);
+			}
+
+			if ($chunk === '') {
+				break;
+			}
+
+			$data .= $chunk;
+			if (strlen($data) > $max_bytes) {
+				$too_large = true;
+				break;
+			}
+		}
+
+		fclose($handle);
+
+		return array(
+			'ok' => true,
+			'data' => $data,
+			'too_large' => $too_large,
+		);
+	}
+}
+
 if (!function_exists('vms_upload_request_has_file')) {
 	function vms_upload_request_has_file(array $files, string $field): bool
 	{

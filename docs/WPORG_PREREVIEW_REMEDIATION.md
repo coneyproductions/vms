@@ -68,9 +68,9 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `B3` | B | Medium | Confirmed | `includes/vendor-applications.php:1393,2487` | Vendor Applications renders inline `<style>` and inline executable `<script>` blocks. | Low to Medium | `WPORG-22` |
 | `B4` | B | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:7917` | Ticketing Rules V2 still emits a large inline executable script block. | Medium | `WPORG-22` |
 | `B5` | B | Low | Confirmed | `includes/admin/ticket-integrity-page.php:2412` | Ticket Integrity admin page emits inline CSS directly in PHP. | Low | `WPORG-22` |
-| `D2` | D | Medium | Likely | `includes/vendor-applications.php:2142-2180`; `includes/vendor-applications.php:2186-2194` | `WPORG-20A` completed the request-global scalar/IP/user-agent normalization part of the Turnstile and request-fingerprint review; the remaining decoded-response shape validation stays deferred to `WPORG-20C`. | Low to Medium | `WPORG-20A`, `WPORG-20C` |
-| `D3` | D | Medium | Likely | `includes/integrations/ticketing-phase-b.php:1936-1955` | Ticketing Phase B accepts JSON-decoded arrays after basic type checks; the remaining structured payload review stays deferred to `WPORG-20C`. | Medium | `WPORG-20C` |
-| `D4` | D | Medium | Likely | `includes/integrations/ticketing-rules-v2.php:9044-9072`; `includes/integrations/ticketing-rules-v2.php:9430-9431` | Ticketing Rules V2 JSON-body handlers still need dedicated decoded-structure validation in a separate batch after the ordinary request-global cleanup completed in `WPORG-20A`. | Medium | `WPORG-20C` |
+| `D2` | D | Medium | Confirmed | `includes/vendor-applications.php:2142-2192`; `includes/runtime-guards.php` | `WPORG-20C` now validates the decoded Turnstile response shape before trusting `success`, keeping the earlier `WPORG-20A` request-fingerprint normalization intact. | Low to Medium | `WPORG-20A`, `WPORG-20C` |
+| `D3` | D | Medium | Confirmed | `includes/integrations/ticketing-phase-b.php:1919-2051`; `includes/integrations/ticketing-phase-b.php:9596-9729` | `WPORG-20C` now bounds, decodes, and shape-validates the Phase B tier, commit-item, and config/template JSON payloads before the existing per-field normalizers run. | Medium | `WPORG-20C` |
+| `D4` | D | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:3082-3190`; `includes/integrations/ticketing-rules-v2.php:9089-9519` | `WPORG-20C` now bounds raw JSON-body reads and validates Ticketing Rules V2 atomic-add and silent-add payload shapes before any cart mutation or claim-assignment normalization occurs. | Medium | `WPORG-20C` |
 | `E1` | E | Medium | Likely | `docs/plugin-check-1.0.0-raw.txt:475`; `docs/plugin-check-1.0.0-raw.txt:733`; `docs/plugin-check-1.0.0-raw.txt:1770`; `docs/plugin-check-1.0.0-raw.txt:2115`; `docs/plugin-check-1.0.0-raw.txt:2438`; `docs/plugin-check-1.0.0-raw.txt:2906` | Historical packaged Plugin Check still points to large output-escaping hotspots that were not re-audited deeply in this pass. | Medium | `WPORG-24` |
 | `I1` | I | Medium | Likely | `includes/integrations/load.php:4-9`; `includes/integrations/ticketing.php:44-58` | Global AJAX output buffering only stays safe if every response path reaches the cleanup helper. | Medium | `WPORG-25` |
 | `I2` | I | Medium | Likely | `includes/integrations/ticketing-rules-v2.php:5860`; `includes/integrations/ticketing-rules-v2.php:7113` | Hook-scoped callback buffers in Ticketing Rules V2 are lifecycle-fragile and need architecture review before edits. | Medium | `WPORG-25` |
@@ -225,7 +225,7 @@ Status:
 - `WPORG-20A` ordinary request-global sanitization and redirect/server normalization is now applied in the current mirror/live working tree.
 - The original `FILTER_UNSAFE_RAW` example and the reviewed raw redirect/server-value examples are remediated.
 - Upload transport and MIME trust findings remain deferred to `WPORG-20B`.
-- Decoded JSON / structured-body validation findings remain deferred to `WPORG-20C`.
+- The audited `WPORG-20C` decoded JSON / structured-body validation follow-up is now applied across the first-party request, importer cache, and remote-response paths reviewed in this batch.
 
 ### `D1` Ordinary request-global sanitization and `FILTER_UNSAFE_RAW` remediation are now applied in the working tree
 
@@ -237,33 +237,33 @@ Status:
 - Compatibility or regression risk: Low to Medium because the remediation preserves keys, redirects, hook names, and business logic while tightening only the input boundary.
 - Suggested remediation batch ID: `WPORG-20A`
 
-### `D2` Turnstile verification and fingerprint storage need tighter validation review
+### `D2` Turnstile verification and fingerprint storage validation is now applied
 
 - Severity: Medium
-- Confidence: Likely
-- References: `includes/vendor-applications.php:2142-2180`; `includes/vendor-applications.php:2186-2194`
-- Why WordPress.org may object: the flow trusts a minimally validated `json_decode()` result and records raw IP / user-agent values after trimming only.
-- Recommended remediation: validate expected response keys explicitly, normalize request fingerprint fields consistently, and document why any raw values must be retained.
+- Confidence: Confirmed
+- References: `includes/vendor-applications.php:2142-2192`; `includes/runtime-guards.php`
+- Why WordPress.org may object: the flow previously trusted a minimally validated `json_decode()` result and recorded raw IP / user-agent values after trimming only.
+- Recommended remediation: validate the Turnstile response as a bounded JSON object with the expected boolean `success` field before treating the verification as authoritative, while keeping the earlier request-fingerprint normalization from `WPORG-20A`. That work is now applied in the current `WPORG-20C` working tree.
 - Compatibility or regression risk: Low to Medium.
 - Suggested remediation batch ID: `WPORG-20A`, `WPORG-20C`
 
-### `D3` Ticketing Phase B JSON payload handling still needs shape validation
+### `D3` Ticketing Phase B JSON payload validation is now applied
 
 - Severity: Medium
-- Confidence: Likely
-- References: `includes/integrations/ticketing-phase-b.php:1936-1955`
-- Why WordPress.org may object: JSON-decoded arrays are accepted after basic type checks, but there is limited per-key validation before later logic consumes them.
-- Recommended remediation: add schema-like validation for required keys, types, and value ranges before accepting the decoded arrays.
+- Confidence: Confirmed
+- References: `includes/integrations/ticketing-phase-b.php:1919-2051`; `includes/integrations/ticketing-phase-b.php:9596-9729`
+- Why WordPress.org may object: JSON-decoded arrays were accepted after basic type checks, but there was limited per-key validation before later logic consumed them.
+- Recommended remediation: bound the raw JSON strings, require list-vs-object shape explicitly, and reject malformed tier, commit-item, and config/template payloads before the established Phase B normalizers and sync logic execute. That work is now applied in the current `WPORG-20C` working tree.
 - Compatibility or regression risk: Medium.
 - Suggested remediation batch ID: `WPORG-20C`
 
-### `D4` Ticketing Rules V2 JSON-body handlers need careful structured-input review
+### `D4` Ticketing Rules V2 JSON-body validation is now applied
 
 - Severity: Medium
-- Confidence: Likely
-- References: `includes/integrations/ticketing-rules-v2.php:9044-9072`; `includes/integrations/ticketing-rules-v2.php:9430-9431`
-- Why WordPress.org may object: raw request bodies are JSON-decoded and then normalized, but the payload contract is not fully explicit from the initial guard layer.
-- Recommended remediation: keep the existing nonce and array normalization, then add targeted payload-schema validation instead of blanket `sanitize_text_field()` rewrites.
+- Confidence: Confirmed
+- References: `includes/integrations/ticketing-rules-v2.php:3082-3190`; `includes/integrations/ticketing-rules-v2.php:9089-9519`
+- Why WordPress.org may object: raw request bodies were JSON-decoded and then normalized, but the payload contract was not fully explicit from the initial guard layer.
+- Recommended remediation: read bounded request bodies, reject malformed JSON objects up front, and validate ticket-line, add-on-line, variation, and claim-assignment shapes before any cart mutation or downstream normalization occurs. That work is now applied in the current `WPORG-20C` working tree.
 - Compatibility or regression risk: Medium.
 - Suggested remediation batch ID: `WPORG-20C`
 
@@ -613,7 +613,7 @@ Recommended follow-up order, keeping each pass narrow:
 - [x] Complete `WPORG-19B` missing-nonce and capability/authorization follow-up before packaging the final public submission build.
 - [x] Complete `WPORG-20A` ordinary request-global sanitization, redirect allowlisting, and server-value normalization without mixing upload or decoded-JSON refactors.
 - [ ] Complete `WPORG-20B` upload transport and MIME/type hardening across tax-profile, import, and private-file flows.
-- [ ] Complete `WPORG-20C` decoded JSON / structured-body validation after the ordinary request-global pass.
+- [x] Complete `WPORG-20C` decoded JSON / structured-body validation after the ordinary request-global pass.
 - [ ] Migrate remaining inline executable JS/CSS into enqueued assets or approved inline helpers.
 - [ ] Scope all admin notices to VMS-owned screens.
 - [ ] Re-run Plugin Check in a controlled release-gate environment with a concrete plugin target and documented runtime/static mode.
@@ -1115,7 +1115,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, and the ordinary request-global cleanup tracked in `WPORG-20A`; the remaining open work in this inventory now starts at `WPORG-20B` and `WPORG-20C`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, and the decoded JSON / structured-payload hardening tracked in `WPORG-20C`; the remaining open work in this inventory now starts at `WPORG-20B`.
 
 ## WPORG-19B Result
 
@@ -1434,6 +1434,47 @@ Reconciliation:
 - The ordinary request-global remediation portion of section D can be treated as complete.
 - No remaining audited mirror or shared-live ordinary request/global boundary reviewed for `WPORG-20A` is still classified as requiring unslashing, shape guards, restrictive scalar validation, redirect allowlisting, or server normalization.
 - The focused coverage gap and the database-backed regression gap are closed; `WPORG-20A` is ready to commit.
+
+## WPORG-20C Result
+
+Date: 2026-07-11
+
+### Summary
+
+- Result: `PASS`
+- Scope completed: decoded JSON syntax, top-level shape, bounded body/file size checks, and narrow schema validation for the audited first-party request, importer-cache, and remote-response paths in `packages/vms-github-reconcile`.
+- Compatibility floors preserved: WordPress `6.8`, PHP `8.3`.
+- Shared helpers added in `includes/runtime-guards.php` intentionally stop at decode, top-level token, list-vs-object, and bounded-stream utilities; route-specific handlers still own their own field rules.
+
+### Completed Runtime Boundaries
+
+- Remote-service JSON:
+  - `includes/vendor-applications.php` now validates the Turnstile siteverify body as a bounded JSON object with an explicit boolean `success` field before treating the request as verified.
+- Request-derived JSON / structured bodies:
+  - `includes/integrations/ticketing-phase-b.php` now validates tier-save, commit-item, and config/template payload shapes before the existing Phase B normalizers run.
+  - `includes/integrations/ticketing-rules-v2.php` now reads bounded JSON request bodies and validates atomic-add / silent-add ticket, add-on, variation, and claim-assignment shapes before cart mutation.
+  - `includes/rest/class-vms-rest-tours.php` now rejects list-shaped or malformed REST JSON payloads for the drift-report mutation routes.
+  - `includes/integrations/ticketing-claims-customer.php` now validates the decoded `existing_counts` object rather than accepting any decoded array.
+- Uploaded/imported or cache-derived JSON:
+  - `includes/services/event-plan-import/event-plan-import-engine.php` now validates preview-row and revert-snapshot JSON file size, top-level object shape, and required nested list/object boundaries before commit/revert work.
+- Stored JSON from request-derived data:
+  - `includes/modules/admissions/pass-claims.php` now validates `venue_ids_json` as a JSON list of venue IDs before use.
+  - `includes/modules/admissions/vendor-guest-portal.php` and `includes/modules/admissions/admission-tokens.php` now reject malformed `claim_meta` JSON instead of trusting any decoded array.
+  - `includes/core/calendar-feed.php` plus the legacy fallback in `includes/admin/settings-page.php` now treat JSON map inputs as object-only contracts rather than accepting list-shaped decodes.
+
+### Tests and Verification
+
+- Added focused regression coverage in `tests/decoded-json-validation.php` for the new decode/shape validators.
+- Existing required verification for this batch should include:
+  - `php tests/request-input-sanitization.php`
+  - `php tests/upload-validation-guards.php`
+  - `php tests/verification-proof-normalization.php`
+  - `php tests/decoded-json-validation.php`
+
+### Residual Risk
+
+- This batch intentionally does not change upload transport/MIME architecture from `WPORG-20B`.
+- Remaining `json_decode()` sites are either test/build tooling, static/internal compatibility state, encrypted internal payloads, or trusted first-party data paths where no current user-controlled or externally controlled boundary was identified in this audit.
 
 ## Non-Actions in This Audit
 

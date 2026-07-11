@@ -3112,6 +3112,236 @@ function vms_ticketing_v2_claim_assignments_normalize($raw): array
     return $out;
 }
 
+function vms_ticketing_v2_payload_is_object_like_array(array $value): bool
+{
+    return empty($value) || !vms_array_is_list_compat($value);
+}
+
+function vms_ticketing_v2_payload_has_scalar_value($value, int $max_length = 512): bool
+{
+    if ($value === null) {
+        return true;
+    }
+    if (is_array($value) || is_object($value)) {
+        return false;
+    }
+
+    return strlen((string) $value) <= $max_length;
+}
+
+function vms_ticketing_v2_validate_claim_assignment_payload($rows): bool
+{
+    if (!is_array($rows) || (!empty($rows) && !vms_array_is_list_compat($rows)) || count($rows) > 100) {
+        return false;
+    }
+
+    foreach ($rows as $row) {
+        if (!is_array($row) || !vms_ticketing_v2_payload_is_object_like_array($row)) {
+            return false;
+        }
+        if (isset($row['seat']) && !vms_ticketing_v2_payload_has_scalar_value($row['seat'], 16)) {
+            return false;
+        }
+        if (isset($row['seat_index']) && !vms_ticketing_v2_payload_has_scalar_value($row['seat_index'], 16)) {
+            return false;
+        }
+        if (isset($row['assignee_email']) && !vms_ticketing_v2_payload_has_scalar_value($row['assignee_email'], 254)) {
+            return false;
+        }
+        if (isset($row['email']) && !vms_ticketing_v2_payload_has_scalar_value($row['email'], 254)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function vms_ticketing_v2_validate_atomic_ticket_line_payload($line): bool
+{
+    if (!is_array($line) || !vms_ticketing_v2_payload_is_object_like_array($line)) {
+        return false;
+    }
+
+    foreach (array('product_id', 'productId', 'ticket_id', 'ticketId', 'qty', 'quantity', 'variation_id', 'variationId') as $scalar_key) {
+        if (isset($line[$scalar_key]) && !vms_ticketing_v2_payload_has_scalar_value($line[$scalar_key], 32)) {
+            return false;
+        }
+    }
+
+    if (isset($line['variation'])) {
+        if (!is_array($line['variation']) || !vms_ticketing_v2_payload_is_object_like_array($line['variation']) || count($line['variation']) > 20) {
+            return false;
+        }
+        foreach ($line['variation'] as $variation_key => $variation_value) {
+            if (!vms_ticketing_v2_payload_has_scalar_value($variation_key, 64) || !vms_ticketing_v2_payload_has_scalar_value($variation_value, 200)) {
+                return false;
+            }
+        }
+    }
+
+    if (isset($line['attributes'])) {
+        if (!is_array($line['attributes']) || !vms_ticketing_v2_payload_is_object_like_array($line['attributes']) || count($line['attributes']) > 20) {
+            return false;
+        }
+        foreach ($line['attributes'] as $attribute_key => $attribute_value) {
+            if (!vms_ticketing_v2_payload_has_scalar_value($attribute_key, 64) || !vms_ticketing_v2_payload_has_scalar_value($attribute_value, 200)) {
+                return false;
+            }
+        }
+    }
+
+    foreach (array('claim_assignments', 'claimAssignments') as $assignment_key) {
+        if (isset($line[$assignment_key]) && !vms_ticketing_v2_validate_claim_assignment_payload($line[$assignment_key])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function vms_ticketing_v2_validate_atomic_addon_line_payload($line): bool
+{
+    if (!is_array($line) || !vms_ticketing_v2_payload_is_object_like_array($line)) {
+        return false;
+    }
+
+    foreach (array('product_id', 'productId', 'product', 'qty', 'quantity') as $scalar_key) {
+        if (isset($line[$scalar_key]) && !vms_ticketing_v2_payload_has_scalar_value($line[$scalar_key], 32)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function vms_ticketing_v2_validate_atomic_add_payload(array $data): bool
+{
+    if (!vms_ticketing_v2_payload_is_object_like_array($data)) {
+        return false;
+    }
+
+    foreach (array('nonce', 'tec_event_id', 'tecEventId', 'event_plan_id', 'eventPlanId') as $scalar_key) {
+        if (isset($data[$scalar_key]) && !vms_ticketing_v2_payload_has_scalar_value($data[$scalar_key], 200)) {
+            return false;
+        }
+    }
+
+    $ticket_lines = $data['ticket_lines'] ?? ($data['tickets'] ?? array());
+    if (!is_array($ticket_lines) || (!empty($ticket_lines) && !vms_array_is_list_compat($ticket_lines)) || count($ticket_lines) > 50) {
+        return false;
+    }
+    foreach ($ticket_lines as $line) {
+        if (!vms_ticketing_v2_validate_atomic_ticket_line_payload($line)) {
+            return false;
+        }
+    }
+
+    $addon_lines = $data['addon_lines'] ?? ($data['addons'] ?? array());
+    if (!is_array($addon_lines) || (!empty($addon_lines) && !vms_array_is_list_compat($addon_lines)) || count($addon_lines) > 50) {
+        return false;
+    }
+    foreach ($addon_lines as $line) {
+        if (!vms_ticketing_v2_validate_atomic_addon_line_payload($line)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function vms_ticketing_v2_validate_silent_add_payload(array $data): bool
+{
+    if (!vms_ticketing_v2_payload_is_object_like_array($data)) {
+        return false;
+    }
+
+    foreach (array('nonce', 'tec_event_id', 'event_plan_id', 'ga_qty_hint') as $scalar_key) {
+        if (isset($data[$scalar_key]) && !vms_ticketing_v2_payload_has_scalar_value($data[$scalar_key], 200)) {
+            return false;
+        }
+    }
+
+    $items = $data['items'] ?? array();
+    if (!is_array($items) || (!empty($items) && !vms_array_is_list_compat($items)) || count($items) > 50) {
+        return false;
+    }
+    foreach ($items as $item) {
+        if (!vms_ticketing_v2_validate_atomic_addon_line_payload($item)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @return array{ok:bool,present:bool,payload:array<string,mixed>,error:string}
+ */
+function vms_ticketing_v2_read_json_request_payload(int $max_bytes): array
+{
+    $body = vms_read_limited_stream('php://input', $max_bytes);
+    if (empty($body['ok'])) {
+        return array(
+            'ok' => false,
+            'present' => false,
+            'payload' => array(),
+            'error' => 'body_read_failed',
+        );
+    }
+
+    $raw = trim((string) ($body['data'] ?? ''));
+    if ($raw === '') {
+        return array(
+            'ok' => true,
+            'present' => false,
+            'payload' => array(),
+            'error' => '',
+        );
+    }
+
+    $content_type = strtolower(vms_request_server_value('CONTENT_TYPE'));
+    $top_level_token = vms_json_top_level_token($raw);
+    $expects_json = (strpos($content_type, 'application/json') !== false || $top_level_token === '{' || $top_level_token === '[');
+    if (!$expects_json) {
+        return array(
+            'ok' => true,
+            'present' => false,
+            'payload' => array(),
+            'error' => '',
+        );
+    }
+
+    if (!empty($body['too_large'])) {
+        return array(
+            'ok' => false,
+            'present' => true,
+            'payload' => array(),
+            'error' => 'body_too_large',
+        );
+    }
+
+    $decoded = vms_json_decode_associative($raw, 32);
+    if (
+        empty($decoded['ok'])
+        || !is_array($decoded['value'])
+        || !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+    ) {
+        return array(
+            'ok' => false,
+            'present' => true,
+            'payload' => array(),
+            'error' => 'body_invalid_json',
+        );
+    }
+
+    return array(
+        'ok' => true,
+        'present' => true,
+        'payload' => $decoded['value'],
+        'error' => '',
+    );
+}
+
 /**
  * @return array<int,array{seat:int,assignee_email:string}>
  */
@@ -9093,10 +9323,17 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         exit;
     }
 
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw ?: '', true);
+    $request_payload = vms_ticketing_v2_read_json_request_payload(65536);
+    if (empty($request_payload['ok'])) {
+        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+    }
+
+    $data = $request_payload['present'] ? $request_payload['payload'] : null;
     if (!is_array($data)) {
         $data = $_POST;
+    }
+    if (!is_array($data) || !vms_ticketing_v2_validate_atomic_add_payload($data)) {
+        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     $nonce = '';
@@ -9480,11 +9717,17 @@ function vms_ticketing_v2_ajax_silent_add(): void
         exit;
     }
 
-    // Prefer JSON payload; fall back to POST fields.
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw ?: '', true);
+    $request_payload = vms_ticketing_v2_read_json_request_payload(65536);
+    if (empty($request_payload['ok'])) {
+        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+    }
+
+    $data = $request_payload['present'] ? $request_payload['payload'] : null;
     if (!is_array($data)) {
         $data = $_POST;
+    }
+    if (!is_array($data) || !vms_ticketing_v2_validate_silent_add_payload($data)) {
+        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     // Nonce may arrive via query string, form POST, or JSON payload.

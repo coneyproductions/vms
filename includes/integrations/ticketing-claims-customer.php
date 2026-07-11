@@ -50,6 +50,48 @@ if (!function_exists('vms_ticketing_claims_account_should_expand')) {
 	}
 }
 
+if (!function_exists('vms_ticketing_claims_parse_existing_counts_payload')) {
+	function vms_ticketing_claims_parse_existing_counts_payload($raw): array
+	{
+		if (is_array($raw)) {
+			$decoded = $raw;
+		} elseif (is_string($raw)) {
+			$raw = trim($raw);
+			if ($raw === '' || strlen($raw) > 16384) {
+				return array();
+			}
+
+			$json = vms_json_decode_associative($raw, 8);
+			if (
+				empty($json['ok'])
+				|| !is_array($json['value'])
+				|| !vms_json_decoded_is_object($json['value'], (string) ($json['top_level_token'] ?? ''))
+			) {
+				return array();
+			}
+
+			$decoded = $json['value'];
+		} else {
+			return array();
+		}
+
+		$existing_counts = array();
+		foreach ($decoded as $email_key => $count) {
+			$email_key = strtolower(trim(sanitize_email((string) $email_key)));
+			if ($email_key === '') {
+				continue;
+			}
+			if (is_array($count) || is_object($count)) {
+				continue;
+			}
+
+			$existing_counts[$email_key] = max(0, min(1000, absint($count)));
+		}
+
+		return $existing_counts;
+	}
+}
+
 if (!function_exists('vms_ticketing_claims_account_event_date_text')) {
 	function vms_ticketing_claims_account_event_date_text(int $event_id): string
 	{
@@ -367,22 +409,11 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		$event_id = isset($_POST['event_id']) ? absint(wp_unslash($_POST['event_id'])) : 0;
 		$ticket_key = isset($_POST['ticket_key']) ? sanitize_key((string) wp_unslash($_POST['ticket_key'])) : '';
 		$assignee_email = isset($_POST['assignee_email']) ? sanitize_email((string) wp_unslash($_POST['assignee_email'])) : '';
-		$existing_counts = array();
-		if (isset($_POST['existing_counts'])) {
-			$raw_existing_counts = wp_unslash($_POST['existing_counts']);
-			$decoded_existing_counts = is_string($raw_existing_counts)
-				? json_decode((string) $raw_existing_counts, true)
-				: (is_array($raw_existing_counts) ? $raw_existing_counts : array());
-			if (is_array($decoded_existing_counts)) {
-				foreach ($decoded_existing_counts as $email_key => $count) {
-					$email_key = strtolower(trim(sanitize_email((string) $email_key)));
-					if ($email_key === '') {
-						continue;
-					}
-					$existing_counts[$email_key] = max(0, absint($count));
-				}
+			$existing_counts = array();
+			if (isset($_POST['existing_counts'])) {
+				$raw_existing_counts = wp_unslash($_POST['existing_counts']);
+				$existing_counts = vms_ticketing_claims_parse_existing_counts_payload($raw_existing_counts);
 			}
-		}
 
 		if ($product_id <= 0 || $assignee_email === '') {
 			wp_send_json_error(array(

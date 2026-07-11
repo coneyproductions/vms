@@ -682,6 +682,27 @@ if (!function_exists('vms_pass_claims_parse_venue_ids')) {
 	}
 }
 
+if (!function_exists('vms_pass_claims_decode_venue_ids_json')) {
+	function vms_pass_claims_decode_venue_ids_json(string $raw): array
+	{
+		$raw = trim($raw);
+		if ($raw === '') {
+			return array();
+		}
+
+		$decoded = vms_json_decode_associative($raw, 8);
+		if (
+			empty($decoded['ok'])
+			|| !is_array($decoded['value'])
+			|| !vms_json_decoded_is_list($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+		) {
+			return array();
+		}
+
+		return vms_pass_claims_parse_venue_ids($decoded['value']);
+	}
+}
+
 if (!function_exists('vms_pass_claims_soft_batch_payload_for_form')) {
 	function vms_pass_claims_soft_batch_payload_for_form(array $raw): array
 	{
@@ -1811,7 +1832,7 @@ if (!function_exists('vms_pass_claims_render_preview_summary')) {
 		$value_labels = vms_pass_claims_value_type_labels();
 		$status_labels = vms_pass_claims_batch_status_labels();
 		$checkin_labels = vms_pass_claims_checkin_open_labels();
-		$venue_ids = json_decode((string) ($payload['venue_ids_json'] ?? ''), true);
+		$venue_ids = vms_pass_claims_decode_venue_ids_json((string) ($payload['venue_ids_json'] ?? ''));
 		$venue_names = array();
 		foreach ((array) $venue_ids as $venue_id) {
 			$venue_id = (int) $venue_id;
@@ -1915,8 +1936,8 @@ if (!function_exists('vms_pass_claims_render_preview_summary')) {
 		echo '<label>' . esc_html__('Season Label (optional)', 'backstage-venue-manager') . '<input type="text" name="season_label" value="' . esc_attr((string) vms_pass_claims_payload_value($form_payload, 'season_label', '')) . '" placeholder="Spring 2026"></label>';
 
 		echo '<label class="vms-pass-span-2">' . esc_html__('Eligible Venues (optional)', 'backstage-venue-manager') . '<select name="venue_ids[]" multiple size="4">';
-		$selected_venues = json_decode((string) vms_pass_claims_payload_value($form_payload, 'venue_ids_json', ''), true);
-		foreach ((array) $venues as $venue_id) {
+			$selected_venues = vms_pass_claims_decode_venue_ids_json((string) vms_pass_claims_payload_value($form_payload, 'venue_ids_json', ''));
+			foreach ((array) $venues as $venue_id) {
 			$venue_id = (int) $venue_id;
 			if ($venue_id <= 0) {
 				continue;
@@ -2434,13 +2455,7 @@ if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
 	function vms_pass_claims_eligible_events_for_batch(array $batch): array
 	{
 		$validity_type = sanitize_key((string) ($batch['validity_type'] ?? 'single_event'));
-		$venue_ids = json_decode((string) ($batch['venue_ids_json'] ?? ''), true);
-		if (!is_array($venue_ids)) {
-			$venue_ids = array();
-		}
-		$venue_ids = array_values(array_filter(array_map('absint', $venue_ids), static function (int $id): bool {
-			return $id > 0;
-		}));
+		$venue_ids = vms_pass_claims_decode_venue_ids_json((string) ($batch['venue_ids_json'] ?? ''));
 
 		if ($validity_type === 'single_event') {
 			$single = vms_pass_claims_get_event_plan_brief((int) ($batch['single_event_plan_id'] ?? 0));

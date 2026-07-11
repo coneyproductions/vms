@@ -2139,6 +2139,35 @@ function vms_vendor_apply_is_rate_limited(): bool
  * Verify Turnstile token with Cloudflare siteverify.
  * Expects token posted as cf-turnstile-response (auto-added by widget in a <form>).
  */
+function vms_vendor_apply_parse_turnstile_siteverify_body(string $body): array
+{
+    $body = trim($body);
+    if ($body === '' || strlen($body) > 16384) {
+        return array();
+    }
+
+    $decoded = vms_json_decode_associative($body, 8);
+    if (
+        empty($decoded['ok'])
+        || !is_array($decoded['value'])
+        || !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+    ) {
+        return array();
+    }
+
+    $payload = $decoded['value'];
+    $success = $payload['success'] ?? null;
+    if (!is_bool($success)) {
+        return array();
+    }
+
+    if (isset($payload['error-codes']) && !is_array($payload['error-codes'])) {
+        return array();
+    }
+
+    return $payload;
+}
+
 function vms_vendor_apply_verify_turnstile(): bool
 {
     $site_key = vms_vendor_apply_turnstile_site_key();
@@ -2186,8 +2215,11 @@ function vms_vendor_apply_verify_turnstile(): bool
         return false;
     }
 
-    $json = json_decode($body, true);
-    if (!is_array($json)) return false;
+    $json = vms_vendor_apply_parse_turnstile_siteverify_body($body);
+    if (empty($json)) {
+        error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');
+        return false;
+    }
 
     return !empty($json['success']);
 }

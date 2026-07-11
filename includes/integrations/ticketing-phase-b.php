@@ -1916,6 +1916,139 @@ function vms_ticketing_b_commit_sync(int $plan_id, array $preview_items): array 
 /**
  * AJAX: save ticket tiers.
  */
+function vms_ticketing_payload_is_object_like_array(array $value): bool {
+    return empty($value) || !vms_array_is_list_compat($value);
+}
+
+/**
+ * @return array{ok:bool,value:array<int,mixed>}
+ */
+function vms_ticketing_b_decode_list_payload(string $raw, int $max_bytes, int $depth = 32): array {
+    $raw = trim($raw);
+    if ($raw === '' || strlen($raw) > $max_bytes) {
+        return array('ok' => false, 'value' => array());
+    }
+
+    $decoded = vms_json_decode_associative($raw, $depth);
+    if (
+        empty($decoded['ok'])
+        || !is_array($decoded['value'])
+        || !vms_json_decoded_is_list($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+    ) {
+        return array('ok' => false, 'value' => array());
+    }
+
+    return array(
+        'ok' => true,
+        'value' => $decoded['value'],
+    );
+}
+
+function vms_ticketing_b_validate_tier_rows_payload(array $tiers): bool {
+    if (!empty($tiers) && !vms_array_is_list_compat($tiers)) {
+        return false;
+    }
+    if (count($tiers) > 25) {
+        return false;
+    }
+
+    $scalar_keys = array(
+        'tier_key',
+        'name',
+        'price',
+        'early_price',
+        'early_price_start',
+        'early_price_end',
+        'early_price_start_relative_days',
+        'early_price_end_relative_days',
+        'early_price_cap',
+        'capacity',
+        'sales_start',
+        'sales_end',
+        'sales_start_relative_days',
+        'sales_end_relative_days',
+        'counts_toward_attendance',
+        'qualifies_for_discounts',
+        'qualification_code',
+        'sort_order',
+        'is_hidden',
+    );
+
+    foreach ($tiers as $tier) {
+        if (!is_array($tier) || !vms_ticketing_payload_is_object_like_array($tier)) {
+            return false;
+        }
+
+        foreach ($scalar_keys as $scalar_key) {
+            if (isset($tier[$scalar_key]) && (is_array($tier[$scalar_key]) || is_object($tier[$scalar_key]))) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+function vms_ticketing_b_validate_commit_items_payload(array $items): bool {
+    if (!empty($items) && !vms_array_is_list_compat($items)) {
+        return false;
+    }
+    if (count($items) > 25) {
+        return false;
+    }
+
+    foreach ($items as $item) {
+        if (!is_array($item) || !vms_ticketing_payload_is_object_like_array($item)) {
+            return false;
+        }
+
+        if (!isset($item['tier_key']) || !is_scalar($item['tier_key']) || sanitize_key((string) $item['tier_key']) === '') {
+            return false;
+        }
+        if (!isset($item['action']) || !is_scalar($item['action']) || !in_array((string) $item['action'], array('skip', 'adopt', 'create', 'update'), true)) {
+            return false;
+        }
+        if (isset($item['woo_product_id']) && (is_array($item['woo_product_id']) || is_object($item['woo_product_id']))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function vms_ticketing_v2_validate_config_payload(array $cfg): bool {
+    if (!vms_ticketing_payload_is_object_like_array($cfg)) {
+        return false;
+    }
+
+    if (isset($cfg['mode']) && (is_array($cfg['mode']) || is_object($cfg['mode']))) {
+        return false;
+    }
+
+    if (isset($cfg['ga']) && (!is_array($cfg['ga']) || !vms_ticketing_payload_is_object_like_array($cfg['ga']))) {
+        return false;
+    }
+
+    foreach (array('tickets', 'entitlements') as $list_key) {
+        if (!array_key_exists($list_key, $cfg)) {
+            continue;
+        }
+
+        $rows = $cfg[$list_key];
+        if (!is_array($rows) || (!empty($rows) && !vms_array_is_list_compat($rows)) || count($rows) > 200) {
+            return false;
+        }
+
+        foreach ($rows as $row) {
+            if (!is_array($row) || !vms_ticketing_payload_is_object_like_array($row)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 function vms_ticketing_b_ajax_save_tiers(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
         wp_send_json_error(array('message' => 'bad_nonce'), 403);
@@ -1935,13 +2068,15 @@ function vms_ticketing_b_ajax_save_tiers(): void {
 
     $tiers_in = null;
     if (is_array($tiers_in_raw)) {
-        $tiers_in = $tiers_in_raw;
+        if (vms_ticketing_b_validate_tier_rows_payload($tiers_in_raw)) {
+            $tiers_in = $tiers_in_raw;
+        }
     } elseif (is_string($tiers_in_raw)) {
         $tiers_in_raw = trim($tiers_in_raw);
         if ($tiers_in_raw !== '') {
-            $decoded = json_decode($tiers_in_raw, true);
-            if (is_array($decoded)) {
-                $tiers_in = $decoded;
+            $decoded = vms_ticketing_b_decode_list_payload($tiers_in_raw, 65536, 32);
+            if (!empty($decoded['ok']) && vms_ticketing_b_validate_tier_rows_payload($decoded['value'])) {
+                $tiers_in = $decoded['value'];
             }
         }
     }
@@ -1966,11 +2101,6 @@ $tiers_out = array();
         }
         $seen[$k] = true;
         $tiers_out[] = $tn;
-    }
-
-    // Guardrail: keep reasonable.
-    if (count($tiers_out) > 25) {
-        $tiers_out = array_slice($tiers_out, 0, 25);
     }
 
     vms_ticketing_b_set_tiers($plan_id, $tiers_out);
@@ -2022,13 +2152,15 @@ function vms_ticketing_b_ajax_commit_sync(): void {
 
     $items = null;
     if (is_array($items_raw)) {
-        $items = $items_raw;
+        if (vms_ticketing_b_validate_commit_items_payload($items_raw)) {
+            $items = $items_raw;
+        }
     } elseif (is_string($items_raw)) {
         $items_raw = trim($items_raw);
         if ($items_raw !== '') {
-            $decoded = json_decode($items_raw, true);
-            if (is_array($decoded)) {
-                $items = $decoded;
+            $decoded = vms_ticketing_b_decode_list_payload($items_raw, 65536, 32);
+            if (!empty($decoded['ok']) && vms_ticketing_b_validate_commit_items_payload($decoded['value'])) {
+                $items = $decoded['value'];
             }
         }
     }
@@ -9617,13 +9749,20 @@ function vms_ticketing_v2_ajax_save_config(): void {
 
     $cfg_in = null;
     if (is_array($raw)) {
-        $cfg_in = $raw;
+        if (vms_ticketing_v2_validate_config_payload($raw)) {
+            $cfg_in = $raw;
+        }
     } elseif (is_string($raw)) {
         $raw = trim($raw);
-        if ($raw !== '') {
-            $decoded = json_decode($raw, true);
-            if (is_array($decoded)) {
-                $cfg_in = $decoded;
+        if ($raw !== '' && strlen($raw) <= 262144) {
+            $decoded = vms_json_decode_associative($raw, 64);
+            if (
+                !empty($decoded['ok'])
+                && is_array($decoded['value'])
+                && vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+                && vms_ticketing_v2_validate_config_payload($decoded['value'])
+            ) {
+                $cfg_in = $decoded['value'];
             }
         }
     }
@@ -9715,9 +9854,24 @@ function vms_ticketing_v2_ajax_save_template(): void {
 	$name = isset($_POST['name']) ? sanitize_text_field((string) $_POST['name']) : '';
 	$cfg_raw = isset($_POST['config']) ? wp_unslash($_POST['config']) : null;
 	if (is_string($cfg_raw) && $cfg_raw !== '') {
-		$decoded = json_decode($cfg_raw, true);
-		$cfg_in = is_array($decoded) ? $decoded : array();
+		$cfg_raw = trim($cfg_raw);
+		if (strlen($cfg_raw) > 262144) {
+			wp_send_json_error(array('message' => 'invalid_payload_config'), 400);
+		}
+		$decoded = vms_json_decode_associative($cfg_raw, 64);
+		if (
+			empty($decoded['ok'])
+			|| !is_array($decoded['value'])
+			|| !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+			|| !vms_ticketing_v2_validate_config_payload($decoded['value'])
+		) {
+			wp_send_json_error(array('message' => 'invalid_payload_config'), 400);
+		}
+		$cfg_in = $decoded['value'];
 	} elseif (is_array($cfg_raw)) {
+		if (!vms_ticketing_v2_validate_config_payload($cfg_raw)) {
+			wp_send_json_error(array('message' => 'invalid_payload_config'), 400);
+		}
 		$cfg_in = $cfg_raw;
 	} else {
 		$cfg_in = array();

@@ -1532,6 +1532,67 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 
 if (!function_exists('vms_event_plan_import_read_rows_json')) {
 	/**
+	 * @param array<string,mixed> $payload
+	 */
+	function vms_event_plan_import_validate_rows_payload(array $payload, string $top_level_token): bool
+	{
+		if (!vms_json_decoded_is_object($payload, $top_level_token)) {
+			return false;
+		}
+
+		$columns = $payload['columns'] ?? null;
+		if (!is_array($columns) || (!empty($columns) && vms_array_is_list_compat($columns))) {
+			return false;
+		}
+
+		$rows = $payload['rows'] ?? null;
+		if (!is_array($rows) || (!empty($rows) && !vms_array_is_list_compat($rows)) || count($rows) > 10000) {
+			return false;
+		}
+
+		if (isset($columns['secondary_vendor_columns']) && (!is_array($columns['secondary_vendor_columns']) || (!empty($columns['secondary_vendor_columns']) && !vms_array_is_list_compat($columns['secondary_vendor_columns'])))) {
+			return false;
+		}
+
+		foreach ($rows as $row) {
+			if (!is_array($row) || (!empty($row) && vms_array_is_list_compat($row))) {
+				return false;
+			}
+
+			foreach (array('warnings', 'errors', 'secondary_vendor_ids', 'secondary_vendor_create_names') as $list_key) {
+				if (isset($row[$list_key]) && (!is_array($row[$list_key]) || (!empty($row[$list_key]) && !vms_array_is_list_compat($row[$list_key])))) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param array<string,mixed> $payload
+	 */
+	function vms_event_plan_import_validate_snapshot_payload(array $payload, string $top_level_token): bool
+	{
+		if (!vms_json_decoded_is_object($payload, $top_level_token)) {
+			return false;
+		}
+
+		$entries = $payload['entries'] ?? null;
+		if (!is_array($entries) || (!empty($entries) && !vms_array_is_list_compat($entries)) || count($entries) > 10000) {
+			return false;
+		}
+
+		foreach ($entries as $entry) {
+			if (!is_array($entry) || (!empty($entry) && vms_array_is_list_compat($entry))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * @return array<string,mixed>|WP_Error
 	 */
 	function vms_event_plan_import_read_rows_json(string $rows_json_reference)
@@ -1543,18 +1604,26 @@ if (!function_exists('vms_event_plan_import_read_rows_json')) {
 		if (!vms_event_plan_import_path_is_safe($rows_json_path)) {
 			return new WP_Error('rows_json_unsafe', __('Preview rows cache path is invalid.', 'backstage-venue-manager'));
 		}
+		$rows_json_size = @filesize($rows_json_path);
+		if (is_numeric($rows_json_size) && (int) $rows_json_size > 5 * 1024 * 1024) {
+			return new WP_Error('rows_json_too_large', __('Preview rows cache is too large to validate safely.', 'backstage-venue-manager'));
+		}
 
 		$raw = file_get_contents($rows_json_path);
 		if (!is_string($raw) || $raw === '') {
 			return new WP_Error('rows_json_empty', __('Preview rows cache is empty.', 'backstage-venue-manager'));
 		}
 
-		$decoded = json_decode($raw, true);
-		if (!is_array($decoded)) {
+		$decoded = vms_json_decode_associative($raw, 64);
+		if (
+			empty($decoded['ok'])
+			|| !is_array($decoded['value'])
+			|| !vms_event_plan_import_validate_rows_payload($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+		) {
 			return new WP_Error('rows_json_invalid', __('Preview rows cache is not valid JSON.', 'backstage-venue-manager'));
 		}
 
-		return $decoded;
+		return $decoded['value'];
 	}
 }
 
@@ -2481,18 +2550,26 @@ if (!function_exists('vms_event_plan_import_revert_last_run')) {
 		if (!vms_event_plan_import_path_is_safe($snapshot_path)) {
 			return new WP_Error('snapshot_unsafe', __('Snapshot file path is not allowed.', 'backstage-venue-manager'));
 		}
+		$snapshot_size = @filesize($snapshot_path);
+		if (is_numeric($snapshot_size) && (int) $snapshot_size > 5 * 1024 * 1024) {
+			return new WP_Error('snapshot_too_large', __('Snapshot file is too large to validate safely.', 'backstage-venue-manager'));
+		}
 
 		$raw = file_get_contents($snapshot_path);
 		if (!is_string($raw) || $raw === '') {
 			return new WP_Error('snapshot_read_failed', __('Could not read snapshot file.', 'backstage-venue-manager'));
 		}
 
-		$decoded = json_decode($raw, true);
-		if (!is_array($decoded)) {
+		$decoded = vms_json_decode_associative($raw, 64);
+		if (
+			empty($decoded['ok'])
+			|| !is_array($decoded['value'])
+			|| !vms_event_plan_import_validate_snapshot_payload($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+		) {
 			return new WP_Error('snapshot_invalid', __('Snapshot file is invalid JSON.', 'backstage-venue-manager'));
 		}
 
-		$entries = isset($decoded['entries']) && is_array($decoded['entries']) ? $decoded['entries'] : array();
+		$entries = isset($decoded['value']['entries']) && is_array($decoded['value']['entries']) ? $decoded['value']['entries'] : array();
 		if (empty($entries)) {
 			return new WP_Error('snapshot_empty', __('Snapshot file does not contain any restorable entries.', 'backstage-venue-manager'));
 		}

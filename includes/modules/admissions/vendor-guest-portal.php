@@ -248,9 +248,13 @@ if (!function_exists('vms_admission_vendor_guest_bridge_context_from_claim_meta'
 	function vms_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta): array
 	{
 		if (is_string($claim_meta) && $claim_meta !== '') {
-			$decoded = json_decode($claim_meta, true);
-			if (is_array($decoded)) {
-				$claim_meta = $decoded;
+			$decoded = vms_json_decode_associative($claim_meta, 16);
+			if (
+				!empty($decoded['ok'])
+				&& is_array($decoded['value'])
+				&& vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+			) {
+				$claim_meta = $decoded['value'];
 			}
 		}
 		$claim_meta = is_array($claim_meta) ? $claim_meta : array();

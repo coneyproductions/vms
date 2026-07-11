@@ -722,17 +722,19 @@ function vms_sanitize_settings($input)
 
   // Calendar (Core)
   $parse_map = function ($raw): array {
-    if (function_exists('vms_calendar_parse_assoc_map')) {
-      return (array) vms_calendar_parse_assoc_map($raw);
-    }
-    if (is_array($raw)) return $raw;
-    if (!is_string($raw)) return array();
-    $raw = trim($raw);
-    if ($raw === '') return array();
-    $json = json_decode($raw, true);
-    if (is_array($json)) return $json;
-    $out = array();
-    $lines = preg_split('/\r\n|\r|\n/', $raw) ?: array();
+	    if (function_exists('vms_calendar_parse_assoc_map')) {
+	      return (array) vms_calendar_parse_assoc_map($raw);
+	    }
+	    if (is_array($raw)) return $raw;
+	    if (!is_string($raw)) return array();
+	    $raw = trim($raw);
+	    if ($raw === '') return array();
+	    $decoded = vms_json_decode_associative($raw, 16);
+	    if (!empty($decoded['ok']) && is_array($decoded['value']) && vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))) {
+	      return $decoded['value'];
+	    }
+	    $out = array();
+	    $lines = preg_split('/\r\n|\r|\n/', $raw) ?: array();
     foreach ($lines as $line) {
       $line = trim((string) $line);
       if ($line === '' || strpos($line, '#') === 0) continue;

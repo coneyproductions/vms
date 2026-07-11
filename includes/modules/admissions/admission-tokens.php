@@ -283,16 +283,20 @@ if (!function_exists('vms_admission_email_pass_result')) {
 		);
 		foreach ($group_rows as $group_row) {
 			$gid = (int) ($group_row['id'] ?? 0);
-			if ($gid > 0) {
-				$current_meta = (string) ($group_row['claim_meta'] ?? '');
-				$meta = array();
-				if ($current_meta !== '') {
-					$decoded = json_decode($current_meta, true);
-					if (is_array($decoded)) {
-						$meta = $decoded;
+				if ($gid > 0) {
+					$current_meta = (string) ($group_row['claim_meta'] ?? '');
+					$meta = array();
+					if ($current_meta !== '') {
+						$decoded = vms_json_decode_associative($current_meta, 16);
+						if (
+							!empty($decoded['ok'])
+							&& is_array($decoded['value'])
+							&& vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+						) {
+							$meta = $decoded['value'];
+						}
 					}
-				}
-				$meta['last_email_status'] = $result;
+					$meta['last_email_status'] = $result;
 				$updates = array('claim_meta' => wp_json_encode($meta), 'updated_at' => $now);
 				$formats = array('%s', '%s');
 				if ($sent) {
