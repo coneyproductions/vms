@@ -196,6 +196,8 @@ function vms_sd_maybe_handle_post(): void
 
 	$page_slug = isset($_GET['page']) ? sanitize_key((string)$_GET['page']) : '';
 	if ($page_slug === '') return;
+	$cap = apply_filters('vms_admin_capability', 'manage_options');
+	if (!current_user_can($cap)) return;
 
 	vms_sd_require_engine();
 

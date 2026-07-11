@@ -13655,6 +13655,7 @@ if (function_exists('vms_add_admin_notice')) {
 
             $post = get_post($post_id);
             if (!$post || $post->post_type !== 'vms_event_plan') return;
+            if (!current_user_can('edit_post', $post_id)) return;
 
             $k_band = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
             $band_id = (int) get_post_meta($post_id, $k_band, true);

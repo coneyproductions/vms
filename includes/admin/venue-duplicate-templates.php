@@ -369,6 +369,7 @@ function vms_handle_create_venue_from_template(): void
 
     $template_id = isset($_POST['vms_template_id']) ? absint($_POST['vms_template_id']) : 0;
     if ($template_id <= 0) wp_die('Missing template.');
+    if (!current_user_can('edit_post', $template_id)) wp_die('Not allowed.');
 
     $template = get_post($template_id);
     if (!$template || $template->post_type !== 'vms_venue') wp_die('Invalid template.');

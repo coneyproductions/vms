@@ -3766,13 +3766,12 @@ function vms_vendor_change_tracking_metabox_cb($post)
 add_action('admin_post_vms_vendor_mark_reviewed', 'vms_vendor_handle_mark_reviewed');
 function vms_vendor_handle_mark_reviewed()
 {
-    if (!current_user_can('edit_posts')) {
-        wp_die('Permission denied.');
-    }
-
     $vendor_id = isset($_GET['vendor_id']) ? (int) $_GET['vendor_id'] : 0;
     if ($vendor_id <= 0) {
         wp_die('Invalid vendor.');
+    }
+    if (!current_user_can('edit_post', $vendor_id)) {
+        wp_die('Permission denied.');
     }
 
     check_admin_referer('vms_vendor_mark_reviewed_' . $vendor_id);

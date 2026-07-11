@@ -58,7 +58,8 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `H1` | D, H | High | Confirmed | `includes/admin/tax-profile-admin-metabox.php:35-38`; `includes/portal/vendor-tax-profile.php:117-129` | Tax-profile upload handlers trust `$_FILES['type']` before `media_handle_upload()`. | Medium | `WPORG-21` |
 | `K1` | K | High | Confirmed | `includes/admin/admin-notices.php:16-64` | First-run notice is global, promotional, and not scoped to VMS screens. | Low | `WPORG-23` |
 | `K2` | K | High | Confirmed | `includes/runtime-guards.php:100-108`; `includes/ticketing/ticket-integrity-payment-gateway-health.php:1044-1052` | Diagnostics and payment-gateway notices are hooked globally to `admin_notices` without VMS-screen gating. | Low to Medium | `WPORG-23` |
-| `C1` | C | Medium | Confirmed | `includes/cpt/venues.php:266-269`; `includes/cpt/ratings.php:177-180`; `includes/admin/staff-worker-type.php:75-76`; `includes/admin/venue-context.php:169-170`; `includes/vendor-applications.php:1728-1729`; `includes/portal/vendor-tax-profile.php:92-93`; `includes/admin/tax-profile-admin-metabox.php:35-38` | `WPORG-19A` working-tree remediation now normalizes and sanitizes nonce verification inputs across the audited direct request and wrapper/REST paths; missing-nonce and broader capability follow-up remains deferred to `WPORG-19B`. | Low to Medium | `WPORG-19A`, `WPORG-19B` |
+| `C1` | C | Medium | Confirmed | `includes/cpt/venues.php:266-269`; `includes/cpt/ratings.php:177-180`; `includes/admin/staff-worker-type.php:75-76`; `includes/admin/venue-context.php:169-170`; `includes/vendor-applications.php:1728-1729`; `includes/portal/vendor-tax-profile.php:92-93`; `includes/admin/tax-profile-admin-metabox.php:35-38` | `WPORG-19A` working-tree remediation now normalizes and sanitizes nonce verification inputs across the direct request and wrapper/REST paths. The later complete `WPORG-19B` runtime inventory did not uncover any additional missing-nonce defects. | Low to Medium | `WPORG-19A`, `WPORG-19B` |
+| `C2` | C | Medium | Confirmed | `includes/vendor-applications.php:1420`; `includes/vendor-applications.php:1616`; `includes/vendor-applications.php:1736`; `includes/vendor-applications.php:1843`; `includes/vendor-applications.php:1895`; `includes/vendor-applications.php:1924`; `includes/vendor-applications.php:1965`; `includes/helpers.php:3773`; `includes/admin/venue-duplicate-templates.php:372`; `includes/admin/season-dates.php:199-200`; `includes/cpt/event-plans.php:13658` | The complete `WPORG-19B` runtime inventory closed the remaining section C authorization follow-up by replacing broad or missing object-aware gates across vendor-application, vendor-review, venue-template, season-dates, and event-plan edit-screen mutation boundaries, plus aligned vendor-application admin UI gates. | Low | `WPORG-19B` |
 | `D1` | D | Medium | Confirmed | `includes/portal/staff-portal.php:1755-1758` | `filter_input(..., FILTER_UNSAFE_RAW)` remains in a live request path. | Low | `WPORG-20` |
 | `H2` | D, H | Medium | Confirmed | `includes/admin/data-tools/actions-event-plan-import.php:13-33` | CSV import stores uploaded files with `move_uploaded_file()` before type/content validation beyond filename intent. | Medium | `WPORG-21` |
 | `H3` | D, H | Medium | Confirmed | `includes/safety/private-files.php:163-180` | Private-file storage derives MIME from the original filename after moving the file, not from content. | Medium | `WPORG-21` |
@@ -188,7 +189,8 @@ Acceptable / false-positive notes:
 Status:
 
 - `WPORG-19A` nonce verification input normalization is now applied in the current mirror/live working tree for the shared runtime paths, plus the live-only local outreach module.
-- `WPORG-19B` is still required for missing-nonce additions and broader capability/authorization review that was intentionally kept out of this batch.
+- `WPORG-19B` follow-up is now applied in the current mirror/live working tree after a complete runtime handler inventory across the mirror and live request-processing surfaces.
+- No additional missing-nonce additions, REST permission-callback changes, or public token/link trust-model changes were required in the completed runtime inventory.
 - Several handlers already had the right capability/nonce shape and only required normalization cleanup, not new permission design.
 
 ### `C1` Multiple state-changing handlers verify raw submitted nonces without `wp_unslash()`
@@ -197,9 +199,19 @@ Status:
 - Confidence: Confirmed
 - References: `includes/cpt/venues.php:266-269`; `includes/cpt/venues.php:382`; `includes/cpt/venues.php:536`; `includes/cpt/ratings.php:177-180`; `includes/cpt/ratings.php:404`; `includes/admin/staff-worker-type.php:75-76`; `includes/admin/venue-context.php:169-170`; `includes/admin/venue-context.php:224`; `includes/admin/venue-context.php:278`; `includes/admin/tax-profile-admin-metabox.php:35-38`; `includes/portal/vendor-tax-profile.php:92-93`; `includes/vendor-applications.php:1728-1729`; `includes/vendor-applications.php:2581-2582`
 - Why WordPress.org may object: WordPress coding standards expect submitted nonce values to be unslashed before verification, and these paths mutate state.
-- Recommended remediation: normalize each submitted nonce once with `wp_unslash()` plus string casting before `wp_verify_nonce()`, while keeping the existing capability and early-return behavior intact. That normalization pass is now applied in the current `WPORG-19A` working tree; remaining missing-nonce and capability-scope work stays deferred to `WPORG-19B`.
+- Recommended remediation: normalize each submitted nonce once with `wp_unslash()` plus string casting before `wp_verify_nonce()`, while keeping the existing capability and early-return behavior intact. That normalization pass is now applied in the current `WPORG-19A` working tree. The later `WPORG-19B` follow-up then closed the remaining object-level authorization review for the complete runtime handler inventory.
 - Compatibility or regression risk: Low to Medium if limited to nonce normalization only.
 - Suggested remediation batch ID: `WPORG-19A`, `WPORG-19B`
+
+### `C2` Specific-object mutation and direct-dispatch handlers lacked object-aware authorization
+
+- Severity: Medium
+- Confidence: Confirmed
+- References: `includes/vendor-applications.php:1420`; `includes/vendor-applications.php:1616`; `includes/vendor-applications.php:1736`; `includes/vendor-applications.php:1843`; `includes/vendor-applications.php:1895`; `includes/vendor-applications.php:1924`; `includes/vendor-applications.php:1965`; `includes/helpers.php:3773`; `includes/admin/venue-duplicate-templates.php:372`; `includes/admin/season-dates.php:199-200`; `includes/cpt/event-plans.php:13658`
+- Why WordPress.org may object: several admin-post, save-post, and direct request dispatchers mutated specific posts or settings while relying on broad `edit_posts` access or on no handler-local authorization check, which can over-authorize operators who may edit some posts but not the targeted object or who should not reach an admin settings mutation path at all.
+- Recommended remediation: preserve existing nonce actions, request keys, redirects, and operator flows while requiring `current_user_can('edit_post', $object_id)` or the existing filtered admin capability on the targeted object or page before any mutation. That targeted follow-up is now applied in the current `WPORG-19B` working tree, along with matching live-tree updates, a complete runtime inventory, and focused behavioral regression coverage.
+- Compatibility or regression risk: Low because the remediation narrows authorization only at the specific-object boundary and does not alter the surrounding workflow.
+- Suggested remediation batch ID: `WPORG-19B`
 
 Acceptable notes:
 
@@ -538,10 +550,10 @@ Recommended follow-up order, keeping each pass narrow:
 
 1. `WPORG-19A - Nonce verification input normalization`
    - Scope: `C1` normalization/sanitization only
-   - Result: completed in the current working tree; keep paired with `WPORG-19B` before packaging
+   - Result: completed in the current working tree
 2. `WPORG-19B - Missing nonce and capability/authorization follow-up`
    - Scope: remaining section C concerns outside normalization
-   - Goal: add missing nonces where needed and review capability/authorization boundaries without broad functional changes
+   - Result: completed in the current working tree after a full runtime handler inventory; no additional missing-nonce additions were required, and the remaining shared object-level / direct-dispatch authorization gaps were hardened without broad functional changes
 3. `WPORG-20 - Input sanitization and structured-payload review`
    - Scope: `D1`, `D2`, `D3`, `D4`
    - Goal: remove `FILTER_UNSAFE_RAW`, then validate JSON/body/fingerprint inputs deliberately
@@ -591,7 +603,7 @@ Recommended follow-up order, keeping each pass narrow:
 - [ ] Resolve mirror vs live version drift and synchronize all public metadata markers.
 - [x] Run the final `WPORG-18B` parser/extraction audit after the `WPORG-18A` code remediation.
 - [x] Complete `WPORG-19A` nonce verification input normalization in legacy save, admin-post, AJAX, REST-wrapper, and frontend mutation handlers.
-- [ ] Complete `WPORG-19B` missing-nonce and capability/authorization follow-up before packaging the final public submission build.
+- [x] Complete `WPORG-19B` missing-nonce and capability/authorization follow-up before packaging the final public submission build.
 - [ ] Replace `FILTER_UNSAFE_RAW` and validate structured request bodies explicitly.
 - [ ] Harden upload validation across tax-profile, import, and private-file flows.
 - [ ] Migrate remaining inline executable JS/CSS into enqueued assets or approved inline helpers.
@@ -693,7 +705,6 @@ Date: 2026-07-10
 ### Remaining Follow-Up Batches
 
 - `WPORG-18B` — Internationalization parser compliance verification
-- `WPORG-19B` — Missing nonce and capability/authorization follow-up
 - `WPORG-20` — Input sanitization and structured-payload review
 - `WPORG-21` — Upload handling hardening
 - `WPORG-22` — Inline asset enqueue migration
@@ -951,7 +962,7 @@ Date: 2026-07-10
 
 ### Summary
 
-- Result: `PASS WITH FOLLOW-UP`
+- Result: `PASS`
 - Scope completed: nonce verification input normalization and sanitization across the audited mirror runtime tree, corresponding live runtime paths, and the one live-only local admissions file that has no mirror counterpart.
 - Starting mirror HEAD: `f95b50e77c78752af2964c5eb6c36f85026aae4e`
 - Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task
@@ -988,8 +999,10 @@ Date: 2026-07-10
   - live: `96`
 - Non-request `wp_verify_nonce()` paths left unchanged: `0`
 - Comments, fixtures, and false positives in the audited runtime/helper totals: `0`
-- Missing-nonce findings newly inventoried in this batch and deferred to `WPORG-19B`: `0`
-- Capability / authorization findings newly inventoried in this batch and deferred to `WPORG-19B`: `0`
+- Missing-nonce findings not fully inventoried in this normalization-only batch:
+  - Later completed in `WPORG-19B`: no additional missing-nonce defects were found.
+- Capability / authorization findings not fully inventoried in this normalization-only batch:
+  - Later completed in `WPORG-19B`: the complete runtime inventory found and fixed the remaining shared object-level and direct-dispatch authorization gaps.
 
 ### Files Changed
 
@@ -1091,10 +1104,151 @@ Date: 2026-07-10
 
 ### Remaining Risks and Required Follow-Up
 
-- `WPORG-19B` is still required.
-- This batch intentionally did not add missing nonces to handlers that currently lack them.
-- This batch intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C only; broader missing-nonce and authorization review remains open by scope choice, not by a failed normalization check.
+- `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
+- `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C and the targeted follow-up authorization hardening tracked in `WPORG-19B`; the remaining open work in this inventory now starts at `WPORG-20`.
+
+## WPORG-19B Result
+
+Date: 2026-07-10
+
+### Summary
+
+- Result: `PASS`
+- Scope completed: complete mirror/live runtime handler inventory for section C, targeted object-level and direct-dispatch authorization hardening, focused behavioral regression coverage, and remediation-inventory closeout for the remaining nonce/permission batch.
+- Starting mirror HEAD: `85ded6ed23ff773b883da72a067d8a59bb6a9e60`
+- Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task
+- Protected stash status: `stash@{0}: On work/unreleased-2026-06-18: WPORG-16D preserve unrelated sidebar+doc work` remained untouched.
+
+### Inventory Coverage
+
+- Mirror classified handler entries audited: `348`
+  - Inventory unit: deduped runtime handler entries with `16` unique REST route patterns
+  - Additional REST verification: `17` method-specific route registrations reviewed (`/admissions` GET and POST were reviewed separately even though the deduped inventory counts the shared path once)
+- Live classified handler entries audited: `374`
+  - Shared runtime surface matches the mirror inventory shape
+  - Live-only delta: `26` handlers outside the WordPress.org release package
+    - `vms/includes/modules/admissions/outreach-recipients.php`: `17`
+    - `vms/includes/modules/admissions/outreach.php`: `2`
+    - `vms/includes/modules/admissions/pass-claims.php`: `1`
+    - `vms/includes/modules/outreach/admin-ui.php`: `5`
+    - `vms/includes/modules/outreach/outreach.php`: `1`
+
+### Classification Totals
+
+| Class | Mirror | Live | Notes |
+| --- | ---: | ---: | --- |
+| `1` | `201` | `201` | Nonce plus capability/ownership protected mutation or sensitive request handler |
+| `2` | `0` | `0` | Missing nonce |
+| `3` | `0` | `0` | Missing capability or role authorization |
+| `4` | `0` | `0` | Missing ownership or object authorization |
+| `5` | `17` | `17` | Public or semi-public signed-token / equivalent protected flow |
+| `6` | `7` | `7` | Intentionally public, read-only, or otherwise non-sensitive endpoint |
+| `7` | `16` | `16` | Dedupe-counted REST route patterns with explicit `permission_callback` |
+| `8` | `97` | `97` | Internal-only bootstrap, migration, rewrite, registration, observer, or profiler callback |
+| `9` | `10` | `10` | Duplicate dispatcher or save-path callback protected at a shared boundary |
+| `10` | `0` | `0` | Test, fixture, comment, dead code, or false positive |
+| `11` | `0` | `0` | Ambiguous contract requiring a product or security decision |
+| `12` | `0` | `26` | Live-only or outside the WordPress.org release package |
+
+Reconciliation:
+
+- Mirror: `201 + 17 + 7 + 16 + 97 + 10 = 348`
+- Live: mirror `348` + live-only `26` = `374`
+
+### Authorization Boundaries Changed
+
+- Replaced broad `edit_posts` gates with object-aware `edit_post()` checks in `7` shared mutation handlers:
+  - `includes/vendor-applications.php` `vms_vendor_applications_handle_edit_screen_decision`
+  - `includes/vendor-applications.php` `vms_vendor_applications_handle_approve`
+  - `includes/vendor-applications.php` `vms_vendor_applications_handle_reject`
+  - `includes/vendor-applications.php` `vms_vendor_applications_handle_repair_vendor`
+  - `includes/vendor-applications.php` `vms_vendor_applications_handle_resync_vendor`
+  - `includes/helpers.php` `vms_vendor_handle_mark_reviewed`
+  - `includes/admin/venue-duplicate-templates.php` `vms_handle_create_venue_from_template`
+- Added matching object-aware gates to `2` supporting vendor-application admin UI boundaries in `includes/vendor-applications.php` so review controls only render for operators who can edit the specific application.
+- Completed the full inventory by hardening `2` additional shared direct-dispatch handlers that were not part of the earlier seven-handler patch:
+  - `includes/admin/season-dates.php` `vms_sd_maybe_handle_post` now enforces the existing filtered admin capability before any POST mutation path
+  - `includes/cpt/event-plans.php` admin-edit safety-net closure now enforces `current_user_can('edit_post', $post_id)` before any vendor-integrity mutation
+- Added focused mirror behavioral regression coverage in `tests/authorization-boundary-hardening.php` to prevent future reintroduction of broad-object or missing handler-local authorization at those boundaries.
+- Applied the same shared runtime changes to the corresponding files in `vms/`.
+
+### Files Changed
+
+- Mirror runtime PHP files changed (`5`):
+  - `includes/vendor-applications.php`
+  - `includes/helpers.php`
+  - `includes/admin/venue-duplicate-templates.php`
+  - `includes/admin/season-dates.php`
+  - `includes/cpt/event-plans.php`
+- Mirror tests changed (`1`):
+  - `tests/authorization-boundary-hardening.php`
+- Mirror documentation changed (`1`):
+  - `docs/WPORG_PREREVIEW_REMEDIATION.md`
+- Corresponding shared live runtime files changed:
+  - `vms/includes/vendor-applications.php`
+  - `vms/includes/helpers.php`
+  - `vms/includes/admin/venue-duplicate-templates.php`
+  - `vms/includes/admin/season-dates.php`
+  - `vms/includes/cpt/event-plans.php`
+- Live-only runtime files changed in this batch: `0`
+
+### Findings Summary
+
+- Missing nonce result:
+  - No additional missing-nonce defects were found in the completed runtime inventory.
+  - `20` `$stop = false` nonce checks were re-reviewed; every match enforces the returned value before continuing.
+- Missing capability / object-authorization result:
+  - The original seven shared mutation handlers and two supporting vendor-application UI gates remain correctly hardened.
+  - The complete runtime inventory uncovered `2` additional shared direct-dispatch capability gaps (`season-dates` POST handling and the Event Plan edit-screen vendor-integrity guard); both are now fixed in mirror and live.
+  - No remaining audited mutation handler relies only on broad `edit_posts` when mutating a request-supplied specific object.
+- REST findings:
+  - `17` method-specific route registrations reviewed, covering `16` deduped route patterns in the classified inventory.
+  - Every registration has an explicit `permission_callback`.
+  - `0` registrations use `__return_true`.
+  - Mutation routes stay behind `manage_options`, tours capability checks plus REST nonces, or admissions check-in/manage callbacks plus REST nonces.
+- AJAX and admin-post findings:
+  - Authenticated AJAX handlers reviewed: `41`
+  - `nopriv` AJAX handlers reviewed: `4`
+  - `admin_post` handlers reviewed: `144`
+  - `admin_post_nopriv` handlers reviewed: `2`
+  - `5` admin-post wrappers intentionally rely on a shared protected helper boundary rather than duplicating their own nonce/cap checks.
+  - `1` authenticated AJAX endpoint (`vms_get_venue_comp_defaults`) intentionally remains nonce-free because it is `manage_options`-gated and read-only.
+- Save-post findings:
+  - Total reviewed: `41`
+  - Explicit nonce-protected callbacks: `26`
+  - Object-aware `edit_post` or equivalent callbacks: `28`
+  - Internal observers / profilers / cache-bust hooks not independently HTTP-invokable: `13`
+  - Shared post-save boundary callbacks intentionally relying on the protected save dispatcher: `4`
+- Public and token-flow findings:
+  - Category `5` handlers reviewed: `17`
+  - Trust models reviewed: confirmation-email lookup keys, invitation / scanner / pass-claim tokens, customer/cart nonce flows, and ownership-linked portal submissions
+  - No ambiguous token-binding, expiration, or revocation contract blocked this batch
+
+### Verification Performed
+
+- Confirmed mirror start state matched `85ded6ed23ff773b883da72a067d8a59bb6a9e60`, the worktree started clean, and `stash@{0}` remained untouched.
+- Reviewed the full mirror diff for nonce action strings, nonce request-key names, capability or hook churn, routes, redirects, and business-logic changes; no unintended functional drift was introduced.
+- Confirmed the shared runtime hardening remains aligned between `packages/vms-github-reconcile` and `vms/` for the five changed runtime files.
+- Replaced the original source-pattern-only authorization test with behavioral mirror-source coverage in `tests/authorization-boundary-hardening.php`.
+- Re-ran the required mirror test suite:
+  - `tests/authorization-boundary-hardening.php`
+  - `tests/nonce-input-normalization.php`
+  - `tests/admissions-rest-permissions.php`
+  - `tests/runtime-stub-guards.php`
+  - `tests/release-compatibility-harness.php`
+  - `tests/public-release-build-pipeline.php`
+  - `tests/event-plan-calendar-resync-isolated.php`
+  - `tests/event-plan-editor-vendor-preservation.php`
+  - `tests/ticket-checkout-safety-hardening.php`
+- Ran `php -l` on every changed mirror and live PHP file and re-ran `git diff --check`.
+- Retained the existing Plugin Check environment note: WP-CLI `2.12.0` under PHP `8.5` still fails in its `php-cli-tools` dependency, so no fresh parseable Plugin Check result was added in this batch.
+- Detailed command verification for this batch is recorded in the task report rather than duplicated inline here.
+
+### Result
+
+- The nonce / permissions category can remain marked complete.
+- No remaining WPORG-19B runtime handler in the audited mirror or live surfaces is classified as missing a nonce, missing capability/role authorization, missing ownership/object authorization, or requiring an unresolved authorization-contract decision.
 
 ## Non-Actions in This Audit
 

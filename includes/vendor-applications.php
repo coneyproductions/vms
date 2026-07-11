@@ -1415,9 +1415,10 @@ add_filter('post_row_actions', 'vms_vendor_applications_row_actions', 10, 2);
 function vms_vendor_applications_row_actions($actions, $post)
 {
     if (empty($post->post_type) || !in_array($post->post_type, vms_vendor_app_cpt_slugs(), true)) return $actions;
-    if (!current_user_can('edit_posts')) return $actions;
 
     $app_id  = (int) $post->ID;
+    if ($app_id <= 0 || !current_user_can('edit_post', $app_id)) return $actions;
+
     $status  = vms_vendor_app_get_status($app_id);
 
     $vendor_id = (int) get_post_meta($app_id, '_vms_vendor_id', true);
@@ -1611,9 +1612,15 @@ function vms_vendor_applications_metabox_details($post): void
 
 function vms_vendor_applications_metabox_actions($post): void
 {
-    $status = vms_vendor_app_get_status((int)$post->ID);
+    $post_id = ($post instanceof WP_Post) ? (int) $post->ID : 0;
+    if ($post_id <= 0 || !current_user_can('edit_post', $post_id)) {
+        echo '<p>' . esc_html__('You do not have permission to update applications.', 'backstage-venue-manager') . '</p>';
+        return;
+    }
+
+    $status = vms_vendor_app_get_status($post_id);
     $labels = vms_vendor_app_statuses();
-    $vendor_id = (int) get_post_meta($post->ID, '_vms_vendor_id', true);
+    $vendor_id = (int) get_post_meta($post_id, '_vms_vendor_id', true);
 
     echo '<p><strong>' . esc_html__('Status:', 'backstage-venue-manager') . '</strong> ';
     echo '<span class="vms-status-pill ' . esc_attr(vms_vendor_app_status_pill_class($status)) . '">' . esc_html($labels[$status] ?? $status) . '</span></p>';
@@ -1638,8 +1645,8 @@ function vms_vendor_applications_metabox_actions($post): void
 
     if ($status === 'approved' && !$vendor_ok) {
         $repair_url = wp_nonce_url(
-            admin_url('admin-post.php?action=vms_vendor_app_repair_vendor&app_id=' . (int)$post->ID),
-            'vms_vendor_app_repair_vendor_' . (int)$post->ID
+            admin_url('admin-post.php?action=vms_vendor_app_repair_vendor&app_id=' . $post_id),
+            'vms_vendor_app_repair_vendor_' . $post_id
         );
         echo '<p><a class="button button-primary" href="' . esc_url($repair_url) . '">'
             . esc_html__('Create Vendor Now', 'backstage-venue-manager')
@@ -1649,16 +1656,11 @@ function vms_vendor_applications_metabox_actions($post): void
             . '</p>';
     }
 
-    if (!current_user_can('edit_posts')) {
-        echo '<p>' . esc_html__('You do not have permission to update applications.', 'backstage-venue-manager') . '</p>';
-        return;
-    }
-
-    $email = sanitize_email((string) get_post_meta($post->ID, '_vms_app_email', true));
-    $last_message = trim((string) get_post_meta($post->ID, '_vms_app_last_response_message', true));
-    $last_sent_at = trim((string) get_post_meta($post->ID, '_vms_app_last_response_sent_at', true));
-    $last_sent_to = sanitize_email((string) get_post_meta($post->ID, '_vms_app_last_response_sent_to', true));
-    $internal_note = trim((string) get_post_meta($post->ID, '_vms_app_operator_internal_note', true));
+    $email = sanitize_email((string) get_post_meta($post_id, '_vms_app_email', true));
+    $last_message = trim((string) get_post_meta($post_id, '_vms_app_last_response_message', true));
+    $last_sent_at = trim((string) get_post_meta($post_id, '_vms_app_last_response_sent_at', true));
+    $last_sent_to = sanitize_email((string) get_post_meta($post_id, '_vms_app_last_response_sent_to', true));
+    $internal_note = trim((string) get_post_meta($post_id, '_vms_app_operator_internal_note', true));
 
     echo '<hr>';
     echo '<p><strong>' . esc_html__('Operator response', 'backstage-venue-manager') . '</strong></p>';
@@ -1667,11 +1669,11 @@ function vms_vendor_applications_metabox_actions($post): void
         echo '<p class="description" style="color:#92400e;">' . esc_html__('This application is not review-ready yet. The applicant must confirm their email before operators can approve, hold, or reject it.', 'backstage-venue-manager') . '</p>';
     }
 
-    wp_nonce_field('vms_vendor_app_decision_' . (int) $post->ID, 'vms_vendor_app_decision_nonce');
+    wp_nonce_field('vms_vendor_app_decision_' . $post_id, 'vms_vendor_app_decision_nonce');
     echo '<input type="hidden" name="vms_vendor_app_admin_fields_present" value="1">';
 
     echo '<p><label for="vms-app-decision-message"><strong>' . esc_html__('Message to applicant', 'backstage-venue-manager') . '</strong></label></p>';
-    echo '<textarea id="vms-app-decision-message" name="vms_vendor_app_decision_message" rows="7" style="width:100%;">' . esc_textarea(vms_vendor_app_default_response_message((int) $post->ID, $status === 'pending' ? 'holding' : $status)) . '</textarea>';
+    echo '<textarea id="vms-app-decision-message" name="vms_vendor_app_decision_message" rows="7" style="width:100%;">' . esc_textarea(vms_vendor_app_default_response_message($post_id, $status === 'pending' ? 'holding' : $status)) . '</textarea>';
 
     if ($email !== '') {
         /* translators: %s: email address. */
@@ -1731,7 +1733,7 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
         if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
             return;
         }
-        if (!current_user_can('edit_posts')) {
+        if (!current_user_can('edit_post', $post_id)) {
             return;
         }
         if (empty($_POST['vms_vendor_app_admin_fields_present'])) {
@@ -1836,10 +1838,9 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
 add_action('admin_post_vms_vendor_app_approve', 'vms_vendor_applications_handle_approve');
 function vms_vendor_applications_handle_approve(): void
 {
-    if (!current_user_can('edit_posts')) wp_die('Forbidden');
-
     $app_id = isset($_GET['app_id']) ? (int) $_GET['app_id'] : 0;
     if ($app_id <= 0) wp_die('Missing app_id');
+    if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
     check_admin_referer('vms_vendor_app_approve_' . $app_id);
 
@@ -1889,10 +1890,9 @@ function vms_vendor_applications_handle_approve(): void
 add_action('admin_post_vms_vendor_app_reject', 'vms_vendor_applications_handle_reject');
 function vms_vendor_applications_handle_reject(): void
 {
-    if (!current_user_can('edit_posts')) wp_die('Forbidden');
-
     $app_id = isset($_GET['app_id']) ? (int) $_GET['app_id'] : 0;
     if ($app_id <= 0) wp_die('Missing app_id');
+    if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
     check_admin_referer('vms_vendor_app_reject_' . $app_id);
 
@@ -1919,10 +1919,9 @@ function vms_vendor_applications_handle_reject(): void
 add_action('admin_post_vms_vendor_app_repair_vendor', 'vms_vendor_applications_handle_repair_vendor');
 function vms_vendor_applications_handle_repair_vendor(): void
 {
-    if (!current_user_can('edit_posts')) wp_die('Forbidden');
-
     $app_id = isset($_GET['app_id']) ? (int) $_GET['app_id'] : 0;
     if ($app_id <= 0) wp_die('Missing app_id');
+    if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
     check_admin_referer('vms_vendor_app_repair_vendor_' . $app_id);
 
@@ -1961,10 +1960,9 @@ function vms_vendor_applications_handle_repair_vendor(): void
 add_action('admin_post_vms_vendor_app_resync_vendor', 'vms_vendor_applications_handle_resync_vendor');
 function vms_vendor_applications_handle_resync_vendor(): void
 {
-    if (!current_user_can('edit_posts')) wp_die('Forbidden');
-
     $app_id = isset($_GET['app_id']) ? (int) $_GET['app_id'] : 0;
     if ($app_id <= 0) wp_die('Missing app_id');
+    if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
     check_admin_referer('vms_vendor_app_resync_vendor_' . $app_id);
 
