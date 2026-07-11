@@ -1298,7 +1298,7 @@ if (!function_exists('vms_vendor_applications_status_filter_dropdown')) {
             return;
         }
 
-        $selected = isset($_GET['vms_app_status_filter']) ? sanitize_key((string) $_GET['vms_app_status_filter']) : '';
+        $selected = vms_request_read_key($_GET, 'vms_app_status_filter');
         echo '<select name="vms_app_status_filter">';
         echo '<option value="">' . esc_html__('All application statuses', 'backstage-venue-manager') . '</option>';
         foreach (vms_vendor_app_statuses() as $status => $label) {
@@ -1329,7 +1329,7 @@ if (!function_exists('vms_vendor_applications_apply_status_filter')) {
             return;
         }
 
-        $status = isset($_GET['vms_app_status_filter']) ? sanitize_key((string) $_GET['vms_app_status_filter']) : '';
+        $status = vms_request_read_key($_GET, 'vms_app_status_filter');
         $statuses = vms_vendor_app_statuses();
         if ($status === '' || !isset($statuses[$status])) {
             $status = '';
@@ -1746,10 +1746,10 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
             return;
         }
 
-        $internal_note = isset($_POST['vms_vendor_app_operator_internal_note']) ? sanitize_textarea_field((string) $_POST['vms_vendor_app_operator_internal_note']) : '';
+        $internal_note = vms_request_read_textarea_field($_POST, 'vms_vendor_app_operator_internal_note');
         update_post_meta($post_id, '_vms_app_operator_internal_note', $internal_note);
 
-        $decision = isset($_POST['vms_vendor_app_decision']) ? sanitize_key((string) $_POST['vms_vendor_app_decision']) : '';
+        $decision = vms_request_read_key($_POST, 'vms_vendor_app_decision');
         $statuses = vms_vendor_app_statuses();
         if ($decision === '' || !isset($statuses[$decision])) {
             return;
@@ -1766,13 +1766,13 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
         }
 
         $from_status = vms_vendor_app_get_status($post_id);
-        $message = isset($_POST['vms_vendor_app_decision_message']) ? sanitize_textarea_field((string) $_POST['vms_vendor_app_decision_message']) : '';
+        $message = vms_request_read_textarea_field($_POST, 'vms_vendor_app_decision_message');
         $shown_default_status = ($from_status === 'pending') ? 'holding' : $from_status;
         $shown_default_message = vms_vendor_app_default_response_message($post_id, $shown_default_status);
         if (trim($message) === '' || trim($message) === trim($shown_default_message)) {
             $message = vms_vendor_app_default_response_message($post_id, $decision);
         }
-        $send_email = !empty($_POST['vms_vendor_app_send_response_email']);
+        $send_email = vms_request_read_bool_flag($_POST, 'vms_vendor_app_send_response_email');
         $block_approved_email = false;
 
         if ($decision === 'approved') {
@@ -2120,8 +2120,7 @@ function vms_vendor_apply_turnstile_secret_key(): string
  */
 function vms_vendor_apply_is_rate_limited(): bool
 {
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
-    $ip = trim($ip);
+    $ip = vms_request_remote_addr();
 
     if ($ip === '') return false;
 
@@ -2151,15 +2150,16 @@ function vms_vendor_apply_verify_turnstile(): bool
         return false;
     }
 
-    $token = isset($_POST['cf-turnstile-response']) ? (string) $_POST['cf-turnstile-response'] : '';
-    $token = trim($token);
+    $token = vms_request_read_scalar($_POST, 'cf-turnstile-response');
+    if (strlen($token) > 4096) {
+        $token = substr($token, 0, 4096);
+    }
 
     if ($token === '') {
         return false;
     }
 
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
-    $ip = trim($ip);
+    $ip = vms_request_remote_addr();
 
     $resp = wp_remote_post(
         'https://challenges.cloudflare.com/turnstile/v0/siteverify',
@@ -2197,12 +2197,9 @@ function vms_vendor_apply_verify_turnstile(): bool
  */
 function vms_vendor_apply_request_fingerprint(): array
 {
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
-    $ua = isset($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
-
     return array(
-        'ip' => trim($ip),
-        'ua' => trim($ua),
+        'ip' => vms_request_remote_addr(),
+        'ua' => vms_request_user_agent(),
     );
 }
 
@@ -2284,14 +2281,14 @@ add_shortcode('vms_vendor_apply', 'vms_vendor_apply_shortcode');
 function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
 {
     // Handle submission first
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_vendor_apply_submit'])) {
+    if (vms_request_method() === 'post' && isset($_POST['vms_vendor_apply_submit'])) {
         return vms_vendor_apply_handle_frontend_post();
     }
 
     $msg = '';
-    $flag = isset($_GET['vms_app']) ? (string) $_GET['vms_app'] : '';
+    $flag = vms_request_read_key($_GET, 'vms_app');
     $is_logged_in_submitter = is_user_logged_in();
-    $is_portal_add_flow = $is_logged_in_submitter && !empty($_GET['vms_from_portal']);
+    $is_portal_add_flow = $is_logged_in_submitter && vms_request_read_bool_flag($_GET, 'vms_from_portal');
     $prefill_email = '';
     if ($is_logged_in_submitter) {
         $current_user = wp_get_current_user();
@@ -2609,9 +2606,9 @@ function vms_vendor_apply_handle_frontend_post(): string
         return '';
     }
 
-    $vendor_type = isset($_POST['vms_app_vendor_type']) ? vms_vendor_app_normalize_vendor_type((string) $_POST['vms_app_vendor_type']) : '';
-    $name        = isset($_POST['vms_app_name']) ? sanitize_text_field((string) $_POST['vms_app_name']) : '';
-    $email       = isset($_POST['vms_app_email']) ? sanitize_email((string) $_POST['vms_app_email']) : '';
+    $vendor_type = vms_vendor_app_normalize_vendor_type(vms_request_read_scalar($_POST, 'vms_app_vendor_type'));
+    $name        = vms_request_read_text_field($_POST, 'vms_app_name');
+    $email       = vms_request_read_email($_POST, 'vms_app_email');
 
     if (!$vendor_type || !$name || !$email) {
         vms_vendor_apply_frontend_redirect('error');
@@ -2673,31 +2670,37 @@ function vms_vendor_apply_handle_frontend_post(): string
         }
     }
 
-    $contact_name = isset($_POST['vms_app_contact_name']) ? sanitize_text_field((string) $_POST['vms_app_contact_name']) : '';
-    $location = isset($_POST['vms_app_location']) ? sanitize_text_field((string) $_POST['vms_app_location']) : '';
-    $phone    = isset($_POST['vms_app_phone']) ? sanitize_text_field((string) $_POST['vms_app_phone']) : '';
-    $website  = isset($_POST['vms_app_website']) ? vms_vendor_app_sanitize_url_input((string) $_POST['vms_app_website']) : '';
-    $rate     = isset($_POST['vms_app_rate']) ? sanitize_text_field((string) $_POST['vms_app_rate']) : '';
-    $turnout  = isset($_POST['vms_app_turnout']) ? sanitize_key((string) $_POST['vms_app_turnout']) : '';
+    $contact_name = vms_request_read_text_field($_POST, 'vms_app_contact_name');
+    $location = vms_request_read_text_field($_POST, 'vms_app_location');
+    $phone    = vms_request_read_text_field($_POST, 'vms_app_phone');
+    $website  = vms_vendor_app_sanitize_url_input(vms_request_read_scalar($_POST, 'vms_app_website'));
+    $rate     = vms_request_read_text_field($_POST, 'vms_app_rate');
+    $turnout  = vms_request_read_key($_POST, 'vms_app_turnout');
     if ($turnout !== '' && !array_key_exists($turnout, vms_vendor_app_turnout_options())) {
         $turnout = '';
     }
-    $compensation_notes = isset($_POST['vms_app_compensation_notes']) ? sanitize_textarea_field((string) $_POST['vms_app_compensation_notes']) : '';
-    $audience_notes = isset($_POST['vms_app_audience_notes']) ? sanitize_textarea_field((string) $_POST['vms_app_audience_notes']) : '';
+    $compensation_notes = vms_request_read_textarea_field($_POST, 'vms_app_compensation_notes');
+    $audience_notes = vms_request_read_textarea_field($_POST, 'vms_app_audience_notes');
     if ($vendor_type === 'band' && ($rate === '' || $turnout === '')) {
         vms_vendor_apply_frontend_redirect('band_required');
         return '';
     }
-    $epk      = isset($_POST['vms_app_epk']) ? vms_vendor_app_sanitize_url_input((string) $_POST['vms_app_epk']) : '';
-    $cuisine  = isset($_POST['vms_app_cuisine']) ? sanitize_text_field((string) $_POST['vms_app_cuisine']) : '';
-    $menu     = isset($_POST['vms_app_menu']) ? vms_vendor_app_sanitize_url_input((string) $_POST['vms_app_menu']) : '';
+    $epk      = vms_vendor_app_sanitize_url_input(vms_request_read_scalar($_POST, 'vms_app_epk'));
+    $cuisine  = vms_request_read_text_field($_POST, 'vms_app_cuisine');
+    $menu     = vms_vendor_app_sanitize_url_input(vms_request_read_scalar($_POST, 'vms_app_menu'));
     $social_inputs = array();
-    $posted_social = isset($_POST['vms_app_social']) && is_array($_POST['vms_app_social']) ? (array) $_POST['vms_app_social'] : array();
+    $posted_social = array();
+    if (isset($_POST['vms_app_social']) && is_array($_POST['vms_app_social'])) {
+        $posted_social = wp_unslash($_POST['vms_app_social']);
+        $posted_social = is_array($posted_social) ? $posted_social : array();
+    }
     foreach (vms_vendor_app_social_field_map() as $slug => $field) {
-        $social_inputs[$slug] = isset($posted_social[$slug]) ? vms_vendor_app_sanitize_url_input((string) $posted_social[$slug]) : '';
+        $social_inputs[$slug] = (isset($posted_social[$slug]) && is_scalar($posted_social[$slug]))
+            ? vms_vendor_app_sanitize_url_input(trim((string) $posted_social[$slug]))
+            : '';
     }
     $social   = vms_vendor_app_compose_social_legacy_blob($social_inputs);
-    $notes    = isset($_POST['vms_app_notes']) ? sanitize_textarea_field((string) $_POST['vms_app_notes']) : '';
+    $notes    = vms_request_read_textarea_field($_POST, 'vms_app_notes');
 
     $app_id = wp_insert_post(array(
         'post_type'   => VMS_VENDOR_APP_CPT,

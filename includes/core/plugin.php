@@ -31,8 +31,7 @@ add_filter('admin_body_class', function (string $classes): string {
 	// Ensure VMS admin styling applies on:
 	// - VMS admin pages (page=vms, page=vms-*)
 	// - VMS CPT edit screens (Event Plans, Vendors, Venues)
-	$page_raw = isset($_GET['page']) ? (string) $_GET['page'] : '';
-	$page     = $page_raw !== '' ? sanitize_key($page_raw) : '';
+	$page = vms_request_read_key($_GET, 'page');
 
 	$is_vms_page = false;
 	if ($page === 'vms') {
@@ -79,8 +78,7 @@ add_filter('admin_body_class', function (string $classes): string {
  */
 add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 
-	$page_raw = isset($_GET['page']) ? (string) $_GET['page'] : '';
-	$page     = $page_raw !== '' ? sanitize_key($page_raw) : '';
+	$page = vms_request_read_key($_GET, 'page');
 
 	// Only load assets on VMS admin pages.
 	$is_vms_page = false;

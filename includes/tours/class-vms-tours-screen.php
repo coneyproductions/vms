@@ -25,7 +25,7 @@ if (!class_exists('VMS_Tours_Screen')) {
 
 		public function resolve_admin_screen_key(): string
 		{
-			$page = isset($_GET['page']) ? sanitize_text_field((string) wp_unslash($_GET['page'])) : '';
+			$page = vms_request_read_text_field($_GET, 'page');
 			if ($page !== '') {
 				if ($page === 'vms') {
 					$page = 'vms-dashboard';
@@ -56,7 +56,7 @@ if (!class_exists('VMS_Tours_Screen')) {
 				return false;
 			}
 
-			$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+			$page = vms_request_read_key($_GET, 'page');
 			if ($page === 'vms' || $page === 'vms-dashboard' || strpos($page, 'vms-') === 0) {
 				return true;
 			}

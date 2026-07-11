@@ -173,7 +173,7 @@ if (!function_exists('vms_vendor_app_is_confirmation_request')) {
             return true;
         }
 
-        return isset($_GET['vms_vendor_app_confirm']) && (string) wp_unslash($_GET['vms_vendor_app_confirm']) === '1';
+        return vms_request_read_scalar($_GET, 'vms_vendor_app_confirm') === '1';
     }
 }
 
@@ -542,8 +542,8 @@ if (!function_exists('vms_vendor_app_mark_confirmation_token_consumed')) {
             return;
         }
 
-        $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
-        $ua = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+        $ip = vms_request_remote_addr();
+        $ua = vms_request_user_agent();
 
         $wpdb->update(
             vms_vendor_app_confirm_tokens_table(),
@@ -603,7 +603,10 @@ if (!function_exists('vms_vendor_app_note_confirmation_send')) {
 if (!function_exists('vms_vendor_app_confirmation_ip_bucket_key')) {
     function vms_vendor_app_confirmation_ip_bucket_key(int $app_id): string
     {
-        $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) wp_unslash($_SERVER['REMOTE_ADDR']) : 'unknown';
+        $ip = vms_request_remote_addr();
+        if ($ip === '') {
+            $ip = 'unknown';
+        }
         return 'vms_vendor_app_confirm_ip_' . md5($app_id . '|' . $ip);
     }
 }
@@ -985,7 +988,10 @@ if (!function_exists('vms_vendor_app_maybe_notify_review_ready')) {
 if (!function_exists('vms_vendor_app_confirmation_attempt_bucket_key')) {
     function vms_vendor_app_confirmation_attempt_bucket_key(string $raw_token): string
     {
-        $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) wp_unslash($_SERVER['REMOTE_ADDR']) : 'unknown';
+        $ip = vms_request_remote_addr();
+        if ($ip === '') {
+            $ip = 'unknown';
+        }
         return 'vms_vendor_app_confirm_attempt_' . md5($ip . '|' . vms_vendor_app_hash_confirmation_token($raw_token));
     }
 }
@@ -1492,10 +1498,10 @@ if (!function_exists('vms_vendor_app_render_portal_applicant_panel')) {
 if (!function_exists('vms_vendor_app_redirect_after_resend')) {
     function vms_vendor_app_redirect_after_resend(int $app_id, string $return_url, string $notice_key, string $message = '', string $type = 'success'): void
     {
-        $return_url = trim($return_url);
-        if ($return_url === '') {
-            $return_url = vms_vendor_app_public_state_url('confirm_pending', $app_id, array('vms_app_notice' => $notice_key));
-        }
+        $return_url = vms_request_local_redirect(
+            vms_vendor_app_public_state_url('confirm_pending', $app_id, array('vms_app_notice' => $notice_key)),
+            $return_url
+        );
 
         if (is_user_logged_in() && function_exists('vms_vendor_portal_set_flash')) {
             $user_id = get_current_user_id();
@@ -1530,11 +1536,11 @@ if (!function_exists('vms_vendor_app_redirect_after_resend')) {
 if (!function_exists('vms_vendor_app_handle_resend_confirmation')) {
     function vms_vendor_app_handle_resend_confirmation(): void
     {
-        $app_ref = isset($_REQUEST['vms_app_ref']) ? sanitize_text_field((string) wp_unslash($_REQUEST['vms_app_ref'])) : '';
+        $app_ref = vms_request_read_text_field($_REQUEST, 'vms_app_ref');
         $nonce = (isset($_REQUEST['_vms_vendor_app_resend_nonce']) && !is_array($_REQUEST['_vms_vendor_app_resend_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_vendor_app_resend_nonce']))
             : '';
-        $return_url = isset($_REQUEST['return_url']) ? esc_url_raw((string) wp_unslash($_REQUEST['return_url'])) : '';
+        $return_url = vms_request_local_redirect('', $_REQUEST['return_url'] ?? null);
 
         if ($app_ref === '' || !$nonce || !wp_verify_nonce($nonce, 'vms_vendor_app_resend_confirmation_' . $app_ref)) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
@@ -1612,7 +1618,7 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
             return;
         }
 
-        $request_method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+        $request_method = strtoupper(vms_request_method('get'));
         if ($request_method === 'HEAD') {
             status_header(200);
             nocache_headers();
@@ -1627,7 +1633,7 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
             exit;
         }
 
-        $token = isset($_GET['token']) ? sanitize_text_field((string) wp_unslash($_GET['token'])) : '';
+        $token = vms_request_read_text_field($_GET, 'token');
         $title = __('Vendor Application Confirmation', 'backstage-venue-manager');
         $content = '';
 

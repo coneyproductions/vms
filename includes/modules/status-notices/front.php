@@ -23,9 +23,7 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 		$is_woo_account = function_exists('is_account_page') ? (bool) is_account_page() : false;
 		$has_ticketing_hint = ($is_event_single || $is_woo_product || $is_woo_cart || $is_woo_checkout) ? 1 : 0;
 
-		$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
-		$request_uri = wp_unslash($request_uri);
-		$request_uri = '/' . ltrim($request_uri, '/');
+		$request_uri = vms_request_current_uri('/');
 
 		$roles = array();
 		if (is_user_logged_in()) {
@@ -61,7 +59,7 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 if (!function_exists('vms_status_notice_runtime_context_admin')) {
 	function vms_status_notice_runtime_context_admin(): array
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = vms_request_read_key($_GET, 'page');
 		$roles = array();
 		$user = wp_get_current_user();
 		if ($user instanceof WP_User) {
@@ -81,7 +79,7 @@ if (!function_exists('vms_status_notice_runtime_context_admin')) {
 			'post_type' => '',
 			'page_id' => 0,
 			'has_vms_ticketing_wrapper' => 0,
-			'request_uri' => isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/wp-admin/',
+			'request_uri' => vms_request_current_uri('/wp-admin/'),
 			'is_logged_in' => is_user_logged_in() ? 1 : 0,
 			'roles' => $roles,
 			'can_debug' => $can_debug,

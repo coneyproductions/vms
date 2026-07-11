@@ -130,7 +130,7 @@ if (!function_exists('vms_event_plan_perf_request_id')) {
 			(string) microtime(true),
 			(string) wp_rand(1000, 999999),
 			isset($_SERVER['REQUEST_TIME_FLOAT']) ? (string) $_SERVER['REQUEST_TIME_FLOAT'] : '',
-			isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '',
+			vms_request_current_uri(),
 		);
 		$request_id = substr(hash('sha256', implode('|', $seed)), 0, 12);
 		return $request_id;
@@ -484,8 +484,8 @@ if (!function_exists('vms_event_plan_perf_request_context')) {
 
 		return array(
 			'request_type' => vms_event_plan_perf_request_type(),
-			'request_method' => isset($_SERVER['REQUEST_METHOD']) ? sanitize_key((string) $_SERVER['REQUEST_METHOD']) : '',
-			'request_uri' => isset($_SERVER['REQUEST_URI']) ? esc_url_raw((string) $_SERVER['REQUEST_URI']) : '',
+			'request_method' => vms_request_method(''),
+			'request_uri' => vms_request_current_uri(),
 			'trace_scenario' => vms_event_plan_perf_request_scenario(),
 			'wp_action' => $wp_action,
 			'plan_action' => $plan_action,

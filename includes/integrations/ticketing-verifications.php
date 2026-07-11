@@ -1422,23 +1422,24 @@ if (!function_exists('vms_ticketing_verification_render_panel')) {
             return '';
         }
 
-        $notice_code = isset($_GET['vms_verification_notice']) ? sanitize_key((string) wp_unslash($_GET['vms_verification_notice'])) : '';
+        $notice_code = vms_request_read_key($_GET, 'vms_verification_notice');
         $notice_text = vms_ticketing_verification_notice_message($notice_code);
         $notice_class = in_array($notice_code, array('submitted'), true) ? 'vms-verify-notice--success' : 'vms-verify-notice--error';
         if ($notice_code === 'submitted') {
             $notice_class = 'vms-verify-notice--success';
         }
 
-        $current_program = isset($_GET['vms_verify_program']) ? sanitize_key((string) wp_unslash($_GET['vms_verify_program'])) : '';
+        $current_program = vms_request_read_key($_GET, 'vms_verify_program');
         if ($current_program !== '' && !isset($programs[$current_program])) {
             $current_program = '';
         }
 
-        $return_to = isset($_GET['vms_return_to']) ? esc_url_raw((string) wp_unslash($_GET['vms_return_to'])) : '';
+        $return_to = vms_request_local_redirect('', $_GET['vms_return_to'] ?? null);
 
         $current_url = '';
-        if (!empty($_SERVER['REQUEST_URI'])) {
-            $current_url = home_url((string) wp_unslash($_SERVER['REQUEST_URI']));
+        $request_uri = vms_request_current_uri('');
+        if ($request_uri !== '') {
+            $current_url = home_url($request_uri);
         }
         if ($current_url === '') {
             if ($tec_event_id > 0) {
@@ -1726,7 +1727,7 @@ if (!function_exists('vms_ticketing_verification_enqueue_account_styles')) {
             true
         );
 
-        $debug_mode = current_user_can('manage_options') && !empty($_GET['vms_debug']);
+        $debug_mode = current_user_can('manage_options') && vms_request_read_bool_flag($_GET, 'vms_debug');
         wp_add_inline_script(
             'vms-verification-upload',
             'window.vmsVerificationUpload = ' . wp_json_encode(array(
@@ -2019,10 +2020,7 @@ if (!function_exists('vms_ticketing_verification_create_request')) {
 if (!function_exists('vms_ticketing_verification_notice_redirect_url')) {
     function vms_ticketing_verification_notice_redirect_url(string $redirect_to, string $notice): string
     {
-        $redirect_to = trim($redirect_to);
-        if ($redirect_to === '') {
-            $redirect_to = home_url('/');
-        }
+        $redirect_to = vms_request_local_redirect(home_url('/'), $redirect_to);
 
         return add_query_arg('vms_verification_notice', sanitize_key($notice), $redirect_to);
     }
@@ -2031,12 +2029,12 @@ if (!function_exists('vms_ticketing_verification_notice_redirect_url')) {
 if (!function_exists('vms_ticketing_verification_wants_json_response')) {
     function vms_ticketing_verification_wants_json_response(): bool
     {
-        $mode = isset($_POST['response_mode']) ? sanitize_key((string) wp_unslash($_POST['response_mode'])) : '';
+        $mode = vms_request_read_key($_POST, 'response_mode');
         if ($mode === 'json') {
             return true;
         }
 
-        $accept = isset($_SERVER['HTTP_ACCEPT']) ? strtolower(trim((string) $_SERVER['HTTP_ACCEPT'])) : '';
+        $accept = strtolower(vms_request_server_value('HTTP_ACCEPT'));
         return $accept !== '' && strpos($accept, 'application/json') !== false;
     }
 }
@@ -2090,7 +2088,7 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
     function vms_ticketing_verification_handle_submit(): void
     {
         if (!is_user_logged_in()) {
-            $redirect_to = isset($_POST['redirect_to']) ? (string) wp_unslash($_POST['redirect_to']) : home_url('/');
+            $redirect_to = vms_request_local_redirect(home_url('/'), $_POST['redirect_to'] ?? null);
             vms_ticketing_verification_finish_error($redirect_to, 'login_required', 401);
         }
 
@@ -2101,7 +2099,7 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             wp_die(esc_html__('Invalid verification request.', 'backstage-venue-manager'));
         }
 
-        $redirect_to = isset($_POST['redirect_to']) ? (string) wp_unslash($_POST['redirect_to']) : home_url('/');
+        $redirect_to = vms_request_local_redirect(home_url('/'), $_POST['redirect_to'] ?? null);
         $user_state = vms_ticketing_verification_get_user_state((int) get_current_user_id());
         if ($user_state['mode'] === 'pending') {
             vms_ticketing_verification_finish_error($redirect_to, 'already_pending', 409);
@@ -2110,9 +2108,9 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             vms_ticketing_verification_finish_error($redirect_to, 'already_approved', 409);
         }
 
-        $program = isset($_POST['program']) ? sanitize_key((string) wp_unslash($_POST['program'])) : '';
-        $notes = isset($_POST['notes']) ? sanitize_text_field((string) wp_unslash($_POST['notes'])) : '';
-        $eligibility_confirm = isset($_POST['eligibility_confirm']) ? absint(wp_unslash($_POST['eligibility_confirm'])) : 0;
+        $program = vms_request_read_key($_POST, 'program');
+        $notes = vms_request_read_text_field($_POST, 'notes');
+        $eligibility_confirm = vms_request_read_absint($_POST, 'eligibility_confirm');
 
         $programs = vms_ticketing_verification_programs();
         if ($program === '' || !isset($programs[$program])) {
@@ -2658,20 +2656,29 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
             wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
         }
 
-        $status_filter = isset($_GET['status']) ? sanitize_key((string) wp_unslash($_GET['status'])) : 'pending';
+        $status_filter = vms_request_read_key($_GET, 'status');
+        if ($status_filter === '') {
+            $status_filter = 'pending';
+        }
         if (!in_array($status_filter, array('all', 'pending', 'approved', 'denied'), true)) {
             $status_filter = 'pending';
         }
 
-        $program_filter = isset($_GET['program']) ? sanitize_key((string) wp_unslash($_GET['program'])) : 'all';
+        $program_filter = vms_request_read_key($_GET, 'program');
+        if ($program_filter === '') {
+            $program_filter = 'all';
+        }
         $programs = vms_ticketing_verification_programs();
         if ($program_filter !== 'all' && !isset($programs[$program_filter])) {
             $program_filter = 'all';
         }
 
-        $search = isset($_GET['s']) ? sanitize_text_field((string) wp_unslash($_GET['s'])) : '';
+        $search = vms_request_read_text_field($_GET, 's');
         $search = trim($search);
-        $order = isset($_GET['order']) ? sanitize_key((string) wp_unslash($_GET['order'])) : 'desc';
+        $order = vms_request_read_key($_GET, 'order');
+        if ($order === '') {
+            $order = 'desc';
+        }
         if (!in_array($order, array('asc', 'desc'), true)) {
             $order = 'desc';
         }
@@ -3061,9 +3068,9 @@ if (!function_exists('vms_ticketing_verification_handle_decision')) {
             wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
         }
 
-        $request_id = isset($_POST['request_id']) ? absint($_POST['request_id']) : 0;
-        $decision = isset($_POST['decision']) ? sanitize_key((string) wp_unslash($_POST['decision'])) : '';
-        $review_notes = isset($_POST['review_notes']) ? sanitize_text_field((string) wp_unslash($_POST['review_notes'])) : '';
+        $request_id = vms_request_read_absint($_POST, 'request_id');
+        $decision = vms_request_read_key($_POST, 'decision');
+        $review_notes = vms_request_read_text_field($_POST, 'review_notes');
 
         if ($request_id <= 0 || !in_array($decision, array('approved', 'denied'), true)) {
             wp_die(esc_html__('Invalid verification decision.', 'backstage-venue-manager'));
@@ -3167,7 +3174,7 @@ if (!function_exists('vms_ticketing_verification_stream_proof')) {
             wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
         }
 
-        $request_id = isset($_GET['request_id']) ? absint($_GET['request_id']) : 0;
+        $request_id = vms_request_read_absint($_GET, 'request_id');
         if ($request_id <= 0) {
             wp_die(esc_html__('Verification proof not found.', 'backstage-venue-manager'));
         }

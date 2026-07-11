@@ -1078,12 +1078,12 @@ if (!function_exists('vms_add_dispatch_get_request_token')) {
 			return rawurldecode($token);
 		}
 
-		$token = isset($_GET['vms_add_dispatch_token']) ? (string) $_GET['vms_add_dispatch_token'] : '';
+		$token = vms_request_read_scalar($_GET, 'vms_add_dispatch_token');
 		if ($token !== '') {
-			return rawurldecode(wp_unslash($token));
+			return rawurldecode($token);
 		}
 
-		$uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+		$uri = vms_request_current_uri('');
 		if ($uri !== '' && preg_match('~^/availability-dispatch/respond/([^/?#]+)~', $uri, $matches)) {
 			return rawurldecode((string) $matches[1]);
 		}
@@ -1095,7 +1095,7 @@ if (!function_exists('vms_add_dispatch_get_request_token')) {
 if (!function_exists('vms_add_dispatch_get_request_choice')) {
 	function vms_add_dispatch_get_request_choice(): string
 	{
-		$choice = isset($_GET['choice']) ? sanitize_key((string) wp_unslash($_GET['choice'])) : '';
+		$choice = vms_request_read_key($_GET, 'choice');
 		if ($choice === 'yes') {
 			return 'available';
 		}

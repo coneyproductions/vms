@@ -5,12 +5,7 @@ add_action('admin_menu', 'vms_docs_admin_menu');
 
 function vms_docs_query_arg($key) {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only docs routing only changes admin display state.
-    if (!isset($_GET[$key])) {
-        return '';
-    }
-
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only docs routing is unslashed here and sanitized or allowlisted by the caller.
-    return (string) wp_unslash($_GET[$key]);
+    return vms_request_read_scalar($_GET, (string) $key);
 }
 
 function vms_docs_admin_menu() {

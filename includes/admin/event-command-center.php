@@ -21,12 +21,7 @@ if (!function_exists('vms_event_command_center_query_arg')) {
     function vms_event_command_center_query_arg(string $key): string
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Event Command Center admin routing and display state only.
-        if (!isset($_GET[$key])) {
-            return '';
-        }
-
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Event Command Center admin routing and display state are unslashed here and sanitized or cast by the caller.
-        return (string) wp_unslash($_GET[$key]);
+        return vms_request_read_scalar($_GET, $key);
     }
 }
 

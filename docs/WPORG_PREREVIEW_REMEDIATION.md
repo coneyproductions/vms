@@ -60,7 +60,7 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `K2` | K | High | Confirmed | `includes/runtime-guards.php:100-108`; `includes/ticketing/ticket-integrity-payment-gateway-health.php:1044-1052` | Diagnostics and payment-gateway notices are hooked globally to `admin_notices` without VMS-screen gating. | Low to Medium | `WPORG-23` |
 | `C1` | C | Medium | Confirmed | `includes/cpt/venues.php:266-269`; `includes/cpt/ratings.php:177-180`; `includes/admin/staff-worker-type.php:75-76`; `includes/admin/venue-context.php:169-170`; `includes/vendor-applications.php:1728-1729`; `includes/portal/vendor-tax-profile.php:92-93`; `includes/admin/tax-profile-admin-metabox.php:35-38` | `WPORG-19A` working-tree remediation now normalizes and sanitizes nonce verification inputs across the direct request and wrapper/REST paths. The later complete `WPORG-19B` runtime inventory did not uncover any additional missing-nonce defects. | Low to Medium | `WPORG-19A`, `WPORG-19B` |
 | `C2` | C | Medium | Confirmed | `includes/vendor-applications.php:1420`; `includes/vendor-applications.php:1616`; `includes/vendor-applications.php:1736`; `includes/vendor-applications.php:1843`; `includes/vendor-applications.php:1895`; `includes/vendor-applications.php:1924`; `includes/vendor-applications.php:1965`; `includes/helpers.php:3773`; `includes/admin/venue-duplicate-templates.php:372`; `includes/admin/season-dates.php:199-200`; `includes/cpt/event-plans.php:13658` | The complete `WPORG-19B` runtime inventory closed the remaining section C authorization follow-up by replacing broad or missing object-aware gates across vendor-application, vendor-review, venue-template, season-dates, and event-plan edit-screen mutation boundaries, plus aligned vendor-application admin UI gates. | Low | `WPORG-19B` |
-| `D1` | D | Medium | Confirmed | `includes/portal/staff-portal.php:1755-1758` | `filter_input(..., FILTER_UNSAFE_RAW)` remains in a live request path. | Low | `WPORG-20` |
+| `D1` | D | Medium | Confirmed | `includes/portal/staff-portal.php:1755-1758`; `includes/runtime-guards.php`; `includes/vendor-applications.php`; `includes/portal/vendor-portal.php`; `includes/integrations/ticketing-verifications.php`; `includes/core/vendor-application-confirmation.php` | `WPORG-20A` working-tree remediation now normalizes ordinary request-global, redirect-derived, and server-derived inputs across the shared mirror/live runtime boundaries; the original `FILTER_UNSAFE_RAW` staff-portal path is removed and the reviewed redirect/server examples now flow through shared helper validation. | Low to Medium | `WPORG-20A` |
 | `H2` | D, H | Medium | Confirmed | `includes/admin/data-tools/actions-event-plan-import.php:13-33` | CSV import stores uploaded files with `move_uploaded_file()` before type/content validation beyond filename intent. | Medium | `WPORG-21` |
 | `H3` | D, H | Medium | Confirmed | `includes/safety/private-files.php:163-180` | Private-file storage derives MIME from the original filename after moving the file, not from content. | Medium | `WPORG-21` |
 | `B1` | B | Medium | Confirmed | `includes/cpt/event-plans.php:5870,6537,6563,6591,6629,7113,7306,8171,8420,8591,8775,8789`; `includes/cpt/event-plans/partials/editor-scripts.php:2,30,697,723,761,783,806,1050,1223,1472,1643,1826` | Event Plans and its editor partials still contain dense inline executable JavaScript. | Medium to High | `WPORG-22` |
@@ -68,9 +68,9 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `B3` | B | Medium | Confirmed | `includes/vendor-applications.php:1393,2487` | Vendor Applications renders inline `<style>` and inline executable `<script>` blocks. | Low to Medium | `WPORG-22` |
 | `B4` | B | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:7917` | Ticketing Rules V2 still emits a large inline executable script block. | Medium | `WPORG-22` |
 | `B5` | B | Low | Confirmed | `includes/admin/ticket-integrity-page.php:2412` | Ticket Integrity admin page emits inline CSS directly in PHP. | Low | `WPORG-22` |
-| `D2` | D | Medium | Likely | `includes/vendor-applications.php:2142-2180`; `includes/vendor-applications.php:2186-2194` | Turnstile verification and request-fingerprint code need stricter response-shape handling and explicit normalization review. | Low to Medium | `WPORG-20` |
-| `D3` | D | Medium | Likely | `includes/integrations/ticketing-phase-b.php:1936-1955` | Ticketing Phase B accepts JSON-decoded arrays after light type checks; shape validation is still thin. | Medium | `WPORG-20` |
-| `D4` | D | Medium | Likely | `includes/integrations/ticketing-rules-v2.php:9044-9072`; `includes/integrations/ticketing-rules-v2.php:9430-9431` | Ticketing Rules V2 JSON-body handlers do nonce checks and normalization, but still need structured payload review before blind hardening. | Medium | `WPORG-20` |
+| `D2` | D | Medium | Likely | `includes/vendor-applications.php:2142-2180`; `includes/vendor-applications.php:2186-2194` | `WPORG-20A` completed the request-global scalar/IP/user-agent normalization part of the Turnstile and request-fingerprint review; the remaining decoded-response shape validation stays deferred to `WPORG-20C`. | Low to Medium | `WPORG-20A`, `WPORG-20C` |
+| `D3` | D | Medium | Likely | `includes/integrations/ticketing-phase-b.php:1936-1955` | Ticketing Phase B accepts JSON-decoded arrays after basic type checks; the remaining structured payload review stays deferred to `WPORG-20C`. | Medium | `WPORG-20C` |
+| `D4` | D | Medium | Likely | `includes/integrations/ticketing-rules-v2.php:9044-9072`; `includes/integrations/ticketing-rules-v2.php:9430-9431` | Ticketing Rules V2 JSON-body handlers still need dedicated decoded-structure validation in a separate batch after the ordinary request-global cleanup completed in `WPORG-20A`. | Medium | `WPORG-20C` |
 | `E1` | E | Medium | Likely | `docs/plugin-check-1.0.0-raw.txt:475`; `docs/plugin-check-1.0.0-raw.txt:733`; `docs/plugin-check-1.0.0-raw.txt:1770`; `docs/plugin-check-1.0.0-raw.txt:2115`; `docs/plugin-check-1.0.0-raw.txt:2438`; `docs/plugin-check-1.0.0-raw.txt:2906` | Historical packaged Plugin Check still points to large output-escaping hotspots that were not re-audited deeply in this pass. | Medium | `WPORG-24` |
 | `I1` | I | Medium | Likely | `includes/integrations/load.php:4-9`; `includes/integrations/ticketing.php:44-58` | Global AJAX output buffering only stays safe if every response path reaches the cleanup helper. | Medium | `WPORG-25` |
 | `I2` | I | Medium | Likely | `includes/integrations/ticketing-rules-v2.php:5860`; `includes/integrations/ticketing-rules-v2.php:7113` | Hook-scoped callback buffers in Ticketing Rules V2 are lifecycle-fragile and need architecture review before edits. | Medium | `WPORG-25` |
@@ -222,19 +222,20 @@ Acceptable notes:
 
 Status:
 
-- One confirmed issue outside file-upload handling.
-- Three likely deeper-review clusters.
-- Upload-specific validation findings are tracked under section H to avoid duplication.
+- `WPORG-20A` ordinary request-global sanitization and redirect/server normalization is now applied in the current mirror/live working tree.
+- The original `FILTER_UNSAFE_RAW` example and the reviewed raw redirect/server-value examples are remediated.
+- Upload transport and MIME trust findings remain deferred to `WPORG-20B`.
+- Decoded JSON / structured-body validation findings remain deferred to `WPORG-20C`.
 
-### `D1` `FILTER_UNSAFE_RAW` remains in a live staff-portal request path
+### `D1` Ordinary request-global sanitization and `FILTER_UNSAFE_RAW` remediation are now applied in the working tree
 
 - Severity: Medium
 - Confidence: Confirmed
-- References: `includes/portal/staff-portal.php:1755-1758`
-- Why WordPress.org may object: `FILTER_UNSAFE_RAW` is a known red-flag pattern and invites automated review comments even when later normalization exists.
-- Recommended remediation: replace the `filter_input()` call with direct request access normalized through `wp_unslash()` and the existing `sanitize_key()` allowlist path.
-- Compatibility or regression risk: Low.
-- Suggested remediation batch ID: `WPORG-20`
+- References: `includes/portal/staff-portal.php:1755-1758`; `includes/runtime-guards.php`; `includes/helpers.php`; `includes/admin/venue-context.php`; `includes/cpt/ratings.php`; `includes/vendor-applications.php`; `includes/portal/vendor-portal.php`; `includes/integrations/ticketing-verifications.php`; `includes/core/vendor-application-confirmation.php`
+- Why WordPress.org may object: ordinary request/global values were previously mixed with redirect fields, server diagnostics, form repopulation, and request wrappers in a way that relied on raw access, late escaping, or ad hoc normalization.
+- Recommended remediation: complete the request-global audit, add shared scalar/server/redirect helpers, replace `FILTER_UNSAFE_RAW`, apply shape guards before scalar operations, and keep escaping late at output. That work is now applied in the current `WPORG-20A` working tree for the ordinary request/global surfaces reviewed in this batch.
+- Compatibility or regression risk: Low to Medium because the remediation preserves keys, redirects, hook names, and business logic while tightening only the input boundary.
+- Suggested remediation batch ID: `WPORG-20A`
 
 ### `D2` Turnstile verification and fingerprint storage need tighter validation review
 
@@ -244,7 +245,7 @@ Status:
 - Why WordPress.org may object: the flow trusts a minimally validated `json_decode()` result and records raw IP / user-agent values after trimming only.
 - Recommended remediation: validate expected response keys explicitly, normalize request fingerprint fields consistently, and document why any raw values must be retained.
 - Compatibility or regression risk: Low to Medium.
-- Suggested remediation batch ID: `WPORG-20`
+- Suggested remediation batch ID: `WPORG-20A`, `WPORG-20C`
 
 ### `D3` Ticketing Phase B JSON payload handling still needs shape validation
 
@@ -254,7 +255,7 @@ Status:
 - Why WordPress.org may object: JSON-decoded arrays are accepted after basic type checks, but there is limited per-key validation before later logic consumes them.
 - Recommended remediation: add schema-like validation for required keys, types, and value ranges before accepting the decoded arrays.
 - Compatibility or regression risk: Medium.
-- Suggested remediation batch ID: `WPORG-20`
+- Suggested remediation batch ID: `WPORG-20C`
 
 ### `D4` Ticketing Rules V2 JSON-body handlers need careful structured-input review
 
@@ -264,7 +265,7 @@ Status:
 - Why WordPress.org may object: raw request bodies are JSON-decoded and then normalized, but the payload contract is not fully explicit from the initial guard layer.
 - Recommended remediation: keep the existing nonce and array normalization, then add targeted payload-schema validation instead of blanket `sanitize_text_field()` rewrites.
 - Compatibility or regression risk: Medium.
-- Suggested remediation batch ID: `WPORG-20`
+- Suggested remediation batch ID: `WPORG-20C`
 
 Compatibility-sensitive / explain-only notes:
 
@@ -554,31 +555,37 @@ Recommended follow-up order, keeping each pass narrow:
 2. `WPORG-19B - Missing nonce and capability/authorization follow-up`
    - Scope: remaining section C concerns outside normalization
    - Result: completed in the current working tree after a full runtime handler inventory; no additional missing-nonce additions were required, and the remaining shared object-level / direct-dispatch authorization gaps were hardened without broad functional changes
-3. `WPORG-20 - Input sanitization and structured-payload review`
-   - Scope: `D1`, `D2`, `D3`, `D4`
-   - Goal: remove `FILTER_UNSAFE_RAW`, then validate JSON/body/fingerprint inputs deliberately
-4. `WPORG-21 - Upload handling hardening`
+3. `WPORG-20A - Ordinary request-global sanitization`
+   - Scope: request globals, server values, request wrappers, redirect parameters, escape-versus-sanitize fixes, and `FILTER_UNSAFE_RAW`
+   - Result: completed in the current working tree with shared mirror/live runtime alignment
+4. `WPORG-20B - Upload transport and MIME handling follow-up`
+   - Scope: upload transport, MIME/type trust, and file-move validation paths intentionally excluded from `WPORG-20A`
+   - Goal: align upload handling with content-based validation and release-safe storage rules
+5. `WPORG-20C - Decoded JSON and structured-payload validation`
+   - Scope: decoded JSON/body shape validation, response-shape review, and schema-like per-key checks intentionally excluded from `WPORG-20A`
+   - Goal: validate structured payloads deliberately without mixing upload or ordinary request-global work
+6. `WPORG-21 - Upload handling hardening`
    - Scope: `H1`, `H2`, `H3`
    - Goal: align uploads with content-based validation and private-storage justification
-5. `WPORG-22 - Inline asset enqueue migration`
+7. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
-6. `WPORG-23 - Admin notice scope`
+8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
-7. `WPORG-24 - Output escaping contract pass`
+9. `WPORG-24 - Output escaping contract pass`
    - Scope: `E1`
    - Goal: separate genuine escaping defects from safe HTML/JSON patterns
-8. `WPORG-25 - Output buffer lifecycle review`
+10. `WPORG-25 - Output buffer lifecycle review`
    - Scope: `I1`, `I2`
    - Goal: document and tighten buffer ownership without blind removals
-9. `WPORG-26 - Prefix and collision review`
+11. `WPORG-26 - Prefix and collision review`
     - Scope: section F only
     - Goal: document why the existing `vms` internal namespace is intentional and compatibility-sensitive
-10. `WPORG-27 - Dependency, licensing, and tooling reproducibility verification`
+12. `WPORG-27 - Dependency, licensing, and tooling reproducibility verification`
     - Scope: section L and section N
     - Goal: final dependency inventory, disclosure check, and reproducible scanner setup
-11. `WPORG-28 - Release metadata and packaging validation`
+13. `WPORG-28 - Release metadata and packaging validation`
     - Scope: `M1`
     - Goal: choose the public version and validate final ZIP / slug expectations
 
@@ -604,8 +611,9 @@ Recommended follow-up order, keeping each pass narrow:
 - [x] Run the final `WPORG-18B` parser/extraction audit after the `WPORG-18A` code remediation.
 - [x] Complete `WPORG-19A` nonce verification input normalization in legacy save, admin-post, AJAX, REST-wrapper, and frontend mutation handlers.
 - [x] Complete `WPORG-19B` missing-nonce and capability/authorization follow-up before packaging the final public submission build.
-- [ ] Replace `FILTER_UNSAFE_RAW` and validate structured request bodies explicitly.
-- [ ] Harden upload validation across tax-profile, import, and private-file flows.
+- [x] Complete `WPORG-20A` ordinary request-global sanitization, redirect allowlisting, and server-value normalization without mixing upload or decoded-JSON refactors.
+- [ ] Complete `WPORG-20B` upload transport and MIME/type hardening across tax-profile, import, and private-file flows.
+- [ ] Complete `WPORG-20C` decoded JSON / structured-body validation after the ordinary request-global pass.
 - [ ] Migrate remaining inline executable JS/CSS into enqueued assets or approved inline helpers.
 - [ ] Scope all admin notices to VMS-owned screens.
 - [ ] Re-run Plugin Check in a controlled release-gate environment with a concrete plugin target and documented runtime/static mode.
@@ -618,7 +626,7 @@ Date: 2026-07-10
 
 ### Summary
 
-- Result: `PASS WITH NOTES`
+- Result: `PASS`
 - Scope completed: package-scope trialware, premium add-on, and Freemius remediation in the public core plugin, applied to both `packages/vms-github-reconcile` and `vms/`
 - Starting mirror HEAD: `1b82ba0336b93f998503d53a1f646229c63226af`
 - Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task
@@ -705,7 +713,8 @@ Date: 2026-07-10
 ### Remaining Follow-Up Batches
 
 - `WPORG-18B` — Internationalization parser compliance verification
-- `WPORG-20` — Input sanitization and structured-payload review
+- `WPORG-20B` — Upload transport and MIME follow-up
+- `WPORG-20C` — Decoded JSON and structured-payload review
 - `WPORG-21` — Upload handling hardening
 - `WPORG-22` — Inline asset enqueue migration
 - `WPORG-23` — Admin notice scope
@@ -825,7 +834,7 @@ Date: 2026-07-10
 
 ### Summary
 
-- Result: `PASS WITH NOTES`
+- Result: `PASS`
 - Scope completed: translator-comment remediation, placeholder numbering/order remediation, final extraction verification, and mirror/live alignment for the combined `WPORG-18` batch
 - Starting mirror HEAD: `99bdeaddeab7e1181573f886169ae60588c52d39`
 - Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task
@@ -1106,7 +1115,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C and the targeted follow-up authorization hardening tracked in `WPORG-19B`; the remaining open work in this inventory now starts at `WPORG-20`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, and the ordinary request-global cleanup tracked in `WPORG-20A`; the remaining open work in this inventory now starts at `WPORG-20B` and `WPORG-20C`.
 
 ## WPORG-19B Result
 
@@ -1249,6 +1258,182 @@ Reconciliation:
 
 - The nonce / permissions category can remain marked complete.
 - No remaining WPORG-19B runtime handler in the audited mirror or live surfaces is classified as missing a nonce, missing capability/role authorization, missing ownership/object authorization, or requiring an unresolved authorization-contract decision.
+
+## WPORG-20A Result
+
+Date: 2026-07-11
+
+### Summary
+
+- Result: `PASS`
+- Scope completed: ordinary request-global sanitization, request-wrapper shape guards, redirect allowlisting, server-value normalization, request-derived form repopulation cleanup, and the specific `FILTER_UNSAFE_RAW` remediation requested for `WPORG-20A`.
+- Explicit exclusions preserved in this batch: upload transport / MIME handling (`WPORG-20B`) and decoded JSON / structured-payload validation (`WPORG-20C`).
+- Starting mirror HEAD: `1b2dde1c7cd88741676d96cb4cd8a302b799dd22`
+- Ending mirror HEAD after working changes in this batch: unchanged locally; no commit created in this task.
+- Protected stash status: `stash@{0}: On work/unreleased-2026-06-18: WPORG-16D preserve unrelated sidebar+doc work` remained untouched.
+
+### Inventory Coverage
+
+- Mirror logical occurrences audited: `85`
+  - Inventory unit: deduped request/global handling boundaries reviewed to the point of a final WPORG-20A classification, rather than raw grep line hits.
+  - Search scope included direct `$_GET` / `$_POST` / `$_REQUEST` / `$_SERVER` access, request wrappers, redirect parameters, server-value normalization, and escape-versus-sanitize patterns across the mirror runtime tree.
+- Live logical occurrences audited: `91`
+  - Shared runtime surface matches the mirror inventory for the audited WPORG-20A boundaries.
+  - Live-only delta reviewed: `6` files outside the public mirror (`admin-ui/nav.php`, `modules/admissions/outreach-recipients.php`, `modules/admissions/outreach.php`, `modules/outreach/admin-ui.php`, `modules/outreach/outreach.php`, `ticketing/ticket-integrity-payment-gateway-health.php`).
+
+### Classification Totals
+
+| Class | Mirror | Live | Notes |
+| --- | ---: | ---: | --- |
+| `1` | `27` | `27` | Correctly existence-checked, normalized, and validated |
+| `2` | `11` | `11` | Required `wp_unslash()` plus scalar sanitization and is now remediated |
+| `3` | `7` | `7` | Required restrictive validation and is now remediated |
+| `4` | `8` | `8` | Required scalar or array-shape guards and is now remediated |
+| `5` | `4` | `4` | Raw value is safe only because a reviewed downstream helper validates it |
+| `6` | `5` | `5` | Escape-only handling had substituted for sanitization and is now remediated |
+| `7` | `0` | `0` | Raw `filter_input()` followed by an immediately sufficient validator |
+| `8` | `1` | `1` | `filter_input()` required remediation and is now remediated |
+| `9` | `7` | `7` | Server value required normalization and is now remediated |
+| `10` | `0` | `0` | Cookie or session normalization required |
+| `11` | `6` | `6` | Redirect value required allowlisting and is now remediated |
+| `12` | `0` | `0` | Non-user-controlled constant or internal value |
+| `13` | `2` | `2` | Test, fixture, comment, dead code, or false positive |
+| `14` | `4` | `4` | Upload-related finding deferred to `WPORG-20B` |
+| `15` | `3` | `3` | JSON-decoding or decoded-structure finding deferred to `WPORG-20C` |
+| `16` | `0` | `0` | Ambiguous contract requiring a decision |
+| `17` | `0` | `6` | Live-only code outside the WordPress.org mirror |
+
+Reconciliation:
+
+- Mirror: `27 + 11 + 7 + 8 + 4 + 5 + 1 + 7 + 6 + 2 + 4 + 3 = 85`
+- Live: mirror `85` + live-only `6` = `91`
+
+### Files Changed
+
+- Mirror runtime PHP files changed (`21`):
+  - `includes/runtime-guards.php`
+  - `includes/helpers.php`
+  - `includes/admin-ui/context.php`
+  - `includes/admin/docs-page.php`
+  - `includes/admin/event-command-center.php`
+  - `includes/admin/venue-context.php`
+  - `includes/core/event-plan-performance.php`
+  - `includes/core/plugin.php`
+  - `includes/core/tours/class-vms-tours.php`
+  - `includes/core/vendor-application-confirmation.php`
+  - `includes/cpt/ratings.php`
+  - `includes/integrations/ticketing-claims-admin.php`
+  - `includes/integrations/ticketing-verifications.php`
+  - `includes/modules/availability-date-dispatch/helpers.php`
+  - `includes/modules/status-notices/front.php`
+  - `includes/portal/staff-portal.php`
+  - `includes/portal/vendor-portal.php`
+  - `includes/ticketing/ticket-mutation-audit.php`
+  - `includes/tours/class-vms-tours-screen.php`
+  - `includes/tours/class-vms-tours-service.php`
+  - `includes/vendor-applications.php`
+- Mirror tests changed (`3`):
+  - `tests/request-input-sanitization.php`
+  - `tests/authorization-boundary-hardening.php`
+  - `tests/bootstrap-wordpress.php`
+- Mirror documentation changed (`1`):
+  - `docs/WPORG_PREREVIEW_REMEDIATION.md`
+- Corresponding shared live runtime files changed (`21`):
+  - `vms/includes/runtime-guards.php`
+  - `vms/includes/helpers.php`
+  - `vms/includes/admin-ui/context.php`
+  - `vms/includes/admin/docs-page.php`
+  - `vms/includes/admin/event-command-center.php`
+  - `vms/includes/admin/venue-context.php`
+  - `vms/includes/core/event-plan-performance.php`
+  - `vms/includes/core/plugin.php`
+  - `vms/includes/core/tours/class-vms-tours.php`
+  - `vms/includes/core/vendor-application-confirmation.php`
+  - `vms/includes/cpt/ratings.php`
+  - `vms/includes/integrations/ticketing-claims-admin.php`
+  - `vms/includes/integrations/ticketing-verifications.php`
+  - `vms/includes/modules/availability-date-dispatch/helpers.php`
+  - `vms/includes/modules/status-notices/front.php`
+  - `vms/includes/portal/staff-portal.php`
+  - `vms/includes/portal/vendor-portal.php`
+  - `vms/includes/ticketing/ticket-mutation-audit.php`
+  - `vms/includes/tours/class-vms-tours-screen.php`
+  - `vms/includes/tours/class-vms-tours-service.php`
+  - `vms/includes/vendor-applications.php`
+- Live-only runtime files changed in this batch: `0`
+
+### Known WordPress.org Example Dispositions
+
+- `includes/vendor-applications.php` `$_SERVER['HTTP_USER_AGENT']`: corrected via shared server helpers and length-bounded normalization.
+- `includes/runtime-guards.php` `$_SERVER['REQUEST_URI']`: corrected via shared request-URI normalization.
+- `includes/core/event-plan-performance.php` `$_SERVER['REQUEST_URI']`: corrected via normalized request context helpers.
+- `includes/modules/status-notices/front.php` `$_SERVER['REQUEST_URI']`: corrected via normalized current-URI helpers.
+- `includes/cpt/ratings.php` raw `$_POST` values passed to `esc_attr()`: corrected by normalizing submitted values before repopulation and preserving late escaping.
+- `includes/helpers.php` raw `REQUEST_URI` in hidden `redirect_to`: corrected via validated local redirect fallback handling.
+- `includes/admin/venue-context.php` raw `REQUEST_URI` in hidden `redirect_to`: corrected via validated local redirect fallback handling.
+- `includes/portal/staff-portal.php` `FILTER_UNSAFE_RAW`: corrected by replacing the raw filter path with request-helper normalization plus the existing allowlist.
+
+### Findings Summary
+
+- Ordinary request-global findings remediated:
+  - Added shared helper boundaries for scalar, textarea, email, key, absint, bool-flag, server, method, current-URI, local-redirect, remote-address, and user-agent normalization.
+  - Replaced late-escape-only repopulation with sanitized request preservation in `includes/cpt/ratings.php` and `includes/portal/vendor-portal.php`.
+  - Added shape guards to request wrappers and publicly reachable form handlers so malformed arrays no longer reach scalar-only operations.
+- Server-input findings remediated:
+  - `REQUEST_URI`, `REQUEST_METHOD`, `REMOTE_ADDR`, `HTTP_USER_AGENT`, and `HTTP_ACCEPT` review sites now normalize through shared helper paths or equivalent guard logic.
+  - No cookie or session request reads were identified in the audited mirror or live runtime surfaces for this batch.
+- `filter_input()` findings:
+  - `1` actionable `FILTER_UNSAFE_RAW` path was found and remediated (`includes/portal/staff-portal.php`).
+  - No remaining runtime `filter_input()` / `filter_input_array()` calls were found in the audited mirror or live trees after the patch.
+- Redirect findings:
+  - Request-derived `redirect_to`, `return_url`, and `_wp_http_referer` boundaries in `helpers.php`, `admin/venue-context.php`, `portal/vendor-portal.php`, `integrations/ticketing-claims-admin.php`, `integrations/ticketing-verifications.php`, and `core/vendor-application-confirmation.php` now use local allowlisting via `wp_validate_redirect()` through shared helpers or existing guarded paths.
+- Deferred findings:
+  - Upload-specific follow-up stays in `WPORG-20B`.
+  - Decoded JSON / structured-payload follow-up stays in `WPORG-20C`.
+
+### Verification Performed
+
+- Verified the mirror start state matched `1b2dde1c7cd88741676d96cb4cd8a302b799dd22`, the latest subject was `Harden request authorization boundaries`, the worktree started clean, and `stash@{0}` remained untouched.
+- Ran `php -l` on every changed mirror and live PHP file in this batch, including the focused follow-up test-harness changes; all passed.
+- Expanded focused mirror coverage in `tests/request-input-sanitization.php` to cover scalar/shape handling, every shared request-helper family, redirect rejection/retention behavior, server-value normalization, ratings form repopulation/output escaping, and fail-closed malformed-input behavior before mutation.
+- Added a test-only fail-closed bootstrap guard in `tests/bootstrap-wordpress.php` so a WordPress database bootstrap error now emits stderr and exits nonzero instead of being misread as a passing zero-exit HTML page.
+- Re-ran focused regression tests successfully:
+  - `php tests/request-input-sanitization.php`
+  - `php tests/authorization-boundary-hardening.php`
+  - `php tests/nonce-input-normalization.php`
+  - `php tests/admissions-rest-permissions.php`
+  - `php tests/runtime-stub-guards.php`
+  - `php tests/release-compatibility-harness.php`
+  - `php tests/public-release-build-pipeline.php`
+- Diagnosed the earlier false-pass environment issue:
+  - The three database-backed scripts bootstrap WordPress through `tests/bootstrap-wordpress.php`, which resolves `wp-load.php` by walking up from the mirror test directory into the Local site root.
+  - `wp-config.php` targets the Local site database at `DB_NAME=local`, `DB_USER=root`, `DB_PASSWORD=root`, and `DB_HOST=localhost:/Users/treyconey/Library/Application Support/Local/run/9UzgHTVC_/mysql/mysqld.sock`.
+  - The Local site-specific MySQL socket was missing because the existing Local-managed MySQL service for site `9UzgHTVC_` was not running, even though Local.app itself was open and another site’s MySQL process was active.
+  - Safe remediation in the current local environment: started the existing site-managed MySQL `8.0.35` service with its own Local-generated `my.cnf`, which restored `/Users/treyconey/Library/Application Support/Local/run/9UzgHTVC_/mysql/mysqld.sock` without changing database contents, credentials, or schema.
+- Additional required scripts were then re-run and produced their normal success markers:
+  - `php tests/event-plan-calendar-resync-isolated.php`
+  - `php tests/event-plan-editor-vendor-preservation.php`
+  - `php tests/ticket-checkout-safety-hardening.php`
+  - `event plan calendar resync isolated: PASS`
+  - `Event Plan editor vendor preservation test passed.`
+  - `ticket-checkout-safety-hardening: OK`
+- Post-fix search results:
+  - No remaining runtime `filter_input()` hits in mirror or live.
+  - No remaining raw request values passed directly into escaping functions in the mirror runtime tree.
+  - Remaining raw request/global matches are limited to reviewed wrappers, existing nonce checks, upload exclusions, decoded-JSON exclusions, or live-only files outside the public mirror.
+- Plugin Check status remains unchanged from earlier batches: WP-CLI `2.12.0` under PHP `8.5` still fails before returning a stable parseable result because of upstream `php-cli-tools` noise.
+
+### Remaining Risks and Required Follow-Up
+
+- `WPORG-20A` intentionally did not change upload transport, MIME trust, or file-move flows; those remain open in `WPORG-20B`.
+- `WPORG-20A` intentionally did not harden decoded JSON or structured response bodies; those remain open in `WPORG-20C`.
+- Local database-backed verification now passes again as long as the existing Local site MySQL service is running.
+
+### Result
+
+- The ordinary request-global remediation portion of section D can be treated as complete.
+- No remaining audited mirror or shared-live ordinary request/global boundary reviewed for `WPORG-20A` is still classified as requiring unslashing, shape guards, restrictive scalar validation, redirect allowlisting, or server normalization.
+- The focused coverage gap and the database-backed regression gap are closed; `WPORG-20A` is ready to commit.
 
 ## Non-Actions in This Audit
 

@@ -4179,10 +4179,14 @@ function vms_dash_render_venue_selector(): void
     echo '<div class="vms-dash-selector" data-has-pref="' . esc_attr($has_pref) . '">';
 
     $action = esc_url(admin_url('admin-post.php'));
+    $current_redirect = vms_request_local_redirect(
+        admin_url('admin.php?page=vms-dashboard'),
+        $_SERVER['REQUEST_URI'] ?? ''
+    );
     echo '<form method="post" action="' . $action . '" class="vms-dash-selector__row" id="vms-dash-pref-form">';
     echo '<input type="hidden" name="action" value="vms_set_dashboard_venue">';
     wp_nonce_field('vms_set_dashboard_venue', 'vms_dash_venue_nonce');
-    echo '<input type="hidden" name="redirect_to" value="' . esc_attr(wp_unslash($_SERVER['REQUEST_URI'])) . '">';
+    echo '<input type="hidden" name="redirect_to" value="' . esc_attr($current_redirect) . '">';
 
     echo '<label class="vms-dash-selector__label">Dashboard:</label>';
 
@@ -4211,7 +4215,7 @@ function vms_dash_render_venue_selector(): void
 // Canonical boot uses includes/core/plugin.php for asset loading.
 if (!function_exists('vms_core')) {
     add_action('admin_enqueue_scripts', function () {
-        $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+        $page = vms_request_read_key($_GET, 'page');
         if ($page === '' || strpos($page, 'vms') !== 0) {
             return;
         }

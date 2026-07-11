@@ -45,6 +45,179 @@ if (!function_exists('vms_should_run_runtime_maintenance')) {
 	}
 }
 
+if (!function_exists('vms_request_read_scalar')) {
+	function vms_request_read_scalar(array $source, string $key): string
+	{
+		if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+			return '';
+		}
+
+		$value = wp_unslash($source[$key]);
+		if (!is_scalar($value)) {
+			return '';
+		}
+
+		return trim((string) $value);
+	}
+}
+
+if (!function_exists('vms_request_read_text_field')) {
+	function vms_request_read_text_field(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_text_field($value);
+	}
+}
+
+if (!function_exists('vms_request_read_textarea_field')) {
+	function vms_request_read_textarea_field(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_textarea_field($value);
+	}
+}
+
+if (!function_exists('vms_request_read_email')) {
+	function vms_request_read_email(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_email($value);
+	}
+}
+
+if (!function_exists('vms_request_read_key')) {
+	function vms_request_read_key(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_key($value);
+	}
+}
+
+if (!function_exists('vms_request_read_absint')) {
+	function vms_request_read_absint(array $source, string $key): int
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? 0 : absint($value);
+	}
+}
+
+if (!function_exists('vms_request_read_bool_flag')) {
+	function vms_request_read_bool_flag(array $source, string $key): bool
+	{
+		if (!array_key_exists($key, $source)) {
+			return false;
+		}
+
+		$value = $source[$key];
+		if (is_array($value) || is_object($value)) {
+			return false;
+		}
+
+		$value = wp_unslash($value);
+		if (is_bool($value)) {
+			return $value;
+		}
+		if (!is_scalar($value)) {
+			return false;
+		}
+
+		$value = strtolower(trim((string) $value));
+		if ($value === '') {
+			return false;
+		}
+
+		return !in_array($value, array('0', 'false', 'off', 'no'), true);
+	}
+}
+
+if (!function_exists('vms_request_server_value')) {
+	function vms_request_server_value(string $key): string
+	{
+		if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
+			return '';
+		}
+
+		$value = wp_unslash($_SERVER[$key]);
+		if (!is_scalar($value)) {
+			return '';
+		}
+
+		return trim((string) $value);
+	}
+}
+
+if (!function_exists('vms_request_method')) {
+	function vms_request_method(string $fallback = 'get'): string
+	{
+		$fallback = sanitize_key($fallback);
+		if ($fallback === '') {
+			$fallback = 'get';
+		}
+
+		$method = sanitize_key(vms_request_server_value('REQUEST_METHOD'));
+		return $method !== '' ? $method : $fallback;
+	}
+}
+
+if (!function_exists('vms_request_current_uri')) {
+	function vms_request_current_uri(string $fallback = ''): string
+	{
+		$request_uri = vms_request_server_value('REQUEST_URI');
+		if ($request_uri === '') {
+			return $fallback;
+		}
+
+		$request_uri = (string) preg_replace('/[\x00-\x1F\x7F]+/', '', $request_uri);
+		$request_uri = '/' . ltrim($request_uri, '/');
+		if (strlen($request_uri) > 2048) {
+			$request_uri = substr($request_uri, 0, 2048);
+		}
+
+		return $request_uri;
+	}
+}
+
+if (!function_exists('vms_request_local_redirect')) {
+	function vms_request_local_redirect(string $fallback, $raw = null): string
+	{
+		$fallback = trim($fallback);
+		if ($fallback === '') {
+			$fallback = function_exists('home_url') ? home_url('/') : '/';
+		}
+
+		$candidate = '';
+		if (is_scalar($raw)) {
+			$candidate = trim((string) wp_unslash($raw));
+		}
+
+		return wp_validate_redirect($candidate, $fallback);
+	}
+}
+
+if (!function_exists('vms_request_remote_addr')) {
+	function vms_request_remote_addr(): string
+	{
+		$ip = vms_request_server_value('REMOTE_ADDR');
+		if ($ip === '') {
+			return '';
+		}
+
+		return substr(sanitize_text_field($ip), 0, 64);
+	}
+}
+
+if (!function_exists('vms_request_user_agent')) {
+	function vms_request_user_agent(): string
+	{
+		$user_agent = vms_request_server_value('HTTP_USER_AGENT');
+		if ($user_agent === '') {
+			return '';
+		}
+
+		return substr(sanitize_text_field($user_agent), 0, 255);
+	}
+}
+
 if (!function_exists('vms_queue_admin_diagnostic')) {
 	function vms_queue_admin_diagnostic(string $code, string $message): void
 	{
@@ -357,14 +530,14 @@ if (!function_exists('vms_admin_guard_current_screen_id')) {
 if (!function_exists('vms_admin_guard_request_uri')) {
 	function vms_admin_guard_request_uri(): string
 	{
-		return trim((string) ($_SERVER['REQUEST_URI'] ?? ''));
+		return vms_request_current_uri();
 	}
 }
 
 if (!function_exists('vms_admin_guard_request_method')) {
 	function vms_admin_guard_request_method(): string
 	{
-		return sanitize_key((string) ($_SERVER['REQUEST_METHOD'] ?? 'get'));
+		return vms_request_method();
 	}
 }
 
@@ -1176,27 +1349,27 @@ if (!function_exists('vms_resource_fingerprint_shutdown')) {
 			return;
 		}
 
-		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
-		$entry = array(
-			'captured_at_gmt' => gmdate('Y-m-d H:i:s'),
-			'runtime_ms' => (int) round($runtime_seconds * 1000),
-			'peak_memory_mb' => round($peak_memory_bytes / 1048576, 1),
-			'request_uri' => vms_resource_fingerprint_compact_value((string) ($_SERVER['REQUEST_URI'] ?? '')),
-			'request_method' => sanitize_key((string) ($_SERVER['REQUEST_METHOD'] ?? 'get')),
-			'admin_page' => vms_resource_fingerprint_current_admin_page(),
-			'screen_id' => (is_object($screen) && !empty($screen->id)) ? sanitize_key((string) $screen->id) : '',
-			'user_id' => function_exists('get_current_user_id') ? (int) get_current_user_id() : 0,
-			'context' => array(
-				'admin' => is_admin() ? 1 : 0,
-				'ajax' => (function_exists('wp_doing_ajax') && wp_doing_ajax()) ? 1 : 0,
-				'rest' => (defined('REST_REQUEST') && REST_REQUEST) ? 1 : 0,
-				'cron' => (function_exists('wp_doing_cron') && wp_doing_cron()) ? 1 : 0,
-				'wp_cli' => (defined('WP_CLI') && WP_CLI) ? 1 : 0,
-			),
-			'flags' => vms_resource_fingerprint_compact_value_deep((array) ($state['flags'] ?? array())),
-			'markers' => vms_resource_fingerprint_compact_value_deep((array) ($state['markers'] ?? array())),
-			'notes' => vms_resource_fingerprint_compact_value_deep((array) ($state['notes'] ?? array())),
-			'due_wp_cron' => vms_resource_fingerprint_wp_cron_counts(),
+			$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+			$entry = array(
+				'captured_at_gmt' => gmdate('Y-m-d H:i:s'),
+				'runtime_ms' => (int) round($runtime_seconds * 1000),
+				'peak_memory_mb' => round($peak_memory_bytes / 1048576, 1),
+				'request_uri' => vms_resource_fingerprint_compact_value(vms_admin_guard_request_uri()),
+				'request_method' => vms_admin_guard_request_method(),
+				'admin_page' => vms_resource_fingerprint_current_admin_page(),
+				'screen_id' => (is_object($screen) && !empty($screen->id)) ? sanitize_key((string) $screen->id) : '',
+				'user_id' => function_exists('get_current_user_id') ? (int) get_current_user_id() : 0,
+				'context' => array(
+					'admin' => is_admin() ? 1 : 0,
+					'ajax' => (function_exists('wp_doing_ajax') && wp_doing_ajax()) ? 1 : 0,
+					'rest' => (defined('REST_REQUEST') && REST_REQUEST) ? 1 : 0,
+					'cron' => (function_exists('wp_doing_cron') && wp_doing_cron()) ? 1 : 0,
+					'wp_cli' => (defined('WP_CLI') && WP_CLI) ? 1 : 0,
+				),
+				'flags' => vms_resource_fingerprint_compact_value_deep((array) ($state['flags'] ?? array())),
+				'markers' => vms_resource_fingerprint_compact_value_deep((array) ($state['markers'] ?? array())),
+				'notes' => vms_resource_fingerprint_compact_value_deep((array) ($state['notes'] ?? array())),
+				'due_wp_cron' => vms_resource_fingerprint_wp_cron_counts(),
 			'action_scheduler' => vms_resource_fingerprint_action_scheduler_counts(),
 		);
 
@@ -1228,7 +1401,7 @@ if (!function_exists('vms_render_resource_fingerprint_admin_screen')) {
 		}
 
 		$cleared = false;
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_clear_resource_fingerprints'])) {
+		if (vms_admin_guard_request_method() === 'post' && isset($_POST['vms_clear_resource_fingerprints'])) {
 			check_admin_referer('vms_clear_resource_fingerprints');
 			vms_resource_fingerprint_clear_entries();
 			$cleared = true;

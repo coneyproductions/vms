@@ -112,7 +112,7 @@ if (!class_exists('VMS_Tours_Service')) {
 			$screen_key = $this->screen->resolve_screen_key();
 			$this->storage->remember_seen_screen($screen_key);
 
-			$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+			$page = vms_request_read_key($_GET, 'page');
 			$settings = $this->storage->get_site_settings();
 			$screen_tours = $this->registry->for_screen($screen_key);
 
@@ -190,7 +190,7 @@ if (!class_exists('VMS_Tours_Service')) {
 			check_ajax_referer('vms_tours', 'nonce');
 
 			$user_id = get_current_user_id();
-			$screen_key = isset($_POST['screen_key']) ? $this->sanitize_screen_key((string) wp_unslash($_POST['screen_key'])) : '';
+			$screen_key = $this->sanitize_screen_key(vms_request_read_scalar($_POST, 'screen_key'));
 			if (!current_user_can('manage_options')) {
 				if ($screen_key === '' || empty($this->registry->for_screen($screen_key))) {
 					wp_send_json_error(array('message' => 'Screen not allowed'), 403);
@@ -232,9 +232,12 @@ if (!class_exists('VMS_Tours_Service')) {
 			check_ajax_referer('vms_tours', 'nonce');
 
 			$user_id = get_current_user_id();
-			$tour_id = isset($_POST['tour_id']) ? $this->sanitize_tour_id((string) wp_unslash($_POST['tour_id'])) : '';
-			$mode = isset($_POST['mode']) ? sanitize_key((string) wp_unslash($_POST['mode'])) : 'complete';
-			$tour_version = isset($_POST['tour_version']) ? sanitize_text_field((string) wp_unslash($_POST['tour_version'])) : '';
+			$tour_id = $this->sanitize_tour_id(vms_request_read_scalar($_POST, 'tour_id'));
+			$mode = vms_request_read_key($_POST, 'mode');
+			if ($mode === '') {
+				$mode = 'complete';
+			}
+			$tour_version = vms_request_read_text_field($_POST, 'tour_version');
 
 			if ($tour_id === '') {
 				wp_send_json_error(array('message' => 'Missing tour_id'), 400);

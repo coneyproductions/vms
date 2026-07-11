@@ -1,6 +1,35 @@
 <?php
 defined('ABSPATH') || exit;
 
+if (!function_exists('vms_rating_submitted_text_field')) {
+    function vms_rating_submitted_text_field(string $key): string
+    {
+        return vms_request_read_text_field($_POST, $key);
+    }
+}
+
+if (!function_exists('vms_rating_submitted_email')) {
+    function vms_rating_submitted_email(string $key): string
+    {
+        return vms_request_read_email($_POST, $key);
+    }
+}
+
+if (!function_exists('vms_rating_submitted_comment')) {
+    function vms_rating_submitted_comment(): string
+    {
+        return vms_request_read_textarea_field($_POST, 'vms_rating_comment');
+    }
+}
+
+if (!function_exists('vms_rating_submitted_value')) {
+    function vms_rating_submitted_value(string $key): int
+    {
+        $value = vms_request_read_absint($_POST, $key);
+        return ($value >= 1 && $value <= 5) ? $value : 0;
+    }
+}
+
 
 // ============================
 // VMS Rating custom post type
@@ -183,11 +212,11 @@ function vms_save_rating_details_meta($post_id, $post)
 
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $band_id   = isset($_POST['vms_band_id']) ? absint($_POST['vms_band_id']) : 0;
-    $event_id  = isset($_POST['vms_event_id']) ? absint($_POST['vms_event_id']) : 0;
-    $stars     = isset($_POST['vms_rating_value']) ? (int) $_POST['vms_rating_value'] : 0;
-    $rev_name  = isset($_POST['vms_reviewer_name']) ? sanitize_text_field($_POST['vms_reviewer_name']) : '';
-    $rev_email = isset($_POST['vms_reviewer_email']) ? sanitize_email($_POST['vms_reviewer_email']) : '';
+    $band_id   = vms_request_read_absint($_POST, 'vms_band_id');
+    $event_id  = vms_request_read_absint($_POST, 'vms_event_id');
+    $stars     = vms_rating_submitted_value('vms_rating_value');
+    $rev_name  = vms_rating_submitted_text_field('vms_reviewer_name');
+    $rev_email = vms_rating_submitted_email('vms_reviewer_email');
     $verified  = isset($_POST['vms_verified_attendance']) ? 1 : 0;
 
     update_post_meta($post_id, '_vms_band_id', $band_id);
@@ -271,8 +300,8 @@ function vms_rate_band_shortcode($atts) {
     ), $atts, 'vms_rate_band');
 
     // Allow event/band to come from query string as well.
-    $event_id = isset($_GET['event']) ? absint($_GET['event']) : absint($atts['event']);
-    $band_id  = isset($_GET['band'])  ? absint($_GET['band'])  : absint($atts['band']);
+    $event_id = isset($_GET['event']) ? vms_request_read_absint($_GET, 'event') : absint($atts['event']);
+    $band_id  = isset($_GET['band'])  ? vms_request_read_absint($_GET, 'band')  : absint($atts['band']);
 
     // If we don't even have IDs, bail.
     if (!$event_id || !$band_id) {
@@ -325,7 +354,7 @@ function vms_rate_band_shortcode($atts) {
 
     // Handle form submission
     $message = '';
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_rating_submit'])) {
+    if (vms_request_method() === 'post' && isset($_POST['vms_rating_submit'])) {
         $result  = vms_handle_rating_submission($event_id, $band_id);
         $message = $result['message'];
     }
@@ -347,14 +376,14 @@ function vms_rate_band_shortcode($atts) {
             <p>
                 <label for="vms_reviewer_name"><strong>Your Name</strong></label><br>
                 <input type="text" id="vms_reviewer_name" name="vms_reviewer_name"
-                    value="<?php echo isset($_POST['vms_reviewer_name']) ? esc_attr($_POST['vms_reviewer_name']) : ''; ?>"
+                    value="<?php echo esc_attr(vms_rating_submitted_text_field('vms_reviewer_name')); ?>"
                     class="regular-text" required>
             </p>
 
             <p>
                 <label for="vms_reviewer_email"><strong>Your Email</strong></label><br>
                 <input type="email" id="vms_reviewer_email" name="vms_reviewer_email"
-                    value="<?php echo isset($_POST['vms_reviewer_email']) ? esc_attr($_POST['vms_reviewer_email']) : ''; ?>"
+                    value="<?php echo esc_attr(vms_rating_submitted_email('vms_reviewer_email')); ?>"
                     class="regular-text" required>
             </p>
 
@@ -364,7 +393,7 @@ function vms_rate_band_shortcode($atts) {
                     <option value="">-- Select --</option>
                     <?php for ($i = 1; $i <= 5; $i++) : ?>
                         <option value="<?php echo esc_attr($i); ?>"
-                            <?php selected(isset($_POST['vms_rating_value']) ? (int) $_POST['vms_rating_value'] : '', $i); ?>>
+                            <?php selected(vms_rating_submitted_value('vms_rating_value'), $i); ?>>
                             <?php echo esc_html($i . ' ★'); ?>
                         </option>
                     <?php endfor; ?>
@@ -374,7 +403,7 @@ function vms_rate_band_shortcode($atts) {
             <p>
                 <label for="vms_rating_comment"><strong>Comments (optional)</strong></label><br>
                 <textarea id="vms_rating_comment" name="vms_rating_comment" rows="4" class="vms-rating-comment"><?php
-                    echo isset($_POST['vms_rating_comment']) ? esc_textarea($_POST['vms_rating_comment']) : '';
+                    echo esc_textarea(vms_rating_submitted_comment());
                 ?></textarea>
             </p>
 
@@ -410,10 +439,10 @@ function vms_handle_rating_submission($event_id, $band_id)
         );
     }
 
-    $name    = isset($_POST['vms_reviewer_name']) ? sanitize_text_field($_POST['vms_reviewer_name']) : '';
-    $email   = isset($_POST['vms_reviewer_email']) ? sanitize_email($_POST['vms_reviewer_email']) : '';
-    $stars   = isset($_POST['vms_rating_value']) ? (int) $_POST['vms_rating_value'] : 0;
-    $comment = isset($_POST['vms_rating_comment']) ? wp_kses_post($_POST['vms_rating_comment']) : '';
+    $name    = vms_rating_submitted_text_field('vms_reviewer_name');
+    $email   = vms_rating_submitted_email('vms_reviewer_email');
+    $stars   = vms_rating_submitted_value('vms_rating_value');
+    $comment = vms_rating_submitted_comment();
 
     if (empty($name) || empty($email) || !$stars) {
         return array(

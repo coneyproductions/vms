@@ -1755,8 +1755,10 @@ function vms_staff_portal_shortcode()
     $tax_tab_label = ($worker_type === 'employee') ? __('Employee Packet', 'backstage-venue-manager') : __('Tax Profile', 'backstage-venue-manager');
     $url_tax_tab   = add_query_arg('tab', $tax_tab_slug, $base_url);
 
-    $tab = filter_input(INPUT_GET, 'tab', FILTER_UNSAFE_RAW);
-    $tab = is_string($tab) ? sanitize_key($tab) : 'dashboard';
+    $tab = vms_request_read_key($_GET, 'tab');
+    if ($tab === '') {
+        $tab = 'dashboard';
+    }
     if (!in_array($tab, array('dashboard', 'tax-profile', 'employee-packet', 'certifications', 'availability'), true)) {
         $tab = 'dashboard';
     }
@@ -2973,8 +2975,8 @@ function vms_staff_save_manual_availability_day_ajax(): void
         wp_send_json_error(array('message' => 'Staff profile not linked.'), 400);
     }
 
-    $date  = sanitize_text_field((string) ($_POST['date'] ?? ''));
-    $state = sanitize_text_field((string) ($_POST['state'] ?? ''));
+    $date  = vms_request_read_text_field($_POST, 'date');
+    $state = vms_request_read_text_field($_POST, 'state');
 
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         wp_send_json_error(array('message' => 'Invalid date.'), 400);

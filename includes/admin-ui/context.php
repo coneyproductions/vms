@@ -6,13 +6,7 @@ if (!function_exists('vms_admin_ui_query_arg')) {
 	function vms_admin_ui_query_arg(string $key): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin shell routing helper.
-		if (!isset($_GET[$key])) {
-			return '';
-		}
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- read-only admin shell routing helper.
-		$value = $_GET[$key];
-		return (string) wp_unslash($value);
+		return vms_request_read_scalar($_GET, $key);
 	}
 }
 

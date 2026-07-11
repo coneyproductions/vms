@@ -103,7 +103,7 @@ if (!class_exists('VMS_Tours')) {
 			if (!is_admin()) {
 				return false;
 			}
-			$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+			$page = vms_request_read_key($_GET, 'page');
 			if ($page === 'vms' || strpos($page, 'vms-') === 0) {
 				return true;
 			}
@@ -402,7 +402,7 @@ if (!class_exists('VMS_Tours')) {
 			}
 
 			$current_context = self::get_current_context_key();
-			$page            = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+			$page            = vms_request_read_key($_GET, 'page');
 			$needs_assets    = ($current_context !== '' || $page === 'vms-tour-maintenance' || $page === 'vms' || $page === 'vms-dashboard');
 			if (!$needs_assets) {
 				return;
@@ -469,7 +469,7 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function get_current_context_key(): string
 		{
-			$page   = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+			$page   = vms_request_read_key($_GET, 'page');
 			$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 			$sid    = ($screen && isset($screen->id)) ? (string) $screen->id : '';
 			$url    = self::get_current_admin_relative_url();
@@ -581,7 +581,7 @@ if (!class_exists('VMS_Tours')) {
 				wp_die('Insufficient permissions.');
 			}
 			check_admin_referer('vms_tours_dismiss_notice');
-			$hash = sanitize_text_field((string) ($_GET['hash'] ?? ''));
+			$hash = vms_request_read_text_field($_GET, 'hash');
 			if ($hash !== '') {
 				update_user_meta(get_current_user_id(), self::USER_META_NOTICE_DISMISSED, $hash);
 			}
@@ -629,10 +629,16 @@ if (!class_exists('VMS_Tours')) {
 			}
 			check_ajax_referer('vms_tours_state', 'nonce');
 
-			$tour_id = sanitize_key((string) ($_POST['tour_id'] ?? ''));
-			$status  = sanitize_key((string) ($_POST['status'] ?? 'in_progress'));
-			$version = absint($_POST['version'] ?? 1);
-			$step    = absint($_POST['step_index'] ?? 0);
+			$tour_id = vms_request_read_key($_POST, 'tour_id');
+			$status  = vms_request_read_key($_POST, 'status');
+			if ($status === '') {
+				$status = 'in_progress';
+			}
+			$version = vms_request_read_absint($_POST, 'version');
+			if ($version <= 0) {
+				$version = 1;
+			}
+			$step = vms_request_read_absint($_POST, 'step_index');
 			if ($tour_id === '') {
 				wp_send_json_error(array('message' => 'Missing tour_id'), 400);
 			}
@@ -942,7 +948,7 @@ if (!class_exists('VMS_Tours')) {
 
 		private static function get_current_admin_relative_url(): string
 		{
-			$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
+			$request_uri = vms_request_current_uri('');
 			if ($request_uri === '') {
 				return '';
 			}
