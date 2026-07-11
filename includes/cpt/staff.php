@@ -99,7 +99,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
         'vms-staff-qualifications',
         __('Qualifications / Licenses', 'backstage-venue-manager'),
         function (WP_Post $post): void {
-            $rows = function_exists('vms_staffing_get_staff_qualifications')
+                $rows = function_exists('vms_staffing_get_staff_qualifications')
                 ? (array) vms_staffing_get_staff_qualifications((int) $post->ID)
                 : array();
             if (empty($rows)) {
@@ -113,6 +113,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                     'status' => 'active',
                     'proof_url' => '',
                     'attachment_id' => '',
+                    'storage_kind' => '',
                     'notes' => '',
                     'source' => 'admin',
                     'submitted_by' => '',
@@ -150,6 +151,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                         $status = 'active';
                     }
                     $proof_url = !empty($row['proof_url']) ? (string) $row['proof_url'] : '';
+                    $proof_download_url = !empty($row['proof_download_url']) ? (string) $row['proof_download_url'] : '';
                     $submitted_by = !empty($row['submitted_by']) ? get_user_by('id', absint($row['submitted_by'])) : null;
                     $reviewed_by = !empty($row['reviewed_by']) ? get_user_by('id', absint($row['reviewed_by'])) : null;
                     $submitted_label = !empty($row['submitted_at']) ? wp_date('M j, Y g:ia', absint($row['submitted_at']), wp_timezone()) : '';
@@ -158,6 +160,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                     <div class="vms-staff-qualification-card" data-vms-staff-qualification-row="1">
                         <input type="hidden" name="vms_staff_qualifications[<?php echo esc_attr((string) $idx); ?>][id]" value="<?php echo esc_attr((string) ($row['id'] ?? '')); ?>">
                         <input type="hidden" name="vms_staff_qualifications[<?php echo esc_attr((string) $idx); ?>][attachment_id]" value="<?php echo esc_attr((string) ($row['attachment_id'] ?? '')); ?>">
+                        <input type="hidden" name="vms_staff_qualifications[<?php echo esc_attr((string) $idx); ?>][storage_kind]" value="<?php echo esc_attr((string) ($row['storage_kind'] ?? '')); ?>">
                         <input type="hidden" name="vms_staff_qualifications[<?php echo esc_attr((string) $idx); ?>][source]" value="<?php echo esc_attr((string) ($row['source'] ?? 'admin')); ?>">
                         <input type="hidden" name="vms_staff_qualifications[<?php echo esc_attr((string) $idx); ?>][submitted_by]" value="<?php echo esc_attr((string) ($row['submitted_by'] ?? '')); ?>">
                         <input type="hidden" name="vms_staff_qualifications[<?php echo esc_attr((string) $idx); ?>][submitted_at]" value="<?php echo esc_attr((string) ($row['submitted_at'] ?? '')); ?>">
@@ -198,8 +201,8 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                             <label class="vms-staff-qualification-card__proof">
                                 <span><?php esc_html_e('Proof URL', 'backstage-venue-manager'); ?></span>
                                 <input type="url" class="regular-text" name="vms_staff_qualifications[<?php echo esc_attr((string) $idx); ?>][proof_url]" value="<?php echo esc_attr($proof_url); ?>">
-                                <?php if ($proof_url !== '') : ?>
-                                    <a href="<?php echo esc_url($proof_url); ?>" target="_blank" rel="noopener"><?php esc_html_e('View proof', 'backstage-venue-manager'); ?></a>
+                                <?php if ($proof_download_url !== '' || $proof_url !== '') : ?>
+                                    <a href="<?php echo esc_url($proof_download_url !== '' ? $proof_download_url : $proof_url); ?>" target="_blank" rel="noopener"><?php esc_html_e('View proof', 'backstage-venue-manager'); ?></a>
                                 <?php endif; ?>
                             </label>
                         </div>
@@ -237,7 +240,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                     card.className = 'vms-staff-qualification-card';
                     card.setAttribute('data-vms-staff-qualification-row', '1');
                     card.innerHTML =
-                        hidden(idx, 'id', '') + hidden(idx, 'attachment_id', '') + hidden(idx, 'source', 'admin') + hidden(idx, 'submitted_by', '') + hidden(idx, 'submitted_at', '') + hidden(idx, 'reviewed_by', '') + hidden(idx, 'reviewed_at', '') +
+                        hidden(idx, 'id', '') + hidden(idx, 'attachment_id', '') + hidden(idx, 'storage_kind', '') + hidden(idx, 'source', 'admin') + hidden(idx, 'submitted_by', '') + hidden(idx, 'submitted_at', '') + hidden(idx, 'reviewed_by', '') + hidden(idx, 'reviewed_at', '') +
                         '<div class="vms-staff-qualification-card__grid vms-staff-qualification-card__grid--primary">' +
                             '<label><span><?php echo esc_js(__('Qualification', 'backstage-venue-manager')); ?></span><input type="text" class="regular-text" name="vms_staff_qualifications['+idx+'][name]" value=""></label>' +
                             '<label><span><?php echo esc_js(__('Authority', 'backstage-venue-manager')); ?></span><input type="text" class="regular-text" name="vms_staff_qualifications['+idx+'][authority]" value=""></label>' +

@@ -2893,6 +2893,132 @@ if (!function_exists('vms_vendor_portal_headliner_promo_video_max_bytes')) {
     }
 }
 
+if (!function_exists('vms_vendor_portal_public_image_allowed_mimes')) {
+    function vms_vendor_portal_public_image_allowed_mimes(): array
+    {
+        return array(
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+        );
+    }
+}
+
+if (!function_exists('vms_vendor_portal_public_image_max_bytes')) {
+    function vms_vendor_portal_public_image_max_bytes(): int
+    {
+        $configured = 10 * 1024 * 1024;
+        $wp_limit = (int) wp_max_upload_size();
+        if ($wp_limit > 0) {
+            return max(1, min($configured, $wp_limit));
+        }
+
+        return $configured;
+    }
+}
+
+if (!function_exists('vms_vendor_portal_validate_public_image_upload')) {
+    /**
+     * @return array<string,mixed>|WP_Error
+     */
+    function vms_vendor_portal_validate_public_image_upload(string $field_name)
+    {
+        $upload = vms_upload_read_file($_FILES, $field_name);
+        if (is_wp_error($upload)) {
+            return $upload;
+        }
+
+        return vms_validate_uploaded_file(
+            $upload,
+            array(
+                'allowed_mimes' => vms_vendor_portal_public_image_allowed_mimes(),
+                'max_bytes' => vms_vendor_portal_public_image_max_bytes(),
+                'type_message' => __('Please upload a JPG, PNG, or WEBP image.', 'backstage-venue-manager'),
+                'empty_message' => __('That image appears to be empty.', 'backstage-venue-manager'),
+                'too_large_message' => __('That image is too large.', 'backstage-venue-manager'),
+                'tmp_invalid_message' => __('The uploaded image could not be verified.', 'backstage-venue-manager'),
+            )
+        );
+    }
+}
+
+if (!function_exists('vms_vendor_portal_handle_public_image_upload')) {
+    /**
+     * @return int|WP_Error
+     */
+    function vms_vendor_portal_handle_public_image_upload(string $field_name, int $post_id = 0)
+    {
+        $validated = vms_vendor_portal_validate_public_image_upload($field_name);
+        if (is_wp_error($validated)) {
+            return $validated;
+        }
+
+        if (!function_exists('media_handle_upload')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+        }
+
+        return media_handle_upload($field_name, $post_id, array(), array(
+            'test_form' => false,
+            'mimes' => vms_vendor_portal_public_image_allowed_mimes(),
+        ));
+    }
+}
+
+if (!function_exists('vms_vendor_portal_validate_headliner_promo_video_upload')) {
+    /**
+     * @return array<string,mixed>|WP_Error
+     */
+    function vms_vendor_portal_validate_headliner_promo_video_upload(string $field_name)
+    {
+        $upload = vms_upload_read_file($_FILES, $field_name);
+        if (is_wp_error($upload)) {
+            return $upload;
+        }
+
+        return vms_validate_uploaded_file(
+            $upload,
+            array(
+                'allowed_mimes' => vms_vendor_portal_headliner_promo_video_allowed_mimes(),
+                'max_bytes' => vms_vendor_portal_headliner_promo_video_max_bytes(),
+                'type_message' => __('Please upload an MP4, MOV, or WebM video.', 'backstage-venue-manager'),
+                'empty_message' => __('That file appears to be empty.', 'backstage-venue-manager'),
+                'too_large_message' => sprintf(
+                    __('That file is too large. Please keep it under %s.', 'backstage-venue-manager'),
+                    function_exists('size_format') ? size_format(vms_vendor_portal_headliner_promo_video_max_bytes(), 0) : (string) vms_vendor_portal_headliner_promo_video_max_bytes()
+                ),
+                'tmp_invalid_message' => __('We could not verify the uploaded file. Please try again.', 'backstage-venue-manager'),
+            )
+        );
+    }
+}
+
+if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_media_upload')) {
+    /**
+     * @return int|WP_Error
+     */
+    function vms_vendor_portal_handle_headliner_promo_video_media_upload(string $field_name, int $plan_id)
+    {
+        $validated = vms_vendor_portal_validate_headliner_promo_video_upload($field_name);
+        if (is_wp_error($validated)) {
+            return $validated;
+        }
+
+        if (!function_exists('media_handle_upload')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+        }
+
+        return media_handle_upload($field_name, $plan_id, array(), array(
+            'test_form' => false,
+            'mimes' => vms_vendor_portal_headliner_promo_video_allowed_mimes(),
+        ));
+    }
+}
+
 if (!function_exists('vms_vendor_portal_headliner_promo_video_accept_attr')) {
     function vms_vendor_portal_headliner_promo_video_accept_attr(): string
     {
@@ -3509,59 +3635,9 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
             exit;
         }
 
-        $upload = $_FILES['vms_headliner_promo_video'];
-        $error = isset($upload['error']) ? (int) $upload['error'] : UPLOAD_ERR_NO_FILE;
-        if ($error !== UPLOAD_ERR_OK) {
-            $message = __('Upload failed before WordPress could save the file. Please try a smaller MP4 if this keeps happening.', 'backstage-venue-manager');
-            if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
-                /* translators: %s: current upload size limit for the promo video. */
-                $message = sprintf(__('That file is larger than the current upload limit. Please keep it under %s.', 'backstage-venue-manager'), function_exists('size_format') ? size_format(vms_vendor_portal_headliner_promo_video_max_bytes(), 0) : (string) vms_vendor_portal_headliner_promo_video_max_bytes());
-            }
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => $message));
-            wp_safe_redirect($return_url);
-            exit;
-        }
-
-        $name = isset($upload['name']) ? (string) $upload['name'] : '';
-        $tmp_name = isset($upload['tmp_name']) ? (string) $upload['tmp_name'] : '';
-        $size = isset($upload['size']) ? (int) $upload['size'] : 0;
-        $max_bytes = vms_vendor_portal_headliner_promo_video_max_bytes();
-        if ($tmp_name === '' || !is_uploaded_file($tmp_name)) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('We could not read the uploaded file. Please try again.', 'backstage-venue-manager')));
-            wp_safe_redirect($return_url);
-            exit;
-        }
-        if ($size <= 0) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('That file appears to be empty.', 'backstage-venue-manager')));
-            wp_safe_redirect($return_url);
-            exit;
-        }
-        if ($size > $max_bytes) {
-            /* translators: %s: current upload size limit for the promo video. */
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('That file is too large. Please keep it under %s.', 'backstage-venue-manager'), function_exists('size_format') ? size_format($max_bytes, 0) : (string) $max_bytes)));
-            wp_safe_redirect($return_url);
-            exit;
-        }
-
-        $checked = wp_check_filetype_and_ext($tmp_name, $name, vms_vendor_portal_headliner_promo_video_allowed_mimes());
-        $ext = isset($checked['ext']) ? sanitize_key((string) $checked['ext']) : '';
-        $mime = isset($checked['type']) ? sanitize_text_field((string) $checked['type']) : '';
-        if ($ext === '' || $mime === '' || strpos($mime, 'video/') !== 0) {
-            vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('Please upload an MP4, MOV, or WebM video.', 'backstage-venue-manager')));
-            wp_safe_redirect($return_url);
-            exit;
-        }
-
-        if (!function_exists('media_handle_upload')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-            require_once ABSPATH . 'wp-admin/includes/media.php';
-            require_once ABSPATH . 'wp-admin/includes/image.php';
-        }
-
-        $attachment_id = media_handle_upload('vms_headliner_promo_video', $plan_id, array(), array(
-            'test_form' => false,
-            'mimes' => vms_vendor_portal_headliner_promo_video_allowed_mimes(),
-        ));
+        $attachment_id = function_exists('vms_vendor_portal_handle_headliner_promo_video_media_upload')
+            ? vms_vendor_portal_handle_headliner_promo_video_media_upload('vms_headliner_promo_video', $plan_id)
+            : new WP_Error('promo_video_upload_unavailable', __('The promo video upload handler is unavailable.', 'backstage-venue-manager'));
 
         if (is_wp_error($attachment_id)) {
             /* translators: %s: media library upload error message. */
@@ -6989,6 +7065,257 @@ if (!function_exists('vms_av_build_month_matrix')) {
  * Tech Docs (procedural) — FIXED (no “. . . .”, no broken echo)
  * ========================================================== */
 
+if (!function_exists('vms_vendor_portal_tech_doc_allowed_mimes')) {
+    function vms_vendor_portal_tech_doc_allowed_mimes(): array
+    {
+        return array(
+            'pdf' => 'application/pdf',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+        );
+    }
+}
+
+if (!function_exists('vms_vendor_portal_tech_doc_max_bytes')) {
+    function vms_vendor_portal_tech_doc_max_bytes(): int
+    {
+        $configured = 15 * 1024 * 1024;
+        $wp_limit = (int) wp_max_upload_size();
+        if ($wp_limit > 0) {
+            return max(1, min($configured, $wp_limit));
+        }
+
+        return $configured;
+    }
+}
+
+if (!function_exists('vms_vendor_portal_tech_doc_meta_key')) {
+    function vms_vendor_portal_tech_doc_meta_key(string $doc_key): string
+    {
+        if ($doc_key === 'input_list') {
+            return '_vms_input_list_attachment_id';
+        }
+
+        return '_vms_stage_plot_attachment_id';
+    }
+}
+
+if (!function_exists('vms_vendor_portal_tech_doc_storage_kind_meta_key')) {
+    function vms_vendor_portal_tech_doc_storage_kind_meta_key(string $doc_key): string
+    {
+        if ($doc_key === 'input_list') {
+            return '_vms_input_list_storage_kind';
+        }
+
+        return '_vms_stage_plot_storage_kind';
+    }
+}
+
+if (!function_exists('vms_vendor_portal_tech_doc_label')) {
+    function vms_vendor_portal_tech_doc_label(string $doc_key): string
+    {
+        return $doc_key === 'input_list'
+            ? __('Input list', 'backstage-venue-manager')
+            : __('Stage plot', 'backstage-venue-manager');
+    }
+}
+
+if (!function_exists('vms_vendor_portal_tech_doc_download_url')) {
+    function vms_vendor_portal_tech_doc_download_url(int $vendor_id, string $doc_key, int $plan_id = 0): string
+    {
+        $vendor_id = absint($vendor_id);
+        $doc_key = sanitize_key($doc_key);
+        $plan_id = absint($plan_id);
+
+        return wp_nonce_url(
+            add_query_arg(
+                array(
+                    'action' => 'vms_vendor_portal_download_tech_doc',
+                    'vendor_id' => $vendor_id,
+                    'doc_key' => $doc_key,
+                    'plan_id' => $plan_id,
+                ),
+                admin_url('admin-post.php')
+            ),
+            'vms_vendor_portal_download_tech_doc_' . $vendor_id . '_' . $doc_key . '_' . $plan_id
+        );
+    }
+}
+
+if (!function_exists('vms_vendor_portal_tech_doc_payload')) {
+    /**
+     * @return array<string,string|int>|WP_Error
+     */
+    function vms_vendor_portal_tech_doc_payload(int $vendor_id, string $doc_key)
+    {
+        $vendor_id = absint($vendor_id);
+        $doc_key = sanitize_key($doc_key);
+        if ($vendor_id <= 0 || !in_array($doc_key, array('stage_plot', 'input_list'), true)) {
+            return new WP_Error('tech_doc_missing', __('Requested file is not available.', 'backstage-venue-manager'));
+        }
+
+        $meta_key = vms_vendor_portal_tech_doc_meta_key($doc_key);
+        $storage_key = vms_vendor_portal_tech_doc_storage_kind_meta_key($doc_key);
+        $file_id = absint(get_post_meta($vendor_id, $meta_key, true));
+        if ($file_id <= 0) {
+            return new WP_Error('tech_doc_missing', __('Requested file is not available.', 'backstage-venue-manager'));
+        }
+
+        $storage_kind = sanitize_key((string) get_post_meta($vendor_id, $storage_key, true));
+        if ($storage_kind === 'private_file') {
+            $row = function_exists('vms_private_file_get') ? vms_private_file_get($file_id) : null;
+            if (!is_array($row)) {
+                return new WP_Error('tech_doc_missing', __('Requested file is not available.', 'backstage-venue-manager'));
+            }
+
+            $path = function_exists('vms_private_file_path') ? vms_private_file_path((string) ($row['stored_filename'] ?? '')) : '';
+            if ($path === '' || !function_exists('vms_private_files_path_is_safe') || !vms_private_files_path_is_safe($path)) {
+                return new WP_Error('tech_doc_missing', __('Requested file is not available.', 'backstage-venue-manager'));
+            }
+
+            return array(
+                'path' => $path,
+                'mime' => (string) ($row['mime_type'] ?? 'application/octet-stream'),
+                'filename' => (string) ($row['original_filename'] ?? $doc_key),
+                'storage_kind' => 'private_file',
+                'file_id' => $file_id,
+            );
+        }
+
+        return function_exists('vms_private_files_attachment_payload')
+            ? vms_private_files_attachment_payload($file_id)
+            : new WP_Error('tech_doc_missing', __('Requested file is not available.', 'backstage-venue-manager'));
+    }
+}
+
+if (!function_exists('vms_vendor_portal_store_tech_doc_upload')) {
+    /**
+     * @return int|WP_Error
+     */
+    function vms_vendor_portal_store_tech_doc_upload(int $vendor_id, string $field_name)
+    {
+        $vendor_id = absint($vendor_id);
+        $field_name = trim($field_name);
+        $upload = vms_upload_read_file($_FILES, $field_name);
+        if (is_wp_error($upload)) {
+            return $upload;
+        }
+
+        $validated = vms_validate_uploaded_file(
+            $upload,
+            array(
+                'allowed_mimes' => vms_vendor_portal_tech_doc_allowed_mimes(),
+                'max_bytes' => vms_vendor_portal_tech_doc_max_bytes(),
+                'type_message' => __('Please upload a PDF, JPG, PNG, or WEBP file.', 'backstage-venue-manager'),
+                'empty_message' => __('The uploaded file is empty.', 'backstage-venue-manager'),
+                'too_large_message' => __('The uploaded file is too large.', 'backstage-venue-manager'),
+                'tmp_invalid_message' => __('The uploaded file could not be verified.', 'backstage-venue-manager'),
+            )
+        );
+        if (is_wp_error($validated)) {
+            return $validated;
+        }
+
+        return function_exists('vms_private_files_store_validated_upload')
+            ? vms_private_files_store_validated_upload(
+                $validated,
+                array(
+                    'bucket' => 'vendor-tech-docs',
+                    'related_post_type' => 'vms_vendor',
+                    'related_post_id' => $vendor_id,
+                )
+            )
+            : new WP_Error('tech_doc_storage_unavailable', __('Private document storage is unavailable.', 'backstage-venue-manager'));
+    }
+}
+
+if (!function_exists('vms_vendor_portal_user_can_download_tech_doc')) {
+    function vms_vendor_portal_user_can_download_tech_doc(int $vendor_id, string $doc_key, int $plan_id = 0): bool
+    {
+        $vendor_id = absint($vendor_id);
+        $plan_id = absint($plan_id);
+        $doc_key = sanitize_key($doc_key);
+        if ($vendor_id <= 0 || !in_array($doc_key, array('stage_plot', 'input_list'), true)) {
+            return false;
+        }
+
+        if (current_user_can('edit_post', $vendor_id)) {
+            return true;
+        }
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        $user_id = get_current_user_id();
+        if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $vendor_id)) {
+            return true;
+        }
+        if (function_exists('vms_get_active_vendor_ids_for_user')) {
+            $vendor_ids = array_map('absint', (array) vms_get_active_vendor_ids_for_user($user_id));
+            if (in_array($vendor_id, $vendor_ids, true)) {
+                return true;
+            }
+        }
+
+        if ($plan_id > 0 && function_exists('vms_staff_portal_get_assignment_rows') && function_exists('vms_staff_portal_assignment_can_view_docs')) {
+            $staff_id = (int) get_user_meta($user_id, '_vms_staff_id', true);
+            if ($staff_id > 0) {
+                $assignments = (array) vms_staff_portal_get_assignment_rows($staff_id, 250);
+                foreach ($assignments as $assignment) {
+                    if (!is_array($assignment)) {
+                        continue;
+                    }
+                    if (absint($assignment['event_plan_id'] ?? 0) !== $plan_id) {
+                        continue;
+                    }
+                    if (vms_staff_portal_assignment_can_view_docs($assignment)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('vms_vendor_portal_download_tech_doc_handler')) {
+    function vms_vendor_portal_download_tech_doc_handler(): void
+    {
+        $vendor_id = isset($_GET['vendor_id']) && !is_array($_GET['vendor_id']) ? absint($_GET['vendor_id']) : 0;
+        $doc_key = isset($_GET['doc_key']) && !is_array($_GET['doc_key']) ? sanitize_key((string) $_GET['doc_key']) : '';
+        $plan_id = isset($_GET['plan_id']) && !is_array($_GET['plan_id']) ? absint($_GET['plan_id']) : 0;
+        if ($vendor_id <= 0 || !in_array($doc_key, array('stage_plot', 'input_list'), true)) {
+            wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
+        }
+
+        check_admin_referer('vms_vendor_portal_download_tech_doc_' . $vendor_id . '_' . $doc_key . '_' . $plan_id);
+        if (!vms_vendor_portal_user_can_download_tech_doc($vendor_id, $doc_key, $plan_id)) {
+            wp_die(esc_html__('You do not have permission to download this file.', 'backstage-venue-manager'));
+        }
+
+        $payload = vms_vendor_portal_tech_doc_payload($vendor_id, $doc_key);
+        if (is_wp_error($payload)) {
+            wp_die(esc_html($payload->get_error_message()));
+        }
+
+        $mime = trim((string) ($payload['mime'] ?? ''));
+        $allowed_mimes = array_values(vms_vendor_portal_tech_doc_allowed_mimes());
+        if (!in_array($mime, $allowed_mimes, true)) {
+            $mime = 'application/octet-stream';
+        }
+
+        vms_private_files_stream_path(
+            (string) ($payload['path'] ?? ''),
+            (string) ($payload['filename'] ?? 'tech-doc'),
+            $mime
+        );
+    }
+}
+add_action('admin_post_vms_vendor_portal_download_tech_doc', 'vms_vendor_portal_download_tech_doc_handler');
+
 if (!function_exists('vms_vendor_portal_render_tech_docs')) {
     function vms_vendor_portal_render_tech_docs($vendor_id)
     {
@@ -6996,13 +7323,6 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
 
         echo '<h3>' . esc_html__('Tech Docs', 'backstage-venue-manager') . '</h3>';
         echo '<p class="vms-muted">' . esc_html__('Upload your current stage plot and input list (PDF or image). You can replace them any time.', 'backstage-venue-manager') . '</p>';
-
-        // Ensure media handling functions are available on front-end
-        if (!function_exists('media_handle_upload')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-            require_once ABSPATH . 'wp-admin/includes/media.php';
-            require_once ABSPATH . 'wp-admin/includes/image.php';
-        }
 
         // Handle uploads
         if (vms_request_method() === 'post' && isset($_POST['vms_techdocs_save'])) {
@@ -7015,25 +7335,37 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
 
                 $updated = false;
 
-                if (!empty($_FILES['vms_stage_plot']['name'])) {
-                    $attach_id = media_handle_upload('vms_stage_plot', 0);
-                    if (!is_wp_error($attach_id)) {
-                        update_post_meta($vendor_id, '_vms_stage_plot_attachment_id', (int) $attach_id);
+                if (vms_upload_request_has_file($_FILES, 'vms_stage_plot')) {
+                    $previous_id = (int) get_post_meta($vendor_id, '_vms_stage_plot_attachment_id', true);
+                    $previous_kind = sanitize_key((string) get_post_meta($vendor_id, '_vms_stage_plot_storage_kind', true));
+                    $file_id = vms_vendor_portal_store_tech_doc_upload($vendor_id, 'vms_stage_plot');
+                    if (!is_wp_error($file_id)) {
+                        update_post_meta($vendor_id, '_vms_stage_plot_attachment_id', (int) $file_id);
+                        update_post_meta($vendor_id, '_vms_stage_plot_storage_kind', 'private_file');
+                        if ($previous_kind === 'private_file' && $previous_id > 0 && $previous_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
+                            vms_private_files_delete($previous_id);
+                        }
                         $updated = true;
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'backstage-venue-manager'), $attach_id->get_error_message())));
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
                     }
                 }
 
-                if (!empty($_FILES['vms_input_list']['name'])) {
-                    $attach_id = media_handle_upload('vms_input_list', 0);
-                    if (!is_wp_error($attach_id)) {
-                        update_post_meta($vendor_id, '_vms_input_list_attachment_id', (int) $attach_id);
+                if (vms_upload_request_has_file($_FILES, 'vms_input_list')) {
+                    $previous_id = (int) get_post_meta($vendor_id, '_vms_input_list_attachment_id', true);
+                    $previous_kind = sanitize_key((string) get_post_meta($vendor_id, '_vms_input_list_storage_kind', true));
+                    $file_id = vms_vendor_portal_store_tech_doc_upload($vendor_id, 'vms_input_list');
+                    if (!is_wp_error($file_id)) {
+                        update_post_meta($vendor_id, '_vms_input_list_attachment_id', (int) $file_id);
+                        update_post_meta($vendor_id, '_vms_input_list_storage_kind', 'private_file');
+                        if ($previous_kind === 'private_file' && $previous_id > 0 && $previous_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
+                            vms_private_files_delete($previous_id);
+                        }
                         $updated = true;
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Input list upload failed: %s', 'backstage-venue-manager'), $attach_id->get_error_message())));
+                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Input list upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
                     }
                 }
 
@@ -7047,13 +7379,13 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
         $stage_id = (int) get_post_meta($vendor_id, '_vms_stage_plot_attachment_id', true);
         $input_id = (int) get_post_meta($vendor_id, '_vms_input_list_attachment_id', true);
 
-        $stage_url = $stage_id ? wp_get_attachment_url($stage_id) : '';
-        $input_url = $input_id ? wp_get_attachment_url($input_id) : '';
+        $stage_url = $stage_id ? vms_vendor_portal_tech_doc_download_url($vendor_id, 'stage_plot') : '';
+        $input_url = $input_id ? vms_vendor_portal_tech_doc_download_url($vendor_id, 'input_list') : '';
 
         echo '<div class="vms-portal-card">';
         echo '<ul class="vms-m0 vms-pl-18">';
-        echo '<li><strong>' . esc_html__('Stage Plot:', 'backstage-venue-manager') . '</strong> ' . ($stage_url ? '<a target="_blank" rel="noopener" href="' . esc_url($stage_url) . '">' . esc_html__('View current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
-        echo '<li><strong>' . esc_html__('Input List:', 'backstage-venue-manager') . '</strong> ' . ($input_url ? '<a target="_blank" rel="noopener" href="' . esc_url($input_url) . '">' . esc_html__('View current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
+        echo '<li><strong>' . esc_html__('Stage Plot:', 'backstage-venue-manager') . '</strong> ' . ($stage_url ? '<a target="_blank" rel="noopener" href="' . esc_url($stage_url) . '">' . esc_html__('Download current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
+        echo '<li><strong>' . esc_html__('Input List:', 'backstage-venue-manager') . '</strong> ' . ($input_url ? '<a target="_blank" rel="noopener" href="' . esc_url($input_url) . '">' . esc_html__('Download current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
         echo '</ul>';
         echo '</div>';
 
@@ -7152,7 +7484,9 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
 
                 // Logo upload (sets Vendor featured image)
                 if (!empty($_FILES['vms_vendor_logo']['name'])) {
-                    $attach_id = media_handle_upload('vms_vendor_logo', 0);
+                    $attach_id = function_exists('vms_vendor_portal_handle_public_image_upload')
+                        ? vms_vendor_portal_handle_public_image_upload('vms_vendor_logo', 0)
+                        : new WP_Error('vendor_logo_upload_unavailable', __('The logo upload handler is unavailable.', 'backstage-venue-manager'));
                     if (!is_wp_error($attach_id)) {
                         set_post_thumbnail($vendor_id, (int) $attach_id);
                     } else {
@@ -7206,7 +7540,9 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                     $gallery_value = $gallery_urls[$i] ?? '';
 
                     if (!empty($_FILES[$file_field]['name'])) {
-                        $attach_id = media_handle_upload($file_field, 0);
+                        $attach_id = function_exists('vms_vendor_portal_handle_public_image_upload')
+                            ? vms_vendor_portal_handle_public_image_upload($file_field, 0)
+                            : new WP_Error('vendor_gallery_upload_unavailable', __('The gallery upload handler is unavailable.', 'backstage-venue-manager'));
                         if (!is_wp_error($attach_id)) {
                             $uploaded_url = wp_get_attachment_url((int) $attach_id);
                             if ($uploaded_url) {

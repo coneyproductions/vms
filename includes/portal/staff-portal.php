@@ -213,18 +213,16 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             return vms_staff_portal_notice_html('error', __('Please choose or enter the certification type before uploading.', 'backstage-venue-manager'));
         }
 
-        if (empty($_FILES['vms_staff_certification_file']['name'])) {
+        if (!vms_upload_request_has_file($_FILES, 'vms_staff_certification_file')) {
             return vms_staff_portal_notice_html('error', __('Please choose a certificate file to upload.', 'backstage-venue-manager'));
         }
 
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-        require_once ABSPATH . 'wp-admin/includes/media.php';
-        require_once ABSPATH . 'wp-admin/includes/image.php';
-
-        $attachment_id = media_handle_upload('vms_staff_certification_file', $staff_id);
-        if (is_wp_error($attachment_id)) {
+        $file_id = function_exists('vms_private_staff_cert_store_upload')
+            ? vms_private_staff_cert_store_upload($staff_id, $_FILES)
+            : new WP_Error('staff_cert_upload_unavailable', __('The certificate upload handler is unavailable.', 'backstage-venue-manager'));
+        if (is_wp_error($file_id)) {
             /* translators: %s: upload error message from WordPress media handling. */
-            return vms_staff_portal_notice_html('error', sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $attachment_id->get_error_message()));
+            return vms_staff_portal_notice_html('error', sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message()));
         }
 
         $authority = isset($_POST['vms_certification_authority']) ? sanitize_text_field((string) wp_unslash($_POST['vms_certification_authority'])) : '';
@@ -238,8 +236,9 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             'credential_number' => $credential_number,
             'issue_date' => $issue_date,
             'expiration_date' => $expiration_date,
-            'attachment_id' => absint($attachment_id),
-            'proof_url' => wp_get_attachment_url(absint($attachment_id)),
+            'attachment_id' => absint($file_id),
+            'storage_kind' => 'private_file',
+            'proof_url' => '',
         );
 
         $result = function_exists('vms_staffing_add_staff_qualification_submission')
@@ -320,7 +319,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             $credential_number = !empty($row['credential_number']) ? (string) $row['credential_number'] : '';
             $issue_date = !empty($row['issue_date']) ? (string) $row['issue_date'] : '';
             $expiration_date = !empty($row['expiration_date']) ? (string) $row['expiration_date'] : '';
-            $proof_url = !empty($row['proof_url']) ? (string) $row['proof_url'] : '';
+            $proof_url = !empty($row['proof_download_url']) ? (string) $row['proof_download_url'] : (!empty($row['proof_url']) ? (string) $row['proof_url'] : '');
             $notes = !empty($row['notes']) ? (string) $row['notes'] : '';
             $submitted_at = !empty($row['submitted_at']) ? absint($row['submitted_at']) : 0;
             $reviewed_at = !empty($row['reviewed_at']) ? absint($row['reviewed_at']) : 0;
@@ -678,23 +677,20 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
 
             $pairs = array(
                 'stage_plot' => array(
-                    'attachment_id' => absint(get_post_meta($vendor_id, '_vms_stage_plot_attachment_id', true)),
                     'label' => __('Stage plot', 'backstage-venue-manager'),
                 ),
                 'input_list' => array(
-                    'attachment_id' => absint(get_post_meta($vendor_id, '_vms_input_list_attachment_id', true)),
                     'label' => __('Input list', 'backstage-venue-manager'),
                 ),
             );
 
             foreach ($pairs as $doc_key => $doc) {
-                $attachment_id = absint($doc['attachment_id'] ?? 0);
-                if ($attachment_id <= 0) {
+                if (!function_exists('vms_vendor_portal_tech_doc_payload') || !function_exists('vms_vendor_portal_tech_doc_download_url')) {
                     continue;
                 }
 
-                $url = wp_get_attachment_url($attachment_id);
-                if (!$url) {
+                $payload = vms_vendor_portal_tech_doc_payload($vendor_id, $doc_key);
+                if (is_wp_error($payload)) {
                     continue;
                 }
 
@@ -703,7 +699,7 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
                     'vendor_name' => $vendor_name,
                     'doc_key' => $doc_key,
                     'label' => (string) ($doc['label'] ?? __('Document', 'backstage-venue-manager')),
-                    'url' => (string) $url,
+                    'url' => vms_vendor_portal_tech_doc_download_url($vendor_id, $doc_key, $plan_id),
                 );
             }
         }
@@ -2025,15 +2021,10 @@ function vms_staff_portal_render_tax_profile($staff_id)
     $provider = vms_staff_portal_tax_provider();
     $provider_label = vms_staff_portal_provider_label($provider);
 
-    if ($provider === 'upload' && !function_exists('media_handle_upload')) {
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-        require_once ABSPATH . 'wp-admin/includes/media.php';
-        require_once ABSPATH . 'wp-admin/includes/image.php';
-    }
-
     $k_done = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'tax_profile_completed_at') : '_vms_tax_profile_completed_at';
     $k_attest = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_attested_at') : '_vms_w9_external_vendor_attested_at';
     $k_prov = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_provider') : '_vms_w9_offsite_provider';
+    $k_upload_kind = function_exists('vms_private_w9_storage_kind_meta_key') ? vms_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_staff_tax_save'])) {
         $nonce = (isset($_POST['vms_staff_tax_nonce']) && !is_array($_POST['vms_staff_tax_nonce']))
@@ -2069,18 +2060,20 @@ function vms_staff_portal_render_tax_profile($staff_id)
             update_post_meta($staff_id, '_vms_zip', $zip);
 
             if ($provider === 'upload') {
-                if (!empty($_FILES['vms_w9_upload']['name'])) {
-                    $allowed = array('application/pdf', 'image/jpeg', 'image/png', 'image/webp');
-                    $type = isset($_FILES['vms_w9_upload']['type']) ? (string) $_FILES['vms_w9_upload']['type'] : '';
-                    if ($type && !in_array($type, $allowed, true)) {
-                        echo vms_staff_portal_notice_html('error', __('Upload must be a PDF or image (JPG/PNG/WEBP).', 'backstage-venue-manager'));
+                if (vms_upload_request_has_file($_FILES, 'vms_w9_upload')) {
+                    $previous_upload_id = (int) get_post_meta($staff_id, '_vms_w9_upload_id', true);
+                    $previous_kind = sanitize_key((string) get_post_meta($staff_id, $k_upload_kind, true));
+                    $file_id = function_exists('vms_private_w9_store_upload')
+                        ? vms_private_w9_store_upload($staff_id, $_FILES)
+                        : new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
+                    if (is_wp_error($file_id)) {
+                        echo vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message());
                     } else {
-                        $attach_id = media_handle_upload('vms_w9_upload', 0);
-                        if (is_wp_error($attach_id)) {
-                            echo vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $attach_id->get_error_message());
-                        } else {
-                            update_post_meta($staff_id, '_vms_w9_upload_id', (int) $attach_id);
-                            update_post_meta($staff_id, '_vms_w9_received_date', wp_date('Y-m-d', time(), wp_timezone()));
+                        update_post_meta($staff_id, '_vms_w9_upload_id', (int) $file_id);
+                        update_post_meta($staff_id, $k_upload_kind, 'private_file');
+                        update_post_meta($staff_id, '_vms_w9_received_date', wp_date('Y-m-d', time(), wp_timezone()));
+                        if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
+                            vms_private_files_delete($previous_upload_id);
                         }
                     }
                 }
@@ -2127,8 +2120,8 @@ function vms_staff_portal_render_tax_profile($staff_id)
     $zip         = $m('_vms_zip');
 
     $w9_upload_id = (int) get_post_meta($staff_id, '_vms_w9_upload_id', true);
-    $w9_url = $w9_upload_id ? wp_get_attachment_url($w9_upload_id) : '';
-    $w9_label = $w9_upload_id ? get_the_title($w9_upload_id) : '';
+    $w9_url = $w9_upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($staff_id) : '';
+    $w9_label = $w9_upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($staff_id) : '';
 
     $tax_status = vms_staff_portal_tax_status($staff_id);
     $missing = isset($tax_status['missing']) ? (array) $tax_status['missing'] : array();

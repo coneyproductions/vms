@@ -72,6 +72,7 @@ add_action('save_post', function ($post_id, $post) {
     $k_state       = $k('state', '_vms_state');
     $k_zip         = $k('zip', '_vms_zip');
     $k_w9_upload   = $k('w9_upload_id', '_vms_w9_upload_id');
+    $k_w9_upload_kind = function_exists('vms_private_w9_storage_kind_meta_key') ? vms_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
     $k_w9_recv     = $k('w9_received_date', '_vms_w9_received_date');
     $k_done        = $k('tax_profile_completed_at', '_vms_tax_profile_completed_at');
 
@@ -99,23 +100,19 @@ add_action('save_post', function ($post_id, $post) {
     update_post_meta($post_id, $k_zip,   $zip);
 
     // Handle W-9 upload from admin screen
-    if (!empty($_FILES['vms_w9_upload']['name'])) {
-        if (!function_exists('media_handle_upload')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-            require_once ABSPATH . 'wp-admin/includes/media.php';
-            require_once ABSPATH . 'wp-admin/includes/image.php';
-        }
+    if (vms_upload_request_has_file($_FILES, 'vms_w9_upload')) {
+        $previous_upload_id = (int) get_post_meta($post_id, $k_w9_upload, true);
+        $previous_kind = sanitize_key((string) get_post_meta($post_id, $k_w9_upload_kind, true));
+        $file_id = function_exists('vms_private_w9_store_upload')
+            ? vms_private_w9_store_upload((int) $post_id, $_FILES)
+            : new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
 
-        $allowed = array('application/pdf', 'image/jpeg', 'image/png', 'image/webp');
-        $type = isset($_FILES['vms_w9_upload']['type']) ? (string) $_FILES['vms_w9_upload']['type'] : '';
-
-        if ($type && !in_array($type, $allowed, true)) {
-            // No hard fail here; just skip. (Could add admin notice later.)
-        } else {
-            $attach_id = media_handle_upload('vms_w9_upload', 0);
-            if (!is_wp_error($attach_id)) {
-                update_post_meta($post_id, $k_w9_upload, (int) $attach_id);
-                update_post_meta($post_id, $k_w9_recv, date('Y-m-d'));
+        if (!is_wp_error($file_id)) {
+            update_post_meta($post_id, $k_w9_upload, (int) $file_id);
+            update_post_meta($post_id, $k_w9_upload_kind, 'private_file');
+            update_post_meta($post_id, $k_w9_recv, function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d'));
+            if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
+                vms_private_files_delete($previous_upload_id);
             }
         }
     }
@@ -169,8 +166,8 @@ function vms_render_tax_profile_admin_metabox($post)
     $zip   = $m($k('zip', '_vms_zip'));
 
     $w9_upload_id = (int) $m($k('w9_upload_id', '_vms_w9_upload_id'), 0);
-    $w9_url = $w9_upload_id ? wp_get_attachment_url($w9_upload_id) : '';
-    $w9_label = $w9_upload_id ? get_the_title($w9_upload_id) : '';
+    $w9_url = $w9_upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($id) : '';
+    $w9_label = $w9_upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($id) : '';
 
     $is_complete = function_exists('vms_vendor_tax_profile_is_complete')
         ? vms_vendor_tax_profile_is_complete($id)

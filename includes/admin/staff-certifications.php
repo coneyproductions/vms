@@ -89,7 +89,7 @@ if (!function_exists('vms_render_staff_certifications_admin_page_content')) {
             $qualification = (string) ($row['name'] ?? __('Certification', 'backstage-venue-manager'));
             $submitted_at = !empty($row['submitted_at']) ? wp_date('M j, Y g:ia', absint($row['submitted_at']), wp_timezone()) : '—';
             $expiration = !empty($row['expiration_date']) ? (string) $row['expiration_date'] : '—';
-            $proof_url = !empty($row['proof_url']) ? (string) $row['proof_url'] : '';
+            $proof_url = !empty($row['proof_download_url']) ? (string) $row['proof_download_url'] : (!empty($row['proof_url']) ? (string) $row['proof_url'] : '');
             $edit_url = $staff_id > 0 ? vms_staffing_staff_qualification_review_url($staff_id) : admin_url('edit.php?post_type=vms_staff');
 
             echo '<tr>';

@@ -10,40 +10,57 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 
 		check_admin_referer('vms_event_plan_import_preview');
 
-		$file = isset($_FILES['event_plan_csv_file']) ? (array) $_FILES['event_plan_csv_file'] : array();
-		$tmp_name = isset($file['tmp_name']) ? (string) $file['tmp_name'] : '';
-		$error_code = isset($file['error']) ? (int) $file['error'] : UPLOAD_ERR_NO_FILE;
-		$source_name = isset($file['name']) ? (string) $file['name'] : '';
-
-		if ($error_code !== UPLOAD_ERR_OK || $tmp_name === '' || !is_uploaded_file($tmp_name)) {
+		$upload = vms_upload_read_file($_FILES, 'event_plan_csv_file');
+		if (is_wp_error($upload)) {
 			vms_event_plan_import_set_notice('error', __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
 
-		$root = vms_event_plan_import_upload_root();
-		if (is_wp_error($root)) {
-			vms_event_plan_import_set_notice('error', $root->get_error_message());
+		$validated = vms_validate_uploaded_file(
+			$upload,
+			array(
+				'allowed_mimes' => vms_event_plan_import_allowed_mimes(),
+				'max_bytes' => vms_event_plan_import_max_bytes(),
+				'type_message' => __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'),
+				'empty_message' => __('The uploaded CSV file is empty.', 'backstage-venue-manager'),
+				'too_large_message' => __('The uploaded CSV file is too large.', 'backstage-venue-manager'),
+				'tmp_invalid_message' => __('The uploaded CSV file could not be verified.', 'backstage-venue-manager'),
+			)
+		);
+		if (is_wp_error($validated)) {
+			vms_event_plan_import_set_notice('error', $validated->get_error_message());
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
 
 		$token = vms_event_plan_import_make_token();
-		$target_path = trailingslashit((string) $root['dir']) . $token . '-source.csv';
-		$moved = @move_uploaded_file($tmp_name, $target_path);
-		if (!$moved) {
+		$source_name = isset($upload['name']) ? (string) $upload['name'] : '';
+		$prepared = vms_event_plan_import_prepare_generated_path('csv', $token, 'source');
+		if (is_wp_error($prepared)) {
+			vms_event_plan_import_set_notice('error', $prepared->get_error_message());
+			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		$target_path = (string) ($prepared['path'] ?? '');
+		$target_key = (string) ($prepared['storage_key'] ?? '');
+		$tmp_name = trim((string) ($validated['tmp_name'] ?? ''));
+		if ($target_path === '' || $target_key === '' || $tmp_name === '' || !@move_uploaded_file($tmp_name, $target_path)) {
 			vms_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
+		@chmod($target_path, 0640);
 
 		$options = array(
 			'auto_create_missing_vendors' => !empty($_POST['auto_create_missing_vendors']),
 			'allow_update_locked_plans' => !empty($_POST['allow_update_locked_plans']),
 		);
 
-		$preview = vms_event_plan_import_build_preview_from_csv($target_path, $source_name, $options, $token);
+		$preview = vms_event_plan_import_build_preview_from_csv($target_path, $source_name, $options, $token, $target_key);
 		if (is_wp_error($preview)) {
+			vms_event_plan_import_delete_stored_file($target_key);
 			error_log('[VMS EPCSV] Preview build failed: ' . $preview->get_error_message());
 			vms_event_plan_import_set_notice('error', $preview->get_error_message());
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
@@ -175,12 +192,16 @@ if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
 			wp_die(esc_html__('Preview report is no longer available. Run Preview again.', 'backstage-venue-manager'));
 		}
 
-		$path = trim((string) ($preview['report_csv_path'] ?? ''));
+		$path = vms_event_plan_import_storage_path((string) ($preview['report_csv_storage_key'] ?? ($preview['report_csv_path'] ?? '')));
 		if ($path === '' || !file_exists($path) || !vms_event_plan_import_path_is_safe($path)) {
 			wp_die(esc_html__('Preview report file is missing.', 'backstage-venue-manager'));
 		}
 
 		$filename = 'vms-event-plan-import-preview-' . gmdate('Ymd-His') . '.csv';
+		if (function_exists('vms_private_files_stream_path')) {
+			vms_private_files_stream_path($path, $filename, 'text/csv');
+		}
+
 		nocache_headers();
 		header('Content-Type: text/csv; charset=utf-8');
 		header('Content-Disposition: attachment; filename="' . sanitize_file_name($filename) . '"');

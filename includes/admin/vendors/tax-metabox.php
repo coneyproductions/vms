@@ -65,7 +65,8 @@ function vms_vendor_tax_metabox_render($post)
 	$effective_provider = ($done_at > 0 && $stored_provider !== '') ? $stored_provider : $global_provider;
 
 	$upload_id  = (int) get_post_meta($vendor_id, $k_upload, true);
-	$upload_url = $upload_id ? wp_get_attachment_url($upload_id) : '';
+	$upload_url = $upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($vendor_id) : '';
+	$upload_label = $upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($vendor_id) : '';
 
 	echo '<div class="vms-tax-box">';
 
@@ -88,7 +89,7 @@ function vms_vendor_tax_metabox_render($post)
 	echo '<p class="vms-tax-row"><strong>Vendor confirmed:</strong> ' . ($attest_at > 0 ? esc_html(wp_date('Y-m-d', $attest_at, $tz)) : '—') . '</p>';
 
 	if ($upload_url) {
-		echo '<p class="vms-tax-row vms-tax-row--file"><strong>W-9 File:</strong> <a href="' . esc_url($upload_url) . '" target="_blank" rel="noopener">View</a></p>';
+		echo '<p class="vms-tax-row vms-tax-row--file"><strong>W-9 File:</strong> <a href="' . esc_url($upload_url) . '" target="_blank" rel="noopener">' . esc_html($upload_label !== '' ? $upload_label : __('Download', 'backstage-venue-manager')) . '</a></p>';
 	} else {
 		echo '<p class="vms-tax-row vms-tax-row--file"><strong>W-9 File:</strong> —</p>';
 	}

@@ -139,6 +139,41 @@ if (!function_exists('vms_safety_private_file_download_url')) {
 	}
 }
 
+if (!function_exists('vms_safety_private_allowed_mimes')) {
+	/**
+	 * @return array<string,string|array<int,string>>
+	 */
+	function vms_safety_private_allowed_mimes(): array
+	{
+		return array(
+			'pdf' => 'application/pdf',
+			'jpg' => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'png' => 'image/png',
+			'webp' => 'image/webp',
+			'txt' => 'text/plain',
+			'csv' => array('text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'),
+			'doc' => 'application/msword',
+			'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			'xls' => 'application/vnd.ms-excel',
+			'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		);
+	}
+}
+
+if (!function_exists('vms_safety_private_max_bytes')) {
+	function vms_safety_private_max_bytes(): int
+	{
+		$configured = 20 * 1024 * 1024;
+		$wp_limit = (int) wp_max_upload_size();
+		if ($wp_limit > 0) {
+			return max(1, min($configured, $wp_limit));
+		}
+
+		return $configured;
+	}
+}
+
 if (!function_exists('vms_safety_store_private_upload')) {
 	/**
 	 * @param array<string,mixed> $upload
@@ -147,64 +182,43 @@ if (!function_exists('vms_safety_store_private_upload')) {
 	 */
 	function vms_safety_store_private_upload(array $upload, array $context = array())
 	{
-		if (empty($upload['tmp_name']) || empty($upload['name'])) {
-			return new WP_Error('vms_safety_upload_missing', __('Missing upload payload.', 'backstage-venue-manager'));
+		if (!function_exists('vms_validate_uploaded_file') || !function_exists('vms_private_files_store_validated_upload')) {
+			return new WP_Error('vms_safety_upload_unavailable', __('The private upload handler is unavailable.', 'backstage-venue-manager'));
 		}
-		if (!empty($upload['error']) && (int) $upload['error'] !== UPLOAD_ERR_OK) {
-			return new WP_Error('vms_safety_upload_error', __('Upload failed.', 'backstage-venue-manager'));
+
+		$validated = vms_validate_uploaded_file(
+			$upload,
+			array(
+				'allowed_mimes' => vms_safety_private_allowed_mimes(),
+				'max_bytes' => vms_safety_private_max_bytes(),
+				'type_message' => __('Please upload a PDF, image, spreadsheet, text file, or Office document.', 'backstage-venue-manager'),
+				'empty_message' => __('The uploaded file is empty.', 'backstage-venue-manager'),
+				'too_large_message' => __('The uploaded file is too large.', 'backstage-venue-manager'),
+				'tmp_invalid_message' => __('The uploaded file could not be verified.', 'backstage-venue-manager'),
+			)
+		);
+		if (is_wp_error($validated)) {
+			return $validated;
 		}
-		if (!is_uploaded_file((string) $upload['tmp_name'])) {
-			return new WP_Error('vms_safety_upload_invalid', __('Invalid upload source.', 'backstage-venue-manager'));
-		}
+
 		if (!vms_safety_private_files_ensure_dir()) {
 			return new WP_Error('vms_safety_upload_dir', __('Could not create private upload directory.', 'backstage-venue-manager'));
 		}
 
-		$filename = sanitize_file_name((string) $upload['name']);
-		if ($filename === '') {
-			$filename = 'file';
-		}
-		$ext = pathinfo($filename, PATHINFO_EXTENSION);
-		$stored = wp_generate_uuid4();
-		if (is_string($ext) && $ext !== '') {
-			$stored .= '.' . strtolower($ext);
-		}
-		$path = vms_safety_private_file_path($stored);
-
-		if (!@move_uploaded_file((string) $upload['tmp_name'], $path)) {
-			return new WP_Error('vms_safety_upload_move', __('Could not store uploaded file.', 'backstage-venue-manager'));
-		}
-
-		$mime = wp_check_filetype($filename);
-		$mime_type = !empty($mime['type']) ? (string) $mime['type'] : 'application/octet-stream';
-		$file_size = file_exists($path) ? (int) filesize($path) : 0;
-		$hash = file_exists($path) ? hash_file('sha256', $path) : '';
-
-		global $wpdb;
-		$table = vms_safety_private_files_table();
-		$inserted = $wpdb->insert(
-			$table,
+		$file_id = vms_private_files_store_validated_upload(
+			$validated,
 			array(
-				'original_filename' => $filename,
-				'stored_filename' => $stored,
-				'mime_type' => $mime_type,
-				'file_size' => max(0, $file_size),
-				'sha256' => is_string($hash) ? $hash : '',
-				'created_at' => current_time('mysql'),
-				'created_by' => get_current_user_id(),
+				'bucket' => 'safety',
 				'related_post_type' => isset($context['related_post_type']) ? sanitize_key((string) $context['related_post_type']) : null,
 				'related_post_id' => isset($context['related_post_id']) ? absint($context['related_post_id']) : null,
-			),
-			array('%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%d')
+			)
 		);
-		if (!$inserted) {
-			@unlink($path);
-			return new WP_Error('vms_safety_upload_db', __('Could not register uploaded file.', 'backstage-venue-manager'));
+		if (is_wp_error($file_id)) {
+			return $file_id;
 		}
 
-		$file_id = (int) $wpdb->insert_id;
-		vms_safety_audit_log('doc_uploaded', array('file_id' => $file_id, 'filename' => $filename));
-		return $file_id;
+		vms_safety_audit_log('doc_uploaded', array('file_id' => (int) $file_id, 'filename' => (string) ($validated['sanitized_name'] ?? 'file')));
+		return (int) $file_id;
 	}
 }
 
@@ -237,8 +251,11 @@ if (!function_exists('vms_safety_private_file_download_handler')) {
 
 		vms_safety_audit_log('doc_downloaded', array('file_id' => $file_id, 'filename' => $name));
 
+		if (function_exists('vms_private_files_stream_path')) {
+			vms_private_files_stream_path($path, $name, $mime);
+		}
+
 		nocache_headers();
-		header('Content-Description: File Transfer');
 		header('Content-Type: ' . $mime);
 		header('Content-Disposition: attachment; filename="' . rawurlencode($name) . '"');
 		header('Content-Length: ' . (string) $size);

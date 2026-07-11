@@ -101,8 +101,9 @@ function vms_meta_keys(): array
 			'zip'   => '_vms_zip',
 
 			// W-9 workflow (upload mode)
-			'w9_upload_id'     => '_vms_w9_upload_id',
-			'w9_received_date' => '_vms_w9_received_date',
+			'w9_upload_id'           => '_vms_w9_upload_id',
+			'w9_upload_storage_kind' => '_vms_w9_upload_storage_kind',
+			'w9_received_date'       => '_vms_w9_received_date',
 
 			// W-9 workflow (off-site email modes: QuickBooks/Tax1099)
 			'w9_attested_at' => '_vms_w9_external_vendor_attested_at',

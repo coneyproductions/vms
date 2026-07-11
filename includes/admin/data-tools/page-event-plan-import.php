@@ -219,7 +219,7 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 				$summary = isset($preview['summary']) && is_array($preview['summary']) ? $preview['summary'] : array();
 				$total_rows = (int) ($summary['total_rows'] ?? 0);
 				$source_name = (string) ($preview['source_csv_name'] ?? '');
-				$rows_payload = vms_event_plan_import_read_rows_json((string) ($preview['rows_json_path'] ?? ''));
+				$rows_payload = vms_event_plan_import_read_rows_json((string) ($preview['rows_json_storage_key'] ?? ($preview['rows_json_path'] ?? '')));
 				$preview_rows = array();
 				if (!is_wp_error($rows_payload)) {
 					$rows = isset($rows_payload['rows']) && is_array($rows_payload['rows']) ? $rows_payload['rows'] : array();

@@ -194,6 +194,283 @@ if (!function_exists('vms_request_local_redirect')) {
 	}
 }
 
+if (!function_exists('vms_upload_request_has_file')) {
+	function vms_upload_request_has_file(array $files, string $field): bool
+	{
+		if (!array_key_exists($field, $files) || !is_array($files[$field])) {
+			return false;
+		}
+
+		$upload = $files[$field];
+		if (!array_key_exists('name', $upload) || !is_scalar($upload['name'])) {
+			return false;
+		}
+
+		return trim((string) $upload['name']) !== '';
+	}
+}
+
+if (!function_exists('vms_upload_read_file')) {
+	/**
+	 * @return array<string,mixed>|WP_Error
+	 */
+	function vms_upload_read_file(array $files, string $field)
+	{
+		if (!array_key_exists($field, $files) || !is_array($files[$field])) {
+			return new WP_Error('upload_missing', __('Please choose a file to upload.', 'backstage-venue-manager'));
+		}
+
+		$upload = $files[$field];
+		foreach (array('name', 'type', 'tmp_name', 'error', 'size') as $required_key) {
+			if (!array_key_exists($required_key, $upload)) {
+				return new WP_Error('upload_invalid_shape', __('The uploaded file payload is malformed.', 'backstage-venue-manager'));
+			}
+			if (is_array($upload[$required_key]) || is_object($upload[$required_key])) {
+				return new WP_Error('upload_invalid_shape', __('The uploaded file payload is malformed.', 'backstage-venue-manager'));
+			}
+		}
+
+		return array(
+			'name' => trim((string) $upload['name']),
+			'type' => trim((string) $upload['type']),
+			'tmp_name' => trim((string) $upload['tmp_name']),
+			'error' => (int) $upload['error'],
+			'size' => max(0, (int) $upload['size']),
+		);
+	}
+}
+
+if (!function_exists('vms_upload_normalize_multi_file_array')) {
+	/**
+	 * @return array<int,array<string,mixed>>|WP_Error
+	 */
+	function vms_upload_normalize_multi_file_array(array $files, string $field)
+	{
+		if (!array_key_exists($field, $files) || !is_array($files[$field])) {
+			return new WP_Error('upload_missing', __('Please choose a file to upload.', 'backstage-venue-manager'));
+		}
+
+		$upload = $files[$field];
+		foreach (array('name', 'type', 'tmp_name', 'error', 'size') as $required_key) {
+			if (!isset($upload[$required_key]) || !is_array($upload[$required_key])) {
+				return new WP_Error('upload_invalid_shape', __('The uploaded file payload is malformed.', 'backstage-venue-manager'));
+			}
+		}
+
+		$normalized = array();
+		foreach ($upload['name'] as $index => $name) {
+			$row = array(
+				'name' => $name,
+				'type' => $upload['type'][$index] ?? null,
+				'tmp_name' => $upload['tmp_name'][$index] ?? null,
+				'error' => $upload['error'][$index] ?? null,
+				'size' => $upload['size'][$index] ?? null,
+			);
+
+			foreach ($row as $value) {
+				if (is_array($value) || is_object($value)) {
+					return new WP_Error('upload_invalid_shape', __('The uploaded file payload is malformed.', 'backstage-venue-manager'));
+				}
+			}
+
+			$normalized[] = array(
+				'name' => trim((string) $row['name']),
+				'type' => trim((string) $row['type']),
+				'tmp_name' => trim((string) $row['tmp_name']),
+				'error' => (int) $row['error'],
+				'size' => max(0, (int) $row['size']),
+			);
+		}
+
+		return $normalized;
+	}
+}
+
+if (!function_exists('vms_upload_error_message')) {
+	function vms_upload_error_message(int $error_code, array $messages = array()): string
+	{
+		$defaults = array(
+			UPLOAD_ERR_INI_SIZE => __('The uploaded file is larger than the server allows.', 'backstage-venue-manager'),
+			UPLOAD_ERR_FORM_SIZE => __('The uploaded file is larger than this form allows.', 'backstage-venue-manager'),
+			UPLOAD_ERR_PARTIAL => __('The upload did not finish. Please try again.', 'backstage-venue-manager'),
+			UPLOAD_ERR_NO_FILE => __('Please choose a file to upload.', 'backstage-venue-manager'),
+			UPLOAD_ERR_NO_TMP_DIR => __('The server could not create a temporary upload file.', 'backstage-venue-manager'),
+			UPLOAD_ERR_CANT_WRITE => __('The server could not save the uploaded file.', 'backstage-venue-manager'),
+			UPLOAD_ERR_EXTENSION => __('A server extension blocked the upload.', 'backstage-venue-manager'),
+		);
+
+		if (isset($messages[$error_code]) && is_string($messages[$error_code]) && trim($messages[$error_code]) !== '') {
+			return $messages[$error_code];
+		}
+
+		if (isset($defaults[$error_code])) {
+			return $defaults[$error_code];
+		}
+
+		return __('The uploaded file could not be processed.', 'backstage-venue-manager');
+	}
+}
+
+if (!function_exists('vms_validate_uploaded_file')) {
+	/**
+	 * @param array<string,mixed> $upload
+	 * @param array<string,mixed> $args
+	 * @return array<string,mixed>|WP_Error
+	 */
+	function vms_validate_uploaded_file(array $upload, array $args = array())
+	{
+		$allowed_mimes = isset($args['allowed_mimes']) && is_array($args['allowed_mimes'])
+			? $args['allowed_mimes']
+			: array();
+		if (empty($allowed_mimes)) {
+			return new WP_Error('upload_type_not_allowed', __('This file type is not allowed here.', 'backstage-venue-manager'));
+		}
+
+		$name = isset($upload['name']) && is_scalar($upload['name']) ? trim((string) $upload['name']) : '';
+		$tmp_name = isset($upload['tmp_name']) && is_scalar($upload['tmp_name']) ? trim((string) $upload['tmp_name']) : '';
+		$reported_mime = isset($upload['type']) && is_scalar($upload['type']) ? sanitize_text_field((string) $upload['type']) : '';
+		$error_code = isset($upload['error']) && is_scalar($upload['error']) ? (int) $upload['error'] : UPLOAD_ERR_NO_FILE;
+		$declared_size = isset($upload['size']) && is_scalar($upload['size']) ? max(0, (int) $upload['size']) : 0;
+		$messages = isset($args['upload_error_messages']) && is_array($args['upload_error_messages'])
+			? $args['upload_error_messages']
+			: array();
+
+		if ($name === '') {
+			return new WP_Error('upload_missing', __('Please choose a file to upload.', 'backstage-venue-manager'));
+		}
+		if ($error_code !== UPLOAD_ERR_OK) {
+			return new WP_Error('upload_error_' . $error_code, vms_upload_error_message($error_code, $messages));
+		}
+		if ($tmp_name === '') {
+			return new WP_Error(
+				'upload_tmp_missing',
+				isset($args['tmp_missing_message']) && is_string($args['tmp_missing_message']) && trim($args['tmp_missing_message']) !== ''
+					? $args['tmp_missing_message']
+					: __('The uploaded file is missing its temporary source.', 'backstage-venue-manager')
+			);
+		}
+
+		$is_uploaded_file_callback = isset($args['is_uploaded_file_callback']) && is_callable($args['is_uploaded_file_callback'])
+			? $args['is_uploaded_file_callback']
+			: 'is_uploaded_file';
+		if (!call_user_func($is_uploaded_file_callback, $tmp_name)) {
+			return new WP_Error(
+				'upload_tmp_invalid',
+				isset($args['tmp_invalid_message']) && is_string($args['tmp_invalid_message']) && trim($args['tmp_invalid_message']) !== ''
+					? $args['tmp_invalid_message']
+					: __('The uploaded file could not be verified.', 'backstage-venue-manager')
+			);
+		}
+
+		$file_exists_callback = isset($args['file_exists_callback']) && is_callable($args['file_exists_callback'])
+			? $args['file_exists_callback']
+			: 'file_exists';
+		if (!call_user_func($file_exists_callback, $tmp_name)) {
+			return new WP_Error(
+				'upload_tmp_missing',
+				isset($args['tmp_missing_message']) && is_string($args['tmp_missing_message']) && trim($args['tmp_missing_message']) !== ''
+					? $args['tmp_missing_message']
+					: __('The uploaded file is no longer available.', 'backstage-venue-manager')
+			);
+		}
+
+		$filesize_callback = isset($args['filesize_callback']) && is_callable($args['filesize_callback'])
+			? $args['filesize_callback']
+			: 'filesize';
+		$actual_size = max(0, $declared_size);
+		$measured_size = call_user_func($filesize_callback, $tmp_name);
+		if (is_numeric($measured_size)) {
+			$actual_size = max(0, (int) $measured_size);
+		}
+
+		if ($actual_size <= 0) {
+			return new WP_Error(
+				'upload_empty',
+				isset($args['empty_message']) && is_string($args['empty_message']) && trim($args['empty_message']) !== ''
+					? $args['empty_message']
+					: __('The uploaded file is empty.', 'backstage-venue-manager')
+			);
+		}
+
+		$max_bytes = isset($args['max_bytes']) ? max(0, (int) $args['max_bytes']) : 0;
+		if ($max_bytes > 0 && $actual_size > $max_bytes) {
+			return new WP_Error(
+				'upload_too_large',
+				isset($args['too_large_message']) && is_string($args['too_large_message']) && trim($args['too_large_message']) !== ''
+					? $args['too_large_message']
+					: __('The uploaded file is too large.', 'backstage-venue-manager')
+			);
+		}
+
+		$sanitized_name = sanitize_file_name($name);
+		if ($sanitized_name === '') {
+			$sanitized_name = 'upload';
+		}
+
+		$type_check_callback = isset($args['type_check_callback']) && is_callable($args['type_check_callback'])
+			? $args['type_check_callback']
+			: 'wp_check_filetype_and_ext';
+		$checked = call_user_func($type_check_callback, $tmp_name, $sanitized_name, $allowed_mimes);
+		$checked = is_array($checked) ? $checked : array();
+		$ext = isset($checked['ext']) ? sanitize_key((string) $checked['ext']) : '';
+		$mime = isset($checked['type']) ? sanitize_text_field((string) $checked['type']) : '';
+
+		$allowed_for_extension = array();
+		if ($ext !== '' && isset($allowed_mimes[$ext])) {
+			$raw_allowed = $allowed_mimes[$ext];
+			$raw_allowed = is_array($raw_allowed) ? $raw_allowed : array($raw_allowed);
+			foreach ($raw_allowed as $allowed_mime) {
+				$allowed_mime = sanitize_text_field((string) $allowed_mime);
+				if ($allowed_mime !== '') {
+					$allowed_for_extension[] = $allowed_mime;
+				}
+			}
+			$allowed_for_extension = array_values(array_unique($allowed_for_extension));
+		}
+
+		if ($ext === '' || $mime === '' || empty($allowed_for_extension) || !in_array($mime, $allowed_for_extension, true)) {
+			return new WP_Error(
+				'upload_type_not_allowed',
+				isset($args['type_message']) && is_string($args['type_message']) && trim($args['type_message']) !== ''
+					? $args['type_message']
+					: __('This file type is not allowed here.', 'backstage-venue-manager')
+			);
+		}
+
+		$content_validator = isset($args['content_validator']) && is_callable($args['content_validator'])
+			? $args['content_validator']
+			: null;
+		if ($content_validator !== null) {
+			$result = call_user_func($content_validator, $tmp_name, $sanitized_name, $ext, $mime, $actual_size, $upload);
+			if (is_wp_error($result)) {
+				return $result;
+			}
+			if ($result === false) {
+				return new WP_Error(
+					'upload_content_invalid',
+					isset($args['content_message']) && is_string($args['content_message']) && trim($args['content_message']) !== ''
+						? $args['content_message']
+						: __('The uploaded file contents are not valid for this upload.', 'backstage-venue-manager')
+				);
+			}
+			if (is_string($result) && trim($result) !== '') {
+				return new WP_Error('upload_content_invalid', $result);
+			}
+		}
+
+		return array(
+			'name' => $name,
+			'sanitized_name' => $sanitized_name,
+			'tmp_name' => $tmp_name,
+			'reported_mime' => $reported_mime,
+			'reported_size' => $declared_size,
+			'size' => $actual_size,
+			'ext' => $ext,
+			'mime' => $mime,
+		);
+	}
+}
+
 if (!function_exists('vms_request_remote_addr')) {
 	function vms_request_remote_addr(): string
 	{

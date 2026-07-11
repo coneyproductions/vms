@@ -713,34 +713,15 @@ if (!function_exists('vms_ticketing_verification_optimize_image_upload')) {
 if (!function_exists('vms_ticketing_verification_upload_root')) {
     function vms_ticketing_verification_upload_root(): string
     {
-        $upload_dir = wp_upload_dir(null, false);
-        $base = isset($upload_dir['basedir']) ? trim((string) $upload_dir['basedir']) : '';
-        if ($base === '') {
+        if (!function_exists('vms_private_files_ensure_dir') || !function_exists('vms_private_files_bucket_dir')) {
             return '';
         }
 
-        $path = trailingslashit($base) . 'vms-private/verifications';
-        if (!is_dir($path)) {
-            wp_mkdir_p($path);
+        if (!vms_private_files_ensure_dir('verifications')) {
+            return '';
         }
 
-        // Best-effort hardening.
-        $index = trailingslashit($path) . 'index.php';
-        if (!file_exists($index)) {
-            @file_put_contents($index, "<?php\n// Silence is golden.\n");
-        }
-
-        $htaccess = trailingslashit($path) . '.htaccess';
-        if (!file_exists($htaccess)) {
-            @file_put_contents($htaccess, "Deny from all\n");
-        }
-
-        $webconfig = trailingslashit($path) . 'web.config';
-        if (!file_exists($webconfig)) {
-            @file_put_contents($webconfig, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n");
-        }
-
-        return $path;
+        return vms_private_files_bucket_dir('verifications');
     }
 }
 
@@ -816,6 +797,171 @@ if (!function_exists('vms_ticketing_verification_delete_proof_file')) {
         if (file_exists($path) && is_file($path)) {
             @unlink($path);
         }
+    }
+}
+
+if (!function_exists('vms_ticketing_verification_store_proof_file')) {
+    /**
+     * @param array<string,mixed> $validated_upload
+     * @return array{file_id:int,mime:string}|WP_Error
+     */
+    function vms_ticketing_verification_store_proof_file(array $validated_upload)
+    {
+        $mime = sanitize_text_field((string) ($validated_upload['mime'] ?? ''));
+        if ($mime === '') {
+            return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
+        }
+
+        if (!vms_ticketing_verification_is_image_mime($mime)) {
+            $file_id = vms_private_files_store_validated_upload(
+                $validated_upload,
+                array(
+                    'bucket' => 'verifications',
+                )
+            );
+            if (is_wp_error($file_id)) {
+                return $file_id;
+            }
+
+            return array(
+                'file_id' => (int) $file_id,
+                'mime' => $mime,
+            );
+        }
+
+        $root = vms_ticketing_verification_upload_root();
+        if ($root === '' || !is_dir($root) || !is_writable($root)) {
+            return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
+        }
+
+        $storage_key = function_exists('vms_private_files_generate_storage_key')
+            ? vms_private_files_generate_storage_key('verifications', vms_ticketing_verification_image_extension_for_mime(vms_ticketing_verification_image_output_mime()))
+            : '';
+        $target_path = $storage_key !== '' && function_exists('vms_private_files_absolute_path')
+            ? vms_private_files_absolute_path($storage_key)
+            : '';
+        if ($storage_key === '' || $target_path === '') {
+            return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
+        }
+
+        $optimized = vms_ticketing_verification_optimize_image_upload(
+            (string) ($validated_upload['tmp_name'] ?? ''),
+            dirname($target_path),
+            (string) pathinfo(basename($target_path), PATHINFO_FILENAME)
+        );
+        if (is_wp_error($optimized)) {
+            return $optimized;
+        }
+
+        $stored_path = trim((string) ($optimized['path'] ?? ''));
+        $stored_mime = sanitize_text_field((string) ($optimized['mime'] ?? vms_ticketing_verification_image_output_mime()));
+        if ($stored_path === '' || !vms_ticketing_verification_path_within_root($stored_path)) {
+            return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
+        }
+
+        $stored_key = 'verifications/' . basename($stored_path);
+        $display_name = sanitize_file_name((string) ($validated_upload['sanitized_name'] ?? 'proof.jpg'));
+        $display_base = (string) pathinfo($display_name, PATHINFO_FILENAME);
+        if ($display_base === '') {
+            $display_base = 'proof';
+        }
+        $display_name = $display_base . '.jpg';
+        $file_id = function_exists('vms_private_files_register_path')
+            ? vms_private_files_register_path(
+                $stored_key,
+                $stored_path,
+                $display_name,
+                $stored_mime,
+                array(
+                    'bucket' => 'verifications',
+                )
+            )
+            : new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
+        if (is_wp_error($file_id)) {
+            if ($stored_path !== '' && file_exists($stored_path)) {
+                @unlink($stored_path);
+            }
+            return $file_id;
+        }
+
+        return array(
+            'file_id' => (int) $file_id,
+            'mime' => $stored_mime,
+        );
+    }
+}
+
+if (!function_exists('vms_ticketing_verification_proof_payload')) {
+    /**
+     * @return array<string,string|int>|WP_Error
+     */
+    function vms_ticketing_verification_proof_payload(int $request_id)
+    {
+        $request_id = absint($request_id);
+        if ($request_id <= 0) {
+            return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
+        }
+
+        $file_id = absint(get_post_meta($request_id, 'proof_file_id', true));
+        $storage_kind = sanitize_key((string) get_post_meta($request_id, 'proof_storage_kind', true));
+        if ($file_id > 0 && $storage_kind === 'private_file') {
+            $row = vms_private_file_get($file_id);
+            if (!is_array($row)) {
+                return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
+            }
+
+            $path = vms_private_file_path((string) ($row['stored_filename'] ?? ''));
+            if ($path === '' || !vms_ticketing_verification_path_within_root($path)) {
+                return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
+            }
+
+            return array(
+                'path' => $path,
+                'mime' => (string) ($row['mime_type'] ?? 'application/octet-stream'),
+                'filename' => (string) ($row['original_filename'] ?? 'verification-proof'),
+                'storage_kind' => 'private_file',
+                'file_id' => $file_id,
+            );
+        }
+
+        $path = (string) get_post_meta($request_id, 'proof_file_path', true);
+        $mime = (string) get_post_meta($request_id, 'proof_mime', true);
+        if ($path === '' || !file_exists($path) || !vms_ticketing_verification_path_within_root($path)) {
+            return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
+        }
+
+        return array(
+            'path' => $path,
+            'mime' => $mime !== '' ? $mime : 'application/octet-stream',
+            'filename' => sanitize_file_name((string) basename($path)),
+            'storage_kind' => 'legacy_path',
+            'file_id' => 0,
+        );
+    }
+}
+
+if (!function_exists('vms_ticketing_verification_delete_proof_asset_for_request')) {
+    function vms_ticketing_verification_delete_proof_asset_for_request(int $request_id): void
+    {
+        $request_id = absint($request_id);
+        if ($request_id <= 0) {
+            return;
+        }
+
+        $file_id = absint(get_post_meta($request_id, 'proof_file_id', true));
+        $storage_kind = sanitize_key((string) get_post_meta($request_id, 'proof_storage_kind', true));
+        if ($file_id > 0 && $storage_kind === 'private_file' && function_exists('vms_private_files_delete')) {
+            vms_private_files_delete($file_id);
+        }
+
+        $legacy_path = (string) get_post_meta($request_id, 'proof_file_path', true);
+        if ($legacy_path !== '') {
+            vms_ticketing_verification_delete_proof_file($legacy_path);
+        }
+
+        delete_post_meta($request_id, 'proof_file_id');
+        delete_post_meta($request_id, 'proof_storage_kind');
+        delete_post_meta($request_id, 'proof_file_path');
     }
 }
 
@@ -1974,14 +2120,16 @@ if (!function_exists('vms_ticketing_verification_run_submission_notification')) 
 add_action('vms_ticketing_verification_send_submission_notification_async', 'vms_ticketing_verification_run_submission_notification', 10, 1);
 
 if (!function_exists('vms_ticketing_verification_create_request')) {
-    function vms_ticketing_verification_create_request(int $user_id, string $program, string $proof_path, string $proof_mime, string $notes = ''): int
+    function vms_ticketing_verification_create_request(int $user_id, string $program, $proof_file, string $proof_mime, string $notes = '', string $proof_storage_kind = 'private_file'): int
     {
         $user_id = absint($user_id);
         $program = sanitize_key($program);
-        $proof_path = trim($proof_path);
+        $proof_file_id = is_numeric($proof_file) ? absint($proof_file) : 0;
+        $proof_path = $proof_file_id > 0 ? '' : trim((string) $proof_file);
         $proof_mime = sanitize_text_field($proof_mime);
         $notes = trim(sanitize_text_field($notes));
-        if ($user_id <= 0 || $program === '' || $proof_path === '') {
+        $proof_storage_kind = sanitize_key($proof_storage_kind);
+        if ($user_id <= 0 || $program === '' || ($proof_file_id <= 0 && $proof_path === '')) {
             return 0;
         }
 
@@ -2000,7 +2148,15 @@ if (!function_exists('vms_ticketing_verification_create_request')) {
         $request_id = (int) $request_id;
         update_post_meta($request_id, 'user_id', $user_id);
         update_post_meta($request_id, 'program', $program);
-        update_post_meta($request_id, 'proof_file_path', $proof_path);
+        if ($proof_file_id > 0) {
+            update_post_meta($request_id, 'proof_file_id', $proof_file_id);
+            update_post_meta($request_id, 'proof_storage_kind', $proof_storage_kind !== '' ? $proof_storage_kind : 'private_file');
+            delete_post_meta($request_id, 'proof_file_path');
+        } else {
+            update_post_meta($request_id, 'proof_file_path', $proof_path);
+            delete_post_meta($request_id, 'proof_file_id');
+            delete_post_meta($request_id, 'proof_storage_kind');
+        }
         update_post_meta($request_id, 'proof_mime', $proof_mime);
         update_post_meta($request_id, 'submitted_at', current_time('mysql'));
         if ($notes !== '') {
@@ -2124,23 +2280,18 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             vms_ticketing_verification_finish_error($redirect_to, 'file_missing', 400);
         }
 
-        $upload = $_FILES['proof_file'];
+        $upload = vms_upload_read_file($_FILES, 'proof_file');
+        if (is_wp_error($upload)) {
+            vms_ticketing_verification_finish_error($redirect_to, 'file_missing', 400);
+        }
+
         $name = isset($upload['name']) ? (string) $upload['name'] : '';
-        $tmp_name = isset($upload['tmp_name']) ? (string) $upload['tmp_name'] : '';
         $reported_mime = isset($upload['type']) ? sanitize_text_field((string) $upload['type']) : '';
         $error = isset($upload['error']) ? (int) $upload['error'] : UPLOAD_ERR_NO_FILE;
         if ($error !== UPLOAD_ERR_OK) {
             $notice = vms_ticketing_verification_upload_error_notice_code($error, $name, $reported_mime);
             $status = in_array($notice, array('file_too_large', 'pdf_too_large'), true) ? 413 : 400;
             vms_ticketing_verification_finish_error($redirect_to, $notice, $status);
-        }
-
-        $size = isset($upload['size']) ? (int) $upload['size'] : 0;
-        if ($size <= 0 && $tmp_name !== '' && file_exists($tmp_name)) {
-            $size = (int) @filesize($tmp_name);
-        }
-        if ($tmp_name === '' || !is_uploaded_file($tmp_name)) {
-            vms_ticketing_verification_finish_error($redirect_to, 'file_missing', 400);
         }
 
         if (preg_match('/dd\s*214/i', $name)) {
@@ -2152,59 +2303,62 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             vms_ticketing_verification_finish_error($redirect_to, 'heic_not_supported', 415);
         }
 
-        $allowed_mimes = vms_ticketing_verification_allowed_mimes();
-        $checked = wp_check_filetype_and_ext($tmp_name, $name, $allowed_mimes);
-        $ext = isset($checked['ext']) ? sanitize_key((string) $checked['ext']) : '';
-        $mime = isset($checked['type']) ? sanitize_text_field((string) $checked['type']) : '';
-        if ($ext === '' || $mime === '') {
-            if ($kind_hint === 'pdf') {
-                vms_ticketing_verification_finish_error($redirect_to, 'pdf_not_supported', 415);
+        $validated = vms_validate_uploaded_file(
+            $upload,
+            array(
+                'allowed_mimes' => vms_ticketing_verification_allowed_mimes(),
+                'max_bytes' => vms_ticketing_verification_get_effective_max_upload_bytes(),
+                'type_message' => $kind_hint === 'pdf'
+                    ? vms_ticketing_verification_notice_message('pdf_not_supported')
+                    : vms_ticketing_verification_notice_message('file_type_not_allowed'),
+                'empty_message' => vms_ticketing_verification_notice_message('file_missing'),
+                'too_large_message' => $kind_hint === 'pdf'
+                    ? vms_ticketing_verification_notice_message('pdf_too_large')
+                    : vms_ticketing_verification_notice_message('file_too_large'),
+                'tmp_invalid_message' => vms_ticketing_verification_notice_message('file_missing'),
+            )
+        );
+        if (is_wp_error($validated)) {
+            $code = (string) $validated->get_error_code();
+            if ($code === 'upload_type_not_allowed') {
+                if ($kind_hint === 'pdf') {
+                    vms_ticketing_verification_finish_error($redirect_to, 'pdf_not_supported', 415);
+                }
+                vms_ticketing_verification_finish_error($redirect_to, 'file_type_not_allowed', 415);
             }
-            vms_ticketing_verification_finish_error($redirect_to, 'file_type_not_allowed', 415);
+            if ($code === 'upload_too_large') {
+                vms_ticketing_verification_finish_error($redirect_to, $kind_hint === 'pdf' ? 'pdf_too_large' : 'file_too_large', 413);
+            }
+            if ($code === 'upload_missing' || $code === 'upload_tmp_missing' || $code === 'upload_tmp_invalid' || $code === 'upload_empty') {
+                vms_ticketing_verification_finish_error($redirect_to, 'file_missing', 400);
+            }
+            vms_ticketing_verification_finish_error($redirect_to, 'save_failed', 400);
         }
 
-        if ($size > vms_ticketing_verification_get_effective_max_upload_bytes()) {
-            $notice = $mime === 'application/pdf' ? 'pdf_too_large' : 'file_too_large';
-            vms_ticketing_verification_finish_error($redirect_to, $notice, 413);
-        }
-
-        $root = vms_ticketing_verification_upload_root();
-        if ($root === '' || !is_dir($root) || !is_writable($root)) {
-            vms_ticketing_verification_finish_error($redirect_to, 'save_failed', 500);
+        $stored = vms_ticketing_verification_store_proof_file($validated);
+        if (is_wp_error($stored)) {
+            $code = (string) $stored->get_error_code();
+            $status = $code === 'file_too_large' ? 413 : 500;
+            vms_ticketing_verification_finish_error(
+                $redirect_to,
+                $code !== '' ? $code : 'save_failed',
+                $status
+            );
         }
 
         $user_id = get_current_user_id();
-        $filename_base = 'proof-' . $user_id . '-' . $program . '-' . gmdate('Ymd-His');
-        $target = '';
-
-        if (vms_ticketing_verification_is_image_mime($mime)) {
-            $optimized = vms_ticketing_verification_optimize_image_upload($tmp_name, $root, $filename_base);
-            if (is_wp_error($optimized)) {
-                $code = (string) $optimized->get_error_code();
-                $status = $code === 'file_too_large' ? 413 : 422;
-                vms_ticketing_verification_finish_error(
-                    $redirect_to,
-                    $code !== '' ? $code : 'image_processing_failed',
-                    $status
-                );
-            }
-
-            $target = (string) ($optimized['path'] ?? '');
-            $mime = sanitize_text_field((string) ($optimized['mime'] ?? $mime));
-        } else {
-            $filename = wp_unique_filename($root, $filename_base . '.' . $ext);
-            $target = trailingslashit($root) . $filename;
-
-            $moved = @move_uploaded_file($tmp_name, $target);
-            if (!$moved) {
-                vms_ticketing_verification_finish_error($redirect_to, 'save_failed', 500);
-            }
-            @chmod($target, 0640);
-        }
-
-        $request_id = vms_ticketing_verification_create_request($user_id, $program, $target, $mime, $notes);
+        $request_id = vms_ticketing_verification_create_request(
+            $user_id,
+            $program,
+            (int) ($stored['file_id'] ?? 0),
+            (string) ($stored['mime'] ?? ''),
+            $notes,
+            'private_file'
+        );
         if ($request_id <= 0) {
-            vms_ticketing_verification_delete_proof_file($target);
+            if (!empty($stored['file_id']) && function_exists('vms_private_files_delete')) {
+                vms_private_files_delete((int) $stored['file_id']);
+            }
             vms_ticketing_verification_finish_error($redirect_to, 'save_failed', 500);
         }
 
@@ -3000,8 +3154,8 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                             }
                             $submit_notes = (string) get_post_meta($request_id, 'submit_notes', true);
                             $user = $user_id > 0 ? get_userdata($user_id) : null;
-                            $proof_path = (string) get_post_meta($request_id, 'proof_file_path', true);
-                            $proof_exists = ($proof_path !== '' && file_exists($proof_path));
+                            $proof_payload = vms_ticketing_verification_proof_payload($request_id);
+                            $proof_exists = !is_wp_error($proof_payload);
                             $decision_nonce = wp_create_nonce('vms_verification_decision_' . $request_id);
                             $proof_nonce = wp_create_nonce('vms_verification_proof_' . $request_id);
                             ?>
@@ -3090,7 +3244,6 @@ if (!function_exists('vms_ticketing_verification_handle_decision')) {
 
         $user_id = absint(get_post_meta($request_id, 'user_id', true));
         $program = sanitize_key((string) get_post_meta($request_id, 'program', true));
-        $proof_path = (string) get_post_meta($request_id, 'proof_file_path', true);
         $from_status = sanitize_key((string) $request->post_status);
         if (!in_array($from_status, array('pending', 'approved', 'denied'), true)) {
             $from_status = 'pending';
@@ -3129,10 +3282,7 @@ if (!function_exists('vms_ticketing_verification_handle_decision')) {
             update_post_meta($request_id, 'review_notes', $review_notes);
         }
 
-        if ($proof_path !== '') {
-            vms_ticketing_verification_delete_proof_file($proof_path);
-        }
-        delete_post_meta($request_id, 'proof_file_path');
+        vms_ticketing_verification_delete_proof_asset_for_request($request_id);
 
         if (function_exists('vms_approvals_queue_record_transition')) {
             vms_approvals_queue_record_transition(
@@ -3191,21 +3341,16 @@ if (!function_exists('vms_ticketing_verification_stream_proof')) {
             wp_die(esc_html__('Verification request not found.', 'backstage-venue-manager'));
         }
 
-        $path = (string) get_post_meta($request_id, 'proof_file_path', true);
-        $mime = (string) get_post_meta($request_id, 'proof_mime', true);
-        if ($path === '' || !file_exists($path) || !vms_ticketing_verification_path_within_root($path)) {
-            wp_die(esc_html__('Proof file not found or already deleted.', 'backstage-venue-manager'));
-        }
-        if ($mime === '') {
-            $mime = 'application/octet-stream';
+        $payload = vms_ticketing_verification_proof_payload($request_id);
+        if (is_wp_error($payload)) {
+            wp_die(esc_html($payload->get_error_message()));
         }
 
-        nocache_headers();
-        header('Content-Type: ' . $mime);
-        header('Content-Length: ' . (string) filesize($path));
-        header('Content-Disposition: inline; filename="' . basename($path) . '"');
-        readfile($path);
-        exit;
+        vms_private_files_stream_path(
+            (string) ($payload['path'] ?? ''),
+            (string) ($payload['filename'] ?? 'verification-proof'),
+            (string) ($payload['mime'] ?? 'application/octet-stream')
+        );
     }
 }
 add_action('admin_post_vms_view_verification_proof', 'vms_ticketing_verification_stream_proof');
@@ -3225,12 +3370,6 @@ if (!function_exists('vms_ticketing_verification_cleanup_old_proofs')) {
             'posts_per_page' => -1,
             'fields'         => 'ids',
             'no_found_rows'  => true,
-            'meta_query'     => array(
-                array(
-                    'key'     => 'proof_file_path',
-                    'compare' => 'EXISTS',
-                ),
-            ),
         ));
 
         foreach ((array) $request_ids as $request_id_raw) {
@@ -3239,11 +3378,13 @@ if (!function_exists('vms_ticketing_verification_cleanup_old_proofs')) {
                 continue;
             }
 
-            $path = (string) get_post_meta($request_id, 'proof_file_path', true);
-            if ($path === '') {
+            $payload = vms_ticketing_verification_proof_payload($request_id);
+            if (is_wp_error($payload)) {
+                vms_ticketing_verification_delete_proof_asset_for_request($request_id);
                 continue;
             }
 
+            $path = (string) ($payload['path'] ?? '');
             $status = (string) get_post_status($request_id);
             $delete_now = in_array($status, array('approved', 'denied'), true);
 
@@ -3257,8 +3398,7 @@ if (!function_exists('vms_ticketing_verification_cleanup_old_proofs')) {
             }
 
             if ($delete_now) {
-                vms_ticketing_verification_delete_proof_file($path);
-                delete_post_meta($request_id, 'proof_file_path');
+                vms_ticketing_verification_delete_proof_asset_for_request($request_id);
             }
         }
     }

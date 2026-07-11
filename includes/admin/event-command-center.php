@@ -92,21 +92,11 @@ if (!function_exists('vms_event_command_center_can_manage_promo_video')) {
 if (!function_exists('vms_event_command_center_promo_video_upload_file')) {
     function vms_event_command_center_promo_video_upload_file(int $plan_id, string $field_name)
     {
-        if (!function_exists('media_handle_upload')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-            require_once ABSPATH . 'wp-admin/includes/media.php';
-            require_once ABSPATH . 'wp-admin/includes/image.php';
+        if (function_exists('vms_vendor_portal_handle_headliner_promo_video_media_upload')) {
+            return vms_vendor_portal_handle_headliner_promo_video_media_upload($field_name, $plan_id);
         }
 
-        return media_handle_upload($field_name, $plan_id, array(), array(
-            'test_form' => false,
-            'mimes' => function_exists('vms_vendor_portal_headliner_promo_video_allowed_mimes') ? vms_vendor_portal_headliner_promo_video_allowed_mimes() : array(
-                'mp4'  => 'video/mp4',
-                'm4v'  => 'video/mp4',
-                'mov'  => 'video/quicktime',
-                'webm' => 'video/webm',
-            ),
-        ));
+        return new WP_Error('promo_video_upload_unavailable', __('The promo video upload handler is unavailable.', 'backstage-venue-manager'));
     }
 }
 

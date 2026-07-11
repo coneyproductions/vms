@@ -74,7 +74,8 @@ if (!function_exists('vms_staff_tax_status_context')) {
         $effective_provider = ($done_at > 0 && $stored_provider !== '') ? $stored_provider : $provider;
 
         $upload_id = (int) get_post_meta($staff_id, $k_upload, true);
-        $upload_url = $upload_id ? wp_get_attachment_url($upload_id) : '';
+        $upload_url = $upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($staff_id) : '';
+        $upload_label = $upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($staff_id) : '';
 
         $admin_confirmed_at = (int) get_post_meta($staff_id, $k_confirmed_at, true);
         if ($admin_confirmed_at <= 0 && $done_at > 0) {
@@ -106,6 +107,7 @@ if (!function_exists('vms_staff_tax_status_context')) {
             'attested_at' => $attested_at,
             'upload_id' => $upload_id,
             'upload_url' => $upload_url,
+            'upload_label' => $upload_label,
             'missing' => $missing,
             'stage' => $stage,
             'badge_label' => $badge_label,
@@ -264,6 +266,7 @@ function vms_render_staff_tax_status_metabox($post)
     $admin_confirmed_by_name = (string) ($ctx['admin_confirmed_by_name'] ?? '');
     $missing = isset($ctx['missing']) ? (array) $ctx['missing'] : array();
     $upload_url = (string) ($ctx['upload_url'] ?? '');
+    $upload_label = (string) ($ctx['upload_label'] ?? '');
 
     echo '<p class="vms-staff-tax-badge-row">';
     if ($stage === 'complete') {
@@ -296,7 +299,7 @@ function vms_render_staff_tax_status_metabox($post)
     }
 
     if ($upload_url) {
-        echo '<p class="vms-mini"><strong>' . esc_html__('W-9 file:', 'backstage-venue-manager') . '</strong> <a href="' . esc_url($upload_url) . '" target="_blank" rel="noopener">' . esc_html__('View', 'backstage-venue-manager') . '</a></p>';
+        echo '<p class="vms-mini"><strong>' . esc_html__('W-9 file:', 'backstage-venue-manager') . '</strong> <a href="' . esc_url($upload_url) . '" target="_blank" rel="noopener">' . esc_html($upload_label !== '' ? $upload_label : __('Download', 'backstage-venue-manager')) . '</a></p>';
     }
 
     if (!empty($missing)) {

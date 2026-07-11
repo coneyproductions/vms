@@ -538,8 +538,13 @@ if (!function_exists('vms_staffing_normalize_staff_qualification_row')) {
 		}
 
 		$attachment_id = isset($row['attachment_id']) ? absint($row['attachment_id']) : 0;
+		$storage_kind = isset($row['storage_kind']) ? sanitize_key((string) $row['storage_kind']) : '';
+		if ($storage_kind !== 'private_file') {
+			$storage_kind = $attachment_id > 0 ? 'attachment' : '';
+		}
+
 		$proof_url = isset($row['proof_url']) ? esc_url_raw((string) $row['proof_url']) : '';
-		if ($proof_url === '' && $attachment_id > 0) {
+		if ($proof_url === '' && $attachment_id > 0 && $storage_kind !== 'private_file') {
 			$attachment_url = wp_get_attachment_url($attachment_id);
 			if ($attachment_url) {
 				$proof_url = esc_url_raw((string) $attachment_url);
@@ -566,6 +571,7 @@ if (!function_exists('vms_staffing_normalize_staff_qualification_row')) {
 			'status' => $status,
 			'proof_url' => ($proof_url === '' ? null : $proof_url),
 			'attachment_id' => $attachment_id > 0 ? $attachment_id : null,
+			'storage_kind' => ($storage_kind === '' ? null : $storage_kind),
 			'notes' => ($notes === '' ? null : $notes),
 			'source' => $source,
 			'submitted_by' => $submitted_by > 0 ? $submitted_by : null,
@@ -610,6 +616,19 @@ if (!function_exists('vms_staffing_get_staff_qualifications')) {
 			$clean['effective_status'] = $effective_status;
 			$clean['expiring_soon'] = $expiring_soon ? 1 : 0;
 			$clean['match_key'] = sanitize_title((string) $clean['name']);
+			$clean['proof_download_url'] = '';
+			$clean['proof_label'] = '';
+			$attachment_id = absint($clean['attachment_id'] ?? 0);
+			$qualification_id = sanitize_key((string) ($clean['id'] ?? ''));
+			if ($attachment_id > 0 && $qualification_id !== '' && function_exists('vms_private_staff_cert_download_url')) {
+				$clean['proof_download_url'] = vms_private_staff_cert_download_url($staff_id, $qualification_id);
+			}
+			if ($attachment_id > 0 && function_exists('vms_private_staff_cert_file_payload')) {
+				$payload = vms_private_staff_cert_file_payload($staff_id, $clean);
+				if (!is_wp_error($payload)) {
+					$clean['proof_label'] = trim((string) ($payload['filename'] ?? ''));
+				}
+			}
 			$out[] = $clean;
 		}
 		return $out;
@@ -623,7 +642,24 @@ if (!function_exists('vms_staffing_save_staff_qualifications')) {
 		if ($staff_id <= 0) {
 			return;
 		}
+
+		$old_rows = vms_staffing_get_staff_qualifications($staff_id);
+		$old_private_ids = array();
+		foreach ($old_rows as $old_row) {
+			if (!is_array($old_row)) {
+				continue;
+			}
+			if (sanitize_key((string) ($old_row['storage_kind'] ?? '')) !== 'private_file') {
+				continue;
+			}
+			$file_id = absint($old_row['attachment_id'] ?? 0);
+			if ($file_id > 0) {
+				$old_private_ids[] = $file_id;
+			}
+		}
+
 		$clean = array();
+		$new_private_ids = array();
 		foreach ($rows as $row) {
 			if (!is_array($row)) {
 				continue;
@@ -631,8 +667,22 @@ if (!function_exists('vms_staffing_save_staff_qualifications')) {
 			$norm = vms_staffing_normalize_staff_qualification_row($row);
 			if (is_array($norm)) {
 				$clean[] = $norm;
+				if (sanitize_key((string) ($norm['storage_kind'] ?? '')) === 'private_file') {
+					$file_id = absint($norm['attachment_id'] ?? 0);
+					if ($file_id > 0) {
+						$new_private_ids[] = $file_id;
+					}
+				}
 			}
 		}
+
+		$stale_private_ids = array_diff(array_unique($old_private_ids), array_unique($new_private_ids));
+		if (!empty($stale_private_ids) && function_exists('vms_private_files_delete')) {
+			foreach ($stale_private_ids as $stale_private_id) {
+				vms_private_files_delete((int) $stale_private_id);
+			}
+		}
+
 		if (empty($clean)) {
 			delete_post_meta($staff_id, vms_staffing_staff_qualification_meta_key());
 			return;

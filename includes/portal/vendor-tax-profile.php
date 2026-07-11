@@ -79,6 +79,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 	$k_zip     = vms_meta_key('vendor', 'zip');
 
 	$k_upload  = vms_meta_key('vendor', 'w9_upload_id');
+	$k_upload_kind = function_exists('vms_private_w9_storage_kind_meta_key') ? vms_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
 	$k_recv    = vms_meta_key('vendor', 'w9_received_date');
 
 	$k_attest  = vms_meta_key('vendor', 'w9_attested_at');
@@ -117,24 +118,23 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 
 			if ($provider === 'upload') {
 
-				if (!empty($_FILES['vms_w9_upload']['name'])) {
+				if (vms_upload_request_has_file($_FILES, 'vms_w9_upload')) {
+					$previous_upload_id = (int) get_post_meta($vendor_id, $k_upload, true);
+					$previous_kind = sanitize_key((string) get_post_meta($vendor_id, $k_upload_kind, true));
+					$file_id = function_exists('vms_private_w9_store_upload')
+						? vms_private_w9_store_upload($vendor_id, $_FILES)
+						: new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
 
-					$allowed = array('application/pdf', 'image/jpeg', 'image/png', 'image/webp');
-					$type = isset($_FILES['vms_w9_upload']['type']) ? (string) $_FILES['vms_w9_upload']['type'] : '';
-
-					if ($type && !in_array($type, $allowed, true)) {
-						echo vms_portal_notice('error', __('Upload must be a PDF or image (JPG/PNG/WEBP).', 'backstage-venue-manager'));
+					if (is_wp_error($file_id)) {
+						echo vms_portal_notice('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message());
 					} else {
-
-						$attach_id = media_handle_upload('vms_w9_upload', 0);
-
-						if (is_wp_error($attach_id)) {
-							echo vms_portal_notice('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $attach_id->get_error_message());
-						} else {
-							update_post_meta($vendor_id, $k_upload, (int) $attach_id);
-							update_post_meta($vendor_id, $k_recv, function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d'));
-							$vendor_update_context = 'tax_w9_upload';
+						update_post_meta($vendor_id, $k_upload, (int) $file_id);
+						update_post_meta($vendor_id, $k_upload_kind, 'private_file');
+						update_post_meta($vendor_id, $k_recv, function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d'));
+						if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
+							vms_private_files_delete($previous_upload_id);
 						}
+						$vendor_update_context = 'tax_w9_upload';
 					}
 				}
 
@@ -189,7 +189,8 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 	$zip   = $m($k_zip);
 
 	$w9_upload_id = (int) get_post_meta($vendor_id, $k_upload, true);
-	$w9_url = $w9_upload_id ? wp_get_attachment_url($w9_upload_id) : '';
+	$w9_url = $w9_upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($vendor_id) : '';
+	$w9_label = $w9_upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($vendor_id) : '';
 
 	$attested_at = (int) get_post_meta($vendor_id, $k_attest, true);
 	$attested_checked = ($attested_at > 0);
@@ -295,7 +296,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 
 		if ($w9_url) {
 			echo '<p class="description vms-vtp-upload-note">' .
-				esc_html__('W-9 on file:', 'backstage-venue-manager') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' . esc_html__('View', 'backstage-venue-manager') . '</a>' .
+				esc_html__('W-9 on file:', 'backstage-venue-manager') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' . esc_html($w9_label !== '' ? $w9_label : __('Download', 'backstage-venue-manager')) . '</a>' .
 				'</p>';
 		}
 

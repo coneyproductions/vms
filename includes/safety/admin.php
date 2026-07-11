@@ -386,18 +386,14 @@ if (!function_exists('vms_safety_normalize_multi_upload')) {
 	 */
 	function vms_safety_normalize_multi_upload(array $files): array
 	{
-		$out = array();
-		$names = isset($files['name']) && is_array($files['name']) ? $files['name'] : array();
-		foreach ($names as $i => $name) {
-			$out[] = array(
-				'name' => (string) $name,
-				'type' => isset($files['type'][$i]) ? (string) $files['type'][$i] : '',
-				'tmp_name' => isset($files['tmp_name'][$i]) ? (string) $files['tmp_name'][$i] : '',
-				'error' => isset($files['error'][$i]) ? (int) $files['error'][$i] : UPLOAD_ERR_NO_FILE,
-				'size' => isset($files['size'][$i]) ? (int) $files['size'][$i] : 0,
-			);
+		if (function_exists('vms_upload_normalize_multi_file_array')) {
+			$normalized = vms_upload_normalize_multi_file_array(array('incident_attachments' => $files), 'incident_attachments');
+			if (!is_wp_error($normalized)) {
+				return $normalized;
+			}
 		}
-		return $out;
+
+		return array();
 	}
 }
 
