@@ -1582,6 +1582,27 @@ Date: 2026-07-12
 ### Non-Actions
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B2 Shell Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B2`
+- Scope completed: the second B2 slice, externalizing the passive Vendor Portal shell listeners into `assets/js/vms-vendor-portal.js`
+- Migrated in this slice: the narrow-layout listener, the stale Opportunities/Open Dates navigation cleanup, the three inline form-submit attributes, and the passive All Vendors accordion behavior
+- Non-behavioral confirmation: no availability persistence, no `window.VMS_AV` configuration, no localStorage/cookie open-state logic, and no availability AJAX/autosave behavior changed in this slice
+- B2 slice 1 remains completed by the modal-removal result above
+- Remaining `B2` work: availability method open-state/localStorage behavior, month accordion cookie restoration, and manual availability autosave plus its configuration handoff
+- `B1` remains pending
+- `B3`, `B4`, and `B5` remain completed by the result sections below
+- `WPORG-22` remains open
+### What Changed
+- Added the narrowly scoped `vms-vendor-portal` frontend asset and enqueued it only from the Vendor Portal shortcode render path.
+- Removed the targeted passive inline shell scripts from `includes/portal/vendor-portal.php`.
+- Replaced the three `onchange="this.form.submit()"` attributes with external-listener markers consumed by the new asset.
+- Preserved the active `vms-public-calendar` popover path and left the remaining availability inline scripts for later B2 slices.
+### Non-Actions
+- No deployment, push, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B3 JS Result
 
 Date: 2026-07-11

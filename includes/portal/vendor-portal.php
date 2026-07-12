@@ -4583,6 +4583,13 @@ function vms_vendor_portal_shortcode($atts = []): string
             $calendar_script_ver,
             true
         );
+        $portal_script_src = function_exists('vms_asset_url')
+            ? vms_asset_url('assets/js/vms-vendor-portal.js')
+            : VMS_PLUGIN_URL . 'assets/js/vms-vendor-portal.js';
+        $portal_script_ver = function_exists('vms_asset_version_for')
+            ? vms_asset_version_for('assets/js/vms-vendor-portal.js')
+            : (function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''));
+        wp_enqueue_script('vms-vendor-portal', $portal_script_src, array(), $portal_script_ver, true);
     }
 
     $base_url = get_permalink(); // page where shortcode lives
@@ -4762,9 +4769,10 @@ function vms_vendor_portal_shortcode($atts = []): string
         $portal_classes .= ' vms-portal--mobile';
     }
     echo '<div id="vms-portal-root" class="' . esc_attr($portal_classes) . '">';
-    // Narrow/mobile mode helper: add a class based on viewport/screen width.
-    // Avoids depending only on CSS media queries (some mobile browsers can force a desktop viewport).
-    echo '<script>(function(){function vmsSetNarrow(){var r=document.getElementById("vms-portal-root");if(!r){return;}var w=9999;try{w=Math.min((window.innerWidth||9999),(document.documentElement&&document.documentElement.clientWidth||9999),(screen&&screen.width||9999));}catch(e){}if(w<=760){r.classList.add("vms-portal--narrow");}else{r.classList.remove("vms-portal--narrow");}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",vmsSetNarrow);}else{vmsSetNarrow();}window.addEventListener("resize",vmsSetNarrow);window.addEventListener("orientationchange",vmsSetNarrow);})();</script>';
+    // Shell listeners migrated to assets/js/vms-vendor-portal.js:
+    // function vmsSetNarrow()
+    // function vmsPortalStripOpportunityTabs()
+    // document.querySelector(".vms-av-allvendors-wrap")
     echo '<div class="vms-portal-header">';
 
     // Vendor switcher (only shown when the user manages multiple vendors)
@@ -4775,7 +4783,7 @@ function vms_vendor_portal_shortcode($atts = []): string
             vms_vendor_portal_render_preview_hidden_fields((int) $vendor_id);
         }
         echo '<label class="vms-portal-vendor-switch-label">' . esc_html__('Vendor', 'backstage-venue-manager') . '</label>';
-        echo '<select name="vendor_id" class="vms-portal-vendor-switch-select" onchange="this.form.submit()">';
+        echo '<select name="vendor_id" class="vms-portal-vendor-switch-select" data-vms-portal-submit-on-change="1">';
         foreach ($vendor_ids as $vid) {
             $vid = (int) $vid;
             if ($vid <= 0) continue;
@@ -4812,7 +4820,6 @@ function vms_vendor_portal_shortcode($atts = []): string
         echo '<a href="' . esc_url($apply_url) . '">' . esc_html__('Add a Business', 'backstage-venue-manager') . '</a>';
     }
     echo '</nav>';
-    echo '<script>(function(){function vmsPortalStripOpportunityTabs(){var nav=document.querySelector("#vms-portal-root .vms-portal-nav");if(!nav){return;}var links=nav.querySelectorAll("a");for(var i=links.length-1;i>=0;i--){var link=links[i];var href=link.getAttribute("href")||"";var text=(link.textContent||"").trim().toLowerCase();var isOpportunity=false;try{var url=new URL(href,window.location.origin);isOpportunity=(url.searchParams.get("tab")==="opportunities");}catch(e){isOpportunity=(href.indexOf("tab=opportunities")!==-1);}if(isOpportunity||text==="opportunities"||text==="open dates"){if(link.parentNode){link.parentNode.removeChild(link);}}}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",vmsPortalStripOpportunityTabs);}else{vmsPortalStripOpportunityTabs();}})();</script>';
     echo '</div>'; // header
     if ($is_preview) {
         $preview_back_url = admin_url('post.php?post=' . (int) $vendor_id . '&action=edit');
@@ -5585,7 +5592,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             vms_vendor_portal_render_preview_hidden_fields((int) $vendor_id);
         }
         echo '<label for="vms-av-lb">' . esc_html__('Show past:', 'backstage-venue-manager') . '</label>';
-        echo '<select id="vms-av-lb" name="lb" onchange="this.form.submit()">';
+        echo '<select id="vms-av-lb" name="lb" data-vms-portal-submit-on-change="1">';
         echo '<option value="0"' . selected(0, $months_back, false) . '>' . esc_html__('None', 'backstage-venue-manager') . '</option>';
         echo '<option value="1"' . selected(1, $months_back, false) . '>' . esc_html__('1 month', 'backstage-venue-manager') . '</option>';
         echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'backstage-venue-manager') . '</option>';
@@ -6601,7 +6608,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
         }
 
         echo '<label for="vms-av-lb-all">' . esc_html__('Show past:', 'backstage-venue-manager') . '</label>';
-        echo '<select id="vms-av-lb-all" name="lb" onchange="this.form.submit()">';
+        echo '<select id="vms-av-lb-all" name="lb" data-vms-portal-submit-on-change="1">';
         $opts = array(
             0  => __('None', 'backstage-venue-manager'),
             1  => __('1 month', 'backstage-venue-manager'),
@@ -6842,23 +6849,6 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
 
         echo '</div>'; // wrap
 
-        // Only one month open at a time (All Vendors tab)
-        echo '<script>
-document.addEventListener("DOMContentLoaded", function () {
-  var wrap = document.querySelector(".vms-av-allvendors-wrap");
-  if (!wrap) return;
-  var all = wrap.querySelectorAll("details.vms-sch-month");
-  if (!all || !all.length) return;
-  all.forEach(function (d) {
-    d.addEventListener("toggle", function () {
-      if (!d.open) return;
-      all.forEach(function (other) {
-        if (other !== d) other.removeAttribute("open");
-      });
-    });
-  });
-});
-</script>';
     }
 }
 /**
