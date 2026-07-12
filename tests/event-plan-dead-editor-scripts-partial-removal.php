@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 $pluginRoot = dirname(__DIR__);
 $deletedPartialPath = $pluginRoot . '/includes/cpt/event-plans/partials/editor-scripts.php';
+$deletedBasicDetailsPath = $pluginRoot . '/includes/cpt/event-plans/partials/basic-details.php';
+$deletedSecondaryVendorsSectionPath = $pluginRoot . '/includes/cpt/event-plans/partials/secondary-vendors-section.php';
 $eventPlansPath = $pluginRoot . '/includes/cpt/event-plans.php';
 $secondaryVendorsPath = $pluginRoot . '/includes/cpt/event-plans/partials/secondary-vendors.php';
 $compensationPath = $pluginRoot . '/includes/cpt/event-plans/partials/compensation.php';
@@ -26,8 +28,11 @@ $readFile = static function (string $path) use ($assert): string {
 
 try {
 	$assert(!file_exists($deletedPartialPath), 'The dead Event Plan editor-scripts partial should be deleted.');
+	$assert(!file_exists($deletedBasicDetailsPath), 'The dead Event Plan basic-details partial should be deleted.');
+	$assert(!file_exists($deletedSecondaryVendorsSectionPath), 'The dead Event Plan secondary-vendors-section partial should be deleted.');
 
 	$runtimeEditorScriptHits = array();
+	$deadPartialCallerHits = array();
 	$iterator = new RecursiveIteratorIterator(
 		new RecursiveDirectoryIterator($pluginRoot . '/includes', FilesystemIterator::SKIP_DOTS)
 	);
@@ -39,12 +44,29 @@ try {
 		$path = $fileInfo->getPathname();
 		$contents = file_get_contents($path);
 		if (!is_string($contents) || strpos($contents, 'editor-scripts') === false) {
-			continue;
+			$contents = is_string($contents) ? $contents : '';
+		} else {
+			$runtimeEditorScriptHits[] = substr($path, strlen($pluginRoot) + 1);
 		}
 
-		$runtimeEditorScriptHits[] = substr($path, strlen($pluginRoot) + 1);
+		$deadPartialNeedles = array(
+			"capture_event_plan_partial('basic-details'",
+			"render_event_plan_partial('basic-details'",
+			'basic-details.php',
+			"capture_event_plan_partial('secondary-vendors-section'",
+			"render_event_plan_partial('secondary-vendors-section'",
+			'secondary-vendors-section.php',
+		);
+		foreach ($deadPartialNeedles as $needle) {
+			if (strpos($contents, $needle) === false) {
+				continue;
+			}
+
+			$deadPartialCallerHits[] = substr($path, strlen($pluginRoot) + 1) . ' :: ' . $needle;
+		}
 	}
 	$assert($runtimeEditorScriptHits === array(), 'No first-party runtime PHP source should retain an editor-scripts reference. Found: ' . implode(', ', $runtimeEditorScriptHits));
+	$assert($deadPartialCallerHits === array(), 'No first-party runtime PHP source should retain a deleted Event Plan partial capture/include path. Found: ' . implode(', ', $deadPartialCallerHits));
 
 	$eventPlansSource = $readFile($eventPlansPath);
 	$secondaryVendorsSource = $readFile($secondaryVendorsPath);
@@ -55,6 +77,10 @@ try {
 
 	$assert(strpos($eventPlansSource, "'editor-scripts'") === false, 'Event Plan source should not request the deleted editor-scripts partial.');
 	$assert(strpos($eventPlansSource, 'editor-scripts.php') === false, 'Event Plan source should not reference the deleted editor-scripts.php path.');
+	$assert(strpos($eventPlansSource, "'basic-details'") === false, 'Event Plan source should not request the deleted basic-details partial.');
+	$assert(strpos($eventPlansSource, 'basic-details.php') === false, 'Event Plan source should not reference the deleted basic-details.php path.');
+	$assert(strpos($eventPlansSource, "'secondary-vendors-section'") === false, 'Event Plan source should not request the deleted secondary-vendors-section partial.');
+	$assert(strpos($eventPlansSource, 'secondary-vendors-section.php') === false, 'Event Plan source should not reference the deleted secondary-vendors-section.php path.');
 	$assert(strpos($eventPlansSource, "in_array(\$section, array('staff', 'secondary_vendors', 'readiness_details'), true)") !== false, 'Lazy section inventory should remain scoped to staff, secondary_vendors, and readiness_details.');
 
 	$capturedPartials = array();
@@ -63,6 +89,8 @@ try {
 		sort($capturedPartials);
 	}
 	$assert(!in_array('editor-scripts', $capturedPartials, true), 'Dynamic Event Plan partial inventory should not include editor-scripts.');
+	$assert(!in_array('basic-details', $capturedPartials, true), 'Dynamic Event Plan partial inventory should not include basic-details.');
+	$assert(!in_array('secondary-vendors-section', $capturedPartials, true), 'Dynamic Event Plan partial inventory should not include secondary-vendors-section.');
 	$requiredCapturedPartials = array(
 		'advanced-controls',
 		'compensation',
@@ -83,6 +111,8 @@ try {
 	$partialBasenames = array_map('basename', $partialFiles);
 	sort($partialBasenames);
 	$assert(!in_array('editor-scripts.php', $partialBasenames, true), 'Static Event Plan partial inventory should not include editor-scripts.php.');
+	$assert(!in_array('basic-details.php', $partialBasenames, true), 'Static Event Plan partial inventory should not include basic-details.php.');
+	$assert(!in_array('secondary-vendors-section.php', $partialBasenames, true), 'Static Event Plan partial inventory should not include secondary-vendors-section.php.');
 	foreach (array(
 		'advanced-controls.php',
 		'comp-ack.php',
@@ -98,6 +128,13 @@ try {
 	) as $activePartialFile) {
 		$assert(in_array($activePartialFile, $partialBasenames, true), 'Expected active Event Plan partial file to remain present: ' . $activePartialFile);
 	}
+
+	$assert(strpos($eventPlansSource, 'class="vms-ep-basic-grid"') !== false, 'Live Event Plan renderer should retain the inlined basic details grid.');
+	$assert(strpos($eventPlansSource, 'This event plan lost its vendor (the vendor was deleted) and needs attention.') !== false, 'Live Event Plan renderer should retain the primary-vendor integrity notice.');
+	$assert(strpos($eventPlansSource, 'Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.') !== false, 'Live Event Plan renderer should retain the primary-vendor booking-prefill notice.');
+	$assert(strpos($eventPlansSource, 'capture_event_plan_partial(\'secondary-vendors\'') !== false, 'Live Event Plan renderer should still capture the active secondary-vendors partial.');
+	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendors-section"') !== false, 'Active secondary-vendors partial should retain the live section wrapper.');
+	$assert(strpos($secondaryVendorsSource, 'data-vms-save-nonce') !== false, 'Active secondary-vendors partial should retain its save contract.');
 
 	$assert(substr_count($eventPlansSource, '<script') >= 10, 'Event Plan source should still contain the current live inline script surface for later B1 slices.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Event Plan source should retain the live requested-section persistence helper.');
