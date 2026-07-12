@@ -5,6 +5,7 @@ $pluginRoot = dirname(__DIR__);
 $eventPlansPath = $pluginRoot . '/includes/cpt/event-plans.php';
 $ticketingBootstrapPath = $pluginRoot . '/includes/integrations/ticketing.php';
 $ticketingAssetPath = $pluginRoot . '/assets/admin-ticketing.js';
+$shellAssetPath = $pluginRoot . '/assets/js/vms-event-plan-shell.js';
 $unexpectedAssetPath = $pluginRoot . '/assets/js/vms-event-plan-ticketing-focus.js';
 
 $assert = static function (bool $condition, string $message): void {
@@ -25,14 +26,15 @@ try {
 	$eventPlansSource = $readFile($eventPlansPath);
 	$ticketingBootstrapSource = $readFile($ticketingBootstrapPath);
 	$ticketingAssetSource = $readFile($ticketingAssetPath);
+	$shellAssetSource = $readFile($shellAssetPath);
 
 	$assert(strpos($eventPlansSource, '$ticketing_focus_requested') === false, 'Event Plan source should no longer define the inline ticketing-focus request variable.');
 	$assert(strpos($eventPlansSource, "const ticketingBox = document.getElementById('vms_event_plan_ticketing_v2');") === false, 'Event Plan source should no longer emit the inline ticketing-focus helper.');
 	$assert(strpos($eventPlansSource, "const focusTarget = ticketingBox.querySelector('#vms-ticketing-v2-source .button, #vms-ticketing-v2-source select, #vms-ticketing-v2-source input, #vms-ticketing-v2-source textarea, #vms-ticketing-v2-source a');") === false, 'Event Plan source should no longer emit the inline ticketing focus target query.');
 	$assert(strpos($eventPlansSource, "get_post_meta(\$post->ID, '_vms_admin_scroll_to', true);") !== false, 'Generic server-requested scroll helper should remain present.');
 	$assert(strpos($eventPlansSource, "delete_post_meta(\$post->ID, '_vms_admin_scroll_to');") !== false, 'Generic server-requested scroll helper should still clear the scroll marker.');
-	$assert(strpos($eventPlansSource, "const el = document.getElementById('<?php echo esc_js(\$scroll_to); ?>');") !== false, 'Generic server-requested scroll helper should remain unchanged.');
-	$assert(strpos($eventPlansSource, "setTimeout(() => el.scrollIntoView({") !== false, 'Generic server-requested scroll helper should still use the existing deferred scroll behavior.');
+	$assert(strpos($eventPlansSource, 'Generic scroll helper migrated to vms-event-plan-shell.js:') === false, 'Event Plan source should not retain the obsolete generic-scroll migration marker comment.');
+	$assert(strpos($eventPlansSource, 'data-vms-scroll-target=') !== false, 'Generic server-requested scroll helper should hand off its target through the non-executable scroll marker.');
 	$assert(strpos($eventPlansSource, "'vms_event_plan_ticketing_v2'") !== false, 'Event Plan ticketing meta box target should remain present.');
 
 	$assert(strpos($ticketingAssetSource, 'function maybeFocusEventPlanTicketingArea()') !== false, 'admin-ticketing.js should contain the migrated ticketing-focus helper.');
@@ -57,6 +59,8 @@ try {
 	$assert(strpos($ticketingBootstrapSource, '$handle = \'vms-admin-ticketing\';') !== false, 'Ticketing bootstrap should retain the existing admin-ticketing handle.');
 	$assert(strpos($ticketingBootstrapSource, 'assets/admin-ticketing.js') !== false, 'Ticketing bootstrap should still enqueue assets/admin-ticketing.js.');
 	$assert(strpos($ticketingBootstrapSource, "if (!in_array(\$hook, array('post.php', 'post-new.php'), true)) {") !== false, 'admin-ticketing.js should remain enqueued on post editor screens, including Event Plan edit/new.');
+	$assert(strpos($shellAssetSource, "var root = document.querySelector('.vms-ep-basic-grid[data-vms-scroll-target]');") !== false, 'The separate generic scroll shell asset should remain present.');
+	$assert(strpos($shellAssetSource, 'document.getElementById(targetId)') !== false, 'The generic scroll shell asset should continue treating the marker as an element ID.');
 
 	$assert(!file_exists($unexpectedAssetPath), 'This remediation slice should not create a new dedicated Event Plan ticketing-focus asset.');
 

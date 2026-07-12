@@ -8833,11 +8833,6 @@ class VMS_Admin_Event_Plans
         // Scroll helper (optional)
         if ($scroll_to) {
             delete_post_meta($post->ID, '_vms_admin_scroll_to');
-            /*
-             * Generic scroll helper migrated to vms-event-plan-shell.js:
-             * const el = document.getElementById('<?php echo esc_js($scroll_to); ?>');
-             * setTimeout(() => el.scrollIntoView({
-             */
         }
     } finally {
             if (function_exists('vms_event_plan_perf_memory_checkpoint')) {
