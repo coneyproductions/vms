@@ -639,11 +639,4 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 		</p>
 	</div>
 
-	<script>
-		(function() {
-			if (typeof window.vmsEventPlanInitSecondaryVendors === 'function') {
-				window.vmsEventPlanInitSecondaryVendors(document);
-			}
-		})();
-	</script>
 </div>

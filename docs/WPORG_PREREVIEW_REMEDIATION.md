@@ -1583,6 +1583,29 @@ Date: 2026-07-12
 ### Non-Actions
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B1 Secondary Vendor Bootstrap Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B1`
+- Scope completed: only the second B1 slice, removing the redundant executable inline Secondary Vendors bootstrap bridge from `includes/cpt/event-plans/partials/secondary-vendors.php`
+- Duplication proof: the partial-level bridge only called `window.vmsEventPlanInitSecondaryVendors(document)`, while the live full-page Event Plan controller in `includes/cpt/event-plans.php` still self-initializes on page boot and the lazy-section success path still reinitializes after injecting returned markup
+- Remaining runtime retained: the `application/json` secondary-vendor configuration payload, all Additional Vendors markup, data attributes, templates, hidden fields, save controls, badges, market targeting, capacity UI, and existing PHP conditions remain unchanged
+- Behavior scope: no Secondary Vendors persistence, AJAX, assignment, compatibility-index, or wording behavior changed in this slice
+- Controller status: the main Secondary Vendors controller remains inline in `includes/cpt/event-plans.php` and still guards against duplicate init via `data-vms-secondary-init-bound`
+- Tests added: `php tests/event-plan-secondary-vendor-bootstrap-remediation.php`
+- Validation run: `php tests/event-plan-secondary-vendor-assignments.php`, `php tests/event-plan-secondary-vendor-capacity-and-add.php`, `php tests/event-plan-editor-vendor-preservation.php`, `php tests/event-plan-module-reopen-and-market-layout.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
+- Remaining `B1` work: the live inline Event Plan controllers in `includes/cpt/event-plans.php` and the remaining active partial-level executable blocks still remain pending
+- `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
+- `WPORG-22` remains open
+- The known legacy ticketing smoke-test failure remains a documented pre-existing `WPORG-27` AJAX capture-test issue, not a new B1 regression
+### What Changed
+- Removed only the redundant executable inline `<script>` bridge from `includes/cpt/event-plans/partials/secondary-vendors.php`.
+- Added a focused source-level regression test that proves the partial still contains only the non-executable JSON payload and markup contracts, while the full-page and lazy-load initialization paths remain active in `includes/cpt/event-plans.php`.
+- Left `includes/cpt/event-plans.php`, all other Event Plan partials, and all JavaScript/CSS assets unchanged in this slice.
+### Non-Actions
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B2 Modal Result
 Date: 2026-07-12
 ### Summary
