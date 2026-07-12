@@ -50,14 +50,27 @@ foreach ($forbiddenAssetMarkers as $marker) {
 	$assert(strpos($shellAssetSource, $marker) === false, 'Vendor Portal asset should not contain excluded autosave/AJAX marker: ' . $marker);
 }
 
-$remainingPhpMarkers = array(
+$obsoletePhpMarkers = array(
 	'window.VMS_AV = window.VMS_AV || {};',
 	'var cfg = window.VMS_AV || {};',
 	'action: "vms_save_manual_availability_day"',
 	'window.addEventListener("beforeunload"',
+	'var methods = document.querySelectorAll("details.vms-av-method");',
+	'var cookieName = "vms_av_open_ym";',
 );
-foreach ($remainingPhpMarkers as $marker) {
-	$assert(strpos($vendorPortalSource, $marker) !== false, 'Vendor Portal PHP should retain the later autosave marker: ' . $marker);
+foreach ($obsoletePhpMarkers as $marker) {
+	$assert(strpos($vendorPortalSource, $marker) === false, 'Vendor Portal PHP should not retain obsolete migration-marker text: ' . $marker);
+}
+$assert(strpos($vendorPortalSource, 'data-vms-portal-config="availability"') !== false, 'Vendor Portal source should preserve the scoped availability JSON payload.');
+preg_match_all('~<script\b([^>]*)>(.*?)</script>~is', (string) $vendorPortalSource, $scriptMatches, PREG_SET_ORDER);
+$assert($scriptMatches !== array(), 'Vendor Portal source should still contain the scoped JSON config payload.');
+foreach ($scriptMatches as $scriptMatch) {
+	$attrs = (string) ($scriptMatch[1] ?? '');
+	$type = '';
+	if (preg_match('~type=["\']([^"\']+)["\']~i', $attrs, $typeMatch)) {
+		$type = strtolower(trim((string) ($typeMatch[1] ?? '')));
+	}
+	$assert($type === 'application/json', 'Vendor Portal source should not emit executable inline script tags.');
 }
 
 $markupMarkers = array('data-today-ym="', 'data-method="ics"', 'data-method="pattern"', 'data-method="manual"', 'data-ym="');

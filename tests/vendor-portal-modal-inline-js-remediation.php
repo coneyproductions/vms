@@ -49,9 +49,21 @@ $activeVendorPortalMarkers = array('vms-public-cal', 'vms-cal-entry', 'vms-cal-p
 foreach ($activeVendorPortalMarkers as $marker) {
 	$assert(strpos($vendorPortalSource, $marker) !== false, 'Vendor Portal source should preserve the active public-calendar path marker: ' . $marker);
 }
-$remainingInlineMarkers = array('function vmsSetNarrow()', 'function vmsPortalStripOpportunityTabs()', 'window.VMS_AV = window.VMS_AV || {};', 'var methods = document.querySelectorAll("details.vms-av-method");', 'var cookieName = "vms_av_open_ym";', 'document.querySelector(".vms-av-allvendors-wrap")');
-foreach ($remainingInlineMarkers as $marker) {
-	$assert(strpos($vendorPortalSource, $marker) !== false, 'Vendor Portal source should retain the unrelated inline script marker for this slice: ' . $marker);
+$assert(strpos($vendorPortalSource, "wp_enqueue_script('vms-vendor-portal'") !== false, 'Vendor Portal source should still enqueue the shared frontend asset after modal cleanup.');
+$assert(strpos($vendorPortalSource, 'data-vms-portal-config="availability"') !== false, 'Vendor Portal source should still expose the scoped availability JSON payload after modal cleanup.');
+$obsoleteMarkers = array('function vmsSetNarrow()', 'function vmsPortalStripOpportunityTabs()', 'window.VMS_AV = window.VMS_AV || {};', 'var methods = document.querySelectorAll("details.vms-av-method");', 'var cookieName = "vms_av_open_ym";', 'document.querySelector(".vms-av-allvendors-wrap")');
+foreach ($obsoleteMarkers as $marker) {
+	$assert(strpos($vendorPortalSource, $marker) === false, 'Vendor Portal source should not retain obsolete migration-marker text: ' . $marker);
+}
+preg_match_all('~<script\b([^>]*)>(.*?)</script>~is', (string) $vendorPortalSource, $scriptMatches, PREG_SET_ORDER);
+$assert($scriptMatches !== array(), 'Vendor Portal source should still contain the scoped JSON config payload.');
+foreach ($scriptMatches as $scriptMatch) {
+	$attrs = (string) ($scriptMatch[1] ?? '');
+	$type = '';
+	if (preg_match('~type=["\']([^"\']+)["\']~i', $attrs, $typeMatch)) {
+		$type = strtolower(trim((string) ($typeMatch[1] ?? '')));
+	}
+	$assert($type === 'application/json', 'Vendor Portal source should not emit executable inline script tags.');
 }
 $assert(strpos($publicCalendarSource, "const ROOT_SELECTOR = '.vms-public-cal';") !== false, 'Public calendar asset should still target the active Vendor Portal calendar root.');
 $assert(strpos($publicCalendarSource, "const ENTRY_SELECTOR = '.vms-cal-entry';") !== false, 'Public calendar asset should still target the active Vendor Portal entry selector.');

@@ -4769,10 +4769,6 @@ function vms_vendor_portal_shortcode($atts = []): string
         $portal_classes .= ' vms-portal--mobile';
     }
     echo '<div id="vms-portal-root" class="' . esc_attr($portal_classes) . '">';
-    // Shell listeners migrated to assets/js/vms-vendor-portal.js:
-    // function vmsSetNarrow()
-    // function vmsPortalStripOpportunityTabs()
-    // document.querySelector(".vms-av-allvendors-wrap")
     echo '<div class="vms-portal-header">';
 
     // Vendor switcher (only shown when the user manages multiple vendors)
@@ -6200,15 +6196,6 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '<script type="application/json" id="' . esc_attr($autosave_config_id) . '" data-vms-portal-config="availability">' . $autosave_config_json . '</script>';
 
         echo '</div></details>'; // /Manual
-
-        // Manual availability autosave migrated to assets/js/vms-vendor-portal.js:
-        // window.VMS_AV = window.VMS_AV || {};
-        // var cfg = window.VMS_AV || {};
-        // action: "vms_save_manual_availability_day"
-        // window.addEventListener("beforeunload"
-        // Availability open-state listeners migrated to assets/js/vms-vendor-portal.js:
-        // var methods = document.querySelectorAll("details.vms-av-method");
-        // var cookieName = "vms_av_open_ym";
         echo '</div>'; // wrap
     }
 }
