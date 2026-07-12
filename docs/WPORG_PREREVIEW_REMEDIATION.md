@@ -1603,6 +1603,26 @@ Date: 2026-07-12
 ### Non-Actions
 - No deployment, push, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B2 Availability State Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B2`
+- Scope completed: the third B2 slice, externalizing the Vendor Portal availability open-state UI into the existing `assets/js/vms-vendor-portal.js` asset
+- Migrated in this slice: availability-method accordion restore/store behavior using the unchanged `vms_av_open_method` browser-state key, and individual availability month restore/store behavior using the unchanged `vms_av_open_ym` browser-state key
+- Non-behavioral confirmation: no network, database, preview-vendor, autosave, or availability-record persistence behavior changed in this slice
+- `B2` slices 1 and 2 remain completed by the result sections above
+- Remaining `B2` work: only the manual availability autosave controller and its safe configuration handoff
+- `B1` remains pending
+- `B3`, `B4`, and `B5` remain completed by the result sections below
+- `WPORG-22` remains open
+### What Changed
+- Removed only the two targeted executable inline availability open-state `<script>` blocks from `includes/portal/vendor-portal.php`.
+- Extended the existing `vms-vendor-portal` asset to restore/store the current availability method via `localStorage` and the current availability month via the existing cookie contract.
+- Preserved the existing `data-method`, `data-ym`, and `data-today-ym` markup and left the autosave controller plus its `window.VMS_AV` configuration in PHP for the final B2 slice.
+### Non-Actions
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B3 JS Result
 
 Date: 2026-07-11

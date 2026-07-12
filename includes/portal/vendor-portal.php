@@ -6186,45 +6186,11 @@ window.VMS_AV.previewNonce  = ' . wp_json_encode((string) (($is_preview && funct
 
         echo '</div></details>'; // /Manual
 
-        // JS: tap-to-toggle
+        // Availability open-state listeners migrated to assets/js/vms-vendor-portal.js:
+        // var methods = document.querySelectorAll("details.vms-av-method");
+        // var cookieName = "vms_av_open_ym";
     ?>
         <script>
-            (function() {
-                var methods = document.querySelectorAll("details.vms-av-method");
-                if (!methods.length) return;
-
-                function closeOthers(except) {
-                    methods.forEach(function(d) {
-                        if (d !== except) d.removeAttribute("open");
-                    });
-                }
-
-                methods.forEach(function(d) {
-                    d.addEventListener("toggle", function() {
-                        if (d.open) {
-                            closeOthers(d);
-                            var key = d.getAttribute("data-method");
-                            if (key) localStorage.setItem("vms_av_open_method", key);
-                        }
-                    });
-                });
-
-                // Restore last open
-                var last = localStorage.getItem("vms_av_open_method");
-                var target = last ? document.querySelector('details.vms-av-method[data-method="' + last + '"]') : null;
-                if (target) {
-                    target.setAttribute("open", "open");
-                    closeOthers(target);
-                } else {
-                    // default
-                    var def = document.querySelector('details.vms-av-method[data-method="manual"]');
-                    if (def) {
-                        def.setAttribute("open", "open");
-                        closeOthers(def);
-                    }
-                }
-            })();
-
             (function() {
                 document.documentElement.classList.add("vms-js");
 
@@ -6444,90 +6410,6 @@ function ariaFor(state, src) {
                 
 
 
-            })();
-        </script>
-
-        <script>
-            (function() {
-                var root = document.getElementById("vms-av");
-                if (!root) return;
-
-                var cookieName = "vms_av_open_ym";
-                var todayYm = root.getAttribute("data-today-ym") || "";
-
-                var monthEls = Array.prototype.slice.call(root.querySelectorAll(".vms-av-month[data-ym]"));
-                if (!monthEls.length) return;
-
-                function getCookie(name) {
-                    var parts = document.cookie.split(";").map(function(c) {
-                        return c.trim();
-                    });
-                    for (var i = 0; i < parts.length; i++) {
-                        if (parts[i].indexOf(name + "=") === 0) return decodeURIComponent(parts[i].slice(name.length + 1));
-                    }
-                    return "";
-                }
-
-                function setCookie(name, value, days) {
-                    var maxAge = (days || 30) * 24 * 60 * 60;
-                    document.cookie = name + "=" + encodeURIComponent(value) + "; path=/; max-age=" + maxAge + "; samesite=lax";
-                }
-
-                var byYm = new Map();
-                monthEls.forEach(function(m) {
-                    var ym = m.getAttribute("data-ym") || "";
-                    var details = m.querySelector("details");
-                    var summary = details ? details.querySelector("summary") : null;
-                    if (ym && details && summary) byYm.set(ym, {
-                        details: details,
-                        summary: summary
-                    });
-                });
-
-                function firstYm() {
-                    for (var k of byYm.keys()) return k;
-                    return "";
-                }
-
-                var preferredYm = getCookie(cookieName);
-                var openYm =
-                    (preferredYm && byYm.has(preferredYm)) ? preferredYm :
-                    (todayYm && byYm.has(todayYm)) ? todayYm :
-                    firstYm();
-
-                var currentOpenYm = "";
-
-                function openOnly(ym) {
-                    if (!ym || !byYm.has(ym)) return;
-
-                    currentOpenYm = ym;
-
-                    byYm.forEach(function(obj, key) {
-                        obj.details.open = (key === ym);
-                    });
-
-                    setCookie(cookieName, ym, 30);
-                }
-
-                // Initial state
-                openOnly(openYm);
-
-                // Switch months via summary click (prevents “twitch” from toggle loops)
-                byYm.forEach(function(obj, ym) {
-                    obj.summary.addEventListener("click", function(e) {
-                        e.preventDefault();
-                        if (currentOpenYm === ym) return;
-                        openOnly(ym);
-                        try {
-                            obj.summary.scrollIntoView({
-                                block: "start",
-                                behavior: "smooth"
-                            });
-                        } catch (err) {
-                            // no-op
-                        }
-                    });
-                });
             })();
         </script>
 
