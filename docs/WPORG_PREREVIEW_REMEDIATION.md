@@ -1632,6 +1632,31 @@ Date: 2026-07-12
 ### Non-Actions
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B1 Generic Scroll Helper Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B1`
+- Scope completed: only the next B1 slice, moving the generic server-requested Event Plan `_vms_admin_scroll_to` helper from `includes/cpt/event-plans.php` into the new `assets/js/vms-event-plan-shell.js` asset
+- Non-executable handoff: the Event Plan shell now exposes the existing target element ID only through `data-vms-scroll-target` on the stable `.vms-ep-basic-grid` wrapper when a server scroll target is present
+- Behavior retained: the migrated shell helper still performs only a deferred `document.getElementById()` lookup followed by `scrollIntoView({ behavior: 'smooth', block: 'start' })` after `150ms`; it does not focus, save, fetch, mutate history/storage, or submit forms
+- Enqueue scope: the new `vms-event-plan-shell.js` asset is enqueued only on `post.php` and `post-new.php` screens for the `vms_event_plan` post type through the existing Event Plan admin asset loader in `includes/admin-ui/assets.php`
+- Separation of concerns: the previously migrated ticketing-focus helper remains separately owned by `assets/admin-ticketing.js` and was not changed in this slice
+- Remaining shell scope: the larger Event Plan shell controller, section-reopen handling, dirty-state logic, and lazy-load orchestration remain inline and pending for later B1 slices
+- Tests added: `php tests/event-plan-generic-scroll-inline-js-remediation.php`
+- Validation run: `php tests/event-plan-ticketing-focus-inline-js-remediation.php`, `php tests/event-plan-module-reopen-and-market-layout.php`, `php tests/event-plan-editor-vendor-preservation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
+- All remaining `B1` live inline blocks remain pending
+- `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
+- `WPORG-22` remains open
+- Known `WPORG-27` test exceptions remain unchanged
+### What Changed
+- Removed only the passive inline `_vms_admin_scroll_to` `<script>` block from `includes/cpt/event-plans.php`.
+- Added one escaped non-executable `data-vms-scroll-target` marker to the existing Event Plan basic-grid wrapper when a server-selected target is present.
+- Added the new `assets/js/vms-event-plan-shell.js` asset and enqueued it only on Event Plan edit/new screens through `includes/admin-ui/assets.php`.
+- Added a focused source-level regression test that proves the inline helper is gone, the server target contract remains, the new shell asset owns the generic scroll behavior, and `admin-ticketing.js` still owns ticketing focus separately.
+### Non-Actions
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B2 Modal Result
 Date: 2026-07-12
 ### Summary

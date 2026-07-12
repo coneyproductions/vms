@@ -4725,6 +4725,7 @@ class VMS_Admin_Event_Plans
         }
         wp_nonce_field('vms_save_event_plan_details', 'vms_event_plan_details_nonce');
         echo '<input type="hidden" name="vms_reopen_section_after_save" id="vms-reopen-section-after-save" value="" />';
+        $scroll_to = (string) get_post_meta($post->ID, '_vms_admin_scroll_to', true);
 
         // ----------------------------
         // Load core meta
@@ -5522,7 +5523,7 @@ class VMS_Admin_Event_Plans
             }
         ?>
 
-        <div class="vms-ep-basic-grid">
+        <div class="vms-ep-basic-grid"<?php echo $scroll_to !== '' ? ' data-vms-scroll-target="' . esc_attr($scroll_to) . '"' : ''; ?>>
         <p class="vms-ep-basic-item">
             <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>" />
@@ -8829,24 +8830,16 @@ class VMS_Admin_Event_Plans
     </script>
 
     <?php
-	        // Scroll helper (optional)
-	        $scroll_to = (string) get_post_meta($post->ID, '_vms_admin_scroll_to', true);
-	        if ($scroll_to) {
-	            delete_post_meta($post->ID, '_vms_admin_scroll_to');
-	    ?>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const el = document.getElementById('<?php echo esc_js($scroll_to); ?>');
-                if (!el) return;
-                setTimeout(() => el.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-	                }), 150);
-	            });
-	        </script>
-	    <?php
-	        }
-	        } finally {
+        // Scroll helper (optional)
+        if ($scroll_to) {
+            delete_post_meta($post->ID, '_vms_admin_scroll_to');
+            /*
+             * Generic scroll helper migrated to vms-event-plan-shell.js:
+             * const el = document.getElementById('<?php echo esc_js($scroll_to); ?>');
+             * setTimeout(() => el.scrollIntoView({
+             */
+        }
+    } finally {
             if (function_exists('vms_event_plan_perf_memory_checkpoint')) {
                 vms_event_plan_perf_memory_checkpoint((int) $post->ID, 'details_meta_box_after', array(
                     'section' => 'meta_box_render',
