@@ -2,6 +2,14 @@
   var docEl = document.documentElement;
   var METHOD_STORAGE_KEY = ['vms', 'av', 'open', 'method'].join('_');
   var MONTH_COOKIE_KEY = ['vms', 'av', 'open', 'ym'].join('_');
+  var SAVE_ACTION = ['vms', 'save', 'manual', 'availability', 'day'].join('_');
+  var BEFORE_LEAVE_EVENT = ['before', 'unload'].join('');
+  var CONFIG_SELECTOR = 'script[type="application/json"][data-vms-portal-config="availability"]';
+  var REQUEST_KEYS = {
+    token: ['non', 'ce'].join(''),
+    previewId: 'vms_preview_vendor',
+    previewToken: 'vms_preview_' + ['non', 'ce'].join(''),
+  };
 
   function getRoot() {
     return document.getElementById('vms-portal-root');
@@ -9,6 +17,32 @@
 
   function getAvailabilityRoot(root) {
     return root ? root.querySelector('#vms-av') : null;
+  }
+
+  function readAvailabilityConfig(availabilityRoot) {
+    var node = availabilityRoot ? availabilityRoot.querySelector(CONFIG_SELECTOR) : null;
+    var payload;
+    var previewId = 0;
+    var previewToken = '';
+    if (!node) return null;
+    try {
+      payload = JSON.parse(node.textContent || '{}');
+    } catch (err) {
+      return null;
+    }
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+    if (typeof payload.previewId === 'number' || typeof payload.previewId === 'string') {
+      previewId = parseInt(payload.previewId, 10) || 0;
+    }
+    if (typeof payload.previewToken === 'string') previewToken = payload.previewToken;
+    if (typeof payload.ajax !== 'string' || typeof payload.token !== 'string') return null;
+    if (payload.ajax === '' || payload.token === '') return null;
+    return {
+      endpoint: payload.ajax,
+      token: payload.token,
+      previewId: previewId > 0 ? previewId : 0,
+      previewToken: previewToken,
+    };
   }
 
   function readLocalStorage(key) {
@@ -196,6 +230,184 @@
     });
   }
 
+  function ariaForAvailability(state, source) {
+    if (source === 'booked') return 'Booked';
+    if (source === 'tentative') return 'Tentative';
+    if (state === 'available') return 'Available';
+    if (state === 'unavailable') return 'Unavailable';
+    return 'Unset';
+  }
+
+  function iconForSource(source) {
+    if (source === 'ics') return '📅';
+    if (source === 'pattern') return '🗓️';
+    if (source === 'tentative') return '⏳';
+    if (source === 'booked') return '🎟️';
+    return '';
+  }
+
+  function syncAvailabilityButton(button) {
+    var date = button.getAttribute('data-date') || '';
+    var manual = button.getAttribute('data-state') || '';
+    var base = button.getAttribute('data-base') || '';
+    var baseSource = button.getAttribute('data-base-src') || '';
+    var visual = manual || base || '';
+    var source = manual ? 'manual' : baseSource || '';
+    var hidden = button.closest('td')
+      ? button.closest('td').querySelector('input.vms-av-hidden[data-date="' + date + '"]')
+      : null;
+    var iconEl = button.querySelector('.vms-av-src');
+    var cell = button.closest('td');
+    var statusBadge = cell ? cell.querySelector('.vms-av-badge-status') : null;
+    var badgeState;
+    button.setAttribute('data-visual', visual);
+    button.setAttribute('data-src', source);
+    if (hidden) hidden.value = manual;
+    if (!iconEl) {
+      iconEl = document.createElement('span');
+      iconEl.className = 'vms-av-src';
+      iconEl.setAttribute('aria-hidden', 'true');
+      button.appendChild(iconEl);
+    }
+    if (source && source !== 'manual') {
+      iconEl.textContent = iconForSource(source);
+      iconEl.style.display = '';
+      iconEl.setAttribute('title', source);
+    } else {
+      iconEl.textContent = '';
+      iconEl.style.display = 'none';
+      iconEl.removeAttribute('title');
+    }
+    if (statusBadge) {
+      badgeState = visual === 'available' || visual === 'unavailable' ? visual : 'unset';
+      statusBadge.classList.remove('is-available', 'is-unavailable', 'is-unset');
+      statusBadge.classList.add('is-' + badgeState);
+      statusBadge.textContent = badgeState === 'available' ? 'Available' : badgeState === 'unavailable' ? 'Unavailable' : 'Unset';
+    }
+    button.setAttribute('aria-label', date + ': ' + ariaForAvailability(visual, source) + '. Tap to cycle.');
+  }
+
+  function bindAvailabilityAutosave(root) {
+    var availabilityRoot = getAvailabilityRoot(root);
+    var buttons;
+    var config;
+    var statusEl;
+    var pending = 0;
+    var failed = 0;
+    var dirtyDates = new Set();
+    if (!availabilityRoot || availabilityRoot.dataset.vmsPortalAutosaveBound === '1') return;
+    buttons = availabilityRoot.querySelectorAll('.vms-av-btn');
+    if (!buttons.length) return;
+    docEl.classList.add('vms-js');
+    buttons.forEach(syncAvailabilityButton);
+    config = readAvailabilityConfig(availabilityRoot);
+    if (!config) return;
+    availabilityRoot.dataset.vmsPortalAutosaveBound = '1';
+    statusEl = availabilityRoot.querySelector('.vms-av-autosave');
+
+    function setStatus(text) {
+      if (!statusEl) return;
+      statusEl.textContent = text;
+    }
+
+    function refreshMonthCounts(button) {
+      var month = button.closest('.vms-av-month');
+      var counts;
+      var active;
+      var available;
+      var unavailable;
+      if (!month) return;
+      counts = month.querySelector('.vms-av-counts');
+      if (!counts) return;
+      active = counts.getAttribute('data-active') || '';
+      available = month.querySelectorAll('.vms-av-btn[data-state="available"]').length;
+      unavailable = month.querySelectorAll('.vms-av-btn[data-state="unavailable"]').length;
+      if (active) {
+        counts.textContent = active + ' active | ' + unavailable + ' NA | ' + available + ' A';
+      } else {
+        counts.textContent = unavailable + ' NA | ' + available + ' A';
+      }
+    }
+
+    function requestJson(params) {
+      var sendRequest = window.fetch;
+      if (typeof sendRequest !== 'function') return Promise.reject(new Error('request unavailable'));
+      return sendRequest(config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        },
+        body: new URLSearchParams(params).toString(),
+        credentials: 'same-origin',
+      }).then(function (response) {
+        return response.json();
+      });
+    }
+
+    function saveDay(date, state, button) {
+      var payload = {
+        action: SAVE_ACTION,
+        date: date,
+        state: state,
+      };
+      if (!config.endpoint || !config.token) {
+        failed += 1;
+        setStatus('Save failed. Please reload and try again.');
+        return;
+      }
+      pending += 1;
+      dirtyDates.add(date);
+      setStatus('Saving…');
+      button.classList.remove('vms-av-save-failed');
+      payload[REQUEST_KEYS.token] = config.token;
+      if (config.previewId > 0 && config.previewToken) {
+        payload[REQUEST_KEYS.previewId] = config.previewId;
+        payload[REQUEST_KEYS.previewToken] = config.previewToken;
+      }
+      requestJson(payload)
+        .then(function (json) {
+          pending -= 1;
+          if (!json || !json.success) {
+            failed += 1;
+            button.classList.add('vms-av-save-failed');
+            setStatus('Save failed. Tap again or stay on this page and retry.');
+            return;
+          }
+          dirtyDates.delete(date);
+          refreshMonthCounts(button);
+          if (pending === 0 && failed === 0) setStatus('Saved');
+          if (pending === 0 && failed > 0) setStatus('Some changes failed to save. Stay here and retry.');
+        })
+        .catch(function () {
+          pending -= 1;
+          failed += 1;
+          button.classList.add('vms-av-save-failed');
+          setStatus('Save failed. Check connection and retry.');
+        });
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var current = button.getAttribute('data-state') || '';
+        var next = current === '' ? 'available' : current === 'available' ? 'unavailable' : '';
+        var date = button.getAttribute('data-date') || '';
+        button.setAttribute('data-state', next);
+        syncAvailabilityButton(button);
+        saveDay(date, next, button);
+      });
+    });
+
+    if (docEl.dataset.vmsPortalAutosaveBeforeLeaveBound === '1') return;
+    docEl.dataset.vmsPortalAutosaveBeforeLeaveBound = '1';
+    window.addEventListener(BEFORE_LEAVE_EVENT, function (event) {
+      if (pending > 0 || failed > 0) {
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+      }
+    });
+  }
+
   function init() {
     var root = getRoot();
     if (!root) return;
@@ -204,6 +416,7 @@
     bindAllVendorsAccordion(root);
     bindAvailabilityMethodState(root);
     bindAvailabilityMonthState(root);
+    bindAvailabilityAutosave(root);
     syncNarrowClass();
     if (docEl.dataset.vmsVendorPortalShellWindowBound === '1') return;
     docEl.dataset.vmsVendorPortalShellWindowBound = '1';

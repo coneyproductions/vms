@@ -1603,6 +1603,31 @@ Date: 2026-07-12
 ### Non-Actions
 - No deployment, push, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B2 Autosave Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B2`
+- Scope completed: the final B2 slice, externalizing the Vendor Portal manual availability autosave controller into the existing `assets/js/vms-vendor-portal.js` asset
+- Executable configuration removed: `window.VMS_AV` no longer renders from `includes/portal/vendor-portal.php`
+- Non-executable configuration handoff: scoped `<script type="application/json" data-vms-portal-config="availability">...</script>` payload rendered beside the individual availability UI
+- Configuration fields included: AJAX endpoint, availability nonce, preview vendor id, and preview nonce
+- Non-behavioral confirmation: the AJAX endpoint, request action, and server-side handler remained unchanged
+- Preserved behavior: preview-vendor mode, pending-save tracking, status messaging, icon updates, per-day accessibility labels, month count recomputation, failure-state handling, and the existing leave-page warning condition
+- Tests added and run: `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/vendor-portal-availability-autosave-ajax.php`, plus the previously completed B2 focused tests and `php tests/vendor-availability-ux.php`
+- `B2` slices 1 through 3 remain completed by the earlier result sections above
+- `B2` is now fully completed
+- `B3`, `B4`, and `B5` remain completed by the result sections below
+- `B1` is the only remaining `WPORG-22` item
+- `WPORG-22` remains open until `B1` is complete
+### What Changed
+- Removed the executable Vendor Portal autosave inline script from `includes/portal/vendor-portal.php`.
+- Replaced the executable autosave global bootstrap with a narrowly scoped JSON payload consumed only by the external Vendor Portal asset.
+- Extended `vms-vendor-portal.js` to own the manual availability autosave controller while preserving the existing button, hidden-input, icon, badge, count, preview, and warning contracts.
+- Left the existing AJAX handler, nonce action, request fields, preview authorization flow, and availability record persistence path unchanged.
+### Non-Actions
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B2 Availability State Result
 Date: 2026-07-12
 ### Summary

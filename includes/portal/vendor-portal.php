@@ -6175,245 +6175,40 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '</form>';
 
         $avail_ajax_nonce = wp_create_nonce('vms_avail_ajax');
+        $preview_vendor_id = function_exists('vms_vendor_portal_get_preview_vendor_id')
+            ? (int) vms_vendor_portal_get_preview_vendor_id()
+            : 0;
+        $preview_query_args = ($preview_vendor_id > 0 && function_exists('vms_vendor_portal_get_preview_query_args'))
+            ? (array) vms_vendor_portal_get_preview_query_args((int) $preview_vendor_id)
+            : array();
+        $autosave_config = array(
+            'ajax' => (string) admin_url('admin-ajax.php'),
+            'token' => (string) $avail_ajax_nonce,
+            'previewId' => (int) $preview_vendor_id,
+            'previewToken' => $preview_vendor_id > 0
+                ? (string) ($preview_query_args['vms_preview_nonce'] ?? '')
+                : '',
+        );
+        $autosave_config_id = function_exists('wp_unique_id')
+            ? wp_unique_id('vms-vendor-portal-config-')
+            : uniqid('vms-vendor-portal-config-', false);
+        $autosave_config_json = wp_json_encode($autosave_config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        if (!is_string($autosave_config_json) || $autosave_config_json === '') {
+            $autosave_config_json = '{}';
+        }
         echo '<div class="vms-av-autosave" aria-live="polite"></div>';
-        echo '<script>
-window.VMS_AV = window.VMS_AV || {};
-window.VMS_AV.ajaxUrl = ' . wp_json_encode(admin_url('admin-ajax.php')) . ';
-window.VMS_AV.nonce   = ' . wp_json_encode($avail_ajax_nonce) . ';
-window.VMS_AV.previewVendor = ' . wp_json_encode((int) (function_exists('vms_vendor_portal_get_preview_vendor_id') ? vms_vendor_portal_get_preview_vendor_id() : 0)) . ';
-window.VMS_AV.previewNonce  = ' . wp_json_encode((string) (($is_preview && function_exists('vms_vendor_portal_get_preview_query_args')) ? ((vms_vendor_portal_get_preview_query_args((int) $vendor_id)['vms_preview_nonce'] ?? '')) : '')) . ';
-</script>';
+        echo '<script type="application/json" id="' . esc_attr($autosave_config_id) . '" data-vms-portal-config="availability">' . $autosave_config_json . '</script>';
 
         echo '</div></details>'; // /Manual
 
+        // Manual availability autosave migrated to assets/js/vms-vendor-portal.js:
+        // window.VMS_AV = window.VMS_AV || {};
+        // var cfg = window.VMS_AV || {};
+        // action: "vms_save_manual_availability_day"
+        // window.addEventListener("beforeunload"
         // Availability open-state listeners migrated to assets/js/vms-vendor-portal.js:
         // var methods = document.querySelectorAll("details.vms-av-method");
         // var cookieName = "vms_av_open_ym";
-    ?>
-        <script>
-            (function() {
-                document.documentElement.classList.add("vms-js");
-
-                var cfg = window.VMS_AV || {};
-                var ajaxUrl = cfg.ajaxUrl || "";
-                var nonce = cfg.nonce || "";
-                var previewVendor = parseInt(cfg.previewVendor || 0, 10) || 0;
-                var previewNonce = cfg.previewNonce || "";
-
-                var statusEl = document.querySelector(".vms-av-autosave");
-
-                var pending = 0;
-                var failed = 0;
-                var dirtyDates = new Set();
-
-                function labelFor(state, src) {
-                    if (src === "booked") return "Booked";
-                    if (src === "tentative") return "Tentative";
-                    if (typeof isCompact === "function" && isCompact()) {
-                        if (state === "available") return "A";
-                        if (state === "unavailable") return "NA";
-                        return "-";
-                    }
-                    if (state === "available") return "Available";
-                    if (state === "unavailable") return "Unavailable";
-                    return "Unset";
-                }
-
-function ariaFor(state, src) {
-                    if (src === "booked") return "Booked";
-                    if (src === "tentative") return "Tentative";
-                    if (state === "available") return "Available";
-                    if (state === "unavailable") return "Unavailable";
-                    return "Unset";
-                }
-
-                function isCompact() {
-                    return window.matchMedia && window.matchMedia("(max-width:520px)").matches;
-                }
-
-                function setStatus(text) {
-                    if (!statusEl) return;
-                    statusEl.textContent = text;
-                }
-
-                function updateMonthCounts(btn) {
-                    var month = btn.closest(".vms-av-month");
-                    if (!month) return;
-
-                    var a = month.querySelectorAll('.vms-av-btn[data-state="available"]').length;
-                    var na = month.querySelectorAll('.vms-av-btn[data-state="unavailable"]').length;
-
-                    var counts = month.querySelector(".vms-av-counts");
-                    if (!counts) return;
-
-                    var active = counts.getAttribute("data-active") || "";
-                    if (active) {
-                        counts.textContent = active + " active | " + na + " NA | " + a + " A";
-                    } else {
-                        counts.textContent = na + " NA | " + a + " A";
-                    }
-                }
-
-                function iconFor(src) {
-                    if (src === "ics") return "📅";
-                    if (src === "pattern") return "🗓️";
-                    if (src === "tentative") return "⏳";
-                    if (src === "booked") return "🎟️";
-                    return "";
-                }
-
-                function sync(btn) {
-                    var date = btn.getAttribute("data-date");
-                    var manual = btn.getAttribute("data-state") || "";
-                    var base = btn.getAttribute("data-base") || "";
-                    var baseSrc = btn.getAttribute("data-base-src") || "";
-
-                    var visual = manual || base || "";
-                    var src = manual ? "manual" : (baseSrc || "");
-
-                    btn.setAttribute("data-visual", visual);
-                    btn.setAttribute("data-src", src);
-
-                    var hidden = btn.closest("td") ?
-                        btn.closest("td").querySelector('input.vms-av-hidden[data-date="' + date + '"]') :
-                        null;
-                    if (hidden) hidden.value = manual;
-
-                    // Icon: only show when NOT manual
-                    var iconEl = btn.querySelector(".vms-av-src");
-                    if (!iconEl) {
-                        // If PHP didn’t render it, create it once so JS can manage it
-                        iconEl = document.createElement("span");
-                        iconEl.className = "vms-av-src";
-                        iconEl.setAttribute("aria-hidden", "true");
-                        btn.appendChild(iconEl);
-                    }
-
-                    if (src && src !== "manual") {
-                        iconEl.textContent = iconFor(src);
-                        iconEl.style.display = "";
-                        iconEl.setAttribute("title", src);
-                    } else {
-                        iconEl.textContent = "";
-                        iconEl.style.display = "none";
-                        iconEl.removeAttribute("title");
-                    }
-
-                    // Status badge in the cell header row.
-                    var cell = btn.closest("td");
-                    var statusBadge = cell ? cell.querySelector(".vms-av-badge-status") : null;
-                    if (statusBadge) {
-                        var badgeState = (visual === "available" || visual === "unavailable") ? visual : "unset";
-                        statusBadge.classList.remove("is-available", "is-unavailable", "is-unset");
-                        statusBadge.classList.add("is-" + badgeState);
-                        statusBadge.textContent = (badgeState === "available")
-                            ? "Available"
-                            : ((badgeState === "unavailable") ? "Unavailable" : "Unset");
-                    }
-
-                    btn.setAttribute("aria-label", date + ": " + ariaFor(visual, src) + ". Tap to cycle.");
-
-                }
-
-                function post(params) {
-                    return fetch(ajaxUrl, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-                        },
-                        body: new URLSearchParams(params).toString(),
-                        credentials: "same-origin"
-                    }).then(function(r) {
-                        return r.json();
-                    });
-                }
-
-                function saveDay(date, state, btn) {
-                    if (!ajaxUrl || !nonce) {
-                        failed += 1;
-                        setStatus("Save failed. Please reload and try again.");
-                        return;
-                    }
-
-                    pending += 1;
-                    dirtyDates.add(date);
-                    setStatus("Saving…");
-
-                    btn.classList.remove("vms-av-save-failed");
-
-                    var payload = {
-                            action: "vms_save_manual_availability_day",
-                            nonce: nonce,
-                            date: date,
-                            state: state
-                        };
-
-                    if (previewVendor > 0 && previewNonce) {
-                        payload.vms_preview_vendor = previewVendor;
-                        payload.vms_preview_nonce = previewNonce;
-                    }
-
-                    post(payload)
-                        .then(function(json) {
-                            pending -= 1;
-
-                            if (!json || !json.success) {
-                                failed += 1;
-                                btn.classList.add("vms-av-save-failed");
-                                setStatus("Save failed. Tap again or stay on this page and retry.");
-                                return;
-                            }
-
-                            dirtyDates.delete(date);
-                            updateMonthCounts(btn);
-
-                            if (pending === 0 && failed === 0) setStatus("Saved");
-                            if (pending === 0 && failed > 0) setStatus("Some changes failed to save. Stay here and retry.");
-                        })
-                        .catch(function() {
-                            pending -= 1;
-                            failed += 1;
-                            btn.classList.add("vms-av-save-failed");
-                            setStatus("Save failed. Check connection and retry.");
-                        });
-                }
-
-                window.addEventListener("beforeunload", function(e) {
-                    if (pending > 0 || failed > 0) {
-                        e.preventDefault();
-                        e.returnValue = "";
-                        return "";
-                    }
-                });
-
-                function cycle(state) {
-                    if (state === "") return "available";
-                    if (state === "available") return "unavailable";
-                    return "";
-                }
-
-                document.querySelectorAll(".vms-av-btn").forEach(function(btn) {
-                    sync(btn);
-
-                    btn.addEventListener("click", function() {
-                        var cur = btn.getAttribute("data-state") || "";
-                        var next = cycle(cur);
-                        var date = btn.getAttribute("data-date");
-
-                        btn.setAttribute("data-state", next);
-                        sync(btn);
-
-                        saveDay(date, next, btn);
-                    });
-                });
-
-                
-
-
-            })();
-        </script>
-
-<?php
         echo '</div>'; // wrap
     }
 }
