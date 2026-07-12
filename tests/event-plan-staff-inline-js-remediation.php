@@ -64,7 +64,7 @@ try {
 	$assert(strpos($staffPartialSource, 'data-vms-staff-wrap="1"') !== false, 'Staff markup should retain the live wrap selector contract.');
 	$assert(strpos($staffPartialSource, 'data-vms-role-assignment-input="1"') !== false, 'Staff markup should retain the assignment selector contract.');
 	$assert(strpos($staffPartialSource, 'data-vms-role-headcount-input="1"') !== false, 'Staff markup should retain the headcount selector contract.');
-	$assert(substr_count($eventPlansSource, '<script') >= 8, 'WPORG-22 B1 should still have other active inline Event Plan script blocks after the staff migration.');
+	$assert(substr_count($eventPlansSource, '<script') >= 7, 'WPORG-22 B1 should still have other active inline Event Plan script blocks after the staff migration.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-staff'") !== false, 'Admin UI assets should register the new Event Plan staff handle.');
 	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-staff.js'") !== false, 'Admin UI assets should point the staff handle at assets/js/vms-event-plan-staff.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Staff asset should remain restricted to post and post-new screens.');

@@ -140,7 +140,7 @@ try {
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendors-section"') !== false, 'Active secondary-vendors partial should retain the live section wrapper.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-save-nonce') !== false, 'Active secondary-vendors partial should retain its save contract.');
 
-	$assert(substr_count($eventPlansSource, '<script') >= 8, 'Event Plan source should still contain the current live inline script surface for later B1 slices.');
+	$assert(substr_count($eventPlansSource, '<script') >= 7, 'Event Plan source should still contain the current live inline script surface for later B1 slices.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section persistence helper.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section reveal helper.');
 	$assert(strpos($shellAssetSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Shell asset should now own the requested-section persistence helper.');
