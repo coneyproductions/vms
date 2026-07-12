@@ -1561,6 +1561,28 @@ Date: 2026-07-11
 
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B1 Dead Partial Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B1`
+- Scope completed: only the first B1 slice, deleting the unreferenced Event Plan `includes/cpt/event-plans/partials/editor-scripts.php` partial
+- Reachability proof: checked direct includes, `capture_event_plan_partial()` callers, the generic partial-path helper, lazy AJAX section mapping, hook/filter entry points, tests, and current package/build references; no active first-party runtime caller was found
+- Deleted file characteristics: approximately `1,835` lines of stale scanner-visible inline executable JavaScript, including obsolete selectors and older workflow contracts that no longer match the live Event Plan editor
+- Live runtime retained: `includes/cpt/event-plans.php` and active partials continue to own the current Event Plan inline controllers; no script was moved or rewritten in this slice
+- Tests added: `php tests/event-plan-dead-editor-scripts-partial-removal.php`
+- Validation run: `php tests/event-plan-module-reopen-and-market-layout.php`, `php tests/event-plan-editor-vendor-preservation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
+- Remaining `B1` work: all live Event Plan inline blocks in `includes/cpt/event-plans.php` and active partials remain pending
+- `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
+- `WPORG-22` remains open
+- The known legacy ticketing smoke-test failure remains a documented pre-existing `WPORG-27` AJAX capture-test issue, not a new B1 regression
+### What Changed
+- Deleted only the dead `includes/cpt/event-plans/partials/editor-scripts.php` partial.
+- Added a focused source-level regression test that proves the partial is absent, no runtime PHP or active partial inventory still references it, the live Event Plan script surface remains in `includes/cpt/event-plans.php`, the existing module assets/enqueue paths remain unchanged, and the Secondary Vendors `application/json` payload is still present.
+- Left `includes/cpt/event-plans.php`, all active Event Plan partials, and all Event Plan assets unchanged in this slice.
+### Non-Actions
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B2 Modal Result
 Date: 2026-07-12
 ### Summary
