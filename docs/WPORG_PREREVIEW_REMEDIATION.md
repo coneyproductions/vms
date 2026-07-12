@@ -571,7 +571,7 @@ Recommended follow-up order, keeping each pass narrow:
 7. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
-   - `B5` is completed by the Ticket Integrity CSS sub-pass below; `B1` / `B2` / `B3` / `B4` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
+   - `B5` is completed by the Ticket Integrity CSS sub-pass below, and the executable Vendor Applications JavaScript portion of `B3` is completed by the Vendor Applications sub-pass below; `B1` / `B2` / `B4` plus the inline CSS portion of `B3` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
 8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
@@ -1556,6 +1556,31 @@ Date: 2026-07-11
 - Removed the Ticket Integrity menu-badge inline `<style>` emitter from `includes/admin/ticket-integrity-page.php`.
 - Moved the static `#adminmenu .vms-ticket-integrity-alert-badge` rules into `assets/css/admin-ticket-integrity.css`.
 - Kept the existing badge/no-badge decision logic intact and broadened only the stylesheet enqueue condition so the badge CSS is available on admin screens where the badge markup can render.
+
+### Non-Actions
+
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
+## WPORG-22 B3 JS Result
+
+Date: 2026-07-11
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `B3`
+- Vendor Applications renderer: `vms_vendor_apply_shortcode()` in `includes/vendor-applications.php`
+- External asset used: `assets/js/vms-vendor-apply.js`
+- Configuration handoff: page-local `<script type="application/json" id="vms-vendor-apply-variant-map">`
+- Tests added: `php tests/vendor-apply-inline-js-remediation.php`
+- `B5` remains completed by the Ticket Integrity CSS sub-pass above
+- Remaining `WPORG-22` work: `B1`, `B2`, `B4`, and the inline CSS portion of `B3` remain pending, so `WPORG-22` stays open
+
+### What Changed
+
+- Removed the executable inline Vendor Applications form script from `includes/vendor-applications.php`.
+- Enqueued `vms-vendor-apply` only when the public Vendor Applications form renders.
+- Preserved the existing vendor-type, label, social-field, concession-field, and band-required toggle behavior by moving the same logic into the external asset and feeding only the form-variant map through a non-executable JSON payload.
 
 ### Non-Actions
 

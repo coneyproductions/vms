@@ -2388,10 +2388,26 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
         }
     }
 
+    if (function_exists('wp_enqueue_script')) {
+        $apply_script_src = function_exists('vms_asset_url')
+            ? vms_asset_url('assets/js/vms-vendor-apply.js')
+            : VMS_PLUGIN_URL . 'assets/js/vms-vendor-apply.js';
+        $apply_script_ver = function_exists('vms_asset_version_for')
+            ? vms_asset_version_for('assets/js/vms-vendor-apply.js')
+            : (function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''));
+        wp_enqueue_script('vms-vendor-apply', $apply_script_src, array(), $apply_script_ver, true);
+    }
+
+    $variant_map_json = wp_json_encode(vms_vendor_app_form_variant_map());
+    if (!is_string($variant_map_json) || $variant_map_json === '') {
+        $variant_map_json = '{}';
+    }
+
     ob_start();
     echo '<div class="vms-vendor-apply-flow">';
     echo $msg;
     ?>
+    <script type="application/json" id="vms-vendor-apply-variant-map"><?php echo $variant_map_json; ?></script>
     <form method="post" class="vms-vendor-apply-form">
         <?php wp_nonce_field('vms_vendor_apply', 'vms_vendor_apply_nonce'); ?>
 
@@ -2524,89 +2540,6 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
                 Submit Application
             </button>
         </p>
-
-        <script>
-            (function() {
-                var sel = document.getElementById('vms-app-vendor-type');
-                if (!sel) return;
-
-                var variantMap = <?php echo wp_json_encode(vms_vendor_app_form_variant_map()); ?> || {};
-                var bandSections = document.querySelectorAll('.vms-app-band');
-                var concessionSections = document.querySelectorAll('.vms-app-concession');
-                var socialGroup = document.getElementById('vms-app-social-group');
-                var socialHeading = document.getElementById('vms-app-social-heading');
-                var nameLabel = document.getElementById('vms-app-name-label');
-                var websiteLabel = document.getElementById('vms-app-website-label');
-                var concessionLabel = document.getElementById('vms-app-concession-label');
-                var concessionInput = document.getElementById('vms-app-concession-input');
-                var concessionMenuLabel = document.getElementById('vms-app-concession-menu-label');
-                var socialFields = document.querySelectorAll('.vms-app-social-field');
-
-                function setGroupState(elements, visible) {
-                    elements.forEach(function(el) {
-                        el.hidden = !visible;
-                        el.querySelectorAll('input, select, textarea').forEach(function(field) {
-                            field.disabled = !visible;
-                            if (!visible) {
-                                field.required = false;
-                            }
-                        });
-                    });
-                }
-
-                function toggle() {
-                    var v = sel.value;
-                    var config = variantMap[v] || variantMap.default || {};
-                    var visibleSocials = Array.isArray(config.visible_socials) ? config.visible_socials : [];
-                    var socialCount = 0;
-
-                    if (nameLabel) {
-                        nameLabel.textContent = config.name_label || 'Business / Vendor Name';
-                    }
-                    if (websiteLabel) {
-                        websiteLabel.textContent = config.website_label || 'Website URL (optional)';
-                    }
-                    if (socialHeading) {
-                        socialHeading.textContent = config.social_heading || 'Social links (optional)';
-                    }
-                    if (concessionLabel) {
-                        concessionLabel.textContent = config.concession_label || 'Cuisine / Food Type';
-                    }
-                    if (concessionInput) {
-                        concessionInput.placeholder = config.concession_placeholder || 'Tacos, BBQ, Burgers, Coffee, etc.';
-                    }
-                    if (concessionMenuLabel) {
-                        concessionMenuLabel.textContent = config.concession_menu_label || 'Menu Link (optional)';
-                    }
-
-                    setGroupState(bandSections, v === 'band');
-                    document.querySelectorAll('[data-vms-band-required]').forEach(function(el) {
-                        el.required = (v === 'band');
-                    });
-
-                    setGroupState(concessionSections, !!config.show_concession);
-
-                    socialFields.forEach(function(wrapper) {
-                        var slug = wrapper.getAttribute('data-vms-social-slug') || '';
-                        var visible = v !== '' && visibleSocials.indexOf(slug) !== -1;
-                        wrapper.hidden = !visible;
-                        wrapper.querySelectorAll('input, select, textarea').forEach(function(field) {
-                            field.disabled = !visible;
-                        });
-                        if (visible) {
-                            socialCount += 1;
-                        }
-                    });
-
-                    if (socialGroup) {
-                        socialGroup.hidden = !(v !== '' && socialCount > 0);
-                    }
-                }
-
-                sel.addEventListener('change', toggle);
-                toggle();
-            })();
-        </script>
     </form>
     <?php
     echo '</div>';
