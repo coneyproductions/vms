@@ -61,6 +61,7 @@ try {
 	$assert(strpos($ticketingBootstrapSource, "if (!in_array(\$hook, array('post.php', 'post-new.php'), true)) {") !== false, 'admin-ticketing.js should remain enqueued on post editor screens, including Event Plan edit/new.');
 	$assert(strpos($shellAssetSource, "var root = document.querySelector('.vms-ep-basic-grid[data-vms-scroll-target]');") !== false, 'The separate generic scroll shell asset should remain present.');
 	$assert(strpos($shellAssetSource, 'document.getElementById(targetId)') !== false, 'The generic scroll shell asset should continue treating the marker as an element ID.');
+	$assert(strpos($shellAssetSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'The separate shell asset should own the generic requested-section helper.');
 
 	$assert(!file_exists($unexpectedAssetPath), 'This remediation slice should not create a new dedicated Event Plan ticketing-focus asset.');
 

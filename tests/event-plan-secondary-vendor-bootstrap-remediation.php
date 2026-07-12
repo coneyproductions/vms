@@ -5,6 +5,7 @@ $pluginRoot = dirname(__DIR__);
 $eventPlansPath = $pluginRoot . '/includes/cpt/event-plans.php';
 $secondaryVendorsPath = $pluginRoot . '/includes/cpt/event-plans/partials/secondary-vendors.php';
 $secondaryVendorAssetPath = $pluginRoot . '/assets/js/vms-secondary-vendors.js';
+$shellAssetPath = $pluginRoot . '/assets/js/vms-event-plan-shell.js';
 
 $assert = static function (bool $condition, string $message): void {
 	if ($condition) {
@@ -23,6 +24,7 @@ $readFile = static function (string $path) use ($assert): string {
 try {
 	$eventPlansSource = $readFile($eventPlansPath);
 	$secondaryVendorsSource = $readFile($secondaryVendorsPath);
+	$shellAssetSource = $readFile($shellAssetPath);
 
 	$assert(
 		preg_match('/<script\b(?![^>]*type=(["\'])application\/json\1)[^>]*>/i', $secondaryVendorsSource) !== 1,
@@ -49,8 +51,9 @@ try {
 	$assert(strpos($eventPlansSource, "section.dataset.vmsSecondaryInitBound = '1';") !== false, 'Secondary Vendors initializer should still mark the section as initialized.');
 	$assert(strpos($eventPlansSource, "document.addEventListener('DOMContentLoaded', function() {\n\t                    initSecondaryVendors(document);") !== false || strpos($eventPlansSource, "document.addEventListener('DOMContentLoaded', function() {\r\n\t                    initSecondaryVendors(document);") !== false, 'Full-page Event Plan boot should still initialize Secondary Vendors on DOM ready.');
 	$assert(strpos($eventPlansSource, "            } else {\n\t                initSecondaryVendors(document);") !== false || strpos($eventPlansSource, "            } else {\r\n\t                initSecondaryVendors(document);") !== false, 'Full-page Event Plan boot should still initialize Secondary Vendors after immediate render.');
-	$assert(strpos($eventPlansSource, 'body.innerHTML = payload.data.html;') !== false, 'Lazy-section success path should still inject the rendered Secondary Vendors markup.');
-	$assert(substr_count($eventPlansSource, 'window.vmsEventPlanInitSecondaryVendors(body);') >= 2, 'Secondary Vendors initializer should still run after lazy-load and save-response markup replacement.');
+	$assert(strpos($shellAssetSource, 'body.innerHTML = payload.data.html;') !== false, 'Shell lazy-load success path should still inject the rendered Secondary Vendors markup.');
+	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Shell lazy-load success path should still reinitialize Secondary Vendors after injecting markup.');
+	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Secondary Vendors inline controller should still reinitialize itself after save-response markup replacement.');
 
 	$bridgeHits = array();
 	$runtimeIterator = new RecursiveIteratorIterator(
@@ -82,7 +85,13 @@ try {
 
 		$assetPath = $fileInfo->getPathname();
 		$contents = file_get_contents($assetPath);
-		if (!is_string($contents) || strpos($contents, 'vmsEventPlanInitSecondaryVendors') === false) {
+		if (!is_string($contents)) {
+			continue;
+		}
+		$definesInitializer = preg_match('/window\.vmsEventPlanInitSecondaryVendors\s*=(?!=)/', $contents) === 1
+			|| preg_match('/function\s+initSecondaryVendors\s*\(/', $contents) === 1
+			|| preg_match('/\b(?:const|let|var)\s+initSecondaryVendors\s*=/', $contents) === 1;
+		if (!$definesInitializer) {
 			continue;
 		}
 

@@ -34,8 +34,9 @@ $readFile = static function (string $path) use ($assert): string {
 			preg_match('~<script>\s*document\.addEventListener\(\'DOMContentLoaded\', function\(\) \{\s*const el = document\.getElementById\(\'<\?php echo esc_js\(\$scroll_to\); \?>\'\);~s', $eventPlansSource) !== 1,
 			'Event Plan source should no longer emit the inline generic scroll helper.'
 		);
-		$assert(strpos($eventPlansSource, 'data-vms-scroll-target=') !== false, 'Event Plan source should hand off the generic scroll target through a non-executable data attribute.');
-	$assert(strpos($eventPlansSource, '<div class="vms-ep-basic-grid"<?php echo $scroll_to !== \'\' ? \' data-vms-scroll-target="\' . esc_attr($scroll_to) . \'"\' : \'\'; ?>>') !== false, 'Event Plan source should attach the escaped scroll target marker to the stable basic-grid wrapper.');
+	$assert(strpos($eventPlansSource, 'data-vms-scroll-target=') !== false, 'Event Plan source should hand off the generic scroll target through a non-executable data attribute.');
+	$assert(strpos($eventPlansSource, 'data-vms-lazy-loading-label=') !== false, 'Event Plan source should keep the non-executable shell-label handoff on the stable basic-grid wrapper.');
+	$assert(strpos($eventPlansSource, 'data-vms-lazy-error-label=') !== false, 'Event Plan source should keep the non-executable shell error-label handoff on the stable basic-grid wrapper.');
 	$assert(substr_count($eventPlansSource, '<script') >= 9, 'This slice should not remove unrelated live Event Plan inline script blocks.');
 
 	$assert(is_dir($partialsDir), 'Event Plan partial directory should still exist.');
@@ -66,10 +67,12 @@ $readFile = static function (string $path) use ($assert): string {
 	$assert(strpos($shellAssetSource, 'if (!target) return;') !== false, 'The shell asset should safely no-op when the target element does not exist.');
 	$assert(strpos($shellAssetSource, 'window.setTimeout(function () {') !== false && strpos($shellAssetSource, '}, 150);') !== false, 'The shell asset should preserve the existing deferred scroll timing.');
 	$assert(strpos($shellAssetSource, "target.scrollIntoView({ behavior: 'smooth', block: 'start' });") !== false, 'The shell asset should preserve the existing scroll options.');
+	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitCollapsibleSection = initExistingSection;') !== false, 'The shell asset should also own the migrated collapsible-section helper.');
 	$assert(strpos($shellAssetSource, 'focus(') === false, 'The generic scroll shell asset should not introduce focus behavior.');
-	foreach (array('fetch(', 'ajaxurl', 'XMLHttpRequest', 'localStorage', 'sessionStorage', 'history.', 'submit(', 'wp.apiFetch', 'ticketing_v2') as $forbiddenToken) {
+	foreach (array('ajaxurl', 'XMLHttpRequest', 'wp.apiFetch') as $forbiddenToken) {
 		$assert(strpos($shellAssetSource, $forbiddenToken) === false, 'The shell asset should remain passive and generic: ' . $forbiddenToken);
 	}
+	$assert(strpos($shellAssetSource, 'maybeFocusEventPlanTicketingArea') === false, 'The shell asset should not absorb the ticketing-specific focus helper.');
 
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-shell'") !== false, 'Admin UI assets should enqueue the new Event Plan shell asset.');
 	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js'") !== false, 'Admin UI assets should point the shell handle to assets/js/vms-event-plan-shell.js.');
