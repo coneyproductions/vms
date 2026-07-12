@@ -246,6 +246,29 @@
 	padding: 12px 14px 14px;
 }
 
+#adminmenu .vms-ticket-integrity-alert-badge {
+	margin-left: 6px;
+	min-width: 18px;
+	height: 18px;
+	line-height: 18px;
+	border-radius: 999px;
+	background: #d63638;
+	box-shadow: none;
+}
+
+#adminmenu .vms-ticket-integrity-alert-badge .update-count,
+#adminmenu .vms-ticket-integrity-alert-badge .plugin-count {
+	display: block;
+	min-width: 18px;
+	height: 18px;
+	line-height: 18px;
+	padding: 0 4px;
+	color: #fff;
+	font-size: 11px;
+	font-weight: 700;
+	text-align: center;
+}
+
 .vms-ticket-integrity__subdetails--role {
 	margin-top: 0;
 }

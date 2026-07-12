@@ -571,7 +571,7 @@ Recommended follow-up order, keeping each pass narrow:
 7. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
-   - Next actual incomplete implementation batch
+   - `B5` is completed by the Ticket Integrity CSS sub-pass below; `B1` / `B2` / `B3` / `B4` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
 8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
@@ -1537,6 +1537,29 @@ Date: 2026-07-11
 
 - `WPORG-22` is now the next incomplete implementation batch.
 - `WPORG-21` was not reopened in this corrective pass.
+
+## WPORG-22 B5 Result
+
+Date: 2026-07-11
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `B5`
+- Entry point: `includes/admin/ticket-integrity-page.php`
+- CSS asset used: `assets/css/admin-ticket-integrity.css` via the existing `vms-admin-ticket-integrity` stylesheet handle
+- Test coverage: `php tests/ticket-integrity-inline-css-remediation.php` plus existing `php tests/ticket-integrity-scan-lock.php`
+- Remaining `WPORG-22` items: `B1`, `B2`, `B3`, and `B4` remain pending, so `WPORG-22` stays open
+
+### What Changed
+
+- Removed the Ticket Integrity menu-badge inline `<style>` emitter from `includes/admin/ticket-integrity-page.php`.
+- Moved the static `#adminmenu .vms-ticket-integrity-alert-badge` rules into `assets/css/admin-ticket-integrity.css`.
+- Kept the existing badge/no-badge decision logic intact and broadened only the stylesheet enqueue condition so the badge CSS is available on admin screens where the badge markup can render.
+
+### Non-Actions
+
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
 ## Non-Actions in This Audit
 

@@ -30,7 +30,8 @@ function vms_ticket_integrity_admin_enqueue_assets(string $hook): void
 	unset($hook);
 
 	$page = sanitize_key(vms_ticket_integrity_query_arg('page'));
-	if (!in_array($page, array('vms-ticket-integrity', 'vms-dashboard'), true)) {
+	$needs_menu_badge_style = current_user_can('manage_options') && vms_ticket_integrity_menu_alert_needed();
+	if (!$needs_menu_badge_style && !in_array($page, array('vms-ticket-integrity', 'vms-dashboard'), true)) {
 		return;
 	}
 
@@ -2402,19 +2403,6 @@ function vms_ticket_integrity_add_menu_alert_badge(): void
 	}
 }
 add_action('admin_menu', 'vms_ticket_integrity_add_menu_alert_badge', 1001);
-
-function vms_ticket_integrity_render_menu_alert_badge_css(): void
-{
-	if (!current_user_can('manage_options') || !vms_ticket_integrity_menu_alert_needed()) {
-		return;
-	}
-
-	echo '<style id="vms-ticket-integrity-alert-dot-css">';
-	echo '#adminmenu .vms-ticket-integrity-alert-badge{margin-left:6px;min-width:18px;height:18px;line-height:18px;border-radius:999px;background:#d63638;box-shadow:none;}';
-	echo '#adminmenu .vms-ticket-integrity-alert-badge .update-count,#adminmenu .vms-ticket-integrity-alert-badge .plugin-count{display:block;min-width:18px;height:18px;line-height:18px;padding:0 4px;color:#fff;font-size:11px;font-weight:700;text-align:center;}';
-	echo '</style>';
-}
-add_action('admin_head', 'vms_ticket_integrity_render_menu_alert_badge_css', 20);
 
 function vms_ticket_integrity_render_admin_page(): void
 {
