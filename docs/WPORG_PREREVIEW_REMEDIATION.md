@@ -55,14 +55,14 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `J1` | J | High | Confirmed | `includes/core/registry/admin-menu.php:19-30`; `includes/core/registry/statuses.php:13-21` | Dynamic gettext wrapper and non-literal domain usage were remediated in the working tree; final `WPORG-18` verification now shows zero parser violations and zero actionable i18n Plugin Check findings. | Medium | `WPORG-18A`, `WPORG-18B` |
 | `J2` | J | High | Confirmed | `includes/admin/continuity-binder.php:266`; `includes/core/event-credits.php:380`; `includes/core/event-plan-save-profiler.php:1476`; `includes/modules/email-followups/admin-ui.php:604`; `vms/includes/modules/admissions/outreach-recipients.php:1861` | Translator-comment, placeholder-order, and final semantic comment-audit findings were remediated in the working tree; `WPORG-18D` corrected the remaining misleading heuristic comments and the final verification suite stayed clean. | Low to Medium | `WPORG-18B`, `WPORG-18D` |
 | `M1` | M | High | Confirmed | `vendor-management-system.php:3-13`; `readme.txt:4-9`; `vms-build.txt:1`; `vms/vendor-management-system.php:3-13`; `vms/readme.txt:4-9`; `vms/vms-build.txt:1` | Mirror release metadata says `1.0.0`; live local plugin says `1.1.0`. Packaging decision is blocked until versions are reconciled. | Low | `WPORG-28` |
-| `H1` | D, H | High | Confirmed | `includes/admin/tax-profile-admin-metabox.php:35-38`; `includes/portal/vendor-tax-profile.php:117-129` | Tax-profile upload handlers trust `$_FILES['type']` before `media_handle_upload()`. | Medium | `WPORG-21` |
+| `H1` | D, H | High | Confirmed | `includes/admin/tax-profile-admin-metabox.php:102-118`; `includes/portal/vendor-tax-profile.php:121-137`; `includes/core/private-files.php:541-714` | `WPORG-20B` now routes admin and portal W-9 uploads through validated private-file helpers and brokered downloads; the historical `WPORG-21` H1 scope is fully completed by that committed work. | Medium | `WPORG-20B`, `WPORG-21` |
 | `K1` | K | High | Confirmed | `includes/admin/admin-notices.php:16-64` | First-run notice is global, promotional, and not scoped to VMS screens. | Low | `WPORG-23` |
 | `K2` | K | High | Confirmed | `includes/runtime-guards.php:100-108`; `includes/ticketing/ticket-integrity-payment-gateway-health.php:1044-1052` | Diagnostics and payment-gateway notices are hooked globally to `admin_notices` without VMS-screen gating. | Low to Medium | `WPORG-23` |
 | `C1` | C | Medium | Confirmed | `includes/cpt/venues.php:266-269`; `includes/cpt/ratings.php:177-180`; `includes/admin/staff-worker-type.php:75-76`; `includes/admin/venue-context.php:169-170`; `includes/vendor-applications.php:1728-1729`; `includes/portal/vendor-tax-profile.php:92-93`; `includes/admin/tax-profile-admin-metabox.php:35-38` | `WPORG-19A` working-tree remediation now normalizes and sanitizes nonce verification inputs across the direct request and wrapper/REST paths. The later complete `WPORG-19B` runtime inventory did not uncover any additional missing-nonce defects. | Low to Medium | `WPORG-19A`, `WPORG-19B` |
 | `C2` | C | Medium | Confirmed | `includes/vendor-applications.php:1420`; `includes/vendor-applications.php:1616`; `includes/vendor-applications.php:1736`; `includes/vendor-applications.php:1843`; `includes/vendor-applications.php:1895`; `includes/vendor-applications.php:1924`; `includes/vendor-applications.php:1965`; `includes/helpers.php:3773`; `includes/admin/venue-duplicate-templates.php:372`; `includes/admin/season-dates.php:199-200`; `includes/cpt/event-plans.php:13658` | The complete `WPORG-19B` runtime inventory closed the remaining section C authorization follow-up by replacing broad or missing object-aware gates across vendor-application, vendor-review, venue-template, season-dates, and event-plan edit-screen mutation boundaries, plus aligned vendor-application admin UI gates. | Low | `WPORG-19B` |
 | `D1` | D | Medium | Confirmed | `includes/portal/staff-portal.php:1755-1758`; `includes/runtime-guards.php`; `includes/vendor-applications.php`; `includes/portal/vendor-portal.php`; `includes/integrations/ticketing-verifications.php`; `includes/core/vendor-application-confirmation.php` | `WPORG-20A` working-tree remediation now normalizes ordinary request-global, redirect-derived, and server-derived inputs across the shared mirror/live runtime boundaries; the original `FILTER_UNSAFE_RAW` staff-portal path is removed and the reviewed redirect/server examples now flow through shared helper validation. | Low to Medium | `WPORG-20A` |
-| `H2` | D, H | Medium | Confirmed | `includes/admin/data-tools/actions-event-plan-import.php:13-33` | CSV import stores uploaded files with `move_uploaded_file()` before type/content validation beyond filename intent. | Medium | `WPORG-21` |
-| `H3` | D, H | Medium | Confirmed | `includes/safety/private-files.php:163-180` | Private-file storage derives MIME from the original filename after moving the file, not from content. | Medium | `WPORG-21` |
+| `H2` | D, H | Medium | Confirmed | `includes/admin/data-tools/actions-event-plan-import.php:13-54`; `includes/services/event-plan-import/event-plan-import-engine.php`; `tests/upload-validation-guards.php:132-231` | `WPORG-20B` now validates CSV upload structure and MIME before persistence, stores importer artifacts via safe private storage keys, and fully covers the historical `WPORG-21` H2 scope. | Medium | `WPORG-20B`, `WPORG-21` |
+| `H3` | D, H | Medium | Confirmed | `includes/safety/private-files.php:177-221`; `includes/core/private-files.php:355-714`; `includes/core/staffing.php:620-690` | `WPORG-20B` now validates private operational uploads before persistence, brokers authenticated downloads, and avoids new raw absolute-path persistence for these flows; the historical `WPORG-21` H3 scope is fully completed by that committed work. | Medium | `WPORG-20B`, `WPORG-21` |
 | `B1` | B | Medium | Confirmed | `includes/cpt/event-plans.php:5870,6537,6563,6591,6629,7113,7306,8171,8420,8591,8775,8789`; `includes/cpt/event-plans/partials/editor-scripts.php:2,30,697,723,761,783,806,1050,1223,1472,1643,1826` | Event Plans and its editor partials still contain dense inline executable JavaScript. | Medium to High | `WPORG-22` |
 | `B2` | B | Medium | Confirmed | `includes/portal/vendor-portal.php:4690,4701,4738,5068,5635,6219,6231,6490,6651,6893` | Vendor Portal contains inline scripts and inline event handlers such as `onchange="this.form.submit()"`. | Medium | `WPORG-22` |
 | `B3` | B | Medium | Confirmed | `includes/vendor-applications.php:1393,2487` | Vendor Applications renders inline `<style>` and inline executable `<script>` blocks. | Low to Medium | `WPORG-22` |
@@ -224,7 +224,7 @@ Status:
 
 - `WPORG-20A` ordinary request-global sanitization and redirect/server normalization is now applied in the current mirror/live working tree.
 - The original `FILTER_UNSAFE_RAW` example and the reviewed raw redirect/server-value examples are remediated.
-- Upload transport and MIME trust findings remain deferred to `WPORG-20B`.
+- The upload transport and MIME trust follow-up originally deferred from `WPORG-20A` is now completed in committed `WPORG-20B`.
 - The audited `WPORG-20C` decoded JSON / structured-body validation follow-up is now applied across the first-party request, importer cache, and remote-response paths reviewed in this batch.
 
 ### `D1` Ordinary request-global sanitization and `FILTER_UNSAFE_RAW` remediation are now applied in the working tree
@@ -334,38 +334,39 @@ Conclusion:
 
 Status:
 
-- Three confirmed actionable findings.
-- One acceptable reference implementation that should guide remediation.
+- The original `H1` / `H2` / `H3` upload-handling findings are now fully remediated by committed `WPORG-20B`.
+- `WPORG-21` remains as the historical tracking identifier for `H1` / `H2` / `H3`, but it is no longer an open duplicate implementation batch because the committed `WPORG-20B` work already completed that scope.
+- `includes/integrations/ticketing-verifications.php:2130-2178` remains the preferred local reference implementation for upload prevalidation.
 
-### `H1` Tax-profile upload flows trust `$_FILES['type']`
+### `H1` Tax-profile upload hardening is now completed by committed `WPORG-20B`
 
 - Severity: High
 - Confidence: Confirmed
-- References: `includes/admin/tax-profile-admin-metabox.php:35-38`; `includes/portal/vendor-tax-profile.php:117-129`
-- Why WordPress.org may object: client-reported MIME types are not authoritative, and the current allowlist check happens before `media_handle_upload()`.
-- Recommended remediation: replace the `$_FILES['type']` trust path with `wp_check_filetype_and_ext()` or equivalent server-side validation before accepting the upload.
+- References: `includes/admin/tax-profile-admin-metabox.php:102-118`; `includes/portal/vendor-tax-profile.php:121-137`; `includes/core/private-files.php:541-714`
+- Why WordPress.org may object: client-reported MIME types were previously trusted before upload acceptance.
+- Recommended remediation: route these uploads through server-side validated helper boundaries before persistence and serve them back through authenticated brokered download URLs. That work is now completed by commit `d1cdfbd80b05c8254cdc413d0e1bbb821ca13492` (`Harden uploaded file handling`).
 - Compatibility or regression risk: Medium because both admin and portal flows touch operator workflows.
-- Suggested remediation batch ID: `WPORG-21`
+- Suggested remediation batch ID: `WPORG-20B`, historical verifier `WPORG-21`
 
-### `H2` Event-plan CSV import stores uploads before validating content type
+### `H2` Event-plan CSV import hardening is now completed by committed `WPORG-20B`
 
 - Severity: Medium
 - Confidence: Confirmed
-- References: `includes/admin/data-tools/actions-event-plan-import.php:13-33`
-- Why WordPress.org may object: the importer confirms upload mechanics, then moves the file into storage without validating content or MIME beyond expected CSV intent.
-- Recommended remediation: validate MIME, extension, and actual parseability before or immediately after storing the temporary file, and fail closed on mismatch.
+- References: `includes/admin/data-tools/actions-event-plan-import.php:13-54`; `includes/services/event-plan-import/event-plan-import-engine.php`
+- Why WordPress.org may object: the importer previously stored uploads before sufficiently validating content and MIME.
+- Recommended remediation: validate MIME, extension, and the normalized upload structure before persistence, then keep generated importer artifacts behind safe private storage keys. That work is now completed by commit `d1cdfbd80b05c8254cdc413d0e1bbb821ca13492` (`Harden uploaded file handling`).
 - Compatibility or regression risk: Medium because the importer is operationally sensitive.
-- Suggested remediation batch ID: `WPORG-21`
+- Suggested remediation batch ID: `WPORG-20B`, historical verifier `WPORG-21`
 
-### `H3` Private-file storage infers MIME from filename after moving the file
+### `H3` Private operational-file hardening is now completed by committed `WPORG-20B`
 
 - Severity: Medium
 - Confidence: Confirmed
-- References: `includes/safety/private-files.php:163-180`
-- Why WordPress.org may object: MIME classification comes from `wp_check_filetype($filename)` after the file is already stored, which is filename-based and not content-based.
-- Recommended remediation: validate file content and extension before persistence, then record the verified type rather than inferring it from the original filename alone.
+- References: `includes/safety/private-files.php:177-221`; `includes/core/private-files.php:355-714`; `includes/core/staffing.php:620-690`
+- Why WordPress.org may object: MIME trust and file-path persistence were previously too loose for private operational-file handling.
+- Recommended remediation: validate file content and extension before persistence, record the verified type, broker downloads through authenticated handlers, and stop introducing new raw absolute-path persistence for these flows. That work is now completed by commit `d1cdfbd80b05c8254cdc413d0e1bbb821ca13492` (`Harden uploaded file handling`).
 - Compatibility or regression risk: Medium because this storage layer is intentionally private and should not be rewritten casually.
-- Suggested remediation batch ID: `WPORG-21`
+- Suggested remediation batch ID: `WPORG-20B`, historical verifier `WPORG-21`
 
 Acceptable pattern:
 
@@ -560,16 +561,17 @@ Recommended follow-up order, keeping each pass narrow:
    - Result: completed in the current working tree with shared mirror/live runtime alignment
 4. `WPORG-20B - Upload transport and MIME handling follow-up`
    - Scope: upload transport, MIME/type trust, and file-move validation paths intentionally excluded from `WPORG-20A`
-   - Goal: align upload handling with content-based validation and release-safe storage rules
+   - Result: completed by committed mirror change `d1cdfbd80b05c8254cdc413d0e1bbb821ca13492` (`Harden uploaded file handling`)
 5. `WPORG-20C - Decoded JSON and structured-payload validation`
    - Scope: decoded JSON/body shape validation, response-shape review, and schema-like per-key checks intentionally excluded from `WPORG-20A`
-   - Goal: validate structured payloads deliberately without mixing upload or ordinary request-global work
+   - Result: completed in the current mirror history, including the corrective tours REST JSON boundary fix
 6. `WPORG-21 - Upload handling hardening`
    - Scope: `H1`, `H2`, `H3`
-   - Goal: align uploads with content-based validation and private-storage justification
+   - Result: historical tracking identifier only; the mapped `H1` / `H2` / `H3` implementation was fully completed by committed `WPORG-20B`, so no separate `WPORG-21` implementation batch remains open unless a future verification uncovers a concrete regression
 7. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
+   - Next actual incomplete implementation batch
 8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
@@ -612,7 +614,7 @@ Recommended follow-up order, keeping each pass narrow:
 - [x] Complete `WPORG-19A` nonce verification input normalization in legacy save, admin-post, AJAX, REST-wrapper, and frontend mutation handlers.
 - [x] Complete `WPORG-19B` missing-nonce and capability/authorization follow-up before packaging the final public submission build.
 - [x] Complete `WPORG-20A` ordinary request-global sanitization, redirect allowlisting, and server-value normalization without mixing upload or decoded-JSON refactors.
-- [ ] Complete `WPORG-20B` upload transport and MIME/type hardening across tax-profile, import, and private-file flows.
+- [x] Complete `WPORG-20B` upload transport and MIME/type hardening across tax-profile, import, and private-file flows.
 - [x] Complete `WPORG-20C` decoded JSON / structured-body validation after the ordinary request-global pass.
 - [ ] Migrate remaining inline executable JS/CSS into enqueued assets or approved inline helpers.
 - [ ] Scope all admin notices to VMS-owned screens.
@@ -712,10 +714,6 @@ Date: 2026-07-10
 
 ### Remaining Follow-Up Batches
 
-- `WPORG-18B` — Internationalization parser compliance verification
-- `WPORG-20B` — Upload transport and MIME follow-up
-- `WPORG-20C` — Decoded JSON and structured-payload review
-- `WPORG-21` — Upload handling hardening
 - `WPORG-22` — Inline asset enqueue migration
 - `WPORG-23` — Admin notice scope
 - `WPORG-24` — Output escaping contract pass
@@ -1115,7 +1113,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, and the decoded JSON / structured-payload hardening tracked in `WPORG-20C`; the remaining open work in this inventory now starts at `WPORG-20B`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, and the decoded JSON / structured-payload hardening tracked in `WPORG-20C`; the next actual incomplete implementation batch in this inventory now starts at `WPORG-22`.
 
 ## WPORG-19B Result
 
@@ -1388,8 +1386,8 @@ Reconciliation:
 - Redirect findings:
   - Request-derived `redirect_to`, `return_url`, and `_wp_http_referer` boundaries in `helpers.php`, `admin/venue-context.php`, `portal/vendor-portal.php`, `integrations/ticketing-claims-admin.php`, `integrations/ticketing-verifications.php`, and `core/vendor-application-confirmation.php` now use local allowlisting via `wp_validate_redirect()` through shared helpers or existing guarded paths.
 - Deferred findings:
-  - Upload-specific follow-up stays in `WPORG-20B`.
-  - Decoded JSON / structured-payload follow-up stays in `WPORG-20C`.
+  - Upload-specific follow-up stayed in `WPORG-20B` at the time of this batch and was later completed there.
+  - Decoded JSON / structured-payload follow-up stayed in `WPORG-20C` at the time of this batch and was later completed there.
 
 ### Verification Performed
 
@@ -1425,8 +1423,8 @@ Reconciliation:
 
 ### Remaining Risks and Required Follow-Up
 
-- `WPORG-20A` intentionally did not change upload transport, MIME trust, or file-move flows; those remain open in `WPORG-20B`.
-- `WPORG-20A` intentionally did not harden decoded JSON or structured response bodies; those remain open in `WPORG-20C`.
+- `WPORG-20A` intentionally did not change upload transport, MIME trust, or file-move flows in that batch itself; the later committed `WPORG-20B` follow-up completed that work.
+- `WPORG-20A` intentionally did not harden decoded JSON or structured response bodies in that batch itself; the later `WPORG-20C` follow-up completed that work, including the corrective tours REST JSON boundary fix.
 - Local database-backed verification now passes again as long as the existing Local site MySQL service is running.
 
 ### Result
@@ -1434,6 +1432,45 @@ Reconciliation:
 - The ordinary request-global remediation portion of section D can be treated as complete.
 - No remaining audited mirror or shared-live ordinary request/global boundary reviewed for `WPORG-20A` is still classified as requiring unslashing, shape guards, restrictive scalar validation, redirect allowlisting, or server normalization.
 - The focused coverage gap and the database-backed regression gap are closed; `WPORG-20A` is ready to commit.
+
+## WPORG-20B Result
+
+Date: 2026-07-11
+
+### Summary
+
+- Result: `PASS`
+- Commit: `d1cdfbd80b05c8254cdc413d0e1bbb821ca13492`
+- Subject: `Harden uploaded file handling`
+- Scope completed: uploaded-file structure and trust validation, content-based MIME/type validation, public media prevalidation before `media_handle_upload()` where still applicable, hardened private operational-file handling, brokered authenticated downloads, storage-key-backed private artifacts instead of new raw absolute-path persistence, and focused importer / ticketing proof upload hardening.
+- Protected stash status: `stash@{0}: On work/unreleased-2026-06-18: WPORG-16D preserve unrelated sidebar+doc work` remained untouched.
+
+### Completed Runtime Boundaries
+
+- Tax-profile uploads:
+  - `includes/admin/tax-profile-admin-metabox.php`
+  - `includes/portal/vendor-tax-profile.php`
+  - `includes/portal/staff-portal.php`
+  - now route W-9 uploads through `vms_private_w9_store_upload()`, store private-file IDs plus storage-kind metadata, and expose brokered authenticated download URLs instead of trusting client MIME input or persisting new raw public paths.
+- Event-plan importer uploads and artifacts:
+  - `includes/admin/data-tools/actions-event-plan-import.php`
+  - `includes/services/event-plan-import/event-plan-import-engine.php`
+  - now validate upload structure and MIME before persistence, then store source CSV, rows JSON, reports, and snapshots via safe private storage keys.
+- Private operational-file handling:
+  - `includes/core/private-files.php`
+  - `includes/safety/private-files.php`
+  - `includes/core/staffing.php`
+  - now validate uploads before persistence, record verified MIME metadata, broker authenticated downloads, and avoid introducing new raw absolute-path persistence for these flows.
+- Ticketing proof and supporting upload paths:
+  - `includes/integrations/ticketing-verifications.php`
+  - `includes/portal/vendor-portal.php`
+  - retain or extend content-based prevalidation before attachment or private-file storage.
+
+### Tests and Verification
+
+- Added focused regression coverage in `tests/upload-validation-guards.php`.
+- Complementary proof normalization coverage remains in `tests/verification-proof-normalization.php`.
+- No push, deployment, package, submission, or production change occurred in this batch.
 
 ## WPORG-20C Result
 
@@ -1453,7 +1490,7 @@ Date: 2026-07-11
 - Request-derived JSON / structured bodies:
   - `includes/integrations/ticketing-phase-b.php` now validates tier-save, commit-item, and config/template payload shapes before the existing Phase B normalizers run.
   - `includes/integrations/ticketing-rules-v2.php` now reads bounded JSON request bodies and validates atomic-add / silent-add ticket, add-on, variation, and claim-assignment shapes before cart mutation.
-  - `includes/rest/class-vms-rest-tours.php` now rejects list-shaped or malformed REST JSON payloads for the drift-report mutation routes.
+  - `includes/rest/class-vms-rest-tours.php` now rejects malformed, scalar, and list-shaped REST JSON payloads for the drift-report mutation routes before runtime drift or scan-report replacement work begins, while still distinguishing `[]` from `{}`.
   - `includes/integrations/ticketing-claims-customer.php` now validates the decoded `existing_counts` object rather than accepting any decoded array.
 - Uploaded/imported or cache-derived JSON:
   - `includes/services/event-plan-import/event-plan-import-engine.php` now validates preview-row and revert-snapshot JSON file size, top-level object shape, and required nested list/object boundaries before commit/revert work.
@@ -1464,7 +1501,7 @@ Date: 2026-07-11
 
 ### Tests and Verification
 
-- Added focused regression coverage in `tests/decoded-json-validation.php` for the new decode/shape validators.
+- Added focused regression coverage in `tests/decoded-json-validation.php` for the new decode/shape validators, including the tours REST object-boundary fix.
 - Existing required verification for this batch should include:
   - `php tests/request-input-sanitization.php`
   - `php tests/upload-validation-guards.php`
@@ -1475,6 +1512,31 @@ Date: 2026-07-11
 
 - This batch intentionally does not change upload transport/MIME architecture from `WPORG-20B`.
 - Remaining `json_decode()` sites are either test/build tooling, static/internal compatibility state, encrypted internal payloads, or trusted first-party data paths where no current user-controlled or externally controlled boundary was identified in this audit.
+
+## WPORG-21 Result
+
+Date: 2026-07-11
+
+### Summary
+
+- Result: `PASS`
+- Historical scope `H1` / `H2` / `H3` is fully completed by committed `WPORG-20B` (`d1cdfbd80b05c8254cdc413d0e1bbb821ca13492`, `Harden uploaded file handling`).
+- `WPORG-21` remains preserved as the historical verifier identifier for those three upload findings, but it is no longer an open duplicate implementation batch.
+- No separate `WPORG-21` implementation commit is needed unless a future verification uncovers a concrete regression in those already-remediated upload boundaries.
+
+### H1 / H2 / H3 Reconciliation
+
+- `H1` tax-profile upload trust path:
+  - completed by validated W-9 private upload helpers in the admin, vendor portal, and staff portal flows, plus brokered authenticated downloads.
+- `H2` event-plan CSV import prevalidation:
+  - completed by `vms_upload_read_file()` plus `vms_validate_uploaded_file()` before persistence, followed by storage-key-backed importer artifacts.
+- `H3` private operational-file MIME trust and path persistence:
+  - completed by validated private-file storage, authenticated brokered downloads, and storage-key resolution instead of new raw absolute-path persistence for these flows.
+
+### Next Actual Incomplete Batch
+
+- `WPORG-22` is now the next incomplete implementation batch.
+- `WPORG-21` was not reopened in this corrective pass.
 
 ## Non-Actions in This Audit
 
