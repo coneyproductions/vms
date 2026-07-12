@@ -1621,14 +1621,37 @@ Date: 2026-07-12
 
 - Result: `PASS`
 - Exact finding identifier: `B4`
+- Completing commit: `8096682beaea18a91650f37e26675810f1a341ff` (`Move ticketing controls script to asset`)
 - Original inline controller source: the server-controls `<script>` block in `vms_ticketing_v2_render_entitlements_block()` within `includes/integrations/ticketing-rules-v2.php`
 - External asset reused: `assets/vms-ticketing-front.js`
 - Duplication audit conclusion: the removed inline controller was redundant; the main `vms-ticketing-front` bundle already booted the same server-controls flow, while the separate `assets/vms-ticketing-front-server-controls.js` sidecar existed only as an unused parallel implementation and was not the active runtime owner
 - Configuration and data handoff retained: `vmsTicketingFront.atomicAddUrl`, `vmsTicketingFront.atomicAddNonce`, `vmsTicketingFront.cartUrl`, `vmsTicketingFront.tecEventId`, `vmsTicketingFront.eventPlanId`, plus the existing `#vms-reserved-addons` `data-vms-*` payload for qualifying-ticket IDs, prior/cart quantities, pool quantities, selector mode, and per-add-on limits
 - Tests added: `php tests/ticketing-server-controls-inline-js-remediation.php`
-- Existing tests run: `php tests/event-plan-legacy-ticketing-integration-smoke.php`, `php tests/request-input-sanitization.php`, `php tests/decoded-json-validation.php`
 - `B3` and `B5` remain completed by the result sections above
 - Remaining `WPORG-22` work: `B1` and `B2` remain pending, so `WPORG-22` stays open
+
+### Passing B4 Validation
+
+- `php tests/ticketing-server-controls-inline-js-remediation.php` passed.
+- `php tests/request-input-sanitization.php` passed.
+- `php tests/decoded-json-validation.php` passed.
+- `php -l includes/integrations/ticketing-rules-v2.php` passed.
+- `git diff --check` was clean for the B4 pass.
+
+### Pre-Existing Validation Exception
+
+- Command: `php tests/event-plan-legacy-ticketing-integration-smoke.php`
+- Exit code: `1`
+- Failure point: the test's AJAX response-capture helper failed while decoding the response from `vms_ticketing_search_tec_events`.
+- Failure signature: the AJAX callback emitted a successful JSON payload, but the helper's capture buffer was empty when the assertion attempted to decode it.
+- Pre-B4 comparison: a detached-worktree run against `05e3c81eb16781fc8d64c7d3d46e3cb517529d36` failed with the same material signature, including the same assertion point, the same AJAX action, the same successful JSON payload type, the same empty capture-buffer behavior, and the same exit code; only generated event identifiers and stdout/stderr ordering differed.
+- Failing path: `tests/event-plan-legacy-ticketing-integration-smoke.php` and `includes/integrations/ticketing.php`.
+- Non-intersection with B4 commit: the B4 committed files were `docs/WPORG_PREREVIEW_REMEDIATION.md`, `includes/integrations/ticketing-rules-v2.php`, and `tests/ticketing-server-controls-inline-js-remediation.php`, so B4 does not touch the failing execution path.
+- Conclusion: this is a proven pre-existing identical failure, not a B4 regression, and no B4 corrective runtime code change is required.
+
+### Follow-Up Requirement
+
+- The legacy ticketing AJAX capture-test defect in `php tests/event-plan-legacy-ticketing-integration-smoke.php` must be repaired or otherwise resolved before `WPORG-27`'s reproducible final test gate can be considered successful.
 
 ### What Changed
 
