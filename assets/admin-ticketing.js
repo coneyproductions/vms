@@ -173,6 +173,31 @@
     }
   }
 
+  function maybeFocusEventPlanTicketingArea() {
+    let requestedSection = '';
+    try {
+      requestedSection = String(new URL(window.location.href).searchParams.get('vms_ep_load_section') || '').trim();
+    } catch (e) {}
+    if (requestedSection !== 'ticketing_v2') return;
+
+    const ticketingBox = document.getElementById('vms_event_plan_ticketing_v2');
+    if (!ticketingBox || ticketingBox.dataset.vmsTicketingFocusHandled === '1') return;
+    ticketingBox.dataset.vmsTicketingFocusHandled = '1';
+
+    window.setTimeout(() => {
+      try { ticketingBox.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { try { ticketingBox.scrollIntoView(); } catch (err) {} }
+      const focusTarget = ticketingBox.querySelector('#vms-ticketing-v2-source .button, #vms-ticketing-v2-source select, #vms-ticketing-v2-source input, #vms-ticketing-v2-source textarea, #vms-ticketing-v2-source a');
+      if (!focusTarget || typeof focusTarget.focus !== 'function') return;
+      try { focusTarget.focus({ preventScroll: true }); } catch (e) { try { focusTarget.focus(); } catch (err) {} }
+    }, 150);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeFocusEventPlanTicketingArea, { once: true });
+  } else {
+    maybeFocusEventPlanTicketingArea();
+  }
+
   function waitMs(ms) {
     return new Promise((resolve) => window.setTimeout(resolve, ms));
   }

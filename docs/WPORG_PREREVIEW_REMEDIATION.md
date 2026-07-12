@@ -1606,6 +1606,32 @@ Date: 2026-07-12
 ### Non-Actions
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B1 Ticketing Focus Helper Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B1`
+- Scope completed: only the next B1 slice, moving the small passive Event Plan ticketing-focus helper from `includes/cpt/event-plans.php` into the existing `assets/admin-ticketing.js` asset
+- Configuration handoff: no new inline config was emitted; the asset now reads the existing `vms_ep_load_section=ticketing_v2` request state directly and safely no-ops when the Event Plan ticketing wrapper is absent
+- Behavior retained: the migrated helper still performs only a deferred scroll-to-top of the Ticketing metabox plus a deferred focus on the first control inside `#vms-ticketing-v2-source`
+- Non-intersection proof: the generic server-requested `_vms_admin_scroll_to` helper in `includes/cpt/event-plans.php` remains unchanged and pending, and no Ticketing Rules V2, cart, save, AJAX, metadata, or legacy ticketing behavior changed in this slice
+- Existing asset owner: `assets/admin-ticketing.js` was already enqueued on `post.php` and `post-new.php`, so no enqueue or asset-ownership expansion was required
+- Tests added: `php tests/event-plan-ticketing-focus-inline-js-remediation.php`
+- Validation run: `php tests/event-plan-ticket-ui-overrides-isolated.php`, `php tests/event-plan-module-reopen-and-market-layout.php`, `php tests/event-plan-editor-vendor-preservation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
+- Remaining `B1` work: the generic server-requested scroll helper and the remaining live inline Event Plan controllers still remain pending
+- `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
+- `WPORG-22` remains open
+- The known legacy ticketing smoke-test failure remains a documented pre-existing `WPORG-27` AJAX capture-test issue, not a new B1 regression
+### Pre-Existing Validation Exceptions
+- Carried forward from the prior B1 slice and not rerun here: `php tests/add-dispatch-open-vendor-needs.php` remains a proven pre-existing `WPORG-27` failure because a future Event Plan with a missing Primary Vendor did not appear in ADD open needs.
+- Carried forward from the prior B1 slice and not rerun here: `php tests/add-dispatch-assignment-review.php` remains blocked in the local test environment because `wp-load.php` could not be located.
+### What Changed
+- Removed only the passive inline ticketing-focus `<script>` block from `includes/cpt/event-plans.php`.
+- Added a small guarded helper to `assets/admin-ticketing.js` that reads the existing requested-section query parameter, scrolls the same `#vms_event_plan_ticketing_v2` target, and focuses the same first ticketing control without mutating data.
+- Added a focused source-level regression test that proves the inline helper is gone, the generic scroll helper remains, the existing asset owns the passive focus behavior, and no new asset or mutation behavior was introduced.
+### Non-Actions
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B2 Modal Result
 Date: 2026-07-12
 ### Summary

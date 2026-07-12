@@ -8831,7 +8831,6 @@ class VMS_Admin_Event_Plans
     <?php
 	        // Scroll helper (optional)
 	        $scroll_to = (string) get_post_meta($post->ID, '_vms_admin_scroll_to', true);
-	        $ticketing_focus_requested = isset($_GET['vms_ep_load_section']) && sanitize_key((string) wp_unslash($_GET['vms_ep_load_section'])) === 'ticketing_v2';
 	        if ($scroll_to) {
 	            delete_post_meta($post->ID, '_vms_admin_scroll_to');
 	    ?>
@@ -8843,28 +8842,6 @@ class VMS_Admin_Event_Plans
                     behavior: 'smooth',
                     block: 'start'
 	                }), 150);
-	            });
-	        </script>
-	    <?php
-	        }
-	        if ($ticketing_focus_requested) {
-	    ?>
-	        <script>
-	            document.addEventListener('DOMContentLoaded', function() {
-	                const ticketingBox = document.getElementById('vms_event_plan_ticketing_v2');
-	                if (!ticketingBox) return;
-	                setTimeout(() => {
-	                    ticketingBox.scrollIntoView({
-	                        behavior: 'smooth',
-	                        block: 'start'
-	                    });
-	                    const focusTarget = ticketingBox.querySelector('#vms-ticketing-v2-source .button, #vms-ticketing-v2-source select, #vms-ticketing-v2-source input, #vms-ticketing-v2-source textarea, #vms-ticketing-v2-source a');
-	                    if (focusTarget && typeof focusTarget.focus === 'function') {
-	                        focusTarget.focus({
-	                            preventScroll: true
-	                        });
-	                    }
-	                }, 150);
 	            });
 	        </script>
 	    <?php
