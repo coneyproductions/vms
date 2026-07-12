@@ -1389,26 +1389,6 @@ if (!function_exists('vms_vendor_applications_apply_status_filter')) {
 }
 
 /**
- * Admin CSS for pills.
- */
-add_action('admin_head-edit.php', 'vms_vendor_applications_admin_css');
-function vms_vendor_applications_admin_css(): void
-{
-    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-    if (!$screen || empty($screen->post_type) || !in_array($screen->post_type, vms_vendor_app_cpt_slugs(), true)) return;
-?>
-    <style>
-        .vms-status-pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; line-height:1.6; font-weight:600; }
-        .vms-pill-blue { background:#dbeafe; color:#1e3a8a; }
-        .vms-pill-yellow { background:#fef3c7; color:#92400e; }
-        .vms-pill-green { background:#dcfce7; color:#166534; }
-        .vms-pill-red { background:#fee2e2; color:#991b1b; }
-        .vms-pill-grey { background:#f3f4f6; color:#374151; }
-    </style>
-<?php
-}
-
-/**
  * Add Approve/Reject row actions for pending applications.
  */
 add_filter('post_row_actions', 'vms_vendor_applications_row_actions', 10, 2);

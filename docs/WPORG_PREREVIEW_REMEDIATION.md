@@ -65,7 +65,7 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `H3` | D, H | Medium | Confirmed | `includes/safety/private-files.php:177-221`; `includes/core/private-files.php:355-714`; `includes/core/staffing.php:620-690` | `WPORG-20B` now validates private operational uploads before persistence, brokers authenticated downloads, and avoids new raw absolute-path persistence for these flows; the historical `WPORG-21` H3 scope is fully completed by that committed work. | Medium | `WPORG-20B`, `WPORG-21` |
 | `B1` | B | Medium | Confirmed | `includes/cpt/event-plans.php:5870,6537,6563,6591,6629,7113,7306,8171,8420,8591,8775,8789`; `includes/cpt/event-plans/partials/editor-scripts.php:2,30,697,723,761,783,806,1050,1223,1472,1643,1826` | Event Plans and its editor partials still contain dense inline executable JavaScript. | Medium to High | `WPORG-22` |
 | `B2` | B | Medium | Confirmed | `includes/portal/vendor-portal.php:4690,4701,4738,5068,5635,6219,6231,6490,6651,6893` | Vendor Portal contains inline scripts and inline event handlers such as `onchange="this.form.submit()"`. | Medium | `WPORG-22` |
-| `B3` | B | Medium | Confirmed | `includes/vendor-applications.php:1393,2487` | Vendor Applications renders inline `<style>` and inline executable `<script>` blocks. | Low to Medium | `WPORG-22` |
+| `B3` | B | Medium | Confirmed | `includes/vendor-applications.php:803,1247,1606`; `assets/js/vms-vendor-apply.js`; `assets/css/vms-admin.css:5767-5814` | Vendor Applications inline asset findings are fully remediated: the public form JS is externalized, the public CSS was already asset-backed, and the remaining admin-only status-pill CSS now lives in `vms-admin.css`. | Low to Medium | `WPORG-22` |
 | `B4` | B | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:7917` | Ticketing Rules V2 still emits a large inline executable script block. | Medium | `WPORG-22` |
 | `B5` | B | Low | Confirmed | `includes/admin/ticket-integrity-page.php:2412` | Ticket Integrity admin page emits inline CSS directly in PHP. | Low | `WPORG-22` |
 | `D2` | D | Medium | Confirmed | `includes/vendor-applications.php:2142-2192`; `includes/runtime-guards.php` | `WPORG-20C` now validates the decoded Turnstile response shape before trusting `success`, keeping the earlier `WPORG-20A` request-fingerprint normalization intact. | Low to Medium | `WPORG-20A`, `WPORG-20C` |
@@ -149,13 +149,13 @@ Inline-hit counts from this pass:
 - Compatibility or regression risk: Medium because the portal mixes auth, availability, and opportunity UI concerns.
 - Suggested remediation batch ID: `WPORG-22`
 
-### `B3` Vendor Applications still emits inline CSS and inline JS
+### `B3` Vendor Applications inline CSS and inline JS are now externalized
 
 - Severity: Medium
 - Confidence: Confirmed
-- References: `includes/vendor-applications.php:1393`; `includes/vendor-applications.php:2487`
-- Why WordPress.org may object: scanner-visible inline styles and scripts remain in a public-facing submission flow.
-- Recommended remediation: move CSS into a style handle and move behavior into an enqueued script, leaving only structured state in JSON if necessary.
+- References: `includes/vendor-applications.php:803,1247,1606`; `assets/js/vms-vendor-apply.js`; `assets/css/vms-admin.css:5767-5814`
+- Why WordPress.org may object: this was previously a scanner-visible inline JS/CSS hit in a public-facing submission flow.
+- Recommended remediation: keep the public form behavior in `assets/js/vms-vendor-apply.js`, keep the existing public CSS assets, and keep the remaining admin-only status-pill presentation in `assets/css/vms-admin.css`.
 - Compatibility or regression risk: Low to Medium.
 - Suggested remediation batch ID: `WPORG-22`
 
@@ -571,7 +571,7 @@ Recommended follow-up order, keeping each pass narrow:
 7. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
-   - `B5` is completed by the Ticket Integrity CSS sub-pass below, and the executable Vendor Applications JavaScript portion of `B3` is completed by the Vendor Applications sub-pass below; `B1` / `B2` / `B4` plus the inline CSS portion of `B3` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
+   - `B5` is completed by the Ticket Integrity CSS sub-pass below, and `B3` is now fully completed across the committed Vendor Applications JS sub-pass plus the admin CSS sub-pass below; `B1` / `B2` / `B4` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
 8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
@@ -1572,15 +1572,42 @@ Date: 2026-07-11
 - Vendor Applications renderer: `vms_vendor_apply_shortcode()` in `includes/vendor-applications.php`
 - External asset used: `assets/js/vms-vendor-apply.js`
 - Configuration handoff: page-local `<script type="application/json" id="vms-vendor-apply-variant-map">`
+- Completing commit: `4981e8ac671181a78af699fc726cc1059c426c28` (`Move vendor application script to asset`)
 - Tests added: `php tests/vendor-apply-inline-js-remediation.php`
 - `B5` remains completed by the Ticket Integrity CSS sub-pass above
-- Remaining `WPORG-22` work: `B1`, `B2`, `B4`, and the inline CSS portion of `B3` remain pending, so `WPORG-22` stays open
+- The remaining admin-only CSS portion of `B3` is completed by the follow-up sub-pass immediately below
 
 ### What Changed
 
 - Removed the executable inline Vendor Applications form script from `includes/vendor-applications.php`.
 - Enqueued `vms-vendor-apply` only when the public Vendor Applications form renders.
 - Preserved the existing vendor-type, label, social-field, concession-field, and band-required toggle behavior by moving the same logic into the external asset and feeding only the form-variant map through a non-executable JSON payload.
+
+### Non-Actions
+
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
+## WPORG-22 B3 CSS Result
+
+Date: 2026-07-12
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `B3`
+- Remaining inline CSS source: `vms_vendor_applications_admin_css()` on the Vendor Applications admin list screen in `includes/vendor-applications.php`
+- External asset used: `assets/css/vms-admin.css` via the existing `vms-admin` stylesheet handle on Vendor Applications CPT admin screens
+- Tests added: `php tests/vendor-apply-admin-css-remediation.php`
+- Public Vendor Applications JS was already completed by committed `4981e8ac671181a78af699fc726cc1059c426c28` (`Move vendor application script to asset`)
+- Public Vendor Applications CSS already lived in `assets/css/vms-portal.css` and `assets/css/vms-ui.css`
+- `B5` remains completed by the Ticket Integrity CSS sub-pass above
+- Remaining `WPORG-22` work: `B1`, `B2`, and `B4` remain pending, so `WPORG-22` stays open
+
+### What Changed
+
+- Removed the `admin_head-edit.php` inline CSS emitter from `includes/vendor-applications.php`.
+- Moved the Vendor Applications list-screen status-pill presentation into `assets/css/vms-admin.css`, scoped to the Vendor Applications CPT admin screens so the historical colors and sizing remain unchanged on that screen only.
+- Kept the existing `vms-status-pill` and `vms-pill-*` class contract intact, so the PHP renderers and the earlier public JS remediation stay decoupled from this admin-only styling pass.
 
 ### Non-Actions
 
