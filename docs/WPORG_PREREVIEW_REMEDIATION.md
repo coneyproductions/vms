@@ -66,7 +66,7 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `B1` | B | Medium | Confirmed | `includes/cpt/event-plans.php:5870,6537,6563,6591,6629,7113,7306,8171,8420,8591,8775,8789`; `includes/cpt/event-plans/partials/editor-scripts.php:2,30,697,723,761,783,806,1050,1223,1472,1643,1826` | Event Plans and its editor partials still contain dense inline executable JavaScript. | Medium to High | `WPORG-22` |
 | `B2` | B | Medium | Confirmed | `includes/portal/vendor-portal.php:4690,4701,4738,5068,5635,6219,6231,6490,6651,6893` | Vendor Portal contains inline scripts and inline event handlers such as `onchange="this.form.submit()"`. | Medium | `WPORG-22` |
 | `B3` | B | Medium | Confirmed | `includes/vendor-applications.php:803,1247,1606`; `assets/js/vms-vendor-apply.js`; `assets/css/vms-admin.css:5767-5814` | Vendor Applications inline asset findings are fully remediated: the public form JS is externalized, the public CSS was already asset-backed, and the remaining admin-only status-pill CSS now lives in `vms-admin.css`. | Low to Medium | `WPORG-22` |
-| `B4` | B | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:7917` | Ticketing Rules V2 still emits a large inline executable script block. | Medium | `WPORG-22` |
+| `B4` | B | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:8080-8198`; `assets/vms-ticketing-front.js:4871-5666` | Ticketing Rules V2 no longer emits executable inline JS for the server-controls add-on flow; the existing `vms-ticketing-front` bundle already owns that behavior and continues to read the same localized config plus server-rendered `data-*` payloads. | Medium | `WPORG-22` |
 | `B5` | B | Low | Confirmed | `includes/admin/ticket-integrity-page.php:2412` | Ticket Integrity admin page emits inline CSS directly in PHP. | Low | `WPORG-22` |
 | `D2` | D | Medium | Confirmed | `includes/vendor-applications.php:2142-2192`; `includes/runtime-guards.php` | `WPORG-20C` now validates the decoded Turnstile response shape before trusting `success`, keeping the earlier `WPORG-20A` request-fingerprint normalization intact. | Low to Medium | `WPORG-20A`, `WPORG-20C` |
 | `D3` | D | Medium | Confirmed | `includes/integrations/ticketing-phase-b.php:1919-2051`; `includes/integrations/ticketing-phase-b.php:9596-9729` | `WPORG-20C` now bounds, decodes, and shape-validates the Phase B tier, commit-item, and config/template JSON payloads before the existing per-field normalizers run. | Medium | `WPORG-20C` |
@@ -159,13 +159,13 @@ Inline-hit counts from this pass:
 - Compatibility or regression risk: Low to Medium.
 - Suggested remediation batch ID: `WPORG-22`
 
-### `B4` Ticketing Rules V2 still emits inline executable JS
+### `B4` Ticketing Rules V2 server-controls JS is now externalized
 
 - Severity: Medium
 - Confidence: Confirmed
-- References: `includes/integrations/ticketing-rules-v2.php:7917`
-- Why WordPress.org may object: the runtime still prints executable script directly from PHP.
-- Recommended remediation: move script logic into a versioned asset and feed dynamic config through `wp_add_inline_script()` or a JSON element.
+- References: `includes/integrations/ticketing-rules-v2.php:8080-8198`; `assets/vms-ticketing-front.js:4871-5666`
+- Why WordPress.org may object: this was previously a large executable inline controller embedded directly in the public Ticketing Rules V2 renderer.
+- Recommended remediation: keep the existing `vms-ticketing-front` bundle as the only runtime owner for the server-controls flow and preserve the PHP-to-JS handoff through the existing localized config plus `data-*` attributes on `#vms-reserved-addons`.
 - Compatibility or regression risk: Medium because this file also drives cart and claims flows.
 - Suggested remediation batch ID: `WPORG-22`
 
@@ -571,7 +571,7 @@ Recommended follow-up order, keeping each pass narrow:
 7. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
-   - `B5` is completed by the Ticket Integrity CSS sub-pass below, and `B3` is now fully completed across the committed Vendor Applications JS sub-pass plus the admin CSS sub-pass below; `B1` / `B2` / `B4` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
+   - `B5` is completed by the Ticket Integrity CSS sub-pass below, `B3` is fully completed across the Vendor Applications JS and admin CSS sub-passes below, and `B4` is completed by the Ticketing Rules V2 server-controls JS sub-pass below; `B1` / `B2` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
 8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
@@ -1601,13 +1601,40 @@ Date: 2026-07-12
 - Public Vendor Applications JS was already completed by committed `4981e8ac671181a78af699fc726cc1059c426c28` (`Move vendor application script to asset`)
 - Public Vendor Applications CSS already lived in `assets/css/vms-portal.css` and `assets/css/vms-ui.css`
 - `B5` remains completed by the Ticket Integrity CSS sub-pass above
-- Remaining `WPORG-22` work: `B1`, `B2`, and `B4` remain pending, so `WPORG-22` stays open
+- Remaining `WPORG-22` work: `B1` and `B2` remain pending, so `WPORG-22` stays open
 
 ### What Changed
 
 - Removed the `admin_head-edit.php` inline CSS emitter from `includes/vendor-applications.php`.
 - Moved the Vendor Applications list-screen status-pill presentation into `assets/css/vms-admin.css`, scoped to the Vendor Applications CPT admin screens so the historical colors and sizing remain unchanged on that screen only.
 - Kept the existing `vms-status-pill` and `vms-pill-*` class contract intact, so the PHP renderers and the earlier public JS remediation stay decoupled from this admin-only styling pass.
+
+### Non-Actions
+
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
+## WPORG-22 B4 Result
+
+Date: 2026-07-12
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `B4`
+- Original inline controller source: the server-controls `<script>` block in `vms_ticketing_v2_render_entitlements_block()` within `includes/integrations/ticketing-rules-v2.php`
+- External asset reused: `assets/vms-ticketing-front.js`
+- Duplication audit conclusion: the removed inline controller was redundant; the main `vms-ticketing-front` bundle already booted the same server-controls flow, while the separate `assets/vms-ticketing-front-server-controls.js` sidecar existed only as an unused parallel implementation and was not the active runtime owner
+- Configuration and data handoff retained: `vmsTicketingFront.atomicAddUrl`, `vmsTicketingFront.atomicAddNonce`, `vmsTicketingFront.cartUrl`, `vmsTicketingFront.tecEventId`, `vmsTicketingFront.eventPlanId`, plus the existing `#vms-reserved-addons` `data-vms-*` payload for qualifying-ticket IDs, prior/cart quantities, pool quantities, selector mode, and per-add-on limits
+- Tests added: `php tests/ticketing-server-controls-inline-js-remediation.php`
+- Existing tests run: `php tests/event-plan-legacy-ticketing-integration-smoke.php`, `php tests/request-input-sanitization.php`, `php tests/decoded-json-validation.php`
+- `B3` and `B5` remain completed by the result sections above
+- Remaining `WPORG-22` work: `B1` and `B2` remain pending, so `WPORG-22` stays open
+
+### What Changed
+
+- Removed the executable inline Ticketing Rules V2 server-controls controller from `includes/integrations/ticketing-rules-v2.php`.
+- Kept the existing server-rendered add-on markup and `data-vms-*` configuration contract intact so the already-enqueued `vms-ticketing-front` bundle continues to initialize the controls without any PHP-emitted executable JavaScript.
+- Removed the dead inline-controller ownership marker and the stale unused server-controls sidecar-path setup from the PHP enqueue path so the runtime now matches the actual asset ownership model.
 
 ### Non-Actions
 
