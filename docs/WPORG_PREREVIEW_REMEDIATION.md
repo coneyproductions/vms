@@ -1561,6 +1561,27 @@ Date: 2026-07-11
 
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
+## WPORG-22 B2 Modal Result
+Date: 2026-07-12
+### Summary
+- Result: `PASS`
+- Exact finding identifier: `B2`
+- Scope completed: only the first B2 slice, removing the obsolete executable inline Vendor Portal modal controller from `vms_vendor_portal_shortcode()` in `includes/portal/vendor-portal.php`
+- Proof outcome: no first-party runtime PHP emits `.vms-av-event-trigger` or any `data-vms-modal-*` attributes, no first-party executable code calls `window.VMSPortalCalendarModalOpen` or depends on `window.__vmsPortalModalInlineLoaded`, and `assets/js/vms-portal-calendar-modal.js` remains unused and unenqueued
+- Active runtime path retained: live Vendor Portal event-detail markup still uses `.vms-public-cal`, `.vms-cal-entry`, and `.vms-cal-pop`, with behavior still owned by the existing `assets/js/vms-public-calendar.js` enqueue in the Vendor Portal path
+- Deliberate non-action: the duplicate historical asset `assets/js/vms-portal-calendar-modal.js` was left unchanged and unenqueued in this slice
+- Tests added: `php tests/vendor-portal-modal-inline-js-remediation.php`
+- `B1` remains pending
+- `B3`, `B4`, and `B5` remain completed by the result sections above
+- Remaining `B2` work: passive portal shell listeners and inline form-submit attributes, availability open-state UI, and the availability autosave controller plus its configuration handoff
+- Remaining `WPORG-22` work: `B1` and the remaining `B2` slices stay pending, so `WPORG-22` remains open
+### What Changed
+- Removed only the dead executable inline Vendor Portal modal-controller `<script>` block from `includes/portal/vendor-portal.php`.
+- Preserved the surrounding shortcode output buffering, markup, live `.vms-public-cal` event-detail rendering, and the current `vms-public-calendar` enqueue path.
+- Confirmed the dead modal controller contract had no active first-party selector, markup, global, caller, registration, or enqueue dependency before removing it.
+### Non-Actions
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
 ## WPORG-22 B3 JS Result
 
 Date: 2026-07-11
