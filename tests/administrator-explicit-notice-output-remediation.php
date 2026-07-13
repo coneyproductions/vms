@@ -179,11 +179,13 @@ if (!function_exists('wp_kses')) {
 require_once dirname(__DIR__) . '/includes/admin-ui/shell.php';
 require_once dirname(__DIR__) . '/includes/modules/status-notices/admin-ui.php';
 require_once dirname(__DIR__) . '/includes/admin/continuity-binder.php';
+require_once dirname(__DIR__) . '/includes/admin/due-dates.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
 $statusSource = file_get_contents($pluginRoot . '/includes/modules/status-notices/admin-ui.php');
 $continuitySource = file_get_contents($pluginRoot . '/includes/admin/continuity-binder.php');
+$dueDatesSource = file_get_contents($pluginRoot . '/includes/admin/due-dates.php');
 $bootstrapSource = file_get_contents($pluginRoot . '/includes/bootstrap.php');
 
 $assert = static function (bool $condition, string $message): void {
@@ -195,6 +197,7 @@ $assert = static function (bool $condition, string $message): void {
 $assert(is_string($shellSource) && $shellSource !== '', 'Admin shell source should be readable.');
 $assert(is_string($statusSource) && $statusSource !== '', 'Status Notices admin UI source should be readable.');
 $assert(is_string($continuitySource) && $continuitySource !== '', 'Continuity Binder source should be readable.');
+$assert(is_string($dueDatesSource) && $dueDatesSource !== '', 'Due Dates source should be readable.');
 $assert(is_string($bootstrapSource) && $bootstrapSource !== '', 'Bootstrap source should be readable.');
 
 $normalizeAllowedHtml = static function (array $allowed_html): array {
@@ -290,6 +293,7 @@ foreach ($iterator as $file) {
 $noticesCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedMatches);
 $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
+$dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $expectedActionCallerFiles = array(
 	'admin/event-command-center.php',
 	'admin/integrity-calendar-reconcile.php',
@@ -304,6 +308,7 @@ $expectedActionCallerFiles = array(
 );
 $expectedNoticesCallbackFiles = array(
 	'admin/continuity-binder.php',
+	'admin/due-dates.php',
 	'modules/status-notices/admin-ui.php',
 );
 sort($actionCallerFiles);
@@ -311,11 +316,12 @@ sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 3, 'Only three production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 4, 'Only four production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices list and edit screens should be the only production notices_callback callers.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should be the only new production notices_callback caller.');
+$assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices and Continuity Binder.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, and Due Dates.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -397,6 +403,58 @@ ob_start();
 vms_continuity_binder_render_updated_notice();
 $continuityNoNotice = (string) ob_get_clean();
 $assert($continuityNoNotice === '', 'Continuity Binder explicit notice callback should stay silent when the exact updated flag is absent.');
+
+$assert(strpos($dueDatesSource, 'function vms_due_render_admin_notices(): void') !== false, 'Due Dates should expose a dedicated explicit notice callback.');
+$assert(substr_count($dueDatesSource, "'notices_callback' => 'vms_due_render_admin_notices'") === 1, 'Due Dates shell call should supply its explicit notice callback exactly once.');
+$assert(strpos($dueDatesSource, 'apply_filters(') === false && strpos($dueDatesSource, 'do_action(') === false, 'Due Dates notice path should not hand off markup through hooks or filters.');
+$assert(strpos($dueDatesSource, 'settings_errors(') === false && strpos($dueDatesSource, 'do_settings_sections(') === false && strpos($dueDatesSource, 'wp_editor(') === false, 'Due Dates should not route notice markup through Settings API or editor callbacks.');
+$dueNoticeStart = strpos($dueDatesSource, 'function vms_due_render_admin_notices(): void');
+$dueNoticeEnd = strpos($dueDatesSource, 'function vms_render_due_dates_admin_page(): void');
+$assert($dueNoticeStart !== false && $dueNoticeEnd !== false && $dueNoticeEnd > $dueNoticeStart, 'Due Dates explicit notice callback body should be locatable.');
+$dueNoticeSource = substr($dueDatesSource, (int) $dueNoticeStart, (int) $dueNoticeEnd - (int) $dueNoticeStart);
+$dueContentStart = strpos($dueDatesSource, 'function vms_render_due_dates_admin_page_content(): void');
+$assert($dueContentStart !== false, 'Due Dates content callback body should be locatable.');
+$dueDatesContentSource = substr($dueDatesSource, (int) $dueContentStart);
+$assert(strpos($dueNoticeSource, 'sanitize_key(vms_due_admin_query_arg(\'vms_due_msg\'))') !== false, 'Due Dates explicit notice callback should preserve the existing sanitized message source.');
+$assert(strpos($dueNoticeSource, 'strpos($msg, \'error\') !== false') !== false, 'Due Dates explicit notice callback should preserve the severity mapping.');
+$assert(strpos($dueNoticeSource, 'esc_html(str_replace(\'_\', \' \', $msg))') !== false, 'Due Dates explicit notice callback should preserve contextual escaping and wording normalization.');
+$assert(strpos($dueNoticeSource, 'notice ' . "' . (\$is_error ? 'notice-error' : 'notice-success') . ' is-dismissible") !== false, 'Due Dates explicit notice callback should keep the exact class family.');
+$assert(strpos($dueNoticeSource, '<strong>') === false && strpos($dueNoticeSource, '<a ') === false && strpos($dueNoticeSource, '<button') === false && strpos($dueNoticeSource, '<span') === false, 'Due Dates explicit notice callback should not introduce richer markup.');
+$assert(strpos($dueDatesContentSource, 'notice-error') === false && strpos($dueDatesContentSource, 'notice-success') === false && strpos($dueDatesContentSource, 'is-dismissible') === false, 'Due Dates content callback should no longer emit the migrated simple notices.');
+
+$_GET = array(
+	'vms_due_msg' => 'payee_added',
+);
+ob_start();
+vms_due_render_admin_notices();
+$dueSuccessNotice = (string) ob_get_clean();
+$assert(
+	$dueSuccessNotice === '<div class="notice notice-success is-dismissible"><p>payee added</p></div>',
+	'Due Dates explicit notice callback should preserve the success notice fragment and normalized message text.'
+);
+$assert(
+	wp_kses($dueSuccessNotice, vms_admin_ui_explicit_notice_allowed_html()) === $dueSuccessNotice,
+	'The explicit notice allowlist should admit the Due Dates success notice unchanged.'
+);
+
+$_GET = array(
+	'vms_due_msg' => 'due_complete_error_unknown',
+);
+ob_start();
+vms_due_render_admin_notices();
+$dueErrorNotice = (string) ob_get_clean();
+$assert(
+	$dueErrorNotice === '<div class="notice notice-error is-dismissible"><p>due complete error unknown</p></div>',
+	'Due Dates explicit notice callback should preserve the error notice fragment and severity mapping.'
+);
+
+$_GET = array(
+	'vms_due_msg' => '',
+);
+ob_start();
+vms_due_render_admin_notices();
+$dueNoNotice = (string) ob_get_clean();
+$assert($dueNoNotice === '', 'Due Dates explicit notice callback should stay silent when no message slug is present.');
 
 $allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
 $assert(

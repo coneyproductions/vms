@@ -585,11 +585,24 @@ function vms_due_admin_post_seed_templates(): void {
 // ---------------------------
 // Render
 // ---------------------------
+function vms_due_render_admin_notices(): void {
+  $msg = sanitize_key(vms_due_admin_query_arg('vms_due_msg'));
+  if ($msg === '') {
+    return;
+  }
+
+  $is_error = (strpos($msg, 'error') !== false);
+  echo '<div class="notice ' . ($is_error ? 'notice-error' : 'notice-success') . ' is-dismissible"><p>';
+  echo esc_html(str_replace('_', ' ', $msg));
+  echo '</p></div>';
+}
+
 function vms_render_due_dates_admin_page(): void {
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
         'title' => __('Due Dates', 'backstage-venue-manager'),
+        'notices_callback' => 'vms_due_render_admin_notices',
       ),
       'vms_render_due_dates_admin_page_content'
     );
@@ -606,7 +619,6 @@ function vms_render_due_dates_admin_page_content(): void {
     wp_die('Forbidden');
   }
 
-  $msg = sanitize_key(vms_due_admin_query_arg('vms_due_msg'));
   $payees = vms_due_get_payees();
   $obs = vms_due_get_obligations();
   $log = vms_due_get_log();
@@ -653,13 +665,6 @@ function vms_render_due_dates_admin_page_content(): void {
   $instance_counts = is_array($instance_resp['counts'] ?? null) ? $instance_resp['counts'] : [];
   $instance_items = is_array($instance_resp['items'] ?? null) ? $instance_resp['items'] : [];
   $instance_window = is_array($instance_resp['window'] ?? null) ? $instance_resp['window'] : [];
-
-  if ($msg) {
-    $is_error = (strpos($msg, 'error') !== false);
-    echo '<div class="notice ' . ($is_error ? 'notice-error' : 'notice-success') . ' is-dismissible"><p>';
-    echo esc_html(str_replace('_', ' ', $msg));
-    echo '</p></div>';
-  }
 
   echo '<p class="description">Track recurring compliance and other obligations separately from Vendors. Dashboard shows upcoming / overdue items, and completions are logged (append-only).</p>';
 
