@@ -173,11 +173,20 @@ function vms_continuity_binder_render_nav($sections, $base_url) {
     echo '</div>';
 }
 
+function vms_continuity_binder_render_updated_notice(): void {
+    if (!isset($_GET['updated']) || $_GET['updated'] !== '1') {
+        return;
+    }
+
+    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Binder updated.', 'backstage-venue-manager') . '</p></div>';
+}
+
 function vms_render_continuity_binder_page() {
     if (function_exists('vms_admin_ui_render_shell')) {
         vms_admin_ui_render_shell(
             array(
                 'title' => __('Continuity Binder', 'backstage-venue-manager'),
+                'notices_callback' => 'vms_continuity_binder_render_updated_notice',
             ),
             'vms_render_continuity_binder_page_content'
         );
@@ -200,10 +209,6 @@ function vms_render_continuity_binder_page_content() {
     $page_slug = 'vms-continuity-binder';
 
     echo '<div class="vms-continuity-binder">';
-
-    if (isset($_GET['updated']) && $_GET['updated'] === '1') {
-        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Binder updated.', 'backstage-venue-manager') . '</p></div>';
-    }
 
     echo '<div class="notice notice-warning"><p><strong>' . esc_html__('Security note:', 'backstage-venue-manager') . '</strong> ' .
         esc_html__('Do not store passwords, full SSNs, or full EINs here.', 'backstage-venue-manager') . '</p></div>';

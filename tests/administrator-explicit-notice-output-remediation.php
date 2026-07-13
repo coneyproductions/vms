@@ -106,6 +106,13 @@ if (!function_exists('esc_html')) {
 	}
 }
 
+if (!function_exists('esc_html__')) {
+	function esc_html__(string $text, string $domain = ''): string
+	{
+		return esc_html(__($text, $domain));
+	}
+}
+
 if (!function_exists('esc_attr')) {
 	function esc_attr($text): string
 	{
@@ -171,10 +178,12 @@ if (!function_exists('wp_kses')) {
 
 require_once dirname(__DIR__) . '/includes/admin-ui/shell.php';
 require_once dirname(__DIR__) . '/includes/modules/status-notices/admin-ui.php';
+require_once dirname(__DIR__) . '/includes/admin/continuity-binder.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
 $statusSource = file_get_contents($pluginRoot . '/includes/modules/status-notices/admin-ui.php');
+$continuitySource = file_get_contents($pluginRoot . '/includes/admin/continuity-binder.php');
 $bootstrapSource = file_get_contents($pluginRoot . '/includes/bootstrap.php');
 
 $assert = static function (bool $condition, string $message): void {
@@ -185,6 +194,7 @@ $assert = static function (bool $condition, string $message): void {
 
 $assert(is_string($shellSource) && $shellSource !== '', 'Admin shell source should be readable.');
 $assert(is_string($statusSource) && $statusSource !== '', 'Status Notices admin UI source should be readable.');
+$assert(is_string($continuitySource) && $continuitySource !== '', 'Continuity Binder source should be readable.');
 $assert(is_string($bootstrapSource) && $bootstrapSource !== '', 'Bootstrap source should be readable.');
 
 $normalizeAllowedHtml = static function (array $allowed_html): array {
@@ -257,6 +267,7 @@ $assert(strpos($bootstrapSource, 'class-vms-tours.php') === false, 'Canonical bo
 
 $allIncludeSource = '';
 $actionCallerFiles = array();
+$noticesCallbackFiles = array();
 $iterator = new RecursiveIteratorIterator(
 	new RecursiveDirectoryIterator($pluginRoot . '/includes', FilesystemIterator::SKIP_DOTS)
 );
@@ -271,10 +282,14 @@ foreach ($iterator as $file) {
 	if (preg_match('~[\'"]actions_html[\'"]\s*=>~', $source) === 1) {
 		$actionCallerFiles[] = str_replace($pluginRoot . '/includes/', '', $file->getPathname());
 	}
+	if (preg_match('~[\'"]notices_callback[\'"]\s*=>~', $source) === 1) {
+		$noticesCallbackFiles[] = str_replace($pluginRoot . '/includes/', '', $file->getPathname());
+	}
 }
 
 $noticesCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedMatches);
 $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
+$continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
 $expectedActionCallerFiles = array(
 	'admin/event-command-center.php',
 	'admin/integrity-calendar-reconcile.php',
@@ -287,11 +302,20 @@ $expectedActionCallerFiles = array(
 	'modules/status-notices/admin-ui.php',
 	'safety/admin.php',
 );
+$expectedNoticesCallbackFiles = array(
+	'admin/continuity-binder.php',
+	'modules/status-notices/admin-ui.php',
+);
 sort($actionCallerFiles);
 sort($expectedActionCallerFiles);
-$assert($noticesCallbackCount === 2, 'Only two production notices_callback assignments should exist.');
+$noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
+sort($noticesCallbackFiles);
+sort($expectedNoticesCallbackFiles);
+$assert($noticesCallbackCount === 3, 'Only three production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices list and edit screens should be the only production notices_callback callers.');
+$assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should be the only new production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices and Continuity Binder.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -328,6 +352,51 @@ $assert(
 	$bulkNotice === '<div class="notice notice-success is-dismissible"><p>2 notices updated.</p></div>',
 	'Status Notice callback should preserve the bulk-updated notice fragment with inert dynamic text.'
 );
+
+$assert(strpos($continuitySource, 'function vms_continuity_binder_render_updated_notice(): void') !== false, 'Continuity Binder should expose a dedicated explicit notice callback.');
+$assert(substr_count($continuitySource, "'notices_callback' => 'vms_continuity_binder_render_updated_notice'") === 1, 'Continuity Binder shell call should supply its explicit notice callback exactly once.');
+$assert(substr_count($continuitySource, 'notice notice-success is-dismissible') === 1, 'Continuity Binder success notice should have exactly one production emission path.');
+$assert(strpos($continuitySource, 'notice notice-warning') !== false, 'Continuity Binder warning notice should remain in the content callback.');
+$assert(strpos($continuitySource, 'notice notice-warning"><p><strong>') !== false, 'Continuity Binder warning notice should remain a richer captured family outside the explicit contract.');
+$assert(strpos($continuitySource, 'apply_filters(') === false && strpos($continuitySource, 'do_action(') === false, 'Continuity Binder notice paths should not hand off markup through hooks or filters.');
+$assert(strpos($continuitySource, 'settings_errors(') === false && strpos($continuitySource, 'do_settings_sections(') === false && strpos($continuitySource, 'wp_editor(') === false, 'Continuity Binder should not route notice markup through Settings API or editor callbacks.');
+$updatedNoticeStart = strpos($continuitySource, 'function vms_continuity_binder_render_updated_notice(): void');
+$updatedNoticeEnd = strpos($continuitySource, 'function vms_render_continuity_binder_page()');
+$assert($updatedNoticeStart !== false && $updatedNoticeEnd !== false && $updatedNoticeEnd > $updatedNoticeStart, 'Continuity Binder explicit notice callback body should be locatable.');
+$updatedNoticeSource = substr($continuitySource, (int) $updatedNoticeStart, (int) $updatedNoticeEnd - (int) $updatedNoticeStart);
+$contentStart = strpos($continuitySource, 'function vms_render_continuity_binder_page_content()');
+$contentEnd = strpos($continuitySource, 'function vms_admin_post_save_continuity_binder()');
+$assert($contentStart !== false && $contentEnd !== false && $contentEnd > $contentStart, 'Continuity Binder content callback body should be locatable.');
+$continuityContentSource = substr($continuitySource, (int) $contentStart, (int) $contentEnd - (int) $contentStart);
+$assert(strpos($updatedNoticeSource, '$_GET[\'updated\'] !== \'1\'') !== false, 'Continuity Binder explicit notice callback should preserve the existing exact display condition.');
+$assert(strpos($updatedNoticeSource, 'esc_html__(\'Binder updated.\'') !== false, 'Continuity Binder explicit notice callback should keep contextual escaping for notice text.');
+$assert(strpos($updatedNoticeSource, '<div class="notice notice-success is-dismissible"><p>') !== false, 'Continuity Binder explicit notice callback should keep the fixed simple notice fragment.');
+$assert(strpos($updatedNoticeSource, '<strong>') === false && strpos($updatedNoticeSource, '<a ') === false && strpos($updatedNoticeSource, '<button') === false, 'Continuity Binder explicit notice callback should not introduce richer markup.');
+$assert(strpos($continuityContentSource, 'notice notice-success is-dismissible') === false, 'Continuity Binder content callback should no longer emit the moved success notice.');
+$assert(strpos($continuityContentSource, 'notice notice-warning') !== false, 'Continuity Binder content callback should still emit the remaining warning notice.');
+
+$_GET = array(
+	'updated' => '1',
+);
+ob_start();
+vms_continuity_binder_render_updated_notice();
+$continuityUpdatedNotice = (string) ob_get_clean();
+$assert(
+	$continuityUpdatedNotice === '<div class="notice notice-success is-dismissible"><p>Binder updated.</p></div>',
+	'Continuity Binder explicit notice callback should preserve the updated notice fragment.'
+);
+$assert(
+	wp_kses($continuityUpdatedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $continuityUpdatedNotice,
+	'The explicit notice allowlist should admit the Continuity Binder updated notice unchanged.'
+);
+
+$_GET = array(
+	'updated' => '0',
+);
+ob_start();
+vms_continuity_binder_render_updated_notice();
+$continuityNoNotice = (string) ob_get_clean();
+$assert($continuityNoNotice === '', 'Continuity Binder explicit notice callback should stay silent when the exact updated flag is absent.');
 
 $allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
 $assert(
