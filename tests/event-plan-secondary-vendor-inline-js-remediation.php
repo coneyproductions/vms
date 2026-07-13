@@ -114,8 +114,7 @@ try {
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Secondary Vendors asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') !== false, 'Bulk-cancellation retry confirmation should remain inline.');
 	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') !== false, 'Live-refunds confirmation should remain inline.');
-	$assert(strpos($eventPlansSource, 'const bypassSetBtn = document.getElementById(\'vms-tax-bypass-set\');') !== false, 'Primary-vendor tax controller should remain inline.');
-	$assert(substr_count($eventPlansSource, '<script') >= 4, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the Secondary Vendors migration.');
+	$assert(substr_count($eventPlansSource, '<script') >= 3, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the Secondary Vendors migration.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(

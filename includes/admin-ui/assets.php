@@ -74,6 +74,14 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 			);
 
 			wp_enqueue_script(
+				'vms-event-plan-primary-vendor',
+				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-primary-vendor.js',
+				array(),
+				vms_admin_ui_asset_version(),
+				true
+			);
+
+			wp_enqueue_script(
 				'vms-event-plan-compensation',
 				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-compensation.js',
 				array(),

@@ -37,7 +37,7 @@ $readFile = static function (string $path) use ($assert): string {
 	$assert(strpos($eventPlansSource, 'data-vms-scroll-target=') !== false, 'Event Plan source should hand off the generic scroll target through a non-executable data attribute.');
 	$assert(strpos($eventPlansSource, 'data-vms-lazy-loading-label=') !== false, 'Event Plan source should keep the non-executable shell-label handoff on the stable basic-grid wrapper.');
 	$assert(strpos($eventPlansSource, 'data-vms-lazy-error-label=') !== false, 'Event Plan source should keep the non-executable shell error-label handoff on the stable basic-grid wrapper.');
-	$assert(substr_count($eventPlansSource, '<script') >= 4, 'This slice should not remove unrelated live Event Plan inline script blocks.');
+	$assert(substr_count($eventPlansSource, '<script') >= 3, 'This slice should not remove unrelated live Event Plan inline script blocks.');
 
 	$assert(is_dir($partialsDir), 'Event Plan partial directory should still exist.');
 	$partialScrollHits = array();

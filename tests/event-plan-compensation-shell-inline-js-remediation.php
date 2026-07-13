@@ -78,12 +78,11 @@ try {
 	$assert(strpos($compensationSource, 'id="vms-attendance-bonus-preview"') !== false, 'Compensation partial should retain the attendance preview node.');
 	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') !== false, 'Adjacent cancellation confirmation controller should remain inline.');
 	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') !== false, 'Adjacent live-refunds confirmation controller should remain inline.');
-	$assert(strpos($eventPlansSource, 'const bypassSetBtn = document.getElementById(\'vms-tax-bypass-set\');') !== false, 'Adjacent primary-vendor tax controller should remain inline.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-compensation'") !== false, 'Admin UI assets should retain the Event Plan compensation handle.');
 	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-compensation.js'") !== false, 'Admin UI assets should still point the compensation handle at assets/js/vms-event-plan-compensation.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Compensation asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Compensation asset should remain restricted to Event Plan edit/new screens.');
-	$assert(substr_count($eventPlansSource, '<script') >= 4, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the compensation-shell migration.');
+	$assert(substr_count($eventPlansSource, '<script') >= 3, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the compensation-shell migration.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(
