@@ -175,6 +175,7 @@ require_once dirname(__DIR__) . '/includes/modules/status-notices/admin-ui.php';
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
 $statusSource = file_get_contents($pluginRoot . '/includes/modules/status-notices/admin-ui.php');
+$bootstrapSource = file_get_contents($pluginRoot . '/includes/bootstrap.php');
 
 $assert = static function (bool $condition, string $message): void {
 	if (!$condition) {
@@ -184,6 +185,7 @@ $assert = static function (bool $condition, string $message): void {
 
 $assert(is_string($shellSource) && $shellSource !== '', 'Admin shell source should be readable.');
 $assert(is_string($statusSource) && $statusSource !== '', 'Status Notices admin UI source should be readable.');
+$assert(is_string($bootstrapSource) && $bootstrapSource !== '', 'Bootstrap source should be readable.');
 
 $normalizeAllowedHtml = static function (array $allowed_html): array {
 	ksort($allowed_html);
@@ -203,28 +205,58 @@ $expectedAllowed = array(
 	),
 	'p' => array(),
 );
+$expectedHeaderActionsAllowed = array(
+	'a' => array(
+		'class' => true,
+		'href' => true,
+	),
+	'button' => array(
+		'class' => true,
+		'data-vms-tour' => true,
+		'data-vms-tour-start' => true,
+		'type' => true,
+	),
+	'div' => array(
+		'class' => true,
+		'data-vms-tour' => true,
+	),
+);
 
 $assert(function_exists('vms_admin_ui_explicit_notice_allowed_html'), 'Explicit notice allowlist helper should be defined.');
+$assert(function_exists('vms_admin_ui_header_actions_allowed_html'), 'Header actions allowlist helper should be defined.');
 $assert(
 	$normalizeAllowedHtml(vms_admin_ui_explicit_notice_allowed_html()) === $normalizeAllowedHtml($expectedAllowed),
 	'Explicit notice allowlist should contain only div[class] and p.'
 );
 $assert(
+	$normalizeAllowedHtml(vms_admin_ui_header_actions_allowed_html()) === $normalizeAllowedHtml($expectedHeaderActionsAllowed),
+	'Header actions allowlist should contain only the discovered action elements and attributes.'
+);
+$assert(
 	preg_match('~echo\s+wp_kses\s*\(\s*\$explicit_notices_html\s*,\s*vms_admin_ui_explicit_notice_allowed_html\s*\(\s*\)\s*\)\s*;~s', $shellSource) === 1,
 	'Admin shell should apply the dedicated allowlist at the final explicit notice sink.'
+);
+$assert(
+	preg_match('~echo\s+[\'"]<div class="vms-admin-shell__actions">[\'"]\s*\.\s*wp_kses\s*\(\s*\$actions_html\s*,\s*vms_admin_ui_header_actions_allowed_html\s*\(\s*\)\s*\)\s*\.\s*[\'"]</div>[\'"]\s*;~s', $shellSource) === 1,
+	'Admin shell should apply the dedicated allowlist at the final header-actions sink.'
 );
 $assert(strpos($shellSource, 'echo $explicit_notices_html;') === false, 'Admin shell should not leave a raw explicit notice echo sink.');
 $assert(strpos($shellSource, 'esc_html($explicit_notices_html') === false, 'Admin shell should not text-escape the explicit notice fragment.');
 $assert(strpos($shellSource, 'wp_kses_post($explicit_notices_html') === false, 'Admin shell should not use wp_kses_post() for the explicit notice sink.');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $shellSource), 'Admin shell should not use the post allowlist for the explicit notice sink.');
-$assert(strpos($shellSource, 'echo \'<div class="vms-admin-shell__actions">\' . $actions_html . \'</div>\';') !== false, 'Actions sink should remain untouched.');
+$assert(strpos($shellSource, 'echo \'<div class="vms-admin-shell__actions">\' . $actions_html . \'</div>\';') === false, 'Admin shell should not leave a raw header-actions echo sink.');
+$assert(strpos($shellSource, 'esc_html($actions_html') === false, 'Admin shell should not text-escape the header-actions fragment.');
+$assert(strpos($shellSource, 'wp_kses_post($actions_html') === false, 'Admin shell should not use wp_kses_post() for the header-actions sink.');
 $assert(strpos($shellSource, 'echo $captured_notices_html;') !== false, 'Captured notice sink should remain untouched.');
 $assert(strpos($shellSource, 'echo $content_html;') !== false, 'Shell content sink should remain untouched.');
-$assert(strpos($shellSource, 'wp_kses($actions_html') === false, 'Dedicated explicit notice allowlist should not be applied to actions.');
+$assert(strpos($shellSource, 'wp_kses($actions_html, vms_admin_ui_header_actions_allowed_html())') !== false, 'Dedicated header-actions allowlist should be applied only to actions.');
 $assert(strpos($shellSource, 'wp_kses($captured_notices_html') === false, 'Dedicated explicit notice allowlist should not be applied to captured notices.');
 $assert(strpos($shellSource, 'wp_kses($content_html') === false, 'Dedicated explicit notice allowlist should not be applied to shell content.');
+$assert(strpos($bootstrapSource, "require_once __DIR__ . '/tours/tours.php';") !== false, 'Canonical bootstrap should load the shared tours helper file.');
+$assert(strpos($bootstrapSource, 'class-vms-tours.php') === false, 'Canonical bootstrap should not directly load the legacy core tours help-button file.');
 
 $allIncludeSource = '';
+$actionCallerFiles = array();
 $iterator = new RecursiveIteratorIterator(
 	new RecursiveDirectoryIterator($pluginRoot . '/includes', FilesystemIterator::SKIP_DOTS)
 );
@@ -236,12 +268,30 @@ foreach ($iterator as $file) {
 	$source = file_get_contents($file->getPathname());
 	$assert(is_string($source), 'Production include source should be readable: ' . $file->getPathname());
 	$allIncludeSource .= "\n" . $source;
+	if (preg_match('~[\'"]actions_html[\'"]\s*=>~', $source) === 1) {
+		$actionCallerFiles[] = str_replace($pluginRoot . '/includes/', '', $file->getPathname());
+	}
 }
 
 $noticesCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedMatches);
 $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
+$expectedActionCallerFiles = array(
+	'admin/event-command-center.php',
+	'admin/integrity-calendar-reconcile.php',
+	'admin/integrity-venue-reconcile.php',
+	'admin/schedule.php',
+	'admin/ticket-integrity-page.php',
+	'admin/vendor-availability.php',
+	'admin/vendor-command-center.php',
+	'modules/availability-date-dispatch/admin-ui.php',
+	'modules/status-notices/admin-ui.php',
+	'safety/admin.php',
+);
+sort($actionCallerFiles);
+sort($expectedActionCallerFiles);
 $assert($noticesCallbackCount === 2, 'Only two production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices list and edit screens should be the only production notices_callback callers.');
+$assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -279,6 +329,26 @@ $assert(
 	'Status Notice callback should preserve the bulk-updated notice fragment with inert dynamic text.'
 );
 
+$allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
+$assert(
+	wp_kses($allowedHeaderActions, vms_admin_ui_header_actions_allowed_html()) === $allowedHeaderActions,
+	'Header actions allowlist should preserve the current anchor, wrapper, and guided-tour button fragments.'
+);
+
+$unsafeHeaderActions = '<div class="vms-help-menu" style="display:inline-block" data-vms-tour="ticket-integrity.help" data-vms-help-action="quick_tips"><details class="vms-help-menu" style="display:inline-block"><summary class="button button-secondary">Help</summary></details><button type="button" class="button" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help" data-vms-help-action="quick_tips" data-vms-help-open="1" onclick="alert(1)">Quick Tips</button><a class="button" href="javascript:alert(1)" target="_blank">Bad</a><script>alert(1)</script></div>';
+$sanitizedHeaderActions = wp_kses($unsafeHeaderActions, vms_admin_ui_header_actions_allowed_html());
+$assert(strpos($sanitizedHeaderActions, '<div class="vms-help-menu" data-vms-tour="ticket-integrity.help">') !== false, 'Header actions allowlist should preserve approved wrapper attributes.');
+$assert(strpos($sanitizedHeaderActions, '<button type="button" class="button" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Quick Tips</button>') !== false, 'Header actions allowlist should preserve approved button hooks.');
+$assert(strpos($sanitizedHeaderActions, '<a class="button">Bad</a>') !== false, 'Header actions allowlist should strip unsafe href protocols while preserving approved anchor markup.');
+$assert(strpos($sanitizedHeaderActions, '<details') === false && strpos($sanitizedHeaderActions, '</details>') === false, 'Legacy details markup should not survive the canonical header-actions contract.');
+$assert(strpos($sanitizedHeaderActions, '<summary') === false && strpos($sanitizedHeaderActions, '</summary>') === false, 'Legacy summary markup should not survive the canonical header-actions contract.');
+$assert(strpos($sanitizedHeaderActions, '<script') === false && strpos($sanitizedHeaderActions, '</script>') === false, 'Header actions contract should reject script tags.');
+$assert(stripos($sanitizedHeaderActions, 'style=') === false, 'Header actions contract should reject style attributes.');
+$assert(stripos($sanitizedHeaderActions, 'target=') === false, 'Header actions contract should reject unapproved anchor attributes.');
+$assert(stripos($sanitizedHeaderActions, 'data-vms-help-action=') === false, 'Header actions contract should reject unapproved data attributes.');
+$assert(stripos($sanitizedHeaderActions, 'data-vms-help-open=') === false, 'Header actions contract should reject undiscovered helper attributes.');
+$assert(preg_match('~<[^>]+\son[a-z]+\s*=~i', $sanitizedHeaderActions) === 0, 'Header actions contract should reject inline event-handler attributes.');
+
 $unsafeHtml = '<div class="notice notice-success is-dismissible" style="color:red" data-track="1" role="alert" onclick="alert(1)"><p class="bad" aria-live="assertive" style="font-weight:bold">Saved<script>alert(1)</script><iframe src="https://example.test"></iframe><object data="bad"></object><embed src="bad"><form action="#"><input type="text" value="x"></form><a href="https://example.test">link</a><button type="button">button</button></p></div>';
 $sanitizedHtml = wp_kses($unsafeHtml, vms_admin_ui_explicit_notice_allowed_html());
 $assert(strpos($sanitizedHtml, '<div class="notice notice-success is-dismissible">') !== false, 'Allowed div tag and class attribute should survive.');
@@ -306,4 +376,4 @@ $assert(strpos($sanitizedMalformedHtml, 'title=') === false, 'Malformed p attrib
 $assert(strpos($sanitizedMalformedHtml, 'data-bad=') === false, 'Malformed div data attributes should not survive.');
 $assert(strpos($sanitizedMalformedHtml, '<div class="notice notice-success is-dismissible"><p>Broken</p></div>') !== false, 'Malformed markup should remain inside the intended fragment contract.');
 
-fwrite(STDOUT, "Administrator explicit notice output remediation OK.\n");
+fwrite(STDOUT, "Administrator shell output remediation OK.\n");

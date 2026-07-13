@@ -138,6 +138,28 @@ if (!function_exists('vms_admin_ui_explicit_notice_allowed_html')) {
 	}
 }
 
+if (!function_exists('vms_admin_ui_header_actions_allowed_html')) {
+	function vms_admin_ui_header_actions_allowed_html(): array
+	{
+		return array(
+			'a' => array(
+				'class' => true,
+				'href' => true,
+			),
+			'button' => array(
+				'class' => true,
+				'data-vms-tour' => true,
+				'data-vms-tour-start' => true,
+				'type' => true,
+			),
+			'div' => array(
+				'class' => true,
+				'data-vms-tour' => true,
+			),
+		);
+	}
+}
+
 if (!function_exists('vms_admin_ui_render_shell')) {
 	/**
 	 * @param array<string,mixed> $args
@@ -190,15 +212,15 @@ if (!function_exists('vms_admin_ui_render_shell')) {
 		}
 		echo '</section>';
 
-		echo '<header class="vms-admin-shell__header">';
-		echo '<div class="vms-admin-shell__title-wrap">';
-		echo '<h1 class="vms-admin-shell__title">' . esc_html($title) . '</h1>';
-		if ($subtitle !== '') {
-			echo '<p class="vms-admin-shell__subtitle">' . esc_html($subtitle) . '</p>';
-		}
-		echo '</div>';
-		echo '<div class="vms-admin-shell__actions">' . $actions_html . '</div>';
-		echo '</header>';
+			echo '<header class="vms-admin-shell__header">';
+			echo '<div class="vms-admin-shell__title-wrap">';
+			echo '<h1 class="vms-admin-shell__title">' . esc_html($title) . '</h1>';
+			if ($subtitle !== '') {
+				echo '<p class="vms-admin-shell__subtitle">' . esc_html($subtitle) . '</p>';
+			}
+			echo '</div>';
+			echo '<div class="vms-admin-shell__actions">' . wp_kses($actions_html, vms_admin_ui_header_actions_allowed_html()) . '</div>';
+			echo '</header>';
 
 		echo '<section class="vms-admin-shell__notices">';
 		if ($explicit_notices_html !== '') {

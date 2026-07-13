@@ -391,6 +391,33 @@ Acceptable note:
 - Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php`; `php -l includes/admin-ui/shell.php`; `php -l tests/administrator-explicit-notice-output-remediation.php`; `php tests/administrator-explicit-notice-output-remediation.php`; `php tests/admin-notice-scope-remediation.php`; `php tests/portal-notice-sink-remediation.php`; `git diff --check`.
 - Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining Administrator shell work is now limited to header action fragments, captured notice fragments, and full page content, each requiring their own narrower inventories rather than a shell-wide allowlist. Broader remaining `WPORG-24` boundaries still include Event Plans partial/AJAX HTML and Pass-claims output.
 
+### `WPORG-24 E1` Administrator shell header-action output-contract result
+
+- Result: the Administrator shell `$actions_html` fragment now uses a dedicated final-output contract at the header-action sink in `vms_admin_ui_render_shell()`.
+- Historical finding inspected: the packaged Plugin Check artifact for `includes/admin-ui/shell.php` reported `OutputNotEscaped` hits for `$actions_html`, `$explicit_notices_html`, `$captured_notices_html`, and `$content_html` at `docs/plugin-check-1.0.0-raw.txt:2438-2443`.
+- Production files inspected for the caller inventory: `includes/admin-ui/shell.php`, `includes/bootstrap.php`, `includes/tours/tours.php`, `includes/core/tours/class-vms-tours.php`, `includes/admin/schedule.php`, `includes/admin/integrity-calendar-reconcile.php`, `includes/admin/integrity-venue-reconcile.php`, `includes/modules/status-notices/admin-ui.php`, `includes/admin/event-command-center.php`, `includes/modules/availability-date-dispatch/admin-ui.php`, `includes/admin/vendor-command-center.php`, `includes/admin/vendor-availability.php`, `includes/admin/ticket-integrity-page.php`, and `includes/safety/admin.php`.
+- Production file changed: `includes/admin-ui/shell.php`.
+- Complete current caller inventory for `'actions_html' => ...`: `includes/admin/schedule.php`; `includes/admin/integrity-calendar-reconcile.php`; `includes/admin/integrity-venue-reconcile.php`; `includes/modules/status-notices/admin-ui.php`; `includes/admin/event-command-center.php`; `includes/modules/availability-date-dispatch/admin-ui.php`; `includes/admin/vendor-command-center.php`; `includes/admin/vendor-availability.php`; `includes/admin/ticket-integrity-page.php`; `includes/safety/admin.php`.
+- Exact action families discovered:
+  - Empty/no-action value: the shell default and the Event Command Center / Safety Toolkit paths when their conditional help or plan links are absent.
+  - Plain anchor actions: one or two concatenated `<a>` elements with `class` and `href`, emitted by Schedule, both Integrity pages, Status Notices, and Event Command Center.
+  - Guided-tour button actions: one `<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="..." data-vms-tour="...">...</button>` fragment emitted directly or via `vms_render_help_button()` for Add Dispatch, Vendor Command Center, Vendor Availability, Ticket Integrity, and Safety Toolkit.
+  - Guided-tour wrappers: fixed plugin `<div>` wrappers with `class`, and for Ticket Integrity also `data-vms-tour`, around the guided-tour button fragment.
+- Origin and trust level: every discovered shell action fragment is fixed plugin markup assembled in code. Dynamic values entering the sink are limited to admin URLs, `get_edit_post_link()` results, translated labels, and fixed tour IDs / anchors / classes; existing fragment builders retain `esc_url()`, `esc_html__()`, `sanitize_text_field()`, `sanitize_html_class()`, `sanitize_key()`, and anchor-token sanitization. No editor HTML, Settings API HTML, callback output, hook output, or third-party markup enters `$actions_html`.
+- Help-button implementations inspected:
+  - Canonical bootstrap implementation: `includes/tours/tours.php` defines `vms_render_help_button()` behind `if (!function_exists(...))` and returns only the single guided-tour `<button>` shape used by the shell action callers.
+  - Legacy shipped implementation: `includes/core/tours/class-vms-tours.php` also defines `vms_render_help_button()` behind the same guard but returns a materially different `details` / `summary` / panel markup family with inline `style` and `data-vms-help-action`.
+  - Bootstrap resolution: `includes/bootstrap.php` requires `includes/tours/tours.php` and does not require `includes/core/tours/class-vms-tours.php`, so both definitions cannot coexist in the same canonical request and the shared tours implementation wins for current Administrator shell callers. The legacy `details` / `summary` help-menu markup remains shipped code, but it is not part of the current bootstrapped shell action family and is therefore excluded from this contract.
+- Contract: `vms_admin_ui_header_actions_allowed_html()` in `includes/admin-ui/shell.php`.
+- Exact allowed elements and attributes:
+  - `a[class|href]`
+  - `button[class|type|data-vms-tour|data-vms-tour-start]`
+  - `div[class|data-vms-tour]`
+- Boundary behavior: the final header-action sink now echoes `wp_kses($actions_html, vms_admin_ui_header_actions_allowed_html())` inside the existing `.vms-admin-shell__actions` wrapper. Only `$actions_html` is newly filtered; `$explicit_notices_html` remains contracted exactly as before, and `$captured_notices_html` plus `$content_html` remain untouched existing sinks.
+- Scope confirmation: no complete WordPress admin page, no shell wrapper, and no caller-specific page body is filtered through this contract. No Event Plans partial/AJAX output or Pass-claims output was touched.
+- Focused coverage: `tests/administrator-explicit-notice-output-remediation.php` now also proves the header-action allowlist, canonical tours bootstrap assumption, current `actions_html` caller inventory, allowed anchor/button/wrapper fragments, rejection of `style`, unsafe URLs, unapproved `data-*`, event handlers, and the unloaded legacy `details` / `summary` help-menu markup.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining Administrator shell work still includes captured notice fragments, which require a page-family inventory, and full page content, which requires per-screen remediation. Broader remaining `WPORG-24` boundaries still include Event Plans partial/AJAX HTML and Pass-claims output.
+
 ## F. Prefixing and Collision Safety
 
 Status:
