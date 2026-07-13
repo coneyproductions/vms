@@ -5,6 +5,20 @@ define('ABSPATH', __DIR__);
 
 $GLOBALS['vms_test_event_id'] = 0;
 
+final class WP_Post
+{
+	public $ID;
+	public $post_type;
+	public $post_status;
+
+	public function __construct(int $id, string $postType, string $postStatus)
+	{
+		$this->ID = $id;
+		$this->post_type = $postType;
+		$this->post_status = $postStatus;
+	}
+}
+
 function vms_public_event_sidebar_guard_assert(bool $condition, string $message): void
 {
 	if ($condition) {
@@ -85,6 +99,16 @@ function get_post_type($post_id = null): string
 {
 	unset($post_id);
 	return 'tribe_events';
+}
+
+function get_post($post_id)
+{
+	$post_id = absint($post_id);
+	if ($post_id <= 0) {
+		return null;
+	}
+
+	return new WP_Post($post_id, 'tribe_events', 'publish');
 }
 
 function esc_attr(string $value): string

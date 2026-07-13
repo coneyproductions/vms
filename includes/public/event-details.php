@@ -101,40 +101,59 @@ if (!function_exists('vms_event_details_enqueue_assets')) {
     }
 }
 
+if (!function_exists('vms_event_details_get_published_event_id')) {
+    function vms_event_details_get_published_event_id(int $event_id): int
+    {
+        $event_id = absint($event_id);
+        if ($event_id <= 0) {
+            return 0;
+        }
+
+        $event_post = get_post($event_id);
+        if (!$event_post instanceof WP_Post) {
+            return 0;
+        }
+
+        if ($event_post->post_type !== 'tribe_events' || $event_post->post_status !== 'publish') {
+            return 0;
+        }
+
+        return (int) $event_post->ID;
+    }
+}
+
 if (!function_exists('vms_event_details_shortcode')) {
     function vms_event_details_shortcode($atts = array()): string
     {
+        $raw_atts = (array) $atts;
         $a = shortcode_atts(array(
             'event_id' => '0',
             'id'       => '0',
             'event'    => '0',
             'heading'  => '',
             'layout'   => 'sidebar',
-        ), (array) $atts, 'vms_plan_your_visit');
+        ), $raw_atts, 'vms_plan_your_visit');
 
-        $event_id = absint($a['event_id'] ?? 0);
-        if ($event_id <= 0) {
-            $event_id = absint($a['id'] ?? 0);
-        }
-        if ($event_id <= 0) {
-            $event_id = absint($a['event'] ?? 0);
-        }
+        $has_explicit_event_id = array_key_exists('event_id', $raw_atts) || array_key_exists('id', $raw_atts) || array_key_exists('event', $raw_atts);
+        $event_id = 0;
 
-        if ($event_id <= 0 && function_exists('get_queried_object_id')) {
-            $queried_id = (int) get_queried_object_id();
-            if ($queried_id > 0 && get_post_type($queried_id) === 'tribe_events') {
-                $event_id = $queried_id;
+        if ($has_explicit_event_id) {
+            $event_id = vms_event_details_get_published_event_id((int) ($a['event_id'] ?? 0));
+            if ($event_id <= 0) {
+                $event_id = vms_event_details_get_published_event_id((int) ($a['id'] ?? 0));
             }
+            if ($event_id <= 0) {
+                $event_id = vms_event_details_get_published_event_id((int) ($a['event'] ?? 0));
+            }
+        } else {
+            if (!function_exists('is_singular') || !is_singular('tribe_events') || !function_exists('get_queried_object_id')) {
+                return '';
+            }
+
+            $event_id = vms_event_details_get_published_event_id((int) get_queried_object_id());
         }
 
         if ($event_id <= 0) {
-            global $post;
-            if ($post instanceof WP_Post && get_post_type((int) $post->ID) === 'tribe_events') {
-                $event_id = (int) $post->ID;
-            }
-        }
-
-        if ($event_id <= 0 || get_post_type($event_id) !== 'tribe_events') {
             return '';
         }
 
