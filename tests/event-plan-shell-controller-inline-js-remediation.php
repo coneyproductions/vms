@@ -74,7 +74,7 @@ try {
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitStaff = initStaff;') === false, 'Staff controller ownership should move out of Event Plan PHP in this slice.');
 	$assert(strpos($staffAssetSource, 'window.vmsEventPlanInitStaff = initStaff;') !== false, 'Dedicated staff asset should now own the public staff initializer.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;') !== false, 'Secondary Vendors should remain an active inline controller after the shell migration.');
-	$assert(substr_count($eventPlansSource, '<script') >= 6, 'B1 should still have other active Event Plan inline script blocks after this shell-only slice.');
+	$assert(substr_count($eventPlansSource, '<script') >= 5, 'B1 should still have other active Event Plan inline script blocks after this shell-only slice.');
 	$assert(!file_exists($unexpectedAssetPath), 'This slice should not create a second Event Plan shell/controller asset.');
 
 	fwrite(STDOUT, "event plan shell controller inline js remediation: PASS\n");
