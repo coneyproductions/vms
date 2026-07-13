@@ -24,6 +24,27 @@ if (!function_exists('vms_add_dispatch_maybe_flush_rewrites')) {
 }
 add_action('admin_init', 'vms_add_dispatch_maybe_flush_rewrites', 30);
 
+if (!function_exists('vms_add_dispatch_public_response_allowed_html')) {
+	function vms_add_dispatch_public_response_allowed_html(): array
+	{
+		return array(
+			'a' => array(
+				'class' => true,
+				'href' => true,
+			),
+			'br' => array(),
+			'div' => array(
+				'class' => true,
+			),
+			'h1' => array(),
+			'p' => array(
+				'class' => true,
+			),
+			'strong' => array(),
+		);
+	}
+}
+
 if (!function_exists('vms_add_dispatch_render_public_shell')) {
 	function vms_add_dispatch_render_public_shell(string $headline, string $content_html): void
 	{
@@ -48,7 +69,7 @@ if (!function_exists('vms_add_dispatch_render_public_shell')) {
 		echo '.vms-add-success{background:#ecfbf2;border:1px solid #abd5b7;color:#13472b;}';
 		echo '@media (max-width:760px){.vms-add-actions{grid-template-columns:1fr;}}';
 		echo '</style></head><body><div class="vms-add-public"><div class="vms-add-card">';
-		echo $content_html;
+		echo wp_kses($content_html, vms_add_dispatch_public_response_allowed_html());
 		echo '</div></div></body></html>';
 		exit;
 	}
