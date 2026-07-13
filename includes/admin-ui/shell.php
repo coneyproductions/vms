@@ -126,6 +126,18 @@ if (!function_exists('vms_admin_ui_prepare_notice_markup')) {
 	}
 }
 
+if (!function_exists('vms_admin_ui_explicit_notice_allowed_html')) {
+	function vms_admin_ui_explicit_notice_allowed_html(): array
+	{
+		return array(
+			'div' => array(
+				'class' => true,
+			),
+			'p' => array(),
+		);
+	}
+}
+
 if (!function_exists('vms_admin_ui_render_shell')) {
 	/**
 	 * @param array<string,mixed> $args
@@ -190,7 +202,7 @@ if (!function_exists('vms_admin_ui_render_shell')) {
 
 		echo '<section class="vms-admin-shell__notices">';
 		if ($explicit_notices_html !== '') {
-			echo $explicit_notices_html;
+			echo wp_kses($explicit_notices_html, vms_admin_ui_explicit_notice_allowed_html());
 		}
 		if ($captured_notices_html !== '') {
 			echo $captured_notices_html;
