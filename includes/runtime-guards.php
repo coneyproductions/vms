@@ -677,6 +677,10 @@ if (!function_exists('vms_render_admin_diagnostics')) {
 			return;
 		}
 
+		if (!function_exists('vms_admin_ui_is_admin_notice_screen') || !vms_admin_ui_is_admin_notice_screen()) {
+			return;
+		}
+
 		$queue = get_transient('vms_admin_diagnostic_queue');
 		if (!is_array($queue) || empty($queue)) {
 			return;

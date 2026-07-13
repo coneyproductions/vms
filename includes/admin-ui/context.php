@@ -82,6 +82,40 @@ if (!function_exists('vms_admin_ui_is_vms_screen')) {
 	}
 }
 
+if (!function_exists('vms_admin_ui_is_admin_notice_screen')) {
+	/**
+	 * @param WP_Screen|null $screen
+	 */
+	function vms_admin_ui_is_admin_notice_screen($screen = null): bool
+	{
+		if (!is_admin()) {
+			return false;
+		}
+
+		if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (function_exists('wp_doing_cron') && wp_doing_cron())) {
+			return false;
+		}
+
+		if ((defined('REST_REQUEST') && REST_REQUEST) || (defined('DOING_CRON') && DOING_CRON)) {
+			return false;
+		}
+
+		if (!is_object($screen)) {
+			if (!function_exists('get_current_screen')) {
+				return false;
+			}
+
+			$screen = get_current_screen();
+		}
+
+		if (!is_object($screen)) {
+			return false;
+		}
+
+		return vms_admin_ui_is_vms_screen($screen);
+	}
+}
+
 if (!function_exists('vms_admin_ui_is_shell_page')) {
 	function vms_admin_ui_is_shell_page(): bool
 	{

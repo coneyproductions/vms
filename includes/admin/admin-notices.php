@@ -20,6 +20,10 @@ add_action('admin_notices', function () {
         return;
     }
 
+    if (!function_exists('vms_admin_ui_is_admin_notice_screen') || !vms_admin_ui_is_admin_notice_screen()) {
+        return;
+    }
+
     // Only show if flagged by activation.
     if (get_option('vms_show_first_run_notice') !== '1') {
         return;   

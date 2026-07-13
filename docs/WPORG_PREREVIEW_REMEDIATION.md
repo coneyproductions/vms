@@ -56,8 +56,8 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `J2` | J | High | Confirmed | `includes/admin/continuity-binder.php:266`; `includes/core/event-credits.php:380`; `includes/core/event-plan-save-profiler.php:1476`; `includes/modules/email-followups/admin-ui.php:604`; `vms/includes/modules/admissions/outreach-recipients.php:1861` | Translator-comment, placeholder-order, and final semantic comment-audit findings were remediated in the working tree; `WPORG-18D` corrected the remaining misleading heuristic comments and the final verification suite stayed clean. | Low to Medium | `WPORG-18B`, `WPORG-18D` |
 | `M1` | M | High | Confirmed | `vendor-management-system.php:3-13`; `readme.txt:4-9`; `vms-build.txt:1`; `vms/vendor-management-system.php:3-13`; `vms/readme.txt:4-9`; `vms/vms-build.txt:1` | Mirror release metadata says `1.0.0`; live local plugin says `1.1.0`. Packaging decision is blocked until versions are reconciled. | Low | `WPORG-28` |
 | `H1` | D, H | High | Confirmed | `includes/admin/tax-profile-admin-metabox.php:102-118`; `includes/portal/vendor-tax-profile.php:121-137`; `includes/core/private-files.php:541-714` | `WPORG-20B` now routes admin and portal W-9 uploads through validated private-file helpers and brokered downloads; the historical `WPORG-21` H1 scope is fully completed by that committed work. | Medium | `WPORG-20B`, `WPORG-21` |
-| `K1` | K | High | Confirmed | `includes/admin/admin-notices.php:16-64` | First-run notice is global, promotional, and not scoped to VMS screens. | Low | `WPORG-23` |
-| `K2` | K | High | Confirmed | `includes/runtime-guards.php:100-108`; `includes/ticketing/ticket-integrity-payment-gateway-health.php:1044-1052` | Diagnostics and payment-gateway notices are hooked globally to `admin_notices` without VMS-screen gating. | Low to Medium | `WPORG-23` |
+| `K1` | K | High | Confirmed | `includes/admin-ui/context.php`; `includes/admin/admin-notices.php` | First-run notice now uses the shared VMS admin-notice screen predicate and no longer renders across unrelated WordPress admin screens. | Low | `WPORG-23` |
+| `K2` | K | High | Confirmed | `includes/admin-ui/context.php`; `includes/runtime-guards.php`; `includes/ticketing/ticket-integrity-payment-gateway-health.php` | Runtime diagnostics and payment-gateway health notices now use the same shared predicate and remain limited to VMS-owned screens, including the exact Ticket Integrity screen. | Low to Medium | `WPORG-23` |
 | `C1` | C | Medium | Confirmed | `includes/cpt/venues.php:266-269`; `includes/cpt/ratings.php:177-180`; `includes/admin/staff-worker-type.php:75-76`; `includes/admin/venue-context.php:169-170`; `includes/vendor-applications.php:1728-1729`; `includes/portal/vendor-tax-profile.php:92-93`; `includes/admin/tax-profile-admin-metabox.php:35-38` | `WPORG-19A` working-tree remediation now normalizes and sanitizes nonce verification inputs across the direct request and wrapper/REST paths. The later complete `WPORG-19B` runtime inventory did not uncover any additional missing-nonce defects. | Low to Medium | `WPORG-19A`, `WPORG-19B` |
 | `C2` | C | Medium | Confirmed | `includes/vendor-applications.php:1420`; `includes/vendor-applications.php:1616`; `includes/vendor-applications.php:1736`; `includes/vendor-applications.php:1843`; `includes/vendor-applications.php:1895`; `includes/vendor-applications.php:1924`; `includes/vendor-applications.php:1965`; `includes/helpers.php:3773`; `includes/admin/venue-duplicate-templates.php:372`; `includes/admin/season-dates.php:199-200`; `includes/cpt/event-plans.php:13658` | The complete `WPORG-19B` runtime inventory closed the remaining section C authorization follow-up by replacing broad or missing object-aware gates across vendor-application, vendor-review, venue-template, season-dates, and event-plan edit-screen mutation boundaries, plus aligned vendor-application admin UI gates. | Low | `WPORG-19B` |
 | `D1` | D | Medium | Confirmed | `includes/portal/staff-portal.php:1755-1758`; `includes/runtime-guards.php`; `includes/vendor-applications.php`; `includes/portal/vendor-portal.php`; `includes/integrations/ticketing-verifications.php`; `includes/core/vendor-application-confirmation.php` | `WPORG-20A` working-tree remediation now normalizes ordinary request-global, redirect-derived, and server-derived inputs across the shared mirror/live runtime boundaries; the original `FILTER_UNSAFE_RAW` staff-portal path is removed and the reviewed redirect/server examples now flow through shared helper validation. | Low to Medium | `WPORG-20A` |
@@ -438,26 +438,26 @@ Already resolved note:
 
 Status:
 
-- Two confirmed actionable findings.
+- `WPORG-23` is complete in the current mirror history.
 - One pre-existing top-nav system that should be documented, not conflated with the global notice problem.
 
-### `K1` First-run notice is global, promotional, and not VMS-screen scoped
+### `K1` First-run notice is now restricted to VMS-owned admin screens
 
 - Severity: High
-- Confidence: Confirmed
-- References: `includes/admin/admin-notices.php:16-64`
-- Why WordPress.org may object: the notice appears anywhere in `wp-admin` for admins, includes setup-checklist copy, and presents an `Open VMS` CTA.
-- Recommended remediation: restrict it to VMS-owned screens, minimize promotional wording, or remove it from the WordPress.org package.
+- Confidence: Confirmed complete
+- References: `includes/admin-ui/context.php`; `includes/admin/admin-notices.php`
+- Remediation outcome: the existing first-run/setup notice still uses the same option flag, dismissal action/nonce, CTA, capability gate, notice class, and copy, but now returns early unless the current screen is a real VMS-owned admin screen recognized through the shared notice-scope predicate.
+- Operator-visible effect: unrelated WordPress admin screens such as Dashboard, Plugins, Posts, Pages, Media, Comments, Users, Appearance, Tools, Settings, unrelated CPTs, and unrelated plugin pages no longer receive this notice.
 - Compatibility or regression risk: Low.
 - Suggested remediation batch ID: `WPORG-23`
 
-### `K2` Diagnostics and payment-health notices render globally through `admin_notices`
+### `K2` Diagnostics and payment-health notices are now restricted to VMS-owned or exact Ticket Integrity screens
 
 - Severity: High
-- Confidence: Confirmed
-- References: `includes/runtime-guards.php:100-108`; `includes/ticketing/ticket-integrity-payment-gateway-health.php:1044-1052`
-- Why WordPress.org may object: these notices can appear outside VMS screens and contribute to the dashboard-hijack concern under Guideline 11.
-- Recommended remediation: gate both notice systems to VMS screens or convert them into screen-specific diagnostics inside existing VMS admin pages.
+- Confidence: Confirmed complete
+- References: `includes/admin-ui/context.php`; `includes/runtime-guards.php`; `includes/ticketing/ticket-integrity-payment-gateway-health.php`
+- Remediation outcome: both global health/diagnostic notice systems now use the shared notice-scope predicate, which requires a real current screen object, rejects AJAX/REST/cron/front-end contexts, and then delegates to the existing VMS screen classifier.
+- Operator-visible effect: runtime diagnostics and payment-gateway health notices continue to render on VMS-owned screens, including Event Plan edit/new and the dedicated Ticket Integrity page, while unrelated WordPress admin screens no longer receive them.
 - Compatibility or regression risk: Low to Medium because operators may rely on current visibility.
 - Suggested remediation batch ID: `WPORG-23`
 
@@ -581,6 +581,7 @@ Recommended follow-up order, keeping each pass narrow:
 8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
+   - Result: completed in the current mirror history via a shared notice-scope helper in `includes/admin-ui/context.php`, with the first-run, runtime-diagnostic, and payment-health notices limited to VMS-owned or exact Ticket Integrity screens only
 9. `WPORG-24 - Output escaping contract pass`
    - Scope: `E1`
    - Goal: separate genuine escaping defects from safe HTML/JSON patterns
@@ -623,7 +624,7 @@ Recommended follow-up order, keeping each pass narrow:
 - [x] Complete `WPORG-20B` upload transport and MIME/type hardening across tax-profile, import, and private-file flows.
 - [x] Complete `WPORG-20C` decoded JSON / structured-body validation after the ordinary request-global pass.
 - [x] Complete `WPORG-22` inline asset enqueue migration for B1-B5.
-- [ ] Scope all admin notices to VMS-owned screens.
+- [x] Scope all admin notices to VMS-owned screens.
 - [ ] Re-run Plugin Check in a controlled release-gate environment with a concrete plugin target and documented runtime/static mode.
 - [ ] Reconfirm external-service disclosures after the package-scope decisions above.
 - [ ] Validate the final public ZIP folder, slug, and version before any packaging or submission work.
@@ -721,7 +722,6 @@ Date: 2026-07-10
 ### Remaining Follow-Up Batches
 
 - `WPORG-22` — Inline asset enqueue migration
-- `WPORG-23` — Admin notice scope
 - `WPORG-24` — Output escaping contract pass
 - `WPORG-25` — Output buffer lifecycle review
 - `WPORG-26` — Prefix and collision review
@@ -1119,7 +1119,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, and the inline asset enqueue migration tracked in `WPORG-22`; the next actual incomplete implementation batch in this inventory now starts at `WPORG-23`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the inline asset enqueue migration tracked in `WPORG-22`, and the admin-notice scope remediation tracked in `WPORG-23`; the next actual incomplete implementation batch in this inventory now starts at `WPORG-24`.
 
 ## WPORG-19B Result
 
@@ -1542,8 +1542,36 @@ Date: 2026-07-11
 ### Next Actual Incomplete Batch
 
 - `WPORG-22` is now completed by the recorded B1-B5 inline asset remediation passes.
-- `WPORG-23` is now the next incomplete implementation batch.
+- `WPORG-23` is now completed by the admin-notice scope remediation recorded below.
+- `WPORG-24` is now the next incomplete implementation batch.
 - `WPORG-21` was not reopened in this corrective pass.
+
+## WPORG-23 Result
+
+Date: 2026-07-12
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifiers: `K1`, `K2`
+- Shared helper ownership: `includes/admin-ui/context.php` via `vms_admin_ui_is_admin_notice_screen()`
+- Notice entry points: `includes/admin/admin-notices.php`, `includes/runtime-guards.php`, `includes/ticketing/ticket-integrity-payment-gateway-health.php`
+- Test coverage: `php tests/admin-notice-scope-remediation.php`, `php tests/request-input-sanitization.php`, `php tests/vendor-apply-admin-css-remediation.php`, and `php tests/ticket-integrity-inline-css-remediation.php`
+- Current `WPORG-23` status: complete; the first-run, runtime-diagnostic, and payment-health notices are now restricted to VMS-owned or exact Ticket Integrity screens, and unrelated WordPress admin screens no longer receive them.
+- Separate backlog explicitly unchanged: notice placement, top-navigation relocation, below-menu polish, and other non-WPORG-23 admin-message presentation work remain outside this batch.
+
+### What Changed
+
+- Added a shared admin-notice screen predicate in `includes/admin-ui/context.php` that requires a real current screen object, rejects AJAX/REST/cron/front-end contexts, and then delegates to the existing VMS screen classifier.
+- Scoped the first-run notice in `includes/admin/admin-notices.php` to that shared predicate while preserving its option flag, dismissal URL/action/nonce, CTA, capability gate, text, and success notice class.
+- Scoped the runtime diagnostics notice in `includes/runtime-guards.php` to that shared predicate while preserving its queue/seen-state behavior, warning severity, message rendering, and diagnostic logging.
+- Scoped the payment-gateway health notice in `includes/ticketing/ticket-integrity-payment-gateway-health.php` to that shared predicate while preserving its critical-state check, severity, message, first-detected timestamp, and Ticket Integrity CTA.
+- Kept Event Plan edit/new screens eligible through the existing VMS screen classifier and kept the dedicated Ticket Integrity page eligible through its exact `page=vms-ticket-integrity` screen context.
+
+### Non-Actions
+
+- No VMS top-navigation, notice relocation, notice container, CSS, below-menu placement polish, or unrelated post-action notice behavior was changed in this batch.
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
 ## WPORG-22 B5 Result
 
