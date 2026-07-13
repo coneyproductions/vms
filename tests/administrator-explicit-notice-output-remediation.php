@@ -41,6 +41,18 @@ if (!function_exists('sanitize_key')) {
 	}
 }
 
+if (!function_exists('sanitize_text_field')) {
+	function sanitize_text_field($value): string
+	{
+		if (!is_scalar($value)) {
+			return '';
+		}
+
+		$sanitized = preg_replace('/[\r\n\t ]+/', ' ', strip_tags((string) $value));
+		return is_string($sanitized) ? trim($sanitized) : '';
+	}
+}
+
 if (!function_exists('absint')) {
 	function absint($value): int
 	{
@@ -239,6 +251,7 @@ require_once dirname(__DIR__) . '/includes/admin/continuity-binder.php';
 require_once dirname(__DIR__) . '/includes/admin/due-dates.php';
 require_once dirname(__DIR__) . '/includes/admin/square-sync-protection.php';
 require_once dirname(__DIR__) . '/includes/admin/staff-certifications.php';
+require_once dirname(__DIR__) . '/includes/social-share/admin.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
@@ -247,6 +260,9 @@ $continuitySource = file_get_contents($pluginRoot . '/includes/admin/continuity-
 $dueDatesSource = file_get_contents($pluginRoot . '/includes/admin/due-dates.php');
 $squareSyncProtectionSource = file_get_contents($pluginRoot . '/includes/admin/square-sync-protection.php');
 $staffCertificationsSource = file_get_contents($pluginRoot . '/includes/admin/staff-certifications.php');
+$socialSource = file_get_contents($pluginRoot . '/includes/social-share/admin.php');
+$emailFollowupsSource = file_get_contents($pluginRoot . '/includes/modules/email-followups/admin-ui.php');
+$eventPlanImportSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/page-event-plan-import.php');
 $bootstrapSource = file_get_contents($pluginRoot . '/includes/bootstrap.php');
 
 $assert = static function (bool $condition, string $message): void {
@@ -261,6 +277,9 @@ $assert(is_string($continuitySource) && $continuitySource !== '', 'Continuity Bi
 $assert(is_string($dueDatesSource) && $dueDatesSource !== '', 'Due Dates source should be readable.');
 $assert(is_string($squareSyncProtectionSource) && $squareSyncProtectionSource !== '', 'Square Sync Protection source should be readable.');
 $assert(is_string($staffCertificationsSource) && $staffCertificationsSource !== '', 'Staff Certifications source should be readable.');
+$assert(is_string($socialSource) && $socialSource !== '', 'Social Sharing source should be readable.');
+$assert(is_string($emailFollowupsSource) && $emailFollowupsSource !== '', 'Email Follow-Ups source should be readable.');
+$assert(is_string($eventPlanImportSource) && $eventPlanImportSource !== '', 'Event Plan Import source should be readable.');
 $assert(is_string($bootstrapSource) && $bootstrapSource !== '', 'Bootstrap source should be readable.');
 
 $normalizeAllowedHtml = static function (array $allowed_html): array {
@@ -359,6 +378,7 @@ $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
 $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
+$socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
 	'admin/event-command-center.php',
 	'admin/integrity-calendar-reconcile.php',
@@ -377,20 +397,22 @@ $expectedNoticesCallbackFiles = array(
 	'admin/square-sync-protection.php',
 	'admin/staff-certifications.php',
 	'modules/status-notices/admin-ui.php',
+	'social-share/admin.php',
 );
 sort($actionCallerFiles);
 sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 6, 'Only six production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 7, 'Only seven production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
 $assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
 $assert($staffCertificationsNoticeCallbackCount === 1, 'Staff Certifications should contribute exactly one production notices_callback caller.');
+$assert($socialNoticeCallbackCount === 1, 'Social Sharing should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Due Dates, Square Sync Protection, and Staff Certifications.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Due Dates, Square Sync Protection, Staff Certifications, and Social Sharing.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -678,6 +700,77 @@ $assert($GLOBALS['vms_test_staff_certifications_provider_statuses'] === array('p
 $assert(strpos($staffNonemptyPage, 'No staff certifications are waiting for review.') === false, 'Staff Certifications page renderer should emit no empty-state notice when pending items exist.');
 $assert(strpos($staffNonemptyPage, 'Jamie Queue') !== false && strpos($staffNonemptyPage, 'Food Handler') !== false, 'Staff Certifications page renderer should keep using the resolved dataset for nonempty page content.');
 $assert(strpos($staffNonemptyPage, '>1</strong> certification needs review') !== false, 'Staff Certifications nonempty summary should still use the same resolved dataset count.');
+
+$assert(strpos($socialSource, 'function vms_social_render_notices(): void') !== false, 'Social Sharing should expose a dedicated explicit notice callback.');
+$assert(substr_count($socialSource, "'notices_callback' => 'vms_social_render_notices'") === 1, 'Social Sharing shell call should supply its explicit notice callback exactly once.');
+$socialNoticeStart = strpos($socialSource, 'function vms_social_render_notices(): void');
+$socialNoticeEnd = strpos($socialSource, "if (!function_exists('vms_social_render_admin_page'))");
+$assert($socialNoticeStart !== false && $socialNoticeEnd !== false && $socialNoticeEnd > $socialNoticeStart, 'Social Sharing explicit notice callback body should be locatable.');
+$socialNoticeSource = substr($socialSource, (int) $socialNoticeStart, (int) $socialNoticeEnd - (int) $socialNoticeStart);
+$socialPageStart = strpos($socialSource, 'function vms_social_render_admin_page(): void');
+$socialPageEnd = strpos($socialSource, "if (!function_exists('vms_social_render_admin_page_content'))");
+$assert($socialPageStart !== false && $socialPageEnd !== false && $socialPageEnd > $socialPageStart, 'Social Sharing page renderer body should be locatable.');
+$socialPageSource = substr($socialSource, (int) $socialPageStart, (int) $socialPageEnd - (int) $socialPageStart);
+$socialContentStart = strpos($socialSource, 'function vms_social_render_admin_page_content(): void');
+$socialContentEnd = strpos($socialSource, "if (!function_exists('vms_social_render_overview_tab'))");
+$assert($socialContentStart !== false && $socialContentEnd !== false && $socialContentEnd > $socialContentStart, 'Social Sharing content callback body should be locatable.');
+$socialContentSource = substr($socialSource, (int) $socialContentStart, (int) $socialContentEnd - (int) $socialContentStart);
+$assert(strpos($socialNoticeSource, 'sanitize_text_field(vms_social_admin_query_arg(\'vms_social_notice\'))') !== false, 'Social Sharing explicit notice callback should preserve the sanitized notice message source.');
+$assert(strpos($socialNoticeSource, 'sanitize_key(vms_social_admin_query_arg(\'vms_social_notice_type\'))') !== false, 'Social Sharing explicit notice callback should preserve the sanitized notice type source.');
+$assert(strpos($socialNoticeSource, "array('error', 'warning', 'success', 'info')") !== false, 'Social Sharing explicit notice callback should preserve the existing notice type allowlist.');
+$assert(strpos($socialNoticeSource, '<div class="notice notice-') !== false && strpos($socialNoticeSource, 'is-dismissible') !== false, 'Social Sharing explicit notice callback should preserve the dismissible notice class family.');
+$assert(strpos($socialNoticeSource, 'esc_attr($class)') !== false && strpos($socialNoticeSource, 'esc_html($notice)') !== false, 'Social Sharing explicit notice callback should preserve contextual escaping.');
+$assert(strpos($socialNoticeSource, '<strong>') === false && strpos($socialNoticeSource, '<a ') === false && strpos($socialNoticeSource, '<button') === false && strpos($socialNoticeSource, '<span') === false, 'Social Sharing explicit notice callback should stay within the simple fragment contract.');
+$assert(strpos($socialPageSource, "'notices_callback' => 'vms_social_render_notices'") !== false, 'Social Sharing page renderer should pass the explicit notice callback through the Administrator shell.');
+$assert(strpos($socialPageSource, "echo '<h1>'") !== false && strpos($socialPageSource, 'vms_social_render_notices();') !== false, 'Social Sharing no-shell fallback should preserve the pre-content notice ordering.');
+$assert(strpos($socialContentSource, 'vms_social_render_notices();') === false, 'Social Sharing content callback should no longer emit the moved page-local notice family.');
+
+$_GET = array(
+	'vms_social_notice' => 'Accounts synced.',
+	'vms_social_notice_type' => 'warning',
+);
+ob_start();
+vms_social_render_notices();
+$socialWarningNotice = (string) ob_get_clean();
+$assert(
+	$socialWarningNotice === '<div class="notice notice-warning is-dismissible"><p>Accounts synced.</p></div>',
+	'Social Sharing explicit notice callback should preserve the warning notice fragment.'
+);
+$assert(
+	wp_kses($socialWarningNotice, vms_admin_ui_explicit_notice_allowed_html()) === $socialWarningNotice,
+	'The explicit notice allowlist should admit the Social Sharing warning notice unchanged.'
+);
+
+$_GET = array(
+	'vms_social_notice' => '<strong>Queue</strong> run complete.',
+	'vms_social_notice_type' => 'danger',
+);
+ob_start();
+vms_social_render_notices();
+$socialFallbackNotice = (string) ob_get_clean();
+$assert(
+	$socialFallbackNotice === '<div class="notice notice-success is-dismissible"><p>Queue run complete.</p></div>',
+	'Social Sharing explicit notice callback should sanitize the notice text and fall back unknown types to success.'
+);
+
+$_GET = array(
+	'vms_social_notice' => '',
+	'vms_social_notice_type' => 'info',
+);
+ob_start();
+vms_social_render_notices();
+$socialNoNotice = (string) ob_get_clean();
+$assert($socialNoNotice === '', 'Social Sharing explicit notice callback should stay silent when no notice text is present.');
+
+$assert(strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void') !== false, 'Email Follow-Ups should remain an inspected but unmigrated notice helper source.');
+$assert(strpos($emailFollowupsSource, "'notices_callback' =>") === false, 'Email Follow-Ups should remain unmigrated in this pass.');
+$assert(strpos($emailFollowupsSource, 'vms_email_followups_render_notices();') !== false, 'Email Follow-Ups render flow should still emit its notice helper from the page-render closure.');
+$assert(strpos($emailFollowupsSource, 'No Event Plans found for preview/testing.') !== false, 'Email Follow-Ups should still retain its separate inline preview warning family.');
+
+$assert(strpos($eventPlanImportSource, "'notices_callback' =>") === false, 'Event Plan Import should remain unmigrated in this pass.');
+$assert(strpos($eventPlanImportSource, 'vms_event_plan_import_pop_notice();') !== false, 'Event Plan Import should still resolve its page-local notice payload inside the content-render path.');
+$assert(strpos($eventPlanImportSource, 'vms_event_plan_import_notice_class($type)') !== false, 'Event Plan Import should still keep its inline notice-class mapper path.');
+$assert(strpos($eventPlanImportSource, 'notice notice-error inline') !== false, 'Event Plan Import should still retain the separate preview rows payload error notice family.');
 
 $allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
 $assert(

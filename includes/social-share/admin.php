@@ -176,6 +176,7 @@ if (!function_exists('vms_social_render_admin_page')) {
 			vms_admin_ui_render_shell(
 				array(
 					'title' => __('Social Sharing', 'backstage-venue-manager'),
+					'notices_callback' => 'vms_social_render_notices',
 				),
 				'vms_social_render_admin_page_content'
 			);
@@ -184,6 +185,7 @@ if (!function_exists('vms_social_render_admin_page')) {
 
 		echo '<div class="wrap vms-social-admin">';
 		echo '<h1>' . esc_html__('Social Sharing', 'backstage-venue-manager') . '</h1>';
+		vms_social_render_notices();
 		vms_social_render_admin_page_content();
 		echo '</div>';
 	}
@@ -196,7 +198,6 @@ if (!function_exists('vms_social_render_admin_page_content')) {
 		$tab = vms_social_admin_current_tab();
 		$tabs = vms_social_admin_tabs();
 		echo '<div class="vms-social-admin">';
-		vms_social_render_notices();
 
 		echo '<nav class="nav-tab-wrapper">';
 		foreach ($tabs as $key => $label) {
