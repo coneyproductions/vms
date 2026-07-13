@@ -307,6 +307,18 @@ Acceptable note:
 - Scope: `WPORG-24` remains open. Other trusted-HTML boundaries remain for later slices, including staff portal safe HTML, ADD pills and public shell output, admin shell output, vendor application confirmation shell output, docs-public markdown, Event Plans partial/AJAX HTML, and pass-claims output.
 - Focused coverage: `tests/portal-notice-sink-remediation.php`.
 
+### `WPORG-24 E1` public documentation Markdown output-contract result
+
+- Result: the public documentation Markdown sink now explicitly enforces the renderer's narrow rendered-document HTML contract before echoing the rendered output.
+- Production files inspected: `includes/docs-render.php`, `includes/docs-public.php`, and `includes/admin/docs-page.php`.
+- Production files changed: `includes/docs-render.php` and `includes/docs-public.php`.
+- Contract: `vms_docs_rendered_allowed_html()` permits only `h1`-`h6`, `p`, `ul`, `li`, `pre`, `code`, `a` with `href`, `target`, and `rel`, `strong`, and `em`; `vms_docs_inline_allowed_html()` remains limited to `a` with `href`, `target`, and `rel`, `strong`, `em`, and `code`.
+- Formatting preserved: headings, paragraphs, unordered lists and list items, links with their existing safe attributes, bold text, italic text, inline code, and fenced code blocks still render as HTML.
+- Boundary behavior: unsupported raw elements, event-handler attributes, unsafe link protocols, and HTML-like code text do not survive as executable or allowed markup.
+- Administrator caller: `includes/admin/docs-page.php` was inspected and intentionally left unchanged because it already applies an explicit final `wp_kses()` contract and this slice targets the public sink.
+- Focused coverage and validation: `tests/docs-public-markdown-output-remediation.php`; `php -l includes/docs-public.php`; `php -l includes/docs-render.php`; `php -l tests/docs-public-markdown-output-remediation.php`; `php tests/docs-public-markdown-output-remediation.php`; `git diff --check`.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include staff portal safe HTML, ADD pills and public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
+
 ## F. Prefixing and Collision Safety
 
 Status:

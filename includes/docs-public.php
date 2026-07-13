@@ -78,7 +78,8 @@ function vms_docs_public_render() {
     }
 
     $md = vms_docs_get_markdown($doc['file']);
-    echo vms_docs_render_markdown($md);
+    $rendered_markdown = vms_docs_render_markdown($md);
+    echo wp_kses($rendered_markdown, vms_docs_rendered_allowed_html());
 
     echo '</main>';
 
