@@ -127,7 +127,6 @@ if (!function_exists('vms_email_followups_render_admin_page')) {
 		}
 		$tab = vms_email_followups_current_tab();
 		$render = static function () use ($tab): void {
-			vms_email_followups_render_notices();
 			vms_email_followups_render_tabs($tab);
 			if ($tab === 'templates') {
 				vms_email_followups_render_templates_tab();
@@ -145,10 +144,12 @@ if (!function_exists('vms_email_followups_render_admin_page')) {
 				'title' => __('Email Follow-Ups', 'backstage-venue-manager'),
 				'subtitle' => __('Event-aware buyer reminders, day-of updates, and post-show follow-ups.', 'backstage-venue-manager'),
 				'shell_id' => 'vms-email-followups-admin',
+				'notices_callback' => 'vms_email_followups_render_notices',
 			), $render);
 			return;
 		}
 		echo '<div class="wrap" id="vms-email-followups-admin"><h1>' . esc_html__('Email Follow-Ups', 'backstage-venue-manager') . '</h1>';
+		vms_email_followups_render_notices();
 		$render();
 		echo '</div>';
 	}

@@ -13,6 +13,14 @@ if (!function_exists('add_action')) {
 	}
 }
 
+if (!function_exists('add_filter')) {
+	function add_filter(string $hook, $callback, int $priority = 10, int $accepted_args = 1): bool
+	{
+		unset($hook, $callback, $priority, $accepted_args);
+		return true;
+	}
+}
+
 if (!function_exists('__')) {
 	function __(string $text, string $domain = ''): string
 	{
@@ -139,11 +147,70 @@ if (!function_exists('esc_url')) {
 	}
 }
 
+if (!function_exists('esc_textarea')) {
+	function esc_textarea($text): string
+	{
+		return htmlspecialchars((string) $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
 if (!function_exists('sanitize_html_class')) {
 	function sanitize_html_class($class): string
 	{
 		$sanitized = preg_replace('/[^A-Za-z0-9_-]/', '-', (string) $class);
 		return is_string($sanitized) ? trim($sanitized, '-') : '';
+	}
+}
+
+if (!function_exists('current_user_can')) {
+	function current_user_can(string $capability): bool
+	{
+		unset($capability);
+		return true;
+	}
+}
+
+if (!function_exists('wp_die')) {
+	function wp_die($message = ''): void
+	{
+		throw new RuntimeException((string) $message);
+	}
+}
+
+if (!function_exists('checked')) {
+	function checked($checked, $current = true, bool $display = true): string
+	{
+		$result = ((string) $checked === (string) $current) ? 'checked="checked"' : '';
+		if ($display) {
+			echo $result;
+		}
+
+		return $result;
+	}
+}
+
+if (!function_exists('selected')) {
+	function selected($selected, $current = true, bool $display = true): string
+	{
+		$result = ((string) $selected === (string) $current) ? 'selected="selected"' : '';
+		if ($display) {
+			echo $result;
+		}
+
+		return $result;
+	}
+}
+
+if (!function_exists('wp_nonce_field')) {
+	function wp_nonce_field(string $action = '', string $name = '_wpnonce', bool $referer = true, bool $display = true): string
+	{
+		unset($action, $referer);
+		$field = '<input type="hidden" name="' . esc_attr($name) . '" value="nonce" />';
+		if ($display) {
+			echo $field;
+		}
+
+		return $field;
 	}
 }
 
@@ -176,6 +243,11 @@ if (!function_exists('vms_staffing_staff_qualification_review_url')) {
 $GLOBALS['vms_test_staff_certifications_pending_items'] = array();
 $GLOBALS['vms_test_staff_certifications_provider_calls'] = 0;
 $GLOBALS['vms_test_staff_certifications_provider_statuses'] = array();
+$GLOBALS['vms_test_email_followups_settings_calls'] = 0;
+$GLOBALS['vms_test_email_followups_mailpoet_status_calls'] = 0;
+$GLOBALS['vms_test_email_followups_due_items_calls'] = 0;
+$GLOBALS['vms_test_email_followups_event_choices_calls'] = 0;
+$GLOBALS['vms_test_email_followups_template_definitions_calls'] = 0;
 
 if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
 	/**
@@ -186,6 +258,67 @@ if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
 		$GLOBALS['vms_test_staff_certifications_provider_calls']++;
 		$GLOBALS['vms_test_staff_certifications_provider_statuses'][] = $status;
 		return $GLOBALS['vms_test_staff_certifications_pending_items'];
+	}
+}
+
+if (!function_exists('vms_email_followups_settings')) {
+	function vms_email_followups_settings(): array
+	{
+		$GLOBALS['vms_test_email_followups_settings_calls']++;
+		return array(
+			'enabled' => true,
+			'auto_send_enabled' => false,
+			'mailpoet_sync_enabled' => false,
+			'mailpoet_list_id' => 42,
+			'from_name' => 'Example Team',
+			'from_email' => 'from@example.test',
+			'reply_to_email' => 'reply@example.test',
+			'test_recipient' => 'test@example.test',
+			'reminder_window_hours' => 24,
+			'signature' => "Regards,\nExample Team",
+			'templates' => array(),
+			'templates_enabled' => array(),
+		);
+	}
+}
+
+if (!function_exists('vms_email_followups_mailpoet_status')) {
+	function vms_email_followups_mailpoet_status(): array
+	{
+		$GLOBALS['vms_test_email_followups_mailpoet_status_calls']++;
+		return array(
+			'message' => 'Connected',
+			'setup_complete' => true,
+		);
+	}
+}
+
+if (!function_exists('vms_email_followups_due_items')) {
+	function vms_email_followups_due_items(): array
+	{
+		$GLOBALS['vms_test_email_followups_due_items_calls']++;
+		return array('first', 'second');
+	}
+}
+
+if (!function_exists('vms_email_followups_event_choices')) {
+	function vms_email_followups_event_choices(int $limit = 0, int $selected_id = 0): array
+	{
+		unset($limit, $selected_id);
+		$GLOBALS['vms_test_email_followups_event_choices_calls']++;
+		return array();
+	}
+}
+
+if (!function_exists('vms_email_followups_template_definitions')) {
+	function vms_email_followups_template_definitions(): array
+	{
+		$GLOBALS['vms_test_email_followups_template_definitions_calls']++;
+		return array(
+			'know_before' => array(
+				'label' => 'Know Before',
+			),
+		);
 	}
 }
 
@@ -251,6 +384,7 @@ require_once dirname(__DIR__) . '/includes/admin/continuity-binder.php';
 require_once dirname(__DIR__) . '/includes/admin/due-dates.php';
 require_once dirname(__DIR__) . '/includes/admin/square-sync-protection.php';
 require_once dirname(__DIR__) . '/includes/admin/staff-certifications.php';
+require_once dirname(__DIR__) . '/includes/modules/email-followups/admin-ui.php';
 require_once dirname(__DIR__) . '/includes/social-share/admin.php';
 
 $pluginRoot = dirname(__DIR__);
@@ -378,6 +512,7 @@ $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
 $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
+$emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_email_followups_render_notices[\'"]~', $allIncludeSource, $unusedEmailFollowupsMatches);
 $socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
 	'admin/event-command-center.php',
@@ -396,6 +531,7 @@ $expectedNoticesCallbackFiles = array(
 	'admin/due-dates.php',
 	'admin/square-sync-protection.php',
 	'admin/staff-certifications.php',
+	'modules/email-followups/admin-ui.php',
 	'modules/status-notices/admin-ui.php',
 	'social-share/admin.php',
 );
@@ -404,15 +540,16 @@ sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 7, 'Only seven production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 8, 'Only eight production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
 $assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
 $assert($staffCertificationsNoticeCallbackCount === 1, 'Staff Certifications should contribute exactly one production notices_callback caller.');
+$assert($emailFollowupsNoticeCallbackCount === 1, 'Email Follow-Ups should contribute exactly one production notices_callback caller.');
 $assert($socialNoticeCallbackCount === 1, 'Social Sharing should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Due Dates, Square Sync Protection, Staff Certifications, and Social Sharing.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Due Dates, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -762,10 +899,144 @@ vms_social_render_notices();
 $socialNoNotice = (string) ob_get_clean();
 $assert($socialNoNotice === '', 'Social Sharing explicit notice callback should stay silent when no notice text is present.');
 
-$assert(strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void') !== false, 'Email Follow-Ups should remain an inspected but unmigrated notice helper source.');
-$assert(strpos($emailFollowupsSource, "'notices_callback' =>") === false, 'Email Follow-Ups should remain unmigrated in this pass.');
-$assert(strpos($emailFollowupsSource, 'vms_email_followups_render_notices();') !== false, 'Email Follow-Ups render flow should still emit its notice helper from the page-render closure.');
+$assert(strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void') !== false, 'Email Follow-Ups should expose a dedicated explicit notice callback.');
+$assert(substr_count($emailFollowupsSource, "'notices_callback' => 'vms_email_followups_render_notices'") === 1, 'Email Follow-Ups shell call should supply its explicit notice callback exactly once.');
+$emailNoticeStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void');
+$emailNoticeEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_tabs'))");
+$assert($emailNoticeStart !== false && $emailNoticeEnd !== false && $emailNoticeEnd > $emailNoticeStart, 'Email Follow-Ups explicit notice callback body should be locatable.');
+$emailNoticeSource = substr($emailFollowupsSource, (int) $emailNoticeStart, (int) $emailNoticeEnd - (int) $emailNoticeStart);
+$emailPageStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_admin_page(): void');
+$emailPageEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_overview_tab'))");
+$assert($emailPageStart !== false && $emailPageEnd !== false && $emailPageEnd > $emailPageStart, 'Email Follow-Ups page renderer body should be locatable.');
+$emailPageSource = substr($emailFollowupsSource, (int) $emailPageStart, (int) $emailPageEnd - (int) $emailPageStart);
+$emailRenderClosureStart = strpos($emailPageSource, '$render = static function () use ($tab): void {');
+$emailRenderClosureEnd = strpos($emailPageSource, "if (function_exists('vms_admin_ui_render_shell')) {");
+$assert($emailRenderClosureStart !== false && $emailRenderClosureEnd !== false && $emailRenderClosureEnd > $emailRenderClosureStart, 'Email Follow-Ups render closure body should be locatable.');
+$emailRenderClosureSource = substr($emailPageSource, (int) $emailRenderClosureStart, (int) $emailRenderClosureEnd - (int) $emailRenderClosureStart);
+$assert(strpos($emailNoticeSource, 'sanitize_text_field(wp_unslash((string) $_GET[\'vms_efu_notice\']))') !== false, 'Email Follow-Ups explicit notice callback should preserve the sanitized redirect notice source.');
+$assert(strpos($emailNoticeSource, 'sanitize_key((string) $_GET[\'vms_efu_notice_type\'])') !== false, 'Email Follow-Ups explicit notice callback should preserve the sanitized redirect notice type source.');
+$assert(strpos($emailNoticeSource, "array('success', 'error', 'warning', 'info')") !== false, 'Email Follow-Ups explicit notice callback should preserve the existing severity allowlist.');
+$assert(strpos($emailNoticeSource, '<div class="notice notice-') !== false && strpos($emailNoticeSource, 'is-dismissible') !== false, 'Email Follow-Ups explicit notice callback should preserve the dismissible notice class family.');
+$assert(strpos($emailNoticeSource, 'esc_attr($type)') !== false && strpos($emailNoticeSource, 'esc_html($notice)') !== false, 'Email Follow-Ups explicit notice callback should preserve contextual escaping.');
+$assert(strpos($emailNoticeSource, '<strong>') === false && strpos($emailNoticeSource, '<a ') === false && strpos($emailNoticeSource, '<button') === false && strpos($emailNoticeSource, '<span') === false, 'Email Follow-Ups explicit notice callback should stay within the simple fragment contract.');
+$assert(strpos($emailNoticeSource, 'vms_email_followups_settings(') === false && strpos($emailNoticeSource, 'vms_email_followups_due_items(') === false && strpos($emailNoticeSource, 'vms_email_followups_mailpoet_status(') === false, 'Email Follow-Ups explicit notice callback should not resolve page providers or stored state.');
+$assert(strpos($emailRenderClosureSource, 'vms_email_followups_render_notices();') === false, 'Email Follow-Ups render closure should no longer emit the primary notice helper directly.');
+$assert(strpos($emailRenderClosureSource, 'vms_email_followups_render_tabs($tab);') !== false, 'Email Follow-Ups render closure should still render the page tabs.');
+$assert(strpos($emailPageSource, "'notices_callback' => 'vms_email_followups_render_notices'") !== false, 'Email Follow-Ups page renderer should pass the explicit notice callback through the Administrator shell.');
+$assert(preg_match('~echo\s+[\'"]<div class="wrap" id="vms-email-followups-admin"><h1>[\'"].*?vms_email_followups_render_notices\(\);\s*\$render\(\);~s', $emailPageSource) === 1, 'Email Follow-Ups no-shell fallback should preserve notice-before-content ordering.');
 $assert(strpos($emailFollowupsSource, 'No Event Plans found for preview/testing.') !== false, 'Email Follow-Ups should still retain its separate inline preview warning family.');
+$assert(strpos($emailFollowupsSource, '<div class="notice notice-warning inline"><p>') !== false, 'Email Follow-Ups preview warning should preserve its exact inline warning fragment.');
+
+$_GET = array(
+	'vms_efu_notice' => 'Email follow-up settings saved.',
+	'vms_efu_notice_type' => 'success',
+);
+ob_start();
+vms_email_followups_render_notices();
+$emailSuccessNotice = (string) ob_get_clean();
+$assert(
+	$emailSuccessNotice === '<div class="notice notice-success is-dismissible"><p>Email follow-up settings saved.</p></div>',
+	'Email Follow-Ups explicit notice callback should preserve the success notice fragment.'
+);
+$assert(
+	wp_kses($emailSuccessNotice, vms_admin_ui_explicit_notice_allowed_html()) === $emailSuccessNotice,
+	'The explicit notice allowlist should admit the Email Follow-Ups success notice unchanged.'
+);
+
+$_GET = array(
+	'vms_efu_notice' => 'Test send failed.',
+	'vms_efu_notice_type' => 'error',
+);
+ob_start();
+vms_email_followups_render_notices();
+$emailErrorNotice = (string) ob_get_clean();
+$assert(
+	$emailErrorNotice === '<div class="notice notice-error is-dismissible"><p>Test send failed.</p></div>',
+	'Email Follow-Ups explicit notice callback should preserve the error notice fragment.'
+);
+
+$_GET = array(
+	'vms_efu_notice' => 'Manual send was not confirmed, so no recipient emails were sent.',
+	'vms_efu_notice_type' => 'warning',
+);
+ob_start();
+vms_email_followups_render_notices();
+$emailWarningNotice = (string) ob_get_clean();
+$assert(
+	$emailWarningNotice === '<div class="notice notice-warning is-dismissible"><p>Manual send was not confirmed, so no recipient emails were sent.</p></div>',
+	'Email Follow-Ups explicit notice callback should preserve the warning notice fragment.'
+);
+
+$_GET = array(
+	'vms_efu_notice' => 'Preview batch ready.',
+	'vms_efu_notice_type' => 'info',
+);
+ob_start();
+vms_email_followups_render_notices();
+$emailInfoNotice = (string) ob_get_clean();
+$assert(
+	$emailInfoNotice === '<div class="notice notice-info is-dismissible"><p>Preview batch ready.</p></div>',
+	'Email Follow-Ups explicit notice callback should preserve the info notice fragment.'
+);
+
+$_GET = array(
+	'vms_efu_notice' => '<strong>Queue</strong> run complete.',
+	'vms_efu_notice_type' => 'danger',
+);
+ob_start();
+vms_email_followups_render_notices();
+$emailFallbackNotice = (string) ob_get_clean();
+$assert(
+	$emailFallbackNotice === '<div class="notice notice-success is-dismissible"><p>Queue run complete.</p></div>',
+	'Email Follow-Ups explicit notice callback should sanitize the notice text and fall back unknown types to success.'
+);
+
+$_GET = array(
+	'vms_efu_notice' => '',
+	'vms_efu_notice_type' => 'warning',
+);
+ob_start();
+vms_email_followups_render_notices();
+$emailNoNotice = (string) ob_get_clean();
+$assert($emailNoNotice === '', 'Email Follow-Ups explicit notice callback should stay silent when no notice text is present.');
+
+$GLOBALS['vms_test_email_followups_settings_calls'] = 0;
+$GLOBALS['vms_test_email_followups_mailpoet_status_calls'] = 0;
+$GLOBALS['vms_test_email_followups_due_items_calls'] = 0;
+$_GET = array(
+	'tab' => 'overview',
+	'vms_efu_notice' => 'Email follow-up settings saved.',
+	'vms_efu_notice_type' => 'success',
+);
+ob_start();
+vms_email_followups_render_admin_page();
+$emailOverviewPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_email_followups_settings_calls'] === 1, 'Email Follow-Ups page renderer should resolve settings exactly once during the overview render.');
+$assert($GLOBALS['vms_test_email_followups_mailpoet_status_calls'] === 1, 'Email Follow-Ups page renderer should resolve MailPoet status exactly once during the overview render.');
+$assert($GLOBALS['vms_test_email_followups_due_items_calls'] === 1, 'Email Follow-Ups page renderer should resolve due items exactly once during the overview render.');
+$assert(substr_count($emailOverviewPage, 'Email follow-up settings saved.') === 1, 'Email Follow-Ups page renderer should emit the explicit notice exactly once.');
+$assert(strpos($emailOverviewPage, 'notice notice-success is-dismissible') !== false, 'Email Follow-Ups overview render should preserve the success notice classes.');
+$assert(strpos($emailOverviewPage, 'Email follow-up settings saved.') < strpos($emailOverviewPage, 'vms-email-followups-tabs'), 'Email Follow-Ups shell ordering should keep the notice before the tabbed page content.');
+
+$GLOBALS['vms_test_email_followups_event_choices_calls'] = 0;
+$GLOBALS['vms_test_email_followups_template_definitions_calls'] = 0;
+$_GET = array(
+	'tab' => 'preview',
+	'email_key' => 'know_before',
+);
+ob_start();
+vms_email_followups_render_preview_tab();
+$emailPreviewContent = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_email_followups_event_choices_calls'] >= 1, 'Email Follow-Ups preview tab should still resolve event choices for the preview warning path.');
+$assert($GLOBALS['vms_test_email_followups_template_definitions_calls'] >= 1, 'Email Follow-Ups preview tab should still resolve template definitions for the preview warning path.');
+$assert(
+	strpos($emailPreviewContent, '<div class="notice notice-warning inline"><p>No Event Plans found for preview/testing.</p></div>') !== false,
+	'Email Follow-Ups preview warning should remain unchanged in the preview tab content path.'
+);
+$assert(
+	strpos($emailPreviewContent, 'vms-efu-filter-form') < strpos($emailPreviewContent, 'No Event Plans found for preview/testing.'),
+	'Email Follow-Ups preview warning should still render after the preview filter form inside the preview tab content path.'
+);
 
 $assert(strpos($eventPlanImportSource, "'notices_callback' =>") === false, 'Event Plan Import should remain unmigrated in this pass.');
 $assert(strpos($eventPlanImportSource, 'vms_event_plan_import_pop_notice();') !== false, 'Event Plan Import should still resolve its page-local notice payload inside the content-render path.');

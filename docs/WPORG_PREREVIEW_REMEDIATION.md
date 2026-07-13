@@ -500,6 +500,33 @@ Acceptable note:
 - Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves the Social Sharing shell wiring, the dedicated explicit notice helper, sanitized request input handling, severity fallback to `success` for unknown types, removal of the original content-path emission, continued no-shell ordering, unchanged explicit-notice contract, and the explicit non-migration of Event Plan Import and Email Follow-Ups. Validation ran with `php -l includes/social-share/admin.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, and `git diff --check`.
 - Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Shared `$captured_notices_html`, shared `$content_html`, the deferred Event Plan Import and Email Follow-Ups families, Pass Claims, and the broader Event Plans partial/AJAX output boundaries remain separate follow-up work.
 
+### `WPORG-24 E1` Email Follow-Ups primary notice reduction result
+
+- Result: the primary Email Follow-Ups redirect-notice helper now routes through the existing Administrator shell explicit-notice path instead of being emitted from the page render closure and extracted into shared `$captured_notices_html`.
+- Constrained production inspection scope: this pass inspected only `includes/modules/email-followups/admin-ui.php` for the Email Follow-Ups Administrator screen and did not inspect or migrate any fallback candidate.
+- Production file changed: `includes/modules/email-followups/admin-ui.php`.
+- Exact submenu and render boundary:
+  - The file registers `add_submenu_page('vms-dashboard', __('Email Follow-Ups', 'backstage-venue-manager'), __('Email Follow-Ups', 'backstage-venue-manager'), 'manage_options', vms_email_followups_admin_slug(), 'vms_email_followups_render_admin_page')`.
+  - `vms_email_followups_render_admin_page()` resolves the current tab once, builds a page-local `$render` closure for the tab navigation and content, and now passes `vms_email_followups_render_notices` through the shell `notices_callback`.
+- Exact primary notice family:
+  - `vms_email_followups_render_notices()` reads `$_GET['vms_efu_notice']` through `sanitize_text_field(wp_unslash((string) $_GET['vms_efu_notice']))`.
+  - It reads `$_GET['vms_efu_notice_type']` through `sanitize_key((string) $_GET['vms_efu_notice_type'])`.
+  - Allowed severities remain exactly `success`, `error`, `warning`, and `info`; unknown values still fall back to `success`.
+  - Output remains exactly `<div class="notice notice-... is-dismissible"><p>...</p></div>` with `esc_attr($type)` on the class fragment and `esc_html($notice)` for the text.
+- Message and condition sources:
+  - The helper emits nothing when the sanitized `vms_efu_notice` value is empty.
+  - Non-empty notice text continues to come from page-local redirect callers in the same file, including fixed messages such as `Email follow-up settings saved.`, `Manual send was not confirmed, so no recipient emails were sent.`, `The saved send batch expired or no longer matches this event/template. No emails were sent.`, `No recipients were selected, so no emails were sent.`, `Email follow-up logs cleared.`, plus existing dynamic result messages already produced by the page-local send/preview flows.
+- Ordering preserved:
+  - The shell path now supplies `'notices_callback' => 'vms_email_followups_render_notices'`.
+  - The original in-closure call was removed so the primary helper executes once.
+  - The no-shell fallback still renders the page `<h1>`, then `vms_email_followups_render_notices()`, then the existing `$render()` closure, preserving notice-before-content ordering.
+- Separate unresolved preview-warning boundary:
+  - `vms_email_followups_render_preview_tab()` still emits `<div class="notice notice-warning inline"><p>No Event Plans found for preview/testing.</p></div>` when no Event Plan ID is available.
+  - That preview warning remains unchanged, stays outside `notices_callback`, and remains a separate later boundary.
+- Contract and scope confirmation: the explicit-notice contract remains exactly `div[class]` and `p`; no allowlist was broadened; shared raw `$captured_notices_html` remains unresolved and untouched; shared raw `$content_html` remains unresolved and untouched; the preview warning remains separate; Pass Claims remains a separate `WPORG-24` boundary.
+- Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves the Email Follow-Ups shell wiring, the dedicated helper source, every preserved severity branch plus unknown-type fallback, sanitized request handling, single-render ordering for the shell path, preserved no-shell source ordering, unchanged provider call counts for the overview render, unchanged preview-warning source and markup, unchanged explicit-notice contract, and unchanged raw shell sinks. Validation ran with `php -l includes/modules/email-followups/admin-ui.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, any discovered Email Follow-Ups-specific test inventory search, and `git diff --check`.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Shared `$captured_notices_html`, shared `$content_html`, the separate Email Follow-Ups preview warning, Event Plan Import, Pass Claims, and the broader Event Plans partial/AJAX output boundaries remain separate follow-up work.
+
 ## F. Prefixing and Collision Safety
 
 Status:
