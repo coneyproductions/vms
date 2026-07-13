@@ -1312,6 +1312,51 @@ if (!function_exists('vms_vendor_app_public_state_url')) {
     }
 }
 
+if (!function_exists('vms_vendor_app_confirmation_allowed_html')) {
+    function vms_vendor_app_confirmation_allowed_html(): array
+    {
+        return array(
+            'a' => array(
+                'class' => true,
+                'href' => true,
+            ),
+            'button' => array(
+                'class' => true,
+                'type' => true,
+            ),
+            'div' => array(
+                'class' => true,
+            ),
+            'form' => array(
+                'action' => true,
+                'class' => true,
+                'method' => true,
+            ),
+            'h2' => array(),
+            'input' => array(
+                'id' => true,
+                'name' => true,
+                'type' => true,
+                'value' => true,
+            ),
+            'li' => array(),
+            'ol' => array(
+                'class' => true,
+            ),
+            'p' => array(
+                'class' => true,
+            ),
+            'section' => array(
+                'class' => true,
+            ),
+            'span' => array(
+                'class' => true,
+            ),
+            'strong' => array(),
+        );
+    }
+}
+
 if (!function_exists('vms_vendor_app_render_resend_confirmation_form')) {
     function vms_vendor_app_render_resend_confirmation_form(int $app_id, string $return_url = '', string $button_label = ''): string
     {
@@ -1337,7 +1382,7 @@ if (!function_exists('vms_vendor_app_render_resend_confirmation_form')) {
             <button type="submit" class="button button-secondary"><?php echo esc_html($button_label); ?></button>
         </form>
         <?php
-        return (string) ob_get_clean();
+        return wp_kses((string) ob_get_clean(), vms_vendor_app_confirmation_allowed_html());
     }
 }
 
@@ -1397,14 +1442,14 @@ if (!function_exists('vms_vendor_apply_render_confirmation_pending_screen')) {
                     <li><?php echo esc_html__('After confirmation, the application moves into the real operator review queue. This does not mean approved.', 'backstage-venue-manager'); ?></li>
                 </ol>
                 <div class="vms-vendor-apply-confirmation__actions">
-                    <?php echo vms_vendor_app_render_resend_confirmation_form($app_id, vms_vendor_app_public_state_url('confirm_pending', $app_id), __('Resend confirmation email', 'backstage-venue-manager')); ?>
+                    <?php echo wp_kses(vms_vendor_app_render_resend_confirmation_form($app_id, vms_vendor_app_public_state_url('confirm_pending', $app_id), __('Resend confirmation email', 'backstage-venue-manager')), vms_vendor_app_confirmation_allowed_html()); ?>
                     <a class="button" href="<?php echo esc_url($apply_url); ?>"><?php echo esc_html__('View Application Form', 'backstage-venue-manager'); ?></a>
                     <a class="button" href="<?php echo esc_url($portal_url); ?>"><?php echo esc_html__('Open Vendor Portal', 'backstage-venue-manager'); ?></a>
                 </div>
             </div>
         </section>
         <?php
-        return (string) ob_get_clean();
+        return wp_kses((string) ob_get_clean(), vms_vendor_app_confirmation_allowed_html());
     }
 }
 
@@ -1449,7 +1494,7 @@ if (!function_exists('vms_vendor_apply_render_existing_status_screen')) {
             </div>
         </section>
         <?php
-        return (string) ob_get_clean();
+        return wp_kses((string) ob_get_clean(), vms_vendor_app_confirmation_allowed_html());
     }
 }
 
@@ -1476,7 +1521,7 @@ if (!function_exists('vms_vendor_app_render_portal_applicant_panel')) {
             echo '<p class="vms-portal-auth-copy">' . esc_html__('Your application is saved, but it does not enter the operator review queue until you confirm the email address used on the form.', 'backstage-venue-manager') . '</p>';
             echo '<p class="vms-portal-auth-hint">' . esc_html__('Please check your inbox, spam, and junk folders. If needed, request another confirmation email below.', 'backstage-venue-manager') . '</p>';
             echo '<div class="vms-vendor-apply-confirmation__actions">';
-            echo vms_vendor_app_render_resend_confirmation_form($app_id, $return_url, __('Resend confirmation email', 'backstage-venue-manager'));
+            echo wp_kses(vms_vendor_app_render_resend_confirmation_form($app_id, $return_url, __('Resend confirmation email', 'backstage-venue-manager')), vms_vendor_app_confirmation_allowed_html());
             echo '<a class="button" href="' . esc_url($portal_url) . '">' . esc_html__('Vendor Portal Home', 'backstage-venue-manager') . '</a>';
             echo '</div>';
         } elseif ($state['kind'] === 'pending_review') {
@@ -1491,7 +1536,7 @@ if (!function_exists('vms_vendor_app_render_portal_applicant_panel')) {
         }
         echo '</div>';
         echo '</div>';
-        return (string) ob_get_clean();
+        return wp_kses((string) ob_get_clean(), vms_vendor_app_confirmation_allowed_html());
     }
 }
 
@@ -1593,7 +1638,9 @@ if (!function_exists('vms_vendor_app_render_confirmation_shell')) {
         }
 
         echo '<!doctype html>';
-        echo '<html ' . get_language_attributes() . '>';
+        echo '<html ';
+        language_attributes();
+        echo '>';
         echo '<head>';
         echo '<meta charset="' . esc_attr(get_bloginfo('charset')) . '">';
         echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
@@ -1603,7 +1650,7 @@ if (!function_exists('vms_vendor_app_render_confirmation_shell')) {
         echo '</head>';
         echo '<body class="vms-vendor-app-confirmation-page">';
         echo '<main class="vms-vendor-apply-flow vms-vendor-app-confirmation-page__main">';
-        echo $content;
+        echo wp_kses($content, vms_vendor_app_confirmation_allowed_html());
         echo '</main>';
         wp_footer();
         echo '</body></html>';
