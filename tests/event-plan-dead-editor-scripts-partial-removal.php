@@ -11,6 +11,7 @@ $compensationPath = $pluginRoot . '/includes/cpt/event-plans/partials/compensati
 $adminUiAssetsPath = $pluginRoot . '/includes/admin-ui/assets.php';
 $compensationAssetPath = $pluginRoot . '/assets/js/vms-event-plan-compensation.js';
 $secondaryVendorAssetPath = $pluginRoot . '/assets/js/vms-event-plan-secondary-vendors.js';
+$workflowAssetPath = $pluginRoot . '/assets/js/vms-event-plan-workflow.js';
 $shellAssetPath = $pluginRoot . '/assets/js/vms-event-plan-shell.js';
 $staffAssetPath = $pluginRoot . '/assets/js/vms-event-plan-staff.js';
 $ticketingBootstrapPath = $pluginRoot . '/includes/integrations/ticketing.php';
@@ -144,7 +145,7 @@ try {
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendors-section"') !== false, 'Active secondary-vendors partial should retain the live section wrapper.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-save-nonce') !== false, 'Active secondary-vendors partial should retain its save contract.');
 
-	$assert(substr_count($eventPlansSource, '<script') >= 3, 'Event Plan source should still contain the current live inline script surface for later B1 slices.');
+	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan source should no longer contain active inline Event Plan scripts after the workflow migration.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section persistence helper.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section reveal helper.');
 	$assert(strpos($shellAssetSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Shell asset should now own the requested-section persistence helper.');
@@ -162,10 +163,13 @@ try {
 	$assert(file_exists($pluginRoot . '/assets/admin-ticketing.js'), 'Existing Event Plan ticketing asset should remain present.');
 	$assert(file_exists($pluginRoot . '/assets/js/vms-tasks-event-plan-metabox.js'), 'Existing Event Plan staff-task asset should remain present.');
 	$assert(file_exists($secondaryVendorAssetPath), 'Dedicated Secondary Vendors asset should now be present.');
+	$assert(file_exists($workflowAssetPath), 'Dedicated workflow confirmations asset should now be present.');
 	$assert(strpos($adminUiAssetsSource, "'vms-lineup-schedule-admin'") !== false, 'Admin UI enqueue path should still register the lineup Event Plan asset.');
 	$assert(strpos($adminUiAssetsSource, 'assets/js/vms-lineup-schedule-admin.js') !== false, 'Admin UI enqueue path should still point to the lineup Event Plan asset.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-secondary-vendors'") !== false, 'Admin UI enqueue path should register the dedicated Secondary Vendors asset.');
 	$assert(strpos($adminUiAssetsSource, 'assets/js/vms-event-plan-secondary-vendors.js') !== false, 'Admin UI enqueue path should point to the dedicated Secondary Vendors asset.');
+	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-workflow'") !== false, 'Admin UI enqueue path should register the dedicated workflow confirmations asset.');
+	$assert(strpos($adminUiAssetsSource, 'assets/js/vms-event-plan-workflow.js') !== false, 'Admin UI enqueue path should point to the dedicated workflow confirmations asset.');
 	$assert(strpos($ticketingBootstrapSource, "'vms-admin-ticketing'") !== false, 'Ticketing bootstrap should still enqueue the existing Event Plan ticketing asset.');
 	$assert(strpos($ticketingBootstrapSource, 'assets/admin-ticketing.js') !== false, 'Ticketing bootstrap should still point to assets/admin-ticketing.js.');
 	$assert(strpos($staffTasksAdminUiSource, "'vms-tasks-event-plan-metabox'") !== false, 'Staff Tasks admin UI should still enqueue the existing Event Plan staff-task asset.');

@@ -112,9 +112,9 @@ try {
 	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js'") !== false, 'Admin UI assets should point the Secondary Vendors handle at the new asset.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Secondary Vendors asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Secondary Vendors asset should remain restricted to Event Plan edit/new screens.');
-	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') !== false, 'Bulk-cancellation retry confirmation should remain inline.');
-	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') !== false, 'Live-refunds confirmation should remain inline.');
-	$assert(substr_count($eventPlansSource, '<script') >= 3, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the Secondary Vendors migration.');
+	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') === false, 'Bulk-cancellation retry confirmation should no longer remain inline.');
+	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') === false, 'Live-refunds confirmation should no longer remain inline.');
+	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan PHP should no longer have active inline Event Plan script blocks after the workflow migration.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(

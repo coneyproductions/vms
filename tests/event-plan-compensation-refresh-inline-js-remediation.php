@@ -59,12 +59,12 @@ try {
 	$assert(strpos($compensationSource, 'id="vms-comp-options" data-nonce=') !== false, 'Compensation partial should retain the comp-options markup and nonce attribute.');
 	$assert(strpos($eventPlansSource, "document.addEventListener('vms_comp_options_updated', () => {") === false, 'Event Plan PHP should no longer retain the migrated compensation consumer.');
 	$assert(strpos($compensationAssetSource, "document.addEventListener('vms_comp_options_updated', () => {") !== false, 'Compensation asset should now own the vms_comp_options_updated consumer.');
-	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') !== false, 'Refund-related inline controller should remain inline.');
+	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') === false, 'Refund-related workflow controller should no longer remain inline.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-compensation'") !== false, 'Admin UI assets should register the new Event Plan compensation handle.');
 	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-compensation.js'") !== false, 'Admin UI assets should point the compensation handle at assets/js/vms-event-plan-compensation.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Compensation asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Compensation asset should remain restricted to Event Plan edit/new screens.');
-	$assert(substr_count($eventPlansSource, '<script') >= 3, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the compensation migration.');
+	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan PHP should no longer have active inline Event Plan script blocks after the workflow migration.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(

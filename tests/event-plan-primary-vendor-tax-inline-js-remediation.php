@@ -6,6 +6,7 @@ $eventPlansPath = $pluginRoot . '/includes/cpt/event-plans.php';
 $timeLineupPath = $pluginRoot . '/includes/cpt/event-plans/partials/time-lineup.php';
 $adminUiAssetsPath = $pluginRoot . '/includes/admin-ui/assets.php';
 $primaryVendorAssetPath = $pluginRoot . '/assets/js/vms-event-plan-primary-vendor.js';
+$workflowAssetPath = $pluginRoot . '/assets/js/vms-event-plan-workflow.js';
 $titleAssetPath = $pluginRoot . '/assets/js/vms-event-plan-title.js';
 
 $assert = static function (bool $condition, string $message): void {
@@ -27,6 +28,7 @@ try {
 	$timeLineupSource = $readFile($timeLineupPath);
 	$adminUiAssetsSource = $readFile($adminUiAssetsPath);
 	$primaryVendorAssetSource = $readFile($primaryVendorAssetPath);
+	$workflowAssetSource = $readFile($workflowAssetPath);
 	$titleAssetSource = $readFile($titleAssetPath);
 
 	foreach (array(
@@ -137,10 +139,12 @@ try {
 	sort($assetOwnershipHits);
 	$assert($assetOwnershipHits === array('assets/js/vms-event-plan-primary-vendor.js'), 'Only the dedicated primary-vendor asset should own the tax bypass AJAX controller. Found: ' . implode(', ', $assetOwnershipHits));
 
-	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') !== false, 'Bulk-cancellation retry confirmation should remain inline.');
-	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') !== false, 'Live-refunds confirmation should remain inline.');
-	$assert(strpos($eventPlansSource, 'button[type="submit"][name="vms_event_plan_action"][value="mark_cancelled"]') !== false, 'Mark-cancelled confirmation should remain inline.');
-	$assert(substr_count($eventPlansSource, '<script') === 3, 'WPORG-22 B1 should remain open because exactly three executable inline Event Plan script blocks should remain after this slice.');
+	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') === false, 'Event Plan PHP should no longer retain the bulk-retry workflow controller.');
+	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') === false, 'Event Plan PHP should no longer retain the live-refunds workflow controller.');
+	$assert(strpos($workflowAssetSource, 'retry_cancellation_all') !== false, 'Workflow asset should now own the bulk-retry workflow selector.');
+	$assert(strpos($workflowAssetSource, 'vms_run_live_refunds_now_button') !== false, 'Workflow asset should now own the live-refunds workflow selector.');
+	$assert(strpos($workflowAssetSource, 'mark_cancelled') !== false, 'Workflow asset should now own the mark-cancelled workflow selector.');
+	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan PHP should no longer contain executable inline workflow scripts after the final B1 migration slice.');
 
 	fwrite(STDOUT, "event plan primary vendor tax inline js remediation: PASS\n");
 } catch (Throwable $e) {
