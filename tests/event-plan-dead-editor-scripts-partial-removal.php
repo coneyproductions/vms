@@ -9,6 +9,7 @@ $eventPlansPath = $pluginRoot . '/includes/cpt/event-plans.php';
 $secondaryVendorsPath = $pluginRoot . '/includes/cpt/event-plans/partials/secondary-vendors.php';
 $compensationPath = $pluginRoot . '/includes/cpt/event-plans/partials/compensation.php';
 $adminUiAssetsPath = $pluginRoot . '/includes/admin-ui/assets.php';
+$compensationAssetPath = $pluginRoot . '/assets/js/vms-event-plan-compensation.js';
 $shellAssetPath = $pluginRoot . '/assets/js/vms-event-plan-shell.js';
 $staffAssetPath = $pluginRoot . '/assets/js/vms-event-plan-staff.js';
 $ticketingBootstrapPath = $pluginRoot . '/includes/integrations/ticketing.php';
@@ -73,6 +74,7 @@ try {
 	$eventPlansSource = $readFile($eventPlansPath);
 	$secondaryVendorsSource = $readFile($secondaryVendorsPath);
 	$compensationSource = $readFile($compensationPath);
+	$compensationAssetSource = $readFile($compensationAssetPath);
 	$adminUiAssetsSource = $readFile($adminUiAssetsPath);
 	$shellAssetSource = $readFile($shellAssetPath);
 	$staffAssetSource = $readFile($staffAssetPath);
@@ -140,7 +142,7 @@ try {
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendors-section"') !== false, 'Active secondary-vendors partial should retain the live section wrapper.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-save-nonce') !== false, 'Active secondary-vendors partial should retain its save contract.');
 
-	$assert(substr_count($eventPlansSource, '<script') >= 7, 'Event Plan source should still contain the current live inline script surface for later B1 slices.');
+	$assert(substr_count($eventPlansSource, '<script') >= 6, 'Event Plan source should still contain the current live inline script surface for later B1 slices.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section persistence helper.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section reveal helper.');
 	$assert(strpos($shellAssetSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Shell asset should now own the requested-section persistence helper.');
@@ -148,7 +150,8 @@ try {
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitStaff = initStaff;') === false, 'Event Plan source should no longer retain the migrated staff initializer.');
 	$assert(strpos($staffAssetSource, 'window.vmsEventPlanInitStaff = initStaff;') !== false, 'Dedicated staff asset should now own the public staff initializer.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;') !== false, 'Event Plan source should retain the live secondary-vendor initializer.');
-	$assert(strpos($compensationSource, "document.dispatchEvent(new Event('vms_comp_options_updated'));") !== false, 'Compensation partial should retain the live comp-options update bridge.');
+	$assert(strpos($compensationSource, "document.dispatchEvent(new Event('vms_comp_options_updated'));") === false, 'Compensation partial should no longer retain the migrated comp-options update bridge.');
+	$assert(strpos($compensationAssetSource, "document.dispatchEvent(new Event('vms_comp_options_updated'));") !== false, 'Dedicated compensation asset should now own the comp-options update bridge.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-secondary-config') !== false, 'Secondary Vendors partial should retain the live non-executable JSON configuration payload.');
 
 	$assert(!file_exists($pluginRoot . '/assets/js/vms-event-plan-editor.js'), 'This dead-partial slice should not create a monolithic Event Plan editor asset.');
