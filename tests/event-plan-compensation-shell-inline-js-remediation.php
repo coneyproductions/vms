@@ -83,7 +83,7 @@ try {
 	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-compensation.js'") !== false, 'Admin UI assets should still point the compensation handle at assets/js/vms-event-plan-compensation.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Compensation asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Compensation asset should remain restricted to Event Plan edit/new screens.');
-	$assert(substr_count($eventPlansSource, '<script') >= 5, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the compensation-shell migration.');
+	$assert(substr_count($eventPlansSource, '<script') >= 4, 'WPORG-22 B1 should still have active inline Event Plan script blocks after the compensation-shell migration.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(

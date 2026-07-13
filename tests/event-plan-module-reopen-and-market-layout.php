@@ -253,12 +253,14 @@ try {
 	$assert(wp_json_encode($secondaryBefore) === wp_json_encode($secondaryAfter), 'Saving an unrelated module should not alter saved Additional Vendors assignments.');
 
 	$eventPlansPhp = (string) file_get_contents(dirname(__DIR__) . '/includes/cpt/event-plans.php');
+	$secondaryVendorsJs = (string) file_get_contents(dirname(__DIR__) . '/assets/js/vms-event-plan-secondary-vendors.js');
 	$shellAssetJs = (string) file_get_contents(dirname(__DIR__) . '/assets/js/vms-event-plan-shell.js');
 	$adminTicketingJs = (string) file_get_contents(dirname(__DIR__) . '/assets/admin-ticketing.js');
-	$assert(strpos($eventPlansPhp, "createGroup('');") !== false, 'Adding a vendor group should start from the compact empty state instead of auto-selecting a type.');
+	$assert(strpos($eventPlansPhp, "createGroup('');") === false, 'Event Plan PHP should no longer own the Additional Vendors create-group runtime.');
+	$assert(strpos($secondaryVendorsJs, "createGroup('');") !== false, 'Adding a vendor group should start from the compact empty state instead of auto-selecting a type.');
 	$assert(strpos($shellAssetJs, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Event Plan shell asset should expose the saved-section URL helper.');
 	$assert(strpos($shellAssetJs, 'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;') !== false, 'Event Plan shell asset should expose the requested-section reopen helper.');
-	$assert(strpos($eventPlansPhp, "window.vmsEventPlanPersistRequestedSection('secondary_vendors');") !== false, 'Additional Vendors save should persist the saved module target.');
+	$assert(strpos($secondaryVendorsJs, "window.vmsEventPlanPersistRequestedSection('secondary_vendors');") !== false, 'Additional Vendors save should persist the saved module target.');
 	$assert(strpos($adminTicketingJs, "persistRequestedSectionTarget('ticketing_v2');") !== false, 'Ticketing saves should persist the saved module target.');
 
 	fwrite(STDOUT, "event plan module reopen + market layout regression: PASS\n");

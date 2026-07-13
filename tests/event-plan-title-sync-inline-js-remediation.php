@@ -61,7 +61,7 @@ try {
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Title asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'const bypassSetBtn = document.getElementById(\'vms-tax-bypass-set\');') !== false, 'Adjacent primary-vendor tax controller should remain inline.');
 	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') !== false, 'The adjacent cancellation confirmation controller should remain inline.');
-	$assert(substr_count($eventPlansSource, '<script') >= 5, 'WPORG-22 B1 should still have other active inline Event Plan script blocks after the title migration.');
+	$assert(substr_count($eventPlansSource, '<script') >= 4, 'WPORG-22 B1 should still have other active inline Event Plan script blocks after the title migration.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(
