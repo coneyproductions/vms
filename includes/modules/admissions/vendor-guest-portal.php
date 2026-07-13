@@ -1071,14 +1071,14 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 		echo '<div class="vms-vendor-guest-tour" data-vms-tour="vendor-portal-guest.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor.portal.guest_list">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button></div>';
 		echo '<p class="vms-vendor-guest-help">' . esc_html__('Use this page to add the complimentary guests the venue has allowed for your upcoming events. Every entry is checked against the current door list and paid customer history before it is accepted.', 'backstage-venue-manager') . '</p>';
 		if (!empty($flash['message']) && function_exists('vms_portal_notice')) {
-			echo vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']);
+			echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
 		}
 		if ($is_preview && function_exists('vms_portal_notice')) {
-			echo vms_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'backstage-venue-manager'));
+			echo wp_kses_post(vms_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'backstage-venue-manager')));
 		}
 		if (empty($events)) {
 			if (function_exists('vms_portal_notice')) {
-				echo vms_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager'));
+				echo wp_kses_post(vms_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager')));
 			} else {
 				echo '<p>' . esc_html__('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager') . '</p>';
 			}

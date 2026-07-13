@@ -94,7 +94,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 			? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_tax_nonce']))
 			: '';
 		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_tax_save')) {
-			echo vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager'));
+			echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
 		} else {
 
 			$t = function ($key) {
@@ -126,7 +126,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 						: new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
 
 					if (is_wp_error($file_id)) {
-						echo vms_portal_notice('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message());
+						echo wp_kses_post(vms_portal_notice('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message()));
 					} else {
 						update_post_meta($vendor_id, $k_upload, (int) $file_id);
 						update_post_meta($vendor_id, $k_upload_kind, 'private_file');
@@ -168,7 +168,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 				delete_post_meta($vendor_id, $k_done);
 			}
 
-			echo vms_portal_notice('success', __('Tax Profile saved.', 'backstage-venue-manager'));
+			echo wp_kses_post(vms_portal_notice('success', __('Tax Profile saved.', 'backstage-venue-manager')));
 		}
 	}
 

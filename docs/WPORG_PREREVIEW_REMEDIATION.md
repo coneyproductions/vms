@@ -299,6 +299,14 @@ Acceptable note:
 
 - `includes/public/event-details.php:669-674` is the structured-data example that should remain explanation-only unless its schema payload itself is incorrect.
 
+### `WPORG-24 E1` first portal-notice sink normalization result
+
+- Result: the first narrow E1 slice normalized the remaining direct `vms_portal_notice()` sinks outside the main Vendor Portal in `includes/portal/vendor-tax-profile.php` and `includes/modules/admissions/vendor-guest-portal.php`.
+- Contract: `vms_portal_notice()` still returns the same escaped `<div class="vms-notice vms-notice-{type}">...</div>` fragment; rendered classes, notice copy, and business logic are unchanged.
+- Sink pattern: those two files now use the established `wp_kses_post(vms_portal_notice(...))` pattern already used by `includes/portal/vendor-portal.php`.
+- Scope: `WPORG-24` remains open. Other trusted-HTML boundaries remain for later slices, including staff portal safe HTML, ADD pills and public shell output, admin shell output, vendor application confirmation shell output, docs-public markdown, Event Plans partial/AJAX HTML, and pass-claims output.
+- Focused coverage: `tests/portal-notice-sink-remediation.php`.
+
 ## F. Prefixing and Collision Safety
 
 Status:
