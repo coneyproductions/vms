@@ -304,7 +304,7 @@ Acceptable note:
 - Result: the first narrow E1 slice normalized the remaining direct `vms_portal_notice()` sinks outside the main Vendor Portal in `includes/portal/vendor-tax-profile.php` and `includes/modules/admissions/vendor-guest-portal.php`.
 - Contract: `vms_portal_notice()` still returns the same escaped `<div class="vms-notice vms-notice-{type}">...</div>` fragment; rendered classes, notice copy, and business logic are unchanged.
 - Sink pattern: those two files now use the established `wp_kses_post(vms_portal_notice(...))` pattern already used by `includes/portal/vendor-portal.php`.
-- Scope: `WPORG-24` remains open. Other trusted-HTML boundaries remain for later slices, including staff portal safe HTML, ADD pills and public shell output, admin shell output, vendor application confirmation shell output, docs-public markdown, Event Plans partial/AJAX HTML, and pass-claims output.
+- Scope: `WPORG-24` remains open. Other trusted-HTML boundaries remain for later slices, including staff portal safe HTML, ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
 - Focused coverage: `tests/portal-notice-sink-remediation.php`.
 
 ### `WPORG-24 E1` public documentation Markdown output-contract result
@@ -317,7 +317,18 @@ Acceptable note:
 - Boundary behavior: unsupported raw elements, event-handler attributes, unsafe link protocols, and HTML-like code text do not survive as executable or allowed markup.
 - Administrator caller: `includes/admin/docs-page.php` was inspected and intentionally left unchanged because it already applies an explicit final `wp_kses()` contract and this slice targets the public sink.
 - Focused coverage and validation: `tests/docs-public-markdown-output-remediation.php`; `php -l includes/docs-public.php`; `php -l includes/docs-render.php`; `php -l tests/docs-public-markdown-output-remediation.php`; `php tests/docs-public-markdown-output-remediation.php`; `git diff --check`.
-- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include staff portal safe HTML, ADD pills and public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include staff portal safe HTML, ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
+
+### `WPORG-24 E1` ADD dispatch pill output-contract result
+
+- Result: ADD administrator status/source pill fragments now use a dedicated narrow final-output contract at every production sink.
+- Production helper file inspected and changed: `includes/modules/availability-date-dispatch/admin-ui.php`.
+- Contract: `vms_add_dispatch_pill_allowed_html()` permits only `span` with the `class` attribute.
+- Helper behavior preserved: `vms_add_dispatch_status_pill()` and `vms_add_dispatch_source_pill()` still normalize status/source values with `sanitize_key()`, preserve the existing status/source label maps, preserve the neutral/success/warning/danger/source CSS classes, escape classes with `esc_attr()`, and escape labels with `esc_html()`.
+- Complete production caller inventory normalized: status-pill sinks at `admin-ui.php:350`, `:366`, `:466`, `:525`, `:557`, `:724`, `:882`, and `:956`; source-pill sinks at `admin-ui.php:365`, `:523`, `:556`, `:831`, and `:955`.
+- Boundary behavior: each sink applies `wp_kses(vms_add_dispatch_status_pill(...), vms_add_dispatch_pill_allowed_html())` or `wp_kses(vms_add_dispatch_source_pill(...), vms_add_dispatch_pill_allowed_html())`; no larger ADD table, row, card, form, or page HTML is filtered through the pill allowlist.
+- Focused coverage and validation: `php -l includes/modules/availability-date-dispatch/admin-ui.php`, `php -l tests/add-dispatch-pill-output-remediation.php`, `php tests/add-dispatch-pill-output-remediation.php`, `php tests/event-plan-secondary-vendor-capacity-and-add.php`, and `git diff --check` passed. `php tests/add-dispatch-open-vendor-needs.php` still has the known unrelated `WPORG-27` missing-primary ADD visibility failure, and `php tests/add-dispatch-assignment-review.php` remains blocked in this local harness because `wp-load.php` could not be located.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include staff portal safe HTML, ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
 
 ## F. Prefixing and Collision Safety
 

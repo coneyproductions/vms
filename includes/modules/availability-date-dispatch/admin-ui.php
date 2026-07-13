@@ -243,6 +243,17 @@ if (!function_exists('vms_add_dispatch_register_tours')) {
 }
 add_filter('vms_tours_register', 'vms_add_dispatch_register_tours');
 
+if (!function_exists('vms_add_dispatch_pill_allowed_html')) {
+	function vms_add_dispatch_pill_allowed_html(): array
+	{
+		return array(
+			'span' => array(
+				'class' => true,
+			),
+		);
+	}
+}
+
 if (!function_exists('vms_add_dispatch_register_event_plan_metabox')) {
 	function vms_add_dispatch_register_event_plan_metabox(): void
 	{
@@ -336,7 +347,7 @@ if (!function_exists('vms_add_dispatch_render_event_plan_metabox')) {
 				echo '<tr>';
 				echo '<td>' . esc_html((string) ($request['created_at'] ?? '')) . '</td>';
 				echo '<td>' . esc_html($target) . '</td>';
-				echo '<td>' . vms_add_dispatch_status_pill((string) ($request['status'] ?? 'active')) . '</td>';
+				echo '<td>' . wp_kses(vms_add_dispatch_status_pill((string) ($request['status'] ?? 'active')), vms_add_dispatch_pill_allowed_html()) . '</td>';
 				echo '<td>' . esc_html(sprintf('%d total / %d available', (int) ($request['recipient_total'] ?? 0), (int) ($request['available_count'] ?? 0))) . '</td>';
 				echo '</tr>';
 			}
@@ -351,8 +362,8 @@ if (!function_exists('vms_add_dispatch_render_event_plan_metabox')) {
 				$status = sanitize_key((string) ($response['response_status'] ?? 'requested'));
 				echo '<tr>';
 				echo '<td>' . esc_html((string) ($response['vendor_title'] ?? '')) . '</td>';
-				echo '<td>' . vms_add_dispatch_source_pill((string) ($response['response_source'] ?? '')) . '</td>';
-				echo '<td>' . vms_add_dispatch_status_pill($status) . '</td>';
+				echo '<td>' . wp_kses(vms_add_dispatch_source_pill((string) ($response['response_source'] ?? '')), vms_add_dispatch_pill_allowed_html()) . '</td>';
+				echo '<td>' . wp_kses(vms_add_dispatch_status_pill($status), vms_add_dispatch_pill_allowed_html()) . '</td>';
 				echo '<td>' . esc_html((string) ($response['responded_at'] ?? '')) . '</td>';
 				echo '<td>';
 				if ($status === 'available') {
@@ -452,7 +463,7 @@ if (!function_exists('vms_add_dispatch_render_request_builder')) {
 					echo '<div class="description">' . esc_html__('Previously contacted on this Event Plan', 'backstage-venue-manager') . '</div>';
 				}
 				echo '</td>';
-				echo '<td>' . vms_add_dispatch_status_pill((string) ($recipient['state'] ?? 'requested')) . '</td>';
+				echo '<td>' . wp_kses(vms_add_dispatch_status_pill((string) ($recipient['state'] ?? 'requested')), vms_add_dispatch_pill_allowed_html()) . '</td>';
 				echo '<td class="vms-add-decision-cell">';
 				if ($included) {
 					echo '<strong data-vms-add-decision-label>' . esc_html__('Selectable.', 'backstage-venue-manager') . '</strong>';
@@ -509,9 +520,9 @@ if (!function_exists('vms_add_dispatch_render_request_history')) {
 			}
 			echo '<div class="vms-add-request-block">';
 			echo '<div class="vms-add-request-head">';
-			echo '<div><strong>' . esc_html($target) . '</strong> ' . vms_add_dispatch_source_pill($source) . '<div class="description">' . esc_html((string) ($request['created_at'] ?? '')) . '</div></div>';
+			echo '<div><strong>' . esc_html($target) . '</strong> ' . wp_kses(vms_add_dispatch_source_pill($source), vms_add_dispatch_pill_allowed_html()) . '<div class="description">' . esc_html((string) ($request['created_at'] ?? '')) . '</div></div>';
 			echo '<div class="vms-add-request-actions">';
-			echo vms_add_dispatch_status_pill((string) ($request['status'] ?? 'active'));
+			echo wp_kses(vms_add_dispatch_status_pill((string) ($request['status'] ?? 'active')), vms_add_dispatch_pill_allowed_html());
 			if (sanitize_key((string) ($request['status'] ?? 'active')) === 'active') {
 				$close_url = wp_nonce_url(
 					add_query_arg(
@@ -542,8 +553,8 @@ if (!function_exists('vms_add_dispatch_render_request_history')) {
 					echo '<tr>';
 					$target_label = sanitize_key((string) ($request['target_mode'] ?? 'secondary')) === 'primary' ? __('Primary vendor', 'backstage-venue-manager') : (string) vms_add_dispatch_type_label((string) ($request['vendor_type'] ?? ''));
 					echo '<td><strong>' . esc_html((string) ($response['vendor_title'] ?? '')) . '</strong><div class="description">' . esc_html($target_label !== '' ? $target_label : __('Vendor', 'backstage-venue-manager')) . ' • ' . esc_html((string) ($response['vendor_email'] ?? '')) . '</div></td>';
-					echo '<td>' . vms_add_dispatch_source_pill((string) ($response['response_source'] ?? '')) . '</td>';
-					echo '<td>' . vms_add_dispatch_status_pill($status) . '</td>';
+					echo '<td>' . wp_kses(vms_add_dispatch_source_pill((string) ($response['response_source'] ?? '')), vms_add_dispatch_pill_allowed_html()) . '</td>';
+					echo '<td>' . wp_kses(vms_add_dispatch_status_pill($status), vms_add_dispatch_pill_allowed_html()) . '</td>';
 					echo '<td>' . esc_html((string) ($response['responded_at'] ?? '')) . '</td>';
 					echo '<td>';
 					if ($status === 'available') {
@@ -710,7 +721,7 @@ if (!function_exists('vms_add_dispatch_render_assignment_review')) {
 				echo '<td>' . esc_html(sanitize_key((string) ($group['mode'] ?? 'standard')) === 'market' ? __('Market', 'backstage-venue-manager') : __('Standard', 'backstage-venue-manager')) . '</td>';
 				echo '<td>' . esc_html((string) (int) ($group['filled_slots'] ?? 0)) . '</td>';
 				echo '<td>' . esc_html($capacity !== null && $capacity !== '' ? (string) (int) $capacity : __('No slot limit', 'backstage-venue-manager')) . '</td>';
-				echo '<td>' . vms_add_dispatch_status_pill((string) ($group['status'] ?? 'full')) . '</td>';
+				echo '<td>' . wp_kses(vms_add_dispatch_status_pill((string) ($group['status'] ?? 'full')), vms_add_dispatch_pill_allowed_html()) . '</td>';
 				echo '</tr>';
 			}
 			echo '</tbody></table>';
@@ -817,7 +828,7 @@ if (!function_exists('vms_add_dispatch_render_dashboard_home')) {
 				$assign_url = vms_add_dispatch_assignment_review_url((int) ($row['id'] ?? 0), (int) ($row['event_plan_id'] ?? 0));
 				$dispatch_url = vms_add_dispatch_admin_url(array('event_plan_id' => (int) ($row['event_plan_id'] ?? 0)));
 				echo '<tr>';
-				echo '<td><strong>' . esc_html((string) ($row['vendor_title'] ?? '')) . '</strong><div class="description">' . vms_add_dispatch_source_pill('portal_interest') . '</div></td>';
+				echo '<td><strong>' . esc_html((string) ($row['vendor_title'] ?? '')) . '</strong><div class="description">' . wp_kses(vms_add_dispatch_source_pill('portal_interest'), vms_add_dispatch_pill_allowed_html()) . '</div></td>';
 				$target_label = sanitize_key((string) ($row['target_mode'] ?? 'secondary')) === 'primary'
 					? __('Primary vendor', 'backstage-venue-manager')
 					: (string) vms_add_dispatch_type_label((string) ($row['vendor_type'] ?? ''));
@@ -868,7 +879,7 @@ if (!function_exists('vms_add_dispatch_render_dashboard_home')) {
 					echo '<td>' . esc_html($capacity !== null && $capacity !== '' ? (string) (int) $capacity : __('No slot limit', 'backstage-venue-manager')) . '</td>';
 					echo '<td>' . esc_html((string) max(0, (int) $open_needed)) . '</td>';
 					echo '<td>' . esc_html($open_capacity !== null && $open_capacity !== '' ? (string) max(0, (int) $open_capacity) : __('Uncapped', 'backstage-venue-manager')) . '</td>';
-					echo '<td>' . vms_add_dispatch_status_pill((string) ($group['status'] ?? 'full')) . '</td>';
+					echo '<td>' . wp_kses(vms_add_dispatch_status_pill((string) ($group['status'] ?? 'full')), vms_add_dispatch_pill_allowed_html()) . '</td>';
 					echo '<td><a class="button button-small" href="' . esc_url($dispatch_url) . '">' . esc_html__('Review in ADD', 'backstage-venue-manager') . '</a></td>';
 					echo '</tr>';
 				}
@@ -941,8 +952,8 @@ if (!function_exists('vms_add_dispatch_render_dashboard_home')) {
 					: (string) vms_add_dispatch_type_label((string) ($response['vendor_type'] ?? ''));
 				echo '<td>' . esc_html($target_label !== '' ? $target_label : __('Vendor', 'backstage-venue-manager')) . '</td>';
 				echo '<td>' . esc_html((string) ($response['event_title'] ?? '')) . '</td>';
-				echo '<td>' . vms_add_dispatch_source_pill((string) ($response['response_source'] ?? '')) . '</td>';
-				echo '<td>' . vms_add_dispatch_status_pill((string) ($response['response_status'] ?? 'requested')) . '</td>';
+				echo '<td>' . wp_kses(vms_add_dispatch_source_pill((string) ($response['response_source'] ?? '')), vms_add_dispatch_pill_allowed_html()) . '</td>';
+				echo '<td>' . wp_kses(vms_add_dispatch_status_pill((string) ($response['response_status'] ?? 'requested')), vms_add_dispatch_pill_allowed_html()) . '</td>';
 				echo '<td>' . esc_html((string) (($response['responded_at'] ?? '') ?: ($response['created_at'] ?? ''))) . '</td>';
 				echo '</tr>';
 			}
