@@ -21,6 +21,18 @@ if (!function_exists('vms_staff_certifications_pending_count')) {
     }
 }
 
+if (!function_exists('vms_staff_certifications_get_pending_review_items')) {
+    /**
+     * @return array<int|string,mixed>
+     */
+    function vms_staff_certifications_get_pending_review_items(): array
+    {
+        return function_exists('vms_staffing_get_staff_qualification_review_items')
+            ? (array) vms_staffing_get_staff_qualification_review_items('pending_verification')
+            : array();
+    }
+}
+
 if (!function_exists('vms_staff_certifications_admin_menu_label')) {
     function vms_staff_certifications_admin_menu_label(string $label = ''): string
     {
@@ -29,34 +41,59 @@ if (!function_exists('vms_staff_certifications_admin_menu_label')) {
     }
 }
 
+if (!function_exists('vms_staff_certifications_render_empty_state_notice')) {
+    /**
+     * @param array<int|string,mixed> $pending
+     */
+    function vms_staff_certifications_render_empty_state_notice(array $pending): void
+    {
+        if (!empty($pending)) {
+            return;
+        }
+
+        echo '<div class="notice notice-success inline"><p>' . esc_html__('No staff certifications are waiting for review.', 'backstage-venue-manager') . '</p></div>';
+    }
+}
+
 if (!function_exists('vms_render_staff_certifications_admin_page')) {
     function vms_render_staff_certifications_admin_page(): void
     {
+        $pending = vms_staff_certifications_get_pending_review_items();
+
         if (function_exists('vms_admin_ui_render_shell')) {
             vms_admin_ui_render_shell(
                 array(
                     'title' => __('Staff Certifications', 'backstage-venue-manager'),
                     'subtitle' => __('Review staff-uploaded certificates, licenses, and permits that are waiting on admin approval.', 'backstage-venue-manager'),
                     'shell_id' => 'vms-staff-certifications-admin',
+                    'notices_callback' => function () use ($pending): void {
+                        vms_staff_certifications_render_empty_state_notice($pending);
+                    },
                 ),
-                'vms_render_staff_certifications_admin_page_content'
+                function () use ($pending): void {
+                    vms_render_staff_certifications_admin_page_content($pending);
+                }
             );
             return;
         }
 
         echo '<div class="wrap" id="vms-staff-certifications-admin">';
         echo '<h1>' . esc_html__('Staff Certifications', 'backstage-venue-manager') . '</h1>';
-        vms_render_staff_certifications_admin_page_content();
+        vms_render_staff_certifications_admin_page_content($pending);
+        vms_staff_certifications_render_empty_state_notice($pending);
         echo '</div>';
     }
 }
 
 if (!function_exists('vms_render_staff_certifications_admin_page_content')) {
-    function vms_render_staff_certifications_admin_page_content(): void
+    /**
+     * @param array<int|string,mixed>|null $pending
+     */
+    function vms_render_staff_certifications_admin_page_content(?array $pending = null): void
     {
-        $pending = function_exists('vms_staffing_get_staff_qualification_review_items')
-            ? vms_staffing_get_staff_qualification_review_items('pending_verification')
-            : array();
+        if ($pending === null) {
+            $pending = vms_staff_certifications_get_pending_review_items();
+        }
 
         echo '<div class="vms-admin-card vms-staff-certifications-summary">';
         echo '<h2>' . esc_html__('Pending Review', 'backstage-venue-manager') . '</h2>';
@@ -65,7 +102,6 @@ if (!function_exists('vms_render_staff_certifications_admin_page_content')) {
         echo '</div>';
 
         if (empty($pending)) {
-            echo '<div class="notice notice-success inline"><p>' . esc_html__('No staff certifications are waiting for review.', 'backstage-venue-manager') . '</p></div>';
             return;
         }
 

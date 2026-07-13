@@ -120,6 +120,63 @@ if (!function_exists('esc_attr')) {
 	}
 }
 
+if (!function_exists('esc_url')) {
+	function esc_url($url): string
+	{
+		return htmlspecialchars((string) $url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
+if (!function_exists('sanitize_html_class')) {
+	function sanitize_html_class($class): string
+	{
+		$sanitized = preg_replace('/[^A-Za-z0-9_-]/', '-', (string) $class);
+		return is_string($sanitized) ? trim($sanitized, '-') : '';
+	}
+}
+
+if (!function_exists('wp_timezone')) {
+	function wp_timezone(): DateTimeZone
+	{
+		return new DateTimeZone('UTC');
+	}
+}
+
+if (!function_exists('wp_date')) {
+	function wp_date(string $format, int $timestamp, ?DateTimeZone $timezone = null): string
+	{
+		$date = new DateTimeImmutable('@' . $timestamp);
+		if ($timezone instanceof DateTimeZone) {
+			$date = $date->setTimezone($timezone);
+		}
+
+		return $date->format($format);
+	}
+}
+
+if (!function_exists('vms_staffing_staff_qualification_review_url')) {
+	function vms_staffing_staff_qualification_review_url(int $staff_id): string
+	{
+		return admin_url('post.php?post=' . $staff_id . '&action=edit');
+	}
+}
+
+$GLOBALS['vms_test_staff_certifications_pending_items'] = array();
+$GLOBALS['vms_test_staff_certifications_provider_calls'] = 0;
+$GLOBALS['vms_test_staff_certifications_provider_statuses'] = array();
+
+if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
+	/**
+	 * @return array<int|string,mixed>
+	 */
+	function vms_staffing_get_staff_qualification_review_items(string $status): array
+	{
+		$GLOBALS['vms_test_staff_certifications_provider_calls']++;
+		$GLOBALS['vms_test_staff_certifications_provider_statuses'][] = $status;
+		return $GLOBALS['vms_test_staff_certifications_pending_items'];
+	}
+}
+
 if (!function_exists('wp_kses')) {
 	function wp_kses($html, $allowed_html): string
 	{
@@ -181,6 +238,7 @@ require_once dirname(__DIR__) . '/includes/modules/status-notices/admin-ui.php';
 require_once dirname(__DIR__) . '/includes/admin/continuity-binder.php';
 require_once dirname(__DIR__) . '/includes/admin/due-dates.php';
 require_once dirname(__DIR__) . '/includes/admin/square-sync-protection.php';
+require_once dirname(__DIR__) . '/includes/admin/staff-certifications.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
@@ -300,6 +358,7 @@ $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
+$staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
 $expectedActionCallerFiles = array(
 	'admin/event-command-center.php',
 	'admin/integrity-calendar-reconcile.php',
@@ -316,6 +375,7 @@ $expectedNoticesCallbackFiles = array(
 	'admin/continuity-binder.php',
 	'admin/due-dates.php',
 	'admin/square-sync-protection.php',
+	'admin/staff-certifications.php',
 	'modules/status-notices/admin-ui.php',
 );
 sort($actionCallerFiles);
@@ -323,13 +383,14 @@ sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 5, 'Only five production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 6, 'Only six production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
 $assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
+$assert($staffCertificationsNoticeCallbackCount === 1, 'Staff Certifications should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Due Dates, and Square Sync Protection.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Due Dates, Square Sync Protection, and Staff Certifications.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -519,9 +580,104 @@ vms_square_sync_protection_render_admin_notice();
 $squareNoNotice = (string) ob_get_clean();
 $assert($squareNoNotice === '', 'Square Sync Protection explicit notice callback should stay silent when no notice slug is present.');
 
-$assert(strpos($staffCertificationsSource, 'notices_callback') === false, 'Staff Certifications should remain outside the explicit notice callback inventory in this pass.');
-$assert(strpos($staffCertificationsSource, 'notice notice-success inline') !== false, 'Staff Certifications empty-state notice should remain in the content callback for the deferred candidate.');
-$assert(strpos($staffCertificationsSource, 'notice notice-warning is-dismissible vms-staff-certifications-admin-notice') !== false, 'Staff Certifications should retain the richer global warning notice family that keeps it outside the smallest-safe migration boundary.');
+$assert(strpos($staffCertificationsSource, 'function vms_staff_certifications_get_pending_review_items(): array') !== false, 'Staff Certifications should expose a dedicated pending-review loader helper.');
+$assert(strpos($staffCertificationsSource, "vms_staffing_get_staff_qualification_review_items('pending_verification')") !== false, 'Staff Certifications should preserve the exact pending-review provider call and argument.');
+$assert(substr_count($staffCertificationsSource, "vms_staffing_get_staff_qualification_review_items('pending_verification')") === 1, 'Staff Certifications pending-review provider should appear exactly once in production source.');
+$assert(strpos($staffCertificationsSource, 'function vms_staff_certifications_render_empty_state_notice(array $pending): void') !== false, 'Staff Certifications should expose a dedicated empty-state explicit notice helper.');
+$assert(strpos($staffCertificationsSource, "'notices_callback' => function () use (\$pending): void {") !== false, 'Staff Certifications shell call should supply a page-local explicit notice closure using the resolved pending dataset.');
+$assert(strpos($staffCertificationsSource, "function () use (\$pending): void {\n                    vms_render_staff_certifications_admin_page_content(\$pending);") !== false, 'Staff Certifications shell content callback should use the same resolved pending dataset.');
+$assert(strpos($staffCertificationsSource, 'vms_render_staff_certifications_admin_page_content(?array $pending = null): void') !== false, 'Staff Certifications content callback should accept an already-resolved pending dataset.');
+$assert(strpos($staffCertificationsSource, 'vms_staff_certifications_render_empty_state_notice($pending);') !== false, 'Staff Certifications fallback renderer should reuse the same pending dataset for the empty-state notice.');
+$assert(strpos($staffCertificationsSource, 'if (empty($pending)) {') !== false, 'Staff Certifications should preserve the exact empty-state condition.');
+$assert(strpos($staffCertificationsSource, '<div class="notice notice-success inline"><p>') !== false, 'Staff Certifications explicit notice helper should preserve the exact inline success notice fragment.');
+$assert(strpos($staffCertificationsSource, 'esc_html__(\'No staff certifications are waiting for review.\'') !== false, 'Staff Certifications explicit notice helper should preserve the exact message translation and escaping function.');
+$assert(strpos($staffCertificationsSource, "add_action('admin_notices', function (): void {") !== false, 'Staff Certifications should keep the separate rich warning family on the admin_notices hook.');
+$assert(strpos($staffCertificationsSource, '$screen && isset($screen->id) && $screen->id === \'vms_page_vms-staff-certifications\'') !== false, 'Staff Certifications rich warning family should keep its existing screen visibility guard.');
+$assert(strpos($staffCertificationsSource, 'notice notice-warning is-dismissible vms-staff-certifications-admin-notice') !== false, 'Staff Certifications should retain the richer global warning notice family markup unchanged.');
+$assert(strpos($staffCertificationsSource, '<p><strong>') !== false && strpos($staffCertificationsSource, '<a href="') !== false, 'Staff Certifications rich warning family should remain outside the explicit notice contract.');
+
+ob_start();
+vms_staff_certifications_render_empty_state_notice(array());
+$staffEmptyNotice = (string) ob_get_clean();
+$assert(
+	$staffEmptyNotice === '<div class="notice notice-success inline"><p>No staff certifications are waiting for review.</p></div>',
+	'Staff Certifications explicit notice helper should preserve the exact inline empty-state notice fragment.'
+);
+$assert(
+	wp_kses($staffEmptyNotice, vms_admin_ui_explicit_notice_allowed_html()) === $staffEmptyNotice,
+	'The explicit notice allowlist should admit the Staff Certifications empty-state notice unchanged.'
+);
+
+ob_start();
+vms_staff_certifications_render_empty_state_notice(
+	array(
+		array(
+			'staff_id' => 17,
+		),
+	)
+);
+$staffNonemptyNotice = (string) ob_get_clean();
+$assert($staffNonemptyNotice === '', 'Staff Certifications explicit notice helper should stay silent when pending items exist.');
+
+ob_start();
+vms_render_staff_certifications_admin_page_content(array());
+$staffEmptyContent = (string) ob_get_clean();
+$assert(strpos($staffEmptyContent, 'No staff certifications are waiting for review.') === false, 'Staff Certifications content callback should no longer emit the moved empty-state notice.');
+$assert(strpos($staffEmptyContent, 'Pending Review') !== false, 'Staff Certifications content callback should still render the summary content for the empty state.');
+
+ob_start();
+vms_render_staff_certifications_admin_page_content(
+	array(
+		array(
+			'staff_id' => 29,
+			'staff_name' => 'Alex Example',
+			'row' => array(
+				'name' => 'TABC',
+				'submitted_at' => 1710000000,
+				'expiration_date' => '2026-12-31',
+				'proof_download_url' => 'https://example.test/proof.pdf',
+			),
+		),
+	)
+);
+$staffNonemptyContent = (string) ob_get_clean();
+$assert(strpos($staffNonemptyContent, 'No staff certifications are waiting for review.') === false, 'Staff Certifications content callback should not emit the empty-state notice when pending items exist.');
+$assert(strpos($staffNonemptyContent, 'Alex Example') !== false && strpos($staffNonemptyContent, 'TABC') !== false, 'Staff Certifications content callback should keep rendering nonempty review rows from the resolved dataset.');
+
+$GLOBALS['vms_test_staff_certifications_pending_items'] = array();
+$GLOBALS['vms_test_staff_certifications_provider_calls'] = 0;
+$GLOBALS['vms_test_staff_certifications_provider_statuses'] = array();
+ob_start();
+vms_render_staff_certifications_admin_page();
+$staffEmptyPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_staff_certifications_provider_calls'] === 1, 'Staff Certifications page renderer should resolve the pending-review dataset exactly once for the empty state.');
+$assert($GLOBALS['vms_test_staff_certifications_provider_statuses'] === array('pending_verification'), 'Staff Certifications page renderer should use the existing pending-review provider argument exactly once.');
+$assert(substr_count($staffEmptyPage, 'No staff certifications are waiting for review.') === 1, 'Staff Certifications page renderer should emit the empty-state notice exactly once when the resolved dataset is empty.');
+$assert(strpos($staffEmptyPage, 'notice notice-success inline') !== false, 'Staff Certifications rendered empty-state notice should preserve the inline class.');
+$assert(strpos($staffEmptyPage, 'Alex Example') === false, 'Staff Certifications empty-state render should not leak nonempty-row content.');
+
+$GLOBALS['vms_test_staff_certifications_pending_items'] = array(
+	array(
+		'staff_id' => 31,
+		'staff_name' => 'Jamie Queue',
+		'row' => array(
+			'name' => 'Food Handler',
+			'submitted_at' => 1710001234,
+			'expiration_date' => '2027-01-15',
+			'proof_download_url' => 'https://example.test/queue-proof.pdf',
+		),
+	),
+);
+$GLOBALS['vms_test_staff_certifications_provider_calls'] = 0;
+$GLOBALS['vms_test_staff_certifications_provider_statuses'] = array();
+ob_start();
+vms_render_staff_certifications_admin_page();
+$staffNonemptyPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_staff_certifications_provider_calls'] === 1, 'Staff Certifications page renderer should still resolve the pending-review dataset exactly once for the nonempty state.');
+$assert($GLOBALS['vms_test_staff_certifications_provider_statuses'] === array('pending_verification'), 'Staff Certifications nonempty render should keep the existing provider argument.');
+$assert(strpos($staffNonemptyPage, 'No staff certifications are waiting for review.') === false, 'Staff Certifications page renderer should emit no empty-state notice when pending items exist.');
+$assert(strpos($staffNonemptyPage, 'Jamie Queue') !== false && strpos($staffNonemptyPage, 'Food Handler') !== false, 'Staff Certifications page renderer should keep using the resolved dataset for nonempty page content.');
+$assert(strpos($staffNonemptyPage, '>1</strong> certification needs review') !== false, 'Staff Certifications nonempty summary should still use the same resolved dataset count.');
 
 $allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
 $assert(
