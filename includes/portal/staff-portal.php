@@ -129,38 +129,42 @@ if (!function_exists('vms_staff_portal_format_ts')) {
     }
 }
 
+if (!function_exists('vms_staff_portal_safe_html_allowed_html')) {
+    function vms_staff_portal_safe_html_allowed_html(): array
+    {
+        return array(
+            'a' => array(
+                'class' => true,
+                'href' => true,
+                'loading' => true,
+                'rel' => true,
+                'target' => true,
+            ),
+            'div' => array(
+                'class' => true,
+                'tabindex' => true,
+            ),
+            'img' => array(
+                'alt' => true,
+                'class' => true,
+                'loading' => true,
+                'src' => true,
+            ),
+            'p' => array(
+                'class' => true,
+            ),
+            'span' => array(
+                'aria-hidden' => true,
+                'class' => true,
+            ),
+        );
+    }
+}
+
 if (!function_exists('vms_staff_portal_safe_html')) {
     function vms_staff_portal_safe_html(string $html): string
     {
-        return wp_kses(
-            $html,
-            array(
-                'a' => array(
-                    'class' => true,
-                    'href' => true,
-                    'loading' => true,
-                    'rel' => true,
-                    'target' => true,
-                ),
-                'div' => array(
-                    'class' => true,
-                    'tabindex' => true,
-                ),
-                'img' => array(
-                    'alt' => true,
-                    'class' => true,
-                    'loading' => true,
-                    'src' => true,
-                ),
-                'p' => array(
-                    'class' => true,
-                ),
-                'span' => array(
-                    'aria-hidden' => true,
-                    'class' => true,
-                ),
-            )
-        );
+        return wp_kses($html, vms_staff_portal_safe_html_allowed_html());
     }
 }
 
@@ -263,7 +267,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             return;
         }
 
-        echo vms_staff_portal_safe_html(vms_staff_portal_handle_certification_submission($staff_id));
+        echo wp_kses(vms_staff_portal_safe_html(vms_staff_portal_handle_certification_submission($staff_id)), vms_staff_portal_safe_html_allowed_html());
 
         $rows = function_exists('vms_staffing_get_staff_qualifications')
             ? (array) vms_staffing_get_staff_qualifications($staff_id)
@@ -326,7 +330,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
 
             echo '<div class="vms-staff-certification-row">';
             echo '<div class="vms-staff-certification-main">';
-            echo '<strong>' . esc_html($name) . '</strong> ' . vms_staff_portal_safe_html(vms_staff_portal_certification_status_badge($status));
+            echo '<strong>' . esc_html($name) . '</strong> ' . wp_kses(vms_staff_portal_safe_html(vms_staff_portal_certification_status_badge($status)), vms_staff_portal_safe_html_allowed_html());
             echo '<p class="vms-muted">';
             $details = array();
             if ($authority !== '') {
@@ -1888,7 +1892,7 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
         echo '<div>';
         echo '<div class="vms-portal-card">';
         echo '<h3>' . esc_html($tax_tab_label) . '</h3>';
-        echo '<p class="vms-tax-profile-status">' . vms_staff_portal_safe_html(vms_staff_portal_badge_html($tax_stage)) . '</p>';
+        echo '<p class="vms-tax-profile-status">' . wp_kses(vms_staff_portal_safe_html(vms_staff_portal_badge_html($tax_stage)), vms_staff_portal_safe_html_allowed_html()) . '</p>';
         echo '<div class="vms-dash-kpis">';
         echo '<div class="vms-dash-kpi"><b>' . esc_html__('Workflow', 'backstage-venue-manager') . '</b><span>' . esc_html($tax_provider_label) . '</span></div>';
         if ($worker_type !== 'employee' && !empty($tax_status['attested_at']) && empty($tax_status['is_complete'])) {
@@ -1956,7 +1960,7 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
             ? sanitize_text_field(wp_unslash((string) $_POST['vms_employee_packet_nonce']))
             : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_employee_packet_ack')) {
-            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
+            echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
         } else {
             $now = time();
             $ack_w4 = isset($_POST['vms_ack_w4']) ? 1 : 0;
@@ -1969,7 +1973,7 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
 
             update_post_meta($staff_id, '_vms_employee_packet_attested_at', $now);
 
-            echo vms_staff_portal_notice_html('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'backstage-venue-manager'));
+            echo wp_kses(vms_staff_portal_notice_html('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
         }
     }
 
@@ -2031,7 +2035,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
             ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_tax_nonce']))
             : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_tax_save')) {
-            echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
+            echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
         } else {
             $t = static function ($key) {
                 return isset($_POST[$key]) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
@@ -2067,7 +2071,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
                         ? vms_private_w9_store_upload($staff_id, $_FILES)
                         : new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
                     if (is_wp_error($file_id)) {
-                        echo vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message());
+                        echo wp_kses(vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message()), vms_staff_portal_safe_html_allowed_html());
                     } else {
                         update_post_meta($staff_id, '_vms_w9_upload_id', (int) $file_id);
                         update_post_meta($staff_id, $k_upload_kind, 'private_file');
@@ -2101,7 +2105,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
                 }
             }
 
-            echo vms_staff_portal_notice_html('success', __('Tax Profile saved.', 'backstage-venue-manager'));
+            echo wp_kses(vms_staff_portal_notice_html('success', __('Tax Profile saved.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
         }
     }
 
@@ -2142,7 +2146,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
 
     echo '<div class="vms-portal-card">';
     echo '<h3 class="vms-mt-0">' . esc_html__('Tax Profile', 'backstage-venue-manager') . '</h3>';
-    echo '<p class="vms-tax-profile-status">' . vms_staff_portal_safe_html(vms_staff_portal_badge_html((string) ($tax_status['stage'] ?? 'incomplete'))) . '</p>';
+    echo '<p class="vms-tax-profile-status">' . wp_kses(vms_staff_portal_safe_html(vms_staff_portal_badge_html((string) ($tax_status['stage'] ?? 'incomplete'))), vms_staff_portal_safe_html_allowed_html()) . '</p>';
     echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'backstage-venue-manager') . '</strong> ' . esc_html($provider_label) . '</div>';
     if ($provider !== 'upload') {
         echo '<p class="vms-muted vms-mt-10">' . esc_html__('Complete your W-9/tax step through the secure off-site workflow, then return here to confirm you completed it. The venue will review and mark it complete after verification.', 'backstage-venue-manager') . '</p>';
@@ -2316,7 +2320,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_ics_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_ics_settings')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
+                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
             } else {
                 $new_url = isset($_POST['vms_staff_ics_url']) ? esc_url_raw(trim((string) $_POST['vms_staff_ics_url'])) : '';
                 $new_autosync = !empty($_POST['vms_staff_ics_autosync']) ? 1 : 0;
@@ -2330,7 +2334,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 if ($ics_url !== '' && $ics_autosync) {
                     $ics_meta .= ' | ' . __('Auto-sync on', 'backstage-venue-manager');
                 }
-                echo vms_staff_portal_notice_html('success', __('Calendar settings saved.', 'backstage-venue-manager'));
+                echo wp_kses(vms_staff_portal_notice_html('success', __('Calendar settings saved.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
             }
         }
 
@@ -2339,14 +2343,14 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_ics_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_ics_settings')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
+                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
             } else {
                 update_post_meta($staff_id, '_vms_availability_preferred_method', 'ics');
                 $preferred = 'ics';
                 if ($ics_url === '') {
-                    echo vms_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager'));
+                    echo wp_kses(vms_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
                 } elseif (!function_exists('vms_vendor_ics_sync_now')) {
-                    echo vms_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'backstage-venue-manager'));
+                    echo wp_kses(vms_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
                 } else {
                     $result = (array) vms_vendor_ics_sync_now($staff_id, $active_dates);
                     if (!empty($result['ok'])) {
@@ -2360,10 +2364,10 @@ function vms_staff_portal_render_availability_manual($staff_id)
                         $ics_meta .= ' | ' . wp_date('M j', $ics_last, wp_timezone());
                         $count = count($ics_unavailable);
                         /* translators: %d: number of unavailable dates imported from the ICS feed. */
-                        echo vms_staff_portal_notice_html('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count));
+                        echo wp_kses(vms_staff_portal_notice_html('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count)), vms_staff_portal_safe_html_allowed_html());
                     } else {
                         $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'backstage-venue-manager');
-                        echo vms_staff_portal_notice_html('error', $msg);
+                        echo wp_kses(vms_staff_portal_notice_html('error', $msg), vms_staff_portal_safe_html_allowed_html());
                     }
                 }
             }
@@ -2374,7 +2378,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_pattern_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_pattern_settings')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
+                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
             } else {
                 $days = array();
                 if (isset($_POST['vms_staff_pattern_days']) && is_array($_POST['vms_staff_pattern_days'])) {
@@ -2410,7 +2414,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                     }
                     $pattern_meta = __('Enabled', 'backstage-venue-manager') . ' | ' . implode(', ', $picked);
                 }
-                echo vms_staff_portal_notice_html('success', __('Pattern availability saved.', 'backstage-venue-manager'));
+                echo wp_kses(vms_staff_portal_notice_html('success', __('Pattern availability saved.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
             }
         }
 
@@ -2423,7 +2427,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_avail_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_save_availability')) {
-                echo vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager'));
+                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
             } else {
                 $incoming = isset($_POST['vms_availability']) && is_array($_POST['vms_availability']) ? $_POST['vms_availability'] : array();
                 $clean = array();
@@ -2444,7 +2448,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 $preferred = 'manual';
 
                 /* translators: %d: number of manual availability dates saved. */
-                echo vms_staff_portal_notice_html('success', sprintf(__('Availability saved. %d manual date(s) active.', 'backstage-venue-manager'), count($manual)));
+                echo wp_kses(vms_staff_portal_notice_html('success', sprintf(__('Availability saved. %d manual date(s) active.', 'backstage-venue-manager'), count($manual))), vms_staff_portal_safe_html_allowed_html());
             }
         }
     }
@@ -2569,7 +2573,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
     echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-conflict"></span>' . esc_html__('Conflict', 'backstage-venue-manager') . '</span>';
     echo '</div>';
     if (!vms_staff_portal_has_availability_setup($staff_id)) {
-        echo vms_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager'));
+        echo wp_kses(vms_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
     }
     echo '<form method="post" class="vms-staff-av-form">';
     wp_nonce_field('vms_staff_save_availability', 'vms_staff_avail_nonce');
@@ -2772,7 +2776,7 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
                         echo '<span class="vms-av-chip">' . esc_html($status_label) . '</span>';
                     }
                     if ($assignment_markup !== '') {
-                        echo vms_staff_portal_safe_html($assignment_markup);
+                        echo wp_kses(vms_staff_portal_safe_html($assignment_markup), vms_staff_portal_safe_html_allowed_html());
                     }
                     echo '</div>';
                 }

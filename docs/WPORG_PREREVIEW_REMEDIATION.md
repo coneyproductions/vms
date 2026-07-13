@@ -304,7 +304,7 @@ Acceptable note:
 - Result: the first narrow E1 slice normalized the remaining direct `vms_portal_notice()` sinks outside the main Vendor Portal in `includes/portal/vendor-tax-profile.php` and `includes/modules/admissions/vendor-guest-portal.php`.
 - Contract: `vms_portal_notice()` still returns the same escaped `<div class="vms-notice vms-notice-{type}">...</div>` fragment; rendered classes, notice copy, and business logic are unchanged.
 - Sink pattern: those two files now use the established `wp_kses_post(vms_portal_notice(...))` pattern already used by `includes/portal/vendor-portal.php`.
-- Scope: `WPORG-24` remains open. Other trusted-HTML boundaries remain for later slices, including staff portal safe HTML, ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
+- Scope: `WPORG-24` remains open. Other trusted-HTML boundaries remain for later slices, including ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
 - Focused coverage: `tests/portal-notice-sink-remediation.php`.
 
 ### `WPORG-24 E1` public documentation Markdown output-contract result
@@ -317,7 +317,7 @@ Acceptable note:
 - Boundary behavior: unsupported raw elements, event-handler attributes, unsafe link protocols, and HTML-like code text do not survive as executable or allowed markup.
 - Administrator caller: `includes/admin/docs-page.php` was inspected and intentionally left unchanged because it already applies an explicit final `wp_kses()` contract and this slice targets the public sink.
 - Focused coverage and validation: `tests/docs-public-markdown-output-remediation.php`; `php -l includes/docs-public.php`; `php -l includes/docs-render.php`; `php -l tests/docs-public-markdown-output-remediation.php`; `php tests/docs-public-markdown-output-remediation.php`; `git diff --check`.
-- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include staff portal safe HTML, ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
 
 ### `WPORG-24 E1` ADD dispatch pill output-contract result
 
@@ -328,7 +328,21 @@ Acceptable note:
 - Complete production caller inventory normalized: status-pill sinks at `admin-ui.php:350`, `:366`, `:466`, `:525`, `:557`, `:724`, `:882`, and `:956`; source-pill sinks at `admin-ui.php:365`, `:523`, `:556`, `:831`, and `:955`.
 - Boundary behavior: each sink applies `wp_kses(vms_add_dispatch_status_pill(...), vms_add_dispatch_pill_allowed_html())` or `wp_kses(vms_add_dispatch_source_pill(...), vms_add_dispatch_pill_allowed_html())`; no larger ADD table, row, card, form, or page HTML is filtered through the pill allowlist.
 - Focused coverage and validation: `php -l includes/modules/availability-date-dispatch/admin-ui.php`, `php -l tests/add-dispatch-pill-output-remediation.php`, `php tests/add-dispatch-pill-output-remediation.php`, `php tests/event-plan-secondary-vendor-capacity-and-add.php`, and `git diff --check` passed. `php tests/add-dispatch-open-vendor-needs.php` still has the known unrelated `WPORG-27` missing-primary ADD visibility failure, and `php tests/add-dispatch-assignment-review.php` remains blocked in this local harness because `wp-load.php` could not be located.
-- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include staff portal safe HTML, ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
+
+### `WPORG-24 E1` Staff Portal safe-HTML output-contract result
+
+- Result: Staff Portal helper-generated safe HTML fragments now use an explicit named final-output contract at every production sink.
+- Production files inspected: `includes/portal/staff-portal.php` and `includes/portal/vendor-portal.php` for the `vms_portal_notice()` fragment consumed by the Staff Portal notice wrapper.
+- Production file changed: `includes/portal/staff-portal.php`.
+- Contract: `vms_staff_portal_safe_html_allowed_html()` preserves the existing Staff Portal safe-HTML contract: `a[class,href,loading,rel,target]`, `div[class,tabindex]`, `img[alt,class,loading,src]`, `p[class]`, and `span[aria-hidden,class]`.
+- HTML-bearing origins and trust level: the safe fragments are fixed plugin-generated portal notices, tax/certification badges, and assignment-calendar card fragments. Notice text is escaped by `vms_portal_notice()` or the Staff Portal fallback; badge labels/classes are escaped or sanitized before composition; assignment titles, icons, venue names, dates, times, excerpts, and shift metadata are escaped as text; assignment URLs and images are passed through `esc_url()` before the fragment is composed.
+- Relevant helper/value inventory: `vms_staff_portal_badge_html()` creates tax status badge spans; `vms_staff_portal_safe_html()` remains the defense-in-depth helper and now uses `vms_staff_portal_safe_html_allowed_html()`; `vms_staff_portal_notice_html()` prepares portal notice fragments; `vms_staff_portal_certification_status_badge()` creates certification badge spans; `$assignment_markup` builds the Staff Portal availability assignment fragment from already escaped text and URL parts.
+- Complete production final-output inventory normalized: `vms_staff_portal_safe_html()` sinks at `staff-portal.php:270`, `:333`, `:1895`, `:2149`, and `:2779`; `vms_staff_portal_notice_html()` sinks at `staff-portal.php:1963`, `:1976`, `:2038`, `:2074`, `:2108`, `:2323`, `:2337`, `:2346`, `:2351`, `:2353`, `:2367`, `:2370`, `:2381`, `:2417`, `:2430`, `:2451`, and `:2576`.
+- Boundary behavior: each final sink applies `wp_kses(vms_staff_portal_safe_html(...), vms_staff_portal_safe_html_allowed_html())` or `wp_kses(vms_staff_portal_notice_html(...), vms_staff_portal_safe_html_allowed_html())`; no full Staff Portal page, card, form, calendar, table, buffered shell, or navigation structure is filtered through the fragment allowlist.
+- Defense in depth preserved: `vms_staff_portal_safe_html()` still sanitizes fragments with `wp_kses()`, final sinks apply an explicit second `wp_kses()` contract, text nodes continue using `esc_html()` / `esc_html__()`, attributes continue using `esc_attr()`, URLs continue using `esc_url()` or `esc_url_raw()` as already applicable, and request/nonce handling was not changed.
+- Focused coverage and validation: `php -l includes/portal/staff-portal.php`, `php -l tests/staff-portal-safe-html-output-remediation.php`, `php tests/staff-portal-safe-html-output-remediation.php`, `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/portal-notice-sink-remediation.php`, and `git diff --check` passed.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Remaining trusted-HTML slices include ADD public shell output, admin shell output, vendor application confirmation shell output, Event Plans partial/AJAX HTML, and pass-claims output.
 
 ## F. Prefixing and Collision Safety
 
