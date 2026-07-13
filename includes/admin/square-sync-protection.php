@@ -211,19 +211,24 @@ if (!function_exists('vms_render_square_sync_protection_rows')) {
     }
 }
 
-if (!function_exists('vms_render_square_sync_protection_page_content')) {
-    function vms_render_square_sync_protection_page_content(): void
+if (!function_exists('vms_square_sync_protection_render_admin_notice')) {
+    function vms_square_sync_protection_render_admin_notice(): void
     {
-        $report = vms_square_sync_protection_get_report();
         $notice = isset($_GET['vms_square_notice']) ? sanitize_key((string) $_GET['vms_square_notice']) : '';
-
-        echo '<p>' . esc_html__('Protect VMS/TEC tickets, admissions, passes, and event add-ons from Square catalog or inventory sync while leaving normal Square-owned items available for menus, merch, and inventory workflows.', 'backstage-venue-manager') . '</p>';
-
         if ($notice === 'scan_done') {
             echo '<div class="notice notice-info"><p>' . esc_html__('Square Sync Protection scan complete.', 'backstage-venue-manager') . '</p></div>';
         } elseif ($notice === 'repair_done') {
             echo '<div class="notice notice-success"><p>' . esc_html__('Square Sync Protection repair complete.', 'backstage-venue-manager') . '</p></div>';
         }
+    }
+}
+
+if (!function_exists('vms_render_square_sync_protection_page_content')) {
+    function vms_render_square_sync_protection_page_content(): void
+    {
+        $report = vms_square_sync_protection_get_report();
+
+        echo '<p>' . esc_html__('Protect VMS/TEC tickets, admissions, passes, and event add-ons from Square catalog or inventory sync while leaving normal Square-owned items available for menus, merch, and inventory workflows.', 'backstage-venue-manager') . '</p>';
 
         echo '<div class="card">';
         echo '<h2>' . esc_html__('Run protection tools', 'backstage-venue-manager') . '</h2>';
@@ -272,6 +277,7 @@ if (!function_exists('vms_render_square_sync_protection_page')) {
                     'title' => __('Square Sync Protection', 'backstage-venue-manager'),
                     'subtitle' => __('Protect VMS-owned products from accidental Square catalog and inventory sync.', 'backstage-venue-manager'),
                     'shell_id' => 'vms-square-sync-protection-wrap',
+                    'notices_callback' => 'vms_square_sync_protection_render_admin_notice',
                 ),
                 'vms_render_square_sync_protection_page_content'
             );

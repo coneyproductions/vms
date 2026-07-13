@@ -180,12 +180,15 @@ require_once dirname(__DIR__) . '/includes/admin-ui/shell.php';
 require_once dirname(__DIR__) . '/includes/modules/status-notices/admin-ui.php';
 require_once dirname(__DIR__) . '/includes/admin/continuity-binder.php';
 require_once dirname(__DIR__) . '/includes/admin/due-dates.php';
+require_once dirname(__DIR__) . '/includes/admin/square-sync-protection.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
 $statusSource = file_get_contents($pluginRoot . '/includes/modules/status-notices/admin-ui.php');
 $continuitySource = file_get_contents($pluginRoot . '/includes/admin/continuity-binder.php');
 $dueDatesSource = file_get_contents($pluginRoot . '/includes/admin/due-dates.php');
+$squareSyncProtectionSource = file_get_contents($pluginRoot . '/includes/admin/square-sync-protection.php');
+$staffCertificationsSource = file_get_contents($pluginRoot . '/includes/admin/staff-certifications.php');
 $bootstrapSource = file_get_contents($pluginRoot . '/includes/bootstrap.php');
 
 $assert = static function (bool $condition, string $message): void {
@@ -198,6 +201,8 @@ $assert(is_string($shellSource) && $shellSource !== '', 'Admin shell source shou
 $assert(is_string($statusSource) && $statusSource !== '', 'Status Notices admin UI source should be readable.');
 $assert(is_string($continuitySource) && $continuitySource !== '', 'Continuity Binder source should be readable.');
 $assert(is_string($dueDatesSource) && $dueDatesSource !== '', 'Due Dates source should be readable.');
+$assert(is_string($squareSyncProtectionSource) && $squareSyncProtectionSource !== '', 'Square Sync Protection source should be readable.');
+$assert(is_string($staffCertificationsSource) && $staffCertificationsSource !== '', 'Staff Certifications source should be readable.');
 $assert(is_string($bootstrapSource) && $bootstrapSource !== '', 'Bootstrap source should be readable.');
 
 $normalizeAllowedHtml = static function (array $allowed_html): array {
@@ -294,6 +299,7 @@ $noticesCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>~', $all
 $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
+$squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
 $expectedActionCallerFiles = array(
 	'admin/event-command-center.php',
 	'admin/integrity-calendar-reconcile.php',
@@ -309,6 +315,7 @@ $expectedActionCallerFiles = array(
 $expectedNoticesCallbackFiles = array(
 	'admin/continuity-binder.php',
 	'admin/due-dates.php',
+	'admin/square-sync-protection.php',
 	'modules/status-notices/admin-ui.php',
 );
 sort($actionCallerFiles);
@@ -316,12 +323,13 @@ sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 4, 'Only four production notices_callback assignments should exist.');
-$assert($statusNoticeCallbackCount === 2, 'Status Notices list and edit screens should be the only production notices_callback callers.');
-$assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should be the only new production notices_callback caller.');
+$assert($noticesCallbackCount === 5, 'Only five production notices_callback assignments should exist.');
+$assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
+$assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
+$assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, and Due Dates.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Due Dates, and Square Sync Protection.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -455,6 +463,65 @@ ob_start();
 vms_due_render_admin_notices();
 $dueNoNotice = (string) ob_get_clean();
 $assert($dueNoNotice === '', 'Due Dates explicit notice callback should stay silent when no message slug is present.');
+
+$assert(strpos($squareSyncProtectionSource, 'function vms_square_sync_protection_render_admin_notice(): void') !== false, 'Square Sync Protection should expose a dedicated explicit notice callback.');
+$assert(substr_count($squareSyncProtectionSource, "'notices_callback' => 'vms_square_sync_protection_render_admin_notice'") === 1, 'Square Sync Protection shell call should supply its explicit notice callback exactly once.');
+$assert(strpos($squareSyncProtectionSource, 'apply_filters(') === false && strpos($squareSyncProtectionSource, 'do_action(') === false, 'Square Sync Protection notice path should not hand off explicit notice markup through hooks or filters.');
+$assert(strpos($squareSyncProtectionSource, 'settings_errors(') === false && strpos($squareSyncProtectionSource, 'do_settings_sections(') === false && strpos($squareSyncProtectionSource, 'wp_editor(') === false, 'Square Sync Protection should not route notice markup through Settings API or editor callbacks.');
+$squareNoticeStart = strpos($squareSyncProtectionSource, 'function vms_square_sync_protection_render_admin_notice(): void');
+$squareNoticeEnd = strpos($squareSyncProtectionSource, 'function vms_render_square_sync_protection_page_content(): void');
+$assert($squareNoticeStart !== false && $squareNoticeEnd !== false && $squareNoticeEnd > $squareNoticeStart, 'Square Sync Protection explicit notice callback body should be locatable.');
+$squareNoticeSource = substr($squareSyncProtectionSource, (int) $squareNoticeStart, (int) $squareNoticeEnd - (int) $squareNoticeStart);
+$squareContentStart = strpos($squareSyncProtectionSource, 'function vms_render_square_sync_protection_page_content(): void');
+$squareContentEnd = strpos($squareSyncProtectionSource, 'function vms_render_square_sync_protection_page(): void');
+$assert($squareContentStart !== false && $squareContentEnd !== false && $squareContentEnd > $squareContentStart, 'Square Sync Protection content callback body should be locatable.');
+$squareContentSource = substr($squareSyncProtectionSource, (int) $squareContentStart, (int) $squareContentEnd - (int) $squareContentStart);
+$assert(strpos($squareNoticeSource, 'sanitize_key((string) $_GET[\'vms_square_notice\'])') !== false, 'Square Sync Protection explicit notice callback should preserve the existing sanitized notice source.');
+$assert(strpos($squareNoticeSource, 'scan_done') !== false && strpos($squareNoticeSource, 'repair_done') !== false, 'Square Sync Protection explicit notice callback should preserve the existing notice conditions.');
+$assert(strpos($squareNoticeSource, '<div class="notice notice-info"><p>') !== false, 'Square Sync Protection explicit notice callback should preserve the scan info notice fragment.');
+$assert(strpos($squareNoticeSource, '<div class="notice notice-success"><p>') !== false, 'Square Sync Protection explicit notice callback should preserve the repair success notice fragment.');
+$assert(strpos($squareNoticeSource, 'esc_html__(\'Square Sync Protection scan complete.\'') !== false, 'Square Sync Protection explicit notice callback should preserve the scan-complete message text.');
+$assert(strpos($squareNoticeSource, 'esc_html__(\'Square Sync Protection repair complete.\'') !== false, 'Square Sync Protection explicit notice callback should preserve the repair-complete message text.');
+$assert(strpos($squareNoticeSource, '<strong>') === false && strpos($squareNoticeSource, '<a ') === false && strpos($squareNoticeSource, '<button') === false && strpos($squareNoticeSource, '<span') === false, 'Square Sync Protection explicit notice callback should not introduce richer markup.');
+$assert(strpos($squareContentSource, 'Square Sync Protection scan complete.') === false && strpos($squareContentSource, 'Square Sync Protection repair complete.') === false, 'Square Sync Protection content callback should no longer emit the migrated simple notices.');
+
+$_GET = array(
+	'vms_square_notice' => 'scan_done',
+);
+ob_start();
+vms_square_sync_protection_render_admin_notice();
+$squareScanNotice = (string) ob_get_clean();
+$assert(
+	$squareScanNotice === '<div class="notice notice-info"><p>Square Sync Protection scan complete.</p></div>',
+	'Square Sync Protection explicit notice callback should preserve the scan-complete notice fragment.'
+);
+$assert(
+	wp_kses($squareScanNotice, vms_admin_ui_explicit_notice_allowed_html()) === $squareScanNotice,
+	'The explicit notice allowlist should admit the Square Sync Protection scan notice unchanged.'
+);
+
+$_GET = array(
+	'vms_square_notice' => 'repair_done',
+);
+ob_start();
+vms_square_sync_protection_render_admin_notice();
+$squareRepairNotice = (string) ob_get_clean();
+$assert(
+	$squareRepairNotice === '<div class="notice notice-success"><p>Square Sync Protection repair complete.</p></div>',
+	'Square Sync Protection explicit notice callback should preserve the repair-complete notice fragment.'
+);
+
+$_GET = array(
+	'vms_square_notice' => '',
+);
+ob_start();
+vms_square_sync_protection_render_admin_notice();
+$squareNoNotice = (string) ob_get_clean();
+$assert($squareNoNotice === '', 'Square Sync Protection explicit notice callback should stay silent when no notice slug is present.');
+
+$assert(strpos($staffCertificationsSource, 'notices_callback') === false, 'Staff Certifications should remain outside the explicit notice callback inventory in this pass.');
+$assert(strpos($staffCertificationsSource, 'notice notice-success inline') !== false, 'Staff Certifications empty-state notice should remain in the content callback for the deferred candidate.');
+$assert(strpos($staffCertificationsSource, 'notice notice-warning is-dismissible vms-staff-certifications-admin-notice') !== false, 'Staff Certifications should retain the richer global warning notice family that keeps it outside the smallest-safe migration boundary.');
 
 $allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
 $assert(
