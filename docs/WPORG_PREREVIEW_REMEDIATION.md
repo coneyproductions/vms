@@ -63,11 +63,11 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `D1` | D | Medium | Confirmed | `includes/portal/staff-portal.php:1755-1758`; `includes/runtime-guards.php`; `includes/vendor-applications.php`; `includes/portal/vendor-portal.php`; `includes/integrations/ticketing-verifications.php`; `includes/core/vendor-application-confirmation.php` | `WPORG-20A` working-tree remediation now normalizes ordinary request-global, redirect-derived, and server-derived inputs across the shared mirror/live runtime boundaries; the original `FILTER_UNSAFE_RAW` staff-portal path is removed and the reviewed redirect/server examples now flow through shared helper validation. | Low to Medium | `WPORG-20A` |
 | `H2` | D, H | Medium | Confirmed | `includes/admin/data-tools/actions-event-plan-import.php:13-54`; `includes/services/event-plan-import/event-plan-import-engine.php`; `tests/upload-validation-guards.php:132-231` | `WPORG-20B` now validates CSV upload structure and MIME before persistence, stores importer artifacts via safe private storage keys, and fully covers the historical `WPORG-21` H2 scope. | Medium | `WPORG-20B`, `WPORG-21` |
 | `H3` | D, H | Medium | Confirmed | `includes/safety/private-files.php:177-221`; `includes/core/private-files.php:355-714`; `includes/core/staffing.php:620-690` | `WPORG-20B` now validates private operational uploads before persistence, brokers authenticated downloads, and avoids new raw absolute-path persistence for these flows; the historical `WPORG-21` H3 scope is fully completed by that committed work. | Medium | `WPORG-20B`, `WPORG-21` |
-| `B1` | B | Medium | Confirmed | `includes/cpt/event-plans.php:5870,6537,6563,6591,6629,7113,7306,8171,8420,8591,8775,8789`; `includes/cpt/event-plans/partials/editor-scripts.php:2,30,697,723,761,783,806,1050,1223,1472,1643,1826` | Event Plans and its editor partials still contain dense inline executable JavaScript. | Medium to High | `WPORG-22` |
-| `B2` | B | Medium | Confirmed | `includes/portal/vendor-portal.php:4690,4701,4738,5068,5635,6219,6231,6490,6651,6893` | Vendor Portal contains inline scripts and inline event handlers such as `onchange="this.form.submit()"`. | Medium | `WPORG-22` |
+| `B1` | B | Medium | Confirmed | `assets/js/vms-event-plan-shell.js`; `assets/js/vms-event-plan-staff.js`; `assets/js/vms-event-plan-title.js`; `assets/js/vms-event-plan-compensation.js`; `assets/js/vms-event-plan-secondary-vendors.js`; `assets/js/vms-event-plan-primary-vendor.js`; `assets/js/vms-event-plan-workflow.js`; `assets/admin-ticketing.js` | Event Plan executable inline runtime is fully remediated: dense PHP-emitted controllers moved into enqueued external assets, the obsolete editor-scripts partial is gone, and only inert scoped Secondary Vendors JSON plus minimal scoped ticketing configuration remain. | Low to Medium | `WPORG-22` |
+| `B2` | B | Medium | Confirmed | `assets/js/vms-vendor-portal.js`; `assets/js/vms-public-calendar.js`; `includes/portal/vendor-portal.php` | Vendor Portal inline JS findings are fully remediated: obsolete modal runtime was removed, passive shell/form-submit and availability controllers moved into external assets, and only scoped availability JSON configuration remains. | Medium | `WPORG-22` |
 | `B3` | B | Medium | Confirmed | `includes/vendor-applications.php:803,1247,1606`; `assets/js/vms-vendor-apply.js`; `assets/css/vms-admin.css:5767-5814` | Vendor Applications inline asset findings are fully remediated: the public form JS is externalized, the public CSS was already asset-backed, and the remaining admin-only status-pill CSS now lives in `vms-admin.css`. | Low to Medium | `WPORG-22` |
 | `B4` | B | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:8080-8198`; `assets/vms-ticketing-front.js:4871-5666` | Ticketing Rules V2 no longer emits executable inline JS for the server-controls add-on flow; the existing `vms-ticketing-front` bundle already owns that behavior and continues to read the same localized config plus server-rendered `data-*` payloads. | Medium | `WPORG-22` |
-| `B5` | B | Low | Confirmed | `includes/admin/ticket-integrity-page.php:2412` | Ticket Integrity admin page emits inline CSS directly in PHP. | Low | `WPORG-22` |
+| `B5` | B | Low | Confirmed | `assets/css/admin-ticket-integrity.css`; `includes/admin/ticket-integrity-page.php` | Ticket Integrity inline CSS is fully remediated: the menu-badge rules now live in the enqueued `vms-admin-ticket-integrity` stylesheet, with the existing badge/no-badge PHP logic retained. | Low | `WPORG-22` |
 | `D2` | D | Medium | Confirmed | `includes/vendor-applications.php:2142-2192`; `includes/runtime-guards.php` | `WPORG-20C` now validates the decoded Turnstile response shape before trusting `success`, keeping the earlier `WPORG-20A` request-fingerprint normalization intact. | Low to Medium | `WPORG-20A`, `WPORG-20C` |
 | `D3` | D | Medium | Confirmed | `includes/integrations/ticketing-phase-b.php:1919-2051`; `includes/integrations/ticketing-phase-b.php:9596-9729` | `WPORG-20C` now bounds, decodes, and shape-validates the Phase B tier, commit-item, and config/template JSON payloads before the existing per-field normalizers run. | Medium | `WPORG-20C` |
 | `D4` | D | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:3082-3190`; `includes/integrations/ticketing-rules-v2.php:9089-9519` | `WPORG-20C` now bounds raw JSON-body reads and validates Ticketing Rules V2 atomic-add and silent-add payload shapes before any cart mutation or claim-assignment normalization occurs. | Medium | `WPORG-20C` |
@@ -114,11 +114,12 @@ Acceptable / already resolved notes:
 
 Status:
 
-- `48` scanner-style hits across the six highest-signal files inspected in this pass.
-- Five confirmed actionable clusters.
-- Two acceptable structured-data/state-blob patterns that should not be "fixed" as if they were executable inline JS.
+- The original scanner-style hit table below is retained as historical prereview evidence.
+- `WPORG-22` B1 through B5 are now completed in the current mirror history.
+- Remaining script-like Event Plan payloads reviewed for B1 are limited to inert scoped JSON and minimal scoped ticketing configuration, not executable controller code.
+- Acceptable structured-data/state-blob patterns should not be "fixed" as if they were executable inline JS.
 
-Inline-hit counts from this pass:
+Historical inline-hit counts from the initial pass:
 
 | File | Count |
 | --- | ---: |
@@ -129,24 +130,28 @@ Inline-hit counts from this pass:
 | `includes/integrations/ticketing-rules-v2.php` | `1` |
 | `includes/admin/ticket-integrity-page.php` | `1` |
 
-### `B1` Event Plans and editor partials still ship dense inline executable JS
+### `B1` Event Plan inline runtime is now externalized
 
 - Severity: Medium
-- Confidence: Confirmed
-- References: `includes/cpt/event-plans.php:5870,6537,6563,6591,6629,7113,7306,8171,8420,8591,8775,8789`; `includes/cpt/event-plans/partials/editor-scripts.php:2,30,697,723,761,783,806,1050,1223,1472,1643,1826`
-- Why WordPress.org may object: large inline script blocks are a recurring Plugin Check target and make escaping, dependency management, and CSP-friendly packaging harder to reason about.
-- Recommended remediation: split static behavior into enqueued assets, keep only minimal runtime configuration in `wp_add_inline_script()` or `application/json` payloads, and avoid PHP partials that emit raw `<script>` tags.
-- Compatibility or regression risk: Medium to High because Event Plans is operationally dense and historically brittle.
+- Confidence: Confirmed complete
+- Historical finding: Event Plans and its editor partials contained dense inline executable JavaScript in `includes/cpt/event-plans.php` and the now-deleted `includes/cpt/event-plans/partials/editor-scripts.php`.
+- Current references: `assets/js/vms-event-plan-shell.js`; `assets/js/vms-event-plan-staff.js`; `assets/js/vms-event-plan-title.js`; `assets/js/vms-event-plan-compensation.js`; `assets/js/vms-event-plan-secondary-vendors.js`; `assets/js/vms-event-plan-primary-vendor.js`; `assets/js/vms-event-plan-workflow.js`; `assets/admin-ticketing.js`.
+- Remediation outcome: executable Event Plan controller behavior now lives in enqueued external assets, active Event Plan PHP/partials no longer emit executable inline `<script>` controllers, and the obsolete `editor-scripts.php` partial is removed.
+- Allowed configuration retained: `includes/cpt/event-plans/partials/secondary-vendors.php` keeps an inert `application/json` payload for Secondary Vendors, and `includes/integrations/ticketing.php` keeps a narrowly scoped `window.VMS_TICKETING` configuration block before `vms-admin-ticketing`; neither contains static controller behavior.
+- Focused coverage: `tests/event-plan-generic-scroll-inline-js-remediation.php`, `tests/event-plan-ticketing-focus-inline-js-remediation.php`, `tests/event-plan-shell-controller-inline-js-remediation.php`, `tests/event-plan-staff-inline-js-remediation.php`, `tests/event-plan-title-sync-inline-js-remediation.php`, `tests/event-plan-compensation-refresh-inline-js-remediation.php`, `tests/event-plan-compensation-shell-inline-js-remediation.php`, `tests/event-plan-secondary-vendor-inline-js-remediation.php`, `tests/event-plan-primary-vendor-tax-inline-js-remediation.php`, `tests/event-plan-workflow-confirmations-inline-js-remediation.php`, and `tests/event-plan-dead-editor-scripts-partial-removal.php`.
+- Closure audit result: `B1 COMPLETE`.
 - Suggested remediation batch ID: `WPORG-22`
 
-### `B2` Vendor Portal still contains inline scripts and inline event handlers
+### `B2` Vendor Portal inline scripts and event handlers are now externalized
 
 - Severity: Medium
-- Confidence: Confirmed
-- References: `includes/portal/vendor-portal.php:4690,4701,4738,5068,5635,6219,6231,6490,6651,6893`
-- Why WordPress.org may object: inline executable JS plus `onchange="this.form.submit()"` is a direct match for the prereview complaint.
-- Recommended remediation: move runtime logic into enqueued assets and replace inline attributes with delegated event listeners.
-- Compatibility or regression risk: Medium because the portal mixes auth, availability, and opportunity UI concerns.
+- Confidence: Confirmed complete
+- Historical finding: Vendor Portal contained executable inline JS plus inline form-submit attributes such as `onchange="this.form.submit()"`.
+- Current references: `assets/js/vms-vendor-portal.js`; `assets/js/vms-public-calendar.js`; `includes/portal/vendor-portal.php`.
+- Remediation outcome: obsolete modal runtime was removed, passive portal shell listeners and form-submit handlers moved into delegated external-asset listeners, and availability open-state plus autosave controller behavior now lives in `assets/js/vms-vendor-portal.js`.
+- Allowed configuration retained: `includes/portal/vendor-portal.php` keeps a scoped availability `application/json` payload consumed by the external Vendor Portal asset; the executable `window.VMS_AV` bootstrap is gone.
+- Focused coverage: `tests/vendor-portal-modal-inline-js-remediation.php`, `tests/vendor-portal-shell-inline-js-remediation.php`, `tests/vendor-portal-availability-open-state-remediation.php`, `tests/vendor-portal-availability-autosave-remediation.php`, and `tests/vendor-portal-availability-autosave-ajax.php`.
+- Closure result: `B2 COMPLETE`.
 - Suggested remediation batch ID: `WPORG-22`
 
 ### `B3` Vendor Applications inline CSS and inline JS are now externalized
@@ -169,14 +174,15 @@ Inline-hit counts from this pass:
 - Compatibility or regression risk: Medium because this file also drives cart and claims flows.
 - Suggested remediation batch ID: `WPORG-22`
 
-### `B5` Ticket Integrity page still prints inline CSS directly
+### `B5` Ticket Integrity inline CSS is now externalized
 
 - Severity: Low
-- Confidence: Confirmed
-- References: `includes/admin/ticket-integrity-page.php:2412`
-- Why WordPress.org may object: even small admin-only inline CSS still shows up as a direct scanner hit.
-- Recommended remediation: replace with an enqueued admin stylesheet or `wp_add_inline_style()` attached to an existing handle.
-- Compatibility or regression risk: Low.
+- Confidence: Confirmed complete
+- Historical finding: Ticket Integrity printed a small admin-only inline CSS block directly from PHP.
+- Current references: `assets/css/admin-ticket-integrity.css`; `includes/admin/ticket-integrity-page.php`.
+- Remediation outcome: the static menu-badge rules now live in the enqueued `vms-admin-ticket-integrity` stylesheet while the existing badge/no-badge PHP decision logic remains intact.
+- Focused coverage: `tests/ticket-integrity-inline-css-remediation.php` and `tests/ticket-integrity-scan-lock.php`.
+- Closure result: `B5 COMPLETE`.
 - Suggested remediation batch ID: `WPORG-22`
 
 Acceptable / false-positive notes:
@@ -571,7 +577,7 @@ Recommended follow-up order, keeping each pass narrow:
 7. `WPORG-22 - Inline asset enqueue migration`
    - Scope: `B1`, `B2`, `B3`, `B4`, `B5`
    - Goal: move executable JS/CSS out of inline PHP output
-   - `B5` is completed by the Ticket Integrity CSS sub-pass below, `B3` is fully completed across the Vendor Applications JS and admin CSS sub-passes below, and `B4` is completed by the Ticketing Rules V2 server-controls JS sub-pass below; `B1` / `B2` remain pending, so `WPORG-22` stays the next actual incomplete implementation batch
+   - Result: completed in the current mirror history. `B1` is closed by the Event Plan external-asset closeout; `B2`, `B3`, `B4`, and `B5` remain completed by their recorded sub-passes.
 8. `WPORG-23 - Admin notice scope`
    - Scope: `K1`, `K2`
    - Goal: keep notices on VMS-owned screens only
@@ -616,7 +622,7 @@ Recommended follow-up order, keeping each pass narrow:
 - [x] Complete `WPORG-20A` ordinary request-global sanitization, redirect allowlisting, and server-value normalization without mixing upload or decoded-JSON refactors.
 - [x] Complete `WPORG-20B` upload transport and MIME/type hardening across tax-profile, import, and private-file flows.
 - [x] Complete `WPORG-20C` decoded JSON / structured-body validation after the ordinary request-global pass.
-- [ ] Migrate remaining inline executable JS/CSS into enqueued assets or approved inline helpers.
+- [x] Complete `WPORG-22` inline asset enqueue migration for B1-B5.
 - [ ] Scope all admin notices to VMS-owned screens.
 - [ ] Re-run Plugin Check in a controlled release-gate environment with a concrete plugin target and documented runtime/static mode.
 - [ ] Reconfirm external-service disclosures after the package-scope decisions above.
@@ -1113,7 +1119,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, and the decoded JSON / structured-payload hardening tracked in `WPORG-20C`; the next actual incomplete implementation batch in this inventory now starts at `WPORG-22`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, and the inline asset enqueue migration tracked in `WPORG-22`; the next actual incomplete implementation batch in this inventory now starts at `WPORG-23`.
 
 ## WPORG-19B Result
 
@@ -1535,7 +1541,8 @@ Date: 2026-07-11
 
 ### Next Actual Incomplete Batch
 
-- `WPORG-22` is now the next incomplete implementation batch.
+- `WPORG-22` is now completed by the recorded B1-B5 inline asset remediation passes.
+- `WPORG-23` is now the next incomplete implementation batch.
 - `WPORG-21` was not reopened in this corrective pass.
 
 ## WPORG-22 B5 Result
@@ -1549,7 +1556,7 @@ Date: 2026-07-11
 - Entry point: `includes/admin/ticket-integrity-page.php`
 - CSS asset used: `assets/css/admin-ticket-integrity.css` via the existing `vms-admin-ticket-integrity` stylesheet handle
 - Test coverage: `php tests/ticket-integrity-inline-css-remediation.php` plus existing `php tests/ticket-integrity-scan-lock.php`
-- Remaining `WPORG-22` items: `B1`, `B2`, `B3`, and `B4` remain pending, so `WPORG-22` stays open
+- Current `WPORG-22` status: B1-B5 are now complete; this B5 slice remains the Ticket Integrity CSS closeout.
 
 ### What Changed
 
@@ -1572,9 +1579,9 @@ Date: 2026-07-12
 - Live runtime retained: `includes/cpt/event-plans.php` and active partials continue to own the current Event Plan inline controllers; no script was moved or rewritten in this slice
 - Tests added: `php tests/event-plan-dead-editor-scripts-partial-removal.php`
 - Validation run: `php tests/event-plan-module-reopen-and-market-layout.php`, `php tests/event-plan-editor-vendor-preservation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
-- Remaining `B1` work: all live Event Plan inline blocks in `includes/cpt/event-plans.php` and active partials remain pending
+- Later B1 slices completed the live Event Plan inline blocks after this dead-partial slice.
 - `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
-- `WPORG-22` remains open
+- Current `WPORG-22` status: complete after the final B1 closeout.
 - The known legacy ticketing smoke-test failure remains a documented pre-existing `WPORG-27` AJAX capture-test issue, not a new B1 regression
 ### What Changed
 - Deleted only the dead `includes/cpt/event-plans/partials/editor-scripts.php` partial.
@@ -1592,12 +1599,12 @@ Date: 2026-07-12
 - Duplication proof: the partial-level bridge only called `window.vmsEventPlanInitSecondaryVendors(document)`, while the live full-page Event Plan controller in `includes/cpt/event-plans.php` still self-initializes on page boot and the lazy-section success path still reinitializes after injecting returned markup
 - Remaining runtime retained: the `application/json` secondary-vendor configuration payload, all Additional Vendors markup, data attributes, templates, hidden fields, save controls, badges, market targeting, capacity UI, and existing PHP conditions remain unchanged
 - Behavior scope: no Secondary Vendors persistence, AJAX, assignment, compatibility-index, or wording behavior changed in this slice
-- Controller status: the main Secondary Vendors controller remains inline in `includes/cpt/event-plans.php` and still guards against duplicate init via `data-vms-secondary-init-bound`
+- Historical controller status at this intermediate slice: the main Secondary Vendors controller still lived inline in `includes/cpt/event-plans.php`; later B1 closeout moved it into `assets/js/vms-event-plan-secondary-vendors.js`.
 - Tests added: `php tests/event-plan-secondary-vendor-bootstrap-remediation.php`
 - Validation run: `php tests/event-plan-secondary-vendor-assignments.php`, `php tests/event-plan-secondary-vendor-capacity-and-add.php`, `php tests/event-plan-editor-vendor-preservation.php`, `php tests/event-plan-module-reopen-and-market-layout.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
-- Remaining `B1` work: the live inline Event Plan controllers in `includes/cpt/event-plans.php` and the remaining active partial-level executable blocks still remain pending
+- Later B1 slices completed the live Event Plan inline controllers after this bootstrap slice.
 - `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
-- `WPORG-22` remains open
+- Current `WPORG-22` status: complete after the final B1 closeout.
 - The known legacy ticketing smoke-test failure remains a documented pre-existing `WPORG-27` AJAX capture-test issue, not a new B1 regression
 ### What Changed
 - Removed only the redundant executable inline `<script>` bridge from `includes/cpt/event-plans/partials/secondary-vendors.php`.
@@ -1614,13 +1621,13 @@ Date: 2026-07-12
 - Scope completed: only the next B1 slice, moving the small passive Event Plan ticketing-focus helper from `includes/cpt/event-plans.php` into the existing `assets/admin-ticketing.js` asset
 - Configuration handoff: no new inline config was emitted; the asset now reads the existing `vms_ep_load_section=ticketing_v2` request state directly and safely no-ops when the Event Plan ticketing wrapper is absent
 - Behavior retained: the migrated helper still performs only a deferred scroll-to-top of the Ticketing metabox plus a deferred focus on the first control inside `#vms-ticketing-v2-source`
-- Non-intersection proof: the generic server-requested `_vms_admin_scroll_to` helper in `includes/cpt/event-plans.php` remains unchanged and pending, and no Ticketing Rules V2, cart, save, AJAX, metadata, or legacy ticketing behavior changed in this slice
+- Non-intersection proof at this slice: the generic server-requested `_vms_admin_scroll_to` helper was intentionally unchanged here, and no Ticketing Rules V2, cart, save, AJAX, metadata, or legacy ticketing behavior changed in this slice; later B1 slices moved the generic scroll helper and remaining live controllers.
 - Existing asset owner: `assets/admin-ticketing.js` was already enqueued on `post.php` and `post-new.php`, so no enqueue or asset-ownership expansion was required
 - Tests added: `php tests/event-plan-ticketing-focus-inline-js-remediation.php`
 - Validation run: `php tests/event-plan-ticket-ui-overrides-isolated.php`, `php tests/event-plan-module-reopen-and-market-layout.php`, `php tests/event-plan-editor-vendor-preservation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
-- Remaining `B1` work: the generic server-requested scroll helper and the remaining live inline Event Plan controllers still remain pending
+- Later B1 slices completed the generic server-requested scroll helper and remaining live inline Event Plan controllers.
 - `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
-- `WPORG-22` remains open
+- Current `WPORG-22` status: complete after the final B1 closeout.
 - The known legacy ticketing smoke-test failure remains a documented pre-existing `WPORG-27` AJAX capture-test issue, not a new B1 regression
 ### Pre-Existing Validation Exceptions
 - Carried forward from the prior B1 slice and not rerun here: `php tests/add-dispatch-open-vendor-needs.php` remains a proven pre-existing `WPORG-27` failure because a future Event Plan with a missing Primary Vendor did not appear in ADD open needs.
@@ -1642,12 +1649,12 @@ Date: 2026-07-12
 - Behavior retained: the migrated shell helper still performs only a deferred `document.getElementById()` lookup followed by `scrollIntoView({ behavior: 'smooth', block: 'start' })` after `150ms`; it does not focus, save, fetch, mutate history/storage, or submit forms
 - Enqueue scope: the new `vms-event-plan-shell.js` asset is enqueued only on `post.php` and `post-new.php` screens for the `vms_event_plan` post type through the existing Event Plan admin asset loader in `includes/admin-ui/assets.php`
 - Separation of concerns: the previously migrated ticketing-focus helper remains separately owned by `assets/admin-ticketing.js` and was not changed in this slice
-- Remaining shell scope: the larger Event Plan shell controller, section-reopen handling, dirty-state logic, and lazy-load orchestration remain inline and pending for later B1 slices
+- Historical remaining shell scope at this slice: the larger Event Plan shell controller, section-reopen handling, dirty-state logic, and lazy-load orchestration still required later B1 work; the final B1 closeout has since externalized that runtime.
 - Tests added: `php tests/event-plan-generic-scroll-inline-js-remediation.php`
 - Validation run: `php tests/event-plan-ticketing-focus-inline-js-remediation.php`, `php tests/event-plan-module-reopen-and-market-layout.php`, `php tests/event-plan-editor-vendor-preservation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`
-- All remaining `B1` live inline blocks remain pending
+- Later B1 closeout completed the remaining live inline blocks.
 - `B2`, `B3`, `B4`, and `B5` remain completed by the result sections below
-- `WPORG-22` remains open
+- Current `WPORG-22` status: complete after the final B1 closeout.
 - Known `WPORG-27` test exceptions remain unchanged
 ### What Changed
 - Removed only the passive inline `_vms_admin_scroll_to` `<script>` block from `includes/cpt/event-plans.php`.
@@ -1667,10 +1674,10 @@ Date: 2026-07-12
 - Active runtime path retained: live Vendor Portal event-detail markup still uses `.vms-public-cal`, `.vms-cal-entry`, and `.vms-cal-pop`, with behavior still owned by the existing `assets/js/vms-public-calendar.js` enqueue in the Vendor Portal path
 - Deliberate non-action: the duplicate historical asset `assets/js/vms-portal-calendar-modal.js` was left unchanged and unenqueued in this slice
 - Tests added: `php tests/vendor-portal-modal-inline-js-remediation.php`
-- `B1` remains pending
+- `B1` has since been completed by the Event Plan final closeout.
 - `B3`, `B4`, and `B5` remain completed by the result sections above
-- Remaining `B2` work: passive portal shell listeners and inline form-submit attributes, availability open-state UI, and the availability autosave controller plus its configuration handoff
-- Remaining `WPORG-22` work: `B1` and the remaining `B2` slices stay pending, so `WPORG-22` remains open
+- Later B2 slices completed passive portal shell listeners, inline form-submit attributes, availability open-state UI, and availability autosave.
+- Current `WPORG-22` status: complete after B1-B5 closeout.
 ### What Changed
 - Removed only the dead executable inline Vendor Portal modal-controller `<script>` block from `includes/portal/vendor-portal.php`.
 - Preserved the surrounding shortcode output buffering, markup, live `.vms-public-cal` event-detail rendering, and the current `vms-public-calendar` enqueue path.
@@ -1687,10 +1694,10 @@ Date: 2026-07-12
 - Migrated in this slice: the narrow-layout listener, the stale Opportunities/Open Dates navigation cleanup, the three inline form-submit attributes, and the passive All Vendors accordion behavior
 - Non-behavioral confirmation: no availability persistence, no `window.VMS_AV` configuration, no localStorage/cookie open-state logic, and no availability AJAX/autosave behavior changed in this slice
 - B2 slice 1 remains completed by the modal-removal result above
-- Remaining `B2` work: availability method open-state/localStorage behavior, month accordion cookie restoration, and manual availability autosave plus its configuration handoff
-- `B1` remains pending
+- Later B2 slices completed availability method open-state/localStorage behavior, month accordion cookie restoration, and manual availability autosave plus its configuration handoff.
+- `B1` has since been completed by the Event Plan final closeout.
 - `B3`, `B4`, and `B5` remain completed by the result sections below
-- `WPORG-22` remains open
+- Current `WPORG-22` status: complete after B1-B5 closeout.
 ### What Changed
 - Added the narrowly scoped `vms-vendor-portal` frontend asset and enqueued it only from the Vendor Portal shortcode render path.
 - Removed the targeted passive inline shell scripts from `includes/portal/vendor-portal.php`.
@@ -1714,8 +1721,8 @@ Date: 2026-07-12
 - `B2` slices 1 through 3 remain completed by the earlier result sections above
 - `B2` is now fully completed
 - `B3`, `B4`, and `B5` remain completed by the result sections below
-- `B1` is the only remaining `WPORG-22` item
-- `WPORG-22` remains open until `B1` is complete
+- `B1` has since been completed by the Event Plan final closeout.
+- Current `WPORG-22` status: complete after B1-B5 closeout.
 ### What Changed
 - Removed the executable Vendor Portal autosave inline script from `includes/portal/vendor-portal.php`.
 - Replaced the executable autosave global bootstrap with a narrowly scoped JSON payload consumed only by the external Vendor Portal asset.
@@ -1733,10 +1740,10 @@ Date: 2026-07-12
 - Migrated in this slice: availability-method accordion restore/store behavior using the unchanged `vms_av_open_method` browser-state key, and individual availability month restore/store behavior using the unchanged `vms_av_open_ym` browser-state key
 - Non-behavioral confirmation: no network, database, preview-vendor, autosave, or availability-record persistence behavior changed in this slice
 - `B2` slices 1 and 2 remain completed by the result sections above
-- Remaining `B2` work: only the manual availability autosave controller and its safe configuration handoff
-- `B1` remains pending
+- Later B2 autosave work completed the manual availability autosave controller and its safe configuration handoff.
+- `B1` has since been completed by the Event Plan final closeout.
 - `B3`, `B4`, and `B5` remain completed by the result sections below
-- `WPORG-22` remains open
+- Current `WPORG-22` status: complete after B1-B5 closeout.
 ### What Changed
 - Removed only the two targeted executable inline availability open-state `<script>` blocks from `includes/portal/vendor-portal.php`.
 - Extended the existing `vms-vendor-portal` asset to restore/store the current availability method via `localStorage` and the current availability month via the existing cookie contract.
@@ -1784,7 +1791,7 @@ Date: 2026-07-12
 - Public Vendor Applications JS was already completed by committed `4981e8ac671181a78af699fc726cc1059c426c28` (`Move vendor application script to asset`)
 - Public Vendor Applications CSS already lived in `assets/css/vms-portal.css` and `assets/css/vms-ui.css`
 - `B5` remains completed by the Ticket Integrity CSS sub-pass above
-- Remaining `WPORG-22` work: `B1` and `B2` remain pending, so `WPORG-22` stays open
+- Current `WPORG-22` status: complete after B1-B5 closeout.
 
 ### What Changed
 
@@ -1811,7 +1818,7 @@ Date: 2026-07-12
 - Configuration and data handoff retained: `vmsTicketingFront.atomicAddUrl`, `vmsTicketingFront.atomicAddNonce`, `vmsTicketingFront.cartUrl`, `vmsTicketingFront.tecEventId`, `vmsTicketingFront.eventPlanId`, plus the existing `#vms-reserved-addons` `data-vms-*` payload for qualifying-ticket IDs, prior/cart quantities, pool quantities, selector mode, and per-add-on limits
 - Tests added: `php tests/ticketing-server-controls-inline-js-remediation.php`
 - `B3` and `B5` remain completed by the result sections above
-- Remaining `WPORG-22` work: `B1` and `B2` remain pending, so `WPORG-22` stays open
+- Current `WPORG-22` status: complete after B1-B5 closeout.
 
 ### Passing B4 Validation
 
