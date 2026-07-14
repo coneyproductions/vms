@@ -133,6 +133,13 @@ if (!function_exists('admin_url')) {
 	}
 }
 
+if (!function_exists('get_option')) {
+	function get_option(string $option, $default = false)
+	{
+		return array_key_exists($option, $GLOBALS['vms_test_options']) ? $GLOBALS['vms_test_options'][$option] : $default;
+	}
+}
+
 if (!function_exists('add_query_arg')) {
 	function add_query_arg($args, string $url = ''): string
 	{
@@ -289,6 +296,18 @@ if (!function_exists('wp_nonce_field')) {
 	}
 }
 
+if (!function_exists('submit_button')) {
+	function submit_button($text = null, string $type = 'primary', string $name = 'submit', bool $wrap = true, $other_attributes = null): void
+	{
+		unset($other_attributes);
+		$button = '<button type="submit" name="' . esc_attr((string) $name) . '" class="' . esc_attr(trim('button ' . $type)) . '">' . esc_html((string) $text) . '</button>';
+		if ($wrap) {
+			$button = '<p class="submit">' . $button . '</p>';
+		}
+		echo $button;
+	}
+}
+
 if (!function_exists('wp_kses_post')) {
 	function wp_kses_post($html): string
 	{
@@ -376,6 +395,7 @@ if (!function_exists('vms_staffing_staff_qualification_review_url')) {
 $GLOBALS['vms_test_staff_certifications_pending_items'] = array();
 $GLOBALS['vms_test_staff_certifications_provider_calls'] = 0;
 $GLOBALS['vms_test_staff_certifications_provider_statuses'] = array();
+$GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_current_user_can'] = true;
 $GLOBALS['vms_test_current_user_id'] = 7;
 $GLOBALS['vms_test_transients'] = array();
@@ -440,6 +460,17 @@ $GLOBALS['vms_test_email_followups_scheduled_timestamp_value'] = 0;
 $GLOBALS['vms_test_email_followups_context_allows_send_calls'] = 0;
 $GLOBALS['vms_test_email_followups_context_allows_send_value'] = array(true, 'ok');
 $GLOBALS['vms_test_email_followups_manual_batch_size_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_settings_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_settings_value'] = array();
+$GLOBALS['vms_test_ticket_integrity_get_results_store_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_results_store_value'] = array('summary' => array(), 'last_scan' => array());
+$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_args'] = array();
+$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_value'] = array();
+$GLOBALS['vms_test_ticket_integrity_get_sorted_events_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_sorted_events_value'] = array();
+$GLOBALS['vms_test_ticket_integrity_get_logs_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_logs_value'] = array();
 
 if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
 	/**
@@ -619,6 +650,74 @@ if (!function_exists('vms_email_followups_manual_batch_size')) {
 	}
 }
 
+if (!function_exists('vms_ticket_integrity_get_settings')) {
+	function vms_ticket_integrity_get_settings(): array
+	{
+		$GLOBALS['vms_test_ticket_integrity_get_settings_calls']++;
+		return is_array($GLOBALS['vms_test_ticket_integrity_get_settings_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_settings_value'] : array();
+	}
+}
+
+if (!function_exists('vms_ticket_integrity_get_results_store')) {
+	function vms_ticket_integrity_get_results_store(): array
+	{
+		$GLOBALS['vms_test_ticket_integrity_get_results_store_calls']++;
+		return is_array($GLOBALS['vms_test_ticket_integrity_get_results_store_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_results_store_value'] : array();
+	}
+}
+
+if (!function_exists('vms_ticket_integrity_prepare_payment_gateway_health')) {
+	function vms_ticket_integrity_prepare_payment_gateway_health(string $context = '', int $ttl = 0): array
+	{
+		$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_calls']++;
+		$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_args'][] = array($context, $ttl);
+		return is_array($GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_value'] : array();
+	}
+}
+
+if (!function_exists('vms_ticket_integrity_get_sorted_events')) {
+	function vms_ticket_integrity_get_sorted_events(): array
+	{
+		$GLOBALS['vms_test_ticket_integrity_get_sorted_events_calls']++;
+		return is_array($GLOBALS['vms_test_ticket_integrity_get_sorted_events_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_sorted_events_value'] : array();
+	}
+}
+
+if (!function_exists('vms_ticket_integrity_get_logs')) {
+	function vms_ticket_integrity_get_logs(): array
+	{
+		$GLOBALS['vms_test_ticket_integrity_get_logs_calls']++;
+		return is_array($GLOBALS['vms_test_ticket_integrity_get_logs_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_logs_value'] : array();
+	}
+}
+
+if (!function_exists('vms_ticket_integrity_format_datetime')) {
+	function vms_ticket_integrity_format_datetime(int $timestamp_gmt): string
+	{
+		if ($timestamp_gmt <= 0) {
+			return 'Never';
+		}
+
+		return gmdate('Y-m-d H:i:s T', $timestamp_gmt);
+	}
+}
+
+if (!function_exists('vms_ticket_integrity_status_css_class')) {
+	function vms_ticket_integrity_status_css_class(string $status): string
+	{
+		$status = sanitize_html_class($status);
+		return 'vms-ticket-integrity__status vms-ticket-integrity__status--' . ($status !== '' ? $status : 'unknown');
+	}
+}
+
+if (!function_exists('vms_ticket_integrity_status_label')) {
+	function vms_ticket_integrity_status_label(string $status): string
+	{
+		$status = sanitize_key($status);
+		return $status !== '' ? ucwords(str_replace('_', ' ', $status)) : 'Unknown';
+	}
+}
+
 if (!function_exists('wp_kses')) {
 	function wp_kses($html, $allowed_html): string
 	{
@@ -686,6 +785,7 @@ require_once dirname(__DIR__) . '/includes/admin/data-tools/page-event-plan-impo
 require_once dirname(__DIR__) . '/includes/modules/email-followups/admin-ui.php';
 require_once dirname(__DIR__) . '/includes/social-share/admin.php';
 require_once dirname(__DIR__) . '/includes/admin/event-feedback.php';
+require_once dirname(__DIR__) . '/includes/admin/ticket-integrity-page.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
@@ -697,9 +797,11 @@ $staffCertificationsSource = file_get_contents($pluginRoot . '/includes/admin/st
 $socialSource = file_get_contents($pluginRoot . '/includes/social-share/admin.php');
 $emailFollowupsSource = file_get_contents($pluginRoot . '/includes/modules/email-followups/admin-ui.php');
 $eventFeedbackSource = file_get_contents($pluginRoot . '/includes/admin/event-feedback.php');
+$ticketIntegritySource = file_get_contents($pluginRoot . '/includes/admin/ticket-integrity-page.php');
 $eventPlanImportSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/page-event-plan-import.php');
 $eventPlanImportActionsSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/actions-event-plan-import.php');
 $eventPlanImportEngineSource = file_get_contents($pluginRoot . '/includes/services/event-plan-import/event-plan-import-engine.php');
+$vendorAvailabilitySource = file_get_contents($pluginRoot . '/includes/admin/vendor-availability.php');
 $bootstrapSource = file_get_contents($pluginRoot . '/includes/bootstrap.php');
 
 $assert = static function (bool $condition, string $message): void {
@@ -717,9 +819,11 @@ $assert(is_string($staffCertificationsSource) && $staffCertificationsSource !== 
 $assert(is_string($socialSource) && $socialSource !== '', 'Social Sharing source should be readable.');
 $assert(is_string($emailFollowupsSource) && $emailFollowupsSource !== '', 'Email Follow-Ups source should be readable.');
 $assert(is_string($eventFeedbackSource) && $eventFeedbackSource !== '', 'Event Feedback source should be readable.');
+$assert(is_string($ticketIntegritySource) && $ticketIntegritySource !== '', 'Ticket Integrity source should be readable.');
 $assert(is_string($eventPlanImportSource) && $eventPlanImportSource !== '', 'Event Plan Import source should be readable.');
 $assert(is_string($eventPlanImportActionsSource) && $eventPlanImportActionsSource !== '', 'Event Plan Import actions source should be readable.');
 $assert(is_string($eventPlanImportEngineSource) && $eventPlanImportEngineSource !== '', 'Event Plan Import engine source should be readable.');
+$assert(is_string($vendorAvailabilitySource) && $vendorAvailabilitySource !== '', 'Vendor Availability source should be readable.');
 $assert(is_string($bootstrapSource) && $bootstrapSource !== '', 'Bootstrap source should be readable.');
 
 $normalizeAllowedHtml = static function (array $allowed_html): array {
@@ -820,6 +924,7 @@ $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=
 $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
 $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notices~', $emailFollowupsSource, $unusedEmailFollowupsMatches);
 $eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
+$ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
 $eventPlanImportNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportSource, $unusedEventPlanImportMatches);
 $socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
@@ -841,6 +946,7 @@ $expectedNoticesCallbackFiles = array(
 	'admin/event-feedback.php',
 	'admin/square-sync-protection.php',
 	'admin/staff-certifications.php',
+	'admin/ticket-integrity-page.php',
 	'modules/email-followups/admin-ui.php',
 	'modules/status-notices/admin-ui.php',
 	'social-share/admin.php',
@@ -850,18 +956,19 @@ sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 10, 'Only ten production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 11, 'Only eleven production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
 $assert($eventFeedbackNoticeCallbackCount === 1, 'Event Feedback should contribute exactly one production notices_callback caller.');
+$assert($ticketIntegrityNoticeCallbackCount === 1, 'Ticket Integrity should contribute exactly one production notices_callback caller.');
 $assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
 $assert($staffCertificationsNoticeCallbackCount === 1, 'Staff Certifications should contribute exactly one production notices_callback caller.');
 $assert($emailFollowupsNoticeCallbackCount === 1, 'Email Follow-Ups should contribute exactly one production notices_callback caller.');
 $assert($eventPlanImportNoticeCallbackCount === 1, 'Event Plan Import should contribute exactly one production notices_callback caller.');
 $assert($socialNoticeCallbackCount === 1, 'Social Sharing should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Ticket Integrity, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -1533,6 +1640,281 @@ $assert(strpos($emailNonemptyPreviewPage, 'Recipient Preview') !== false && strp
 $assert(strpos($emailNonemptyPreviewPage, 'Know Before You Go') !== false && strpos($emailNonemptyPreviewPage, 'Rendered preview body.') !== false, 'Email Follow-Ups nonempty preview render should preserve the rendered message output.');
 $assert(strpos($emailNonemptyPreviewPage, 'buyer@example.test') !== false && strpos($emailNonemptyPreviewPage, 'Buyer Example') !== false, 'Email Follow-Ups nonempty preview render should preserve the recipient preview output.');
 $assert(strpos($emailNonemptyPreviewPage, 'value="321" selected="selected"') !== false, 'Email Follow-Ups nonempty preview render should preserve the selected event choice in the preview form.');
+
+$assert(strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_notice_from_query(): void') !== false, 'Ticket Integrity should preserve the dedicated top-level query notice helper.');
+$ticketIntegrityNoticeStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_notice_from_query(): void');
+$ticketIntegrityNoticeEnd = strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_summary_cards(array $summary, array $last_scan): void');
+$assert($ticketIntegrityNoticeStart !== false && $ticketIntegrityNoticeEnd !== false && $ticketIntegrityNoticeEnd > $ticketIntegrityNoticeStart, 'Ticket Integrity notice helper body should be locatable.');
+$ticketIntegrityNoticeSource = substr($ticketIntegritySource, (int) $ticketIntegrityNoticeStart, (int) $ticketIntegrityNoticeEnd - (int) $ticketIntegrityNoticeStart);
+$ticketIntegrityPageStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_admin_page(): void');
+$assert($ticketIntegrityPageStart !== false, 'Ticket Integrity page renderer body should be locatable.');
+$ticketIntegrityPageSource = substr($ticketIntegritySource, (int) $ticketIntegrityPageStart);
+$ticketIntegrityContentStart = strpos($ticketIntegrityPageSource, 'static function () use (');
+$ticketIntegrityContentEnd = strpos($ticketIntegrityPageSource, "echo '<div class=\"wrap\"><h1>'");
+$assert($ticketIntegrityContentStart !== false && $ticketIntegrityContentEnd !== false && $ticketIntegrityContentEnd > $ticketIntegrityContentStart, 'Ticket Integrity shell content closure body should be locatable.');
+$ticketIntegrityContentSource = substr($ticketIntegrityPageSource, (int) $ticketIntegrityContentStart, (int) $ticketIntegrityContentEnd - (int) $ticketIntegrityContentStart);
+$ticketIntegrityRebuildStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_handle_rebuild(): void');
+$ticketIntegrityRebuildEnd = strpos($ticketIntegritySource, "function vms_ticket_integrity_find_ticket_config_row(array \$context, string \$ticket_key, string \$title_token = ''): array");
+$assert($ticketIntegrityRebuildStart !== false && $ticketIntegrityRebuildEnd !== false && $ticketIntegrityRebuildEnd > $ticketIntegrityRebuildStart, 'Ticket Integrity rebuild handler body should be locatable.');
+$ticketIntegrityRebuildSource = substr($ticketIntegritySource, (int) $ticketIntegrityRebuildStart, (int) $ticketIntegrityRebuildEnd - (int) $ticketIntegrityRebuildStart);
+$ticketIntegrityDuplicateStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_handle_duplicate_cleanup(): void');
+$ticketIntegrityDuplicateEnd = strpos($ticketIntegritySource, 'function vms_ticket_integrity_report_text_value($value): string');
+$assert($ticketIntegrityDuplicateStart !== false && $ticketIntegrityDuplicateEnd !== false && $ticketIntegrityDuplicateEnd > $ticketIntegrityDuplicateStart, 'Ticket Integrity duplicate-cleanup handler body should be locatable.');
+$ticketIntegrityDuplicateSource = substr($ticketIntegritySource, (int) $ticketIntegrityDuplicateStart, (int) $ticketIntegrityDuplicateEnd - (int) $ticketIntegrityDuplicateStart);
+$assert(strpos($ticketIntegrityPageSource, "'notices_callback' => 'vms_ticket_integrity_render_notice_from_query'") !== false, 'Ticket Integrity shell call should route the full notice helper through the explicit notice callback.');
+$assert(strpos($ticketIntegrityContentSource, 'vms_ticket_integrity_render_notice_from_query();') === false, 'Ticket Integrity shell content closure should no longer call the moved notice helper directly.');
+$assert(strpos($ticketIntegrityContentSource, "echo '<section class=\"vms-ticket-integrity__panel\" data-vms-tour=\"ticket-integrity.run\">'") !== false, 'Ticket Integrity shell content closure should still begin with the run panel after the moved notice boundary.');
+$assert(strpos($ticketIntegrityPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Ticket Integrity', 'backstage-venue-manager') . '</h1></div>';") !== false, 'Ticket Integrity no-shell fallback should preserve the historical heading-only output path.');
+$assert(strpos($ticketIntegrityNoticeSource, "sanitize_key(vms_ticket_integrity_query_arg('tim_notice'))") !== false, 'Ticket Integrity notice helper should preserve selector sanitization.');
+$assert(strpos($ticketIntegrityNoticeSource, "sanitize_text_field(vms_ticket_integrity_query_arg('detail'))") !== false, 'Ticket Integrity notice helper should preserve detail sanitization.');
+$assert(strpos($ticketIntegrityNoticeSource, "sanitize_email(vms_ticket_integrity_query_arg('recipient'))") !== false, 'Ticket Integrity notice helper should preserve recipient sanitization.');
+$assert(strpos($ticketIntegrityNoticeSource, "absint(vms_ticket_integrity_query_arg('red'))") !== false && strpos($ticketIntegrityNoticeSource, "absint(vms_ticket_integrity_query_arg('yellow'))") !== false, 'Ticket Integrity notice helper should preserve red/yellow count normalization.');
+$assert(substr_count($ticketIntegrityNoticeSource, "message .= ' ' . \$detail;") === 9, 'Ticket Integrity notice helper should preserve every detail-text append branch.');
+$assert(substr_count($ticketIntegrityNoticeSource, "message .= ' ' . \$notice_recipient;") === 1, 'Ticket Integrity notice helper should preserve the single recipient-text append branch.');
+$assert(strpos($ticketIntegrityNoticeSource, "echo '<div class=\"notice ' . esc_attr(\$class) . '\"><p>' . esc_html(\$message) . '</p></div>';") !== false, 'Ticket Integrity notice helper should preserve the exact non-inline, non-dismissible simple notice markup.');
+$assert(strpos($ticketIntegrityNoticeSource, '<strong>') === false && strpos($ticketIntegrityNoticeSource, '<a ') === false && strpos($ticketIntegrityNoticeSource, '<button') === false && strpos($ticketIntegrityNoticeSource, '<span') === false, 'Ticket Integrity notice helper should stay within the simple fragment contract.');
+$assert(strpos($ticketIntegrityNoticeSource, 'apply_filters(') === false && strpos($ticketIntegrityNoticeSource, 'do_action(') === false && strpos($ticketIntegrityNoticeSource, 'settings_errors(') === false, 'Ticket Integrity notice helper should stay package-owned and nonextensible.');
+$assert(strpos($ticketIntegrityNoticeSource, 'get_transient(') === false && strpos($ticketIntegrityNoticeSource, 'set_transient(') === false && strpos($ticketIntegrityNoticeSource, 'delete_transient(') === false, 'Ticket Integrity notice helper should not perform storage reads or mutations.');
+$assert(strpos($vendorAvailabilitySource, "echo '<div class=\"notice notice-info inline\"><p>' . esc_html__('No vendors matched the current filters for this date.', 'backstage-venue-manager') . '</p></div>';") !== false, 'Vendor Availability nested empty-state notice should remain content-local and unchanged.');
+
+$ticketIntegrityExpectedStatuses = array(
+	'daily_report_dry_run_ready',
+	'daily_report_failed',
+	'daily_report_preview_ready',
+	'daily_report_sent',
+	'daily_report_test_sent',
+	'duplicate_cleanup_blocked',
+	'duplicate_cleanup_complete',
+	'duplicate_cleanup_failed',
+	'duplicate_cleanup_partial',
+	'event_scan_complete',
+	'event_scan_failed',
+	'rebuild_blocked',
+	'rebuild_complete',
+	'rebuild_failed',
+	'rebuild_no_change',
+	'rebuild_partial',
+	'scan_complete',
+	'scan_failed',
+	'settings_saved',
+);
+$ticketIntegrityExpectedQueryArgs = array('detail', 'recipient', 'red', 'tim_notice', 'yellow');
+preg_match_all("~vms_ticket_integrity_query_arg\\('([a-z_]+)'\\)~", $ticketIntegrityNoticeSource, $ticketIntegrityQueryArgMatches);
+$ticketIntegrityQueryArgs = array_values(array_unique($ticketIntegrityQueryArgMatches[1]));
+sort($ticketIntegrityQueryArgs);
+sort($ticketIntegrityExpectedQueryArgs);
+$assert($ticketIntegrityQueryArgs === $ticketIntegrityExpectedQueryArgs, 'Ticket Integrity notice helper should keep the exact query-argument inventory.');
+preg_match_all("~case '([a-z_]+)':~", $ticketIntegrityNoticeSource, $ticketIntegrityRenderStatusMatches);
+$ticketIntegrityRenderStatuses = array_values(array_unique($ticketIntegrityRenderStatusMatches[1]));
+sort($ticketIntegrityRenderStatuses);
+$expectedRenderStatuses = $ticketIntegrityExpectedStatuses;
+sort($expectedRenderStatuses);
+$assert($ticketIntegrityRenderStatuses === $expectedRenderStatuses, 'Ticket Integrity notice helper should preserve the complete recognized selector vocabulary.');
+preg_match_all("~vms_ticket_integrity_admin_redirect\\(\\s*'([a-z_]+)'~", $ticketIntegritySource, $ticketIntegrityDirectWriterMatches);
+preg_match_all('~\\$notice\\s*=\\s*\'(rebuild_[a-z_]+)\'~', $ticketIntegrityRebuildSource, $ticketIntegrityRebuildWriterMatches);
+preg_match_all('~\\$notice\\s*=\\s*\'(duplicate_cleanup_[a-z_]+)\'~', $ticketIntegrityDuplicateSource, $ticketIntegrityDuplicateWriterMatches);
+$ticketIntegrityWriterStatuses = array_values(array_unique(array_merge(
+	$ticketIntegrityDirectWriterMatches[1],
+	$ticketIntegrityRebuildWriterMatches[1],
+	$ticketIntegrityDuplicateWriterMatches[1]
+)));
+sort($ticketIntegrityWriterStatuses);
+$expectedWriterStatuses = $ticketIntegrityExpectedStatuses;
+sort($expectedWriterStatuses);
+$assert($ticketIntegrityWriterStatuses === $expectedWriterStatuses, 'Ticket Integrity redirect/action writers should preserve the same status vocabulary as the renderer.');
+
+$ticketIntegrityRenderCases = array(
+	array(
+		'label' => 'Ticket Integrity scan_complete branch',
+		'query' => array('tim_notice' => 'scan_complete', 'red' => '3', 'yellow' => '2'),
+		'expected' => '<div class="notice notice-success"><p>Ticket integrity scan completed. Red: 3. Yellow: 2.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity normalized malformed selector branch',
+		'query' => array('tim_notice' => 'SCAN_COMPLETE!!', 'red' => '7', 'yellow' => '0'),
+		'expected' => '<div class="notice notice-success"><p>Ticket integrity scan completed. Red: 7. Yellow: 0.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity event_scan_complete branch',
+		'query' => array('tim_notice' => 'event_scan_complete'),
+		'expected' => '<div class="notice notice-success"><p>Event integrity scan completed.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity settings_saved branch',
+		'query' => array('tim_notice' => 'settings_saved'),
+		'expected' => '<div class="notice notice-success"><p>Ticket Integrity settings saved.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity daily_report_sent branch',
+		'query' => array('tim_notice' => 'daily_report_sent'),
+		'expected' => '<div class="notice notice-success"><p>State of the Range email sent.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity daily_report_preview_ready branch',
+		'query' => array('tim_notice' => 'daily_report_preview_ready'),
+		'expected' => '<div class="notice notice-success"><p>State of the Range preview rendered successfully.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity daily_report_dry_run_ready branch',
+		'query' => array('tim_notice' => 'daily_report_dry_run_ready'),
+		'expected' => '<div class="notice notice-success"><p>State of the Range dry-run diagnostic completed without sending email.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity daily_report_test_sent branch',
+		'query' => array('tim_notice' => 'daily_report_test_sent', 'recipient' => 'ops@example.test'),
+		'expected' => '<div class="notice notice-success"><p>State of the Range admin test email sent. ops@example.test</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity daily_report_failed branch',
+		'query' => array('tim_notice' => 'daily_report_failed', 'detail' => '<strong>Mailer</strong> down'),
+		'expected' => '<div class="notice notice-error"><p>State of the Range email failed to send. Mailer down</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity rebuild_complete branch',
+		'query' => array('tim_notice' => 'rebuild_complete', 'detail' => 'Mapped 3 products.'),
+		'expected' => '<div class="notice notice-success"><p>Repair completed and the event was re-scanned. Mapped 3 products.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity rebuild_no_change branch',
+		'query' => array('tim_notice' => 'rebuild_no_change', 'detail' => 'No drift remained.'),
+		'expected' => '<div class="notice notice-info"><p>No mapping changes were needed and the event was re-scanned. No drift remained.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity rebuild_partial branch',
+		'query' => array('tim_notice' => 'rebuild_partial', 'detail' => '2 warnings remain.'),
+		'expected' => '<div class="notice notice-warning"><p>Repair made changes, but unresolved conflicts still remain. 2 warnings remain.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity rebuild_blocked branch',
+		'query' => array('tim_notice' => 'rebuild_blocked', 'detail' => 'Sold SKU mismatch.'),
+		'expected' => '<div class="notice notice-warning"><p>Repair could not proceed safely. Sold SKU mismatch.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity duplicate_cleanup_complete branch',
+		'query' => array('tim_notice' => 'duplicate_cleanup_complete', 'detail' => 'Retired 2 duplicates.'),
+		'expected' => '<div class="notice notice-success"><p>Duplicate legacy ticket cleanup completed and the event was re-scanned. Retired 2 duplicates.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity duplicate_cleanup_partial branch',
+		'query' => array('tim_notice' => 'duplicate_cleanup_partial', 'detail' => '1 sold path still needs review.'),
+		'expected' => '<div class="notice notice-warning"><p>Duplicate legacy ticket cleanup made progress, but warnings remain. 1 sold path still needs review.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity duplicate_cleanup_blocked branch',
+		'query' => array('tim_notice' => 'duplicate_cleanup_blocked', 'detail' => 'Legacy sold product retained.'),
+		'expected' => '<div class="notice notice-warning"><p>Duplicate legacy ticket cleanup was blocked for one or more sold paths. Legacy sold product retained.</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity scan_failed branch',
+		'query' => array('tim_notice' => 'scan_failed', 'detail' => 'scan_helper_missing'),
+		'expected' => '<div class="notice notice-error"><p>Ticket Integrity action failed. scan_helper_missing</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity event_scan_failed branch',
+		'query' => array('tim_notice' => 'event_scan_failed', 'detail' => 'event_scan_failed'),
+		'expected' => '<div class="notice notice-error"><p>Ticket Integrity action failed. event_scan_failed</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity rebuild_failed branch',
+		'query' => array('tim_notice' => 'rebuild_failed', 'detail' => 'repair_helper_missing'),
+		'expected' => '<div class="notice notice-error"><p>Ticket Integrity action failed. repair_helper_missing</p></div>',
+	),
+	array(
+		'label' => 'Ticket Integrity duplicate_cleanup_failed branch',
+		'query' => array('tim_notice' => 'duplicate_cleanup_failed', 'detail' => 'duplicate_cleanup_helper_missing'),
+		'expected' => '<div class="notice notice-error"><p>Ticket Integrity action failed. duplicate_cleanup_helper_missing</p></div>',
+	),
+);
+foreach ($ticketIntegrityRenderCases as $ticketIntegrityRenderCase) {
+	$_GET = $ticketIntegrityRenderCase['query'];
+	ob_start();
+	vms_ticket_integrity_render_notice_from_query();
+	$ticketIntegrityNoticeHtml = (string) ob_get_clean();
+	$assert(
+		$ticketIntegrityNoticeHtml === $ticketIntegrityRenderCase['expected'],
+		$ticketIntegrityRenderCase['label'] . ' should preserve the exact notice fragment.'
+	);
+	$assert(
+		wp_kses($ticketIntegrityNoticeHtml, vms_admin_ui_explicit_notice_allowed_html()) === $ticketIntegrityNoticeHtml,
+		$ticketIntegrityRenderCase['label'] . ' should remain within the explicit notice contract.'
+	);
+}
+
+$_GET = array('tim_notice' => 'daily_report_failed');
+ob_start();
+vms_ticket_integrity_render_notice_from_query();
+$ticketIntegrityNoDetailNotice = (string) ob_get_clean();
+$assert($ticketIntegrityNoDetailNotice === '<div class="notice notice-error"><p>State of the Range email failed to send.</p></div>', 'Ticket Integrity daily_report_failed should preserve its base message when detail is absent.');
+
+$_GET = array('tim_notice' => 'daily_report_test_sent');
+ob_start();
+vms_ticket_integrity_render_notice_from_query();
+$ticketIntegrityNoRecipientNotice = (string) ob_get_clean();
+$assert($ticketIntegrityNoRecipientNotice === '<div class="notice notice-success"><p>State of the Range admin test email sent.</p></div>', 'Ticket Integrity daily_report_test_sent should preserve its base message when recipient is absent.');
+
+$_GET = array();
+ob_start();
+vms_ticket_integrity_render_notice_from_query();
+$ticketIntegrityNoStatusNotice = (string) ob_get_clean();
+$assert($ticketIntegrityNoStatusNotice === '', 'Ticket Integrity notice helper should stay silent when the selector is absent.');
+
+$_GET = array('tim_notice' => '');
+ob_start();
+vms_ticket_integrity_render_notice_from_query();
+$ticketIntegrityEmptyStatusNotice = (string) ob_get_clean();
+$assert($ticketIntegrityEmptyStatusNotice === '', 'Ticket Integrity notice helper should stay silent when the selector is empty.');
+
+$_GET = array('tim_notice' => 'not_real');
+ob_start();
+vms_ticket_integrity_render_notice_from_query();
+$ticketIntegrityUnknownStatusNotice = (string) ob_get_clean();
+$assert($ticketIntegrityUnknownStatusNotice === '', 'Ticket Integrity notice helper should stay silent for unknown selectors.');
+
+$_GET = array('tim_notice' => '<strong>bogus</strong>');
+ob_start();
+vms_ticket_integrity_render_notice_from_query();
+$ticketIntegrityMalformedStatusNotice = (string) ob_get_clean();
+$assert($ticketIntegrityMalformedStatusNotice === '', 'Ticket Integrity notice helper should stay silent when a malformed selector sanitizes to an unrecognized value.');
+
+$GLOBALS['vms_test_ticket_integrity_get_settings_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_settings_value'] = array();
+$GLOBALS['vms_test_ticket_integrity_get_results_store_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_results_store_value'] = array('summary' => array(), 'last_scan' => array());
+$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_args'] = array();
+$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_value'] = array();
+$GLOBALS['vms_test_ticket_integrity_get_sorted_events_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_sorted_events_value'] = array();
+$GLOBALS['vms_test_ticket_integrity_get_logs_calls'] = 0;
+$GLOBALS['vms_test_ticket_integrity_get_logs_value'] = array();
+$GLOBALS['vms_test_current_user_id'] = 0;
+$GLOBALS['vms_test_transients'] = array();
+$GLOBALS['vms_test_transient_get_calls'] = 0;
+$GLOBALS['vms_test_transient_get_keys'] = array();
+$GLOBALS['vms_test_transient_set_calls'] = 0;
+$GLOBALS['vms_test_transient_set_payloads'] = array();
+$GLOBALS['vms_test_transient_delete_calls'] = 0;
+$GLOBALS['vms_test_transient_delete_keys'] = array();
+$GLOBALS['vms_test_options'] = array('admin_email' => 'admin@example.test');
+$_GET = array(
+	'tim_notice' => 'daily_report_failed',
+	'detail' => '<strong>Mailer</strong> down',
+);
+ob_start();
+vms_ticket_integrity_render_admin_page();
+$ticketIntegrityRenderedPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_ticket_integrity_get_settings_calls'] === 1, 'Ticket Integrity page render should resolve settings exactly once.');
+$assert($GLOBALS['vms_test_ticket_integrity_get_results_store_calls'] === 1, 'Ticket Integrity page render should resolve the results store exactly once.');
+$assert($GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_calls'] === 1, 'Ticket Integrity page render should resolve payment gateway health exactly once.');
+$assert($GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_args'] === array(array('admin_page', 20 * MINUTE_IN_SECONDS)), 'Ticket Integrity page render should preserve the existing payment-gateway-health arguments.');
+$assert($GLOBALS['vms_test_ticket_integrity_get_sorted_events_calls'] === 1, 'Ticket Integrity page render should resolve sorted events exactly once.');
+$assert($GLOBALS['vms_test_ticket_integrity_get_logs_calls'] === 1, 'Ticket Integrity page render should resolve audit logs exactly once.');
+$assert($GLOBALS['vms_test_transient_get_calls'] === 1, 'Ticket Integrity page render should preserve the existing daily-report preview lookup exactly once.');
+$assert($GLOBALS['vms_test_transient_get_keys'] === array('vms_ticket_integrity_daily_report_preview_0'), 'Ticket Integrity page render should preserve the existing daily-report preview transient key lookup.');
+$assert($GLOBALS['vms_test_transient_set_calls'] === 0 && $GLOBALS['vms_test_transient_delete_calls'] === 0, 'Ticket Integrity page render should not introduce transient writes or deletes while routing notices through the explicit sink.');
+$assert(substr_count($ticketIntegrityRenderedPage, 'State of the Range email failed to send. Mailer down') === 1, 'Ticket Integrity page render should emit the moved notice exactly once.');
+$assert(strpos($ticketIntegrityRenderedPage, 'State of the Range email failed to send. Mailer down') < strpos($ticketIntegrityRenderedPage, 'Run Ticket Integrity Check Now'), 'Ticket Integrity shell output should keep the moved notice before the run panel.');
+$assert(strpos($ticketIntegrityRenderedPage, 'Run Ticket Integrity Check Now') < strpos($ticketIntegrityRenderedPage, 'Monitor Settings'), 'Ticket Integrity shell output should preserve the original content ordering after the moved notice.');
 
 $assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(): void') !== false, 'Event Feedback should expose a dedicated explicit notice callback.');
 $assert(substr_count($eventFeedbackSource, "'notices_callback' => 'vms_feedback_admin_render_notices'") === 1, 'Event Feedback shell call should supply its explicit notice callback exactly once.');

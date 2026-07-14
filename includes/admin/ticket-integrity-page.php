@@ -2437,19 +2437,18 @@ function vms_ticket_integrity_render_admin_page(): void
 
 	$actions_html = '<div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help">' . $tour_button . '</div>';
 
-	if (function_exists('vms_admin_ui_render_shell')) {
-		vms_admin_ui_render_shell(
-			array(
-				'title' => __('Ticket Integrity', 'backstage-venue-manager'),
-				'subtitle' => __('Proactively scan published upcoming events for customer-facing ticketing failures before sales are lost.', 'backstage-venue-manager'),
-				'shell_id' => 'vms-ticket-integrity',
-				'content_class' => 'vms-ticket-integrity-page',
-				'actions_html' => $actions_html,
-			),
-			static function () use ($settings, $summary, $last_scan, $payment_gateway_health, $events, $logs, $filter_plan_id): void {
-				vms_ticket_integrity_render_notice_from_query();
-
-				echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.run">';
+		if (function_exists('vms_admin_ui_render_shell')) {
+			vms_admin_ui_render_shell(
+				array(
+					'title' => __('Ticket Integrity', 'backstage-venue-manager'),
+					'subtitle' => __('Proactively scan published upcoming events for customer-facing ticketing failures before sales are lost.', 'backstage-venue-manager'),
+					'shell_id' => 'vms-ticket-integrity',
+					'content_class' => 'vms-ticket-integrity-page',
+					'actions_html' => $actions_html,
+					'notices_callback' => 'vms_ticket_integrity_render_notice_from_query',
+				),
+				static function () use ($settings, $summary, $last_scan, $payment_gateway_health, $events, $logs, $filter_plan_id): void {
+					echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.run">';
 				echo '<h2>' . esc_html__('Run Ticket Integrity Check Now', 'backstage-venue-manager') . '</h2>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__run-form">';
 				wp_nonce_field('vms_ticket_integrity_run_scan');
