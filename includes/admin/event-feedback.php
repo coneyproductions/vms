@@ -682,9 +682,6 @@ if (!function_exists('vms_feedback_admin_render_content')) {
 	function vms_feedback_admin_render_content(): void
 	{
 		$selected_event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
-		if (function_exists('vms_feedback_admin_render_notices')) {
-			vms_feedback_admin_render_notices();
-		}
 		vms_feedback_admin_render_event_selector($selected_event_plan_id);
 
 		if ($selected_event_plan_id <= 0) {
@@ -750,6 +747,7 @@ if (!function_exists('vms_render_event_feedback_admin_page')) {
 					'title' => __('Event Feedback', 'backstage-venue-manager'),
 					'subtitle' => __('Private one-stop post-event surveys for venue, bar, bathrooms, primary vendors, and secondary vendors.', 'backstage-venue-manager'),
 					'shell_id' => 'vms-event-feedback-admin',
+					'notices_callback' => 'vms_feedback_admin_render_notices',
 				),
 				'vms_feedback_admin_render_content'
 			);
@@ -757,6 +755,7 @@ if (!function_exists('vms_render_event_feedback_admin_page')) {
 		}
 
 		echo '<div class="wrap"><h1>' . esc_html__('Event Feedback', 'backstage-venue-manager') . '</h1>';
+		vms_feedback_admin_render_notices();
 		vms_feedback_admin_render_content();
 		echo '</div>';
 	}

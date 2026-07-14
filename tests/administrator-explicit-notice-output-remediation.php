@@ -685,6 +685,7 @@ require_once dirname(__DIR__) . '/includes/services/event-plan-import/event-plan
 require_once dirname(__DIR__) . '/includes/admin/data-tools/page-event-plan-import.php';
 require_once dirname(__DIR__) . '/includes/modules/email-followups/admin-ui.php';
 require_once dirname(__DIR__) . '/includes/social-share/admin.php';
+require_once dirname(__DIR__) . '/includes/admin/event-feedback.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
@@ -695,6 +696,7 @@ $squareSyncProtectionSource = file_get_contents($pluginRoot . '/includes/admin/s
 $staffCertificationsSource = file_get_contents($pluginRoot . '/includes/admin/staff-certifications.php');
 $socialSource = file_get_contents($pluginRoot . '/includes/social-share/admin.php');
 $emailFollowupsSource = file_get_contents($pluginRoot . '/includes/modules/email-followups/admin-ui.php');
+$eventFeedbackSource = file_get_contents($pluginRoot . '/includes/admin/event-feedback.php');
 $eventPlanImportSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/page-event-plan-import.php');
 $eventPlanImportActionsSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/actions-event-plan-import.php');
 $eventPlanImportEngineSource = file_get_contents($pluginRoot . '/includes/services/event-plan-import/event-plan-import-engine.php');
@@ -714,6 +716,7 @@ $assert(is_string($squareSyncProtectionSource) && $squareSyncProtectionSource !=
 $assert(is_string($staffCertificationsSource) && $staffCertificationsSource !== '', 'Staff Certifications source should be readable.');
 $assert(is_string($socialSource) && $socialSource !== '', 'Social Sharing source should be readable.');
 $assert(is_string($emailFollowupsSource) && $emailFollowupsSource !== '', 'Email Follow-Ups source should be readable.');
+$assert(is_string($eventFeedbackSource) && $eventFeedbackSource !== '', 'Event Feedback source should be readable.');
 $assert(is_string($eventPlanImportSource) && $eventPlanImportSource !== '', 'Event Plan Import source should be readable.');
 $assert(is_string($eventPlanImportActionsSource) && $eventPlanImportActionsSource !== '', 'Event Plan Import actions source should be readable.');
 $assert(is_string($eventPlanImportEngineSource) && $eventPlanImportEngineSource !== '', 'Event Plan Import engine source should be readable.');
@@ -816,6 +819,7 @@ $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
 $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
 $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notices~', $emailFollowupsSource, $unusedEmailFollowupsMatches);
+$eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
 $eventPlanImportNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportSource, $unusedEventPlanImportMatches);
 $socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
@@ -834,6 +838,7 @@ $expectedNoticesCallbackFiles = array(
 	'admin/continuity-binder.php',
 	'admin/data-tools/page-event-plan-import.php',
 	'admin/due-dates.php',
+	'admin/event-feedback.php',
 	'admin/square-sync-protection.php',
 	'admin/staff-certifications.php',
 	'modules/email-followups/admin-ui.php',
@@ -845,17 +850,18 @@ sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 9, 'Only nine production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 10, 'Only ten production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
+$assert($eventFeedbackNoticeCallbackCount === 1, 'Event Feedback should contribute exactly one production notices_callback caller.');
 $assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
 $assert($staffCertificationsNoticeCallbackCount === 1, 'Staff Certifications should contribute exactly one production notices_callback caller.');
 $assert($emailFollowupsNoticeCallbackCount === 1, 'Email Follow-Ups should contribute exactly one production notices_callback caller.');
 $assert($eventPlanImportNoticeCallbackCount === 1, 'Event Plan Import should contribute exactly one production notices_callback caller.');
 $assert($socialNoticeCallbackCount === 1, 'Social Sharing should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
@@ -1527,6 +1533,111 @@ $assert(strpos($emailNonemptyPreviewPage, 'Recipient Preview') !== false && strp
 $assert(strpos($emailNonemptyPreviewPage, 'Know Before You Go') !== false && strpos($emailNonemptyPreviewPage, 'Rendered preview body.') !== false, 'Email Follow-Ups nonempty preview render should preserve the rendered message output.');
 $assert(strpos($emailNonemptyPreviewPage, 'buyer@example.test') !== false && strpos($emailNonemptyPreviewPage, 'Buyer Example') !== false, 'Email Follow-Ups nonempty preview render should preserve the recipient preview output.');
 $assert(strpos($emailNonemptyPreviewPage, 'value="321" selected="selected"') !== false, 'Email Follow-Ups nonempty preview render should preserve the selected event choice in the preview form.');
+
+$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(): void') !== false, 'Event Feedback should expose a dedicated explicit notice callback.');
+$assert(substr_count($eventFeedbackSource, "'notices_callback' => 'vms_feedback_admin_render_notices'") === 1, 'Event Feedback shell call should supply its explicit notice callback exactly once.');
+$eventFeedbackNoticeStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(): void');
+$eventFeedbackNoticeEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_admin_render_notification_settings'))");
+$assert($eventFeedbackNoticeStart !== false && $eventFeedbackNoticeEnd !== false && $eventFeedbackNoticeEnd > $eventFeedbackNoticeStart, 'Event Feedback explicit notice callback body should be locatable.');
+$eventFeedbackNoticeSource = substr($eventFeedbackSource, (int) $eventFeedbackNoticeStart, (int) $eventFeedbackNoticeEnd - (int) $eventFeedbackNoticeStart);
+$eventFeedbackContentStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_content(): void');
+$eventFeedbackContentEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_render_event_feedback_admin_page'))");
+$assert($eventFeedbackContentStart !== false && $eventFeedbackContentEnd !== false && $eventFeedbackContentEnd > $eventFeedbackContentStart, 'Event Feedback content callback body should be locatable.');
+$eventFeedbackContentSource = substr($eventFeedbackSource, (int) $eventFeedbackContentStart, (int) $eventFeedbackContentEnd - (int) $eventFeedbackContentStart);
+$eventFeedbackPageStart = strpos($eventFeedbackSource, 'function vms_render_event_feedback_admin_page(): void');
+$eventFeedbackPageEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_add_event_plan_metabox'))");
+$assert($eventFeedbackPageStart !== false && $eventFeedbackPageEnd !== false && $eventFeedbackPageEnd > $eventFeedbackPageStart, 'Event Feedback page renderer body should be locatable.');
+$eventFeedbackPageSource = substr($eventFeedbackSource, (int) $eventFeedbackPageStart, (int) $eventFeedbackPageEnd - (int) $eventFeedbackPageStart);
+$assert(strpos($eventFeedbackNoticeSource, '!empty($_GET[\'vms_feedback_settings_saved\'])') !== false, 'Event Feedback explicit notice callback should preserve the existing saved-settings presence check.');
+$assert(strpos($eventFeedbackNoticeSource, 'sanitize_key((string) $_GET[\'vms_feedback_deleted\'])') !== false, 'Event Feedback explicit notice callback should preserve the sanitized delete-status source.');
+$assert(substr_count($eventFeedbackNoticeSource, 'notice notice-success is-dismissible') === 2, 'Event Feedback explicit notice callback should preserve both success notice branches.');
+$assert(substr_count($eventFeedbackNoticeSource, 'notice notice-error is-dismissible') === 2, 'Event Feedback explicit notice callback should preserve both error notice branches.');
+$assert(strpos($eventFeedbackNoticeSource, 'Event Feedback notification settings saved.') !== false, 'Event Feedback explicit notice callback should preserve the saved-settings notice copy.');
+$assert(strpos($eventFeedbackNoticeSource, 'Feedback response deleted.') !== false, 'Event Feedback explicit notice callback should preserve the delete-success notice copy.');
+$assert(strpos($eventFeedbackNoticeSource, 'Feedback response could not be found.') !== false, 'Event Feedback explicit notice callback should preserve the missing-response notice copy.');
+$assert(strpos($eventFeedbackNoticeSource, 'Feedback response could not be deleted.') !== false, 'Event Feedback explicit notice callback should preserve the delete-failure notice copy.');
+$assert(strpos($eventFeedbackNoticeSource, '<strong>') === false && strpos($eventFeedbackNoticeSource, '<a ') === false && strpos($eventFeedbackNoticeSource, '<button') === false && strpos($eventFeedbackNoticeSource, '<span') === false, 'Event Feedback explicit notice callback should stay within the simple fragment contract.');
+$assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_settings_saved\', \'1\'') !== false, 'Event Feedback save handler should preserve the redirect-status notice source.');
+$assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_deleted\', \'missing\'') !== false, 'Event Feedback delete handler should preserve the missing-response redirect path.');
+$assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_deleted\', $deleted ? \'1\' : \'0\'') !== false, 'Event Feedback delete handler should preserve the success/failure redirect-status path.');
+$assert(strpos($eventFeedbackPageSource, "'notices_callback' => 'vms_feedback_admin_render_notices'") !== false, 'Event Feedback page renderer should pass the explicit notice callback through the Administrator shell.');
+$eventFeedbackFallbackHeadingPos = strpos($eventFeedbackPageSource, "echo '<div class=\"wrap\"><h1>'");
+$eventFeedbackFallbackNoticePos = strpos($eventFeedbackPageSource, 'vms_feedback_admin_render_notices();');
+$eventFeedbackFallbackContentPos = strpos($eventFeedbackPageSource, 'vms_feedback_admin_render_content();');
+$assert($eventFeedbackFallbackHeadingPos !== false && $eventFeedbackFallbackNoticePos !== false && $eventFeedbackFallbackContentPos !== false && $eventFeedbackFallbackHeadingPos < $eventFeedbackFallbackNoticePos && $eventFeedbackFallbackNoticePos < $eventFeedbackFallbackContentPos, 'Event Feedback no-shell fallback should preserve heading, notices, then content ordering.');
+$assert(strpos($eventFeedbackContentSource, 'vms_feedback_admin_render_notices();') === false, 'Event Feedback content callback should no longer emit the moved redirect notice family.');
+$assert(strpos($eventFeedbackContentSource, 'That Event Plan could not be found.') !== false, 'Event Feedback content callback should preserve the separate missing-plan notice in the ordinary content path.');
+
+$_GET = array(
+	'vms_feedback_settings_saved' => '1',
+);
+ob_start();
+vms_feedback_admin_render_notices();
+$eventFeedbackSavedNotice = (string) ob_get_clean();
+$assert(
+	$eventFeedbackSavedNotice === '<div class="notice notice-success is-dismissible"><p>Event Feedback notification settings saved.</p></div>',
+	'Event Feedback explicit notice callback should preserve the saved-settings notice fragment.'
+);
+$assert(
+	wp_kses($eventFeedbackSavedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $eventFeedbackSavedNotice,
+	'The explicit notice allowlist should admit the Event Feedback saved-settings notice unchanged.'
+);
+
+$_GET = array(
+	'vms_feedback_deleted' => '1',
+);
+ob_start();
+vms_feedback_admin_render_notices();
+$eventFeedbackDeletedNotice = (string) ob_get_clean();
+$assert(
+	$eventFeedbackDeletedNotice === '<div class="notice notice-success is-dismissible"><p>Feedback response deleted.</p></div>',
+	'Event Feedback explicit notice callback should preserve the delete-success notice fragment.'
+);
+
+$_GET = array(
+	'vms_feedback_deleted' => 'missing',
+);
+ob_start();
+vms_feedback_admin_render_notices();
+$eventFeedbackMissingNotice = (string) ob_get_clean();
+$assert(
+	$eventFeedbackMissingNotice === '<div class="notice notice-error is-dismissible"><p>Feedback response could not be found.</p></div>',
+	'Event Feedback explicit notice callback should preserve the missing-response notice fragment.'
+);
+
+$_GET = array(
+	'vms_feedback_deleted' => '0',
+);
+ob_start();
+vms_feedback_admin_render_notices();
+$eventFeedbackFailedNotice = (string) ob_get_clean();
+$assert(
+	$eventFeedbackFailedNotice === '<div class="notice notice-error is-dismissible"><p>Feedback response could not be deleted.</p></div>',
+	'Event Feedback explicit notice callback should preserve the delete-failure notice fragment.'
+);
+
+$_GET = array(
+	'vms_feedback_deleted' => '<strong>unexpected</strong>',
+);
+ob_start();
+vms_feedback_admin_render_notices();
+$eventFeedbackMalformedNotice = (string) ob_get_clean();
+$assert(
+	$eventFeedbackMalformedNotice === '<div class="notice notice-error is-dismissible"><p>Feedback response could not be deleted.</p></div>',
+	'Event Feedback explicit notice callback should preserve the delete-failure fallback for malformed delete-status values.'
+);
+
+$_GET = array(
+	'vms_feedback_settings_saved' => '1',
+	'vms_feedback_deleted' => 'missing',
+);
+ob_start();
+vms_feedback_admin_render_notices();
+$eventFeedbackCombinedNotice = (string) ob_get_clean();
+$assert(
+	$eventFeedbackCombinedNotice === '<div class="notice notice-success is-dismissible"><p>Event Feedback notification settings saved.</p></div><div class="notice notice-error is-dismissible"><p>Feedback response could not be found.</p></div>',
+	'Event Feedback explicit notice callback should preserve the saved-then-delete notice ordering when both query flags are present.'
+);
 
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_notice_class(string $type): string') !== false, 'Event Plan Import should preserve the notice-class mapper.');
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_notice(array $notice): void') !== false, 'Event Plan Import should expose a dedicated explicit notice renderer.');
