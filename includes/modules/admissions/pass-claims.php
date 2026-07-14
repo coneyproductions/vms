@@ -2320,42 +2320,43 @@ if (!function_exists('vms_pass_claims_render_admin_page')) {
 			$tab = 'sources';
 		}
 
-		$content = static function () use ($tab): void {
+			$content = static function () use ($tab): void {
+				vms_pass_claims_render_tab_nav($tab);
+				if ($tab === 'sources') {
+					vms_pass_claims_render_sources_tab();
+					return;
+				}
+				if ($tab === 'batches') {
+					vms_pass_claims_render_batches_tab();
+					return;
+				}
+				if ($tab === 'passes') {
+					vms_pass_claims_render_passes_tab();
+					return;
+				}
+				vms_pass_claims_render_reports_tab();
+			};
+
+			if (function_exists('vms_admin_ui_render_shell')) {
+				vms_admin_ui_render_shell(
+					array(
+						'title' => __('Guest Passes', 'backstage-venue-manager'),
+						'subtitle' => __('Forecast-first pass claims with Source attribution, batch generation, and door check-in parity.', 'backstage-venue-manager'),
+						'shell_id' => 'vms-pass-claims-wrap',
+						'notices_callback' => 'vms_pass_claims_render_admin_notices',
+					),
+					$content
+				);
+				return;
+			}
+
+			echo '<div class="wrap">';
+			echo '<h1>' . esc_html__('Guest Passes', 'backstage-venue-manager') . '</h1>';
 			vms_pass_claims_render_admin_notices();
-			vms_pass_claims_render_tab_nav($tab);
-			if ($tab === 'sources') {
-				vms_pass_claims_render_sources_tab();
-				return;
-			}
-			if ($tab === 'batches') {
-				vms_pass_claims_render_batches_tab();
-				return;
-			}
-			if ($tab === 'passes') {
-				vms_pass_claims_render_passes_tab();
-				return;
-			}
-			vms_pass_claims_render_reports_tab();
-		};
-
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
-				array(
-					'title' => __('Guest Passes', 'backstage-venue-manager'),
-					'subtitle' => __('Forecast-first pass claims with Source attribution, batch generation, and door check-in parity.', 'backstage-venue-manager'),
-					'shell_id' => 'vms-pass-claims-wrap',
-				),
-				$content
-			);
-			return;
+			$content();
+			echo '</div>';
 		}
-
-		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('Guest Passes', 'backstage-venue-manager') . '</h1>';
-		$content();
-		echo '</div>';
 	}
-}
 
 if (!function_exists('vms_pass_claims_admin_enqueue_assets')) {
 	function vms_pass_claims_admin_enqueue_assets(): void

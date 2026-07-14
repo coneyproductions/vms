@@ -955,6 +955,7 @@ require_once dirname(__DIR__) . '/includes/social-share/admin.php';
 require_once dirname(__DIR__) . '/includes/admin/event-feedback.php';
 require_once dirname(__DIR__) . '/includes/admin/ticket-integrity-page.php';
 require_once dirname(__DIR__) . '/includes/admin/settings-page.php';
+require_once dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 require_once dirname(__DIR__) . '/includes/admin/integrity-calendar-reconcile.php';
 require_once dirname(__DIR__) . '/includes/admin/integrity-venue-reconcile.php';
 
@@ -970,6 +971,7 @@ $emailFollowupsSource = file_get_contents($pluginRoot . '/includes/modules/email
 $eventFeedbackSource = file_get_contents($pluginRoot . '/includes/admin/event-feedback.php');
 $ticketIntegritySource = file_get_contents($pluginRoot . '/includes/admin/ticket-integrity-page.php');
 $settingsSource = file_get_contents($pluginRoot . '/includes/admin/settings-page.php');
+$passClaimsSource = file_get_contents($pluginRoot . '/includes/modules/admissions/pass-claims.php');
 $venueReconcileSource = file_get_contents($pluginRoot . '/includes/admin/integrity-venue-reconcile.php');
 $calendarReconcileSource = file_get_contents($pluginRoot . '/includes/admin/integrity-calendar-reconcile.php');
 $toursAdminSource = file_get_contents($pluginRoot . '/includes/tours/class-vms-tours-admin.php');
@@ -1135,6 +1137,7 @@ $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]
 $eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
 $ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
 $settingsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_render_settings_page_notice_bar[\'"]~', $settingsSource, $unusedSettingsMatches);
+$passClaimsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_pass_claims_render_admin_notices[\'"]~', $passClaimsSource, $unusedPassClaimsMatches);
 $eventPlanImportNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportSource, $unusedEventPlanImportMatches);
 $socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
@@ -1154,6 +1157,7 @@ $expectedNoticesCallbackFiles = array(
 	'admin/data-tools/page-event-plan-import.php',
 	'admin/due-dates.php',
 	'admin/event-feedback.php',
+	'modules/admissions/pass-claims.php',
 	'admin/settings-page.php',
 	'admin/square-sync-protection.php',
 	'admin/staff-certifications.php',
@@ -1174,7 +1178,7 @@ sort($expectedNoticesCallbackFiles);
 $richNoticesCallbackFiles = array_values(array_unique($richNoticesCallbackFiles));
 sort($richNoticesCallbackFiles);
 sort($expectedRichNoticesCallbackFiles);
-$assert($noticesCallbackCount === 12, 'Only twelve production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 13, 'Only thirteen production notices_callback assignments should exist.');
 $assert($richNoticesCallbackCount === 2, 'Only two production rich_notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
 $assert($calendarRichNoticeCallbackCount === 1, 'Calendar Reconciliation should contribute exactly one production rich_notices_callback caller.');
@@ -1184,13 +1188,14 @@ $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly
 $assert($eventFeedbackNoticeCallbackCount === 1, 'Event Feedback should contribute exactly one production notices_callback caller.');
 $assert($ticketIntegrityNoticeCallbackCount === 1, 'Ticket Integrity should contribute exactly one production notices_callback caller.');
 $assert($settingsNoticeCallbackCount === 1, 'Settings should contribute exactly one production notices_callback caller.');
+$assert($passClaimsNoticeCallbackCount === 1, 'Pass Claims should contribute exactly one production notices_callback caller.');
 $assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
 $assert($staffCertificationsNoticeCallbackCount === 1, 'Staff Certifications should contribute exactly one production notices_callback caller.');
 $assert($emailFollowupsNoticeCallbackCount === 1, 'Email Follow-Ups should contribute exactly one production notices_callback caller.');
 $assert($eventPlanImportNoticeCallbackCount === 1, 'Event Plan Import should contribute exactly one production notices_callback caller.');
 $assert($socialNoticeCallbackCount === 1, 'Social Sharing should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Settings, Ticket Integrity, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Pass Claims, Settings, Ticket Integrity, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
 $assert($richNoticesCallbackFiles === $expectedRichNoticesCallbackFiles, 'Rich explicit notice callbacks should remain limited to Venue and Calendar Reconciliation.');
 
 $GLOBALS['vms_test_rich_notice_callback_calls'] = 0;
@@ -2330,6 +2335,139 @@ ob_start();
 vms_social_render_notices();
 $socialNoNotice = (string) ob_get_clean();
 $assert($socialNoNotice === '', 'Social Sharing explicit notice callback should stay silent when no notice text is present.');
+
+$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_admin_notices(): void') !== false, 'Pass Claims should expose a dedicated explicit notice callback.');
+$assert(substr_count($passClaimsSource, "'notices_callback' => 'vms_pass_claims_render_admin_notices'") === 1, 'Pass Claims shell call should supply its explicit notice callback exactly once.');
+$passClaimsNoticeStart = strpos($passClaimsSource, 'function vms_pass_claims_render_admin_notices(): void');
+$passClaimsNoticeEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_tab_nav'))");
+$assert($passClaimsNoticeStart !== false && $passClaimsNoticeEnd !== false && $passClaimsNoticeEnd > $passClaimsNoticeStart, 'Pass Claims explicit notice callback body should be locatable.');
+$passClaimsNoticeSource = substr($passClaimsSource, (int) $passClaimsNoticeStart, (int) $passClaimsNoticeEnd - (int) $passClaimsNoticeStart);
+$passClaimsPopStart = strpos($passClaimsSource, 'function vms_pass_claims_pop_user_message(): array');
+$passClaimsPopEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_handle_source_save'))");
+$assert($passClaimsPopStart !== false && $passClaimsPopEnd !== false && $passClaimsPopEnd > $passClaimsPopStart, 'Pass Claims transient pop helper body should be locatable.');
+$passClaimsPopSource = substr($passClaimsSource, (int) $passClaimsPopStart, (int) $passClaimsPopEnd - (int) $passClaimsPopStart);
+$passClaimsPageStart = strpos($passClaimsSource, 'function vms_pass_claims_render_admin_page(): void');
+$passClaimsPageEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_admin_enqueue_assets'))");
+$assert($passClaimsPageStart !== false && $passClaimsPageEnd !== false && $passClaimsPageEnd > $passClaimsPageStart, 'Pass Claims page renderer body should be locatable.');
+$passClaimsPageSource = substr($passClaimsSource, (int) $passClaimsPageStart, (int) $passClaimsPageEnd - (int) $passClaimsPageStart);
+$passClaimsContentStart = strpos($passClaimsPageSource, '$content = static function () use ($tab): void {');
+$passClaimsShellStart = strpos($passClaimsPageSource, "if (function_exists('vms_admin_ui_render_shell')) {");
+$assert($passClaimsContentStart !== false && $passClaimsShellStart !== false && $passClaimsShellStart > $passClaimsContentStart, 'Pass Claims content callback body should be locatable.');
+$passClaimsContentSource = substr($passClaimsPageSource, (int) $passClaimsContentStart, (int) $passClaimsShellStart - (int) $passClaimsContentStart);
+$assert(strpos($passClaimsNoticeSource, 'sanitize_key((string) $_GET[\'result\'])') !== false, 'Pass Claims explicit notice callback should preserve the sanitized result query source.');
+$assert(strpos($passClaimsNoticeSource, 'vms_pass_claims_pop_user_message();') !== false, 'Pass Claims explicit notice callback should preserve the destructive user-message pop source.');
+$assert(strpos($passClaimsPopSource, 'get_transient($key);') !== false && strpos($passClaimsPopSource, 'delete_transient($key);') !== false, 'Pass Claims user-message pop should remain a transient read-and-delete operation.');
+$assert(strpos($passClaimsNoticeSource, '<div class="notice notice-success is-dismissible"><p>') !== false, 'Pass Claims explicit notice callback should preserve the fixed dismissible success notice fragments.');
+$assert(strpos($passClaimsNoticeSource, '<div class="notice notice-info is-dismissible"><p>') !== false, 'Pass Claims explicit notice callback should preserve the fixed dismissible info notice fragment.');
+$assert(strpos($passClaimsNoticeSource, 'esc_attr($class)') !== false && strpos($passClaimsNoticeSource, 'esc_html((string) $msg[\'message\'])') !== false, 'Pass Claims explicit notice callback should preserve contextual escaping for dynamic notices.');
+$assert(strpos($passClaimsNoticeSource, '\'notice notice-error\' : \'notice notice-info\'') !== false, 'Pass Claims explicit notice callback should preserve the error-vs-info class mapping for stored messages.');
+$assert(strpos($passClaimsNoticeSource, '<strong>') === false && strpos($passClaimsNoticeSource, '<a ') === false && strpos($passClaimsNoticeSource, '<button') === false && strpos($passClaimsNoticeSource, '<span') === false, 'Pass Claims explicit notice callback should stay within the simple fragment contract.');
+$assert(strpos($passClaimsNoticeSource, '$wpdb') === false && strpos($passClaimsNoticeSource, 'get_posts(') === false && strpos($passClaimsNoticeSource, 'vms_pass_claims_get_sources(') === false, 'Pass Claims explicit notice callback should not add provider reads beyond the existing transient pop.');
+$assert(strpos($passClaimsPageSource, 'current_user_can(vms_pass_claims_capability())') !== false, 'Pass Claims page renderer should preserve the capability gate before rendering through the shell.');
+$assert(strpos($passClaimsPageSource, "'notices_callback' => 'vms_pass_claims_render_admin_notices'") !== false, 'Pass Claims page renderer should pass the explicit notice callback through the Administrator shell.');
+$assert(strpos($passClaimsPageSource, "echo '<h1>'") !== false && substr_count($passClaimsPageSource, 'vms_pass_claims_render_admin_notices();') === 1, 'Pass Claims no-shell fallback should preserve the pre-content notice ordering exactly once.');
+$assert(strpos($passClaimsContentSource, 'vms_pass_claims_render_admin_notices();') === false, 'Pass Claims content callback should no longer emit the moved page-local notice family.');
+
+$renderPassClaimsNotices = static function (array $query = array(), array $transients = array(), int $user_id = 7): string {
+	$_GET = $query;
+	$GLOBALS['vms_test_current_user_id'] = $user_id;
+	$GLOBALS['vms_test_transients'] = $transients;
+	$GLOBALS['vms_test_transient_get_keys'] = array();
+	$GLOBALS['vms_test_transient_set_payloads'] = array();
+	$GLOBALS['vms_test_transient_delete_keys'] = array();
+	$GLOBALS['vms_test_transient_get_calls'] = 0;
+	$GLOBALS['vms_test_transient_set_calls'] = 0;
+	$GLOBALS['vms_test_transient_delete_calls'] = 0;
+	ob_start();
+	vms_pass_claims_render_admin_notices();
+	return (string) ob_get_clean();
+};
+
+$passClaimsSourceSavedNotice = $renderPassClaimsNotices(array('result' => 'source_saved'));
+$assert(
+	$passClaimsSourceSavedNotice === '<div class="notice notice-success is-dismissible"><p>Source saved.</p></div>',
+	'Pass Claims explicit notice callback should preserve the source-saved notice fragment.'
+);
+$assert(
+	wp_kses($passClaimsSourceSavedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $passClaimsSourceSavedNotice,
+	'The explicit notice allowlist should admit the Pass Claims source-saved notice unchanged.'
+);
+$assert($GLOBALS['vms_test_transient_set_calls'] === 0 && $GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_delete_calls'] === 1, 'Pass Claims source-saved notice rendering should perform only one destructive transient pop check.');
+
+$passClaimsPreviewNotice = $renderPassClaimsNotices(array('result' => 'batch_preview'));
+$assert(
+	$passClaimsPreviewNotice === '<div class="notice notice-info is-dismissible"><p>Preview generated. Review sample URLs below before committing.</p></div>',
+	'Pass Claims explicit notice callback should preserve the batch-preview notice fragment.'
+);
+
+$passClaimsGeneratedNotice = $renderPassClaimsNotices(array('result' => 'batch_generated'));
+$assert(
+	$passClaimsGeneratedNotice === '<div class="notice notice-success is-dismissible"><p>Batch created and passes generated.</p></div>',
+	'Pass Claims explicit notice callback should preserve the batch-generated notice fragment.'
+);
+
+$passClaimsVoidedNotice = $renderPassClaimsNotices(array('result' => 'token_voided'));
+$assert(
+	$passClaimsVoidedNotice === '<div class="notice notice-success is-dismissible"><p>Pass voided.</p></div>',
+	'Pass Claims explicit notice callback should preserve the token-voided notice fragment.'
+);
+
+$passClaimsRestoredNotice = $renderPassClaimsNotices(array('result' => 'token_restored'));
+$assert(
+	$passClaimsRestoredNotice === '<div class="notice notice-success is-dismissible"><p>Pass restored to unclaimed.</p></div>',
+	'Pass Claims explicit notice callback should preserve the token-restored notice fragment.'
+);
+
+$passClaimsMessageKey = vms_pass_claims_error_transient_key(7);
+$passClaimsCombinedNotice = $renderPassClaimsNotices(
+	array('result' => 'token_voided'),
+	array(
+		$passClaimsMessageKey => array(
+			'type' => 'success',
+			'message' => 'Pass email resent to <b>vip@example.com</b>.',
+		),
+	)
+);
+$assert(
+	$passClaimsCombinedNotice === '<div class="notice notice-success is-dismissible"><p>Pass voided.</p></div><div class="notice notice-info is-dismissible"><p>Pass email resent to &lt;b&gt;vip@example.com&lt;/b&gt;.</p></div>',
+	'Pass Claims explicit notice callback should preserve result-first ordering and keep stored HTML-like message text inert.'
+);
+$assert(
+	wp_kses($passClaimsCombinedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $passClaimsCombinedNotice,
+	'The explicit notice allowlist should admit the combined Pass Claims notice family unchanged.'
+);
+$assert($GLOBALS['vms_test_transient_set_calls'] === 0 && $GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_delete_calls'] === 1, 'Pass Claims combined notice rendering should pop the stored user message exactly once.');
+$assert($GLOBALS['vms_test_transient_delete_keys'] === array($passClaimsMessageKey), 'Pass Claims combined notice rendering should delete only the current user transient key.');
+
+$passClaimsErrorNotice = $renderPassClaimsNotices(
+	array(),
+	array(
+		$passClaimsMessageKey => array(
+			'type' => 'error',
+			'message' => 'Could not resend <script>alert(1)</script>.',
+		),
+	)
+);
+$assert(
+	$passClaimsErrorNotice === '<div class="notice notice-error is-dismissible"><p>Could not resend &lt;script&gt;alert(1)&lt;/script&gt;.</p></div>',
+	'Pass Claims explicit notice callback should preserve the error-class mapping and escape stored HTML-like message text.'
+);
+
+$passClaimsMalformedNotice = $renderPassClaimsNotices(array('result' => '<script>token_voided</script>'));
+$assert($passClaimsMalformedNotice === '', 'Pass Claims explicit notice callback should stay silent for malformed or unknown result codes when no stored message exists.');
+
+$passClaimsLoggedOutNotice = $renderPassClaimsNotices(
+	array(),
+	array(
+		$passClaimsMessageKey => array(
+			'type' => 'error',
+			'message' => 'Should stay hidden.',
+		),
+	),
+	0
+);
+$assert($passClaimsLoggedOutNotice === '', 'Pass Claims explicit notice callback should stay silent when no user is available for the stored-message family.');
+$assert($GLOBALS['vms_test_transient_get_calls'] === 0 && $GLOBALS['vms_test_transient_delete_calls'] === 0, 'Pass Claims stored-message rendering should not touch transients when no user is available.');
 
 $assert(strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void') !== false, 'Email Follow-Ups should preserve the dedicated primary redirect notice callback.');
 $emailNoticeStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void');
