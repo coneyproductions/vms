@@ -553,6 +553,40 @@ Acceptable note:
 - Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves preview-only visibility, exact warning markup, redirect-notice-before-preview-warning composition, explicit-notice-before-tabs ordering, no-shell source ordering, exact provider-call counts for empty and nonempty preview renders, non-preview laziness, preserved malformed/unknown selection fallback behavior, unchanged nonempty preview rendering, unchanged explicit-notice contract, and unchanged raw shell sinks. Validation ran with `php -l includes/modules/email-followups/admin-ui.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, the Email Follow-Ups-specific test inventory search, and `git diff --check`.
 - Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Shared `$captured_notices_html`, shared `$content_html`, Event Plan Import, Pass Claims, and the broader Event Plans partial/AJAX output boundaries remain separate follow-up work.
 
+### `WPORG-24 E1` Event Plan Import primary notice reduction result
+
+- Result: the Event Plan Import Administrator screen now routes its primary popped/flash notice family through the existing Administrator shell explicit-notice path instead of emitting it inside page content and relying on shared captured-notice extraction.
+- Constrained production inspection scope: this pass inspected only `includes/admin/data-tools/page-event-plan-import.php`, `includes/admin/data-tools/actions-event-plan-import.php`, and the exact notice-storage helper definitions in `includes/services/event-plan-import/event-plan-import-engine.php` for the Event Plan Import Administrator screen. No fallback screen was inspected or migrated.
+- Production files changed:
+  - `includes/admin/data-tools/page-event-plan-import.php`
+- Exact page registration and shell boundary:
+  - The screen still registers `add_submenu_page(null, __('Import Event Plans (CSV)', 'backstage-venue-manager'), __('Import Event Plans (CSV)', 'backstage-venue-manager'), 'manage_options', 'vms-import-event-plans', 'vms_event_plan_import_render_admin_page')`, so it remains a hidden submenu page under a `null` parent slug with `manage_options` capability and `vms_event_plan_import_render_admin_page()` as the renderer.
+  - The shell path still calls `vms_admin_ui_render_shell()` with the same title `Import Event Plans (CSV)` and subtitle `Preview then commit VMS-only Event Plan updates.`. This pass adds only one page-local `notices_callback` that renders the already-popped primary notice value.
+- Primary notice storage and destructive-pop lifecycle:
+  - `vms_event_plan_import_set_notice(string $type, string $message)` still writes one transient keyed by `vms_event_plan_import_notice_transient_key((int) get_current_user_id())`, which resolves to `vms_epcsv_notice_{user_id}`. The store is per-user and uses the existing 10-minute transient lifetime.
+  - Before storage, the type still passes through `sanitize_key()` and the message still passes through `sanitize_text_field()`, so the stored payload contract remains text-only `array('type' => ..., 'message' => ...)`.
+  - `vms_event_plan_import_pop_notice(): array` still performs a destructive pop by reading that transient with `get_transient($key)`, deleting it with `delete_transient($key)`, and returning the array payload or `array()` when the store is empty or malformed.
+  - This pass preserves that destructive behavior but moves the pop to one page-local render variable that is shared safely between the explicit notice path and the no-shell fallback path without a second pop.
+- Primary notice-producing action paths remain unchanged:
+  - Preview action writes errors for invalid upload, validation failure, generated-path failure, storage failure, and preview-build/provider failure, plus one translated success summary `Preview ready. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.`.
+  - Commit action writes errors for missing preview token, expired/missing preview, empty selected-row submission, and commit/provider failure, plus one translated success summary `Import committed. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.` with the existing optional appended summary fragments for template-not-applied and selected-row counts.
+  - Revert-last action writes one provider error branch and one translated success summary `Revert complete. Restored: %1$d, Failed: %2$d.`.
+  - Provider and exception-style messages still flow only through existing `$validated->get_error_message()`, `$preview->get_error_message()`, and `$result->get_error_message()` calls before `sanitize_text_field()` stores them as plain text.
+- Primary notice output contract preserved:
+  - Severity mapping remains exactly `error|critical => notice notice-error`, `warning => notice notice-warning`, `info => notice notice-info`, and unknown/other values => `notice notice-success`.
+  - Output remains exactly `<div class="... inline"><p>TEXT ONLY</p></div>` with `esc_attr(vms_event_plan_import_notice_class($type))` on the class string and `esc_html($message)` for the text.
+  - The notice remains inline and non-dismissible; no HTML, links, emphasis, spans, lists, buttons, or extensible markup were introduced.
+- Ordering preserved:
+  - The page now pops the notice once after the capability gate succeeds, creates one page-local explicit notice callback from that resolved value, and passes it into the shell path.
+  - Final shell order remains explicit primary notice first, then any separately captured notices such as the rows-payload error, then ordinary content.
+  - The no-shell fallback still renders the page heading, then the same primary notice renderer, then the existing content callback.
+- Separate inline rows-payload error remains unchanged and unresolved:
+  - The content callback still emits the separate rows-payload error only when `vms_event_plan_import_read_rows_json(...)` returns `WP_Error`, using the exact fragment `<div class="notice notice-error inline"><p>...</p></div>` with `esc_html($rows_payload->get_error_message())`.
+  - That error still depends on content-local preview state and rows-payload validation, remains outside the primary popped-notice helper, and remains nested inside the Preview Results content section rather than being routed through `notices_callback`.
+- Contract and scope confirmation: the explicit-notice contract remains exactly `div[class]` and `p`; no shell-wide captured-notice allowlist was added; shared raw `$captured_notices_html` remains unresolved and untouched; shared raw `$content_html` remains unresolved and untouched; Pass Claims remains a separate `WPORG-24` boundary.
+- Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves the Event Plan Import shell wiring, dedicated explicit notice renderer, destructive transient pop behavior, type/message sanitization, severity mapping including unknown-type fallback, capability-gate protection against premature notice consumption, single-pop shell rendering, preserved no-shell source ordering, unchanged action-handler notice-writing paths, and unchanged separate rows-payload error behavior. Validation ran with `php -l includes/admin/data-tools/page-event-plan-import.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, the discovered Event Plan Import-specific test inventory, `php tests/decoded-json-validation.php`, and `git diff --check`.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Shared `$captured_notices_html`, shared `$content_html`, the separate Event Plan Import rows-payload error boundary, Pass Claims, and the broader Event Plans partial/AJAX output boundaries remain separate follow-up work.
+
 ## F. Prefixing and Collision Safety
 
 Status:

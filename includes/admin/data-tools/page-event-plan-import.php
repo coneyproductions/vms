@@ -57,6 +57,26 @@ if (!function_exists('vms_event_plan_import_notice_class')) {
 	}
 }
 
+if (!function_exists('vms_event_plan_import_render_notice')) {
+	/**
+	 * @param array<string,mixed> $notice
+	 */
+	function vms_event_plan_import_render_notice(array $notice): void
+	{
+		if (empty($notice)) {
+			return;
+		}
+
+		$type = (string) ($notice['type'] ?? 'info');
+		$message = (string) ($notice['message'] ?? '');
+		if ($message === '') {
+			return;
+		}
+
+		echo '<div class="' . esc_attr(vms_event_plan_import_notice_class($type)) . ' inline"><p>' . esc_html($message) . '</p></div>';
+	}
+}
+
 if (!function_exists('vms_event_plan_import_render_summary_cards')) {
 	/**
 	 * @param array<string,mixed> $summary
@@ -167,19 +187,14 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 			$latest_run = is_array($runs[0]) ? $runs[0] : array();
 		}
 		$revertible_run = vms_event_plan_import_latest_revertible_run();
+		$render_notice = static function () use ($notice): void {
+			vms_event_plan_import_render_notice($notice);
+		};
 
-		$render_content = static function () use ($notice, $preview, $preview_token, $latest_run, $revertible_run): void {
+		$render_content = static function () use ($preview, $preview_token, $latest_run, $revertible_run): void {
 			echo '<p class="vms-admin-hub-intro">';
 			echo esc_html__('Upload a CSV, preview changes, then commit. This importer only writes VMS Event Plan data and does not create or update TEC/Woo records.', 'backstage-venue-manager');
 			echo '</p>';
-
-			if (!empty($notice) && is_array($notice)) {
-				$type = (string) ($notice['type'] ?? 'info');
-				$message = (string) ($notice['message'] ?? '');
-				if ($message !== '') {
-					echo '<div class="' . esc_attr(vms_event_plan_import_notice_class($type)) . ' inline"><p>' . esc_html($message) . '</p></div>';
-				}
-			}
 
 			echo '<section class="vms-pass-card">';
 			echo '<h2>' . esc_html__('Preview Import', 'backstage-venue-manager') . '</h2>';
@@ -362,18 +377,20 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 			}
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
-				array(
-					'title' => __('Import Event Plans (CSV)', 'backstage-venue-manager'),
-					'subtitle' => __('Preview then commit VMS-only Event Plan updates.', 'backstage-venue-manager'),
-				),
-				$render_content
-			);
-			return;
-		}
+			if (function_exists('vms_admin_ui_render_shell')) {
+				vms_admin_ui_render_shell(
+					array(
+						'title' => __('Import Event Plans (CSV)', 'backstage-venue-manager'),
+						'subtitle' => __('Preview then commit VMS-only Event Plan updates.', 'backstage-venue-manager'),
+						'notices_callback' => $render_notice,
+					),
+					$render_content
+				);
+				return;
+			}
 
 		echo '<div class="wrap"><h1>' . esc_html__('Import Event Plans (CSV)', 'backstage-venue-manager') . '</h1>';
+		$render_notice();
 		$render_content();
 		echo '</div>';
 	}
