@@ -2863,6 +2863,25 @@ if (!function_exists('vms_pass_claims_render_public_status_screen')) {
 	}
 }
 
+if (!function_exists('vms_pass_claims_public_claimed_card_html')) {
+	function vms_pass_claims_public_claimed_card_html(int $entry_id): string
+	{
+		$html = '<h1>' . esc_html__('Already Claimed', 'backstage-venue-manager') . '</h1>';
+		$html .= '<p class="vms-pass-note">' . esc_html__('This pass has already been claimed.', 'backstage-venue-manager') . '</p>';
+		if ($entry_id > 0) {
+			$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Reference:', 'backstage-venue-manager') . '</strong> ' . esc_html('GL-' . $entry_id) . '</p>';
+		}
+		return $html;
+	}
+}
+
+if (!function_exists('vms_pass_claims_render_public_claimed_card')) {
+	function vms_pass_claims_render_public_claimed_card(int $entry_id): void
+	{
+		vms_pass_claims_render_public_shell(__('Already Claimed', 'backstage-venue-manager'), vms_pass_claims_public_claimed_card_html($entry_id));
+	}
+}
+
 if (!function_exists('vms_pass_claims_render_public_shell')) {
 	function vms_pass_claims_render_public_shell(string $headline, string $content_html): void
 	{
@@ -2951,13 +2970,7 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 		}
 
 		if ($token_status === 'claimed') {
-			$claimed_html = '<h1>' . esc_html__('Already Claimed', 'backstage-venue-manager') . '</h1>';
-			$claimed_html .= '<p class="vms-pass-note">' . esc_html__('This pass has already been claimed.', 'backstage-venue-manager') . '</p>';
-			$entry_id = (int) ($token_row['reservation_entry_id'] ?? 0);
-			if ($entry_id > 0) {
-				$claimed_html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Reference:', 'backstage-venue-manager') . '</strong> ' . esc_html('GL-' . $entry_id) . '</p>';
-			}
-			vms_pass_claims_render_public_shell(__('Already Claimed', 'backstage-venue-manager'), $claimed_html);
+			vms_pass_claims_render_public_claimed_card((int) ($token_row['reservation_entry_id'] ?? 0));
 		}
 
 		$ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
