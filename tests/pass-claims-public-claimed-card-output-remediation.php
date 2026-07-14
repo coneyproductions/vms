@@ -319,11 +319,14 @@ if (!function_exists('wp_kses')) {
 }
 
 if (!function_exists('vms_pass_claims_render_public_shell')) {
-	function vms_pass_claims_render_public_shell(string $headline, string $content_html): void
+	function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void
 	{
+		ob_start();
+		$render_content();
+		$content_html = ob_get_clean();
 		$GLOBALS['vms_test_shell_calls'][] = array(
 			'headline' => $headline,
-			'content_html' => $content_html,
+			'content_html' => is_string($content_html) ? $content_html : '',
 		);
 		throw new VmsPassClaimsPublicShellRendered('rendered');
 	}
@@ -480,10 +483,11 @@ $resetRuntime();
 vms_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay silent when no claim token is present.');
 
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_public_shell(string $headline, string $content_html): void') !== false, 'Pass Claims public shell should retain the raw content_html signature.');
+$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
 $assert(strpos($passClaimsSource, "echo '<main id=\"primary\" class=\"site-main vms-pass-public-page\" role=\"main\">';") !== false, 'Pass Claims public shell should preserve the outer main wrapper.');
 $assert(strpos($passClaimsSource, "echo '<div class=\"vms-pass-wrap\"><div class=\"vms-pass-card\">';") !== false, 'Pass Claims public shell should preserve the nested pass wrappers.');
-$assert(strpos($passClaimsSource, 'echo $content_html;') !== false, 'Pass Claims public shell raw content sink should remain unchanged for unselected families.');
+$assert(strpos($passClaimsSource, '$render_content();') !== false, 'Pass Claims public shell should invoke the renderer callback at the content insertion point.');
+$assert(strpos($passClaimsSource, 'echo $content_html;') === false, 'Pass Claims public shell should remove the raw content_html sink.');
 $assert(strpos($passClaimsSource, "echo '</div></div>';") !== false && strpos($passClaimsSource, "echo '</main>';") !== false, 'Pass Claims public shell should preserve the closing wrappers.');
 $assert(strpos($adminShellSource, 'echo $captured_notices_html;') !== false && strpos($adminShellSource, 'echo $content_html;') !== false, 'Administrator shell raw captured and content sinks should remain unchanged.');
 

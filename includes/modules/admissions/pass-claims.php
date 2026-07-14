@@ -2859,7 +2859,9 @@ if (!function_exists('vms_pass_claims_public_status_fragment')) {
 if (!function_exists('vms_pass_claims_render_public_status_screen')) {
 	function vms_pass_claims_render_public_status_screen(string $headline, string $title, string $message): void
 	{
-		vms_pass_claims_render_public_shell($headline, vms_pass_claims_public_status_fragment($title, $message));
+		vms_pass_claims_render_public_shell($headline, static function () use ($title, $message): void {
+			echo vms_pass_claims_public_status_fragment($title, $message);
+		});
 	}
 }
 
@@ -2878,7 +2880,9 @@ if (!function_exists('vms_pass_claims_public_claimed_card_html')) {
 if (!function_exists('vms_pass_claims_render_public_claimed_card')) {
 	function vms_pass_claims_render_public_claimed_card(int $entry_id): void
 	{
-		vms_pass_claims_render_public_shell(__('Already Claimed', 'backstage-venue-manager'), vms_pass_claims_public_claimed_card_html($entry_id));
+		vms_pass_claims_render_public_shell(__('Already Claimed', 'backstage-venue-manager'), static function () use ($entry_id): void {
+			echo vms_pass_claims_public_claimed_card_html($entry_id);
+		});
 	}
 }
 
@@ -2952,7 +2956,9 @@ if (!function_exists('vms_pass_claims_public_success_confirmation_html')) {
 if (!function_exists('vms_pass_claims_render_public_success_confirmation')) {
 	function vms_pass_claims_render_public_success_confirmation(array $success, string $posted_email): void
 	{
-		vms_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), vms_pass_claims_public_success_confirmation_html($success, $posted_email));
+		vms_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), static function () use ($success, $posted_email): void {
+			echo vms_pass_claims_public_success_confirmation_html($success, $posted_email);
+		});
 	}
 }
 
@@ -3001,12 +3007,19 @@ if (!function_exists('vms_pass_claims_public_form_html')) {
 if (!function_exists('vms_pass_claims_render_public_form')) {
 	function vms_pass_claims_render_public_form(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): void
 	{
-		vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), vms_pass_claims_public_form_html($batch, $eligible_events, $posted, $error, $max_party_size));
+		vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), static function () use ($batch, $eligible_events, $posted, $error, $max_party_size): void {
+			echo vms_pass_claims_public_form_html($batch, $eligible_events, $posted, $error, $max_party_size);
+		});
 	}
 }
 
 if (!function_exists('vms_pass_claims_render_public_shell')) {
-	function vms_pass_claims_render_public_shell(string $headline, string $content_html): void
+	/**
+	 * Render the public pass shell around a package-owned public-family renderer.
+	 *
+	 * @param callable():void $render_content Package-owned renderer callback that echoes one accepted Pass Claims public family.
+	 */
+	function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void
 	{
 		status_header(200);
 		nocache_headers();
@@ -3031,7 +3044,7 @@ if (!function_exists('vms_pass_claims_render_public_shell')) {
 
 		echo '<main id="primary" class="site-main vms-pass-public-page" role="main">';
 		echo '<div class="vms-pass-wrap"><div class="vms-pass-card">';
-		echo $content_html;
+		$render_content();
 		echo '</div></div>';
 		echo '</main>';
 
