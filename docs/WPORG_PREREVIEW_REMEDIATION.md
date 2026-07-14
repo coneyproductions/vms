@@ -578,8 +578,8 @@ Acceptable note:
   - The notice remains inline and non-dismissible; no HTML, links, emphasis, spans, lists, buttons, or extensible markup were introduced.
 - Ordering preserved:
   - The page now pops the notice once after the capability gate succeeds, creates one page-local explicit notice callback from that resolved value, and passes it into the shell path.
-  - Final shell order remains explicit primary notice first, then any separately captured notices such as the rows-payload error, then ordinary content.
-  - The no-shell fallback still renders the page heading, then the same primary notice renderer, then the existing content callback.
+  - Final shell order remains explicit primary notice first, then the introductory paragraph and ordinary content, with any separate content-local rows-payload error remaining in its existing nested Preview Results position.
+  - The no-shell fallback now retains the historical ordering of page heading, introductory paragraph, primary notice, and then the remaining import form and content.
 - Separate inline rows-payload error remains unchanged and unresolved:
   - The content callback still emits the separate rows-payload error only when `vms_event_plan_import_read_rows_json(...)` returns `WP_Error`, using the exact fragment `<div class="notice notice-error inline"><p>...</p></div>` with `esc_html($rows_payload->get_error_message())`.
   - That error still depends on content-local preview state and rows-payload validation, remains outside the primary popped-notice helper, and remains nested inside the Preview Results content section rather than being routed through `notices_callback`.
