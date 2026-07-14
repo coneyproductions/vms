@@ -194,6 +194,13 @@ if (!function_exists('esc_attr')) {
 	}
 }
 
+if (!function_exists('esc_attr__')) {
+	function esc_attr__(string $text, string $domain = ''): string
+	{
+		return esc_attr(__($text, $domain));
+	}
+}
+
 if (!function_exists('esc_url')) {
 	function esc_url($url): string
 	{
@@ -471,6 +478,13 @@ $GLOBALS['vms_test_ticket_integrity_get_sorted_events_calls'] = 0;
 $GLOBALS['vms_test_ticket_integrity_get_sorted_events_value'] = array();
 $GLOBALS['vms_test_ticket_integrity_get_logs_calls'] = 0;
 $GLOBALS['vms_test_ticket_integrity_get_logs_value'] = array();
+$GLOBALS['vms_test_integrity_venue_issue_calls'] = 0;
+$GLOBALS['vms_test_integrity_venue_issue_limits'] = array();
+$GLOBALS['vms_test_integrity_venue_issues_value'] = array();
+$GLOBALS['vms_test_integrity_venue_get_posts_calls'] = 0;
+$GLOBALS['vms_test_integrity_venue_get_posts_args'] = array();
+$GLOBALS['vms_test_integrity_venue_get_posts_value'] = array();
+$GLOBALS['vms_test_integrity_venue_titles'] = array();
 
 if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
 	/**
@@ -691,6 +705,39 @@ if (!function_exists('vms_ticket_integrity_get_logs')) {
 	}
 }
 
+if (!function_exists('vms_integrity_list_event_plans_with_venue_issues')) {
+	function vms_integrity_list_event_plans_with_venue_issues(int $limit): array
+	{
+		$GLOBALS['vms_test_integrity_venue_issue_calls']++;
+		$GLOBALS['vms_test_integrity_venue_issue_limits'][] = $limit;
+		return is_array($GLOBALS['vms_test_integrity_venue_issues_value'] ?? null) ? $GLOBALS['vms_test_integrity_venue_issues_value'] : array();
+	}
+}
+
+if (!function_exists('get_posts')) {
+	function get_posts(array $args = array()): array
+	{
+		$GLOBALS['vms_test_integrity_venue_get_posts_calls']++;
+		$GLOBALS['vms_test_integrity_venue_get_posts_args'][] = $args;
+		return is_array($GLOBALS['vms_test_integrity_venue_get_posts_value'] ?? null) ? $GLOBALS['vms_test_integrity_venue_get_posts_value'] : array();
+	}
+}
+
+if (!function_exists('get_edit_post_link')) {
+	function get_edit_post_link(int $post_id, string $context = 'display'): string
+	{
+		unset($context);
+		return admin_url('post.php?post=' . $post_id . '&action=edit');
+	}
+}
+
+if (!function_exists('get_the_title')) {
+	function get_the_title(int $post_id): string
+	{
+		return (string) ($GLOBALS['vms_test_integrity_venue_titles'][$post_id] ?? ('Post ' . $post_id));
+	}
+}
+
 if (!function_exists('vms_ticket_integrity_format_datetime')) {
 	function vms_ticket_integrity_format_datetime(int $timestamp_gmt): string
 	{
@@ -787,6 +834,7 @@ require_once dirname(__DIR__) . '/includes/social-share/admin.php';
 require_once dirname(__DIR__) . '/includes/admin/event-feedback.php';
 require_once dirname(__DIR__) . '/includes/admin/ticket-integrity-page.php';
 require_once dirname(__DIR__) . '/includes/admin/settings-page.php';
+require_once dirname(__DIR__) . '/includes/admin/integrity-venue-reconcile.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
@@ -800,6 +848,8 @@ $emailFollowupsSource = file_get_contents($pluginRoot . '/includes/modules/email
 $eventFeedbackSource = file_get_contents($pluginRoot . '/includes/admin/event-feedback.php');
 $ticketIntegritySource = file_get_contents($pluginRoot . '/includes/admin/ticket-integrity-page.php');
 $settingsSource = file_get_contents($pluginRoot . '/includes/admin/settings-page.php');
+$venueReconcileSource = file_get_contents($pluginRoot . '/includes/admin/integrity-venue-reconcile.php');
+$calendarReconcileSource = file_get_contents($pluginRoot . '/includes/admin/integrity-calendar-reconcile.php');
 $toursAdminSource = file_get_contents($pluginRoot . '/includes/tours/class-vms-tours-admin.php');
 $scheduleSource = file_get_contents($pluginRoot . '/includes/admin/schedule.php');
 $eventPlanImportSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/page-event-plan-import.php');
@@ -825,6 +875,8 @@ $assert(is_string($emailFollowupsSource) && $emailFollowupsSource !== '', 'Email
 $assert(is_string($eventFeedbackSource) && $eventFeedbackSource !== '', 'Event Feedback source should be readable.');
 $assert(is_string($ticketIntegritySource) && $ticketIntegritySource !== '', 'Ticket Integrity source should be readable.');
 $assert(is_string($settingsSource) && $settingsSource !== '', 'Settings source should be readable.');
+$assert(is_string($venueReconcileSource) && $venueReconcileSource !== '', 'Venue Reconciliation source should be readable.');
+$assert(is_string($calendarReconcileSource) && $calendarReconcileSource !== '', 'Calendar Reconciliation source should be readable.');
 $assert(is_string($toursAdminSource) && $toursAdminSource !== '', 'Guided Tours admin source should be readable.');
 $assert(is_string($scheduleSource) && $scheduleSource !== '', 'Schedule source should be readable.');
 $assert(is_string($eventPlanImportSource) && $eventPlanImportSource !== '', 'Event Plan Import source should be readable.');
@@ -851,6 +903,13 @@ $expectedAllowed = array(
 	),
 	'p' => array(),
 );
+$expectedRichAllowed = array(
+	'div' => array(
+		'class' => true,
+	),
+	'p' => array(),
+	'strong' => array(),
+);
 $expectedHeaderActionsAllowed = array(
 	'a' => array(
 		'class' => true,
@@ -869,10 +928,15 @@ $expectedHeaderActionsAllowed = array(
 );
 
 $assert(function_exists('vms_admin_ui_explicit_notice_allowed_html'), 'Explicit notice allowlist helper should be defined.');
+$assert(function_exists('vms_admin_ui_rich_explicit_notice_allowed_html'), 'Rich explicit notice allowlist helper should be defined.');
 $assert(function_exists('vms_admin_ui_header_actions_allowed_html'), 'Header actions allowlist helper should be defined.');
 $assert(
 	$normalizeAllowedHtml(vms_admin_ui_explicit_notice_allowed_html()) === $normalizeAllowedHtml($expectedAllowed),
 	'Explicit notice allowlist should contain only div[class] and p.'
+);
+$assert(
+	$normalizeAllowedHtml(vms_admin_ui_rich_explicit_notice_allowed_html()) === $normalizeAllowedHtml($expectedRichAllowed),
+	'Rich explicit notice allowlist should contain only div[class], p, and strong.'
 );
 $assert(
 	$normalizeAllowedHtml(vms_admin_ui_header_actions_allowed_html()) === $normalizeAllowedHtml($expectedHeaderActionsAllowed),
@@ -883,12 +947,19 @@ $assert(
 	'Admin shell should apply the dedicated allowlist at the final explicit notice sink.'
 );
 $assert(
+	preg_match('~echo\s+wp_kses\s*\(\s*\$rich_explicit_notices_html\s*,\s*vms_admin_ui_rich_explicit_notice_allowed_html\s*\(\s*\)\s*\)\s*;~s', $shellSource) === 1,
+	'Admin shell should apply the dedicated allowlist at the final rich explicit notice sink.'
+);
+$assert(
 	preg_match('~echo\s+[\'"]<div class="vms-admin-shell__actions">[\'"]\s*\.\s*wp_kses\s*\(\s*\$actions_html\s*,\s*vms_admin_ui_header_actions_allowed_html\s*\(\s*\)\s*\)\s*\.\s*[\'"]</div>[\'"]\s*;~s', $shellSource) === 1,
 	'Admin shell should apply the dedicated allowlist at the final header-actions sink.'
 );
 $assert(strpos($shellSource, 'echo $explicit_notices_html;') === false, 'Admin shell should not leave a raw explicit notice echo sink.');
+$assert(strpos($shellSource, 'echo $rich_explicit_notices_html;') === false, 'Admin shell should not leave a raw rich explicit notice echo sink.');
 $assert(strpos($shellSource, 'esc_html($explicit_notices_html') === false, 'Admin shell should not text-escape the explicit notice fragment.');
+$assert(strpos($shellSource, 'esc_html($rich_explicit_notices_html') === false, 'Admin shell should not text-escape the rich explicit notice fragment.');
 $assert(strpos($shellSource, 'wp_kses_post($explicit_notices_html') === false, 'Admin shell should not use wp_kses_post() for the explicit notice sink.');
+$assert(strpos($shellSource, 'wp_kses_post($rich_explicit_notices_html') === false, 'Admin shell should not use wp_kses_post() for the rich explicit notice sink.');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $shellSource), 'Admin shell should not use the post allowlist for the explicit notice sink.');
 $assert(strpos($shellSource, 'echo \'<div class="vms-admin-shell__actions">\' . $actions_html . \'</div>\';') === false, 'Admin shell should not leave a raw header-actions echo sink.');
 $assert(strpos($shellSource, 'esc_html($actions_html') === false, 'Admin shell should not text-escape the header-actions fragment.');
@@ -896,6 +967,8 @@ $assert(strpos($shellSource, 'wp_kses_post($actions_html') === false, 'Admin she
 $assert(strpos($shellSource, 'echo $captured_notices_html;') !== false, 'Captured notice sink should remain untouched.');
 $assert(strpos($shellSource, 'echo $content_html;') !== false, 'Shell content sink should remain untouched.');
 $assert(strpos($shellSource, 'wp_kses($actions_html, vms_admin_ui_header_actions_allowed_html())') !== false, 'Dedicated header-actions allowlist should be applied only to actions.');
+$assert(strpos($shellSource, 'wp_kses($rich_explicit_notices_html, vms_admin_ui_explicit_notice_allowed_html())') === false, 'Rich explicit notice sink should not reuse the simple notice allowlist.');
+$assert(strpos($shellSource, 'wp_kses($explicit_notices_html, vms_admin_ui_rich_explicit_notice_allowed_html())') === false, 'Simple explicit notice sink should not reuse the rich allowlist.');
 $assert(strpos($shellSource, 'wp_kses($captured_notices_html') === false, 'Dedicated explicit notice allowlist should not be applied to captured notices.');
 $assert(strpos($shellSource, 'wp_kses($content_html') === false, 'Dedicated explicit notice allowlist should not be applied to shell content.');
 $assert(strpos($bootstrapSource, "require_once __DIR__ . '/tours/tours.php';") !== false, 'Canonical bootstrap should load the shared tours helper file.');
@@ -904,6 +977,7 @@ $assert(strpos($bootstrapSource, 'class-vms-tours.php') === false, 'Canonical bo
 $allIncludeSource = '';
 $actionCallerFiles = array();
 $noticesCallbackFiles = array();
+$richNoticesCallbackFiles = array();
 $iterator = new RecursiveIteratorIterator(
 	new RecursiveDirectoryIterator($pluginRoot . '/includes', FilesystemIterator::SKIP_DOTS)
 );
@@ -918,13 +992,18 @@ foreach ($iterator as $file) {
 	if (preg_match('~[\'"]actions_html[\'"]\s*=>~', $source) === 1) {
 		$actionCallerFiles[] = str_replace($pluginRoot . '/includes/', '', $file->getPathname());
 	}
-	if (preg_match('~[\'"]notices_callback[\'"]\s*=>~', $source) === 1) {
-		$noticesCallbackFiles[] = str_replace($pluginRoot . '/includes/', '', $file->getPathname());
+		if (preg_match('~[\'"]notices_callback[\'"]\s*=>~', $source) === 1) {
+			$noticesCallbackFiles[] = str_replace($pluginRoot . '/includes/', '', $file->getPathname());
+		}
+		if (preg_match('~[\'"]rich_notices_callback[\'"]\s*=>~', $source) === 1) {
+			$richNoticesCallbackFiles[] = str_replace($pluginRoot . '/includes/', '', $file->getPathname());
+		}
 	}
-}
 
 $noticesCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedMatches);
+$richNoticesCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedRichMatches);
 $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
+$venueRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]vms_render_integrity_venue_reconcile_notice[\'"]~', $allIncludeSource, $unusedVenueRichMatches);
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
@@ -960,13 +1039,21 @@ $expectedNoticesCallbackFiles = array(
 	'modules/status-notices/admin-ui.php',
 	'social-share/admin.php',
 );
+$expectedRichNoticesCallbackFiles = array(
+	'admin/integrity-venue-reconcile.php',
+);
 sort($actionCallerFiles);
 sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
+$richNoticesCallbackFiles = array_values(array_unique($richNoticesCallbackFiles));
+sort($richNoticesCallbackFiles);
+sort($expectedRichNoticesCallbackFiles);
 $assert($noticesCallbackCount === 12, 'Only twelve production notices_callback assignments should exist.');
+$assert($richNoticesCallbackCount === 1, 'Only one production rich_notices_callback assignment should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
+$assert($venueRichNoticeCallbackCount === 1, 'Venue Reconciliation should contribute exactly one production rich_notices_callback caller.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
 $assert($eventFeedbackNoticeCallbackCount === 1, 'Event Feedback should contribute exactly one production notices_callback caller.');
@@ -979,6 +1066,200 @@ $assert($eventPlanImportNoticeCallbackCount === 1, 'Event Plan Import should con
 $assert($socialNoticeCallbackCount === 1, 'Social Sharing should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
 $assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Settings, Ticket Integrity, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
+$assert($richNoticesCallbackFiles === $expectedRichNoticesCallbackFiles, 'Rich explicit notice callbacks should remain limited to Venue Reconciliation.');
+
+$GLOBALS['vms_test_rich_notice_callback_calls'] = 0;
+ob_start();
+vms_admin_ui_render_shell(
+	array(
+		'title' => 'Rich Shell Test',
+		'rich_notices_callback' => static function (): void {
+			$GLOBALS['vms_test_rich_notice_callback_calls']++;
+			echo '<div class="notice notice-warning"><p><strong>Heads up.</strong> Continue.</p></div>';
+		},
+	),
+	static function (): void {
+		echo '<p>Plain body</p>';
+	}
+);
+$richShellOutput = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_rich_notice_callback_calls'] === 1, 'Rich explicit notice callback should execute exactly once.');
+$assert(strpos($richShellOutput, '<div class="notice notice-warning below-h2 vms-shell-notice"><p><strong>Heads up.</strong> Continue.</p></div>') !== false, 'Rich explicit notice output should be normalized into the shell notice region.');
+$assert(strpos($richShellOutput, 'Heads up.') < strpos($richShellOutput, 'Plain body'), 'Rich explicit notice output should render before ordinary content.');
+
+$GLOBALS['vms_test_rich_notice_callback_calls'] = 0;
+ob_start();
+vms_admin_ui_render_shell(
+	array(
+		'title' => 'Rich Shell Empty Test',
+		'rich_notices_callback' => static function (): void {
+			$GLOBALS['vms_test_rich_notice_callback_calls']++;
+		},
+	),
+	static function (): void {
+		echo '<p>Silent body</p>';
+	}
+);
+$richShellEmptyOutput = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_rich_notice_callback_calls'] === 1, 'Empty rich explicit notice callback should still execute exactly once.');
+$assert(strpos($richShellEmptyOutput, 'vms-shell-notice') === false, 'Empty rich explicit notice output should render nothing in the notice region.');
+$assert(strpos($richShellEmptyOutput, 'Silent body') !== false, 'Empty rich explicit notice output should not block ordinary content rendering.');
+
+$assert(strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_notice(): void') !== false, 'Venue Reconciliation should expose a dedicated rich notice callback.');
+$venueNoticeStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_notice(): void');
+$venueNoticeEnd = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_intro(): void');
+$venuePageStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page(): void');
+$venuePageEnd = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_content(): void');
+$venueContentStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_content(): void');
+$venueContentEnd = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_sections(): void');
+$venueSectionsStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_sections(): void');
+$assert($venueNoticeStart !== false && $venueNoticeEnd !== false && $venueNoticeEnd > $venueNoticeStart, 'Venue Reconciliation rich notice callback body should be locatable.');
+$assert($venuePageStart !== false && $venuePageEnd !== false && $venuePageEnd > $venuePageStart, 'Venue Reconciliation page renderer body should be locatable.');
+$assert($venueContentStart !== false && $venueContentEnd !== false && $venueContentEnd > $venueContentStart, 'Venue Reconciliation content callback body should be locatable.');
+$assert($venueSectionsStart !== false, 'Venue Reconciliation page sections helper should be locatable.');
+$venueNoticeSource = substr($venueReconcileSource, (int) $venueNoticeStart, (int) $venueNoticeEnd - (int) $venueNoticeStart);
+$venuePageSource = substr($venueReconcileSource, (int) $venuePageStart, (int) $venuePageEnd - (int) $venuePageStart);
+$venueContentSource = substr($venueReconcileSource, (int) $venueContentStart, (int) $venueContentEnd - (int) $venueContentStart);
+$venueSectionsSource = substr($venueReconcileSource, (int) $venueSectionsStart);
+$assert(strpos($venuePageSource, "'rich_notices_callback' => 'vms_render_integrity_venue_reconcile_notice'") !== false, 'Venue Reconciliation shell call should route the rich notice family through the dedicated rich callback.');
+$assert(strpos($venuePageSource, "'notices_callback' =>") === false, 'Venue Reconciliation should not reuse the simple explicit notice callback path.');
+$assert(strpos($calendarReconcileSource, "'rich_notices_callback' =>") === false, 'Calendar Reconciliation should remain unchanged and should not opt into the rich notice callback path in this pass.');
+$assert(strpos($calendarReconcileSource, '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ') !== false, 'Calendar Reconciliation should retain its original rich notice family unchanged.');
+$venueFallbackHeadingPos = strpos($venuePageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Integrity: Venue Links', 'backstage-venue-manager') . '</h1>';");
+$venueFallbackIntroPos = strpos($venuePageSource, 'vms_render_integrity_venue_reconcile_page_intro();');
+$venueFallbackNoticePos = strpos($venuePageSource, 'vms_render_integrity_venue_reconcile_notice();');
+$venueFallbackSectionsPos = strpos($venuePageSource, 'vms_render_integrity_venue_reconcile_page_sections();');
+$assert($venueFallbackHeadingPos !== false && $venueFallbackIntroPos !== false && $venueFallbackNoticePos !== false && $venueFallbackSectionsPos !== false && $venueFallbackHeadingPos < $venueFallbackIntroPos && $venueFallbackIntroPos < $venueFallbackNoticePos && $venueFallbackNoticePos < $venueFallbackSectionsPos, 'Venue Reconciliation no-shell fallback should preserve heading, intro, notice, then ordinary content ordering.');
+$assert(strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_intro') === false, 'Venue Reconciliation should use the dedicated intro helper name consistently.');
+$assert(strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_page_intro();') !== false && strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_page_sections();') !== false, 'Venue Reconciliation content callback should render the intro and ordinary page sections.');
+$assert(strpos($venueContentSource, 'vms_msg') === false && strpos($venueContentSource, 'vms_changed') === false, 'Venue Reconciliation content callback should no longer read the moved notice query parameters.');
+$assert(strpos($venueContentSource, 'Confirmation required.') === false && strpos($venueContentSource, 'Nothing selected.') === false && strpos($venueContentSource, 'Action complete.') === false, 'Venue Reconciliation content callback should no longer emit the moved rich notice family.');
+$assert(strpos($venueNoticeSource, "sanitize_key((string) \$_GET['vms_msg'])") !== false, 'Venue Reconciliation rich notice callback should preserve sanitize_key() normalization for vms_msg.');
+$assert(strpos($venueNoticeSource, "(int) \$_GET['vms_changed']") !== false, 'Venue Reconciliation rich notice callback should preserve integer normalization for vms_changed.');
+$assert(strpos($venueNoticeSource, '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>') !== false, 'Venue Reconciliation rich notice callback should preserve the confirmation-required warning fragment.');
+$assert(strpos($venueNoticeSource, '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>') !== false, 'Venue Reconciliation rich notice callback should preserve the nothing-selected warning fragment.');
+$assert(strpos($venueNoticeSource, '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ') !== false, 'Venue Reconciliation rich notice callback should preserve the success fragment.');
+$assert(strpos($venueNoticeSource, '<a ') === false && strpos($venueNoticeSource, '<span') === false && strpos($venueNoticeSource, '<em') === false && strpos($venueNoticeSource, '<button') === false && strpos($venueNoticeSource, '<ul') === false && strpos($venueNoticeSource, '<ol') === false && strpos($venueNoticeSource, '<li') === false && strpos($venueNoticeSource, 'data-') === false && strpos($venueNoticeSource, 'role=') === false && strpos($venueNoticeSource, 'style=') === false, 'Venue Reconciliation rich notice callback should remain limited to div[class], p, strong, and text nodes.');
+$assert(strpos($venueNoticeSource, 'get_option(') === false && strpos($venueNoticeSource, 'get_transient(') === false && strpos($venueNoticeSource, 'set_transient(') === false && strpos($venueNoticeSource, 'delete_transient(') === false && strpos($venueNoticeSource, 'get_posts(') === false && strpos($venueNoticeSource, 'vms_integrity_list_event_plans_with_venue_issues(') === false, 'Venue Reconciliation rich notice callback should not add provider or storage reads or mutations.');
+$assert(strpos($venueNoticeSource, 'apply_filters(') === false && strpos($venueNoticeSource, 'do_action(') === false && strpos($venueNoticeSource, 'settings_errors(') === false && strpos($venueNoticeSource, 'add_settings_error(') === false, 'Venue Reconciliation rich notice callback should remain package-owned and outside hooks or Settings API notice ownership.');
+$assert(strpos($venueSectionsSource, 'Review Event Plans that reference Venues') === false, 'Venue Reconciliation page sections helper should not duplicate the intro copy.');
+
+$_GET = array(
+	'vms_msg' => 'confirm_required',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueConfirmNotice = (string) ob_get_clean();
+$assert($venueConfirmNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Venue Reconciliation rich notice callback should preserve the confirmation-required fragment.');
+$assert(wp_kses($venueConfirmNotice, vms_admin_ui_rich_explicit_notice_allowed_html()) === $venueConfirmNotice, 'The rich explicit notice allowlist should admit the confirmation-required Venue Reconciliation notice unchanged.');
+
+$_GET = array(
+	'vms_msg' => 'nothing_selected',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueNothingSelectedNotice = (string) ob_get_clean();
+$assert($venueNothingSelectedNotice === '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>', 'Venue Reconciliation rich notice callback should preserve the nothing-selected fragment.');
+
+$_GET = array(
+	'vms_msg' => 'done',
+	'vms_changed' => '9<script>alert(1)</script>',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueDoneNotice = (string) ob_get_clean();
+$assert($venueDoneNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 9</p></div>', 'Venue Reconciliation rich notice callback should preserve the success fragment with integer-normalized changed counts.');
+$assert(strpos($venueDoneNotice, '<script') === false, 'Venue Reconciliation changed counts should not become markup.');
+$assert(wp_kses($venueDoneNotice, vms_admin_ui_rich_explicit_notice_allowed_html()) === $venueDoneNotice, 'The rich explicit notice allowlist should admit the Venue Reconciliation success notice unchanged.');
+
+$_GET = array(
+	'vms_msg' => 'done',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueDoneMissingCountNotice = (string) ob_get_clean();
+$assert($venueDoneMissingCountNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 0</p></div>', 'Venue Reconciliation rich notice callback should default missing changed counts to zero.');
+
+$_GET = array();
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueMissingNotice = (string) ob_get_clean();
+$assert($venueMissingNotice === '', 'Venue Reconciliation rich notice callback should stay silent when vms_msg is absent.');
+
+$_GET = array(
+	'vms_msg' => '',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueEmptyNotice = (string) ob_get_clean();
+$assert($venueEmptyNotice === '', 'Venue Reconciliation rich notice callback should stay silent when vms_msg is empty.');
+
+$_GET = array(
+	'vms_msg' => 'not_real',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueUnknownNotice = (string) ob_get_clean();
+$assert($venueUnknownNotice === '', 'Venue Reconciliation rich notice callback should stay silent for unknown vms_msg values.');
+
+$_GET = array(
+	'vms_msg' => 'Confirm_Required!!!',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_notice();
+$venueNormalizedNotice = (string) ob_get_clean();
+$assert($venueNormalizedNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Venue Reconciliation rich notice callback should preserve sanitize_key() normalization when malformed input collapses into a known slug.');
+
+$GLOBALS['vms_test_integrity_venue_issue_calls'] = 0;
+$GLOBALS['vms_test_integrity_venue_issue_limits'] = array();
+$GLOBALS['vms_test_integrity_venue_issues_value'] = array(
+	'trashed' => array(
+		array(
+			'plan_id' => 11,
+			'venue_id' => 21,
+			'plan_title' => 'Summer Fest',
+			'venue_title' => 'Old Hall',
+		),
+	),
+	'missing' => array(),
+	'unpublished' => array(),
+);
+$GLOBALS['vms_test_integrity_venue_get_posts_calls'] = 0;
+$GLOBALS['vms_test_integrity_venue_get_posts_args'] = array();
+$GLOBALS['vms_test_integrity_venue_get_posts_value'] = array(77);
+$GLOBALS['vms_test_integrity_venue_titles'] = array(
+	77 => 'Replacement Hall',
+);
+$_GET = array(
+	'vms_msg' => 'done',
+	'vms_changed' => '12',
+	'limit' => '25',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_page();
+$venueShellPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_integrity_venue_issue_calls'] === 1, 'Venue Reconciliation shell render should resolve issue rows exactly once.');
+$assert($GLOBALS['vms_test_integrity_venue_issue_limits'] === array(25), 'Venue Reconciliation shell render should preserve the integer-normalized limit parameter.');
+$assert($GLOBALS['vms_test_integrity_venue_get_posts_calls'] === 1, 'Venue Reconciliation shell render should resolve replacement venues exactly once.');
+$assert(strpos($venueShellPage, '<div class="notice notice-success below-h2 vms-shell-notice"><p><strong>Action complete.</strong> Changed: 12</p></div>') !== false, 'Venue Reconciliation shell render should move the rich notice into the notice region with preserved strong markup and shell notice classes.');
+$assert(substr_count($venueShellPage, 'Action complete.') === 1, 'Venue Reconciliation shell render should emit the rich notice exactly once.');
+$assert(strpos($venueShellPage, 'Action complete.') < strpos($venueShellPage, 'Review Event Plans that reference Venues in the Trash'), 'Venue Reconciliation shell render should preserve notice-before-content ordering.');
+$assert(strpos($venueShellPage, 'Review Event Plans that reference Venues in the Trash') < strpos($venueShellPage, 'Total affected Event Plans:'), 'Venue Reconciliation shell render should preserve the intro before the ordinary page body.');
+
+$GLOBALS['vms_test_integrity_venue_issue_calls'] = 0;
+$GLOBALS['vms_test_integrity_venue_issue_limits'] = array();
+$GLOBALS['vms_test_integrity_venue_get_posts_calls'] = 0;
+$GLOBALS['vms_test_integrity_venue_get_posts_args'] = array();
+$_GET = array(
+	'vms_msg' => 'confirm_required',
+);
+ob_start();
+vms_render_integrity_venue_reconcile_page_content();
+$venueContentOnly = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_integrity_venue_issue_calls'] === 1, 'Venue Reconciliation content callback should still resolve issue rows exactly once.');
+$assert($GLOBALS['vms_test_integrity_venue_get_posts_calls'] === 1, 'Venue Reconciliation content callback should still resolve replacement venues exactly once.');
+$assert(strpos($venueContentOnly, 'Review Event Plans that reference Venues in the Trash') !== false, 'Venue Reconciliation content callback should still render the intro copy.');
+$assert(strpos($venueContentOnly, 'Confirmation required.') === false, 'Venue Reconciliation content callback should no longer emit the moved rich notice directly.');
 
 $assert(strpos($settingsSource, 'function vms_render_settings_page_notices(): void') !== false, 'Settings should expose a dedicated explicit notice callback for the fixed default-venue redirect notice.');
 $settingsNoticeStart = strpos($settingsSource, 'function vms_render_settings_page_notices(): void');
@@ -2354,6 +2635,21 @@ $assert(stripos($sanitizedHeaderActions, 'target=') === false, 'Header actions c
 $assert(stripos($sanitizedHeaderActions, 'data-vms-help-action=') === false, 'Header actions contract should reject unapproved data attributes.');
 $assert(stripos($sanitizedHeaderActions, 'data-vms-help-open=') === false, 'Header actions contract should reject undiscovered helper attributes.');
 $assert(preg_match('~<[^>]+\son[a-z]+\s*=~i', $sanitizedHeaderActions) === 0, 'Header actions contract should reject inline event-handler attributes.');
+
+$unsafeRichHtml = '<div class="notice notice-success is-dismissible" style="color:red" data-track="1" role="alert" onclick="alert(1)"><p class="bad" aria-live="assertive"><strong class="bad" data-bad="1">Saved</strong><span> now</span><a href="https://example.test">link</a><script>alert(1)</script></p></div>';
+$sanitizedRichHtml = wp_kses($unsafeRichHtml, vms_admin_ui_rich_explicit_notice_allowed_html());
+$assert(strpos($sanitizedRichHtml, '<div class="notice notice-success is-dismissible">') !== false, 'Rich explicit notice allowlist should preserve the allowed notice wrapper and class attribute.');
+$assert(strpos($sanitizedRichHtml, '<p><strong>Saved</strong>') !== false, 'Rich explicit notice allowlist should preserve strong markup inside the notice paragraph.');
+$assert(strpos($sanitizedRichHtml, ' now') !== false && strpos($sanitizedRichHtml, 'link') !== false, 'Rich explicit notice allowlist should preserve text nodes while stripping disallowed tags.');
+$assert(strpos($sanitizedRichHtml, '<span') === false && strpos($sanitizedRichHtml, '</span>') === false, 'Rich explicit notice allowlist should reject span tags.');
+$assert(strpos($sanitizedRichHtml, '<a ') === false && strpos($sanitizedRichHtml, '</a>') === false, 'Rich explicit notice allowlist should reject anchor tags.');
+$assert(strpos($sanitizedRichHtml, '<script') === false && strpos($sanitizedRichHtml, '</script>') === false, 'Rich explicit notice allowlist should reject script tags.');
+$assert(stripos($sanitizedRichHtml, 'style=') === false, 'Rich explicit notice allowlist should reject style attributes.');
+$assert(stripos($sanitizedRichHtml, 'data-track=') === false && stripos($sanitizedRichHtml, 'data-bad=') === false, 'Rich explicit notice allowlist should reject data attributes.');
+$assert(stripos($sanitizedRichHtml, 'role=') === false && stripos($sanitizedRichHtml, 'aria-live=') === false, 'Rich explicit notice allowlist should reject role and aria attributes.');
+$assert(preg_match('~<p[^>]+\s(?:class|id|role|aria-[a-z-]+)=~i', $sanitizedRichHtml) === 0, 'Rich explicit notice allowlist should reject attributes on p.');
+$assert(preg_match('~<strong[^>]+\s(?:class|id|role|aria-[a-z-]+|data-[a-z-]+)=~i', $sanitizedRichHtml) === 0, 'Rich explicit notice allowlist should reject attributes on strong.');
+$assert(preg_match('~<[^>]+\son[a-z]+\s*=~i', $sanitizedRichHtml) === 0, 'Rich explicit notice allowlist should reject inline event-handler attributes.');
 
 $unsafeHtml = '<div class="notice notice-success is-dismissible" style="color:red" data-track="1" role="alert" onclick="alert(1)"><p class="bad" aria-live="assertive" style="font-weight:bold">Saved<script>alert(1)</script><iframe src="https://example.test"></iframe><object data="bad"></object><embed src="bad"><form action="#"><input type="text" value="x"></form><a href="https://example.test">link</a><button type="button">button</button></p></div>';
 $sanitizedHtml = wp_kses($unsafeHtml, vms_admin_ui_explicit_notice_allowed_html());

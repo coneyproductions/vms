@@ -653,6 +653,27 @@ Acceptable note:
 - Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves the Settings shell wiring, callback inventory update, removed content-path emission, preserved heading-before-notice-before-content fallback ordering, exact fixed notice fragment, silent behavior for absent/empty/unknown/malformed non-matching values, unchanged richer Settings content notices, unchanged Guided Tours nested reset notice, unchanged Schedule nested notice families, unchanged simple explicit-notice contract, and unchanged raw shell sinks. Validation ran with `php -l includes/admin/settings-page.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, the discovered Settings-screen test inventory search, and `git diff --check`.
 - Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Shared `$captured_notices_html`, shared `$content_html`, the deferred Guided Tours nested reset notice, the deferred Schedule nested notice families, Venue and Calendar Reconciliation as future rich-notice candidates, Vendor Availability's content-local empty-state notice, the separate Event Plan Import rows-payload error boundary, Pass Claims, and the broader Event Plans partial/AJAX output boundaries remain separate follow-up work.
 
+### `WPORG-24 E1` Venue Reconciliation rich explicit-notice result
+
+- Result: Venue Reconciliation is now the first narrowly contracted rich Administrator notice family. Its page-level `<strong>` notice branches no longer flow through shared captured-notice extraction; they render through a separate rich explicit notice sink in the Administrator shell.
+- Candidate boundary update: the previously identified simple page-level `div[class] > p` captured-notice candidates now appear exhausted. Venue Reconciliation was the next narrow page-local family because every branch stays within `div[class] > p > strong + text`, with no links, spans, buttons, lists, attributes beyond `class`, or externally supplied HTML.
+- Registration and ownership remained unchanged: the page still registers through the `admin_menu` anonymous closure in `includes/admin/menu.php` with parent slug `vms-dashboard`, capability `manage_options`, page slug `vms-integrity-venue-links`, and renderer `vms_render_integrity_venue_reconcile_page()`. The notice family remains package-owned, page-local, and nonextensible.
+- Rich contract and shell behavior:
+  - `vms_admin_ui_explicit_notice_allowed_html()` remains exactly `div[class]` and `p`.
+  - The shell now also supports a separate `rich_notices_callback` path with its own dedicated allowlist limited to `div[class]`, `p`, and `strong`.
+  - The rich output is buffered separately from simple explicit notices, raw `$captured_notices_html`, raw `$content_html`, and `$actions_html`.
+  - Shared raw `$captured_notices_html` remains unresolved and untouched.
+  - Shared raw `$content_html` remains unresolved and untouched.
+  - No raw shell sink was allowlisted, and no generic arbitrary-rich-HTML sink was introduced.
+- Venue family details:
+  - The dedicated callback `vms_render_integrity_venue_reconcile_notice()` preserves the exact recognized `vms_msg` vocabulary: `confirm_required`, `nothing_selected`, and `done`.
+  - `vms_msg` still normalizes through `sanitize_key()`. `vms_changed` still normalizes through integer casting, stays server-calculated, and remains escaped safely by rendering only the resulting integer.
+  - Exact markup, wording, severity, `<strong>` placement, inline status, and nondismissible behavior remain unchanged for every branch.
+  - The original content-path notice emission was removed from `vms_render_integrity_venue_reconcile_page_content()`, which now renders only the intro and ordinary page body.
+  - Shell ordering remains behaviorally unchanged because the notice still appears before ordinary page content in the notice region. The historical no-shell fallback ordering also remains unchanged by rendering heading, intro, notice, then the remaining page body.
+- Comparison boundary retained: Calendar Reconciliation remains deferred and unchanged as a separate future rich-notice family. This pass did not alter `includes/admin/integrity-calendar-reconcile.php`.
+- Scope confirmation: Pass Claims remains a separate `WPORG-24` boundary. `WPORG-24 E1` remains open and is not marked complete by this slice.
+
 ## F. Prefixing and Collision Safety
 
 Status:

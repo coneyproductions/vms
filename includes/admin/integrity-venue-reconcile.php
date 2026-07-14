@@ -96,6 +96,25 @@ function vms_handle_integrity_venue_links_action(): void
 }
 
 
+function vms_render_integrity_venue_reconcile_notice(): void
+{
+  $msg = isset($_GET['vms_msg']) ? sanitize_key((string) $_GET['vms_msg']) : '';
+  $changed = isset($_GET['vms_changed']) ? (int) $_GET['vms_changed'] : 0;
+
+  if ($msg === 'confirm_required') {
+    echo '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>';
+  } elseif ($msg === 'nothing_selected') {
+    echo '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>';
+  } elseif ($msg === 'done') {
+    echo '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ' . (int) $changed . '</p></div>';
+  }
+}
+
+function vms_render_integrity_venue_reconcile_page_intro(): void
+{
+  echo '<p class="description">Review Event Plans that reference Venues in the Trash, missing Venues, or Venues that are not published. This is intentionally review-first and does not auto-publish restored Venues.</p>';
+}
+
 function vms_render_integrity_venue_reconcile_page(): void
 {
   if (!current_user_can('manage_options')) {
@@ -117,6 +136,7 @@ function vms_render_integrity_venue_reconcile_page(): void
         'title' => __('Integrity: Venue Links', 'backstage-venue-manager'),
         'actions_html' => $actions_html,
         'content_class' => 'vms-admin-shell__content--integrity',
+        'rich_notices_callback' => 'vms_render_integrity_venue_reconcile_notice',
       ),
       'vms_render_integrity_venue_reconcile_page_content'
     );
@@ -124,11 +144,19 @@ function vms_render_integrity_venue_reconcile_page(): void
   }
 
   echo '<div class="wrap"><h1>' . esc_html__('Integrity: Venue Links', 'backstage-venue-manager') . '</h1>';
-  vms_render_integrity_venue_reconcile_page_content();
+  vms_render_integrity_venue_reconcile_page_intro();
+  vms_render_integrity_venue_reconcile_notice();
+  vms_render_integrity_venue_reconcile_page_sections();
   echo '</div>';
 }
 
 function vms_render_integrity_venue_reconcile_page_content(): void
+{
+  vms_render_integrity_venue_reconcile_page_intro();
+  vms_render_integrity_venue_reconcile_page_sections();
+}
+
+function vms_render_integrity_venue_reconcile_page_sections(): void
 {
   $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 500;
   if ($limit < 1) $limit = 500;
@@ -137,19 +165,6 @@ function vms_render_integrity_venue_reconcile_page_content(): void
   $issues = function_exists('vms_integrity_list_event_plans_with_venue_issues')
     ? (array) vms_integrity_list_event_plans_with_venue_issues($limit)
     : array();
-
-  $msg = isset($_GET['vms_msg']) ? sanitize_key((string) $_GET['vms_msg']) : '';
-  $changed = isset($_GET['vms_changed']) ? (int) $_GET['vms_changed'] : 0;
-
-  echo '<p class="description">Review Event Plans that reference Venues in the Trash, missing Venues, or Venues that are not published. This is intentionally review-first and does not auto-publish restored Venues.</p>';
-
-  if ($msg === 'confirm_required') {
-    echo '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>';
-  } elseif ($msg === 'nothing_selected') {
-    echo '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>';
-  } elseif ($msg === 'done') {
-    echo '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ' . (int) $changed . '</p></div>';
-  }
 
   $trashed = isset($issues['trashed']) ? (array) $issues['trashed'] : array();
   $missing = isset($issues['missing']) ? (array) $issues['missing'] : array();
