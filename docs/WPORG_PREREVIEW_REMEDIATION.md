@@ -520,12 +520,38 @@ Acceptable note:
   - The shell path now supplies `'notices_callback' => 'vms_email_followups_render_notices'`.
   - The original in-closure call was removed so the primary helper executes once.
   - The no-shell fallback still renders the page `<h1>`, then `vms_email_followups_render_notices()`, then the existing `$render()` closure, preserving notice-before-content ordering.
-- Separate unresolved preview-warning boundary:
-  - `vms_email_followups_render_preview_tab()` still emits `<div class="notice notice-warning inline"><p>No Event Plans found for preview/testing.</p></div>` when no Event Plan ID is available.
-  - That preview warning remains unchanged, stays outside `notices_callback`, and remains a separate later boundary.
+- Later follow-up boundary note: this slice intentionally left the preview empty-state warning separate. That boundary was addressed in the subsequent Email Follow-Ups preview-warning slice below.
 - Contract and scope confirmation: the explicit-notice contract remains exactly `div[class]` and `p`; no allowlist was broadened; shared raw `$captured_notices_html` remains unresolved and untouched; shared raw `$content_html` remains unresolved and untouched; the preview warning remains separate; Pass Claims remains a separate `WPORG-24` boundary.
 - Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves the Email Follow-Ups shell wiring, the dedicated helper source, every preserved severity branch plus unknown-type fallback, sanitized request handling, single-render ordering for the shell path, preserved no-shell source ordering, unchanged provider call counts for the overview render, unchanged preview-warning source and markup, unchanged explicit-notice contract, and unchanged raw shell sinks. Validation ran with `php -l includes/modules/email-followups/admin-ui.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, any discovered Email Follow-Ups-specific test inventory search, and `git diff --check`.
 - Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Shared `$captured_notices_html`, shared `$content_html`, the separate Email Follow-Ups preview warning, Event Plan Import, Pass Claims, and the broader Event Plans partial/AJAX output boundaries remain separate follow-up work.
+
+### `WPORG-24 E1` Email Follow-Ups preview warning reduction result
+
+- Result: the Email Follow-Ups preview empty-state warning now routes through the existing Administrator shell explicit-notice path instead of being source-rendered in preview content and then hoisted by shared captured-notice extraction.
+- Constrained production inspection scope: this pass inspected only `includes/modules/email-followups/admin-ui.php` for the already-identified preview warning boundary and did not inspect or migrate any fallback candidate.
+- Production file changed: `includes/modules/email-followups/admin-ui.php`.
+- Exact preview boundary:
+  - The active tab still resolves through `vms_email_followups_current_tab()` with accepted values `overview`, `templates`, `preview`, and `logs`, defaulting to `overview`.
+  - The page renderer now resolves preview state only when `$tab === 'preview'`, then shares that same state with both the explicit notice path and the preview content path.
+  - The preview empty-state condition remains exactly `event_plan_id <= 0`.
+  - The warning fragment remains exactly `<div class="notice notice-warning inline"><p>No Event Plans found for preview/testing.</p></div>`.
+- Shared preview-state resolution:
+  - A page-local preview-state resolver now sanitizes `$_GET['event_plan_id']` with `absint()`, resolves preview event choices once through `vms_email_followups_event_choices(120, $selected_event_plan_id)` or the existing fallback helper, derives the default selected plan from that same choice list, sanitizes `$_GET['email_key']` with `sanitize_key()`, and validates it against the existing template definitions before both the notice path and the preview content use it.
+  - No globals, mutable statics, transients, options, or persistent request caches were introduced for this sharing.
+- Ordering preserved:
+  - The page now uses one page-specific notice composer that first calls the already accepted `vms_email_followups_render_notices()` helper and then emits the preview warning only when the preview tab is active and the shared preview state is empty.
+  - The shell path therefore preserves the effective final order as primary redirect notices first, preview warning second, then tabs and ordinary content.
+  - The no-shell fallback still renders the page heading, then the same composed notice output, then tabs/content.
+- Original content-path warning removed:
+  - `vms_email_followups_render_preview_tab()` no longer echoes the preview warning itself.
+  - The preview tab still renders the same filter form and then returns early for the empty state after the form markup, while the explicit notice path now owns the warning fragment so it is no longer captured from raw content.
+- Lazy behavior and provider counts:
+  - Preview-only resolution remains limited to the preview tab.
+  - The shared preview-state resolver avoids duplicate choice and template-definition work by feeding the same resolved event choices, selected plan, and template definitions into both the notice path and the preview content path.
+  - Non-preview tabs do not invoke preview-only event-choice or template-definition providers through this change.
+- Contract and scope confirmation: no explicit-notice contract expansion occurred; the explicit-notice sink remains limited to `div[class]` and `p`; shared raw `$captured_notices_html` remains unresolved and untouched; shared raw `$content_html` remains unresolved and untouched; the already migrated primary redirect notices remain behaviorally unchanged; Pass Claims remains a separate `WPORG-24` boundary.
+- Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves preview-only visibility, exact warning markup, redirect-notice-before-preview-warning composition, explicit-notice-before-tabs ordering, no-shell source ordering, exact provider-call counts for empty and nonempty preview renders, non-preview laziness, preserved malformed/unknown selection fallback behavior, unchanged nonempty preview rendering, unchanged explicit-notice contract, and unchanged raw shell sinks. Validation ran with `php -l includes/modules/email-followups/admin-ui.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, the Email Follow-Ups-specific test inventory search, and `git diff --check`.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. Shared `$captured_notices_html`, shared `$content_html`, Event Plan Import, Pass Claims, and the broader Event Plans partial/AJAX output boundaries remain separate follow-up work.
 
 ## F. Prefixing and Collision Safety
 

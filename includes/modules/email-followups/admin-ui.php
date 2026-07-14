@@ -126,12 +126,19 @@ if (!function_exists('vms_email_followups_render_admin_page')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		$tab = vms_email_followups_current_tab();
-		$render = static function () use ($tab): void {
+		$preview_state = array();
+		if ($tab === 'preview') {
+			$preview_state = vms_email_followups_resolve_preview_state();
+		}
+		$render_notices = static function () use ($tab, $preview_state): void {
+			vms_email_followups_render_page_notices($tab, $preview_state);
+		};
+		$render = static function () use ($tab, $preview_state): void {
 			vms_email_followups_render_tabs($tab);
 			if ($tab === 'templates') {
 				vms_email_followups_render_templates_tab();
 			} elseif ($tab === 'preview') {
-				vms_email_followups_render_preview_tab();
+				vms_email_followups_render_preview_tab($preview_state);
 			} elseif ($tab === 'logs') {
 				vms_email_followups_render_logs_tab();
 			} else {
@@ -144,12 +151,12 @@ if (!function_exists('vms_email_followups_render_admin_page')) {
 				'title' => __('Email Follow-Ups', 'backstage-venue-manager'),
 				'subtitle' => __('Event-aware buyer reminders, day-of updates, and post-show follow-ups.', 'backstage-venue-manager'),
 				'shell_id' => 'vms-email-followups-admin',
-				'notices_callback' => 'vms_email_followups_render_notices',
+				'notices_callback' => $render_notices,
 			), $render);
 			return;
 		}
 		echo '<div class="wrap" id="vms-email-followups-admin"><h1>' . esc_html__('Email Follow-Ups', 'backstage-venue-manager') . '</h1>';
-		vms_email_followups_render_notices();
+		$render_notices();
 		$render();
 		echo '</div>';
 	}
@@ -303,23 +310,97 @@ if (!function_exists('vms_email_followups_render_templates_tab')) {
 }
 
 if (!function_exists('vms_email_followups_selected_plan_id')) {
-	function vms_email_followups_selected_plan_id(): int
+	/**
+	 * @param array<int,WP_Post>|null $event_choices
+	 */
+	function vms_email_followups_selected_plan_id(?array $event_choices = null): int
 	{
 		$raw = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
 		if ($raw > 0) {
 			return $raw;
 		}
-		$choices = function_exists('vms_email_followups_event_choices') ? vms_email_followups_event_choices(1) : vms_email_followups_upcoming_event_choices(1);
-		return !empty($choices[0]) && $choices[0] instanceof WP_Post ? (int) $choices[0]->ID : 0;
+		if ($event_choices === null) {
+			$event_choices = function_exists('vms_email_followups_event_choices') ? vms_email_followups_event_choices(1) : vms_email_followups_upcoming_event_choices(1);
+		}
+		return !empty($event_choices[0]) && $event_choices[0] instanceof WP_Post ? (int) $event_choices[0]->ID : 0;
+	}
+}
+
+if (!function_exists('vms_email_followups_resolve_preview_state')) {
+	/**
+	 * @return array{event_plan_id:int,email_key:string,event_choices:array<int,WP_Post>,template_definitions:array<string,mixed>}
+	 */
+	function vms_email_followups_resolve_preview_state(): array
+	{
+		$selected_event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
+		$event_choices = function_exists('vms_email_followups_event_choices')
+			? vms_email_followups_event_choices(120, $selected_event_plan_id)
+			: vms_email_followups_upcoming_event_choices(80);
+		$event_plan_id = vms_email_followups_selected_plan_id($event_choices);
+		$email_key = isset($_GET['email_key']) ? sanitize_key((string) $_GET['email_key']) : 'know_before';
+		$template_definitions = vms_email_followups_template_definitions();
+		if (!isset($template_definitions[$email_key])) {
+			$email_key = 'know_before';
+		}
+
+		return array(
+			'event_plan_id' => $event_plan_id,
+			'email_key' => $email_key,
+			'event_choices' => $event_choices,
+			'template_definitions' => $template_definitions,
+		);
+	}
+}
+
+if (!function_exists('vms_email_followups_render_preview_empty_state_notice')) {
+	/**
+	 * @param array<string,mixed> $preview_state
+	 */
+	function vms_email_followups_render_preview_empty_state_notice(array $preview_state): void
+	{
+		$event_plan_id = isset($preview_state['event_plan_id']) ? absint($preview_state['event_plan_id']) : 0;
+		if ($event_plan_id > 0) {
+			return;
+		}
+
+		echo '<div class="notice notice-warning inline"><p>' . esc_html__('No Event Plans found for preview/testing.', 'backstage-venue-manager') . '</p></div>';
+	}
+}
+
+if (!function_exists('vms_email_followups_render_page_notices')) {
+	/**
+	 * @param array<string,mixed> $preview_state
+	 */
+	function vms_email_followups_render_page_notices(string $tab, array $preview_state = array()): void
+	{
+		vms_email_followups_render_notices();
+		if ($tab !== 'preview') {
+			return;
+		}
+
+		vms_email_followups_render_preview_empty_state_notice($preview_state);
 	}
 }
 
 if (!function_exists('vms_email_followups_render_preview_tab')) {
-	function vms_email_followups_render_preview_tab(): void
+	/**
+	 * @param array<string,mixed> $preview_state
+	 */
+	function vms_email_followups_render_preview_tab(array $preview_state = array()): void
 	{
-		$event_plan_id = vms_email_followups_selected_plan_id();
-		$email_key = isset($_GET['email_key']) ? sanitize_key((string) $_GET['email_key']) : 'know_before';
-		if (!isset(vms_email_followups_template_definitions()[$email_key])) {
+		if (empty($preview_state)) {
+			$preview_state = vms_email_followups_resolve_preview_state();
+		}
+
+		$event_plan_id = isset($preview_state['event_plan_id']) ? absint($preview_state['event_plan_id']) : 0;
+		$email_key = isset($preview_state['email_key']) ? sanitize_key((string) $preview_state['email_key']) : 'know_before';
+		$event_choices = isset($preview_state['event_choices']) && is_array($preview_state['event_choices'])
+			? $preview_state['event_choices']
+			: (function_exists('vms_email_followups_event_choices') ? vms_email_followups_event_choices(120, $event_plan_id) : vms_email_followups_upcoming_event_choices(80));
+		$template_definitions = isset($preview_state['template_definitions']) && is_array($preview_state['template_definitions'])
+			? $preview_state['template_definitions']
+			: vms_email_followups_template_definitions();
+		if (!isset($template_definitions[$email_key])) {
 			$email_key = 'know_before';
 		}
 		$settings = vms_email_followups_settings();
@@ -328,7 +409,6 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 		echo '<input type="hidden" name="page" value="' . esc_attr(vms_email_followups_admin_slug()) . '" />';
 		echo '<input type="hidden" name="tab" value="preview" />';
 		echo '<label><span>' . esc_html__('Event', 'backstage-venue-manager') . '</span><select name="event_plan_id">';
-		$event_choices = function_exists('vms_email_followups_event_choices') ? vms_email_followups_event_choices(120, $event_plan_id) : vms_email_followups_upcoming_event_choices(80);
 		foreach ($event_choices as $plan) {
 			if (!$plan instanceof WP_Post) {
 				continue;
@@ -338,7 +418,7 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 		}
 		echo '</select></label>';
 		echo '<label><span>' . esc_html__('Template', 'backstage-venue-manager') . '</span><select name="email_key">';
-		foreach (vms_email_followups_template_definitions() as $key => $def) {
+		foreach ($template_definitions as $key => $def) {
 			echo '<option value="' . esc_attr($key) . '" ' . selected($email_key, $key, false) . '>' . esc_html((string) ($def['label'] ?? $key)) . '</option>';
 		}
 		echo '</select></label>';
@@ -346,7 +426,6 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 		echo '</form>';
 
 		if ($event_plan_id <= 0) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__('No Event Plans found for preview/testing.', 'backstage-venue-manager') . '</p></div>';
 			return;
 		}
 
