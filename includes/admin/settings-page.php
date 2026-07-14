@@ -1644,12 +1644,20 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
   }
 }
 
+function vms_render_settings_page_notices(): void
+{
+  if (isset($_GET['vms_notice']) && (string) $_GET['vms_notice'] === 'default_venue_set') {
+    echo '<div class="notice notice-success"><p>' . esc_html__('Default venue updated.', 'backstage-venue-manager') . '</p></div>';
+  }
+}
+
 function vms_render_settings_page()
 {
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
         'title' => __('VMS Settings', 'backstage-venue-manager'),
+        'notices_callback' => 'vms_render_settings_page_notices',
       ),
       'vms_render_settings_page_content'
     );
@@ -1657,17 +1665,13 @@ function vms_render_settings_page()
   }
 
   echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';
+  vms_render_settings_page_notices();
   vms_render_settings_page_content();
   echo '</div>';
 }
 
 function vms_render_settings_page_content()
 {
-
-  if (isset($_GET['vms_notice']) && (string) $_GET['vms_notice'] === 'default_venue_set') {
-    echo '<div class="notice notice-success"><p>' . esc_html__('Default venue updated.', 'backstage-venue-manager') . '</p></div>';
-  }
-
   if (defined('VMS_VERSION')) {
     echo '<p class="description">' . esc_html__('Plugin version:', 'backstage-venue-manager') . ' ' . esc_html((string) VMS_VERSION) . '</p>';
   }

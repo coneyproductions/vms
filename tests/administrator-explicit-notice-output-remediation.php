@@ -786,6 +786,7 @@ require_once dirname(__DIR__) . '/includes/modules/email-followups/admin-ui.php'
 require_once dirname(__DIR__) . '/includes/social-share/admin.php';
 require_once dirname(__DIR__) . '/includes/admin/event-feedback.php';
 require_once dirname(__DIR__) . '/includes/admin/ticket-integrity-page.php';
+require_once dirname(__DIR__) . '/includes/admin/settings-page.php';
 
 $pluginRoot = dirname(__DIR__);
 $shellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
@@ -798,6 +799,9 @@ $socialSource = file_get_contents($pluginRoot . '/includes/social-share/admin.ph
 $emailFollowupsSource = file_get_contents($pluginRoot . '/includes/modules/email-followups/admin-ui.php');
 $eventFeedbackSource = file_get_contents($pluginRoot . '/includes/admin/event-feedback.php');
 $ticketIntegritySource = file_get_contents($pluginRoot . '/includes/admin/ticket-integrity-page.php');
+$settingsSource = file_get_contents($pluginRoot . '/includes/admin/settings-page.php');
+$toursAdminSource = file_get_contents($pluginRoot . '/includes/tours/class-vms-tours-admin.php');
+$scheduleSource = file_get_contents($pluginRoot . '/includes/admin/schedule.php');
 $eventPlanImportSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/page-event-plan-import.php');
 $eventPlanImportActionsSource = file_get_contents($pluginRoot . '/includes/admin/data-tools/actions-event-plan-import.php');
 $eventPlanImportEngineSource = file_get_contents($pluginRoot . '/includes/services/event-plan-import/event-plan-import-engine.php');
@@ -820,6 +824,9 @@ $assert(is_string($socialSource) && $socialSource !== '', 'Social Sharing source
 $assert(is_string($emailFollowupsSource) && $emailFollowupsSource !== '', 'Email Follow-Ups source should be readable.');
 $assert(is_string($eventFeedbackSource) && $eventFeedbackSource !== '', 'Event Feedback source should be readable.');
 $assert(is_string($ticketIntegritySource) && $ticketIntegritySource !== '', 'Ticket Integrity source should be readable.');
+$assert(is_string($settingsSource) && $settingsSource !== '', 'Settings source should be readable.');
+$assert(is_string($toursAdminSource) && $toursAdminSource !== '', 'Guided Tours admin source should be readable.');
+$assert(is_string($scheduleSource) && $scheduleSource !== '', 'Schedule source should be readable.');
 $assert(is_string($eventPlanImportSource) && $eventPlanImportSource !== '', 'Event Plan Import source should be readable.');
 $assert(is_string($eventPlanImportActionsSource) && $eventPlanImportActionsSource !== '', 'Event Plan Import actions source should be readable.');
 $assert(is_string($eventPlanImportEngineSource) && $eventPlanImportEngineSource !== '', 'Event Plan Import engine source should be readable.');
@@ -925,6 +932,7 @@ $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback
 $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notices~', $emailFollowupsSource, $unusedEmailFollowupsMatches);
 $eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
 $ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
+$settingsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_render_settings_page_notices[\'"]~', $settingsSource, $unusedSettingsMatches);
 $eventPlanImportNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportSource, $unusedEventPlanImportMatches);
 $socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
@@ -944,6 +952,7 @@ $expectedNoticesCallbackFiles = array(
 	'admin/data-tools/page-event-plan-import.php',
 	'admin/due-dates.php',
 	'admin/event-feedback.php',
+	'admin/settings-page.php',
 	'admin/square-sync-protection.php',
 	'admin/staff-certifications.php',
 	'admin/ticket-integrity-page.php',
@@ -956,19 +965,105 @@ sort($expectedActionCallerFiles);
 $noticesCallbackFiles = array_values(array_unique($noticesCallbackFiles));
 sort($noticesCallbackFiles);
 sort($expectedNoticesCallbackFiles);
-$assert($noticesCallbackCount === 11, 'Only eleven production notices_callback assignments should exist.');
+$assert($noticesCallbackCount === 12, 'Only twelve production notices_callback assignments should exist.');
 $assert($statusNoticeCallbackCount === 2, 'Status Notices should still contribute exactly two production notices_callback callers.');
 $assert($continuityNoticeCallbackCount === 1, 'Continuity Binder should contribute exactly one production notices_callback caller.');
 $assert($dueDatesNoticeCallbackCount === 1, 'Due Dates should contribute exactly one production notices_callback caller.');
 $assert($eventFeedbackNoticeCallbackCount === 1, 'Event Feedback should contribute exactly one production notices_callback caller.');
 $assert($ticketIntegrityNoticeCallbackCount === 1, 'Ticket Integrity should contribute exactly one production notices_callback caller.');
+$assert($settingsNoticeCallbackCount === 1, 'Settings should contribute exactly one production notices_callback caller.');
 $assert($squareSyncNoticeCallbackCount === 1, 'Square Sync Protection should contribute exactly one production notices_callback caller.');
 $assert($staffCertificationsNoticeCallbackCount === 1, 'Staff Certifications should contribute exactly one production notices_callback caller.');
 $assert($emailFollowupsNoticeCallbackCount === 1, 'Email Follow-Ups should contribute exactly one production notices_callback caller.');
 $assert($eventPlanImportNoticeCallbackCount === 1, 'Event Plan Import should contribute exactly one production notices_callback caller.');
 $assert($socialNoticeCallbackCount === 1, 'Social Sharing should contribute exactly one production notices_callback caller.');
 $assert($actionCallerFiles === $expectedActionCallerFiles, 'Header-actions caller inventory should stay limited to the inspected production files.');
-$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Ticket Integrity, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
+$assert($noticesCallbackFiles === $expectedNoticesCallbackFiles, 'Explicit notice callbacks should remain limited to Status Notices, Continuity Binder, Event Plan Import, Due Dates, Event Feedback, Settings, Ticket Integrity, Square Sync Protection, Staff Certifications, Email Follow-Ups, and Social Sharing.');
+
+$assert(strpos($settingsSource, 'function vms_render_settings_page_notices(): void') !== false, 'Settings should expose a dedicated explicit notice callback for the fixed default-venue redirect notice.');
+$settingsNoticeStart = strpos($settingsSource, 'function vms_render_settings_page_notices(): void');
+$settingsNoticeEnd = strpos($settingsSource, 'function vms_render_settings_page()');
+$assert($settingsNoticeStart !== false && $settingsNoticeEnd !== false && $settingsNoticeEnd > $settingsNoticeStart, 'Settings explicit notice callback body should be locatable.');
+$settingsNoticeSource = substr($settingsSource, (int) $settingsNoticeStart, (int) $settingsNoticeEnd - (int) $settingsNoticeStart);
+$settingsPageStart = strpos($settingsSource, 'function vms_render_settings_page()');
+$settingsPageEnd = strpos($settingsSource, 'function vms_render_settings_page_content()');
+$assert($settingsPageStart !== false && $settingsPageEnd !== false && $settingsPageEnd > $settingsPageStart, 'Settings page renderer body should be locatable.');
+$settingsPageSource = substr($settingsSource, (int) $settingsPageStart, (int) $settingsPageEnd - (int) $settingsPageStart);
+$settingsContentStart = strpos($settingsSource, 'function vms_render_settings_page_content()');
+$settingsContentEnd = strpos($settingsSource, "\n  // Ticketing");
+$assert($settingsContentStart !== false && $settingsContentEnd !== false && $settingsContentEnd > $settingsContentStart, 'Settings content callback pre-ticketing body should be locatable.');
+$settingsContentPreludeSource = substr($settingsSource, (int) $settingsContentStart, (int) $settingsContentEnd - (int) $settingsContentStart);
+$assert(strpos($settingsPageSource, "'notices_callback' => 'vms_render_settings_page_notices'") !== false, 'Settings shell call should route the fixed default-venue redirect notice through the explicit notice callback.');
+$assert(strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';") !== false, 'Settings no-shell fallback heading should remain locatable.');
+$settingsFallbackHeadingPos = strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';");
+$settingsFallbackNoticePos = strpos($settingsPageSource, 'vms_render_settings_page_notices();');
+$settingsFallbackContentPos = strpos($settingsPageSource, 'vms_render_settings_page_content();');
+$assert($settingsFallbackHeadingPos !== false && $settingsFallbackNoticePos !== false && $settingsFallbackContentPos !== false && $settingsFallbackHeadingPos < $settingsFallbackNoticePos && $settingsFallbackNoticePos < $settingsFallbackContentPos, 'Settings no-shell fallback should preserve heading, fixed redirect notice, then content ordering.');
+$assert(strpos($settingsContentPreludeSource, 'default_venue_set') === false, 'Settings content callback should no longer emit the moved fixed redirect notice directly.');
+$assert(strpos($settingsContentPreludeSource, 'Default venue updated.') === false, 'Settings content callback should no longer contain the moved fixed redirect notice copy.');
+$assert(strpos($settingsNoticeSource, "isset(\$_GET['vms_notice']) && (string) \$_GET['vms_notice'] === 'default_venue_set'") !== false, 'Settings explicit notice callback should preserve the exact raw redirect-status comparison.');
+$assert(strpos($settingsNoticeSource, "<div class=\"notice notice-success\"><p>") !== false, 'Settings explicit notice callback should preserve the fixed simple notice fragment.');
+$assert(strpos($settingsNoticeSource, 'Default venue updated.') !== false, 'Settings explicit notice callback should preserve the fixed translated notice copy.');
+$assert(strpos($settingsNoticeSource, '<strong>') === false && strpos($settingsNoticeSource, '<a ') === false && strpos($settingsNoticeSource, '<button') === false && strpos($settingsNoticeSource, '<span') === false, 'Settings explicit notice callback should stay within the simple fragment contract.');
+$assert(strpos($settingsNoticeSource, 'get_option(') === false && strpos($settingsNoticeSource, 'get_transient(') === false && strpos($settingsNoticeSource, 'set_transient(') === false && strpos($settingsNoticeSource, 'delete_transient(') === false, 'Settings explicit notice callback should not introduce provider or storage reads or mutations.');
+$assert(strpos($settingsNoticeSource, 'apply_filters(') === false && strpos($settingsNoticeSource, 'do_action(') === false && strpos($settingsNoticeSource, 'settings_errors(') === false && strpos($settingsNoticeSource, 'add_settings_error(') === false, 'Settings explicit notice callback should remain page-local and outside Settings API notice ownership.');
+$assert(strpos($settingsSource, 'settings_errors(') === false && strpos($settingsSource, 'add_settings_error(') === false, 'Settings page should not define a Settings API notice family for this pass.');
+$assert(strpos($settingsSource, 'vms-settings-default-venue-alert') !== false, 'Settings page should preserve the richer nested default-venue alert family in ordinary content.');
+$assert(strpos($settingsSource, '<strong>Entitlement image sync complete.</strong>') !== false, 'Settings page should preserve the richer entitlement-image-sync notice family in ordinary content.');
+$assert(strpos($settingsSource, '<strong>Integrity scan complete.</strong>') !== false, 'Settings page should preserve the richer integrity-scan notice family in ordinary content.');
+$assert(strpos($toursAdminSource, '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">') !== false, 'Guided Tours reset notice should remain nested inside the page wrapper.');
+$assert(strpos($toursAdminSource, '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice">') !== false, 'Guided Tours reset notice should remain the extra-attribute nested content boundary and stay unmigrated.');
+$assert(strpos($toursAdminSource, "'notices_callback' =>") === false, 'Guided Tours should remain without an explicit notice callback in this pass.');
+$assert(strpos($scheduleSource, "echo '<div class=\"vms-admin-schedule-content\">';") !== false, 'Schedule notice families should remain nested inside the schedule content wrapper.');
+$assert(strpos($scheduleSource, "echo '<div class=\"notice notice-error\"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';") !== false, 'Schedule should preserve the richer action-required notice family in ordinary content.');
+$assert(strpos($scheduleSource, '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>') !== false, 'Schedule should preserve the nested venue-selection empty-state notice.');
+$assert(strpos($scheduleSource, '<div class="notice notice-warning"><p>No venues found to display.</p></div>') !== false, 'Schedule should preserve the nested no-venues empty-state notice.');
+$assert(strpos($scheduleSource, "'notices_callback' =>") === false, 'Schedule should remain without an explicit notice callback in this pass.');
+
+$_GET = array(
+	'vms_notice' => 'default_venue_set',
+);
+ob_start();
+vms_render_settings_page_notices();
+$settingsDefaultVenueNotice = (string) ob_get_clean();
+$assert(
+	$settingsDefaultVenueNotice === '<div class="notice notice-success"><p>Default venue updated.</p></div>',
+	'Settings explicit notice callback should preserve the fixed default-venue notice fragment.'
+);
+$assert(
+	wp_kses($settingsDefaultVenueNotice, vms_admin_ui_explicit_notice_allowed_html()) === $settingsDefaultVenueNotice,
+	'The explicit notice allowlist should admit the Settings default-venue notice unchanged.'
+);
+
+$_GET = array();
+ob_start();
+vms_render_settings_page_notices();
+$settingsMissingNotice = (string) ob_get_clean();
+$assert($settingsMissingNotice === '', 'Settings explicit notice callback should stay silent when the redirect-status flag is absent.');
+
+$_GET = array(
+	'vms_notice' => '',
+);
+ob_start();
+vms_render_settings_page_notices();
+$settingsEmptyNotice = (string) ob_get_clean();
+$assert($settingsEmptyNotice === '', 'Settings explicit notice callback should stay silent when the redirect-status flag is empty.');
+
+$_GET = array(
+	'vms_notice' => 'not_real',
+);
+ob_start();
+vms_render_settings_page_notices();
+$settingsUnknownNotice = (string) ob_get_clean();
+$assert($settingsUnknownNotice === '', 'Settings explicit notice callback should stay silent for unknown redirect-status values.');
+
+$_GET = array(
+	'vms_notice' => '<strong>default_venue_set</strong>',
+);
+ob_start();
+vms_render_settings_page_notices();
+$settingsMalformedNotice = (string) ob_get_clean();
+$assert($settingsMalformedNotice === '', 'Settings explicit notice callback should stay silent for malformed redirect-status values that do not exactly match the fixed slug.');
 $assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
 $noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
