@@ -2956,6 +2956,55 @@ if (!function_exists('vms_pass_claims_render_public_success_confirmation')) {
 	}
 }
 
+if (!function_exists('vms_pass_claims_public_form_html')) {
+	function vms_pass_claims_public_form_html(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): string
+	{
+		$html = '<h1>' . esc_html__('Claim Your Pass', 'backstage-venue-manager') . '</h1>';
+		$html .= '<p class="vms-pass-meta">' . esc_html__('Complete this claim before arrival. Door staff can only check in claimed reservations.', 'backstage-venue-manager') . '</p>';
+		$html .= '<p class="vms-pass-note"><strong>' . esc_html__('Batch:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($batch['batch_name'] ?? '')) . '</p>';
+		if ($error !== '') {
+			$html .= '<p class="vms-pass-error">' . esc_html($error) . '</p>';
+		}
+
+		$html .= '<form method="post">';
+		$html .= wp_nonce_field('vms_pass_claim_submit', '_vms_pass_claim_nonce', true, false);
+		$html .= '<div class="vms-pass-grid">';
+		$html .= '<label>' . esc_html__('First Name', 'backstage-venue-manager') . '<input type="text" name="first_name" value="' . esc_attr((string) ($posted['first_name'] ?? '')) . '" required></label>';
+		$html .= '<label>' . esc_html__('Last Name', 'backstage-venue-manager') . '<input type="text" name="last_name" value="' . esc_attr((string) ($posted['last_name'] ?? '')) . '" required></label>';
+		$html .= '<label>' . esc_html__('Phone', 'backstage-venue-manager') . '<input type="text" name="phone" value="' . esc_attr((string) ($posted['phone'] ?? '')) . '" required></label>';
+		$html .= '<label>' . esc_html__('Email (optional)', 'backstage-venue-manager') . '<input type="email" name="email" value="' . esc_attr((string) ($posted['email'] ?? '')) . '"></label>';
+		$html .= '<label class="vms-pass-span-2">' . esc_html__('Select Event', 'backstage-venue-manager') . '<select name="event_plan_id" required>';
+		$html .= '<option value="">' . esc_html__('Choose an event', 'backstage-venue-manager') . '</option>';
+		foreach ($eligible_events as $event) {
+			$event_id = (int) ($event['id'] ?? 0);
+			$label = (string) ($event['title'] ?? 'Event');
+			if (!empty($event['event_date'])) {
+				$label .= ' (' . vms_pass_claims_format_public_date((string) $event['event_date']) . ')';
+			}
+			if (!empty($event['venue_name'])) {
+				$label .= ' - ' . (string) $event['venue_name'];
+			}
+			$html .= '<option value="' . esc_attr((string) $event_id) . '"' . selected((int) ($posted['event_plan_id'] ?? 0), $event_id, false) . '>' . esc_html($label) . '</option>';
+		}
+		$html .= '</select></label>';
+		/* translators: %d: maximum number of people this pass link can admit. */
+		$html .= '<label class="vms-pass-span-2">' . esc_html__('How many people will use this pass?', 'backstage-venue-manager') . '<span class="vms-pass-number-control"><button type="button" class="vms-pass-number-control__button" data-vms-pass-party-decrease aria-label="' . esc_attr__('Decrease party size', 'backstage-venue-manager') . '">-</button><input type="number" name="party_size" min="1" max="' . esc_attr((string) $max_party_size) . '" step="1" inputmode="numeric" data-vms-pass-party-size value="' . esc_attr((string) max(1, min($max_party_size, (int) ($posted['party_size'] ?? 1)))) . '"><button type="button" class="vms-pass-number-control__button" data-vms-pass-party-increase aria-label="' . esc_attr__('Increase party size', 'backstage-venue-manager') . '">+</button></span><span class="vms-pass-field-help">' . esc_html(sprintf(__('This link can admit up to %d people.', 'backstage-venue-manager'), $max_party_size)) . '</span></label>';
+		$html .= '<label class="vms-pass-span-2 vms-pass-checkbox"><input type="checkbox" name="opt_in" value="1"' . checked(1, (int) ($posted['opt_in'] ?? 0), false) . '> <span>' . esc_html__('Send me event updates and reminders (optional). Your pass email is sent automatically if you enter an email.', 'backstage-venue-manager') . '</span></label>';
+		$html .= '</div>';
+		$html .= '<p class="vms-pass-actions"><button type="submit" name="vms_pass_claim_submit" value="1">' . esc_html__('Claim Pass', 'backstage-venue-manager') . '</button></p>';
+		$html .= '</form>';
+
+		return $html;
+	}
+}
+
+if (!function_exists('vms_pass_claims_render_public_form')) {
+	function vms_pass_claims_render_public_form(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): void
+	{
+		vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), vms_pass_claims_public_form_html($batch, $eligible_events, $posted, $error, $max_party_size));
+	}
+}
+
 if (!function_exists('vms_pass_claims_render_public_shell')) {
 	function vms_pass_claims_render_public_shell(string $headline, string $content_html): void
 	{
@@ -3129,45 +3178,11 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 			vms_pass_claims_render_public_success_confirmation($success, (string) $posted['email']);
 		}
 
-		$html .= '<h1>' . esc_html__('Claim Your Pass', 'backstage-venue-manager') . '</h1>';
-		$html .= '<p class="vms-pass-meta">' . esc_html__('Complete this claim before arrival. Door staff can only check in claimed reservations.', 'backstage-venue-manager') . '</p>';
-		$html .= '<p class="vms-pass-note"><strong>' . esc_html__('Batch:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($batch['batch_name'] ?? '')) . '</p>';
-		if ($error !== '') {
-			$html .= '<p class="vms-pass-error">' . esc_html($error) . '</p>';
-		}
-
-		$html .= '<form method="post">';
-		$html .= wp_nonce_field('vms_pass_claim_submit', '_vms_pass_claim_nonce', true, false);
-		$html .= '<div class="vms-pass-grid">';
-		$html .= '<label>' . esc_html__('First Name', 'backstage-venue-manager') . '<input type="text" name="first_name" value="' . esc_attr((string) $posted['first_name']) . '" required></label>';
-		$html .= '<label>' . esc_html__('Last Name', 'backstage-venue-manager') . '<input type="text" name="last_name" value="' . esc_attr((string) $posted['last_name']) . '" required></label>';
-		$html .= '<label>' . esc_html__('Phone', 'backstage-venue-manager') . '<input type="text" name="phone" value="' . esc_attr((string) $posted['phone']) . '" required></label>';
-		$html .= '<label>' . esc_html__('Email (optional)', 'backstage-venue-manager') . '<input type="email" name="email" value="' . esc_attr((string) $posted['email']) . '"></label>';
-		$html .= '<label class="vms-pass-span-2">' . esc_html__('Select Event', 'backstage-venue-manager') . '<select name="event_plan_id" required>';
-		$html .= '<option value="">' . esc_html__('Choose an event', 'backstage-venue-manager') . '</option>';
-		foreach ($eligible_events as $event) {
-			$event_id = (int) ($event['id'] ?? 0);
-			$label = (string) ($event['title'] ?? 'Event');
-			if (!empty($event['event_date'])) {
-				$label .= ' (' . vms_pass_claims_format_public_date((string) $event['event_date']) . ')';
-			}
-			if (!empty($event['venue_name'])) {
-				$label .= ' - ' . (string) $event['venue_name'];
-			}
-			$html .= '<option value="' . esc_attr((string) $event_id) . '"' . selected((int) $posted['event_plan_id'], $event_id, false) . '>' . esc_html($label) . '</option>';
-		}
-		$html .= '</select></label>';
 		$global_max_party_size = function_exists('vms_admission_settings') ? max(1, (int) (vms_admission_settings()['max_party_size'] ?? 6)) : 6;
 		$batch_max_party_size = max(1, (int) ($batch['admissions_per_link'] ?? 1));
 		$max_party_size = max(1, min($global_max_party_size, $batch_max_party_size));
-		/* translators: %d: maximum number of people this pass link can admit. */
-		$html .= '<label class="vms-pass-span-2">' . esc_html__('How many people will use this pass?', 'backstage-venue-manager') . '<span class="vms-pass-number-control"><button type="button" class="vms-pass-number-control__button" data-vms-pass-party-decrease aria-label="' . esc_attr__('Decrease party size', 'backstage-venue-manager') . '">-</button><input type="number" name="party_size" min="1" max="' . esc_attr((string) $max_party_size) . '" step="1" inputmode="numeric" data-vms-pass-party-size value="' . esc_attr((string) max(1, min($max_party_size, (int) $posted['party_size']))) . '"><button type="button" class="vms-pass-number-control__button" data-vms-pass-party-increase aria-label="' . esc_attr__('Increase party size', 'backstage-venue-manager') . '">+</button></span><span class="vms-pass-field-help">' . esc_html(sprintf(__('This link can admit up to %d people.', 'backstage-venue-manager'), $max_party_size)) . '</span></label>';
-		$html .= '<label class="vms-pass-span-2 vms-pass-checkbox"><input type="checkbox" name="opt_in" value="1"' . checked(1, (int) $posted['opt_in'], false) . '> <span>' . esc_html__('Send me event updates and reminders (optional). Your pass email is sent automatically if you enter an email.', 'backstage-venue-manager') . '</span></label>';
-		$html .= '</div>';
-		$html .= '<p class="vms-pass-actions"><button type="submit" name="vms_pass_claim_submit" value="1">' . esc_html__('Claim Pass', 'backstage-venue-manager') . '</button></p>';
-		$html .= '</form>';
 
-		vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), $html);
+		vms_pass_claims_render_public_form($batch, $eligible_events, $posted, $error, $max_party_size);
 	}
 }
 

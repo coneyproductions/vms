@@ -550,7 +550,6 @@ $assert(strpos($successHelperSource, 'wp_verify_nonce(') === false && strpos($su
 
 $assert(strpos($passClaimsSource, "vms_pass_claims_render_public_success_confirmation(\$success, (string) \$posted['email']);") !== false, 'Pass Claims should route successful claims through the dedicated success-confirmation renderer.');
 $assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), \$html);") === false, 'Pass Claims should remove the old raw success html handoff.');
-$assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), \$html);") !== false, 'The interactive claim-form Pass Claims family should remain on its existing public shell handoff.');
 $assert(strpos($passClaimsSource, 'function vms_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
 $assert(strpos($passClaimsSource, 'function vms_pass_claims_public_claimed_card_html(int $entry_id): string') !== false, 'The accepted Pass Claims already-claimed family should remain defined.');
 

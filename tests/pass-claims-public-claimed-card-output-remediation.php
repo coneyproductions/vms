@@ -511,7 +511,6 @@ foreach (array('<a', '<button', '<form', '<input', '<img', '<ul', '<ol', '<table
 
 $assert(strpos($passClaimsSource, 'vms_pass_claims_render_public_claimed_card((int) ($token_row[\'reservation_entry_id\'] ?? 0));') !== false, 'Pass Claims should route the claimed-token branch through the dedicated already-claimed renderer.');
 $assert(strpos($passClaimsSource, '$claimed_html') === false, 'Pass Claims should remove the old claimed_html handoff variable from the public claimed branch.');
-$assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), \$html);") !== false, 'The interactive claim-form Pass Claims family should remain on its existing public shell handoff.');
 $assert(strpos($passClaimsSource, 'function vms_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
 
 $resetRuntime();
