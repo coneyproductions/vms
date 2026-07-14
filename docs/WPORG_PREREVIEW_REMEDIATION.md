@@ -748,6 +748,31 @@ Acceptable note:
   - Settings entitlement image-sync and integrity-scan structured-result families remain deferred separately.
 - Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. This accepted Pass Claims Administrator slice does not complete the overall `WPORG-24` batch.
 
+### `WPORG-24 E1` Pass Claims public status sink reduction result
+
+- Result: Pass Claims public output was re-inventoried as its own `WPORG-24` boundary, and the smallest independently complete family proved to be the early-return public status screens inside `vms_pass_claims_render_public_claim()`. Those branches now route through a local status-screen renderer / fragment contract before reaching the shared public shell.
+- Public entry-point and shell map:
+  - Public route registration remains `add_action('init', 'vms_pass_claims_register_rewrite', 30)` plus `add_rewrite_tag('%vms_pass_claim_token%', '([^&]+)')` and `add_rewrite_rule('^pass/claim/([^/]+)/?$', 'index.php?vms_pass_claim_token=$matches[1]', 'top')`.
+  - Browser entry remains `add_action('template_redirect', 'vms_pass_claims_template_router', 0)`, which still returns in `wp-admin`, resolves the claim token from query-var / query-string / request-URI fallbacks, and then calls `vms_pass_claims_render_public_claim($token)`.
+  - Shared public shell remains `vms_pass_claims_render_public_shell(string $headline, string $content_html): void`, still emitting the document-title filter, optional asset enqueues, `<main id="primary" class="site-main vms-pass-public-page" role="main">`, `<div class="vms-pass-wrap"><div class="vms-pass-card">`, the raw `echo $content_html;` sink, the closing wrappers, and the footer / fallback document close.
+- Family inventory and qualification decision:
+  - Selected family: the fixed early-return public status screens for invalid token, missing batch, inactive / void pass, expired pass, rate-limit wait, and the empty-eligible-events notice variants.
+  - Exact selected markup contract across every branch is now only `<h1>...</h1><p class="vms-pass-error">...</p>`.
+  - Unselected public families remained separate because they require broader markup and state: the already-claimed card (`$claimed_html` with `<strong>` metadata), the success confirmation card (`$html` with divs, images, spans, links, buttons, and QR output), and the interactive claim form (`$html` with form fields, nonce field, `data-*`, ARIA attributes, buttons, and validation/state reuse).
+- Authentication, state, provenance, and contract:
+  - Public status rendering remains unauthenticated and nonce-free by design; ownership stays token-based through `vms_pass_claims_find_token_by_raw()`, batch resolution stays in `vms_pass_claims_get_batch_by_id()`, rate limiting stays in `vms_pass_claims_rate_limit_hit()`, and empty-event state stays in `vms_pass_claims_eligible_events_for_batch()` plus `vms_pass_claims_empty_events_notice()`.
+  - The selected family adds one local contract only: `vms_pass_claims_public_status_allowed_html()` now allows exactly `h1` and `p[class]`; `vms_pass_claims_public_status_fragment()` builds the status fragment with `esc_html()` for both title and message and applies `wp_kses()` once at that local boundary; `vms_pass_claims_render_public_status_screen()` passes the contracted fragment to the unchanged shared shell.
+  - Empty-events dynamic title / message text still comes only from `vms_pass_claims_empty_events_notice()` and now remains inert text even if HTML-like provider content is returned. No links, buttons, forms, IDs, inline styles, scripts, JSON, images, or extra attributes were added.
+  - Query / provider / storage behavior remains unchanged for the selected family: invalid-token still stops after token lookup, missing-batch still stops after batch lookup, unavailable / expired still stop before rate limiting and eligibility checks, rate-limited still stops after the rate-limit check, and empty-events still stops after the eligibility and empty-notice reads. No new mutations were introduced.
+- Unchanged and deferred boundaries:
+  - The shared public shell still contains the raw `echo $content_html;` sink for unselected Pass Claims families.
+  - The already-claimed, success, and interactive claim-form public families remain on their original shell handoffs and were not contracted in this slice.
+  - The accepted Guest Passes Administrator notice family remains unchanged.
+  - The shared Administrator shell, `vms_admin_ui_explicit_notice_allowed_html()`, `vms_admin_ui_rich_explicit_notice_allowed_html()`, raw `$captured_notices_html`, and raw `$content_html` remain unchanged and unresolved here.
+  - Settings entitlement image-sync and integrity-scan structured-result families remain deferred separately.
+- Focused coverage and validation: new coverage lives in `tests/pass-claims-public-status-output-remediation.php`, which proves the exact route registration, token resolution fallbacks, selected-family branch counts, preserved markup / ordering, exact `h1` + `p[class]` allowlist, escaped HTML-like provider text, unchanged public-shell raw sink for unselected families, unchanged Administrator shell raw sinks, and unchanged Pass Claims family boundaries. Validation ran with `php -l includes/modules/admissions/pass-claims.php`, `php -l tests/pass-claims-public-status-output-remediation.php`, `php tests/pass-claims-public-status-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, `php tests/decoded-json-validation.php`, and `git diff --check`.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. This accepted Pass Claims public-status slice does not complete the overall `WPORG-24` batch.
+
 ## F. Prefixing and Collision Safety
 
 Status:

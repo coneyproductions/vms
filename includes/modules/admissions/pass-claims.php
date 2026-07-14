@@ -2835,6 +2835,34 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 	}
 }
 
+if (!function_exists('vms_pass_claims_public_status_allowed_html')) {
+	function vms_pass_claims_public_status_allowed_html(): array
+	{
+		return array(
+			'h1' => array(),
+			'p' => array(
+				'class' => true,
+			),
+		);
+	}
+}
+
+if (!function_exists('vms_pass_claims_public_status_fragment')) {
+	function vms_pass_claims_public_status_fragment(string $title, string $message): string
+	{
+		$html = '<h1>' . esc_html($title) . '</h1>';
+		$html .= '<p class="vms-pass-error">' . esc_html($message) . '</p>';
+		return wp_kses($html, vms_pass_claims_public_status_allowed_html());
+	}
+}
+
+if (!function_exists('vms_pass_claims_render_public_status_screen')) {
+	function vms_pass_claims_render_public_status_screen(string $headline, string $title, string $message): void
+	{
+		vms_pass_claims_render_public_shell($headline, vms_pass_claims_public_status_fragment($title, $message));
+	}
+}
+
 if (!function_exists('vms_pass_claims_render_public_shell')) {
 	function vms_pass_claims_render_public_shell(string $headline, string $content_html): void
 	{
@@ -2879,18 +2907,30 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 	{
 		$token_row = vms_pass_claims_find_token_by_raw($raw_token);
 		if (!$token_row) {
-			vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Pass Not Found', 'backstage-venue-manager') . '</h1><p class="vms-pass-error">' . esc_html__('This pass link is invalid or has expired.', 'backstage-venue-manager') . '</p>');
+			vms_pass_claims_render_public_status_screen(
+				__('Claim Pass', 'backstage-venue-manager'),
+				__('Pass Not Found', 'backstage-venue-manager'),
+				__('This pass link is invalid or has expired.', 'backstage-venue-manager')
+			);
 		}
 
 		$batch = vms_pass_claims_get_batch_by_id((int) ($token_row['batch_id'] ?? 0));
 		if (!$batch) {
-			vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Batch Not Found', 'backstage-venue-manager') . '</h1><p class="vms-pass-error">' . esc_html__('This pass batch is no longer available.', 'backstage-venue-manager') . '</p>');
+			vms_pass_claims_render_public_status_screen(
+				__('Claim Pass', 'backstage-venue-manager'),
+				__('Batch Not Found', 'backstage-venue-manager'),
+				__('This pass batch is no longer available.', 'backstage-venue-manager')
+			);
 		}
 
 		$batch_status = sanitize_key((string) ($batch['status'] ?? ''));
 		$token_status = sanitize_key((string) ($token_row['status'] ?? ''));
 		if ($batch_status !== 'active' || $token_status === 'void') {
-			vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Pass Unavailable', 'backstage-venue-manager') . '</h1><p class="vms-pass-error">' . esc_html__('This pass is not currently active.', 'backstage-venue-manager') . '</p>');
+			vms_pass_claims_render_public_status_screen(
+				__('Claim Pass', 'backstage-venue-manager'),
+				__('Pass Unavailable', 'backstage-venue-manager'),
+				__('This pass is not currently active.', 'backstage-venue-manager')
+			);
 		}
 
 		$expires_at = trim((string) ($batch['expires_at'] ?? ''));
@@ -2899,7 +2939,11 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 			try {
 				$expires_dt = new DateTimeImmutable($expires_at, wp_timezone());
 				if (time() >= $expires_dt->getTimestamp()) {
-					vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Pass Expired', 'backstage-venue-manager') . '</h1><p class="vms-pass-error">' . esc_html__('This pass link has expired.', 'backstage-venue-manager') . '</p>');
+					vms_pass_claims_render_public_status_screen(
+						__('Claim Pass', 'backstage-venue-manager'),
+						__('Pass Expired', 'backstage-venue-manager'),
+						__('This pass link has expired.', 'backstage-venue-manager')
+					);
 				}
 			} catch (Exception $e) {
 				// Ignore malformed expiration values.
@@ -2918,13 +2962,21 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 
 		$ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
 		if ($ip !== '' && vms_pass_claims_rate_limit_hit($ip, (string) ($token_row['token_public_key'] ?? ''))) {
-			vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Please Wait', 'backstage-venue-manager') . '</h1><p class="vms-pass-error">' . esc_html__('Too many attempts. Please try again shortly.', 'backstage-venue-manager') . '</p>');
+			vms_pass_claims_render_public_status_screen(
+				__('Claim Pass', 'backstage-venue-manager'),
+				__('Please Wait', 'backstage-venue-manager'),
+				__('Too many attempts. Please try again shortly.', 'backstage-venue-manager')
+			);
 		}
 
 		$eligible_events = vms_pass_claims_eligible_events_for_batch($batch);
 		if (empty($eligible_events)) {
 			$empty_notice = vms_pass_claims_empty_events_notice($batch);
-			vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html((string) ($empty_notice['title'] ?? __('No Eligible Events', 'backstage-venue-manager'))) . '</h1><p class="vms-pass-error">' . esc_html((string) ($empty_notice['message'] ?? __('There are no eligible published events for this pass right now.', 'backstage-venue-manager'))) . '</p>');
+			vms_pass_claims_render_public_status_screen(
+				__('Claim Pass', 'backstage-venue-manager'),
+				(string) ($empty_notice['title'] ?? __('No Eligible Events', 'backstage-venue-manager')),
+				(string) ($empty_notice['message'] ?? __('There are no eligible published events for this pass right now.', 'backstage-venue-manager'))
+			);
 		}
 
 		$error = '';
