@@ -674,6 +674,34 @@ Acceptable note:
 - Comparison boundary retained: Calendar Reconciliation remains deferred and unchanged as a separate future rich-notice family. This pass did not alter `includes/admin/integrity-calendar-reconcile.php`.
 - Scope confirmation: Pass Claims remains a separate `WPORG-24` boundary. `WPORG-24 E1` remains open and is not marked complete by this slice.
 
+### `WPORG-24 E1` Calendar Reconciliation rich explicit-notice result
+
+- Result: Calendar Reconciliation now reuses the existing narrow Administrator-shell rich notice path instead of emitting its page-level `<strong>` notice family inside content and relying on shared captured-notice extraction.
+- Family inventory and contract confirmation:
+  - The complete rendered `vms_msg` vocabulary remains exactly `confirm_required`, `nothing_selected`, and `done`.
+  - The package-owned writer family remains the single `admin_post_vms_integrity_calendar_links_action` handler, which writes only those same statuses.
+  - `vms_msg` still normalizes through `sanitize_key()`.
+  - `vms_changed` still normalizes through integer casting, remains server-calculated from the handler’s `$changed` counter, and stays escaped safely by rendering only the resulting integer.
+  - Every notice branch remains within the existing rich contract: `div[class]`, `p`, attribute-free `strong`, and text nodes only.
+- Rich callback reuse:
+  - The page now exposes `vms_render_integrity_calendar_reconcile_notice()` and routes it through the existing `rich_notices_callback` shell argument.
+  - The shared rich allowlist remains unchanged at exactly `div[class]`, `p`, and `strong`.
+  - The simple explicit-notice allowlist remains unchanged at exactly `div[class]` and `p`.
+  - No new shell callback, allowlist, or generic arbitrary-rich-HTML sink was introduced.
+- Ordering and content decomposition:
+  - The original content-path notice emission was removed from `vms_render_integrity_calendar_reconcile_page_content()`.
+  - As with Venue Reconciliation, the Calendar page now uses the smallest page-local split needed to preserve historical no-shell ordering: intro text first, then the rich notice, then the remaining ordinary content.
+  - Effective shell ordering remains unchanged because the rich notice still renders before ordinary page content in the shell notice region.
+  - Historical no-shell ordering remains unchanged because the fallback path still renders heading, intro, notice, then the remaining page sections.
+- Unchanged boundaries:
+  - Venue Reconciliation remains behaviorally unchanged and continues to use the same existing rich callback path.
+  - No raw sink allowlisting occurred.
+  - Shared raw `$captured_notices_html` remains unresolved and untouched.
+  - Shared raw `$content_html` remains unresolved and untouched.
+  - `$actions_html` remains under its existing separate contract and was not modified.
+  - Pass Claims remains a separate `WPORG-24` boundary.
+- Scope confirmation: `WPORG-24 E1` remains open and is not marked complete by this slice.
+
 ## F. Prefixing and Collision Safety
 
 Status:
