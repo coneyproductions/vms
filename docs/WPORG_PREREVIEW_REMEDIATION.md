@@ -728,6 +728,26 @@ Acceptable note:
 - Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves the composed Settings shell callback, unchanged default-venue fragment, exact preview / commit fragments, writer / renderer vocabulary parity, missing / expired / malformed / unknown behavior, integer-normalized HTML-like input, preview-before-commit ordering, preserved relative order with `default_venue_set`, removed content-path emission, preserved fallback placeholder seam, unchanged allowlists, and unchanged raw shell sinks. Validation ran with `php -l includes/admin/settings-page.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, and `git diff --check`.
 - Scope confirmation: `WPORG-24 E1` remains open and is not marked complete by this slice.
 
+### `WPORG-24 E1` Pass Claims Administrator notice reduction result
+
+- Result: Pass Claims was inspected as a separate `WPORG-24` boundary, and the Guest Passes Administrator notice family now routes through the existing simple Administrator-shell explicit notice sink instead of being emitted from the page content closure.
+- Rendering path and accepted boundary:
+  - The affected Administrator renderer remains `vms_pass_claims_render_admin_page()` for page slug `vms-passes`, titled `Guest Passes`.
+  - The shell call now supplies `'notices_callback' => 'vms_pass_claims_render_admin_notices'` to `vms_admin_ui_render_shell()`.
+  - The original content-path call removed from the `$content` closure was `vms_pass_claims_render_admin_notices();`.
+  - The no-shell fallback ordering remains heading first, then `vms_pass_claims_render_admin_notices()`, then the tab/content renderer.
+- State lifecycle and contract confirmation:
+  - `vms_pass_claims_render_admin_notices()` still reads only the sanitized `$_GET['result']` selector plus the per-user stored message returned by `vms_pass_claims_pop_user_message()`.
+  - The stored-message pop remains destructive and once-only: `vms_pass_claims_pop_user_message()` still does `get_transient($key); delete_transient($key);` and returns the popped payload for the current user exactly once per render.
+  - The migrated markup remains entirely inside the simple explicit contract: fixed `source_saved`, `batch_preview`, `batch_generated`, `token_voided`, and `token_restored` branches all render `div[class] > p`, and the stored message branch remains `div[class] > p` with `esc_html()`-escaped text only.
+  - HTML-like stored notice text therefore remains escaped and inert; the Administrator simple and rich notice allowlists were not broadened.
+- Unchanged and deferred boundaries:
+  - The public Pass Claims shell `vms_pass_claims_render_public_shell()` still echoes raw `$content_html`, so that standalone browser output remains a separate open boundary.
+  - Public claim forms, success / error cards, other Pass Claims output families, and Pass Claims redirect / export surfaces were not migrated in this slice.
+  - Raw `$captured_notices_html` and raw `$content_html` in the shared Administrator shell remain unresolved and unchanged.
+  - Settings entitlement image-sync and integrity-scan structured-result families remain deferred separately.
+- Status: `WPORG-24 E1` remains `PARTIALLY STALE` / open. This accepted Pass Claims Administrator slice does not complete the overall `WPORG-24` batch.
+
 ## F. Prefixing and Collision Safety
 
 Status:
