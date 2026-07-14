@@ -1653,11 +1653,13 @@ function vms_render_settings_page_notices(): void
 
 function vms_render_settings_page()
 {
+  vms_get_settings_page_ticketing_stock_notice_state(true);
+
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
         'title' => __('VMS Settings', 'backstage-venue-manager'),
-        'notices_callback' => 'vms_render_settings_page_notices',
+        'notices_callback' => 'vms_render_settings_page_notice_bar',
       ),
       'vms_render_settings_page_content'
     );
@@ -1666,11 +1668,19 @@ function vms_render_settings_page()
 
   echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';
   vms_render_settings_page_notices();
-  vms_render_settings_page_content();
+  ob_start();
+  vms_render_settings_page_content(true);
+  $content_html = (string) ob_get_clean();
+  $content_html = str_replace(
+    vms_settings_page_ticketing_stock_notice_placeholder(),
+    vms_get_settings_page_ticketing_stock_notice_markup(),
+    $content_html
+  );
+  echo $content_html;
   echo '</div>';
 }
 
-function vms_render_settings_page_content()
+function vms_render_settings_page_content(bool $include_ticketing_stock_notice_placeholder = false)
 {
   if (defined('VMS_VERSION')) {
     echo '<p class="description">' . esc_html__('Plugin version:', 'backstage-venue-manager') . ' ' . esc_html((string) VMS_VERSION) . '</p>';
@@ -1856,28 +1866,11 @@ function vms_render_settings_page_content()
 
 
   // Ticketing inventory tools (Preview → Commit)
-  $preview_key = function_exists('vms_ticketing_stock_preview_transient_key')
-    ? vms_ticketing_stock_preview_transient_key(get_current_user_id())
-    : 'vms_ticketing_stock_preview_' . max(1, get_current_user_id());
-  $preview_rep = get_transient($preview_key);
+  $ticketing_stock_notice_state = vms_get_settings_page_ticketing_stock_notice_state();
+  $preview_rep = $ticketing_stock_notice_state['preview_report'] ?? false;
 
-  if (isset($_GET['vms_ticketing_stock_preview_done']) && is_array($preview_rep)) {
-    $checked = (int) ($preview_rep['checked'] ?? 0);
-    $updated = (int) ($preview_rep['updated'] ?? 0);
-    $skipped = (int) ($preview_rep['skipped'] ?? 0);
-    $errors  = (int) ($preview_rep['errors'] ?? 0);
-    echo '<div class="notice notice-info"><p>' . esc_html(sprintf('Ticketing stock preview ready: checked=%d would_update=%d skipped=%d errors=%d', $checked, $updated, $skipped, $errors)) . '</p></div>';
-  }
-
-  if (isset($_GET['vms_ticketing_stock_commit_done'])) {
-    $rep = get_transient('vms_ticketing_stock_reconcile_last');
-    if (is_array($rep)) {
-      $checked = (int) ($rep['checked'] ?? 0);
-      $updated = (int) ($rep['updated'] ?? 0);
-      $skipped = (int) ($rep['skipped'] ?? 0);
-      $errors  = (int) ($rep['errors'] ?? 0);
-      echo '<div class="notice notice-success"><p>' . esc_html(sprintf('Ticketing stock reconcile complete: checked=%d updated=%d skipped=%d errors=%d', $checked, $updated, $skipped, $errors)) . '</p></div>';
-    }
+  if ($include_ticketing_stock_notice_placeholder) {
+    echo vms_settings_page_ticketing_stock_notice_placeholder();
   }
 
   echo '<h3 class="vms-mt-16">' . esc_html__('Ticketing inventory tools', 'backstage-venue-manager') . '</h3>';
@@ -2537,6 +2530,77 @@ function vms_render_settings_page_content()
 		echo '</div>';
 
 echo '</div>';
+}
+
+function vms_settings_page_ticketing_stock_notice_placeholder(): string
+{
+  return '<!-- vms-settings-ticketing-stock-notice -->';
+}
+
+function vms_get_settings_page_ticketing_stock_notice_state(bool $refresh = false): array
+{
+  static $state = null;
+
+  if ($refresh) {
+    $state = null;
+  }
+
+  if (is_array($state)) {
+    return $state;
+  }
+
+  $preview_key = function_exists('vms_ticketing_stock_preview_transient_key')
+    ? vms_ticketing_stock_preview_transient_key(get_current_user_id())
+    : 'vms_ticketing_stock_preview_' . max(1, get_current_user_id());
+
+  $state = array(
+    'preview_done' => isset($_GET['vms_ticketing_stock_preview_done']),
+    'commit_done' => isset($_GET['vms_ticketing_stock_commit_done']),
+    'preview_report' => get_transient($preview_key),
+    'commit_report' => false,
+  );
+
+  if ($state['commit_done']) {
+    $state['commit_report'] = get_transient('vms_ticketing_stock_reconcile_last');
+  }
+
+  return $state;
+}
+
+function vms_render_settings_page_notice_bar(): void
+{
+  vms_render_settings_page_notices();
+  vms_render_settings_page_ticketing_stock_notices(vms_get_settings_page_ticketing_stock_notice_state());
+}
+
+function vms_get_settings_page_ticketing_stock_notice_markup(): string
+{
+  ob_start();
+  vms_render_settings_page_ticketing_stock_notices(vms_get_settings_page_ticketing_stock_notice_state());
+  return (string) ob_get_clean();
+}
+
+function vms_render_settings_page_ticketing_stock_notices(array $ticketing_stock_notice_state): void
+{
+  $preview_rep = $ticketing_stock_notice_state['preview_report'] ?? false;
+
+  if (!empty($ticketing_stock_notice_state['preview_done']) && is_array($preview_rep)) {
+    $checked = (int) ($preview_rep['checked'] ?? 0);
+    $updated = (int) ($preview_rep['updated'] ?? 0);
+    $skipped = (int) ($preview_rep['skipped'] ?? 0);
+    $errors  = (int) ($preview_rep['errors'] ?? 0);
+    echo '<div class="notice notice-info"><p>' . esc_html(sprintf('Ticketing stock preview ready: checked=%d would_update=%d skipped=%d errors=%d', $checked, $updated, $skipped, $errors)) . '</p></div>';
+  }
+
+  $commit_rep = $ticketing_stock_notice_state['commit_report'] ?? false;
+
+  if (!empty($ticketing_stock_notice_state['commit_done']) && is_array($commit_rep)) {
+    $checked = (int) ($commit_rep['checked'] ?? 0);
+    $updated = (int) ($commit_rep['updated'] ?? 0);
+    $skipped = (int) ($commit_rep['skipped'] ?? 0);
+    $errors  = (int) ($commit_rep['errors'] ?? 0);
+    echo '<div class="notice notice-success"><p>' . esc_html(sprintf('Ticketing stock reconcile complete: checked=%d updated=%d skipped=%d errors=%d', $checked, $updated, $skipped, $errors)) . '</p></div>';
+  }
 }
 
 function vms_field_sch_hide_past_default()

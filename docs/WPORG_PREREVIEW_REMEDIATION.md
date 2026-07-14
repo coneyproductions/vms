@@ -699,7 +699,33 @@ Acceptable note:
   - Shared raw `$captured_notices_html` remains unresolved and untouched.
   - Shared raw `$content_html` remains unresolved and untouched.
   - `$actions_html` remains under its existing separate contract and was not modified.
-  - Pass Claims remains a separate `WPORG-24` boundary.
+- Pass Claims remains a separate `WPORG-24` boundary.
+- Scope confirmation: `WPORG-24 E1` remains open and is not marked complete by this slice.
+
+### `WPORG-24 E1` Settings ticketing stock notice reduction result
+
+- Result: the Settings page's complete Ticketing stock preview / commit notice family now routes through the existing simple Administrator-shell explicit notice sink, while the no-shell fallback keeps the notice at its historical mid-page seam immediately before `Ticketing inventory tools`.
+- Rendering path and selected sink:
+  - Page registration remains unchanged through the `admin_menu` anonymous closure in `includes/admin/menu.php`, with parent slug `vms-dashboard`, capability `manage_options`, page slug `vms-settings`, and renderer `vms_render_settings_page()`.
+  - The shell path now passes `'notices_callback' => 'vms_render_settings_page_notice_bar'` into `vms_admin_ui_render_shell()`. That composed callback keeps the existing fixed `default_venue_set` notice first and then renders the Ticketing stock family through the same simple explicit sink.
+  - The no-shell fallback still renders the heading and fixed default-venue notice first, then buffers `vms_render_settings_page_content(true)` and replaces the dedicated `<!-- vms-settings-ticketing-stock-notice -->` placeholder with the resolved Ticketing stock notice markup so the stock notice remains after the Ticketing settings controls and before the inventory-tools section exactly as before.
+- Complete family inventory and state lifecycle:
+  - Preview writer: `vms_handle_ticketing_stock_preview()` still requires `manage_options`, verifies the `vms_ticketing_stock_preview` nonce, runs `vms_ticketing_stock_reconcile_scan(false)`, stores the report in the per-user transient key returned by `vms_ticketing_stock_preview_transient_key(get_current_user_id())`, and redirects with `page=vms-settings&vms_ticketing_stock_preview_done=1`.
+  - Commit writers: `vms_handle_ticketing_stock_commit()` and the back-compat `vms_handle_reconcile_ticketing_stock()` still require `manage_options`, verify their existing nonces, run `vms_ticketing_stock_reconcile_scan(true)`, store the commit report in the global transient `vms_ticketing_stock_reconcile_last`, and redirect with `page=vms-settings&vms_ticketing_stock_commit_done=1`. The primary commit path still deletes the current user's preview transient after storing the commit report.
+  - Clear path: `vms_handle_ticketing_stock_clear_preview()` still deletes the per-user preview transient and redirects back to `page=vms-settings` without any notice flag. `vms_handle_ticketing_stock_csv()` remained unchanged and still reads the existing preview / commit stores directly for CSV output only.
+  - Read path: `vms_get_settings_page_ticketing_stock_notice_state()` now resolves and caches the existing page render state once per request. It always reads the per-user preview transient because the page body still needs that report for buttons and preview details, and it reads `vms_ticketing_stock_reconcile_last` only when `isset($_GET['vms_ticketing_stock_commit_done'])` is true. Reads remain non-destructive and emit no writes or deletes.
+  - Writer / renderer vocabulary remains exact and unchanged: the renderer recognizes only the presence of `vms_ticketing_stock_preview_done` and `vms_ticketing_stock_commit_done`, preview uses the per-user preview report, commit uses the global commit report, unknown query flags stay silent, missing / expired / malformed transient payloads stay silent, and both flags together still render preview before commit.
+- Contract confirmation:
+  - The whole family qualifies for the existing simple explicit-notice contract only: every branch remains `div[class] > p` text, with classes `notice notice-info` for preview and `notice notice-success` for commit.
+  - Exact message templates remain unchanged and un-translated: `Ticketing stock preview ready: checked=%d would_update=%d skipped=%d errors=%d` and `Ticketing stock reconcile complete: checked=%d updated=%d skipped=%d errors=%d`.
+  - Dynamic values remain integer-cast before rendering; no branch introduces `<strong>`, links, spans, buttons, lists, line breaks, IDs, `data-*`, Settings API notices, provider HTML, or raw request HTML.
+- Ordering and unchanged boundaries:
+  - Effective shell ordering remains unchanged relative to `default_venue_set`: default-venue notice first, then the Ticketing stock notice family, then ordinary Settings content.
+  - Historical no-shell ordering also remains unchanged: heading, default-venue notice, ordinary Settings / Ticketing controls, Ticketing stock notice family, `Ticketing inventory tools`, then the remainder of the page.
+  - Richer Settings families remain untouched in ordinary content, including the nested default-venue alert family with buttons / emphasis, entitlement image-sync completion + error details, integrity-scan completion output, Settings API/editor output, and other content-local notice families.
+  - Guided Tours, Schedule, Venue Reconciliation, Calendar Reconciliation, and Pass Claims remained separate boundaries in this slice.
+- Contract and sink confirmation: `vms_admin_ui_explicit_notice_allowed_html()` remains exactly `div[class]` and `p`; `vms_admin_ui_rich_explicit_notice_allowed_html()` remains exactly `div[class]`, `p`, and attribute-free `strong`; no shell allowlist was broadened; raw `$captured_notices_html`, raw `$content_html`, and `$actions_html` remain untouched and unresolved.
+- Focused coverage and validation: `tests/administrator-explicit-notice-output-remediation.php` now proves the composed Settings shell callback, unchanged default-venue fragment, exact preview / commit fragments, writer / renderer vocabulary parity, missing / expired / malformed / unknown behavior, integer-normalized HTML-like input, preview-before-commit ordering, preserved relative order with `default_venue_set`, removed content-path emission, preserved fallback placeholder seam, unchanged allowlists, and unchanged raw shell sinks. Validation ran with `php -l includes/admin/settings-page.php`, `php -l tests/administrator-explicit-notice-output-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/admin-notice-scope-remediation.php`, `php tests/portal-notice-sink-remediation.php`, and `git diff --check`.
 - Scope confirmation: `WPORG-24 E1` remains open and is not marked complete by this slice.
 
 ## F. Prefixing and Collision Safety
