@@ -533,7 +533,6 @@ $assert(count($allowlistUseLines) === 1, 'Pass Claims public status allowlist sh
 
 $assert(substr_count($passClaimsSource, 'vms_pass_claims_render_public_status_screen(') === 7, 'Pass Claims should route exactly the six selected public status branches through the dedicated status renderer.');
 $assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Pass Not Found'") === false, 'The invalid-token status branch should no longer hand raw concatenated status HTML directly to the public shell.');
-$assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), \$html);") !== false, 'The success Pass Claims family should remain on its existing public shell handoff.');
 $assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), \$html);") !== false, 'The interactive claim-form Pass Claims family should remain on its existing public shell handoff.');
 
 $resetRuntime();

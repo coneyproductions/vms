@@ -2882,6 +2882,80 @@ if (!function_exists('vms_pass_claims_render_public_claimed_card')) {
 	}
 }
 
+if (!function_exists('vms_pass_claims_public_success_confirmation_html')) {
+	function vms_pass_claims_public_success_confirmation_html(array $success, string $posted_email): string
+	{
+		$admission_tokens = is_array($success['admission_tokens'] ?? null) ? (array) $success['admission_tokens'] : array();
+		$scan_url = (string) ($success['scan_url'] ?? '');
+		$qr_url = $scan_url !== '' ? vms_pass_claims_qr_image_url('vms-admission:' . (string) ($success['admission_token'] ?? '')) : '';
+
+		$html = '<h1>' . esc_html__('You Are Confirmed', 'backstage-venue-manager') . '</h1>';
+		$html .= '<div class="vms-pass-success">' . esc_html__('Your pass has been claimed and your reservation is confirmed.', 'backstage-venue-manager') . '</div>';
+		$html .= '<div class="vms-pass-ticket">';
+		$html .= '<h2>' . esc_html(count($admission_tokens) > 1 ? __('Show these passes at the gate', 'backstage-venue-manager') : __('Show this pass at the gate', 'backstage-venue-manager')) . '</h2>';
+		if (count($admission_tokens) > 1) {
+			$html .= '<p class="vms-pass-hint">' . esc_html__('Each person has their own QR code, so your group can arrive separately.', 'backstage-venue-manager') . '</p>';
+			$html .= '<div class="vms-pass-qr-grid">';
+			$total = count($admission_tokens);
+			foreach ($admission_tokens as $index => $admission_token_row) {
+				$token = (string) ($admission_token_row['token'] ?? '');
+				if ($token === '') {
+					continue;
+				}
+				$group_qr_url = vms_pass_claims_qr_image_url('vms-admission:' . $token);
+				$reference = (string) ($admission_token_row['reference'] ?? ('GL-' . (int) ($admission_token_row['entry_id'] ?? 0)));
+				/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+				$html .= '<div class="vms-pass-qr-item"><strong>' . esc_html(sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $index + 1, $total)) . '</strong>';
+				if ($group_qr_url !== '') {
+					$html .= '<img class="vms-pass-qr" src="' . esc_url($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '">';
+				}
+				$html .= '<span>' . esc_html($reference) . '</span></div>';
+			}
+			$html .= '</div>';
+		} elseif ($qr_url !== '') {
+			$html .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_url($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"></div>';
+		}
+		$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Event:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($success['event_title'] ?? '')) . '</p>';
+		if (!empty($success['event_date'])) {
+			$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Date:', 'backstage-venue-manager') . '</strong> ' . esc_html(vms_pass_claims_format_public_date((string) $success['event_date'])) . '</p>';
+		}
+		if (!empty($success['venue_name'])) {
+			$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Venue:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $success['venue_name']) . '</p>';
+		}
+		if (!empty($success['party_size']) && (int) $success['party_size'] > 1) {
+			/* translators: %d: number of items described in this message. */
+			$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Admissions:', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(_n('%d individual pass', '%d individual passes', (int) $success['party_size'], 'backstage-venue-manager'), (int) $success['party_size'])) . '</p>';
+		}
+		$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Reference:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($success['reference'] ?? '')) . '</p>';
+		if ($scan_url !== '') {
+			$pass_url = !empty($success['admission_token']) && function_exists('vms_admission_public_pass_url') ? vms_admission_public_pass_url((string) $success['admission_token'], true) : $scan_url;
+			$html .= '<p class="vms-pass-actions"><a class="vms-pass-button" href="' . esc_url($pass_url) . '" target="_blank" rel="noopener">' . esc_html__('View / Print Passes', 'backstage-venue-manager') . '</a></p>';
+		}
+		$html .= '<p class="vms-pass-hint">' . esc_html__('Screenshot this page or open it at the gate. Door staff can scan each QR code or search your name/phone.', 'backstage-venue-manager') . '</p>';
+		$html .= '</div>';
+		if (!empty($success['email_sent'])) {
+			$html .= '<p class="vms-pass-note">' . esc_html__('We also emailed a copy of this pass to the email address you entered.', 'backstage-venue-manager') . '</p>';
+		} elseif ($posted_email !== '') {
+			$email_result = isset($success['email_result']) && is_array($success['email_result']) ? $success['email_result'] : array();
+			$reason = isset($email_result['message']) ? (string) $email_result['message'] : '';
+			$message = $reason !== ''
+				/* translators: %s: human-readable pass email delivery failure reason. */
+				? sprintf(__('Your pass is confirmed, but the email was not sent: %s. Screenshot this page and use it at the gate.', 'backstage-venue-manager'), $reason)
+				: __('Your pass is confirmed, but the email was not sent. Screenshot this page and use it at the gate.', 'backstage-venue-manager');
+			$html .= '<p class="vms-pass-note vms-pass-note-warning">' . esc_html($message) . '</p>';
+		}
+
+		return $html;
+	}
+}
+
+if (!function_exists('vms_pass_claims_render_public_success_confirmation')) {
+	function vms_pass_claims_render_public_success_confirmation(array $success, string $posted_email): void
+	{
+		vms_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), vms_pass_claims_public_success_confirmation_html($success, $posted_email));
+	}
+}
+
 if (!function_exists('vms_pass_claims_render_public_shell')) {
 	function vms_pass_claims_render_public_shell(string $headline, string $content_html): void
 	{
@@ -3052,65 +3126,7 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 
 		$html = '';
 		if (!empty($success)) {
-			$admission_tokens = is_array($success['admission_tokens'] ?? null) ? (array) $success['admission_tokens'] : array();
-			$scan_url = (string) ($success['scan_url'] ?? '');
-			$qr_url = $scan_url !== '' ? vms_pass_claims_qr_image_url('vms-admission:' . (string) ($success['admission_token'] ?? '')) : '';
-			$html .= '<h1>' . esc_html__('You Are Confirmed', 'backstage-venue-manager') . '</h1>';
-			$html .= '<div class="vms-pass-success">' . esc_html__('Your pass has been claimed and your reservation is confirmed.', 'backstage-venue-manager') . '</div>';
-			$html .= '<div class="vms-pass-ticket">';
-			$html .= '<h2>' . esc_html(count($admission_tokens) > 1 ? __('Show these passes at the gate', 'backstage-venue-manager') : __('Show this pass at the gate', 'backstage-venue-manager')) . '</h2>';
-			if (count($admission_tokens) > 1) {
-				$html .= '<p class="vms-pass-hint">' . esc_html__('Each person has their own QR code, so your group can arrive separately.', 'backstage-venue-manager') . '</p>';
-				$html .= '<div class="vms-pass-qr-grid">';
-				$total = count($admission_tokens);
-				foreach ($admission_tokens as $index => $token_row) {
-					$token = (string) ($token_row['token'] ?? '');
-					if ($token === '') {
-						continue;
-					}
-					$group_qr_url = vms_pass_claims_qr_image_url('vms-admission:' . $token);
-					$reference = (string) ($token_row['reference'] ?? ('GL-' . (int) ($token_row['entry_id'] ?? 0)));
-					/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
-					$html .= '<div class="vms-pass-qr-item"><strong>' . esc_html(sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $index + 1, $total)) . '</strong>';
-					if ($group_qr_url !== '') {
-						$html .= '<img class="vms-pass-qr" src="' . esc_url($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '">';
-					}
-					$html .= '<span>' . esc_html($reference) . '</span></div>';
-				}
-				$html .= '</div>';
-			} elseif ($qr_url !== '') {
-				$html .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_url($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"></div>';
-			}
-			$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Event:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($success['event_title'] ?? '')) . '</p>';
-			if (!empty($success['event_date'])) {
-				$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Date:', 'backstage-venue-manager') . '</strong> ' . esc_html(vms_pass_claims_format_public_date((string) $success['event_date'])) . '</p>';
-			}
-			if (!empty($success['venue_name'])) {
-				$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Venue:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $success['venue_name']) . '</p>';
-			}
-			if (!empty($success['party_size']) && (int) $success['party_size'] > 1) {
-				/* translators: %d: number of items described in this message. */
-				$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Admissions:', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(_n('%d individual pass', '%d individual passes', (int) $success['party_size'], 'backstage-venue-manager'), (int) $success['party_size'])) . '</p>';
-			}
-			$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Reference:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($success['reference'] ?? '')) . '</p>';
-			if ($scan_url !== '') {
-				$pass_url = !empty($success['admission_token']) && function_exists('vms_admission_public_pass_url') ? vms_admission_public_pass_url((string) $success['admission_token'], true) : $scan_url;
-				$html .= '<p class="vms-pass-actions"><a class="vms-pass-button" href="' . esc_url($pass_url) . '" target="_blank" rel="noopener">' . esc_html__('View / Print Passes', 'backstage-venue-manager') . '</a></p>';
-			}
-			$html .= '<p class="vms-pass-hint">' . esc_html__('Screenshot this page or open it at the gate. Door staff can scan each QR code or search your name/phone.', 'backstage-venue-manager') . '</p>';
-			$html .= '</div>';
-			if (!empty($success['email_sent'])) {
-				$html .= '<p class="vms-pass-note">' . esc_html__('We also emailed a copy of this pass to the email address you entered.', 'backstage-venue-manager') . '</p>';
-			} elseif (!empty($posted['email'])) {
-				$email_result = isset($success['email_result']) && is_array($success['email_result']) ? $success['email_result'] : array();
-				$reason = isset($email_result['message']) ? (string) $email_result['message'] : '';
-				$message = $reason !== ''
-					/* translators: %s: human-readable pass email delivery failure reason. */
-					? sprintf(__('Your pass is confirmed, but the email was not sent: %s. Screenshot this page and use it at the gate.', 'backstage-venue-manager'), $reason)
-					: __('Your pass is confirmed, but the email was not sent. Screenshot this page and use it at the gate.', 'backstage-venue-manager');
-				$html .= '<p class="vms-pass-note vms-pass-note-warning">' . esc_html($message) . '</p>';
-			}
-			vms_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), $html);
+			vms_pass_claims_render_public_success_confirmation($success, (string) $posted['email']);
 		}
 
 		$html .= '<h1>' . esc_html__('Claim Your Pass', 'backstage-venue-manager') . '</h1>';
