@@ -177,6 +177,14 @@ if (!function_exists('add_query_arg')) {
 	}
 }
 
+if (!function_exists('wp_json_encode')) {
+	function wp_json_encode($value): string
+	{
+		$json = json_encode($value);
+		return is_string($json) ? $json : '';
+	}
+}
+
 if (!function_exists('esc_html')) {
 	function esc_html($text): string
 	{
@@ -591,6 +599,14 @@ $GLOBALS['vms_test_integrity_venue_get_posts_calls'] = 0;
 $GLOBALS['vms_test_integrity_venue_get_posts_args'] = array();
 $GLOBALS['vms_test_integrity_venue_get_posts_value'] = array();
 $GLOBALS['vms_test_integrity_venue_titles'] = array();
+$GLOBALS['vms_test_feedback_recent_event_plans_calls'] = 0;
+$GLOBALS['vms_test_feedback_recent_event_plans_args'] = array();
+$GLOBALS['vms_test_feedback_event_plan_date_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_plan_date_ids'] = array();
+$GLOBALS['vms_test_feedback_event_plan_date_values'] = array();
+$GLOBALS['vms_test_feedback_event_context_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_context_ids'] = array();
+$GLOBALS['vms_test_feedback_event_context_value'] = array();
 
 if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
 	/**
@@ -833,6 +849,8 @@ if (!function_exists('get_posts')) {
 	function get_posts(array $args = array()): array
 	{
 		if (isset($args['post_type']) && $args['post_type'] === 'vms_event_plan') {
+			$GLOBALS['vms_test_feedback_recent_event_plans_calls']++;
+			$GLOBALS['vms_test_feedback_recent_event_plans_args'][] = $args;
 			$GLOBALS['vms_test_integrity_calendar_get_posts_calls']++;
 			$GLOBALS['vms_test_integrity_calendar_get_posts_args'][] = $args;
 			return is_array($GLOBALS['vms_test_integrity_calendar_get_posts_value'] ?? null) ? $GLOBALS['vms_test_integrity_calendar_get_posts_value'] : array();
@@ -856,6 +874,24 @@ if (!function_exists('get_the_title')) {
 	function get_the_title(int $post_id): string
 	{
 		return (string) ($GLOBALS['vms_test_integrity_venue_titles'][$post_id] ?? ('Post ' . $post_id));
+	}
+}
+
+if (!function_exists('vms_feedback_get_event_plan_date')) {
+	function vms_feedback_get_event_plan_date(int $event_plan_id): string
+	{
+		$GLOBALS['vms_test_feedback_event_plan_date_calls']++;
+		$GLOBALS['vms_test_feedback_event_plan_date_ids'][] = $event_plan_id;
+		return (string) ($GLOBALS['vms_test_feedback_event_plan_date_values'][$event_plan_id] ?? '');
+	}
+}
+
+if (!function_exists('vms_feedback_get_event_context')) {
+	function vms_feedback_get_event_context(int $event_plan_id): array
+	{
+		$GLOBALS['vms_test_feedback_event_context_calls']++;
+		$GLOBALS['vms_test_feedback_event_context_ids'][] = $event_plan_id;
+		return is_array($GLOBALS['vms_test_feedback_event_context_value'] ?? null) ? $GLOBALS['vms_test_feedback_event_context_value'] : array();
 	}
 }
 
@@ -3067,24 +3103,41 @@ $assert(substr_count($ticketIntegrityRenderedPage, 'State of the Range email fai
 $assert(strpos($ticketIntegrityRenderedPage, 'State of the Range email failed to send. Mailer down') < strpos($ticketIntegrityRenderedPage, 'Run Ticket Integrity Check Now'), 'Ticket Integrity shell output should keep the moved notice before the run panel.');
 $assert(strpos($ticketIntegrityRenderedPage, 'Run Ticket Integrity Check Now') < strpos($ticketIntegrityRenderedPage, 'Monitor Settings'), 'Ticket Integrity shell output should preserve the original content ordering after the moved notice.');
 
-$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(): void') !== false, 'Event Feedback should expose a dedicated explicit notice callback.');
+$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_get_page_state(): array') !== false, 'Event Feedback should expose a dedicated page-state resolver for the selected Event Plan.');
+$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(array $args = array()): void') !== false, 'Event Feedback should expose a dedicated explicit notice callback.');
+$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_resolved_content(array $state, bool $render_missing_plan_notice = false): void') !== false, 'Event Feedback should expose a dedicated resolved-content renderer for the selected Event Plan state.');
+$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_page_without_shell(): void') !== false, 'Event Feedback should expose a dedicated no-shell fallback renderer.');
 $assert(substr_count($eventFeedbackSource, "'notices_callback' => 'vms_feedback_admin_render_notices'") === 1, 'Event Feedback shell call should supply its explicit notice callback exactly once.');
-$eventFeedbackNoticeStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(): void');
+$eventFeedbackStateStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_get_page_state(): array');
+$eventFeedbackStateEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_admin_render_notices'))");
+$assert($eventFeedbackStateStart !== false && $eventFeedbackStateEnd !== false && $eventFeedbackStateEnd > $eventFeedbackStateStart, 'Event Feedback page-state resolver body should be locatable.');
+$eventFeedbackStateSource = substr($eventFeedbackSource, (int) $eventFeedbackStateStart, (int) $eventFeedbackStateEnd - (int) $eventFeedbackStateStart);
+$eventFeedbackNoticeStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(array $args = array()): void');
 $eventFeedbackNoticeEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_admin_render_notification_settings'))");
 $assert($eventFeedbackNoticeStart !== false && $eventFeedbackNoticeEnd !== false && $eventFeedbackNoticeEnd > $eventFeedbackNoticeStart, 'Event Feedback explicit notice callback body should be locatable.');
 $eventFeedbackNoticeSource = substr($eventFeedbackSource, (int) $eventFeedbackNoticeStart, (int) $eventFeedbackNoticeEnd - (int) $eventFeedbackNoticeStart);
 $eventFeedbackContentStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_content(): void');
-$eventFeedbackContentEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_render_event_feedback_admin_page'))");
+$eventFeedbackContentEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_admin_render_page_without_shell'))");
 $assert($eventFeedbackContentStart !== false && $eventFeedbackContentEnd !== false && $eventFeedbackContentEnd > $eventFeedbackContentStart, 'Event Feedback content callback body should be locatable.');
 $eventFeedbackContentSource = substr($eventFeedbackSource, (int) $eventFeedbackContentStart, (int) $eventFeedbackContentEnd - (int) $eventFeedbackContentStart);
+$eventFeedbackFallbackStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_page_without_shell(): void');
+$eventFeedbackFallbackEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_render_event_feedback_admin_page'))");
+$assert($eventFeedbackFallbackStart !== false && $eventFeedbackFallbackEnd !== false && $eventFeedbackFallbackEnd > $eventFeedbackFallbackStart, 'Event Feedback no-shell fallback renderer body should be locatable.');
+$eventFeedbackFallbackSource = substr($eventFeedbackSource, (int) $eventFeedbackFallbackStart, (int) $eventFeedbackFallbackEnd - (int) $eventFeedbackFallbackStart);
 $eventFeedbackPageStart = strpos($eventFeedbackSource, 'function vms_render_event_feedback_admin_page(): void');
 $eventFeedbackPageEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_add_event_plan_metabox'))");
 $assert($eventFeedbackPageStart !== false && $eventFeedbackPageEnd !== false && $eventFeedbackPageEnd > $eventFeedbackPageStart, 'Event Feedback page renderer body should be locatable.');
 $eventFeedbackPageSource = substr($eventFeedbackSource, (int) $eventFeedbackPageStart, (int) $eventFeedbackPageEnd - (int) $eventFeedbackPageStart);
+$assert(strpos($eventFeedbackStateSource, 'isset($_GET[\'event_plan_id\']) ? absint($_GET[\'event_plan_id\']) : 0') !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan request normalization.');
+$assert(strpos($eventFeedbackStateSource, 'vms_feedback_get_event_context($selected_event_plan_id)') !== false, 'Event Feedback page-state resolver should preserve the existing Event Plan context lookup.');
+$assert(strpos($eventFeedbackStateSource, '\'show_missing_plan_notice\' => $show_missing_plan_notice') !== false, 'Event Feedback page-state resolver should preserve a dedicated missing-plan flag.');
 $assert(strpos($eventFeedbackNoticeSource, '!empty($_GET[\'vms_feedback_settings_saved\'])') !== false, 'Event Feedback explicit notice callback should preserve the existing saved-settings presence check.');
 $assert(strpos($eventFeedbackNoticeSource, 'sanitize_key((string) $_GET[\'vms_feedback_deleted\'])') !== false, 'Event Feedback explicit notice callback should preserve the sanitized delete-status source.');
+$assert(strpos($eventFeedbackNoticeSource, 'That Event Plan could not be found.') !== false, 'Event Feedback explicit notice callback should now own the missing-plan notice family.');
+$assert(strpos($eventFeedbackNoticeSource, 'include_missing_plan_notice') !== false, 'Event Feedback explicit notice callback should support including the missing-plan family without replacing the redirect notices.');
 $assert(substr_count($eventFeedbackNoticeSource, 'notice notice-success is-dismissible') === 2, 'Event Feedback explicit notice callback should preserve both success notice branches.');
 $assert(substr_count($eventFeedbackNoticeSource, 'notice notice-error is-dismissible') === 2, 'Event Feedback explicit notice callback should preserve both error notice branches.');
+$assert(substr_count($eventFeedbackNoticeSource, 'notice notice-error"><p>') === 1, 'Event Feedback explicit notice callback should own exactly one non-dismissible missing-plan notice branch.');
 $assert(strpos($eventFeedbackNoticeSource, 'Event Feedback notification settings saved.') !== false, 'Event Feedback explicit notice callback should preserve the saved-settings notice copy.');
 $assert(strpos($eventFeedbackNoticeSource, 'Feedback response deleted.') !== false, 'Event Feedback explicit notice callback should preserve the delete-success notice copy.');
 $assert(strpos($eventFeedbackNoticeSource, 'Feedback response could not be found.') !== false, 'Event Feedback explicit notice callback should preserve the missing-response notice copy.');
@@ -3094,12 +3147,17 @@ $assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedb
 $assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_deleted\', \'missing\'') !== false, 'Event Feedback delete handler should preserve the missing-response redirect path.');
 $assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_deleted\', $deleted ? \'1\' : \'0\'') !== false, 'Event Feedback delete handler should preserve the success/failure redirect-status path.');
 $assert(strpos($eventFeedbackPageSource, "'notices_callback' => 'vms_feedback_admin_render_notices'") !== false, 'Event Feedback page renderer should pass the explicit notice callback through the Administrator shell.');
-$eventFeedbackFallbackHeadingPos = strpos($eventFeedbackPageSource, "echo '<div class=\"wrap\"><h1>'");
-$eventFeedbackFallbackNoticePos = strpos($eventFeedbackPageSource, 'vms_feedback_admin_render_notices();');
-$eventFeedbackFallbackContentPos = strpos($eventFeedbackPageSource, 'vms_feedback_admin_render_content();');
-$assert($eventFeedbackFallbackHeadingPos !== false && $eventFeedbackFallbackNoticePos !== false && $eventFeedbackFallbackContentPos !== false && $eventFeedbackFallbackHeadingPos < $eventFeedbackFallbackNoticePos && $eventFeedbackFallbackNoticePos < $eventFeedbackFallbackContentPos, 'Event Feedback no-shell fallback should preserve heading, notices, then content ordering.');
+$assert(strpos($eventFeedbackPageSource, 'vms_feedback_admin_render_page_without_shell();') !== false, 'Event Feedback page renderer should delegate the no-shell fallback through the dedicated renderer.');
+$eventFeedbackFallbackHeadingPos = strpos($eventFeedbackFallbackSource, "echo '<div class=\"wrap\"><h1>'");
+$eventFeedbackFallbackNoticePos = strpos($eventFeedbackFallbackSource, 'vms_feedback_admin_render_notices(array(');
+$eventFeedbackFallbackSelectorPos = strpos($eventFeedbackFallbackSource, 'vms_feedback_admin_render_event_selector($selected_event_plan_id);');
+$eventFeedbackFallbackContentPos = strpos($eventFeedbackFallbackSource, 'vms_feedback_admin_render_resolved_content($state, true);');
+$assert($eventFeedbackFallbackHeadingPos !== false && $eventFeedbackFallbackNoticePos !== false && $eventFeedbackFallbackSelectorPos !== false && $eventFeedbackFallbackContentPos !== false && $eventFeedbackFallbackHeadingPos < $eventFeedbackFallbackNoticePos && $eventFeedbackFallbackNoticePos < $eventFeedbackFallbackSelectorPos && $eventFeedbackFallbackSelectorPos < $eventFeedbackFallbackContentPos, 'Event Feedback no-shell fallback should preserve heading, redirect notices, selector, then the resolved page body.');
+$assert(strpos($eventFeedbackFallbackSource, "'include_missing_plan_notice' => false") !== false, 'Event Feedback no-shell fallback should defer the missing-plan notice until after the selector.');
 $assert(strpos($eventFeedbackContentSource, 'vms_feedback_admin_render_notices();') === false, 'Event Feedback content callback should no longer emit the moved redirect notice family.');
-$assert(strpos($eventFeedbackContentSource, 'That Event Plan could not be found.') !== false, 'Event Feedback content callback should preserve the separate missing-plan notice in the ordinary content path.');
+$assert(strpos($eventFeedbackContentSource, 'That Event Plan could not be found.') === false, 'Event Feedback content callback should remove the original missing-plan notice emission from ordinary content.');
+$assert(strpos($eventFeedbackContentSource, 'vms_feedback_admin_render_event_selector($selected_event_plan_id);') !== false, 'Event Feedback content callback should still render the selector before the remaining page body.');
+$assert(strpos($eventFeedbackContentSource, 'vms_feedback_admin_render_resolved_content($state);') !== false, 'Event Feedback content callback should delegate to the resolved content renderer after rendering the selector.');
 
 $_GET = array(
 	'vms_feedback_settings_saved' => '1',
@@ -3171,6 +3229,114 @@ $assert(
 	$eventFeedbackCombinedNotice === '<div class="notice notice-success is-dismissible"><p>Event Feedback notification settings saved.</p></div><div class="notice notice-error is-dismissible"><p>Feedback response could not be found.</p></div>',
 	'Event Feedback explicit notice callback should preserve the saved-then-delete notice ordering when both query flags are present.'
 );
+
+$GLOBALS['vms_test_feedback_event_context_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_context_ids'] = array();
+$GLOBALS['vms_test_feedback_event_context_value'] = array();
+$_GET = array(
+	'event_plan_id' => '77',
+);
+ob_start();
+vms_feedback_admin_render_notices(array('include_redirect_notices' => false));
+$eventFeedbackMissingPlanNotice = (string) ob_get_clean();
+$assert(
+	$eventFeedbackMissingPlanNotice === '<div class="notice notice-error"><p>That Event Plan could not be found.</p></div>',
+	'Event Feedback explicit notice callback should preserve the missing-plan notice fragment.'
+);
+$assert(
+	wp_kses($eventFeedbackMissingPlanNotice, vms_admin_ui_explicit_notice_allowed_html()) === $eventFeedbackMissingPlanNotice,
+	'The explicit notice allowlist should admit the Event Feedback missing-plan notice unchanged.'
+);
+$assert($GLOBALS['vms_test_feedback_event_context_calls'] === 1, 'Event Feedback missing-plan notice should resolve Event Plan context exactly once.');
+$assert($GLOBALS['vms_test_feedback_event_context_ids'] === array(77), 'Event Feedback missing-plan notice should preserve the selected Event Plan ID when resolving context.');
+
+$GLOBALS['vms_test_feedback_event_context_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_context_ids'] = array();
+$_GET = array(
+	'event_plan_id' => '<strong>unexpected</strong>',
+);
+ob_start();
+vms_feedback_admin_render_notices(array('include_redirect_notices' => false));
+$eventFeedbackMalformedPlanNotice = (string) ob_get_clean();
+$assert($eventFeedbackMalformedPlanNotice === '', 'Event Feedback missing-plan notice should stay silent when the selected Event Plan request sanitizes to zero.');
+$assert($GLOBALS['vms_test_feedback_event_context_calls'] === 0, 'Event Feedback missing-plan notice should not resolve Event Plan context when the selected Event Plan request sanitizes to zero.');
+
+$missingPlanEvent = new WP_Post(77);
+$missingPlanEvent->post_type = 'vms_event_plan';
+$GLOBALS['vms_test_integrity_calendar_get_posts_value'] = array($missingPlanEvent);
+$GLOBALS['vms_test_integrity_venue_titles'][77] = 'Missing Plan Event';
+$GLOBALS['vms_test_feedback_event_plan_date_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_plan_date_ids'] = array();
+$GLOBALS['vms_test_feedback_event_plan_date_values'] = array(77 => '');
+$GLOBALS['vms_test_feedback_recent_event_plans_calls'] = 0;
+$GLOBALS['vms_test_feedback_recent_event_plans_args'] = array();
+$GLOBALS['vms_test_feedback_event_context_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_context_ids'] = array();
+$GLOBALS['vms_test_feedback_event_context_value'] = array();
+$_GET = array(
+	'event_plan_id' => '77',
+	'vms_feedback_settings_saved' => '1',
+);
+ob_start();
+vms_render_event_feedback_admin_page();
+$eventFeedbackShellPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_feedback_recent_event_plans_calls'] === 1, 'Event Feedback shell render should resolve recent Event Plans exactly once for the selector.');
+$assert($GLOBALS['vms_test_feedback_event_plan_date_calls'] === 1 && $GLOBALS['vms_test_feedback_event_plan_date_ids'] === array(77), 'Event Feedback shell render should preserve the existing selector label date lookup exactly once.');
+$assert($GLOBALS['vms_test_feedback_event_context_calls'] === 1 && $GLOBALS['vms_test_feedback_event_context_ids'] === array(77), 'Event Feedback shell render should resolve Event Plan context exactly once for the missing-plan family.');
+$assert(substr_count($eventFeedbackShellPage, 'class="vms-feedback-admin-selector"') === 1, 'Event Feedback shell render should preserve the selector exactly once when the selected Event Plan is missing.');
+$assert(substr_count($eventFeedbackShellPage, 'Event Feedback notification settings saved.') === 1, 'Event Feedback shell render should preserve the existing redirect notice exactly once when the selected Event Plan is missing.');
+$assert(substr_count($eventFeedbackShellPage, 'That Event Plan could not be found.') === 1, 'Event Feedback shell render should emit the missing-plan notice exactly once.');
+$assert(strpos($eventFeedbackShellPage, '<div class="notice notice-success is-dismissible below-h2 vms-shell-notice"><p>Event Feedback notification settings saved.</p></div>') !== false, 'Event Feedback shell render should preserve the explicit saved-settings notice fragment through the shell notice preparation path.');
+$assert(strpos($eventFeedbackShellPage, '<div class="notice notice-error below-h2 vms-shell-notice"><p>That Event Plan could not be found.</p></div>') !== false, 'Event Feedback shell render should preserve the missing-plan notice fragment through the shell notice preparation path.');
+$assert(strpos($eventFeedbackShellPage, 'Event Feedback notification settings saved.') < strpos($eventFeedbackShellPage, 'That Event Plan could not be found.'), 'Event Feedback shell render should preserve redirect notices ahead of the missing-plan notice.');
+$assert(strpos($eventFeedbackShellPage, 'That Event Plan could not be found.') < strpos($eventFeedbackShellPage, 'class="vms-feedback-admin-selector"'), 'Event Feedback shell render should keep the missing-plan notice ahead of the selector in shell mode.');
+$assert(strpos($eventFeedbackShellPage, 'Get started') === false && strpos($eventFeedbackShellPage, 'Response count') === false, 'Event Feedback shell render should preserve the missing-plan early return without leaking intro or response content.');
+
+$GLOBALS['vms_test_feedback_recent_event_plans_calls'] = 0;
+$GLOBALS['vms_test_feedback_recent_event_plans_args'] = array();
+$GLOBALS['vms_test_feedback_event_plan_date_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_plan_date_ids'] = array();
+$GLOBALS['vms_test_feedback_event_context_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_context_ids'] = array();
+$GLOBALS['vms_test_feedback_event_context_value'] = array();
+$fallbackMissingPlanEvent = new WP_Post(78);
+$fallbackMissingPlanEvent->post_type = 'vms_event_plan';
+$GLOBALS['vms_test_integrity_calendar_get_posts_value'] = array($fallbackMissingPlanEvent);
+$GLOBALS['vms_test_integrity_venue_titles'][78] = 'Fallback Missing Plan Event';
+$GLOBALS['vms_test_feedback_event_plan_date_values'] = array(78 => '');
+$_GET = array(
+	'event_plan_id' => '78',
+	'vms_feedback_settings_saved' => '1',
+);
+ob_start();
+vms_feedback_admin_render_page_without_shell();
+$eventFeedbackFallbackPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_feedback_recent_event_plans_calls'] === 1, 'Event Feedback no-shell fallback should resolve recent Event Plans exactly once for the selector.');
+$assert($GLOBALS['vms_test_feedback_event_plan_date_calls'] === 1 && $GLOBALS['vms_test_feedback_event_plan_date_ids'] === array(78), 'Event Feedback no-shell fallback should preserve the existing selector label date lookup exactly once.');
+$assert($GLOBALS['vms_test_feedback_event_context_calls'] === 1 && $GLOBALS['vms_test_feedback_event_context_ids'] === array(78), 'Event Feedback no-shell fallback should resolve Event Plan context exactly once for the missing-plan family.');
+$assert(substr_count($eventFeedbackFallbackPage, 'class="vms-feedback-admin-selector"') === 1, 'Event Feedback no-shell fallback should preserve the selector exactly once when the selected Event Plan is missing.');
+$assert(strpos($eventFeedbackFallbackPage, '<div class="notice notice-success is-dismissible"><p>Event Feedback notification settings saved.</p></div>') !== false, 'Event Feedback no-shell fallback should preserve the historical saved-settings notice fragment.');
+$assert(strpos($eventFeedbackFallbackPage, '<div class="notice notice-error"><p>That Event Plan could not be found.</p></div>') !== false, 'Event Feedback no-shell fallback should preserve the historical missing-plan notice fragment.');
+$assert(strpos($eventFeedbackFallbackPage, '<div class="wrap"><h1>Event Feedback</h1>') !== false, 'Event Feedback no-shell fallback should preserve the historical page heading.');
+$assert(strpos($eventFeedbackFallbackPage, 'Event Feedback notification settings saved.') < strpos($eventFeedbackFallbackPage, 'class="vms-feedback-admin-selector"'), 'Event Feedback no-shell fallback should keep redirect notices ahead of the selector.');
+$assert(strpos($eventFeedbackFallbackPage, 'class="vms-feedback-admin-selector"') < strpos($eventFeedbackFallbackPage, 'That Event Plan could not be found.'), 'Event Feedback no-shell fallback should keep the selector ahead of the missing-plan notice.');
+$assert(strpos($eventFeedbackFallbackPage, 'below-h2 vms-shell-notice') === false, 'Event Feedback no-shell fallback should not route notices through the shell notice preparation path.');
+$assert(strpos($eventFeedbackFallbackPage, 'Get started') === false && strpos($eventFeedbackFallbackPage, 'Response count') === false, 'Event Feedback no-shell fallback should preserve the missing-plan early return without leaking intro or response content.');
+
+$GLOBALS['vms_test_feedback_recent_event_plans_calls'] = 0;
+$GLOBALS['vms_test_feedback_recent_event_plans_args'] = array();
+$GLOBALS['vms_test_feedback_event_plan_date_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_plan_date_ids'] = array();
+$GLOBALS['vms_test_feedback_event_context_calls'] = 0;
+$GLOBALS['vms_test_feedback_event_context_ids'] = array();
+$_GET = array();
+ob_start();
+vms_feedback_admin_render_page_without_shell();
+$eventFeedbackIntroPage = (string) ob_get_clean();
+$assert($GLOBALS['vms_test_feedback_recent_event_plans_calls'] === 1, 'Event Feedback intro render should still resolve recent Event Plans exactly once for the selector.');
+$assert($GLOBALS['vms_test_feedback_event_context_calls'] === 0, 'Event Feedback intro render should not resolve Event Plan context when no Event Plan is selected.');
+$assert(strpos($eventFeedbackIntroPage, 'class="vms-feedback-admin-selector"') < strpos($eventFeedbackIntroPage, 'Get started'), 'Event Feedback intro render should preserve selector-before-intro ordering.');
+$assert(strpos($eventFeedbackIntroPage, 'That Event Plan could not be found.') === false, 'Event Feedback intro render should stay separate from the missing-plan notice family when no Event Plan is selected.');
 
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_notice_class(string $type): string') !== false, 'Event Plan Import should preserve the notice-class mapper.');
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_notice(array $notice): void') !== false, 'Event Plan Import should expose a dedicated explicit notice renderer.');

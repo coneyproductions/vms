@@ -113,20 +113,74 @@ if (!function_exists('vms_feedback_admin_handle_delete_response')) {
 add_action('admin_post_vms_delete_event_feedback_response', 'vms_feedback_admin_handle_delete_response');
 
 
-if (!function_exists('vms_feedback_admin_render_notices')) {
-	function vms_feedback_admin_render_notices(): void
+if (!function_exists('vms_feedback_admin_get_page_state')) {
+	/**
+	 * @return array{selected_event_plan_id:int,context:array<string,mixed>,show_missing_plan_notice:bool}
+	 */
+	function vms_feedback_admin_get_page_state(): array
 	{
-		if (!empty($_GET['vms_feedback_settings_saved'])) {
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Event Feedback notification settings saved.', 'backstage-venue-manager') . '</p></div>';
+		static $state = null;
+		static $cache_key = null;
+
+		$request_key = array_key_exists('event_plan_id', $_GET) ? wp_json_encode($_GET['event_plan_id']) : 'missing';
+		if (!is_string($request_key)) {
+			$request_key = array_key_exists('event_plan_id', $_GET) ? 'non-scalar' : 'missing';
 		}
-		if (isset($_GET['vms_feedback_deleted'])) {
-			$status = sanitize_key((string) $_GET['vms_feedback_deleted']);
-			if ($status === '1') {
-				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Feedback response deleted.', 'backstage-venue-manager') . '</p></div>';
-			} elseif ($status === 'missing') {
-				echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('Feedback response could not be found.', 'backstage-venue-manager') . '</p></div>';
-			} else {
-				echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('Feedback response could not be deleted.', 'backstage-venue-manager') . '</p></div>';
+
+		if (is_array($state) && $cache_key === $request_key) {
+			return $state;
+		}
+
+		$selected_event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
+		$context = array();
+		$show_missing_plan_notice = false;
+
+		if ($selected_event_plan_id > 0) {
+			$context = vms_feedback_get_event_context($selected_event_plan_id);
+			$show_missing_plan_notice = empty($context);
+		}
+
+		$cache_key = $request_key;
+		$state = array(
+			'selected_event_plan_id' => $selected_event_plan_id,
+			'context' => is_array($context) ? $context : array(),
+			'show_missing_plan_notice' => $show_missing_plan_notice,
+		);
+
+		return $state;
+	}
+}
+
+if (!function_exists('vms_feedback_admin_render_notices')) {
+	/**
+	 * @param array{include_redirect_notices?:bool,include_missing_plan_notice?:bool,state?:array<string,mixed>} $args
+	 */
+	function vms_feedback_admin_render_notices(array $args = array()): void
+	{
+		$include_redirect_notices = !array_key_exists('include_redirect_notices', $args) || !empty($args['include_redirect_notices']);
+		$include_missing_plan_notice = !array_key_exists('include_missing_plan_notice', $args) || !empty($args['include_missing_plan_notice']);
+		$state = (isset($args['state']) && is_array($args['state'])) ? $args['state'] : null;
+
+		if ($include_redirect_notices) {
+			if (!empty($_GET['vms_feedback_settings_saved'])) {
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Event Feedback notification settings saved.', 'backstage-venue-manager') . '</p></div>';
+			}
+			if (isset($_GET['vms_feedback_deleted'])) {
+				$status = sanitize_key((string) $_GET['vms_feedback_deleted']);
+				if ($status === '1') {
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Feedback response deleted.', 'backstage-venue-manager') . '</p></div>';
+				} elseif ($status === 'missing') {
+					echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('Feedback response could not be found.', 'backstage-venue-manager') . '</p></div>';
+				} else {
+					echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('Feedback response could not be deleted.', 'backstage-venue-manager') . '</p></div>';
+				}
+			}
+		}
+
+		if ($include_missing_plan_notice) {
+			$state = is_array($state) ? $state : vms_feedback_admin_get_page_state();
+			if (!empty($state['show_missing_plan_notice'])) {
+				echo '<div class="notice notice-error"><p>' . esc_html__('That Event Plan could not be found.', 'backstage-venue-manager') . '</p></div>';
 			}
 		}
 	}
@@ -678,23 +732,30 @@ if (!function_exists('vms_feedback_admin_render_response')) {
 	}
 }
 
-if (!function_exists('vms_feedback_admin_render_content')) {
-	function vms_feedback_admin_render_content(): void
+if (!function_exists('vms_feedback_admin_render_resolved_content')) {
+	/**
+	 * @param array{selected_event_plan_id:int,context:array<string,mixed>,show_missing_plan_notice:bool} $state
+	 */
+	function vms_feedback_admin_render_resolved_content(array $state, bool $render_missing_plan_notice = false): void
 	{
-		$selected_event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
-		vms_feedback_admin_render_event_selector($selected_event_plan_id);
-
+		$selected_event_plan_id = isset($state['selected_event_plan_id']) ? (int) $state['selected_event_plan_id'] : 0;
 		if ($selected_event_plan_id <= 0) {
 			echo '<div class="vms-feedback-admin-card"><h2>' . esc_html__('Get started', 'backstage-venue-manager') . '</h2><p>' . esc_html__('Choose an Event Plan to generate a private survey link and review responses.', 'backstage-venue-manager') . '</p></div>';
 			return;
 		}
 
-		$context = vms_feedback_get_event_context($selected_event_plan_id);
-		if (empty($context)) {
-			echo '<div class="notice notice-error"><p>' . esc_html__('That Event Plan could not be found.', 'backstage-venue-manager') . '</p></div>';
+		if (!empty($state['show_missing_plan_notice'])) {
+			if ($render_missing_plan_notice) {
+				vms_feedback_admin_render_notices(array(
+					'include_redirect_notices' => false,
+					'include_missing_plan_notice' => true,
+					'state' => $state,
+				));
+			}
 			return;
 		}
 
+		$context = isset($state['context']) && is_array($state['context']) ? $state['context'] : array();
 		$responses = vms_feedback_get_responses($selected_event_plan_id);
 		$partition = function_exists('vms_feedback_partition_duplicate_responses') ? vms_feedback_partition_duplicate_responses($responses) : array('unique' => $responses, 'duplicate_ids' => array());
 		$unique_responses = (array) ($partition['unique'] ?? $responses);
@@ -734,6 +795,33 @@ if (!function_exists('vms_feedback_admin_render_content')) {
 	}
 }
 
+if (!function_exists('vms_feedback_admin_render_content')) {
+	function vms_feedback_admin_render_content(): void
+	{
+		$state = vms_feedback_admin_get_page_state();
+		$selected_event_plan_id = isset($state['selected_event_plan_id']) ? (int) $state['selected_event_plan_id'] : 0;
+		vms_feedback_admin_render_event_selector($selected_event_plan_id);
+		vms_feedback_admin_render_resolved_content($state);
+	}
+}
+
+if (!function_exists('vms_feedback_admin_render_page_without_shell')) {
+	function vms_feedback_admin_render_page_without_shell(): void
+	{
+		$state = vms_feedback_admin_get_page_state();
+		$selected_event_plan_id = isset($state['selected_event_plan_id']) ? (int) $state['selected_event_plan_id'] : 0;
+
+		echo '<div class="wrap"><h1>' . esc_html__('Event Feedback', 'backstage-venue-manager') . '</h1>';
+		vms_feedback_admin_render_notices(array(
+			'include_missing_plan_notice' => false,
+			'state' => $state,
+		));
+		vms_feedback_admin_render_event_selector($selected_event_plan_id);
+		vms_feedback_admin_render_resolved_content($state, true);
+		echo '</div>';
+	}
+}
+
 if (!function_exists('vms_render_event_feedback_admin_page')) {
 	function vms_render_event_feedback_admin_page(): void
 	{
@@ -754,10 +842,7 @@ if (!function_exists('vms_render_event_feedback_admin_page')) {
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('Event Feedback', 'backstage-venue-manager') . '</h1>';
-		vms_feedback_admin_render_notices();
-		vms_feedback_admin_render_content();
-		echo '</div>';
+		vms_feedback_admin_render_page_without_shell();
 	}
 }
 
