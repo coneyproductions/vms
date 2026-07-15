@@ -86,6 +86,35 @@ if (!function_exists('vms_event_plan_import_render_intro')) {
 	}
 }
 
+if (!function_exists('vms_event_plan_import_rows_payload_error_messages')) {
+	/**
+	 * @return array<string,string>
+	 */
+	function vms_event_plan_import_rows_payload_error_messages(): array
+	{
+		return array(
+			'rows_json_missing' => __('Preview rows cache is missing. Please run Preview again.', 'backstage-venue-manager'),
+			'rows_json_unsafe' => __('Preview rows cache path is invalid.', 'backstage-venue-manager'),
+			'rows_json_too_large' => __('Preview rows cache is too large to validate safely.', 'backstage-venue-manager'),
+			'rows_json_empty' => __('Preview rows cache is empty.', 'backstage-venue-manager'),
+			'rows_json_invalid' => __('Preview rows cache is not valid JSON.', 'backstage-venue-manager'),
+		);
+	}
+}
+
+if (!function_exists('vms_event_plan_import_render_rows_payload_error')) {
+	function vms_event_plan_import_render_rows_payload_error(string $error_code): void
+	{
+		$messages = vms_event_plan_import_rows_payload_error_messages();
+		$error_code = sanitize_key($error_code);
+		if (!isset($messages[$error_code]) || $messages[$error_code] === '') {
+			return;
+		}
+
+		echo '<div class="notice notice-error inline"><p>' . esc_html($messages[$error_code]) . '</p></div>';
+	}
+}
+
 if (!function_exists('vms_event_plan_import_render_summary_cards')) {
 	/**
 	 * @param array<string,mixed> $summary
@@ -262,7 +291,7 @@ if (!function_exists('vms_event_plan_import_render_main_content')) {
 			vms_event_plan_import_render_summary_cards($summary);
 
 			if (is_wp_error($rows_payload)) {
-				echo '<div class="notice notice-error inline"><p>' . esc_html($rows_payload->get_error_message()) . '</p></div>';
+				vms_event_plan_import_render_rows_payload_error((string) $rows_payload->get_error_code());
 			}
 
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="vms-epcsv-commit-form" style="margin-top:16px;">';

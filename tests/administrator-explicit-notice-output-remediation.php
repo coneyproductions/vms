@@ -3341,6 +3341,8 @@ $assert(strpos($eventFeedbackIntroPage, 'That Event Plan could not be found.') =
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_notice_class(string $type): string') !== false, 'Event Plan Import should preserve the notice-class mapper.');
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_notice(array $notice): void') !== false, 'Event Plan Import should expose a dedicated explicit notice renderer.');
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_intro(): void') !== false, 'Event Plan Import should expose a dedicated intro renderer for the shared page copy.');
+$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_rows_payload_error_messages(): array') !== false, 'Event Plan Import should expose the local rows-payload error vocabulary.');
+$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_rows_payload_error(string $error_code): void') !== false, 'Event Plan Import should expose a dedicated local rows-payload error renderer.');
 $assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_main_content(array $preview, string $preview_token, array $latest_run, array $revertible_run): void') !== false, 'Event Plan Import should expose a dedicated renderer for the remaining page content.');
 $eventPlanImportNoticeStart = strpos($eventPlanImportSource, 'function vms_event_plan_import_render_notice(array $notice): void');
 $eventPlanImportNoticeEnd = strpos($eventPlanImportSource, "if (!function_exists('vms_event_plan_import_render_summary_cards'))");
@@ -3391,7 +3393,14 @@ $assert(preg_match('~echo\s+[\'"]<div class=\"wrap\"><h1>[\'"].*?\$render_intro\
 $assert(substr_count($eventPlanImportSource, 'vms_event_plan_import_pop_notice();') === 1, 'Event Plan Import page source should keep exactly one destructive notice pop call.');
 $assert(strpos($eventPlanImportContentSource, 'vms_event_plan_import_pop_notice();') === false, 'Event Plan Import content callback should no longer pop notice state directly.');
 $assert(strpos($eventPlanImportContentSource, 'vms_event_plan_import_render_notice(') === false, 'Event Plan Import content callback should no longer emit the moved primary notice.');
-$assert(strpos($eventPlanImportMainContentSource, 'notice notice-error inline') !== false, 'Event Plan Import should preserve the separate inline rows-payload error branch in the remaining content renderer.');
+$assert(strpos($eventPlanImportMainContentSource, 'vms_event_plan_import_render_rows_payload_error((string) $rows_payload->get_error_code());') !== false, 'Event Plan Import should route the rows-payload branch through the dedicated local renderer.');
+$assert(strpos($eventPlanImportMainContentSource, '$rows_payload->get_error_message()') === false, 'Event Plan Import should no longer interpolate arbitrary rows-payload error text directly into Preview Results markup.');
+$assert(strpos($eventPlanImportSource, '<div class="notice notice-error inline"><p>') !== false, 'Event Plan Import should preserve the separate inline rows-payload error fragment in its dedicated local renderer.');
+$assert(strpos($eventPlanImportSource, "'rows_json_missing' => __('Preview rows cache is missing. Please run Preview again.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the missing-cache message.');
+$assert(strpos($eventPlanImportSource, "'rows_json_unsafe' => __('Preview rows cache path is invalid.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the invalid-path message.');
+$assert(strpos($eventPlanImportSource, "'rows_json_too_large' => __('Preview rows cache is too large to validate safely.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the oversized-cache message.');
+$assert(strpos($eventPlanImportSource, "'rows_json_empty' => __('Preview rows cache is empty.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the empty-cache message.');
+$assert(strpos($eventPlanImportSource, "'rows_json_invalid' => __('Preview rows cache is not valid JSON.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the invalid-JSON message.');
 $assert(strpos($eventPlanImportActionsSource, 'function vms_event_plan_import_handle_preview_action(): void') !== false && strpos($eventPlanImportActionsSource, 'function vms_event_plan_import_handle_commit_action(): void') !== false && strpos($eventPlanImportActionsSource, 'function vms_event_plan_import_handle_revert_last_action(): void') !== false, 'Event Plan Import should preserve the existing notice-writing action handlers.');
 $assert(preg_match_all('~vms_event_plan_import_set_notice\s*\(~', $eventPlanImportActionsSource, $unusedEventPlanImportSetNoticeMatches) === 13, 'Event Plan Import action handlers should preserve every existing notice-writing path.');
 $assert(strpos($eventPlanImportActionsSource, 'Preview ready. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.') !== false, 'Event Plan Import preview action should preserve the summary success message source.');
@@ -3536,7 +3545,7 @@ $GLOBALS['vms_test_event_plan_import_preview_payload_value'] = array(
 	'source_csv_name' => 'example.csv',
 	'rows_json_storage_key' => 'rows-key',
 );
-$GLOBALS['vms_test_event_plan_import_read_rows_json_value'] = new WP_Error('rows_missing', 'Preview rows payload is unavailable.');
+$GLOBALS['vms_test_event_plan_import_read_rows_json_value'] = new WP_Error('rows_json_missing', 'Preview rows payload is unavailable.');
 $_GET = array(
 	'preview_token' => 'preview-token-1',
 );
@@ -3549,13 +3558,14 @@ $assert($GLOBALS['vms_test_event_plan_import_preview_payload_tokens'] === array(
 $assert($GLOBALS['vms_test_event_plan_import_read_rows_json_calls'] === 1, 'Event Plan Import rows-error render should resolve the rows payload exactly once.');
 $assert($GLOBALS['vms_test_event_plan_import_read_rows_json_references'] === array('rows-key'), 'Event Plan Import rows-error render should preserve the rows payload storage reference.');
 $assert(substr_count($eventPlanImportRowsErrorPage, 'Preview ready.') === 1, 'Event Plan Import rows-error render should preserve the primary notice exactly once.');
-$assert(substr_count($eventPlanImportRowsErrorPage, 'Preview rows payload is unavailable.') === 1, 'Event Plan Import rows-error render should preserve the separate rows-payload error exactly once.');
-$assert(strpos($eventPlanImportRowsErrorPage, 'Preview ready.') < strpos($eventPlanImportRowsErrorPage, 'Preview rows payload is unavailable.'), 'Event Plan Import shell output should keep the explicit primary notice before the separate rows-payload error.');
-$assert(strpos($eventPlanImportRowsErrorPage, 'Upload a CSV, preview changes, then commit.') < strpos($eventPlanImportRowsErrorPage, 'Preview rows payload is unavailable.'), 'Event Plan Import rows-payload error should remain in the content path after the ordinary page intro.');
-$assert(strpos($eventPlanImportRowsErrorPage, 'Preview Results') < strpos($eventPlanImportRowsErrorPage, 'Preview rows payload is unavailable.'), 'Event Plan Import rows-payload error should remain inside the preview results section.');
+$assert(substr_count($eventPlanImportRowsErrorPage, 'Preview rows cache is missing. Please run Preview again.') === 1, 'Event Plan Import rows-error render should preserve the separate rows-payload error exactly once through the local code-owned vocabulary.');
+$assert(strpos($eventPlanImportRowsErrorPage, 'Preview ready.') < strpos($eventPlanImportRowsErrorPage, 'Preview rows cache is missing. Please run Preview again.'), 'Event Plan Import shell output should keep the explicit primary notice before the separate rows-payload error.');
+$assert(strpos($eventPlanImportRowsErrorPage, 'Upload a CSV, preview changes, then commit.') < strpos($eventPlanImportRowsErrorPage, 'Preview rows cache is missing. Please run Preview again.'), 'Event Plan Import rows-payload error should remain in the content path after the ordinary page intro.');
+$assert(strpos($eventPlanImportRowsErrorPage, 'Preview Results') < strpos($eventPlanImportRowsErrorPage, 'Preview rows cache is missing. Please run Preview again.'), 'Event Plan Import rows-payload error should remain inside the preview results section.');
 $assert(strpos($eventPlanImportRowsErrorPage, 'notice notice-error inline') !== false, 'Event Plan Import rows-payload error should preserve its original inline notice classes in the content path.');
 $assert(strpos($eventPlanImportRowsErrorPage, 'notice notice-error inline below-h2 vms-shell-notice') === false, 'Event Plan Import rows-payload error should not be normalized by the shell explicit/captured notice preparation path.');
 $assert(strpos($eventPlanImportRowsErrorPage, 'Preview Results') !== false, 'Event Plan Import rows-error render should preserve the preview results content path.');
+$assert(strpos($eventPlanImportRowsErrorPage, 'Preview rows payload is unavailable.') === false, 'Event Plan Import rows-error render should ignore arbitrary provider text outside the package-owned rows-cache vocabulary.');
 
 $allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
 $assert(
