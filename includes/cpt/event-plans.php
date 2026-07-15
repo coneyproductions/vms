@@ -2752,29 +2752,27 @@ class VMS_Admin_Event_Plans
                 'no_found_rows'  => true,
                 'update_post_term_cache' => false,
             ));
-            $vendor_option_context = $this->build_event_plan_vendor_option_context(
+            $response_payload = $this->build_event_plan_supporting_vendor_options_response_payload(
                 $post_id,
                 is_array($bands) ? $bands : array(),
                 (string) ($bundle['event_date'] ?? ''),
                 absint($bundle['venue_id'] ?? 0),
-                absint($bundle['band_vendor_id'] ?? 0),
-                array(),
-                true
+                absint($bundle['band_vendor_id'] ?? 0)
             );
-            $primary_html = is_string($vendor_option_context['primary_option_html'] ?? null)
-                ? (string) $vendor_option_context['primary_option_html']
+            $primary_html = is_string($response_payload['primary_html'] ?? null)
+                ? (string) $response_payload['primary_html']
                 : '';
-            $supporting_html = is_string($vendor_option_context['supporting_option_html'] ?? null)
-                ? (string) $vendor_option_context['supporting_option_html']
+            $supporting_html = is_string($response_payload['supporting_html'] ?? null)
+                ? (string) $response_payload['supporting_html']
                 : '';
 
             if (function_exists('vms_event_plan_perf_log')) {
                 vms_event_plan_perf_log('event_plan_vendor_options', $post_id, array(
                     'phase' => 'lazy_full_vendor_options',
-                    'option_mode' => 'shared_full_payload',
+                    'option_mode' => 'supporting_vendor_options_response',
                     'lazy_load' => 1,
-                    'primary_option_count' => count((array) ($vendor_option_context['primary_rows'] ?? array())),
-                    'supporting_option_count' => count((array) ($vendor_option_context['supporting_rows'] ?? array())),
+                    'primary_option_count' => count((array) ($response_payload['primary_rows'] ?? array())),
+                    'supporting_option_count' => count((array) ($response_payload['supporting_rows'] ?? array())),
                     'primary_option_payload_bytes' => strlen($primary_html),
                     'shared_option_payload_bytes' => strlen($supporting_html),
                 ));
@@ -2792,6 +2790,42 @@ class VMS_Admin_Event_Plans
                 ));
             }
         }
+    }
+
+    private function build_event_plan_supporting_vendor_options_response_payload(int $post_id, array $bands, string $event_date, int $venue_id_effective, int $selected_primary_vendor_id = 0): array
+    {
+        $vendor_boot_summary = $this->get_event_plan_vendor_boot_summary($post_id, $bands, $event_date, $venue_id_effective, array(
+            'include_primary_rows' => true,
+            'include_supporting_rows' => true,
+            'include_vendor_state_map' => false,
+            'primary_scope' => 'all',
+            'primary_vendor_id' => $selected_primary_vendor_id,
+            'supporting_scope' => 'all',
+            'supporting_vendor_ids' => array(),
+        ));
+        $primary_rows = isset($vendor_boot_summary['primary_rows']) && is_array($vendor_boot_summary['primary_rows'])
+            ? $vendor_boot_summary['primary_rows']
+            : array();
+        $supporting_rows = isset($vendor_boot_summary['supporting_rows']) && is_array($vendor_boot_summary['supporting_rows'])
+            ? $vendor_boot_summary['supporting_rows']
+            : array();
+
+        return array(
+            'primary_rows' => $primary_rows,
+            'supporting_rows' => $supporting_rows,
+            'primary_html' => $this->render_event_plan_supporting_vendor_options_primary_html($primary_rows, $selected_primary_vendor_id),
+            'supporting_html' => $this->render_event_plan_supporting_vendor_options_supporting_html($supporting_rows),
+        );
+    }
+
+    private function render_event_plan_supporting_vendor_options_primary_html(array $rows, int $selected_id): string
+    {
+        return $this->render_event_plan_primary_vendor_option_html($rows, $selected_id);
+    }
+
+    private function render_event_plan_supporting_vendor_options_supporting_html(array $rows): string
+    {
+        return $this->render_event_plan_supporting_vendor_option_html($rows, 0);
     }
 
     private function event_plan_admin_section_supports_lazy_load(string $section): bool
