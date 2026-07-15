@@ -2379,7 +2379,7 @@ class VMS_Admin_Event_Plans
         $opts['_venue_selected'] = ($venue_id > 0);
         $opts['_date_selected'] = (!empty($event_date));
         $selected_opt = isset($_POST['selected_opt']) ? sanitize_text_field(wp_unslash($_POST['selected_opt'])) : '';
-        $html = $this->render_comp_option_tiles_html($opts, 0, $selected_opt);
+        $html = $this->render_event_plan_compensation_options_response_html($opts, 0, $selected_opt);
 
         wp_send_json_success(array(
             'html' => $html,
@@ -3025,7 +3025,10 @@ class VMS_Admin_Event_Plans
         return $html;
     }
 
-    private function render_comp_option_tiles_html(array $opts, int $current_pkg_id = 0, string $selected_opt = ""): string
+    /**
+     * Render the complete HTML fragment returned in the compensation-options AJAX html field.
+     */
+    private function render_event_plan_compensation_options_response_html(array $opts, int $current_pkg_id = 0, string $selected_opt = ""): string
     {
         $fmt_money = function($n): string {
             $n = (float) $n;
@@ -3104,54 +3107,7 @@ class VMS_Admin_Event_Plans
 
         foreach (array('venue', 'vendor', 'holiday') as $k) {
             $d = isset($defaults[$k]) && is_array($defaults[$k]) ? $defaults[$k] : array();
-            $enabled = !empty($d['enabled']);
-            $title = isset($d['title']) ? (string) $d['title'] : '';
-            $sub = isset($d['subtitle']) ? (string) $d['subtitle'] : '';
-            $terms = isset($d['terms']) && is_array($d['terms']) ? $d['terms'] : array();
-            $g = isset($d['guarantee']) ? (float) $d['guarantee'] : 0.0;
-            if ($g < 0) $g = 0.0;
-
-            $structure = isset($terms['structure']) ? (string) $terms['structure'] : '';
-            $flat = array_key_exists('flat_fee_amount', $terms) ? (string) $terms['flat_fee_amount'] : '';
-            $split = array_key_exists('door_split_percent', $terms) ? (string) $terms['door_split_percent'] : '';
-            $bonus_mode = array_key_exists('attendance_bonus_mode', $terms) ? (string) $terms['attendance_bonus_mode'] : '';
-            $bonus_start = array_key_exists('attendance_bonus_start_count', $terms) ? (string) $terms['attendance_bonus_start_count'] : '';
-            $bonus_step_size = array_key_exists('attendance_bonus_step_size', $terms) ? (string) $terms['attendance_bonus_step_size'] : '';
-            $bonus_step_bonus = array_key_exists('attendance_bonus_step_bonus', $terms) ? (string) $terms['attendance_bonus_step_bonus'] : '';
-            $bonus_per_ticket = array_key_exists('attendance_bonus_per_ticket_rate', $terms) ? (string) $terms['attendance_bonus_per_ticket_rate'] : '';
-            $bonus_max = array_key_exists('attendance_bonus_max_bonus', $terms) ? (string) $terms['attendance_bonus_max_bonus'] : '';
-            $commission_pct = array_key_exists('commission_percent', $terms) ? (string) $terms['commission_percent'] : '';
-            $commission_mode = array_key_exists('commission_mode', $terms) ? (string) $terms['commission_mode'] : '';
-
-            $opt = 'default:' . $k;
-            $is_sel = ($sel !== '' && $sel === $opt);
-
-            $is_max = ($enabled && $max > 0 && abs($g - $max) < 0.0001);
-            $scale_class = $scale_class_for($enabled, $g);
-
-            $html .= '<button type="button" class="vms-comp-opt-tile' . $scale_class . ($enabled ? '' : ' is-disabled') . ($is_sel ? ' is-selected' : '') . '"'
-                . ' data-opt-kind="default" data-opt-key="' . esc_attr($k) . '"'
-                . ' data-opt="' . esc_attr($opt) . '"'
-                . ' data-structure="' . esc_attr($structure) . '"'
-                . ' data-flat="' . esc_attr($flat) . '"'
-                . ' data-split="' . esc_attr($split) . '"'
-                . ' data-bonus-mode="' . esc_attr($bonus_mode) . '"'
-                . ' data-bonus-start-count="' . esc_attr($bonus_start) . '"'
-                . ' data-bonus-step-size="' . esc_attr($bonus_step_size) . '"'
-                . ' data-bonus-step-bonus="' . esc_attr($bonus_step_bonus) . '"'
-                . ' data-bonus-per-ticket-rate="' . esc_attr($bonus_per_ticket) . '"'
-                . ' data-bonus-max-bonus="' . esc_attr($bonus_max) . '"'
-                . ' data-commission-percent="' . esc_attr($commission_pct) . '"'
-                . ' data-commission-mode="' . esc_attr($commission_mode) . '"'
-                . ' data-package-id="0"'
-                . ($enabled ? '' : ' disabled="disabled"')
-                . '>';
-
-            $html .= '<div class="vms-comp-opt-tile__title">' . esc_html($title) . '</div>';
-            $html .= '<div class="vms-comp-opt-tile__value">' . ($enabled ? esc_html($fmt_money($g)) : '—') . '</div>';
-            $html .= '<div class="vms-comp-opt-tile__sub">' . esc_html($sub) . '</div>';
-            $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'backstage-venue-manager') . '</div>';
-            $html .= '</button>';
+            $html .= $this->render_event_plan_compensation_default_option_tile_html($k, $d, $sel, $max, $fmt_money, $scale_class_for);
         }
 
         $html .= '</div>';
@@ -3161,65 +3117,13 @@ class VMS_Admin_Event_Plans
         $html .= '<div class="vms-comp-opt-row__title"><strong>' . esc_html__('Packages (Optional presets)', 'backstage-venue-manager') . '</strong></div>';
  
         if (empty($packages)) {
-            if (!$venue_selected) {
-                $html .= '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><em>' . esc_html__('Select a Venue above to load packages.', 'backstage-venue-manager') . '</em></p></div>';
-            } else {
-                $html .= '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><strong>' . esc_html__('No Comp Packages are available for the selected venue yet.', 'backstage-venue-manager') . '</strong></p></div>';
-            }
+            $html .= $this->render_event_plan_compensation_package_empty_state_html($venue_selected);
         } else {
             $html .= '<div class="vms-comp-opt-tiles vms-comp-opt-tiles--packages">';
 
             foreach ($packages as $p) {
                 if (!is_array($p)) continue;
-                $enabled = !empty($p['enabled']);
-                $pid = isset($p['id']) ? (int) $p['id'] : 0;
-                $title = isset($p['title']) ? (string) $p['title'] : '';
-                $sub = isset($p['subtitle']) ? (string) $p['subtitle'] : '';
-                $terms = isset($p['terms']) && is_array($p['terms']) ? $p['terms'] : array();
-                $g = isset($p['guarantee']) ? (float) $p['guarantee'] : 0.0;
-                if ($g < 0) $g = 0.0;
-
-                $structure = isset($terms['structure']) ? (string) $terms['structure'] : '';
-                $flat = array_key_exists('flat_fee_amount', $terms) ? (string) $terms['flat_fee_amount'] : '';
-                $split = array_key_exists('door_split_percent', $terms) ? (string) $terms['door_split_percent'] : '';
-                $bonus_mode = array_key_exists('attendance_bonus_mode', $terms) ? (string) $terms['attendance_bonus_mode'] : '';
-                $bonus_start = array_key_exists('attendance_bonus_start_count', $terms) ? (string) $terms['attendance_bonus_start_count'] : '';
-                $bonus_step_size = array_key_exists('attendance_bonus_step_size', $terms) ? (string) $terms['attendance_bonus_step_size'] : '';
-                $bonus_step_bonus = array_key_exists('attendance_bonus_step_bonus', $terms) ? (string) $terms['attendance_bonus_step_bonus'] : '';
-                $bonus_per_ticket = array_key_exists('attendance_bonus_per_ticket_rate', $terms) ? (string) $terms['attendance_bonus_per_ticket_rate'] : '';
-                $bonus_max = array_key_exists('attendance_bonus_max_bonus', $terms) ? (string) $terms['attendance_bonus_max_bonus'] : '';
-                $commission_pct = array_key_exists('commission_percent', $terms) ? (string) $terms['commission_percent'] : '';
-                $commission_mode = array_key_exists('commission_mode', $terms) ? (string) $terms['commission_mode'] : '';
-
-                $is_max = ($enabled && $max > 0 && abs($g - $max) < 0.0001);
-                $scale_class = $scale_class_for($enabled, $g);
-
-                $opt = 'package:' . (int) $pid;
-                $is_sel = ($sel !== '' ? ($sel === $opt) : ($pid > 0 && $pid === (int) $current_pkg_id));
-
-                $html .= '<button type="button" class="vms-comp-opt-tile' . $scale_class . ($enabled ? '' : ' is-disabled') . ($is_sel ? ' is-selected' : '') . '"'
-                    . ' data-opt-kind="package" data-opt-id="' . esc_attr($pid) . '"'
-                    . ' data-opt="' . esc_attr($opt) . '"'
-                    . ' data-structure="' . esc_attr($structure) . '"'
-                    . ' data-flat="' . esc_attr($flat) . '"'
-                    . ' data-split="' . esc_attr($split) . '"'
-                    . ' data-bonus-mode="' . esc_attr($bonus_mode) . '"'
-                    . ' data-bonus-start-count="' . esc_attr($bonus_start) . '"'
-                    . ' data-bonus-step-size="' . esc_attr($bonus_step_size) . '"'
-                    . ' data-bonus-step-bonus="' . esc_attr($bonus_step_bonus) . '"'
-                    . ' data-bonus-per-ticket-rate="' . esc_attr($bonus_per_ticket) . '"'
-                    . ' data-bonus-max-bonus="' . esc_attr($bonus_max) . '"'
-                    . ' data-commission-percent="' . esc_attr($commission_pct) . '"'
-                    . ' data-commission-mode="' . esc_attr($commission_mode) . '"'
-                    . ' data-package-id="' . esc_attr($pid) . '"'
-                    . ($enabled ? '' : ' disabled="disabled"')
-                    . '>';
-
-                $html .= '<div class="vms-comp-opt-tile__title">' . esc_html($title) . '</div>';
-                $html .= '<div class="vms-comp-opt-tile__value">' . ($enabled ? esc_html($fmt_money($g)) : '—') . '</div>';
-                $html .= '<div class="vms-comp-opt-tile__sub">' . esc_html($sub) . '</div>';
-                $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'backstage-venue-manager') . '</div>';
-                $html .= '</button>';
+                $html .= $this->render_event_plan_compensation_package_option_tile_html($p, $sel, $max, $fmt_money, $scale_class_for);
             }
  
             $html .= '</div>';
@@ -3228,6 +3132,111 @@ class VMS_Admin_Event_Plans
         $html .= '</div>';
 
         return $html;
+    }
+
+    private function render_event_plan_compensation_package_empty_state_html(bool $venue_selected): string
+    {
+        if (!$venue_selected) {
+            return '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><em>' . esc_html__('Select a Venue above to load packages.', 'backstage-venue-manager') . '</em></p></div>';
+        }
+
+        return '<div class="notice notice-info inline vms-notice vms-notice--info vms-notice-tight"><p><strong>' . esc_html__('No Comp Packages are available for the selected venue yet.', 'backstage-venue-manager') . '</strong></p></div>';
+    }
+
+    private function render_event_plan_compensation_default_option_tile_html(string $key, array $option, string $selected_opt, float $max, callable $fmt_money, callable $scale_class_for): string
+    {
+        $enabled = !empty($option['enabled']);
+        $title = isset($option['title']) ? (string) $option['title'] : '';
+        $sub = isset($option['subtitle']) ? (string) $option['subtitle'] : '';
+        $terms = isset($option['terms']) && is_array($option['terms']) ? $option['terms'] : array();
+        $guarantee = isset($option['guarantee']) ? (float) $option['guarantee'] : 0.0;
+        if ($guarantee < 0) {
+            $guarantee = 0.0;
+        }
+
+        $opt = 'default:' . $key;
+        $is_sel = ($selected_opt !== '' && $selected_opt === $opt);
+        $is_max = ($enabled && $max > 0 && abs($guarantee - $max) < 0.0001);
+        $scale_class = (string) $scale_class_for($enabled, $guarantee);
+
+        $html = '<button type="button" class="vms-comp-opt-tile' . $scale_class . ($enabled ? '' : ' is-disabled') . ($is_sel ? ' is-selected' : '') . '"'
+            . ' data-opt-kind="default" data-opt-key="' . esc_attr($key) . '"'
+            . ' data-opt="' . esc_attr($opt) . '"'
+            . $this->render_event_plan_compensation_option_tile_term_data_attributes($terms)
+            . ' data-package-id="0"'
+            . ($enabled ? '' : ' disabled="disabled"')
+            . '>';
+
+        $html .= '<div class="vms-comp-opt-tile__title">' . esc_html($title) . '</div>';
+        $html .= '<div class="vms-comp-opt-tile__value">' . ($enabled ? esc_html($fmt_money($guarantee)) : '—') . '</div>';
+        $html .= '<div class="vms-comp-opt-tile__sub">' . esc_html($sub) . '</div>';
+        $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'backstage-venue-manager') . '</div>';
+        $html .= '</button>';
+
+        return $html;
+    }
+
+    private function render_event_plan_compensation_package_option_tile_html(array $package, string $selected_opt, float $max, callable $fmt_money, callable $scale_class_for): string
+    {
+        $enabled = !empty($package['enabled']);
+        $package_id = isset($package['id']) ? (int) $package['id'] : 0;
+        $title = isset($package['title']) ? (string) $package['title'] : '';
+        $sub = isset($package['subtitle']) ? (string) $package['subtitle'] : '';
+        $terms = isset($package['terms']) && is_array($package['terms']) ? $package['terms'] : array();
+        $guarantee = isset($package['guarantee']) ? (float) $package['guarantee'] : 0.0;
+        if ($guarantee < 0) {
+            $guarantee = 0.0;
+        }
+
+        $opt = 'package:' . $package_id;
+        $is_sel = ($selected_opt !== '' && $selected_opt === $opt);
+        $is_max = ($enabled && $max > 0 && abs($guarantee - $max) < 0.0001);
+        $scale_class = (string) $scale_class_for($enabled, $guarantee);
+
+        $html = '<button type="button" class="vms-comp-opt-tile' . $scale_class . ($enabled ? '' : ' is-disabled') . ($is_sel ? ' is-selected' : '') . '"'
+            . ' data-opt-kind="package" data-opt-id="' . esc_attr($package_id) . '"'
+            . ' data-opt="' . esc_attr($opt) . '"'
+            . $this->render_event_plan_compensation_option_tile_term_data_attributes($terms)
+            . ' data-package-id="' . esc_attr($package_id) . '"'
+            . ($enabled ? '' : ' disabled="disabled"')
+            . '>';
+
+        $html .= '<div class="vms-comp-opt-tile__title">' . esc_html($title) . '</div>';
+        $html .= '<div class="vms-comp-opt-tile__value">' . ($enabled ? esc_html($fmt_money($guarantee)) : '—') . '</div>';
+        $html .= '<div class="vms-comp-opt-tile__sub">' . esc_html($sub) . '</div>';
+        $html .= '<div class="vms-comp-opt-tile__badge' . ($is_max ? '' : ' vms-hidden') . '">' . esc_html__('Highest guaranteed', 'backstage-venue-manager') . '</div>';
+        $html .= '</button>';
+
+        return $html;
+    }
+
+    private function render_event_plan_compensation_option_tile_term_data_attributes(array $terms): string
+    {
+        $values = array(
+            'structure' => isset($terms['structure']) ? (string) $terms['structure'] : '',
+            'flat' => array_key_exists('flat_fee_amount', $terms) ? (string) $terms['flat_fee_amount'] : '',
+            'split' => array_key_exists('door_split_percent', $terms) ? (string) $terms['door_split_percent'] : '',
+            'bonus_mode' => array_key_exists('attendance_bonus_mode', $terms) ? (string) $terms['attendance_bonus_mode'] : '',
+            'bonus_start_count' => array_key_exists('attendance_bonus_start_count', $terms) ? (string) $terms['attendance_bonus_start_count'] : '',
+            'bonus_step_size' => array_key_exists('attendance_bonus_step_size', $terms) ? (string) $terms['attendance_bonus_step_size'] : '',
+            'bonus_step_bonus' => array_key_exists('attendance_bonus_step_bonus', $terms) ? (string) $terms['attendance_bonus_step_bonus'] : '',
+            'bonus_per_ticket_rate' => array_key_exists('attendance_bonus_per_ticket_rate', $terms) ? (string) $terms['attendance_bonus_per_ticket_rate'] : '',
+            'bonus_max_bonus' => array_key_exists('attendance_bonus_max_bonus', $terms) ? (string) $terms['attendance_bonus_max_bonus'] : '',
+            'commission_percent' => array_key_exists('commission_percent', $terms) ? (string) $terms['commission_percent'] : '',
+            'commission_mode' => array_key_exists('commission_mode', $terms) ? (string) $terms['commission_mode'] : '',
+        );
+
+        return ' data-structure="' . esc_attr($values['structure']) . '"'
+            . ' data-flat="' . esc_attr($values['flat']) . '"'
+            . ' data-split="' . esc_attr($values['split']) . '"'
+            . ' data-bonus-mode="' . esc_attr($values['bonus_mode']) . '"'
+            . ' data-bonus-start-count="' . esc_attr($values['bonus_start_count']) . '"'
+            . ' data-bonus-step-size="' . esc_attr($values['bonus_step_size']) . '"'
+            . ' data-bonus-step-bonus="' . esc_attr($values['bonus_step_bonus']) . '"'
+            . ' data-bonus-per-ticket-rate="' . esc_attr($values['bonus_per_ticket_rate']) . '"'
+            . ' data-bonus-max-bonus="' . esc_attr($values['bonus_max_bonus']) . '"'
+            . ' data-commission-percent="' . esc_attr($values['commission_percent']) . '"'
+            . ' data-commission-mode="' . esc_attr($values['commission_mode']) . '"';
     }
 
     private function get_lock_pay_required_basics_labels(): array

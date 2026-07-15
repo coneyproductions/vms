@@ -58,7 +58,7 @@
         </p>
 
         <div id="vms-comp-options" data-nonce="<?php echo esc_attr($comp_options_nonce); ?>">
-            <?php echo $this->render_comp_option_tiles_html($comp_opts, (int) $current_pkg_id, (string) $selected_opt); ?>
+            <?php echo $this->render_event_plan_compensation_options_response_html($comp_opts, (int) $current_pkg_id, (string) $selected_opt); ?>
         </div>
 
 	        <input type="hidden" id="vms_max_guarantee_available" value="<?php echo esc_attr((string) ((float) ($comp_opts['max_guarantee'] ?? 0.0))); ?>" />
