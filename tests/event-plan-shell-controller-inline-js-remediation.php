@@ -73,7 +73,12 @@ try {
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Shell asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitStaff = initStaff;') === false, 'Staff controller ownership should move out of Event Plan PHP in this slice.');
 	$assert(strpos($staffAssetSource, 'window.vmsEventPlanInitStaff = initStaff;') !== false, 'Dedicated staff asset should now own the public staff initializer.');
-	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan PHP should no longer have active inline script blocks after the workflow migration.');
+	$assert(
+		preg_match('/<script\b(?![^>]*type=(["\'])application\/json\1)[^>]*>/i', $eventPlansSource) !== 1,
+		'Event Plan PHP should not contain executable inline script blocks after the workflow migration.'
+	);
+	$assert(substr_count($eventPlansSource, '<script') === 1, 'Event Plan PHP should retain only the inert Secondary Vendors application/json script tag after the workflow migration.');
+	$assert(strpos($eventPlansSource, '<script type="application/json" data-vms-secondary-config>') !== false, 'Event Plan PHP should retain the inert Secondary Vendors application/json configuration payload.');
 	$assert(!file_exists($unexpectedAssetPath), 'This slice should not create a second Event Plan shell/controller asset.');
 
 	fwrite(STDOUT, "event plan shell controller inline js remediation: PASS\n");

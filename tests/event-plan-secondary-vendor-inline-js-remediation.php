@@ -114,7 +114,12 @@ try {
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Secondary Vendors asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') === false, 'Bulk-cancellation retry confirmation should no longer remain inline.');
 	$assert(strpos($eventPlansSource, 'const btn = document.getElementById(\'vms_run_live_refunds_now_button\');') === false, 'Live-refunds confirmation should no longer remain inline.');
-	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan PHP should no longer have active inline Event Plan script blocks after the workflow migration.');
+	$assert(
+		preg_match('/<script\b(?![^>]*type=(["\'])application\/json\1)[^>]*>/i', $eventPlansSource) !== 1,
+		'Event Plan PHP should not contain executable inline Event Plan script blocks after the workflow migration.'
+	);
+	$assert(substr_count($eventPlansSource, '<script') === 1, 'Event Plan PHP should retain only the inert Secondary Vendors application/json script tag after the workflow migration.');
+	$assert(strpos($eventPlansSource, '<script type="application/json" data-vms-secondary-config>') !== false, 'Event Plan PHP should retain the inert Secondary Vendors application/json configuration payload.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(

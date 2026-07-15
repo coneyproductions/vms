@@ -146,7 +146,12 @@ try {
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendors-section"') !== false, 'Active secondary-vendors partial should retain the live section wrapper.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-save-nonce') !== false, 'Active secondary-vendors partial should retain its save contract.');
 
-	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan source should no longer contain active inline Event Plan scripts after the workflow migration.');
+	$assert(
+		preg_match('/<script\b(?![^>]*type=(["\'])application\/json\1)[^>]*>/i', $eventPlansSource) !== 1,
+		'Event Plan source should not contain executable inline Event Plan scripts after the workflow migration.'
+	);
+	$assert(substr_count($eventPlansSource, '<script') === 1, 'Event Plan source should retain only the inert Secondary Vendors application/json script tag after the workflow migration.');
+	$assert(strpos($eventPlansSource, '<script type="application/json" data-vms-secondary-config>') !== false, 'Event Plan source should retain the inert Secondary Vendors application/json configuration payload.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section persistence helper.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;') === false, 'Event Plan source should no longer retain the migrated shell requested-section reveal helper.');
 	$assert(strpos($shellAssetSource, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Shell asset should now own the requested-section persistence helper.');
