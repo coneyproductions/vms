@@ -2568,13 +2568,10 @@ class VMS_Admin_Event_Plans
                     $staff_assignments = array();
                 }
 
-                $vars = array(
-                    'post' => $post,
-                    'staff_assignments' => $staff_assignments,
-                    'vms_staff_include_heading' => false,
-                );
-                $vars = array_merge($vars, $this->get_event_plan_staff_render_context($post_id, $staff_assignments));
-                $html = $this->capture_event_plan_partial('staff', $vars);
+                $staff_payload = $this->build_event_plan_staff_response_payload($post_id, $staff_assignments);
+                $html = is_string($staff_payload['html'] ?? null)
+                    ? (string) $staff_payload['html']
+                    : '';
 
                 if (function_exists('vms_event_plan_perf_log')) {
                     vms_event_plan_perf_log('event_plan_staff_section_render', $post_id, array(
@@ -4445,6 +4442,941 @@ class VMS_Admin_Event_Plans
                 vms_event_plan_perf_span_finish('event_plan_staff_render_context', $post_id, $trace, array('section' => 'staffing'));
             }
         }
+    }
+
+    private function build_event_plan_staff_response_payload(int $post_id, array $staff_assignments): array
+    {
+        $render_context = $this->get_event_plan_staff_render_context($post_id, $staff_assignments);
+        $staff_context = $this->build_event_plan_staff_response_context($render_context, $staff_assignments);
+
+        return array(
+            'staff_context' => $staff_context,
+            'html' => $this->render_event_plan_staff_response_html($staff_context),
+        );
+    }
+
+    private function build_event_plan_staff_response_context(array $render_context, array $staff_assignments): array
+    {
+        $staff_roles = isset($render_context['staff_roles']) && is_array($render_context['staff_roles']) && !is_wp_error($render_context['staff_roles'])
+            ? $render_context['staff_roles']
+            : array();
+        $staff_slot_by_role = isset($render_context['staff_slot_by_role']) && is_array($render_context['staff_slot_by_role'])
+            ? $render_context['staff_slot_by_role']
+            : array();
+        $staff_role_meta_map = isset($render_context['staff_role_meta_map']) && is_array($render_context['staff_role_meta_map'])
+            ? $render_context['staff_role_meta_map']
+            : array();
+        $staff_by_role = isset($render_context['staff_by_role']) && is_array($render_context['staff_by_role'])
+            ? $render_context['staff_by_role']
+            : array();
+        $staff_eligible_counts_by_role = isset($render_context['staff_eligible_counts_by_role']) && is_array($render_context['staff_eligible_counts_by_role'])
+            ? $render_context['staff_eligible_counts_by_role']
+            : array();
+        $staff_activation_thresholds = isset($render_context['staff_activation_thresholds']) && is_array($render_context['staff_activation_thresholds'])
+            ? $render_context['staff_activation_thresholds']
+            : array();
+        $staff_headcount_wired = !empty($render_context['staff_headcount_wired']);
+        $staff_current_headcount = max(0, (int) ($render_context['staff_current_headcount'] ?? 0));
+        $staff_headcount_label = isset($render_context['staff_headcount_label']) ? (string) $render_context['staff_headcount_label'] : __('Attendance not wired yet', 'backstage-venue-manager');
+        $staffing_templates = isset($render_context['staffing_templates']) && is_array($render_context['staffing_templates'])
+            ? $render_context['staffing_templates']
+            : array();
+        $staff_applied_template_id = max(0, (int) ($render_context['staff_applied_template_id'] ?? 0));
+        $staff_applied_template = isset($render_context['staff_applied_template']) && is_array($render_context['staff_applied_template'])
+            ? $render_context['staff_applied_template']
+            : null;
+        $staff_recommended_template = isset($render_context['staff_recommended_template']) && is_array($render_context['staff_recommended_template'])
+            ? $render_context['staff_recommended_template']
+            : null;
+        $vms_staff_has_data = !empty($render_context['vms_staff_has_data']);
+
+        $applied_name = (is_array($staff_applied_template) && !empty($staff_applied_template['name']))
+            ? (string) $staff_applied_template['name']
+            : __('None recorded', 'backstage-venue-manager');
+        $recommended_name = (is_array($staff_recommended_template) && !empty($staff_recommended_template['name']))
+            ? (string) $staff_recommended_template['name']
+            : __('No match', 'backstage-venue-manager');
+        $headcount_summary_text = $staff_headcount_wired
+            ? sprintf(
+                /* translators: %1$d: anticipated guests. */
+                __('Anticipated guests: %1$d. Staffing highlights below update against this number.', 'backstage-venue-manager'),
+                $staff_current_headcount,
+                $staff_headcount_label
+            )
+            : __('Anticipated guest count is not available yet. Staffing highlights will appear once ticket sales or guest entries are available.', 'backstage-venue-manager');
+
+        $role_rows = $this->build_event_plan_staff_response_role_rows(
+            $staff_roles,
+            $staff_slot_by_role,
+            $staff_role_meta_map,
+            $staff_by_role,
+            $staff_eligible_counts_by_role,
+            $staff_activation_thresholds,
+            $staff_headcount_wired,
+            $staff_current_headcount,
+            $vms_staff_has_data,
+            $staff_applied_template_id,
+            $staff_assignments
+        );
+
+        return array(
+            'has_data' => $vms_staff_has_data,
+            'headcount_wired' => $staff_headcount_wired,
+            'headcount_summary_text' => $headcount_summary_text,
+            'current_headcount' => $staff_current_headcount,
+            'headcount_label' => $staff_headcount_label,
+            'template_alerts' => $this->build_event_plan_staff_response_template_alerts(
+                $staff_roles,
+                $staff_activation_thresholds,
+                $staff_headcount_wired,
+                $staff_current_headcount,
+                $staff_applied_template,
+                $staff_recommended_template,
+                $staff_applied_template_id
+            ),
+            'applied_template_summary' => sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+                __('Applied: %1$s · Recommended now: %2$s', 'backstage-venue-manager'),
+                $applied_name,
+                $recommended_name
+            ),
+            'applied_template_id' => $staff_applied_template_id,
+            'template_options' => $this->build_event_plan_staff_response_template_option_rows($staffing_templates),
+            'has_roles' => !empty($role_rows),
+            'role_rows' => $role_rows,
+        );
+    }
+
+    private function build_event_plan_staff_response_template_alerts(
+        array $staff_roles,
+        array $staff_activation_thresholds,
+        bool $staff_headcount_wired,
+        int $staff_current_headcount,
+        ?array $staff_applied_template,
+        ?array $staff_recommended_template,
+        int $staff_applied_template_id
+    ): array {
+        $alerts = array();
+        $applied_template_band_min = (is_array($staff_applied_template) && isset($staff_applied_template['min_headcount']) && $staff_applied_template['min_headcount'] !== null && $staff_applied_template['min_headcount'] !== '')
+            ? max(0, (int) $staff_applied_template['min_headcount'])
+            : null;
+        $applied_template_band_max = (is_array($staff_applied_template) && isset($staff_applied_template['max_headcount']) && $staff_applied_template['max_headcount'] !== null && $staff_applied_template['max_headcount'] !== '')
+            ? max(0, (int) $staff_applied_template['max_headcount'])
+            : null;
+
+        if ($staff_headcount_wired && is_array($staff_applied_template) && $applied_template_band_max !== null && $staff_current_headcount > $applied_template_band_max) {
+            $alerts[] = sprintf(
+                /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+                __('Anticipated guests (%1$d) are above the applied template ceiling of %2$d. Review staffing now.', 'backstage-venue-manager'),
+                $staff_current_headcount,
+                $applied_template_band_max
+            );
+        }
+
+        if ($staff_headcount_wired && is_array($staff_applied_template) && $applied_template_band_min !== null && $staff_current_headcount < $applied_template_band_min) {
+            $alerts[] = sprintf(
+                /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+                __('Anticipated guests (%1$d) are below the applied template floor of %2$d.', 'backstage-venue-manager'),
+                $staff_current_headcount,
+                $applied_template_band_min
+            );
+        }
+
+        if (
+            $staff_headcount_wired
+            && is_array($staff_recommended_template)
+            && !empty($staff_recommended_template['template_id'])
+            && (int) $staff_recommended_template['template_id'] > 0
+            && (int) $staff_recommended_template['template_id'] !== $staff_applied_template_id
+        ) {
+            $alerts[] = sprintf(
+                /* translators: %s: current guest count fits a different staffing template. */
+                __('Current guest count fits a different staffing template: %s.', 'backstage-venue-manager'),
+                isset($staff_recommended_template['name']) ? (string) $staff_recommended_template['name'] : __('Recommended template', 'backstage-venue-manager')
+            );
+        }
+
+        $next_threshold_gap = null;
+        $next_threshold_role = '';
+        foreach ($staff_roles as $role) {
+            if (!is_object($role) || empty($role->term_id)) {
+                continue;
+            }
+
+            $role_id = (int) $role->term_id;
+            $threshold = array_key_exists($role_id, $staff_activation_thresholds)
+                ? max(0, (int) $staff_activation_thresholds[$role_id])
+                : 0;
+            if ($threshold <= 0 || $threshold <= $staff_current_headcount) {
+                continue;
+            }
+
+            $gap = $threshold - $staff_current_headcount;
+            if ($next_threshold_gap === null || $gap < $next_threshold_gap) {
+                $next_threshold_gap = $gap;
+                $next_threshold_role = isset($role->name) ? (string) $role->name : '';
+            }
+        }
+
+        if ($staff_headcount_wired && $next_threshold_gap !== null && $next_threshold_gap <= 10) {
+            $alerts[] = sprintf(
+                __('This event is %1$d away from the next staffing trigger%2$s.', 'backstage-venue-manager'),
+                $next_threshold_gap,
+                $next_threshold_role !== '' ? sprintf(__(' for %s', 'backstage-venue-manager'), $next_threshold_role) : ''
+            );
+        }
+
+        return $alerts;
+    }
+
+    private function build_event_plan_staff_response_template_option_rows(array $staffing_templates): array
+    {
+        $rows = array();
+        foreach ($staffing_templates as $template_row) {
+            if (!is_array($template_row)) {
+                continue;
+            }
+
+            $template_id = isset($template_row['template_id']) ? absint($template_row['template_id']) : 0;
+            if ($template_id <= 0) {
+                continue;
+            }
+
+            $label_parts = array();
+            $label_parts[] = isset($template_row['name']) ? (string) $template_row['name'] : ('#' . $template_id);
+            if (
+                (isset($template_row['min_headcount']) && $template_row['min_headcount'] !== null && $template_row['min_headcount'] !== '')
+                || (isset($template_row['max_headcount']) && $template_row['max_headcount'] !== null && $template_row['max_headcount'] !== '')
+            ) {
+                $label_parts[] = sprintf(
+                    __('guests %1$s-%2$s', 'backstage-venue-manager'),
+                    (isset($template_row['min_headcount']) && $template_row['min_headcount'] !== null && $template_row['min_headcount'] !== '')
+                        ? (int) $template_row['min_headcount']
+                        : 0,
+                    (isset($template_row['max_headcount']) && $template_row['max_headcount'] !== null && $template_row['max_headcount'] !== '')
+                        ? (int) $template_row['max_headcount']
+                        : '∞'
+                );
+            }
+
+            $rows[] = array(
+                'template_id' => $template_id,
+                'label' => implode(' · ', $label_parts),
+            );
+        }
+
+        return $rows;
+    }
+
+    private function build_event_plan_staff_response_role_rows(
+        array $staff_roles,
+        array $staff_slot_by_role,
+        array $staff_role_meta_map,
+        array $staff_by_role,
+        array $staff_eligible_counts_by_role,
+        array $staff_activation_thresholds,
+        bool $staff_headcount_wired,
+        int $staff_current_headcount,
+        bool $vms_staff_has_data,
+        int $staff_applied_template_id,
+        array $staff_assignments
+    ): array {
+        $rows = array();
+        $previous_duration_minutes = '';
+
+        foreach ($staff_roles as $role) {
+            if (!is_object($role) || empty($role->term_id)) {
+                continue;
+            }
+
+            $role_id = (int) $role->term_id;
+            if ($role_id <= 0) {
+                continue;
+            }
+
+            $role_name = isset($role->name) ? (string) $role->name : '';
+            $role_meta = isset($staff_role_meta_map[$role_id]) && is_array($staff_role_meta_map[$role_id])
+                ? $staff_role_meta_map[$role_id]
+                : array();
+            $slot_row = isset($staff_slot_by_role[$role_id]) && is_array($staff_slot_by_role[$role_id])
+                ? $staff_slot_by_role[$role_id]
+                : array();
+
+            $assigned_ids = array();
+            if (!empty($slot_row['assignments']) && is_array($slot_row['assignments'])) {
+                foreach ($slot_row['assignments'] as $assignment_row) {
+                    if (!is_array($assignment_row)) {
+                        continue;
+                    }
+
+                    $assignment_status = isset($assignment_row['status']) ? sanitize_key((string) $assignment_row['status']) : '';
+                    if (!in_array($assignment_status, array('proposed', 'confirmed'), true)) {
+                        continue;
+                    }
+
+                    $staff_id = isset($assignment_row['staff_id']) ? absint($assignment_row['staff_id']) : 0;
+                    if ($staff_id > 0) {
+                        $assigned_ids[] = $staff_id;
+                    }
+                }
+            } elseif (isset($staff_assignments[$role_id]) && is_array($staff_assignments[$role_id])) {
+                $assigned_ids = array_map('intval', $staff_assignments[$role_id]);
+            }
+
+            $assigned_ids = array_values(array_unique(array_filter($assigned_ids, static function ($value): bool {
+                return $value > 0;
+            })));
+
+            $default_headcount = isset($role_meta['default_headcount']) ? max(1, (int) $role_meta['default_headcount']) : 1;
+            $use_role_default_headcount = empty($slot_row) && !$vms_staff_has_data && $staff_applied_template_id <= 0;
+            $headcount = isset($slot_row['headcount_needed'])
+                ? max(0, (int) $slot_row['headcount_needed'])
+                : ($use_role_default_headcount ? $default_headcount : 0);
+            $time_mode = isset($slot_row['shift_time_mode']) ? sanitize_key((string) $slot_row['shift_time_mode']) : 'absolute';
+            if (!in_array($time_mode, array('absolute', 'relative'), true)) {
+                $time_mode = 'absolute';
+            }
+
+            $shift_start = isset($slot_row['shift_start_local']) ? (string) $slot_row['shift_start_local'] : '';
+            $shift_end = isset($slot_row['shift_end_local']) ? (string) $slot_row['shift_end_local'] : '';
+            $duration_minutes = isset($slot_row['duration_minutes']) && $slot_row['duration_minutes'] !== null
+                ? (int) $slot_row['duration_minutes']
+                : '';
+            $filled = count($assigned_ids);
+            $open = max(0, $headcount - $filled);
+            $is_critical = !empty($role_meta['is_critical']);
+            $role_in_use = ($headcount > 0 || $filled > 0);
+            $activation_threshold = array_key_exists($role_id, $staff_activation_thresholds)
+                ? max(0, (int) $staff_activation_thresholds[$role_id])
+                : ($role_in_use ? 1 : 0);
+            $threshold_met = $staff_headcount_wired && ($staff_current_headcount >= $activation_threshold);
+            $required_now = ($headcount > 0) && $threshold_met;
+            // Preserve the legacy partial's warning calculation order for this lazy-load response.
+            $absolute_time_missing = $role_in_use && $time_mode === 'absolute' && ($shift_start === '' || ($shift_end === '' && (int) $previous_duration_minutes <= 0));
+            $missing_staff_now = $required_now && ($filled < $headcount);
+
+            $role_card_classes = array('vms-ep-staff-role');
+            if ($required_now) {
+                $role_card_classes[] = 'is-required-now';
+            }
+            if ($absolute_time_missing || $missing_staff_now) {
+                $role_card_classes[] = 'has-inline-warning';
+            }
+            if ($missing_staff_now) {
+                $role_card_classes[] = 'has-required-gap';
+            }
+            if ($role_in_use && !$required_now && $staff_headcount_wired && $activation_threshold > 0) {
+                $role_card_classes[] = 'is-waiting-threshold';
+            }
+
+            if (!$role_in_use) {
+                $state_pill = __('Not set', 'backstage-venue-manager');
+                $state_class = 'is-inactive';
+            } elseif (!$staff_headcount_wired) {
+                $state_pill = __('Guests pending', 'backstage-venue-manager');
+                $state_class = 'is-unwired';
+            } elseif ($required_now) {
+                $state_pill = __('Needed now', 'backstage-venue-manager');
+                $state_class = 'is-required';
+            } elseif ($activation_threshold <= 0) {
+                $state_pill = __('Always needed', 'backstage-venue-manager');
+                $state_class = 'is-active';
+            } else {
+                $state_pill = sprintf(
+                    /* translators: %d: number used in this message. */
+                    __('Needed at %d+ guests', 'backstage-venue-manager'),
+                    $activation_threshold
+                );
+                $state_class = 'is-waiting';
+            }
+
+            if (!$role_in_use) {
+                $threshold_copy = __('Set staff needed and the guest trigger for when this role should become needed.', 'backstage-venue-manager');
+            } elseif (!$staff_headcount_wired) {
+                $threshold_copy = sprintf(
+                    /* translators: %d: number used in this message. */
+                    __('Guest count is not available yet. This role will become needed at %d guests once sales or guest entries are available.', 'backstage-venue-manager'),
+                    $activation_threshold
+                );
+            } elseif ($required_now) {
+                $threshold_copy = sprintf(
+                    /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+                    __('This role is needed now based on %1$d anticipated guests. It turns on at %2$d guests.', 'backstage-venue-manager'),
+                    $staff_current_headcount,
+                    $activation_threshold
+                );
+            } elseif ($activation_threshold <= 0) {
+                $threshold_copy = sprintf(
+                    __('This role is needed as soon as guest counts are available.', 'backstage-venue-manager'),
+                    $staff_current_headcount
+                );
+            } else {
+                $threshold_copy = sprintf(
+                    /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+                    __('This role becomes needed at %2$d anticipated guests. Current guest count: %1$d.', 'backstage-venue-manager'),
+                    $staff_current_headcount,
+                    $activation_threshold
+                );
+            }
+
+            $qualification_summary_parts = array();
+            $required_qualification_rules = !empty($role_meta['required_qualification_rules']) && is_array($role_meta['required_qualification_rules'])
+                ? $role_meta['required_qualification_rules']
+                : array();
+            foreach ($required_qualification_rules as $qualification_rule) {
+                if (!is_array($qualification_rule) || empty($qualification_rule['name'])) {
+                    continue;
+                }
+
+                $qualification_summary_parts[] = sprintf(
+                    /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+                    __('%1$s (%2$s)', 'backstage-venue-manager'),
+                    (string) $qualification_rule['name'],
+                    function_exists('vms_staffing_admin_qualification_mode_label')
+                        ? vms_staffing_admin_qualification_mode_label((string) ($qualification_rule['mode'] ?? 'warn'))
+                        : (string) ($qualification_rule['mode'] ?? 'warn')
+                );
+            }
+
+            $role_staff = isset($staff_by_role[$role_id]) && is_array($staff_by_role[$role_id]) ? $staff_by_role[$role_id] : array();
+            $role_eligible_count = isset($staff_eligible_counts_by_role[$role_id]) ? max(0, (int) $staff_eligible_counts_by_role[$role_id]) : 0;
+            $rows[] = array(
+                'role_id' => $role_id,
+                'role_name' => $role_name,
+                'is_critical' => $is_critical,
+                'card_class_name' => implode(' ', $role_card_classes),
+                'state_pill' => $state_pill,
+                'state_class' => $state_class,
+                'headcount' => $headcount,
+                'filled' => $filled,
+                'open' => $open,
+                'base_summary' => sprintf(
+                    /* translators: 1: number 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message, 4: value 4 used in this message. */
+                    __('Need %1$d · Filled %2$d · Open %3$d%4$s', 'backstage-venue-manager'),
+                    $headcount,
+                    $filled,
+                    $open,
+                    $is_critical ? ' · ' . __('Critical', 'backstage-venue-manager') : ''
+                ),
+                'activation_threshold' => $activation_threshold,
+                'time_mode' => $time_mode,
+                'shift_start' => $shift_start,
+                'shift_end' => $shift_end,
+                'start_anchor_key' => isset($slot_row['start_anchor_key']) ? (string) $slot_row['start_anchor_key'] : 'event_start',
+                'end_anchor_key' => isset($slot_row['end_anchor_key']) ? (string) $slot_row['end_anchor_key'] : 'event_end',
+                'start_offset_minutes' => isset($slot_row['start_offset_minutes']) ? (int) $slot_row['start_offset_minutes'] : 0,
+                'end_offset_minutes' => isset($slot_row['end_offset_minutes']) ? (int) $slot_row['end_offset_minutes'] : 0,
+                'duration_minutes' => $duration_minutes,
+                'threshold_copy' => $threshold_copy,
+                'qualification_summary' => !empty($qualification_summary_parts)
+                    ? sprintf(
+                        /* translators: %s: comma-separated required qualification names. */
+                        __('Required qualifications: %s.', 'backstage-venue-manager'),
+                        implode(', ', $qualification_summary_parts)
+                    )
+                    : '',
+                'absolute_time_missing' => $absolute_time_missing,
+                'missing_staff_now' => $missing_staff_now,
+                'role_eligible_count' => $role_eligible_count,
+                'no_eligible_staff_text' => sprintf(
+                    /* translators: %s: human-readable value used in this message. */
+                    __('No %s-eligible staff found.', 'backstage-venue-manager'),
+                    strtolower($role_name)
+                ),
+                'show_assigned_ineligible_copy' => ($role_eligible_count <= 0 && !empty($role_staff)),
+                'candidate_rows' => $this->build_event_plan_staff_response_candidate_rows(
+                    $role_id,
+                    $assigned_ids,
+                    $role_staff,
+                    $required_qualification_rules
+                ),
+            );
+
+            $previous_duration_minutes = $duration_minutes;
+        }
+
+        return $rows;
+    }
+
+    private function build_event_plan_staff_response_candidate_rows(
+        int $role_id,
+        array $assigned_ids,
+        array $role_staff,
+        array $required_qualification_rules
+    ): array {
+        $rows = array();
+        $has_required_qualification_rules = !empty($required_qualification_rules);
+
+        foreach ($role_staff as $staff_post) {
+            $staff_id = is_object($staff_post) && isset($staff_post->ID) ? (int) $staff_post->ID : 0;
+            if ($staff_id <= 0) {
+                continue;
+            }
+
+            $checked = in_array($staff_id, $assigned_ids, true);
+            $candidate_status = function_exists('vms_staffing_staff_candidate_status_for_role')
+                ? (array) vms_staffing_staff_candidate_status_for_role($staff_id, $role_id)
+                : array(
+                    'eligible' => true,
+                    'qualification' => array('ok' => true, 'mode' => 'warn', 'missing' => array(), 'expired' => array()),
+                    'ineligibility_reason' => '',
+                );
+            $role_eligible = !empty($candidate_status['eligible']);
+            $eligibility_reason = isset($candidate_status['ineligibility_reason']) ? (string) $candidate_status['ineligibility_reason'] : '';
+            $qualification_check = isset($candidate_status['qualification']) && is_array($candidate_status['qualification'])
+                ? $candidate_status['qualification']
+                : array('ok' => true, 'mode' => 'warn', 'missing' => array(), 'expired' => array());
+            $qualification_ok = !empty($qualification_check['ok']);
+            $qualification_mode = isset($qualification_check['mode']) ? (string) $qualification_check['mode'] : 'warn';
+            $qualification_disabled = (!$qualification_ok && $qualification_mode === 'hard_block' && !$checked);
+            $qualification_parts = array();
+
+            if (!empty($qualification_check['missing'])) {
+                $qualification_parts[] = sprintf(
+                    /* translators: %s: human-readable value used in this message. */
+                    __('missing %s', 'backstage-venue-manager'),
+                    implode(', ', array_map('strval', (array) $qualification_check['missing']))
+                );
+            }
+
+            if (!empty($qualification_check['expired'])) {
+                $qualification_parts[] = sprintf(
+                    /* translators: %s: human-readable value used in this message. */
+                    __('expired %s', 'backstage-venue-manager'),
+                    implode(', ', array_map('strval', (array) $qualification_check['expired']))
+                );
+            }
+
+            $badge_rows = $this->build_event_plan_staff_response_tax_badge_rows($staff_id);
+            if (!$role_eligible && $checked) {
+                $badge_rows[] = array(
+                    'kind' => 'badge',
+                    'class_name' => 'vms-ep-tax-badge vms-ep-tax-badge--missing',
+                    'text' => __('Role⚠', 'backstage-venue-manager'),
+                    'aria_label' => '',
+                );
+                if ($eligibility_reason !== '') {
+                    $badge_rows[] = array(
+                        'kind' => 'note',
+                        'class_name' => 'vms-ep-tax-badge-note',
+                        'text' => $eligibility_reason,
+                        'aria_label' => '',
+                    );
+                }
+            }
+
+            if (!$qualification_ok) {
+                $badge_rows[] = array(
+                    'kind' => 'badge',
+                    'class_name' => 'vms-ep-tax-badge ' . ($qualification_disabled ? 'vms-ep-tax-badge--missing' : 'vms-ep-tax-badge--bypass'),
+                    'text' => $qualification_disabled ? 'Q✕' : 'Q⚠',
+                    'aria_label' => '',
+                );
+                $badge_rows[] = array(
+                    'kind' => 'note',
+                    'class_name' => 'vms-ep-tax-badge-note',
+                    'text' => implode('; ', $qualification_parts),
+                    'aria_label' => '',
+                );
+            } elseif ($has_required_qualification_rules) {
+                $badge_rows[] = array(
+                    'kind' => 'badge',
+                    'class_name' => 'vms-ep-tax-badge vms-ep-tax-badge--ok',
+                    'text' => 'Q✓',
+                    'aria_label' => '',
+                );
+            }
+
+            $rows[] = array(
+                'staff_id' => $staff_id,
+                'title' => function_exists('get_the_title') ? (string) get_the_title($staff_id) : (is_object($staff_post) && isset($staff_post->post_title) ? (string) $staff_post->post_title : ''),
+                'checked' => $checked,
+                'disabled' => $qualification_disabled,
+                'badge_rows' => $badge_rows,
+            );
+        }
+
+        return $rows;
+    }
+
+    private function build_event_plan_staff_response_tax_badge_rows(int $staff_id): array
+    {
+        $missing_items = function_exists('vms_vendor_tax_profile_missing_items')
+            ? (array) vms_vendor_tax_profile_missing_items($staff_id)
+            : array();
+        if (empty($missing_items)) {
+            return array(
+                array(
+                    'kind' => 'badge',
+                    'class_name' => 'vms-ep-tax-badge vms-ep-tax-badge--ok',
+                    'text' => 'T✓',
+                    'aria_label' => 'Tax profile ok',
+                ),
+            );
+        }
+
+        $bypass_active = false;
+        $bypass_until = '';
+        if (function_exists('vms_get_tax_bypass_status')) {
+            $bypass_status = (array) vms_get_tax_bypass_status($staff_id);
+            $bypass_active = !empty($bypass_status['is_active']);
+            $bypass_until = isset($bypass_status['until']) ? (string) $bypass_status['until'] : '';
+        }
+
+        if ($bypass_active) {
+            return array(
+                array(
+                    'kind' => 'badge',
+                    'class_name' => 'vms-ep-tax-badge vms-ep-tax-badge--bypass',
+                    'text' => 'TB',
+                    'aria_label' => 'Tax profile bypass active',
+                ),
+                array(
+                    'kind' => 'note',
+                    'class_name' => 'vms-ep-tax-badge-note',
+                    'text' => sprintf(
+                        /* translators: %s: date or time value. */
+                        __('until %s', 'backstage-venue-manager'),
+                        $bypass_until !== '' ? $bypass_until : __('(date unknown)', 'backstage-venue-manager')
+                    ),
+                    'aria_label' => '',
+                ),
+            );
+        }
+
+        return array(
+            array(
+                'kind' => 'badge',
+                'class_name' => 'vms-ep-tax-badge vms-ep-tax-badge--missing',
+                'text' => 'T⚠',
+                'aria_label' => 'Tax profile missing items',
+            ),
+        );
+    }
+
+    private function render_event_plan_staff_response_html(array $staff_context): string
+    {
+        $has_data = !empty($staff_context['has_data']);
+        $headcount_wired = !empty($staff_context['headcount_wired']);
+        $headcount_summary_text = isset($staff_context['headcount_summary_text']) ? (string) $staff_context['headcount_summary_text'] : '';
+        $template_alerts = isset($staff_context['template_alerts']) && is_array($staff_context['template_alerts'])
+            ? $staff_context['template_alerts']
+            : array();
+        $applied_template_summary = isset($staff_context['applied_template_summary']) ? (string) $staff_context['applied_template_summary'] : '';
+        $applied_template_id = max(0, (int) ($staff_context['applied_template_id'] ?? 0));
+        $template_options = isset($staff_context['template_options']) && is_array($staff_context['template_options'])
+            ? $staff_context['template_options']
+            : array();
+        $role_rows = isset($staff_context['role_rows']) && is_array($staff_context['role_rows'])
+            ? $staff_context['role_rows']
+            : array();
+
+        ob_start();
+        ?>
+        <div class="vms-ep-card vms-ep-card--white vms-ep-card--staff" data-vms-section-has-data="<?php echo $has_data ? '1' : '0'; ?>">
+            <p class="description"><?php esc_html_e('Structured staffing by role: set staff needed and shift windows, then assign staff. Missing staff is based only on roles with Staff needed above 0.', 'backstage-venue-manager'); ?></p>
+            <p class="description vms-ep-staff-headcount-summary <?php echo $headcount_wired ? '' : 'is-muted'; ?>" id="vms-ep-staff-headcount-summary"><?php echo esc_html($headcount_summary_text); ?></p>
+            <?php echo $this->render_event_plan_staff_response_template_alert_notice_html($template_alerts); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <div class="vms-ep-inline-card vms-mb-12">
+                <strong><?php esc_html_e('Staffing template', 'backstage-venue-manager'); ?></strong>
+                <p class="description vms-m0"><?php echo esc_html($applied_template_summary); ?></p>
+                <p class="vms-m0 vms-mt-8">
+                    <label>
+                        <?php esc_html_e('Template', 'backstage-venue-manager'); ?>
+                        <select name="vms_staffing_template_id">
+                            <option value="0"><?php esc_html_e('Select staffing template', 'backstage-venue-manager'); ?></option>
+                            <?php echo $this->render_event_plan_staff_response_template_option_rows_html($template_options, $applied_template_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        </select>
+                    </label>
+                    <label class="vms-ml-8">
+                        <?php esc_html_e('Mode', 'backstage-venue-manager'); ?>
+                        <select name="vms_staffing_template_mode">
+                            <option value="merge_missing"><?php esc_html_e('Merge missing roles only', 'backstage-venue-manager'); ?></option>
+                            <option value="replace_all"><?php esc_html_e('Replace staffing from template', 'backstage-venue-manager'); ?></option>
+                        </select>
+                    </label>
+                    <button type="submit" class="button" name="vms_staffing_template_apply" value="1"><?php esc_html_e('Apply selected template', 'backstage-venue-manager'); ?></button>
+                </p>
+                <p class="description vms-m0"><?php esc_html_e('Use this when the event was not created from Schedule or when current guest count points to a different staffing package.', 'backstage-venue-manager'); ?></p>
+            </div>
+
+            <input type="hidden" name="vms_staff_assignments_present" value="1" />
+            <input type="hidden" name="vms_staffing_roles_present" value="1" />
+
+            <div
+                class="vms-ep-staff-wrap"
+                data-vms-staff-wrap="1"
+                data-vms-current-headcount="<?php echo esc_attr((string) absint($staff_context['current_headcount'] ?? 0)); ?>"
+                data-vms-headcount-wired="<?php echo $headcount_wired ? '1' : '0'; ?>"
+                data-vms-headcount-label="<?php echo esc_attr((string) ($staff_context['headcount_label'] ?? '')); ?>"
+            >
+                <?php if (empty($role_rows)) : ?>
+                    <p class="description"><?php esc_html_e('No staff roles are configured yet. Create roles in Staff Roles first.', 'backstage-venue-manager'); ?></p>
+                <?php else : ?>
+                    <?php echo $this->render_event_plan_staff_response_role_cards_html($role_rows); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_template_alert_notice_html(array $template_alerts): string
+    {
+        $alert_texts = array_values(array_filter(array_map('strval', $template_alerts), static function (string $alert_text): bool {
+            return trim($alert_text) !== '';
+        }));
+        if (empty($alert_texts)) {
+            return '';
+        }
+
+        ob_start();
+        ?>
+        <div class="notice notice-warning inline">
+            <p><strong><?php esc_html_e('Staffing alert:', 'backstage-venue-manager'); ?></strong></p>
+            <ul style="margin:0 0 0 18px;">
+                <?php foreach ($alert_texts as $alert_text) : ?>
+                    <li><?php echo esc_html($alert_text); ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_template_option_rows_html(array $template_options, int $selected_template_id): string
+    {
+        ob_start();
+        foreach ($template_options as $template_option) {
+            if (!is_array($template_option)) {
+                continue;
+            }
+
+            $template_id = isset($template_option['template_id']) ? absint($template_option['template_id']) : 0;
+            if ($template_id <= 0) {
+                continue;
+            }
+            ?>
+            <option value="<?php echo esc_attr((string) $template_id); ?>"<?php echo $this->render_event_plan_staff_response_selected_attr($selected_template_id === $template_id); ?>><?php echo esc_html((string) ($template_option['label'] ?? '')); ?></option>
+            <?php
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_role_cards_html(array $role_rows): string
+    {
+        ob_start();
+        foreach ($role_rows as $role_row) {
+            if (!is_array($role_row)) {
+                continue;
+            }
+
+            echo $this->render_event_plan_staff_response_role_card_html($role_row); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_role_card_html(array $role_row): string
+    {
+        $role_id = isset($role_row['role_id']) ? absint($role_row['role_id']) : 0;
+        if ($role_id <= 0) {
+            return '';
+        }
+
+        $role_name = isset($role_row['role_name']) ? (string) $role_row['role_name'] : '';
+        $candidate_rows = isset($role_row['candidate_rows']) && is_array($role_row['candidate_rows'])
+            ? $role_row['candidate_rows']
+            : array();
+
+        ob_start();
+        ?>
+        <div
+            class="<?php echo esc_attr((string) ($role_row['card_class_name'] ?? 'vms-ep-staff-role')); ?>"
+            data-vms-staff-role="1"
+            data-role-id="<?php echo esc_attr((string) $role_id); ?>"
+            data-role-name="<?php echo esc_attr($role_name); ?>"
+            data-role-critical="<?php echo !empty($role_row['is_critical']) ? '1' : '0'; ?>"
+        >
+            <div class="vms-ep-staff-role__head">
+                <div class="vms-ep-staff-role__head-copy">
+                    <strong><?php echo esc_html($role_name); ?></strong>
+                    <span class="description" data-vms-role-base-summary><?php echo esc_html((string) ($role_row['base_summary'] ?? '')); ?></span>
+                </div>
+                <span class="vms-ep-staff-role__state <?php echo esc_attr('vms-ep-staff-role__state--' . (string) ($role_row['state_class'] ?? 'is-inactive')); ?>" data-vms-role-state-pill><?php echo esc_html((string) ($role_row['state_pill'] ?? '')); ?></span>
+            </div>
+
+            <p class="vms-m0 vms-mb-8 vms-ep-staff-role__controls">
+                <label>
+                    <?php esc_html_e('Staff needed', 'backstage-venue-manager'); ?>
+                    <input type="number" min="0" step="1" name="vms_staff_role_headcount[<?php echo esc_attr((string) $role_id); ?>]" value="<?php echo esc_attr((string) absint($role_row['headcount'] ?? 0)); ?>" data-vms-role-headcount-input="1">
+                </label>
+                <label>
+                    <?php esc_html_e('Activate at attendance', 'backstage-venue-manager'); ?>
+                    <input type="number" min="0" step="1" name="vms_staff_role_activation_threshold[<?php echo esc_attr((string) $role_id); ?>]" value="<?php echo esc_attr((string) absint($role_row['activation_threshold'] ?? 0)); ?>" data-vms-role-threshold-input="1">
+                </label>
+                <label>
+                    <?php esc_html_e('Time mode', 'backstage-venue-manager'); ?>
+                    <select name="vms_staff_role_time_mode[<?php echo esc_attr((string) $role_id); ?>]" data-vms-role-time-mode-input="1">
+                        <option value="absolute"<?php echo $this->render_event_plan_staff_response_selected_attr((string) ($role_row['time_mode'] ?? 'absolute') === 'absolute'); ?>><?php esc_html_e('Absolute', 'backstage-venue-manager'); ?></option>
+                        <option value="relative"<?php echo $this->render_event_plan_staff_response_selected_attr((string) ($role_row['time_mode'] ?? 'absolute') === 'relative'); ?>><?php esc_html_e('Relative', 'backstage-venue-manager'); ?></option>
+                    </select>
+                </label>
+                <label data-vms-role-absolute-field="1">
+                    <?php esc_html_e('Shift start', 'backstage-venue-manager'); ?>
+                    <input type="time" name="vms_staff_role_shift_start[<?php echo esc_attr((string) $role_id); ?>]" value="<?php echo esc_attr((string) ($role_row['shift_start'] ?? '')); ?>" data-vms-role-shift-start-input="1">
+                </label>
+                <label data-vms-role-absolute-field="1" data-vms-role-end-field="1">
+                    <?php esc_html_e('Shift end', 'backstage-venue-manager'); ?>
+                    <input type="time" name="vms_staff_role_shift_end[<?php echo esc_attr((string) $role_id); ?>]" value="<?php echo esc_attr((string) ($role_row['shift_end'] ?? '')); ?>" data-vms-role-shift-end-input="1">
+                </label>
+                <label data-vms-role-relative-field="1">
+                    <?php esc_html_e('Start anchor', 'backstage-venue-manager'); ?>
+                    <select name="vms_staff_role_start_anchor[<?php echo esc_attr((string) $role_id); ?>]" data-vms-role-start-anchor-input="1">
+                        <?php echo $this->render_event_plan_staff_response_anchor_option_rows_html((string) ($role_row['start_anchor_key'] ?? 'event_start')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    </select>
+                </label>
+                <label data-vms-role-relative-field="1">
+                    <?php esc_html_e('Start offset (min)', 'backstage-venue-manager'); ?>
+                    <input type="number" step="1" name="vms_staff_role_start_offset[<?php echo esc_attr((string) $role_id); ?>]" value="<?php echo esc_attr((string) ((int) ($role_row['start_offset_minutes'] ?? 0))); ?>" data-vms-role-start-offset-input="1">
+                </label>
+                <label data-vms-role-relative-field="1" data-vms-role-end-field="1">
+                    <?php esc_html_e('End anchor', 'backstage-venue-manager'); ?>
+                    <select name="vms_staff_role_end_anchor[<?php echo esc_attr((string) $role_id); ?>]" data-vms-role-end-anchor-input="1">
+                        <?php echo $this->render_event_plan_staff_response_anchor_option_rows_html((string) ($role_row['end_anchor_key'] ?? 'event_end')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    </select>
+                </label>
+                <label data-vms-role-relative-field="1" data-vms-role-end-field="1">
+                    <?php esc_html_e('End offset (min)', 'backstage-venue-manager'); ?>
+                    <input type="number" step="1" name="vms_staff_role_end_offset[<?php echo esc_attr((string) $role_id); ?>]" value="<?php echo esc_attr((string) ((int) ($role_row['end_offset_minutes'] ?? 0))); ?>" data-vms-role-end-offset-input="1">
+                </label>
+                <label data-vms-role-duration-field="1">
+                    <?php esc_html_e('Duration (min)', 'backstage-venue-manager'); ?>
+                    <input type="number" min="0" step="1" name="vms_staff_role_duration_minutes[<?php echo esc_attr((string) $role_id); ?>]" value="<?php echo esc_attr((string) ($role_row['duration_minutes'] ?? '')); ?>" data-vms-role-duration-input="1">
+                </label>
+            </p>
+            <p class="description vms-m0" data-vms-role-threshold-copy><?php echo esc_html((string) ($role_row['threshold_copy'] ?? '')); ?></p>
+            <?php if ((string) ($role_row['qualification_summary'] ?? '') !== '') : ?>
+                <p class="description vms-m0"><?php echo esc_html((string) $role_row['qualification_summary']); ?></p>
+            <?php endif; ?>
+            <p class="description vms-m0"><?php esc_html_e('Absolute mode uses Shift start plus Shift end or Duration. Relative mode uses start anchor/offset plus End anchor/offset or Duration.', 'backstage-venue-manager'); ?></p>
+            <div class="vms-ep-inline-warning <?php echo !empty($role_row['absolute_time_missing']) ? '' : 'vms-hidden'; ?>" data-vms-role-absolute-warning>
+                <?php esc_html_e('Absolute time mode requires Shift start plus Shift end or Duration when this role is in use.', 'backstage-venue-manager'); ?>
+            </div>
+            <div class="vms-ep-inline-warning vms-ep-inline-warning--required <?php echo !empty($role_row['missing_staff_now']) ? '' : 'vms-hidden'; ?>" data-vms-role-required-warning>
+                <?php esc_html_e('Current guest count has reached this role\'s trigger. Assign staff until Filled reaches Staff needed.', 'backstage-venue-manager'); ?>
+            </div>
+
+            <?php if ((int) ($role_row['role_eligible_count'] ?? 0) <= 0) : ?>
+                <p class="description vms-m0"><?php echo esc_html((string) ($role_row['no_eligible_staff_text'] ?? '')); ?></p>
+                <?php if (!empty($role_row['show_assigned_ineligible_copy'])) : ?>
+                    <p class="description vms-m0"><?php esc_html_e('Currently assigned but now-ineligible staff are shown below so this plan does not silently lose them.', 'backstage-venue-manager'); ?></p>
+                <?php endif; ?>
+            <?php endif; ?>
+            <?php if (empty($candidate_rows)) : ?>
+                <p class="description vms-m0"><?php esc_html_e('No staff candidates are available for this role yet.', 'backstage-venue-manager'); ?></p>
+            <?php else : ?>
+                <div class="vms-ep-check-grid" role="group" aria-label="<?php echo esc_attr($role_name); ?>">
+                    <?php echo $this->render_event_plan_staff_response_candidate_rows_html($role_id, $candidate_rows); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </div>
+                <p class="description vms-m0"><?php esc_html_e('Tax status: T✓ ok, T⚠ missing, TB bypass active. Assigned staff default to Proposed status in staffing rollups.', 'backstage-venue-manager'); ?></p>
+            <?php endif; ?>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_anchor_option_rows_html(string $selected_key): string
+    {
+        $anchor_options = array(
+            'event_start' => __('Event start', 'backstage-venue-manager'),
+            'event_end' => __('Event end', 'backstage-venue-manager'),
+            'a1' => __('Anchor 1', 'backstage-venue-manager'),
+            'a2' => __('Anchor 2', 'backstage-venue-manager'),
+            'a3' => __('Anchor 3', 'backstage-venue-manager'),
+            'a4' => __('Anchor 4', 'backstage-venue-manager'),
+        );
+
+        ob_start();
+        foreach ($anchor_options as $anchor_key => $anchor_label) {
+            ?>
+            <option value="<?php echo esc_attr($anchor_key); ?>"<?php echo $this->render_event_plan_staff_response_selected_attr($selected_key === $anchor_key); ?>><?php echo esc_html($anchor_label); ?></option>
+            <?php
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_candidate_rows_html(int $role_id, array $candidate_rows): string
+    {
+        ob_start();
+        foreach ($candidate_rows as $candidate_row) {
+            if (!is_array($candidate_row)) {
+                continue;
+            }
+
+            $staff_id = isset($candidate_row['staff_id']) ? absint($candidate_row['staff_id']) : 0;
+            if ($staff_id <= 0) {
+                continue;
+            }
+            ?>
+            <label class="vms-ep-check">
+                <input type="checkbox" name="vms_staff_assignments[<?php echo esc_attr((string) $role_id); ?>][]" value="<?php echo esc_attr((string) $staff_id); ?>"<?php echo $this->render_event_plan_staff_response_checked_attr(!empty($candidate_row['checked'])); ?><?php echo $this->render_event_plan_staff_response_disabled_attr(!empty($candidate_row['disabled'])); ?> data-vms-role-assignment-input="1" />
+                <span class="vms-ep-check__label"><?php echo esc_html((string) ($candidate_row['title'] ?? '')); ?></span>
+                <?php echo $this->render_event_plan_staff_response_badges_html(isset($candidate_row['badge_rows']) && is_array($candidate_row['badge_rows']) ? $candidate_row['badge_rows'] : array()); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </label>
+            <?php
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_badges_html(array $badge_rows): string
+    {
+        ob_start();
+        foreach ($badge_rows as $badge_row) {
+            if (!is_array($badge_row)) {
+                continue;
+            }
+
+            $text = isset($badge_row['text']) ? (string) $badge_row['text'] : '';
+            if ($text === '') {
+                continue;
+            }
+
+            $kind = isset($badge_row['kind']) ? (string) $badge_row['kind'] : 'badge';
+            $class_name = isset($badge_row['class_name']) ? (string) $badge_row['class_name'] : '';
+            if ($kind === 'note') {
+                ?>
+                <span class="<?php echo esc_attr($class_name !== '' ? $class_name : 'vms-ep-tax-badge-note'); ?>"><?php echo esc_html($text); ?></span>
+                <?php
+                continue;
+            }
+            ?>
+            <span class="<?php echo esc_attr($class_name !== '' ? $class_name : 'vms-ep-tax-badge'); ?>"<?php if ((string) ($badge_row['aria_label'] ?? '') !== '') : ?> aria-label="<?php echo esc_attr((string) $badge_row['aria_label']); ?>"<?php endif; ?>><?php echo esc_html($text); ?></span>
+            <?php
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_staff_response_selected_attr(bool $selected): string
+    {
+        return $selected ? ' selected="selected"' : '';
+    }
+
+    private function render_event_plan_staff_response_checked_attr(bool $checked): string
+    {
+        return $checked ? ' checked="checked"' : '';
+    }
+
+    private function render_event_plan_staff_response_disabled_attr(bool $disabled): string
+    {
+        return $disabled ? ' disabled="disabled"' : '';
     }
 
     private function get_event_plan_compensation_render_context(
