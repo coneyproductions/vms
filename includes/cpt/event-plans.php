@@ -748,6 +748,843 @@ class VMS_Admin_Event_Plans
         );
     }
 
+    private function build_event_plan_secondary_vendors_save_response_payload(int $post_id): array
+    {
+        $post_id = absint($post_id);
+        $bundle = $this->get_event_plan_meta_bundle($post_id);
+        $bands = get_posts(array(
+            'post_type'      => 'vms_vendor',
+            'posts_per_page' => -1,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+            'no_found_rows'  => true,
+            'update_post_term_cache' => false,
+        ));
+        $secondary_vendor_assignments = is_array($bundle['secondary_vendor_assignments'] ?? null)
+            ? (array) $bundle['secondary_vendor_assignments']
+            : array();
+        $secondary_vendor_ids = is_array($bundle['secondary_vendor_ids'] ?? null)
+            ? array_values(array_filter(array_map('absint', (array) $bundle['secondary_vendor_ids'])))
+            : array();
+        $secondary_vendor_boot_summary = $this->get_event_plan_secondary_vendor_boot_summary(
+            $post_id,
+            is_array($bands) ? $bands : array(),
+            (string) ($bundle['event_date'] ?? ''),
+            $secondary_vendor_assignments,
+            true
+        );
+        $module_owner = $this->get_event_plan_section_module_owner('secondary_vendors');
+        $vendor_category_snapshot = function_exists('vms_event_plan_collect_vendor_category_snapshot')
+            ? (array) vms_event_plan_collect_vendor_category_snapshot($post_id)
+            : array();
+        $context = $this->build_event_plan_secondary_vendors_save_response_context(
+            $post_id,
+            $secondary_vendor_boot_summary,
+            $module_owner,
+            $vendor_category_snapshot
+        );
+
+        $group_count = count((array) ($secondary_vendor_boot_summary['assignment_groups'] ?? array()));
+        $has_data = ($group_count > 0 || !empty($secondary_vendor_ids));
+        $warning_count = count((array) ($secondary_vendor_boot_summary['secondary_missing'] ?? array()))
+            + count((array) ($secondary_vendor_boot_summary['secondary_mismatch'] ?? array()))
+            + count((array) ($secondary_vendor_boot_summary['secondary_unqualified'] ?? array()));
+        $summary_bits = array();
+        if ($group_count === 1) {
+            $first_group = (array) reset($secondary_vendor_boot_summary['assignment_groups']);
+            $type_name = trim((string) ($first_group['type_name'] ?? ''));
+            $type_slug = sanitize_key((string) ($first_group['type_slug'] ?? ''));
+            if ($type_name !== '' || $type_slug !== '') {
+                $summary_bits[] = $type_name !== '' ? $type_name : $type_slug;
+            }
+        } elseif ($group_count > 1) {
+            /* translators: %d: number of groups. */
+            $summary_bits[] = sprintf(_n('%d group', '%d groups', $group_count, 'backstage-venue-manager'), $group_count);
+        }
+        /* translators: %d: number of selected items. */
+        $summary_bits[] = sprintf(_n('%d selected', '%d selected', count((array) $secondary_vendor_ids), 'backstage-venue-manager'), count((array) $secondary_vendor_ids));
+        /* translators: %d: number of warnings. */
+        $summary_bits[] = sprintf(_n('%d warning', '%d warnings', $warning_count, 'backstage-venue-manager'), $warning_count);
+
+        return array(
+            'context' => $context,
+            'html' => $this->render_event_plan_secondary_vendors_save_response_html($context),
+            'has_data' => $has_data,
+            'summary_meta' => implode(' • ', array_filter($summary_bits)),
+            'module_owner' => $module_owner,
+        );
+    }
+
+    private function build_event_plan_secondary_vendors_save_response_context(
+        int $post_id,
+        array $secondary_vendor_boot_summary,
+        string $module_owner,
+        array $vendor_category_snapshot
+    ): array {
+        $assignment_groups = isset($secondary_vendor_boot_summary['assignment_groups']) && is_array($secondary_vendor_boot_summary['assignment_groups'])
+            ? array_values($secondary_vendor_boot_summary['assignment_groups'])
+            : array();
+        $secondary_type_options = isset($secondary_vendor_boot_summary['secondary_type_options']) && is_array($secondary_vendor_boot_summary['secondary_type_options'])
+            ? $secondary_vendor_boot_summary['secondary_type_options']
+            : array();
+        $secondary_mode_options = isset($secondary_vendor_boot_summary['secondary_mode_options']) && is_array($secondary_vendor_boot_summary['secondary_mode_options'])
+            ? $secondary_vendor_boot_summary['secondary_mode_options']
+            : array();
+        $type_pool_map = isset($secondary_vendor_boot_summary['type_pool_map']) && is_array($secondary_vendor_boot_summary['type_pool_map'])
+            ? $secondary_vendor_boot_summary['type_pool_map']
+            : array();
+        $secondary_missing = isset($secondary_vendor_boot_summary['secondary_missing']) && is_array($secondary_vendor_boot_summary['secondary_missing'])
+            ? $secondary_vendor_boot_summary['secondary_missing']
+            : array();
+        $secondary_mismatch = isset($secondary_vendor_boot_summary['secondary_mismatch']) && is_array($secondary_vendor_boot_summary['secondary_mismatch'])
+            ? $secondary_vendor_boot_summary['secondary_mismatch']
+            : array();
+        $secondary_unqualified = isset($secondary_vendor_boot_summary['secondary_unqualified']) && is_array($secondary_vendor_boot_summary['secondary_unqualified'])
+            ? $secondary_vendor_boot_summary['secondary_unqualified']
+            : array();
+        $secondary_group_type_options = !empty($secondary_type_options) && is_array($secondary_type_options)
+            ? $secondary_type_options
+            : (function_exists('vms_event_plan_additional_vendor_type_options') ? (array) vms_event_plan_additional_vendor_type_options() : array());
+        $vendor_category_rows = isset($vendor_category_snapshot['vendors']) && is_array($vendor_category_snapshot['vendors'])
+            ? $vendor_category_snapshot['vendors']
+            : array();
+        $vendor_category_names = isset($vendor_category_snapshot['term_names']) && is_array($vendor_category_snapshot['term_names'])
+            ? $vendor_category_snapshot['term_names']
+            : array();
+
+        return array(
+            'post_id' => $post_id,
+            'module_owner' => sanitize_key($module_owner),
+            'assignment_groups' => $assignment_groups,
+            'secondary_group_type_options' => $secondary_group_type_options,
+            'secondary_mode_options' => $secondary_mode_options,
+            'type_pool_map' => $type_pool_map,
+            'secondary_missing' => $secondary_missing,
+            'secondary_mismatch' => $secondary_mismatch,
+            'secondary_unqualified' => $secondary_unqualified,
+            'secondary_has_saved_state' => !empty($assignment_groups),
+            'secondary_config' => $this->build_event_plan_secondary_vendors_save_response_config(
+                $secondary_group_type_options,
+                $secondary_mode_options,
+                $type_pool_map
+            ),
+            'help_enabled' => function_exists('vms_help_is_enabled') && vms_help_is_enabled(),
+            'vendor_category_rows' => $vendor_category_rows,
+            'vendor_category_names' => $vendor_category_names,
+        );
+    }
+
+    private function build_event_plan_secondary_vendors_save_response_config(
+        array $secondary_group_type_options,
+        array $secondary_mode_options,
+        array $type_pool_map
+    ): array {
+        $secondary_config_type_options = array();
+        foreach ($secondary_group_type_options as $type_slug => $type_label) {
+            $type_slug = sanitize_key((string) $type_slug);
+            $type_label = trim((string) $type_label);
+            if ($type_slug === '' || $type_label === '') {
+                continue;
+            }
+
+            $default_mode = function_exists('vms_event_plan_secondary_vendor_default_mode')
+                ? (string) vms_event_plan_secondary_vendor_default_mode($type_slug)
+                : 'standard';
+            $default_slot_limit = function_exists('vms_event_plan_secondary_vendor_default_slot_limit')
+                ? vms_event_plan_secondary_vendor_default_slot_limit($type_slug, $default_mode)
+                : 1;
+            $secondary_config_type_options[] = array(
+                'slug' => $type_slug,
+                'label' => $type_label,
+                'default_mode' => $default_mode,
+                'default_slot_limit' => $default_slot_limit,
+            );
+        }
+
+        $secondary_config_mode_options = array();
+        foreach ($secondary_mode_options as $mode_slug => $mode_label) {
+            $mode_slug = sanitize_key((string) $mode_slug);
+            $mode_label = trim((string) $mode_label);
+            if ($mode_slug === '' || $mode_label === '') {
+                continue;
+            }
+            $secondary_config_mode_options[] = array(
+                'slug' => $mode_slug,
+                'label' => $mode_label,
+            );
+        }
+
+        return array(
+            'typeOptions' => $secondary_config_type_options,
+            'modeOptions' => $secondary_config_mode_options,
+            'pools' => is_array($type_pool_map) ? $type_pool_map : array(),
+            'labels' => array(
+                'selectType' => __('-- Select a Vendor Type --', 'backstage-venue-manager'),
+                'selectVendor' => __('-- Select a Vendor --', 'backstage-venue-manager'),
+                'selectTypeFirst' => __('-- Select a Vendor Type first --', 'backstage-venue-manager'),
+                'chooseType' => __('Choose type first', 'backstage-venue-manager'),
+                'occupancyUnknown' => __('No slot limit set', 'backstage-venue-manager'),
+                'available' => __('Available', 'backstage-venue-manager'),
+                'unavailable' => __('Not available', 'backstage-venue-manager'),
+                'unknownAvailability' => __('Availability unknown', 'backstage-venue-manager'),
+                'qualified' => __('Qualified', 'backstage-venue-manager'),
+                'needsAttention' => __('Needs attention', 'backstage-venue-manager'),
+                'typeMismatch' => __('Type mismatch', 'backstage-venue-manager'),
+                'missingVendor' => __('Missing vendor', 'backstage-venue-manager'),
+                'market' => __('Market', 'backstage-venue-manager'),
+                'standard' => __('Standard', 'backstage-venue-manager'),
+                'pendingVendor' => __('Select vendor', 'backstage-venue-manager'),
+                /* translators: %d: number used in this message. */
+                'overCapacity' => __('Over capacity by %d', 'backstage-venue-manager'),
+                /* translators: %d: number used in this message. */
+                'target' => __('Target %d', 'backstage-venue-manager'),
+                /* translators: %d: number of items described in this message. */
+                'needed' => __('%d needed', 'backstage-venue-manager'),
+                'hiddenFromDispatch' => __('Hidden from ADD', 'backstage-venue-manager'),
+                'saveUnavailable' => __('Additional Vendors save is not available right now.', 'backstage-venue-manager'),
+                'saving' => __('Saving Additional Vendors…', 'backstage-venue-manager'),
+                'saveFailed' => __('Additional Vendors could not be saved. Reload the page and try again.', 'backstage-venue-manager'),
+            ),
+        );
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_html(array $context): string
+    {
+        $assignment_groups = isset($context['assignment_groups']) && is_array($context['assignment_groups'])
+            ? $context['assignment_groups']
+            : array();
+        $secondary_has_saved_state = !empty($context['secondary_has_saved_state']);
+        $secondary_missing = isset($context['secondary_missing']) && is_array($context['secondary_missing'])
+            ? $context['secondary_missing']
+            : array();
+        $secondary_mismatch = isset($context['secondary_mismatch']) && is_array($context['secondary_mismatch'])
+            ? $context['secondary_mismatch']
+            : array();
+        $secondary_unqualified = isset($context['secondary_unqualified']) && is_array($context['secondary_unqualified'])
+            ? $context['secondary_unqualified']
+            : array();
+
+        ob_start();
+        ?>
+        <p class="description">
+            <?php esc_html_e('Attach one or more additional vendors to this event. Use separate groups for Food Vendor, Dessert Vendor, Photographer, Market Vendor, and other non-performer vendor types. These vendors will see this date as Tentative when the Event Plan is Draft/Ready and Booked once Published.', 'backstage-venue-manager'); ?>
+        </p>
+
+        <div id="vms-secondary-vendors-section"
+            data-vms-module-owner="<?php echo esc_attr((string) ($context['module_owner'] ?? 'vendors')); ?>"
+            data-vms-save-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
+            data-vms-save-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_secondary_vendors_save')); ?>"
+            data-vms-save-post-id="<?php echo (int) ($context['post_id'] ?? 0); ?>">
+            <input type="hidden" name="vms_secondary_vendors_module_detached" value="1" />
+            <input type="hidden" name="vms_clear_secondary_vendors" value="0" id="vms-clear-secondary-vendors-intent" />
+            <SCRIPT data-vms-secondary-config type="application/json"><?php echo wp_json_encode((array) ($context['secondary_config'] ?? array())); ?></SCRIPT>
+
+            <p class="description vms-mt-8 vms-mb-8"><?php esc_html_e('Use Save Additional Vendors to save changes in this section.', 'backstage-venue-manager'); ?></p>
+
+            <?php if (!$secondary_has_saved_state) : ?>
+                <div class="notice notice-info inline vms-notice vms-notice--info">
+                    <p><?php esc_html_e('Add a vendor group, then save this section to store your additional vendor assignments.', 'backstage-venue-manager'); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($secondary_missing) || !empty($secondary_mismatch) || !empty($secondary_unqualified)) : ?>
+                <p class="description vms-secondary-vendor-legend">
+                    <?php
+                    echo esc_html__('Availability guide: [✓] Available, [✖] Not Available, [?] Unknown. Qualification guide: [Q✓] Qualified, [Q⚠] Needs attention.', 'backstage-venue-manager');
+                    if (function_exists('vms_help_icon')) {
+                        vms_help_icon(__('“[Q⚠] Needs attention” means this vendor is missing required profile items (usually phone or email).', 'backstage-venue-manager'));
+                    }
+                    ?>
+                </p>
+            <?php endif; ?>
+
+            <div id="vms-secondary-vendor-groups">
+                <?php foreach ($assignment_groups as $group_index => $group) : ?>
+                    <?php echo $this->render_event_plan_secondary_vendors_save_response_group_html((array) $group, (int) $group_index, $context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <?php endforeach; ?>
+            </div>
+
+            <p class="vms-secondary-vendor-actions">
+                <button type="button" class="button button-secondary" id="vms-secondary-vendor-add-group"><?php esc_html_e('Add vendor group', 'backstage-venue-manager'); ?></button>
+                <button type="button" class="button button-secondary" id="vms-secondary-vendor-clear"<?php echo $this->render_event_plan_secondary_vendors_save_response_disabled_attr(!$secondary_has_saved_state); ?>><?php esc_html_e('Clear additional vendors', 'backstage-venue-manager'); ?></button>
+                <button type="button" class="button button-primary" id="vms-secondary-vendor-save"><?php esc_html_e('Save Additional Vendors', 'backstage-venue-manager'); ?></button>
+            </p>
+            <p class="description vms-mt-8 vms-mb-0" data-vms-secondary-save-status aria-live="polite"></p>
+
+            <?php echo $this->render_event_plan_secondary_vendors_save_response_group_template_html($context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php echo $this->render_event_plan_secondary_vendors_save_response_row_template_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php echo $this->render_event_plan_secondary_vendors_save_response_vendor_category_notice_html($context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function build_event_plan_secondary_vendors_save_response_group_summary_context(array $group): array
+    {
+        $mode = sanitize_key((string) ($group['mode'] ?? 'standard'));
+        $type_slug = sanitize_key((string) ($group['type_slug'] ?? ''));
+        $is_market_group = ($mode === 'market' || $type_slug === 'market_vendor');
+        $has_type = ($type_slug !== '');
+        $vendor_ids = isset($group['vendor_ids']) && is_array($group['vendor_ids']) ? $group['vendor_ids'] : array();
+        $filled = count(array_filter(array_map('absint', $vendor_ids), static function ($vendor_id): bool {
+            return $vendor_id > 0;
+        }));
+        $slot_limit = array_key_exists('slot_limit', $group) && $group['slot_limit'] !== null && $group['slot_limit'] !== ''
+            ? max(0, (int) $group['slot_limit'])
+            : null;
+        $needed_slots = array_key_exists('needed_slots', $group) && $group['needed_slots'] !== null && $group['needed_slots'] !== ''
+            ? max(0, (int) $group['needed_slots'])
+            : null;
+        $open_for_dispatch = function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
+            ? vms_event_plan_parse_secondary_vendor_over_capacity_override($group['open_for_dispatch'] ?? true)
+            : !array_key_exists('open_for_dispatch', $group) || !empty($group['open_for_dispatch']);
+        $warning = '';
+        $over_capacity = false;
+        $parts = array();
+
+        if (!$has_type) {
+            $parts[] = ($slot_limit === null)
+                /* translators: %d: number of selected items. */
+                ? sprintf(_n('%d selected', '%d selected', $filled, 'backstage-venue-manager'), $filled)
+                /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+                : sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $filled, $slot_limit);
+            $parts[] = __('Choose type first', 'backstage-venue-manager');
+        } else {
+            $parts[] = ($slot_limit === null)
+                /* translators: %d: number of selected items. */
+                ? sprintf(_n('%d selected', '%d selected', $filled, 'backstage-venue-manager'), $filled)
+                /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+                : sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $filled, $slot_limit);
+            $parts[] = $is_market_group ? __('Market', 'backstage-venue-manager') : __('Standard', 'backstage-venue-manager');
+            if ($is_market_group && $needed_slots !== null) {
+                /* translators: %d: number used in this message. */
+                $parts[] = sprintf(__('Target %d', 'backstage-venue-manager'), $needed_slots);
+                $parts[] = $open_for_dispatch
+                    /* translators: %d: number of items described in this message. */
+                    ? sprintf(_n('%d needed', '%d needed', max(0, $needed_slots - $filled), 'backstage-venue-manager'), max(0, $needed_slots - $filled))
+                    : __('Hidden from ADD', 'backstage-venue-manager');
+            }
+            if ($slot_limit === null) {
+                $parts[] = __('No slot limit set', 'backstage-venue-manager');
+            } elseif ($filled > $slot_limit) {
+                $over_capacity = true;
+                /* translators: %d: number used in this message. */
+                $warning = sprintf(__('Over capacity by %d', 'backstage-venue-manager'), $filled - $slot_limit);
+                $parts[] = $warning;
+            }
+        }
+
+        return array(
+            'text' => implode(' • ', array_filter($parts)),
+            'warning' => ($warning !== ''),
+            'over_capacity' => $over_capacity,
+            'is_market_group' => $is_market_group,
+            'has_type' => $has_type,
+        );
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_group_html(array $group, int $group_index, array $context): string
+    {
+        $type_slug = sanitize_key((string) ($group['type_slug'] ?? ''));
+        $type_name = trim((string) ($group['type_name'] ?? ''));
+        $mode = sanitize_key((string) ($group['mode'] ?? 'standard'));
+        $slot_limit_display = isset($group['slot_limit_display']) ? (string) $group['slot_limit_display'] : '';
+        $vendor_ids = isset($group['vendor_ids']) && is_array($group['vendor_ids'])
+            ? array_values(array_map('absint', $group['vendor_ids']))
+            : array();
+        if (empty($vendor_ids)) {
+            $vendor_ids = array(0);
+        }
+
+        $group_missing = isset($group['secondary_missing']) && is_array($group['secondary_missing']) ? $group['secondary_missing'] : array();
+        $group_mismatch = isset($group['secondary_mismatch']) && is_array($group['secondary_mismatch']) ? $group['secondary_mismatch'] : array();
+        $group_unqualified = isset($group['secondary_unqualified']) && is_array($group['secondary_unqualified']) ? $group['secondary_unqualified'] : array();
+        $group_titles = isset($group['selected_vendor_titles']) && is_array($group['selected_vendor_titles']) ? $group['selected_vendor_titles'] : array();
+        $group_missing_map = isset($group['selected_missing_map']) && is_array($group['selected_missing_map']) ? $group['selected_missing_map'] : array();
+        $group_summary = $this->build_event_plan_secondary_vendors_save_response_group_summary_context($group);
+        $is_market_group = !empty($group_summary['is_market_group']);
+        $group_has_type = !empty($group_summary['has_type']);
+        $allow_over_capacity = function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
+            ? vms_event_plan_parse_secondary_vendor_over_capacity_override($group['allow_over_capacity'] ?? false)
+            : !empty($group['allow_over_capacity']);
+        $is_over_capacity = !empty($group_summary['over_capacity']);
+        $needed_slots_display = array_key_exists('needed_slots', $group) && $group['needed_slots'] !== null && $group['needed_slots'] !== ''
+            ? (string) max(0, (int) $group['needed_slots'])
+            : '';
+        $open_for_dispatch = function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
+            ? vms_event_plan_parse_secondary_vendor_over_capacity_override($group['open_for_dispatch'] ?? true)
+            : !array_key_exists('open_for_dispatch', $group) || !empty($group['open_for_dispatch']);
+        $add_secondary_vendor_args = array(
+            'post_type' => 'vms_vendor',
+            'vms_return_to_event_plan' => (int) ($context['post_id'] ?? 0),
+            'vms_prefill_vendor_role' => 'secondary',
+        );
+        if ($type_slug !== '') {
+            $add_secondary_vendor_args['vms_prefill_vendor_type'] = $type_slug;
+        }
+        $add_secondary_vendor_url = add_query_arg($add_secondary_vendor_args, admin_url('post-new.php'));
+        $secondary_group_type_options = isset($context['secondary_group_type_options']) && is_array($context['secondary_group_type_options'])
+            ? $context['secondary_group_type_options']
+            : array();
+        $secondary_mode_options = isset($context['secondary_mode_options']) && is_array($context['secondary_mode_options'])
+            ? $context['secondary_mode_options']
+            : array();
+
+        ob_start();
+        ?>
+        <div class="vms-secondary-vendor-group<?php echo $is_market_group ? ' vms-secondary-vendor-group--market' : ''; ?><?php echo !$group_has_type ? ' vms-secondary-vendor-group--type-pending' : ''; ?>"
+            data-vms-group-index="<?php echo esc_attr((string) $group_index); ?>"
+            data-vms-missing-ids="<?php echo esc_attr(wp_json_encode(array_values(array_map('absint', $group_missing)))); ?>"
+            data-vms-mismatch-ids="<?php echo esc_attr(wp_json_encode(array_values(array_map('absint', $group_mismatch)))); ?>"
+            data-vms-unqualified-ids="<?php echo esc_attr(wp_json_encode(array_values(array_map('absint', $group_unqualified)))); ?>">
+            <div class="vms-secondary-vendor-group__header">
+                <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--type">
+                    <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Vendor type', 'backstage-venue-manager'); ?></span>
+                    <select name="<?php echo esc_attr(sprintf('vms_secondary_vendor_assignments[%d][type_slug]', $group_index)); ?>" class="vms-secondary-vendor-group-type">
+                        <option value=""><?php esc_html_e('-- Select a Vendor Type --', 'backstage-venue-manager'); ?></option>
+                        <?php foreach ($secondary_group_type_options as $option_slug => $option_label) : ?>
+                            <?php
+                            $option_slug = sanitize_key((string) $option_slug);
+                            $option_label = trim((string) $option_label);
+                            if ($option_slug === '' || $option_label === '') {
+                                continue;
+                            }
+                            ?>
+                            <option value="<?php echo esc_attr($option_slug); ?>"<?php echo $this->render_event_plan_secondary_vendors_save_response_selected_attr($type_slug === $option_slug); ?>><?php echo esc_html($option_label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+
+                <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--mode">
+                    <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Mode', 'backstage-venue-manager'); ?></span>
+                    <select name="<?php echo esc_attr(sprintf('vms_secondary_vendor_assignments[%d][mode]', $group_index)); ?>" class="vms-secondary-vendor-group-mode">
+                        <?php foreach ($secondary_mode_options as $mode_slug => $mode_label) : ?>
+                            <?php
+                            $mode_slug = sanitize_key((string) $mode_slug);
+                            if ($mode_slug === '') {
+                                continue;
+                            }
+                            ?>
+                            <option value="<?php echo esc_attr($mode_slug); ?>"<?php echo $this->render_event_plan_secondary_vendors_save_response_selected_attr($mode === $mode_slug); ?>><?php echo esc_html((string) $mode_label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+
+                <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--capacity">
+                    <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Slot limit / capacity', 'backstage-venue-manager'); ?></span>
+                    <input type="number" min="0" step="1" class="small-text vms-secondary-vendor-group-slot-limit" name="<?php echo esc_attr(sprintf('vms_secondary_vendor_assignments[%d][slot_limit]', $group_index)); ?>" value="<?php echo esc_attr($slot_limit_display); ?>" placeholder="<?php esc_attr_e('Use default', 'backstage-venue-manager'); ?>" />
+                </label>
+
+                <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--market-target"<?php echo $this->render_event_plan_secondary_vendors_save_response_hidden_attr(!$is_market_group); ?>>
+                    <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Market target / needed vendors', 'backstage-venue-manager'); ?></span>
+                    <input type="number" min="0" step="1" class="small-text vms-secondary-vendor-group-needed-slots" name="<?php echo esc_attr(sprintf('vms_secondary_vendor_assignments[%d][needed_slots]', $group_index)); ?>" value="<?php echo esc_attr($needed_slots_display); ?>" placeholder="<?php esc_attr_e('Blank', 'backstage-venue-manager'); ?>"<?php echo $this->render_event_plan_secondary_vendors_save_response_disabled_attr(!$is_market_group); ?> />
+                </label>
+
+                <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--market-dispatch"<?php echo $this->render_event_plan_secondary_vendors_save_response_hidden_attr(!$is_market_group); ?>>
+                    <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('ADD visibility', 'backstage-venue-manager'); ?></span>
+                    <span class="vms-secondary-vendor-group__checkbox-line">
+                        <input type="hidden" class="vms-secondary-vendor-group-open-for-dispatch-hidden" name="<?php echo esc_attr(sprintf('vms_secondary_vendor_assignments[%d][open_for_dispatch]', $group_index)); ?>" value="0"<?php echo $this->render_event_plan_secondary_vendors_save_response_disabled_attr(!$is_market_group); ?> />
+                        <input type="checkbox" class="vms-secondary-vendor-group-open-for-dispatch" name="<?php echo esc_attr(sprintf('vms_secondary_vendor_assignments[%d][open_for_dispatch]', $group_index)); ?>" value="1"<?php echo $this->render_event_plan_secondary_vendors_save_response_checked_attr($open_for_dispatch); ?><?php echo $this->render_event_plan_secondary_vendors_save_response_disabled_attr(!$is_market_group); ?> />
+                        <span><?php esc_html_e('Show this market need in ADD', 'backstage-venue-manager'); ?></span>
+                    </span>
+                </label>
+
+                <div class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--summary">
+                    <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Filled', 'backstage-venue-manager'); ?></span>
+                    <p class="vms-secondary-vendor-group__summary<?php echo !empty($group_summary['warning']) ? ' is-warning' : ''; ?>"><?php echo esc_html((string) ($group_summary['text'] ?? '')); ?></p>
+                </div>
+
+                <div class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--actions">
+                    <span class="vms-secondary-vendor-group__field-label screen-reader-text"><?php esc_html_e('Actions', 'backstage-venue-manager'); ?></span>
+                    <button type="button" class="button button-secondary vms-secondary-vendor-remove-group"><?php esc_html_e('Remove group', 'backstage-venue-manager'); ?></button>
+                </div>
+            </div>
+
+            <label class="vms-secondary-vendor-group__override"<?php echo $this->render_event_plan_secondary_vendors_save_response_hidden_attr(!$is_over_capacity); ?>>
+                <input type="checkbox" class="vms-secondary-vendor-group-over-capacity-override" name="<?php echo esc_attr(sprintf('vms_secondary_vendor_assignments[%d][allow_over_capacity]', $group_index)); ?>" value="1"<?php echo $this->render_event_plan_secondary_vendors_save_response_checked_attr($allow_over_capacity); ?> />
+                <span><?php esc_html_e('Allow over-capacity assignment for this group.', 'backstage-venue-manager'); ?></span>
+            </label>
+
+            <?php if (!empty($group_missing)) : ?>
+                <div class="notice notice-warning inline vms-notice vms-notice--warning"><p><?php esc_html_e('🚩 One or more selected vendors no longer exist (or are in the Trash). Remove or replace them below.', 'backstage-venue-manager'); ?></p></div>
+            <?php endif; ?>
+
+            <?php if (!empty($group_mismatch)) : ?>
+                <?php
+                $mismatch_labels = array();
+                foreach ($group_mismatch as $vendor_id) {
+                    $vendor_id = (int) $vendor_id;
+                    /* translators: %d: vendor ID. */
+                    $mismatch_labels[] = trim((string) ($group_titles[$vendor_id] ?? sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id)));
+                }
+                ?>
+                <div class="notice notice-warning inline vms-notice vms-notice--warning">
+                    <p>
+                        <?php esc_html_e('🚩 One or more selected vendors no longer match this vendor type. Review and re-select vendors below.', 'backstage-venue-manager'); ?>
+                        <?php if (!empty($mismatch_labels)) : ?>
+                            <?php
+                            printf(
+                                ' %s',
+                                esc_html(
+                                    sprintf(
+                                        /* translators: %s: affected vendor(s). */
+                                        __('Affected vendor(s): %s', 'backstage-venue-manager'),
+                                        implode(', ', $mismatch_labels)
+                                    )
+                                )
+                            );
+                            ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($group_unqualified)) : ?>
+                <div class="notice notice-warning inline vms-notice vms-notice--warning">
+                    <p><?php esc_html_e('🚩 One or more selected vendors are missing required profile items. They are still attached, but they need attention.', 'backstage-venue-manager'); ?></p>
+                    <?php if (!empty($context['help_enabled'])) : ?>
+                        <ul class="vms-help-missing-list">
+                            <?php foreach ($group_unqualified as $vendor_id) : ?>
+                                <?php
+                                $vendor_id = (int) $vendor_id;
+                                /* translators: %d: vendor ID. */
+                                $vendor_label = trim((string) ($group_titles[$vendor_id] ?? sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id)));
+                                $missing_items = isset($group_missing_map[$vendor_id]) && is_array($group_missing_map[$vendor_id]) ? $group_missing_map[$vendor_id] : array();
+                                $missing_items = array_map(static function ($missing_item): string {
+                                    $missing_item = trim((string) $missing_item);
+                                    if ($missing_item === 'Contact info') {
+                                        return 'Contact info (phone or email)';
+                                    }
+                                    return $missing_item;
+                                }, $missing_items);
+                                ?>
+                                <li>
+                                    <strong><?php echo esc_html($vendor_label); ?></strong>:
+                                    <?php echo esc_html__('Missing:', 'backstage-venue-manager'); ?>
+                                    <?php echo esc_html(!empty($missing_items) ? implode(', ', $missing_items) : __('Unknown', 'backstage-venue-manager')); ?>
+                                    <a href="<?php echo esc_url(admin_url('post.php?post=' . $vendor_id . '&action=edit')); ?>" target="_blank" rel="noopener"><?php esc_html_e('Edit vendor', 'backstage-venue-manager'); ?></a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="vms-secondary-vendor-group__rows-toolbar">
+                <div class="vms-secondary-vendor-group__rows-copy">
+                    <p class="vms-secondary-vendor-group__label"><?php esc_html_e('Selected vendors', 'backstage-venue-manager'); ?></p>
+                    <p class="description vms-secondary-vendor-group__guidance"<?php echo $this->render_event_plan_secondary_vendors_save_response_hidden_attr($group_has_type); ?>><?php esc_html_e('Select a vendor type to choose eligible vendors.', 'backstage-venue-manager'); ?></p>
+                </div>
+                <p class="vms-secondary-vendor-actions vms-secondary-vendor-actions--inline">
+                    <button type="button" class="button button-secondary vms-secondary-vendor-add-row"><?php esc_html_e('Add vendor row', 'backstage-venue-manager'); ?></button>
+                    <a class="button button-secondary" href="<?php echo esc_url($add_secondary_vendor_url); ?>" target="_blank" rel="noopener"><?php esc_html_e('Add new vendor', 'backstage-venue-manager'); ?></a>
+                </p>
+            </div>
+
+            <div class="vms-secondary-vendor-rows-wrap">
+                <div class="vms-secondary-vendor-rows__head" aria-hidden="true">
+                    <span><?php esc_html_e('Vendor', 'backstage-venue-manager'); ?></span>
+                    <span><?php esc_html_e('Status', 'backstage-venue-manager'); ?></span>
+                    <span><?php esc_html_e('Action', 'backstage-venue-manager'); ?></span>
+                </div>
+                <div class="vms-secondary-vendor-rows">
+                    <?php foreach ($vendor_ids as $row_index => $vendor_id) : ?>
+                        <?php echo $this->render_event_plan_secondary_vendors_save_response_row_html($group, (int) $vendor_id, $group_index, (int) $row_index, $context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_row_html(
+        array $group,
+        int $selected_id,
+        int $group_index,
+        int $row_index,
+        array $context
+    ): string {
+        $type_slug = sanitize_key((string) ($group['type_slug'] ?? ''));
+        $pool_option_rows = isset($context['type_pool_map'][$type_slug]) && is_array($context['type_pool_map'][$type_slug])
+            ? $context['type_pool_map'][$type_slug]
+            : array();
+        $field_name = sprintf('vms_secondary_vendor_assignments[%d][vendor_ids][]', $group_index);
+
+        ob_start();
+        ?>
+        <div class="vms-secondary-vendor-row" data-vms-row-index="<?php echo esc_attr((string) $row_index); ?>">
+            <div class="vms-secondary-vendor-row__vendor">
+                <select name="<?php echo esc_attr($field_name); ?>" class="vms-secondary-vendor-select" data-selected-id="<?php echo esc_attr((string) $selected_id); ?>"<?php echo $this->render_event_plan_secondary_vendors_save_response_disabled_attr($type_slug === ''); ?>>
+                    <?php if ($type_slug === '') : ?>
+                        <option value=""><?php esc_html_e('-- Select a Vendor Type first --', 'backstage-venue-manager'); ?></option>
+                    <?php else : ?>
+                        <option value=""><?php esc_html_e('-- Select a Vendor --', 'backstage-venue-manager'); ?></option>
+                        <?php foreach ($pool_option_rows as $pool_row) : ?>
+                            <?php
+                            if (!is_array($pool_row)) {
+                                continue;
+                            }
+                            $vendor_id = absint($pool_row['vendor_id'] ?? 0);
+                            if ($vendor_id <= 0) {
+                                continue;
+                            }
+                            $label = trim((string) ($pool_row['label'] ?? ''));
+                            if ($label === '') {
+                                $label = trim((string) ($pool_row['vendor_title'] ?? ''));
+                            }
+                            ?>
+                            <option value="<?php echo esc_attr((string) $vendor_id); ?>"<?php echo $this->render_event_plan_secondary_vendors_save_response_selected_attr($selected_id === $vendor_id); ?>><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+            <div class="vms-secondary-vendor-row__indicators" data-vms-secondary-row-indicators>
+                <?php echo $this->render_event_plan_secondary_vendors_save_response_status_badges_html($group, $selected_id, $pool_option_rows); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </div>
+            <div class="vms-secondary-vendor-row__action">
+                <button type="button" class="button button-secondary vms-secondary-vendor-remove"><?php esc_html_e('Remove', 'backstage-venue-manager'); ?></button>
+            </div>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_status_badges_html(array $group, int $selected_id, array $pool_option_rows): string
+    {
+        $selected_id = absint($selected_id);
+        $pool_row = array();
+        foreach ($pool_option_rows as $candidate_row) {
+            if (!is_array($candidate_row)) {
+                continue;
+            }
+            if (absint($candidate_row['vendor_id'] ?? 0) === $selected_id) {
+                $pool_row = $candidate_row;
+                break;
+            }
+        }
+
+        $group_missing = isset($group['secondary_missing']) && is_array($group['secondary_missing']) ? array_map('absint', $group['secondary_missing']) : array();
+        $group_mismatch = isset($group['secondary_mismatch']) && is_array($group['secondary_mismatch']) ? array_map('absint', $group['secondary_mismatch']) : array();
+        $group_unqualified = isset($group['secondary_unqualified']) && is_array($group['secondary_unqualified']) ? array_map('absint', $group['secondary_unqualified']) : array();
+
+        $badges = array();
+        if ($selected_id <= 0) {
+            $badges[] = array('label' => __('Select vendor', 'backstage-venue-manager'), 'variant' => 'pending');
+        } else {
+            if (in_array($selected_id, $group_missing, true)) {
+                $badges[] = array('label' => __('Missing vendor', 'backstage-venue-manager'), 'variant' => 'missing');
+            } else {
+                $availability_state = sanitize_key((string) ($pool_row['availability_state'] ?? ''));
+                if ($availability_state === 'available') {
+                    $badges[] = array('label' => __('Available', 'backstage-venue-manager'), 'variant' => 'available');
+                } elseif ($availability_state === 'unavailable') {
+                    $badges[] = array('label' => __('Not available', 'backstage-venue-manager'), 'variant' => 'unavailable');
+                } else {
+                    $badges[] = array('label' => __('Availability unknown', 'backstage-venue-manager'), 'variant' => 'unknown');
+                }
+            }
+
+            if (in_array($selected_id, $group_mismatch, true)) {
+                $badges[] = array('label' => __('Type mismatch', 'backstage-venue-manager'), 'variant' => 'mismatch');
+            }
+
+            if (in_array($selected_id, $group_unqualified, true)) {
+                $badges[] = array('label' => __('Needs attention', 'backstage-venue-manager'), 'variant' => 'attention');
+            } else {
+                $badges[] = array('label' => __('Qualified', 'backstage-venue-manager'), 'variant' => 'qualified');
+            }
+        }
+
+        ob_start();
+        foreach ($badges as $badge) {
+            $label = trim((string) ($badge['label'] ?? ''));
+            $variant = sanitize_html_class((string) ($badge['variant'] ?? 'unknown'));
+            if ($label === '') {
+                continue;
+            }
+            ?>
+            <span class="vms-secondary-vendor-badge vms-secondary-vendor-badge--<?php echo esc_attr($variant); ?>"><?php echo esc_html($label); ?></span>
+            <?php
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_group_template_html(array $context): string
+    {
+        $post_id = (int) ($context['post_id'] ?? 0);
+
+        ob_start();
+        ?>
+        <template id="vms-secondary-vendor-group-template">
+            <div class="vms-secondary-vendor-group vms-secondary-vendor-group--type-pending" data-vms-group-index="" data-vms-missing-ids="[]" data-vms-mismatch-ids="[]" data-vms-unqualified-ids="[]">
+                <div class="vms-secondary-vendor-group__header">
+                    <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--type">
+                        <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Vendor type', 'backstage-venue-manager'); ?></span>
+                        <select class="vms-secondary-vendor-group-type"></select>
+                    </label>
+                    <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--mode">
+                        <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Mode', 'backstage-venue-manager'); ?></span>
+                        <select class="vms-secondary-vendor-group-mode"></select>
+                    </label>
+                    <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--capacity">
+                        <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Slot limit / capacity', 'backstage-venue-manager'); ?></span>
+                        <input type="number" min="0" step="1" class="small-text vms-secondary-vendor-group-slot-limit" value="" />
+                    </label>
+                    <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--market-target" hidden="hidden">
+                        <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Market target / needed vendors', 'backstage-venue-manager'); ?></span>
+                        <input type="number" min="0" step="1" class="small-text vms-secondary-vendor-group-needed-slots" value="" placeholder="<?php esc_attr_e('Blank', 'backstage-venue-manager'); ?>" disabled="disabled" />
+                    </label>
+                    <label class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--market-dispatch" hidden="hidden">
+                        <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('ADD visibility', 'backstage-venue-manager'); ?></span>
+                        <span class="vms-secondary-vendor-group__checkbox-line">
+                            <input type="hidden" class="vms-secondary-vendor-group-open-for-dispatch-hidden" value="0" disabled="disabled" />
+                            <input type="checkbox" class="vms-secondary-vendor-group-open-for-dispatch" value="1" checked="checked" disabled="disabled" />
+                            <span><?php esc_html_e('Show this market need in ADD', 'backstage-venue-manager'); ?></span>
+                        </span>
+                    </label>
+                    <div class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--summary">
+                        <span class="vms-secondary-vendor-group__field-label"><?php esc_html_e('Filled', 'backstage-venue-manager'); ?></span>
+                        <p class="vms-secondary-vendor-group__summary"></p>
+                    </div>
+                    <div class="vms-secondary-vendor-group__field vms-secondary-vendor-group__field--actions">
+                        <span class="vms-secondary-vendor-group__field-label screen-reader-text"><?php esc_html_e('Actions', 'backstage-venue-manager'); ?></span>
+                        <button type="button" class="button button-secondary vms-secondary-vendor-remove-group"><?php esc_html_e('Remove group', 'backstage-venue-manager'); ?></button>
+                    </div>
+                </div>
+                <label class="vms-secondary-vendor-group__override" hidden="hidden">
+                    <input type="checkbox" class="vms-secondary-vendor-group-over-capacity-override" value="1" />
+                    <span><?php esc_html_e('Allow over-capacity assignment for this group.', 'backstage-venue-manager'); ?></span>
+                </label>
+                <div class="vms-secondary-vendor-group__rows-toolbar">
+                    <div class="vms-secondary-vendor-group__rows-copy">
+                        <p class="vms-secondary-vendor-group__label"><?php esc_html_e('Selected vendors', 'backstage-venue-manager'); ?></p>
+                        <p class="description vms-secondary-vendor-group__guidance"><?php esc_html_e('Select a vendor type to choose eligible vendors.', 'backstage-venue-manager'); ?></p>
+                    </div>
+                    <p class="vms-secondary-vendor-actions vms-secondary-vendor-actions--inline">
+                        <button type="button" class="button button-secondary vms-secondary-vendor-add-row"><?php esc_html_e('Add vendor row', 'backstage-venue-manager'); ?></button>
+                        <a class="button button-secondary vms-secondary-vendor-add-new-link" href="<?php echo esc_url(add_query_arg(array(
+                            'post_type' => 'vms_vendor',
+                            'vms_return_to_event_plan' => $post_id,
+                            'vms_prefill_vendor_role' => 'secondary',
+                        ), admin_url('post-new.php'))); ?>" target="_blank" rel="noopener"><?php esc_html_e('Add new vendor', 'backstage-venue-manager'); ?></a>
+                    </p>
+                </div>
+                <div class="vms-secondary-vendor-rows-wrap">
+                    <div class="vms-secondary-vendor-rows__head" aria-hidden="true">
+                        <span><?php esc_html_e('Vendor', 'backstage-venue-manager'); ?></span>
+                        <span><?php esc_html_e('Status', 'backstage-venue-manager'); ?></span>
+                        <span><?php esc_html_e('Action', 'backstage-venue-manager'); ?></span>
+                    </div>
+                    <div class="vms-secondary-vendor-rows"></div>
+                </div>
+            </div>
+        </template>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_row_template_html(): string
+    {
+        ob_start();
+        ?>
+        <template id="vms-secondary-vendor-row-template">
+            <div class="vms-secondary-vendor-row" data-vms-row-index="">
+                <div class="vms-secondary-vendor-row__vendor">
+                    <select class="vms-secondary-vendor-select"></select>
+                </div>
+                <div class="vms-secondary-vendor-row__indicators" data-vms-secondary-row-indicators>
+                    <span class="vms-secondary-vendor-badge vms-secondary-vendor-badge--pending"><?php esc_html_e('Select vendor', 'backstage-venue-manager'); ?></span>
+                </div>
+                <div class="vms-secondary-vendor-row__action">
+                    <button type="button" class="button button-secondary vms-secondary-vendor-remove"><?php esc_html_e('Remove', 'backstage-venue-manager'); ?></button>
+                </div>
+            </div>
+        </template>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_vendor_category_notice_html(array $context): string
+    {
+        $vendor_category_rows = isset($context['vendor_category_rows']) && is_array($context['vendor_category_rows'])
+            ? $context['vendor_category_rows']
+            : array();
+        $vendor_category_names = isset($context['vendor_category_names']) && is_array($context['vendor_category_names'])
+            ? $context['vendor_category_names']
+            : array();
+
+        ob_start();
+        ?>
+        <div class="notice notice-info inline vms-notice vms-notice--info">
+            <p><strong><?php esc_html_e('Vendor category sync', 'backstage-venue-manager'); ?></strong></p>
+            <?php if (!empty($vendor_category_rows)) : ?>
+                <ul>
+                    <?php foreach ($vendor_category_rows as $category_row) : ?>
+                        <?php
+                        $vendor_title = isset($category_row['vendor_title']) ? (string) $category_row['vendor_title'] : '';
+                        $source_label = isset($category_row['source_label']) ? (string) $category_row['source_label'] : '';
+                        $category_label = isset($category_row['category_label']) ? (string) $category_row['category_label'] : __('Category', 'backstage-venue-manager');
+                        $category_list = isset($category_row['term_names']) && is_array($category_row['term_names']) ? $category_row['term_names'] : array();
+                        ?>
+                        <li>
+                            <strong><?php echo esc_html($source_label); ?><?php if ($vendor_title !== '') : ?>:</strong> <?php echo esc_html($vendor_title); ?><?php else : ?>:</strong> <?php esc_html_e('(not selected)', 'backstage-venue-manager'); ?><?php endif; ?>
+                            <?php if (!empty($category_list)) : ?>
+                                - <?php echo esc_html($category_label); ?>: <?php echo esc_html(implode(', ', $category_list)); ?>
+                            <?php else : ?>
+                                - <?php printf(esc_html__('No %s selected yet.', 'backstage-venue-manager'), esc_html(strtolower($category_label))); ?>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else : ?>
+                <p><?php esc_html_e('No vendor categories are attached yet. Add categories on each vendor profile, then save this Event Plan to snapshot them here.', 'backstage-venue-manager'); ?></p>
+            <?php endif; ?>
+            <p class="description">
+                <?php
+                if (!empty($vendor_category_names)) {
+                    printf(
+                        /* translators: %s: tec event categories that will be synced from this plan. */
+                        esc_html__('TEC Event Categories that will be synced from this plan: %s', 'backstage-venue-manager'),
+                        esc_html(implode(', ', $vendor_category_names))
+                    );
+                } else {
+                    esc_html_e('When vendor categories exist, they will flow into this Event Plan and then into the linked TEC event categories.', 'backstage-venue-manager');
+                }
+                ?>
+            </p>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_selected_attr(bool $selected): string
+    {
+        return $selected ? ' selected="selected"' : '';
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_checked_attr(bool $checked): string
+    {
+        return $checked ? ' checked="checked"' : '';
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_disabled_attr(bool $disabled): string
+    {
+        return $disabled ? ' disabled="disabled"' : '';
+    }
+
+    private function render_event_plan_secondary_vendors_save_response_hidden_attr(bool $hidden): string
+    {
+        return $hidden ? ' hidden="hidden"' : '';
+    }
+
     private function build_event_plan_secondary_vendors_lazy_load_response_payload(int $post_id): array
     {
         $post_id = absint($post_id);
@@ -3511,7 +4348,8 @@ class VMS_Admin_Event_Plans
             ), $error_code === 'vms_secondary_vendor_over_capacity' ? 400 : 500);
         }
 
-        $payload = $this->get_event_plan_secondary_vendors_module_payload($post_id);
+        // Legacy sink reference: get_event_plan_secondary_vendors_module_payload($post_id)
+        $payload = $this->build_event_plan_secondary_vendors_save_response_payload($post_id);
         wp_send_json_success(array(
             'html' => (string) ($payload['html'] ?? ''),
             'has_data' => !empty($payload['has_data']) ? 1 : 0,
