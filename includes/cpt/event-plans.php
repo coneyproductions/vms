@@ -2241,6 +2241,145 @@ class VMS_Admin_Event_Plans
         );
     }
 
+    private function build_event_plan_readiness_details_response_payload(int $post_id): array
+    {
+        $detail_context = $this->get_event_plan_readiness_detail_context($post_id);
+
+        return array(
+            'detail_context' => $detail_context,
+            'html' => $this->render_event_plan_readiness_details_response_html($detail_context),
+        );
+    }
+
+    private function render_event_plan_readiness_details_response_html(array $detail_context): string
+    {
+        $summary_rows = isset($detail_context['summary_rows']) && is_array($detail_context['summary_rows'])
+            ? $detail_context['summary_rows']
+            : array();
+        $warning_items = isset($detail_context['warning_items']) && is_array($detail_context['warning_items'])
+            ? $detail_context['warning_items']
+            : array();
+        $linked_tec_summary = isset($detail_context['linked_tec_summary']) && is_array($detail_context['linked_tec_summary'])
+            ? $detail_context['linked_tec_summary']
+            : array();
+        $ticketing_summary = isset($detail_context['ticketing_summary']) && is_array($detail_context['ticketing_summary'])
+            ? $detail_context['ticketing_summary']
+            : array();
+        $secondary_vendor_boot_summary = isset($detail_context['secondary_vendor_boot_summary']) && is_array($detail_context['secondary_vendor_boot_summary'])
+            ? $detail_context['secondary_vendor_boot_summary']
+            : array();
+        $readiness_boot_summary = isset($detail_context['readiness_boot_summary']) && is_array($detail_context['readiness_boot_summary'])
+            ? $detail_context['readiness_boot_summary']
+            : array();
+        $add_on_summary = isset($detail_context['add_on_summary']) && is_array($detail_context['add_on_summary'])
+            ? $detail_context['add_on_summary']
+            : array();
+        $html = '<div class="vms-ep-card vms-ep-card--white vms-ep-card--readiness-details">';
+        $html .= '<p class="description">' . esc_html((string) ($detail_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager'))) . '</p>';
+        $html .= $this->render_event_plan_readiness_details_summary_rows_html($summary_rows);
+        $html .= $this->render_event_plan_readiness_details_warning_notice_html($warning_items);
+        $html .= '<p class="description">' . $this->render_event_plan_readiness_details_linked_tec_text($linked_tec_summary) . '</p>';
+        $html .= '<p class="description">' . $this->render_event_plan_readiness_details_ticketing_text($ticketing_summary, $add_on_summary) . '</p>';
+        $html .= '<p class="description">' . $this->render_event_plan_readiness_details_secondary_vendor_text($secondary_vendor_boot_summary, $readiness_boot_summary) . '</p>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    private function render_event_plan_readiness_details_summary_rows_html(array $summary_rows): string
+    {
+        if (empty($summary_rows)) {
+            return '';
+        }
+
+        $html = '<ul class="vms-ep-inline-list">';
+        foreach ($summary_rows as $summary_row) {
+            if (!is_array($summary_row)) {
+                continue;
+            }
+
+            $html .= '<li><strong>'
+                . esc_html((string) ($summary_row['label'] ?? ''))
+                . ':</strong> '
+                . esc_html((string) ($summary_row['value'] ?? ''))
+                . '</li>';
+        }
+        $html .= '</ul>';
+
+        return $html;
+    }
+
+    private function render_event_plan_readiness_details_warning_notice_html(array $warning_items): string
+    {
+        $warning_texts = array();
+        foreach ($warning_items as $warning_item) {
+            if (!is_scalar($warning_item) && null !== $warning_item) {
+                continue;
+            }
+
+            $warning_text = trim((string) $warning_item);
+            if ($warning_text === '') {
+                continue;
+            }
+
+            $warning_texts[] = $warning_text;
+        }
+
+        if (empty($warning_texts)) {
+            return '<div class="notice notice-success inline vms-notice"><p>'
+                . esc_html__('No blocking or vendor-warning details are currently flagged in this summary view.', 'backstage-venue-manager')
+                . '</p></div>';
+        }
+
+        $html = '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p><strong>'
+            . esc_html__('Current warning details', 'backstage-venue-manager')
+            . '</strong></p><ul>';
+        foreach ($warning_texts as $warning_text) {
+            $html .= '<li>' . esc_html($warning_text) . '</li>';
+        }
+        $html .= '</ul></div>';
+
+        return $html;
+    }
+
+    private function render_event_plan_readiness_details_linked_tec_text(array $linked_tec_summary): string
+    {
+        $linked_tec_id = absint($linked_tec_summary['linked_tec_id'] ?? 0);
+        if ($linked_tec_id > 0) {
+            return sprintf(
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+                esc_html__('Linked TEC event: %1$s (%2$s).', 'backstage-venue-manager'),
+                /* translators: %d: event ID. */
+                esc_html((string) ($linked_tec_summary['linked_tec_title'] ?? sprintf(__('Event #%d', 'backstage-venue-manager'), $linked_tec_id))),
+                esc_html(strtoupper((string) ($linked_tec_summary['linked_tec_status'] ?? 'draft')))
+            );
+        }
+
+        return esc_html__('Linked TEC event: not linked.', 'backstage-venue-manager');
+    }
+
+    private function render_event_plan_readiness_details_ticketing_text(array $ticketing_summary, array $add_on_summary): string
+    {
+        return sprintf(
+            /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+            esc_html__('Configured tickets: %1$d. Configured add-ons: %2$d.', 'backstage-venue-manager'),
+            absint($ticketing_summary['effective_ticket_count'] ?? 0),
+            absint($add_on_summary['enabled_add_on_count'] ?? 0)
+        );
+    }
+
+    private function render_event_plan_readiness_details_secondary_vendor_text(array $secondary_vendor_boot_summary, array $readiness_boot_summary): string
+    {
+        return sprintf(
+            /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+            esc_html__('Secondary vendor warnings: %1$d. Selected secondary vendors: %2$d.', 'backstage-venue-manager'),
+            count((array) ($secondary_vendor_boot_summary['secondary_missing'] ?? array()))
+                + count((array) ($secondary_vendor_boot_summary['secondary_mismatch'] ?? array()))
+                + count((array) ($secondary_vendor_boot_summary['secondary_unqualified'] ?? array())),
+            absint($readiness_boot_summary['secondary_vendor_count'] ?? 0)
+        );
+    }
+
     private function should_defer_event_plan_admin_section(int $plan_id, string $section): bool
     {
         $plan_id = absint($plan_id);
@@ -2473,17 +2612,22 @@ class VMS_Admin_Event_Plans
             }
 
             if ($section === 'readiness_details') {
-                $detail_context = $this->get_event_plan_readiness_detail_context($post_id);
-                $html = $this->capture_event_plan_partial('readiness-details', array(
-                    'post' => $post,
-                    'vms_readiness_detail_context' => $detail_context,
-                ));
+                $readiness_payload = $this->build_event_plan_readiness_details_response_payload($post_id);
+                $detail_context = isset($readiness_payload['detail_context']) && is_array($readiness_payload['detail_context'])
+                    ? $readiness_payload['detail_context']
+                    : array();
+                $html = is_string($readiness_payload['html'] ?? null)
+                    ? (string) $readiness_payload['html']
+                    : '';
 
                 if (function_exists('vms_event_plan_perf_log')) {
                     vms_event_plan_perf_log('event_plan_readiness_details', $post_id, array(
                         'phase' => 'full',
                         'lazy_load' => 1,
                         'section' => 'readiness_details',
+                        'summary_row_count' => count((array) ($detail_context['summary_rows'] ?? array())),
+                        'warning_item_count' => count((array) ($detail_context['warning_items'] ?? array())),
+                        'payload_size_bytes' => strlen($html),
                     ));
                 }
 

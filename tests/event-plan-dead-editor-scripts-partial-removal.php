@@ -103,7 +103,6 @@ try {
 	$requiredCapturedPartials = array(
 		'advanced-controls',
 		'compensation',
-		'readiness-details',
 		'secondary-vendors',
 		'staff',
 		'ticketing-v2',
@@ -142,6 +141,8 @@ try {
 	$assert(strpos($eventPlansSource, 'This event plan lost its vendor (the vendor was deleted) and needs attention.') !== false, 'Live Event Plan renderer should retain the primary-vendor integrity notice.');
 	$assert(strpos($eventPlansSource, 'Booking prefill: %s was added as the primary vendor. Review below, then save the Event Plan.') !== false, 'Live Event Plan renderer should retain the primary-vendor booking-prefill notice.');
 	$assert(strpos($eventPlansSource, 'capture_event_plan_partial(\'secondary-vendors\'') !== false, 'Live Event Plan renderer should still capture the active secondary-vendors partial.');
+	$assert(strpos($eventPlansSource, 'capture_event_plan_partial(\'readiness-details\'') === false, 'Readiness details should no longer route through an active captured partial.');
+	$assert(strpos($eventPlansSource, 'render_event_plan_readiness_details_response_html') !== false, 'Readiness details should now route through the dedicated response renderer.');
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendors-section"') !== false, 'Active secondary-vendors partial should retain the live section wrapper.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-save-nonce') !== false, 'Active secondary-vendors partial should retain its save contract.');
 
