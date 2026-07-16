@@ -331,7 +331,7 @@ if (!function_exists('vms_event_details_context')) {
         $venue = vms_event_details_venue_context($event_id, $plan_id);
         $ticket = vms_event_details_ticket_context($event_id, $plan_id);
         $event_url = (string) get_permalink($event_id);
-        $title = html_entity_decode(wp_strip_all_tags((string) get_the_title($event_id)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $title = vms_event_details_normalize_schema_name((string) get_the_title($event_id));
         $status = function_exists('vms_tec_is_cancelled_event') && vms_tec_is_cancelled_event($event_id) ? 'cancelled' : 'scheduled';
 
         $date_label = '';
@@ -547,6 +547,124 @@ if (!function_exists('vms_event_details_address_lines')) {
     }
 }
 
+if (!function_exists('vms_event_details_decode_schema_text')) {
+    function vms_event_details_decode_schema_text(string $value): string
+    {
+        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+}
+
+if (!function_exists('vms_event_details_normalize_schema_whitespace')) {
+    function vms_event_details_normalize_schema_whitespace(string $value): string
+    {
+        $value = str_replace(array("\r\n", "\r", "\n", "\t"), ' ', $value);
+        $value = preg_replace('/[\x{00A0}\x{1680}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]+/u', ' ', $value);
+        $value = preg_replace('/\s+/u', ' ', (string) $value);
+        return trim((string) $value);
+    }
+}
+
+if (!function_exists('vms_event_details_normalize_schema_name')) {
+    function vms_event_details_normalize_schema_name(string $value): string
+    {
+        $value = vms_event_details_decode_schema_text($value);
+        $value = wp_strip_all_tags($value);
+        return vms_event_details_normalize_schema_whitespace($value);
+    }
+}
+
+if (!function_exists('vms_event_details_normalize_schema_description_text')) {
+    function vms_event_details_normalize_schema_description_text(string $value): string
+    {
+        $value = vms_event_details_decode_schema_text($value);
+        $value = strip_shortcodes($value);
+        $value = wp_strip_all_tags($value);
+        return vms_event_details_normalize_schema_whitespace($value);
+    }
+}
+
+if (!function_exists('vms_event_details_parse_schema_price')) {
+    function vms_event_details_parse_schema_price($value): ?float
+    {
+        if (!is_scalar($value)) {
+            return null;
+        }
+
+        $text = vms_event_details_decode_schema_text((string) $value);
+        $text = preg_replace('/[\x{2010}-\x{2015}\x{2212}]/u', '-', $text);
+        $text = vms_event_details_normalize_schema_whitespace((string) $text);
+        if ($text === '') {
+            return null;
+        }
+
+        preg_match_all('/(?:^|[^\pL\pN])(?:[$£€¥]\s*)?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?=$|[^\pL\pN])/u', $text, $matches);
+
+        $remainder = preg_replace('/(?:[$£€¥]\s*)?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?/u', ' ', $text);
+        $remainder = preg_replace('/[^\p{L}\s]+/u', ' ', (string) $remainder);
+        $remainder = vms_event_details_normalize_schema_whitespace((string) $remainder);
+
+        $allowed_words = array(
+            'admission',
+            'at',
+            'cover',
+            'dollar',
+            'dollars',
+            'entry',
+            'event',
+            'free',
+            'from',
+            'online',
+            'show',
+            'starting',
+            'ticket',
+            'tickets',
+            'usd',
+        );
+
+        $words = $remainder === '' ? array() : preg_split('/\s+/u', strtolower($remainder));
+        $has_unexpected_words = false;
+        foreach ($words as $word) {
+            if ($word === '' || in_array($word, $allowed_words, true)) {
+                continue;
+            }
+
+            $has_unexpected_words = true;
+            break;
+        }
+
+        $prices = array();
+        foreach ($matches[1] ?? array() as $match) {
+            $candidate = str_replace(',', '', (string) $match);
+            if ($candidate === '' || !is_numeric($candidate)) {
+                continue;
+            }
+
+            $prices[] = (float) $candidate;
+        }
+
+        $positive_prices = array_values(array_filter($prices, static function (float $price): bool {
+            return $price > 0;
+        }));
+        if (!$has_unexpected_words && !empty($positive_prices)) {
+            return min($positive_prices);
+        }
+
+        if (!$has_unexpected_words && !empty($prices)) {
+            return 0.0;
+        }
+
+        if (
+            !$has_unexpected_words
+            && empty($prices)
+            && preg_match('/\bfree\b/i', $text)
+        ) {
+            return 0.0;
+        }
+
+        return null;
+    }
+}
+
 if (!function_exists('vms_event_details_ticket_context')) {
     function vms_event_details_ticket_context(int $event_id, int $plan_id = 0): array
     {
@@ -554,7 +672,7 @@ if (!function_exists('vms_event_details_ticket_context')) {
             return array('label' => __('Ticket sales are closed for this cancelled event.', 'backstage-venue-manager'), 'min_price' => null, 'free_labels' => array());
         }
 
-        $paid_prices = array();
+        $prices = array();
         $free_labels = array();
 
         if ($plan_id > 0 && function_exists('vms_ticketing_v2_get_config')) {
@@ -574,24 +692,24 @@ if (!function_exists('vms_event_details_ticket_context')) {
                     $price = (float) vms_ticketing_v2_get_ticket_effective_price($row);
                 }
                 if ($price > 0 && $visibility === 'public') {
-                    $paid_prices[] = $price;
+                    $prices[] = $price;
                 } elseif ($price <= 0 && $title !== '') {
                     $free_labels[] = $title;
                 }
             }
         }
 
-        if (empty($paid_prices) && function_exists('tribe_get_cost')) {
+        if (empty($prices) && function_exists('tribe_get_cost')) {
             $cost = trim(wp_strip_all_tags((string) tribe_get_cost($event_id, true)));
             if ($cost !== '') {
-                $numeric = preg_replace('/[^0-9.]/', '', $cost);
-                if (is_numeric($numeric)) {
-                    $paid_prices[] = (float) $numeric;
+                $fallback_price = vms_event_details_parse_schema_price($cost);
+                if ($fallback_price !== null) {
+                    $prices[] = $fallback_price;
                 }
             }
         }
 
-        $min_price = !empty($paid_prices) ? min($paid_prices) : null;
+        $min_price = !empty($prices) ? min($prices) : null;
         $free_labels = array_values(array_unique(array_filter(array_map(static function ($label): string {
             return trim(wp_strip_all_tags((string) $label));
         }, $free_labels))));
@@ -651,8 +769,7 @@ if (!function_exists('vms_event_details_plain_description')) {
             $post = get_post($event_id);
             $excerpt = $post instanceof WP_Post ? (string) $post->post_content : '';
         }
-        $excerpt = html_entity_decode(wp_strip_all_tags(strip_shortcodes($excerpt)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $excerpt = trim((string) preg_replace('/\s+/', ' ', $excerpt));
+        $excerpt = vms_event_details_normalize_schema_description_text($excerpt);
         if (function_exists('mb_substr')) {
             return mb_substr($excerpt, 0, 500);
         }
@@ -748,6 +865,24 @@ if (!function_exists('vms_event_details_filter_tec_event_schema')) {
         if ($url !== '') {
             $event['@id'] = trailingslashit($url) . '#event';
             $event['url'] = $url;
+        }
+
+        $name = vms_event_details_normalize_schema_name((string) ($event['name'] ?? ''));
+        if ($name === '') {
+            $name = vms_event_details_normalize_schema_name((string) ($ctx['title'] ?? get_the_title($event_id)));
+        }
+        if ($name !== '') {
+            $event['name'] = $name;
+        }
+
+        $description = vms_event_details_normalize_schema_description_text((string) ($event['description'] ?? ''));
+        if ($description === '') {
+            $description = vms_event_details_normalize_schema_description_text((string) ($ctx['description'] ?? ''));
+        }
+        if ($description !== '') {
+            $event['description'] = $description;
+        } elseif (isset($event['description'])) {
+            unset($event['description']);
         }
 
         $event = vms_event_details_clean_tec_location_schema($event, $ctx);
@@ -903,13 +1038,12 @@ if (!function_exists('vms_event_details_min_paid_price_from_schema_offers')) {
         $prices = array();
         foreach ($offers as $offer) {
             $offer = is_object($offer) ? (array) $offer : (is_array($offer) ? $offer : array());
-            if (!isset($offer['price']) || !is_numeric($offer['price'])) {
+            $price = vms_event_details_parse_schema_price($offer['price'] ?? null);
+            if ($price === null) {
                 continue;
             }
-            $price = (float) $offer['price'];
-            if ($price > 0) {
-                $prices[] = $price;
-            }
+
+            $prices[] = $price;
         }
         return !empty($prices) ? min($prices) : null;
     }
@@ -991,7 +1125,7 @@ if (!function_exists('vms_event_details_schema')) {
             '@context' => 'https://schema.org',
             '@type' => 'Event',
             '@id' => trailingslashit((string) ($ctx['url'] ?? get_permalink($event_id))) . '#event',
-            'name' => (string) ($ctx['title'] ?? get_the_title($event_id)),
+            'name' => vms_event_details_normalize_schema_name((string) ($ctx['title'] ?? get_the_title($event_id))),
             'url' => (string) ($ctx['url'] ?? get_permalink($event_id)),
             'startDate' => $start->format(DATE_ATOM),
             'endDate' => $end->format(DATE_ATOM),
@@ -1016,7 +1150,7 @@ if (!function_exists('vms_event_details_schema')) {
             ),
         );
 
-        $description = trim((string) ($ctx['description'] ?? ''));
+        $description = vms_event_details_normalize_schema_description_text((string) ($ctx['description'] ?? ''));
         if ($description !== '') {
             $schema['description'] = $description;
         }
