@@ -598,17 +598,18 @@ function vms_render_schedule_page_content(): void
     }
 
 
-    if ($scope === 'venue' && (int) $venue_id <= 0) {
-        echo '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>';
+    $scope_warning_notice_context = vms_schedule_get_scope_warning_notice_context($scope === 'venue' && (int) $venue_id <= 0, 'no_selection');
+    if (!empty($scope_warning_notice_context['show'])) {
+        vms_schedule_render_scope_warning_notice($scope_warning_notice_context);
         echo '</div>';
         return;
     }
 
     if ($scope === 'all') {
-
         $venue_ids = vms_sch_get_all_venue_ids();
-        if (empty($venue_ids)) {
-            echo '<div class="notice notice-warning"><p>No venues found to display.</p></div>';
+        $scope_warning_notice_context = vms_schedule_get_scope_warning_notice_context(empty($venue_ids), 'no_venues');
+        if (!empty($scope_warning_notice_context['show'])) {
+            vms_schedule_render_scope_warning_notice($scope_warning_notice_context);
             echo '</div>';
             return;
         }
@@ -693,6 +694,16 @@ function vms_schedule_get_invalid_bounds_notice_context(bool $show): array
     );
 }
 
+function vms_schedule_get_scope_warning_notice_context(bool $show, string $variant): array
+{
+    $variant = in_array($variant, array('no_selection', 'no_venues'), true) ? $variant : '';
+
+    return array(
+        'show' => $show,
+        'variant' => $variant,
+    );
+}
+
 function vms_schedule_render_invalid_bounds_notice(array $context): void
 {
     if (empty($context['show'])) {
@@ -700,6 +711,23 @@ function vms_schedule_render_invalid_bounds_notice(array $context): void
     }
 
     echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+}
+
+function vms_schedule_render_scope_warning_notice(array $context): void
+{
+    if (empty($context['show'])) {
+        return;
+    }
+
+    $variant = isset($context['variant']) ? (string) $context['variant'] : '';
+    if ($variant === 'no_selection') {
+        echo '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>';
+        return;
+    }
+
+    if ($variant === 'no_venues') {
+        echo '<div class="notice notice-warning"><p>No venues found to display.</p></div>';
+    }
 }
 
 
