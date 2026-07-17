@@ -1652,7 +1652,13 @@ $assert(
 	'Settings page should preserve the richer integrity-scan notice family in ordinary content through the dedicated page-local renderer.'
 );
 $assert(strpos($toursAdminSource, '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">') !== false, 'Guided Tours reset notice should remain nested inside the page wrapper.');
-$assert(strpos($toursAdminSource, '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice">') !== false, 'Guided Tours reset notice should remain the extra-attribute nested content boundary and stay unmigrated.');
+$assert(
+	strpos($toursAdminSource, 'private function get_reset_notice_context(): array') !== false
+	&& strpos($toursAdminSource, 'private function render_reset_notice(array $context): void') !== false
+	&& strpos($toursAdminSource, '$this->render_reset_notice($this->get_reset_notice_context());') !== false
+	&& strpos($toursAdminSource, '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice">') !== false,
+	'Guided Tours reset notice should remain the same nested extra-attribute content family through a dedicated page-local renderer.'
+);
 $assert(strpos($toursAdminSource, "'notices_callback' =>") === false, 'Guided Tours should remain without an explicit notice callback in this pass.');
 $assert(strpos($scheduleSource, "echo '<div class=\"vms-admin-schedule-content\">';") !== false, 'Schedule notice families should remain nested inside the schedule content wrapper.');
 $assert(strpos($scheduleSource, "echo '<div class=\"notice notice-error\"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';") !== false, 'Schedule should preserve the richer action-required notice family in ordinary content.');

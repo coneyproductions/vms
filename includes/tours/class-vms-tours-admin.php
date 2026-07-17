@@ -211,13 +211,35 @@ if (!class_exists('VMS_Tours_Admin')) {
 			echo '</tbody></table>';
 		}
 
-			public function render_page_content(): void
-			{
-				echo '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">';
+		/**
+		 * @return array{show:bool,state:string}
+		 */
+		private function get_reset_notice_context(): array
+		{
+			$show_notice = ($this->query_arg('vms_tours_reset_my_state') !== '');
 
-				if ($this->query_arg('vms_tours_reset_my_state') !== '') {
-					echo '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice"><p>' . esc_html__('Your tour progress has been reset.', 'backstage-venue-manager') . '</p></div>';
-				}
+			return array(
+				'show' => $show_notice,
+				'state' => $show_notice ? 'reset_success' : 'hidden',
+			);
+		}
+
+		/**
+		 * @param array{show:bool,state:string} $context
+		 */
+		private function render_reset_notice(array $context): void
+		{
+			if (empty($context['show']) || ($context['state'] ?? 'hidden') !== 'reset_success') {
+				return;
+			}
+
+			echo '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice"><p>' . esc_html__('Your tour progress has been reset.', 'backstage-venue-manager') . '</p></div>';
+		}
+
+		public function render_page_content(): void
+		{
+			echo '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">';
+			$this->render_reset_notice($this->get_reset_notice_context());
 
 			echo '<form method="post" action="options.php" data-vms-tour="guided-tours.global-settings">';
 			settings_fields('vms_tours_settings_group');
