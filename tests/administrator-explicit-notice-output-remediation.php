@@ -1661,6 +1661,10 @@ $assert(
 );
 $assert(strpos($toursAdminSource, "'notices_callback' =>") === false, 'Guided Tours should remain without an explicit notice callback in this pass.');
 $assert(strpos($scheduleSource, "echo '<div class=\"vms-admin-schedule-content\">';") !== false, 'Schedule notice families should remain nested inside the schedule content wrapper.');
+$assert(strpos($scheduleSource, 'function vms_schedule_get_invalid_bounds_notice_context(bool $show): array') !== false, 'Schedule should expose a dedicated invalid-bounds notice context builder.');
+$assert(strpos($scheduleSource, 'function vms_schedule_render_invalid_bounds_notice(array $context): void') !== false, 'Schedule should expose a dedicated invalid-bounds notice renderer.');
+$assert(substr_count($scheduleSource, "echo '<div class=\"notice notice-error\"><p>Schedule window bounds were invalid.</p></div>';") === 1, 'Schedule should keep only one direct invalid-bounds notice fragment after normalizing the repeated branches.');
+$assert(substr_count($scheduleSource, 'vms_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);') === 4, 'Schedule should route all four invalid-bounds branches through the shared page-local renderer.');
 $assert(strpos($scheduleSource, "echo '<div class=\"notice notice-error\"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';") !== false, 'Schedule should preserve the richer action-required notice family in ordinary content.');
 $assert(strpos($scheduleSource, '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>') !== false, 'Schedule should preserve the nested venue-selection empty-state notice.');
 $assert(strpos($scheduleSource, '<div class="notice notice-warning"><p>No venues found to display.</p></div>') !== false, 'Schedule should preserve the nested no-venues empty-state notice.');

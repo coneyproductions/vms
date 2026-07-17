@@ -686,6 +686,22 @@ function vms_render_schedule_page_content(): void
     echo '</div>';
 }
 
+function vms_schedule_get_invalid_bounds_notice_context(bool $show): array
+{
+    return array(
+        'show' => $show,
+    );
+}
+
+function vms_schedule_render_invalid_bounds_notice(array $context): void
+{
+    if (empty($context['show'])) {
+        return;
+    }
+
+    echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+}
+
 
 function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string $end_ymd, array $open_map, array $plans_by_date, string $create_start_ymd, string $create_end_ymd): void
 {
@@ -694,9 +710,10 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
     $start_dt = vms_sch_parse_ymd($start_ymd);
     $end_dt   = vms_sch_parse_ymd($end_ymd);
+    $invalid_bounds_notice_context = vms_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);
 
-    if (!$start_dt || !$end_dt) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        vms_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
@@ -952,9 +969,10 @@ function vms_render_schedule_calendar_view(int $venue_id, string $start_ymd, str
 {
     $start_ts = strtotime($start_ymd);
     $end_ts   = strtotime($end_ymd);
+    $invalid_bounds_notice_context = vms_schedule_get_invalid_bounds_notice_context(!$start_ts || !$end_ts);
 
-    if (!$start_ts || !$end_ts) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        vms_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
@@ -1189,9 +1207,10 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
 {
     $start_dt = vms_sch_parse_ymd($start_ymd);
     $end_dt   = vms_sch_parse_ymd($end_ymd);
+    $invalid_bounds_notice_context = vms_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);
 
-    if (!$start_dt || !$end_dt) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        vms_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
@@ -1316,9 +1335,10 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
 
     $start_dt = vms_sch_parse_ymd($start_ymd);
     $end_dt   = vms_sch_parse_ymd($end_ymd);
+    $invalid_bounds_notice_context = vms_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);
 
-    if (!$start_dt || !$end_dt) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        vms_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
