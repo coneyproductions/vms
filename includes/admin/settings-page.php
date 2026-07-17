@@ -966,8 +966,44 @@ function vms_field_default_venue()
   ));
   $published = array_values(array_unique(array_map('intval', (array) $published)));
 
-  // Compute total venues (including drafts) to detect the single-venue draft trap.
-  $all = array_values(array_unique(array_map('intval', (array) $venues)));
+  vms_render_settings_default_venue_alert(
+    vms_build_settings_default_venue_alert_context($saved, $venues, $published, $saved_is_valid)
+  );
+}
+
+/**
+ * @return array{visible:bool,class:string,label:string,href:string,target:string,rel:string}
+ */
+function vms_settings_default_venue_alert_default_action_context(): array
+{
+  return array(
+    'visible' => false,
+    'class' => '',
+    'label' => '',
+    'href' => '',
+    'target' => '',
+    'rel' => '',
+  );
+}
+
+/**
+ * @param array<int,mixed> $venues
+ * @param array<int,mixed> $published
+ * @return array<string,mixed>
+ */
+function vms_build_settings_default_venue_alert_context(int $saved, array $venues, array $published, bool $saved_is_valid): array
+{
+  $context = array(
+    'show' => false,
+    'state' => 'hidden',
+    'notice_class' => '',
+    'status' => '',
+    'primary_action' => vms_settings_default_venue_alert_default_action_context(),
+    'secondary_action' => vms_settings_default_venue_alert_default_action_context(),
+  );
+
+  $all = array_values(array_unique(array_map('intval', $venues)));
+  $published = array_values(array_unique(array_map('intval', $published)));
 
   if (count($all) === 1) {
     $only_id = (int) $all[0];
@@ -976,49 +1012,119 @@ function vms_field_default_venue()
     if ($only_status !== 'publish') {
       $edit_url = get_edit_post_link($only_id, 'raw');
       if (empty($edit_url)) {
-        $edit_url = admin_url('post.php?post=' . (int) $only_id . '&action=edit');
+        $edit_url = admin_url('post.php?post=' . $only_id . '&action=edit');
       }
 
-      echo '<div class="notice notice-error vms-settings-default-venue-alert">';
-      echo '<p><strong>Action required:</strong> Your only venue is not published (status: <strong>' . esc_html($only_status) . '</strong>). This will cause Schedule and Season Dates to appear empty.</p>';
-      echo '<p><a class="button button-primary" href="' . esc_url($edit_url) . '">Open venue and publish</a></p>';
-      echo '</div>';
-
-      // If there are no published venues, a Default Venue cannot be set yet.
-      return;
-    }
-  }
-
-  if (!$saved_is_valid) {
-    echo '<div class="notice notice-warning vms-settings-default-venue-alert">';
-
-    if ($saved > 0 && get_post_type($saved) === 'vms_venue') {
-      $saved_status = (string) get_post_status($saved);
-      $edit_url = get_edit_post_link($saved, 'raw');
-      if (empty($edit_url)) {
-        $edit_url = admin_url('post.php?post=' . (int) $saved . '&action=edit');
-      }
-
-      echo '<p><strong>Default Venue needs attention:</strong> The selected venue is not published (status: <strong>' . esc_html($saved_status) . '</strong>). Publish it or choose a published venue.</p>';
-      echo '<p><a class="button button-secondary" href="' . esc_url($edit_url) . '">Open selected venue</a></p>';
-    } else {
-      echo '<p><strong>Default Venue is not set.</strong> This can cause parts of VMS to load with no venue context (especially in single-venue installs).</p>';
-    }
-
-    if (count($published) === 1) {
-      $vid = (int) $published[0];
-      $fix_url = wp_nonce_url(
-        admin_url('admin-post.php?action=vms_set_default_venue&venue_id=' . (int) $vid),
-        'vms_set_default_venue_' . (int) $vid
+      $context['show'] = true;
+      $context['state'] = 'single_unpublished';
+      $context['notice_class'] = 'notice notice-error vms-settings-default-venue-alert';
+      $context['status'] = $only_status;
+      $context['primary_action'] = array(
+        'visible' => true,
+        'class' => 'button button-primary',
+        'label' => 'Open venue and publish',
+        'href' => $edit_url,
+        'target' => '',
+        'rel' => '',
       );
 
-      echo '<p>';
-      echo '<a class="button button-primary" href="' . esc_url($fix_url) . '">Fix now: set Default Venue to “' . esc_html(get_the_title($vid)) . '”</a>';
-      echo '</p>';
+      return $context;
+    }
+  }
+
+  if ($saved_is_valid) {
+    return $context;
+  }
+
+  $context['show'] = true;
+  $context['state'] = 'unset';
+  $context['notice_class'] = 'notice notice-warning vms-settings-default-venue-alert';
+
+  if ($saved > 0 && get_post_type($saved) === 'vms_venue') {
+    $saved_status = (string) get_post_status($saved);
+    $edit_url = get_edit_post_link($saved, 'raw');
+    if (empty($edit_url)) {
+      $edit_url = admin_url('post.php?post=' . $saved . '&action=edit');
     }
 
-    echo '</div>';
+    $context['state'] = 'selected_unpublished';
+    $context['status'] = $saved_status;
+    $context['primary_action'] = array(
+      'visible' => true,
+      'class' => 'button button-secondary',
+      'label' => 'Open selected venue',
+      'href' => $edit_url,
+      'target' => '',
+      'rel' => '',
+    );
   }
+
+  if (count($published) === 1) {
+    $vid = (int) $published[0];
+    $context['secondary_action'] = array(
+      'visible' => true,
+      'class' => 'button button-primary',
+      'label' => 'Fix now: set Default Venue to “' . get_the_title($vid) . '”',
+      'href' => wp_nonce_url(
+        admin_url('admin-post.php?action=vms_set_default_venue&venue_id=' . $vid),
+        'vms_set_default_venue_' . $vid
+      ),
+      'target' => '',
+      'rel' => '',
+    );
+  }
+
+  return $context;
+}
+
+/**
+ * @param array<string,mixed> $context
+ */
+function vms_render_settings_default_venue_alert(array $context): void
+{
+  if (empty($context['show'])) {
+    return;
+  }
+
+  echo '<div class="' . esc_attr((string) ($context['notice_class'] ?? '')) . '">';
+
+  if (($context['state'] ?? 'hidden') === 'single_unpublished') {
+    echo '<p><strong>Action required:</strong> Your only venue is not published (status: <strong>' . esc_html((string) ($context['status'] ?? '')) . '</strong>). This will cause Schedule and Season Dates to appear empty.</p>';
+  } elseif (($context['state'] ?? 'hidden') === 'selected_unpublished') {
+    echo '<p><strong>Default Venue needs attention:</strong> The selected venue is not published (status: <strong>' . esc_html((string) ($context['status'] ?? '')) . '</strong>). Publish it or choose a published venue.</p>';
+  } else {
+    echo '<p><strong>Default Venue is not set.</strong> This can cause parts of VMS to load with no venue context (especially in single-venue installs).</p>';
+  }
+
+  $primary_action = is_array($context['primary_action'] ?? null) ? $context['primary_action'] : array();
+  if (!empty($primary_action['visible'])) {
+    echo '<p><a';
+    echo ' class="' . esc_attr((string) ($primary_action['class'] ?? '')) . '"';
+    echo ' href="' . esc_url((string) ($primary_action['href'] ?? '')) . '"';
+    if ((string) ($primary_action['target'] ?? '') !== '') {
+      echo ' target="' . esc_attr((string) $primary_action['target']) . '"';
+    }
+    if ((string) ($primary_action['rel'] ?? '') !== '') {
+      echo ' rel="' . esc_attr((string) $primary_action['rel']) . '"';
+    }
+    echo '>' . esc_html((string) ($primary_action['label'] ?? '')) . '</a></p>';
+  }
+
+  $secondary_action = is_array($context['secondary_action'] ?? null) ? $context['secondary_action'] : array();
+  if (!empty($secondary_action['visible'])) {
+    echo '<p><a';
+    echo ' class="' . esc_attr((string) ($secondary_action['class'] ?? '')) . '"';
+    echo ' href="' . esc_url((string) ($secondary_action['href'] ?? '')) . '"';
+    if ((string) ($secondary_action['target'] ?? '') !== '') {
+      echo ' target="' . esc_attr((string) $secondary_action['target']) . '"';
+    }
+    if ((string) ($secondary_action['rel'] ?? '') !== '') {
+      echo ' rel="' . esc_attr((string) $secondary_action['rel']) . '"';
+    }
+    echo '>' . esc_html((string) ($secondary_action['label'] ?? '')) . '</a></p>';
+  }
+
+  echo '</div>';
 }
 
 function vms_field_admission_max_party_size()
