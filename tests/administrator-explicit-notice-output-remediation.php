@@ -2876,7 +2876,10 @@ $assert(strpos($ticketIntegrityNoticeSource, "echo '<div class=\"notice ' . esc_
 $assert(strpos($ticketIntegrityNoticeSource, '<strong>') === false && strpos($ticketIntegrityNoticeSource, '<a ') === false && strpos($ticketIntegrityNoticeSource, '<button') === false && strpos($ticketIntegrityNoticeSource, '<span') === false, 'Ticket Integrity notice helper should stay within the simple fragment contract.');
 $assert(strpos($ticketIntegrityNoticeSource, 'apply_filters(') === false && strpos($ticketIntegrityNoticeSource, 'do_action(') === false && strpos($ticketIntegrityNoticeSource, 'settings_errors(') === false, 'Ticket Integrity notice helper should stay package-owned and nonextensible.');
 $assert(strpos($ticketIntegrityNoticeSource, 'get_transient(') === false && strpos($ticketIntegrityNoticeSource, 'set_transient(') === false && strpos($ticketIntegrityNoticeSource, 'delete_transient(') === false, 'Ticket Integrity notice helper should not perform storage reads or mutations.');
-$assert(strpos($vendorAvailabilitySource, "echo '<div class=\"notice notice-info inline\"><p>' . esc_html__('No vendors matched the current filters for this date.', 'backstage-venue-manager') . '</p></div>';") !== false, 'Vendor Availability nested empty-state notice should remain content-local and unchanged.');
+$assert(strpos($vendorAvailabilitySource, 'vms_vendor_availability_get_list_empty_state_notice_context') !== false, 'Vendor Availability should define a page-local empty-state context builder.');
+$assert(strpos($vendorAvailabilitySource, 'vms_vendor_availability_render_list_empty_state_notice') !== false, 'Vendor Availability should define a page-local empty-state renderer.');
+$assert(strpos($vendorAvailabilitySource, "echo '<div class=\"notice notice-info inline\"><p>' . esc_html__('No vendors matched the current filters for this date.', 'backstage-venue-manager') . '</p></div>';") !== false, 'Vendor Availability nested empty-state notice should preserve the exact content-local fragment.');
+$assert(strpos($vendorAvailabilitySource, 'vms_vendor_availability_render_list_empty_state_notice($empty_state_notice_context);') !== false, 'Vendor Availability list view should render the nested empty-state fragment through the page-local renderer.');
 
 $ticketIntegrityExpectedStatuses = array(
 	'daily_report_dry_run_ready',

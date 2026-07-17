@@ -1698,10 +1698,38 @@ if (!function_exists('vms_vendor_availability_new_plan_url')) {
     }
 }
 
+if (!function_exists('vms_vendor_availability_get_list_empty_state_notice_context')) {
+    /**
+     * @param array<int,array<string,mixed>> $rows
+     * @return array{show:bool}
+     */
+    function vms_vendor_availability_get_list_empty_state_notice_context(array $rows): array
+    {
+        return array(
+            'show' => empty($rows),
+        );
+    }
+}
+
+if (!function_exists('vms_vendor_availability_render_list_empty_state_notice')) {
+    /**
+     * @param array{show?:mixed} $context
+     */
+    function vms_vendor_availability_render_list_empty_state_notice(array $context): void
+    {
+        if (empty($context['show'])) {
+            return;
+        }
+
+        echo '<div class="notice notice-info inline"><p>' . esc_html__('No vendors matched the current filters for this date.', 'backstage-venue-manager') . '</p></div>';
+    }
+}
+
 if (!function_exists('vms_render_vendor_availability_list_view')) {
     function vms_render_vendor_availability_list_view(array $rows, string $date, string $active_view = 'list', array $filters = array()): void
     {
         $classes = 'vms-va-list';
+        $empty_state_notice_context = vms_vendor_availability_get_list_empty_state_notice_context($rows);
         if ($active_view !== 'list') {
             $classes .= ' vms-va-list--secondary';
         }
@@ -1713,8 +1741,8 @@ if (!function_exists('vms_render_vendor_availability_list_view')) {
         echo '<p class="description">' . esc_html__('This view explains why each filtered vendor is free, blocked, tentative, or still unconfirmed on the selected date.', 'backstage-venue-manager') . '</p>';
         echo '</div>';
 
-        if (empty($rows)) {
-            echo '<div class="notice notice-info inline"><p>' . esc_html__('No vendors matched the current filters for this date.', 'backstage-venue-manager') . '</p></div>';
+        if (!empty($empty_state_notice_context['show'])) {
+            vms_vendor_availability_render_list_empty_state_notice($empty_state_notice_context);
             echo '</div>';
             return;
         }
