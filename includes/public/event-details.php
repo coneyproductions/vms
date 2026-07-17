@@ -777,6 +777,18 @@ if (!function_exists('vms_event_details_plain_description')) {
     }
 }
 
+if (!function_exists('vms_event_details_encode_fallback_json_ld')) {
+    function vms_event_details_encode_fallback_json_ld(array $schema): string
+    {
+        $json = wp_json_encode(
+            $schema,
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+        );
+
+        return is_string($json) ? $json : '';
+    }
+}
+
 if (!function_exists('vms_event_details_print_json_ld')) {
     function vms_event_details_print_json_ld(): void
     {
@@ -804,8 +816,8 @@ if (!function_exists('vms_event_details_print_json_ld')) {
             return;
         }
 
-        $json = wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (!is_string($json) || $json === '') {
+        $json = vms_event_details_encode_fallback_json_ld($schema);
+        if ($json === '') {
             return;
         }
 

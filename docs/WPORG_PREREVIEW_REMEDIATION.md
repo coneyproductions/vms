@@ -78,7 +78,7 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 ## Findings Already Resolved, Acceptable, or Compatibility-Sensitive
 
 - Core bundled modules are not currently marked as premium-gated. Representative refs: `includes/modules/admissions/admissions.php:19-26`, `includes/modules/status-notices/status-notices.php:14-21`, `includes/modules/staff-tasks/staff-tasks.php:20-27`, `includes/modules/email-followups/email-followups.php:5-10`, `includes/modules/availability-date-dispatch/availability-date-dispatch.php:17-24`.
-- Structured data output in `includes/public/event-details.php:669-674` is JSON-LD, not executable application logic.
+- The package-owned fallback structured-data sink in `includes/public/event-details.php:780-824` now uses explicit script-safe JSON encoding inside an inert `application/ld+json` script; it remains structured data, not executable application logic, and must stay distinct from TEC-owned final emitters.
 - JSON state blobs in `includes/admin/addons/views/page-addons.php:53`, `includes/admin/vendor-command-center.php:1498`, `includes/admin/vendor-command-center.php:1556`, and `includes/cpt/event-plans/partials/secondary-vendors.php:465` are acceptable `application/json` payloads, not inline script execution.
 - Runtime AJAX URLs are generally generated correctly with `admin_url('admin-ajax.php')`; the only hard-coded `/wp-admin/admin-ajax.php` strings found in runtime PHP are log-normalization keys in `includes/core/slow-request-logger.php:292-306`.
 - The internal `vms` prefix surface is broad and established across CPTs, taxonomies, REST namespaces, shortcodes, AJAX actions, and options. This is compatibility-sensitive and should not be blindly renamed to match the new display name or slug.
@@ -187,7 +187,7 @@ Historical inline-hit counts from the initial pass:
 
 Acceptable / false-positive notes:
 
-- `includes/public/event-details.php:669-674` uses `wp_json_encode()` to print JSON-LD structured data inside `<script type="application/ld+json">`. This is not executable runtime JS and should not be removed blindly.
+- The package-owned fallback JSON-LD sink in `includes/public/event-details.php:780-824` now hardens output with explicit script-safe JSON flags. The separate TEC-owned final JSON-LD path is still inert structured data, not executable runtime JS, and should not be removed blindly.
 - `includes/admin/addons/views/page-addons.php:53`, `includes/admin/vendor-command-center.php:1498`, `includes/admin/vendor-command-center.php:1556`, and `includes/cpt/event-plans/partials/secondary-vendors.php:465` emit `application/json` state payloads, which are materially different from executable `<script>` blocks.
 
 ## C. Nonces and Permissions
@@ -297,7 +297,7 @@ Status:
 
 Acceptable note:
 
-- `includes/public/event-details.php:669-674` is the structured-data example that should remain explanation-only unless its schema payload itself is incorrect.
+- The package-owned fallback JSON-LD sink in `includes/public/event-details.php:780-824` is now hardened at the output boundary. Remaining JSON-LD review should stay explanation-only for the separate TEC-owned final emitter path unless its schema payload itself is incorrect.
 
 ### `WPORG-24 E1` first portal-notice sink normalization result
 
@@ -1020,6 +1020,20 @@ Acceptable note:
 - Focused coverage and validation: new coverage lives in `tests/event-plan-secondary-vendors-save-output-remediation.php`, which source-asserts the authenticated save hook / no-nopriv boundary, unchanged save request validation and success/error vocabulary, continued mutation-helper delegation, separation from the accepted lazy-load renderer, builder-layer read isolation, renderer-layer no-read guarantees, finite markup inventory, inert hostile config proof, boolean-parser parity, unchanged JavaScript replacement / initialization behavior, and DOM-level parity with the legacy `secondary-vendors` partial for representative rich and empty contexts through a package-local direct-renderer harness. Because the local WordPress bootstrap still loads the installed `vms` plugin instead of `packages/vms-github-reconcile`, this focused test stays package-source / direct-renderer based rather than mutating the installed plugin tree.
 - Status: `WPORG-24` remains open. This accepted save-response slice closes only the Secondary Vendors save `html` response family; broader Event Plan output-contract follow-up work remains separate.
 
+### `WPORG-24G` Event JSON-LD fallback script-sink result
+
+- Result: the package-owned fallback Event JSON-LD emitter on `wp_head` now routes `vms_event_details_schema()` through `vms_event_details_encode_fallback_json_ld(array $schema): string` before echoing the unchanged `<script type="application/ld+json" class="vms-event-json-ld" data-vms-schema-mode="fallback">...</script>` wrapper.
+- Selected family and producer / consumer contract:
+  - Only the package-owned fallback emitter was changed: `vms_event_details_print_json_ld()` still registers on `add_action('wp_head', 'vms_event_details_print_json_ld', 30);` in `includes/public/event-details.php:792-824`.
+  - Guard and fallback behavior remain unchanged: admin/non-singular exits, queried-event validation, `!vms_event_details_tec_schema_filters_available()` default-print gating, `vms_event_details_print_json_ld` filter opt-in/veto behavior, empty-schema no-output behavior, and encode-failure no-output behavior all remain intact.
+  - `vms_event_details_schema()` remains the sole structured-data producer for this sink.
+  - The new output boundary uses `wp_json_encode($schema, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE)` inside `vms_event_details_encode_fallback_json_ld()`, preserving decoded Event / Place / Organization / MusicGroup / Offer values while preventing literal `</script>` breakout in inline `application/ld+json`.
+- Adjacent boundaries unchanged:
+  - `vms_event_details_filter_tec_event_schema()` and `vms_event_details_filter_tec_json_ld_markup()` were inspected and left unchanged; the TEC-owned final JSON-LD emitter path remains separate.
+  - Event Plan code, shared Administrator-shell output contracts, and visible event-page markup were not changed in this slice.
+- Focused coverage and validation: new coverage lives in `tests/event-details-fallback-json-ld-output-remediation.php`, which proves the same `wp_head` registration, the same schema producer, the same fixed script attributes, the single-script DOM invariant, inert hostile `</script><script>alert(1)</script>` handling, preserved decoded URLs and Unicode, preserved Event / Place / Organization / MusicGroup / Offer vocabularies, no broad allowlist, and unchanged TEC hook registrations. Validation ran with `php -l includes/public/event-details.php`, `php -l tests/event-details-fallback-json-ld-output-remediation.php`, `php tests/event-details-fallback-json-ld-output-remediation.php`, `php tests/event-details-schema-normalization.php`, `php tests/plan-your-visit-sidebar-context.php`, `php tests/public-event-sidebar-guards.php`, `php tests/vendor-apply-inline-js-remediation.php`, `php tests/decoded-json-validation.php`, and `git diff --check`.
+- Status: `WPORG-24` remains open. This accepted `WPORG-24G` slice hardens only the package-owned fallback JSON-LD script sink; the TEC-owned final emitters and the broader `WPORG-24` boundaries remain separate.
+
 ## F. Prefixing and Collision Safety
 
 Status:
@@ -1327,7 +1341,7 @@ Recommended follow-up order, keeping each pass narrow:
 
 ## Findings Requiring Explanation Rather Than Code Changes
 
-- JSON-LD structured data in `includes/public/event-details.php:669-674`
+- TEC-owned final JSON-LD markup after the separate package-owned fallback hardening in `includes/public/event-details.php:780-824`
 - `application/json` state blobs in `includes/admin/addons/views/page-addons.php:53`, `includes/admin/vendor-command-center.php:1498`, `includes/admin/vendor-command-center.php:1556`, and `includes/cpt/event-plans/partials/secondary-vendors.php:465`
 - Log-normalization strings in `includes/core/slow-request-logger.php:292-306`
 - Established `vms` internal namespace across CPTs, AJAX, REST, and shortcodes
