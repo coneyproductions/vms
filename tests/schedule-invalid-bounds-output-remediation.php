@@ -443,6 +443,8 @@ try {
 
     $assert(function_exists('vms_schedule_get_invalid_bounds_notice_context'), 'Schedule should define the invalid-bounds notice context builder.');
     $assert(function_exists('vms_schedule_render_invalid_bounds_notice'), 'Schedule should define the invalid-bounds notice renderer.');
+    $assert(function_exists('vms_schedule_get_unpublished_venue_notice_context'), 'Schedule should define the unpublished-venue notice context builder.');
+    $assert(function_exists('vms_schedule_render_unpublished_venue_notice'), 'Schedule should define the unpublished-venue notice renderer.');
     $assert(function_exists('vms_render_schedule_list_view'), 'Schedule should still define the selected-venue list view renderer.');
     $assert(function_exists('vms_render_schedule_calendar_view'), 'Schedule should still define the selected-venue calendar view renderer.');
     $assert(function_exists('vms_render_schedule_list_view_all'), 'Schedule should still define the all-venues list view renderer.');
@@ -470,6 +472,7 @@ try {
 
     $assert(substr_count($scheduleSource, $expectedNoticeHtml) === 1, 'Schedule should keep exactly one direct invalid-bounds fragment source after normalization.');
     $assert(substr_count($scheduleSource, 'vms_schedule_render_invalid_bounds_notice(') === 5, 'Schedule should use the invalid-bounds renderer exactly four times plus its own declaration.');
+    $assert(substr_count($scheduleSource, 'vms_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should keep routing the richer unpublished-venue branches through their separate shared renderer.');
     $assert(strpos($scheduleSource, "'notices_callback' =>") === false, 'Schedule invalid-bounds output should remain content-local and outside the Administrator shell.');
 
     $invalidBranchPattern = '~if\s*\(\s*!empty\(\$invalid_bounds_notice_context\[\'show\'\]\)\s*\)\s*\{\s*vms_schedule_render_invalid_bounds_notice\(\$invalid_bounds_notice_context\);\s*return;\s*\}~s';

@@ -560,13 +560,8 @@ function vms_render_schedule_page_content(): void
             $edit = admin_url('post.php?post=' . (int) $only_unpublished_id . '&action=edit');
         }
 
-        echo '<div class="notice notice-error"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';
-        echo esc_html__('Your only venue is not published, so Schedule cannot load availability.', 'backstage-venue-manager') . ' ';
-        if ($title !== '') {
-            echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
-        }
-        echo '<span class="vms-muted">(' . esc_html($only_unpublished_status) . ')</span>';
-        echo '</p><p><a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a></p></div>';
+        $unpublished_notice_context = vms_schedule_get_unpublished_venue_notice_context(true, 'single_unpublished', $title, $only_unpublished_status, $edit);
+        vms_schedule_render_unpublished_venue_notice($unpublished_notice_context);
 
         // Stop here to avoid a confusing blank calendar when the only venue is unpublished.
         echo '</div>';
@@ -583,14 +578,8 @@ function vms_render_schedule_page_content(): void
                 $edit = admin_url('post.php?post=' . (int) $venue_id . '&action=edit');
             }
 
-            echo '<div class="notice notice-error"><p><strong>' . esc_html__('Venue is not published:', 'backstage-venue-manager') . '</strong> ';
-            if ($title !== '') {
-                echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
-            }
-            echo '<span class="vms-muted">(' . esc_html($selected_status) . ')</span> ';
-            echo esc_html__('Publish this venue to enable schedule availability.', 'backstage-venue-manager') . '</p><p>';
-            echo '<a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a>';
-            echo '</p></div>';
+            $unpublished_notice_context = vms_schedule_get_unpublished_venue_notice_context(true, 'selected_unpublished', $title, $selected_status, $edit);
+            vms_schedule_render_unpublished_venue_notice($unpublished_notice_context);
 
             echo '</div>';
             return;
@@ -704,6 +693,21 @@ function vms_schedule_get_scope_warning_notice_context(bool $show, string $varia
     );
 }
 
+function vms_schedule_get_unpublished_venue_notice_context(bool $show, string $variant, string $title, string $status, string $edit_url): array
+{
+    $variant = in_array($variant, array('single_unpublished', 'selected_unpublished'), true) ? $variant : '';
+    $show = $show && $variant !== '';
+
+    return array(
+        'show' => $show,
+        'variant' => $variant,
+        'show_title' => $show && $title !== '',
+        'title' => $show ? $title : '',
+        'status' => $show ? $status : '',
+        'edit_url' => $show ? $edit_url : '',
+    );
+}
+
 function vms_schedule_render_invalid_bounds_notice(array $context): void
 {
     if (empty($context['show'])) {
@@ -728,6 +732,43 @@ function vms_schedule_render_scope_warning_notice(array $context): void
     if ($variant === 'no_venues') {
         echo '<div class="notice notice-warning"><p>No venues found to display.</p></div>';
     }
+}
+
+function vms_schedule_render_unpublished_venue_notice(array $context): void
+{
+    if (empty($context['show'])) {
+        return;
+    }
+
+    $variant = isset($context['variant']) ? (string) $context['variant'] : '';
+    if (!in_array($variant, array('single_unpublished', 'selected_unpublished'), true)) {
+        return;
+    }
+
+    $show_title = !empty($context['show_title']);
+    $title = isset($context['title']) ? (string) $context['title'] : '';
+    $status = isset($context['status']) ? (string) $context['status'] : '';
+    $edit_url = isset($context['edit_url']) ? (string) $context['edit_url'] : '';
+
+    if ($variant === 'single_unpublished') {
+        echo '<div class="notice notice-error"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';
+        echo esc_html__('Your only venue is not published, so Schedule cannot load availability.', 'backstage-venue-manager') . ' ';
+        if ($show_title) {
+            echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
+        }
+        echo '<span class="vms-muted">(' . esc_html($status) . ')</span>';
+        echo '</p><p><a class="button button-primary" href="' . esc_url($edit_url) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a></p></div>';
+        return;
+    }
+
+    echo '<div class="notice notice-error"><p><strong>' . esc_html__('Venue is not published:', 'backstage-venue-manager') . '</strong> ';
+    if ($show_title) {
+        echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
+    }
+    echo '<span class="vms-muted">(' . esc_html($status) . ')</span> ';
+    echo esc_html__('Publish this venue to enable schedule availability.', 'backstage-venue-manager') . '</p><p>';
+    echo '<a class="button button-primary" href="' . esc_url($edit_url) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a>';
+    echo '</p></div>';
 }
 
 

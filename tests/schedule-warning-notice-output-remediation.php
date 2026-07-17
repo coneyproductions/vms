@@ -419,6 +419,8 @@ try {
 
     $assert(function_exists('vms_schedule_get_scope_warning_notice_context'), 'Schedule should define the scope warning notice context builder.');
     $assert(function_exists('vms_schedule_render_scope_warning_notice'), 'Schedule should define the scope warning notice renderer.');
+    $assert(function_exists('vms_schedule_get_unpublished_venue_notice_context'), 'Schedule should define the unpublished-venue notice context builder.');
+    $assert(function_exists('vms_schedule_render_unpublished_venue_notice'), 'Schedule should define the unpublished-venue notice renderer.');
     $assert(function_exists('vms_render_schedule_page_content'), 'Schedule should still define the page-content renderer.');
 
     $builderSource = $functionSource('vms_schedule_get_scope_warning_notice_context');
@@ -443,6 +445,7 @@ try {
     $assert(substr_count($scheduleSource, $expectedNoSelectionHtml) === 1, 'Schedule should keep only one direct no-selection warning fragment after normalization.');
     $assert(substr_count($scheduleSource, $expectedNoVenuesHtml) === 1, 'Schedule should keep only one direct no-venues warning fragment after normalization.');
     $assert(substr_count($scheduleSource, 'vms_schedule_render_scope_warning_notice($scope_warning_notice_context);') === 2, 'Schedule should route both scope warning branches through the shared page-local renderer.');
+    $assert(substr_count($scheduleSource, 'vms_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should keep routing both richer unpublished-venue branches through their separate shared renderer.');
     $assert(strpos($pageContentSource, "vms_schedule_get_scope_warning_notice_context(\$scope === 'venue' && (int) \$venue_id <= 0, 'no_selection');") !== false, 'Schedule page content should preserve the exact no-selection condition.');
     $assert(strpos($pageContentSource, "vms_schedule_get_scope_warning_notice_context(empty(\$venue_ids), 'no_venues');") !== false, 'Schedule page content should preserve the exact no-venues condition after the all-venue read.');
     $assert(strpos($scheduleSource, "echo '<div class=\"notice notice-error\"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';") !== false, 'Schedule should preserve the richer unpublished-venue notice family outside the scope warning renderer.');
