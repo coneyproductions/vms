@@ -142,25 +142,76 @@ if (!function_exists('vms_render_staff_certifications_admin_page_content')) {
     }
 }
 
-add_action('admin_notices', function (): void {
-    if (!current_user_can('manage_options')) {
-        return;
-    }
+if (!function_exists('vms_staff_certifications_get_pending_review_warning_context')) {
+    /**
+     * @return array{show:bool,pending_count:int,review_url:string}
+     */
+    function vms_staff_certifications_get_pending_review_warning_context(): array
+    {
+        if (!current_user_can('manage_options')) {
+            return array(
+                'show' => false,
+                'pending_count' => 0,
+                'review_url' => '',
+            );
+        }
 
-    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-    if ($screen && isset($screen->id) && $screen->id === 'vms_page_vms-staff-certifications') {
-        return;
-    }
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if ($screen && isset($screen->id) && $screen->id === 'vms_page_vms-staff-certifications') {
+            return array(
+                'show' => false,
+                'pending_count' => 0,
+                'review_url' => '',
+            );
+        }
 
-    $count = vms_staff_certifications_pending_count();
-    if ($count <= 0) {
-        return;
-    }
+        $pending_count = max(0, (int) vms_staff_certifications_pending_count());
+        if ($pending_count <= 0) {
+            return array(
+                'show' => false,
+                'pending_count' => 0,
+                'review_url' => '',
+            );
+        }
 
-    $url = admin_url('admin.php?page=vms-staff-certifications');
-    echo '<div class="notice notice-warning is-dismissible vms-staff-certifications-admin-notice">';
-    /* translators: %d: number of staff certifications awaiting review. */
-    echo '<p><strong>' . esc_html(sprintf(_n('%d staff certification needs review.', '%d staff certifications need review.', $count, 'backstage-venue-manager'), $count)) . '</strong> ';
-    echo '<a href="' . esc_url($url) . '">' . esc_html__('Open review queue', 'backstage-venue-manager') . '</a></p>';
-    echo '</div>';
-});
+        return array(
+            'show' => true,
+            'pending_count' => $pending_count,
+            'review_url' => admin_url('admin.php?page=vms-staff-certifications'),
+        );
+    }
+}
+
+if (!function_exists('vms_staff_certifications_render_pending_review_warning')) {
+    /**
+     * @param array{show:bool,pending_count:int,review_url:string} $context
+     */
+    function vms_staff_certifications_render_pending_review_warning(array $context): void
+    {
+        if (empty($context['show'])) {
+            return;
+        }
+
+        $pending_count = max(0, (int) ($context['pending_count'] ?? 0));
+        if ($pending_count <= 0) {
+            return;
+        }
+
+        $review_url = isset($context['review_url']) ? (string) $context['review_url'] : '';
+
+        echo '<div class="notice notice-warning is-dismissible vms-staff-certifications-admin-notice">';
+        /* translators: %d: number of staff certifications awaiting review. */
+        echo '<p><strong>' . esc_html(sprintf(_n('%d staff certification needs review.', '%d staff certifications need review.', $pending_count, 'backstage-venue-manager'), $pending_count)) . '</strong> ';
+        echo '<a href="' . esc_url($review_url) . '">' . esc_html__('Open review queue', 'backstage-venue-manager') . '</a></p>';
+        echo '</div>';
+    }
+}
+
+if (!function_exists('vms_staff_certifications_render_pending_review_admin_notice')) {
+    function vms_staff_certifications_render_pending_review_admin_notice(): void
+    {
+        vms_staff_certifications_render_pending_review_warning(vms_staff_certifications_get_pending_review_warning_context());
+    }
+}
+
+add_action('admin_notices', 'vms_staff_certifications_render_pending_review_admin_notice');
