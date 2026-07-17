@@ -2440,70 +2440,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 			// =========================================================
 			// Data Integrity Tools (On-demand Scan)
 			// =========================================================
-			if (isset($_GET['vms_scan_done'])) {
-			$data = get_transient('vms_integrity_scan_last');
-			if (is_array($data) && !empty($data['results'])) {
-				$ts_readable = wp_date('Y-m-d H:i', (int) $data['ts'], wp_timezone());
-				$mode_label = isset($data['mode']) ? (string) $data['mode'] : 'all';
-
-				echo '<div class="notice notice-success"><p><strong>Integrity scan complete.</strong> Mode: ' . esc_html($mode_label) . ' &nbsp;|&nbsp; Limit: ' . (int) $data['limit'] . ' &nbsp;|&nbsp; ' . esc_html($ts_readable) . '</p>';
-
-				$results = $data['results'];
-				if (isset($results['vendors']) || isset($results['venues']) || isset($results['events'])) {
-					$vendors = isset($results['vendors']) ? $results['vendors'] : array();
-					$venues  = isset($results['venues']) ? $results['venues'] : array();
-					$events  = isset($results['events']) ? $results['events'] : array();
-
-					echo '<p><strong>Event Plans (Vendor links):</strong> Checked ' . (int) ($vendors['checked'] ?? 0) .
-						', Missing ' . (int) ($vendors['flagged_missing_vendor'] ?? 0) .
-						', Trashed ' . (int) ($vendors['flagged_trashed_vendor'] ?? 0) .
-						', Secondary missing ' . (int) ($vendors['flagged_missing_secondary_vendor'] ?? 0) .
-						', Secondary trashed ' . (int) ($vendors['flagged_trashed_secondary_vendor'] ?? 0) .
-						', Forced draft ' . (int) ($vendors['forced_draft'] ?? 0) . '</p>';
-
-					echo '<p><strong>Event Plans (Venue links):</strong> Checked ' . (int) ($venues['checked'] ?? 0) .
-						', Missing ' . (int) ($venues['flagged_missing_venue'] ?? 0) .
-						', Trashed ' . (int) ($venues['flagged_trashed_venue'] ?? 0) .
-						', Unpublished ' . (int) ($venues['flagged_venue_unpublished'] ?? 0) .
-						', Cleared refs ' . (int) ($venues['cleared_venue_refs'] ?? 0) .
-						', Forced draft ' . (int) ($venues['forced_draft'] ?? 0);
-
-					$needs_reconcile = ((int) ($venues['flagged_trashed_venue'] ?? 0) > 0);
-					if ($needs_reconcile) {
-						$reco_url = admin_url('admin.php?page=vms-integrity-venue-links');
-						echo ' &nbsp;|&nbsp; <a class="button button-secondary" href="' . esc_url($reco_url) . '">Review trashed venue links</a>';
-					}
-
-					echo '</p>';
-
-					echo '<p><strong>Event Plans (Calendar):</strong> Checked ' . (int) ($events['checked'] ?? 0) .
-						', Unlinked ' . (int) ($events['flagged_calendar_event_unlinked'] ?? 0) .
-						', Missing ' . (int) ($events['flagged_missing_calendar_event'] ?? 0) .
-						', Trashed ' . (int) ($events['flagged_trashed_calendar_event'] ?? 0) .
-						', Unpublished ' . (int) ($events['flagged_calendar_event_unpublished'] ?? 0) .
-						', Cleared refs ' . (int) ($events['cleared_calendar_event_refs'] ?? 0) .
-						', Forced draft ' . (int) ($events['forced_draft'] ?? 0);
-
-					$needs_cal_reconcile =
-						((int) ($events['flagged_calendar_event_unlinked'] ?? 0) > 0) ||
-						((int) ($events['flagged_missing_calendar_event'] ?? 0) > 0) ||
-						((int) ($events['flagged_trashed_calendar_event'] ?? 0) > 0) ||
-						((int) ($events['flagged_calendar_event_unpublished'] ?? 0) > 0);
-
-					if ($needs_cal_reconcile) {
-						$reco_url = admin_url('admin.php?page=vms-integrity-calendar-links');
-						echo ' &nbsp;|&nbsp; <a class="button button-secondary" href="' . esc_url($reco_url) . '">Review calendar links</a>';
-					}
-
-					echo '</p>';
-				} else {
-					// Single-mode results
-					echo '<p><strong>Results:</strong> ' . esc_html(wp_json_encode($results)) . '</p>';
-				}
-
-				echo '</div>';
-			}
-		}
+		vms_render_settings_page_integrity_scan_result(vms_get_settings_page_integrity_scan_result_context());
 
 		echo '<div class="vms-card">';
 		echo '<h2>Data Integrity</h2>';
@@ -2601,6 +2538,335 @@ function vms_render_settings_page_ticketing_stock_notices(array $ticketing_stock
     $errors  = (int) ($commit_rep['errors'] ?? 0);
     echo '<div class="notice notice-success"><p>' . esc_html(sprintf('Ticketing stock reconcile complete: checked=%d updated=%d skipped=%d errors=%d', $checked, $updated, $skipped, $errors)) . '</p></div>';
   }
+}
+
+function vms_settings_page_integrity_scan_normalize_count($value): int
+{
+  $count = (int) $value;
+  return $count < 0 ? 0 : $count;
+}
+
+function vms_settings_page_integrity_scan_normalize_limit($value): int
+{
+  $limit = (int) $value;
+  if ($limit < 1) {
+    return 500;
+  }
+  if ($limit > 5000) {
+    return 5000;
+  }
+
+  return $limit;
+}
+
+function vms_settings_page_integrity_scan_normalize_mode($value): string
+{
+  $mode = sanitize_key((string) $value);
+  if (!in_array($mode, array('all', 'vendors', 'venues', 'events'), true)) {
+    return 'all';
+  }
+
+  return $mode;
+}
+
+/**
+ * @return array{visible:bool,label:string,href:string,class:string,target:string,rel:string}
+ */
+function vms_settings_page_integrity_scan_default_action_context(): array
+{
+  return array(
+    'visible' => false,
+    'label' => '',
+    'href' => '',
+    'class' => '',
+    'target' => '',
+    'rel' => '',
+  );
+}
+
+/**
+ * @param mixed $results
+ * @return array{section:string,label:string,checked:int,missing:int,trashed:int,secondary_missing:int,secondary_trashed:int,unpublished:int,unlinked:int,cleared_refs:int,forced_draft:int,action:array{visible:bool,label:string,href:string,class:string,target:string,rel:string}}
+ */
+function vms_settings_page_integrity_scan_normalize_section_context(string $section, $results): array
+{
+  $results = is_array($results) ? $results : array();
+  $context = array(
+    'section' => $section,
+    'label' => '',
+    'checked' => 0,
+    'missing' => 0,
+    'trashed' => 0,
+    'secondary_missing' => 0,
+    'secondary_trashed' => 0,
+    'unpublished' => 0,
+    'unlinked' => 0,
+    'cleared_refs' => 0,
+    'forced_draft' => 0,
+    'action' => vms_settings_page_integrity_scan_default_action_context(),
+  );
+
+  if ($section === 'vendors') {
+    $context['label'] = 'Event Plans (Vendor links):';
+    $context['checked'] = vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
+    $context['missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_vendor'] ?? 0);
+    $context['trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_vendor'] ?? 0);
+    $context['secondary_missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_secondary_vendor'] ?? 0);
+    $context['secondary_trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_secondary_vendor'] ?? 0);
+    $context['forced_draft'] = vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
+    return $context;
+  }
+
+  if ($section === 'venues') {
+    $context['label'] = 'Event Plans (Venue links):';
+    $context['checked'] = vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
+    $context['missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_venue'] ?? 0);
+    $context['trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_venue'] ?? 0);
+    $context['unpublished'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_venue_unpublished'] ?? 0);
+    $context['cleared_refs'] = vms_settings_page_integrity_scan_normalize_count($results['cleared_venue_refs'] ?? 0);
+    $context['forced_draft'] = vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
+    if ($context['trashed'] > 0) {
+      $context['action'] = array(
+        'visible' => true,
+        'label' => 'Review trashed venue links',
+        'href' => admin_url('admin.php?page=vms-integrity-venue-links'),
+        'class' => 'button button-secondary',
+        'target' => '',
+        'rel' => '',
+      );
+    }
+    return $context;
+  }
+
+  $context['label'] = 'Event Plans (Calendar):';
+  $context['checked'] = vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
+  $context['unlinked'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unlinked'] ?? 0);
+  $context['missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_calendar_event'] ?? 0);
+  $context['trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_calendar_event'] ?? 0);
+  $context['unpublished'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unpublished'] ?? 0);
+  $context['cleared_refs'] = vms_settings_page_integrity_scan_normalize_count($results['cleared_calendar_event_refs'] ?? 0);
+  $context['forced_draft'] = vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
+  if (
+    $context['unlinked'] > 0 ||
+    $context['missing'] > 0 ||
+    $context['trashed'] > 0 ||
+    $context['unpublished'] > 0
+  ) {
+    $context['action'] = array(
+      'visible' => true,
+      'label' => 'Review calendar links',
+      'href' => admin_url('admin.php?page=vms-integrity-calendar-links'),
+      'class' => 'button button-secondary',
+      'target' => '',
+      'rel' => '',
+    );
+  }
+
+  return $context;
+}
+
+/**
+ * @return array<string,int>
+ */
+function vms_settings_page_integrity_scan_normalize_single_mode_results(string $mode, array $results): array
+{
+  if ($mode === 'vendors') {
+    return array(
+      'checked' => vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
+      'flagged_missing_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_vendor'] ?? 0),
+      'flagged_trashed_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_vendor'] ?? 0),
+      'flagged_missing_secondary_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_secondary_vendor'] ?? 0),
+      'flagged_trashed_secondary_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_secondary_vendor'] ?? 0),
+      'removed_missing_secondary_vendor_ids' => vms_settings_page_integrity_scan_normalize_count($results['removed_missing_secondary_vendor_ids'] ?? 0),
+      'forced_draft' => vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
+    );
+  }
+
+  if ($mode === 'venues') {
+    return array(
+      'checked' => vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
+      'flagged_missing_venue' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_venue'] ?? 0),
+      'flagged_trashed_venue' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_venue'] ?? 0),
+      'flagged_venue_unpublished' => vms_settings_page_integrity_scan_normalize_count($results['flagged_venue_unpublished'] ?? 0),
+      'cleared_venue_refs' => vms_settings_page_integrity_scan_normalize_count($results['cleared_venue_refs'] ?? 0),
+      'forced_draft' => vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
+    );
+  }
+
+  if ($mode === 'events') {
+    return array(
+      'checked' => vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
+      'flagged_calendar_event_unlinked' => vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unlinked'] ?? 0),
+      'flagged_missing_calendar_event' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_calendar_event'] ?? 0),
+      'flagged_trashed_calendar_event' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_calendar_event'] ?? 0),
+      'flagged_calendar_event_unpublished' => vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unpublished'] ?? 0),
+      'cleared_calendar_event_refs' => vms_settings_page_integrity_scan_normalize_count($results['cleared_calendar_event_refs'] ?? 0),
+      'forced_draft' => vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
+    );
+  }
+
+  return array();
+}
+
+/**
+ * @param mixed $stored_result
+ * @return array<string,mixed>
+ */
+function vms_build_settings_page_integrity_scan_result_context($stored_result, bool $scan_done_requested): array
+{
+  $context = array(
+    'requested' => $scan_done_requested,
+    'show' => false,
+    'status' => $scan_done_requested ? 'missing' : 'hidden',
+    'layout' => 'none',
+    'notice_class' => 'notice notice-success',
+    'summary_title' => 'Integrity scan complete.',
+    'mode' => 'all',
+    'mode_label' => 'all',
+    'limit' => 500,
+    'timestamp' => '',
+    'single_result_json' => '',
+    'sections' => array(),
+  );
+
+  if (!$scan_done_requested || !is_array($stored_result)) {
+    return $context;
+  }
+
+  $results = $stored_result['results'] ?? null;
+  if (!is_array($results) || $results === array()) {
+    return $context;
+  }
+
+  $mode = vms_settings_page_integrity_scan_normalize_mode($stored_result['mode'] ?? 'all');
+  $context['mode'] = $mode;
+  $context['mode_label'] = $mode;
+  $context['limit'] = vms_settings_page_integrity_scan_normalize_limit($stored_result['limit'] ?? 500);
+  $context['timestamp'] = wp_date('Y-m-d H:i', (int) ($stored_result['ts'] ?? 0), wp_timezone());
+
+  if (isset($results['vendors']) || isset($results['venues']) || isset($results['events'])) {
+    $context['show'] = true;
+    $context['status'] = 'composite';
+    $context['layout'] = 'composite';
+    $context['sections'] = array(
+      vms_settings_page_integrity_scan_normalize_section_context('vendors', $results['vendors'] ?? array()),
+      vms_settings_page_integrity_scan_normalize_section_context('venues', $results['venues'] ?? array()),
+      vms_settings_page_integrity_scan_normalize_section_context('events', $results['events'] ?? array()),
+    );
+    return $context;
+  }
+
+  if (!in_array($mode, array('vendors', 'venues', 'events'), true)) {
+    $context['status'] = 'invalid';
+    return $context;
+  }
+
+  $single_results = vms_settings_page_integrity_scan_normalize_single_mode_results($mode, $results);
+  if ($single_results === array()) {
+    $context['status'] = 'invalid';
+    return $context;
+  }
+
+  $context['show'] = true;
+  $context['status'] = 'single';
+  $context['layout'] = 'single';
+  $context['single_result_json'] = (string) wp_json_encode($single_results);
+  return $context;
+}
+
+/**
+ * @return array<string,mixed>
+ */
+function vms_get_settings_page_integrity_scan_result_context(bool $refresh = false): array
+{
+  static $context = null;
+
+  if ($refresh) {
+    $context = null;
+  }
+
+  if (is_array($context)) {
+    return $context;
+  }
+
+  $scan_done_requested = isset($_GET['vms_scan_done']);
+  $stored_result = $scan_done_requested ? get_transient('vms_integrity_scan_last') : false;
+  $context = vms_build_settings_page_integrity_scan_result_context($stored_result, $scan_done_requested);
+
+  return $context;
+}
+
+/**
+ * @param array<string,mixed> $context
+ */
+function vms_render_settings_page_integrity_scan_result(array $context): void
+{
+  if (empty($context['show'])) {
+    return;
+  }
+
+  echo '<div class="vms-settings-integrity-scan-result">';
+  echo '<div class="' . esc_attr((string) ($context['notice_class'] ?? 'notice notice-success')) . '">';
+  echo '<p><strong>' . esc_html((string) ($context['summary_title'] ?? 'Integrity scan complete.')) . '</strong> ';
+  echo 'Mode: ' . esc_html((string) ($context['mode_label'] ?? 'all')) . ' &nbsp;|&nbsp; ';
+  echo 'Limit: ' . (int) ($context['limit'] ?? 500) . ' &nbsp;|&nbsp; ';
+  echo esc_html((string) ($context['timestamp'] ?? ''));
+  echo '</p>';
+
+  if (($context['layout'] ?? 'none') === 'composite') {
+    $sections = is_array($context['sections'] ?? null) ? $context['sections'] : array();
+    foreach ($sections as $section) {
+      if (!is_array($section)) {
+        continue;
+      }
+
+      echo '<p><strong>' . esc_html((string) ($section['label'] ?? '')) . '</strong> ';
+      if (($section['section'] ?? '') === 'vendors') {
+        echo 'Checked ' . (int) ($section['checked'] ?? 0) .
+          ', Missing ' . (int) ($section['missing'] ?? 0) .
+          ', Trashed ' . (int) ($section['trashed'] ?? 0) .
+          ', Secondary missing ' . (int) ($section['secondary_missing'] ?? 0) .
+          ', Secondary trashed ' . (int) ($section['secondary_trashed'] ?? 0) .
+          ', Forced draft ' . (int) ($section['forced_draft'] ?? 0);
+      } elseif (($section['section'] ?? '') === 'venues') {
+        echo 'Checked ' . (int) ($section['checked'] ?? 0) .
+          ', Missing ' . (int) ($section['missing'] ?? 0) .
+          ', Trashed ' . (int) ($section['trashed'] ?? 0) .
+          ', Unpublished ' . (int) ($section['unpublished'] ?? 0) .
+          ', Cleared refs ' . (int) ($section['cleared_refs'] ?? 0) .
+          ', Forced draft ' . (int) ($section['forced_draft'] ?? 0);
+      } else {
+        echo 'Checked ' . (int) ($section['checked'] ?? 0) .
+          ', Unlinked ' . (int) ($section['unlinked'] ?? 0) .
+          ', Missing ' . (int) ($section['missing'] ?? 0) .
+          ', Trashed ' . (int) ($section['trashed'] ?? 0) .
+          ', Unpublished ' . (int) ($section['unpublished'] ?? 0) .
+          ', Cleared refs ' . (int) ($section['cleared_refs'] ?? 0) .
+          ', Forced draft ' . (int) ($section['forced_draft'] ?? 0);
+      }
+
+      $action = is_array($section['action'] ?? null) ? $section['action'] : array();
+      if (!empty($action['visible'])) {
+        echo ' &nbsp;|&nbsp; <a';
+        echo ' class="' . esc_attr((string) ($action['class'] ?? '')) . '"';
+        echo ' href="' . esc_url((string) ($action['href'] ?? '')) . '"';
+        if ((string) ($action['target'] ?? '') !== '') {
+          echo ' target="' . esc_attr((string) $action['target']) . '"';
+        }
+        if ((string) ($action['rel'] ?? '') !== '') {
+          echo ' rel="' . esc_attr((string) $action['rel']) . '"';
+        }
+        echo '>' . esc_html((string) ($action['label'] ?? '')) . '</a>';
+      }
+
+      echo '</p>';
+    }
+  } elseif (($context['layout'] ?? 'none') === 'single') {
+    echo '<p><strong>Results:</strong> ' . esc_html((string) ($context['single_result_json'] ?? '')) . '</p>';
+  }
+
+  echo '</div>';
+  echo '</div>';
 }
 
 function vms_field_sch_hide_past_default()

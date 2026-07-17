@@ -1607,7 +1607,7 @@ $settingsNoticeBarEnd = strpos($settingsSource, 'function vms_get_settings_page_
 $assert($settingsNoticeBarStart !== false && $settingsNoticeBarEnd !== false && $settingsNoticeBarEnd > $settingsNoticeBarStart, 'Settings composed notice bar should be locatable.');
 $settingsNoticeBarSource = substr($settingsSource, (int) $settingsNoticeBarStart, (int) $settingsNoticeBarEnd - (int) $settingsNoticeBarStart);
 $settingsTicketingNoticeStart = strpos($settingsSource, 'function vms_render_settings_page_ticketing_stock_notices(array $ticketing_stock_notice_state): void');
-$settingsTicketingNoticeEnd = strpos($settingsSource, 'function vms_field_sch_hide_past_default()');
+$settingsTicketingNoticeEnd = strpos($settingsSource, 'function vms_settings_page_integrity_scan_normalize_count(');
 $assert($settingsTicketingNoticeStart !== false && $settingsTicketingNoticeEnd !== false && $settingsTicketingNoticeEnd > $settingsTicketingNoticeStart, 'Settings ticketing stock notice renderer should be locatable.');
 $settingsTicketingNoticeSource = substr($settingsSource, (int) $settingsTicketingNoticeStart, (int) $settingsTicketingNoticeEnd - (int) $settingsTicketingNoticeStart);
 $assert(strpos($settingsPageSource, "'notices_callback' => 'vms_render_settings_page_notice_bar'") !== false, 'Settings shell call should route the default-venue and ticketing-stock notice families through the composed explicit notice callback.');
@@ -1645,7 +1645,12 @@ $assert(strpos($settingsTicketingNoticeSource, 'get_transient(') === false && st
 $assert(strpos($settingsSource, 'settings_errors(') === false && strpos($settingsSource, 'add_settings_error(') === false, 'Settings page should not define a Settings API notice family for this pass.');
 $assert(strpos($settingsSource, 'vms-settings-default-venue-alert') !== false, 'Settings page should preserve the richer nested default-venue alert family in ordinary content.');
 $assert(strpos($settingsSource, '<strong>Entitlement image sync complete.</strong>') !== false, 'Settings page should preserve the richer entitlement-image-sync notice family in ordinary content.');
-$assert(strpos($settingsSource, '<strong>Integrity scan complete.</strong>') !== false, 'Settings page should preserve the richer integrity-scan notice family in ordinary content.');
+$assert(
+	strpos($settingsSource, 'vms_render_settings_page_integrity_scan_result(vms_get_settings_page_integrity_scan_result_context());') !== false
+	&& strpos($settingsSource, '<div class="vms-settings-integrity-scan-result">') !== false
+	&& strpos($settingsSource, "'summary_title' => 'Integrity scan complete.'") !== false,
+	'Settings page should preserve the richer integrity-scan notice family in ordinary content through the dedicated page-local renderer.'
+);
 $assert(strpos($toursAdminSource, '<div class="vms-tours-admin-page" data-vms-tour="guided-tours.settings">') !== false, 'Guided Tours reset notice should remain nested inside the page wrapper.');
 $assert(strpos($toursAdminSource, '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice">') !== false, 'Guided Tours reset notice should remain the extra-attribute nested content boundary and stay unmigrated.');
 $assert(strpos($toursAdminSource, "'notices_callback' =>") === false, 'Guided Tours should remain without an explicit notice callback in this pass.');
