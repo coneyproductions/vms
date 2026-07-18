@@ -1044,9 +1044,47 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 }
 add_action('admin_post_vms_tasks_create_one_off', 'vms_tasks_admin_handle_create_one_off');
 
-if (!function_exists('vms_tasks_admin_enqueue_event_plan_metabox_assets')) {
-	/**
-	 * Enqueue Staff Tasks metabox JS on the Event Plan edit screen.
+	if (!function_exists('vms_tasks_admin_page_asset_pages')) {
+		/**
+		 * @return array<int,string>
+		 */
+		function vms_tasks_admin_page_asset_pages(): array
+		{
+			return array(
+				'vms-tasks',
+				'vms-checklist-templates',
+			);
+		}
+	}
+
+	if (!function_exists('vms_tasks_admin_enqueue_page_assets')) {
+		/**
+		 * Enqueue Staff Tasks admin-page helpers only on the supported pages.
+		 */
+		function vms_tasks_admin_enqueue_page_assets(): void
+		{
+			$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+			if (!in_array($page, vms_tasks_admin_page_asset_pages(), true)) {
+				return;
+			}
+			if (!vms_tasks_current_user_can_manage_all()) {
+				return;
+			}
+
+			wp_enqueue_script(
+				'vms-tasks-admin-pages',
+				VMS_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js',
+				array(),
+				defined('VMS_VERSION') ? VMS_VERSION : null,
+				true
+			);
+		}
+	}
+	add_action('admin_enqueue_scripts', 'vms_tasks_admin_enqueue_page_assets', 60);
+
+	if (!function_exists('vms_tasks_admin_enqueue_event_plan_metabox_assets')) {
+		/**
+		 * Enqueue Staff Tasks metabox JS on the Event Plan edit screen.
 	 */
 	function vms_tasks_admin_enqueue_event_plan_metabox_assets(): void
 	{
@@ -1447,64 +1485,17 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 			echo '</p>';
 			echo '<p><button class="button button-primary" type="submit">' . esc_html__('Create Task', 'backstage-venue-manager') . '</button></p>';
 			echo '</form>';
-			echo '<script>
-			(function () {
-				var eventSelect = document.getElementById("vms_tasks_one_off_event");
-				var venueRow = document.getElementById("vms_tasks_create_venue_row");
-				var assignmentMode = document.getElementById("vms_tasks_one_off_assignment_mode");
-				var scheduledOption = document.getElementById("vms_tasks_one_off_assignment_scheduled");
-				var checklistSelect = document.getElementById("vms_tasks_one_off_repeatable_checklist");
-				var recurrencePattern = document.getElementById("vms_tasks_one_off_recurrence_pattern");
-				var recurrenceNDays = document.getElementById("vms_tasks_one_off_recurrence_n_days");
-				var recurrenceNote = document.getElementById("vms_tasks_one_off_recurrence_note");
-				if (!eventSelect || !venueRow || !assignmentMode || !scheduledOption || !checklistSelect || !recurrencePattern || !recurrenceNDays || !recurrenceNote) {
-					return;
-				}
-				var syncContext = function () {
-					var hasEvent = parseInt(eventSelect.value || "0", 10) > 0;
-					var scope = hasEvent ? "event" : "general";
-					venueRow.style.display = hasEvent ? "none" : "";
-					scheduledOption.hidden = !hasEvent;
-					if (!hasEvent && assignmentMode.value === "scheduled_role") {
-						assignmentMode.value = "role";
-					}
-					recurrencePattern.disabled = hasEvent;
-					recurrenceNDays.disabled = hasEvent;
-					recurrenceNote.style.display = hasEvent ? "none" : "";
-					if (hasEvent) {
-						recurrencePattern.value = "none";
-						recurrenceNDays.style.display = "none";
-					}
-					recurrenceNDays.style.display = recurrencePattern.value === "every_n_days" && !hasEvent ? "" : "none";
-					for (var i = 0; i < checklistSelect.options.length; i++) {
-						var option = checklistSelect.options[i];
-						var optionScope = option.getAttribute("data-scope");
-						if (!optionScope) {
-							option.hidden = false;
-							continue;
-						}
-						option.hidden = optionScope !== scope;
-						if (option.hidden && option.selected) {
-							checklistSelect.value = "0";
-						}
-					}
-				};
-				eventSelect.addEventListener("change", syncContext);
-				recurrencePattern.addEventListener("change", syncContext);
-				syncContext();
-			}());
-			</script>';
 
-		echo '<table class="widefat striped" data-vms-tour="tasks.list">';
-		echo '<thead><tr>';
-		echo '<th>' . esc_html__('Task', 'backstage-venue-manager') . '</th>';
-		echo '<th>' . esc_html__('Event', 'backstage-venue-manager') . '</th>';
-		echo '<th>' . esc_html__('Due', 'backstage-venue-manager') . '</th>';
-		echo '<th>' . esc_html__('Required', 'backstage-venue-manager') . '</th>';
-		echo '<th>' . esc_html__('Assignment', 'backstage-venue-manager') . '</th>';
-		echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
-		echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
-		echo '</tr></thead><tbody>';
+			echo '<table class="widefat striped" data-vms-tour="tasks.list">';
+			echo '<thead><tr>';
+			echo '<th>' . esc_html__('Task', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Event', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Due', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Required', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Assignment', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
+			echo '</tr></thead><tbody>';
 
 		if (empty($rows)) {
 			echo '<tr><td colspan="7">' . esc_html__('No tasks found for current filters.', 'backstage-venue-manager') . '</td></tr>';
@@ -1889,29 +1880,6 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 		echo '</tbody></table>';
 		submit_button(__('Save Checklist Template', 'backstage-venue-manager'));
 		echo '</form>';
-		echo '<script>
-		(function () {
-			var scopeSelect = document.getElementById("vms_tasks_checklist_scope");
-			var applyModeRow = document.getElementById("vms_tasks_checklist_apply_mode_row");
-			var venueRow = document.getElementById("vms_tasks_checklist_venue_row");
-			var eventTypeRow = document.getElementById("vms_tasks_checklist_event_type_row");
-			var applyModeSelect = document.getElementById("vms_tasks_apply_mode");
-			if (!scopeSelect || !applyModeRow || !venueRow || !eventTypeRow || !applyModeSelect) {
-				return;
-			}
-			var syncChecklistContext = function () {
-				var isGeneral = scopeSelect.value === "general";
-				applyModeRow.style.display = isGeneral ? "none" : "";
-				venueRow.style.display = isGeneral ? "none" : "";
-				eventTypeRow.style.display = isGeneral ? "none" : "";
-				if (isGeneral) {
-					applyModeSelect.value = "default_all_events";
-				}
-			};
-			scopeSelect.addEventListener("change", syncChecklistContext);
-			syncChecklistContext();
-		}());
-		</script>';
 
 		echo '<h2>' . esc_html__('Existing Checklists', 'backstage-venue-manager') . '</h2>';
 		echo '<table class="widefat striped" data-vms-tour="checklists.table"><thead><tr><th>' . esc_html__('Name', 'backstage-venue-manager') . '</th><th>' . esc_html__('Context', 'backstage-venue-manager') . '</th><th>' . esc_html__('Apply mode', 'backstage-venue-manager') . '</th><th>' . esc_html__('Priority', 'backstage-venue-manager') . '</th><th>' . esc_html__('Active', 'backstage-venue-manager') . '</th></tr></thead><tbody>';

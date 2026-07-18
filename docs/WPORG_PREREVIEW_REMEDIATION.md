@@ -2446,6 +2446,7 @@ Date: 2026-07-11
 - `WPORG-22R-A` is now completed by the Reference Keys Map clipboard-helper closeout recorded below.
 - `WPORG-22R-B` and `WPORG-22R-G` are now completed by the Holidays and Tax Bypass helper closeout recorded below.
 - `WPORG-22R-C` is now completed by the dedicated Event Plan Import reconciliation and helper externalization closeout recorded below.
+- `WPORG-22R-D` and `WPORG-22R-H` are now completed by the Staff Tasks and ADD module-admin helper closeout recorded below.
 - `WPORG-22R` remains open for the remaining bounded residual inline-asset children.
 - `WPORG-23` is now completed by the admin-notice scope remediation recorded below.
 - `WPORG-24` is now closed by the accepted child inventory plus documentation-only `WPORG-24R`.
@@ -2537,6 +2538,39 @@ Date: 2026-07-18
 ### Non-Actions
 
 - No Event Plan Import actions, engine, runtime guards, private-file helpers, loaders, or other runtime files changed in this slice.
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
+## WPORG-22R-D/H Result
+
+Date: 2026-07-18
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifiers: `WPORG-22R-D`, `WPORG-22R-H`
+- Scope completed: only the Staff Tasks admin-page helpers in `vms_tasks_render_tasks_page()` and `vms_tasks_render_checklist_templates_page()`, plus the ADD Dispatch request-builder helper in `vms_add_dispatch_render_request_builder()`
+- External assets used: `assets/js/vms-tasks-admin-pages.js` and `assets/js/vms-add-dispatch-admin.js`
+- Enqueue scope: Staff Tasks now uses a dedicated `admin_enqueue_scripts` callback that loads only when `page=vms-tasks` or `page=vms-checklist-templates` and the current user already satisfies the existing `vms_tasks_current_user_can_manage_all()` boundary; ADD now keeps its existing stylesheet loader but adds the request-builder asset only when `page=vms-add-dispatch` and the current user already satisfies the existing `manage_options` boundary
+- Inert data boundaries: no new executable data bridge was introduced; Staff Tasks continues to use the existing DOM IDs plus the existing checklist-option `data-scope` attributes, while ADD continues to read the existing `data-vms-add-*` row attributes and existing hidden-field contract
+- Preserved behavior: the Staff Tasks asset still toggles the exact existing event/venue/assignment/recurrence/checklist controls on the Tasks page and the exact existing scope/apply-mode/venue/event-type rows on the Checklist Templates page, including the same initial-state sync and reset behavior; the ADD asset still drives the existing recipient review table, hidden-field sync, eligibility labels/details, select-all, clear-all, selected/eligible counts, filter-driven eligibility recalculation, and disabled send-button state without altering submission, notices, persistence, or public response behavior
+- Mirror/live synchronization: the live `includes/modules/staff-tasks/admin-ui.php`, live `includes/modules/availability-date-dispatch/admin-ui.php`, live `assets/js/vms-tasks-admin-pages.js`, and live `assets/js/vms-add-dispatch-admin.js` files now match the mirror byte for byte
+- Tests added: `php tests/wporg-22r-module-admin-helpers-inline-js-remediation.php`
+- Supporting verification retained: the focused rerun also keeps the existing ADD pill/public-shell proofs and the Event Plan dead-editor/metabox proof in place
+- Preserved residual: the separate ADD menu-badge CSS and JS emitters in `includes/modules/availability-date-dispatch/admin-ui.php` remain intentionally unchanged for `WPORG-22R-I`
+- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, and `WPORG-22R-H` are now closed, and `WPORG-22R` stays open for `WPORG-22R-I` plus the remaining residual inline-asset children
+
+### What Changed
+
+- Removed the executable create-task and checklist-scope `<script>` blocks from `includes/modules/staff-tasks/admin-ui.php` and moved both helpers into the page-scoped `assets/js/vms-tasks-admin-pages.js` asset.
+- Removed the executable ADD request-builder `<script>` block from `includes/modules/availability-date-dispatch/admin-ui.php` and moved that helper into the page-scoped `assets/js/vms-add-dispatch-admin.js` asset.
+- Preserved the exact page registrations, capabilities, DOM IDs, selectors, hidden fields, existing `data-scope` / `data-vms-add-*` attributes, and runtime state transitions while moving only the executable listeners into external assets.
+- Synchronized the live Staff Tasks and ADD admin runtime files to the current mirror contracts required by this residual closeout.
+
+### Non-Actions
+
+- The ADD menu-badge CSS and JS emitters in `includes/modules/availability-date-dispatch/admin-ui.php` were intentionally left unchanged for the separate `WPORG-22R-I` slice.
+- The ADD public shell in `includes/modules/availability-date-dispatch/public.php` was not changed.
+- The Staff Tasks Event Plan metabox asset path `assets/js/vms-tasks-event-plan-metabox.js` and its enqueue contract were not changed.
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
 ## Review-10 Upload APIs Result
