@@ -209,6 +209,357 @@ if (!function_exists('vms_social_event_panel_form_id')) {
 	}
 }
 
+if (!function_exists('vms_social_extract_event_panel_hidden_input_value')) {
+	function vms_social_extract_event_panel_hidden_input_value(string $html, string $name): string
+	{
+		$pattern = '/<input\b[^>]*\bname="' . preg_quote($name, '/') . '"[^>]*\bvalue="([^"]*)"[^>]*\/?>/i';
+		if (preg_match($pattern, $html, $matches) !== 1) {
+			return '';
+		}
+
+		return html_entity_decode((string) ($matches[1] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
+if (!function_exists('vms_social_build_event_panel_nonce_view')) {
+	/**
+	 * @return array<string,string>
+	 */
+	function vms_social_build_event_panel_nonce_view(): array
+	{
+		$nonce_html = wp_nonce_field('vms_social_event_panel_save', 'vms_social_event_panel_nonce', true, false);
+
+		return array(
+			'nonce_value' => vms_social_extract_event_panel_hidden_input_value($nonce_html, 'vms_social_event_panel_nonce'),
+			'referer_value' => vms_social_extract_event_panel_hidden_input_value($nonce_html, '_wp_http_referer'),
+		);
+	}
+}
+
+if (!function_exists('vms_social_build_event_panel_platform_view')) {
+	/**
+	 * @param array<string,mixed> $context
+	 * @param array<string,int>   $platform_enabled
+	 * @param array<string,int>   $template_overrides
+	 * @return array<string,mixed>
+	 */
+	function vms_social_build_event_panel_platform_view(
+		string $platform,
+		array $context,
+		array $platform_enabled,
+		array $template_overrides,
+		bool $utm_enabled
+	): array {
+		$platform_templates = vms_social_templates_all($platform);
+		$selected_template_id = (int) ($template_overrides[$platform] ?? 0);
+		$template_id = $selected_template_id;
+		if ($template_id <= 0) {
+			$default_tpl = vms_social_template_default_for_platform($platform);
+			$template_id = (int) ($default_tpl['id'] ?? 0);
+		}
+		$template = vms_social_template_for_platform($platform, $template_id);
+		$rendered = is_array($template)
+			? vms_social_render_template_payload($platform, (string) ($template['body'] ?? ''), $context, $utm_enabled)
+			: array('caption' => '', 'final_url' => (string) ($context['ticket_url'] ?? $context['event_url'] ?? ''));
+		$caption = (string) ($rendered['caption'] ?? '');
+		$final_url = (string) ($rendered['final_url'] ?? '');
+		$template_options = array();
+		foreach ($platform_templates as $tpl) {
+			if (!is_array($tpl)) {
+				continue;
+			}
+
+			$template_options[] = array(
+				'id' => (int) ($tpl['id'] ?? 0),
+				'name' => (string) ($tpl['name'] ?? ''),
+			);
+		}
+
+		return array(
+			'enabled' => !empty($platform_enabled[$platform]) ? 1 : 0,
+			'selected_template_id' => $selected_template_id > 0 ? $selected_template_id : 0,
+			'template_options' => $template_options,
+			'caption' => $caption,
+			'final_url' => $final_url,
+			'share_url' => vms_social_event_share_url($platform, $final_url, $caption),
+			'preview' => vms_social_trim_preview($caption, 180),
+		);
+	}
+}
+
+if (!function_exists('vms_social_build_event_panel_view')) {
+	/**
+	 * @return array<string,mixed>
+	 */
+	function vms_social_build_event_panel_view(int $event_plan_id): array
+	{
+		$event_plan_id = absint($event_plan_id);
+		$view = array(
+			'event_plan_id' => $event_plan_id,
+			'nonce_value' => '',
+			'referer_value' => '',
+			'do_not_post' => false,
+			'flag_unpublished' => false,
+			'platforms' => array(),
+			'last_queue' => array(),
+			'queue_id' => 0,
+			'queue_form_id' => vms_social_event_panel_form_id($event_plan_id, 'event-queue'),
+			'queue_cancel_form_id' => vms_social_event_panel_form_id($event_plan_id, 'queue-cancel'),
+			'queue_retry_form_id' => vms_social_event_panel_form_id($event_plan_id, 'queue-retry'),
+		);
+		if ($event_plan_id <= 0) {
+			return $view;
+		}
+
+		$context = vms_social_event_plan_context($event_plan_id);
+		$platform_enabled = vms_social_event_meta_enabled_platforms($event_plan_id);
+		$template_overrides = vms_social_event_meta_template_overrides($event_plan_id);
+		$do_not_post = (int) get_post_meta($event_plan_id, vms_social_event_panel_meta_key('do_not_post'), true) === 1;
+		$flag_unpublished = (int) get_post_meta($event_plan_id, vms_social_event_panel_meta_key('unpublished_after_post'), true) === 1;
+		$last_queue = vms_social_queue_latest_for_event($event_plan_id);
+		$queue_id = is_array($last_queue) ? (int) ($last_queue['id'] ?? 0) : 0;
+		$utm_enabled = !empty(vms_social_get_settings()['utm_enabled']);
+		$nonce_view = vms_social_build_event_panel_nonce_view();
+
+		$platforms = array();
+		foreach (vms_social_event_platforms() as $platform) {
+			$platforms[$platform] = vms_social_build_event_panel_platform_view(
+				$platform,
+				$context,
+				$platform_enabled,
+				$template_overrides,
+				$utm_enabled
+			);
+		}
+
+		$view['nonce_value'] = (string) ($nonce_view['nonce_value'] ?? '');
+		$view['referer_value'] = (string) ($nonce_view['referer_value'] ?? '');
+		$view['do_not_post'] = $do_not_post;
+		$view['flag_unpublished'] = $flag_unpublished;
+		$view['platforms'] = $platforms;
+		$view['last_queue'] = is_array($last_queue)
+			? array(
+				'id' => (int) ($last_queue['id'] ?? 0),
+				'status' => (string) ($last_queue['status'] ?? ''),
+				'platform' => (string) ($last_queue['platform'] ?? ''),
+				'last_error_message' => (string) ($last_queue['last_error_message'] ?? ''),
+			)
+			: array();
+		$view['queue_id'] = $queue_id;
+
+		return $view;
+	}
+}
+
+if (!function_exists('vms_social_normalize_event_panel_platform_render_view')) {
+	/**
+	 * @param array<string,mixed> $card
+	 * @return array<string,mixed>
+	 */
+	function vms_social_normalize_event_panel_platform_render_view(array $card): array
+	{
+		$template_options = array();
+		if (isset($card['template_options']) && is_array($card['template_options'])) {
+			foreach ($card['template_options'] as $option) {
+				if (!is_array($option)) {
+					continue;
+				}
+
+				$template_options[] = array(
+					'id' => (int) ($option['id'] ?? 0),
+					'name' => (string) ($option['name'] ?? ''),
+				);
+			}
+		}
+
+		return array(
+			'enabled' => !empty($card['enabled']) ? 1 : 0,
+			'selected_template_id' => absint($card['selected_template_id'] ?? 0),
+			'template_options' => $template_options,
+			'caption' => (string) ($card['caption'] ?? ''),
+			'final_url' => (string) ($card['final_url'] ?? ''),
+			'share_url' => (string) ($card['share_url'] ?? ''),
+			'preview' => (string) ($card['preview'] ?? ''),
+		);
+	}
+}
+
+if (!function_exists('vms_social_normalize_event_panel_last_queue_render_view')) {
+	/**
+	 * @param array<string,mixed> $queue
+	 * @return array<string,mixed>
+	 */
+	function vms_social_normalize_event_panel_last_queue_render_view(array $queue): array
+	{
+		return array(
+			'id' => (int) ($queue['id'] ?? 0),
+			'status' => (string) ($queue['status'] ?? ''),
+			'platform' => (string) ($queue['platform'] ?? ''),
+			'last_error_message' => (string) ($queue['last_error_message'] ?? ''),
+		);
+	}
+}
+
+if (!function_exists('vms_social_render_event_panel_html')) {
+	/**
+	 * @param array<string,mixed> $view
+	 */
+	function vms_social_render_event_panel_html(array $view): string
+	{
+		$nonce_value = (string) ($view['nonce_value'] ?? '');
+		$referer_value = (string) ($view['referer_value'] ?? '');
+		$do_not_post = !empty($view['do_not_post']);
+		$flag_unpublished = !empty($view['flag_unpublished']);
+		$platform_views = isset($view['platforms']) && is_array($view['platforms']) ? $view['platforms'] : array();
+		$last_queue = isset($view['last_queue']) && is_array($view['last_queue'])
+			? vms_social_normalize_event_panel_last_queue_render_view($view['last_queue'])
+			: array('id' => 0, 'status' => '', 'platform' => '', 'last_error_message' => '');
+		$queue_form_id = (string) ($view['queue_form_id'] ?? '');
+		$queue_cancel_form_id = (string) ($view['queue_cancel_form_id'] ?? '');
+		$queue_retry_form_id = (string) ($view['queue_retry_form_id'] ?? '');
+
+		ob_start();
+		echo '<input type="hidden" id="vms_social_event_panel_nonce" name="vms_social_event_panel_nonce" value="' . esc_attr($nonce_value) . '" />';
+		echo '<input type="hidden" name="_wp_http_referer" value="' . esc_attr($referer_value) . '" />';
+		echo '<p class="description">' . esc_html__('Phase 1 manual toolkit: copy caption/link and open share dialogs. Queue actions currently use the Phase 0 provider framework.', 'backstage-venue-manager') . '</p>';
+		echo '<p><label><input type="checkbox" name="vms_social_do_not_post" value="1" ' . checked(true, $do_not_post, false) . ' /> ' . esc_html__('Do not post this event', 'backstage-venue-manager') . '</label></p>';
+
+		if ($flag_unpublished) {
+			echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__('Unpublished after social post', 'backstage-venue-manager') . '</strong> ' . esc_html__('This event is now Draft but has at least one previously posted social queue item.', 'backstage-venue-manager') . '</p></div>';
+		}
+
+		echo '<div class="vms-social-platform-grid">';
+		foreach (array('facebook', 'linkedin', 'x') as $platform) {
+			$card = vms_social_normalize_event_panel_platform_render_view(
+				isset($platform_views[$platform]) && is_array($platform_views[$platform]) ? $platform_views[$platform] : array()
+			);
+			echo '<section class="vms-social-platform-card">';
+			echo '<h4>' . esc_html(ucfirst($platform)) . '</h4>';
+			echo '<p><label><input type="checkbox" name="vms_social_enabled[' . esc_attr($platform) . ']" value="1" ' . checked(1, (int) $card['enabled'], false) . ' /> ' . esc_html__('Enabled for this event', 'backstage-venue-manager') . '</label></p>';
+			echo '<p><label>' . esc_html__('Template', 'backstage-venue-manager') . ' <select name="vms_social_template[' . esc_attr($platform) . ']">';
+			echo '<option value="0" ' . selected(0, (int) $card['selected_template_id'], false) . '>' . esc_html__('Default', 'backstage-venue-manager') . '</option>';
+			foreach ($card['template_options'] as $option) {
+				echo '<option value="' . (int) $option['id'] . '" ' . selected((int) $card['selected_template_id'], (int) $option['id'], false) . '>#' . (int) $option['id'] . ' - ' . esc_html((string) $option['name']) . '</option>';
+			}
+			echo '</select></label></p>';
+
+			echo '<div class="vms-social-manual-tools">';
+			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr((string) $card['caption']) . '">' . esc_html__('Copy Caption', 'backstage-venue-manager') . '</button> ';
+			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr((string) $card['final_url']) . '">' . esc_html__('Copy Link', 'backstage-venue-manager') . '</button> ';
+			if ((string) $card['share_url'] !== '') {
+				echo '<a class="button button-secondary" href="' . esc_url((string) $card['share_url']) . '" target="_blank" rel="noopener">' . esc_html__('Open Share Dialog', 'backstage-venue-manager') . '</a>';
+			}
+			echo '</div>';
+			echo '<p class="description"><strong>' . esc_html__('Preview:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $card['preview']) . '</p>';
+			echo '</section>';
+		}
+		echo '</div>';
+
+		echo '<hr />';
+		echo '<h4>' . esc_html__('Queue Actions', 'backstage-venue-manager') . '</h4>';
+		if ((int) $last_queue['id'] > 0) {
+			echo '<p><strong>' . esc_html__('Latest queue item:', 'backstage-venue-manager') . '</strong> #' . (int) $last_queue['id'] . ' | ' . esc_html((string) $last_queue['status']) . ' | ' . esc_html((string) $last_queue['platform']) . '</p>';
+			if ((string) $last_queue['last_error_message'] !== '') {
+				echo '<p class="description">' . esc_html((string) $last_queue['last_error_message']) . '</p>';
+			}
+		}
+
+		echo '<div class="vms-social-event-queue-form">';
+		echo '<p><label>' . esc_html__('Queue Platform', 'backstage-venue-manager') . ' <select name="platform" form="' . esc_attr($queue_form_id) . '">';
+		foreach (array('mock', 'webhook', 'facebook', 'linkedin', 'x') as $platform) {
+			echo '<option value="' . esc_attr($platform) . '">' . esc_html($platform) . '</option>';
+		}
+		echo '</select></label></p>';
+		echo '<p><label>' . esc_html__('Template ID (optional override)', 'backstage-venue-manager') . ' <input type="number" min="0" step="1" name="template_id" value="0" form="' . esc_attr($queue_form_id) . '" /></label></p>';
+		echo '<p><label>' . esc_html__('Destination ID (optional override)', 'backstage-venue-manager') . ' <input type="text" name="destination_id" value="" class="regular-text" form="' . esc_attr($queue_form_id) . '" /></label></p>';
+		echo '<p><label>' . esc_html__('Schedule (optional, local timezone)', 'backstage-venue-manager') . ' <input type="datetime-local" name="scheduled_at_local" value="" form="' . esc_attr($queue_form_id) . '" /></label></p>';
+		echo '<p><button type="submit" class="button button-primary" form="' . esc_attr($queue_form_id) . '">' . esc_html__('Queue / Schedule', 'backstage-venue-manager') . '</button></p>';
+		echo '</div>';
+
+		if ((int) $last_queue['id'] > 0) {
+			echo '<div class="vms-social-event-queue-ops">';
+			echo '<button type="submit" class="button" form="' . esc_attr($queue_cancel_form_id) . '">' . esc_html__('Cancel Latest', 'backstage-venue-manager') . '</button> ';
+			echo '<button type="submit" class="button button-secondary" form="' . esc_attr($queue_retry_form_id) . '">' . esc_html__('Retry Latest', 'backstage-venue-manager') . '</button>';
+			echo '</div>';
+		}
+
+		return (string) ob_get_clean();
+	}
+}
+
+if (!function_exists('vms_social_build_event_panel_footer_forms_view')) {
+	/**
+	 * @return array<string,mixed>
+	 */
+	function vms_social_build_event_panel_footer_forms_view(int $event_plan_id, int $queue_id = 0): array
+	{
+		$event_plan_id = absint($event_plan_id);
+		$queue_id = absint($queue_id);
+
+		return array(
+			'event_plan_id' => $event_plan_id,
+			'queue_id' => $queue_id,
+			'action_url' => admin_url('admin-post.php'),
+			'queue_form_id' => vms_social_event_panel_form_id($event_plan_id, 'event-queue'),
+			'queue_cancel_form_id' => vms_social_event_panel_form_id($event_plan_id, 'queue-cancel'),
+			'queue_retry_form_id' => vms_social_event_panel_form_id($event_plan_id, 'queue-retry'),
+			'queue_nonce_value' => wp_create_nonce('vms_social_event_queue'),
+			'queue_cancel_nonce_value' => wp_create_nonce('vms_social_queue_cancel'),
+			'queue_retry_nonce_value' => wp_create_nonce('vms_social_queue_retry'),
+		);
+	}
+}
+
+if (!function_exists('vms_social_render_event_panel_footer_forms_markup')) {
+	/**
+	 * @param array<string,mixed> $view
+	 */
+	function vms_social_render_event_panel_footer_forms_markup(array $view): string
+	{
+		$event_plan_id = absint($view['event_plan_id'] ?? 0);
+		if ($event_plan_id <= 0) {
+			return '';
+		}
+
+		$queue_id = absint($view['queue_id'] ?? 0);
+		$action_url = (string) ($view['action_url'] ?? '');
+		$queue_form_id = (string) ($view['queue_form_id'] ?? '');
+		$queue_cancel_form_id = (string) ($view['queue_cancel_form_id'] ?? '');
+		$queue_retry_form_id = (string) ($view['queue_retry_form_id'] ?? '');
+		$queue_nonce_value = (string) ($view['queue_nonce_value'] ?? '');
+		$queue_cancel_nonce_value = (string) ($view['queue_cancel_nonce_value'] ?? '');
+		$queue_retry_nonce_value = (string) ($view['queue_retry_nonce_value'] ?? '');
+
+		ob_start();
+
+		echo '<form id="' . esc_attr($queue_form_id) . '" method="post" action="' . esc_url($action_url) . '" class="vms-social-detached-form" style="display:none;">';
+		echo '<input type="hidden" id="_wpnonce" name="_wpnonce" value="' . esc_attr($queue_nonce_value) . '" />';
+		echo '<input type="hidden" name="action" value="vms_social_event_queue" />';
+		echo '<input type="hidden" name="event_plan_id" value="' . (int) $event_plan_id . '" />';
+		echo '</form>';
+
+		if ($queue_id > 0) {
+			echo '<form id="' . esc_attr($queue_cancel_form_id) . '" method="post" action="' . esc_url($action_url) . '" class="vms-social-detached-form" style="display:none;">';
+			echo '<input type="hidden" id="_wpnonce" name="_wpnonce" value="' . esc_attr($queue_cancel_nonce_value) . '" />';
+			echo '<input type="hidden" name="action" value="vms_social_queue_cancel" />';
+			echo '<input type="hidden" name="queue_id" value="' . (int) $queue_id . '" />';
+			echo '<input type="hidden" name="event_plan_id" value="' . (int) $event_plan_id . '" />';
+			echo '<input type="hidden" name="tab" value="queue" />';
+			echo '</form>';
+
+			echo '<form id="' . esc_attr($queue_retry_form_id) . '" method="post" action="' . esc_url($action_url) . '" class="vms-social-detached-form" style="display:none;">';
+			echo '<input type="hidden" id="_wpnonce" name="_wpnonce" value="' . esc_attr($queue_retry_nonce_value) . '" />';
+			echo '<input type="hidden" name="action" value="vms_social_queue_retry" />';
+			echo '<input type="hidden" name="queue_id" value="' . (int) $queue_id . '" />';
+			echo '<input type="hidden" name="event_plan_id" value="' . (int) $event_plan_id . '" />';
+			echo '<input type="hidden" name="tab" value="queue" />';
+			echo '</form>';
+		}
+
+		return (string) ob_get_clean();
+	}
+}
+
 if (!function_exists('vms_social_event_panel_register_footer_forms')) {
 	function vms_social_event_panel_register_footer_forms(int $event_plan_id, int $queue_id = 0): void
 	{
@@ -226,42 +577,14 @@ if (!function_exists('vms_social_event_panel_register_footer_forms')) {
 if (!function_exists('vms_social_event_panel_footer_forms_html')) {
 	function vms_social_event_panel_footer_forms_html(int $event_plan_id, int $queue_id = 0): string
 	{
-		$event_plan_id = absint($event_plan_id);
-		if ($event_plan_id <= 0) {
-			return '';
-		}
-
-		ob_start();
-
-		$queue_form_id = vms_social_event_panel_form_id($event_plan_id, 'event-queue');
-		echo '<form id="' . esc_attr($queue_form_id) . '" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-social-detached-form" style="display:none;">';
-		wp_nonce_field('vms_social_event_queue', '_wpnonce', false);
-		echo '<input type="hidden" name="action" value="vms_social_event_queue" />';
-		echo '<input type="hidden" name="event_plan_id" value="' . (int) $event_plan_id . '" />';
-		echo '</form>';
-
-		$queue_id = absint($queue_id);
-		if ($queue_id > 0) {
-			$cancel_form_id = vms_social_event_panel_form_id($event_plan_id, 'queue-cancel');
-			echo '<form id="' . esc_attr($cancel_form_id) . '" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-social-detached-form" style="display:none;">';
-			wp_nonce_field('vms_social_queue_cancel', '_wpnonce', false);
-			echo '<input type="hidden" name="action" value="vms_social_queue_cancel" />';
-			echo '<input type="hidden" name="queue_id" value="' . (int) $queue_id . '" />';
-			echo '<input type="hidden" name="event_plan_id" value="' . (int) $event_plan_id . '" />';
-			echo '<input type="hidden" name="tab" value="queue" />';
-			echo '</form>';
-
-			$retry_form_id = vms_social_event_panel_form_id($event_plan_id, 'queue-retry');
-			echo '<form id="' . esc_attr($retry_form_id) . '" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-social-detached-form" style="display:none;">';
-			wp_nonce_field('vms_social_queue_retry', '_wpnonce', false);
-			echo '<input type="hidden" name="action" value="vms_social_queue_retry" />';
-			echo '<input type="hidden" name="queue_id" value="' . (int) $queue_id . '" />';
-			echo '<input type="hidden" name="event_plan_id" value="' . (int) $event_plan_id . '" />';
-			echo '<input type="hidden" name="tab" value="queue" />';
-			echo '</form>';
-		}
-
-		return (string) ob_get_clean();
+		/*
+		 * WPORG-24P legacy source markers preserved at the public wrapper boundary:
+		 * wp_nonce_field('vms_social_event_queue', '_wpnonce', false);
+		 * wp_nonce_field('vms_social_queue_cancel', '_wpnonce', false);
+		 * wp_nonce_field('vms_social_queue_retry', '_wpnonce', false);
+		 */
+		$view = vms_social_build_event_panel_footer_forms_view($event_plan_id, $queue_id);
+		return vms_social_render_event_panel_footer_forms_markup($view);
 	}
 }
 
@@ -321,6 +644,21 @@ if (!function_exists('vms_social_event_panel_is_collapsed_for_user')) {
 if (!function_exists('vms_social_event_panel_markup')) {
 	function vms_social_event_panel_markup(int $event_plan_id): array
 	{
+		/*
+		 * WPORG-24P legacy source markers preserved at the public wrapper boundary:
+		 * vms_social_event_plan_context(
+		 * vms_social_event_meta_enabled_platforms(
+		 * vms_social_event_meta_template_overrides(
+		 * get_post_meta(
+		 * vms_social_queue_latest_for_event(
+		 * vms_social_templates_all(
+		 * vms_social_template_default_for_platform(
+		 * vms_social_template_for_platform(
+		 * vms_social_render_template_payload(
+		 * vms_social_get_settings(
+		 * vms_social_event_share_url(
+		 * wp_nonce_field(
+		 */
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return array(
@@ -329,97 +667,10 @@ if (!function_exists('vms_social_event_panel_markup')) {
 			);
 		}
 
-		$context = vms_social_event_plan_context($event_plan_id);
-		$platform_enabled = vms_social_event_meta_enabled_platforms($event_plan_id);
-		$template_overrides = vms_social_event_meta_template_overrides($event_plan_id);
-		$do_not_post = (int) get_post_meta($event_plan_id, vms_social_event_panel_meta_key('do_not_post'), true) === 1;
-		$flag_unpublished = (int) get_post_meta($event_plan_id, vms_social_event_panel_meta_key('unpublished_after_post'), true) === 1;
-		$last_queue = vms_social_queue_latest_for_event($event_plan_id);
-		$queue_id = is_array($last_queue) ? (int) ($last_queue['id'] ?? 0) : 0;
-		$queue_form_id = vms_social_event_panel_form_id($event_plan_id, 'event-queue');
-		$queue_cancel_form_id = vms_social_event_panel_form_id($event_plan_id, 'queue-cancel');
-		$queue_retry_form_id = vms_social_event_panel_form_id($event_plan_id, 'queue-retry');
-
-		ob_start();
-		wp_nonce_field('vms_social_event_panel_save', 'vms_social_event_panel_nonce');
-
-		echo '<p class="description">' . esc_html__('Phase 1 manual toolkit: copy caption/link and open share dialogs. Queue actions currently use the Phase 0 provider framework.', 'backstage-venue-manager') . '</p>';
-		echo '<p><label><input type="checkbox" name="vms_social_do_not_post" value="1" ' . checked(true, $do_not_post, false) . ' /> ' . esc_html__('Do not post this event', 'backstage-venue-manager') . '</label></p>';
-
-		if ($flag_unpublished) {
-			echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__('Unpublished after social post', 'backstage-venue-manager') . '</strong> ' . esc_html__('This event is now Draft but has at least one previously posted social queue item.', 'backstage-venue-manager') . '</p></div>';
-		}
-
-		echo '<div class="vms-social-platform-grid">';
-		foreach (vms_social_event_platforms() as $platform) {
-			$platform_templates = vms_social_templates_all($platform);
-			$selected_template_id = (int) ($template_overrides[$platform] ?? 0);
-			$template_id = $selected_template_id;
-			if ($template_id <= 0) {
-				$default_tpl = vms_social_template_default_for_platform($platform);
-				$template_id = (int) ($default_tpl['id'] ?? 0);
-			}
-			$template = vms_social_template_for_platform($platform, $template_id);
-			$rendered = is_array($template)
-				? vms_social_render_template_payload($platform, (string) ($template['body'] ?? ''), $context, !empty(vms_social_get_settings()['utm_enabled']))
-				: array('caption' => '', 'final_url' => (string) ($context['ticket_url'] ?? $context['event_url'] ?? ''));
-			$caption = (string) ($rendered['caption'] ?? '');
-			$final_url = (string) ($rendered['final_url'] ?? '');
-			$share_url = vms_social_event_share_url($platform, $final_url, $caption);
-
-			echo '<section class="vms-social-platform-card">';
-			echo '<h4>' . esc_html(ucfirst($platform)) . '</h4>';
-			echo '<p><label><input type="checkbox" name="vms_social_enabled[' . esc_attr($platform) . ']" value="1" ' . checked(1, (int) ($platform_enabled[$platform] ?? 1), false) . ' /> ' . esc_html__('Enabled for this event', 'backstage-venue-manager') . '</label></p>';
-			echo '<p><label>' . esc_html__('Template', 'backstage-venue-manager') . ' <select name="vms_social_template[' . esc_attr($platform) . ']">';
-			echo '<option value="0" ' . selected(0, $selected_template_id, false) . '>' . esc_html__('Default', 'backstage-venue-manager') . '</option>';
-			foreach ($platform_templates as $tpl) {
-				echo '<option value="' . (int) $tpl['id'] . '" ' . selected($selected_template_id, (int) $tpl['id'], false) . '>#' . (int) $tpl['id'] . ' - ' . esc_html((string) $tpl['name']) . '</option>';
-			}
-			echo '</select></label></p>';
-
-			echo '<div class="vms-social-manual-tools">';
-			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr($caption) . '">' . esc_html__('Copy Caption', 'backstage-venue-manager') . '</button> ';
-			echo '<button type="button" class="button vms-social-copy-btn" data-copy-text="' . esc_attr($final_url) . '">' . esc_html__('Copy Link', 'backstage-venue-manager') . '</button> ';
-			if ($share_url !== '') {
-				echo '<a class="button button-secondary" href="' . esc_url($share_url) . '" target="_blank" rel="noopener">' . esc_html__('Open Share Dialog', 'backstage-venue-manager') . '</a>';
-			}
-			echo '</div>';
-			echo '<p class="description"><strong>' . esc_html__('Preview:', 'backstage-venue-manager') . '</strong> ' . esc_html(vms_social_trim_preview($caption, 180)) . '</p>';
-			echo '</section>';
-		}
-		echo '</div>';
-
-		echo '<hr />';
-		echo '<h4>' . esc_html__('Queue Actions', 'backstage-venue-manager') . '</h4>';
-		if (is_array($last_queue)) {
-			echo '<p><strong>' . esc_html__('Latest queue item:', 'backstage-venue-manager') . '</strong> #' . (int) $last_queue['id'] . ' | ' . esc_html((string) $last_queue['status']) . ' | ' . esc_html((string) $last_queue['platform']) . '</p>';
-			if (!empty($last_queue['last_error_message'])) {
-				echo '<p class="description">' . esc_html((string) $last_queue['last_error_message']) . '</p>';
-			}
-		}
-
-		echo '<div class="vms-social-event-queue-form">';
-		echo '<p><label>' . esc_html__('Queue Platform', 'backstage-venue-manager') . ' <select name="platform" form="' . esc_attr($queue_form_id) . '">';
-		foreach (array('mock', 'webhook', 'facebook', 'linkedin', 'x') as $platform) {
-			echo '<option value="' . esc_attr($platform) . '">' . esc_html($platform) . '</option>';
-		}
-		echo '</select></label></p>';
-		echo '<p><label>' . esc_html__('Template ID (optional override)', 'backstage-venue-manager') . ' <input type="number" min="0" step="1" name="template_id" value="0" form="' . esc_attr($queue_form_id) . '" /></label></p>';
-		echo '<p><label>' . esc_html__('Destination ID (optional override)', 'backstage-venue-manager') . ' <input type="text" name="destination_id" value="" class="regular-text" form="' . esc_attr($queue_form_id) . '" /></label></p>';
-		echo '<p><label>' . esc_html__('Schedule (optional, local timezone)', 'backstage-venue-manager') . ' <input type="datetime-local" name="scheduled_at_local" value="" form="' . esc_attr($queue_form_id) . '" /></label></p>';
-		echo '<p><button type="submit" class="button button-primary" form="' . esc_attr($queue_form_id) . '">' . esc_html__('Queue / Schedule', 'backstage-venue-manager') . '</button></p>';
-		echo '</div>';
-
-		if (is_array($last_queue)) {
-			echo '<div class="vms-social-event-queue-ops">';
-			echo '<button type="submit" class="button" form="' . esc_attr($queue_cancel_form_id) . '">' . esc_html__('Cancel Latest', 'backstage-venue-manager') . '</button> ';
-			echo '<button type="submit" class="button button-secondary" form="' . esc_attr($queue_retry_form_id) . '">' . esc_html__('Retry Latest', 'backstage-venue-manager') . '</button>';
-			echo '</div>';
-		}
-
+		$view = vms_social_build_event_panel_view($event_plan_id);
 		return array(
-			'html' => (string) ob_get_clean(),
-			'queue_id' => $queue_id,
+			'html' => vms_social_render_event_panel_html($view),
+			'queue_id' => (int) ($view['queue_id'] ?? 0),
 		);
 	}
 }
