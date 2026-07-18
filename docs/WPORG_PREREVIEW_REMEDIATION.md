@@ -116,7 +116,7 @@ Status:
 
 - The original scanner-style hit table below is retained as historical prereview evidence.
 - Historical `WPORG-22` B1 through B5 remain completed in the current mirror history.
-- The final prereview also identified a bounded residual inline-asset inventory tracked separately under `WPORG-22R`; `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, and `WPORG-22R-G` below close the Reference Keys Map, Holidays, Event Plan Import, and Tax Bypass helpers, while the parent stays open for the remaining residual children.
+- The final prereview also identified a bounded residual inline-asset inventory tracked separately under `WPORG-22R`; `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, `WPORG-22R-H`, and `WPORG-22R-I` below close the Reference Keys Map, Holidays, Event Plan Import, Staff Tasks module-admin, Tax Bypass, ADD request-builder, and ADD menu-badge helpers, while the parent stays open for the remaining residual children.
 - Remaining script-like Event Plan payloads reviewed for B1 are limited to inert scoped JSON and minimal scoped ticketing configuration, not executable controller code.
 - Acceptable structured-data/state-blob patterns should not be "fixed" as if they were executable inline JS.
 
@@ -2020,7 +2020,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the historical inline asset enqueue migration tracked in `WPORG-22` B1-B5 plus the accepted residual closeouts `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, and `WPORG-22R-G`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; the next actual incomplete implementation batch in this inventory remains the bounded residual inline-asset family tracked in `WPORG-22R`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the historical inline asset enqueue migration tracked in `WPORG-22` B1-B5 plus the accepted residual closeouts `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, `WPORG-22R-H`, and `WPORG-22R-I`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; the next actual incomplete implementation batch in this inventory remains the bounded residual inline-asset family tracked in `WPORG-22R`.
 
 ## WPORG-19B Result
 
@@ -2447,7 +2447,8 @@ Date: 2026-07-11
 - `WPORG-22R-B` and `WPORG-22R-G` are now completed by the Holidays and Tax Bypass helper closeout recorded below.
 - `WPORG-22R-C` is now completed by the dedicated Event Plan Import reconciliation and helper externalization closeout recorded below.
 - `WPORG-22R-D` and `WPORG-22R-H` are now completed by the Staff Tasks and ADD module-admin helper closeout recorded below.
-- `WPORG-22R` remains open for the remaining bounded residual inline-asset children.
+- `WPORG-22R-I` is now completed by the ADD admin menu-badge asset closeout recorded below.
+- `WPORG-22R` remains open for the remaining bounded residual inline-asset children, including the separate ADD public-shell CSS.
 - `WPORG-23` is now completed by the admin-notice scope remediation recorded below.
 - `WPORG-24` is now closed by the accepted child inventory plus documentation-only `WPORG-24R`.
 - `WPORG-25` is not yet the next incomplete implementation batch while `WPORG-22R` remains open.
@@ -2556,8 +2557,8 @@ Date: 2026-07-18
 - Mirror/live synchronization: the live `includes/modules/staff-tasks/admin-ui.php`, live `includes/modules/availability-date-dispatch/admin-ui.php`, live `assets/js/vms-tasks-admin-pages.js`, and live `assets/js/vms-add-dispatch-admin.js` files now match the mirror byte for byte
 - Tests added: `php tests/wporg-22r-module-admin-helpers-inline-js-remediation.php`
 - Supporting verification retained: the focused rerun also keeps the existing ADD pill/public-shell proofs and the Event Plan dead-editor/metabox proof in place
-- Preserved residual: the separate ADD menu-badge CSS and JS emitters in `includes/modules/availability-date-dispatch/admin-ui.php` remain intentionally unchanged for `WPORG-22R-I`
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, and `WPORG-22R-H` are now closed, and `WPORG-22R` stays open for `WPORG-22R-I` plus the remaining residual inline-asset children
+- Historical preserved residual at the time of this slice: the separate ADD menu-badge CSS and JS emitters in `includes/modules/availability-date-dispatch/admin-ui.php` stayed intentionally unchanged for the later `WPORG-22R-I` closeout
+- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, `WPORG-22R-H`, and `WPORG-22R-I` are now closed, the separate ADD public-shell CSS remains open, and `WPORG-22R` stays open for the remaining residual inline-asset children
 
 ### What Changed
 
@@ -2571,6 +2572,38 @@ Date: 2026-07-18
 - The ADD menu-badge CSS and JS emitters in `includes/modules/availability-date-dispatch/admin-ui.php` were intentionally left unchanged for the separate `WPORG-22R-I` slice.
 - The ADD public shell in `includes/modules/availability-date-dispatch/public.php` was not changed.
 - The Staff Tasks Event Plan metabox asset path `assets/js/vms-tasks-event-plan-metabox.js` and its enqueue contract were not changed.
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
+## WPORG-22R-I Result
+
+Date: 2026-07-18
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-22R-I`
+- Scope completed: only the ADD Dispatch admin menu-badge CSS and JS emitters in `vms_add_dispatch_render_menu_badge_css()` and `vms_add_dispatch_render_menu_badge_js()`
+- External assets used: the shared `assets/css/vms-admin-menu.css` stylesheet and the new admin-only `assets/js/vms-admin-menu.js` asset
+- Asset gate: the existing `manage_options` and positive-count gate remains the exact owner for both menu-badge functions, while the script now enqueues through `admin_enqueue_scripts` for authorized admins with a positive pending count across wp-admin
+- Dynamic handoff: the only runtime value passed into the asset is the existing pending count from `vms_add_dispatch_current_pending_count()`, exposed through inert localized config on the `vms-admin-menu` script handle
+- Preserved behavior: the badge still uses the exact top-level and submenu selectors, the existing awaiting-mod / pending-count markup, the `beforeend` insertion point, the DOM-ready timing branch, the no-target no-op path, and duplicate-badge prevention
+- Focused verification: `php tests/add-dispatch-menu-badge-inline-assets-remediation.php`, `php tests/add-dispatch-pill-output-remediation.php`, `php tests/add-dispatch-public-shell-output-remediation.php`, and `php tests/event-plan-secondary-vendor-capacity-and-add.php` passed in this closeout
+- Known unrelated baseline retained: `php tests/add-dispatch-open-vendor-needs.php` still fails with the exact adjudicated missing-primary diagnostic and remains unrelated to this slice
+- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, `WPORG-22R-H`, and `WPORG-22R-I` are now closed, the separate ADD public-shell CSS remains open, and `WPORG-22R` stays open for the remaining residual inline-asset children
+
+### What Changed
+
+- Removed the executable ADD menu-badge `<style>` and `<script>` emitters from `includes/modules/availability-date-dispatch/admin-ui.php`.
+- Moved the static badge rules into `assets/css/vms-admin-menu.css`.
+- Added the admin-only `assets/js/vms-admin-menu.js` asset and wired it through the existing ADD capability and positive-count gate with inert localized pending-count config.
+- Preserved the exact selectors, markup, insertion point, duplicate prevention, and timing while synchronizing the live ADD admin PHP, live shared admin-menu CSS, and live admin-menu JS to the mirror contracts.
+
+### Non-Actions
+
+- The ADD request-builder asset `assets/js/vms-add-dispatch-admin.js` was not changed.
+- The ADD public shell in `includes/modules/availability-date-dispatch/public.php` was not changed and its separate public-shell CSS residual remains open.
+- No ADD helper/query/open-needs logic changed, and the known missing-primary open-needs failure remained identical.
+- `WPORG-24` and `Review-10` remain closed.
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
 ## Review-10 Upload APIs Result

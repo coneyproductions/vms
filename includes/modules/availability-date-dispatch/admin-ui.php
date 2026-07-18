@@ -135,13 +135,10 @@ if (!function_exists('vms_add_dispatch_render_menu_badge_css')) {
 		if ($count <= 0) {
 			return;
 		}
-		echo '<style>';
-		echo '#adminmenu .vms-add-dispatch-alert-badge{margin-left:6px;min-width:18px;height:18px;line-height:18px;border-radius:999px;background:#d63638;box-shadow:none;}';
-		echo '#adminmenu .vms-add-dispatch-alert-badge .pending-count{display:block;min-width:18px;height:18px;line-height:18px;padding:0 4px;color:#fff;font-size:11px;font-weight:700;text-align:center;}';
-		echo '</style>';
+		wp_enqueue_style('vms-admin-menu');
 	}
 }
-add_action('admin_head', 'vms_add_dispatch_render_menu_badge_css', 21);
+add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_css', 21, 0);
 
 if (!function_exists('vms_add_dispatch_render_menu_badge_js')) {
 	function vms_add_dispatch_render_menu_badge_js(): void
@@ -153,11 +150,29 @@ if (!function_exists('vms_add_dispatch_render_menu_badge_js')) {
 		if ($count <= 0) {
 			return;
 		}
-		$markup = wp_json_encode(vms_add_dispatch_menu_badge_markup($count));
-		echo '<script>(function(){var markup=' . $markup . ';if(!markup){return;}function applyBadge(selector){var nodes=document.querySelectorAll(selector);if(!nodes.length){return;}for(var i=0;i<nodes.length;i++){var el=nodes[i];if(!el||el.innerHTML.indexOf("vms-add-dispatch-alert-badge")!==-1){continue;}el.insertAdjacentHTML("beforeend",markup);}}function run(){applyBadge("#toplevel_page_vms-dashboard > a .wp-menu-name");applyBadge("#toplevel_page_vms-dashboard .wp-submenu li a[href*=\"page=vms-add-dispatch\"]");applyBadge("#toplevel_page_vms-dashboard .wp-submenu li.current a[href*=\"page=vms-add-dispatch\"]");}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();</script>';
+		$version = function_exists('vms_asset_version')
+			? vms_asset_version()
+			: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+		wp_enqueue_style('vms-admin-menu');
+		wp_enqueue_script(
+			'vms-admin-menu',
+			VMS_PLUGIN_URL . 'assets/js/vms-admin-menu.js',
+			array(),
+			$version,
+			true
+		);
+		wp_localize_script(
+			'vms-admin-menu',
+			'vmsAdminMenu',
+			array(
+				'addDispatchBadge' => array(
+					'pendingCount' => $count,
+				),
+			)
+		);
 	}
 }
-add_action('admin_footer', 'vms_add_dispatch_render_menu_badge_js', 50);
+add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_js', 50, 0);
 
 
 if (!function_exists('vms_add_dispatch_render_dashboard_card')) {
