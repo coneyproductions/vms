@@ -116,7 +116,7 @@ Status:
 
 - The original scanner-style hit table below is retained as historical prereview evidence.
 - Historical `WPORG-22` B1 through B5 remain completed in the current mirror history.
-- The final prereview also identified a bounded residual inline-asset inventory tracked separately under `WPORG-22R`; `WPORG-22R-A` below closes only the Reference Keys Map clipboard helper and leaves the parent open for remaining residual children.
+- The final prereview also identified a bounded residual inline-asset inventory tracked separately under `WPORG-22R`; `WPORG-22R-A`, `WPORG-22R-B`, and `WPORG-22R-G` below close only the Reference Keys Map, Holidays, and Tax Bypass helpers, while `WPORG-22R-C` remains open for a dedicated Event Plan Import reconciliation gate and the parent stays open for the remaining residual children.
 - Remaining script-like Event Plan payloads reviewed for B1 are limited to inert scoped JSON and minimal scoped ticketing configuration, not executable controller code.
 - Acceptable structured-data/state-blob patterns should not be "fixed" as if they were executable inline JS.
 
@@ -2020,7 +2020,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the historical inline asset enqueue migration tracked in `WPORG-22` B1-B5 plus the first residual closeout `WPORG-22R-A`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; the next actual incomplete implementation batch in this inventory remains the bounded residual inline-asset family tracked in `WPORG-22R`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the historical inline asset enqueue migration tracked in `WPORG-22` B1-B5 plus the accepted residual closeouts `WPORG-22R-A`, `WPORG-22R-B`, and `WPORG-22R-G`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; the next actual incomplete implementation batch in this inventory remains the bounded residual inline-asset family tracked in `WPORG-22R`, with `WPORG-22R-C` currently deferred behind a dedicated Event Plan Import mirror/live reconciliation gate.
 
 ## WPORG-19B Result
 
@@ -2444,6 +2444,8 @@ Date: 2026-07-11
 
 - Historical `WPORG-22` B1-B5 remain completed by the recorded inline asset remediation passes.
 - `WPORG-22R-A` is now completed by the Reference Keys Map clipboard-helper closeout recorded below.
+- `WPORG-22R-B` and `WPORG-22R-G` are now completed by the Holidays and Tax Bypass helper closeout recorded below.
+- `WPORG-22R-C` remains open for a dedicated Event Plan Import reconciliation gate because the current live runtime file materially predates the mirror implementation.
 - `WPORG-22R` remains open for the remaining bounded residual inline-asset children.
 - `WPORG-23` is now completed by the admin-notice scope remediation recorded below.
 - `WPORG-24` is now closed by the accepted child inventory plus documentation-only `WPORG-24R`.
@@ -2476,6 +2478,34 @@ Date: 2026-07-18
 ### Non-Actions
 
 - No other residual inline emitter was changed in this slice.
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
+## WPORG-22R-B/G Result
+
+Date: 2026-07-18
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifiers: `WPORG-22R-B`, `WPORG-22R-G`
+- Scope completed: only the Holidays bulk-selection helper on the `vms-holidays` admin page and the Tax Bypass required-field shim on Vendor/Staff edit screens
+- External assets used: `assets/js/vms-holidays-admin.js` and `assets/js/vms-tax-bypass-admin.js`
+- Enqueue scope: Holidays now uses a dedicated `admin_enqueue_scripts` callback that loads only when `page=vms-holidays` and the current user already satisfies the existing `manage_options` boundary; Tax Bypass now uses a dedicated `admin_enqueue_scripts` callback that loads only on `post` / `post-new` screens whose post type remains `vms_vendor` or `vms_staff` and whose current user already satisfies the existing `manage_options` boundary
+- Preserved behavior: the Holidays helper still targets the existing `#vms_holidays_select_all` control and `.vms_holidays_row_cb` row selector, still runs as an immediate post-markup change handler, and still propagates the controlling checked state without adding a disabled-row filter; the Tax Bypass shim still targets the exact existing tax/address/payee selectors and still removes both `required` and `aria-required` without altering save, validation, nonce, or business-rule behavior
+- Tests added: `php tests/wporg-22r-holidays-tax-bypass-inline-js-remediation.php`
+- Sync proof: the focused verification rerun plus final `cmp -s` checks confirmed both mirror/live PHP pairs and both mirror/live JS pairs remain byte-for-byte synchronized
+- Deferred sibling: `WPORG-22R-C` remains open because the current live `includes/admin/data-tools/page-event-plan-import.php` materially predates the mirror implementation and still requires a dedicated reconciliation gate before any helper externalization
+- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, and `WPORG-22R-G` are now closed, and `WPORG-22R` stays open for `WPORG-22R-C` plus the remaining residual inline-asset children
+
+### What Changed
+
+- Removed the executable Holidays bulk-selection `<script>` block from `includes/admin/holidays.php` and moved that helper into the page-scoped `assets/js/vms-holidays-admin.js` asset.
+- Removed the executable Tax Bypass required-field `<script>` block from `includes/admin/tax-bypass.php` and moved that shim into the screen-scoped `assets/js/vms-tax-bypass-admin.js` asset.
+- Preserved the existing page/screen registration, capabilities, selectors, and runtime behavior while moving only the executable listeners into external assets.
+
+### Non-Actions
+
+- No Event Plan Import file or asset changed in this slice; `WPORG-22R-C` stays deferred for dedicated mirror/live reconciliation.
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
 ## Review-10 Upload APIs Result

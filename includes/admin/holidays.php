@@ -149,6 +149,36 @@ function vms_admin_holidays_register_page(): void
 	// This function exists so menu.php can call it as a callback safely.
 }
 
+function vms_admin_holidays_page_slug(): string
+{
+	return 'vms-holidays';
+}
+
+function vms_admin_holidays_enqueue_assets(): void
+{
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+
+	$page = sanitize_key(vms_holidays_read_query_arg('page'));
+	if ($page !== vms_admin_holidays_page_slug()) {
+		return;
+	}
+
+	$version = function_exists('vms_asset_version')
+		? vms_asset_version()
+		: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+
+	wp_enqueue_script(
+		'vms-holidays-admin',
+		VMS_PLUGIN_URL . 'assets/js/vms-holidays-admin.js',
+		array(),
+		$version,
+		true
+	);
+}
+add_action('admin_enqueue_scripts', 'vms_admin_holidays_enqueue_assets', 50);
+
 function vms_admin_holidays_adminpost_bulk_delete(): void
 {
 	vms_admin_holidays_adminpost_handle('bulk_delete');
@@ -725,21 +755,7 @@ function vms_admin_holidays_page(): void
 	echo '</tbody>';
 	echo '</table>';
 
-	// Select-all JS (inline, tiny, no external deps)
-	echo '<script>
-	(function() {
-		var all = document.getElementById("vms_holidays_select_all");
-		if (!all) return;
-		all.addEventListener("change", function() {
-			var boxes = document.querySelectorAll(".vms_holidays_row_cb");
-			for (var i = 0; i < boxes.length; i++) {
-				boxes[i].checked = all.checked;
-			}
-		});
-	})();
-	</script>';
-
-	echo '</form>'; // end bulk delete form
-	echo '</div>';  // end max-width wrapper
-	echo '</div>';
+		echo '</form>'; // end bulk delete form
+		echo '</div>';  // end max-width wrapper
+		echo '</div>';
 }

@@ -118,6 +118,48 @@ function vms_tax_bypass_warning_label(int $post_id): string
 }
 }
 
+if (!function_exists('vms_tax_bypass_supported_screen')) {
+function vms_tax_bypass_supported_screen($screen): bool
+{
+    if (!is_object($screen)) {
+        return false;
+    }
+
+    if (!in_array((string) ($screen->base ?? ''), array('post', 'post-new'), true)) {
+        return false;
+    }
+
+    return in_array((string) ($screen->post_type ?? ''), vms_tax_bypass_supported_post_types(), true);
+}
+}
+
+if (!function_exists('vms_admin_disable_required_for_tax_fields')) {
+function vms_admin_disable_required_for_tax_fields(): void
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!vms_tax_bypass_supported_screen($screen)) {
+        return;
+    }
+
+    $version = function_exists('vms_asset_version')
+        ? vms_asset_version()
+        : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+
+    wp_enqueue_script(
+        'vms-tax-bypass-admin',
+        VMS_PLUGIN_URL . 'assets/js/vms-tax-bypass-admin.js',
+        array(),
+        $version,
+        true
+    );
+}
+}
+add_action('admin_enqueue_scripts', 'vms_admin_disable_required_for_tax_fields', 50);
+
 
 /**
  * Admin metabox (sidebar)
@@ -215,42 +257,6 @@ function vms_render_tax_bypass_box($post)
         esc_html__('Save/Update this post to apply changes.', 'backstage-venue-manager') .
         '</p>';
 
-    add_action('admin_footer-post.php', 'vms_admin_disable_required_for_tax_fields');
-    add_action('admin_footer-post-new.php', 'vms_admin_disable_required_for_tax_fields');
-
-    function vms_admin_disable_required_for_tax_fields()
-    {
-        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!$screen) return;
-
-        // Only on Vendor + Staff edit screens
-        $ok = array('vms_vendor', 'vms_staff'); // adjust staff slug if needed
-        if (!in_array($screen->post_type, $ok, true)) return;
-
-?>
-        <script>
-            (function() {
-                // Strip HTML required flags so admin can still save titles/notes/etc.
-                // Compliance is enforced at workflow gates (READY/assign), not on basic saving.
-                var selectors = [
-                    'input[name^="vms_tax_"]',
-                    'select[name^="vms_tax_"]',
-                    'input[name^="vms_addr"]',
-                    'input[name="vms_city"]',
-                    'input[name="vms_state"]',
-                    'input[name="vms_zip"]',
-                    'input[name="vms_payee_legal_name"]',
-                    'select[name="vms_entity_type"]'
-                ];
-                document.querySelectorAll(selectors.join(',')).forEach(function(el) {
-                    el.removeAttribute('required');
-                    // also remove ARIA required if any
-                    el.removeAttribute('aria-required');
-                });
-            })();
-        </script>
-<?php
-    }
 }
 
 /**
