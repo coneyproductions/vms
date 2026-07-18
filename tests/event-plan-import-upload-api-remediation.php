@@ -5,14 +5,12 @@ $repoRoot = dirname(__DIR__);
 $actionsFile = $repoRoot . '/includes/admin/data-tools/actions-event-plan-import.php';
 $pageFile = $repoRoot . '/includes/admin/data-tools/page-event-plan-import.php';
 $engineFile = $repoRoot . '/includes/services/event-plan-import/event-plan-import-engine.php';
-$privateFilesFile = $repoRoot . '/includes/core/private-files.php';
 
 $actionsSource = file_get_contents($actionsFile);
 $pageSource = file_get_contents($pageFile);
 $engineSource = file_get_contents($engineFile);
-$privateFilesSource = file_get_contents($privateFilesFile);
 
-if (!is_string($actionsSource) || !is_string($pageSource) || !is_string($engineSource) || !is_string($privateFilesSource)) {
+if (!is_string($actionsSource) || !is_string($pageSource) || !is_string($engineSource)) {
 	throw new RuntimeException('Could not read one or more required source files.');
 }
 
@@ -39,11 +37,13 @@ $assert(strpos($actionsSource, "vms_validate_uploaded_file(\n") !== false || str
 $assert(strpos($actionsSource, "'Failed to store uploaded CSV file.'") !== false, 'Event Plan import should preserve the existing storage-failure notice.');
 $assert(strpos($actionsSource, "vms_event_plan_import_build_preview_from_csv(\$target_path, \$source_name, \$options, \$token, \$target_key)") !== false, 'Event Plan import should keep the existing preview-builder call signature.');
 $assert(strpos($actionsSource, "vms_event_plan_import_delete_stored_file(\$target_key);") !== false, 'Event Plan import should preserve preview-build rollback.');
+$assert(strpos($actionsSource, "vms_event_plan_import_prepare_generated_path('csv', \$token, 'source')") !== false, 'Event Plan import should preserve the generated <token>-source.csv staging contract.');
 $assert(strpos($actionsSource, "vms_event_plan_import_with_scoped_upload_dir(") !== false, 'Event Plan import should scope the upload_dir filter to the upload call.');
 $assert(strpos($actionsSource, "remove_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');") !== false, 'Event Plan import should remove the scoped upload_dir filter.');
 $assert(strpos($actionsSource, "basename(\$target_path)") !== false, 'Event Plan import should preserve the deterministic token-based source basename.');
 $assert(strpos($actionsSource, "vms_event_plan_import_path_is_safe(\$handled_file)") !== false, 'Event Plan import should only delete unexpected handled files when safe.');
 $assert(strpos($actionsSource, "\$handled['url']") === false && strpos($actionsSource, '$handled["url"]') === false, 'Event Plan import should not use the returned public URL from wp_handle_upload().');
+$assert(strpos($actionsSource, 'vms_private_files_store_validated_upload(') === false, 'Event Plan import should not route preview uploads through the shared private-file broker.');
 
 $assert(strpos($pageSource, "wp_nonce_field('vms_event_plan_import_preview');") !== false, 'Event Plan import form should keep the existing preview nonce field.');
 $assert(strpos($pageSource, 'name="event_plan_csv_file"') !== false, 'Event Plan import form should keep the existing upload field name.');
@@ -58,8 +58,6 @@ $assert(strpos($actionsSource, "vms_event_plan_import_delete_preview_payload(\$t
 $assert(strpos($engineSource, "foreach (array('source_csv_storage_key', 'rows_json_storage_key', 'report_csv_storage_key') as \$storage_key_field)") !== false, 'Event Plan import preview cleanup should still delete source, rows, and report storage keys.');
 $assert(strpos($engineSource, "'source_csv_storage_key' => (string) (\$preview_payload['source_csv_storage_key'] ?? ''),") !== false, 'Event Plan import audit metadata should retain source_csv_storage_key.');
 $assert(strpos($engineSource, "'report_csv_storage_key' => (string) (\$preview_payload['report_csv_storage_key'] ?? ''),") !== false, 'Event Plan import audit metadata should retain report_csv_storage_key.');
-
-$assert(strpos($privateFilesSource, 'move_uploaded_file(') !== false, 'Private file core should remain unchanged in this slice.');
 
 $runCommand = static function (string $command) use ($repoRoot): string {
 	if (!function_exists('shell_exec')) {
@@ -76,14 +74,16 @@ $changedFiles = array_values(array_filter(array_map('trim', (array) $changedFile
 	return $file !== '';
 }));
 $allowedChangedFiles = array(
-	'includes/admin/data-tools/actions-event-plan-import.php',
 	'tests/event-plan-import-upload-api-remediation.php',
+	'docs/wporg-remediation-ledger.md',
+	'docs/WPORG_PREREVIEW_REMEDIATION.md',
 );
 $unexpectedFiles = array_values(array_filter($changedFiles, static function (string $file) use ($allowedChangedFiles): bool {
 	return !in_array($file, $allowedChangedFiles, true);
 }));
-$assert($unexpectedFiles === array(), 'Unexpected changed files detected for this slice: ' . implode(', ', $unexpectedFiles));
-$assert($runCommand('git diff --name-only -- includes/core/private-files.php assets docs') === '', 'Private-file core, assets, and docs should remain unchanged in this slice.');
+$assert($unexpectedFiles === array(), 'Unexpected changed files detected for this closeout: ' . implode(', ', $unexpectedFiles));
+$assert($runCommand('git diff --name-only -- includes/admin/data-tools/actions-event-plan-import.php includes/admin/data-tools/page-event-plan-import.php includes/services/event-plan-import/event-plan-import-engine.php') === '', 'Event Plan production files should remain unchanged in this closeout.');
+$assert($runCommand('git diff --name-only -- includes/core/private-files.php assets') === '', 'Shared private-file core and assets should remain unchanged in this closeout.');
 $assert($runCommand('git diff --name-only -- includes/services/event-plan-import/event-plan-import-engine.php') === '', 'The Event Plan import engine should remain unchanged in this slice.');
 $assert(strpos($runCommand('git status --short'), '../../vms') === false, 'Installed-tree paths should not appear in the worktree status.');
 

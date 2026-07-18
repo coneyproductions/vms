@@ -2447,6 +2447,38 @@ Date: 2026-07-11
 - `WPORG-25` is now the next incomplete implementation batch.
 - `WPORG-21` was not reopened in this corrective pass.
 
+## Review-10 Upload APIs Result
+
+Date: 2026-07-18
+
+### Summary
+
+- Result: `PASS`
+- Review family status: closed and verified.
+- Relevant commits:
+  - `88a90cce7087e2d013493236b0280da6d1bd31ea` `Use WordPress upload API for Event Plan import preview`
+  - `7441c7008d8bd38834f4f8cb50b84e61d6fabda2` `Use WordPress upload API for private files`
+- Both plugin-owned raw upload movers identified in this review family were replaced with `wp_handle_upload()`.
+- The Event Plan preview path keeps its private staging directory, deterministic `<token>-source.csv` destination, existing preview/report storage keys, rollback, commit cleanup, notice, redirect, and filter-cleanup behavior.
+- The shared private-file broker keeps its UUID storage keys, private buckets, exact caller MIME boundaries, original-filename metadata, related-post metadata, `0640` permission behavior, registration, replacement cleanup, deletion/expiration behavior, and verification-image bypass behavior.
+- No attachment creation or returned public-URL behavior was introduced by either slice.
+- Focused regression coverage now verifies both the Event Plan and shared private-file success/failure boundaries.
+- No live plugin-owned raw HTTP-upload mover remains in the mirror `includes/` tree for this review family.
+- This closes the final known upload-API implementation target.
+
+### Focused Verification
+
+- `php tests/event-plan-import-upload-api-remediation.php`
+- `php tests/private-file-upload-api-remediation.php`
+- `php tests/upload-validation-guards.php`
+- `php tests/verification-proof-normalization.php`
+
+### Source Reconciliation
+
+- Mirror `includes/` no longer contains any live `move_uploaded_file(` match.
+- Remaining alternative-upload API matches in mirror production are existing WordPress media-attachment flows in `includes/portal/vendor-portal.php` using `media_handle_upload()`, which are outside this raw-mover review family.
+- The only current production `rename()` match is the slow-request log rotation path in `includes/core/slow-request-logger.php`, which is not an HTTP-upload mover.
+
 ## WPORG-23 Result
 
 Date: 2026-07-12
