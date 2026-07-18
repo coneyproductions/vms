@@ -115,7 +115,8 @@ Acceptable / already resolved notes:
 Status:
 
 - The original scanner-style hit table below is retained as historical prereview evidence.
-- `WPORG-22` B1 through B5 are now completed in the current mirror history.
+- Historical `WPORG-22` B1 through B5 remain completed in the current mirror history.
+- The final prereview also identified a bounded residual inline-asset inventory tracked separately under `WPORG-22R`; `WPORG-22R-A` below closes only the Reference Keys Map clipboard helper and leaves the parent open for remaining residual children.
 - Remaining script-like Event Plan payloads reviewed for B1 are limited to inert scoped JSON and minimal scoped ticketing configuration, not executable controller code.
 - Acceptable structured-data/state-blob patterns should not be "fixed" as if they were executable inline JS.
 
@@ -2019,7 +2020,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the inline asset enqueue migration tracked in `WPORG-22`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; the next actual incomplete implementation batch in this inventory now starts at `WPORG-25`.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the historical inline asset enqueue migration tracked in `WPORG-22` B1-B5 plus the first residual closeout `WPORG-22R-A`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; the next actual incomplete implementation batch in this inventory remains the bounded residual inline-asset family tracked in `WPORG-22R`.
 
 ## WPORG-19B Result
 
@@ -2441,11 +2442,41 @@ Date: 2026-07-11
 
 ### Next Actual Incomplete Batch
 
-- `WPORG-22` is now completed by the recorded B1-B5 inline asset remediation passes.
+- Historical `WPORG-22` B1-B5 remain completed by the recorded inline asset remediation passes.
+- `WPORG-22R-A` is now completed by the Reference Keys Map clipboard-helper closeout recorded below.
+- `WPORG-22R` remains open for the remaining bounded residual inline-asset children.
 - `WPORG-23` is now completed by the admin-notice scope remediation recorded below.
 - `WPORG-24` is now closed by the accepted child inventory plus documentation-only `WPORG-24R`.
-- `WPORG-25` is now the next incomplete implementation batch.
+- `WPORG-25` is not yet the next incomplete implementation batch while `WPORG-22R` remains open.
 - `WPORG-21` was not reopened in this corrective pass.
+
+## WPORG-22R-A Result
+
+Date: 2026-07-18
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-22R-A`
+- Scope completed: only the Reference Keys Map clipboard helper on the `vms-reference-keys-map` admin page
+- Entry point: `vms_admin_reference_keys_map_page()` in `includes/admin/reference/keys-map.php`
+- External asset used: `assets/js/vms-reference-keys-map.js`
+- Enqueue scope: a dedicated `admin_enqueue_scripts` callback now loads the asset only when `page=vms-reference-keys-map` and the current user already satisfies the existing `manage_options` boundary
+- Inert handoff: the existing default, success, and failure labels now flow through escaped `data-vms-copy-*` attributes on the existing `#vms-copy-keys-map` button
+- Preserved behavior: the helper still targets the existing `#vms-copy-keys-map` button and `#vms-keys-map-text` textarea, still focuses and selects the textarea before calling `document.execCommand('copy')`, and still restores the default label after `1500ms`
+- Tests added: `php tests/reference-keys-map-inline-js-remediation.php`
+- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, while `WPORG-22R` stays open for additional residual inline-asset children
+
+### What Changed
+
+- Removed the executable clipboard `<script>` block from `includes/admin/reference/keys-map.php`.
+- Added the page-scoped `assets/js/vms-reference-keys-map.js` asset and loaded it only on the existing Reference Keys Map admin page.
+- Preserved the page registration, capability, textarea payload rendering, DOM IDs, button copy behavior, and label timing while moving only the executable listener into the external asset.
+
+### Non-Actions
+
+- No other residual inline emitter was changed in this slice.
+- No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
 
 ## Review-10 Upload APIs Result
 
