@@ -1,6 +1,60 @@
 <?php
 defined('ABSPATH') || exit;
 
+if (!function_exists('vms_event_plan_import_filter_upload_dir')) {
+	/**
+	 * @param array<string,mixed> $uploads
+	 * @return array<string,mixed>
+	 */
+	function vms_event_plan_import_filter_upload_dir(array $uploads): array
+	{
+		$context = isset($GLOBALS['vms_event_plan_import_upload_dir_context']) && is_array($GLOBALS['vms_event_plan_import_upload_dir_context'])
+			? $GLOBALS['vms_event_plan_import_upload_dir_context']
+			: array();
+		$path = isset($context['path']) ? trim((string) $context['path']) : '';
+		if ($path === '') {
+			return $uploads;
+		}
+
+		$uploads['path'] = $path;
+		$uploads['basedir'] = $path;
+		$uploads['subdir'] = '';
+		$uploads['url'] = '';
+		$uploads['baseurl'] = '';
+		$uploads['error'] = false;
+
+		return $uploads;
+	}
+}
+
+if (!function_exists('vms_event_plan_import_with_scoped_upload_dir')) {
+	/**
+	 * @param array<string,mixed> $context
+	 * @return mixed
+	 */
+	function vms_event_plan_import_with_scoped_upload_dir(array $context, callable $callback)
+	{
+		$GLOBALS['vms_event_plan_import_upload_dir_context'] = $context;
+		add_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');
+
+		try {
+			return $callback();
+		} finally {
+			remove_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');
+			unset($GLOBALS['vms_event_plan_import_upload_dir_context']);
+		}
+	}
+}
+
+if (!function_exists('vms_event_plan_import_redirect_storage_failure')) {
+	function vms_event_plan_import_redirect_storage_failure(): void
+	{
+		vms_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'backstage-venue-manager'));
+		wp_safe_redirect(vms_event_plan_import_admin_page_url());
+		exit;
+	}
+}
+
 if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 	function vms_event_plan_import_handle_preview_action(): void
 	{
@@ -46,10 +100,59 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$target_path = (string) ($prepared['path'] ?? '');
 		$target_key = (string) ($prepared['storage_key'] ?? '');
 		$tmp_name = trim((string) ($validated['tmp_name'] ?? ''));
-		if ($target_path === '' || $target_key === '' || $tmp_name === '' || !@move_uploaded_file($tmp_name, $target_path)) {
-			vms_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'backstage-venue-manager'));
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
-			exit;
+		if ($target_path === '' || $target_key === '' || $tmp_name === '') {
+			vms_event_plan_import_redirect_storage_failure();
+		}
+
+		if (!function_exists('wp_handle_upload')) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		$upload_for_handle = $upload;
+		$upload_for_handle['size'] = max(0, (int) ($validated['size'] ?? ($upload['size'] ?? 0)));
+		$target_dir = dirname($target_path);
+		$target_basename = basename($target_path);
+		$handled = vms_event_plan_import_with_scoped_upload_dir(
+			array(
+				'path' => $target_dir,
+			),
+			static function () use (&$upload_for_handle, $target_basename): array {
+				return wp_handle_upload(
+					$upload_for_handle,
+					array(
+						'test_form' => false,
+						'mimes' => vms_event_plan_import_allowed_mimes(),
+						'unique_filename_callback' => static function (string $dir, string $name, string $ext) use ($target_basename): string {
+							unset($dir, $name, $ext);
+							return $target_basename;
+						},
+					)
+				);
+			}
+		);
+
+		$handled_file = is_array($handled) && isset($handled['file']) ? trim((string) $handled['file']) : '';
+		$target_real = realpath($target_path);
+		$handled_real = $handled_file !== '' ? realpath($handled_file) : false;
+		$path_matches_target = (
+			is_string($target_real)
+			&& $target_real !== ''
+			&& is_string($handled_real)
+			&& $handled_real !== ''
+			&& wp_normalize_path($handled_real) === wp_normalize_path($target_real)
+		);
+		if (!is_array($handled) || !empty($handled['error']) || !$path_matches_target) {
+			if (
+				$handled_file !== ''
+				&& file_exists($handled_file)
+				&& is_file($handled_file)
+				&& function_exists('vms_event_plan_import_path_is_safe')
+				&& vms_event_plan_import_path_is_safe($handled_file)
+			) {
+				@unlink($handled_file);
+			}
+
+			vms_event_plan_import_redirect_storage_failure();
 		}
 		@chmod($target_path, 0640);
 
