@@ -204,6 +204,102 @@ if (!function_exists('vms_private_files_path_is_safe')) {
 	}
 }
 
+if (!function_exists('vms_private_files_normalize_allowed_mimes')) {
+	/**
+	 * @param array<string,mixed> $allowed_mimes
+	 * @return array<string,string|array<int,string>>
+	 */
+	function vms_private_files_normalize_allowed_mimes(array $allowed_mimes): array
+	{
+		$normalized = array();
+
+		foreach ($allowed_mimes as $extensions => $raw_mimes) {
+			$parts = array_map(
+				static function ($part): string {
+					return sanitize_key(trim((string) $part));
+				},
+				explode('|', (string) $extensions)
+			);
+			$parts = array_values(array_unique(array_filter($parts, static function ($part): bool {
+				return $part !== '';
+			})));
+			$extension = implode('|', $parts);
+			if ($extension === '') {
+				continue;
+			}
+
+			if (is_array($raw_mimes)) {
+				$clean_mimes = array();
+				foreach ($raw_mimes as $raw_mime) {
+					$mime = sanitize_text_field((string) $raw_mime);
+					if ($mime !== '') {
+						$clean_mimes[] = $mime;
+					}
+				}
+
+				$clean_mimes = array_values(array_unique($clean_mimes));
+				if (!empty($clean_mimes)) {
+					$normalized[$extension] = $clean_mimes;
+				}
+
+				continue;
+			}
+
+			$mime = sanitize_text_field((string) $raw_mimes);
+			if ($mime !== '') {
+				$normalized[$extension] = $mime;
+			}
+		}
+
+		return $normalized;
+	}
+}
+
+if (!function_exists('vms_private_files_filter_upload_dir')) {
+	/**
+	 * @param array<string,mixed> $uploads
+	 * @return array<string,mixed>
+	 */
+	function vms_private_files_filter_upload_dir(array $uploads): array
+	{
+		$context = isset($GLOBALS['vms_private_files_upload_dir_context']) && is_array($GLOBALS['vms_private_files_upload_dir_context'])
+			? $GLOBALS['vms_private_files_upload_dir_context']
+			: array();
+		$path = isset($context['path']) ? trim((string) $context['path']) : '';
+		if ($path === '') {
+			return $uploads;
+		}
+
+		$uploads['path'] = $path;
+		$uploads['basedir'] = $path;
+		$uploads['subdir'] = '';
+		$uploads['url'] = '';
+		$uploads['baseurl'] = '';
+		$uploads['error'] = false;
+
+		return $uploads;
+	}
+}
+
+if (!function_exists('vms_private_files_with_scoped_upload_dir')) {
+	/**
+	 * @param array<string,mixed> $context
+	 * @return mixed
+	 */
+	function vms_private_files_with_scoped_upload_dir(array $context, callable $callback)
+	{
+		$GLOBALS['vms_private_files_upload_dir_context'] = $context;
+		add_filter('upload_dir', 'vms_private_files_filter_upload_dir');
+
+		try {
+			return $callback();
+		} finally {
+			remove_filter('upload_dir', 'vms_private_files_filter_upload_dir');
+			unset($GLOBALS['vms_private_files_upload_dir_context']);
+		}
+	}
+}
+
 if (!function_exists('vms_private_files_install_schema')) {
 	function vms_private_files_install_schema(): void
 	{
@@ -411,6 +507,12 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 		if ($bucket === '') {
 			$bucket = 'general';
 		}
+		$allowed_mimes = isset($args['allowed_mimes']) && is_array($args['allowed_mimes'])
+			? vms_private_files_normalize_allowed_mimes($args['allowed_mimes'])
+			: array();
+		if (empty($allowed_mimes)) {
+			return new WP_Error('private_storage_invalid', __('Could not prepare private file storage.', 'backstage-venue-manager'));
+		}
 		if (!vms_private_files_ensure_dir($bucket)) {
 			return new WP_Error('private_dir_unavailable', __('Could not create the private upload directory.', 'backstage-venue-manager'));
 		}
@@ -429,7 +531,69 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 		vms_private_files_write_hardening_files($destination_dir);
 
 		$tmp_name = isset($validated_upload['tmp_name']) ? trim((string) $validated_upload['tmp_name']) : '';
-		if ($tmp_name === '' || !@move_uploaded_file($tmp_name, $destination)) {
+		if ($tmp_name === '') {
+			return new WP_Error('private_upload_move_failed', __('Could not store the uploaded file.', 'backstage-venue-manager'));
+		}
+
+		if (!function_exists('wp_handle_upload')) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		$upload_name = isset($validated_upload['sanitized_name']) ? trim((string) $validated_upload['sanitized_name']) : '';
+		if ($upload_name === '') {
+			$upload_name = isset($validated_upload['name']) ? trim((string) $validated_upload['name']) : '';
+		}
+		if ($upload_name === '') {
+			$upload_name = 'upload';
+		}
+
+		$upload_for_handle = array(
+			'name' => $upload_name,
+			'type' => isset($validated_upload['reported_mime']) ? sanitize_text_field((string) $validated_upload['reported_mime']) : sanitize_text_field((string) ($validated_upload['mime'] ?? '')),
+			'tmp_name' => $tmp_name,
+			'error' => UPLOAD_ERR_OK,
+			'size' => max(0, (int) ($validated_upload['size'] ?? ($validated_upload['reported_size'] ?? 0))),
+		);
+		$destination_basename = basename($destination);
+		$handled = vms_private_files_with_scoped_upload_dir(
+			array(
+				'path' => $destination_dir,
+			),
+			static function () use (&$upload_for_handle, $allowed_mimes, $destination_basename): array {
+				return wp_handle_upload(
+					$upload_for_handle,
+					array(
+						'test_form' => false,
+						'mimes' => $allowed_mimes,
+						'unique_filename_callback' => static function (string $dir, string $name, string $ext) use ($destination_basename): string {
+							unset($dir, $name, $ext);
+							return $destination_basename;
+						},
+					)
+				);
+			}
+		);
+
+		$handled_file = is_array($handled) && isset($handled['file']) ? trim((string) $handled['file']) : '';
+		$destination_real = realpath($destination);
+		$handled_real = $handled_file !== '' ? realpath($handled_file) : false;
+		$path_matches_destination = (
+			is_string($destination_real)
+			&& $destination_real !== ''
+			&& is_string($handled_real)
+			&& $handled_real !== ''
+			&& wp_normalize_path($handled_real) === wp_normalize_path($destination_real)
+		);
+		if (!is_array($handled) || !empty($handled['error']) || !$path_matches_destination) {
+			if (
+				$handled_file !== ''
+				&& file_exists($handled_file)
+				&& is_file($handled_file)
+				&& vms_private_files_path_is_safe($handled_file)
+			) {
+				@unlink($handled_file);
+			}
+
 			return new WP_Error('private_upload_move_failed', __('Could not store the uploaded file.', 'backstage-venue-manager'));
 		}
 		@chmod($destination, 0640);
@@ -573,6 +737,7 @@ if (!function_exists('vms_private_w9_store_upload')) {
 		return vms_private_files_store_validated_upload(
 			$validated,
 			array(
+				'allowed_mimes' => vms_private_w9_allowed_mimes(),
 				'bucket' => 'tax-docs',
 				'related_post_type' => sanitize_key($post_type),
 				'related_post_id' => $post_id,
@@ -772,6 +937,7 @@ if (!function_exists('vms_private_staff_cert_store_upload')) {
 		return vms_private_files_store_validated_upload(
 			$validated,
 			array(
+				'allowed_mimes' => vms_private_staff_cert_allowed_mimes(),
 				'bucket' => 'staff-certifications',
 				'related_post_type' => 'vms_staff',
 				'related_post_id' => $staff_id,

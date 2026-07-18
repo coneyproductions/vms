@@ -812,10 +812,12 @@ if (!function_exists('vms_ticketing_verification_store_proof_file')) {
             return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
         }
 
+        $allowed_mimes = vms_ticketing_verification_allowed_mimes();
         if (!vms_ticketing_verification_is_image_mime($mime)) {
             $file_id = vms_private_files_store_validated_upload(
                 $validated_upload,
                 array(
+                    'allowed_mimes' => $allowed_mimes,
                     'bucket' => 'verifications',
                 )
             );

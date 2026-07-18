@@ -6716,10 +6716,11 @@ if (!function_exists('vms_vendor_portal_store_tech_doc_upload')) {
             return $upload;
         }
 
+        $allowed_mimes = vms_vendor_portal_tech_doc_allowed_mimes();
         $validated = vms_validate_uploaded_file(
             $upload,
             array(
-                'allowed_mimes' => vms_vendor_portal_tech_doc_allowed_mimes(),
+                'allowed_mimes' => $allowed_mimes,
                 'max_bytes' => vms_vendor_portal_tech_doc_max_bytes(),
                 'type_message' => __('Please upload a PDF, JPG, PNG, or WEBP file.', 'backstage-venue-manager'),
                 'empty_message' => __('The uploaded file is empty.', 'backstage-venue-manager'),
@@ -6735,6 +6736,7 @@ if (!function_exists('vms_vendor_portal_store_tech_doc_upload')) {
             ? vms_private_files_store_validated_upload(
                 $validated,
                 array(
+                    'allowed_mimes' => $allowed_mimes,
                     'bucket' => 'vendor-tech-docs',
                     'related_post_type' => 'vms_vendor',
                     'related_post_id' => $vendor_id,
