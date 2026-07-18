@@ -1,10 +1,17 @@
 <?php
 defined('ABSPATH') || exit;
 
+if (!function_exists('vms_event_plan_import_page_slug')) {
+	function vms_event_plan_import_page_slug(): string
+	{
+		return 'vms-import-event-plans';
+	}
+}
+
 if (!function_exists('vms_event_plan_import_admin_page_url')) {
 	function vms_event_plan_import_admin_page_url(array $args = array()): string
 	{
-		$url = admin_url('admin.php?page=vms-import-event-plans');
+		$url = add_query_arg(array('page' => vms_event_plan_import_page_slug()), admin_url('admin.php'));
 		if (!empty($args)) {
 			$url = add_query_arg($args, $url);
 		}
@@ -25,6 +32,37 @@ if (!function_exists('vms_event_plan_import_query_arg')) {
 	}
 }
 
+if (!function_exists('vms_event_plan_import_enqueue_assets')) {
+	function vms_event_plan_import_enqueue_assets(): void
+	{
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page gate for a hidden admin screen.
+		$page = (isset($_GET['page']) && !is_array($_GET['page']))
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only page slug gate is unslashed here and sanitized immediately.
+			? sanitize_key(wp_unslash((string) $_GET['page']))
+			: '';
+		if ($page !== vms_event_plan_import_page_slug()) {
+			return;
+		}
+
+		$version = function_exists('vms_asset_version')
+			? vms_asset_version()
+			: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+
+		wp_enqueue_script(
+			'vms-event-plan-import',
+			VMS_PLUGIN_URL . 'assets/js/vms-event-plan-import.js',
+			array(),
+			$version,
+			true
+		);
+	}
+}
+add_action('admin_enqueue_scripts', 'vms_event_plan_import_enqueue_assets', 50);
+
 if (!function_exists('vms_event_plan_import_register_admin_page')) {
 	function vms_event_plan_import_register_admin_page(): void
 	{
@@ -33,7 +71,7 @@ if (!function_exists('vms_event_plan_import_register_admin_page')) {
 			__('Import Event Plans (CSV)', 'backstage-venue-manager'),
 			__('Import Event Plans (CSV)', 'backstage-venue-manager'),
 			'manage_options',
-			'vms-import-event-plans',
+			vms_event_plan_import_page_slug(),
 			'vms_event_plan_import_render_admin_page'
 		);
 	}
@@ -294,7 +332,8 @@ if (!function_exists('vms_event_plan_import_render_main_content')) {
 				vms_event_plan_import_render_rows_payload_error((string) $rows_payload->get_error_code());
 			}
 
-			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="vms-epcsv-commit-form" style="margin-top:16px;">';
+			$selected_required_message = __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager');
+			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="vms-epcsv-commit-form" data-vms-selected-required-message="' . esc_attr($selected_required_message) . '" style="margin-top:16px;">';
 			wp_nonce_field('vms_event_plan_import_commit');
 			echo '<input type="hidden" name="action" value="vms_event_plan_import_commit" />';
 			echo '<input type="hidden" name="preview_token" value="' . esc_attr($preview_token) . '" />';
@@ -342,23 +381,6 @@ if (!function_exists('vms_event_plan_import_render_main_content')) {
 				$total_rows
 			));
 			echo '</p>';
-
-			$selected_required_message = __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager');
-			echo '<script>(function(){';
-			echo 'var form=document.getElementById("vms-epcsv-commit-form");if(!form){return;}';
-			echo 'var checks=Array.prototype.slice.call(form.querySelectorAll(".vms-epcsv-row-check"));';
-			echo 'var scopeSelected=form.querySelector(\'input[name="commit_scope"][value="selected"]\');';
-			echo 'var scopeAll=form.querySelector(\'input[name="commit_scope"][value="all"]\');';
-			echo 'var countNode=document.getElementById("vms-epcsv-selected-count");';
-			echo 'var btnAll=document.getElementById("vms-epcsv-select-all");';
-			echo 'var btnClear=document.getElementById("vms-epcsv-clear-all");';
-			echo 'function updateCount(){var c=0;checks.forEach(function(cb){if(cb.checked){c++;}});if(countNode){countNode.textContent=String(c);}return c;}';
-			echo 'if(btnAll){btnAll.addEventListener("click",function(){checks.forEach(function(cb){cb.checked=true;});updateCount();});}';
-			echo 'if(btnClear){btnClear.addEventListener("click",function(){checks.forEach(function(cb){cb.checked=false;});updateCount();});}';
-			echo 'checks.forEach(function(cb){cb.addEventListener("change",updateCount);});';
-			echo 'form.addEventListener("submit",function(e){var selectedCount=updateCount();if(scopeSelected&&scopeSelected.checked&&selectedCount===0){e.preventDefault();window.alert(' . wp_json_encode($selected_required_message) . ');return;}if(scopeAll&&scopeAll.checked){return;}});';
-			echo 'updateCount();';
-			echo '})();</script>';
 			echo '</section>';
 		}
 
