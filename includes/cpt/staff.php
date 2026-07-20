@@ -93,13 +93,90 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     wp_set_post_terms($post_id, $term_ids, 'vms_staff_role', false);
 }, 30, 3);
 
+if (!function_exists('vms_staff_cpt_admin_screen_is_target')) {
+    function vms_staff_cpt_admin_screen_is_target($screen): bool
+    {
+        if (!is_object($screen)) {
+            return false;
+        }
+
+        if (!in_array((string) ($screen->base ?? ''), array('post', 'post-new'), true)) {
+            return false;
+        }
+
+        return (string) ($screen->post_type ?? '') === 'vms_staff';
+    }
+}
+
+if (!function_exists('vms_staff_cpt_admin_enqueue_assets')) {
+    function vms_staff_cpt_admin_enqueue_assets(): void
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!vms_staff_cpt_admin_screen_is_target($screen)) {
+            return;
+        }
+
+        $version = function_exists('vms_asset_version')
+            ? vms_asset_version()
+            : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+
+        wp_enqueue_script(
+            'vms-staff-cpt-admin',
+            VMS_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js',
+            array(),
+            $version,
+            true
+        );
+
+        wp_localize_script(
+            'vms-staff-cpt-admin',
+            'vmsStaffCptAdmin',
+            array(
+                'labels' => array(
+                    'qualification' => __('Qualification', 'backstage-venue-manager'),
+                    'authority' => __('Authority', 'backstage-venue-manager'),
+                    'credentialNumber' => __('Credential #', 'backstage-venue-manager'),
+                    'issueDate' => __('Issue date', 'backstage-venue-manager'),
+                    'expiration' => __('Expiration', 'backstage-venue-manager'),
+                    'status' => __('Status', 'backstage-venue-manager'),
+                    'proofUrl' => __('Proof URL', 'backstage-venue-manager'),
+                    'reviewNote' => __('Review note / rejection reason', 'backstage-venue-manager'),
+                    'remove' => __('Remove', 'backstage-venue-manager'),
+                ),
+                'statusOptions' => array(
+                    array(
+                        'value' => 'active',
+                        'label' => __('Approved', 'backstage-venue-manager'),
+                    ),
+                    array(
+                        'value' => 'pending_verification',
+                        'label' => __('Pending Review', 'backstage-venue-manager'),
+                    ),
+                    array(
+                        'value' => 'rejected',
+                        'label' => __('Rejected', 'backstage-venue-manager'),
+                    ),
+                    array(
+                        'value' => 'expired',
+                        'label' => __('Expired', 'backstage-venue-manager'),
+                    ),
+                    array(
+                        'value' => 'inactive',
+                        'label' => __('Inactive', 'backstage-venue-manager'),
+                    ),
+                ),
+            )
+        );
+    }
+}
+add_action('admin_enqueue_scripts', 'vms_staff_cpt_admin_enqueue_assets', 50);
 
 add_action('add_meta_boxes_vms_staff', function (): void {
     add_meta_box(
         'vms-staff-qualifications',
         __('Qualifications / Licenses', 'backstage-venue-manager'),
         function (WP_Post $post): void {
-                $rows = function_exists('vms_staffing_get_staff_qualifications')
+            $rows = function_exists('vms_staffing_get_staff_qualifications')
                 ? (array) vms_staffing_get_staff_qualifications((int) $post->ID)
                 : array();
             if (empty($rows)) {
@@ -227,57 +304,6 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                 <?php endforeach; ?>
             </div>
             <p><button type="button" class="button" id="vms-staff-qualification-add"><?php esc_html_e('Add qualification', 'backstage-venue-manager'); ?></button></p>
-            <script>
-            (function(){
-                var addBtn = document.getElementById('vms-staff-qualification-add');
-                var wrap = document.getElementById('vms-staff-qualifications-list');
-                if (!addBtn || !wrap) return;
-                function hidden(idx, key, value){
-                    return '<input type="hidden" name="vms_staff_qualifications['+idx+']['+key+']" value="'+(value || '')+'">';
-                }
-                function buildRow(idx){
-                    var card = document.createElement('div');
-                    card.className = 'vms-staff-qualification-card';
-                    card.setAttribute('data-vms-staff-qualification-row', '1');
-                    card.innerHTML =
-                        hidden(idx, 'id', '') + hidden(idx, 'attachment_id', '') + hidden(idx, 'storage_kind', '') + hidden(idx, 'source', 'admin') + hidden(idx, 'submitted_by', '') + hidden(idx, 'submitted_at', '') + hidden(idx, 'reviewed_by', '') + hidden(idx, 'reviewed_at', '') +
-                        '<div class="vms-staff-qualification-card__grid vms-staff-qualification-card__grid--primary">' +
-                            '<label><span><?php echo esc_js(__('Qualification', 'backstage-venue-manager')); ?></span><input type="text" class="regular-text" name="vms_staff_qualifications['+idx+'][name]" value=""></label>' +
-                            '<label><span><?php echo esc_js(__('Authority', 'backstage-venue-manager')); ?></span><input type="text" class="regular-text" name="vms_staff_qualifications['+idx+'][authority]" value=""></label>' +
-                            '<label><span><?php echo esc_js(__('Credential #', 'backstage-venue-manager')); ?></span><input type="text" class="regular-text" name="vms_staff_qualifications['+idx+'][credential_number]" value=""></label>' +
-                        '</div>' +
-                        '<div class="vms-staff-qualification-card__grid vms-staff-qualification-card__grid--secondary">' +
-                            '<label><span><?php echo esc_js(__('Issue date', 'backstage-venue-manager')); ?></span><input type="date" name="vms_staff_qualifications['+idx+'][issue_date]" value=""></label>' +
-                            '<label><span><?php echo esc_js(__('Expiration', 'backstage-venue-manager')); ?></span><input type="date" name="vms_staff_qualifications['+idx+'][expiration_date]" value=""></label>' +
-                            '<label><span><?php echo esc_js(__('Status', 'backstage-venue-manager')); ?></span><select name="vms_staff_qualifications['+idx+'][status]"><option value="active"><?php echo esc_js(__('Approved', 'backstage-venue-manager')); ?></option><option value="pending_verification"><?php echo esc_js(__('Pending Review', 'backstage-venue-manager')); ?></option><option value="rejected"><?php echo esc_js(__('Rejected', 'backstage-venue-manager')); ?></option><option value="expired"><?php echo esc_js(__('Expired', 'backstage-venue-manager')); ?></option><option value="inactive"><?php echo esc_js(__('Inactive', 'backstage-venue-manager')); ?></option></select></label>' +
-                            '<label class="vms-staff-qualification-card__proof"><span><?php echo esc_js(__('Proof URL', 'backstage-venue-manager')); ?></span><input type="url" class="regular-text" name="vms_staff_qualifications['+idx+'][proof_url]" value=""></label>' +
-                        '</div>' +
-                        '<div class="vms-staff-qualification-card__grid vms-staff-qualification-card__grid--notes">' +
-                            '<label class="vms-staff-qualification-card__notes"><span><?php echo esc_js(__('Review note / rejection reason', 'backstage-venue-manager')); ?></span><input type="text" class="regular-text" name="vms_staff_qualifications['+idx+'][notes]" value=""></label>' +
-                            '<div class="vms-staff-qualification-card__actions"><button type="button" class="button vms-staff-qualification-remove"><?php echo esc_js(__('Remove', 'backstage-venue-manager')); ?></button></div>' +
-                        '</div>';
-                    return card;
-                }
-                addBtn.addEventListener('click', function(){
-                    var idx = wrap.querySelectorAll('[data-vms-staff-qualification-row="1"]').length;
-                    wrap.appendChild(buildRow(idx));
-                });
-                wrap.addEventListener('click', function(e){
-                    var btn = e.target.closest('.vms-staff-qualification-remove');
-                    if (!btn) return;
-                    e.preventDefault();
-                    var rows = wrap.querySelectorAll('[data-vms-staff-qualification-row="1"]');
-                    if (rows.length <= 1) {
-                        rows[0].querySelectorAll('input').forEach(function(input){ input.value=''; });
-                        var sel = rows[0].querySelector('select');
-                        if (sel) sel.value = 'active';
-                        return;
-                    }
-                    var row = btn.closest('[data-vms-staff-qualification-row="1"]');
-                    if (row) row.remove();
-                });
-            })();
-            </script>
             <?php
         },
         'vms_staff',
