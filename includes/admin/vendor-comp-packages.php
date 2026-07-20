@@ -37,6 +37,55 @@ add_action('add_meta_boxes', function () {
     );
 });
 
+if (!function_exists('vms_comp_package_admin_screen_is_target')) {
+    function vms_comp_package_admin_screen_is_target($screen): bool
+    {
+        if (!is_object($screen)) {
+            return false;
+        }
+
+        if (!in_array((string) ($screen->base ?? ''), array('post', 'post-new'), true)) {
+            return false;
+        }
+
+        return (string) ($screen->post_type ?? '') === 'vms_comp_package';
+    }
+}
+
+if (!function_exists('vms_comp_package_admin_enqueue_assets')) {
+    function vms_comp_package_admin_enqueue_assets(): void
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!vms_comp_package_admin_screen_is_target($screen)) {
+            return;
+        }
+
+        $version = function_exists('vms_asset_version')
+            ? vms_asset_version()
+            : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+
+        wp_enqueue_script(
+            'vms-compensation-admin',
+            VMS_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
+            array(),
+            $version,
+            true
+        );
+
+        wp_localize_script(
+            'vms-compensation-admin',
+            'vmsCompPackageAdmin',
+            array(
+                'labels' => array(
+                    'basePay' => __('Base Pay', 'backstage-venue-manager'),
+                    'flatFeeAmount' => __('Flat Fee Amount', 'backstage-venue-manager'),
+                ),
+            )
+        );
+    }
+}
+add_action('admin_enqueue_scripts', 'vms_comp_package_admin_enqueue_assets', 50);
+
 function vms_render_comp_package_meta_box($post)
 {
     wp_nonce_field('vms_save_comp_package', 'vms_comp_package_nonce');
@@ -297,48 +346,6 @@ function vms_render_comp_package_meta_box($post)
         <textarea id="vms_notes" name="vms_notes" rows="4" class="vms-comp-package-notes"><?php echo esc_textarea($notes); ?></textarea>
     </p>
     </div>
-
-    <script>
-        // Tiny UI helper: show/hide relevant sections based on type (no backend dependency)
-        (function(){
-            const typeSel = document.getElementById('vms_comp_type');
-            const flatFee = document.getElementById('vms_flat_fee')?.closest('p');
-            const flatLabelText = document.getElementById('vms_flat_fee_label_text');
-            const flatHelp = document.getElementById('vms_flat_fee_help');
-            const bonusModeSel = document.getElementById('vms_attendance_bonus_mode');
-            const typeBlocks = Array.from(document.querySelectorAll('.vms-comp-package-block[data-show-when]'));
-            const modeBlocks = Array.from(document.querySelectorAll('.vms-comp-package-mode-block[data-show-when-mode]'));
-
-            function refresh(){
-                const t = typeSel.value;
-                const mode = String(bonusModeSel?.value || '').trim();
-
-                if (flatFee) flatFee.style.display = (t === 'door_split') ? 'none' : '';
-                if (flatLabelText) flatLabelText.textContent = (t === 'attendance_bonus') ? 'Base Pay' : 'Flat Fee Amount';
-                if (flatHelp) flatHelp.classList.toggle('vms-hidden', t !== 'attendance_bonus');
-
-                typeBlocks.forEach(el => {
-                    const allowed = String(el.getAttribute('data-show-when') || '')
-                        .split(',')
-                        .map((value) => value.trim())
-                        .filter(Boolean);
-                    el.style.display = allowed.includes(t) ? '' : 'none';
-                });
-
-                modeBlocks.forEach(el => {
-                    const allowedMode = String(el.getAttribute('data-show-when-mode') || '').trim();
-                    el.style.display = (t === 'attendance_bonus' && allowedMode === mode) ? '' : 'none';
-                });
-            }
-            if (typeSel) {
-                typeSel.addEventListener('change', refresh);
-            }
-            if (bonusModeSel) {
-                bonusModeSel.addEventListener('change', refresh);
-                refresh();
-            }
-        })();
-    </script>
     <?php
 }
 

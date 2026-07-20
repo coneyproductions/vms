@@ -27,6 +27,99 @@ add_action('add_meta_boxes', function () {
     );
 });
 
+if (!function_exists('vms_vendor_defaults_admin_screen_is_target')) {
+    function vms_vendor_defaults_admin_screen_is_target($screen): bool
+    {
+        if (!is_object($screen)) {
+            return false;
+        }
+
+        if (!in_array((string) ($screen->base ?? ''), array('post', 'post-new'), true)) {
+            return false;
+        }
+
+        return (string) ($screen->post_type ?? '') === 'vms_vendor';
+    }
+}
+
+if (!function_exists('vms_vendor_defaults_admin_enqueue_assets')) {
+    function vms_vendor_defaults_admin_enqueue_assets(): void
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!vms_vendor_defaults_admin_screen_is_target($screen)) {
+            return;
+        }
+
+        $version = function_exists('vms_asset_version')
+            ? vms_asset_version()
+            : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+
+        wp_enqueue_script(
+            'vms-compensation-admin',
+            VMS_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
+            array(),
+            $version,
+            true
+        );
+
+        wp_localize_script(
+            'vms-compensation-admin',
+            'vmsVendorDefaultsAdmin',
+            array(
+                'strings' => array(
+                    'flatFeeOnly' => __('Flat Fee Only', 'backstage-venue-manager'),
+                    'flatFeeDoorSplit' => __('Flat Fee + Door Split', 'backstage-venue-manager'),
+                    'doorSplitOnly' => __('Door Split Only', 'backstage-venue-manager'),
+                    'baseAttendanceBonus' => __('Base + Attendance Bonus', 'backstage-venue-manager'),
+                    'noTemplateSelectedTitle' => __('No template selected', 'backstage-venue-manager'),
+                    'noTemplateSelectedNote' => __('This vendor will rely only on the Global Event Plan Defaults below.', 'backstage-venue-manager'),
+                    'structureLabel' => __('Structure', 'backstage-venue-manager'),
+                    'baseLabel' => __('Base', 'backstage-venue-manager'),
+                    'doorSplitLabel' => __('Door split', 'backstage-venue-manager'),
+                    'agentFeeLabel' => __('Agent fee', 'backstage-venue-manager'),
+                    'supportingActLabel' => __('Supporting act', 'backstage-venue-manager'),
+                    'basePayLabel' => __('Base pay', 'backstage-venue-manager'),
+                    'flatFeeLabel' => __('Flat fee', 'backstage-venue-manager'),
+                    'agentFeeGrossBased' => __('gross-based', 'backstage-venue-manager'),
+                    'agentFeeOnTop' => __('on top', 'backstage-venue-manager'),
+                    'attendanceModeContinuous' => __('continuous', 'backstage-venue-manager'),
+                    'attendanceModeStep' => __('step', 'backstage-venue-manager'),
+                    'attendanceBonusPrefix' => __('Attendance bonus:', 'backstage-venue-manager'),
+                    'attendanceStartsAfter' => __('starts after %s', 'backstage-venue-manager'),
+                    'attendanceStepSegment' => __('+%1$s every %2$s', 'backstage-venue-manager'),
+                    'attendanceContinuousSegment' => __('+%s per ticket', 'backstage-venue-manager'),
+                    'attendanceCapSegment' => __('cap %s', 'backstage-venue-manager'),
+                    'selectedTemplateTitle' => __('Selected Template', 'backstage-venue-manager'),
+                    'scopeLine' => __('Scope: %s', 'backstage-venue-manager'),
+                    'templatePreviewNote' => __('Event Plans start here, then the defaults below can customize this vendor further.', 'backstage-venue-manager'),
+                    'currentDefaultsTitle' => __('What Event Plans Get by Default', 'backstage-venue-manager'),
+                    'noSupportingActDefault' => __('No supporting-act default fee is set yet.', 'backstage-venue-manager'),
+                    'agentFeeGrossSummary' => __('Agent fee is calculated from gross / settlement.', 'backstage-venue-manager'),
+                    'agentFeeOnTopSummary' => __('Agent fee is added on top of vendor pay.', 'backstage-venue-manager'),
+                    'noDefaultAgentFee' => __('No default agent fee is set.', 'backstage-venue-manager'),
+                    'potentialMaxPayout' => __('Potential max payout: %s.', 'backstage-venue-manager'),
+                    'noBonusCapSummary' => __('No bonus cap is set, so payout can keep climbing above %s.', 'backstage-venue-manager'),
+                    'attendancePreviewIncomplete' => __('Complete Base Pay, Bonus Style, and the attendance bonus fields to preview payouts.', 'backstage-venue-manager'),
+                    'attendancePreviewStepSizeInvalid' => __('Step Size must be at least 1 for step-mode attendance bonuses.', 'backstage-venue-manager'),
+                    'formulaBasePay' => __('Base pay %s.', 'backstage-venue-manager'),
+                    'formulaNoBonusThrough' => __('No bonus is earned through %s attendance.', 'backstage-venue-manager'),
+                    'formulaStepBonus' => __('Add %1$s every %2$s tickets after that.', 'backstage-venue-manager'),
+                    'formulaContinuousBonus' => __('Add %s per ticket after that.', 'backstage-venue-manager'),
+                    'formulaTotalBonusCapAtCount' => __('Total bonus caps at %1$s once attendance reaches %2$s.', 'backstage-venue-manager'),
+                    'formulaTotalBonusCap' => __('Total bonus caps at %s.', 'backstage-venue-manager'),
+                    'noBonusCapPreview' => __('No bonus cap is set. Payout will continue to rise beyond the preview rows.', 'backstage-venue-manager'),
+                    'attendanceHeading' => __('Attendance', 'backstage-venue-manager'),
+                    'bonusHeading' => __('Bonus', 'backstage-venue-manager'),
+                    'totalPayHeading' => __('Total Pay', 'backstage-venue-manager'),
+                    'basePayMoney' => __('Base Pay ($)', 'backstage-venue-manager'),
+                    'flatFeeMoney' => __('Flat Fee ($)', 'backstage-venue-manager'),
+                ),
+            )
+        );
+    }
+}
+add_action('admin_enqueue_scripts', 'vms_vendor_defaults_admin_enqueue_assets', 50);
+
 /**
  * Save handler
  */
@@ -892,443 +985,6 @@ function vms_render_vendor_defaults_metabox($post)
             </div>
         </details>
     </div>
-
-    <script>
-    (function() {
-        const structure = document.getElementById('vms_default_comp_structure');
-        const bonusMode = document.getElementById('vms_default_attendance_bonus_mode');
-        const flatField = document.getElementById('vms_default_flat_fee_amount');
-        const supportingFlatField = document.getElementById('vms_default_supporting_flat_fee_amount');
-        const splitField = document.getElementById('vms_default_door_split_percent');
-        const commissionPercentField = document.getElementById('vms_default_commission_percent');
-        const commissionModeField = document.getElementById('vms_default_commission_mode');
-        const templateSelect = document.getElementById('vms_default_comp_package_id');
-        const loadTemplateBtn = document.getElementById('vms-load-comp-template-btn');
-        const editTemplateLink = document.getElementById('vms-edit-comp-template-link');
-        const templatePreview = document.getElementById('vms-comp-template-preview');
-        const summaryCard = document.getElementById('vms-vendor-defaults-summary');
-        const flatLabel = document.getElementById('vms-default-flat-fee-label');
-        const flatHelp = document.getElementById('vms-default-flat-fee-help');
-        const bonusBlock = document.getElementById('vms-vendor-defaults-bonus-block');
-        const previewWrap = document.getElementById('vms-vendor-attendance-bonus-preview');
-        const previewFormula = document.getElementById('vms-vendor-attendance-bonus-formula');
-        const previewNote = document.getElementById('vms-vendor-attendance-bonus-preview-note');
-        const previewTable = document.getElementById('vms-vendor-attendance-bonus-preview-table');
-        if (!structure) return;
-
-        const getStructureLabel = (value) => {
-            switch (String(value || '').trim()) {
-                case 'flat_fee_door_split': return 'Flat Fee + Door Split';
-                case 'door_split': return 'Door Split Only';
-                case 'attendance_bonus': return 'Base + Attendance Bonus';
-                case 'flat_fee':
-                default: return 'Flat Fee Only';
-            }
-        };
-
-        const formatMoney = (value) => {
-            const num = Number(value || 0);
-            return '$' + num.toFixed(2);
-        };
-
-        const escapeHtml = (value) => String(value === undefined || value === null ? '' : value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-
-        const nonNegativeMoney = (value) => {
-            const raw = String(value === undefined || value === null ? '' : value).trim();
-            if (raw === '') return null;
-            const parsed = Number(raw);
-            if (!Number.isFinite(parsed)) return null;
-            return Math.max(0, parsed);
-        };
-
-        const nonNegativeInt = (value) => {
-            const raw = String(value === undefined || value === null ? '' : value).trim();
-            if (raw === '') return null;
-            const parsed = Number(raw);
-            if (!Number.isFinite(parsed)) return null;
-            return Math.max(0, Math.floor(parsed));
-        };
-
-        const getCurrentStructure = () => String(structure.value || '').trim();
-        const getCurrentBonusMode = () => bonusMode ? String(bonusMode.value || '').trim() : '';
-
-        const attendanceState = () => ({
-            mode: getCurrentBonusMode(),
-            start: nonNegativeInt(document.getElementById('vms_default_attendance_bonus_start_count') ? document.getElementById('vms_default_attendance_bonus_start_count').value : ''),
-            stepSize: nonNegativeInt(document.getElementById('vms_default_attendance_bonus_step_size') ? document.getElementById('vms_default_attendance_bonus_step_size').value : ''),
-            stepBonus: nonNegativeMoney(document.getElementById('vms_default_attendance_bonus_step_bonus') ? document.getElementById('vms_default_attendance_bonus_step_bonus').value : ''),
-            perTicketRate: nonNegativeMoney(document.getElementById('vms_default_attendance_bonus_per_ticket_rate') ? document.getElementById('vms_default_attendance_bonus_per_ticket_rate').value : ''),
-            maxBonus: nonNegativeMoney(document.getElementById('vms_default_attendance_bonus_max_bonus') ? document.getElementById('vms_default_attendance_bonus_max_bonus').value : ''),
-        });
-
-        const attendanceCapInfo = (state) => {
-            if (state.maxBonus === null || state.start === null) return null;
-            if (state.mode === 'step' && state.stepSize !== null && state.stepSize >= 1 && state.stepBonus !== null && state.stepBonus > 0) {
-                const stepsToCap = Math.max(0, Math.ceil(state.maxBonus / state.stepBonus));
-                return { count: state.start + (stepsToCap * state.stepSize), steps: stepsToCap };
-            }
-            if (state.mode === 'continuous' && state.perTicketRate !== null && state.perTicketRate > 0) {
-                const ticketsToCap = Math.max(0, Math.ceil(state.maxBonus / state.perTicketRate));
-                return { count: state.start + ticketsToCap, tickets: ticketsToCap };
-            }
-            return null;
-        };
-
-        const buildAttendancePreviewCounts = (state) => {
-            const counts = [];
-            const pushCount = (value) => {
-                const safe = Math.max(0, Math.floor(Number(value || 0)));
-                if (!counts.includes(safe)) counts.push(safe);
-            };
-            const start = state.start ?? 0;
-            const capInfo = attendanceCapInfo(state);
-
-            if (state.mode === 'step') {
-                const stepSize = state.stepSize ?? 0;
-                pushCount(start);
-                if (capInfo && Number.isFinite(Number(capInfo.steps))) {
-                    const exactSteps = Math.max(0, Number(capInfo.steps || 0));
-                    if (exactSteps <= 10) {
-                        for (let stepIndex = 1; stepIndex <= exactSteps; stepIndex += 1) {
-                            pushCount(start + (stepIndex * stepSize));
-                        }
-                    } else {
-                        [1, 2, 3, 5, Math.ceil(exactSteps / 2), exactSteps - 1, exactSteps].forEach((stepIndex) => {
-                            if (stepIndex > 0) pushCount(start + (stepIndex * stepSize));
-                        });
-                    }
-                } else {
-                    [1, 2, 3, 5, 8].forEach((stepIndex) => pushCount(start + (stepIndex * stepSize)));
-                }
-            } else {
-                pushCount(start);
-                if (capInfo && Number.isFinite(Number(capInfo.tickets))) {
-                    const exactTickets = Math.max(0, Number(capInfo.tickets || 0));
-                    if (exactTickets <= 10) {
-                        for (let ticketIndex = 1; ticketIndex <= exactTickets; ticketIndex += 1) {
-                            pushCount(start + ticketIndex);
-                        }
-                    } else {
-                        [1, 5, 10, Math.ceil(exactTickets * 0.25), Math.ceil(exactTickets * 0.5), Math.ceil(exactTickets * 0.75), exactTickets].forEach((ticketIndex) => {
-                            if (ticketIndex > 0) pushCount(start + ticketIndex);
-                        });
-                    }
-                } else {
-                    [1, 5, 10, 25, 50].forEach((ticketIndex) => pushCount(start + ticketIndex));
-                }
-            }
-
-            counts.sort((a, b) => a - b);
-            return counts.slice(0, 8);
-        };
-
-        const calculateAttendancePreviewPayout = (base, state, attendanceCount) => {
-            const safeAttendance = Math.max(0, Math.floor(Number(attendanceCount || 0)));
-            const safeBase = Math.max(0, Number(base || 0));
-            let bonus = 0;
-
-            if (state.mode === 'step' && state.start !== null && state.stepSize !== null && state.stepSize >= 1 && state.stepBonus !== null) {
-                const stepsReached = Math.floor(Math.max(0, safeAttendance - state.start) / state.stepSize);
-                bonus = stepsReached * state.stepBonus;
-            } else if (state.mode === 'continuous' && state.start !== null && state.perTicketRate !== null) {
-                bonus = Math.max(0, safeAttendance - state.start) * state.perTicketRate;
-            }
-
-            bonus = Math.max(0, Number(bonus || 0));
-            if (state.maxBonus !== null) {
-                bonus = Math.min(state.maxBonus, bonus);
-            }
-
-            return {
-                base: safeBase,
-                bonus: bonus,
-                payout: safeBase + bonus,
-            };
-        };
-
-        const getSelectedTemplateTerms = () => {
-            if (!templateSelect) return null;
-            const option = templateSelect.options[templateSelect.selectedIndex] || null;
-            if (!option || !option.value || option.value === '0') return null;
-            try {
-                return JSON.parse(option.getAttribute('data-terms') || '{}');
-            } catch (err) {
-                return null;
-            }
-        };
-
-        const summaryChip = (label, value, tone = '') => {
-            const toneClass = tone ? ' ' + tone : '';
-            return '<span class="vms-vendor-defaults-chip' + toneClass + '"><strong>' + escapeHtml(label) + ':</strong> ' + escapeHtml(value) + '</span>';
-        };
-
-        const renderTemplateUI = () => {
-            if (!templateSelect || !templatePreview) return;
-            const option = templateSelect.options[templateSelect.selectedIndex] || null;
-            const hasSelection = !!(option && option.value && option.value !== '0');
-
-            if (editTemplateLink) {
-                const href = hasSelection ? String(option.getAttribute('data-edit-url') || '').trim() : '';
-                editTemplateLink.style.display = hasSelection ? '' : 'none';
-                editTemplateLink.setAttribute('href', href || '#');
-            }
-
-            if (!hasSelection) {
-                templatePreview.innerHTML = '<div class="vms-vendor-defaults-preview-card__title">No template selected</div><p class="description">This vendor will rely only on the Global Event Plan Defaults below.</p>';
-                return;
-            }
-
-            const scope = String(option.getAttribute('data-scope') || '').trim();
-            const terms = getSelectedTemplateTerms() || {};
-            const chips = [];
-            chips.push(summaryChip('Structure', getStructureLabel(terms.structure || 'flat_fee'), 'vms-vendor-defaults-chip--blue'));
-            if (terms.flat_fee_amount !== undefined && terms.flat_fee_amount !== null && terms.flat_fee_amount !== '') {
-                chips.push(summaryChip('Base', formatMoney(terms.flat_fee_amount)));
-            }
-            if (terms.door_split_percent !== undefined && terms.door_split_percent !== null && terms.door_split_percent !== '') {
-                chips.push(summaryChip('Door split', String(terms.door_split_percent) + '%'));
-            }
-            if (terms.commission_percent !== undefined && terms.commission_percent !== null && terms.commission_percent !== '') {
-                const feeMode = (String(terms.commission_mode || '') === 'gross') ? 'gross-based' : 'on top';
-                chips.push(summaryChip('Agent fee', String(terms.commission_percent) + '% (' + feeMode + ')'));
-            }
-
-            let bonusLine = '';
-            if (String(terms.structure || '') === 'attendance_bonus') {
-                const modeLabel = (String(terms.attendance_bonus_mode || '') === 'continuous') ? 'continuous' : 'step';
-                bonusLine = '<p class="description vms-vendor-defaults-preview-card__note">Attendance bonus: ' + modeLabel;
-                if (terms.attendance_bonus_start_count !== undefined && terms.attendance_bonus_start_count !== null && terms.attendance_bonus_start_count !== '') {
-                    bonusLine += ' • starts after ' + terms.attendance_bonus_start_count;
-                }
-                if (terms.attendance_bonus_mode === 'step' && terms.attendance_bonus_step_size !== undefined && terms.attendance_bonus_step_size !== null && terms.attendance_bonus_step_size !== '' && terms.attendance_bonus_step_bonus !== undefined && terms.attendance_bonus_step_bonus !== null && terms.attendance_bonus_step_bonus !== '') {
-                    bonusLine += ' • +' + formatMoney(terms.attendance_bonus_step_bonus) + ' every ' + terms.attendance_bonus_step_size;
-                }
-                if (terms.attendance_bonus_mode === 'continuous' && terms.attendance_bonus_per_ticket_rate !== undefined && terms.attendance_bonus_per_ticket_rate !== null && terms.attendance_bonus_per_ticket_rate !== '') {
-                    bonusLine += ' • +' + formatMoney(terms.attendance_bonus_per_ticket_rate) + ' per ticket';
-                }
-                if (terms.attendance_bonus_max_bonus !== undefined && terms.attendance_bonus_max_bonus !== null && terms.attendance_bonus_max_bonus !== '') {
-                    bonusLine += ' • cap ' + formatMoney(terms.attendance_bonus_max_bonus);
-                }
-                bonusLine += '</p>';
-            }
-
-            templatePreview.innerHTML = [
-                '<div class="vms-vendor-defaults-preview-card__title">Selected Template</div>',
-                '<div class="vms-vendor-defaults-preview-card__subtitle">' + escapeHtml(option.text) + '</div>',
-                scope ? '<p class="description vms-vendor-defaults-preview-card__scope">Scope: ' + escapeHtml(scope) + '</p>' : '',
-                '<div class="vms-vendor-defaults-chip-row">' + chips.join('') + '</div>',
-                bonusLine,
-                '<p class="description vms-vendor-defaults-preview-card__note">Event Plans start here, then the defaults below can customize this vendor further.</p>'
-            ].join('');
-        };
-
-        const renderCurrentDefaultsSummary = () => {
-            if (!summaryCard) return;
-
-            const currentStructure = getCurrentStructure();
-            const flat = nonNegativeMoney(flatField ? flatField.value : '');
-            const supportingFlat = nonNegativeMoney(supportingFlatField ? supportingFlatField.value : '');
-            const split = nonNegativeMoney(splitField ? splitField.value : '');
-            const comm = nonNegativeMoney(commissionPercentField ? commissionPercentField.value : '');
-            const commMode = String(commissionModeField ? commissionModeField.value : 'artist_fee');
-            const chips = [summaryChip('Structure', getStructureLabel(currentStructure), 'vms-vendor-defaults-chip--blue')];
-            const notes = [];
-
-            if (currentStructure !== 'door_split' && flat !== null) {
-                chips.push(summaryChip(currentStructure === 'attendance_bonus' ? 'Base pay' : 'Flat fee', formatMoney(flat)));
-            }
-            if ((currentStructure === 'flat_fee_door_split' || currentStructure === 'door_split') && split !== null) {
-                chips.push(summaryChip('Door split', String(split) + '%'));
-            }
-            if (supportingFlat !== null) {
-                chips.push(summaryChip('Supporting act', formatMoney(supportingFlat), 'vms-vendor-defaults-chip--green'));
-            } else {
-                notes.push('No supporting-act default fee is set yet.');
-            }
-            if (comm !== null && comm > 0) {
-                chips.push(summaryChip('Agent fee', String(comm) + '%', 'vms-vendor-defaults-chip--amber'));
-                notes.push((commMode === 'gross') ? 'Agent fee is calculated from gross / settlement.' : 'Agent fee is added on top of vendor pay.');
-            } else {
-                notes.push('No default agent fee is set.');
-            }
-
-            if (currentStructure === 'attendance_bonus') {
-                const state = attendanceState();
-                if (flat !== null && state.maxBonus !== null) {
-                    notes.unshift('Potential max payout: ' + formatMoney(flat + state.maxBonus) + '.');
-                } else if (flat !== null) {
-                    notes.unshift('No bonus cap is set, so payout can keep climbing above ' + formatMoney(flat) + '.');
-                }
-            }
-
-            summaryCard.innerHTML = [
-                '<div class="vms-vendor-defaults-preview-card__title">What Event Plans Get by Default</div>',
-                '<div class="vms-vendor-defaults-chip-row">' + chips.join('') + '</div>',
-                '<p class="description vms-vendor-defaults-preview-card__note">' + notes.join(' ') + '</p>'
-            ].join('');
-        };
-
-        const renderAttendancePreview = () => {
-            if (!previewWrap || !previewFormula || !previewTable || !previewNote) return;
-
-            const currentStructure = getCurrentStructure();
-            const base = nonNegativeMoney(flatField ? flatField.value : '');
-            const state = attendanceState();
-            const isAttendance = (currentStructure === 'attendance_bonus');
-
-            previewWrap.classList.toggle('vms-hidden', !isAttendance);
-            if (!bonusBlock) {
-                return;
-            }
-            bonusBlock.classList.toggle('vms-hidden', !isAttendance);
-            if (!isAttendance) {
-                previewFormula.textContent = '';
-                previewNote.textContent = '';
-                previewTable.innerHTML = '';
-                return;
-            }
-
-            const isStepValid = (base !== null && state.mode === 'step' && state.start !== null && state.stepSize !== null && state.stepSize >= 1 && state.stepBonus !== null);
-            const isContinuousValid = (base !== null && state.mode === 'continuous' && state.start !== null && state.perTicketRate !== null);
-
-            if (!isStepValid && !isContinuousValid) {
-                let msg = 'Complete Base Pay, Bonus Style, and the attendance bonus fields to preview payouts.';
-                if (state.mode === 'step' && state.stepSize !== null && state.stepSize < 1) {
-                    msg = 'Step Size must be at least 1 for step-mode attendance bonuses.';
-                }
-                previewFormula.textContent = msg;
-                previewNote.textContent = '';
-                previewTable.innerHTML = '';
-                return;
-            }
-
-            const capInfo = attendanceCapInfo(state);
-            const counts = buildAttendancePreviewCounts(state);
-            if (state.mode === 'step') {
-                const parts = [
-                    'Base pay ' + formatMoney(base) + '.',
-                    'No bonus is earned through ' + state.start + ' attendance.',
-                    'Add ' + formatMoney(state.stepBonus) + ' every ' + state.stepSize + ' tickets after that.'
-                ];
-                if (state.maxBonus !== null) {
-                    parts.push(capInfo && capInfo.count !== null
-                        ? 'Total bonus caps at ' + formatMoney(state.maxBonus) + ' once attendance reaches ' + capInfo.count + '.'
-                        : 'Total bonus caps at ' + formatMoney(state.maxBonus) + '.');
-                }
-                previewFormula.textContent = parts.join(' ');
-            } else {
-                const parts = [
-                    'Base pay ' + formatMoney(base) + '.',
-                    'No bonus is earned through ' + state.start + ' attendance.',
-                    'Add ' + formatMoney(state.perTicketRate) + ' per ticket after that.'
-                ];
-                if (state.maxBonus !== null) {
-                    parts.push(capInfo && capInfo.count !== null
-                        ? 'Total bonus caps at ' + formatMoney(state.maxBonus) + ' once attendance reaches ' + capInfo.count + '.'
-                        : 'Total bonus caps at ' + formatMoney(state.maxBonus) + '.');
-                }
-                previewFormula.textContent = parts.join(' ');
-            }
-
-            if (state.maxBonus !== null) {
-                previewNote.textContent = 'Potential max payout: ' + formatMoney(base + state.maxBonus) + '.';
-            } else {
-                previewNote.textContent = 'No bonus cap is set. Payout will continue to rise beyond the preview rows.';
-            }
-
-            const rows = counts.map((count) => {
-                const payout = calculateAttendancePreviewPayout(base, state, count);
-                return '<tr><td>' + count + '</td><td>' + formatMoney(payout.bonus) + '</td><td>' + formatMoney(payout.payout) + '</td></tr>';
-            }).join('');
-
-            previewTable.innerHTML = '<table class="widefat striped"><thead><tr><th>Attendance</th><th>Bonus</th><th>Total Pay</th></tr></thead><tbody>' + rows + '</tbody></table>';
-        };
-
-        const refreshFieldVisibility = () => {
-            const currentStructure = getCurrentStructure();
-            const currentMode = getCurrentBonusMode();
-
-            document.querySelectorAll('.vms-vendor-bonus-field').forEach((el) => {
-                const needStructure = String(el.getAttribute('data-show-when-structure') || '').trim();
-                const needMode = String(el.getAttribute('data-show-when-mode') || '').trim();
-                const showStructure = (needStructure === '' || needStructure === currentStructure);
-                const showMode = (needMode === '' || needMode === currentMode);
-                el.style.display = (showStructure && showMode) ? '' : 'none';
-            });
-
-            document.querySelectorAll('.vms-vendor-structure-field').forEach((el) => {
-                const allowedStructures = String(el.getAttribute('data-show-when-structures') || '').split(',').map((value) => value.trim()).filter(Boolean);
-                el.classList.toggle('vms-hidden', allowedStructures.length ? !allowedStructures.includes(currentStructure) : false);
-            });
-
-            if (flatLabel) {
-                flatLabel.textContent = (currentStructure === 'attendance_bonus') ? 'Base Pay ($)' : 'Flat Fee ($)';
-            }
-            if (flatHelp) {
-                flatHelp.classList.toggle('vms-hidden', currentStructure !== 'attendance_bonus');
-            }
-        };
-
-        const refresh = () => {
-            refreshFieldVisibility();
-            renderTemplateUI();
-            renderCurrentDefaultsSummary();
-            renderAttendancePreview();
-        };
-
-        if (templateSelect) {
-            templateSelect.addEventListener('change', refresh);
-        }
-
-        if (loadTemplateBtn) {
-            loadTemplateBtn.addEventListener('click', function() {
-                const terms = getSelectedTemplateTerms();
-                if (!terms) return;
-                const setValue = (id, value) => {
-                    const el = document.getElementById(id);
-                    if (!el) return;
-                    el.value = (value === undefined || value === null) ? '' : String(value);
-                };
-                setValue('vms_default_comp_structure', terms.structure || 'flat_fee');
-                setValue('vms_default_flat_fee_amount', terms.flat_fee_amount);
-                setValue('vms_default_door_split_percent', terms.door_split_percent);
-                setValue('vms_default_commission_percent', terms.commission_percent);
-                setValue('vms_default_commission_mode', (String(terms.commission_mode || '') === 'gross') ? 'gross' : 'artist_fee');
-                setValue('vms_default_attendance_bonus_mode', terms.attendance_bonus_mode);
-                setValue('vms_default_attendance_bonus_start_count', terms.attendance_bonus_start_count);
-                setValue('vms_default_attendance_bonus_step_size', terms.attendance_bonus_step_size);
-                setValue('vms_default_attendance_bonus_step_bonus', terms.attendance_bonus_step_bonus);
-                setValue('vms_default_attendance_bonus_per_ticket_rate', terms.attendance_bonus_per_ticket_rate);
-                setValue('vms_default_attendance_bonus_max_bonus', terms.attendance_bonus_max_bonus);
-                refresh();
-            });
-        }
-
-        [
-            structure,
-            bonusMode,
-            flatField,
-            splitField,
-            commissionPercentField,
-            commissionModeField,
-            document.getElementById('vms_default_attendance_bonus_start_count'),
-            document.getElementById('vms_default_attendance_bonus_step_size'),
-            document.getElementById('vms_default_attendance_bonus_step_bonus'),
-            document.getElementById('vms_default_attendance_bonus_per_ticket_rate'),
-            document.getElementById('vms_default_attendance_bonus_max_bonus')
-        ].filter(Boolean).forEach((el) => {
-            el.addEventListener('change', refresh);
-            el.addEventListener('input', refresh);
-        });
-
-        refresh();
-    })();
-    </script>
 
     <?php
 }
