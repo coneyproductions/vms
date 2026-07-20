@@ -174,6 +174,75 @@ if (!function_exists('wp_unslash')) {
 	}
 }
 
+if (!function_exists('vms_request_server_value')) {
+	function vms_request_server_value(string $key): string
+	{
+		if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
+			return '';
+		}
+
+		return trim((string) wp_unslash($_SERVER[$key]));
+	}
+}
+
+if (!function_exists('vms_request_method')) {
+	function vms_request_method(string $fallback = 'get'): string
+	{
+		$method = sanitize_key(vms_request_server_value('REQUEST_METHOD'));
+		if ($method !== '') {
+			return $method;
+		}
+
+		$fallback = sanitize_key($fallback);
+		return ($fallback !== '') ? $fallback : 'get';
+	}
+}
+
+if (!function_exists('vms_request_current_uri')) {
+	function vms_request_current_uri(string $fallback = ''): string
+	{
+		$uri = vms_request_server_value('REQUEST_URI');
+		if ($uri === '') {
+			return $fallback;
+		}
+
+		$uri = preg_replace('/[\x00-\x1F\x7F]+/', '', $uri);
+		if (!is_string($uri) || $uri === '') {
+			return $fallback;
+		}
+
+		if ($uri[0] !== '/') {
+			$uri = '/' . $uri;
+		}
+
+		return substr($uri, 0, 2048);
+	}
+}
+
+if (!function_exists('vms_request_remote_addr')) {
+	function vms_request_remote_addr(): string
+	{
+		$ip = vms_request_server_value('REMOTE_ADDR');
+		if ($ip === '') {
+			return '';
+		}
+
+		return substr(sanitize_text_field($ip), 0, 64);
+	}
+}
+
+if (!function_exists('vms_request_user_agent')) {
+	function vms_request_user_agent(): string
+	{
+		$user_agent = vms_request_server_value('HTTP_USER_AGENT');
+		if ($user_agent === '') {
+			return '';
+		}
+
+		return substr(sanitize_text_field($user_agent), 0, 255);
+	}
+}
+
 if (!function_exists('esc_html')) {
 	function esc_html($text): string
 	{
@@ -458,7 +527,9 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 require_once dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 
 $pluginRoot = dirname(__DIR__);
+$livePluginRoot = dirname(dirname($pluginRoot)) . '/vms';
 $passClaimsSource = file_get_contents($pluginRoot . '/includes/modules/admissions/pass-claims.php');
+$livePassClaimsSource = file_get_contents($livePluginRoot . '/includes/modules/admissions/pass-claims.php');
 $adminShellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');
 $publicJsSource = file_get_contents($pluginRoot . '/assets/js/vms-pass-claims-public.js');
 $publicCssSource = file_get_contents($pluginRoot . '/assets/css/vms-pass-claims-public.css');
@@ -591,6 +662,7 @@ $captureShellRender = static function (callable $callback) use ($assert): array 
 };
 
 $assert(is_string($passClaimsSource) && $passClaimsSource !== '', 'Pass Claims source should be readable.');
+$assert(is_string($livePassClaimsSource) && $livePassClaimsSource !== '', 'Live Pass Claims source should be readable.');
 $assert(is_string($adminShellSource) && $adminShellSource !== '', 'Administrator shell source should be readable.');
 $assert(is_string($publicJsSource) && $publicJsSource !== '', 'Pass Claims public JS source should be readable.');
 $assert(is_string($publicCssSource) && $publicCssSource !== '', 'Pass Claims public CSS source should be readable.');
@@ -615,6 +687,19 @@ $assert(vms_pass_claims_get_request_token() === 'get token', 'Pass Claims reques
 $resetRuntime();
 $_SERVER['REQUEST_URI'] = '/pass/claim/uri%20token?ref=1';
 $assert(vms_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
+
+$assert(strpos($passClaimsSource, '$_SERVER') === false, 'Mirror Pass Claims runtime should not retain direct $_SERVER reads.');
+$assert(strpos($livePassClaimsSource, '$_SERVER') === false, 'Live Pass Claims runtime should not retain direct $_SERVER reads.');
+$assert(substr_count($passClaimsSource, 'vms_request_current_uri()') === 1, 'Mirror Pass Claims runtime should use the shared current-URI helper for claim-token routing.');
+$assert(substr_count($livePassClaimsSource, 'vms_request_current_uri()') === 2, 'Live Pass Claims runtime should use the shared current-URI helper for claim and invite routing.');
+$assert(substr_count($passClaimsSource, 'vms_request_remote_addr()') === 2, 'Mirror Pass Claims runtime should use the shared remote-address helper at each claim boundary.');
+$assert(substr_count($livePassClaimsSource, 'vms_request_remote_addr()') === 2, 'Live Pass Claims runtime should use the shared remote-address helper at each claim boundary.');
+$assert(substr_count($passClaimsSource, 'vms_request_user_agent()') === 1, 'Mirror Pass Claims runtime should use the shared user-agent helper during claim persistence.');
+$assert(substr_count($livePassClaimsSource, 'vms_request_user_agent()') === 1, 'Live Pass Claims runtime should use the shared user-agent helper during claim persistence.');
+$assert(substr_count($passClaimsSource, "vms_request_method() === 'post'") === 1, 'Mirror Pass Claims runtime should preserve the POST-only public submit gate through the shared method helper.');
+$assert(substr_count($livePassClaimsSource, "vms_request_method() === 'post'") === 1, 'Live Pass Claims runtime should preserve the POST-only public submit gate through the shared method helper.');
+$assert(strpos($passClaimsSource, "vms_pass_claims_rate_limit_hit(\$ip, (string) (\$token_row['token_public_key'] ?? ''))") !== false, 'Mirror Pass Claims runtime should preserve the rate-limit public-key handoff.');
+$assert(strpos($livePassClaimsSource, "vms_pass_claims_rate_limit_hit(\$ip, (string) (\$token_row['token_public_key'] ?? ''))") !== false, 'Live Pass Claims runtime should preserve the rate-limit public-key handoff.');
 
 $resetRuntime();
 $GLOBALS['vms_test_is_admin'] = true;

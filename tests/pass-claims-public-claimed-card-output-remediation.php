@@ -128,6 +128,75 @@ if (!function_exists('wp_unslash')) {
 	}
 }
 
+if (!function_exists('vms_request_server_value')) {
+	function vms_request_server_value(string $key): string
+	{
+		if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
+			return '';
+		}
+
+		return trim((string) wp_unslash($_SERVER[$key]));
+	}
+}
+
+if (!function_exists('vms_request_method')) {
+	function vms_request_method(string $fallback = 'get'): string
+	{
+		$method = sanitize_key(vms_request_server_value('REQUEST_METHOD'));
+		if ($method !== '') {
+			return $method;
+		}
+
+		$fallback = sanitize_key($fallback);
+		return ($fallback !== '') ? $fallback : 'get';
+	}
+}
+
+if (!function_exists('vms_request_current_uri')) {
+	function vms_request_current_uri(string $fallback = ''): string
+	{
+		$uri = vms_request_server_value('REQUEST_URI');
+		if ($uri === '') {
+			return $fallback;
+		}
+
+		$uri = preg_replace('/[\x00-\x1F\x7F]+/', '', $uri);
+		if (!is_string($uri) || $uri === '') {
+			return $fallback;
+		}
+
+		if ($uri[0] !== '/') {
+			$uri = '/' . $uri;
+		}
+
+		return substr($uri, 0, 2048);
+	}
+}
+
+if (!function_exists('vms_request_remote_addr')) {
+	function vms_request_remote_addr(): string
+	{
+		$ip = vms_request_server_value('REMOTE_ADDR');
+		if ($ip === '') {
+			return '';
+		}
+
+		return substr(sanitize_text_field($ip), 0, 64);
+	}
+}
+
+if (!function_exists('vms_request_user_agent')) {
+	function vms_request_user_agent(): string
+	{
+		$user_agent = vms_request_server_value('HTTP_USER_AGENT');
+		if ($user_agent === '') {
+			return '';
+		}
+
+		return substr(sanitize_text_field($user_agent), 0, 255);
+	}
+}
+
 if (!function_exists('esc_html')) {
 	function esc_html($text): string
 	{

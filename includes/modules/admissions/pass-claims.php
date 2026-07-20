@@ -2404,7 +2404,7 @@ if (!function_exists('vms_pass_claims_get_request_token')) {
 			return rawurldecode(wp_unslash($token));
 		}
 
-		$uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+		$uri = vms_request_current_uri();
 		if ($uri !== '' && preg_match('~^/pass/claim/([^/?#]+)~', $uri, $m)) {
 			return rawurldecode((string) $m[1]);
 		}
@@ -2663,8 +2663,8 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 			}
 		}
 
-		$ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
-		$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+		$ip = vms_request_remote_addr();
+		$user_agent = vms_request_user_agent();
 
 		$insert_claim = $wpdb->insert(
 			$claims_table,
@@ -3109,7 +3109,7 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 			vms_pass_claims_render_public_claimed_card((int) ($token_row['reservation_entry_id'] ?? 0));
 		}
 
-		$ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+		$ip = vms_request_remote_addr();
 		if ($ip !== '' && vms_pass_claims_rate_limit_hit($ip, (string) ($token_row['token_public_key'] ?? ''))) {
 			vms_pass_claims_render_public_status_screen(
 				__('Claim Pass', 'backstage-venue-manager'),
@@ -3140,7 +3140,7 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 			'opt_in' => 0,
 		);
 
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_pass_claim_submit'])) {
+		if (vms_request_method() === 'post' && isset($_POST['vms_pass_claim_submit'])) {
 			$nonce = (isset($_POST['_vms_pass_claim_nonce']) && !is_array($_POST['_vms_pass_claim_nonce']))
 				? sanitize_text_field(wp_unslash((string) $_POST['_vms_pass_claim_nonce']))
 				: '';
