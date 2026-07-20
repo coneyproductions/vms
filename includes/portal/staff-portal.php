@@ -1762,6 +1762,15 @@ function vms_staff_portal_shortcode()
     if (!in_array($tab, array('dashboard', 'tax-profile', 'employee-packet', 'certifications', 'availability'), true)) {
         $tab = 'dashboard';
     }
+    if ($tab === 'availability' && function_exists('wp_enqueue_script')) {
+        $staff_portal_script_src = function_exists('vms_asset_url')
+            ? vms_asset_url('assets/js/vms-staff-portal.js')
+            : VMS_PLUGIN_URL . 'assets/js/vms-staff-portal.js';
+        $staff_portal_script_ver = function_exists('vms_asset_version_for')
+            ? vms_asset_version_for('assets/js/vms-staff-portal.js')
+            : (function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''));
+        wp_enqueue_script('vms-staff-portal', $staff_portal_script_src, array(), $staff_portal_script_ver, true);
+    }
 
     ob_start();
 
@@ -2575,16 +2584,10 @@ function vms_staff_portal_render_availability_manual($staff_id)
     if (!vms_staff_portal_has_availability_setup($staff_id)) {
         echo wp_kses(vms_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
     }
-    echo '<form method="post" class="vms-staff-av-form">';
-    wp_nonce_field('vms_staff_save_availability', 'vms_staff_avail_nonce');
-
     $staff_avail_ajax_nonce = wp_create_nonce('vms_staff_avail_ajax');
+    echo '<form method="post" class="vms-staff-av-form" data-vms-staff-availability="1" data-vms-staff-availability-ajax-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-vms-staff-availability-nonce="' . esc_attr($staff_avail_ajax_nonce) . '">';
+    wp_nonce_field('vms_staff_save_availability', 'vms_staff_avail_nonce');
     echo '<div class="vms-av-autosave" aria-live="polite"></div>';
-    echo '<script>
-window.VMS_STAFF_AV = window.VMS_STAFF_AV || {};
-window.VMS_STAFF_AV.ajaxUrl = ' . wp_json_encode(admin_url('admin-ajax.php')) . ';
-window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
-</script>';
 
     foreach ($grouped as $ym => $dates_in_month) {
         $month_tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
@@ -2798,160 +2801,6 @@ window.VMS_STAFF_AV.nonce   = ' . wp_json_encode($staff_avail_ajax_nonce) . ';
     echo '</div>';
     echo '</details>';
     echo '</div>';
-    ?>
-    <script>
-    (function(){
-        var root = document.getElementById('vms-portal-root');
-        if (!root || root.dataset.staffAvailabilityBound === '1') {
-            return;
-        }
-        root.dataset.staffAvailabilityBound = '1';
-
-        var config = window.VMS_STAFF_AV || {};
-        var ajaxUrl = config.ajaxUrl || '';
-        var nonce = config.nonce || '';
-        var pending = 0;
-        var failed = 0;
-        var dirtyDates = new Set();
-        var statusEl = root.querySelector('.vms-av-autosave');
-
-        function setStatus(message){
-            if (!statusEl) return;
-            statusEl.textContent = message || '';
-            statusEl.classList.toggle('is-error', /failed/i.test(message || ''));
-        }
-
-        function labelFor(state){
-            if (state === 'available') return 'Available';
-            if (state === 'unavailable') return 'Unavailable';
-            return 'Unset';
-        }
-
-        function visualFor(state){
-            if (state === 'available') return 'available';
-            if (state === 'unavailable') return 'unavailable';
-            return '';
-        }
-
-        function badgeStateClass(state){
-            if (state === 'available') return 'is-available';
-            if (state === 'unavailable') return 'is-unavailable';
-            return 'is-unset';
-        }
-
-        function cycle(state){
-            if (state === '') return 'available';
-            if (state === 'available') return 'unavailable';
-            return '';
-        }
-
-        function post(params) {
-            return fetch(ajaxUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                body: new URLSearchParams(params).toString(),
-                credentials: 'same-origin'
-            }).then(function(r){ return r.json(); });
-        }
-
-        function updateMonthCounts(month){
-            if (!month) return;
-            var counts = month.querySelector('.vms-av-counts');
-            if (!counts) return;
-            var active = parseInt(counts.getAttribute('data-active') || '0', 10) || 0;
-            var working = month.querySelectorAll('.vms-av-badge-status.is-working').length;
-            var conflicts = month.querySelectorAll('.vms-av-badge-status.is-conflict').length;
-            var available = month.querySelectorAll('.vms-av-badge-status.is-available').length;
-            var unavailable = month.querySelectorAll('.vms-av-badge-status.is-unavailable').length + conflicts;
-            counts.textContent = active + ' active | ' + unavailable + ' U | ' + available + ' A | ' + working + ' W';
-        }
-
-        function applyLocalState(btn, next){
-            btn.setAttribute('data-state', next);
-            btn.setAttribute('data-visual', visualFor(next));
-
-            var td = btn.closest('td');
-            if (td) {
-                var hidden = td.querySelector('.vms-av-hidden[data-date="' + btn.getAttribute('data-date') + '"]');
-                if (hidden) {
-                    hidden.value = next;
-                }
-                var badge = td.querySelector('.vms-av-badge-status');
-                if (badge) {
-                    badge.className = 'vms-av-badge-status ' + badgeStateClass(next);
-                    badge.textContent = labelFor(next);
-                }
-                var source = td.querySelector('.vms-av-src');
-                if (source) {
-                    source.remove();
-                }
-            }
-
-            updateMonthCounts(btn.closest('.vms-av-month'));
-        }
-
-        function saveDay(date, state, btn, previous){
-            if (!ajaxUrl || !nonce) {
-                failed += 1;
-                setStatus('Save failed. Please reload and try again.');
-                applyLocalState(btn, previous);
-                return;
-            }
-
-            pending += 1;
-            dirtyDates.add(date);
-            failed = 0;
-            setStatus('Saving…');
-            btn.classList.remove('vms-av-save-failed');
-
-            post({
-                action: 'vms_staff_save_manual_availability_day',
-                nonce: nonce,
-                date: date,
-                state: state
-            }).then(function(json){
-                pending -= 1;
-                if (!json || !json.success) {
-                    failed += 1;
-                    btn.classList.add('vms-av-save-failed');
-                    applyLocalState(btn, previous);
-                    setStatus('Save failed. Tap again or use Fallback Save below.');
-                    return;
-                }
-
-                dirtyDates.delete(date);
-                updateMonthCounts(btn.closest('.vms-av-month'));
-                if (pending === 0 && failed === 0) setStatus('Saved');
-                if (pending === 0 && failed > 0) setStatus('Some changes failed to save.');
-            }).catch(function(){
-                pending -= 1;
-                failed += 1;
-                btn.classList.add('vms-av-save-failed');
-                applyLocalState(btn, previous);
-                setStatus('Save failed. Check connection and try again.');
-            });
-        }
-
-        window.addEventListener('beforeunload', function(e) {
-            if (pending > 0 || failed > 0 || dirtyDates.size > 0) {
-                e.preventDefault();
-                e.returnValue = '';
-                return '';
-            }
-        });
-
-        root.querySelectorAll('.vms-staff-av-btn').forEach(function(btn){
-            btn.addEventListener('click', function(){
-                var current = btn.getAttribute('data-state') || '';
-                var next = cycle(current);
-                var date = btn.getAttribute('data-date') || '';
-                applyLocalState(btn, next);
-                saveDay(date, next, btn, current);
-            });
-        });
-    })();
-    </script>
-    <?php
 }
 
 
