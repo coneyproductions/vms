@@ -116,7 +116,7 @@ Status:
 
 - The original scanner-style hit table below is retained as historical prereview evidence.
 - Historical `WPORG-22` B1 through B5 remain completed in the current mirror history.
-- The final prereview also identified a bounded residual inline-asset inventory tracked separately under `WPORG-22R`; `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, `WPORG-22R-L`, and `WPORG-22R-M` below close the Reference Keys Map, Holidays, Event Plan Import, Staff Tasks module-admin, Vendor Compensation metabox helpers, Tax Bypass, ADD request-builder, ADD menu-badge helpers, the standalone ADD public-shell CSS residual, the Staff CPT qualifications helper, the Staffing admin helpers, and the Staff Portal runtime helpers, while the parent now stays open only for consolidated stale-test maintenance, a fresh repository-wide residual scan, and formal closeout evidence.
+- The final prereview also identified a bounded residual inline-asset inventory tracked separately under `WPORG-22R`; `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, `WPORG-22R-L`, and `WPORG-22R-M` below close the Reference Keys Map, Holidays, Event Plan Import, Staff Tasks module-admin, Vendor Compensation metabox helpers, Tax Bypass, ADD request-builder, ADD menu-badge helpers, the standalone ADD public-shell CSS residual, the Staff CPT qualifications helper, the Staffing admin helpers, and the Staff Portal runtime helpers, and the formal documentation-only closeout below now marks the parent `verified` after stale-test reconciliation at `db9f19d7c14bb36c06f6467af04d5ac62af62566`, 17 maintained tests, 22 support/sentinel tests, and a fresh scoped scan confirmed that no executable inline JS/CSS remains inside the tracked `WPORG-22R` runtime family while unrelated executable inline assets remain elsewhere in the repository outside this parent.
 - Remaining script-like Event Plan payloads reviewed for B1 are limited to inert scoped JSON and minimal scoped ticketing configuration, not executable controller code.
 - Acceptable structured-data/state-blob patterns should not be "fixed" as if they were executable inline JS.
 
@@ -2020,7 +2020,7 @@ Date: 2026-07-10
 
 - `WPORG-19A` intentionally did not add missing nonces to handlers that currently lacked them; the later `WPORG-19B` follow-up confirmed no additional missing-nonce defects in the complete runtime inventory.
 - `WPORG-19A` intentionally did not broaden or tighten capabilities, roles, ownership rules, or endpoint visibility in the normalization patch itself; the later `WPORG-19B` batch handled the needed object-level authorization hardening without changing business logic.
-- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the historical inline asset enqueue migration tracked in `WPORG-22` B1-B5 plus the accepted residual closeouts `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, `WPORG-22R-L`, and `WPORG-22R-M`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; current known runtime implementation work under `WPORG-22R` is complete, and the next follow-up there is consolidated stale-test maintenance plus a formal closeout gate rather than another runtime implementation slice.
+- The current verified working tree closes the nonce input normalization / sanitization part of section C, the targeted follow-up authorization hardening tracked in `WPORG-19B`, the ordinary request-global cleanup tracked in `WPORG-20A`, the committed upload hardening tracked in `WPORG-20B`, the decoded JSON / structured-payload hardening tracked in `WPORG-20C`, the historical inline asset enqueue migration tracked in `WPORG-22` B1-B5 plus the accepted residual closeouts `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, `WPORG-22R-L`, and `WPORG-22R-M`, the admin-notice scope remediation tracked in `WPORG-23`, and the output-escaping contract work tracked in `WPORG-24`; the formal documentation-only closeout below now marks `WPORG-22R` terminally `verified`, with no executable inline JS/CSS remaining inside the tracked `WPORG-22R` runtime family and only unrelated executable inline assets remaining elsewhere in the repository outside this parent.
 
 ## WPORG-19B Result
 
@@ -2453,11 +2453,16 @@ Date: 2026-07-11
 - `WPORG-22R-K` is now completed by the Staff CPT qualifications helper closeout recorded below.
 - `WPORG-22R-L` is now completed by the Staffing admin helper closeout recorded below.
 - `WPORG-22R-M` is now completed by the Staff Portal runtime-helper closeout recorded below.
-- `WPORG-22R` now remains open only for consolidated stale-test maintenance, a fresh repository-wide residual scan, and formal closeout evidence; no further known runtime implementation child remains.
+- The formal documentation-only parent closeout below now marks `WPORG-22R` terminally `verified`; no further known runtime implementation child or parent follow-up remains.
 - `WPORG-23` is now completed by the admin-notice scope remediation recorded below.
 - `WPORG-24` is now closed by the accepted child inventory plus documentation-only `WPORG-24R`.
-- `WPORG-25` is not yet the next incomplete implementation batch while the `WPORG-22R` closeout gate remains pending.
 - `WPORG-21` was not reopened in this corrective pass.
+
+The next actual incomplete batch order is now:
+
+1. `WPORG-20A-S`
+2. `WPORG-20C-R`
+3. `WPORG-25`
 
 ## WPORG-22R-A Result
 
@@ -2474,7 +2479,7 @@ Date: 2026-07-18
 - Inert handoff: the existing default, success, and failure labels now flow through escaped `data-vms-copy-*` attributes on the existing `#vms-copy-keys-map` button
 - Preserved behavior: the helper still targets the existing `#vms-copy-keys-map` button and `#vms-keys-map-text` textarea, still focuses and selects the textarea before calling `document.execCommand('copy')`, and still restores the default label after `1500ms`
 - Tests added: `php tests/reference-keys-map-inline-js-remediation.php`
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, while `WPORG-22R` stays open for additional residual inline-asset children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed while `WPORG-22R` still had additional residual inline-asset children; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2502,7 +2507,7 @@ Date: 2026-07-18
 - Tests added: `php tests/wporg-22r-holidays-tax-bypass-inline-js-remediation.php`
 - Sync proof: the focused verification rerun plus final `cmp -s` checks confirmed both mirror/live PHP pairs and both mirror/live JS pairs remain byte-for-byte synchronized
 - Deferred sibling: `WPORG-22R-C` stayed open in this earlier slice because the current live `includes/admin/data-tools/page-event-plan-import.php` materially predated the mirror implementation and still required a dedicated reconciliation gate before any helper externalization
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, and `WPORG-22R-G` are now closed, and `WPORG-22R` stayed open for `WPORG-22R-C` plus the remaining residual inline-asset children at the time of this earlier slice
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, and `WPORG-22R-G` were already closed, and `WPORG-22R-C` plus the remaining residual inline-asset children were still pending in this earlier slice; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2532,7 +2537,7 @@ Date: 2026-07-18
 - Preserved page contracts: notice rendering, local rows-payload error rendering, `rows_json_storage_key` / legacy `rows_json_path` fallback, preview/report/redirect/rollback/cleanup lifecycle, and explicit notice shell routing remain unchanged
 - Tests added: `php tests/event-plan-import-inline-js-remediation.php`
 - Sync proof: focused verification reruns plus final `cmp -s` checks confirmed the mirror/live page pair, shell pair, and JS pair remain byte-for-byte synchronized
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, and `WPORG-22R-G` are now closed, and `WPORG-22R` stays open for the remaining residual inline-asset children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, and `WPORG-22R-G` were already closed, and additional residual inline-asset children still remained at that time; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2563,7 +2568,7 @@ Date: 2026-07-18
 - Tests added: `php tests/wporg-22r-module-admin-helpers-inline-js-remediation.php`
 - Supporting verification retained: the focused rerun also keeps the existing ADD pill/public-shell proofs and the Event Plan dead-editor/metabox proof in place
 - Historical preserved residual at the time of this slice: the separate ADD menu-badge CSS and JS emitters in `includes/modules/availability-date-dispatch/admin-ui.php` stayed intentionally unchanged for the later `WPORG-22R-I` closeout
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` are now closed, and `WPORG-22R` stays open only for the remaining Staff Portal residual children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` were already closed, and only the later Staff Portal residual work remained at that time; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2594,7 +2599,7 @@ Date: 2026-07-18
 - Preserved behavior: the badge still uses the exact top-level and submenu selectors, the existing awaiting-mod / pending-count markup, the `beforeend` insertion point, the DOM-ready timing branch, the no-target no-op path, and duplicate-badge prevention
 - Focused verification: `php tests/add-dispatch-menu-badge-inline-assets-remediation.php`, `php tests/add-dispatch-pill-output-remediation.php`, `php tests/add-dispatch-public-shell-output-remediation.php`, and `php tests/event-plan-secondary-vendor-capacity-and-add.php` passed in this closeout
 - Known unrelated baseline retained: `php tests/add-dispatch-open-vendor-needs.php` still fails with the exact adjudicated missing-primary diagnostic and remains unrelated to this slice
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` are now closed, and `WPORG-22R` stays open only for the remaining Staff Portal residual children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` were already closed, and only the later Staff Portal residual work remained at that time; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2606,7 +2611,7 @@ Date: 2026-07-18
 ### Non-Actions
 
 - The ADD request-builder asset `assets/js/vms-add-dispatch-admin.js` was not changed.
-- The ADD public shell in `includes/modules/availability-date-dispatch/public.php` was not changed and its separate public-shell CSS residual remains open.
+- The ADD public shell in `includes/modules/availability-date-dispatch/public.php` was not changed in this slice, and its separate public-shell CSS residual later closed under `WPORG-22R-J`.
 - No ADD helper/query/open-needs logic changed, and the known missing-primary open-needs failure remained identical.
 - `WPORG-24` and `Review-10` remain closed.
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
@@ -2626,7 +2631,7 @@ Date: 2026-07-20
 - Preserved behavior: the Comp Package asset still targets the exact type, label, help, and attendance-mode selectors and still preserves the same show/hide logic, initial refresh, and mode-specific row toggles; the Vendor Defaults asset still preserves the exact template-copy path, summary-card output, attendance-bonus calculations, preview-table rendering, field visibility, label swaps, initial-state refresh, and save-facing field contract without changing save handlers, validation, defaults, tax logic, or persistence
 - Mirror/live synchronization: the live `includes/admin/vendor-comp-packages.php`, live `includes/admin/vendor-details.php`, and live `assets/js/vms-compensation-admin.js` files now match the mirror byte for byte
 - Focused verification: `php tests/vendor-compensation-inline-js-remediation.php` plus the required PHP/Node lint and mirror/live `cmp -s` checks passed in this closeout
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` are now closed, and `WPORG-22R` stays open only for the remaining Staff Portal residual children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` were already closed, and only the later Staff Portal residual work remained at that time; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2658,7 +2663,7 @@ Date: 2026-07-20
 - Preserved behavior: the public shell still uses the same `template_redirect` gate, rewrite tag/rule, `status_header(200)`, `nocache_headers()`, standalone document wrapper, allowlisted `wp_kses()` fragment sink, escaped title/action URLs, notices, response-recording lifecycle, and explicit `exit`
 - Mirror/live reconciliation: the live `includes/modules/availability-date-dispatch/public.php` and live `assets/css/vms-add-dispatch-public-shell.css` files now match the mirror byte for byte; the live runtime also picks up the already-current mirror `wp_kses()` sink hardening that previously existed only in the mirror
 - Tests added: `php tests/add-dispatch-public-shell-inline-css-remediation.php`
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` are now closed, and `WPORG-22R` stays open only for the remaining Staff Portal residual children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` were already closed, and only the later Staff Portal residual work remained at that time; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2690,7 +2695,7 @@ Date: 2026-07-20
 - Preserved behavior: the helper still targets the existing `#vms-staff-qualification-add` and `#vms-staff-qualifications-list` nodes, still appends the same qualification row fields and hidden values including `storage_kind` and `source`, still delegates `.vms-staff-qualification-remove` clicks, and still clears the last remaining row's inputs before resetting status to `active`
 - Mirror/live synchronization: the live `includes/cpt/staff.php` and live `assets/js/vms-staff-cpt-admin.js` files now match the mirror byte for byte
 - Tests added: `php tests/staff-cpt-inline-js-remediation.php`
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` are now closed, and `WPORG-22R` stays open only for the remaining Staff Portal residual children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` were already closed, and only the later Staff Portal residual work remained at that time; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2701,8 +2706,8 @@ Date: 2026-07-20
 
 ### Non-Actions
 
-- `includes/admin/staffing.php` was not changed and remains open under `WPORG-22R`.
-- `includes/portal/staff-portal.php` was not changed and remains open under `WPORG-22R`.
+- `includes/admin/staffing.php` was not changed in this slice; later `WPORG-22R-L` and the formal parent closeout below completed that residual work.
+- `includes/portal/staff-portal.php` was not changed in this slice; later `WPORG-22R-M` and the formal parent closeout below completed that residual work.
 - No other verified `WPORG-22R` child source file changed in this slice.
 - `WPORG-24` and `Review-10` remain closed.
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
@@ -2723,7 +2728,7 @@ Date: 2026-07-20
 - Preserved behavior: the qualification builder still targets the existing `[data-vms-qualification-builder="1"]`, `[data-vms-qualification-rows="1"]`, and `[data-vms-qualification-add="1"]` nodes, still appends the same Qualification/Enforcement rows, still delegates remove clicks, and still clears the last remaining row before resetting mode to `warn`; the Templates page still targets `#vms-tpl-slots` and `#vms-tpl-add-row`, still appends the same slot-card markup, still toggles the exact absolute/relative/end-field visibility and disabled state, still shows the existing absolute warning under the same timing conditions, and still preserves the one-row minimum removal guard
 - Mirror/live synchronization: the live `includes/admin/staffing.php`, `assets/js/vms-staffing-admin.js`, and `assets/css/vms-staffing-admin.css` files now match the mirror byte for byte
 - Tests added: `php tests/staffing-admin-inline-assets-remediation.php`
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` are now closed, and `WPORG-22R` stays open only for the remaining Staff Portal residual children
+- Historical residual-family status at the time of this slice: historical `WPORG-22` B1-B5 remained closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, and `WPORG-22R-L` were already closed, and only the later Staff Portal residual work remained at that time; the formal parent closeout below later closes `WPORG-22R`.
 
 ### What Changed
 
@@ -2735,7 +2740,7 @@ Date: 2026-07-20
 
 ### Non-Actions
 
-- `includes/portal/staff-portal.php` was not changed and remains open under `WPORG-22R`.
+- `includes/portal/staff-portal.php` was not changed in this slice; later `WPORG-22R-M` and the formal parent closeout below completed that residual work.
 - `includes/cpt/staff.php` and the other verified `WPORG-22R` child source files were not changed in this slice.
 - `WPORG-24` and `Review-10` remain closed.
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
@@ -2757,7 +2762,7 @@ Date: 2026-07-20
 - Preserved behavior: the asset still targets `#vms-portal-root`, `.vms-staff-av-form`, `.vms-av-autosave`, `.vms-staff-av-btn`, `.vms-av-hidden`, `.vms-av-badge-status`, `.vms-av-src`, `.vms-av-month`, and `.vms-av-counts`; still posts the same `vms_staff_save_manual_availability_day` action, `nonce`, `date`, and `state` payload; still uses the existing staff-linked logged-in portal boundary plus `check_ajax_referer('vms_staff_avail_ajax', 'nonce')`; and still preserves the same save/failure messages, source-icon removal, locked assigned-shift behavior, and fallback-save path
 - Mirror/live synchronization: the live `includes/portal/staff-portal.php` and `assets/js/vms-staff-portal.js` files now match the mirror byte for byte
 - Tests added: `php tests/staff-portal-inline-js-remediation.php`
-- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, `WPORG-22R-L`, and `WPORG-22R-M` are now closed, and `WPORG-22R` stays open only for consolidated stale-test maintenance, a fresh repository-wide residual scan, and formal closeout evidence
+- Current residual-family status: historical `WPORG-22` B1-B5 remain closed, `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, `WPORG-22R-L`, and `WPORG-22R-M` are now closed, and the formal documentation-only parent closeout below now marks `WPORG-22R` terminally `verified`.
 
 ### What Changed
 
@@ -2773,6 +2778,20 @@ Date: 2026-07-20
 - No other verified `WPORG-22R` child source file changed in this slice.
 - `WPORG-24` and `Review-10` remain closed.
 - No push, deployment, packaging, ZIP creation, tag, submission, production change, staging change, or reviewer reply occurred.
+
+### `WPORG-22R` parent closeout result
+
+- Result: documentation-only closeout of parent `WPORG-22R` in `docs/wporg-remediation-ledger.md` and `docs/WPORG_PREREVIEW_REMEDIATION.md` without changing runtime PHP, tests, assets, version metadata, packaging files, mirror/live runtime files, or the protected stash.
+- Status: `verified`. `WPORG-22R` is now closed under terminal status `verified`: all known runtime children are verified, no executable inline JS/CSS remains inside the tracked `WPORG-22R` runtime family, and no further `WPORG-22R` work remains.
+- Closure basis:
+  - All known runtime children `WPORG-22R-A`, `WPORG-22R-B`, `WPORG-22R-C`, `WPORG-22R-D`, `WPORG-22R-F`, `WPORG-22R-G`, `WPORG-22R-H`, `WPORG-22R-I`, `WPORG-22R-J`, `WPORG-22R-K`, `WPORG-22R-L`, and `WPORG-22R-M` are verified.
+  - Stale-test reconciliation commit `db9f19d7c14bb36c06f6467af04d5ac62af62566` (`Reconcile WPORG-22R stale tests`) reconciled exactly 17 stale remediation tests and changed no runtime, asset, live-tree, version, or packaging files.
+  - `php -l` passed on all 17 maintained test files, all 17 maintained tests passed, and all 22 required support/sentinel tests passed.
+  - `tests/event-plan-import-upload-api-remediation.php` passed with the accepted diagnostic `[VMS EPCSV] Preview build failed: Preview build failed.`.
+  - `tests/add-dispatch-open-vendor-needs.php` still fails with `Future Event Plan with missing Primary Vendor should appear in ADD open needs.` and remains outside `WPORG-22R`.
+- Final scan command: `rg -ni "<script\\b|<style\\b|wp_add_inline_script\\(|wp_add_inline_style\\(" vendor-management-system.php vms.php includes | sort`.
+- Final scoped scan conclusion: no executable inline JS/CSS remains inside the tracked `WPORG-22R` runtime family; inert `application/json` and structured-data carriers remain intentionally present; unrelated executable inline assets remain elsewhere in the repository outside this parent.
+- No runtime regression, stale-test regression, evidence gap, invalid maintenance boundary, changed unrelated baseline, or other closeout blocker was found.
 
 ## Review-10 Upload APIs Result
 
