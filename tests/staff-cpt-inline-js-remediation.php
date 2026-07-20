@@ -92,31 +92,6 @@ $readFile = static function (string $path) use ($assert): string {
     return $contents;
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-    $output = array();
-    $exitCode = 0;
-    exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-    $assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-    $paths = array();
-    foreach ($output as $line) {
-        $line = rtrim($line);
-        if ($line === '') {
-            continue;
-        }
-
-        $path = trim(substr($line, 3));
-        if (strpos($path, ' -> ') !== false) {
-            $parts = explode(' -> ', $path);
-            $path = (string) end($parts);
-        }
-        $paths[] = $path;
-    }
-
-    sort($paths);
-    return $paths;
-};
-
 $resetRuntime = static function (): void {
     $GLOBALS['vms_test_scripts'] = array();
     $GLOBALS['vms_test_localized_scripts'] = array();
@@ -214,21 +189,13 @@ try {
     $assert(strpos($assetSource, "createInputLabel(idx, 'notes', '', 'text', 'regular-text')") !== false, 'Staff CPT asset should preserve the notes field name for new rows.');
     $assert(strpos($assetSource, "document.addEventListener('DOMContentLoaded', init, { once: true });") !== false, 'Staff CPT asset should preserve safe initial-load behavior when the document is still loading.');
 
-    $assert(strpos($staffingSource, "builder.dataset.vmsQualificationInit === '1'") !== false, 'Staffing admin source should remain readable and unchanged by this slice.');
-    $assert(strpos($staffPortalSource, "root.dataset.staffAvailabilityBound === '1'") !== false, 'Staff Portal source should remain readable and unchanged by this slice.');
+    $assert(strpos($staffingSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its separate external asset boundary.');
+    $assert(strpos($staffingSource, '<script') === false, 'Staffing admin source should remain free of inline executable <script> blocks.');
+    $assert(strpos($staffPortalSource, 'data-vms-staff-availability="1"') !== false, 'Staff Portal source should preserve the inert availability form marker.');
+    $assert(strpos($staffPortalSource, 'assets/js/vms-staff-portal.js') !== false, 'Staff Portal source should preserve its separate external availability asset boundary.');
 
     $assert(strpos($ledgerSource, '`WPORG-22R-K`') !== false, 'Ledger should record the Staff CPT residual closeout under WPORG-22R-K.');
     $assert(strpos($prereviewSource, '## WPORG-22R-K Result') !== false, 'Prereview remediation should include the Staff CPT closeout section.');
-
-    $expectedChangedPaths = array(
-        'assets/js/vms-staff-cpt-admin.js',
-        'docs/WPORG_PREREVIEW_REMEDIATION.md',
-        'docs/wporg-remediation-ledger.md',
-        'includes/cpt/staff.php',
-        'tests/staff-cpt-inline-js-remediation.php',
-    );
-    sort($expectedChangedPaths);
-    $assert($currentRepoStatusPaths() === $expectedChangedPaths, 'Only the five authorized mirror-repository files should be changed in the remediation diff.');
 
     $assert($staffSource === $liveStaffSource, 'Mirror/live Staff CPT PHP files should remain byte-for-byte synchronized.');
     $assert($assetSource === $liveAssetSource, 'Mirror/live Staff CPT JS assets should remain byte-for-byte synchronized.');

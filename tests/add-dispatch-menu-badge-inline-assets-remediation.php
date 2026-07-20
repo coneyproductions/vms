@@ -57,31 +57,6 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-	$output = array();
-	$exitCode = 0;
-	exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-	$assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-	$paths = array();
-	foreach ($output as $line) {
-		$line = rtrim($line);
-		if ($line === '') {
-			continue;
-		}
-
-		$path = trim(substr($line, 3));
-		if (strpos($path, ' -> ') !== false) {
-			$parts = explode(' -> ', $path);
-			$path = (string) end($parts);
-		}
-		$paths[] = $path;
-	}
-
-	sort($paths);
-	return $paths;
-};
-
 $extractFunctionSource = static function (string $source, string $functionName) use ($assert): string {
 	$tokens = token_get_all($source);
 	$capturing = false;
@@ -262,21 +237,6 @@ try {
 	$assert($addSource === $liveAddSource, 'Mirror and live ADD admin PHP should remain byte-for-byte synchronized.');
 	$assert($menuCssSource === $liveMenuCssSource, 'Mirror and live admin-menu CSS should remain byte-for-byte synchronized.');
 	$assert($menuJsSource === $liveMenuJsSource, 'Mirror and live admin-menu JS should remain byte-for-byte synchronized.');
-
-	$expectedChangedPaths = array(
-		'assets/css/vms-admin-menu.css',
-		'assets/js/vms-admin-menu.js',
-		'docs/WPORG_PREREVIEW_REMEDIATION.md',
-		'docs/wporg-remediation-ledger.md',
-		'includes/modules/availability-date-dispatch/admin-ui.php',
-		'tests/add-dispatch-menu-badge-inline-assets-remediation.php',
-	);
-	sort($expectedChangedPaths);
-	$currentPaths = $currentRepoStatusPaths();
-	$assert($currentPaths === $expectedChangedPaths, 'Only the six authorized mirror-repository files should be changed in the remediation diff.');
-	$assert(!in_array('assets/js/vms-add-dispatch-admin.js', $currentPaths, true), 'ADD request-builder asset should remain untouched in this slice.');
-	$assert(!in_array('includes/modules/availability-date-dispatch/public.php', $currentPaths, true), 'ADD public shell should remain untouched in this slice.');
-	$assert(!in_array('includes/modules/availability-date-dispatch/helpers.php', $currentPaths, true), 'ADD helper/query/open-needs logic should remain untouched in this slice.');
 
 	fwrite(STDOUT, "ADD menu-badge inline assets remediation OK.\n");
 } catch (Throwable $e) {

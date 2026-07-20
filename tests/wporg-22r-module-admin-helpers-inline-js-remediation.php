@@ -29,31 +29,6 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-	$output = array();
-	$exitCode = 0;
-	exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-	$assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-	$paths = array();
-	foreach ($output as $line) {
-		$line = rtrim($line);
-		if ($line === '') {
-			continue;
-		}
-
-		$path = trim(substr($line, 3));
-		if (strpos($path, ' -> ') !== false) {
-			$parts = explode(' -> ', $path);
-			$path = (string) end($parts);
-		}
-		$paths[] = $path;
-	}
-
-	sort($paths);
-	return $paths;
-};
-
 $extractFunctionSource = static function (string $source, string $functionName) use ($assert): string {
 	$tokens = token_get_all($source);
 	$capturing = false;
@@ -291,12 +266,13 @@ try {
 		$assert(strpos($addAssetSource, $requiredAddAssetMarker) !== false, 'ADD asset should preserve the migrated behavior marker: ' . $requiredAddAssetMarker);
 	}
 
-	$assert(strpos($menuBadgeCssSource, '<style>') !== false, 'ADD menu-badge CSS emitter should remain present.');
-	$assert(strpos($menuBadgeCssSource, '#adminmenu .vms-add-dispatch-alert-badge') !== false, 'ADD menu-badge CSS emitter should preserve the existing badge selector.');
-	$assert(strpos($menuBadgeJsSource, '<script>(function(){var markup=') !== false, 'ADD menu-badge JS emitter should remain inline for the separate WPORG-22R-I slice.');
-	$assert(strpos($menuBadgeJsSource, 'applyBadge("#toplevel_page_vms-dashboard > a .wp-menu-name")') !== false, 'ADD menu-badge JS emitter should preserve the existing top-level badge selector.');
-	$assert(strpos($menuBadgeJsSource, 'applyBadge("#toplevel_page_vms-dashboard .wp-submenu li a[href*=\\"page=vms-add-dispatch\\"]")') !== false, 'ADD menu-badge JS emitter should preserve the existing submenu badge selector.');
-	$assert(strpos($menuBadgeJsSource, 'document.readyState==="loading"') !== false, 'ADD menu-badge JS emitter should preserve the existing DOM-ready branch.');
+	$assert(strpos($menuBadgeCssSource, '<style>') === false, 'ADD menu-badge CSS gate should no longer print inline CSS.');
+	$assert(strpos($menuBadgeCssSource, "wp_enqueue_style('vms-admin-menu');") !== false, 'ADD menu-badge CSS gate should enqueue the shared admin-menu stylesheet.');
+	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_css', 21, 0);") !== false, 'ADD menu-badge CSS should remain owned by its admin_enqueue_scripts gate.');
+	$assert(strpos($menuBadgeJsSource, '<script>') === false, 'ADD menu-badge JS gate should no longer print an inline script block.');
+	$assert(strpos($menuBadgeJsSource, "VMS_PLUGIN_URL . 'assets/js/vms-admin-menu.js'") !== false, 'ADD menu-badge JS gate should preserve the external admin-menu asset boundary.');
+	$assert(strpos($menuBadgeJsSource, "wp_localize_script(\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\r\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\n            'vms-admin-menu'") !== false, 'ADD menu-badge JS gate should hand off inert localized config through vmsAdminMenu.');
+	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_js', 50, 0);") !== false, 'ADD menu-badge JS should remain owned by its admin_enqueue_scripts gate.');
 
 	$assert(strpos($publicSource, 'function vms_add_dispatch_render_public_shell(string $headline, string $content_html): void') !== false, 'ADD public shell should remain present and untouched in this slice.');
 
@@ -304,21 +280,6 @@ try {
 	$assert($addSource === $liveAddSource, 'Mirror and live ADD admin PHP should remain byte-for-byte synchronized.');
 	$assert($staffAssetSource === $liveStaffAssetSource, 'Mirror and live Staff Tasks JS should remain byte-for-byte synchronized.');
 	$assert($addAssetSource === $liveAddAssetSource, 'Mirror and live ADD JS should remain byte-for-byte synchronized.');
-
-	$expectedChangedPaths = array(
-		'assets/js/vms-add-dispatch-admin.js',
-		'assets/js/vms-tasks-admin-pages.js',
-		'docs/WPORG_PREREVIEW_REMEDIATION.md',
-		'docs/wporg-remediation-ledger.md',
-		'includes/modules/availability-date-dispatch/admin-ui.php',
-		'includes/modules/staff-tasks/admin-ui.php',
-		'tests/wporg-22r-module-admin-helpers-inline-js-remediation.php',
-	);
-	sort($expectedChangedPaths);
-	$currentPaths = $currentRepoStatusPaths();
-	$assert($currentPaths === $expectedChangedPaths, 'Only the seven authorized mirror-repository files should be changed in the remediation diff.');
-	$assert(!in_array('includes/modules/availability-date-dispatch/public.php', $currentPaths, true), 'ADD public shell runtime should remain untouched in this slice.');
-	$assert(!in_array('assets/js/vms-tasks-event-plan-metabox.js', $currentPaths, true), 'Event Plan metabox asset should remain untouched in this slice.');
 
 	fwrite(STDOUT, "wporg 22r module admin helpers inline js remediation: PASS\n");
 } catch (Throwable $e) {

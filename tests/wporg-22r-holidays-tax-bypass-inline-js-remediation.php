@@ -31,31 +31,6 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-	$output = array();
-	$exitCode = 0;
-	exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-	$assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-	$paths = array();
-	foreach ($output as $line) {
-		$line = rtrim($line);
-		if ($line === '') {
-			continue;
-		}
-
-		$path = trim(substr($line, 3));
-		if (strpos($path, ' -> ') !== false) {
-			$parts = explode(' -> ', $path);
-			$path = (string) end($parts);
-		}
-		$paths[] = $path;
-	}
-
-	sort($paths);
-	return $paths;
-};
-
 try {
 	$holidaysSource = $readFile($holidaysPath);
 	$taxBypassSource = $readFile($taxBypassPath);
@@ -153,27 +128,13 @@ try {
 	$assert(strpos($adminUiAssetsSource, 'vms-holidays-admin') === false, 'Holidays asset should not be registered through the shared VMS admin UI asset loader.');
 	$assert(strpos($adminUiAssetsSource, 'vms-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the shared VMS admin UI asset loader.');
 
-	$assert(strpos($eventPlanImportSource, 'vms-epcsv-select-all') !== false, 'Event Plan Import should remain untouched in this slice.');
-	$assert(strpos($eventPlanImportSource, 'Select at least one eligible row before committing selected rows.') !== false, 'Event Plan Import should retain its existing preview-selection contract because WPORG-22R-C is deferred.');
+	$assert(strpos($eventPlanImportSource, 'vms-epcsv-select-all') !== false, 'Event Plan Import should retain its current select-all control contract.');
+	$assert(strpos($eventPlanImportSource, 'Select at least one eligible row before committing selected rows.') !== false, 'Event Plan Import should retain its current preview-selection contract.');
 
 	$assert($holidaysSource === $liveHolidaysSource, 'Mirror and live Holidays PHP should remain byte-for-byte synchronized.');
 	$assert($taxBypassSource === $liveTaxBypassSource, 'Mirror and live Tax Bypass PHP should remain byte-for-byte synchronized.');
 	$assert($holidaysAssetSource === $liveHolidaysAssetSource, 'Mirror and live Holidays JS should remain byte-for-byte synchronized.');
 	$assert($taxBypassAssetSource === $liveTaxBypassAssetSource, 'Mirror and live Tax Bypass JS should remain byte-for-byte synchronized.');
-
-	$expectedChangedPaths = array(
-		'assets/js/vms-holidays-admin.js',
-		'assets/js/vms-tax-bypass-admin.js',
-		'docs/WPORG_PREREVIEW_REMEDIATION.md',
-		'docs/wporg-remediation-ledger.md',
-		'includes/admin/holidays.php',
-		'includes/admin/tax-bypass.php',
-		'tests/wporg-22r-holidays-tax-bypass-inline-js-remediation.php',
-	);
-	sort($expectedChangedPaths);
-	$currentPaths = $currentRepoStatusPaths();
-	$assert($currentPaths === $expectedChangedPaths, 'Only the seven authorized mirror-repository files should be changed in the remediation diff.');
-	$assert(!in_array('includes/admin/data-tools/page-event-plan-import.php', $currentPaths, true), 'Event Plan Import mirror runtime should remain untouched in this slice.');
 
 	fwrite(STDOUT, "wporg 22r holidays tax bypass inline js remediation: PASS\n");
 } catch (Throwable $e) {

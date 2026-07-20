@@ -20,6 +20,43 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
+$findExecutableInlineScriptTags = static function (string $source): array {
+	preg_match_all('~<script\b([^>]*)>~i', $source, $matches, PREG_SET_ORDER);
+	$hits = array();
+	foreach ($matches as $match) {
+		$tag = (string) ($match[0] ?? '');
+		$attrs = (string) ($match[1] ?? '');
+		$isApplicationJson = stripos($attrs, 'type="application/json"') !== false
+			|| stripos($attrs, "type='application/json'") !== false
+			|| preg_match('~\btype\s*=\s*application/json(?:\s|$)~i', $attrs) === 1;
+		if ($isApplicationJson) {
+			continue;
+		}
+		$hits[] = $tag;
+	}
+	return $hits;
+};
+
+$findApplicationJsonScriptTags = static function (string $source, string $requiredMarker = ''): array {
+	preg_match_all('~<script\b([^>]*)>~i', $source, $matches, PREG_SET_ORDER);
+	$hits = array();
+	foreach ($matches as $match) {
+		$tag = (string) ($match[0] ?? '');
+		$attrs = (string) ($match[1] ?? '');
+		$isApplicationJson = stripos($attrs, 'type="application/json"') !== false
+			|| stripos($attrs, "type='application/json'") !== false
+			|| preg_match('~\btype\s*=\s*application/json(?:\s|$)~i', $attrs) === 1;
+		if (!$isApplicationJson) {
+			continue;
+		}
+		if ($requiredMarker !== '' && stripos($tag, $requiredMarker) === false) {
+			continue;
+		}
+		$hits[] = $tag;
+	}
+	return $hits;
+};
+
 try {
 	$eventPlansSource = $readFile($eventPlansPath);
 	$adminUiAssetsSource = $readFile($adminUiAssetsPath);
@@ -60,7 +97,8 @@ try {
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Title asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Title asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') === false, 'The workflow confirmation controller should no longer remain inline.');
-	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan PHP should no longer have active inline Event Plan script blocks after the workflow migration.');
+	$assert($findExecutableInlineScriptTags($eventPlansSource) === array(), 'Event Plan PHP should not emit executable inline <script> blocks.');
+	$assert(count($findApplicationJsonScriptTags($eventPlansSource, 'data-vms-secondary-config')) === 2, 'Event Plan PHP should retain only the two inert Secondary Vendors application/json carriers.');
 
 	$assetOwnershipHits = array();
 	$assetIterator = new RecursiveIteratorIterator(

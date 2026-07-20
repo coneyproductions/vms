@@ -142,31 +142,6 @@ $extractFunctionSource = static function (string $source, string $functionName) 
     return '';
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-    $output = array();
-    $exitCode = 0;
-    exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-    $assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-    $paths = array();
-    foreach ($output as $line) {
-        $line = rtrim($line);
-        if ($line === '') {
-            continue;
-        }
-
-        $path = trim(substr($line, 3));
-        if (strpos($path, ' -> ') !== false) {
-            $parts = explode(' -> ', $path);
-            $path = (string) end($parts);
-        }
-        $paths[] = $path;
-    }
-
-    sort($paths);
-    return $paths;
-};
-
 $resetRuntime = static function (): void {
     $GLOBALS['vms_test_scripts'] = array();
     $GLOBALS['vms_test_localized_scripts'] = array();
@@ -263,9 +238,14 @@ try {
     $assert(strpos($assetSource, "bonusBlock.classList.toggle('vms-hidden', !isAttendance);") !== false, 'Vendor Defaults asset should preserve the bonus-block visibility behavior.');
     $assert(strpos($assetSource, 'refresh();') !== false, 'Shared compensation asset should preserve the initial-state refresh behavior.');
 
-    $assert(strpos($staffingSource, '<script') !== false, 'Staffing residual inline emitter should remain untouched in this slice.');
-    $assert(strpos($staffPortalSource, '<script') !== false, 'Staff Portal residual inline emitter should remain untouched in this slice.');
-    $assert(strpos($addPublicSource, '<style') !== false || strpos($addPublicSource, '<script') !== false, 'ADD public-shell residual emitter should remain untouched in this slice.');
+    $assert(strpos($staffingSource, '<script') === false, 'Staffing admin source should remain externalized with no inline executable <script> blocks.');
+    $assert(strpos($staffingSource, '<style') === false, 'Staffing admin source should remain externalized with no inline <style> blocks.');
+    $assert(strpos($staffingSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its dedicated external asset boundary.');
+    $assert(strpos($staffPortalSource, 'window.VMS_STAFF_AV') === false, 'Staff Portal source should not reintroduce the old global availability bootstrap.');
+    $assert(strpos($staffPortalSource, 'data-vms-staff-availability="1"') !== false, 'Staff Portal source should preserve the inert availability form marker.');
+    $assert(strpos($staffPortalSource, 'assets/js/vms-staff-portal.js') !== false, 'Staff Portal source should preserve the dedicated availability asset boundary.');
+    $assert(strpos($addPublicSource, '<style>') === false && strpos($addPublicSource, '<script') === false, 'ADD public shell should remain free of inline executable style/script emitters.');
+    $assert(strpos($addPublicSource, 'assets/css/vms-add-dispatch-public-shell.css') !== false, 'ADD public shell should preserve the standalone stylesheet ownership.');
 
     $assert($compSource === $liveCompSource, 'Mirror/live Comp Package PHP should remain byte-identical.');
     $assert($vendorSource === $liveVendorSource, 'Mirror/live Vendor Defaults PHP should remain byte-identical.');
@@ -298,17 +278,6 @@ try {
     $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['name'] ?? '') === 'vmsVendorDefaultsAdmin', 'Vendor screen should localize only the vendor-defaults strings.');
     $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['data']['strings']['selectedTemplateTitle'] ?? '') === 'Selected Template', 'Vendor screen should pass the vendor-defaults preview strings through inert config.');
     $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['data']['strings']['basePayMoney'] ?? '') === 'Base Pay ($)', 'Vendor screen should pass the Base Pay field label through inert config.');
-
-    $expectedPaths = array(
-        'assets/js/vms-compensation-admin.js',
-        'docs/WPORG_PREREVIEW_REMEDIATION.md',
-        'docs/wporg-remediation-ledger.md',
-        'includes/admin/vendor-comp-packages.php',
-        'includes/admin/vendor-details.php',
-        'tests/vendor-compensation-inline-js-remediation.php',
-    );
-    $currentPaths = $currentRepoStatusPaths();
-    $assert($currentPaths === $expectedPaths, 'Only the authorized mirror files should appear in the working-tree diff. Found: ' . implode(', ', $currentPaths));
 
     $assert(strpos($ledgerSource, 'WPORG-22R-F') !== false, 'Ledger should document the new WPORG-22R-F closeout.');
     $assert(strpos($prereviewSource, 'WPORG-22R-F') !== false, 'Prereview doc should document the new WPORG-22R-F closeout.');

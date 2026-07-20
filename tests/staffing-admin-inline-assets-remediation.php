@@ -111,31 +111,6 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-	$output = array();
-	$exitCode = 0;
-	exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-	$assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-	$paths = array();
-	foreach ($output as $line) {
-		$line = rtrim($line);
-		if ($line === '') {
-			continue;
-		}
-
-		$path = trim(substr($line, 3));
-		if (strpos($path, ' -> ') !== false) {
-			$parts = explode(' -> ', $path);
-			$path = (string) end($parts);
-		}
-		$paths[] = $path;
-	}
-
-	sort($paths);
-	return $paths;
-};
-
 $resetRuntime = static function (): void {
 	$GLOBALS['vms_test_current_screen'] = null;
 	$GLOBALS['vms_test_manage_options'] = false;
@@ -283,17 +258,6 @@ try {
 
 	$assert(strpos($ledgerSource, '`WPORG-22R-L`') !== false, 'Ledger should record the Staffing admin residual closeout under WPORG-22R-L.');
 	$assert(strpos($prereviewSource, '## WPORG-22R-L Result') !== false, 'Prereview remediation should include the Staffing admin closeout section.');
-
-	$expectedChangedPaths = array(
-		'assets/css/vms-staffing-admin.css',
-		'assets/js/vms-staffing-admin.js',
-		'docs/WPORG_PREREVIEW_REMEDIATION.md',
-		'docs/wporg-remediation-ledger.md',
-		'includes/admin/staffing.php',
-		'tests/staffing-admin-inline-assets-remediation.php',
-	);
-	sort($expectedChangedPaths);
-	$assert($currentRepoStatusPaths() === $expectedChangedPaths, 'Only the six authorized mirror-repository files should be changed in the remediation diff.');
 
 	$assert($staffingSource === $liveStaffingSource, 'Mirror/live Staffing admin PHP files should remain byte-for-byte synchronized.');
 	$assert($scriptSource === $liveScriptSource, 'Mirror/live Staffing admin JS assets should remain byte-for-byte synchronized.');

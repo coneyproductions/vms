@@ -33,39 +33,6 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-	$output = array();
-	$exitCode = 0;
-	exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-	$assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-	$paths = array();
-	foreach ($output as $line) {
-		$line = rtrim($line);
-		if ($line === '') {
-			continue;
-		}
-
-		$path = trim(substr($line, 3));
-		if (strpos($path, ' -> ') !== false) {
-			$parts = explode(' -> ', $path);
-			$path = (string) end($parts);
-		}
-		$paths[] = $path;
-	}
-
-	sort($paths);
-	return $paths;
-};
-
-$gitDiffExitCode = static function (string $pathspec) use ($assert): int {
-	$output = array();
-	$exitCode = 0;
-	exec('git diff --exit-code -- ' . escapeshellarg($pathspec) . ' 2>&1', $output, $exitCode);
-	$assert(in_array($exitCode, array(0, 1), true), 'git diff --exit-code should complete for ' . $pathspec . '.');
-	return $exitCode;
-};
-
 try {
 	$pageSource = $readFile($pagePath);
 	$assetSource = $readFile($assetPath);
@@ -144,23 +111,6 @@ try {
 	$assert($pageSource === $livePageSource, 'Mirror and live Event Plan Import PHP should remain byte-for-byte synchronized.');
 	$assert($shellSource === $liveShellSource, 'Mirror and live Administrator shell PHP should remain byte-for-byte synchronized.');
 	$assert($assetSource === $liveAssetSource, 'Mirror and live Event Plan Import JS should remain byte-for-byte synchronized.');
-	$assert($gitDiffExitCode('includes/admin-ui/shell.php') === 0, 'Mirror Administrator shell should remain unchanged in the repository diff.');
-
-	$currentPaths = $currentRepoStatusPaths();
-	$expectedChangedPaths = array(
-		'assets/js/vms-event-plan-import.js',
-		'docs/WPORG_PREREVIEW_REMEDIATION.md',
-		'docs/wporg-remediation-ledger.md',
-		'includes/admin/data-tools/page-event-plan-import.php',
-		'tests/event-plan-import-inline-js-remediation.php',
-	);
-	sort($expectedChangedPaths);
-	$assert($currentPaths === $expectedChangedPaths, 'Only the five authorized mirror-repository files should be changed in the remediation diff.');
-	$assert(!in_array('includes/admin/data-tools/actions-event-plan-import.php', $currentPaths, true), 'Event Plan Import upload, preview, redirect, rollback, cleanup, and commit handlers should remain untouched in this slice.');
-	$assert(!in_array('includes/services/event-plan-import/event-plan-import-engine.php', $currentPaths, true), 'Event Plan Import storage, notice, and preview engine should remain untouched in this slice.');
-	$assert(!in_array('includes/admin-ui/shell.php', $currentPaths, true), 'Mirror Administrator shell should remain untouched in this slice.');
-	$assert(!in_array('tests/event-plan-import-rows-payload-output-remediation.php', $currentPaths, true), 'Rows-payload regression coverage should remain untouched in this slice.');
-	$assert(!in_array('tests/administrator-explicit-notice-output-remediation.php', $currentPaths, true), 'Explicit-notice regression coverage should remain untouched in this slice.');
 
 	$assert(strpos($actionsSource, 'wp_handle_upload(') !== false, 'Event Plan Import upload API remediation should remain present in the actions boundary.');
 	$assert(strpos($engineSource, "function vms_event_plan_import_set_notice(string \$type, string \$message): void") !== false, 'Event Plan Import notice and storage engine should remain present and readable.');

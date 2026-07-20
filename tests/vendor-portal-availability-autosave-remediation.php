@@ -5,6 +5,7 @@ $pluginRoot = dirname(__DIR__);
 $vendorPortalSource = file_get_contents($pluginRoot . '/includes/portal/vendor-portal.php');
 $shellAssetSource = file_get_contents($pluginRoot . '/assets/js/vms-vendor-portal.js');
 $staffPortalSource = file_get_contents($pluginRoot . '/includes/portal/staff-portal.php');
+$staffPortalAssetSource = file_get_contents($pluginRoot . '/assets/js/vms-staff-portal.js');
 $publicCalendarSource = file_get_contents($pluginRoot . '/assets/js/vms-public-calendar.js');
 
 $assert = static function (bool $condition, string $message): void {
@@ -14,10 +15,11 @@ $assert = static function (bool $condition, string $message): void {
 };
 
 try {
-	$assert(is_string($vendorPortalSource) && $vendorPortalSource !== '', 'Vendor Portal source should be readable.');
-	$assert(is_string($shellAssetSource) && $shellAssetSource !== '', 'Vendor Portal asset should be readable.');
-	$assert(is_string($staffPortalSource) && $staffPortalSource !== '', 'Staff Portal source should be readable.');
-	$assert(is_string($publicCalendarSource) && $publicCalendarSource !== '', 'Public calendar asset should be readable.');
+		$assert(is_string($vendorPortalSource) && $vendorPortalSource !== '', 'Vendor Portal source should be readable.');
+		$assert(is_string($shellAssetSource) && $shellAssetSource !== '', 'Vendor Portal asset should be readable.');
+		$assert(is_string($staffPortalSource) && $staffPortalSource !== '', 'Staff Portal source should be readable.');
+		$assert(is_string($staffPortalAssetSource) && $staffPortalAssetSource !== '', 'Staff Portal asset should be readable.');
+		$assert(is_string($publicCalendarSource) && $publicCalendarSource !== '', 'Public calendar asset should be readable.');
 
 	$assert(!preg_match('~echo \'<script>\s*window\.VMS_AV~', $vendorPortalSource), 'Vendor Portal source should no longer emit an executable window.VMS_AV config block.');
 	$assert(!preg_match('~<script>\s*\(function\(\)\s*\{\s*document\.documentElement\.classList\.add\("vms-js"\);~s', $vendorPortalSource), 'Vendor Portal source should no longer emit the inline manual availability autosave controller.');
@@ -55,8 +57,16 @@ try {
 	$assert(strpos($shellAssetSource, 'wp_localize_script') === false, 'Vendor Portal asset should not contain localized-script remnants.');
 	$assert(strpos($shellAssetSource, 'wp_add_inline_script') === false, 'Vendor Portal asset should not contain inline-script remnants.');
 
-	$assert(strpos($staffPortalSource, 'window.VMS_STAFF_AV.ajaxUrl') !== false, 'Staff Portal source should remain unchanged in this slice.');
-	$assert(strpos($staffPortalSource, 'vms_staff_save_manual_availability_day') !== false, 'Staff Portal autosave handler contract should remain intact.');
+		$assert(strpos($staffPortalSource, 'window.VMS_STAFF_AV') === false, 'Staff Portal source should not reintroduce the old global availability bootstrap.');
+		$assert(strpos($staffPortalSource, 'assets/js/vms-staff-portal.js') !== false, 'Staff Portal source should preserve the external availability asset boundary.');
+		$assert(strpos($staffPortalSource, 'data-vms-staff-availability="1"') !== false, 'Staff Portal source should preserve the inert availability form marker.');
+		$assert(strpos($staffPortalSource, 'data-vms-staff-availability-ajax-url') !== false, 'Staff Portal source should preserve the inert availability AJAX handoff.');
+		$assert(strpos($staffPortalSource, 'data-vms-staff-availability-nonce') !== false, 'Staff Portal source should preserve the inert availability nonce handoff.');
+		$assert(strpos($staffPortalAssetSource, "FORM_SELECTOR = '.vms-staff-av-form[data-vms-staff-availability=\"1\"]'") !== false, 'Staff Portal asset should own the availability form selector.');
+		$assert(strpos($staffPortalAssetSource, "root.dataset.staffAvailabilityBound === '1'") !== false, 'Staff Portal asset should prevent duplicate availability initialization.');
+		$assert(strpos($staffPortalAssetSource, "root.dataset.staffAvailabilityBound = '1';") !== false, 'Staff Portal asset should mark the availability root after binding.');
+		$assert(strpos($staffPortalAssetSource, "action: SAVE_ACTION") !== false, 'Staff Portal asset should own the availability save action payload.');
+		$assert(strpos($staffPortalSource, 'vms_staff_save_manual_availability_day') !== false, 'Staff Portal autosave handler contract should remain intact.');
 
 	$activePathMarkers = array("'vms-public-calendar'", 'assets/js/vms-public-calendar.js', 'vms-public-cal', 'vms-cal-entry', 'vms-cal-pop');
 	foreach ($activePathMarkers as $marker) {

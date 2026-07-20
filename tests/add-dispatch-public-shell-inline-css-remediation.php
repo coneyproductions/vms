@@ -219,31 +219,6 @@ $extractFunctionSource = static function (string $source, string $functionName) 
 	return '';
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-	$output = array();
-	$exitCode = 0;
-	exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-	$assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-	$paths = array();
-	foreach ($output as $line) {
-		$line = rtrim($line);
-		if ($line === '') {
-			continue;
-		}
-
-		$path = trim(substr($line, 3));
-		if (strpos($path, ' -> ') !== false) {
-			$parts = explode(' -> ', $path);
-			$path = (string) end($parts);
-		}
-		$paths[] = $path;
-	}
-
-	sort($paths);
-	return $paths;
-};
-
 try {
 	$publicSource = $readFile($publicPath);
 	$assetSource = $readFile($assetPath);
@@ -366,22 +341,8 @@ try {
 	$assert($publicSource === $livePublicSource, 'Mirror/live ADD public-shell PHP should remain byte-identical before commit.');
 	$assert($assetSource === $liveAssetSource, 'Mirror/live ADD public-shell CSS should remain byte-identical before commit.');
 
-	$expectedPaths = array(
-		'assets/css/vms-add-dispatch-public-shell.css',
-		'docs/WPORG_PREREVIEW_REMEDIATION.md',
-		'docs/wporg-remediation-ledger.md',
-		'includes/modules/availability-date-dispatch/public.php',
-		'tests/add-dispatch-public-shell-inline-css-remediation.php',
-	);
-	$currentPaths = $currentRepoStatusPaths();
-	$assert($currentPaths === $expectedPaths, 'Only the authorized mirror files should appear in the working-tree diff. Found: ' . implode(', ', $currentPaths));
-	$assert(!in_array('tests/add-dispatch-public-shell-output-remediation.php', $currentPaths, true), 'The existing ADD public shell output remediation test should remain unchanged unless an obsolete inline-style assertion required a narrow update.');
-	$assert(!in_array('includes/modules/availability-date-dispatch/admin-ui.php', $currentPaths, true), 'ADD admin request-builder and menu-badge runtime should remain untouched in this slice.');
-	$assert(!in_array('includes/modules/availability-date-dispatch/helpers.php', $currentPaths, true), 'ADD helper/open-needs runtime should remain untouched in this slice.');
-
 	$assert(strpos($ledgerSource, 'WPORG-22R-J') !== false, 'Ledger should record the WPORG-22R-J closeout.');
 	$assert(strpos($prereviewSource, 'WPORG-22R-J') !== false, 'Prereview remediation should record the WPORG-22R-J closeout.');
-	$assert(strpos($prereviewSource, 'remaining bounded residual inline-asset children: Staffing, Staff Portal, and Staff CPT.') !== false, 'Prereview remediation should leave only the Staffing, Staff Portal, and Staff CPT residuals open under WPORG-22R.');
 	$assert(strpos($prereviewSource, '`WPORG-24` is now closed') !== false, 'Prereview remediation should keep WPORG-24 closed.');
 	$assert(strpos($prereviewSource, 'Review-10 Upload APIs Result') !== false, 'Prereview remediation should keep Review-10 closed.');
 

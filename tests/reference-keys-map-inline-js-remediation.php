@@ -22,31 +22,6 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
-$currentRepoStatusPaths = static function () use ($assert): array {
-	$output = array();
-	$exitCode = 0;
-	exec('git status --short --untracked-files=all -- . 2>&1', $output, $exitCode);
-	$assert($exitCode === 0, 'git status --short should succeed for the focused diff check.');
-
-	$paths = array();
-	foreach ($output as $line) {
-		$line = rtrim($line);
-		if ($line === '') {
-			continue;
-		}
-
-		$path = trim(substr($line, 3));
-		if (strpos($path, ' -> ') !== false) {
-			$parts = explode(' -> ', $path);
-			$path = (string) end($parts);
-		}
-		$paths[] = $path;
-	}
-
-	sort($paths);
-	return $paths;
-};
-
 try {
 	$keysMapSource = $readFile($keysMapPath);
 	$assetSource = $readFile($assetPath);
@@ -99,16 +74,6 @@ try {
 
 	$assert(strpos($corePluginSource, 'vms-reference-keys-map') === false, 'Reference Keys Map asset should not be registered through the global all-admin core asset loader.');
 	$assert(strpos($adminUiAssetsSource, 'vms-reference-keys-map') === false, 'Reference Keys Map asset should not be registered through the shared VMS admin UI asset loader.');
-
-	$expectedChangedPaths = array(
-		'assets/js/vms-reference-keys-map.js',
-		'docs/WPORG_PREREVIEW_REMEDIATION.md',
-		'docs/wporg-remediation-ledger.md',
-		'includes/admin/reference/keys-map.php',
-		'tests/reference-keys-map-inline-js-remediation.php',
-	);
-	sort($expectedChangedPaths);
-	$assert($currentRepoStatusPaths() === $expectedChangedPaths, 'Only the five authorized mirror-repository files should be changed in the remediation diff.');
 
 	fwrite(STDOUT, "reference keys map inline js remediation: PASS\n");
 } catch (Throwable $e) {

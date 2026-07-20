@@ -22,7 +22,44 @@ $readFile = static function (string $path) use ($assert): string {
 	return $contents;
 };
 
-	try {
+$findExecutableInlineScriptTags = static function (string $source): array {
+	preg_match_all('~<script\b([^>]*)>~i', $source, $matches, PREG_SET_ORDER);
+	$hits = array();
+	foreach ($matches as $match) {
+		$tag = (string) ($match[0] ?? '');
+		$attrs = (string) ($match[1] ?? '');
+		$isApplicationJson = stripos($attrs, 'type="application/json"') !== false
+			|| stripos($attrs, "type='application/json'") !== false
+			|| preg_match('~\btype\s*=\s*application/json(?:\s|$)~i', $attrs) === 1;
+		if ($isApplicationJson) {
+			continue;
+		}
+		$hits[] = $tag;
+	}
+	return $hits;
+};
+
+$findApplicationJsonScriptTags = static function (string $source, string $requiredMarker = ''): array {
+	preg_match_all('~<script\b([^>]*)>~i', $source, $matches, PREG_SET_ORDER);
+	$hits = array();
+	foreach ($matches as $match) {
+		$tag = (string) ($match[0] ?? '');
+		$attrs = (string) ($match[1] ?? '');
+		$isApplicationJson = stripos($attrs, 'type="application/json"') !== false
+			|| stripos($attrs, "type='application/json'") !== false
+			|| preg_match('~\btype\s*=\s*application/json(?:\s|$)~i', $attrs) === 1;
+		if (!$isApplicationJson) {
+			continue;
+		}
+		if ($requiredMarker !== '' && stripos($tag, $requiredMarker) === false) {
+			continue;
+		}
+		$hits[] = $tag;
+	}
+	return $hits;
+};
+
+		try {
 		$eventPlansSource = $readFile($eventPlansPath);
 		$adminUiAssetsSource = $readFile($adminUiAssetsPath);
 		$shellAssetSource = $readFile($shellAssetPath);
@@ -37,7 +74,8 @@ $readFile = static function (string $path) use ($assert): string {
 	$assert(strpos($eventPlansSource, 'data-vms-scroll-target=') !== false, 'Event Plan source should hand off the generic scroll target through a non-executable data attribute.');
 	$assert(strpos($eventPlansSource, 'data-vms-lazy-loading-label=') !== false, 'Event Plan source should keep the non-executable shell-label handoff on the stable basic-grid wrapper.');
 	$assert(strpos($eventPlansSource, 'data-vms-lazy-error-label=') !== false, 'Event Plan source should keep the non-executable shell error-label handoff on the stable basic-grid wrapper.');
-	$assert(substr_count($eventPlansSource, '<script') === 0, 'Event Plan PHP should no longer contain live inline Event Plan script blocks after the workflow migration.');
+		$assert($findExecutableInlineScriptTags($eventPlansSource) === array(), 'Event Plan PHP should not emit executable inline <script> blocks.');
+		$assert(count($findApplicationJsonScriptTags($eventPlansSource, 'data-vms-secondary-config')) === 2, 'Event Plan PHP should retain only the two inert Secondary Vendors application/json carriers.');
 
 	$assert(is_dir($partialsDir), 'Event Plan partial directory should still exist.');
 	$partialScrollHits = array();
