@@ -99,56 +99,30 @@ if (!function_exists('vms_staffing_admin_render_required_qualification_rows')) {
 					</div>
 				<?php endforeach; ?>
 			</div>
+			<template data-vms-qualification-row-template="1">
+				<div class="vms-qualification-rule-row" data-vms-qualification-row="1">
+					<div class="vms-qualification-rule-row__fields">
+						<label>
+							<span><?php esc_html_e('Qualification', 'backstage-venue-manager'); ?></span>
+							<input type="text" class="regular-text" name="<?php echo esc_attr($field_base . '[__INDEX__][name]'); ?>" value="" placeholder="TABC Certified">
+						</label>
+						<label>
+							<span><?php esc_html_e('Enforcement', 'backstage-venue-manager'); ?></span>
+							<select name="<?php echo esc_attr($field_base . '[__INDEX__][mode]'); ?>">
+								<option value="warn"><?php esc_html_e('Warn only', 'backstage-venue-manager'); ?></option>
+								<option value="soft_block"><?php esc_html_e('Soft block', 'backstage-venue-manager'); ?></option>
+								<option value="hard_block"><?php esc_html_e('Hard block', 'backstage-venue-manager'); ?></option>
+							</select>
+						</label>
+					</div>
+					<div class="vms-qualification-rule-row__actions">
+						<button type="button" class="button-link-delete vms-qualification-rule-remove" data-vms-qualification-remove="1"><?php esc_html_e('Remove', 'backstage-venue-manager'); ?></button>
+					</div>
+				</div>
+			</template>
 			<p><button type="button" class="button" data-vms-qualification-add="1"><?php esc_html_e('Add requirement', 'backstage-venue-manager'); ?></button></p>
 			<p class="description"><?php esc_html_e('Each qualification can have its own enforcement level. Hard block prevents invalid assignments; soft block warns and flags them; warn only keeps it informational.', 'backstage-venue-manager'); ?></p>
 		</div>
-		<script>
-		(function(){
-			function initBuilder(builder){
-				if (!builder || builder.dataset.vmsQualificationInit === '1') return;
-				builder.dataset.vmsQualificationInit = '1';
-				var base = builder.getAttribute('data-field-base') || '';
-				var rowsWrap = builder.querySelector('[data-vms-qualification-rows="1"]');
-				var addBtn = builder.querySelector('[data-vms-qualification-add="1"]');
-				if (!rowsWrap || !addBtn || !base) return;
-				function buildRow(idx){
-					var row = document.createElement('div');
-					row.className = 'vms-qualification-rule-row';
-					row.setAttribute('data-vms-qualification-row', '1');
-					row.innerHTML =
-						'<div class="vms-qualification-rule-row__fields">' +
-						'<label><span><?php echo esc_js(__('Qualification', 'backstage-venue-manager')); ?></span><input type="text" class="regular-text" name="'+base+'['+idx+'][name]" value="" placeholder="TABC Certified"></label>' +
-						'<label><span><?php echo esc_js(__('Enforcement', 'backstage-venue-manager')); ?></span><select name="'+base+'['+idx+'][mode]">' +
-						'<option value="warn"><?php echo esc_js(__('Warn only', 'backstage-venue-manager')); ?></option>' +
-						'<option value="soft_block"><?php echo esc_js(__('Soft block', 'backstage-venue-manager')); ?></option>' +
-						'<option value="hard_block"><?php echo esc_js(__('Hard block', 'backstage-venue-manager')); ?></option>' +
-						'</select></label>' +
-						'</div>' +
-						'<div class="vms-qualification-rule-row__actions"><button type="button" class="button-link-delete vms-qualification-rule-remove" data-vms-qualification-remove="1"><?php echo esc_js(__('Remove', 'backstage-venue-manager')); ?></button></div>';
-					return row;
-				}
-				addBtn.addEventListener('click', function(){
-					var idx = rowsWrap.querySelectorAll('[data-vms-qualification-row="1"]').length;
-					rowsWrap.appendChild(buildRow(idx));
-				});
-				rowsWrap.addEventListener('click', function(e){
-					var btn = e.target.closest('[data-vms-qualification-remove="1"]');
-					if (!btn) return;
-					e.preventDefault();
-					var rows = rowsWrap.querySelectorAll('[data-vms-qualification-row="1"]');
-					if (rows.length <= 1) {
-						rows[0].querySelectorAll('input').forEach(function(input){ input.value = ''; });
-						var sel = rows[0].querySelector('select');
-						if (sel) sel.value = 'warn';
-						return;
-					}
-					var row = btn.closest('[data-vms-qualification-row="1"]');
-					if (row) row.remove();
-				});
-			}
-			document.currentScript && initBuilder(document.currentScript.previousElementSibling);
-		})();
-		</script>
 		<?php
 	}
 }
@@ -346,6 +320,75 @@ if (!function_exists('vms_staffing_admin_request_method')) {
 		return strtoupper(sanitize_text_field((string) wp_unslash($_SERVER['REQUEST_METHOD'])));
 	}
 }
+
+if (!function_exists('vms_staffing_admin_screen_is_role_target')) {
+	function vms_staffing_admin_screen_is_role_target($screen): bool
+	{
+		if (!is_object($screen)) {
+			return false;
+		}
+
+		if (!in_array((string) ($screen->base ?? ''), array('edit-tags', 'term'), true)) {
+			return false;
+		}
+
+		if ((string) ($screen->taxonomy ?? '') !== 'vms_staff_role') {
+			return false;
+		}
+
+		return (string) ($screen->post_type ?? '') === 'vms_staff';
+	}
+}
+
+if (!function_exists('vms_staffing_admin_is_templates_page')) {
+	function vms_staffing_admin_is_templates_page(): bool
+	{
+		$page = (isset($_GET['page']) && !is_array($_GET['page']))
+			? sanitize_key(wp_unslash((string) $_GET['page']))
+			: '';
+
+		return $page === 'vms-staffing-templates';
+	}
+}
+
+if (!function_exists('vms_staffing_admin_enqueue_assets')) {
+	function vms_staffing_admin_enqueue_assets(): void
+	{
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+
+		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+		$is_role_screen = vms_staffing_admin_screen_is_role_target($screen);
+		$is_templates_page = vms_staffing_admin_is_templates_page();
+
+		if (!$is_role_screen && !$is_templates_page) {
+			return;
+		}
+
+		$version = function_exists('vms_asset_version')
+			? vms_asset_version()
+			: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+
+		if ($is_templates_page) {
+			wp_enqueue_style(
+				'vms-staffing-admin',
+				VMS_PLUGIN_URL . 'assets/css/vms-staffing-admin.css',
+				array(),
+				$version
+			);
+		}
+
+		wp_enqueue_script(
+			'vms-staffing-admin',
+			VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js',
+			array(),
+			$version,
+			true
+		);
+	}
+}
+add_action('admin_enqueue_scripts', 'vms_staffing_admin_enqueue_assets', 50);
 
 if (!function_exists('vms_staffing_admin_build_template_payload_from_post')) {
 	function vms_staffing_admin_build_template_payload_from_post(array $post_data): array
@@ -658,36 +701,6 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__('Staffing Templates', 'backstage-venue-manager') . '</h1>';
 		echo '<p class="description">' . esc_html__('Templates define reusable role slots seeded into Event Plans, with optional template-wide guest bands and per-role attendance triggers.', 'backstage-venue-manager') . '</p>';
-		echo '<style>
-			#vms-tpl-slots{display:grid;gap:12px;margin-top:12px;}
-			.vms-tpl-slot-row{margin:0;}
-			.vms-tpl-slot-card{background:#fff;border:1px solid #ccd0d4;border-radius:10px;padding:14px;box-shadow:0 1px 1px rgba(0,0,0,.02);}
-			.vms-tpl-slot-card__row{display:grid;gap:12px;margin-bottom:12px;align-items:end;}
-			.vms-tpl-slot-card__row--identity{grid-template-columns:repeat(4,minmax(160px,1fr));}
-			.vms-tpl-slot-card__row--timing{grid-template-columns:repeat(3,minmax(180px,1fr));}
-			.vms-tpl-slot-card__row--pay{grid-template-columns:minmax(160px,1fr) minmax(120px,180px) minmax(140px,180px) minmax(220px,2fr) auto;}
-			.vms-tpl-slot-card label{display:flex;flex-direction:column;gap:6px;min-width:0;}
-			.vms-tpl-slot-card label > span{font-weight:600;line-height:1.3;}
-			.vms-tpl-slot-card input[type="text"],
-			.vms-tpl-slot-card input[type="number"],
-			.vms-tpl-slot-card input[type="time"],
-			.vms-tpl-slot-card select{width:100%;max-width:none;}
-			.vms-tpl-slot-card__optional-check{display:flex;align-items:center;gap:8px;font-weight:400;min-height:32px;}
-			.vms-tpl-slot-card__actions{display:flex;align-items:flex-end;justify-content:flex-end;}
-			.vms-tpl-slot-card__notes input{width:100%;}
-			.vms-tpl-slot-card__help{margin:0 0 10px;}
-			.vms-tpl-hidden{display:none !important;}
-			@media (max-width: 1200px){
-				.vms-tpl-slot-card__row--timing,
-				.vms-tpl-slot-card__row--pay{grid-template-columns:repeat(2,minmax(180px,1fr));}
-			}
-			@media (max-width: 782px){
-				.vms-tpl-slot-card__row--identity,
-				.vms-tpl-slot-card__row--timing,
-				.vms-tpl-slot-card__row--pay{grid-template-columns:1fr;}
-				.vms-tpl-slot-card__actions{justify-content:flex-start;}
-			}
-		</style>';
 
 		if (!empty($_GET['saved'])) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Template saved.', 'backstage-venue-manager') . '</p></div>';
@@ -807,110 +820,7 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 		}
 
 		$template_row_template = vms_staffing_admin_template_row_markup('__INDEX__', array());
-		?>
-		<script>
-		(function(){
-			var slotsWrap = document.getElementById('vms-tpl-slots');
-			var addBtn = document.getElementById('vms-tpl-add-row');
-			var rowTemplate = <?php echo wp_json_encode($template_row_template); ?>;
-			if (!slotsWrap || !addBtn) return;
-
-			function rowCount(){
-				return slotsWrap.querySelectorAll('[data-vms-tpl-slot-row="1"]').length;
-			}
-
-			function toggleNodes(nodes, show){
-				nodes.forEach(function(node){
-					node.classList.toggle('vms-tpl-hidden', !show);
-					node.querySelectorAll('input, select, textarea').forEach(function(field){
-						field.disabled = !show;
-					});
-				});
-			}
-
-			function templateState(row){
-				var mode = (row.querySelector('[data-vms-tpl-time-mode-input="1"]') || {}).value || 'absolute';
-				var durationField = row.querySelector('[data-vms-tpl-duration-input="1"]');
-				var duration = durationField ? parseInt(durationField.value || '0', 10) : 0;
-				if (!Number.isFinite(duration)) duration = 0;
-				var roleField = row.querySelector('[data-vms-tpl-role-input="1"]');
-				var roleId = roleField ? parseInt(roleField.value || '0', 10) : 0;
-				if (!Number.isFinite(roleId)) roleId = 0;
-				var needField = row.querySelector('[data-vms-tpl-headcount-input="1"]');
-				var need = needField ? parseInt(needField.value || '0', 10) : 0;
-				if (!Number.isFinite(need)) need = 0;
-				var shiftStart = row.querySelector('[data-vms-tpl-shift-start-input="1"]');
-				var shiftEnd = row.querySelector('[data-vms-tpl-shift-end-input="1"]');
-				return {
-					timeMode: mode === 'relative' ? 'relative' : 'absolute',
-					duration: duration,
-					roleInUse: roleId > 0 && need > 0,
-					shiftStart: shiftStart ? shiftStart.value : '',
-					shiftEnd: shiftEnd ? shiftEnd.value : ''
-				};
-			}
-
-			function syncTimingVisibility(row, state){
-				var absoluteFields = Array.prototype.slice.call(row.querySelectorAll('[data-vms-tpl-absolute-field="1"]'));
-				var relativeFields = Array.prototype.slice.call(row.querySelectorAll('[data-vms-tpl-relative-field="1"]'));
-				var endFields = Array.prototype.slice.call(row.querySelectorAll('[data-vms-tpl-end-field="1"]'));
-				var showAbsolute = state.timeMode === 'absolute';
-				var showRelative = !showAbsolute;
-				toggleNodes(absoluteFields, showAbsolute);
-				toggleNodes(relativeFields, showRelative);
-				if (state.duration > 0) {
-					toggleNodes(endFields.filter(function(node){
-						return showAbsolute ? node.hasAttribute('data-vms-tpl-absolute-field') : node.hasAttribute('data-vms-tpl-relative-field');
-					}), false);
-				}
-			}
-
-			function renderRow(row){
-				var state = templateState(row);
-				syncTimingVisibility(row, state);
-				var absoluteWarning = row.querySelector('[data-vms-tpl-absolute-warning]');
-				if (absoluteWarning) {
-					var showWarning = state.roleInUse && state.timeMode === 'absolute' && (state.shiftStart === '' || (state.shiftEnd === '' && state.duration <= 0));
-					absoluteWarning.classList.toggle('vms-hidden', !showWarning);
-				}
-			}
-
-			function initRow(row){
-				if (!row || row.dataset.vmsTplInit === '1') return;
-				row.dataset.vmsTplInit = '1';
-				row.querySelectorAll('input, select').forEach(function(field){
-					field.addEventListener('input', function(){ renderRow(row); });
-					field.addEventListener('change', function(){ renderRow(row); });
-				});
-				renderRow(row);
-			}
-
-			function buildRow(idx){
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = rowTemplate.replace(/__INDEX__/g, String(idx));
-				var row = wrapper.firstElementChild;
-				initRow(row);
-				return row;
-			}
-
-			slotsWrap.querySelectorAll('[data-vms-tpl-slot-row="1"]').forEach(initRow);
-
-			addBtn.addEventListener('click', function(){
-				slotsWrap.appendChild(buildRow(rowCount()));
-			});
-
-			slotsWrap.addEventListener('click', function(e){
-				var btn = e.target.closest('.vms-tpl-remove-row');
-				if (!btn) return;
-				e.preventDefault();
-				var rows = slotsWrap.querySelectorAll('[data-vms-tpl-slot-row="1"]');
-				if (rows.length <= 1) return;
-				var row = btn.closest('[data-vms-tpl-slot-row="1"]');
-				if (row) row.remove();
-			});
-		})();
-		</script>
-		<?php
+		echo '<template id="vms-tpl-slot-row-template">' . $template_row_template . '</template>';
 
 		echo '</div>';
 	}
