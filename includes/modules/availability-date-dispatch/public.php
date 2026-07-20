@@ -45,30 +45,40 @@ if (!function_exists('vms_add_dispatch_public_response_allowed_html')) {
 	}
 }
 
+if (!function_exists('vms_add_dispatch_public_shell_stylesheet_url')) {
+	function vms_add_dispatch_public_shell_stylesheet_url(): string
+	{
+		if (!defined('VMS_PLUGIN_URL') || !is_string(VMS_PLUGIN_URL) || VMS_PLUGIN_URL === '') {
+			return '';
+		}
+
+		$stylesheet_url = VMS_PLUGIN_URL . 'assets/css/vms-add-dispatch-public-shell.css';
+		$version = function_exists('vms_asset_version') ? trim((string) vms_asset_version()) : '';
+		if ($version === '' && defined('VMS_VERSION')) {
+			$version = (string) VMS_VERSION;
+		}
+		if ($version !== '') {
+			$stylesheet_url = add_query_arg('ver', $version, $stylesheet_url);
+		}
+
+		return (string) $stylesheet_url;
+	}
+}
+
 if (!function_exists('vms_add_dispatch_render_public_shell')) {
 	function vms_add_dispatch_render_public_shell(string $headline, string $content_html): void
 	{
+		$stylesheet_url = vms_add_dispatch_public_shell_stylesheet_url();
+
 		status_header(200);
 		nocache_headers();
 		echo '<!doctype html><html lang="en"><head><meta charset="utf-8">';
 		echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
 		echo '<title>' . esc_html($headline) . '</title>';
-		echo '<style>';
-		echo 'body{margin:0;background:#eef2f6;color:#12253d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}';
-		echo '.vms-add-public{max-width:760px;margin:28px auto;padding:0 14px;}';
-		echo '.vms-add-card{background:#fff;border:1px solid #d6e0eb;border-radius:16px;box-shadow:0 16px 40px rgba(18,37,61,.08);padding:20px;}';
-		echo 'h1{margin:0 0 10px;font-size:30px;line-height:1.15;}';
-		echo '.vms-add-meta{background:#f6f9fc;border:1px solid #dce6f1;border-radius:12px;padding:14px 16px;margin:0 0 14px;}';
-		echo '.vms-add-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px;}';
-		echo '.vms-add-btn{display:block;text-align:center;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:700;}';
-		echo '.vms-add-btn--yes{background:#1f7a4c;color:#fff;}';
-		echo '.vms-add-btn--no{background:#8b2d2d;color:#fff;}';
-		echo '.vms-add-note,.vms-add-error,.vms-add-success{border-radius:12px;padding:12px 14px;margin:14px 0;}';
-		echo '.vms-add-note{background:#f6f9fc;border:1px solid #dce6f1;color:#334b63;}';
-		echo '.vms-add-error{background:#fff0f0;border:1px solid #e7b0b0;color:#7a1d1d;}';
-		echo '.vms-add-success{background:#ecfbf2;border:1px solid #abd5b7;color:#13472b;}';
-		echo '@media (max-width:760px){.vms-add-actions{grid-template-columns:1fr;}}';
-		echo '</style></head><body><div class="vms-add-public"><div class="vms-add-card">';
+		if ($stylesheet_url !== '') {
+			echo '<link rel="stylesheet" href="' . esc_url($stylesheet_url) . '">';
+		}
+		echo '</head><body><div class="vms-add-public"><div class="vms-add-card">';
 		echo wp_kses($content_html, vms_add_dispatch_public_response_allowed_html());
 		echo '</div></div></body></html>';
 		exit;
