@@ -147,7 +147,7 @@ function vms_render_current_venue_selector(): void
     echo '</select>';
     $current_redirect = vms_request_local_redirect(
         admin_url('admin.php?page=vms-schedule'),
-        $_SERVER['REQUEST_URI'] ?? ''
+        vms_request_current_uri()
     );
     echo '<input type="hidden" name="redirect_to" value="' . esc_attr($current_redirect) . '">';
     echo '</form>';

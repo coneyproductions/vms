@@ -4181,7 +4181,7 @@ function vms_dash_render_venue_selector(): void
     $action = esc_url(admin_url('admin-post.php'));
     $current_redirect = vms_request_local_redirect(
         admin_url('admin.php?page=vms-dashboard'),
-        $_SERVER['REQUEST_URI'] ?? ''
+        vms_request_current_uri()
     );
     echo '<form method="post" action="' . $action . '" class="vms-dash-selector__row" id="vms-dash-pref-form">';
     echo '<input type="hidden" name="action" value="vms_set_dashboard_venue">';
