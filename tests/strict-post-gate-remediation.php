@@ -244,8 +244,6 @@ vms_test_assert_order(
 	'Staff Portal manual availability nonce and mutation ordering changed unexpectedly.'
 );
 
-vms_test_assert(strpos($vendorTaxSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_vendor_tax_save'])) {") !== false, 'Vendor Tax Profile direct POST gate should remain deferred and unchanged.');
-
 eval($seasonHelperSource);
 eval($tasksHelperSource);
 eval($portalHelperSource);

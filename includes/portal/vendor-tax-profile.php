@@ -49,6 +49,16 @@ function vms_tax_provider_instructions(string $provider): string
  * This portal view calls vms_vendor_tax_profile_is_complete() from that helper.
  */
 
+function vms_vendor_tax_is_exact_post_request(): bool
+{
+	$request_method = $_SERVER['REQUEST_METHOD'] ?? null;
+	if (!is_scalar($request_method)) {
+		return false;
+	}
+
+	return 'POST' === wp_unslash($request_method);
+}
+
 function vms_vendor_portal_render_tax_profile($vendor_id)
 {
 	$vendor_id = (int) $vendor_id;
@@ -88,7 +98,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 	$k_done    = vms_meta_key('vendor', 'tax_profile_completed_at');
 
 	// Save handler
-	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_vendor_tax_save'])) {
+	if (vms_vendor_tax_is_exact_post_request() && isset($_POST['vms_vendor_tax_save'])) {
 
 		$nonce = (isset($_POST['vms_vendor_tax_nonce']) && !is_array($_POST['vms_vendor_tax_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_tax_nonce']))
