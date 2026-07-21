@@ -120,6 +120,20 @@ function sanitize_text_field($value): string
     return $filtered;
 }
 
+function vms_request_server_value(string $key): string
+{
+    if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
+        return '';
+    }
+
+    $value = wp_unslash($_SERVER[$key]);
+    if (!is_scalar($value)) {
+        return '';
+    }
+
+    return trim((string) $value);
+}
+
 function wp_is_mobile(): bool
 {
     return !empty($GLOBALS['vms_test_public_calendar_is_mobile']);
@@ -167,28 +181,19 @@ function vms_test_public_calendar_capture_current_user_agent(bool $setHeader, $h
     return vms_test_public_calendar_capture_current_user_agent_from_globals();
 }
 
-function vms_test_public_calendar_proposed_server_value(bool $setHeader, $header): string
+function vms_test_public_calendar_expected_user_agent(bool $setHeader, $header): string
 {
-    if (!$setHeader || !isset($header) || !is_scalar($header)) {
-        return '';
+    vms_test_public_calendar_reset_runtime();
+    if ($setHeader) {
+        $_SERVER['HTTP_USER_AGENT'] = $header;
     }
 
-    $value = wp_unslash($header);
-    if (!is_scalar($value)) {
-        return '';
-    }
-
-    return trim((string) $value);
-}
-
-function vms_test_public_calendar_proposed_user_agent(bool $setHeader, $header): string
-{
-    $userAgent = vms_test_public_calendar_proposed_server_value($setHeader, $header);
+    $userAgent = vms_request_server_value('HTTP_USER_AGENT');
     if ($userAgent === '') {
         return '';
     }
 
-    return strtolower(substr(sanitize_text_field($userAgent), 0, 255));
+    return strtolower(sanitize_text_field($userAgent));
 }
 
 function vms_test_public_calendar_detects_token(string $normalizedUserAgent, string $token): bool
@@ -302,10 +307,11 @@ foreach (
         'Live public calendar' => $liveCalendarSource,
     ) as $label => $source
 ) {
-    vms_test_public_calendar_assert_contains("isset(\$_SERVER['HTTP_USER_AGENT'])", $source, $label . ' should preserve direct HTTP_USER_AGENT existence checks.');
-    vms_test_public_calendar_assert_contains("wp_unslash((string) \$_SERVER['HTTP_USER_AGENT'])", $source, $label . ' should preserve local unslash-based UA normalization.');
+    vms_test_public_calendar_assert_not_contains("\$_SERVER['HTTP_USER_AGENT']", $source, $label . ' should remove direct HTTP_USER_AGENT reads.');
+    vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $source, $label . ' should source the request UA through the shared server-value helper.');
+    vms_test_public_calendar_assert_contains('strtolower(sanitize_text_field($user_agent))', $source, $label . ' should preserve lowercase sanitize_text_field() normalization.');
     vms_test_public_calendar_assert_contains('vms_public_calendar_get_request_user_agent()', $source, $label . ' should preserve the local UA helper and its call site.');
-    vms_test_public_calendar_assert_not_contains('vms_request_user_agent()', $source, $label . ' should not migrate to the shared helper in this characterization baseline.');
+    vms_test_public_calendar_assert_not_contains('vms_request_user_agent()', $source, $label . ' should not migrate to the capped shared UA helper.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'ipad') !== false", $source, $label . ' should preserve the ipad marker.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'tablet') !== false", $source, $label . ' should preserve the tablet marker.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'kindle') !== false", $source, $label . ' should preserve the kindle marker.');
@@ -326,8 +332,22 @@ foreach (
     vms_test_public_calendar_assert_contains('Compact view shows up to three event-bearing months in weekend-focused chunks and skips empty months.', $source, $label . ' should preserve the compact-view note.');
 }
 
-vms_test_public_calendar_assert_contains("return substr(sanitize_text_field(\$user_agent), 0, 255);", $mirrorRuntimeGuardsSource, 'Mirror runtime guards should preserve the proposed 255-character helper cap.');
-vms_test_public_calendar_assert_contains("return substr(sanitize_text_field(\$user_agent), 0, 255);", $liveRuntimeGuardsSource, 'Live runtime guards should preserve the proposed 255-character helper cap.');
+foreach (
+    array(
+        'Mirror UA helper' => $mirrorUaHelper,
+        'Live UA helper' => $liveUaHelper,
+    ) as $label => $helperSource
+) {
+    vms_test_public_calendar_assert_not_contains("\$_SERVER['HTTP_USER_AGENT']", $helperSource, $label . ' should not access HTTP_USER_AGENT directly.');
+    vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $helperSource, $label . ' should call the shared server-value helper.');
+    vms_test_public_calendar_assert_contains('sanitize_text_field($user_agent)', $helperSource, $label . ' should retain sanitize_text_field().');
+    vms_test_public_calendar_assert_contains('strtolower(sanitize_text_field($user_agent))', $helperSource, $label . ' should retain lowercase normalization.');
+    vms_test_public_calendar_assert_not_contains('vms_request_user_agent()', $helperSource, $label . ' should not use the capped UA helper.');
+    vms_test_public_calendar_assert_not_contains('substr(', $helperSource, $label . ' should not add a length cap.');
+}
+
+vms_test_public_calendar_assert_contains("return substr(sanitize_text_field(\$user_agent), 0, 255);", $mirrorRuntimeGuardsSource, 'Mirror runtime guards should preserve the capped shared UA helper outside this calendar path.');
+vms_test_public_calendar_assert_contains("return substr(sanitize_text_field(\$user_agent), 0, 255);", $liveRuntimeGuardsSource, 'Live runtime guards should preserve the capped shared UA helper outside this calendar path.');
 vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $mirrorRuntimeGuardsSource, 'Mirror runtime guards should preserve the helper-backed UA source.');
 vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $liveRuntimeGuardsSource, 'Live runtime guards should preserve the helper-backed UA source.');
 
@@ -341,116 +361,103 @@ $uaCases = array(
         'header' => null,
         'expected_current' => '',
         'expected_warning_count' => 0,
-        'expected_proposed' => '',
     ),
     'empty_string' => array(
         'set_header' => true,
         'header' => '',
         'expected_current' => '',
         'expected_warning_count' => 0,
-        'expected_proposed' => '',
     ),
     'ordinary_browser' => array(
         'set_header' => true,
         'header' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         'expected_current' => 'mozilla/5.0 (windows nt 10.0; win64; x64)',
         'expected_warning_count' => 0,
-        'expected_proposed' => 'mozilla/5.0 (windows nt 10.0; win64; x64)',
     ),
     'mixed_case' => array(
         'set_header' => true,
         'header' => 'MoZiLLa/5.0 (IPad; CPU OS 17_0)',
         'expected_current' => 'mozilla/5.0 (ipad; cpu os 17_0)',
         'expected_warning_count' => 0,
-        'expected_proposed' => 'mozilla/5.0 (ipad; cpu os 17_0)',
     ),
     'leading_trailing_whitespace' => array(
         'set_header' => true,
         'header' => "  Tablet Device \n ",
         'expected_current' => 'tablet device',
         'expected_warning_count' => 0,
-        'expected_proposed' => 'tablet device',
     ),
     'html_like_content' => array(
         'set_header' => true,
         'header' => '<b>Tablet</b><script>Playbook</script>',
         'expected_current' => 'tabletplaybook',
         'expected_warning_count' => 0,
-        'expected_proposed' => 'tabletplaybook',
     ),
     'control_characters' => array(
         'set_header' => true,
         'header' => "Tab\x00let\r\nDevice",
         'expected_current' => 'tablet device',
         'expected_warning_count' => 0,
-        'expected_proposed' => 'tablet device',
     ),
     'quotes_and_slashes' => array(
         'set_header' => true,
         'header' => " Browser\\\\Slash \\\"Tablet\\\" ",
         'expected_current' => 'browser\\slash "tablet"',
         'expected_warning_count' => 0,
-        'expected_proposed' => 'browser\\slash "tablet"',
     ),
     'malformed_non_scalar_input' => array(
         'set_header' => true,
         'header' => array('tablet'),
-        'expected_current' => 'array',
-        'expected_warning_count' => 1,
-        'expected_proposed' => '',
+        'expected_current' => '',
+        'expected_warning_count' => 0,
     ),
     'exactly_255_bytes' => array(
         'set_header' => true,
         'header' => str_repeat('A', 255),
         'expected_current' => str_repeat('a', 255),
         'expected_warning_count' => 0,
-        'expected_proposed' => str_repeat('a', 255),
     ),
     'two_hundred_fifty_six_bytes' => array(
         'set_header' => true,
         'header' => str_repeat('B', 256),
         'expected_current' => str_repeat('b', 256),
         'expected_warning_count' => 0,
-        'expected_proposed' => str_repeat('b', 255),
     ),
     'substantially_longer_malformed_input' => array(
         'set_header' => true,
         'header' => str_repeat('A', 280) . '<b>TABLET</b>',
         'expected_current' => str_repeat('a', 280) . 'tablet',
         'expected_warning_count' => 0,
-        'expected_proposed' => str_repeat('a', 255),
     ),
     'repeated_tracked_tokens' => array(
         'set_header' => true,
         'header' => 'tablet start ' . str_repeat('x', 240) . ' TABLET',
         'expected_current' => 'tablet start ' . str_repeat('x', 240) . ' tablet',
         'expected_warning_count' => 0,
-        'expected_proposed' => 'tablet start ' . str_repeat('x', 240) . ' t',
     ),
 );
 
 foreach ($uaCases as $label => $case) {
     $current = vms_test_public_calendar_capture_current_user_agent($case['set_header'], $case['header']);
-    $proposed = vms_test_public_calendar_proposed_user_agent($case['set_header'], $case['header']);
+    $expected = vms_test_public_calendar_expected_user_agent($case['set_header'], $case['header']);
 
     vms_test_public_calendar_assert(
         $current['normalized'] === $case['expected_current'],
-        $label . ' should preserve the current UA normalization output. Got ' . json_encode($current['normalized']) . '.'
+        $label . ' should preserve the accepted UA normalization output. Got ' . json_encode($current['normalized']) . '.'
     );
     vms_test_public_calendar_assert(
         count($current['warnings']) === $case['expected_warning_count'],
-        $label . ' should preserve the current warning count. Got ' . count($current['warnings']) . '.'
+        $label . ' should preserve the accepted warning count. Got ' . count($current['warnings']) . '.'
     );
     vms_test_public_calendar_assert(
-        $proposed === $case['expected_proposed'],
-        $label . ' should preserve the modeled helper-backed comparison output. Got ' . json_encode($proposed) . '.'
+        $expected === $case['expected_current'],
+        $label . ' should preserve the modeled shared-helper output. Got ' . json_encode($expected) . '.'
     );
 }
 
 $malformedWarnings = vms_test_public_calendar_capture_current_user_agent(true, array('tablet'))['warnings'];
 vms_test_public_calendar_assert(
-    isset($malformedWarnings[0]['message']) && strpos((string) $malformedWarnings[0]['message'], 'Array to string conversion') !== false,
-    'Malformed non-scalar UA input should preserve the current array-to-string warning behavior.'
+    $malformedWarnings === array(),
+    'Malformed non-scalar UA input should normalize to an empty string without warnings.'
 );
 
 $trackedTokens = array('ipad', 'tablet', 'kindle', 'silk/', 'playbook');
@@ -463,39 +470,39 @@ foreach ($trackedTokens as $token) {
     $mixedCasePayload = 'noise-' . vms_test_public_calendar_mixed_case($token) . '-tail';
 
     $matrix = array(
-        'before_255' => array('payload' => $beforePayload, 'current' => true, 'proposed' => true),
-        'ends_at_255' => array('payload' => $endAt255Payload, 'current' => true, 'proposed' => true),
-        'starts_at_255' => array('payload' => $startAt255Payload, 'current' => true, 'proposed' => false),
-        'starts_after_255' => array('payload' => $after255Payload, 'current' => true, 'proposed' => false),
-        'repeated' => array('payload' => $repeatedPayload, 'current' => true, 'proposed' => true),
-        'mixed_case' => array('payload' => $mixedCasePayload, 'current' => true, 'proposed' => true),
+        'before_255' => array('payload' => $beforePayload, 'expected' => true),
+        'ends_at_255' => array('payload' => $endAt255Payload, 'expected' => true),
+        'starts_at_255' => array('payload' => $startAt255Payload, 'expected' => true),
+        'starts_after_255' => array('payload' => $after255Payload, 'expected' => true),
+        'repeated' => array('payload' => $repeatedPayload, 'expected' => true),
+        'mixed_case' => array('payload' => $mixedCasePayload, 'expected' => true),
     );
 
     foreach ($matrix as $caseLabel => $row) {
         $current = vms_test_public_calendar_capture_current_user_agent(true, $row['payload']);
-        $proposed = vms_test_public_calendar_proposed_user_agent(true, $row['payload']);
+        $expected = vms_test_public_calendar_expected_user_agent(true, $row['payload']);
         $currentDetected = vms_test_public_calendar_detects_token($current['normalized'], $token);
-        $proposedDetected = vms_test_public_calendar_detects_token($proposed, $token);
+        $expectedDetected = vms_test_public_calendar_detects_token($expected, $token);
 
         $context = json_encode(
             array(
                 'token' => $token,
                 'case' => $caseLabel,
                 'current_normalized' => $current['normalized'],
-                'proposed_normalized' => $proposed,
+                'expected_normalized' => $expected,
                 'current_detected' => $currentDetected,
-                'proposed_detected' => $proposedDetected,
+                'expected_detected' => $expectedDetected,
             ),
             JSON_UNESCAPED_SLASHES
         );
 
         vms_test_public_calendar_assert(
-            $currentDetected === $row['current'],
-            'Current token detection should stay characterized for ' . $context
+            $currentDetected === $row['expected'],
+            'Accepted token detection should stay characterized for ' . $context
         );
         vms_test_public_calendar_assert(
-            $proposedDetected === $row['proposed'],
-            'Proposed helper-backed token detection comparison should stay characterized for ' . $context
+            $expectedDetected === $row['expected'],
+            'Modeled shared-helper token detection should stay characterized for ' . $context
         );
     }
 }
@@ -533,13 +540,13 @@ vms_test_public_calendar_assert(
 $autoLateTabletToken = vms_test_public_calendar_resolve_current_view(false, 'auto', '', null, false, true, str_repeat('a', 256) . 'TABLET');
 vms_test_public_calendar_assert(
     $autoLateTabletToken['view'] === 'auto' && $autoLateTabletToken['effective_view'] === 'list' && $autoLateTabletToken['is_tablet_calendar_request'],
-    'Auto view should currently coerce to list when the tablet marker appears after byte 255.'
+    'Auto view should preserve list coercion when the tablet marker appears after byte 255.'
 );
 
 $explicitMonthTablet = vms_test_public_calendar_resolve_current_view(false, 'auto', 'month', null, true, false, null);
 vms_test_public_calendar_assert(
     $explicitMonthTablet['view'] === 'month' && $explicitMonthTablet['effective_view'] === 'list',
-    'Explicit month view should currently coerce to list on mobile/tablet requests.'
+    'Explicit month view should preserve list coercion on mobile/tablet requests.'
 );
 
 $explicitListMobile = vms_test_public_calendar_resolve_current_view(false, 'auto', 'list', null, true, false, null);

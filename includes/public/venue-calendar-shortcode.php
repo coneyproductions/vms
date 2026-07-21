@@ -215,11 +215,12 @@ if (!function_exists('vms_public_calendar_get_requested_show_past')) {
 if (!function_exists('vms_public_calendar_get_request_user_agent')) {
 	function vms_public_calendar_get_request_user_agent(): string
 	{
-		if (!isset($_SERVER['HTTP_USER_AGENT'])) {
+		$user_agent = vms_request_server_value('HTTP_USER_AGENT');
+		if ($user_agent === '') {
 			return '';
 		}
 
-		return strtolower(sanitize_text_field(wp_unslash((string) $_SERVER['HTTP_USER_AGENT'])));
+		return strtolower(sanitize_text_field($user_agent));
 	}
 }
 
