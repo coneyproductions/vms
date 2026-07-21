@@ -216,11 +216,12 @@ function vms_budget_post_array(string $key): array
 
 function vms_budget_request_method(): string
 {
-  if (!isset($_SERVER['REQUEST_METHOD'])) {
+  $method = vms_request_server_value('REQUEST_METHOD');
+  if ($method === '') {
     return '';
   }
 
-  return strtoupper(sanitize_key(wp_unslash($_SERVER['REQUEST_METHOD'])));
+  return strtoupper(sanitize_key($method));
 }
 
 function vms_budget_calculator_is_valid_ymd(string $ymd): bool

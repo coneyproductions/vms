@@ -313,11 +313,12 @@ if (!function_exists('vms_staffing_admin_get_venues')) {
 if (!function_exists('vms_staffing_admin_request_method')) {
 	function vms_staffing_admin_request_method(): string
 	{
-		if (!isset($_SERVER['REQUEST_METHOD'])) {
+		$method = vms_request_server_value('REQUEST_METHOD');
+		if ($method === '') {
 			return '';
 		}
 
-		return strtoupper(sanitize_text_field((string) wp_unslash($_SERVER['REQUEST_METHOD'])));
+		return strtoupper(sanitize_text_field($method));
 	}
 }
 
