@@ -79,6 +79,20 @@ function wp_unslash($value)
     return $value;
 }
 
+function vms_request_server_value(string $key): string
+{
+    if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
+        return '';
+    }
+
+    $value = wp_unslash($_SERVER[$key]);
+    if (!is_scalar($value)) {
+        return '';
+    }
+
+    return trim((string) $value);
+}
+
 function wp_salt(string $scheme): string
 {
     $GLOBALS['vms_test_event_feedback_wp_salt_calls'][] = $scheme;
@@ -231,6 +245,20 @@ function wp_unslash($value)
     return $value;
 }
 
+function vms_request_server_value(string $key): string
+{
+    if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
+        return '';
+    }
+
+    $value = wp_unslash($_SERVER[$key]);
+    if (!is_scalar($value)) {
+        return '';
+    }
+
+    return trim((string) $value);
+}
+
 PHP;
     $code .= $functionSource . "\n";
     $code .= '$_SERVER = ' . var_export($server, true) . ";\n";
@@ -330,9 +358,19 @@ foreach (
     ) as $label => $source
 ) {
     vms_test_event_feedback_assert_contains(
-        "array('HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR')",
+        "vms_request_server_value('HTTP_CF_CONNECTING_IP')",
         $source,
-        $label . ' should preserve CF > XFF > REMOTE precedence.'
+        $label . ' should source Cloudflare IPs through the shared server-value helper.'
+    );
+    vms_test_event_feedback_assert_contains(
+        "vms_request_server_value('HTTP_X_FORWARDED_FOR')",
+        $source,
+        $label . ' should source XFF through the shared server-value helper.'
+    );
+    vms_test_event_feedback_assert_contains(
+        "vms_request_server_value('REMOTE_ADDR')",
+        $source,
+        $label . ' should source remote addresses through the shared server-value helper.'
     );
     vms_test_event_feedback_assert_contains(
         "trim(explode(',', \$raw)[0])",
@@ -340,14 +378,14 @@ foreach (
         $label . ' should preserve first-element XFF parsing.'
     );
     vms_test_event_feedback_assert_contains(
-        "substr((string) wp_unslash(\$_SERVER['HTTP_USER_AGENT']), 0, 255)",
+        "substr(vms_request_server_value('HTTP_USER_AGENT'), 0, 255)",
         $source,
-        $label . ' should preserve the raw capped UA boundary.'
+        $label . ' should preserve the helper-backed capped UA boundary.'
     );
     vms_test_event_feedback_assert_contains(
-        "substr((string) wp_unslash(\$_SERVER['HTTP_ACCEPT_LANGUAGE']), 0, 80)",
+        "substr(vms_request_server_value('HTTP_ACCEPT_LANGUAGE'), 0, 80)",
         $source,
-        $label . ' should preserve the raw capped Accept-Language boundary.'
+        $label . ' should preserve the helper-backed capped Accept-Language boundary.'
     );
     vms_test_event_feedback_assert_contains(
         "wp_salt('logged_in')",
@@ -383,9 +421,41 @@ foreach (
     ) as $label => $helperSource
 ) {
     vms_test_event_feedback_assert_not_contains(
-        'vms_request_server_value(',
+        '$_SERVER',
         $helperSource,
-        $label . ' should not migrate to shared server helpers yet.'
+        $label . ' should no longer read request globals directly.'
+    );
+    vms_test_event_feedback_assert_contains(
+        "vms_request_server_value('HTTP_CF_CONNECTING_IP')",
+        $helperSource,
+        $label . ' should source Cloudflare IPs through the shared server-value helper.'
+    );
+    vms_test_event_feedback_assert_contains(
+        "vms_request_server_value('HTTP_X_FORWARDED_FOR')",
+        $helperSource,
+        $label . ' should source XFF through the shared server-value helper.'
+    );
+    vms_test_event_feedback_assert_contains(
+        "vms_request_server_value('REMOTE_ADDR')",
+        $helperSource,
+        $label . ' should source remote addresses through the shared server-value helper.'
+    );
+    vms_test_event_feedback_assert_contains(
+        "vms_request_server_value('HTTP_USER_AGENT')",
+        $helperSource,
+        $label . ' should source user agents through the shared server-value helper.'
+    );
+    vms_test_event_feedback_assert_contains(
+        "vms_request_server_value('HTTP_ACCEPT_LANGUAGE')",
+        $helperSource,
+        $label . ' should source Accept-Language through the shared server-value helper.'
+    );
+    vms_test_event_feedback_assert(
+        strpos($helperSource, "vms_request_server_value('HTTP_CF_CONNECTING_IP')")
+        < strpos($helperSource, "vms_request_server_value('HTTP_X_FORWARDED_FOR')")
+        && strpos($helperSource, "vms_request_server_value('HTTP_X_FORWARDED_FOR')")
+        < strpos($helperSource, "vms_request_server_value('REMOTE_ADDR')"),
+        $label . ' should preserve CF > XFF > REMOTE source order.'
     );
     vms_test_event_feedback_assert_not_contains(
         'vms_request_remote_addr(',
@@ -587,6 +657,33 @@ $proxyCases = array(
         ),
         'expected_ip' => '203.0.113.7',
     ),
+    'malformed_cloudflare_falls_through_to_xff' => array(
+        'server' => array(
+            'HTTP_CF_CONNECTING_IP' => array('203.0.113.7'),
+            'HTTP_X_FORWARDED_FOR' => '198.51.100.5, 203.0.113.9',
+            'REMOTE_ADDR' => '192.0.2.44',
+            'HTTP_USER_AGENT' => $proxyUserAgent,
+            'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage,
+        ),
+        'expected_ip' => '198.51.100.5',
+    ),
+    'malformed_xff_falls_through_to_remote' => array(
+        'server' => array(
+            'HTTP_X_FORWARDED_FOR' => array('198.51.100.5'),
+            'REMOTE_ADDR' => '192.0.2.44',
+            'HTTP_USER_AGENT' => $proxyUserAgent,
+            'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage,
+        ),
+        'expected_ip' => '192.0.2.44',
+    ),
+    'malformed_remote_non_scalar' => array(
+        'server' => array(
+            'REMOTE_ADDR' => array('192.0.2.44'),
+            'HTTP_USER_AGENT' => $proxyUserAgent,
+            'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage,
+        ),
+        'expected_ip' => '',
+    ),
     'mixed_case_ip_like_string' => array(
         'server' => array(
             'REMOTE_ADDR' => 'ABCD:EF::1',
@@ -636,14 +733,15 @@ $uaCases = array(
     'ua_missing' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => '', 'warnings' => 0),
     'ua_empty' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => '', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => '', 'warnings' => 0),
     'ua_ordinary' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => 'Mozilla/5.0', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => 'Mozilla/5.0', 'warnings' => 0),
-    'ua_mixed_case' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => 'MoZiLLa/5.0', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => 'MoZiLLa/5.0', 'warnings' => 0),
-    'ua_whitespace' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => '  Browser/1.0 Tablet  ', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => '  Browser/1.0 Tablet  ', 'warnings' => 0),
+    'ua_mixed_case' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => 'mOzIlLa/5.0', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => 'mOzIlLa/5.0', 'warnings' => 0),
+    'ua_whitespace' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => '  Browser/1.0 Tablet  ', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => 'Browser/1.0 Tablet', 'warnings' => 0),
+    'ua_whitespace_trimmed_equivalent' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => 'Browser/1.0 Tablet', 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => 'Browser/1.0 Tablet', 'warnings' => 0),
     'ua_exactly_255' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $ua255, 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => $ua255, 'warnings' => 0),
     'ua_256_bytes' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $ua256, 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => $ua255, 'warnings' => 0),
     'ua_substantially_longer' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $uaLong, 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => $ua255, 'warnings' => 0),
     'ua_quotes_and_slashes' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $uaQuotedInput, 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => $uaQuotedExpected, 'warnings' => 0),
     'ua_html_and_control_content' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $uaHtmlControl, 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => $uaHtmlControl, 'warnings' => 0),
-    'ua_malformed_non_scalar' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => array('Tablet'), 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => 'Array', 'warnings' => 1),
+    'ua_malformed_non_scalar' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => array('Tablet'), 'HTTP_ACCEPT_LANGUAGE' => $proxyLanguage), 'expected' => '', 'warnings' => 0),
 );
 
 $uaResults = array();
@@ -671,8 +769,8 @@ vms_test_event_feedback_assert(
     'UA case should remain hash-significant.'
 );
 vms_test_event_feedback_assert(
-    $uaResults['ua_ordinary']['hash'] !== $uaResults['ua_whitespace']['hash'],
-    'UA leading/trailing whitespace should remain hash-significant.'
+    $uaResults['ua_whitespace']['hash'] === $uaResults['ua_whitespace_trimmed_equivalent']['hash'],
+    'UA outer whitespace should be trimmed before hashing.'
 );
 
 $lang80 = str_repeat('L', 80);
@@ -687,11 +785,11 @@ $languageCases = array(
     'language_mixed_case' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => 'En-US,en;q=0.9'), 'expected' => 'En-US,en;q=0.9', 'warnings' => 0),
     'language_ordering_difference' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => 'fr-CA,fr;q=0.8,en;q=0.5'), 'expected' => 'fr-CA,fr;q=0.8,en;q=0.5', 'warnings' => 0),
     'language_q_value_difference' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.8'), 'expected' => 'en-US,en;q=0.8', 'warnings' => 0),
-    'language_whitespace' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => '  en-US,en;q=0.9  '), 'expected' => '  en-US,en;q=0.9  ', 'warnings' => 0),
+    'language_whitespace' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => '  en-US,en;q=0.9  '), 'expected' => 'en-US,en;q=0.9', 'warnings' => 0),
     'language_exactly_80' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => $lang80), 'expected' => $lang80, 'warnings' => 0),
     'language_81_bytes' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => $lang81), 'expected' => $lang80, 'warnings' => 0),
     'language_substantially_longer' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => $langLong), 'expected' => $lang80, 'warnings' => 0),
-    'language_malformed_non_scalar' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => array('en-US')), 'expected' => 'Array', 'warnings' => 1),
+    'language_malformed_non_scalar' => array('server' => array('REMOTE_ADDR' => '198.51.100.10', 'HTTP_USER_AGENT' => $proxyUserAgent, 'HTTP_ACCEPT_LANGUAGE' => array('en-US')), 'expected' => '', 'warnings' => 0),
 );
 
 $languageResults = array();
@@ -719,8 +817,8 @@ vms_test_event_feedback_assert(
     'Accept-Language case should remain hash-significant.'
 );
 vms_test_event_feedback_assert(
-    $languageResults['language_ordinary']['hash'] !== $languageResults['language_whitespace']['hash'],
-    'Accept-Language leading/trailing whitespace should remain hash-significant.'
+    $languageResults['language_ordinary']['hash'] === $languageResults['language_whitespace']['hash'],
+    'Accept-Language outer whitespace should be trimmed before hashing.'
 );
 vms_test_event_feedback_assert(
     $languageResults['language_exactly_80']['hash'] === $languageResults['language_81_bytes']['hash'],
