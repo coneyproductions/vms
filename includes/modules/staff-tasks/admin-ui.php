@@ -1596,6 +1596,18 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 	}
 }
 
+if (!function_exists('vms_tasks_admin_is_exact_post_request')) {
+	function vms_tasks_admin_is_exact_post_request(): bool
+	{
+		$request_method = $_SERVER['REQUEST_METHOD'] ?? null;
+		if (!is_scalar($request_method)) {
+			return false;
+		}
+
+		return 'POST' === wp_unslash($request_method);
+	}
+}
+
 if (!function_exists('vms_tasks_render_task_templates_page')) {
 	function vms_tasks_render_task_templates_page(): void
 	{
@@ -1609,7 +1621,7 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 		$edit_id = isset($_GET['template_id']) ? absint($_GET['template_id']) : 0;
 		$clone_instance_id = isset($_GET['clone_instance_id']) ? absint($_GET['clone_instance_id']) : 0;
 
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tasks_template_action'])) {
+		if (vms_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_template_action'])) {
 			check_admin_referer('vms_tasks_save_template');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_template_action']));
 			$template_id = absint($_POST['template_id'] ?? 0);
@@ -1764,7 +1776,7 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 		$errors = array();
 		$edit_id = isset($_GET['checklist_id']) ? absint($_GET['checklist_id']) : 0;
 
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tasks_checklist_action'])) {
+		if (vms_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_checklist_action'])) {
 			check_admin_referer('vms_tasks_save_checklist');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_checklist_action']));
 			$checklist_id = absint($_POST['checklist_id'] ?? 0);
@@ -1911,7 +1923,7 @@ if (!function_exists('vms_tasks_render_settings_page')) {
 		vms_tasks_admin_render_hover_tip_assets();
 
 		$saved = false;
-		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_tasks_settings_action'])) {
+		if (vms_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_settings_action'])) {
 			check_admin_referer('vms_tasks_save_settings');
 			$input = array(
 				'horizon_days' => absint($_POST['horizon_days'] ?? 60),

@@ -1938,6 +1938,16 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
 /**
  * Employee packet helpers (front-end safe)
  */
+function vms_staff_portal_is_exact_post_request(): bool
+{
+    $request_method = $_SERVER['REQUEST_METHOD'] ?? null;
+    if (!is_scalar($request_method)) {
+        return false;
+    }
+
+    return 'POST' === wp_unslash($request_method);
+}
+
 function vms_staff_portal_employee_packet_missing_items(int $staff_id): array
 {
     $staff_id = (int) $staff_id;
@@ -1964,7 +1974,7 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
     $missing = vms_staff_portal_employee_packet_missing_items($staff_id);
     $is_complete = empty($missing);
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_employee_packet_ack'])) {
+    if (vms_staff_portal_is_exact_post_request() && isset($_POST['vms_employee_packet_ack'])) {
         $nonce = (isset($_POST['vms_employee_packet_nonce']) && !is_array($_POST['vms_employee_packet_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['vms_employee_packet_nonce']))
             : '';
@@ -2039,7 +2049,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
     $k_prov = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_provider') : '_vms_w9_offsite_provider';
     $k_upload_kind = function_exists('vms_private_w9_storage_kind_meta_key') ? vms_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_staff_tax_save'])) {
+    if (vms_staff_portal_is_exact_post_request() && isset($_POST['vms_staff_tax_save'])) {
         $nonce = (isset($_POST['vms_staff_tax_nonce']) && !is_array($_POST['vms_staff_tax_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_tax_nonce']))
             : '';
@@ -2323,7 +2333,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
         $pattern_meta = __('Enabled', 'backstage-venue-manager') . ' | ' . implode(', ', $picked);
     }
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (vms_staff_portal_is_exact_post_request()) {
         if (isset($_POST['vms_save_staff_ics_settings'])) {
             $nonce = (isset($_POST['vms_staff_ics_nonce']) && !is_array($_POST['vms_staff_ics_nonce']))
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_ics_nonce']))

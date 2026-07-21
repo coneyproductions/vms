@@ -191,7 +191,19 @@ function vms_sd_error_text(string $code): string
 
 function vms_sd_maybe_handle_post(): void
 {
-	if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') return;
+	if (!function_exists('vms_sd_is_exact_post_request')) {
+		function vms_sd_is_exact_post_request(): bool
+		{
+			$request_method = $_SERVER['REQUEST_METHOD'] ?? null;
+			if (!is_scalar($request_method)) {
+				return false;
+			}
+
+			return 'POST' === wp_unslash($request_method);
+		}
+	}
+
+	if (!vms_sd_is_exact_post_request()) return;
 	if (empty($_POST['vms_season_dates_nonce']) || empty($_POST['vms_action'])) return;
 
 	$page_slug = isset($_GET['page']) ? sanitize_key((string)$_GET['page']) : '';

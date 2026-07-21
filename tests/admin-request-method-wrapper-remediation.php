@@ -141,12 +141,7 @@ vms_test_assert(strpos($budgetSource, '$_SERVER[\'REQUEST_METHOD\']') === false,
 vms_test_assert(strpos($staffingSource, '$_SERVER[\'REQUEST_METHOD\']') === false, 'Staffing admin should no longer read $_SERVER[\'REQUEST_METHOD\'] directly.');
 vms_test_assert(substr_count($budgetFunctionSource, "vms_request_server_value('REQUEST_METHOD')") === 1, 'Budget Calculator wrapper should source REQUEST_METHOD through vms_request_server_value().');
 vms_test_assert(substr_count($staffingFunctionSource, "vms_request_server_value('REQUEST_METHOD')") === 1, 'Staffing admin wrapper should source REQUEST_METHOD through vms_request_server_value().');
-vms_test_assert(strpos($seasonDatesSource, "if ((\$_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') return;") !== false, 'Season Dates direct POST gate should remain unchanged in this slice.');
-vms_test_assert(strpos($staffTasksSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_tasks_template_action'])) {") !== false, 'Staff Tasks direct POST gate should remain unchanged in this slice.');
 vms_test_assert(strpos($vendorTaxSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_vendor_tax_save'])) {") !== false, 'Vendor Tax Profile direct POST gate should remain unchanged in this slice.');
-vms_test_assert(strpos($staffPortalSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_employee_packet_ack'])) {") !== false, 'Staff Portal employee packet direct POST gate should remain unchanged in this slice.');
-vms_test_assert(strpos($staffPortalSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_staff_tax_save'])) {") !== false, 'Staff Portal tax-profile direct POST gate should remain unchanged in this slice.');
-vms_test_assert(strpos($staffPortalSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST') {") !== false, 'Staff Portal ICS direct POST gate should remain unchanged in this slice.');
 vms_test_assert(strpos($budgetSource, "if ('POST' === vms_budget_request_method()) {") !== false, 'Budget Calculator POST route should continue to gate on the local wrapper.');
 vms_test_assert(strpos($staffingSource, "\$request_method = vms_staffing_admin_request_method();") !== false, 'Staffing admin should continue to capture the local request-method wrapper result.');
 vms_test_assert(strpos($staffingSource, "if ('POST' === \$request_method && 'save' === \$post_action) {") !== false, 'Staffing templates save route should continue to gate on POST and save action.');
