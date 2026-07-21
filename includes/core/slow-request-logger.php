@@ -68,7 +68,10 @@ if (!function_exists('vms_slow_request_logger_log_path')) {
 if (!function_exists('vms_slow_request_logger_parse_request_uri')) {
 	function vms_slow_request_logger_parse_request_uri(): array
 	{
-		$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
+		$request_uri = vms_request_server_value('REQUEST_URI');
+		if ($request_uri === '') {
+			$request_uri = '/';
+		}
 		$path = function_exists('wp_parse_url') ? (string) wp_parse_url($request_uri, PHP_URL_PATH) : (string) parse_url($request_uri, PHP_URL_PATH);
 		$query_string = function_exists('wp_parse_url') ? (string) wp_parse_url($request_uri, PHP_URL_QUERY) : (string) parse_url($request_uri, PHP_URL_QUERY);
 		$query = array();
@@ -91,10 +94,10 @@ if (!function_exists('vms_slow_request_logger_source_ip_hash')) {
 	{
 		$ip = '';
 		foreach (array('HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR') as $key) {
-			if (empty($_SERVER[$key])) {
+			$raw = vms_request_server_value($key);
+			if ($raw === '') {
 				continue;
 			}
-			$raw = (string) wp_unslash($_SERVER[$key]);
 			$parts = explode(',', $raw);
 			$ip = trim((string) ($parts[0] ?? ''));
 			if ($ip !== '') {
@@ -113,7 +116,7 @@ if (!function_exists('vms_slow_request_logger_source_ip_hash')) {
 if (!function_exists('vms_slow_request_logger_user_agent')) {
 	function vms_slow_request_logger_user_agent(): string
 	{
-		return isset($_SERVER['HTTP_USER_AGENT']) ? substr((string) wp_unslash($_SERVER['HTTP_USER_AGENT']), 0, 255) : '';
+		return substr(vms_request_server_value('HTTP_USER_AGENT'), 0, 255);
 	}
 }
 
@@ -483,7 +486,7 @@ if (!function_exists('vms_slow_request_logger_bootstrap')) {
 		$GLOBALS['vms_slow_request_logger'] = array(
 			'matched' => true,
 			'started_at' => isset($_SERVER['REQUEST_TIME_FLOAT']) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true),
-			'method' => isset($_SERVER['REQUEST_METHOD']) ? strtoupper((string) $_SERVER['REQUEST_METHOD']) : 'GET',
+			'method' => strtoupper(vms_request_method()),
 			'normalized_uri' => (string) ($match['normalized_uri'] ?? '/'),
 			'scope' => (string) ($match['scope'] ?? ''),
 			'reason' => (string) ($match['reason'] ?? ''),
