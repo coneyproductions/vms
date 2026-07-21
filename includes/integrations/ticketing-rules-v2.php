@@ -8550,8 +8550,11 @@ function vms_ticketing_v2_store_api_request_path(): string
         $route = sanitize_text_field(wp_unslash((string) $_GET['rest_route']));
     }
 
-    if ($route === '' && isset($_SERVER['REQUEST_URI'])) {
-        $route = (string) wp_parse_url(wp_unslash((string) $_SERVER['REQUEST_URI']), PHP_URL_PATH);
+    if ($route === '') {
+        $request_path = wp_parse_url(vms_request_current_uri(), PHP_URL_PATH);
+        if (is_string($request_path)) {
+            $route = $request_path;
+        }
     }
 
     return strtolower(trim((string) $route));
