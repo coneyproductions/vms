@@ -129,7 +129,7 @@ if (!function_exists('vms_event_plan_perf_request_id')) {
 		$seed = array(
 			(string) microtime(true),
 			(string) wp_rand(1000, 999999),
-			isset($_SERVER['REQUEST_TIME_FLOAT']) ? (string) $_SERVER['REQUEST_TIME_FLOAT'] : '',
+			vms_request_server_value('REQUEST_TIME_FLOAT'),
 			vms_request_current_uri(),
 		);
 		$request_id = substr(hash('sha256', implode('|', $seed)), 0, 12);

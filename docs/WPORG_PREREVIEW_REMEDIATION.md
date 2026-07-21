@@ -2464,6 +2464,34 @@ The next actual incomplete batch order is now:
 2. `WPORG-20C-R`
 3. `WPORG-25`
 
+## WPORG-20A-S Result
+
+Date: 2026-07-21
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-20A-S`
+- Scope completed in this slice: only the Event Plan performance request-time seed inside `vms_event_plan_perf_request_id()` in `includes/core/event-plan-performance.php` and the synchronized live counterpart
+- Helper-backed replacement: `vms_request_server_value('REQUEST_TIME_FLOAT')`
+- Preserved request-ID contract: the seed order still remains `microtime(true)`, `wp_rand(1000, 999999)`, request-time seed, and `vms_request_current_uri()`; the request ID still uses `hash('sha256', ...)`, still truncates to 12 characters, and still reuses the static request-local cache
+- Preserved downstream use: trace logging in `vms_event_plan_perf_log()` and transient lock payloads in `vms_event_plan_perf_job_set_lock()` still receive the same derived `request_id` key and no raw request-time value is persisted separately
+- Accepted normalization: missing, empty, whitespace-only, and non-scalar `REQUEST_TIME_FLOAT` values now fail closed to an empty seed through the helper; ordinary scalar seeds remain part of the derived request ID without direct array, resource, or object coercion
+- Focused test added: `php tests/event-plan-performance-request-id-remediation.php`
+- Residual-family status at the time of this slice: the Slow Request Logger direct `REQUEST_TIME_FLOAT` read remains unchanged and accepted as timing-only, while the current Runtime Guards and Ticketing Phase B direct timing diagnostics remain deferred pending fresh packaged evidence and the parent `WPORG-20A-S` closeout audit
+
+### What Changed
+
+- Replaced the direct `$_SERVER['REQUEST_TIME_FLOAT']` request-time seed in `vms_event_plan_perf_request_id()` with `vms_request_server_value('REQUEST_TIME_FLOAT')`.
+- Synchronized the same runtime change into the live local `vms` tree while keeping the mirror/live Event Plan performance files byte-identical.
+- Added the focused request-ID characterization test and refreshed the `WPORG-20A-S` tracker entries under commit subject `Normalize Event Plan performance request-time seed` without claiming a fresh packaged Plugin Check rerun.
+
+### Non-Actions
+
+- Did not change the accepted Slow Request Logger timing read.
+- Did not change the deferred Runtime Guards or Ticketing Phase B timing reads.
+- Did not rerun packaged Plugin Check, build a package, push, or submit anything.
+
 ## WPORG-22R-A Result
 
 Date: 2026-07-18
