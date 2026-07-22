@@ -2460,9 +2460,8 @@ Date: 2026-07-11
 
 The next actual incomplete batch order is now:
 
-1. `WPORG-20A-S`
-2. `WPORG-20C-R`
-3. `WPORG-25`
+1. `WPORG-20C-R`
+2. `WPORG-25`
 
 ## WPORG-20A-S Result
 
@@ -2491,6 +2490,21 @@ Date: 2026-07-21
 - Did not change the accepted Slow Request Logger timing read.
 - Did not change the deferred Runtime Guards or Ticketing Phase B timing reads.
 - Did not rerun packaged Plugin Check, build a package, push, or submit anything.
+
+### Final Closeout Update
+
+Date: 2026-07-22
+
+- Result: `PASS`
+- Fresh public package evidence: `php scripts/build-public-release.php --output-dir <temp> --force` produced `backstage-venue-manager-1.0.0-public-release.zip` with SHA-256 `83f9661c3059f23a7921ff2e9db119f430ecf5c5594a83c74bcf9505dbc81f7a`.
+- Fresh packaged Plugin Check evidence: clean packaged `wp plugin check` reruns exited `0`, including the field-attributed `--mode=new --format=strict-json --fields=file,line,column,type,code,message,docs` export; the normalized raw packaged findings were retained separately in `docs/plugin-check-1.0.0-2026-07-22-raw.txt` without overwriting the historical `docs/plugin-check-1.0.0-raw.txt`.
+- Historical packaged direct-server rows reconciled: the stale `docs/plugin-check-1.0.0-raw.txt` hits for `includes/core/event-plan-performance.php`, `includes/core/slow-request-logger.php`, `includes/runtime-guards.php`, and `includes/integrations/ticketing-phase-b.php` no longer reproduce for `REQUEST_TIME_FLOAT`, `REQUEST_URI`, `HTTP_USER_AGENT`, `REMOTE_ADDR`, or `HTTP_ACCEPT` in the fresh packaged scan.
+- Current packaged `$_SERVER` residuals are limited to the centralized `vms_request_server_value()` helper in `includes/runtime-guards.php` and the exact-case POST helpers in `includes/admin/season-dates.php`, `includes/modules/staff-tasks/admin-ui.php`, `includes/portal/staff-portal.php`, and `includes/portal/vendor-tax-profile.php`.
+- Residual disposition: the helper hit is a bounded false positive on the shared unslash-and-scalar guard, and the four exact-POST helpers remain intentionally direct so non-scalar and mixed-case request methods fail closed without routing through the broader request helper.
+- Accepted timing-only reads remain in `includes/runtime-guards.php`, `includes/core/slow-request-logger.php`, and `includes/integrations/ticketing-phase-b.php`, but the fresh packaged scan did not surface them as current direct-server blockers.
+- Scope boundary confirmed: the fresh packaged warnings that remain in `includes/core/event-plan-performance.php` and `includes/integrations/ticketing-phase-b.php` are current `$_REQUEST`/`$_POST` request-body findings, not residual `$_SERVER` findings under this parent.
+- Focused verification reruns passed: `php tests/event-plan-performance-request-id-remediation.php`, `php tests/vendor-tax-profile-strict-post-remediation.php`, `php tests/strict-post-gate-remediation.php`, `php tests/admin-request-method-wrapper-remediation.php`, `php tests/slow-request-logger-request-input-characterization.php`, `php tests/event-feedback-request-hash-characterization.php`, `php tests/public-calendar-user-agent-view-characterization.php`, `php tests/request-input-sanitization.php`, `php tests/runtime-stub-guards.php`, `php tests/public-release-build-pipeline.php`, `php tests/release-compatibility-harness.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`.
+- Parent status: `WPORG-20A-S` is now terminally `verified`.
 
 ## WPORG-22R-A Result
 
@@ -3218,7 +3232,7 @@ Date: 2026-07-22
 - Internal compatibility identity preserved: `VMS_PLUGIN_SLUG` remains `vms`, the main bootstrap filename remains `vendor-management-system.php`, and the sibling local live tree may remain installed as `vms/`
 - Lifecycle compatibility added for both known package basenames: `includes/activation.php` now derives the current plugin basename from its containing folder, and mirror/live `includes/runtime-guards.php` now accept the exact `vms/vendor-management-system.php` and `backstage-venue-manager/vendor-management-system.php` lifecycle basenames without widening to arbitrary folders
 - Focused release tests updated: `php tests/public-release-build-pipeline.php` now proves the separated public slug/root contract, and `php tests/release-compatibility-harness.php` plus `tests/compatibility/collect-state.php` now prove public extracted-package recognition, internal live-tree recognition, basename-specific build-version lookup, and arbitrary-basename rejection
-- Parent status remains open: `WPORG-20A-S` is still not closed by this slice and remains pending the next pass's fresh package build evidence, packaged Plugin Check, residual direct-server closeout work, and final parent documentation reconciliation
+- Parent status update: the later `WPORG-20A-S` closeout on 2026-07-22 supplied the fresh package build evidence, packaged Plugin Check reruns, residual direct-server adjudication, and final documentation reconciliation that were still pending when this slice landed
 
 ### What Changed
 
