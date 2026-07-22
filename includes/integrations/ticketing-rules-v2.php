@@ -2926,6 +2926,37 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
     return max(0, absint($cache[$cache_key]));
 }
 
+if (!function_exists('vms_ticketing_v2_decode_stored_claim_assignment_rows')) {
+    /**
+     * Decode plugin-stored claim-assignment rows.
+     *
+     * @param mixed $raw
+     * @return array<int, array<string, mixed>>
+     */
+    function vms_ticketing_v2_decode_stored_claim_assignment_rows($raw): array
+    {
+        if (!is_string($raw)) {
+            return array();
+        }
+
+        $trimmed = trim($raw);
+        if ($trimmed === '' || substr($trimmed, 0, 1) !== '[') {
+            return array();
+        }
+
+        $decoded = json_decode($trimmed, true, 32);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            return array();
+        }
+
+        if (function_exists('array_is_list')) {
+            return array_is_list($decoded) ? $decoded : array();
+        }
+
+        return array_values($decoded) === $decoded ? $decoded : array();
+    }
+}
+
 function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string $assignee_email, array $product_ids): int
 {
     $event_id = absint($event_id);
@@ -2977,10 +3008,7 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
             if ($assignments_json === '') {
                 continue;
             }
-            $decoded = json_decode($assignments_json, true);
-            if (!is_array($decoded)) {
-                continue;
-            }
+            $decoded = vms_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json);
             foreach ($decoded as $assignment_row) {
                 if (!is_array($assignment_row)) {
                     continue;
@@ -3032,13 +3060,10 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
 
             $assignment_rows = array();
             $assignment_json = $order_item->get_meta('_vms_claim_assignments', true);
-            if (is_string($assignment_json) && $assignment_json !== '') {
-                $decoded = json_decode($assignment_json, true);
-                if (is_array($decoded)) {
-                    $assignment_rows = $decoded;
-                }
-            } elseif (is_array($assignment_json)) {
+            if (is_array($assignment_json)) {
                 $assignment_rows = $assignment_json;
+            } elseif (is_string($assignment_json) && $assignment_json !== '') {
+                $assignment_rows = vms_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json);
             }
 
             if (empty($assignment_rows) && method_exists($order_item, 'get_meta_data')) {

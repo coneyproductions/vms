@@ -551,6 +551,501 @@ $assert(
 	'Importer snapshot validator should reject non-list entry collections.'
 );
 
+function vms_test_decoded_json_find_matching_brace(string $code, int $openBracePos): int
+{
+	$length = strlen($code);
+	$depth = 0;
+
+	for ($offset = $openBracePos; $offset < $length; $offset++) {
+		$char = $code[$offset];
+		if ($char === '{') {
+			$depth++;
+			continue;
+		}
+
+		if ($char !== '}') {
+			continue;
+		}
+
+		$depth--;
+		if ($depth === 0) {
+			return $offset;
+		}
+	}
+
+	throw new RuntimeException('Matching brace not found.');
+}
+
+function vms_test_decoded_json_extract_named_function(string $path, string $functionName): string
+{
+	$code = file_get_contents($path);
+	if (!is_string($code) || $code === '') {
+		throw new RuntimeException('Unable to read source file: ' . $path);
+	}
+
+	$signature = 'function ' . $functionName . '(';
+	$start = strpos($code, $signature);
+	if ($start === false) {
+		throw new RuntimeException('Function not found: ' . $functionName);
+	}
+
+	$bracePos = strpos($code, '{', $start);
+	if ($bracePos === false) {
+		throw new RuntimeException('Function brace not found: ' . $functionName);
+	}
+
+	$endPos = vms_test_decoded_json_find_matching_brace($code, $bracePos);
+	return substr($code, $start, $endPos - $start + 1);
+}
+
+if (!defined('ARRAY_A')) {
+	define('ARRAY_A', 'ARRAY_A');
+}
+
+if (!function_exists('wc_get_orders')) {
+	function wc_get_orders(array $args = array()): array
+	{
+		$GLOBALS['vms_test_wc_get_orders_args'][] = $args;
+		return $GLOBALS['vms_test_wc_orders'] ?? array();
+	}
+}
+
+final class VMS_Test_Decoded_JSON_Meta_Object
+{
+	/** @var array<string, mixed> */
+	private array $data;
+
+	/** @param array<string, mixed> $data */
+	public function __construct(array $data)
+	{
+		$this->data = $data;
+	}
+
+	/** @return array<string, mixed> */
+	public function get_data(): array
+	{
+		return $this->data;
+	}
+}
+
+final class VMS_Test_Decoded_JSON_Order_Item
+{
+	private int $productId;
+	private int $variationId;
+	/** @var array<string, mixed> */
+	private array $meta;
+	/** @var array<int, object> */
+	private array $metaData;
+
+	/**
+	 * @param array<string, mixed> $meta
+	 * @param array<int, object>   $metaData
+	 */
+	public function __construct(int $productId, int $variationId, array $meta, array $metaData = array())
+	{
+		$this->productId = $productId;
+		$this->variationId = $variationId;
+		$this->meta = $meta;
+		$this->metaData = $metaData;
+	}
+
+	public function get_product_id(): int
+	{
+		return $this->productId;
+	}
+
+	public function get_variation_id(): int
+	{
+		return $this->variationId;
+	}
+
+	public function get_meta(string $key, bool $single = true)
+	{
+		return $this->meta[$key] ?? '';
+	}
+
+	/** @return array<int, object> */
+	public function get_meta_data(): array
+	{
+		return $this->metaData;
+	}
+}
+
+final class VMS_Test_Decoded_JSON_Order
+{
+	/** @var array<int, object> */
+	private array $items;
+
+	/** @param array<int, object> $items */
+	public function __construct(array $items)
+	{
+		$this->items = $items;
+	}
+
+	/** @return array<int, object> */
+	public function get_items(string $type = 'line_item'): array
+	{
+		return $this->items;
+	}
+}
+
+final class VMS_Test_Decoded_JSON_WPDB
+{
+	public string $prefix = 'wp_';
+	private bool $lookupSupported;
+	/** @var array<int, array<string, mixed>> */
+	private array $rows;
+
+	/** @param array<int, array<string, mixed>> $rows */
+	public function __construct(bool $lookupSupported, array $rows = array())
+	{
+		$this->lookupSupported = $lookupSupported;
+		$this->rows = $rows;
+	}
+
+	public function prepare($query, ...$args): string
+	{
+		if (count($args) === 1 && is_array($args[0])) {
+			$args = $args[0];
+		}
+
+		if ($query === 'SHOW TABLES LIKE %s') {
+			return (string) ($args[0] ?? '');
+		}
+
+		return is_string($query) ? $query : '';
+	}
+
+	public function get_var($query): string
+	{
+		return $this->lookupSupported ? (string) $query : '';
+	}
+
+	/** @return array<int, array<string, mixed>> */
+	public function get_results($query, $output = ARRAY_A): array
+	{
+		return $this->rows;
+	}
+}
+
+$mirrorTicketingRulesPath = dirname(__DIR__) . '/includes/integrations/ticketing-rules-v2.php';
+$liveTicketingRulesPath = dirname(__DIR__) . '/../../vms/includes/integrations/ticketing-rules-v2.php';
+$mirrorTicketingRulesSource = file_get_contents($mirrorTicketingRulesPath);
+$liveTicketingRulesSource = file_get_contents($liveTicketingRulesPath);
+$assert(is_string($mirrorTicketingRulesSource) && $mirrorTicketingRulesSource !== '', 'Expected to load the mirror Ticketing Rules V2 runtime source.');
+$assert(is_string($liveTicketingRulesSource) && $liveTicketingRulesSource !== '', 'Expected to load the live Ticketing Rules V2 runtime source.');
+
+$mirrorDecodeHelperSource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
+$liveDecodeHelperSource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
+$mirrorConsumedQtySource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
+$liveConsumedQtySource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
+$normalizeSource = static function (string $source): string {
+	$normalized = preg_replace('/\s+/', ' ', trim($source));
+	return is_string($normalized) ? $normalized : trim($source);
+};
+$assert(
+	$normalizeSource($mirrorDecodeHelperSource) === $normalizeSource($liveDecodeHelperSource),
+	'Mirror and live stored claim-assignment decoder helpers should remain synchronized.'
+);
+$assert(
+	$normalizeSource($mirrorConsumedQtySource) === $normalizeSource($liveConsumedQtySource),
+	'Mirror and live consumed-quantity readers should remain synchronized in the targeted block.'
+);
+
+$lookupProbeSource = preg_replace(
+	'/function\s+vms_ticketing_v2_assignee_consumed_qty_for_event\s*\(/',
+	'function vms_test_ticketing_v2_assignee_consumed_qty_lookup_probe(',
+	$mirrorConsumedQtySource,
+	1
+);
+$assert(is_string($lookupProbeSource) && $lookupProbeSource !== $mirrorConsumedQtySource, 'Expected to rename the lookup probe helper.');
+eval($lookupProbeSource);
+
+$fallbackProbeSource = preg_replace(
+	'/function\s+vms_ticketing_v2_assignee_consumed_qty_for_event\s*\(/',
+	'function vms_test_ticketing_v2_assignee_consumed_qty_fallback_probe(',
+	$mirrorConsumedQtySource,
+	1
+);
+$assert(is_string($fallbackProbeSource) && $fallbackProbeSource !== $mirrorConsumedQtySource, 'Expected to rename the fallback probe helper.');
+eval($fallbackProbeSource);
+
+$withoutWarnings = static function (callable $callback) {
+	set_error_handler(static function (int $severity, string $message, string $file = '', int $line = 0): bool {
+		throw new RuntimeException(sprintf('Unexpected PHP warning [%d] %s at %s:%d', $severity, $message, $file, $line));
+	});
+
+	try {
+		return $callback();
+	} finally {
+		restore_error_handler();
+	}
+};
+
+$decodeRowsWithoutWarnings = static function ($raw) use ($withoutWarnings): array {
+	$decoded = $withoutWarnings(static function () use ($raw): array {
+		return vms_ticketing_v2_decode_stored_claim_assignment_rows($raw);
+	});
+
+	return is_array($decoded) ? $decoded : array();
+};
+
+$assert(
+	$decodeRowsWithoutWarnings('[{"assignee_email":"guest@example.com"}]') === array(
+		array('assignee_email' => 'guest@example.com'),
+	),
+	'Stored claim-assignment decoder should accept a one-row JSON list.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('[{"assignee_email":"first@example.com"},{"email":"second@example.com"},{"assignee_email":"third@example.com"}]') === array(
+		array('assignee_email' => 'first@example.com'),
+		array('email' => 'second@example.com'),
+		array('assignee_email' => 'third@example.com'),
+	),
+	'Stored claim-assignment decoder should preserve row order for multi-row JSON lists.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('[]') === array(),
+	'Stored claim-assignment decoder should accept an empty JSON list.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('{"assignee_email":"guest@example.com"}') === array(),
+	'Stored claim-assignment decoder should reject object-shaped JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('{"0":{"assignee_email":"guest@example.com"},"1":{"email":"other@example.com"}}') === array(),
+	'Stored claim-assignment decoder should reject numeric-key object JSON even when it decodes to sequential keys.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('"guest@example.com"') === array(),
+	'Stored claim-assignment decoder should reject scalar string JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('42') === array(),
+	'Stored claim-assignment decoder should reject numeric JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('true') === array(),
+	'Stored claim-assignment decoder should reject boolean true JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('false') === array(),
+	'Stored claim-assignment decoder should reject boolean false JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('null') === array(),
+	'Stored claim-assignment decoder should reject null JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('') === array(),
+	'Stored claim-assignment decoder should treat an empty string as no rows.'
+);
+$assert(
+	$decodeRowsWithoutWarnings(" \n\t ") === array(),
+	'Stored claim-assignment decoder should treat whitespace-only strings as no rows.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('[{"assignee_email":}]') === array(),
+	'Stored claim-assignment decoder should reject malformed JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('[{"assignee_email":"guest@example.com"}') === array(),
+	'Stored claim-assignment decoder should reject truncated JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings(str_repeat('[', 40) . '0' . str_repeat(']', 40)) === array(),
+	'Stored claim-assignment decoder should reject excessive-depth JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings("[\"" . chr(0xB1) . "1\"]") === array(),
+	'Stored claim-assignment decoder should reject invalid UTF-8 JSON.'
+);
+$assert(
+	$decodeRowsWithoutWarnings('{"assignee_email":"first@example.com","assignee_email":"second@example.com"}') === array(),
+	'Stored claim-assignment decoder should reject duplicate-key object JSON because the top-level value is not a list.'
+);
+
+$GLOBALS['wpdb'] = new VMS_Test_Decoded_JSON_WPDB(
+	true,
+	array(
+		array(
+			'order_item_id' => 11,
+			'assignments_json' => '[{"assignee_email":"Guest@example.com"},{"email":"guest@example.com"},{"assignee_email":"other@example.com"}]',
+		),
+	)
+);
+$assert(
+	vms_test_ticketing_v2_assignee_consumed_qty_lookup_probe(44, ' guest@example.com ', array(55, 55)) === 2,
+	'Lookup-backed consumed-quantity reads should count valid stored list JSON with unchanged email normalization.'
+);
+
+$GLOBALS['wpdb'] = new VMS_Test_Decoded_JSON_WPDB(
+	true,
+	array(
+		array(
+			'order_item_id' => 12,
+			'assignments_json' => '{"assignee_email":"guest@example.com"}',
+		),
+	)
+);
+$assert(
+	vms_test_ticketing_v2_assignee_consumed_qty_lookup_probe(44, 'guest@example.com', array(55)) === 0,
+	'Lookup-backed consumed-quantity reads should reject object-shaped stored claim-assignment JSON.'
+);
+
+$GLOBALS['wpdb'] = new VMS_Test_Decoded_JSON_WPDB(
+	true,
+	array(
+		array(
+			'order_item_id' => 13,
+			'assignments_json' => '[{"assignee_email":"guest@example.com"}',
+		),
+	)
+);
+$assert(
+	vms_test_ticketing_v2_assignee_consumed_qty_lookup_probe(44, 'guest@example.com', array(55)) === 0,
+	'Lookup-backed consumed-quantity reads should reject malformed stored claim-assignment JSON.'
+);
+
+$GLOBALS['wpdb'] = new VMS_Test_Decoded_JSON_WPDB(false);
+$GLOBALS['vms_test_wc_get_orders_args'] = array();
+$GLOBALS['vms_test_wc_orders'] = array(
+	new VMS_Test_Decoded_JSON_Order(array(
+		new VMS_Test_Decoded_JSON_Order_Item(
+			55,
+			0,
+			array(
+				'_vms_tec_event_post_id' => 44,
+				'_vms_claim_assignments' => array(
+					array('email' => 'Guest@example.com'),
+					array('assignee_email' => 'other@example.com'),
+				),
+			)
+		),
+	)),
+);
+$assert(
+	vms_test_ticketing_v2_assignee_consumed_qty_fallback_probe(44, 'guest@example.com', array(55)) === 1,
+	'Fallback consumed-quantity reads should preserve direct PHP array claim-assignment metadata.'
+);
+
+$GLOBALS['wpdb'] = new VMS_Test_Decoded_JSON_WPDB(false);
+$GLOBALS['vms_test_wc_orders'] = array(
+	new VMS_Test_Decoded_JSON_Order(array(
+		new VMS_Test_Decoded_JSON_Order_Item(
+			55,
+			0,
+			array(
+				'_vms_tec_event_post_id' => 44,
+			),
+			array(
+				new VMS_Test_Decoded_JSON_Meta_Object(array(
+					'key' => 'Seat 1 Assignee',
+					'value' => 'Guest@example.com',
+				)),
+				new VMS_Test_Decoded_JSON_Meta_Object(array(
+					'key' => 'Seat 1 Label',
+					'value' => 'Front Row',
+				)),
+			)
+		),
+	)),
+);
+$assert(
+	vms_test_ticketing_v2_assignee_consumed_qty_fallback_probe(44, ' guest@example.com ', array(55)) === 1,
+	'Fallback consumed-quantity reads should preserve the legacy seat-meta assignee scan.'
+);
+
+$GLOBALS['wpdb'] = new VMS_Test_Decoded_JSON_WPDB(false);
+$GLOBALS['vms_test_wc_orders'] = array(
+	new VMS_Test_Decoded_JSON_Order(array(
+		new VMS_Test_Decoded_JSON_Order_Item(
+			55,
+			0,
+			array(
+				'_vms_tec_event_post_id' => 44,
+				'_vms_claim_assignments' => '{"assignee_email":"guest@example.com"}',
+			),
+			array(
+				new VMS_Test_Decoded_JSON_Meta_Object(array(
+					'key' => 'Seat 2 Assignee',
+					'value' => 'guest@example.com',
+				)),
+			)
+		),
+	)),
+);
+$assert(
+	vms_test_ticketing_v2_assignee_consumed_qty_fallback_probe(44, 'guest@example.com', array(55)) === 1,
+	'Fallback consumed-quantity reads should still preserve the legacy seat-meta assignee scan when stored JSON is invalid.'
+);
+
+$assert(
+	strpos($mirrorTicketingRulesSource, '$decoded = json_decode($assignments_json, true);') === false,
+	'Mirror Ticketing Rules V2 should no longer raw-decode lookup-backed claim assignments at the consumed-quantity site.'
+);
+$assert(
+	strpos($mirrorTicketingRulesSource, '$decoded = json_decode($assignment_json, true);') === false,
+	'Mirror Ticketing Rules V2 should no longer raw-decode fallback claim assignments at the consumed-quantity site.'
+);
+$assert(
+	strpos($liveTicketingRulesSource, '$decoded = json_decode($assignments_json, true);') === false,
+	'Live Ticketing Rules V2 should no longer raw-decode lookup-backed claim assignments at the consumed-quantity site.'
+);
+$assert(
+	strpos($liveTicketingRulesSource, '$decoded = json_decode($assignment_json, true);') === false,
+	'Live Ticketing Rules V2 should no longer raw-decode fallback claim assignments at the consumed-quantity site.'
+);
+$assert(
+	strpos($mirrorTicketingRulesSource, 'function vms_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
+	'Mirror Ticketing Rules V2 should define the stored claim-assignment decoder helper.'
+);
+$assert(
+	strpos($liveTicketingRulesSource, 'function vms_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
+	'Live Ticketing Rules V2 should define the stored claim-assignment decoder helper.'
+);
+$assert(
+	strpos($mirrorTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
+		&& strpos($mirrorTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
+	'Mirror Ticketing Rules V2 should route both consumed-quantity stored JSON reads through the helper.'
+);
+$assert(
+	strpos($liveTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
+		&& strpos($liveTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
+	'Live Ticketing Rules V2 should route both consumed-quantity stored JSON reads through the helper.'
+);
+$assert(
+	($mirrorArrayBranchPos = strpos($mirrorTicketingRulesSource, 'if (is_array($assignment_json)) {')) !== false
+		&& ($mirrorJsonBranchPos = strpos($mirrorTicketingRulesSource, "elseif (is_string(\$assignment_json) && \$assignment_json !== '') {")) !== false
+		&& $mirrorArrayBranchPos < $mirrorJsonBranchPos
+		&& strpos($mirrorTicketingRulesSource, "stripos(\$meta_key, 'seat ') !== 0 || stripos(\$meta_key, ' assignee') === false") !== false,
+	'Mirror Ticketing Rules V2 should preserve the direct-array branch and legacy seat-meta fallback.'
+);
+$assert(
+	($liveArrayBranchPos = strpos($liveTicketingRulesSource, 'if (is_array($assignment_json)) {')) !== false
+		&& ($liveJsonBranchPos = strpos($liveTicketingRulesSource, "elseif (is_string(\$assignment_json) && \$assignment_json !== '') {")) !== false
+		&& $liveArrayBranchPos < $liveJsonBranchPos
+		&& strpos($liveTicketingRulesSource, "stripos(\$meta_key, 'seat ') !== 0 || stripos(\$meta_key, ' assignee') === false") !== false,
+	'Live Ticketing Rules V2 should preserve the direct-array branch and legacy seat-meta fallback.'
+);
+$assert(
+	strpos($mirrorTicketingRulesSource, "add_meta_data('_vms_claim_assignments', wp_json_encode(\$assignment_snapshot), true);") !== false
+		&& strpos($liveTicketingRulesSource, "add_meta_data('_vms_claim_assignments', wp_json_encode(\$assignment_snapshot), true);") !== false,
+	'Ticketing Rules V2 should leave the stored claim-assignment writer unchanged in mirror and live.'
+);
+$assert(
+	substr_count($mirrorTicketingRulesSource, 'json_decode(') === 1,
+	'Mirror Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder raw decode.'
+);
+$assert(
+	substr_count($liveTicketingRulesSource, 'json_decode(') === 3,
+	'Live Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder and the two unrelated request-body raw decodes.'
+);
+$assert(
+	substr_count($liveTicketingRulesSource, '$data = json_decode($raw ?: \'\', true);') === 2,
+	'Live Ticketing Rules V2 should still retain the two unrelated request-body raw decodes outside this remediation slice.'
+);
+
 $GLOBALS['vms_test_current_user_caps'] = array('manage_options' => true);
 $GLOBALS['vms_test_options'] = array(
 	VMS_Tours::OPT_ENABLED => 1,
