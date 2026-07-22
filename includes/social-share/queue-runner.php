@@ -105,6 +105,121 @@ if (!function_exists('vms_social_queue_render_for_row')) {
 	}
 }
 
+if (!function_exists('vms_social_queue_decode_payload_snapshot')) {
+	/**
+	 * @param mixed $raw
+	 * @return array<string,mixed>
+	 */
+	function vms_social_queue_decode_payload_snapshot($raw): array
+	{
+		$result = array(
+			'ok' => false,
+			'schema' => 'empty',
+			'snapshot' => array(),
+			'account_id' => 0,
+			'allow_fallback_account' => false,
+			'reason' => 'queue_snapshot_empty',
+		);
+
+		if ($raw === null) {
+			return $result;
+		}
+
+		if (!is_string($raw)) {
+			$result['schema'] = 'invalid';
+			$result['reason'] = 'queue_snapshot_non_string';
+			return $result;
+		}
+
+		$trimmed = trim($raw);
+		if ($trimmed === '') {
+			return $result;
+		}
+
+		if (substr($trimmed, 0, 1) !== '{') {
+			$result['schema'] = 'invalid';
+			$result['reason'] = 'queue_snapshot_non_object';
+			return $result;
+		}
+
+		$decoded = json_decode($trimmed, true, 32);
+		if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+			$result['schema'] = 'invalid';
+			$result['reason'] = 'queue_snapshot_invalid_json';
+			return $result;
+		}
+
+		$is_list = function_exists('array_is_list')
+			? array_is_list($decoded)
+			: (array_values($decoded) === $decoded);
+		if ($is_list) {
+			$result['schema'] = 'invalid';
+			$result['reason'] = 'queue_snapshot_non_object';
+			return $result;
+		}
+
+		$result['snapshot'] = $decoded;
+
+		$has_queued_from = array_key_exists('queued_from', $decoded) && !is_array($decoded['queued_from']) && !is_object($decoded['queued_from']);
+		$has_event_title = array_key_exists('event_title', $decoded) && !is_array($decoded['event_title']) && !is_object($decoded['event_title']);
+		if ($has_queued_from && $has_event_title) {
+			$result['ok'] = true;
+			$result['schema'] = 'queued';
+			$result['reason'] = '';
+
+			if (array_key_exists('account_id', $decoded) && !is_array($decoded['account_id']) && !is_object($decoded['account_id'])) {
+				$account_id = filter_var((string) $decoded['account_id'], FILTER_VALIDATE_INT);
+				if ($account_id !== false && $account_id > 0) {
+					$result['account_id'] = (int) $account_id;
+				}
+			}
+
+			if ($result['account_id'] <= 0) {
+				$result['reason'] = 'queue_snapshot_account_invalid';
+			}
+
+			return $result;
+		}
+
+		$has_rendered_preview = array_key_exists('caption', $decoded)
+			&& array_key_exists('base_url', $decoded)
+			&& array_key_exists('final_url', $decoded)
+			&& array_key_exists('length', $decoded)
+			&& array_key_exists('limit', $decoded)
+			&& array_key_exists('needs_review', $decoded)
+			&& array_key_exists('needs_review_reason', $decoded)
+			&& !is_array($decoded['caption']) && !is_object($decoded['caption'])
+			&& !is_array($decoded['base_url']) && !is_object($decoded['base_url'])
+			&& !is_array($decoded['final_url']) && !is_object($decoded['final_url'])
+			&& !is_array($decoded['length']) && !is_object($decoded['length'])
+			&& !is_array($decoded['limit']) && !is_object($decoded['limit'])
+			&& !is_array($decoded['needs_review']) && !is_object($decoded['needs_review'])
+			&& !is_array($decoded['needs_review_reason']) && !is_object($decoded['needs_review_reason']);
+		if ($has_rendered_preview) {
+			$result['ok'] = true;
+			$result['schema'] = 'rendered_preview';
+			$result['allow_fallback_account'] = true;
+			$result['reason'] = '';
+			return $result;
+		}
+
+		$has_provider_result = isset($decoded['rendered'], $decoded['provider_payload'], $decoded['provider_result'])
+			&& is_array($decoded['rendered'])
+			&& is_array($decoded['provider_payload'])
+			&& is_array($decoded['provider_result']);
+		if ($has_provider_result) {
+			$result['ok'] = true;
+			$result['schema'] = 'provider_result';
+			$result['reason'] = '';
+			return $result;
+		}
+
+		$result['schema'] = 'unknown';
+		$result['reason'] = 'queue_snapshot_unknown_schema';
+		return $result;
+	}
+}
+
 if (!function_exists('vms_social_queue_process_item')) {
 	/**
 	 * @param array<string,mixed> $row
@@ -150,6 +265,58 @@ if (!function_exists('vms_social_queue_process_item')) {
 			return;
 		}
 
+		$payload = array_merge(
+			$row,
+			array(
+				'rendered_caption' => (string) ($rendered['caption'] ?? ''),
+				'final_url' => (string) ($rendered['final_url'] ?? ''),
+			)
+		);
+
+		$snapshot_state = vms_social_queue_decode_payload_snapshot($row['payload_snapshot_json'] ?? null);
+		$mark_snapshot_for_review = static function (string $code, string $schema = '') use ($queue_id, $row): void {
+			vms_social_queue_update($queue_id, array(
+				'status' => 'needs_review',
+				'last_error_code' => $code !== '' ? $code : 'queue_snapshot_invalid',
+				'last_error_message' => 'Stored queue snapshot is invalid or unsupported; review the queued social post before retrying.',
+				'updated_by' => 0,
+			));
+			vms_social_audit_log(
+				'publish_fail',
+				array(
+					'reason' => $code !== '' ? $code : 'queue_snapshot_invalid',
+					'snapshot_schema' => $schema,
+				),
+				$queue_id,
+				(string) ($row['platform'] ?? ''),
+				0
+			);
+		};
+
+		$account_id = 0;
+		if (!empty($snapshot_state['ok']) && (string) ($snapshot_state['schema'] ?? '') === 'queued') {
+			$account_id = (int) ($snapshot_state['account_id'] ?? 0);
+			if ($account_id <= 0) {
+				$mark_snapshot_for_review((string) ($snapshot_state['reason'] ?? 'queue_snapshot_account_invalid'), 'queued');
+				return;
+			}
+		} elseif (!empty($snapshot_state['ok']) && (string) ($snapshot_state['schema'] ?? '') === 'rendered_preview') {
+			$map = vms_social_venue_map_for_platform((int) ($row['venue_id'] ?? 0), (string) ($row['platform'] ?? ''));
+			if (is_array($map)) {
+				$account_id = (int) ($map['account_id'] ?? 0);
+			}
+			if ($account_id <= 0) {
+				$mark_snapshot_for_review('queue_snapshot_account_unavailable', 'rendered_preview');
+				return;
+			}
+		} elseif (!empty($snapshot_state['ok']) && (string) ($snapshot_state['schema'] ?? '') === 'provider_result') {
+			$mark_snapshot_for_review('queue_snapshot_provider_result', 'provider_result');
+			return;
+		} else {
+			$mark_snapshot_for_review((string) ($snapshot_state['reason'] ?? 'queue_snapshot_invalid'), (string) ($snapshot_state['schema'] ?? 'invalid'));
+			return;
+		}
+
 		$provider = vms_social_get_provider((string) ($row['platform'] ?? ''));
 		if (!($provider instanceof VMS_Social_Provider_Interface)) {
 			vms_social_queue_update($queue_id, array(
@@ -160,24 +327,6 @@ if (!function_exists('vms_social_queue_process_item')) {
 			));
 			vms_social_audit_log('publish_fail', array('reason' => 'provider_missing'), $queue_id, (string) ($row['platform'] ?? ''), 0);
 			return;
-		}
-
-		$payload = array_merge(
-			$row,
-			array(
-				'rendered_caption' => (string) ($rendered['caption'] ?? ''),
-				'final_url' => (string) ($rendered['final_url'] ?? ''),
-			)
-		);
-
-		$snapshot = json_decode((string) ($row['payload_snapshot_json'] ?? ''), true);
-		$snapshot = is_array($snapshot) ? $snapshot : array();
-		$account_id = (int) ($snapshot['account_id'] ?? 0);
-		if ($account_id <= 0) {
-			$map = vms_social_venue_map_for_platform((int) ($row['venue_id'] ?? 0), (string) ($row['platform'] ?? ''));
-			if (is_array($map)) {
-				$account_id = (int) ($map['account_id'] ?? 0);
-			}
 		}
 
 		$attempts = (int) ($row['attempts'] ?? 0) + 1;
