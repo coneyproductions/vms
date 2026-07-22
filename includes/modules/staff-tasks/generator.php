@@ -170,6 +170,122 @@ if (!function_exists('vms_tasks_build_event_signature')) {
 	}
 }
 
+if (!function_exists('vms_tasks_decode_stored_event_signature')) {
+	/**
+	 * @param mixed $raw
+	 * @return array{state:string,signature:array<string,mixed>,reason:string}
+	 */
+	function vms_tasks_decode_stored_event_signature($raw): array
+	{
+		if ($raw === null) {
+			return array(
+				'state' => 'missing',
+				'signature' => array(),
+				'reason' => 'missing_value',
+			);
+		}
+		if (!is_string($raw)) {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'non_string',
+			);
+		}
+
+		$raw = trim($raw);
+		if ($raw === '') {
+			return array(
+				'state' => 'missing',
+				'signature' => array(),
+				'reason' => 'blank_value',
+			);
+		}
+		if ($raw[0] !== '{') {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'non_object_json',
+			);
+		}
+
+		$decoded = json_decode($raw, true, 8);
+		$error = json_last_error();
+		if ($error !== JSON_ERROR_NONE) {
+			$reason = 'json_decode_failed';
+			if ($error === JSON_ERROR_DEPTH) {
+				$reason = 'json_depth';
+			} elseif ($error === JSON_ERROR_UTF8) {
+				$reason = 'json_utf8';
+			} elseif ($error === JSON_ERROR_SYNTAX) {
+				$reason = 'json_syntax';
+			}
+
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => $reason,
+			);
+		}
+		if (!is_array($decoded)) {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'non_array',
+			);
+		}
+
+		$keys = array_keys($decoded);
+		if ($decoded !== array() && $keys === range(0, count($decoded) - 1)) {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'list_json',
+			);
+		}
+		if (!array_key_exists('date_ymd', $decoded) || !array_key_exists('venue_id', $decoded) || !array_key_exists('event_type', $decoded)) {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'missing_required_fields',
+			);
+		}
+		if (!is_string($decoded['date_ymd'])) {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'date_ymd_type',
+			);
+		}
+
+		$venue_id = $decoded['venue_id'];
+		$is_numeric_string = is_string($venue_id) && preg_match('/^-?\d+$/', trim($venue_id)) === 1;
+		if (!is_int($venue_id) && !$is_numeric_string) {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'venue_id_type',
+			);
+		}
+		if (!is_string($decoded['event_type'])) {
+			return array(
+				'state' => 'invalid',
+				'signature' => array(),
+				'reason' => 'event_type_type',
+			);
+		}
+
+		return array(
+			'state' => 'valid',
+			'signature' => array(
+				'date_ymd' => trim($decoded['date_ymd']),
+				'venue_id' => absint($venue_id),
+				'event_type' => sanitize_key($decoded['event_type']),
+			),
+			'reason' => 'valid',
+		);
+	}
+}
+
 if (!function_exists('vms_tasks_should_allow_supersede')) {
 	function vms_tasks_should_allow_supersede(int $event_id, array $event_context, array $settings): bool
 	{
@@ -177,15 +293,15 @@ if (!function_exists('vms_tasks_should_allow_supersede')) {
 		if ($event_id <= 0) {
 			return true;
 		}
-		$raw_prev = (string) get_post_meta($event_id, vms_tasks_signature_meta_key(), true);
-		if ($raw_prev === '') {
+		$decoded_prev = vms_tasks_decode_stored_event_signature(get_post_meta($event_id, vms_tasks_signature_meta_key(), true));
+		if (($decoded_prev['state'] ?? '') === 'missing') {
 			return true;
 		}
-		$prev = json_decode($raw_prev, true);
-		if (!is_array($prev)) {
-			return true;
+		if (($decoded_prev['state'] ?? '') !== 'valid') {
+			return false;
 		}
 
+		$prev = is_array($decoded_prev['signature'] ?? null) ? $decoded_prev['signature'] : array();
 		$current = vms_tasks_build_event_signature($event_context);
 		$changed_date = (string) ($prev['date_ymd'] ?? '') !== (string) ($current['date_ymd'] ?? '');
 		$changed_venue = absint($prev['venue_id'] ?? 0) !== absint($current['venue_id'] ?? 0);
