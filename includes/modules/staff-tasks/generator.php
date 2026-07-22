@@ -377,6 +377,30 @@ if (!function_exists('vms_tasks_generate_for_event')) {
 				if ($template_id <= 0) {
 					continue;
 				}
+				$overrides_state = 'missing';
+				$overrides_reason = 'missing_value';
+				if (isset($item['overrides_state']) && is_string($item['overrides_state'])) {
+					$candidate_state = (string) $item['overrides_state'];
+					if (in_array($candidate_state, array('missing', 'valid', 'invalid'), true)) {
+						$overrides_state = $candidate_state;
+					} else {
+						$overrides_state = 'invalid';
+						$overrides_reason = 'unknown_state';
+					}
+				}
+				if (isset($item['overrides_reason']) && is_string($item['overrides_reason']) && $item['overrides_reason'] !== '') {
+					$overrides_reason = (string) $item['overrides_reason'];
+				}
+				if ($overrides_state === 'invalid') {
+					$summary['warnings'][] = sprintf(
+						/* translators: 1: checklist item id, 2: task template id, 3: concise reason code. */
+						__('Checklist item #%1$d for task template #%2$d has invalid stored overrides (%3$s) and was skipped.', 'backstage-venue-manager'),
+						absint($item['id'] ?? 0),
+						$template_id,
+						$overrides_reason
+					);
+					continue;
+				}
 				if (isset($seen_templates[$template_id])) {
 					$summary['duplicate_suppressed']++;
 					continue;

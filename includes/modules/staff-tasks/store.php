@@ -577,6 +577,196 @@ if (!function_exists('vms_tasks_replace_checklist_items')) {
 	}
 }
 
+if (!function_exists('vms_tasks_decode_checklist_overrides')) {
+	/**
+	 * @param mixed $raw
+	 * @return array{state:string,overrides:array<string,mixed>,reason:string}
+	 */
+	function vms_tasks_decode_checklist_overrides($raw): array
+	{
+		if ($raw === null) {
+			return array(
+				'state' => 'missing',
+				'overrides' => array(),
+				'reason' => 'missing_value',
+			);
+		}
+		if (!is_string($raw)) {
+			return array(
+				'state' => 'invalid',
+				'overrides' => array(),
+				'reason' => 'non_string',
+			);
+		}
+
+		$raw = trim($raw);
+		if ($raw === '') {
+			return array(
+				'state' => 'missing',
+				'overrides' => array(),
+				'reason' => 'blank_value',
+			);
+		}
+		if ($raw[0] !== '{') {
+			return array(
+				'state' => 'invalid',
+				'overrides' => array(),
+				'reason' => 'non_object_json',
+			);
+		}
+
+		$decoded = json_decode($raw, true, 8);
+		$error = json_last_error();
+		if ($error !== JSON_ERROR_NONE) {
+			$reason = 'json_decode_failed';
+			if ($error === JSON_ERROR_DEPTH) {
+				$reason = 'json_depth';
+			} elseif ($error === JSON_ERROR_UTF8) {
+				$reason = 'json_utf8';
+			} elseif ($error === JSON_ERROR_SYNTAX) {
+				$reason = 'json_syntax';
+			}
+
+			return array(
+				'state' => 'invalid',
+				'overrides' => array(),
+				'reason' => $reason,
+			);
+		}
+		if (!is_array($decoded)) {
+			return array(
+				'state' => 'invalid',
+				'overrides' => array(),
+				'reason' => 'decoded_non_array',
+			);
+		}
+
+		$allowed_keys = array(
+			'required_default' => true,
+			'priority' => true,
+			'assignment_mode' => true,
+			'role_key' => true,
+			'assignee_user_id' => true,
+			'due_offset_minutes' => true,
+		);
+		$overrides = array();
+
+		foreach ($decoded as $key => $value) {
+			if (is_int($key) || ctype_digit((string) $key)) {
+				return array(
+					'state' => 'invalid',
+					'overrides' => array(),
+					'reason' => 'numeric_key',
+				);
+			}
+			if (!is_string($key) || !isset($allowed_keys[$key])) {
+				return array(
+					'state' => 'invalid',
+					'overrides' => array(),
+					'reason' => 'unknown_key',
+				);
+			}
+			if (is_array($value)) {
+				return array(
+					'state' => 'invalid',
+					'overrides' => array(),
+					'reason' => 'nested_' . $key,
+				);
+			}
+
+			switch ($key) {
+				case 'required_default':
+					if (!is_int($value) || ($value !== 0 && $value !== 1)) {
+						return array(
+							'state' => 'invalid',
+							'overrides' => array(),
+							'reason' => 'required_default_value',
+						);
+					}
+					$overrides[$key] = $value;
+					break;
+
+				case 'priority':
+					if (!is_string($value) || !in_array($value, vms_tasks_allowed_priorities(), true)) {
+						return array(
+							'state' => 'invalid',
+							'overrides' => array(),
+							'reason' => 'priority_value',
+						);
+					}
+					$overrides[$key] = $value;
+					break;
+
+				case 'assignment_mode':
+					if (!is_string($value) || !in_array($value, array('role', 'person', 'scheduled_role'), true)) {
+						return array(
+							'state' => 'invalid',
+							'overrides' => array(),
+							'reason' => 'assignment_mode_value',
+						);
+					}
+					$overrides[$key] = $value;
+					break;
+
+				case 'role_key':
+					if (!is_string($value)) {
+						return array(
+							'state' => 'invalid',
+							'overrides' => array(),
+							'reason' => 'role_key_value',
+						);
+					}
+					$sanitized_role_key = sanitize_key($value);
+					if ($value !== '' && $sanitized_role_key !== $value) {
+						return array(
+							'state' => 'invalid',
+							'overrides' => array(),
+							'reason' => 'role_key_value',
+						);
+					}
+					$overrides[$key] = $sanitized_role_key;
+					break;
+
+				case 'assignee_user_id':
+					if (is_int($value) && $value >= 0) {
+						$overrides[$key] = $value;
+						break;
+					}
+					if (is_string($value) && preg_match('/^(0|[1-9][0-9]*)$/', $value) === 1) {
+						$overrides[$key] = (int) $value;
+						break;
+					}
+					return array(
+						'state' => 'invalid',
+						'overrides' => array(),
+						'reason' => 'assignee_user_id_value',
+					);
+
+				case 'due_offset_minutes':
+					if (is_int($value)) {
+						$overrides[$key] = $value;
+						break;
+					}
+					if (is_string($value) && preg_match('/^(0|-?[1-9][0-9]*)$/', $value) === 1) {
+						$overrides[$key] = (int) $value;
+						break;
+					}
+					return array(
+						'state' => 'invalid',
+						'overrides' => array(),
+						'reason' => 'due_offset_minutes_value',
+					);
+			}
+		}
+
+		return array(
+			'state' => 'valid',
+			'overrides' => $overrides,
+			'reason' => 'valid',
+		);
+	}
+}
+
 if (!function_exists('vms_tasks_get_checklist_items')) {
 	/**
 	 * @return array<int,array<string,mixed>>
@@ -605,14 +795,10 @@ if (!function_exists('vms_tasks_get_checklist_items')) {
 		}
 
 		foreach ($rows as &$row) {
-			$overrides = array();
-			if (!empty($row['overrides_json'])) {
-				$decoded = json_decode((string) $row['overrides_json'], true);
-				if (is_array($decoded)) {
-					$overrides = $decoded;
-				}
-			}
-			$row['overrides'] = $overrides;
+			$decoded = vms_tasks_decode_checklist_overrides($row['overrides_json'] ?? null);
+			$row['overrides'] = is_array($decoded['overrides'] ?? null) ? $decoded['overrides'] : array();
+			$row['overrides_state'] = isset($decoded['state']) && is_string($decoded['state']) ? $decoded['state'] : 'invalid';
+			$row['overrides_reason'] = isset($decoded['reason']) && is_string($decoded['reason']) ? $decoded['reason'] : 'unknown';
 		}
 		unset($row);
 
