@@ -44,6 +44,8 @@ final class VMS_Public_Release_Tooling
 		'zip',
 	);
 
+	private const PUBLIC_PLUGIN_SLUG = 'backstage-venue-manager';
+
 	private const OPTIONAL_LOAD_SMOKE_SCENARIOS = array(
 		array(
 			'id' => 'wp-load-smoke-baseline',
@@ -109,7 +111,7 @@ final class VMS_Public_Release_Tooling
 			if (!self::hasRequiredFailures($report['checks'])) {
 				$tempBuildDir = self::createTemporaryDirectory('vms-public-release-');
 				$temporaryPaths[] = $tempBuildDir;
-				$stagedRoot = $tempBuildDir . DIRECTORY_SEPARATOR . $metadata['slug'];
+				$stagedRoot = $tempBuildDir . DIRECTORY_SEPARATOR . $metadata['public_plugin_slug'];
 				$manifestPatterns = self::loadExcludeManifest($metadata['exclude_manifest']);
 
 				$stageResult = self::stagePluginTree(
@@ -145,7 +147,7 @@ final class VMS_Public_Release_Tooling
 				$directoryValidation = self::validateTarget(
 					$stagedRoot,
 					array(
-						'plugin_slug' => $metadata['slug'],
+						'plugin_slug' => $metadata['public_plugin_slug'],
 						'manifest_path' => $metadata['exclude_manifest'],
 					)
 				);
@@ -162,7 +164,7 @@ final class VMS_Public_Release_Tooling
 					self::runOptionalWpLoadSmokes(
 						$config['plugin_root'],
 						$stagedRoot,
-						$metadata['slug']
+						$metadata['public_plugin_slug']
 					)
 				);
 
@@ -187,7 +189,7 @@ final class VMS_Public_Release_Tooling
 					$zipValidation = self::validateTarget(
 						$report['artifact']['zip_path'],
 						array(
-							'plugin_slug' => $metadata['slug'],
+							'plugin_slug' => $metadata['public_plugin_slug'],
 							'manifest_path' => $metadata['exclude_manifest'],
 						)
 					);
@@ -238,7 +240,7 @@ final class VMS_Public_Release_Tooling
 
 	public static function validateTarget(string $target, array $options = array()): array
 	{
-		$pluginSlug = self::normalizeSlug((string) ($options['plugin_slug'] ?? 'vms'));
+		$pluginSlug = self::normalizeSlug((string) ($options['plugin_slug'] ?? self::publicPluginSlug()));
 		$manifestPath = isset($options['manifest_path']) && is_string($options['manifest_path']) && $options['manifest_path'] !== ''
 			? $options['manifest_path']
 			: dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'release-public-excludes.txt';
@@ -292,7 +294,7 @@ final class VMS_Public_Release_Tooling
 	public static function verifyProvenanceTarget(string $target, string $manifestPath): array
 	{
 		$manifest = self::loadProvenanceManifest($manifestPath);
-		$slug = (string) ($manifest['slug'] ?? 'vms');
+		$slug = (string) ($manifest['slug'] ?? self::publicPluginSlug());
 		$checks = array();
 		$temporaryPaths = array();
 
@@ -515,6 +517,11 @@ final class VMS_Public_Release_Tooling
 		);
 	}
 
+	private static function publicPluginSlug(): string
+	{
+		return self::normalizeSlug(self::PUBLIC_PLUGIN_SLUG);
+	}
+
 	private static function collectSourceMetadata(string $pluginRoot): array
 	{
 		$entryFile = $pluginRoot . DIRECTORY_SEPARATOR . 'vendor-management-system.php';
@@ -523,7 +530,8 @@ final class VMS_Public_Release_Tooling
 		$migrationsFile = $pluginRoot . DIRECTORY_SEPARATOR . 'includes/db/migrations.php';
 		$excludeManifest = $pluginRoot . DIRECTORY_SEPARATOR . 'release-public-excludes.txt';
 		$header = self::readPluginHeader($entryFile);
-		$slug = self::extractDefineValue($constantsFile, 'VMS_PLUGIN_SLUG') ?? basename($pluginRoot);
+		$internalSlug = self::extractDefineValue($constantsFile, 'VMS_PLUGIN_SLUG') ?? basename($pluginRoot);
+		$publicSlug = self::publicPluginSlug();
 		$version = self::extractDefineValue($constantsFile, 'VMS_VERSION') ?? '';
 		$buildVersion = is_readable($buildFile) ? trim((string) file_get_contents($buildFile)) : '';
 		$migrationInfo = self::inspectVendorCoreMigrations($migrationsFile);
@@ -536,7 +544,10 @@ final class VMS_Public_Release_Tooling
 			'build_file' => $buildFile,
 			'migrations_file' => $migrationsFile,
 			'exclude_manifest' => $excludeManifest,
-			'slug' => self::normalizeSlug($slug),
+			'slug' => $publicSlug,
+			'internal_plugin_slug' => self::normalizeSlug($internalSlug),
+			'public_plugin_slug' => $publicSlug,
+			'public_plugin_basename' => $publicSlug . '/vendor-management-system.php',
 			'header_version' => (string) ($header['Version'] ?? ''),
 			'header_text_domain' => (string) ($header['Text Domain'] ?? ''),
 			'header_requires_php' => (string) ($header['Requires PHP'] ?? ''),
@@ -553,7 +564,7 @@ final class VMS_Public_Release_Tooling
 
 	private static function buildInitialReport(array $config, array $metadata): array
 	{
-		$baseName = $metadata['slug'] . '-' . (($metadata['version'] !== '') ? $metadata['version'] : 'unknown-version') . '-public-release';
+		$baseName = $metadata['public_plugin_slug'] . '-' . (($metadata['version'] !== '') ? $metadata['version'] : 'unknown-version') . '-public-release';
 		if (!empty($config['dev_build'])) {
 			$baseName .= '-dev';
 		}
@@ -664,6 +675,8 @@ final class VMS_Public_Release_Tooling
 	): array
 	{
 		$checks = array();
+		$publicPluginSlug = (string) ($metadata['public_plugin_slug'] ?? '');
+		$internalPluginSlug = (string) ($metadata['internal_plugin_slug'] ?? '');
 		$versions = array_filter(array(
 			'plugin header' => $metadata['header_version'],
 			'VMS_VERSION' => $metadata['version'],
@@ -687,17 +700,19 @@ final class VMS_Public_Release_Tooling
 
 		$checks[] = self::check(
 			'slug-and-text-domain',
-			($metadata['slug'] !== '' && $metadata['header_text_domain'] === $metadata['slug']) ? 'PASS' : 'FAIL',
+			($publicPluginSlug !== '' && $metadata['header_text_domain'] === $publicPluginSlug) ? 'PASS' : 'FAIL',
 			'Plugin slug and text domain assumptions',
-			($metadata['slug'] !== '' && $metadata['header_text_domain'] === $metadata['slug'])
-				? 'Plugin slug and text domain both resolve to `' . $metadata['slug'] . '`.'
+			($publicPluginSlug !== '' && $metadata['header_text_domain'] === $publicPluginSlug)
+				? 'Public package slug and text domain both resolve to `' . $publicPluginSlug . '`.'
 				: 'Plugin slug/text domain assumptions do not line up with the package root.',
 			array(
 				'required' => true,
 				'details' => array(
-					'slug' => $metadata['slug'],
+					'public_plugin_slug' => $publicPluginSlug,
+					'internal_plugin_slug' => $internalPluginSlug,
 					'text_domain' => $metadata['header_text_domain'],
-					'package_root' => basename($pluginRoot),
+					'public_package_root' => $publicPluginSlug,
+					'source_checkout_root' => basename($pluginRoot),
 				),
 			)
 		);
@@ -1033,7 +1048,7 @@ PHP;
 		$expectedSlug = (string) ($manifest['slug'] ?? '');
 		$actualVersion = (string) ($metadata['version'] ?? '');
 		$actualHeaderVersion = (string) ($metadata['header_version'] ?? '');
-		$actualSlug = (string) ($metadata['slug'] ?? '');
+		$actualSlug = (string) ($metadata['public_plugin_slug'] ?? '');
 
 		$checks[] = self::check(
 			'provenance-manifest-metadata',

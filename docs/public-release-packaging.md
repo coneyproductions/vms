@@ -1,10 +1,10 @@
 # Public Release Packaging
 
-This document defines the canonical VMS public-release build and explains how it differs from the existing deployment workflow.
+This document defines the canonical Backstage Venue Manager public-release build and explains how it differs from the existing deployment workflow.
 
 ## Canonical command
 
-Run this from the `vms/` plugin root:
+Run this from the mirror plugin root, for example `packages/vms-github-reconcile/`:
 
 ```bash
 php scripts/build-public-release.php
@@ -12,10 +12,10 @@ php scripts/build-public-release.php
 
 That command:
 
-- stages a clean public-release copy of `vms/`
+- stages a clean public-release copy of the current checkout
 - reads [`release-public-excludes.txt`](../release-public-excludes.txt) directly
 - runs the release preflight/regression checks
-- builds a ZIP with one top-level `vms/` directory
+- builds a ZIP with one top-level `backstage-venue-manager/` directory
 - validates the finished ZIP
 - writes both a text report and a JSON report
 
@@ -51,11 +51,18 @@ Default output directory:
 
 Default filenames:
 
-- `dist/vms-<version>-public-release.zip`
-- `dist/vms-<version>-public-release.report.txt`
-- `dist/vms-<version>-public-release.report.json`
+- `dist/backstage-venue-manager-<version>-public-release.zip`
+- `dist/backstage-venue-manager-<version>-public-release.report.txt`
+- `dist/backstage-venue-manager-<version>-public-release.report.json`
 
 The ZIP is not uploaded or deployed by this command.
+
+## Public package identity
+
+- Public slug, public ZIP root, and plugin header `Text Domain`: `backstage-venue-manager`
+- Public bootstrap path inside the ZIP: `backstage-venue-manager/vendor-management-system.php`
+- Internal compatibility identifiers may remain `vms`, including `VMS_PLUGIN_SLUG`, `vms-build.txt`, and the sibling live local plugin folder `../../vms`
+- The source checkout folder does not determine the public package root
 
 ## Release-path inventory
 
@@ -127,7 +134,7 @@ The canonical build runs these checks automatically.
 - plugin header version
 - `VMS_VERSION`
 - `vms-build.txt`
-- plugin slug/text-domain alignment
+- public package slug/text-domain alignment
 - vendor-core migration pointer alignment between `includes/db/migrations.php` and `includes/activation.php`
 - version-matched `BUILD-NOTES-<version>.md`
 - readme stable tag, if a readme exists
@@ -149,7 +156,7 @@ The build fails on real inconsistencies. It does not treat intentionally indepen
 
 The staged package tree and the finished ZIP are both checked for:
 
-- one top-level `vms/` root
+- one top-level `backstage-venue-manager/` root
 - required runtime files and directories
 - manifest-excluded paths
 - path traversal entries
@@ -164,7 +171,7 @@ The staged package tree and the finished ZIP are both checked for:
 
 When both `wp` and a local `wp-load.php` are available, the builder also runs staged-package load smokes through WP-CLI while skipping selected dependency plugins:
 
-- baseline `vms` load
+- baseline public package load
 - without WooCommerce
 - without The Events Calendar/Event Tickets stack
 - without optional ticketing add-ons
@@ -190,13 +197,13 @@ If the source is not inside a git worktree:
 Validate a finished release ZIP directly:
 
 ```bash
-php tests/check-package-integrity.php dist/vms-0.2.24.746-public-release.zip
+php tests/check-package-integrity.php dist/backstage-venue-manager-0.2.24.746-public-release.zip
 ```
 
 Validate a staged package directory:
 
 ```bash
-php tests/check-package-integrity.php /path/to/staged/vms
+php tests/check-package-integrity.php /path/to/staged/backstage-venue-manager
 ```
 
 Do not point `tests/check-package-integrity.php` at the live source tree if you expect a PASS. The source tree intentionally contains docs, tests, and scripts that must be excluded from the public package.
@@ -205,7 +212,7 @@ Verify a ZIP or extracted package against a recorded provenance manifest:
 
 ```bash
 php scripts/verify-public-release-provenance.php \
-  --target dist/vms-0.2.24.747-public-release.zip \
+  --target dist/backstage-venue-manager-0.2.24.747-public-release.zip \
   --manifest docs/provenance/releases/0.2.24.747.json
 ```
 
@@ -215,11 +222,11 @@ That provenance check is stricter than the package-integrity scan. It proves tha
 
 Activation, upgrade, uninstall, and dependency-compatibility checks are intentionally separate from the static packaging builder.
 
-Run the disposable compatibility harness from the `vms/` plugin root:
+Run the disposable compatibility harness from the mirror plugin root:
 
 ```bash
 php scripts/test-release-compatibility.php \
-  --artifact=dist/vms-0.2.24.746-public-release.zip \
+  --artifact=dist/backstage-venue-manager-0.2.24.746-public-release.zip \
   --baseline-artifact=../vms-0.2.24.725-checkout-hot-path.zip \
   --expected-sha256=e55302b89eb56a7f2808d94e901c8fb16f96b069352cee5fe0b961883724224d \
   --wordpress-source="/path/to/wordpress-root" \
@@ -236,6 +243,8 @@ That command:
 
 The compatibility harness is opt-in because it mutates disposable databases, installs plugins, and may take several minutes.
 
+The packaged ZIP is expected to install as `backstage-venue-manager/vendor-management-system.php`. The compatibility harness still recognizes historical/internal `vms/vendor-management-system.php` baselines and local live installs when comparing lifecycle state.
+
 It does not:
 
 - deploy anything
@@ -243,6 +252,20 @@ It does not:
 - change the normal packaging command
 
 Document the exact compatibility report that was executed alongside any externally shared ZIP. The static package report and the compatibility report should be reviewed separately.
+
+## Plugin Check path examples
+
+Packaged or extracted public package:
+
+```bash
+wp plugin check /path/to/extracted/backstage-venue-manager --slug=backstage-venue-manager
+```
+
+Local installed live tree:
+
+```bash
+wp plugin check vms --slug=backstage-venue-manager
+```
 
 ## Result semantics
 

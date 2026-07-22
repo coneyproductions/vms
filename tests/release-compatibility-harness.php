@@ -101,7 +101,7 @@ $tests['missing artifact is rejected'] = static function (): void {
 $tests['wrong root directory is rejected'] = static function (): void {
 	$workspace = vms_release_compat_test_temp_dir('vms-release-compat-root-');
 	try {
-		$zipPath = $workspace . DIRECTORY_SEPARATOR . 'vms-1.2.3-public-release.zip';
+		$zipPath = $workspace . DIRECTORY_SEPARATOR . 'backstage-venue-manager-1.2.3-public-release.zip';
 		vms_release_compat_test_create_zip($zipPath, array(
 			'not-vms/' => '',
 			'not-vms/plugin.php' => "<?php\n",
@@ -111,7 +111,7 @@ $tests['wrong root directory is rejected'] = static function (): void {
 			static function () use ($zipPath): void {
 				VMS_Release_Compatibility_Tooling::inspectZipRoot($zipPath);
 			},
-			'one top-level vms/ root directory'
+			'one top-level backstage-venue-manager/ root directory'
 		);
 	} finally {
 		VMS_Release_Compatibility_Tooling::deletePath($workspace);
@@ -122,21 +122,28 @@ $tests['paths with spaces validate and CLI checksum mismatches fail cleanly'] = 
 	$workspace = vms_release_compat_test_temp_dir('vms release compat spaces ');
 	try {
 		$zipDir = $workspace . DIRECTORY_SEPARATOR . 'build output';
-		$zipPath = $zipDir . DIRECTORY_SEPARATOR . 'vms-9.9.9-public-release.zip';
+		$zipPath = $zipDir . DIRECTORY_SEPARATOR . 'backstage-venue-manager-9.9.9-public-release.zip';
 		vms_release_compat_test_create_zip($zipPath, array(
-			'vms/' => '',
-			'vms/vendor-management-system.php' => "<?php\n/**\n * Plugin Name: VMS\n * Version: 9.9.9\n */\n",
-			'vms/includes/bootstrap.php' => "<?php\n",
-			'vms/includes/core/plugin.php' => "<?php\n",
-			'vms/includes/core/registry/constants.php' => "<?php\ndefine('VMS_VERSION', '9.9.9');\n",
-			'vms/includes/db/migrations.php' => "<?php\n",
-			'vms/assets/app.js' => "console.log('ok');\n",
-			'vms/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
-			'vms/vms-build.txt' => "9.9.9\n",
+			'backstage-venue-manager/' => '',
+			'backstage-venue-manager/vendor-management-system.php' => "<?php\n/**\n * Plugin Name: VMS\n * Version: 9.9.9\n */\n",
+			'backstage-venue-manager/includes/bootstrap.php' => "<?php\n",
+			'backstage-venue-manager/includes/core/plugin.php' => "<?php\n",
+			'backstage-venue-manager/includes/core/registry/constants.php' => "<?php\ndefine('VMS_VERSION', '9.9.9');\n",
+			'backstage-venue-manager/includes/db/migrations.php' => "<?php\n",
+			'backstage-venue-manager/assets/app.js' => "console.log('ok');\n",
+			'backstage-venue-manager/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
+			'backstage-venue-manager/vms-build.txt' => "9.9.9\n",
 		));
 
 		$artifact = VMS_Release_Compatibility_Tooling::validateArtifactInput($zipPath);
-		vms_release_compat_test_assert($artifact['root_directory'] === 'vms', 'Expected vms/ root directory.');
+		vms_release_compat_test_assert(
+			$artifact['root_directory'] === VMS_Release_Compatibility_Tooling::publicPluginSlug(),
+			'Expected public package root directory.'
+		);
+		vms_release_compat_test_assert(
+			$artifact['plugin_basename'] === VMS_Release_Compatibility_Tooling::publicPluginBasename(),
+			'Expected public package basename.'
+		);
 		vms_release_compat_test_assert($artifact['version'] === '9.9.9', 'Expected version extraction to preserve ZIP version.');
 
 		$command = array(
@@ -150,6 +157,77 @@ $tests['paths with spaces validate and CLI checksum mismatches fail cleanly'] = 
 		vms_release_compat_test_assert(
 			strpos($result['stderr'], 'Artifact checksum does not match the expected SHA-256.') !== false,
 			'Expected a clean checksum mismatch message from the CLI wrapper.'
+		);
+	} finally {
+		VMS_Release_Compatibility_Tooling::deletePath($workspace);
+	}
+};
+
+$tests['recognized plugin basenames accept internal and public installs only'] = static function (): void {
+	$recognized = VMS_Release_Compatibility_Tooling::recognizedPluginBasenames();
+	vms_release_compat_test_assert(
+		in_array(VMS_Release_Compatibility_Tooling::publicPluginBasename(), $recognized, true),
+		'Expected public plugin basename to be recognized.'
+	);
+	vms_release_compat_test_assert(
+		in_array(VMS_Release_Compatibility_Tooling::internalPluginBasename(), $recognized, true),
+		'Expected internal plugin basename to be recognized.'
+	);
+	vms_release_compat_test_assert(
+		VMS_Release_Compatibility_Tooling::isRecognizedPluginBasename(VMS_Release_Compatibility_Tooling::publicPluginBasename()),
+		'Expected public plugin basename to pass recognition.'
+	);
+	vms_release_compat_test_assert(
+		VMS_Release_Compatibility_Tooling::isRecognizedPluginBasename(VMS_Release_Compatibility_Tooling::internalPluginBasename()),
+		'Expected internal plugin basename to pass recognition.'
+	);
+	vms_release_compat_test_assert(
+		!VMS_Release_Compatibility_Tooling::isRecognizedPluginBasename('not-vms/vendor-management-system.php'),
+		'Expected unrelated plugin basename to be rejected.'
+	);
+	vms_release_compat_test_assert(
+		substr(VMS_Release_Compatibility_Tooling::publicPluginBasename(), -strlen(VMS_Release_Compatibility_Tooling::mainPluginFile())) === VMS_Release_Compatibility_Tooling::mainPluginFile(),
+		'Expected the public basename to preserve the main plugin filename.'
+	);
+};
+
+$tests['installed plugin basename resolution keeps build-version lookup stable across basenames'] = static function (): void {
+	$workspace = vms_release_compat_test_temp_dir('vms release compat basenames ');
+	try {
+		$pluginsDir = $workspace . DIRECTORY_SEPARATOR . 'plugins';
+		$publicDir = $pluginsDir . DIRECTORY_SEPARATOR . VMS_Release_Compatibility_Tooling::publicPluginSlug();
+		$internalDir = $pluginsDir . DIRECTORY_SEPARATOR . VMS_Release_Compatibility_Tooling::internalPluginSlug();
+		if (!mkdir($publicDir, 0775, true) || !mkdir($internalDir, 0775, true)) {
+			throw new RuntimeException('Could not create plugin basename fixtures.');
+		}
+		file_put_contents($publicDir . DIRECTORY_SEPARATOR . VMS_Release_Compatibility_Tooling::mainPluginFile(), "<?php\n");
+		file_put_contents($publicDir . DIRECTORY_SEPARATOR . 'vms-build.txt', "9.9.9\n");
+		file_put_contents($internalDir . DIRECTORY_SEPARATOR . VMS_Release_Compatibility_Tooling::mainPluginFile(), "<?php\n");
+		file_put_contents($internalDir . DIRECTORY_SEPARATOR . 'vms-build.txt', "8.8.8\n");
+
+		$publicBasename = VMS_Release_Compatibility_Tooling::resolveInstalledPluginBasename(array(), $pluginsDir);
+		vms_release_compat_test_assert(
+			$publicBasename === VMS_Release_Compatibility_Tooling::publicPluginBasename(),
+			'Expected the public package basename to be preferred when only installed files are available.'
+		);
+		$publicBuildPath = VMS_Release_Compatibility_Tooling::buildVersionPathForPluginBasename($pluginsDir, $publicBasename);
+		vms_release_compat_test_assert(is_file($publicBuildPath), 'Expected public basename build-version path to resolve.');
+		vms_release_compat_test_assert(trim((string) file_get_contents($publicBuildPath)) === '9.9.9', 'Expected public basename build-version lookup to remain stable.');
+
+		$internalBasename = VMS_Release_Compatibility_Tooling::resolveInstalledPluginBasename(
+			array(VMS_Release_Compatibility_Tooling::internalPluginBasename()),
+			$pluginsDir
+		);
+		vms_release_compat_test_assert(
+			$internalBasename === VMS_Release_Compatibility_Tooling::internalPluginBasename(),
+			'Expected the internal active basename to remain recognized.'
+		);
+		$internalBuildPath = VMS_Release_Compatibility_Tooling::buildVersionPathForPluginBasename($pluginsDir, $internalBasename);
+		vms_release_compat_test_assert(is_file($internalBuildPath), 'Expected internal basename build-version path to resolve.');
+		vms_release_compat_test_assert(trim((string) file_get_contents($internalBuildPath)) === '8.8.8', 'Expected internal basename build-version lookup to remain stable.');
+		vms_release_compat_test_assert(
+			VMS_Release_Compatibility_Tooling::buildVersionPathForPluginBasename($pluginsDir, 'not-vms/vendor-management-system.php') === '',
+			'Expected arbitrary plugin basenames to be rejected for build-version lookup.'
 		);
 	} finally {
 		VMS_Release_Compatibility_Tooling::deletePath($workspace);
@@ -262,7 +340,7 @@ $tests['text report generation handles partial failure payloads'] = static funct
 	$report = array(
 		'status' => 'FAIL',
 		'artifact' => array(
-			'filename' => 'vms-0.2.24.746-public-release.zip',
+			'filename' => 'backstage-venue-manager-0.2.24.746-public-release.zip',
 			'sha256' => 'abc123',
 		),
 		'baseline_artifact' => array(

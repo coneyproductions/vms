@@ -1950,7 +1950,7 @@ if (!function_exists('vms_resource_fingerprint_track_plugin_lifecycle')) {
 	function vms_resource_fingerprint_track_plugin_lifecycle(string $flag, string $plugin_file): void
 	{
 		$plugin_file = trim($plugin_file);
-		if (!in_array($plugin_file, array('vms/vendor-management-system.php', 'vms-data-tools/vms-data-tools.php'), true)) {
+		if (!in_array($plugin_file, array('vms/vendor-management-system.php', 'backstage-venue-manager/vendor-management-system.php', 'vms-data-tools/vms-data-tools.php'), true)) {
 			return;
 		}
 

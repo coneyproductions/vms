@@ -96,6 +96,16 @@ function vms_public_release_test_run(array $command, ?string $cwd = null): array
 	);
 }
 
+function vms_public_release_test_public_slug(): string
+{
+	return 'backstage-venue-manager';
+}
+
+function vms_public_release_test_public_basename(): string
+{
+	return vms_public_release_test_public_slug() . '/vendor-management-system.php';
+}
+
 function vms_public_release_test_fixture(array $options = array()): string
 {
 	$workspace = vms_public_release_test_temp_dir('vms-release-fixture-');
@@ -105,6 +115,8 @@ function vms_public_release_test_fixture(array $options = array()): string
 	$constantsVersion = (string) ($options['constants_version'] ?? $version);
 	$buildVersion = (string) ($options['build_version'] ?? $version);
 	$readmeStableTag = (string) ($options['readme_stable_tag'] ?? $version);
+	$textDomain = (string) ($options['text_domain'] ?? vms_public_release_test_public_slug());
+	$internalPluginSlug = (string) ($options['internal_plugin_slug'] ?? 'vms');
 	$omitFiles = array_values(array_map('strval', (array) ($options['omit_files'] ?? array())));
 
 	$files = array(
@@ -115,7 +127,7 @@ function vms_public_release_test_fixture(array $options = array()): string
  * Description: Test fixture.
  * Version: {$headerVersion}
  * Author: Test
- * Text Domain: vms
+ * Text Domain: {$textDomain}
  * Requires at least: 6.5
  * Requires PHP: 8.1
  */
@@ -142,7 +154,7 @@ PHP,
 defined('ABSPATH') || exit;
 
 if (!defined('VMS_PLUGIN_SLUG')) {
-	define('VMS_PLUGIN_SLUG', 'vms');
+	define('VMS_PLUGIN_SLUG', '{$internalPluginSlug}');
 }
 
 if (!defined('VMS_VERSION')) {
@@ -217,16 +229,37 @@ function vms_public_release_test_create_zip(string $zipPath, array $entries): vo
 	$zip->close();
 }
 
+function vms_public_release_test_read_zip_entries(string $zipPath): array
+{
+	$zip = new ZipArchive();
+	if ($zip->open($zipPath) !== true) {
+		throw new RuntimeException('Could not open ZIP fixture for inspection.');
+	}
+
+	$entries = array();
+	for ($index = 0; $index < $zip->numFiles; $index++) {
+		$name = $zip->getNameIndex($index);
+		if (is_string($name) && $name !== '') {
+			$entries[] = str_replace('\\', '/', $name);
+		}
+	}
+	$zip->close();
+
+	sort($entries, SORT_STRING);
+	return $entries;
+}
+
 function vms_public_release_test_write_provenance_manifest(string $pluginRoot, string $manifestPath, string $artifactPath): void
 {
 	$version = trim((string) file_get_contents($pluginRoot . '/vms-build.txt'));
 	$artifactSha256 = strtolower((string) (hash_file('sha256', $artifactPath) ?: ''));
+	$publicSlug = vms_public_release_test_public_slug();
 	$rootMtimeUnix = 0;
 	$excludePatterns = array('docs/', 'tests/', 'scripts/', 'provenance/', 'dist/', 'BUILD-NOTES-*.md', '*.zip', '**/*.zip');
 	if (class_exists('ZipArchive')) {
 		$zip = new ZipArchive();
 		if ($zip->open($artifactPath) === true) {
-			$stat = $zip->statName('vms/');
+			$stat = $zip->statName($publicSlug . '/');
 			if (is_array($stat) && isset($stat['mtime'])) {
 				$rootMtimeUnix = (int) $stat['mtime'];
 			}
@@ -278,10 +311,10 @@ function vms_public_release_test_write_provenance_manifest(string $pluginRoot, s
 
 	$manifest = array(
 		'schema' => 1,
-		'slug' => 'vms',
+		'slug' => $publicSlug,
 		'version' => $version,
 		'artifact' => array(
-			'filename' => 'vms-' . $version . '-public-release.zip',
+			'filename' => $publicSlug . '-' . $version . '-public-release.zip',
 			'sha256' => strtolower($artifactSha256),
 			'root_mtime_unix' => $rootMtimeUnix,
 		),
@@ -300,28 +333,31 @@ function vms_public_release_test_fixture_package_entries(array $overrides = arra
 	$headerVersion = (string) ($overrides['header_version'] ?? $version);
 	$constantsVersion = (string) ($overrides['constants_version'] ?? $version);
 	$buildVersion = (string) ($overrides['build_version'] ?? $version);
+	$textDomain = (string) ($overrides['text_domain'] ?? vms_public_release_test_public_slug());
+	$internalPluginSlug = (string) ($overrides['internal_plugin_slug'] ?? 'vms');
+	$publicSlug = vms_public_release_test_public_slug();
 
 	$entries = array(
-		'vms/' => '',
-		'vms/vendor-management-system.php' => <<<PHP
+		$publicSlug . '/' => '',
+		$publicSlug . '/vendor-management-system.php' => <<<PHP
 <?php
 /**
  * Plugin Name: VMS
  * Version: {$headerVersion}
- * Text Domain: vms
+ * Text Domain: {$textDomain}
  */
 PHP,
-		'vms/includes/bootstrap.php' => "<?php\n",
-		'vms/includes/core/plugin.php' => "<?php\n",
-		'vms/includes/core/registry/constants.php' => "<?php\ndefine('VMS_PLUGIN_SLUG', 'vms');\ndefine('VMS_VERSION', '{$constantsVersion}');\n",
-		'vms/includes/db/migrations.php' => "<?php\nfunction vms_db_migrate_vendor_core_v1(): void {}\n",
-		'vms/assets/js/app.js' => "console.log('ok');\n",
-		'vms/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
-		'vms/vms-build.txt' => $buildVersion . "\n",
+		$publicSlug . '/includes/bootstrap.php' => "<?php\n",
+		$publicSlug . '/includes/core/plugin.php' => "<?php\n",
+		$publicSlug . '/includes/core/registry/constants.php' => "<?php\ndefine('VMS_PLUGIN_SLUG', '" . addslashes($internalPluginSlug) . "');\ndefine('VMS_VERSION', '{$constantsVersion}');\n",
+		$publicSlug . '/includes/db/migrations.php' => "<?php\nfunction vms_db_migrate_vendor_core_v1(): void {}\n",
+		$publicSlug . '/assets/js/app.js' => "console.log('ok');\n",
+		$publicSlug . '/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
+		$publicSlug . '/vms-build.txt' => $buildVersion . "\n",
 	);
 
 	foreach ($overrides as $path => $contents) {
-		if (!is_string($path) || strpos($path, 'vms/') !== 0) {
+		if (!is_string($path) || strpos($path, $publicSlug . '/') !== 0) {
 			continue;
 		}
 		$entries[$path] = $contents;
@@ -340,7 +376,7 @@ $tests['prohibited development file included in staged source'] = static functio
 	));
 	try {
 		$result = VMS_Public_Release_Tooling::validateTarget($pluginRoot, array(
-			'plugin_slug' => 'vms',
+			'plugin_slug' => vms_public_release_test_public_slug(),
 			'manifest_path' => $pluginRoot . '/release-public-excludes.txt',
 		));
 		$check = vms_public_release_test_find_check($result['checks'], 'manifest-excludes-honored');
@@ -356,7 +392,7 @@ $tests['required runtime file missing'] = static function (): void {
 	));
 	try {
 		$result = VMS_Public_Release_Tooling::validateTarget($pluginRoot, array(
-			'plugin_slug' => 'vms',
+			'plugin_slug' => vms_public_release_test_public_slug(),
 			'manifest_path' => $pluginRoot . '/release-public-excludes.txt',
 		));
 		$check = vms_public_release_test_find_check($result['checks'], 'entry-file-present');
@@ -375,7 +411,7 @@ $tests['multiple top-level ZIP directories'] = static function (): void {
 		$entries['oops/extra.txt'] = "bad\n";
 		vms_public_release_test_create_zip($zipPath, $entries);
 		$result = VMS_Public_Release_Tooling::validateTarget($zipPath, array(
-			'plugin_slug' => 'vms',
+			'plugin_slug' => vms_public_release_test_public_slug(),
 			'manifest_path' => $pluginRoot . '/release-public-excludes.txt',
 		));
 		$check = vms_public_release_test_find_check($result['checks'], 'single-top-level-root');
@@ -391,11 +427,11 @@ $tests['nested archive included'] = static function (): void {
 	$zipPath = $workspace . '/nested-archive.zip';
 	try {
 		$entries = vms_public_release_test_fixture_package_entries(array(
-			'vms/inner.zip' => 'not a real zip but still forbidden',
+			vms_public_release_test_public_slug() . '/inner.zip' => 'not a real zip but still forbidden',
 		));
 		vms_public_release_test_create_zip($zipPath, $entries);
 		$result = VMS_Public_Release_Tooling::validateTarget($zipPath, array(
-			'plugin_slug' => 'vms',
+			'plugin_slug' => vms_public_release_test_public_slug(),
 			'manifest_path' => $pluginRoot . '/release-public-excludes.txt',
 		));
 		$check = vms_public_release_test_find_check($result['checks'], 'nested-archives');
@@ -466,11 +502,11 @@ $tests['excluded file accidentally packaged'] = static function (): void {
 	$zipPath = $workspace . '/excluded-file.zip';
 	try {
 		$entries = vms_public_release_test_fixture_package_entries(array(
-			'vms/docs/private.md' => '# private',
+			vms_public_release_test_public_slug() . '/docs/private.md' => '# private',
 		));
 		vms_public_release_test_create_zip($zipPath, $entries);
 		$result = VMS_Public_Release_Tooling::validateTarget($zipPath, array(
-			'plugin_slug' => 'vms',
+			'plugin_slug' => vms_public_release_test_public_slug(),
 			'manifest_path' => $pluginRoot . '/release-public-excludes.txt',
 		));
 		$check = vms_public_release_test_find_check($result['checks'], 'manifest-excludes-honored');
@@ -495,6 +531,99 @@ $tests['valid package success and output path containing spaces'] = static funct
 		vms_public_release_test_assert(is_readable((string) $report['artifact']['zip_path']), 'Expected ZIP artifact to exist.');
 		vms_public_release_test_assert(is_readable((string) $report['artifact']['report_text_path']), 'Expected text report to exist.');
 		vms_public_release_test_assert(is_readable((string) $report['artifact']['report_json_path']), 'Expected JSON report to exist.');
+		vms_public_release_test_assert(
+			($report['artifact']['filename'] ?? '') === 'backstage-venue-manager-1.2.3-public-release.zip',
+			'Expected public artifact filename to use the WordPress.org slug.'
+		);
+		vms_public_release_test_assert(
+			($report['metadata']['public_plugin_slug'] ?? '') === vms_public_release_test_public_slug(),
+			'Expected report metadata to record the explicit public plugin slug.'
+		);
+		vms_public_release_test_assert(
+			($report['metadata']['internal_plugin_slug'] ?? '') === 'vms',
+			'Expected the internal plugin slug to remain vms.'
+		);
+		vms_public_release_test_assert(
+			($report['metadata']['header_text_domain'] ?? '') === vms_public_release_test_public_slug(),
+			'Expected the fixture header text domain to match the public slug.'
+		);
+		$slugCheck = vms_public_release_test_find_check($report['checks'], 'slug-and-text-domain');
+		vms_public_release_test_assert(($slugCheck['status'] ?? '') === 'PASS', 'Expected explicit public slug/text-domain validation to pass.');
+		$zipEntries = vms_public_release_test_read_zip_entries((string) $report['artifact']['zip_path']);
+		vms_public_release_test_assert($zipEntries !== array(), 'Expected the public-release ZIP to contain entries.');
+		foreach ($zipEntries as $entryName) {
+			vms_public_release_test_assert(
+				strpos($entryName, vms_public_release_test_public_slug() . '/') === 0,
+				'Expected every ZIP entry to use the public package root.'
+			);
+			vms_public_release_test_assert(strpos($entryName, 'vms/') !== 0, 'Expected no internal vms/ public package root.');
+			vms_public_release_test_assert(strpos($entryName, 'vms-github-reconcile/') !== 0, 'Expected no source checkout root in the public package.');
+		}
+		vms_public_release_test_assert(
+			in_array(vms_public_release_test_public_basename(), $zipEntries, true),
+			'Expected the public package bootstrap path to exist.'
+		);
+		vms_public_release_test_assert(
+			!in_array('vms/vendor-management-system.php', $zipEntries, true),
+			'Expected the internal bootstrap basename to stay out of the public ZIP.'
+		);
+	} finally {
+		vms_public_release_test_delete_path(dirname($pluginRoot));
+		vms_public_release_test_delete_path($outputDir);
+	}
+};
+
+$tests['text domain mismatch fails the explicit public package slug check'] = static function (): void {
+	$pluginRoot = vms_public_release_test_fixture(array(
+		'text_domain' => 'vms',
+	));
+	$outputDir = vms_public_release_test_temp_dir('vms-release-output-');
+	try {
+		$report = VMS_Public_Release_Tooling::build(array(
+			'plugin_root' => $pluginRoot,
+			'output_dir' => $outputDir,
+			'force' => true,
+			'release_tests' => array(),
+		));
+		$check = vms_public_release_test_find_check($report['checks'], 'slug-and-text-domain');
+		vms_public_release_test_assert(($check['status'] ?? '') === 'FAIL', 'Expected text-domain mismatch to fail the explicit public slug check.');
+		vms_public_release_test_assert(($report['status'] ?? '') === 'FAIL', 'Expected the build to fail on a public slug/text-domain mismatch.');
+	} finally {
+		vms_public_release_test_delete_path(dirname($pluginRoot));
+		vms_public_release_test_delete_path($outputDir);
+	}
+};
+
+$tests['internal plugin slug changes do not redefine the public package slug'] = static function (): void {
+	$pluginRoot = vms_public_release_test_fixture(array(
+		'internal_plugin_slug' => 'vmstest',
+	));
+	$outputDir = vms_public_release_test_temp_dir('vms-release-output-');
+	try {
+		$report = VMS_Public_Release_Tooling::build(array(
+			'plugin_root' => $pluginRoot,
+			'output_dir' => $outputDir,
+			'force' => true,
+			'release_tests' => array(),
+		));
+		vms_public_release_test_assert(($report['status'] ?? '') === 'PASS', 'Expected the build to preserve the explicit public slug when the internal slug changes.');
+		vms_public_release_test_assert(
+			($report['metadata']['internal_plugin_slug'] ?? '') === 'vmstest',
+			'Expected the internal fixture slug to be reported separately.'
+		);
+		vms_public_release_test_assert(
+			($report['metadata']['public_plugin_slug'] ?? '') === vms_public_release_test_public_slug(),
+			'Expected the public package slug to remain fixed.'
+		);
+		vms_public_release_test_assert(
+			($report['artifact']['filename'] ?? '') === 'backstage-venue-manager-1.2.3-public-release.zip',
+			'Expected the public artifact filename to remain independent from the internal slug.'
+		);
+		$zipEntries = vms_public_release_test_read_zip_entries((string) $report['artifact']['zip_path']);
+		vms_public_release_test_assert(
+			in_array(vms_public_release_test_public_basename(), $zipEntries, true),
+			'Expected the public bootstrap path to remain fixed when the internal slug changes.'
+		);
 	} finally {
 		vms_public_release_test_delete_path(dirname($pluginRoot));
 		vms_public_release_test_delete_path($outputDir);

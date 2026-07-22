@@ -1412,8 +1412,8 @@ Status:
 
 Decision notes:
 
-- The public release directory / slug expectation still needs a packaging decision. The local runtime directory is `vms`, while the requested public slug is `backstage-venue-manager`.
-- `vms.php:1-12` is currently a compatibility shim that delegates to `vendor-management-system.php`. That is acceptable internally, but the final ZIP folder and SVN slug should be validated deliberately rather than inferred.
+- The current release tooling now resolves the public package directory / slug expectation explicitly: public packages build as `backstage-venue-manager/`, while the local runtime directory may remain `vms`.
+- `vms.php:1-12` is currently a compatibility shim that delegates to `vendor-management-system.php`. That remains acceptable internally, and the release builder plus compatibility harness now validate the public ZIP folder and canonical public basename deliberately rather than inferring them from the checkout root.
 
 ## N. Plugin Check and Scanner Reproducibility
 
@@ -3205,3 +3205,30 @@ This audit did not:
 - or modify production data.
 
 That note applied to the earlier docs-only audit pass; later result sections capture subsequent remediation batches that changed runtime code in the mirror and live trees.
+
+## Public Release Slug Separation Result
+
+Date: 2026-07-22
+
+### Summary
+
+- Result: `PASS`
+- Scope completed in this slice: public-release builder identity, disposable release-compatibility harness identity, focused release-harness tests, mirror/live lifecycle basename compatibility, and canonical packaging documentation
+- Public package contract now implemented in the current repository: `backstage-venue-manager/` ZIP root, `backstage-venue-manager-<version>-public-release.zip` artifact naming, plugin header `Text Domain: backstage-venue-manager`, and canonical public bootstrap path `backstage-venue-manager/vendor-management-system.php`
+- Internal compatibility identity preserved: `VMS_PLUGIN_SLUG` remains `vms`, the main bootstrap filename remains `vendor-management-system.php`, and the sibling local live tree may remain installed as `vms/`
+- Lifecycle compatibility added for both known package basenames: `includes/activation.php` now derives the current plugin basename from its containing folder, and mirror/live `includes/runtime-guards.php` now accept the exact `vms/vendor-management-system.php` and `backstage-venue-manager/vendor-management-system.php` lifecycle basenames without widening to arbitrary folders
+- Focused release tests updated: `php tests/public-release-build-pipeline.php` now proves the separated public slug/root contract, and `php tests/release-compatibility-harness.php` plus `tests/compatibility/collect-state.php` now prove public extracted-package recognition, internal live-tree recognition, basename-specific build-version lookup, and arbitrary-basename rejection
+- Parent status remains open: `WPORG-20A-S` is still not closed by this slice and remains pending the next pass's fresh package build evidence, packaged Plugin Check, residual direct-server closeout work, and final parent documentation reconciliation
+
+### What Changed
+
+- Introduced an explicit build-only public package slug in `scripts/lib/public-release.php` and stopped deriving the public ZIP root, artifact filename, and text-domain validation target from `VMS_PLUGIN_SLUG` or the source checkout folder name.
+- Updated `scripts/lib/release-compatibility.php` and `scripts/test-release-compatibility.php` so the harness expects public artifacts rooted at `backstage-venue-manager/`, still recognizes historical/internal `vms` baselines, and targets the installed plugin by exact basename rather than assuming the public artifact continues to activate as `vms`.
+- Updated the mirror and authorized live runtime lifecycle files so activation/deactivation fingerprinting and Runtime Guards lifecycle recognition work for both the internal live-tree folder and the public package folder without changing any option, database, REST, AJAX, nonce, or storage namespace.
+- Refreshed `docs/public-release-packaging.md` so the canonical packaging contract, compatibility examples, extracted-path examples, and Plugin Check examples all use `backstage-venue-manager` for the public package while explicitly preserving internal `vms` identifiers where they are still intentional.
+
+### Non-Actions
+
+- Did not change `vendor-management-system.php`, `readme.txt`, `includes/core/registry/constants.php`, `VMS_PLUGIN_SLUG`, release metadata, or version markers.
+- Did not claim WordPress.org-side slug reservation, a corrected upload, a reviewer reply, or any final external resubmission action.
+- Did not treat this implementation slice as a packaged Plugin Check rerun or final closeout pass.

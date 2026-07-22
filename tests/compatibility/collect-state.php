@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
+require_once dirname(__DIR__, 2) . '/scripts/lib/release-compatibility.php';
 
 if (!function_exists('is_plugin_active')) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -92,11 +93,10 @@ $tableRowCount = static function (string $tableName) use ($tableExists, $wpdb): 
 	return is_numeric($count) ? (int) $count : 0;
 };
 
-$vmsPluginBase = 'vms/vendor-management-system.php';
-$vmsActive = is_plugin_active($vmsPluginBase);
-
 $activePlugins = array_values(array_map('strval', (array) get_option('active_plugins', array())));
 sort($activePlugins, SORT_STRING);
+$vmsPluginBase = VMS_Release_Compatibility_Tooling::resolveInstalledPluginBasename($activePlugins, WP_PLUGIN_DIR);
+$vmsActive = $vmsPluginBase !== '' ? is_plugin_active($vmsPluginBase) : false;
 
 $vmsOptionRows = $wpdb->get_results(
 	$wpdb->prepare(
@@ -369,9 +369,9 @@ if (!empty($fixture)) {
 
 $pluginVersion = defined('VMS_VERSION') ? (string) VMS_VERSION : '';
 $buildVersion = '';
-$pluginFile = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'vms' . DIRECTORY_SEPARATOR . 'vms-build.txt';
-if (is_file($pluginFile)) {
-	$buildVersion = trim((string) file_get_contents($pluginFile));
+$pluginBuildFile = VMS_Release_Compatibility_Tooling::buildVersionPathForPluginBasename(WP_PLUGIN_DIR, $vmsPluginBase);
+if ($pluginBuildFile !== '' && is_file($pluginBuildFile)) {
+	$buildVersion = trim((string) file_get_contents($pluginBuildFile));
 }
 
 $report = array(
@@ -387,6 +387,8 @@ $report = array(
 	'plugin' => array(
 		'active' => $vmsActive,
 		'active_plugins' => $activePlugins,
+		'basename' => $vmsPluginBase,
+		'recognized_basenames' => VMS_Release_Compatibility_Tooling::recognizedPluginBasenames(),
 		'version' => $pluginVersion,
 		'build_version' => $buildVersion,
 		'vms_loaded' => did_action('vms_loaded') > 0,
