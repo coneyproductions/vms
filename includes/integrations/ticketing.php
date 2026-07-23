@@ -72,6 +72,45 @@ function vms_ticketing_ajax_send_error(array $data = array(), int $http_status =
     wp_send_json_error($data, $http_status);
 }
 
+function vms_ticketing_ajax_discard_owned_buffer(): void
+{
+    if (empty($GLOBALS['vms_ajax_ob_started'])) {
+        return;
+    }
+
+    if (ob_get_level() > 0) {
+        @ob_end_clean();
+    }
+
+    $GLOBALS['vms_ajax_ob_started'] = false;
+}
+
+function vms_ticketing_v2_ajax_send_success($data = null, ?int $status_code = null, int $flags = 0): void
+{
+    vms_ticketing_ajax_discard_owned_buffer();
+
+    if (func_num_args() < 2) {
+        wp_send_json_success($data);
+    } elseif (func_num_args() < 3) {
+        wp_send_json_success($data, $status_code);
+    } else {
+        wp_send_json_success($data, $status_code, $flags);
+    }
+}
+
+function vms_ticketing_v2_ajax_send_error($data = null, ?int $status_code = null, int $flags = 0): void
+{
+    vms_ticketing_ajax_discard_owned_buffer();
+
+    if (func_num_args() < 2) {
+        wp_send_json_error($data);
+    } elseif (func_num_args() < 3) {
+        wp_send_json_error($data, $status_code);
+    } else {
+        wp_send_json_error($data, $status_code, $flags);
+    }
+}
+
 function vms_ticketing_is_tec_active(): bool
 {
     return post_type_exists('tribe_events');

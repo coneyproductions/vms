@@ -191,6 +191,20 @@ function vms_test_find_direct_json_calls(string $functionBody): array
 	return $calls;
 }
 
+/**
+ * @return array<int,string>
+ */
+function vms_test_find_v2_wrapper_calls(string $functionBody): array
+{
+	if (!preg_match_all('/\b(vms_ticketing_v2_ajax_send_(success|error))\s*\(/', $functionBody, $matches)) {
+		return array();
+	}
+
+	$calls = array_values(array_unique(array_map('strval', (array) ($matches[1] ?? array()))));
+	sort($calls);
+	return $calls;
+}
+
 function vms_test_find_ob_start_callback(string $functionBody): ?string
 {
 	if (!preg_match('/\bob_start\(\s*[\'"]([^\'"]+)[\'"]\s*\)/', $functionBody, $matches)) {
@@ -236,6 +250,9 @@ try {
 	$legacyAttachBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_attach_noise');
 	$legacySuccessBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_send_success');
 	$legacyErrorBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_send_error');
+	$v2DiscardBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_discard_owned_buffer');
+	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_success');
+	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_error');
 
 	vms_test_assert_contains("!empty(\$GLOBALS['vms_ajax_ob_started'])", $legacyAttachBody, 'Legacy cleanup helper should still consult the shared AJAX buffer ownership flag.');
 	vms_test_assert_contains('ob_get_contents()', $legacyAttachBody, 'Legacy cleanup helper should still read buffered AJAX noise before closing.');
@@ -245,19 +262,35 @@ try {
 	vms_test_assert_contains('wp_send_json_success($data, $http_status)', $legacySuccessBody, 'Legacy success wrapper should still send JSON through wp_send_json_success().');
 	vms_test_assert_contains('vms_ticketing_ajax_attach_noise($data)', $legacyErrorBody, 'Legacy error wrapper should still route through the cleanup helper.');
 	vms_test_assert_contains('wp_send_json_error($data, $http_status)', $legacyErrorBody, 'Legacy error wrapper should still send JSON through wp_send_json_error().');
+	vms_test_assert_contains("empty(\$GLOBALS['vms_ajax_ob_started'])", $v2DiscardBody, 'The V2 cleanup-only helper should still guard on the shared AJAX buffer ownership flag.');
+	vms_test_assert_contains('ob_get_level() > 0', $v2DiscardBody, 'The V2 cleanup-only helper should still only close a current buffer when one exists.');
+	vms_test_assert_contains('@ob_end_clean();', $v2DiscardBody, 'The V2 cleanup-only helper should still suppress compatibility-level close warnings.');
+	vms_test_assert_contains("\$GLOBALS['vms_ajax_ob_started'] = false;", $v2DiscardBody, 'The V2 cleanup-only helper should still clear AJAX buffer ownership after cleanup.');
+	vms_test_assert_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still invoke the cleanup-only helper.');
+	vms_test_assert_contains('wp_send_json_success(', $v2SuccessWrapperBody, 'The V2 success wrapper should still delegate to wp_send_json_success().');
+	vms_test_assert_true(
+		strpos($v2SuccessWrapperBody, 'vms_ticketing_ajax_discard_owned_buffer();') < strpos($v2SuccessWrapperBody, 'wp_send_json_success('),
+		'The V2 success wrapper should still clean up the owned buffer before delegating to WordPress JSON output.'
+	);
+	vms_test_assert_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still invoke the cleanup-only helper.');
+	vms_test_assert_contains('wp_send_json_error(', $v2ErrorWrapperBody, 'The V2 error wrapper should still delegate to wp_send_json_error().');
+	vms_test_assert_true(
+		strpos($v2ErrorWrapperBody, 'vms_ticketing_ajax_discard_owned_buffer();') < strpos($v2ErrorWrapperBody, 'wp_send_json_error('),
+		'The V2 error wrapper should still clean up the owned buffer before delegating to WordPress JSON output.'
+	);
 
 	$v2AjaxExpectations = array(
 		'vms_ticketing_v2_ajax_silent_add' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_v2_silent_add', 'wp_ajax_vms_ticketing_v2_silent_add'),
-			'direct_calls' => array('wp_send_json_error', 'wp_send_json_success'),
+			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
 		),
 		'vms_ticketing_v2_ajax_atomic_add_to_cart' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_v2_atomic_add_to_cart', 'wp_ajax_vms_ticketing_v2_atomic_add_to_cart'),
-			'direct_calls' => array('wp_send_json_error', 'wp_send_json_success'),
+			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
 		),
 		'vms_ticketing_v2_ajax_cart_context' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_v2_cart_context', 'wp_ajax_vms_ticketing_v2_cart_context'),
-			'direct_calls' => array('wp_send_json_error', 'wp_send_json_success'),
+			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
 		),
 	);
 
@@ -266,8 +299,11 @@ try {
 		$hooks = vms_test_find_action_hooks_for_callback($v2Source, $callback);
 		vms_test_assert_same($expectation['hooks'], $hooks, $callback . ' should retain its exact AJAX action registrations.');
 
+		$wrapperCalls = vms_test_find_v2_wrapper_calls($body);
+		vms_test_assert_same($expectation['wrapper_calls'], $wrapperCalls, $callback . ' should retain V2 wrapper-owned JSON termination.');
+
 		$directCalls = vms_test_find_direct_json_calls($body);
-		vms_test_assert_same($expectation['direct_calls'], $directCalls, $callback . ' should retain its direct wp_send_json_* response ownership.');
+		vms_test_assert_same(array(), $directCalls, $callback . ' should no longer terminate through direct wp_send_json_* calls.');
 
 		vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
 		vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');

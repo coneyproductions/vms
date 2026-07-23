@@ -8929,7 +8929,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
 
     $request_payload = vms_ticketing_v2_read_json_request_payload(65536);
     if (empty($request_payload['ok'])) {
-        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     $data = $request_payload['present'] ? $request_payload['payload'] : null;
@@ -8937,7 +8937,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         $data = $_POST;
     }
     if (!is_array($data) || !vms_ticketing_v2_validate_atomic_add_payload($data)) {
-        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     $nonce = '';
@@ -8947,7 +8947,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ticketing_v2_atomic_add_to_cart')) {
-        wp_send_json_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
     $tec_event_id = absint($data['tec_event_id'] ?? ($data['tecEventId'] ?? 0));
@@ -8985,7 +8985,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         }
     }
     if (!$has_ticket_lines && !$has_addon_lines) {
-        wp_send_json_error(array('ok' => false, 'message' => 'empty_selection'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'empty_selection'), 400);
     }
 
     if ($event_plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
@@ -8998,7 +8998,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
 
     $wc = WC();
     if (!$wc || !isset($wc->cart) || !$wc->cart) {
-        wp_send_json_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
     }
 
     if (function_exists('wc_clear_notices')) {
@@ -9009,7 +9009,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
     if ($event_plan_id > 0 || $tec_event_id > 0) {
         $event_validation = vms_ticketing_v2_validate_product_sale_context(0, $event_plan_id, $tec_event_id, 'ga_ticket');
         if (empty($event_validation['ok'])) {
-            wp_send_json_error(array(
+            vms_ticketing_v2_ajax_send_error(array(
                 'ok' => false,
                 'message' => sanitize_text_field((string) ($event_validation['code'] ?? 'event_unavailable')),
                 'notice_message' => sanitize_text_field((string) ($event_validation['message'] ?? '')),
@@ -9286,7 +9286,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         if (function_exists('wc_clear_notices')) {
             wc_clear_notices();
         }
-        wp_send_json_error(array(
+        vms_ticketing_v2_ajax_send_error(array(
             'ok' => false,
             'message' => $message,
             'errors' => $errors,
@@ -9300,7 +9300,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         wc_clear_notices();
     }
 
-    wp_send_json_success(array(
+    vms_ticketing_v2_ajax_send_success(array(
         'ok' => true,
         'cart_url' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
         'added_tickets' => $added_tickets,
@@ -9323,7 +9323,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
 
     $request_payload = vms_ticketing_v2_read_json_request_payload(65536);
     if (empty($request_payload['ok'])) {
-        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     $data = $request_payload['present'] ? $request_payload['payload'] : null;
@@ -9331,7 +9331,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
         $data = $_POST;
     }
     if (!is_array($data) || !vms_ticketing_v2_validate_silent_add_payload($data)) {
-        wp_send_json_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     // Nonce may arrive via query string, form POST, or JSON payload.
@@ -9344,7 +9344,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
 
     // If a nonce is provided, validate it. (We don’t hard-require one to avoid caching edge cases.)
     if ($nonce !== '' && !wp_verify_nonce($nonce, 'vms_ticketing_v2_silent_add')) {
-        wp_send_json_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
     $tec_event_id = absint($data['tec_event_id'] ?? 0);
@@ -9353,7 +9353,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
     $items = $data['items'] ?? array();
 
     if (!is_array($items) || empty($items)) {
-        wp_send_json_success(array('ok' => true, 'added' => 0));
+        vms_ticketing_v2_ajax_send_success(array('ok' => true, 'added' => 0));
     }
 
     if (function_exists('wc_load_cart')) {
@@ -9362,7 +9362,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
 
     $wc = WC();
     if (!$wc || !isset($wc->cart) || !$wc->cart) {
-        wp_send_json_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
     }
 
     // Clear stale success notices but keep validation/error notices intact.
@@ -9385,7 +9385,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
                 vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
             }
             vms_ticketing_v2_clear_success_notices();
-            wp_send_json_error(array(
+            vms_ticketing_v2_ajax_send_error(array(
                 'ok' => false,
                 'message' => sanitize_text_field((string) ($event_validation['code'] ?? 'event_unavailable')),
                 'notice_message' => sanitize_text_field((string) ($event_validation['message'] ?? '')),
@@ -9401,7 +9401,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
             vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
         }
         vms_ticketing_v2_clear_success_notices();
-        wp_send_json_error(array('ok' => false, 'message' => 'ticketing_disabled'), 403);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'ticketing_disabled'), 403);
     }
 
     $added = 0;
@@ -9450,7 +9450,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
             vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
         }
         vms_ticketing_v2_clear_success_notices();
-        wp_send_json_error(array('ok' => false, 'message' => 'add_failed', 'errors' => $errors), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'add_failed', 'errors' => $errors), 400);
     }
 
     $wc->cart->calculate_totals();
@@ -9461,7 +9461,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
         vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
     }
 
-    wp_send_json_success(array('ok' => true, 'added' => $added));
+    vms_ticketing_v2_ajax_send_success(array('ok' => true, 'added' => $added));
 }
 
 /**
@@ -9483,7 +9483,7 @@ function vms_ticketing_v2_ajax_cart_context(): void
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
     if ($nonce !== '' && !wp_verify_nonce($nonce, 'vms_ticketing_v2_cart_context')) {
-        wp_send_json_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
     if ($plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
@@ -9496,7 +9496,7 @@ function vms_ticketing_v2_ajax_cart_context(): void
 
     $wc = WC();
     if (!$wc || !isset($wc->cart) || !$wc->cart) {
-        wp_send_json_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
+        vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
     }
 
     $scan = vms_ticketing_v2_cart_scan();
@@ -9525,7 +9525,7 @@ function vms_ticketing_v2_ajax_cart_context(): void
         ? vms_ticketing_v2_capture_checkout_blocker_error_messages()
         : array();
 
-    wp_send_json_success(array(
+    vms_ticketing_v2_ajax_send_success(array(
         'ok' => true,
         'event_plan_id' => $plan_id,
         'tec_event_id' => $tec_event_id,
