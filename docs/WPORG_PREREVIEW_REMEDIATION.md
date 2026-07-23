@@ -2418,7 +2418,64 @@ Date: 2026-07-11
 ### Residual Risk
 
 - This batch intentionally does not change upload transport/MIME architecture from `WPORG-20B`.
-- Remaining `json_decode()` sites are either test/build tooling, static/internal compatibility state, encrypted internal payloads, or trusted first-party data paths where no current user-controlled or externally controlled boundary was identified in this audit.
+- The residual raw `json_decode()` inventory outside these shared validators is now reconciled separately under the `WPORG-20C-R` closeout below; this `WPORG-20C` result remains limited to the shared validator and direct request/import/runtime boundaries introduced here.
+
+## WPORG-20C-R Result
+
+Date: 2026-07-23
+
+### Summary
+
+- Result: `PASS`
+- Status: `verified`
+- Scope completed: documentation-only terminal closeout of residual decoded-JSON parent `WPORG-20C-R` in `docs/wporg-remediation-ledger.md` and `docs/WPORG_PREREVIEW_REMEDIATION.md` only; no runtime PHP, JavaScript, tests, live-tree files, packaging files, or protected-stash state changed in this closeout.
+- Relevant child commits:
+  - `41ff8b9fdb0bf719172ecb59d75f7bd84bcdd937` `Normalize Ticketing Rules stored claim-assignment reads`
+  - `93f0b32746c9b2c897e73a4e290bd868b952568b` `Guard Social queue snapshot account selection`
+  - `7f92ae2985ca9ec0d9259c2cfdd04cedeeb5e965` `Guard Staff Tasks stored signature JSON`
+  - `a452d088cfaf251bbffb4c24beb7917d8aaa2292` `Guard Staff Tasks checklist overrides JSON`
+  - `c2040655b409f7027791358e4451ff517aa00834` `Characterize Event Plan Review JSON boundaries`
+  - `42189c9f91b9269403adc1cd55cad1ed5b488014` `Guard Event Plan Review stored JSON state`
+  - `0a5c74fccc6339635f0887cf8b67b758a33739c8` `Characterize Tours stored user-state JSON fallbacks`
+- Retained packaged evidence: the clean public-package build and packaged Plugin Check reruns recorded on `2026-07-22` under `WPORG-20A-S` remain adequate for this parent; no fresh packaged scan was required in this closeout.
+
+### Protected Behavior
+
+- Ticketing Rules stored claim-assignment reads:
+  - `tests/decoded-json-validation.php` proves `vms_ticketing_v2_decode_stored_claim_assignment_rows()` accepts only JSON lists for stored rows, rejects object/scalar/malformed/UTF-8/depth failures, preserves the direct PHP-array branch, preserves the legacy seat-meta assignee fallback, and keeps the mirror/live helper contract synchronized where required.
+- Social queue snapshot account selection:
+  - `tests/social-share-queue-snapshot-json-remediation.php` proves invalid snapshots and invalid queued accounts fail before account/provider routing, perform zero provider or venue-map lookups, do not publish or mutate auth state, and still preserve exactly one provider lookup on the valid queued and rendered-preview paths.
+- Staff Tasks stored signature JSON:
+  - `tests/staff-tasks-signature-json-remediation.php` proves missing, valid, and invalid stored signature states remain distinct, malformed/list/scalar/null/schema/UTF-8/depth failures all fail closed, and sequential reads do not leak prior valid state.
+- Staff Tasks checklist overrides JSON:
+  - `tests/staff-tasks-overrides-json-remediation.php` proves invalid rows are skipped before seen-marking, duplicate suppression, or mutation, invalid rows do not consume duplicate slots, later valid duplicate-template rows remain eligible, and missing overrides still preserve template defaults.
+- Event Plan Review snapshot and changes JSON:
+  - `tests/event-plan-review-json-characterization.php` proves invalid baselines cannot clear, overwrite, or fabricate stored review state, invalid derived changes stay review-visible through the existing integrity warning path, and valid baselines still repair or clear stale invalid derived changes canonically.
+- Tours stored user-state compatibility readers:
+  - `tests/tours-user-state-json-characterization.php` proves the JSON, PHP-array, current, and legacy fallbacks remain compatibility readers only, malformed state can re-show tours or lose completion/progress visibility only, and the only accepted residual artifact is an optional malformed nested value stringifying as `Array` in an admin-only label.
+
+### Accepted Residual Raw Decodes
+
+- Intentional helper internals:
+  - `includes/runtime-guards.php`
+- Validated specialized decoders:
+  - `includes/social-share/queue-runner.php`
+  - `includes/integrations/ticketing-rules-v2.php`
+  - `includes/modules/staff-tasks/generator.php`
+  - `includes/modules/staff-tasks/store.php`
+  - `includes/core/event-plan-review.php`
+- Accepted low-risk raw decodes:
+  - `includes/social-share/crypto.php`: plugin-authored encrypted payloads, fail-closed
+  - `includes/social-share/queue-repo.php`: plugin-authored `meta_json`, annotation-only, no secrets, authorization, provider-selection, or routing dependency
+  - `includes/integrations/ticketing-claims-framework.php`: admin log/source context only, no ownership, authorization, financial, or ticket mutation
+  - `includes/core/staffing.php`: computed admin summary payloads; malformed fallback loses summary display only
+  - `includes/tours/class-vms-tours-storage.php`
+  - `includes/core/tours/class-vms-tours.php`
+  - Tours malformed state can re-show tours or lose completion/progress visibility only, has no privileged mutation or external side effect, and the optional malformed nested-value admin-label cleanup is not a release blocker.
+- No-action diagnostic or remote-error decodes:
+  - `includes/ticketing/ticket-inventory-forensics.php`
+  - `includes/integrations/square-ticket-mirror.php`
+- Final residual disposition: no unsafe residual direct `json_decode()` consumer remains in the mirror parent boundary, no runtime child remains open, and this closeout does not claim any new live-only decode remediation, push, submission, or packaging rerun.
 
 ## WPORG-21 Result
 
@@ -2456,12 +2513,12 @@ Date: 2026-07-11
 - The formal documentation-only parent closeout below now marks `WPORG-22R` terminally `verified`; no further known runtime implementation child or parent follow-up remains.
 - `WPORG-23` is now completed by the admin-notice scope remediation recorded below.
 - `WPORG-24` is now closed by the accepted child inventory plus documentation-only `WPORG-24R`.
+- The documentation-only `WPORG-20C-R` closeout above now marks the decoded-JSON residual parent terminally `verified`; no further runtime child remains under that parent.
 - `WPORG-21` was not reopened in this corrective pass.
 
 The next actual incomplete batch order is now:
 
-1. `WPORG-20C-R`
-2. `WPORG-25`
+1. `WPORG-25`
 
 ## WPORG-20A-S Result
 
