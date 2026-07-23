@@ -8,6 +8,7 @@ chdir(dirname(__DIR__));
 const VMS_TEST_PLAN_ID = 123;
 const VMS_TEST_CURRENT_USER_ID = 7;
 const VMS_TEST_CURRENT_TIME = '2026-07-23 14:15:16';
+const VMS_TEST_SNAPSHOT_AT = '2026-07-21 08:09:10';
 const VMS_TEST_CHANGES_AT = '2026-07-22 10:00:00';
 const VMS_TEST_POST_MODIFIED_GMT = '2026-07-22 09:00:00';
 
@@ -288,10 +289,46 @@ function vms_test_assert_same($expected, $actual, string $message): void
 	}
 }
 
+function vms_test_array_is_list(array $value): bool
+{
+	$index = 0;
+	foreach (array_keys($value) as $key) {
+		if ($key !== $index) {
+			return false;
+		}
+		$index++;
+	}
+
+	return true;
+}
+
+function vms_test_canonicalize($value)
+{
+	if (!is_array($value)) {
+		return $value;
+	}
+
+	if (vms_test_array_is_list($value)) {
+		$normalized = array();
+		foreach ($value as $item) {
+			$normalized[] = vms_test_canonicalize($item);
+		}
+		return $normalized;
+	}
+
+	$normalized = array();
+	foreach ($value as $key => $item) {
+		$normalized[$key] = vms_test_canonicalize($item);
+	}
+	ksort($normalized);
+
+	return $normalized;
+}
+
 function vms_test_assert_json_equivalent($expected, $actual, string $message): void
 {
-	$expected_json = wp_json_encode($expected);
-	$actual_json = wp_json_encode($actual);
+	$expected_json = wp_json_encode(vms_test_canonicalize($expected));
+	$actual_json = wp_json_encode(vms_test_canonicalize($actual));
 	vms_test_assert_same($expected_json, $actual_json, $message);
 }
 
@@ -305,9 +342,14 @@ function vms_test_assert_not_contains(string $needle, string $haystack, string $
 	vms_test_assert_true(strpos($haystack, $needle) === false, $message);
 }
 
+function vms_test_assert_no_warnings(array $captured, string $message): void
+{
+	vms_test_assert_same(array(), (array) ($captured['warnings'] ?? array()), $message);
+}
+
 function vms_test_extract_function(string $source, string $name): string
 {
-	$needle = 'function ' . $name;
+	$needle = 'function ' . $name . '(';
 	$start = strpos($source, $needle);
 	if ($start === false) {
 		throw new RuntimeException('Unable to locate function ' . $name . '.');
@@ -655,77 +697,56 @@ function vms_test_command_center_inputs(): array
 	);
 }
 
-function vms_test_run_snapshot_case(array $config, string $existing_changes_json): array
+function vms_test_seed_snapshot_state($raw, bool $set_raw, bool $set_markers): void
 {
-	vms_test_reset_environment();
-	vms_test_apply_state(vms_test_current_state());
+	if ($set_raw) {
+		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_json'] = $raw;
+	}
 
-	if (!empty($config['seed_existing_changes'])) {
-		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_json'] = $existing_changes_json;
+	if ($set_markers) {
+		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_at'] = VMS_TEST_SNAPSHOT_AT;
+		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_by'] = VMS_TEST_CURRENT_USER_ID;
+	}
+}
+
+function vms_test_seed_changes_state($raw, bool $set_raw, bool $set_markers, string $source = 'event_plan_editor'): void
+{
+	if ($set_raw) {
+		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_json'] = $raw;
+	}
+
+	if ($set_markers) {
 		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_at'] = VMS_TEST_CHANGES_AT;
 		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_by'] = VMS_TEST_CURRENT_USER_ID;
-		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_source'] = 'event_plan_editor';
+		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_source'] = $source;
 	}
+}
 
-	if (!empty($config['set_snapshot_meta'])) {
-		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_json'] = $config['raw'];
-	}
-
-	$get_snapshot = vms_test_capture(
+function vms_test_read_review_surfaces(): array
+{
+	$snapshot_state = vms_test_capture(
+		static function () {
+			return vms_event_plan_review_get_snapshot_state(VMS_TEST_PLAN_ID);
+		}
+	);
+	$snapshot = vms_test_capture(
 		static function () {
 			return vms_event_plan_review_get_snapshot(VMS_TEST_PLAN_ID);
 		}
 	);
-	$touch = vms_test_capture(
+	$changes_state = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_touch(VMS_TEST_PLAN_ID, 'event_plan_editor', VMS_TEST_CURRENT_USER_ID);
+			return vms_event_plan_review_get_changes_state(VMS_TEST_PLAN_ID);
 		}
 	);
-
-	$remaining_changes_json = vms_test_meta_value('_vms_unpublished_changes_json');
-	$remaining_changes_at = vms_test_meta_value('_vms_unpublished_changes_at');
-	$remaining_changes_by = vms_test_meta_value('_vms_unpublished_changes_by');
-	$remaining_changes_source = vms_test_meta_value('_vms_unpublished_changes_source');
-
-	$outcome = 'preserved';
-	if (vms_test_count_updates('_vms_unpublished_changes_json') > 0) {
-		$outcome = !empty($config['expected_fabricated']) ? 'fabricated' : 'computed';
-	} elseif ($remaining_changes_json === null) {
-		$outcome = !empty($config['seed_existing_changes']) ? 'cleared' : 'no_baseline';
-	}
-
-	return array(
-		'get_snapshot' => $get_snapshot,
-		'touch' => $touch,
-		'clear_calls' => vms_test_count_deletes('_vms_unpublished_changes_json'),
-		'changes_writes' => vms_test_count_updates('_vms_unpublished_changes_json'),
-		'snapshot_writes' => vms_test_count_updates('_vms_published_snapshot_json'),
-		'remaining_changes_json' => $remaining_changes_json,
-		'remaining_changes_at' => $remaining_changes_at,
-		'remaining_changes_by' => $remaining_changes_by,
-		'remaining_changes_source' => $remaining_changes_source,
-		'outcome' => $outcome,
-	);
-}
-
-function vms_test_run_changes_case(array $config, string $valid_snapshot_json): array
-{
-	vms_test_reset_environment();
-	vms_test_apply_state(vms_test_current_state());
-	$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_json'] = $valid_snapshot_json;
-
-	if (!empty($config['set_changes_meta'])) {
-		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_json'] = $config['raw'];
-	}
-	if (!empty($config['set_aux_meta'])) {
-		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_at'] = VMS_TEST_CHANGES_AT;
-		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_by'] = VMS_TEST_CURRENT_USER_ID;
-		$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_source'] = (string) ($config['source'] ?? 'event_plan_editor');
-	}
-
-	$get_changes = vms_test_capture(
+	$changes = vms_test_capture(
 		static function () {
 			return vms_event_plan_review_get_changes(VMS_TEST_PLAN_ID);
+		}
+	);
+	$integrity = vms_test_capture(
+		static function () {
+			return vms_event_plan_review_get_integrity_issue(VMS_TEST_PLAN_ID);
 		}
 	);
 	$has_changes = vms_test_capture(
@@ -774,7 +795,11 @@ function vms_test_run_changes_case(array $config, string $valid_snapshot_json): 
 	);
 
 	return array(
-		'get_changes' => $get_changes,
+		'snapshot_state' => $snapshot_state,
+		'snapshot' => $snapshot,
+		'changes_state' => $changes_state,
+		'changes' => $changes,
+		'integrity' => $integrity,
 		'has_changes' => $has_changes,
 		'banner' => $banner,
 		'status_note' => $status_note,
@@ -784,6 +809,104 @@ function vms_test_run_changes_case(array $config, string $valid_snapshot_json): 
 		'generic_activity_visible' => vms_test_generic_activity_visible((array) $activity['result']),
 		'specific_review_alert_visible' => vms_test_specific_review_alert_visible((array) $alerts['result']),
 	);
+}
+
+function vms_test_run_read_case(array $config): array
+{
+	vms_test_reset_environment();
+	vms_test_apply_state((array) ($config['applied_state'] ?? vms_test_current_state()));
+	vms_test_seed_snapshot_state($config['snapshot_raw'] ?? null, !empty($config['set_snapshot_meta']), !empty($config['set_snapshot_markers']));
+	vms_test_seed_changes_state(
+		$config['changes_raw'] ?? null,
+		!empty($config['set_changes_meta']),
+		!empty($config['set_changes_markers']),
+		(string) ($config['changes_source'] ?? 'event_plan_editor')
+	);
+
+	$result = vms_test_read_review_surfaces();
+	$result['changes_writes'] = vms_test_count_updates('_vms_unpublished_changes_json');
+	$result['snapshot_writes'] = vms_test_count_updates('_vms_published_snapshot_json');
+	$result['changes_clears'] = vms_test_count_deletes('_vms_unpublished_changes_json');
+	$result['remaining_changes_json'] = vms_test_meta_value('_vms_unpublished_changes_json');
+	$result['remaining_snapshot_json'] = vms_test_meta_value('_vms_published_snapshot_json');
+
+	return $result;
+}
+
+function vms_test_run_touch_case(array $config): array
+{
+	vms_test_reset_environment();
+	vms_test_apply_state((array) ($config['applied_state'] ?? vms_test_current_state()));
+	vms_test_seed_snapshot_state($config['snapshot_raw'] ?? null, !empty($config['set_snapshot_meta']), !empty($config['set_snapshot_markers']));
+	vms_test_seed_changes_state(
+		$config['changes_raw'] ?? null,
+		!empty($config['set_changes_meta']),
+		!empty($config['set_changes_markers']),
+		(string) ($config['changes_source'] ?? 'event_plan_editor')
+	);
+
+	$touch = vms_test_capture(
+		static function () {
+			return vms_event_plan_review_touch(VMS_TEST_PLAN_ID, 'event_plan_editor', VMS_TEST_CURRENT_USER_ID);
+		}
+	);
+
+	$result = vms_test_read_review_surfaces();
+	$result['touch'] = $touch;
+	$result['changes_writes'] = vms_test_count_updates('_vms_unpublished_changes_json');
+	$result['snapshot_writes'] = vms_test_count_updates('_vms_published_snapshot_json');
+	$result['changes_clears'] = vms_test_count_deletes('_vms_unpublished_changes_json');
+	$result['snapshot_clears'] = vms_test_count_deletes('_vms_published_snapshot_json');
+	$result['remaining_changes_json'] = vms_test_meta_value('_vms_unpublished_changes_json');
+	$result['remaining_changes_at'] = vms_test_meta_value('_vms_unpublished_changes_at');
+	$result['remaining_changes_by'] = vms_test_meta_value('_vms_unpublished_changes_by');
+	$result['remaining_changes_source'] = vms_test_meta_value('_vms_unpublished_changes_source');
+	$result['remaining_snapshot_json'] = vms_test_meta_value('_vms_published_snapshot_json');
+	$result['remaining_snapshot_at'] = vms_test_meta_value('_vms_published_snapshot_at');
+	$result['remaining_snapshot_by'] = vms_test_meta_value('_vms_published_snapshot_by');
+
+	return $result;
+}
+
+function vms_test_build_duplicate_snapshot_json(): string
+{
+	$lineup_json = wp_json_encode(
+		array(
+			array(
+				'vendor_id' => 50,
+				'vendor_label' => 'Alpha Band',
+				'role' => 'primary',
+				'set_start' => '18:00',
+				'set_end' => '20:00',
+				'guaranteed_fee' => 500,
+				'sort_order' => 0,
+			),
+		)
+	);
+	$secondary_json = wp_json_encode(array(61, 62));
+	return '{"title":"Wrong","title":"Published Plan","event_date":"2026-08-01","start_time":"18:00","end_time":"21:00","venue_id":10,"status":"published","primary_vendor_id":50,"secondary_vendor_type":"food_truck","secondary_vendor_ids":' . $secondary_json . ',"lineup_rows":' . $lineup_json . '}';
+}
+
+function vms_test_build_large_valid_snapshot_json(array $snapshot): string
+{
+	$payload = $snapshot;
+	for ($i = 0; $i < 150; $i++) {
+		$payload['extra_snapshot_key_' . $i] = 'value_' . $i;
+	}
+
+	$json = wp_json_encode($payload);
+	return is_string($json) ? $json : '';
+}
+
+function vms_test_build_large_valid_changes_json(array $payload): string
+{
+	$large = $payload;
+	for ($i = 0; $i < 150; $i++) {
+		$large['extra_changes_key_' . $i] = 'value_' . $i;
+	}
+
+	$json = wp_json_encode($large);
+	return is_string($json) ? $json : '';
 }
 
 $mirror_review_path = getcwd() . '/includes/core/event-plan-review.php';
@@ -797,6 +920,10 @@ $live_review_source = (string) file_get_contents($live_review_path);
 $command_center_source = (string) file_get_contents($command_center_path);
 
 $current_snapshot_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_current_snapshot');
+$decode_snapshot_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_decode_snapshot_json');
+$decode_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_decode_changes_json');
+$get_snapshot_state_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_snapshot_state');
+$get_changes_state_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_changes_state');
 $get_snapshot_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_snapshot');
 $get_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_changes');
 $build_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_build_changes');
@@ -804,33 +931,44 @@ $clear_changes_body = vms_test_extract_function($mirror_review_source, 'vms_even
 $mark_published_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_mark_published');
 $touch_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_touch');
 $has_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_has_changes');
+$integrity_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_integrity_issue');
 $banner_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_render_banner');
 $status_note_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_render_status_note');
 $activity_body = vms_test_extract_function($command_center_source, 'vms_event_command_center_collect_activity');
 $alerts_body = vms_test_extract_function($command_center_source, 'vms_event_command_center_build_alerts');
 $health_body = vms_test_extract_function($command_center_source, 'vms_event_command_center_get_health');
 
-vms_test_assert_same(1, substr_count($get_snapshot_body, 'json_decode('), 'Snapshot reader should retain exactly one raw json_decode() call.');
-vms_test_assert_same(1, substr_count($get_changes_body, 'json_decode('), 'Changes reader should retain exactly one raw json_decode() call.');
+vms_test_assert_same(1, substr_count($decode_snapshot_body, 'json_decode('), 'Snapshot decoder should retain exactly one raw json_decode() call.');
+vms_test_assert_same(1, substr_count($decode_changes_body, 'json_decode('), 'Changes decoder should retain exactly one raw json_decode() call.');
 vms_test_assert_same(2, substr_count($mirror_review_source, 'json_decode('), 'Event Plan Review runtime should retain exactly two raw json_decode() calls.');
-vms_test_assert_true(strpos($mirror_review_source, 'vms_json_decode_associative(') === false, 'Event Plan Review should not yet delegate these fields to the shared JSON helper.');
-vms_test_assert_true(strpos($mirror_review_source, 'vms_event_plan_review_decode_snapshot') === false && strpos($mirror_review_source, 'vms_event_plan_review_decode_changes') === false, 'No dedicated review JSON decoder helper should exist yet.');
+vms_test_assert_true(strpos($get_snapshot_body, 'json_decode(') === false, 'Snapshot compatibility wrapper should no longer decode raw JSON directly.');
+vms_test_assert_true(strpos($get_changes_body, 'json_decode(') === false, 'Changes compatibility wrapper should no longer decode raw JSON directly.');
+vms_test_assert_true(strpos($mirror_review_source, 'vms_json_decode_associative(') === false, 'Event Plan Review should not delegate these fields to the shared JSON helper.');
+vms_test_assert_true(strpos($mirror_review_source, 'vms_event_plan_review_decode_snapshot_json') !== false && strpos($mirror_review_source, 'vms_event_plan_review_decode_changes_json') !== false, 'Specialized JSON decoders should exist.');
+vms_test_assert_true(strpos($mirror_review_source, 'vms_event_plan_review_get_snapshot_state') !== false && strpos($mirror_review_source, 'vms_event_plan_review_get_changes_state') !== false, 'State-aware post readers should exist.');
 vms_test_assert_contains("update_post_meta(\$plan_id, vms_event_plan_review_meta_key('snapshot_json'), wp_json_encode(\$snapshot));", $mark_published_body, 'Snapshot writer should remain wp_json_encode()-backed.');
 vms_test_assert_contains("update_post_meta(\$plan_id, vms_event_plan_review_meta_key('changes_json'), wp_json_encode(\$payload));", $touch_body, 'Changes writer should remain wp_json_encode()-backed.');
 vms_test_assert_contains("'snapshot_json' => '_vms_published_snapshot_json'", $mirror_review_source, 'Snapshot meta key should remain unchanged.');
 vms_test_assert_contains("'changes_json' => '_vms_unpublished_changes_json'", $mirror_review_source, 'Changes meta key should remain unchanged.');
 vms_test_assert_contains("'count' => count(\$changes)", $touch_body, 'Changes payload should still contain count.');
 vms_test_assert_contains("'changes' => \$changes", $touch_body, 'Changes payload should still contain changes.');
-$touch_snapshot_pos = strpos($touch_body, "vms_event_plan_review_get_snapshot(\$plan_id)");
-$touch_clear_pos = strpos($touch_body, "vms_event_plan_review_clear_changes(\$plan_id)");
-$touch_changes_write_pos = strpos($touch_body, "update_post_meta(\$plan_id, vms_event_plan_review_meta_key('changes_json'), wp_json_encode(\$payload));");
-vms_test_assert_true(is_int($touch_snapshot_pos) && is_int($touch_clear_pos) && is_int($touch_changes_write_pos) && $touch_snapshot_pos < $touch_clear_pos && $touch_snapshot_pos < $touch_changes_write_pos, 'touch() should read the snapshot before deciding whether to clear or write changes.');
+vms_test_assert_contains("vms_event_plan_review_get_snapshot_state(\$plan_id)", $touch_body, 'touch() should use snapshot state.');
+$touch_invalid_pos = strpos($touch_body, "if ('invalid' === (\$snapshot_state['state'] ?? ''))");
+$touch_write_pos = strpos($touch_body, "update_post_meta(\$plan_id, vms_event_plan_review_meta_key('changes_json'), wp_json_encode(\$payload));");
+vms_test_assert_true(is_int($touch_invalid_pos) && is_int($touch_write_pos) && $touch_invalid_pos < $touch_write_pos, 'Invalid snapshot branch should return before the changes write path.');
+$touch_user_id_pos = strpos($touch_body, 'if ($user_id <= 0)');
+$touch_invalid_slice = is_int($touch_invalid_pos) && is_int($touch_user_id_pos) && $touch_invalid_pos < $touch_user_id_pos ? substr($touch_body, $touch_invalid_pos, $touch_user_id_pos - $touch_invalid_pos) : '';
+vms_test_assert_contains("return 'valid' === (\$changes_state['state'] ?? '') ? (array) (\$changes_state['value'] ?? array()) : array();", $touch_invalid_slice, 'Invalid snapshot branch should preserve only stored valid changes.');
+vms_test_assert_not_contains("vms_event_plan_review_clear_changes(\$plan_id)", $touch_invalid_slice, 'Invalid snapshot branch should not clear changes.');
+vms_test_assert_contains("'invalid' === (\$snapshot_state['state'] ?? '')", $has_changes_body, 'has_changes() should consult invalid snapshot state.');
+vms_test_assert_contains("'invalid' === (\$changes_state['state'] ?? '')", $has_changes_body, 'has_changes() should consult invalid changes state.');
 vms_test_assert_contains("vms_event_plan_review_get_changes(\$plan_id)", $activity_body, 'Command Center activity should still read changes through the review helper.');
 vms_test_assert_contains("vms_event_plan_review_has_changes(\$plan_id)", $alerts_body, 'Command Center alerts should still consult has_changes() through the review helper.');
+vms_test_assert_true(strpos($mirror_review_source, 'snapshot_version') === false && strpos($mirror_review_source, 'changes_version') === false, 'No migration or version marker should be added.');
 vms_test_assert_same(hash_file('sha256', $mirror_review_path), hash_file('sha256', $live_review_path), 'Mirror and live Event Plan Review files should remain byte-identical.');
 vms_test_assert_true($mirror_review_source === $live_review_source, 'Mirror and live Event Plan Review sources should remain identical.');
-$runtime_diffs = trim((string) shell_exec("git diff --name-only -- includes/core/event-plan-review.php includes/admin/event-command-center.php"));
-vms_test_assert_same('', $runtime_diffs, 'No runtime file changes should be part of this characterization slice.');
+$command_center_diffs = trim((string) shell_exec("git diff --name-only -- includes/admin/event-command-center.php"));
+vms_test_assert_same('', $command_center_diffs, 'Event Command Center should remain unchanged in this slice.');
 
 require $mirror_review_path;
 eval($activity_body);
@@ -850,195 +988,472 @@ $valid_changes_payload = array(
 	'changes' => $computed_changes,
 );
 $valid_changes_json = (string) wp_json_encode($valid_changes_payload);
-vms_test_assert_true($valid_changes_json !== '', 'Valid changes payload should JSON-encode successfully.');
+$valid_zero_changes_payload = array(
+	'count' => 0,
+	'changes' => array(),
+);
+$valid_zero_changes_json = (string) wp_json_encode($valid_zero_changes_payload);
+vms_test_assert_true($valid_changes_json !== '' && $valid_zero_changes_json !== '', 'Valid changes fixtures should JSON-encode successfully.');
 
-$snapshot_cases = array(
-	'first_publish_no_meta' => array(
-		'label' => 'no meta key / first publish state',
+$duplicate_snapshot_json = vms_test_build_duplicate_snapshot_json();
+$large_valid_snapshot_json = vms_test_build_large_valid_snapshot_json($published_snapshot);
+$large_valid_changes_json = vms_test_build_large_valid_changes_json($valid_changes_payload);
+$changes_with_unknown_keys_json = (string) wp_json_encode(
+	array(
+		'count' => 999,
+		'changes' => $computed_changes,
+		'ignored_top_level' => 'ok',
+	)
+);
+$duplicate_count_changes_json = '{"count":99,"count":1,"changes":[{"field":"status","label":"Plan status","before":"published","after":"draft","before_label":"Published","after_label":"Draft","summary":"Plan status changed from Published to Draft"}]}';
+$invalid_snapshot_message = vms_event_plan_review_integrity_message();
+
+$snapshot_state_cases = array(
+	'true_no_baseline' => array(
 		'set_snapshot_meta' => false,
-		'seed_existing_changes' => false,
+		'set_snapshot_markers' => false,
+		'expected_state' => 'missing',
 	),
-	'db_null' => array(
-		'label' => 'DB NULL',
+	'blank_without_marker' => array(
 		'set_snapshot_meta' => true,
-		'raw' => null,
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '',
+		'set_snapshot_markers' => false,
+		'expected_state' => 'missing',
 	),
-	'empty_string' => array(
-		'label' => 'empty string',
+	'blank_with_marker' => array(
 		'set_snapshot_meta' => true,
-		'raw' => '',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
-	'whitespace_only' => array(
-		'label' => 'whitespace-only string',
+	'valid_expected_object' => array(
 		'set_snapshot_meta' => true,
-		'raw' => " \n\t ",
-		'seed_existing_changes' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'expected_state' => 'valid',
 	),
-	'valid_expected_snapshot' => array(
-		'label' => 'valid expected snapshot object',
+	'empty_object' => array(
 		'set_snapshot_meta' => true,
-		'raw' => $published_snapshot_json,
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '{}',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
-	'valid_empty_object' => array(
-		'label' => 'valid empty object',
+	'list' => array(
 		'set_snapshot_meta' => true,
-		'raw' => '{}',
-		'seed_existing_changes' => true,
-	),
-	'valid_list' => array(
-		'label' => 'valid list',
-		'set_snapshot_meta' => true,
-		'raw' => '[1]',
-		'seed_existing_changes' => true,
-		'expected_fabricated' => true,
+		'snapshot_raw' => '[1]',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'empty_list' => array(
-		'label' => 'empty list',
 		'set_snapshot_meta' => true,
-		'raw' => '[]',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '[]',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
-	'numeric_key_object' => array(
-		'label' => 'numeric-key object',
+	'scalar' => array(
 		'set_snapshot_meta' => true,
-		'raw' => '{"0":"x"}',
-		'seed_existing_changes' => true,
-		'expected_fabricated' => true,
-	),
-	'scalar_string' => array(
-		'label' => 'scalar string',
-		'set_snapshot_meta' => true,
-		'raw' => '"hello"',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '"hello"',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'number' => array(
-		'label' => 'number',
 		'set_snapshot_meta' => true,
-		'raw' => '123',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '123',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'true' => array(
-		'label' => 'true',
 		'set_snapshot_meta' => true,
-		'raw' => 'true',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => 'true',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'false' => array(
-		'label' => 'false',
 		'set_snapshot_meta' => true,
-		'raw' => 'false',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => 'false',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'json_null' => array(
-		'label' => 'JSON null',
 		'set_snapshot_meta' => true,
-		'raw' => 'null',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => 'null',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'malformed' => array(
-		'label' => 'malformed JSON',
 		'set_snapshot_meta' => true,
-		'raw' => '{"title":',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '{"title":',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'truncated' => array(
-		'label' => 'truncated JSON',
 		'set_snapshot_meta' => true,
-		'raw' => '{"title":"Published Plan"',
-		'seed_existing_changes' => true,
+		'snapshot_raw' => '{"title":"Published Plan"',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'invalid_utf8' => array(
-		'label' => 'invalid UTF-8',
 		'set_snapshot_meta' => true,
-		'raw' => vms_test_invalid_utf8_json_object(),
-		'seed_existing_changes' => true,
+		'snapshot_raw' => vms_test_invalid_utf8_json_object(),
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'excessive_depth' => array(
-		'label' => 'excessive depth',
 		'set_snapshot_meta' => true,
-		'raw' => vms_test_deep_json_object(520),
-		'seed_existing_changes' => true,
+		'snapshot_raw' => vms_test_deep_json_object(520),
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
-	'duplicate_keys' => array(
-		'label' => 'duplicate keys',
+	'numeric_key_object' => array(
 		'set_snapshot_meta' => true,
-		'raw' => '{"title":"Old Title","title":"Duplicate Final Title"}',
-		'seed_existing_changes' => true,
-		'expected_fabricated' => true,
+		'snapshot_raw' => '{"0":"x"}',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
 	'unknown_key_object' => array(
-		'label' => 'unknown-key object',
 		'set_snapshot_meta' => true,
-		'raw' => '{"foo":"bar"}',
-		'seed_existing_changes' => true,
-		'expected_fabricated' => true,
+		'snapshot_raw' => '{"foo":"bar"}',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
-	'missing_expected_keys' => array(
-		'label' => 'missing expected keys',
+	'missing_required_keys' => array(
 		'set_snapshot_meta' => true,
-		'raw' => '{"title":"Published Plan"}',
-		'seed_existing_changes' => true,
-		'expected_fabricated' => true,
+		'snapshot_raw' => '{"title":"Published Plan"}',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
-	'unexpected_nested_values' => array(
-		'label' => 'unexpected nested values',
+	'invalid_nested_fields' => array(
 		'set_snapshot_meta' => true,
-		'raw' => '{"title":{"nested":"value"},"secondary_vendor_ids":[{"vendor":61}],"lineup_rows":[{"vendor_id":50}]}',
-		'seed_existing_changes' => true,
-		'expected_fabricated' => true,
+		'snapshot_raw' => '{"title":{"nested":"value"},"event_date":"2026-08-01","start_time":"18:00","end_time":"21:00","venue_id":10,"status":"published","primary_vendor_id":50,"secondary_vendor_type":"food_truck","secondary_vendor_ids":[{"vendor":61}],"lineup_rows":[{"vendor_id":50}]}',
+		'set_snapshot_markers' => true,
+		'expected_state' => 'invalid',
 	),
-	'very_large_object' => array(
-		'label' => 'very large object',
+	'duplicate_keys' => array(
 		'set_snapshot_meta' => true,
-		'raw' => vms_test_large_unknown_object(200),
-		'seed_existing_changes' => true,
-		'expected_fabricated' => true,
+		'snapshot_raw' => $duplicate_snapshot_json,
+		'set_snapshot_markers' => true,
+		'expected_state' => 'valid',
+	),
+	'large_valid_object' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $large_valid_snapshot_json,
+		'set_snapshot_markers' => true,
+		'expected_state' => 'valid',
 	),
 );
 
-$snapshot_results = array();
-foreach ($snapshot_cases as $case_name => $case_config) {
-	$snapshot_results[$case_name] = vms_test_run_snapshot_case($case_config, $valid_changes_json);
+$snapshot_state_results = array();
+foreach ($snapshot_state_cases as $case_name => $case_config) {
+	$snapshot_state_results[$case_name] = vms_test_run_read_case($case_config);
+	vms_test_assert_no_warnings($snapshot_state_results[$case_name]['snapshot_state'], $case_name . ' snapshot state read should be warning-free.');
+	vms_test_assert_no_warnings($snapshot_state_results[$case_name]['snapshot'], $case_name . ' snapshot compatibility read should be warning-free.');
+	vms_test_assert_same($case_config['expected_state'], $snapshot_state_results[$case_name]['snapshot_state']['result']['state'] ?? '', $case_name . ' should report the expected snapshot state.');
 }
 
-$snapshot_clear_cases = array(
-	'db_null',
-	'empty_string',
-	'whitespace_only',
-	'valid_empty_object',
-	'empty_list',
-	'scalar_string',
-	'number',
-	'true',
-	'false',
-	'json_null',
-	'malformed',
-	'truncated',
-	'invalid_utf8',
-	'excessive_depth',
+vms_test_assert_json_equivalent($published_snapshot, $snapshot_state_results['valid_expected_object']['snapshot_state']['result']['value'] ?? array(), 'Valid snapshot state should normalize to the canonical writer schema.');
+vms_test_assert_json_equivalent($published_snapshot, $snapshot_state_results['valid_expected_object']['snapshot']['result'], 'Snapshot compatibility wrapper should return the normalized snapshot for valid state.');
+vms_test_assert_same(array(), $snapshot_state_results['blank_with_marker']['snapshot']['result'], 'Snapshot compatibility wrapper should return an empty array for invalid state.');
+vms_test_assert_same(array(), $snapshot_state_results['blank_without_marker']['snapshot']['result'], 'Snapshot compatibility wrapper should return an empty array for missing state.');
+vms_test_assert_same('Published Plan', $snapshot_state_results['duplicate_keys']['snapshot_state']['result']['value']['title'] ?? '', 'Duplicate snapshot keys should resolve to the final duplicate value after validation.');
+vms_test_assert_json_equivalent($published_snapshot, $snapshot_state_results['large_valid_object']['snapshot_state']['result']['value'] ?? array(), 'Large valid snapshot objects should ignore unknown top-level keys after schema validation.');
+
+$touch_first_publish = vms_test_run_touch_case(
+	array(
+		'set_snapshot_meta' => false,
+		'set_snapshot_markers' => false,
+		'set_changes_meta' => false,
+		'set_changes_markers' => false,
+	)
 );
-foreach ($snapshot_clear_cases as $case_name) {
-	vms_test_assert_same(array(), $snapshot_results[$case_name]['get_snapshot']['result'], $case_name . ' should decode to an empty snapshot.');
-	vms_test_assert_same(0, $snapshot_results[$case_name]['changes_writes'], $case_name . ' should not write a new changes payload.');
-	vms_test_assert_same(null, $snapshot_results[$case_name]['remaining_changes_json'], $case_name . ' should clear the stored changes payload.');
-	vms_test_assert_same('cleared', $snapshot_results[$case_name]['outcome'], $case_name . ' should clear tracked review state.');
+vms_test_assert_no_warnings($touch_first_publish['touch'], 'First-publish touch should be warning-free.');
+vms_test_assert_same(array(), $touch_first_publish['touch']['result'], 'First-publish touch should remain clean when no baseline exists.');
+vms_test_assert_same(0, $touch_first_publish['changes_writes'], 'First-publish touch should not write derived changes.');
+vms_test_assert_same(1, $touch_first_publish['changes_clears'], 'First-publish touch should preserve the current clear-on-missing behavior.');
+
+$touch_valid_unchanged = vms_test_run_touch_case(
+	array(
+		'applied_state' => vms_test_current_state(),
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $current_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => $valid_changes_json,
+		'set_changes_markers' => true,
+	)
+);
+vms_test_assert_same(array(), $touch_valid_unchanged['touch']['result'], 'Valid unchanged baseline should clear changes on touch.');
+vms_test_assert_same(null, $touch_valid_unchanged['remaining_changes_json'], 'Valid unchanged baseline should clear stored derived changes.');
+vms_test_assert_same(1, $touch_valid_unchanged['changes_clears'], 'Valid unchanged baseline should clear the derived changes payload.');
+
+$touch_valid_changed = vms_test_run_touch_case(
+	array(
+		'applied_state' => vms_test_current_state(),
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => false,
+		'set_changes_markers' => false,
+	)
+);
+vms_test_assert_true($touch_valid_changed['changes_writes'] > 0, 'Valid changed baseline should write canonical derived changes.');
+vms_test_assert_json_equivalent($valid_changes_payload, $touch_valid_changed['touch']['result'], 'Valid changed baseline should return the canonical derived changes payload.');
+
+$touch_invalid_baseline_preserves_valid_changes = vms_test_run_touch_case(
+	array(
+		'applied_state' => vms_test_current_state(),
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => '{}',
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => $valid_changes_json,
+		'set_changes_markers' => true,
+	)
+);
+vms_test_assert_same(0, $touch_invalid_baseline_preserves_valid_changes['changes_clears'], 'Invalid snapshot should not clear existing derived changes.');
+vms_test_assert_same(0, $touch_invalid_baseline_preserves_valid_changes['changes_writes'], 'Invalid snapshot should not overwrite existing derived changes.');
+vms_test_assert_same(0, $touch_invalid_baseline_preserves_valid_changes['snapshot_writes'], 'Invalid snapshot should not rewrite snapshot_json.');
+vms_test_assert_same($valid_changes_json, $touch_invalid_baseline_preserves_valid_changes['remaining_changes_json'], 'Invalid snapshot should preserve the previously stored valid derived changes payload.');
+vms_test_assert_json_equivalent($valid_changes_payload, $touch_invalid_baseline_preserves_valid_changes['touch']['result'], 'Invalid snapshot should return the best stored valid changes payload.');
+vms_test_assert_same('snapshot_invalid', $touch_invalid_baseline_preserves_valid_changes['integrity']['result']['type'] ?? '', 'Invalid snapshot should surface a snapshot integrity issue.');
+
+$touch_invalid_baseline_no_changes = vms_test_run_touch_case(
+	array(
+		'applied_state' => vms_test_current_state(),
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => '[1]',
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => false,
+		'set_changes_markers' => false,
+	)
+);
+vms_test_assert_same(0, $touch_invalid_baseline_no_changes['changes_clears'], 'Invalid snapshot without stored changes should not clear anything.');
+vms_test_assert_same(0, $touch_invalid_baseline_no_changes['changes_writes'], 'Invalid snapshot without stored changes should not fabricate derived changes.');
+vms_test_assert_same(null, $touch_invalid_baseline_no_changes['remaining_changes_json'], 'Invalid snapshot without stored changes should leave derived changes absent.');
+vms_test_assert_same(true, (bool) $touch_invalid_baseline_no_changes['has_changes']['result'], 'Invalid snapshot without stored changes should still be review-needed.');
+
+$changes_state_cases = array(
+	'true_no_changes' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => false,
+		'set_changes_markers' => false,
+		'expected_state' => 'missing',
+	),
+	'blank_without_marker' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '',
+		'set_changes_markers' => false,
+		'expected_state' => 'missing',
+	),
+	'blank_with_marker' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'valid_positive' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => $valid_changes_json,
+		'set_changes_markers' => true,
+		'expected_state' => 'valid',
+	),
+	'valid_zero' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => $valid_zero_changes_json,
+		'set_changes_markers' => true,
+		'expected_state' => 'valid',
+	),
+	'empty_object' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{}',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'list' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '[{"field":"status"}]',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'empty_list' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '[]',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'scalar' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '"hello"',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'number' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '123',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'true' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => 'true',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'false' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => 'false',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'json_null' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => 'null',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'malformed' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{"count":',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'truncated' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{"count":1',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'invalid_utf8' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => vms_test_invalid_utf8_json_object(),
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'excessive_depth' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => vms_test_deep_json_object(520),
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'missing_changes' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{"count":1}',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'malformed_changes_list' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{"count":1,"changes":{"field":"status","summary":"Broken"}}',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'invalid_row_shape' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{"count":1,"changes":[{"field":["bad"],"summary":{"bad":"x"},"label":"Broken"}]}',
+		'set_changes_markers' => true,
+		'expected_state' => 'invalid',
+	),
+	'duplicate_count' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => $duplicate_count_changes_json,
+		'set_changes_markers' => true,
+		'expected_state' => 'valid',
+	),
+	'unknown_keys' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => $changes_with_unknown_keys_json,
+		'set_changes_markers' => true,
+		'expected_state' => 'valid',
+	),
+	'large_valid_object' => array(
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => $large_valid_changes_json,
+		'set_changes_markers' => true,
+		'expected_state' => 'valid',
+	),
+);
+
+$changes_state_results = array();
+foreach ($changes_state_cases as $case_name => $case_config) {
+	$changes_state_results[$case_name] = vms_test_run_read_case($case_config);
+	vms_test_assert_no_warnings($changes_state_results[$case_name]['changes_state'], $case_name . ' changes state read should be warning-free.');
+	vms_test_assert_no_warnings($changes_state_results[$case_name]['changes'], $case_name . ' changes compatibility read should be warning-free.');
+	vms_test_assert_same($case_config['expected_state'], $changes_state_results[$case_name]['changes_state']['result']['state'] ?? '', $case_name . ' should report the expected changes state.');
 }
 
-vms_test_assert_same(array(), $snapshot_results['first_publish_no_meta']['get_snapshot']['result'], 'First-publish no-baseline state should decode as empty.');
-vms_test_assert_same(0, $snapshot_results['first_publish_no_meta']['changes_writes'], 'First-publish no-baseline state should not write changes.');
-vms_test_assert_same('no_baseline', $snapshot_results['first_publish_no_meta']['outcome'], 'First-publish no-baseline state should remain distinct from clearing existing tracked changes.');
-vms_test_assert_json_equivalent($published_snapshot, $snapshot_results['valid_expected_snapshot']['get_snapshot']['result'], 'Valid expected snapshot should round-trip through the raw reader.');
-vms_test_assert_true($snapshot_results['valid_expected_snapshot']['changes_writes'] > 0, 'Valid expected snapshot should write a normal computed changes payload.');
-vms_test_assert_same('computed', $snapshot_results['valid_expected_snapshot']['outcome'], 'Valid expected snapshot should produce computed changes rather than clearing state.');
-vms_test_assert_true($snapshot_results['valid_list']['changes_writes'] > 0, 'Non-empty list snapshots should currently fabricate a changes payload.');
-vms_test_assert_true($snapshot_results['numeric_key_object']['changes_writes'] > 0, 'Numeric-key object snapshots should currently fabricate a changes payload.');
-vms_test_assert_true($snapshot_results['unknown_key_object']['changes_writes'] > 0, 'Unknown-key object snapshots should currently fabricate a changes payload.');
-vms_test_assert_true($snapshot_results['very_large_object']['changes_writes'] > 0, 'Large unexpected snapshot objects should currently fabricate a changes payload.');
-vms_test_assert_same('Duplicate Final Title', $snapshot_results['duplicate_keys']['get_snapshot']['result']['title'] ?? null, 'Duplicate snapshot keys should currently resolve to the final duplicate value.');
-vms_test_assert_true(count((array) $snapshot_results['unexpected_nested_values']['touch']['warnings']) > 0, 'Unexpected nested snapshot values should currently surface captured warnings during touch().');
+vms_test_assert_json_equivalent($valid_changes_payload, $changes_state_results['valid_positive']['changes_state']['result']['value'] ?? array(), 'Valid changes payload should normalize to the canonical derived schema.');
+vms_test_assert_same(0, $changes_state_results['valid_zero']['changes_state']['result']['value']['count'] ?? -1, 'Valid zero-change payload should remain valid with a zero count.');
+vms_test_assert_same(array(), $changes_state_results['valid_zero']['changes_state']['result']['value']['changes'] ?? array('x'), 'Valid zero-change payload should preserve an empty changes list.');
+vms_test_assert_same(1, $changes_state_results['duplicate_count']['changes_state']['result']['value']['count'] ?? 0, 'Duplicate count keys should be recomputed from the normalized filtered changes list.');
+vms_test_assert_same(count($computed_changes), $changes_state_results['unknown_keys']['changes_state']['result']['value']['count'] ?? 0, 'Unknown top-level changes keys should be ignored after schema validation.');
+vms_test_assert_same($changes_with_unknown_keys_json, $changes_state_results['unknown_keys']['remaining_changes_json'], 'Read-only changes state should not rewrite stored data.');
 
 vms_test_reset_environment();
 vms_test_apply_state(vms_test_current_state());
@@ -1055,267 +1470,74 @@ vms_test_assert_same($current_snapshot, $first_publish_mark['result'], 'mark_pub
 vms_test_assert_true(vms_test_count_updates('_vms_published_snapshot_json') > 0, 'mark_published() should write snapshot_json.');
 vms_test_assert_true(vms_test_count_updates('_vms_published_snapshot_at') > 0, 'mark_published() should write snapshot_at.');
 vms_test_assert_true(vms_test_count_updates('_vms_published_snapshot_by') > 0, 'mark_published() should write snapshot_by.');
-vms_test_assert_same(null, vms_test_meta_value('_vms_unpublished_changes_json'), 'mark_published() should clear tracked changes on first publish.');
-vms_test_assert_same($current_snapshot_json, vms_test_last_update_value('_vms_published_snapshot_json'), 'mark_published() should persist the current snapshot JSON as written.');
+vms_test_assert_same(null, vms_test_meta_value('_vms_unpublished_changes_json'), 'mark_published() should clear tracked changes on publish.');
+vms_test_assert_same($current_snapshot_json, vms_test_last_update_value('_vms_published_snapshot_json'), 'mark_published() should persist the canonical snapshot JSON as written.');
 
-vms_test_reset_environment();
-vms_test_apply_state(vms_test_current_state());
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_json'] = $current_snapshot_json;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_json'] = $valid_changes_json;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_at'] = VMS_TEST_CHANGES_AT;
-$published_baseline_no_edits = vms_test_capture(
-	static function () {
-		return vms_event_plan_review_touch(VMS_TEST_PLAN_ID, 'event_plan_editor', VMS_TEST_CURRENT_USER_ID);
-	}
-);
-vms_test_assert_same(array(), $published_baseline_no_edits['result'], 'A valid published baseline with no unpublished edits should clear changes rather than rewriting them.');
-vms_test_assert_same(null, vms_test_meta_value('_vms_unpublished_changes_json'), 'A valid published baseline with no unpublished edits should clear stored changes.');
+$valid_visibility = $changes_state_results['valid_positive'];
+vms_test_assert_same(true, (bool) $valid_visibility['has_changes']['result'], 'Valid derived changes should remain review-needed.');
+vms_test_assert_true($valid_visibility['banner']['html'] !== '', 'Valid derived changes should preserve the detailed editor banner.');
+vms_test_assert_contains('Needs Review', $valid_visibility['banner']['html'], 'Valid derived changes banner should retain the existing review heading.');
+vms_test_assert_contains('Source: Event Plan editor', $valid_visibility['banner']['html'], 'Valid derived changes banner should preserve changes_source metadata.');
+vms_test_assert_contains('By: Editor User', $valid_visibility['banner']['html'], 'Valid derived changes banner should preserve changes_by metadata.');
+vms_test_assert_contains('Updated: ' . VMS_TEST_CHANGES_AT, $valid_visibility['banner']['html'], 'Valid derived changes banner should preserve changes_at metadata.');
+vms_test_assert_same('', $changes_state_results['true_no_changes']['banner']['html'], 'True clean state should not render the editor banner.');
 
-$changes_cases = array(
-	'no_meta_key' => array(
-		'label' => 'no meta key',
-		'set_changes_meta' => false,
-		'set_aux_meta' => false,
-	),
-	'db_null' => array(
-		'label' => 'DB NULL',
-		'set_changes_meta' => true,
-		'raw' => null,
-		'set_aux_meta' => true,
-	),
-	'empty_string' => array(
-		'label' => 'empty string',
-		'set_changes_meta' => true,
-		'raw' => '',
-		'set_aux_meta' => true,
-	),
-	'whitespace_only' => array(
-		'label' => 'whitespace-only string',
-		'set_changes_meta' => true,
-		'raw' => " \n\t ",
-		'set_aux_meta' => true,
-	),
-	'valid_count_positive' => array(
-		'label' => 'valid expected payload with count > 0',
-		'set_changes_meta' => true,
-		'raw' => $valid_changes_json,
-		'set_aux_meta' => true,
-		'source' => 'event_plan_editor',
-	),
-	'valid_count_zero' => array(
-		'label' => 'valid expected payload with count = 0',
-		'set_changes_meta' => true,
-		'raw' => '{"count":0,"changes":[]}',
-		'set_aux_meta' => true,
-	),
-	'valid_empty_object' => array(
-		'label' => 'valid empty object',
-		'set_changes_meta' => true,
-		'raw' => '{}',
-		'set_aux_meta' => true,
-	),
-	'valid_list' => array(
-		'label' => 'valid list',
-		'set_changes_meta' => true,
-		'raw' => '[{"field":"status","summary":"List entry"}]',
-		'set_aux_meta' => true,
-	),
-	'empty_list' => array(
-		'label' => 'empty list',
-		'set_changes_meta' => true,
-		'raw' => '[]',
-		'set_aux_meta' => true,
-	),
-	'numeric_key_object' => array(
-		'label' => 'numeric-key object',
-		'set_changes_meta' => true,
-		'raw' => '{"0":"x"}',
-		'set_aux_meta' => true,
-	),
-	'scalar_string' => array(
-		'label' => 'scalar string',
-		'set_changes_meta' => true,
-		'raw' => '"hello"',
-		'set_aux_meta' => true,
-	),
-	'number' => array(
-		'label' => 'number',
-		'set_changes_meta' => true,
-		'raw' => '123',
-		'set_aux_meta' => true,
-	),
-	'true' => array(
-		'label' => 'true',
-		'set_changes_meta' => true,
-		'raw' => 'true',
-		'set_aux_meta' => true,
-	),
-	'false' => array(
-		'label' => 'false',
-		'set_changes_meta' => true,
-		'raw' => 'false',
-		'set_aux_meta' => true,
-	),
-	'json_null' => array(
-		'label' => 'JSON null',
-		'set_changes_meta' => true,
-		'raw' => 'null',
-		'set_aux_meta' => true,
-	),
-	'malformed' => array(
-		'label' => 'malformed JSON',
-		'set_changes_meta' => true,
-		'raw' => '{"count":',
-		'set_aux_meta' => true,
-	),
-	'truncated' => array(
-		'label' => 'truncated JSON',
-		'set_changes_meta' => true,
-		'raw' => '{"count":1',
-		'set_aux_meta' => true,
-	),
-	'invalid_utf8' => array(
-		'label' => 'invalid UTF-8',
-		'set_changes_meta' => true,
-		'raw' => vms_test_invalid_utf8_json_object(),
-		'set_aux_meta' => true,
-	),
-	'excessive_depth' => array(
-		'label' => 'excessive depth',
-		'set_changes_meta' => true,
-		'raw' => vms_test_deep_json_object(520),
-		'set_aux_meta' => true,
-	),
-	'duplicate_keys' => array(
-		'label' => 'duplicate keys',
-		'set_changes_meta' => true,
-		'raw' => '{"count":1,"count":2,"changes":[{"field":"status","summary":"Status changed from Published to Draft","before":"published","after":"draft","before_label":"Published","after_label":"Draft"}]}',
-		'set_aux_meta' => true,
-	),
-	'unknown_key_object' => array(
-		'label' => 'unknown-key object',
-		'set_changes_meta' => true,
-		'raw' => '{"foo":"bar"}',
-		'set_aux_meta' => true,
-	),
-	'missing_count' => array(
-		'label' => 'missing count',
-		'set_changes_meta' => true,
-		'raw' => '{"changes":[{"field":"status","summary":"Status changed from Published to Draft","before":"published","after":"draft","before_label":"Published","after_label":"Draft"}]}',
-		'set_aux_meta' => true,
-	),
-	'missing_changes' => array(
-		'label' => 'missing changes',
-		'set_changes_meta' => true,
-		'raw' => '{"count":1}',
-		'set_aux_meta' => true,
-	),
-	'malformed_changes_list' => array(
-		'label' => 'malformed changes list',
-		'set_changes_meta' => true,
-		'raw' => '{"count":1,"changes":{"field":"status","summary":"Broken"}}',
-		'set_aux_meta' => true,
-	),
-	'nested_unexpected_values' => array(
-		'label' => 'nested unexpected values',
-		'set_changes_meta' => true,
-		'raw' => '{"count":1,"changes":[{"field":["bad"],"summary":{"bad":"x"}}]}',
-		'set_aux_meta' => true,
-	),
-	'very_large_object' => array(
-		'label' => 'very large object',
-		'set_changes_meta' => true,
-		'raw' => vms_test_large_unknown_object(200),
-		'set_aux_meta' => true,
-	),
-);
-
-$changes_results = array();
-foreach ($changes_cases as $case_name => $case_config) {
-	$changes_results[$case_name] = vms_test_run_changes_case($case_config, $published_snapshot_json);
-}
-
-$suppressed_changes_cases = array(
-	'db_null',
-	'empty_string',
-	'whitespace_only',
-	'valid_count_zero',
-	'valid_empty_object',
-	'valid_list',
-	'empty_list',
-	'numeric_key_object',
-	'scalar_string',
-	'number',
-	'true',
-	'false',
-	'json_null',
-	'malformed',
-	'truncated',
-	'invalid_utf8',
-	'excessive_depth',
-	'unknown_key_object',
-	'missing_changes',
-	'malformed_changes_list',
-	'very_large_object',
-);
-foreach ($suppressed_changes_cases as $case_name) {
-	vms_test_assert_same(false, (bool) $changes_results[$case_name]['has_changes']['result'], $case_name . ' should suppress has_changes().');
-	vms_test_assert_same('', $changes_results[$case_name]['banner']['html'], $case_name . ' should suppress the editor banner.');
-	vms_test_assert_same('', $changes_results[$case_name]['status_note']['html'], $case_name . ' should suppress the list-table review indicator.');
-	vms_test_assert_same(false, $changes_results[$case_name]['specific_review_alert_visible'], $case_name . ' should suppress the specific review alert.');
-	vms_test_assert_same(true, $changes_results[$case_name]['generic_activity_visible'], $case_name . ' should still keep the generic activity item when changes_at is present.');
-}
-
-vms_test_assert_same(false, $changes_results['no_meta_key']['generic_activity_visible'], 'No changes meta and no timestamp should suppress the generic activity item in the first-publish state.');
-vms_test_assert_same(false, $changes_results['no_meta_key']['specific_review_alert_visible'], 'No changes meta and no timestamp should suppress the specific review alert.');
-vms_test_assert_same(true, (bool) $changes_results['valid_count_positive']['has_changes']['result'], 'A valid changes payload should preserve has_changes().');
-vms_test_assert_true($changes_results['valid_count_positive']['banner']['html'] !== '', 'A valid changes payload should render the editor banner.');
-vms_test_assert_true($changes_results['valid_count_positive']['status_note']['html'] !== '', 'A valid changes payload should render the list-table review indicator.');
-vms_test_assert_same(true, $changes_results['valid_count_positive']['specific_review_alert_visible'], 'A valid changes payload should preserve the specific review alert.');
-vms_test_assert_same('at-risk', $changes_results['valid_count_positive']['health']['result']['status'] ?? '', 'A valid changes payload should raise the Command Center health state when the review alert is present.');
-vms_test_assert_same(true, (bool) $changes_results['missing_count']['has_changes']['result'], 'A payload with changes but no count should currently be normalized back into a counted changes payload.');
-vms_test_assert_same(1, $changes_results['missing_count']['get_changes']['result']['count'] ?? 0, 'Missing count should currently be backfilled from the filtered changes list.');
-vms_test_assert_same(1, $changes_results['duplicate_keys']['get_changes']['result']['count'] ?? 0, 'Duplicate count keys should currently be recomputed from the filtered changes list.');
-vms_test_assert_same(true, (bool) $changes_results['duplicate_keys']['has_changes']['result'], 'Duplicate-key changes payload should remain visible when the final shape is valid.');
-vms_test_assert_true(count((array) $changes_results['nested_unexpected_values']['banner']['warnings']) > 0, 'Nested unexpected change values should currently surface captured render warnings.');
-vms_test_assert_same($changes_results['valid_empty_object']['banner']['html'], $changes_results['malformed']['banner']['html'], 'Valid empty-object and malformed changes payloads should currently be indistinguishable in the editor banner consumer.');
-vms_test_assert_same($changes_results['valid_empty_object']['status_note']['html'], $changes_results['numeric_key_object']['status_note']['html'], 'Empty-object and numeric-key changes payloads should currently be indistinguishable in the list-table consumer.');
-
-vms_test_reset_environment();
-vms_test_apply_state(vms_test_current_state());
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_json'] = $published_snapshot_json;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_json'] = $valid_changes_json;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_at'] = VMS_TEST_CHANGES_AT;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_by'] = VMS_TEST_CURRENT_USER_ID;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_source'] = 'importer';
-$importer_banner = vms_test_capture_render(
-	static function (): void {
-		$post = new WP_Post();
-		$post->ID = VMS_TEST_PLAN_ID;
-		$post->post_type = 'vms_event_plan';
-		vms_event_plan_review_render_banner($post);
-	}
-);
-vms_test_assert_contains('Source: Importer', $importer_banner['html'], 'The editor banner should reflect source labels from changes_source metadata.');
-vms_test_assert_contains('By: Editor User', $importer_banner['html'], 'The editor banner should reflect changes_by metadata.');
-vms_test_assert_contains('Updated: ' . VMS_TEST_CHANGES_AT, $importer_banner['html'], 'The editor banner should reflect changes_at metadata.');
-
-vms_test_reset_environment();
-vms_test_apply_state(vms_test_current_state());
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_published_snapshot_json'] = $published_snapshot_json;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_json'] = '{"count":1,"changes":{"field":"status","summary":"Broken"}}';
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_at'] = VMS_TEST_CHANGES_AT;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_by'] = VMS_TEST_CURRENT_USER_ID;
-$GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_source'] = 'event_plan_editor';
-$published_baseline_corrupt_changes = vms_test_run_changes_case(
+$invalid_snapshot_visibility = vms_test_run_read_case(
 	array(
-		'set_changes_meta' => true,
-		'raw' => '{"count":1,"changes":{"field":"status","summary":"Broken"}}',
-		'set_aux_meta' => true,
-	),
-	$published_snapshot_json
+		'applied_state' => vms_test_current_state(),
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => '{}',
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => false,
+		'set_changes_markers' => false,
+	)
 );
-vms_test_assert_same(false, $published_baseline_corrupt_changes['specific_review_alert_visible'], 'A valid snapshot paired with corrupt changes should suppress the specific review alert.');
-vms_test_assert_same(true, $published_baseline_corrupt_changes['generic_activity_visible'], 'A valid snapshot paired with corrupt changes should still keep the generic activity note when changes_at exists.');
+vms_test_assert_same(true, (bool) $invalid_snapshot_visibility['has_changes']['result'], 'Invalid snapshot state should remain review-needed.');
+vms_test_assert_contains($invalid_snapshot_message, $invalid_snapshot_visibility['banner']['html'], 'Invalid snapshot should render the generic integrity warning.');
+vms_test_assert_not_contains('{"', $invalid_snapshot_visibility['banner']['html'], 'Invalid snapshot banner should not expose raw JSON.');
+vms_test_assert_not_contains('snapshot-marker-without-valid-json', $invalid_snapshot_visibility['banner']['html'], 'Invalid snapshot banner should not expose internal reasons.');
+vms_test_assert_true($invalid_snapshot_visibility['status_note']['html'] !== '', 'Invalid snapshot should keep the list-table review note visible.');
+vms_test_assert_same(false, $invalid_snapshot_visibility['generic_activity_visible'], 'Invalid snapshot without changes markers should not fabricate Command Center activity.');
+vms_test_assert_same(true, $invalid_snapshot_visibility['specific_review_alert_visible'], 'Invalid snapshot should surface the specific review alert through has_changes().');
+vms_test_assert_same('at-risk', $invalid_snapshot_visibility['health']['result']['status'] ?? '', 'Invalid snapshot should produce the safer Command Center review-risk status with the existing yellow stack.');
+vms_test_assert_not_contains('Plan status changed from Published to Draft', $invalid_snapshot_visibility['banner']['html'], 'Invalid snapshot banner should not fabricate detailed change summaries.');
+
+$invalid_changes_visibility = $changes_state_results['blank_with_marker'];
+vms_test_assert_same(true, (bool) $invalid_changes_visibility['has_changes']['result'], 'Invalid changes state should remain review-needed.');
+vms_test_assert_contains($invalid_snapshot_message, $invalid_changes_visibility['banner']['html'], 'Invalid changes should render the generic integrity warning.');
+vms_test_assert_not_contains('changes-marker-without-valid-json', $invalid_changes_visibility['banner']['html'], 'Invalid changes banner should not expose internal reasons.');
+vms_test_assert_same(true, $invalid_changes_visibility['generic_activity_visible'], 'Invalid changes with changes_at should preserve generic Command Center activity.');
+vms_test_assert_same(true, $invalid_changes_visibility['specific_review_alert_visible'], 'Invalid changes should surface the specific review alert through has_changes().');
+vms_test_assert_same('at-risk', $invalid_changes_visibility['health']['result']['status'] ?? '', 'Invalid changes should produce the safer Command Center review-risk status.');
+vms_test_assert_not_contains('Plan status changed from Published to Draft', $invalid_changes_visibility['banner']['html'], 'Invalid changes should not show fabricated detailed change summaries.');
+
+$touch_repairs_invalid_changes = vms_test_run_touch_case(
+	array(
+		'applied_state' => vms_test_current_state(),
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $published_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{"count":1,"changes":{"field":"status","summary":"Broken"}}',
+		'set_changes_markers' => true,
+	)
+);
+vms_test_assert_true($touch_repairs_invalid_changes['changes_writes'] > 0, 'Valid snapshot plus invalid derived changes should be repaired by touch().');
+vms_test_assert_json_equivalent($valid_changes_payload, $touch_repairs_invalid_changes['touch']['result'], 'touch() should recompute canonical derived changes when the snapshot is valid.');
+vms_test_assert_json_equivalent($valid_changes_payload, vms_event_plan_review_get_changes(VMS_TEST_PLAN_ID), 'Repaired derived changes should read back through the compatibility wrapper.');
+
+$touch_clears_invalid_changes_when_clean = vms_test_run_touch_case(
+	array(
+		'applied_state' => vms_test_current_state(),
+		'set_snapshot_meta' => true,
+		'snapshot_raw' => $current_snapshot_json,
+		'set_snapshot_markers' => true,
+		'set_changes_meta' => true,
+		'changes_raw' => '{"count":1,"changes":{"field":"status","summary":"Broken"}}',
+		'set_changes_markers' => true,
+	)
+);
+vms_test_assert_same(array(), $touch_clears_invalid_changes_when_clean['touch']['result'], 'Valid snapshot with no actual differences should clear stale invalid derived changes.');
+vms_test_assert_same(null, $touch_clears_invalid_changes_when_clean['remaining_changes_json'], 'Valid snapshot with no actual differences should clear stale invalid derived changes from storage.');
 
 echo "event plan review json characterization: PASS\n";

@@ -88,51 +88,495 @@ if (!function_exists('vms_event_plan_review_current_snapshot')) {
     }
 }
 
-if (!function_exists('vms_event_plan_review_get_snapshot')) {
-    function vms_event_plan_review_get_snapshot(int $plan_id): array
+if (!function_exists('vms_event_plan_review_state_result')) {
+    function vms_event_plan_review_state_result(string $state, array $value = array(), string $reason = ''): array
     {
-        $raw = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('snapshot_json'), true);
-        if ($raw === '') {
-            return array();
+        return array(
+            'state' => $state,
+            'value' => $value,
+            'reason' => $reason,
+        );
+    }
+}
+
+if (!function_exists('vms_event_plan_review_is_list_array')) {
+    function vms_event_plan_review_is_list_array(array $value): bool
+    {
+        $index = 0;
+        foreach (array_keys($value) as $key) {
+            if ($key !== $index) {
+                return false;
+            }
+            $index++;
+        }
+
+        return true;
+    }
+}
+
+if (!function_exists('vms_event_plan_review_decode_error_reason')) {
+    function vms_event_plan_review_decode_error_reason(): string
+    {
+        $map = array(
+            JSON_ERROR_DEPTH => 'json-depth',
+            JSON_ERROR_STATE_MISMATCH => 'json-state-mismatch',
+            JSON_ERROR_CTRL_CHAR => 'json-control-char',
+            JSON_ERROR_SYNTAX => 'json-syntax',
+            JSON_ERROR_UTF8 => 'json-utf8',
+        );
+
+        return $map[json_last_error()] ?? 'json-error';
+    }
+}
+
+if (!function_exists('vms_event_plan_review_normalize_id_value')) {
+    function vms_event_plan_review_normalize_id_value($value, string $reason): array
+    {
+        if (is_bool($value) || is_array($value) || is_object($value) || $value === null) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        if (!is_int($value) && !is_float($value) && !is_string($value)) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        if (is_string($value) && trim($value) === '') {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        if (!is_numeric($value)) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        return vms_event_plan_review_state_result('valid', array('normalized' => absint($value)));
+    }
+}
+
+if (!function_exists('vms_event_plan_review_normalize_text_value')) {
+    function vms_event_plan_review_normalize_text_value($value, string $reason): array
+    {
+        if (is_bool($value) || is_array($value) || is_object($value) || $value === null) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        if (!is_scalar($value)) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        return vms_event_plan_review_state_result('valid', array('normalized' => sanitize_text_field((string) $value)));
+    }
+}
+
+if (!function_exists('vms_event_plan_review_normalize_key_value')) {
+    function vms_event_plan_review_normalize_key_value($value, string $reason): array
+    {
+        if (is_bool($value) || is_array($value) || is_object($value) || $value === null) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        if (!is_scalar($value)) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        return vms_event_plan_review_state_result('valid', array('normalized' => sanitize_key((string) $value)));
+    }
+}
+
+if (!function_exists('vms_event_plan_review_normalize_secondary_vendor_ids')) {
+    function vms_event_plan_review_normalize_secondary_vendor_ids($value, string $reason): array
+    {
+        if (!is_array($value) || !vms_event_plan_review_is_list_array($value)) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        $normalized = array();
+        foreach ($value as $vendor_id) {
+            $result = vms_event_plan_review_normalize_id_value($vendor_id, $reason);
+            if ('valid' !== $result['state']) {
+                return $result;
+            }
+            $normalized[] = (int) ($result['value']['normalized'] ?? 0);
+        }
+
+        $normalized = array_values(array_unique(array_filter($normalized)));
+        sort($normalized);
+
+        return vms_event_plan_review_state_result('valid', $normalized);
+    }
+}
+
+if (!function_exists('vms_event_plan_review_normalize_lineup_rows_value')) {
+    function vms_event_plan_review_normalize_lineup_rows_value($value, string $reason): array
+    {
+        if (!is_array($value) || !vms_event_plan_review_is_list_array($value)) {
+            return vms_event_plan_review_state_result('invalid', array(), $reason);
+        }
+
+        $prepared = array();
+        foreach ($value as $index => $row) {
+            if (!is_array($row) || vms_event_plan_review_is_list_array($row)) {
+                return vms_event_plan_review_state_result('invalid', array(), $reason);
+            }
+
+            $required = array('vendor_id', 'vendor_label', 'role', 'set_start', 'set_end', 'guaranteed_fee', 'sort_order');
+            foreach ($required as $required_key) {
+                if (!array_key_exists($required_key, $row)) {
+                    return vms_event_plan_review_state_result('invalid', array(), $reason . '-missing-' . $required_key);
+                }
+            }
+
+            $vendor_id = vms_event_plan_review_normalize_id_value($row['vendor_id'], $reason . '-vendor-id');
+            if ('valid' !== $vendor_id['state']) {
+                return $vendor_id;
+            }
+
+            $vendor_label = vms_event_plan_review_normalize_text_value($row['vendor_label'], $reason . '-vendor-label');
+            if ('valid' !== $vendor_label['state']) {
+                return $vendor_label;
+            }
+
+            $role = vms_event_plan_review_normalize_key_value($row['role'], $reason . '-role');
+            if ('valid' !== $role['state']) {
+                return $role;
+            }
+
+            $set_start = vms_event_plan_review_normalize_text_value($row['set_start'], $reason . '-set-start');
+            if ('valid' !== $set_start['state']) {
+                return $set_start;
+            }
+
+            $set_end = vms_event_plan_review_normalize_text_value($row['set_end'], $reason . '-set-end');
+            if ('valid' !== $set_end['state']) {
+                return $set_end;
+            }
+
+            $sort_order = vms_event_plan_review_normalize_id_value($row['sort_order'], $reason . '-sort-order');
+            if ('valid' !== $sort_order['state']) {
+                return $sort_order;
+            }
+
+            $guaranteed_fee = $row['guaranteed_fee'];
+            if (is_bool($guaranteed_fee) || is_array($guaranteed_fee) || is_object($guaranteed_fee)) {
+                return vms_event_plan_review_state_result('invalid', array(), $reason . '-guaranteed-fee');
+            }
+            if ($guaranteed_fee === '' || $guaranteed_fee === null) {
+                $guaranteed_fee = '';
+            } elseif (!is_int($guaranteed_fee) && !is_float($guaranteed_fee) && !is_string($guaranteed_fee)) {
+                return vms_event_plan_review_state_result('invalid', array(), $reason . '-guaranteed-fee');
+            } elseif (!is_numeric($guaranteed_fee)) {
+                return vms_event_plan_review_state_result('invalid', array(), $reason . '-guaranteed-fee');
+            } else {
+                $guaranteed_fee = round((float) $guaranteed_fee, 2);
+            }
+
+            $prepared[] = array(
+                'vendor_id' => (int) ($vendor_id['value']['normalized'] ?? 0),
+                'vendor_label' => (string) ($vendor_label['value']['normalized'] ?? ''),
+                'role' => (string) ($role['value']['normalized'] ?? ''),
+                'set_start' => (string) ($set_start['value']['normalized'] ?? ''),
+                'set_end' => (string) ($set_end['value']['normalized'] ?? ''),
+                'guaranteed_fee' => $guaranteed_fee,
+                'sort_order' => (int) ($sort_order['value']['normalized'] ?? $index),
+            );
+        }
+
+        return vms_event_plan_review_state_result('valid', vms_event_plan_review_lineup_rows($prepared));
+    }
+}
+
+if (!function_exists('vms_event_plan_review_decode_snapshot_json')) {
+    function vms_event_plan_review_decode_snapshot_json(string $raw): array
+    {
+        if (trim($raw) === '') {
+            return vms_event_plan_review_state_result('missing', array(), 'snapshot-missing');
         }
 
         $decoded = json_decode($raw, true);
-        return is_array($decoded) ? $decoded : array();
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            return vms_event_plan_review_state_result('invalid', array(), 'snapshot-' . vms_event_plan_review_decode_error_reason());
+        }
+
+        if (!is_array($decoded) || vms_event_plan_review_is_list_array($decoded)) {
+            return vms_event_plan_review_state_result('invalid', array(), 'snapshot-schema-top-level');
+        }
+
+        $required = array(
+            'title',
+            'event_date',
+            'start_time',
+            'end_time',
+            'venue_id',
+            'status',
+            'primary_vendor_id',
+            'secondary_vendor_type',
+            'secondary_vendor_ids',
+            'lineup_rows',
+        );
+        foreach ($required as $field) {
+            if (!array_key_exists($field, $decoded)) {
+                return vms_event_plan_review_state_result('invalid', array(), 'snapshot-missing-' . $field);
+            }
+        }
+
+        $title = vms_event_plan_review_normalize_text_value($decoded['title'], 'snapshot-title');
+        $event_date = vms_event_plan_review_normalize_text_value($decoded['event_date'], 'snapshot-event-date');
+        $start_time = vms_event_plan_review_normalize_text_value($decoded['start_time'], 'snapshot-start-time');
+        $end_time = vms_event_plan_review_normalize_text_value($decoded['end_time'], 'snapshot-end-time');
+        $venue_id = vms_event_plan_review_normalize_id_value($decoded['venue_id'], 'snapshot-venue-id');
+        $status = vms_event_plan_review_normalize_key_value($decoded['status'], 'snapshot-status');
+        $primary_vendor_id = vms_event_plan_review_normalize_id_value($decoded['primary_vendor_id'], 'snapshot-primary-vendor-id');
+        $secondary_vendor_type = vms_event_plan_review_normalize_key_value($decoded['secondary_vendor_type'], 'snapshot-secondary-vendor-type');
+        $secondary_vendor_ids = vms_event_plan_review_normalize_secondary_vendor_ids($decoded['secondary_vendor_ids'], 'snapshot-secondary-vendor-ids');
+        $lineup_rows = vms_event_plan_review_normalize_lineup_rows_value($decoded['lineup_rows'], 'snapshot-lineup-rows');
+
+        $parts = array($title, $event_date, $start_time, $end_time, $venue_id, $status, $primary_vendor_id, $secondary_vendor_type, $secondary_vendor_ids, $lineup_rows);
+        foreach ($parts as $part) {
+            if ('valid' !== $part['state']) {
+                return $part;
+            }
+        }
+
+        $normalized_status = (string) ($status['value']['normalized'] ?? '');
+        if ('canceled' === $normalized_status) {
+            $normalized_status = 'cancelled';
+        }
+        if ('' === $normalized_status) {
+            $normalized_status = 'draft';
+        }
+
+        return vms_event_plan_review_state_result(
+            'valid',
+            array(
+                'title' => (string) ($title['value']['normalized'] ?? ''),
+                'event_date' => (string) ($event_date['value']['normalized'] ?? ''),
+                'start_time' => (string) ($start_time['value']['normalized'] ?? ''),
+                'end_time' => (string) ($end_time['value']['normalized'] ?? ''),
+                'venue_id' => (int) ($venue_id['value']['normalized'] ?? 0),
+                'status' => $normalized_status,
+                'primary_vendor_id' => (int) ($primary_vendor_id['value']['normalized'] ?? 0),
+                'secondary_vendor_type' => (string) ($secondary_vendor_type['value']['normalized'] ?? ''),
+                'secondary_vendor_ids' => (array) ($secondary_vendor_ids['value'] ?? array()),
+                'lineup_rows' => (array) ($lineup_rows['value'] ?? array()),
+            )
+        );
+    }
+}
+
+if (!function_exists('vms_event_plan_review_normalize_change_row')) {
+    function vms_event_plan_review_normalize_change_row($row): array
+    {
+        if (!is_array($row) || vms_event_plan_review_is_list_array($row)) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-row-shape');
+        }
+
+        $required = array('field', 'label', 'summary');
+        foreach ($required as $required_key) {
+            if (!array_key_exists($required_key, $row)) {
+                return vms_event_plan_review_state_result('invalid', array(), 'changes-row-missing-' . $required_key);
+            }
+        }
+
+        $field_result = vms_event_plan_review_normalize_key_value($row['field'], 'changes-row-field');
+        if ('valid' !== $field_result['state']) {
+            return $field_result;
+        }
+
+        $field = (string) ($field_result['value']['normalized'] ?? '');
+        if ('' === $field) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-row-field');
+        }
+
+        $string_fields = array('title', 'event_date', 'start_time', 'end_time', 'status', 'secondary_vendor_type');
+        $id_fields = array('venue_id', 'primary_vendor_id');
+        $list_fields = array('secondary_vendor_ids', 'lineup_rows');
+        if (!in_array($field, array_merge($string_fields, $id_fields, $list_fields), true)) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-row-unknown-field');
+        }
+
+        $label = vms_event_plan_review_normalize_text_value($row['label'], 'changes-row-label');
+        $summary = vms_event_plan_review_normalize_text_value($row['summary'], 'changes-row-summary');
+        if ('valid' !== $label['state']) {
+            return $label;
+        }
+        if ('valid' !== $summary['state']) {
+            return $summary;
+        }
+
+        $normalized = array(
+            'field' => $field,
+            'label' => (string) ($label['value']['normalized'] ?? ''),
+            'summary' => (string) ($summary['value']['normalized'] ?? ''),
+        );
+
+        if (in_array($field, $string_fields, true)) {
+            foreach (array('before', 'after', 'before_label', 'after_label') as $key) {
+                if (!array_key_exists($key, $row)) {
+                    return vms_event_plan_review_state_result('invalid', array(), 'changes-row-missing-' . $key);
+                }
+                $value = vms_event_plan_review_normalize_text_value($row[$key], 'changes-row-' . $key);
+                if ('valid' !== $value['state']) {
+                    return $value;
+                }
+                $normalized[$key] = (string) ($value['value']['normalized'] ?? '');
+            }
+        } elseif (in_array($field, $id_fields, true)) {
+            foreach (array('before', 'after') as $key) {
+                if (!array_key_exists($key, $row)) {
+                    return vms_event_plan_review_state_result('invalid', array(), 'changes-row-missing-' . $key);
+                }
+                $value = vms_event_plan_review_normalize_id_value($row[$key], 'changes-row-' . $key);
+                if ('valid' !== $value['state']) {
+                    return $value;
+                }
+                $normalized[$key] = (int) ($value['value']['normalized'] ?? 0);
+            }
+            foreach (array('before_label', 'after_label') as $key) {
+                if (!array_key_exists($key, $row)) {
+                    return vms_event_plan_review_state_result('invalid', array(), 'changes-row-missing-' . $key);
+                }
+                $value = vms_event_plan_review_normalize_text_value($row[$key], 'changes-row-' . $key);
+                if ('valid' !== $value['state']) {
+                    return $value;
+                }
+                $normalized[$key] = (string) ($value['value']['normalized'] ?? '');
+            }
+        } elseif ('secondary_vendor_ids' === $field) {
+            foreach (array('before', 'after') as $key) {
+                if (!array_key_exists($key, $row)) {
+                    return vms_event_plan_review_state_result('invalid', array(), 'changes-row-missing-' . $key);
+                }
+                $value = vms_event_plan_review_normalize_secondary_vendor_ids($row[$key], 'changes-row-' . $key);
+                if ('valid' !== $value['state']) {
+                    return $value;
+                }
+                $normalized[$key] = (array) ($value['value'] ?? array());
+            }
+        } elseif ('lineup_rows' === $field) {
+            foreach (array('before', 'after') as $key) {
+                if (!array_key_exists($key, $row)) {
+                    return vms_event_plan_review_state_result('invalid', array(), 'changes-row-missing-' . $key);
+                }
+                $value = vms_event_plan_review_normalize_lineup_rows_value($row[$key], 'changes-row-' . $key);
+                if ('valid' !== $value['state']) {
+                    return $value;
+                }
+                $normalized[$key] = (array) ($value['value'] ?? array());
+            }
+        }
+
+        return vms_event_plan_review_state_result('valid', $normalized);
+    }
+}
+
+if (!function_exists('vms_event_plan_review_decode_changes_json')) {
+    function vms_event_plan_review_decode_changes_json(string $raw): array
+    {
+        if (trim($raw) === '') {
+            return vms_event_plan_review_state_result('missing', array(), 'changes-missing');
+        }
+
+        $decoded = json_decode($raw, true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-' . vms_event_plan_review_decode_error_reason());
+        }
+
+        if (!is_array($decoded) || vms_event_plan_review_is_list_array($decoded)) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-schema-top-level');
+        }
+
+        if (!array_key_exists('changes', $decoded)) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-missing-changes');
+        }
+
+        if (!is_array($decoded['changes']) || !vms_event_plan_review_is_list_array($decoded['changes'])) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-invalid-list');
+        }
+
+        $normalized_changes = array();
+        foreach ((array) $decoded['changes'] as $row) {
+            $normalized_row = vms_event_plan_review_normalize_change_row($row);
+            if ('valid' !== $normalized_row['state']) {
+                return $normalized_row;
+            }
+
+            $change = (array) ($normalized_row['value'] ?? array());
+            if (function_exists('vms_event_plan_review_change_is_noop') && vms_event_plan_review_change_is_noop($change)) {
+                continue;
+            }
+
+            $normalized_changes[] = $change;
+        }
+
+        return vms_event_plan_review_state_result(
+            'valid',
+            array(
+                'count' => count($normalized_changes),
+                'changes' => $normalized_changes,
+            )
+        );
+    }
+}
+
+if (!function_exists('vms_event_plan_review_has_snapshot_marker')) {
+    function vms_event_plan_review_has_snapshot_marker(int $plan_id): bool
+    {
+        $snapshot_at = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('snapshot_at'), true);
+        $snapshot_by = absint(get_post_meta($plan_id, vms_event_plan_review_meta_key('snapshot_by'), true));
+
+        return '' !== trim($snapshot_at) || $snapshot_by > 0;
+    }
+}
+
+if (!function_exists('vms_event_plan_review_has_changes_marker')) {
+    function vms_event_plan_review_has_changes_marker(int $plan_id): bool
+    {
+        $changes_at = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_at'), true);
+        $changes_by = absint(get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_by'), true));
+        $changes_source = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_source'), true);
+
+        return '' !== trim($changes_at) || $changes_by > 0 || '' !== trim($changes_source);
+    }
+}
+
+if (!function_exists('vms_event_plan_review_get_snapshot_state')) {
+    function vms_event_plan_review_get_snapshot_state(int $plan_id): array
+    {
+        $raw = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('snapshot_json'), true);
+        $state = vms_event_plan_review_decode_snapshot_json($raw);
+        if ('missing' === ($state['state'] ?? '') && vms_event_plan_review_has_snapshot_marker($plan_id)) {
+            return vms_event_plan_review_state_result('invalid', array(), 'snapshot-marker-without-valid-json');
+        }
+
+        return $state;
+    }
+}
+
+if (!function_exists('vms_event_plan_review_get_changes_state')) {
+    function vms_event_plan_review_get_changes_state(int $plan_id): array
+    {
+        $raw = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_json'), true);
+        $state = vms_event_plan_review_decode_changes_json($raw);
+        if ('missing' === ($state['state'] ?? '') && vms_event_plan_review_has_changes_marker($plan_id)) {
+            return vms_event_plan_review_state_result('invalid', array(), 'changes-marker-without-valid-json');
+        }
+
+        return $state;
+    }
+}
+
+if (!function_exists('vms_event_plan_review_get_snapshot')) {
+    function vms_event_plan_review_get_snapshot(int $plan_id): array
+    {
+        $state = vms_event_plan_review_get_snapshot_state($plan_id);
+        return 'valid' === ($state['state'] ?? '') ? (array) ($state['value'] ?? array()) : array();
     }
 }
 
 if (!function_exists('vms_event_plan_review_get_changes')) {
     function vms_event_plan_review_get_changes(int $plan_id): array
     {
-        $raw = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_json'), true);
-        if ($raw === '') {
-            return array();
-        }
-
-        $decoded = json_decode($raw, true);
-        if (!is_array($decoded)) {
-            return array();
-        }
-
-        // Guard display paths from older stored no-op changes such as
-        // "Secondary vendor type changed from Food Truck to Food Truck".
-        $changes = isset($decoded['changes']) && is_array($decoded['changes']) ? (array) $decoded['changes'] : array();
-        if (!empty($changes) && function_exists('vms_event_plan_review_change_is_noop')) {
-            $filtered = array();
-            foreach ($changes as $change) {
-                if (!is_array($change) || vms_event_plan_review_change_is_noop((array) $change)) {
-                    continue;
-                }
-                $filtered[] = $change;
-            }
-            $decoded['changes'] = $filtered;
-            $decoded['count'] = count($filtered);
-            if (empty($filtered)) {
-                return array();
-            }
-        }
-
-        return $decoded;
+        $state = vms_event_plan_review_get_changes_state($plan_id);
+        return 'valid' === ($state['state'] ?? '') ? (array) ($state['value'] ?? array()) : array();
     }
 }
 
@@ -672,6 +1116,38 @@ if (!function_exists('vms_event_plan_review_compact_summary')) {
     }
 }
 
+if (!function_exists('vms_event_plan_review_integrity_message')) {
+    function vms_event_plan_review_integrity_message(): string
+    {
+        return __('Stored Event Plan review state is unavailable or invalid. Review and republish this Event Plan to establish a clean baseline.', 'backstage-venue-manager');
+    }
+}
+
+if (!function_exists('vms_event_plan_review_get_integrity_issue')) {
+    function vms_event_plan_review_get_integrity_issue(int $plan_id): array
+    {
+        $snapshot_state = vms_event_plan_review_get_snapshot_state($plan_id);
+        if ('invalid' === ($snapshot_state['state'] ?? '')) {
+            return array(
+                'type' => 'snapshot_invalid',
+                'reason' => (string) ($snapshot_state['reason'] ?? ''),
+                'message' => vms_event_plan_review_integrity_message(),
+            );
+        }
+
+        $changes_state = vms_event_plan_review_get_changes_state($plan_id);
+        if ('invalid' === ($changes_state['state'] ?? '')) {
+            return array(
+                'type' => 'changes_invalid',
+                'reason' => (string) ($changes_state['reason'] ?? ''),
+                'message' => vms_event_plan_review_integrity_message(),
+            );
+        }
+
+        return array();
+    }
+}
+
 if (!function_exists('vms_event_plan_review_clear_changes')) {
     function vms_event_plan_review_clear_changes(int $plan_id): void
     {
@@ -712,16 +1188,22 @@ if (!function_exists('vms_event_plan_review_touch')) {
             return array();
         }
 
-        $snapshot = vms_event_plan_review_get_snapshot($plan_id);
-        if (empty($snapshot)) {
+        $snapshot_state = vms_event_plan_review_get_snapshot_state($plan_id);
+        if ('missing' === ($snapshot_state['state'] ?? '')) {
             vms_event_plan_review_clear_changes($plan_id);
             return array();
+        }
+
+        if ('invalid' === ($snapshot_state['state'] ?? '')) {
+            $changes_state = vms_event_plan_review_get_changes_state($plan_id);
+            return 'valid' === ($changes_state['state'] ?? '') ? (array) ($changes_state['value'] ?? array()) : array();
         }
 
         if ($user_id <= 0) {
             $user_id = get_current_user_id();
         }
 
+        $snapshot = (array) ($snapshot_state['value'] ?? array());
         $current = vms_event_plan_review_current_snapshot($plan_id);
         $changes = vms_event_plan_review_build_changes($snapshot, $current);
         if (empty($changes)) {
@@ -746,8 +1228,16 @@ if (!function_exists('vms_event_plan_review_touch')) {
 if (!function_exists('vms_event_plan_review_has_changes')) {
     function vms_event_plan_review_has_changes(int $plan_id): bool
     {
-        $changes = vms_event_plan_review_get_changes($plan_id);
-        return !empty($changes['count']) && !empty($changes['changes']) && is_array($changes['changes']);
+        $changes_state = vms_event_plan_review_get_changes_state($plan_id);
+        if ('valid' === ($changes_state['state'] ?? '')) {
+            $changes = (array) ($changes_state['value'] ?? array());
+            if (!empty($changes['count']) && !empty($changes['changes']) && is_array($changes['changes'])) {
+                return true;
+            }
+        }
+
+        $snapshot_state = vms_event_plan_review_get_snapshot_state($plan_id);
+        return 'invalid' === ($snapshot_state['state'] ?? '') || 'invalid' === ($changes_state['state'] ?? '');
     }
 }
 
@@ -758,15 +1248,20 @@ if (!function_exists('vms_event_plan_review_render_banner')) {
             return;
         }
 
-        $changes = vms_event_plan_review_get_changes((int) $post->ID);
-        if (empty($changes['changes']) || !is_array($changes['changes'])) {
+        $plan_id = (int) $post->ID;
+        $changes_state = vms_event_plan_review_get_changes_state($plan_id);
+        $changes = 'valid' === ($changes_state['state'] ?? '') ? (array) ($changes_state['value'] ?? array()) : array();
+        $integrity_issue = vms_event_plan_review_get_integrity_issue($plan_id);
+        $has_detailed_changes = !empty($changes['changes']) && is_array($changes['changes']);
+
+        if (!$has_detailed_changes && empty($integrity_issue)) {
             return;
         }
 
-        $count = max(0, (int) ($changes['count'] ?? count($changes['changes'])));
-        $changed_at = (string) get_post_meta($post->ID, vms_event_plan_review_meta_key('changes_at'), true);
-        $changed_by = absint(get_post_meta($post->ID, vms_event_plan_review_meta_key('changes_by'), true));
-        $changed_source = (string) get_post_meta($post->ID, vms_event_plan_review_meta_key('changes_source'), true);
+        $count = max(0, (int) ($changes['count'] ?? count((array) ($changes['changes'] ?? array()))));
+        $changed_at = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_at'), true);
+        $changed_by = absint(get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_by'), true));
+        $changed_source = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_source'), true);
         $user_name = '';
         if ($changed_by > 0) {
             $user = get_userdata($changed_by);
@@ -790,20 +1285,29 @@ if (!function_exists('vms_event_plan_review_render_banner')) {
         }
 
         echo '<div class="notice notice-warning inline">';
-        /* translators: %d: number of unpublished tracked changes since the last publish. */
-        echo '<p><strong>' . esc_html__('Needs Review', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(_n('%d unpublished change since last publish.', '%d unpublished changes since last publish.', $count, 'backstage-venue-manager'), $count)) . '</p>';
+        if ($has_detailed_changes) {
+            /* translators: %d: number of unpublished tracked changes since the last publish. */
+            echo '<p><strong>' . esc_html__('Needs Review', 'backstage-venue-manager') . '</strong> ' . esc_html(sprintf(_n('%d unpublished change since last publish.', '%d unpublished changes since last publish.', $count, 'backstage-venue-manager'), $count)) . '</p>';
+        } else {
+            echo '<p><strong>' . esc_html__('Needs Review', 'backstage-venue-manager') . '</strong> ' . esc_html(vms_event_plan_review_integrity_message()) . '</p>';
+        }
         if (!empty($meta_bits)) {
             echo '<p class="description">' . esc_html(implode(' | ', $meta_bits)) . '</p>';
         }
-        echo '<ul class="vms-review-banner-list">';
-        foreach (array_slice((array) $changes['changes'], 0, 6) as $change) {
-            $summary = trim((string) ($change['summary'] ?? ''));
-            if ($summary === '') {
-                continue;
+        if ($has_detailed_changes) {
+            echo '<ul class="vms-review-banner-list">';
+            foreach (array_slice((array) $changes['changes'], 0, 6) as $change) {
+                $summary = trim((string) ($change['summary'] ?? ''));
+                if ($summary === '') {
+                    continue;
+                }
+                echo '<li>' . esc_html(vms_event_plan_review_clean_text($summary)) . '</li>';
             }
-            echo '<li>' . esc_html(vms_event_plan_review_clean_text($summary)) . '</li>';
+            echo '</ul>';
         }
-        echo '</ul>';
+        if (!empty($integrity_issue)) {
+            echo '<p class="description">' . esc_html((string) ($integrity_issue['message'] ?? vms_event_plan_review_integrity_message())) . '</p>';
+        }
         echo '<p><em>' . esc_html__('Review the plan, then click Publish Now again to make the current version the new baseline.', 'backstage-venue-manager') . '</em></p>';
         echo '</div>';
     }
@@ -818,6 +1322,7 @@ if (!function_exists('vms_event_plan_review_render_status_note')) {
         }
 
         $changes = vms_event_plan_review_get_changes($post_id);
+        $integrity_issue = vms_event_plan_review_get_integrity_issue($post_id);
         $count = max(0, (int) ($changes['count'] ?? 0));
         $first = vms_event_plan_review_compact_summary((array) ($changes['changes'] ?? array()));
 
@@ -829,6 +1334,8 @@ if (!function_exists('vms_event_plan_review_render_status_note')) {
         echo '</div>';
         if ($first !== '') {
             echo '<div class="description">' . esc_html(vms_event_plan_review_clean_text($first)) . '</div>';
+        } elseif (!empty($integrity_issue)) {
+            echo '<div class="description">' . esc_html((string) ($integrity_issue['message'] ?? vms_event_plan_review_integrity_message())) . '</div>';
         }
     }
 }
