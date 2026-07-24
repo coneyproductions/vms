@@ -6075,7 +6075,7 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
  * This file also ships a front-end UX helper that makes add-ons feel like a single submission with the GA ticket form.
  */
 add_action('wp_enqueue_scripts', 'vms_ticketing_v2_enqueue_front_bundle', 999);
-add_action('template_redirect', 'vms_ticketing_v2_start_my_tickets_notice_buffer', 1);
+add_filter('tec_tickets_my_tickets_link_ticket_count_by_type', 'vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type', 99, 3);
 
 add_action('wp_ajax_vms_ticketing_v2_silent_add', 'vms_ticketing_v2_ajax_silent_add');
 add_action('wp_ajax_nopriv_vms_ticketing_v2_silent_add', 'vms_ticketing_v2_ajax_silent_add');
@@ -6127,202 +6127,75 @@ function vms_ticketing_v2_is_legacy_verified_ticket_copy($value): bool
     );
 }
 
-function vms_ticketing_v2_start_my_tickets_notice_buffer(): void
+function vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type(array $count_by_type, int $event_id, int $user_id): array
 {
     if (is_admin() || !is_user_logged_in()) {
-        return;
+        return $count_by_type;
     }
     if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (function_exists('wp_is_json_request') && wp_is_json_request()) || is_feed()) {
-        return;
+        return $count_by_type;
+    }
+    if (!function_exists('is_singular') || !is_singular('tribe_events')) {
+        return $count_by_type;
     }
 
-    $event_id = 0;
-    if (function_exists('is_singular') && is_singular('tribe_events')) {
-        $event_id = absint(get_queried_object_id());
-    }
-    if ($event_id <= 0) {
-        return;
+    $event_id = absint($event_id);
+    if ($event_id <= 0 || get_post_type($event_id) !== 'tribe_events') {
+        return $count_by_type;
     }
 
-    $count = function_exists('vms_ticketing_v2_active_ticket_count_for_event_user')
-        ? vms_ticketing_v2_active_ticket_count_for_event_user($event_id, (int) get_current_user_id())
+    $current_user_id = (int) get_current_user_id();
+    $user_id = absint($user_id);
+    if ($current_user_id <= 0 || $user_id <= 0 || $current_user_id !== $user_id) {
+        return $count_by_type;
+    }
+
+    $active_count = function_exists('vms_ticketing_v2_active_ticket_count_for_event_user')
+        ? vms_ticketing_v2_active_ticket_count_for_event_user($event_id, $user_id)
         : -1;
-    if ($count < 0) {
-        return;
+    if ($active_count < 0) {
+        return $count_by_type;
     }
 
-    $GLOBALS['vms_ticketing_v2_my_tickets_notice_count'] = max(0, absint($count));
-    if (!empty($GLOBALS['vms_ticketing_v2_my_tickets_notice_buffer_started'])) {
-        return;
-    }
-
-    $GLOBALS['vms_ticketing_v2_my_tickets_notice_buffer_started'] = true;
-    ob_start('vms_ticketing_v2_filter_my_tickets_notice_html');
-}
-
-function vms_ticketing_v2_filter_my_tickets_notice_html(string $html, int $phase = 0): string
-{
-    if ($html === '' || stripos($html, 'Tickets for this Event') === false && stripos($html, 'Ticket for this Event') === false) {
-        return $html;
-    }
-
-    $count = isset($GLOBALS['vms_ticketing_v2_my_tickets_notice_count'])
-        ? max(0, absint($GLOBALS['vms_ticketing_v2_my_tickets_notice_count']))
-        : -1;
-    if ($count < 0) {
-        return $html;
-    }
-
-    return vms_ticketing_v2_rewrite_my_tickets_notice_html($html, $count);
-}
-
-function vms_ticketing_v2_rewrite_my_tickets_notice_html(string $html, int $count): string
-{
-    $notice_pattern = 'You\s+have\s+\d+\s+Tickets?\s+for\s+this\s+Event';
-
-    if ($count <= 0) {
-        if (!(bool) preg_match('#' . $notice_pattern . '#iu', $html)) {
-            return $html;
-        }
-
-        if (vms_ticketing_v2_is_exact_my_tickets_notice_fragment($html)) {
-            return '';
-        }
-
-        return vms_ticketing_v2_remove_exact_my_tickets_notice_nodes($html);
-    }
-
-    $replacement = 'You have ' . $count . ' ' . ($count === 1 ? 'Ticket' : 'Tickets') . ' for this Event';
-    $updated = preg_replace('#' . $notice_pattern . '#iu', esc_html($replacement), $html);
-    return is_string($updated) ? $updated : $html;
-}
-
-function vms_ticketing_v2_is_exact_my_tickets_notice_fragment(string $html): bool
-{
-    $normalized = vms_ticketing_v2_normalize_my_tickets_notice_text($html);
-    if ($normalized === '') {
-        return false;
-    }
-
-    return (bool) preg_match(
-        '#^You\s+have\s+\d+\s+Tickets?\s+for\s+this\s+Event\.?\s*View\s*Tickets?$#iu',
-        $normalized
-    );
-}
-
-function vms_ticketing_v2_remove_exact_my_tickets_notice_nodes(string $html): string
-{
-    if ($html === '') {
-        return $html;
-    }
-
-    $ranges = array();
-    if (!preg_match_all('#</?(p|div|span|section)\b[^>]*>#iu', $html, $matches, PREG_OFFSET_CAPTURE)) {
-        return $html;
-    }
-
-    $stack = array();
-    foreach ($matches[0] as $index => $token_match) {
-        $token = (string) $token_match[0];
-        $offset = (int) $token_match[1];
-        $tag = strtolower((string) $matches[1][$index][0]);
-        $is_closing = isset($token[1]) && $token[1] === '/';
-
-        if (!$is_closing) {
-            $stack[] = array(
-                'tag' => $tag,
-                'offset' => $offset,
-            );
+    $filtered_counts = $count_by_type;
+    foreach ($filtered_counts as $ticket_type => $ticket_data) {
+        if (!is_array($ticket_data)) {
             continue;
         }
 
-        for ($stack_index = count($stack) - 1; $stack_index >= 0; $stack_index--) {
-            if ($stack[$stack_index]['tag'] !== $tag) {
-                continue;
-            }
-
-            $open = $stack[$stack_index];
-            $stack = array_slice($stack, 0, $stack_index);
-
-            $length = ($offset + strlen($token)) - (int) $open['offset'];
-            if ($length > 0 && $length <= 2000) {
-                $ranges[] = array((int) $open['offset'], $length);
-            }
-            break;
-        }
+        $filtered_counts[$ticket_type]['count'] = 0;
     }
 
-    if (empty($ranges)) {
-        return $html;
+    $ticket_entry = (isset($filtered_counts['ticket']) && is_array($filtered_counts['ticket']))
+        ? $filtered_counts['ticket']
+        : array();
+
+    $ticket_singular = (isset($ticket_entry['singular']) && is_string($ticket_entry['singular']) && $ticket_entry['singular'] !== '')
+        ? $ticket_entry['singular']
+        : '';
+    if ($ticket_singular === '' && function_exists('tribe_get_ticket_label_singular')) {
+        $ticket_singular = (string) tribe_get_ticket_label_singular('my-tickets-view-link');
+    }
+    if ($ticket_singular === '') {
+        $ticket_singular = 'Ticket';
     }
 
-    usort($ranges, static function (array $left, array $right): int {
-        if ($left[1] === $right[1]) {
-            return $left[0] <=> $right[0];
-        }
-        return $left[1] <=> $right[1];
-    });
-
-    $selected = array();
-    foreach ($ranges as $range) {
-        $start = (int) $range[0];
-        $length = (int) $range[1];
-        $fragment = substr($html, $start, $length);
-        if (!is_string($fragment) || !vms_ticketing_v2_is_safe_my_tickets_notice_node_fragment($fragment)) {
-            continue;
-        }
-
-        $overlaps_existing = false;
-        foreach ($selected as $selected_range) {
-            $selected_start = (int) $selected_range[0];
-            $selected_end = $selected_start + (int) $selected_range[1];
-            $end = $start + $length;
-            if ($start < $selected_end && $selected_start < $end) {
-                $overlaps_existing = true;
-                break;
-            }
-        }
-
-        if (!$overlaps_existing) {
-            $selected[] = array($start, $length);
-        }
+    $ticket_plural = (isset($ticket_entry['plural']) && is_string($ticket_entry['plural']) && $ticket_entry['plural'] !== '')
+        ? $ticket_entry['plural']
+        : '';
+    if ($ticket_plural === '' && function_exists('tribe_get_ticket_label_plural')) {
+        $ticket_plural = (string) tribe_get_ticket_label_plural('my-tickets-view-link');
+    }
+    if ($ticket_plural === '') {
+        $ticket_plural = 'Tickets';
     }
 
-    if (empty($selected)) {
-        return $html;
-    }
+    $ticket_entry['count'] = max(0, absint($active_count));
+    $ticket_entry['singular'] = $ticket_singular;
+    $ticket_entry['plural'] = $ticket_plural;
+    $filtered_counts['ticket'] = $ticket_entry;
 
-    usort($selected, static function (array $left, array $right): int {
-        return $right[0] <=> $left[0];
-    });
-
-    foreach ($selected as $range) {
-        $start = (int) $range[0];
-        $length = (int) $range[1];
-        $html = substr($html, 0, $start) . substr($html, $start + $length);
-    }
-
-    return $html;
-}
-
-function vms_ticketing_v2_is_safe_my_tickets_notice_node_fragment(string $html): bool
-{
-    if ($html === '' || strlen($html) > 2000) {
-        return false;
-    }
-
-    if (!(bool) preg_match('#<a\b[^>]*>\s*View\s*Tickets?\s*</a>#iu', $html)) {
-        return false;
-    }
-
-    return vms_ticketing_v2_is_exact_my_tickets_notice_fragment($html);
-}
-
-function vms_ticketing_v2_normalize_my_tickets_notice_text(string $html): string
-{
-    $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    $text = preg_replace('/\s+/u', ' ', $text);
-    return trim((string) $text);
+    return $filtered_counts;
 }
 
 function vms_ticketing_v2_front_ui_settings(int $plan_id = 0): array

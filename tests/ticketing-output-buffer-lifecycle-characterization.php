@@ -166,6 +166,26 @@ function vms_test_find_action_priority(string $source, string $hook, string $cal
 }
 
 /**
+ * @return array{priority:int,accepted_args:int}|null
+ */
+function vms_test_find_filter_registration(string $source, string $hook, string $callback): ?array
+{
+	$pattern = sprintf(
+		'~add_filter\(\s*[\'"]%s[\'"]\s*,\s*[\'"]%s[\'"](?:\s*,\s*(\d+))?(?:\s*,\s*(\d+))?~',
+		preg_quote($hook, '~'),
+		preg_quote($callback, '~')
+	);
+	if (!preg_match($pattern, $source, $matches)) {
+		return null;
+	}
+
+	return array(
+		'priority' => (!isset($matches[1]) || $matches[1] === '') ? 10 : (int) $matches[1],
+		'accepted_args' => (!isset($matches[2]) || $matches[2] === '') ? 1 : (int) $matches[2],
+	);
+}
+
+/**
  * @return array<int,string>
  */
 function vms_test_find_action_hooks_for_callback(string $source, string $callback): array
@@ -425,27 +445,26 @@ try {
 		vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
 	}
 
-	$myTicketsPriority = vms_test_find_action_priority($v2Source, 'template_redirect', 'vms_ticketing_v2_start_my_tickets_notice_buffer');
-	vms_test_assert_same(1, $myTicketsPriority, 'The My Tickets notice buffer should remain registered on template_redirect priority 1.');
+	$myTicketsRegistration = vms_test_find_filter_registration($v2Source, 'tec_tickets_my_tickets_link_ticket_count_by_type', 'vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
+	vms_test_assert_true(is_array($myTicketsRegistration), 'My Tickets should now be registered through the native TEC count-source filter.');
+	vms_test_assert_same(99, $myTicketsRegistration['priority'], 'The My Tickets native count-source filter should run after installed TEC callbacks.');
+	vms_test_assert_same(3, $myTicketsRegistration['accepted_args'], 'The My Tickets native count-source filter should retain the installed TEC accepted-argument count.');
+	vms_test_assert_not_contains("add_action('template_redirect', 'vms_ticketing_v2_start_my_tickets_notice_buffer'", $v2Source, 'The obsolete My Tickets template_redirect opener should be removed.');
+	vms_test_assert_not_contains('function vms_ticketing_v2_start_my_tickets_notice_buffer(', $v2Source, 'The obsolete My Tickets opener function should be removed.');
+	vms_test_assert_not_contains('function vms_ticketing_v2_filter_my_tickets_notice_html(', $v2Source, 'The obsolete My Tickets callback-buffer function should be removed.');
+	vms_test_assert_not_contains("vms_ticketing_v2_my_tickets_notice_count", $v2Source, 'The obsolete My Tickets global count state should be removed.');
+	vms_test_assert_not_contains("vms_ticketing_v2_my_tickets_notice_buffer_started", $v2Source, 'The obsolete My Tickets duplicate-start state should be removed.');
+	vms_test_assert_not_contains("ob_start('vms_ticketing_v2_filter_my_tickets_notice_html')", $v2Source, 'No My Tickets callback-based full-response buffer should remain.');
+	vms_test_assert_not_contains('You\s+have\s+\d+\s+Tickets?\s+for\s+this\s+Event', $v2Source, 'The My Tickets full-page regex transformation should be removed.');
 
-	$myTicketsOpenerBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_start_my_tickets_notice_buffer');
-	$myTicketsFilterBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_filter_my_tickets_notice_html');
-	vms_test_assert_same(
-		'vms_ticketing_v2_filter_my_tickets_notice_html',
-		vms_test_find_ob_start_callback($myTicketsOpenerBody),
-		'The My Tickets notice opener should still own a callback-based full-response buffer.'
-	);
+	$myTicketsFilterBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
 	vms_test_assert_contains(
-		"\$GLOBALS['vms_ticketing_v2_my_tickets_notice_buffer_started'] = true;",
-		$myTicketsOpenerBody,
-		'The My Tickets opener should still record that its callback-owned response buffer has started.'
-	);
-	vms_test_assert_contains(
-		'vms_ticketing_v2_rewrite_my_tickets_notice_html(',
+		'vms_ticketing_v2_active_ticket_count_for_event_user(',
 		$myTicketsFilterBody,
-		'The My Tickets buffer callback should still own the response rewrite path.'
+		'The My Tickets native filter callback should still route through the existing VMS active-ticket-count helper.'
 	);
-	vms_test_assert_no_same_flow_explicit_close($myTicketsOpenerBody, 'vms_ticketing_v2_start_my_tickets_notice_buffer');
+	vms_test_assert_not_contains('ob_start(', $myTicketsFilterBody, 'The My Tickets native filter callback should not open any output buffer.');
+	vms_test_assert_not_contains('$GLOBALS', $myTicketsFilterBody, 'The My Tickets native filter callback should not own any request-global buffer state.');
 
 	$serverMountPriority = vms_test_find_action_priority($v2Source, 'template_redirect', 'vms_ticketing_v2_server_mount_boot');
 	vms_test_assert_same(5, $serverMountPriority, 'The server-mount buffer should remain registered on template_redirect priority 5.');
