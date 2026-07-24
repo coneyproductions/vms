@@ -2051,12 +2051,12 @@ function vms_ticketing_v2_validate_config_payload(array $cfg): bool {
 
 function vms_ticketing_b_ajax_save_tiers(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $tiers_in_raw = isset($_POST['tiers']) ? $_POST['tiers'] : null;
@@ -2082,7 +2082,7 @@ function vms_ticketing_b_ajax_save_tiers(): void {
     }
 
     if (!is_array($tiers_in)) {
-        wp_send_json_error(array('message' => 'invalid_payload_tiers'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_tiers'), 400);
     }
 
 $tiers_out = array();
@@ -2105,7 +2105,7 @@ $tiers_out = array();
 
     vms_ticketing_b_set_tiers($plan_id, $tiers_out);
 
-    wp_send_json_success(array('tiers' => $tiers_out));
+    vms_ticketing_v2_ajax_send_success(array('tiers' => $tiers_out));
 }
 add_action('wp_ajax_vms_ticketing_save_tiers', 'vms_ticketing_b_ajax_save_tiers');
 
@@ -2114,20 +2114,20 @@ add_action('wp_ajax_vms_ticketing_save_tiers', 'vms_ticketing_b_ajax_save_tiers'
  */
 function vms_ticketing_b_ajax_preview_sync(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $preview = vms_ticketing_b_preview_sync($plan_id);
     if (empty($preview['ok'])) {
-        wp_send_json_error(array('message' => $preview['message'] ?? 'error'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => $preview['message'] ?? 'error'), 400);
     }
 
-    wp_send_json_success($preview);
+    vms_ticketing_v2_ajax_send_success($preview);
 }
 add_action('wp_ajax_vms_ticketing_preview_sync', 'vms_ticketing_b_ajax_preview_sync');
 
@@ -2136,12 +2136,12 @@ add_action('wp_ajax_vms_ticketing_preview_sync', 'vms_ticketing_b_ajax_preview_s
  */
 function vms_ticketing_b_ajax_commit_sync(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $items_raw = isset($_POST['items']) ? $_POST['items'] : null;
@@ -2166,13 +2166,13 @@ function vms_ticketing_b_ajax_commit_sync(): void {
     }
 
     if (!is_array($items)) {
-        wp_send_json_error(array('message' => 'invalid_payload_items'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_items'), 400);
     }
 
-$res = vms_ticketing_b_commit_sync($plan_id, $items);
+    $res = vms_ticketing_b_commit_sync($plan_id, $items);
     if (empty($res['ok'])) {
         $http = isset($res['http']) ? (int) $res['http'] : 400;
-        wp_send_json_error(array(
+        vms_ticketing_v2_ajax_send_error(array(
             'message' => $res['message'] ?? 'error',
             'error_code' => $res['error_code'] ?? ($res['message'] ?? 'error'),
             'error_summary' => $res['error_summary'] ?? '',
@@ -2180,7 +2180,7 @@ $res = vms_ticketing_b_commit_sync($plan_id, $items);
         ), $http);
     }
 
-    wp_send_json_success($res);
+    vms_ticketing_v2_ajax_send_success($res);
 }
 add_action('wp_ajax_vms_ticketing_commit_sync', 'vms_ticketing_b_ajax_commit_sync');
 
@@ -9733,12 +9733,12 @@ function vms_ticketing_v2_ajax_save_config(): void {
         : 0;
 
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $raw = $_POST['config'] ?? null;
@@ -9768,7 +9768,7 @@ function vms_ticketing_v2_ajax_save_config(): void {
     }
 
     if (!is_array($cfg_in)) {
-        wp_send_json_error(array('message' => 'invalid_payload_config'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
     }
 
     $started_at = microtime(true);
@@ -9843,12 +9843,12 @@ function vms_ticketing_v2_ajax_save_config(): void {
  */
 function vms_ticketing_v2_ajax_save_template(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
 	$name = isset($_POST['name']) ? sanitize_text_field((string) $_POST['name']) : '';
@@ -9856,7 +9856,7 @@ function vms_ticketing_v2_ajax_save_template(): void {
 	if (is_string($cfg_raw) && $cfg_raw !== '') {
 		$cfg_raw = trim($cfg_raw);
 		if (strlen($cfg_raw) > 262144) {
-			wp_send_json_error(array('message' => 'invalid_payload_config'), 400);
+			vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
 		}
 		$decoded = vms_json_decode_associative($cfg_raw, 64);
 		if (
@@ -9865,12 +9865,12 @@ function vms_ticketing_v2_ajax_save_template(): void {
 			|| !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
 			|| !vms_ticketing_v2_validate_config_payload($decoded['value'])
 		) {
-			wp_send_json_error(array('message' => 'invalid_payload_config'), 400);
+			vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
 		}
 		$cfg_in = $decoded['value'];
 	} elseif (is_array($cfg_raw)) {
 		if (!vms_ticketing_v2_validate_config_payload($cfg_raw)) {
-			wp_send_json_error(array('message' => 'invalid_payload_config'), 400);
+			vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
 		}
 		$cfg_in = $cfg_raw;
 	} else {
@@ -9879,7 +9879,7 @@ function vms_ticketing_v2_ajax_save_template(): void {
 
     $res = vms_ticketing_v2_templates_save($name, $cfg_in);
     if (empty($res['ok'])) {
-        wp_send_json_error(array('message' => $res['message'] ?? 'error'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => $res['message'] ?? 'error'), 400);
     }
 
     $templates = vms_ticketing_v2_templates_get_all();
@@ -9895,7 +9895,7 @@ function vms_ticketing_v2_ajax_save_template(): void {
         );
     }
  
-    wp_send_json_success(array(
+    vms_ticketing_v2_ajax_send_success(array(
         'template_id' => (string) ($res['template_id'] ?? ''),
         'templates' => $list,
     ));
@@ -9906,12 +9906,12 @@ function vms_ticketing_v2_ajax_save_template(): void {
  */
 function vms_ticketing_v2_ajax_apply_template(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $template_id = isset($_POST['template_id']) ? sanitize_key((string) $_POST['template_id']) : '';
@@ -9923,10 +9923,10 @@ function vms_ticketing_v2_ajax_apply_template(): void {
         'reset_stale_sales_end' => $reset_stale_sales_end,
     ));
     if (empty($res['ok'])) {
-        wp_send_json_error(array('message' => $res['message'] ?? 'error'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => $res['message'] ?? 'error'), 400);
     }
 
-    wp_send_json_success(array(
+    vms_ticketing_v2_ajax_send_success(array(
         'config' => $res['config'],
         'config_hash' => vms_ticketing_v2_hash_config_for_sync($res['config']),
         'applied_show_datetime' => (string) ($res['applied_show_datetime'] ?? ''),
@@ -9938,12 +9938,12 @@ function vms_ticketing_v2_ajax_apply_template(): void {
  */
 function vms_ticketing_v2_ajax_clear_config(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
  
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     if (function_exists('vms_ticket_mutation_audit_push_context')) {
@@ -9963,7 +9963,7 @@ function vms_ticketing_v2_ajax_clear_config(): void {
         vms_ticket_mutation_audit_pop_context();
     }
 
-    wp_send_json_success(array(
+    vms_ticketing_v2_ajax_send_success(array(
         'config' => vms_ticketing_v2_default_config($plan_id),
     ));
 }
@@ -9973,15 +9973,15 @@ function vms_ticketing_v2_ajax_clear_config(): void {
  */
 function vms_ticketing_v2_ajax_init_from_legacy(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    wp_send_json_error(array(
+    vms_ticketing_v2_ajax_send_error(array(
         'message' => 'legacy_init_retired',
         'detail' => __('Legacy Ticketing initializer is retired. Configure Ticketing v2 directly and use Preview → Commit.', 'backstage-venue-manager'),
     ), 400);
@@ -9997,11 +9997,11 @@ add_action('wp_ajax_vms_ticketing_v2_init_from_legacy', 'vms_ticketing_v2_ajax_i
  */
 function vms_ticketing_v2_ajax_set_default_template(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $template_id = isset($_POST['template_id']) ? sanitize_key((string) $_POST['template_id']) : '';
@@ -10010,13 +10010,13 @@ function vms_ticketing_v2_ajax_set_default_template(): void {
     if ($template_id !== '') {
         $templates = vms_ticketing_v2_templates_get_all();
         if (empty($templates[$template_id])) {
-            wp_send_json_error(array('message' => 'template_not_found'), 400);
+            vms_ticketing_v2_ajax_send_error(array('message' => 'template_not_found'), 400);
         }
     }
 
     $ok = vms_ticketing_v2_set_default_template_id($template_id);
     if (!$ok) {
-        wp_send_json_error(array('message' => 'template_not_found'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'template_not_found'), 400);
     }
 
     $name = '';
@@ -10027,7 +10027,7 @@ function vms_ticketing_v2_ajax_set_default_template(): void {
         }
     }
 
-    wp_send_json_success(array(
+    vms_ticketing_v2_ajax_send_success(array(
         'default_template_id' => $template_id,
         'default_template_name' => $name,
     ));
@@ -10046,12 +10046,12 @@ function vms_ticketing_v2_ajax_preview_sync(): void {
         : 0;
 
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $preview_started_at = microtime(true);
@@ -10060,7 +10060,7 @@ function vms_ticketing_v2_ajax_preview_sync(): void {
 
     if (empty($preview['ok'])) {
         $http = isset($preview['http']) ? (int) $preview['http'] : 400;
-        wp_send_json_error(array(
+        vms_ticketing_v2_ajax_send_error(array(
             'message' => $preview['message'] ?? 'error',
             'preview_elapsed_ms' => $preview_elapsed_ms,
             'request_age_at_handler_ms' => $request_age_at_handler_ms,
@@ -10083,17 +10083,17 @@ add_action('wp_ajax_vms_ticketing_v2_preview_sync', 'vms_ticketing_v2_ajax_previ
  */
 function vms_ticketing_v2_ajax_commit_sync(): void {
     if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'bad_nonce'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
     $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
-        wp_send_json_error(array('message' => 'forbidden'), 403);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
     $preview_id = isset($_POST['preview_id']) ? trim((string) wp_unslash($_POST['preview_id'])) : '';
     if ($preview_id === '') {
-        wp_send_json_error(array('message' => 'invalid_payload_preview_id'), 400);
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_preview_id'), 400);
     }
 
     if (function_exists('vms_ticket_mutation_audit_push_context')) {
@@ -10120,7 +10120,7 @@ function vms_ticketing_v2_ajax_commit_sync(): void {
     }
     if (empty($res['ok'])) {
         $http = isset($res['http']) ? (int) $res['http'] : 400;
-        wp_send_json_error(array(
+        vms_ticketing_v2_ajax_send_error(array(
             'message' => $res['message'] ?? 'error',
             'error_code' => $res['error_code'] ?? ($res['message'] ?? 'error'),
             'error_summary' => $res['error_summary'] ?? '',
@@ -10128,6 +10128,6 @@ function vms_ticketing_v2_ajax_commit_sync(): void {
         ), $http);
     }
 
-    wp_send_json_success($res);
+    vms_ticketing_v2_ajax_send_success($res);
 }
 add_action('wp_ajax_vms_ticketing_v2_commit_sync', 'vms_ticketing_v2_ajax_commit_sync');
