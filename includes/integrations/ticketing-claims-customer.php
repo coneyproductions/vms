@@ -342,17 +342,17 @@ if (!function_exists('vms_ticketing_claims_handle_client_log_action')) {
 	function vms_ticketing_claims_handle_client_log_action(): void
 	{
 		if (!is_user_logged_in()) {
-			wp_send_json_error(array('message' => 'login_required'), 401);
+			vms_ticketing_v2_ajax_send_error(array('message' => 'login_required'), 401);
 		}
 
 		if (!check_ajax_referer('vms_ticketing_claims_log_client_action', 'nonce', false)) {
-			wp_send_json_error(array('message' => 'bad_nonce'), 403);
+			vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
 		}
 
 		$reason_code = isset($_POST['reason_code']) ? sanitize_key((string) wp_unslash($_POST['reason_code'])) : '';
 		$allowed = array('self_apply_attempt', 'recent_claim_helper_used');
 		if (!in_array($reason_code, $allowed, true)) {
-			wp_send_json_error(array('message' => 'invalid_reason'), 400);
+			vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_reason'), 400);
 		}
 
 		$buyer_user_id = (int) get_current_user_id();
@@ -381,7 +381,7 @@ if (!function_exists('vms_ticketing_claims_handle_client_log_action')) {
 			));
 		}
 
-		wp_send_json_success(array('ok' => true));
+		vms_ticketing_v2_ajax_send_success(array('ok' => true));
 	}
 }
 add_action('wp_ajax_vms_ticketing_claims_log_client_action', 'vms_ticketing_claims_handle_client_log_action');
@@ -390,7 +390,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 	function vms_ticketing_claims_handle_validate_assignee(): void
 	{
 		if (!check_ajax_referer('vms_ticketing_claims_validate_assignee', 'nonce', false)) {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => __('Session expired. Please refresh and try again.', 'backstage-venue-manager'),
 				'reason_code' => 'bad_nonce',
@@ -398,7 +398,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		}
 
 		if (!is_user_logged_in()) {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => __('Log in before checking approved guest emails for this ticket.', 'backstage-venue-manager'),
 				'reason_code' => 'login_required',
@@ -416,7 +416,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 			}
 
 		if ($product_id <= 0 || $assignee_email === '') {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => __('Enter a valid registered email address first.', 'backstage-venue-manager'),
 				'reason_code' => 'invalid_request',
@@ -424,7 +424,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		}
 
 		if (!function_exists('vms_ticketing_v2_resolve_verified_ticket_context')) {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => __('Ticket validation is temporarily unavailable.', 'backstage-venue-manager'),
 				'reason_code' => 'context_unavailable',
@@ -434,7 +434,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		$ctx = (array) vms_ticketing_v2_resolve_verified_ticket_context($product_id);
 		$visibility_mode = sanitize_key((string) ($ctx['visibility_mode'] ?? 'public'));
 		if ($visibility_mode !== 'verified') {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => __('This ticket does not support claim-ticket assignment.', 'backstage-venue-manager'),
 				'reason_code' => 'ticket_not_verified',
@@ -458,7 +458,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 			$event_id = $ctx_event_id;
 		}
 		if ($event_id <= 0) {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => __('Could not determine the event for this ticket.', 'backstage-venue-manager'),
 				'reason_code' => 'event_missing',
@@ -486,7 +486,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 
 		$user = get_user_by('email', $assignee_email);
 		if (!($user instanceof WP_User)) {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => function_exists('vms_ticketing_v2_claim_assignment_unknown_guest_message')
 					? vms_ticketing_v2_claim_assignment_unknown_guest_message()
@@ -570,7 +570,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		}
 
 		if (!$eligible) {
-			wp_send_json_error(array(
+			vms_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => $message,
 				'reason_code' => $reason_code,
@@ -579,7 +579,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 			), 200);
 		}
 
-		wp_send_json_success(array(
+		vms_ticketing_v2_ajax_send_success(array(
 			'ok' => true,
 			'message' => $message,
 			'reason_code' => $reason_code,

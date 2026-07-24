@@ -35,13 +35,17 @@ final class Vms_Test_Json_Response extends RuntimeException
 	public bool $success;
 	public array $data;
 	public int $status;
+	public int $flags;
+	public int $numArgs;
 
-	public function __construct(bool $success, array $data, int $status)
+	public function __construct(bool $success, array $data, int $status, int $flags = 0, int $numArgs = 2)
 	{
 		parent::__construct('JSON response captured.');
 		$this->success = $success;
 		$this->data = $data;
 		$this->status = $status;
+		$this->flags = $flags;
+		$this->numArgs = $numArgs;
 	}
 }
 
@@ -111,14 +115,44 @@ function wc_get_product(int $productId)
 	return new Vms_Test_Product('Qualified Guest Ticket');
 }
 
-function wp_send_json_error(array $data, int $statusCode = 200): void
+function wp_send_json_error(array $data, int $statusCode = 200, int $flags = 0): void
 {
-	throw new Vms_Test_Json_Response(false, $data, $statusCode);
+	throw new Vms_Test_Json_Response(false, $data, $statusCode, $flags, func_num_args());
 }
 
-function wp_send_json_success(array $data, int $statusCode = 200): void
+function wp_send_json_success(array $data, int $statusCode = 200, int $flags = 0): void
 {
-	throw new Vms_Test_Json_Response(true, $data, $statusCode);
+	throw new Vms_Test_Json_Response(true, $data, $statusCode, $flags, func_num_args());
+}
+
+function vms_ticketing_v2_ajax_send_error(array $data, ?int $httpStatus = null, int $flags = 0): void
+{
+	if (func_num_args() >= 3) {
+		wp_send_json_error($data, $httpStatus ?? 200, $flags);
+		return;
+	}
+
+	if (func_num_args() === 2) {
+		wp_send_json_error($data, $httpStatus ?? 200);
+		return;
+	}
+
+	wp_send_json_error($data);
+}
+
+function vms_ticketing_v2_ajax_send_success(array $data, ?int $httpStatus = null, int $flags = 0): void
+{
+	if (func_num_args() >= 3) {
+		wp_send_json_success($data, $httpStatus ?? 200, $flags);
+		return;
+	}
+
+	if (func_num_args() === 2) {
+		wp_send_json_success($data, $httpStatus ?? 200);
+		return;
+	}
+
+	wp_send_json_success($data);
 }
 
 function vms_ticketing_v2_resolve_verified_ticket_context(int $productId): array

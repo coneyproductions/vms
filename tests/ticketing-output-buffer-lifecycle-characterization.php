@@ -406,9 +406,11 @@ try {
 	$claimsAjaxExpectations = array(
 		'vms_ticketing_claims_handle_client_log_action' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_claims_log_client_action'),
+			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
 		),
 		'vms_ticketing_claims_handle_validate_assignee' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_claims_validate_assignee', 'wp_ajax_vms_ticketing_claims_validate_assignee'),
+			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
 		),
 	);
 
@@ -416,8 +418,11 @@ try {
 		$body = vms_test_extract_function($claimsSource, $callback);
 		$hooks = vms_test_find_action_hooks_for_callback($claimsSource, $callback);
 		vms_test_assert_same($expectation['hooks'], $hooks, $callback . ' should retain its existing customer-claims AJAX action registrations.');
-		vms_test_assert_same(array('wp_send_json_error', 'wp_send_json_success'), vms_test_find_direct_json_calls($body), $callback . ' should remain a customer-claims direct-send residual.');
-		vms_test_assert_same(array(), vms_test_find_v2_wrapper_calls($body), $callback . ' should not yet route through the V2 cleanup wrappers.');
+		vms_test_assert_same($expectation['wrapper_calls'], vms_test_find_v2_wrapper_calls($body), $callback . ' should now terminate through the V2 cleanup wrappers.');
+		vms_test_assert_same(array(), vms_test_find_direct_json_calls($body), $callback . ' should no longer remain a direct-send residual under the request-global AJAX opener.');
+		vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
+		vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');
+		vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
 	}
 
 	$myTicketsPriority = vms_test_find_action_priority($v2Source, 'template_redirect', 'vms_ticketing_v2_start_my_tickets_notice_buffer');
