@@ -7,6 +7,7 @@ define('VMS_VERSION', 'test-version');
 
 $GLOBALS['vms_test_options'] = array(
 	'vms_turnstile_site_key' => 'site-key',
+	'vms_turnstile_secret_key' => 'secret-key',
 );
 $GLOBALS['vms_test_scripts'] = array();
 
@@ -89,15 +90,16 @@ $_POST = array();
 $resetScripts();
 $html = vms_vendor_apply_shortcode();
 
+$assert(function_exists('vms_vendor_apply_turnstile_is_configured') && vms_vendor_apply_turnstile_is_configured(), 'Vendor Applications form should treat Turnstile as configured only when both keys exist.');
 $assert(isset($GLOBALS['vms_test_scripts']['vms-vendor-apply']), 'Vendor Applications form should enqueue the migrated vms-vendor-apply asset.');
 $assert(($GLOBALS['vms_test_scripts']['vms-vendor-apply']['src'] ?? '') === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/js/vms-vendor-apply.js', 'Vendor Applications asset should use the expected asset URL helper output.');
-$assert(isset($GLOBALS['vms_test_scripts']['cf-turnstile']), 'Vendor Applications form should keep the existing Turnstile asset enqueued when a site key is configured.');
+$assert(isset($GLOBALS['vms_test_scripts']['cf-turnstile']), 'Vendor Applications form should keep the existing Turnstile asset enqueued when both keys are configured.');
 $assert(strpos($html, 'id="vms-vendor-apply-variant-map"') !== false, 'Vendor Applications form should render the JSON configuration payload.');
 $assert(stripos($html, 'onchange=') === false && stripos($html, 'onclick=') === false && stripos($html, 'onsubmit=') === false, 'Vendor Applications form should not emit inline event-handler attributes.');
 $assert(strpos($html, 'name="vms_vendor_apply_nonce"') !== false, 'Vendor Applications form should preserve its server-side nonce field.');
 $assert(strpos($html, 'name="vms_app_vendor_type"') !== false, 'Vendor Applications form should preserve the vendor-type field.');
 $assert(strpos($html, 'data-vms-band-required="1"') !== false, 'Vendor Applications form should preserve the band-specific required markers.');
-$assert(strpos($html, 'class="cf-turnstile" data-sitekey="site-key"') !== false, 'Vendor Applications form should preserve the Turnstile widget markup.');
+$assert(strpos($html, 'class="cf-turnstile" data-sitekey="site-key"') !== false, 'Vendor Applications form should preserve the Turnstile widget markup when both keys are configured.');
 
 preg_match_all('~<script\b([^>]*)>(.*?)</script>~is', $html, $renderedScripts, PREG_SET_ORDER);
 $assert(count($renderedScripts) === 1, 'Vendor Applications form should only render the non-executable JSON script payload.');

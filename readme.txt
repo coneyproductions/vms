@@ -78,9 +78,10 @@ Email coneyproductionsllc@gmail.com.
 Backstage Venue Manager can connect to third-party services only when the corresponding feature is enabled or configured.
 
 1. Cloudflare Turnstile
-Used by: vendor application anti-spam verification, when enabled.
-When enabled and configured with a site key, Backstage Venue Manager loads Cloudflare's Turnstile client script on the vendor application form to render the verification widget.
-Data sent: the Turnstile token and visitor IP address during server-side verification.
+Used by: optional protection for the public Vendor Application form against automated abuse.
+Activation: Backstage Venue Manager uses Turnstile only after an administrator supplies both a site key and a secret key. If either key is missing, the active Vendor Application form is unavailable and the Cloudflare client is not loaded.
+Browser contact: when the fully configured active Vendor Application form is displayed, the visitor's browser loads Cloudflare's Turnstile client from challenges.cloudflare.com before the application is submitted. That contact may disclose ordinary request information such as the visitor IP address, browser or device information, request headers, page URL or referrer, and the configured public site key.
+Server-side verification: Backstage Venue Manager sends the Turnstile response token and the visitor IP address to Cloudflare and authenticates the verification request with the configured secret key. The Vendor Application form contents are not sent to Cloudflare through this integration.
 Service docs and privacy: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/ and https://www.cloudflare.com/turnstile-privacy-policy/
 
 2. QRServer / goQR.me

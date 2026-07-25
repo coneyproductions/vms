@@ -2094,6 +2094,11 @@ function vms_vendor_apply_turnstile_secret_key(): string
     return (string) apply_filters('vms_vendor_apply_turnstile_secret_key', $k);
 }
 
+function vms_vendor_apply_turnstile_is_configured(): bool
+{
+    return vms_vendor_apply_turnstile_site_key() !== '' && vms_vendor_apply_turnstile_secret_key() !== '';
+}
+
 /**
  * Simple rate limit: blocks rapid-fire spam even if CAPTCHA is bypassed.
  * Default: max 3 submissions per IP per hour.
@@ -2340,6 +2345,24 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
         $msg = vms_vendor_apply_render_notice('error', __('Please complete the band booking details.', 'backstage-venue-manager'), __('Add your turnout estimate and requested compensation to continue.', 'backstage-venue-manager'));
     }
 
+    if (!vms_vendor_apply_turnstile_is_configured()) {
+        $msg .= vms_vendor_apply_render_notice(
+            'error',
+            __('Vendor applications are temporarily unavailable.', 'backstage-venue-manager'),
+            __('Please try again later.', 'backstage-venue-manager')
+        );
+
+        if (current_user_can('manage_options')) {
+            $msg .= vms_vendor_apply_render_notice(
+                'warning',
+                __('Turnstile is incomplete.', 'backstage-venue-manager'),
+                __('Turnstile requires both a site key and a secret key before the Vendor Application form can be used.', 'backstage-venue-manager')
+            );
+        }
+
+        return '<div class="vms-vendor-apply-flow">' . $msg . '</div>';
+    }
+
     if ($is_logged_in_submitter && $flag !== 'success') {
         $context_copy = $is_portal_add_flow
             ? __('You’re adding another business while signed in. If you submit the same email as your current website account, the application can move straight into review. If you submit a different email, that email must be confirmed first.', 'backstage-venue-manager')
@@ -2347,26 +2370,14 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
         $msg .= vms_vendor_apply_render_notice('success', __('Signed-in submission detected.', 'backstage-venue-manager'), $context_copy);
     }
 
-    // Turnstile: load script and render widget only when configured
     $site_key = vms_vendor_apply_turnstile_site_key();
-    if ($site_key !== '') {
-        wp_enqueue_script(
-            'cf-turnstile',
-            'https://challenges.cloudflare.com/turnstile/v0/api.js',
-            array(),
-            null,
-            true
-        );
-    } else {
-        // Optional: show admins a hint (public visitors do not need to see this)
-        if (current_user_can('manage_options')) {
-            $msg .= vms_vendor_apply_render_notice(
-                'error',
-                __('Turnstile is not configured.', 'backstage-venue-manager'),
-                __('Set keys via vms_turnstile_* options, or add VMS_TURNSTILE_* / CF_TURNSTILE_* constants in wp-config.php.', 'backstage-venue-manager')
-            );
-        }
-    }
+    wp_enqueue_script(
+        'cf-turnstile',
+        'https://challenges.cloudflare.com/turnstile/v0/api.js',
+        array(),
+        VMS_VERSION,
+        true
+    );
 
     if (function_exists('wp_enqueue_script')) {
         $apply_script_src = function_exists('vms_asset_url')
