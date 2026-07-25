@@ -65,11 +65,11 @@ function vms_test_read_file(string $path): string
 
 function vms_test_extract_function(string $source, string $name): string
 {
-	$needle = 'function ' . $name . '(';
-	$start = strpos($source, $needle);
-	if ($start === false) {
+	$pattern = '~function\s+' . preg_quote($name, '~') . '\s*\(~';
+	if (!preg_match($pattern, $source, $matches, PREG_OFFSET_CAPTURE)) {
 		vms_test_fail('Unable to locate function ' . $name . '.');
 	}
+	$start = (int) $matches[0][1];
 
 	$brace = strpos($source, '{', $start);
 	if ($brace === false) {
@@ -78,60 +78,8 @@ function vms_test_extract_function(string $source, string $name): string
 
 	$depth = 1;
 	$length = strlen($source);
-	$inSingleQuote = false;
-	$inDoubleQuote = false;
-	$inLineComment = false;
-	$inBlockComment = false;
 	for ($i = $brace + 1; $i < $length; $i++) {
 		$char = $source[$i];
-		$nextChar = ($i + 1 < $length) ? $source[$i + 1] : '';
-		$prevChar = ($i > 0) ? $source[$i - 1] : '';
-
-		if ($inLineComment) {
-			if ($char === "\n") {
-				$inLineComment = false;
-			}
-			continue;
-		}
-		if ($inBlockComment) {
-			if ($char === '*' && $nextChar === '/') {
-				$inBlockComment = false;
-				$i++;
-			}
-			continue;
-		}
-		if ($inSingleQuote) {
-			if ($char === "'" && $prevChar !== '\\') {
-				$inSingleQuote = false;
-			}
-			continue;
-		}
-		if ($inDoubleQuote) {
-			if ($char === '"' && $prevChar !== '\\') {
-				$inDoubleQuote = false;
-			}
-			continue;
-		}
-
-		if ($char === '/' && $nextChar === '/') {
-			$inLineComment = true;
-			$i++;
-			continue;
-		}
-		if ($char === '/' && $nextChar === '*') {
-			$inBlockComment = true;
-			$i++;
-			continue;
-		}
-		if ($char === "'") {
-			$inSingleQuote = true;
-			continue;
-		}
-		if ($char === '"') {
-			$inDoubleQuote = true;
-			continue;
-		}
-
 		if ($char === '{') {
 			$depth++;
 			continue;
@@ -466,32 +414,49 @@ try {
 	vms_test_assert_not_contains('ob_start(', $myTicketsFilterBody, 'The My Tickets native filter callback should not open any output buffer.');
 	vms_test_assert_not_contains('$GLOBALS', $myTicketsFilterBody, 'The My Tickets native filter callback should not own any request-global buffer state.');
 
-	$serverMountPriority = vms_test_find_action_priority($v2Source, 'template_redirect', 'vms_ticketing_v2_server_mount_boot');
-	vms_test_assert_same(5, $serverMountPriority, 'The server-mount buffer should remain registered on template_redirect priority 5.');
+	$footerMountRegistration = vms_test_find_filter_registration($v2Source, 'tribe_template_before_include_html:tickets/v2/tickets/footer', 'vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
+	vms_test_assert_true(is_array($footerMountRegistration), 'Reserved add-ons should now be registered through the native TEC footer seam.');
+	vms_test_assert_same(20, $footerMountRegistration['priority'], 'The native TEC footer placement should run after installed ET+/TEC footer filters.');
+	vms_test_assert_same(4, $footerMountRegistration['accepted_args'], 'The native TEC footer placement should retain the installed four-argument footer filter contract.');
 
-	$serverMountBootBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_server_mount_boot');
-	$serverMountCallbackBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_server_mount_callback');
-	vms_test_assert_same(
-		'vms_ticketing_v2_server_mount_callback',
-		vms_test_find_ob_start_callback($serverMountBootBody),
-		'The server-mount opener should still own a callback-based full-response buffer.'
+	$cancelledFilterRegistration = vms_test_find_filter_registration($v2Source, 'tribe_tickets_get_tickets_query_args', 'vms_tec_suppress_tickets_for_cancelled_events');
+	vms_test_assert_true(is_array($cancelledFilterRegistration), 'Cancelled-event ticket suppression should remain registered on the native tickets query filter.');
+	vms_test_assert_same(20, $cancelledFilterRegistration['priority'], 'Cancelled-event ticket suppression should remain at priority 20.');
+	vms_test_assert_same(1, $cancelledFilterRegistration['accepted_args'], 'Cancelled-event ticket suppression should retain the installed one-argument query filter contract.');
+
+	$disabledFilterRegistration = vms_test_find_filter_registration($v2Source, 'tribe_tickets_get_tickets_query_args', 'vms_ticketing_v2_filter_disabled_ticket_query_args');
+	vms_test_assert_true(is_array($disabledFilterRegistration), 'Disabled-ticket suppression should now be registered on the native tickets query filter.');
+	vms_test_assert_same(30, $disabledFilterRegistration['priority'], 'Disabled-ticket suppression should run after cancelled-event suppression.');
+	vms_test_assert_same(1, $disabledFilterRegistration['accepted_args'], 'Disabled-ticket suppression should retain the installed one-argument query filter contract.');
+	vms_test_assert_true(
+		$disabledFilterRegistration['priority'] > $cancelledFilterRegistration['priority'],
+		'Disabled-ticket suppression should run strictly after cancelled-event suppression.'
 	);
-	vms_test_assert_contains(
-		'strpos($html, \'id="vms-reserved-addons"\')',
-		$serverMountCallbackBody,
-		'The server-mount callback should still inspect the rendered public event-page HTML.'
-	);
-	vms_test_assert_contains(
-		'strpos($html, \'id="tribe-tickets__tickets-form"\')',
-		$serverMountCallbackBody,
-		'The server-mount callback should still target the public TEC tickets form markup.'
-	);
-	vms_test_assert_contains(
-		'return $mounted_html;',
-		$serverMountCallbackBody,
-		'The server-mount callback should still return transformed public event-page HTML.'
-	);
-	vms_test_assert_no_same_flow_explicit_close($serverMountBootBody, 'vms_ticketing_v2_server_mount_boot');
+
+	vms_test_assert_not_contains("add_action('template_redirect', 'vms_ticketing_v2_server_mount_boot'", $v2Source, 'The obsolete server-mount template_redirect opener should be removed.');
+	vms_test_assert_not_contains('function vms_ticketing_v2_server_mount_boot(', $v2Source, 'The obsolete server-mount opener function should be removed.');
+	vms_test_assert_not_contains('function vms_ticketing_v2_server_mount_callback(', $v2Source, 'The obsolete server-mount callback function should be removed.');
+	vms_test_assert_not_contains('function vms_ticketing_v2_strip_disabled_ticket_rows_from_html(', $v2Source, 'The obsolete server-mount disabled-row stripping helper should be removed.');
+	vms_test_assert_not_contains('function vms_ticketing_v2_strip_cancelled_event_purchase_blocks(', $v2Source, 'The obsolete server-mount cancellation stripping helper should be removed.');
+	vms_test_assert_not_contains("ob_start('vms_ticketing_v2_server_mount_callback')", $v2Source, 'The obsolete server-mount callback buffer should be removed.');
+
+	$footerMountBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
+	$disabledFilterBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_filter_disabled_ticket_query_args');
+	$appendBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_append_entitlements_to_tec_event');
+
+	vms_test_assert_contains("\$template->get('post_id', 0)", $footerMountBody, 'The native footer placement should source the authoritative event ID from the template context.');
+	vms_test_assert_contains('vms_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id)', $footerMountBody, 'The native footer placement should continue to reuse the shared entitlements renderer.');
+	vms_test_assert_contains('id=\"vms-addon-mount\"', $footerMountBody, 'The native footer placement should prepend the dedicated add-on mount host.');
+	vms_test_assert_contains('vms_ticketing_v2_native_footer_mount_placed($tec_event_id)', $footerMountBody, 'The native footer placement should guard against duplicate insertion within the same request.');
+	vms_test_assert_not_contains('ob_start(', $footerMountBody, 'The native footer placement should not open any output buffer.');
+
+	vms_test_assert_contains('vms_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)', $appendBody, 'The automatic append fallback should suppress duplicate output after successful native footer placement.');
+	vms_test_assert_not_contains('ob_start(', $appendBody, 'The automatic append fallback should not open any output buffer.');
+
+	vms_test_assert_contains('vms_ticketing_v2_event_id_from_ticket_query_args($args)', $disabledFilterBody, 'Disabled-ticket suppression should resolve the authoritative event ID from the native query-filter contract.');
+	vms_test_assert_contains('vms_ticketing_v2_disabled_ticket_products_for_plan($plan_id)', $disabledFilterBody, 'Disabled-ticket suppression should continue to reuse the existing disabled-product helper.');
+	vms_test_assert_contains("\$args['post__not_in']", $disabledFilterBody, 'Disabled-ticket suppression should use the native ticket exclusion query key.');
+	vms_test_assert_not_contains('ob_start(', $disabledFilterBody, 'Disabled-ticket suppression should not open any output buffer.');
 
 	fwrite(STDOUT, "ticketing output buffer lifecycle characterization: PASS\n");
 } catch (Throwable $throwable) {

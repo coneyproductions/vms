@@ -6098,8 +6098,9 @@ add_filter('tribe_tickets_rsvp_tickets_form_hook', 'vms_tec_suppress_ticket_form
 add_filter('tribe_tickets_commerce_tickets_form_hook', 'vms_tec_suppress_ticket_forms_for_cancelled_event', 20, 2);
 add_filter('body_class', 'vms_tec_cancelled_event_body_class', 20);
 
+add_filter('tribe_template_before_include_html:tickets/v2/tickets/footer', 'vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount', 20, 4);
+add_filter('tribe_tickets_get_tickets_query_args', 'vms_ticketing_v2_filter_disabled_ticket_query_args', 30, 1);
 add_filter('the_content', 'vms_ticketing_v2_append_entitlements_to_tec_event', 25);
-add_action('template_redirect', 'vms_ticketing_v2_server_mount_boot', 5);
 add_shortcode('vms_reserved_add_ons', 'vms_ticketing_v2_shortcode_reserved_add_ons');
 
 /**
@@ -7265,344 +7266,216 @@ function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
     return $args;
 }
 
-function vms_ticketing_v2_server_mount_boot(): void
+function vms_ticketing_v2_native_footer_mount_placed(int $tec_event_id, bool $mark_placed = false): bool
 {
-    if (is_admin()) {
-        return;
-    }
-    if (!is_singular('tribe_events')) {
-        return;
-    }
-    if (function_exists('wp_doing_ajax') && wp_doing_ajax()) {
-        return;
-    }
-    if ((defined('REST_REQUEST') && REST_REQUEST) || is_feed() || is_trackback() || is_robots()) {
-        return;
-    }
+    static $placed_event_ids = array();
 
-    ob_start('vms_ticketing_v2_server_mount_callback');
-}
-
-
-function vms_ticketing_v2_extract_div_block_at(string $html, int $start): array
-{
-    $start = absint($start);
-    if ($start <= 0 && strpos($html, '<div') !== 0) {
-        return array();
-    }
-
-    if (!preg_match('~<div\b|</div>~i', $html, $first_match, PREG_OFFSET_CAPTURE, $start)) {
-        return array();
-    }
-    if ((int) $first_match[0][1] !== (int) $start) {
-        return array();
-    }
-
-    $depth = 0;
-    $cursor = $start;
-    $end = false;
-    while (preg_match('~<div\b|</div>~i', $html, $match, PREG_OFFSET_CAPTURE, $cursor)) {
-        $token = strtolower((string) $match[0][0]);
-        $token_pos = (int) $match[0][1];
-        if ($token === '<div') {
-            $depth++;
-            $cursor = $token_pos + 4;
-            continue;
-        }
-
-        $depth--;
-        $cursor = $token_pos + 6;
-        if ($depth <= 0) {
-            $end = $cursor;
-            break;
-        }
-    }
-
-    if ($end === false || $end <= $start) {
-        return array();
-    }
-
-    return array(
-        'start' => $start,
-        'end'   => $end,
-        'html'  => substr($html, $start, $end - $start),
-    );
-}
-
-function vms_ticketing_v2_opening_div_has_class(string $opening_tag, string $class_name): bool
-{
-    if ($class_name === '' || !preg_match('/\sclass=("|\')(.*?)\1/is', $opening_tag, $m)) {
+    $tec_event_id = absint($tec_event_id);
+    if ($tec_event_id <= 0) {
         return false;
     }
-    $classes = preg_split('/\s+/', trim((string) ($m[2] ?? '')));
-    return in_array($class_name, array_map('trim', (array) $classes), true);
+
+    if ($mark_placed) {
+        $placed_event_ids[$tec_event_id] = true;
+    }
+
+    return !empty($placed_event_ids[$tec_event_id]);
 }
 
-function vms_ticketing_v2_strip_disabled_ticket_rows_from_html(string $html): string
+/**
+ * @return array<int,string>
+ */
+function vms_ticketing_v2_ticket_query_event_meta_keys(): array
 {
-    if ($html === '' || is_admin() || !is_singular('tribe_events')) {
+    $keys = array(
+        '_tribe_rsvp_for_event',
+        '_tribe_tpp_for_event',
+        '_tec_tickets_commerce_event',
+    );
+
+    if (class_exists('\TEC\Tickets\Commerce\Ticket') && isset(\TEC\Tickets\Commerce\Ticket::$event_relation_meta_key)) {
+        $keys[] = (string) \TEC\Tickets\Commerce\Ticket::$event_relation_meta_key;
+    }
+
+    return array_values(array_unique(array_filter(array_map('strval', $keys))));
+}
+
+function vms_ticketing_v2_event_id_from_ticket_query_args(array $args): int
+{
+    foreach (array('event', 'event_id', 'post_parent') as $key) {
+        if (isset($args[$key]) && is_numeric($args[$key])) {
+            $event_id = absint($args[$key]);
+            if ($event_id > 0) {
+                return $event_id;
+            }
+        }
+    }
+
+    if (!empty($args['meta_query']) && is_array($args['meta_query'])) {
+        $meta_keys = vms_ticketing_v2_ticket_query_event_meta_keys();
+        $queue = array($args['meta_query']);
+
+        while (!empty($queue)) {
+            $current = array_pop($queue);
+            if (!is_array($current)) {
+                continue;
+            }
+
+            foreach ($current as $candidate) {
+                if (!is_array($candidate)) {
+                    continue;
+                }
+
+                if (isset($candidate['key']) && in_array((string) $candidate['key'], $meta_keys, true)) {
+                    $value = $candidate['value'] ?? null;
+                    if (is_array($value)) {
+                        if (count($value) !== 1) {
+                            continue;
+                        }
+
+                        $value = reset($value);
+                    }
+
+                    if (!is_numeric($value)) {
+                        continue;
+                    }
+
+                    $event_id = absint($value);
+                    if ($event_id > 0) {
+                        return $event_id;
+                    }
+                }
+
+                $queue[] = $candidate;
+            }
+        }
+    }
+
+    if (is_singular('tribe_events')) {
+        return (int) get_queried_object_id();
+    }
+
+    return 0;
+}
+
+function vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount(string $html, string $file, array $name, $template): string
+{
+    if ($html === '' || is_admin()) {
         return $html;
     }
 
-    $tec_event_id = (int) get_queried_object_id();
-    if ($tec_event_id <= 0 || !function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
+    if (function_exists('wp_doing_ajax') && wp_doing_ajax()) {
         return $html;
+    }
+
+    $is_rest_request = (defined('REST_REQUEST') && REST_REQUEST);
+    $is_json_request = function_exists('wp_is_json_request') && wp_is_json_request();
+    $is_feed_request = function_exists('is_feed') && is_feed();
+    $is_trackback_request = function_exists('is_trackback') && is_trackback();
+    $is_robots_request = function_exists('is_robots') && is_robots();
+    if ($is_rest_request || $is_json_request || $is_feed_request || $is_trackback_request || $is_robots_request) {
+        return $html;
+    }
+
+    $normalized_file = str_replace('\\', '/', $file);
+    if ($normalized_file === '' || strpos($normalized_file, '/v2/tickets/footer.php') === false) {
+        return $html;
+    }
+
+    $tec_event_id = 0;
+    if (is_object($template) && method_exists($template, 'get')) {
+        $tec_event_id = absint($template->get('post_id', 0));
+    }
+    if ($tec_event_id <= 0 && is_object($template) && method_exists($template, 'get_values')) {
+        $template_values = (array) $template->get_values();
+        $tec_event_id = absint($template_values['post_id'] ?? 0);
+    }
+    if ($tec_event_id <= 0 && is_singular('tribe_events')) {
+        $tec_event_id = (int) get_queried_object_id();
+    }
+    if ($tec_event_id <= 0 || get_post_type($tec_event_id) !== 'tribe_events') {
+        return $html;
+    }
+
+    if (vms_tec_is_cancelled_event($tec_event_id)) {
+        return $html;
+    }
+
+    if (vms_ticketing_v2_native_footer_mount_placed($tec_event_id)) {
+        return $html;
+    }
+
+    $plan_id = function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')
+        ? absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id))
+        : 0;
+    if ($plan_id <= 0) {
+        return $html;
+    }
+
+    if (function_exists('get_post_field') && function_exists('has_shortcode')) {
+        $event_content = (string) get_post_field('post_content', $tec_event_id);
+        if ($event_content !== '' && has_shortcode($event_content, 'vms_reserved_add_ons')) {
+            return $html;
+        }
+    }
+
+    $mount_body = vms_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id);
+    if ($mount_body === '') {
+        return $html;
+    }
+
+    $mount_html = "<div\n"
+        . "    id=\"vms-addon-mount\"\n"
+        . "    class=\"vms-addon-mount vms-addon-mount--server\"\n"
+        . ">\n"
+        . $mount_body
+        . "\n</div>\n";
+
+    vms_ticketing_v2_native_footer_mount_placed($tec_event_id, true);
+
+    return $mount_html . $html;
+}
+
+function vms_ticketing_v2_filter_disabled_ticket_query_args(array $args): array
+{
+    if (is_admin()) {
+        return $args;
+    }
+
+    $tec_event_id = vms_ticketing_v2_event_id_from_ticket_query_args($args);
+    if ($tec_event_id <= 0 || get_post_type($tec_event_id) !== 'tribe_events') {
+        return $args;
+    }
+
+    if (vms_tec_is_cancelled_event($tec_event_id)) {
+        return $args;
+    }
+
+    if (!function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') || !function_exists('vms_ticketing_v2_disabled_ticket_products_for_plan')) {
+        return $args;
     }
 
     $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
-    if ($plan_id <= 0 || !function_exists('vms_ticketing_v2_disabled_ticket_products_for_plan')) {
-        return $html;
+    if ($plan_id <= 0) {
+        return $args;
     }
 
     $disabled_runtime = vms_ticketing_v2_disabled_ticket_products_for_plan($plan_id);
-    $disabled_ids = (isset($disabled_runtime['product_ids']) && is_array($disabled_runtime['product_ids']))
-        ? array_values(array_unique(array_filter(array_map('absint', $disabled_runtime['product_ids']))))
-        : array();
+    $disabled_ids = array();
+    if (isset($disabled_runtime['product_ids']) && is_array($disabled_runtime['product_ids'])) {
+        $disabled_ids = array_map('intval', $disabled_runtime['product_ids']);
+        $disabled_ids = array_values(array_unique(array_filter($disabled_ids, static function ($product_id) {
+            return $product_id > 0;
+        })));
+    }
     if (empty($disabled_ids)) {
-        return $html;
+        return $args;
     }
 
-    $id_pattern = implode('|', array_map(static function ($id): string {
-        return preg_quote((string) absint($id), '~');
-    }, $disabled_ids));
-    if ($id_pattern === '') {
-        return $html;
-    }
+    $existing_exclusions = isset($args['post__not_in']) ? (array) $args['post__not_in'] : array();
+    $args['post__not_in'] = array_values(array_unique(array_filter(array_map('absint', array_merge($existing_exclusions, $disabled_ids)))));
 
-    $row_classes = array('tribe-tickets__tickets-item', 'tribe-tickets__item');
-    $ranges = array();
-    if (preg_match_all('~<div\b[^>]*class=("|\')[^"\']+\1[^>]*>~is', $html, $matches, PREG_OFFSET_CAPTURE)) {
-        foreach ((array) ($matches[0] ?? array()) as $match) {
-            $opening = (string) ($match[0] ?? '');
-            $start = (int) ($match[1] ?? -1);
-            if ($start < 0) {
-                continue;
-            }
-
-            $is_ticket_row = false;
-            foreach ($row_classes as $row_class) {
-                if (vms_ticketing_v2_opening_div_has_class($opening, $row_class)) {
-                    $is_ticket_row = true;
-                    break;
-                }
-            }
-            if (!$is_ticket_row) {
-                continue;
-            }
-
-            $block = vms_ticketing_v2_extract_div_block_at($html, $start);
-            if (empty($block['html'])) {
-                continue;
-            }
-
-            $block_html = (string) $block['html'];
-            $has_disabled_id = (bool) preg_match('~(?:data-(?:ticket|product)(?:-id)?|name|id|for|value)=("|\')[^"\']*(?:' . $id_pattern . ')[^"\']*\1~i', $block_html);
-            if (!$has_disabled_id) {
-                continue;
-            }
-
-            $ranges[] = array('start' => (int) $block['start'], 'end' => (int) $block['end']);
-        }
-    }
-
-    if (empty($ranges)) {
-        return $html;
-    }
-
-    usort($ranges, static function (array $a, array $b): int {
-        return (int) ($b['start'] ?? 0) <=> (int) ($a['start'] ?? 0);
-    });
-
-    foreach ($ranges as $range) {
-        $start = (int) ($range['start'] ?? 0);
-        $end = (int) ($range['end'] ?? 0);
-        if ($start < 0 || $end <= $start || $end > strlen($html)) {
-            continue;
-        }
-        $html = substr($html, 0, $start) . substr($html, $end);
-    }
-
-    return $html;
-}
-
-
-/**
- * Remove an element with a known ID from rendered TEC event HTML.
- * This is intentionally small and conservative: it handles form/div/section wrappers
- * commonly used by Event Tickets and VMS' mounted ticket UI.
- */
-function vms_ticketing_v2_remove_element_with_id(string $html, string $id): string
-{
-    $id = trim($id);
-    if ($html === '' || $id === '') {
-        return $html;
-    }
-
-    $pattern_id = preg_quote($id, '~');
-    foreach (array('form', 'section', 'div') as $tag) {
-        $pattern = '~<' . $tag . '\b(?=[^>]*\bid=("|\')' . $pattern_id . '\1)[^>]*>.*?</' . $tag . '>~is';
-        $html = (string) preg_replace($pattern, '', $html);
-    }
-
-    return $html;
-}
-
-/**
- * Fail closed on cancelled event pages: remove ticket purchase blocks from the
- * final HTML even if a TEC provider or custom UI path bypasses the normal hooks.
- */
-function vms_ticketing_v2_strip_cancelled_event_purchase_blocks(string $html): string
-{
-    if ($html === '' || is_admin() || !is_singular('tribe_events')) {
-        return $html;
-    }
-
-    $event_id = (int) get_queried_object_id();
-    if ($event_id <= 0 || !vms_tec_is_cancelled_event($event_id)) {
-        return $html;
-    }
-
-    foreach (array(
-        'tribe-tickets__tickets-form',
-        'tribe-tickets__tickets-wrapper',
-        'tribe-tickets__modal-form',
-        'vms-reserved-addons',
-        'vms-addon-mount',
-    ) as $id) {
-        $html = vms_ticketing_v2_remove_element_with_id($html, $id);
-    }
-
-    // Last-resort cleanup for ticket UI containers that may not carry stable IDs.
-    $html = (string) preg_replace('~<div\b(?=[^>]*class=("|\')[^"\']*(?:tribe-tickets|vms-ticketing|vms-addon-mount)[^"\']*\1)[^>]*>.*?</div>~is', '', $html);
-
-    return $html;
-}
-
-function vms_ticketing_v2_server_mount_callback(string $html): string
-{
-    if (is_singular('tribe_events')) {
-        $event_id = (int) get_queried_object_id();
-        if ($event_id > 0 && vms_tec_is_cancelled_event($event_id)) {
-            return vms_ticketing_v2_strip_cancelled_event_purchase_blocks($html);
-        }
-    }
-
-    $html = vms_ticketing_v2_strip_disabled_ticket_rows_from_html($html);
-
-    if ($html === '' || strpos($html, 'id="vms-reserved-addons"') === false || strpos($html, 'id="tribe-tickets__tickets-form"') === false) {
-        return $html;
-    }
-
-    $block = vms_ticketing_v2_extract_named_div_block($html, 'vms-reserved-addons');
-    if (!is_array($block) || empty($block['html'])) {
-        return $html;
-    }
-
-    $block_html = (string) ($block['html'] ?? '');
-    $html_without_block = substr($html, 0, (int) $block['start']) . substr($html, (int) $block['end']);
-    $form_pos = strpos($html_without_block, 'id="tribe-tickets__tickets-form"');
-    if ($form_pos === false) {
-        return $html;
-    }
-
-    $footer_marker_pos = strpos($html_without_block, 'tribe-tickets__tickets-footer', $form_pos);
-    if ($footer_marker_pos === false) {
-        return $html;
-    }
-
-    $footer_div_pos = vms_ticketing_v2_find_tag_open_before($html_without_block, 'div', $footer_marker_pos);
-    if ($footer_div_pos === false) {
-        return $html;
-    }
-
-    $mount_html = '
-<div id="vms-addon-mount" class="vms-addon-mount vms-addon-mount--server">
-'
-        . $block_html
-        . '
-</div>
-';
-
-    $mounted_html = substr($html_without_block, 0, $footer_div_pos) . $mount_html . substr($html_without_block, $footer_div_pos);
-    $mounted_html = preg_replace_callback('/<button\b[^>]*id="tribe-tickets__tickets-submit"[^>]*>.*?<\/button>/is', static function ($matches) {
-        $button_html = (string) ($matches[0] ?? '');
-        if ($button_html === '') {
-            return $button_html;
-        }
-
-        $button_html = preg_replace('/\sdata-content="[^"]*"/i', '', $button_html);
-        $button_html = preg_replace('/\sdata-js="[^"]*"/i', '', $button_html);
-        $button_html = preg_replace('/\saria-haspopup="[^"]*"/i', '', $button_html);
-        if (stripos($button_html, 'data-vms-cart-first=') === false) {
-            $button_html = preg_replace('/<button\b/i', '<button data-vms-cart-first="1"', $button_html, 1);
-        }
-        $button_html = preg_replace('/>.*?<\/button>/is', '>Add items to cart</button>', $button_html, 1);
-        return $button_html;
-    }, $mounted_html, 1);
-
-    return $mounted_html;
-}
-
-function vms_ticketing_v2_extract_named_div_block(string $html, string $id): array
-{
-    $needle = 'id="' . $id . '"';
-    $id_pos = strpos($html, $needle);
-    if ($id_pos === false) {
-        return array();
-    }
-
-    $start = vms_ticketing_v2_find_tag_open_before($html, 'div', $id_pos);
-    if ($start === false) {
-        return array();
-    }
-
-    if (!preg_match('~<div\b|</div>~i', $html, $first_match, PREG_OFFSET_CAPTURE, $start)) {
-        return array();
-    }
-    if ((int) $first_match[0][1] !== (int) $start) {
-        return array();
-    }
-
-    $depth = 0;
-    $cursor = $start;
-    $end = false;
-    while (preg_match('~<div\b|</div>~i', $html, $match, PREG_OFFSET_CAPTURE, $cursor)) {
-        $token = strtolower((string) $match[0][0]);
-        $token_pos = (int) $match[0][1];
-        if ($token === '<div') {
-            $depth++;
-            $cursor = $token_pos + 4;
-            continue;
-        }
-
-        $depth--;
-        $cursor = $token_pos + 6;
-        if ($depth <= 0) {
-            $end = $cursor;
-            break;
-        }
-    }
-
-    if ($end === false || $end <= $start) {
-        return array();
-    }
-
-    return array(
-        'start' => $start,
-        'end'   => $end,
-        'html'  => substr($html, $start, $end - $start),
-    );
-}
-
-function vms_ticketing_v2_find_tag_open_before(string $html, string $tag, int $pos)
-{
-    $needle = '<' . strtolower($tag);
-    $window = substr($html, 0, $pos + 1);
-    $found = strripos($window, $needle);
-    if ($found === false) {
-        return false;
-    }
-    return (int) $found;
+    return $args;
 }
 
 function vms_ticketing_v2_append_entitlements_to_tec_event(string $content): string
@@ -7623,6 +7496,7 @@ function vms_ticketing_v2_append_entitlements_to_tec_event(string $content): str
     if ($tec_event_id !== (int) get_queried_object_id()) return $content;
     if ($tec_event_id <= 0) return $content;
 
+    if (vms_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)) return $content;
 
     // Cancelled events should not show reserved add-ons.
     if (vms_tec_is_cancelled_event((int) $tec_event_id)) return $content;
