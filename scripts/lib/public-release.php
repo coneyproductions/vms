@@ -44,6 +44,10 @@ final class VMS_Public_Release_Tooling
 		'zip',
 	);
 
+	private const PROHIBITED_INTERNAL_INSTRUCTION_FILES = array(
+		'AGENTS.md',
+	);
+
 	private const PUBLIC_PLUGIN_SLUG = 'backstage-venue-manager';
 
 	private const OPTIONAL_LOAD_SMOKE_SCENARIOS = array(
@@ -1369,6 +1373,7 @@ PHP;
 		$missingFiles = array();
 		$missingDirs = array();
 		$manifestViolations = array();
+		$internalInstructionViolations = array();
 		$pathTraversalViolations = array();
 		$localPathViolations = array();
 		$localUrlViolations = array();
@@ -1417,6 +1422,14 @@ PHP;
 
 			$presentFiles[$relativePath] = true;
 			self::registerAncestorDirectories($presentDirs, $relativePath);
+
+			$internalInstructionFile = self::matchProhibitedInternalInstructionFile($relativePath);
+			if ($internalInstructionFile !== null) {
+				$internalInstructionViolations[] = array(
+					'path' => $relativePath,
+					'file' => $internalInstructionFile,
+				);
+			}
 
 			if ((int) ($entry['size'] ?? 0) === 0 && preg_match('/\.(php|js)$/i', $relativePath)) {
 				$zeroByteRuntimeCode[] = $relativePath;
@@ -1512,6 +1525,26 @@ PHP;
 			array(
 				'required' => true,
 				'details' => empty($manifestViolations) ? array() : array('paths' => array_values(array_unique($manifestViolations))),
+			)
+		);
+
+		$checks[] = self::check(
+			'internal-instruction-files-excluded',
+			empty($internalInstructionViolations) ? 'PASS' : 'FAIL',
+			'Internal development instruction files are excluded from the public package',
+			empty($internalInstructionViolations)
+				? 'No internal development instruction files were found in the package.'
+				: 'Internal development instruction file must not be included in the public package: ' . (string) ($internalInstructionViolations[0]['file'] ?? ''),
+			array(
+				'required' => true,
+				'details' => empty($internalInstructionViolations) ? array() : array(
+					'paths' => array_values(array_unique(array_map(
+						static function (array $violation): string {
+							return (string) ($violation['path'] ?? '');
+						},
+						$internalInstructionViolations
+					))),
+				),
 			)
 		);
 
@@ -1841,6 +1874,21 @@ PHP;
 			}
 			if (preg_match(self::globPatternToRegex($pattern), $path) === 1) {
 				return $pattern;
+			}
+		}
+
+		return null;
+	}
+
+	private static function matchProhibitedInternalInstructionFile(string $path): ?string
+	{
+		$normalizedPath = ltrim(str_replace('\\', '/', $path), '/');
+		$normalizedPath = strtolower($normalizedPath);
+
+		foreach (self::PROHIBITED_INTERNAL_INSTRUCTION_FILES as $candidate) {
+			$normalizedCandidate = strtolower(ltrim(str_replace('\\', '/', $candidate), '/'));
+			if ($normalizedPath === $normalizedCandidate) {
+				return $candidate;
 			}
 		}
 

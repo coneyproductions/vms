@@ -70,6 +70,31 @@ function vms_public_release_test_write_file(string $path, string $contents): voi
 	}
 }
 
+function vms_public_release_test_default_release_excludes(): array
+{
+	return array(
+		'docs/',
+		'tests/',
+		'scripts/',
+		'dist/',
+		'BUILD-NOTES-*.md',
+		'*.zip',
+		'**/*.zip',
+	);
+}
+
+function vms_public_release_test_release_excludes_text(array $lines): string
+{
+	return "# Test manifest\n" . implode("\n", $lines) . "\n";
+}
+
+function vms_public_release_test_invoke_private_static(string $method, array $args = array())
+{
+	$reflection = new ReflectionMethod(VMS_Public_Release_Tooling::class, $method);
+
+	return $reflection->invokeArgs(null, $args);
+}
+
 function vms_public_release_test_run(array $command, ?string $cwd = null): array
 {
 	$descriptorSpec = array(
@@ -118,6 +143,7 @@ function vms_public_release_test_fixture(array $options = array()): string
 	$textDomain = (string) ($options['text_domain'] ?? vms_public_release_test_public_slug());
 	$internalPluginSlug = (string) ($options['internal_plugin_slug'] ?? 'vms');
 	$omitFiles = array_values(array_map('strval', (array) ($options['omit_files'] ?? array())));
+	$releaseExcludeLines = array_values(array_map('strval', (array) ($options['release_exclude_lines'] ?? vms_public_release_test_default_release_excludes())));
 
 	$files = array(
 		'vendor-management-system.php' => <<<PHP
@@ -177,16 +203,7 @@ PHP,
 		'vms-build.txt' => $buildVersion . "\n",
 		'BUILD-NOTES-' . $version . '.md' => "# Build Notes {$version}\n",
 		'readme.txt' => "=== VMS ===\nStable tag: {$readmeStableTag}\n",
-		'release-public-excludes.txt' => <<<TXT
-# Test manifest
-docs/
-tests/
-scripts/
-dist/
-BUILD-NOTES-*.md
-*.zip
-**/*.zip
-TXT,
+		'release-public-excludes.txt' => vms_public_release_test_release_excludes_text($releaseExcludeLines),
 	);
 
 	foreach ($files as $relativePath => $contents) {
@@ -513,6 +530,134 @@ $tests['excluded file accidentally packaged'] = static function (): void {
 		vms_public_release_test_assert(($check['status'] ?? '') === 'FAIL', 'Expected packaged docs to fail manifest validation.');
 	} finally {
 		vms_public_release_test_delete_path($workspace);
+	}
+};
+
+$tests['repository exclusion manifest contains a narrow AGENTS rule'] = static function (): void {
+	$manifestPath = dirname(__DIR__) . '/release-public-excludes.txt';
+	$manifestLines = file($manifestPath, FILE_IGNORE_NEW_LINES);
+	vms_public_release_test_assert(is_array($manifestLines), 'Expected repository release-public-excludes.txt to be readable.');
+
+	$patterns = array();
+	foreach ($manifestLines as $line) {
+		$line = trim((string) $line);
+		if ($line === '' || strpos($line, '#') === 0) {
+			continue;
+		}
+		$patterns[] = $line;
+	}
+
+	vms_public_release_test_assert(in_array('AGENTS.md', $patterns, true), 'Expected repository exclusion manifest to exclude AGENTS.md exactly.');
+	vms_public_release_test_assert(!in_array('*.md', $patterns, true), 'Expected repository exclusion manifest to avoid a broad *.md wildcard.');
+	vms_public_release_test_assert(!in_array('**/*.md', $patterns, true), 'Expected repository exclusion manifest to avoid a broad **/*.md wildcard.');
+	vms_public_release_test_assert(!in_array('readme.txt', $patterns, true), 'Expected repository exclusion manifest to keep readme.txt packaged.');
+};
+
+$tests['agent instructions are excluded from staged and packaged public builds'] = static function (): void {
+	$repositoryAgentsPath = dirname(__DIR__) . '/AGENTS.md';
+	vms_public_release_test_assert(is_readable($repositoryAgentsPath), 'Expected repository AGENTS.md to exist.');
+
+	$pluginRoot = vms_public_release_test_fixture(array(
+		'release_exclude_lines' => array_merge(vms_public_release_test_default_release_excludes(), array('AGENTS.md')),
+		'extra_files' => array(
+			'AGENTS.md' => "# Internal instructions\n",
+			'LICENSE.txt' => "GPL\n",
+		),
+	));
+	$workspace = dirname($pluginRoot);
+	$outputDir = vms_public_release_test_temp_dir('vms-release-output-');
+	$stagedRoot = $workspace . '/staged/' . vms_public_release_test_public_slug();
+	try {
+		$manifestPatterns = vms_public_release_test_invoke_private_static('loadExcludeManifest', array($pluginRoot . '/release-public-excludes.txt'));
+		$stageResult = vms_public_release_test_invoke_private_static('stagePluginTree', array($pluginRoot, $stagedRoot, $manifestPatterns, array()));
+
+		$agentsExcluded = false;
+		foreach ((array) ($stageResult['excluded'] ?? array()) as $entry) {
+			if (($entry['path'] ?? '') === 'AGENTS.md' && ($entry['pattern'] ?? '') === 'AGENTS.md') {
+				$agentsExcluded = true;
+				break;
+			}
+		}
+
+		vms_public_release_test_assert($agentsExcluded, 'Expected stagePluginTree() to exclude AGENTS.md through the manifest.');
+		vms_public_release_test_assert(!file_exists($stagedRoot . '/AGENTS.md'), 'Expected staged public package root to omit AGENTS.md.');
+
+		$report = VMS_Public_Release_Tooling::build(array(
+			'plugin_root' => $pluginRoot,
+			'output_dir' => $outputDir,
+			'force' => true,
+			'release_tests' => array(),
+		));
+		vms_public_release_test_assert(($report['status'] ?? '') === 'PASS', 'Expected valid public build with AGENTS exclusion to pass.');
+		vms_public_release_test_assert(!empty($report['artifact']['created']), 'Expected AGENTS exclusion build to create a ZIP.');
+
+		$zipEntries = vms_public_release_test_read_zip_entries((string) $report['artifact']['zip_path']);
+		vms_public_release_test_assert(in_array(vms_public_release_test_public_basename(), $zipEntries, true), 'Expected packaged plugin bootstrap file to remain present.');
+		vms_public_release_test_assert(in_array(vms_public_release_test_public_slug() . '/readme.txt', $zipEntries, true), 'Expected readme.txt to remain packaged.');
+		vms_public_release_test_assert(in_array(vms_public_release_test_public_slug() . '/LICENSE.txt', $zipEntries, true), 'Expected LICENSE.txt to remain packaged when present.');
+		foreach ($zipEntries as $entryName) {
+			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected no packaged path ending in /AGENTS.md.');
+		}
+	} finally {
+		vms_public_release_test_delete_path($workspace);
+		vms_public_release_test_delete_path($outputDir);
+	}
+};
+
+$tests['internal agent instructions fail the build when exclusion is bypassed'] = static function (): void {
+	$pluginRoot = vms_public_release_test_fixture(array(
+		'extra_files' => array(
+			'AGENTS.md' => "# Internal instructions\n",
+		),
+	));
+	$workspace = dirname($pluginRoot);
+	$outputDir = vms_public_release_test_temp_dir('vms-release-output-');
+	$harnessPath = $workspace . '/run-build.php';
+	$reportPath = $workspace . '/build-report.json';
+	try {
+		$harness = <<<PHP
+<?php
+declare(strict_types=1);
+require_once %s;
+\$report = VMS_Public_Release_Tooling::build(array(
+	'plugin_root' => %s,
+	'output_dir' => %s,
+	'force' => true,
+	'release_tests' => array(),
+));
+file_put_contents(%s, json_encode(\$report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+exit((\$report['status'] ?? 'FAIL') === 'PASS' ? 0 : 1);
+PHP;
+		vms_public_release_test_write_file(
+			$harnessPath,
+			sprintf(
+				$harness,
+				var_export(dirname(__DIR__) . '/scripts/lib/public-release.php', true),
+				var_export($pluginRoot, true),
+				var_export($outputDir, true),
+				var_export($reportPath, true)
+			)
+		);
+
+		$result = vms_public_release_test_run(array(PHP_BINARY, $harnessPath));
+		vms_public_release_test_assert($result['exit_code'] !== 0, 'Expected build harness to exit nonzero when AGENTS.md reaches staged validation.');
+
+		$reportJson = file_get_contents($reportPath);
+		$report = json_decode(is_string($reportJson) ? $reportJson : '', true);
+		vms_public_release_test_assert(is_array($report), 'Expected build harness to write a JSON report.');
+
+		$check = vms_public_release_test_find_check((array) ($report['checks'] ?? array()), 'internal-instruction-files-excluded');
+		vms_public_release_test_assert(($check['status'] ?? '') === 'FAIL', 'Expected internal instruction guard to fail when AGENTS.md is staged.');
+		vms_public_release_test_assert(
+			($check['message'] ?? '') === 'Internal development instruction file must not be included in the public package: AGENTS.md',
+			'Expected internal instruction guard diagnostic to name AGENTS.md exactly.'
+		);
+		vms_public_release_test_assert(empty($report['artifact']['created']), 'Expected failing AGENTS build to avoid reporting a created ZIP.');
+		vms_public_release_test_assert(!is_readable((string) ($report['artifact']['zip_path'] ?? '')), 'Expected no readable ZIP artifact after AGENTS guard failure.');
+		vms_public_release_test_assert(glob($outputDir . '/*.zip') === array(), 'Expected no ZIP files to remain after AGENTS guard failure.');
+	} finally {
+		vms_public_release_test_delete_path($workspace);
+		vms_public_release_test_delete_path($outputDir);
 	}
 };
 

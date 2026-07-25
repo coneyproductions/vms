@@ -6,6 +6,7 @@
 .github/
 .gitignore
 .gitattributes
+AGENTS.md
 release-public-excludes.txt
 .codex/
 .codex-temp/
