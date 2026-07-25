@@ -1410,8 +1410,9 @@ Conclusion:
 
 Status:
 
-- No repository-side release-metadata blocker remains after the fresh `WPORG-28Q` package verification.
-- Remaining WordPress.org submission actions and live-production convergence work stay separate from this resolved package boundary.
+- The public release metadata boundary remains verified: the mirror source and disposable public package still align on `1.2.0`.
+- `WPORG-28R` reopened packaged residual reconciliation on `2026-07-25`, so submission readiness is no longer treated as resolved by `WPORG-28Q` alone.
+- Remaining WordPress.org submission actions and live-production convergence work stay separate from the verified metadata boundary, but they remain blocked behind the reopened `WPORG-28R` packaged audit.
 
 ### `M1` Public-core release metadata boundary is now defined and verified
 
@@ -1419,15 +1420,15 @@ Status:
 - Confidence: Confirmed
 - References: `vendor-management-system.php:3-13`; `readme.txt:4-9`; `vms-build.txt:1`; `vms/vendor-management-system.php:3-13`; `vms/readme.txt:4-9`; `vms/vms-build.txt:1`
 - Current status: the mirror source and fresh disposable public package now align on public version `1.2.0`, public slug `backstage-venue-manager`, matching packaged header and readme metadata, and build marker `1.2.0`, while the sibling live local `vms` tree intentionally remains `1.1.0` as a separate production-convergence boundary rather than a public-package blocker.
-- Recommended remediation: complete the separate authorized WordPress.org artifact-preparation, upload/submission, and reviewer-communication steps using the verified `1.2.0` public package; do not treat this as authorization to change the live local `vms` runtime.
+- Recommended remediation: keep the `1.2.0` metadata boundary unchanged, but do not treat it as authorization for final artifact preparation, upload/submission, or reviewer communication until the reopened packaged residual audit in `WPORG-28R` is resolved.
 - Compatibility or regression risk: Low.
-- Suggested remediation batch ID: `WPORG-28Q`
+- Suggested remediation batch ID: `WPORG-28R`
 
 Decision notes:
 
 - The current release tooling now resolves the public package directory / slug expectation explicitly: public packages build as `backstage-venue-manager/`, while the local runtime directory may remain `vms`.
 - `vms.php:1-12` is currently a compatibility shim that delegates to `vendor-management-system.php`. That remains acceptable internally, and the release builder plus compatibility harness now validate the public ZIP folder and canonical public basename deliberately rather than inferring them from the checkout root.
-- The fresh `WPORG-28Q` package audit proved the packaged header version, readme stable tag, changelog, upgrade notice, and `vms-build.txt` marker all align on `1.2.0` without any runtime or release-metadata edit in this closeout.
+- The fresh `WPORG-28Q` package audit proved the packaged header version, readme stable tag, changelog, upgrade notice, and `vms-build.txt` marker all align on `1.2.0` without any runtime or release-metadata edit in that closeout; `WPORG-28R` later confirmed the same metadata alignment while reopening the packaged residual finding audit.
 
 ## N. Plugin Check and Scanner Reproducibility
 
@@ -1512,12 +1513,12 @@ Recommended follow-up order, keeping each pass narrow:
 13. `WPORG-28 - Release metadata and packaging validation`
     - Scope: `M1`
     - Goal: choose the public version and validate final ZIP / slug expectations
-    - Result: completed by the `1.2.0` public-core decision, fresh disposable package validation, packaged strict-json Plugin Check rerun, and final documentation reconciliation under `WPORG-28Q`; the remaining WordPress.org upload/reviewer steps are external to the repository
+    - Result: the `1.2.0` public-core decision and disposable package validation remain complete, but `WPORG-28R` reopened submission readiness after the final rule-family reconciliation found one new packaged warning plus multiple unmapped or still-blocking residual families
 
 ## Findings Requiring User or Product-Owner Decisions
 
-1. Whether to authorize final WordPress.org artifact preparation, slug-reservation request, corrected upload, and reviewer communication using the verified `1.2.0` public package.
-2. Whether to authorize the separate Outreach extraction, duplicate-core safety, and live-production replacement or migration sequence for the active `vms` runtime.
+1. Whether to authorize a new runtime remediation child for the packaged residual families reopened under `WPORG-28R` before any WordPress.org artifact preparation, slug-reservation request, corrected upload, or reviewer communication.
+2. Whether to authorize the separate Outreach extraction, duplicate-core safety, and live-production replacement or migration sequence for the active `vms` runtime after the reopened `WPORG-28R` package audit is resolved.
 
 ## Findings Requiring Explanation Rather Than Code Changes
 
@@ -2578,8 +2579,8 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28` is now terminal under `verified` after the final clean package proof recorded in `WPORG-28Q`.
-- External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout` and `Review-13 Final Actions`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, but `WPORG-28R` reopens the packaged residual audit because the rule-family reconciliation found one new packaged finding plus multiple unmapped or still-blocking families.
+- External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
 
@@ -2599,14 +2600,72 @@ Date: 2026-07-25
 - Compatibility boundary preserved: `vms.php` remains an internal compatibility shim only, `VMS_PLUGIN_SLUG` remains intentionally internal, and the public package does not reintroduce a slug or header mismatch
 - Focused verification reruns passed: `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php`
 - Fresh packaged Plugin Check command: `WP_CLI_PHP_ARGS='-d error_reporting=24575 -d display_errors=0' wp --path='<local-wp-root>' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '<temp>/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
-- Fresh packaged Plugin Check result: exit `0`, leading WP-CLI PHP 8.5 deprecation noise normalized away before JSON parsing, `309` errors, `1709` warnings, `2018` total messages, accepted `OffloadedContent=1`, accepted `ExceptionNotEscaped=4`, and `MissingVersion=0`, `unexpected_markdown_file=0`, `MissingTranslatorsComment=0`
-- Readiness conclusion: the public package is now ready for explicitly authorized final WordPress.org artifact preparation and submission steps, while Outreach extraction, duplicate-core safety, and live production replacement or migration remain separate production-convergence work
+- Fresh packaged Plugin Check result: exit `0`, leading WP-CLI PHP 8.5 deprecation noise normalized away before JSON parsing, `309` errors, `1709` warnings, `2018` total messages, reported `OffloadedContent=1`, reported `ExceptionNotEscaped=4`, and `MissingVersion=0`, `unexpected_markdown_file=0`, `MissingTranslatorsComment=0`
+- Readiness conclusion: `WPORG-28Q` established metadata/build reproducibility and a stable packaged strict-json scan only. `WPORG-28R` later withdrew the submission-readiness conclusion after the final rule-family reconciliation found one new packaged finding plus multiple unmapped or still-blocking families.
 
 ### What Changed
 
 - Rebuilt the public package from committed source in a disposable directory and audited the resulting ZIP and extracted package instead of relying on historical artifacts.
 - Re-ran the focused release harnesses and the packaged strict-json Plugin Check gate against the fresh extracted public package.
 - Reconciled the stale `WPORG-28`, `A1`, `M1`, Plugin Check gate, and release-checklist wording in `docs/WPORG_PREREVIEW_REMEDIATION.md` and `docs/wporg-remediation-ledger.md` to the fresh `1.2.0` package evidence.
+
+### Non-Actions
+
+- No runtime, test, release-metadata, builder, or live-tree file changed in this slice.
+- No upload, deployment, submission, reviewer reply, tag, push, production change, live replacement, or migration occurred.
+
+## WPORG-28R Result
+
+Date: 2026-07-25
+
+### Summary
+
+- Result: `BLOCKED`
+- Exact finding identifier: `WPORG-28R`
+- Starting mirror HEAD: `52ab3603629688f569887d1bd204d03925ca860a` (`Verify final public package prereview`)
+- Starting parent: `3dcd8e70ed00f8885f34334eaa3f0272bc2d3b62`
+- Fresh build command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28r.B7JVEU/build --force`
+- Fresh build result: `/tmp/wporg-28r.B7JVEU/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `1455608bdc7a4b785d88f66245ea5bd984f06da55d6b71e961a800c465b9682e`
+- Reproducibility note: a second fresh rebuild on the same `2026-07-25` source state produced `/tmp/wporg-28r-repro.mWtjGY/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `8effb3e071f5779d3106763183cbfb92030ba899fb39208874e713cb60a3cf19`, while both extracted builds shared the same packaged-content manifest SHA-256 `07e6e41cfe6cdd38cef41552f8b72ad7230bd0b2efc1fb73f514ab629fdcdb86`; the archive hash is therefore non-deterministic and is not treated as evidence of packaged-content drift.
+- Fresh packaged Plugin Check command: `WP_CLI_PHP_ARGS='-d error_reporting=24575 -d display_errors=0' wp --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28r.B7JVEU/extracted/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Plugin Check environment: PHP `8.5.3`, WP-CLI `2.12.0`, WordPress `7.0.1`, Plugin Check `2.0.0`; the same leading WP-CLI / dependency deprecation noise still preceded the JSON payload and was normalized away before parsing.
+- Fresh packaged Plugin Check result: exit `0`, `309` errors, `1709` warnings, `2018` total findings, `34` unique rule codes
+- Exact comparison with `WPORG-28Q`: the fresh `2026-07-25` rerun reproduced the same `309` errors, `1709` warnings, and `2018` total findings recorded under `WPORG-28Q`, but the earlier conclusion that those findings were fully reconciled is not supported by repository evidence.
+- Exact comparison with the prior packaged residual baseline from `docs/plugin-check-1.0.0-2026-07-22-raw.txt`: current `2018 / 309 / 1709 / 34` versus prior `2044 / 330 / 1714 / 36`; `WordPress.WP.I18n.MissingTranslatorsComment` (`20`), `WordPress.WP.EnqueuedResourceParameters.MissingVersion` (`1`), and `unexpected_markdown_file` (`1`) are now gone; `WordPress.Security.NonceVerification.Missing` dropped from `89` to `85`; `WordPress.WP.AlternativeFunctions.strip_tags_strip_tags` dropped from `2` to `1`; and `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` appeared as a new current packaged warning.
+- Rule-family classification totals from this pass: `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=1`, `UNMAPPED=46`, `SUBMISSION_BLOCKER=1843`
+- Defensible readiness outcome: `Outcome C — Reopen remediation`
+- Exact next action: open a new runtime remediation child starting with the new `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` finding in `includes/integrations/ticketing-rules-v2.php:7476`, then perform a rule-family residual reconciliation and/or targeted remediation for the remaining unmapped or still-blocking packaged families before any WordPress.org upload, reviewer reply, or final artifact-preparation step.
+
+### Mapping Method
+
+- Parsed the fresh strict JSON payload from `/tmp/wporg-28r.B7JVEU/plugin-check.strict.json` after normalizing the leading WP-CLI / dependency deprecation noise.
+- Compared every current rule code and count against `docs/plugin-check-1.0.0-2026-07-22-raw.txt`, `docs/plugin-check-1.0.0-raw.txt`, `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`, `docs/WPORG_PREREVIEW_REMEDIATION.md`, `docs/wporg-remediation-ledger.md`, and `docs/wporg-review-source.md`.
+- Treated a finding family as `KNOWN_NONBLOCKING` only when pre-`WPORG-28Q` repository evidence already documented the current packaged boundary as intentionally retained, technically acceptable, or explicitly closed under a verified child.
+- Treated any family with no demonstrated pre-`WPORG-28Q` tracker coverage as `UNMAPPED`, even when the same code appeared in earlier raw artifacts.
+- Treated any current family whose latest durable packaged triage still said `BLOCKER` or `SHOULD FIX BEFORE SUBMISSION`, with no later package-residual closeout superseding that state, as `SUBMISSION_BLOCKER`.
+- Treated any rule code absent from the `2026-07-22` packaged residual baseline as `NEW_FINDING` unless a narrower prior packaged or tracker reconciliation already covered the exact current boundary.
+
+### Error-Family Disposition
+
+- `WordPress.Security.EscapeOutput.OutputNotEscaped` (`127`, prior packaged `127`) is `KNOWN_NONBLOCKING`. Current repository evidence maps the surviving output-contract boundaries to verified `WPORG-24` / `WPORG-24R` children and accepted page-owned renderer architecture rather than to an open parent defect.
+- `WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet` (`1`, prior packaged `1`) is `KNOWN_NONBLOCKING`. Current repository evidence maps this exact `includes/modules/availability-date-dispatch/public.php:79` standalone-document `<link rel="stylesheet">` path to verified `WPORG-22R-J`.
+- `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent` (`1`, prior packaged `1`) is `UNMAPPED`. The current readme documents the optional Cloudflare Turnstile dependency, but no pre-`WPORG-28Q` tracker child explicitly adjudicated this packaged Plugin Check error code.
+- `WordPress.Security.EscapeOutput.ExceptionNotEscaped` (`4`, prior packaged `4`) is `UNMAPPED`. No pre-`WPORG-28Q` tracker child or verified residual closeout specifically covered the current packaged `class-provider-webhook.php` / `ticketing-rules-v2.php` exception-rendering hits.
+- `PluginCheck.Security.DirectDB.UnescapedDBParameter` (`143`, prior packaged `143`; `44` errors + `99` warnings), `WordPress.DB.PreparedSQL.NotPrepared` (`67`, prior packaged `67`), `WordPress.DB.DirectDatabaseQuery.DirectQuery` (`298`, prior packaged `298`), `WordPress.DB.DirectDatabaseQuery.NoCaching` (`260`, prior packaged `260`), `WordPress.DB.PreparedSQL.InterpolatedNotPrepared` (`137`, prior packaged `137`), `WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare` (`7`, prior packaged `7`), `WordPress.DB.SlowDBQuery.slow_db_query_meta_query` (`93`, prior packaged `93`), `WordPress.DB.SlowDBQuery.slow_db_query_meta_key` (`69`, prior packaged `69`), and `WordPress.DB.SlowDBQuery.slow_db_query_meta_value` (`8`, prior packaged `8`) remain `SUBMISSION_BLOCKER`. The latest durable packaged triage still labeled the DB / SQL family `BLOCKER`, and no later package-residual closeout superseded that state.
+- `WordPress.Security.NonceVerification.Recommended` (`372`, prior packaged `372`), `WordPress.Security.NonceVerification.Missing` (`85`, prior packaged `89`), `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized` (`134`, prior packaged `134`), `WordPress.Security.ValidatedSanitizedInput.MissingUnslash` (`100`, prior packaged `100`), and `WordPress.Security.ValidatedSanitizedInput.InputNotValidated` (`3`, prior packaged `3`) remain `SUBMISSION_BLOCKER`. The latest durable packaged triage still labeled nonce/input handling `BLOCKER`, and the later `WPORG-19` / `WPORG-20` runtime slices never reconciled the remaining packaged counts or exact current packaged boundaries rule by rule.
+- `WordPress.DateTime.RestrictedFunctions.date_date` (`25`, prior packaged `25`), `WordPress.PHP.DevelopmentFunctions.error_log_error_log` (`41`, prior packaged `41`), and `WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace` (`1`, prior packaged `1`) remain `SUBMISSION_BLOCKER`. The latest durable packaged triage still marked the date/time and logging families `SHOULD FIX BEFORE SUBMISSION`, and no later packaged residual closeout downgraded or accepted the current remaining counts.
+- `WordPress.WP.AlternativeFunctions.file_system_operations_chmod` (`3`, prior packaged `3`), `WordPress.WP.AlternativeFunctions.file_system_operations_fclose` (`12`, prior packaged `12`), `WordPress.WP.AlternativeFunctions.file_system_operations_fopen` (`3`, prior packaged `3`), `WordPress.WP.AlternativeFunctions.file_system_operations_fread` (`1`, prior packaged `1`), `WordPress.WP.AlternativeFunctions.file_system_operations_is_writable` (`3`, prior packaged `3`), `WordPress.WP.AlternativeFunctions.file_system_operations_readfile` (`3`, prior packaged `3`), `WordPress.WP.AlternativeFunctions.parse_url_parse_url` (`2`, prior packaged `2`), `WordPress.WP.AlternativeFunctions.rename_rename` (`1`, prior packaged `1`), `WordPress.WP.AlternativeFunctions.strip_tags_strip_tags` (`1`, prior packaged `2`), `WordPress.WP.AlternativeFunctions.unlink_unlink` (`9`, prior packaged `9`), and `WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters` (`2`, prior packaged `2`) are `UNMAPPED`. Current repository evidence mentions adjacent upload-, logging-, or query-boundary work, but no pre-`WPORG-28Q` tracker child explicitly reconciled these specific packaged error codes.
+
+### New and Unmapped Residuals
+
+- `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` (`1`, prior packaged `0`) is a `NEW_FINDING`. The current occurrence is `includes/integrations/ticketing-rules-v2.php:7476`, in the later `WPORG-25` disabled-ticket suppression path that now appends excluded ticket IDs through the native `tribe_tickets_get_tickets_query_args` boundary.
+- `Squiz.PHP.DiscouragedFunctions.Discouraged` (`1`, prior packaged `1`) is `UNMAPPED`. No pre-`WPORG-28Q` tracker child specifically covered the remaining packaged `includes/admin/settings-page.php:569` discouraged-function warning.
+
+### Readiness Outcome
+
+- `WPORG-28Q` correctly proved that the public package can be rebuilt, structure-audited, and rescanned on `2026-07-25`, but it overstated readiness by treating all remaining packaged findings as reconciled residuals.
+- No repository evidence currently demonstrates that WordPress.org will accept the current packaged `ERROR` families merely because the packaged Plugin Check command exits `0`.
+- The defensible current state is therefore `Outcome C — Reopen remediation`, not a ready-for-upload or fully reconciled closeout.
 
 ### Non-Actions
 
