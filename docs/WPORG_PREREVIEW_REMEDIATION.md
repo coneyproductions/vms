@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, but `WPORG-28R` remains blocked after `WPORG-28R-A` removed the lone new packaged finding because `UNMAPPED=46` and `SUBMISSION_BLOCKER=1843` still stand.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-B` later reconciled the Cloudflare Turnstile `OffloadedContent` occurrence as a documented service boundary, but `WPORG-28R` remains blocked because `UNMAPPED=45` and `SUBMISSION_BLOCKER=1843` still stand.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -2601,7 +2601,7 @@ Date: 2026-07-25
 - Focused verification reruns passed: `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php`
 - Fresh packaged Plugin Check command: `WP_CLI_PHP_ARGS='-d error_reporting=24575 -d display_errors=0' wp --path='<local-wp-root>' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '<temp>/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
 - Fresh packaged Plugin Check result: exit `0`, leading WP-CLI PHP 8.5 deprecation noise normalized away before JSON parsing, `309` errors, `1709` warnings, `2018` total messages, reported `OffloadedContent=1`, reported `ExceptionNotEscaped=4`, and `MissingVersion=0`, `unexpected_markdown_file=0`, `MissingTranslatorsComment=0`
-- Readiness conclusion: `WPORG-28Q` established metadata/build reproducibility and a stable packaged strict-json scan only. `WPORG-28R` later withdrew the submission-readiness conclusion after the final rule-family reconciliation found one new packaged finding plus multiple unmapped or still-blocking families, and `WPORG-28R-A` later removed that lone new finding without closing the remaining blocked families.
+- Readiness conclusion: `WPORG-28Q` established metadata/build reproducibility and a stable packaged strict-json scan only. `WPORG-28R` later withdrew the submission-readiness conclusion after the final rule-family reconciliation found one new packaged finding plus multiple unmapped or still-blocking families, `WPORG-28R-A` later removed that lone new finding, and `WPORG-28R-B` later mapped the remaining Turnstile `OffloadedContent` occurrence without closing the remaining blocked families.
 
 ### What Changed
 
@@ -2633,9 +2633,9 @@ Date: 2026-07-25
 - Exact comparison with `WPORG-28Q`: the fresh `2026-07-25` rerun reproduced the same `309` errors, `1709` warnings, and `2018` total findings recorded under `WPORG-28Q`, but the earlier conclusion that those findings were fully reconciled is not supported by repository evidence.
 - Exact comparison with the prior packaged residual baseline from `docs/plugin-check-1.0.0-2026-07-22-raw.txt`: current `2018 / 309 / 1709 / 34` versus prior `2044 / 330 / 1714 / 36`; `WordPress.WP.I18n.MissingTranslatorsComment` (`20`), `WordPress.WP.EnqueuedResourceParameters.MissingVersion` (`1`), and `unexpected_markdown_file` (`1`) are now gone; `WordPress.Security.NonceVerification.Missing` dropped from `89` to `85`; `WordPress.WP.AlternativeFunctions.strip_tags_strip_tags` dropped from `2` to `1`; and `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` appeared as a new current packaged warning.
 - Initial rule-family classification totals from this pass: `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=1`, `UNMAPPED=46`, `SUBMISSION_BLOCKER=1843`
-- Current parent totals after `WPORG-28R-A`: `309` errors, `1708` warnings, `2017` total findings, `33` unique rule codes, with `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=0`, `UNMAPPED=46`, and `SUBMISSION_BLOCKER=1843`
+- Current parent totals after `WPORG-28R-B`: `309` errors, `1708` warnings, `2017` total findings, `33` unique rule codes, with `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=45`, and `SUBMISSION_BLOCKER=1843`
 - Defensible readiness outcome: `Outcome C — Reopen remediation`
-- Exact next action: open the next `WPORG-28R` child for the surviving unmapped packaged families, starting with `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent`, `WordPress.Security.EscapeOutput.ExceptionNotEscaped`, `WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters`, and the remaining alternative filesystem/helper-function codes, or explicitly authorize a still-blocking family instead before any WordPress.org upload, reviewer reply, or final artifact-preparation step.
+- Exact next action: open the next `WPORG-28R` child for `WordPress.Security.EscapeOutput.ExceptionNotEscaped`, then continue with `WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters` and the remaining alternative filesystem/helper-function codes, or explicitly authorize a still-blocking family instead before any WordPress.org upload, reviewer reply, or final artifact-preparation step.
 
 ### Mapping Method
 
@@ -2650,7 +2650,7 @@ Date: 2026-07-25
 
 - `WordPress.Security.EscapeOutput.OutputNotEscaped` (`127`, prior packaged `127`) is `KNOWN_NONBLOCKING`. Current repository evidence maps the surviving output-contract boundaries to verified `WPORG-24` / `WPORG-24R` children and accepted page-owned renderer architecture rather than to an open parent defect.
 - `WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet` (`1`, prior packaged `1`) is `KNOWN_NONBLOCKING`. Current repository evidence maps this exact `includes/modules/availability-date-dispatch/public.php:79` standalone-document `<link rel="stylesheet">` path to verified `WPORG-22R-J`.
-- `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent` (`1`, prior packaged `1`) is `UNMAPPED`. The current readme documents the optional Cloudflare Turnstile dependency, but no pre-`WPORG-28Q` tracker child explicitly adjudicated this packaged Plugin Check error code.
+- `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent` (`1`, prior packaged `1`) is now `KNOWN_NONBLOCKING`. `WPORG-28R-B` demonstrated that the current occurrence is the Cloudflare Turnstile client at `includes/vendor-applications.php:2376`, loaded only from the fully configured `[vms_vendor_apply]` public form, with exact continuity to `fd67f51` (`Clarify Turnstile disclosure and tighten vendor apply enqueue guard`). The packaged `readme.txt:80-85` clearly documents the provider, purpose, activation condition, browser contact, server-side verification, and service/privacy links, and the current official WordPress.org guidance permits documented external service code while prohibiting offloaded assets unrelated to a service. Final WordPress.org acceptance is still not guaranteed because Plugin Check `2.0.0` emits a generic remote-resource error with no docs link or service-specific exception for this SDK URL.
 - `WordPress.Security.EscapeOutput.ExceptionNotEscaped` (`4`, prior packaged `4`) is `UNMAPPED`. No pre-`WPORG-28Q` tracker child or verified residual closeout specifically covered the current packaged `class-provider-webhook.php` / `ticketing-rules-v2.php` exception-rendering hits.
 - `PluginCheck.Security.DirectDB.UnescapedDBParameter` (`143`, prior packaged `143`; `44` errors + `99` warnings), `WordPress.DB.PreparedSQL.NotPrepared` (`67`, prior packaged `67`), `WordPress.DB.DirectDatabaseQuery.DirectQuery` (`298`, prior packaged `298`), `WordPress.DB.DirectDatabaseQuery.NoCaching` (`260`, prior packaged `260`), `WordPress.DB.PreparedSQL.InterpolatedNotPrepared` (`137`, prior packaged `137`), `WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare` (`7`, prior packaged `7`), `WordPress.DB.SlowDBQuery.slow_db_query_meta_query` (`93`, prior packaged `93`), `WordPress.DB.SlowDBQuery.slow_db_query_meta_key` (`69`, prior packaged `69`), and `WordPress.DB.SlowDBQuery.slow_db_query_meta_value` (`8`, prior packaged `8`) remain `SUBMISSION_BLOCKER`. The latest durable packaged triage still labeled the DB / SQL family `BLOCKER`, and no later package-residual closeout superseded that state.
 - `WordPress.Security.NonceVerification.Recommended` (`372`, prior packaged `372`), `WordPress.Security.NonceVerification.Missing` (`85`, prior packaged `89`), `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized` (`134`, prior packaged `134`), `WordPress.Security.ValidatedSanitizedInput.MissingUnslash` (`100`, prior packaged `100`), and `WordPress.Security.ValidatedSanitizedInput.InputNotValidated` (`3`, prior packaged `3`) remain `SUBMISSION_BLOCKER`. The latest durable packaged triage still labeled nonce/input handling `BLOCKER`, and the later `WPORG-19` / `WPORG-20` runtime slices never reconciled the remaining packaged counts or exact current packaged boundaries rule by rule.
@@ -2666,7 +2666,7 @@ Date: 2026-07-25
 
 - `WPORG-28Q` correctly proved that the public package can be rebuilt, structure-audited, and rescanned on `2026-07-25`, but it overstated readiness by treating all remaining packaged findings as reconciled residuals.
 - No repository evidence currently demonstrates that WordPress.org will accept the current packaged `ERROR` families merely because the packaged Plugin Check command exits `0`.
-- After `WPORG-28R-A`, the parent still remains blocked because the current residual baseline is `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=0`, `UNMAPPED=46`, and `SUBMISSION_BLOCKER=1843`.
+- After `WPORG-28R-B`, the parent still remains blocked because the current residual baseline is `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=45`, and `SUBMISSION_BLOCKER=1843`.
 - The defensible current state is therefore `Outcome C — Reopen remediation`, not a ready-for-upload or fully reconciled closeout.
 
 ### Non-Actions
@@ -2718,6 +2718,53 @@ Date: 2026-07-25
 
 - The live `../../vms/includes/integrations/ticketing-rules-v2.php` file remained read-only and unchanged; full mirror/live convergence was not attempted.
 - No other runtime PHP file, build script, package manifest, release metadata file, asset, add-on, migration, production tree, or unrelated test was edited.
+- No upload, deployment, submission, reviewer reply, push, tag, production change, live replacement, migration, stash mutation, or WordPress.org action occurred.
+
+## WPORG-28R-B Result
+
+Date: 2026-07-25
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-B`
+- Starting mirror HEAD: `736f398af9ffbd1814807212243aa3c03189a0cc` (`Document bounded disabled ticket exclusion`)
+- Starting parent: `f1f8d83b3de8ec8dae8e3c591dd15d7b7fd7613d`
+- Baseline verification: `./scripts/codex-preflight.sh`, `git rev-parse HEAD`, `git log -1 --format='%s'`, `git rev-parse HEAD^`, `git status --short`, `git diff --check`, `git diff --cached --check`, `git diff --cached --name-only`, and `git stash list` all matched the required clean starting state, including protected stash `stash@{0}: On work/unreleased-2026-06-18: WPORG-16D preserve unrelated sidebar+doc work`.
+- Pre-edit package build command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rb-pre.4RnyrA/build --force`
+- Pre-edit package result: `/tmp/wporg-28rb-pre.4RnyrA/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `e4fc136c3fc286b57fdd8d993291f7fb6f28ea7086b6ae87165dd79b101eb24b`
+- Pre-edit packaged Plugin Check command: `WP_CLI_PHP_ARGS='-d error_reporting=24575 -d display_errors=0' wp --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rb-pre.4RnyrA/extracted/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Plugin Check environment: PHP `8.5.3`, WP-CLI `2.12.0`, WordPress `7.0.1`, Plugin Check `2.0.0`
+- Pre-edit packaged Plugin Check result: exit `0`, `309` errors, `1708` warnings, `2017` total findings, `33` unique rule codes, target count `1`
+- Exact target occurrence: strict JSON row `{file:\"/privateincludes/vendor-applications.php\", line:2376, column:9, type:\"ERROR\", code:\"PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent\", message:\"Found call to wp_enqueue_script() with external resource. Offloading scripts to your servers or any remote service is disallowed.\", docs:\"\"}`; the empty docs field confirms the emitted occurrence does not link to a rule page directly.
+- Exact external resource: `https://challenges.cloudflare.com/turnstile/v0/api.js`
+- Resource type: JavaScript
+- Service provider and purpose: Cloudflare Turnstile, used as optional anti-abuse protection for the public Vendor Application form.
+- Exact enqueue boundary: `vms_vendor_apply_shortcode()` enqueues script handle `cf-turnstile` and renders the widget only inside shortcode `[vms_vendor_apply]`; there is no broad `wp_enqueue_scripts`, admin, REST, AJAX, cron, or CLI enqueue hook.
+- Guard behavior: the resource loads only after `vms_vendor_apply_turnstile_is_configured()` confirms both site key and secret key, only on the active rendered form path, only once per render, and never from visitor-controlled URLs. If either key is missing, the public form is unavailable and the client is not loaded. Administrators can disable the integration by omitting either key.
+- Data boundary: loading the client may disclose ordinary browser request data plus the public site key; server-side verification sends only the Turnstile response token, visitor IP address, and secret-key-authenticated verification request; the Vendor Application form contents are not sent to Cloudflare through this integration.
+- Packaged disclosure state: packaged `readme.txt:80-85` identifies provider, purpose, activation condition, browser contact, server-side verification, and service/privacy links; the current shortcode also withholds the form and remote client when incomplete, and only shows the administrator-facing incomplete-config diagnostic to users with `manage_options`.
+- Prior Turnstile remediation continuity: `fd67f51` (`Clarify Turnstile disclosure and tighten vendor apply enqueue guard`) introduced `vms_vendor_apply_turnstile_is_configured()`, the current two-key gate, the current `VMS_VERSION`-versioned Turnstile enqueue, the current readme disclosure block, and the focused contract test. No later commit weakened that guard or disclosure; later history changed only unrelated `readme.txt` public-release metadata.
+- Official policy and rule evidence: the installed Plugin Check sniff `PluginCheck/Sniffs/CodeAnalysis/EnqueuedResourceOffloadingSniff.php` generically flags any enqueued remote resource and its helper pattern explicitly matches `cloudflare.com`. The current official WordPress.org developer docs say Software as a Service is permitted when clearly documented, external code from documented services is permitted, offloaded assets unrelated to a service are prohibited, and third-party services must be clearly disclosed with links and privacy/terms references.
+- Decision outcome: `Outcome A — Required disclosed service resource`
+- Classification result: this exact occurrence is now reconciled as a project-level `KNOWN_NONBLOCKING` residual for `WPORG-28R`, but final WordPress.org acceptance is not guaranteed because Plugin Check still reports it as a generic `ERROR` with no service exception.
+- Focused verification reruns passed: `php tests/vendor-apply-turnstile-contract-remediation.php` and `php tests/vendor-apply-inline-js-remediation.php`
+- Broader regression reruns passed: `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php`
+- Live reference: inspected read-only `../../vms/includes/vendor-applications.php` with SHA-256 `e440227fc398fe14234d897d89bc62fe8c37f7bebe13367dcb99e9a8b8d2cfdd`; it remained unchanged throughout this child.
+- Package-postcheck note: no runtime, readme, or test file changed in this child, so no post-edit package rerun was required; the packaged counts remain the reproduced pre-edit values above because the packaged boundary itself did not change.
+- Final parent totals after this child: `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=45`, `SUBMISSION_BLOCKER=1843`, while the current packaged scan itself remains `309` errors, `1708` warnings, `2017` total findings, and `33` unique rule codes.
+- Readiness conclusion: this child reconciles the Turnstile `OffloadedContent` occurrence for project tracking only. `WPORG-28R` and overall submission readiness remain blocked by the remaining `UNMAPPED` and `SUBMISSION_BLOCKER` families.
+
+### What Changed
+
+- Reproduced the clean packaged `OffloadedContent` occurrence from committed source in a disposable directory and normalized the strict JSON result for current evidence.
+- Re-verified the current Turnstile enqueue guard, disclosure copy, and prior remediation continuity against the existing source, current packaged `readme.txt`, the focused Turnstile contract tests, the installed Plugin Check sniff, and the current official WordPress.org service-disclosure guidance.
+- Updated `docs/WPORG_PREREVIEW_REMEDIATION.md` and `docs/wporg-remediation-ledger.md` to map this exact current occurrence from `UNMAPPED` to `KNOWN_NONBLOCKING` without changing runtime behavior or suppressing the rule.
+
+### Non-Actions
+
+- No runtime PHP file, `readme.txt`, focused test file, build script, asset, package manifest, live-tree file, or release metadata file changed in this child.
+- No suppression was added for `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent`; the packaged occurrence remains visible for reviewer evaluation.
 - No upload, deployment, submission, reviewer reply, push, tag, production change, live replacement, migration, stash mutation, or WordPress.org action occurred.
 
 ## WPORG-20A-S Result
