@@ -191,6 +191,46 @@ $tests['recognized plugin basenames accept internal and public installs only'] =
 	);
 };
 
+$tests['repository public boundary keeps current metadata separate from internal compatibility basenames'] = static function (): void {
+	$pluginRoot = dirname(__DIR__);
+	$header = file_get_contents($pluginRoot . '/vendor-management-system.php');
+	$constants = file_get_contents($pluginRoot . '/includes/core/registry/constants.php');
+	$readme = file_get_contents($pluginRoot . '/readme.txt');
+	$build = file_get_contents($pluginRoot . '/vms-build.txt');
+
+	vms_release_compat_test_assert(is_string($header), 'Expected repository plugin header to be readable.');
+	vms_release_compat_test_assert(is_string($constants), 'Expected repository constants file to be readable.');
+	vms_release_compat_test_assert(is_string($readme), 'Expected repository readme to be readable.');
+	vms_release_compat_test_assert(is_string($build), 'Expected repository build marker to be readable.');
+
+	vms_release_compat_test_assert(strpos($header, 'Version: 1.2.0') !== false, 'Expected the current repository plugin header to advertise 1.2.0.');
+	vms_release_compat_test_assert(
+		strpos($constants, "define('VMS_VERSION', '1.2.0');") !== false,
+		'Expected the current repository VMS_VERSION constant to advertise 1.2.0.'
+	);
+	vms_release_compat_test_assert(strpos($readme, 'Stable tag: 1.2.0') !== false, 'Expected the current repository readme stable tag to advertise 1.2.0.');
+	vms_release_compat_test_assert(trim($build) === '1.2.0', 'Expected the current repository build marker to advertise 1.2.0.');
+	vms_release_compat_test_assert(strpos($header, 'Version: 1.1.0') === false, 'Expected the live-only 1.1.0 marker to stay out of the public plugin header.');
+	vms_release_compat_test_assert(strpos($readme, 'Stable tag: 1.1.0') === false, 'Expected the live-only 1.1.0 marker to stay out of the public readme stable tag.');
+	vms_release_compat_test_assert(trim($build) !== '1.1.0', 'Expected the live-only 1.1.0 build marker to stay out of the public build source.');
+	vms_release_compat_test_assert(
+		VMS_Release_Compatibility_Tooling::publicPluginBasename() === 'backstage-venue-manager/vendor-management-system.php',
+		'Expected the public basename to remain backstage-venue-manager/vendor-management-system.php.'
+	);
+	vms_release_compat_test_assert(
+		VMS_Release_Compatibility_Tooling::internalPluginBasename() === 'vms/vendor-management-system.php',
+		'Expected the internal compatibility basename to remain vms/vendor-management-system.php.'
+	);
+	vms_release_compat_test_assert(
+		strpos($constants, "define('VMS_REST_NAMESPACE', 'vms/v1');") !== false,
+		'Expected the internal REST namespace compatibility constant to remain unchanged.'
+	);
+	vms_release_compat_test_assert(
+		strpos($constants, "define('VMS_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION', 'vms_ticket_mutation_audit_db_schema_version');") !== false,
+		'Expected unrelated schema option constants to remain unchanged.'
+	);
+};
+
 $tests['installed plugin basename resolution keeps build-version lookup stable across basenames'] = static function (): void {
 	$workspace = vms_release_compat_test_temp_dir('vms release compat basenames ');
 	try {

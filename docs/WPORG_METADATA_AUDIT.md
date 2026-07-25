@@ -1,5 +1,38 @@
 # WordPress.org Metadata Audit
 
+## Current Submission Boundary Update
+
+Date: 2026-07-25
+
+This supplement records the current public-core submission boundary without rewriting the original `1.0.0` audit record below.
+
+### Public submission state
+
+- Authoritative source: repository mirror `packages/vms-github-reconcile`
+- Public release version: `1.2.0`
+- Package slug: `backstage-venue-manager`
+- Main plugin filename: `vendor-management-system.php`
+- Current mirror package boundary is valid for WordPress.org resubmission review.
+
+### Production state
+
+- Active live basename remains `vms/vendor-management-system.php`.
+- Active live version remains `1.1.0`.
+- No production deployment, live replacement, or side-by-side coexistence is authorized by this boundary.
+- Outreach extraction and duplicate-core safety remain prerequisites for any future production convergence.
+
+### Current public marker synchronization
+
+| Item | Current State | Evidence | Status | Follow-up |
+| --- | --- | --- | --- | --- |
+| Version | `1.2.0` synchronized across the canonical public version markers in the mirror. | `vendor-management-system.php`; `includes/core/registry/constants.php`; `vms-build.txt`; `readme.txt` | Applied | Preserve the separate production `vms` `1.1.0` line until convergence is explicitly authorized. |
+| Stable tag | `1.2.0` | `readme.txt` | Applied | Keep synchronized with the release markers and public package filename. |
+| Changelog | Root readme now begins with a public `1.2.0` changelog entry while retaining the historical `1.0.0` record. | `readme.txt` | Applied | Keep public-facing wording suitable for WordPress.org display. |
+| Upgrade Notice | Root readme now begins with a public `1.2.0` upgrade notice covering coexistence and backup caution. | `readme.txt` | Applied | Do not broaden this notice into a production-deployment approval. |
+| Release notes | Dedicated `1.2.0` public-core release notes now track the accepted submission boundary. | `docs/WPORG_RELEASE_NOTES_1.2.0.md` | Applied | Keep historical `docs/WPORG_RELEASE_NOTES_1.0.0.md` unchanged. |
+
+Historical `1.0.0` provenance and hash records remain below unchanged.
+
 Date: 2026-06-22
 
 Scope note:

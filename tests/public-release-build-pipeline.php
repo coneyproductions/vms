@@ -266,6 +266,23 @@ function vms_public_release_test_read_zip_entries(string $zipPath): array
 	return $entries;
 }
 
+function vms_public_release_test_read_zip_file(string $zipPath, string $entryPath): string
+{
+	$zip = new ZipArchive();
+	if ($zip->open($zipPath) !== true) {
+		throw new RuntimeException('Could not open ZIP fixture for file inspection.');
+	}
+
+	$contents = $zip->getFromName($entryPath);
+	$zip->close();
+
+	if (!is_string($contents)) {
+		throw new RuntimeException('Could not read ZIP entry: ' . $entryPath);
+	}
+
+	return $contents;
+}
+
 function vms_public_release_test_write_provenance_manifest(string $pluginRoot, string $manifestPath, string $artifactPath): void
 {
 	$version = trim((string) file_get_contents($pluginRoot . '/vms-build.txt'));
@@ -771,6 +788,87 @@ $tests['internal plugin slug changes do not redefine the public package slug'] =
 		);
 	} finally {
 		vms_public_release_test_delete_path(dirname($pluginRoot));
+		vms_public_release_test_delete_path($outputDir);
+	}
+};
+
+$tests['repository public boundary packages the current 1.2.0 public release markers'] = static function (): void {
+	$pluginRoot = dirname(__DIR__);
+	$outputDir = vms_public_release_test_temp_dir('vms release current boundary ');
+	try {
+		$report = VMS_Public_Release_Tooling::build(array(
+			'plugin_root' => $pluginRoot,
+			'output_dir' => $outputDir,
+			'force' => true,
+			'allow_dirty' => true,
+			'release_tests' => array(),
+		));
+		vms_public_release_test_assert(($report['status'] ?? '') === 'PASS', 'Expected the current repository public build to pass.');
+		vms_public_release_test_assert(
+			($report['metadata']['header_version'] ?? '') === '1.2.0',
+			'Expected the current repository header version to resolve to 1.2.0.'
+		);
+		vms_public_release_test_assert(
+			($report['metadata']['version'] ?? '') === '1.2.0',
+			'Expected the current repository VMS_VERSION to resolve to 1.2.0.'
+		);
+		vms_public_release_test_assert(
+			($report['metadata']['build_version'] ?? '') === '1.2.0',
+			'Expected the current repository build marker to resolve to 1.2.0.'
+		);
+		vms_public_release_test_assert(
+			($report['artifact']['filename'] ?? '') === 'backstage-venue-manager-1.2.0-public-release.zip',
+			'Expected the current repository artifact filename to derive from 1.2.0.'
+		);
+
+		$zipPath = (string) ($report['artifact']['zip_path'] ?? '');
+		$zipEntries = vms_public_release_test_read_zip_entries($zipPath);
+		vms_public_release_test_assert(
+			in_array(vms_public_release_test_public_slug() . '/', $zipEntries, true),
+			'Expected the public ZIP root directory to remain backstage-venue-manager/.'
+		);
+
+		$packagedFiles = array_values(array_filter($zipEntries, static function (string $entryName): bool {
+			return substr($entryName, -1) !== '/';
+		}));
+		vms_public_release_test_assert(count($packagedFiles) === 379, 'Expected the current repository public package to contain 379 files.');
+
+		foreach ($zipEntries as $entryName) {
+			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected AGENTS.md to stay out of the packaged public ZIP.');
+			vms_public_release_test_assert(strpos($entryName, '/outreach/') === false, 'Expected Outreach runtime paths to stay out of the packaged public ZIP.');
+		}
+
+		$packagedHeader = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_basename());
+		$packagedConstants = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/includes/core/registry/constants.php');
+		$packagedReadme = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/readme.txt');
+		$packagedBuild = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/vms-build.txt');
+
+		vms_public_release_test_assert(strpos($packagedHeader, 'Version: 1.2.0') !== false, 'Expected the packaged plugin header version to resolve to 1.2.0.');
+		vms_public_release_test_assert(
+			strpos($packagedConstants, "define('VMS_VERSION', '1.2.0');") !== false,
+			'Expected the packaged VMS_VERSION constant to resolve to 1.2.0.'
+		);
+		vms_public_release_test_assert(strpos($packagedReadme, 'Stable tag: 1.2.0') !== false, 'Expected the packaged readme stable tag to resolve to 1.2.0.');
+		vms_public_release_test_assert(substr_count($packagedReadme, '= 1.2.0 =') >= 2, 'Expected the packaged readme to contain the 1.2.0 changelog and upgrade-notice sections.');
+		vms_public_release_test_assert(trim($packagedBuild) === '1.2.0', 'Expected the packaged build marker to resolve to 1.2.0.');
+
+		vms_public_release_test_assert(
+			$packagedHeader === (string) file_get_contents($pluginRoot . '/vendor-management-system.php'),
+			'Expected the packaged plugin header file to match the mirror source.'
+		);
+		vms_public_release_test_assert(
+			$packagedConstants === (string) file_get_contents($pluginRoot . '/includes/core/registry/constants.php'),
+			'Expected the packaged constants file to match the mirror source.'
+		);
+		vms_public_release_test_assert(
+			$packagedReadme === (string) file_get_contents($pluginRoot . '/readme.txt'),
+			'Expected the packaged readme to match the mirror source.'
+		);
+		vms_public_release_test_assert(
+			$packagedBuild === (string) file_get_contents($pluginRoot . '/vms-build.txt'),
+			'Expected the packaged build marker file to match the mirror source.'
+		);
+	} finally {
 		vms_public_release_test_delete_path($outputDir);
 	}
 };
