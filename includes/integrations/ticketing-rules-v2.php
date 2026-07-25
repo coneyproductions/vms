@@ -7473,6 +7473,7 @@ function vms_ticketing_v2_filter_disabled_ticket_query_args(array $args): array
     }
 
     $existing_exclusions = isset($args['post__not_in']) ? (array) $args['post__not_in'] : array();
+    // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in -- Disabled IDs are plan-scoped pending-sync ticket products for the resolved event, bounded by the saved plan config, and query-level exclusion preserves TEC ticket counts and pagination without broadening unrelated queries.
     $args['post__not_in'] = array_values(array_unique(array_filter(array_map('absint', array_merge($existing_exclusions, $disabled_ids)))));
 
     return $args;

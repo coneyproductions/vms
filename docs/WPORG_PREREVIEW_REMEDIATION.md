@@ -1513,7 +1513,7 @@ Recommended follow-up order, keeping each pass narrow:
 13. `WPORG-28 - Release metadata and packaging validation`
     - Scope: `M1`
     - Goal: choose the public version and validate final ZIP / slug expectations
-    - Result: the `1.2.0` public-core decision and disposable package validation remain complete, but `WPORG-28R` reopened submission readiness after the final rule-family reconciliation found one new packaged warning plus multiple unmapped or still-blocking residual families
+    - Result: the `1.2.0` public-core decision and disposable package validation remain complete; `WPORG-28R` reopened submission readiness, `WPORG-28R-A` removed the lone new packaged warning, and the parent remains blocked by the surviving unmapped or still-blocking residual families
 
 ## Findings Requiring User or Product-Owner Decisions
 
@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, but `WPORG-28R` reopens the packaged residual audit because the rule-family reconciliation found one new packaged finding plus multiple unmapped or still-blocking families.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, but `WPORG-28R` remains blocked after `WPORG-28R-A` removed the lone new packaged finding because `UNMAPPED=46` and `SUBMISSION_BLOCKER=1843` still stand.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -2601,7 +2601,7 @@ Date: 2026-07-25
 - Focused verification reruns passed: `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php`
 - Fresh packaged Plugin Check command: `WP_CLI_PHP_ARGS='-d error_reporting=24575 -d display_errors=0' wp --path='<local-wp-root>' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '<temp>/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
 - Fresh packaged Plugin Check result: exit `0`, leading WP-CLI PHP 8.5 deprecation noise normalized away before JSON parsing, `309` errors, `1709` warnings, `2018` total messages, reported `OffloadedContent=1`, reported `ExceptionNotEscaped=4`, and `MissingVersion=0`, `unexpected_markdown_file=0`, `MissingTranslatorsComment=0`
-- Readiness conclusion: `WPORG-28Q` established metadata/build reproducibility and a stable packaged strict-json scan only. `WPORG-28R` later withdrew the submission-readiness conclusion after the final rule-family reconciliation found one new packaged finding plus multiple unmapped or still-blocking families.
+- Readiness conclusion: `WPORG-28Q` established metadata/build reproducibility and a stable packaged strict-json scan only. `WPORG-28R` later withdrew the submission-readiness conclusion after the final rule-family reconciliation found one new packaged finding plus multiple unmapped or still-blocking families, and `WPORG-28R-A` later removed that lone new finding without closing the remaining blocked families.
 
 ### What Changed
 
@@ -2632,9 +2632,10 @@ Date: 2026-07-25
 - Fresh packaged Plugin Check result: exit `0`, `309` errors, `1709` warnings, `2018` total findings, `34` unique rule codes
 - Exact comparison with `WPORG-28Q`: the fresh `2026-07-25` rerun reproduced the same `309` errors, `1709` warnings, and `2018` total findings recorded under `WPORG-28Q`, but the earlier conclusion that those findings were fully reconciled is not supported by repository evidence.
 - Exact comparison with the prior packaged residual baseline from `docs/plugin-check-1.0.0-2026-07-22-raw.txt`: current `2018 / 309 / 1709 / 34` versus prior `2044 / 330 / 1714 / 36`; `WordPress.WP.I18n.MissingTranslatorsComment` (`20`), `WordPress.WP.EnqueuedResourceParameters.MissingVersion` (`1`), and `unexpected_markdown_file` (`1`) are now gone; `WordPress.Security.NonceVerification.Missing` dropped from `89` to `85`; `WordPress.WP.AlternativeFunctions.strip_tags_strip_tags` dropped from `2` to `1`; and `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` appeared as a new current packaged warning.
-- Rule-family classification totals from this pass: `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=1`, `UNMAPPED=46`, `SUBMISSION_BLOCKER=1843`
+- Initial rule-family classification totals from this pass: `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=1`, `UNMAPPED=46`, `SUBMISSION_BLOCKER=1843`
+- Current parent totals after `WPORG-28R-A`: `309` errors, `1708` warnings, `2017` total findings, `33` unique rule codes, with `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=0`, `UNMAPPED=46`, and `SUBMISSION_BLOCKER=1843`
 - Defensible readiness outcome: `Outcome C — Reopen remediation`
-- Exact next action: open a new runtime remediation child starting with the new `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` finding in `includes/integrations/ticketing-rules-v2.php:7476`, then perform a rule-family residual reconciliation and/or targeted remediation for the remaining unmapped or still-blocking packaged families before any WordPress.org upload, reviewer reply, or final artifact-preparation step.
+- Exact next action: open the next `WPORG-28R` child for the surviving unmapped packaged families, starting with `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent`, `WordPress.Security.EscapeOutput.ExceptionNotEscaped`, `WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters`, and the remaining alternative filesystem/helper-function codes, or explicitly authorize a still-blocking family instead before any WordPress.org upload, reviewer reply, or final artifact-preparation step.
 
 ### Mapping Method
 
@@ -2658,19 +2659,66 @@ Date: 2026-07-25
 
 ### New and Unmapped Residuals
 
-- `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` (`1`, prior packaged `0`) is a `NEW_FINDING`. The current occurrence is `includes/integrations/ticketing-rules-v2.php:7476`, in the later `WPORG-25` disabled-ticket suppression path that now appends excluded ticket IDs through the native `tribe_tickets_get_tickets_query_args` boundary.
+- `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` (`1`, prior packaged `0`) was the triggering `NEW_FINDING` in this pass. The occurrence was `includes/integrations/ticketing-rules-v2.php:7476`, in the later `WPORG-25` disabled-ticket suppression path that appends excluded ticket IDs through the native `tribe_tickets_get_tickets_query_args` boundary, and it is now closed under `WPORG-28R-A`.
 - `Squiz.PHP.DiscouragedFunctions.Discouraged` (`1`, prior packaged `1`) is `UNMAPPED`. No pre-`WPORG-28Q` tracker child specifically covered the remaining packaged `includes/admin/settings-page.php:569` discouraged-function warning.
 
 ### Readiness Outcome
 
 - `WPORG-28Q` correctly proved that the public package can be rebuilt, structure-audited, and rescanned on `2026-07-25`, but it overstated readiness by treating all remaining packaged findings as reconciled residuals.
 - No repository evidence currently demonstrates that WordPress.org will accept the current packaged `ERROR` families merely because the packaged Plugin Check command exits `0`.
+- After `WPORG-28R-A`, the parent still remains blocked because the current residual baseline is `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=0`, `UNMAPPED=46`, and `SUBMISSION_BLOCKER=1843`.
 - The defensible current state is therefore `Outcome C — Reopen remediation`, not a ready-for-upload or fully reconciled closeout.
 
 ### Non-Actions
 
 - No runtime, test, release-metadata, builder, or live-tree file changed in this slice.
 - No upload, deployment, submission, reviewer reply, tag, push, production change, live replacement, or migration occurred.
+
+## WPORG-28R-A Result
+
+Date: 2026-07-25
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-A`
+- Starting mirror HEAD: `f1f8d83b3de8ec8dae8e3c591dd15d7b7fd7613d` (`Reopen packaged Plugin Check remediation`)
+- Starting parent: `52ab3603629688f569887d1bd204d03925ca860a`
+- Baseline verification: `./scripts/codex-preflight.sh`, `git rev-parse HEAD`, `git log -1 --format='%s'`, `git rev-parse HEAD^`, `git status --short`, `git diff --check`, `git diff --cached --check`, `git diff --cached --name-only`, and `git stash list` all matched the required clean starting state, including protected stash `stash@{0}: On work/unreleased-2026-06-18: WPORG-16D preserve unrelated sidebar+doc work`.
+- Established public/live boundary before edit: public `includes/integrations/ticketing-rules-v2.php` SHA-256 `1aad70a8e6380e264a3d135cabe7575346019fbbbede52acdc5606bae42e37cd` versus read-only live `../../vms/includes/integrations/ticketing-rules-v2.php` SHA-256 `2de83c1b76a9cffe5fedfa47d6842aac137e93aecb0d56db96fb0fd5ea757235`; the files remained globally divergent because of unrelated JSON request-validation remediation, benefits-link behavior, and minor formatting drift.
+- Exact target comparison before edit: only the hook registration, `vms_ticketing_v2_filter_disabled_ticket_query_args()`, `vms_ticketing_v2_disabled_ticket_products_for_plan()`, `vms_ticketing_v2_ticket_query_event_meta_keys()`, and `vms_ticketing_v2_event_id_from_ticket_query_args()` were compared. The public callback at approximately `7439-7476` and the live callback at approximately `7209-7246` were semantically equivalent, full-file parity was not attempted, and the live file remained outside edit scope.
+- Query characterization: `add_filter('tribe_tickets_get_tickets_query_args', 'vms_ticketing_v2_filter_disabled_ticket_query_args', 30, 1);` modifies the public Event Tickets ticket query boundary, resolves the event from direct args, `meta_query`, or singular `tribe_events` fallback, resolves the plan via `vms_ticketing_v2_find_plan_id_by_tec_event_id()`, derives disabled IDs from `vms_ticketing_v2_disabled_ticket_products_for_plan()`, and merges those plan-scoped disabled ticket IDs into incoming `post__not_in` while preserving unrelated constraints.
+- Disabled-ID scope and behavior: the excluded IDs are plan-scoped, bounded by saved plan configuration plus pending-sync map entries and child variations, the practical maximum cardinality remains the finite disabled ticket set for one resolved plan, no-plan or no-disabled cases leave the query unchanged, existing `post__not_in` values are merged and deduplicated, existing `post__in` values are preserved as-is, and non-ticket queries or cancelled-event handling remain unaffected.
+- Pre-edit focused verification passed: `php tests/ticketing-disabled-ticket-native-suppression-remediation.php` and `php tests/event-plan-legacy-ticketing-integration-smoke.php`.
+- Pre-edit package build command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28ra-pre.6SjHAj/build --force`
+- Pre-edit package result: `/tmp/wporg-28ra-pre.6SjHAj/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `5e981800f8d78fc12c583d3ee5b047169d4215bc53d6228822de5978946402a8`
+- Pre-edit packaged Plugin Check command: `WP_CLI_PHP_ARGS='-d error_reporting=24575 -d display_errors=0' wp --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28ra-pre.6SjHAj/extracted/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Pre-edit packaged Plugin Check result: exit `0`, target `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` count `1` at packaged `includes/integrations/ticketing-rules-v2.php:7476`, `309` errors, `1709` warnings, `2018` total findings, and `34` unique rule codes.
+- Implementation decision gate: `Option A` was rejected because the helper exposes only disabled IDs, not a complete authoritative allowlist of valid public ticket posts; `Option B` was unavailable because the authoritative query assembly does not occur earlier in this bounded file; `Option C` was accepted because the exclusion list is plan-scoped and bounded, query-level exclusion preserves pagination and result counts, and project conventions already permit line-specific `phpcs:ignore` usage.
+- Runtime remediation applied: added a single line-specific `phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` immediately above the existing `post__not_in` merge in `vms_ticketing_v2_filter_disabled_ticket_query_args()` with a bounded plan-scope and pagination/counts justification; runtime behavior did not change.
+- Focused test update: `tests/ticketing-disabled-ticket-native-suppression-remediation.php` now asserts the exact one-line suppression token, and no other focused test file changed.
+- Post-edit syntax and focused verification passed: `php -l includes/integrations/ticketing-rules-v2.php`, `php tests/ticketing-disabled-ticket-native-suppression-remediation.php`, `php tests/event-plan-legacy-ticketing-integration-smoke.php`, and the additional narrowly relevant `php tests/ticketing-output-buffer-lifecycle-characterization.php`.
+- Regression gates passed: `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php`.
+- Post-edit source checksums: public `includes/integrations/ticketing-rules-v2.php` SHA-256 `18b4a12eb7e83bd3d8a8b0f9d360a1744579808b0a3a61ba401918fbe83f3477`; live `../../vms/includes/integrations/ticketing-rules-v2.php` remained `2de83c1b76a9cffe5fedfa47d6842aac137e93aecb0d56db96fb0fd5ea757235`.
+- Post-edit package build: the exact `php scripts/build-public-release.php --output-dir /tmp/wporg-28ra-post.PadP96/build --force` attempt failed only because the builder enforces a clean worktree once runtime/test edits exist, so the successful verification rerun used `php scripts/build-public-release.php --output-dir /tmp/wporg-28ra-post2.hpJlqH/build --force --allow-dirty`.
+- Post-edit package result: `/tmp/wporg-28ra-post2.hpJlqH/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `67fc5c5ddd381184800498b61fcce2deff46f5942d9de99e50d9fb6d7d5fe277`, `427` extracted package files, root `backstage-venue-manager/`, entry file `vendor-management-system.php`, version `1.2.0`, and text domain `backstage-venue-manager`.
+- Post-edit packaged Plugin Check result: exit `0`, `309` errors, `1708` warnings, `2017` total findings, `33` unique rule codes, and target `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` count `0`.
+- Exact pre/post code-count delta: only `WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` changed, from `1` to `0`; no unrelated finding increased and no new rule code appeared.
+- Current parent classification totals after this child: `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=0`, `UNMAPPED=46`, `SUBMISSION_BLOCKER=1843`.
+- Readiness conclusion: this child closes the lone new packaged finding, but `WPORG-28R` remains blocked by the surviving `UNMAPPED` and `SUBMISSION_BLOCKER` families. Do not treat the current package as ready for final artifact preparation, upload/submission, reviewer communication, slug reservation, or production convergence.
+
+### What Changed
+
+- Added the bounded one-line `phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in` comment above the existing disabled-ticket `post__not_in` merge in `includes/integrations/ticketing-rules-v2.php`.
+- Added the exact suppression-token assertion to `tests/ticketing-disabled-ticket-native-suppression-remediation.php`.
+- Rebuilt the public package in disposable directories, reran the focused ticketing suites plus release/regression harnesses, and reran packaged strict-json Plugin Check from the extracted public package.
+- Updated `docs/WPORG_PREREVIEW_REMEDIATION.md` and `docs/wporg-remediation-ledger.md` so the parent `WPORG-28R` state now reflects the resolved `NEW_FINDING=0` package baseline without claiming final package readiness.
+
+### Non-Actions
+
+- The live `../../vms/includes/integrations/ticketing-rules-v2.php` file remained read-only and unchanged; full mirror/live convergence was not attempted.
+- No other runtime PHP file, build script, package manifest, release metadata file, asset, add-on, migration, production tree, or unrelated test was edited.
+- No upload, deployment, submission, reviewer reply, push, tag, production change, live replacement, migration, stash mutation, or WordPress.org action occurred.
 
 ## WPORG-20A-S Result
 

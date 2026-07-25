@@ -225,6 +225,7 @@ try {
 	vms_test_assert_contains("'disabledTicketProductIds' => array_values(array_unique(array_filter(array_map('absint', \$disabled_ticket_product_ids))))", $ticketingRulesSource, 'Frontend disabled-ticket ID localization should remain present.');
 	vms_test_assert_contains("'disabledTicketMap' => \$disabled_ticket_map", $ticketingRulesSource, 'Frontend disabled-ticket map localization should remain present.');
 	vms_test_assert_contains('function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array', $ticketingRulesSource, 'The existing disabled-ticket helper should remain present.');
+	vms_test_assert_contains('phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in', $ticketingRulesSource, 'Disabled-ticket suppression should keep any bounded post__not_in exception limited to the single packaged Plugin Check rule.');
 	vms_test_assert_contains('hideDisabledTicketRows(state)', $frontBundleSource, 'Frontend disabled-row hiding should remain available as a fail-closed backup.');
 	vms_test_assert_contains('disabledTicketMap', $frontBundleSource, 'Frontend disabled-ticket mapping should remain available as a fail-closed backup.');
 
