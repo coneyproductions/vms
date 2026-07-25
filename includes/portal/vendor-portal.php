@@ -2986,7 +2986,7 @@ if (!function_exists('vms_vendor_portal_validate_headliner_promo_video_upload'))
                 'type_message' => __('Please upload an MP4, MOV, or WebM video.', 'backstage-venue-manager'),
                 'empty_message' => __('That file appears to be empty.', 'backstage-venue-manager'),
                 'too_large_message' => sprintf(
-                    __('That file is too large. Please keep it under %s.', 'backstage-venue-manager'),
+                    /* translators: %s: current upload size limit for the promo video. */ __('That file is too large. Please keep it under %s.', 'backstage-venue-manager'),
                     function_exists('size_format') ? size_format(vms_vendor_portal_headliner_promo_video_max_bytes(), 0) : (string) vms_vendor_portal_headliner_promo_video_max_bytes()
                 ),
                 'tmp_invalid_message' => __('We could not verify the uploaded file. Please try again.', 'backstage-venue-manager'),

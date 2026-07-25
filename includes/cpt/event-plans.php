@@ -1538,7 +1538,7 @@ class VMS_Admin_Event_Plans
                             <?php if (!empty($category_list)) : ?>
                                 - <?php echo esc_html($category_label); ?>: <?php echo esc_html(implode(', ', $category_list)); ?>
                             <?php else : ?>
-                                - <?php printf(esc_html__('No %s selected yet.', 'backstage-venue-manager'), esc_html(strtolower($category_label))); ?>
+                                - <?php printf(/* translators: %s: lowercased vendor category display label. */ esc_html__('No %s selected yet.', 'backstage-venue-manager'), esc_html(strtolower($category_label))); ?>
                             <?php endif; ?>
                         </li>
                     <?php endforeach; ?>
@@ -2375,7 +2375,7 @@ class VMS_Admin_Event_Plans
                             <?php if (!empty($category_list)) : ?>
                                 - <?php echo esc_html($category_label); ?>: <?php echo esc_html(implode(', ', $category_list)); ?>
                             <?php else : ?>
-                                - <?php printf(esc_html__('No %s selected yet.', 'backstage-venue-manager'), esc_html(strtolower($category_label))); ?>
+                                - <?php printf(/* translators: %s: lowercased vendor category display label. */ esc_html__('No %s selected yet.', 'backstage-venue-manager'), esc_html(strtolower($category_label))); ?>
                             <?php endif; ?>
                         </li>
                     <?php endforeach; ?>
@@ -6295,9 +6295,9 @@ class VMS_Admin_Event_Plans
 
         if ($staff_headcount_wired && $next_threshold_gap !== null && $next_threshold_gap <= 10) {
             $alerts[] = sprintf(
-                __('This event is %1$d away from the next staffing trigger%2$s.', 'backstage-venue-manager'),
+                /* translators: %1$d: number of guests remaining before the next staffing trigger, %2$s: optional staffing role suffix for that trigger. */ __('This event is %1$d away from the next staffing trigger%2$s.', 'backstage-venue-manager'),
                 $next_threshold_gap,
-                $next_threshold_role !== '' ? sprintf(__(' for %s', 'backstage-venue-manager'), $next_threshold_role) : ''
+                $next_threshold_role !== '' ? sprintf(/* translators: %s: staffing role name for the next trigger. */ __(' for %s', 'backstage-venue-manager'), $next_threshold_role) : ''
             );
         }
 
@@ -6324,7 +6324,7 @@ class VMS_Admin_Event_Plans
                 || (isset($template_row['max_headcount']) && $template_row['max_headcount'] !== null && $template_row['max_headcount'] !== '')
             ) {
                 $label_parts[] = sprintf(
-                    __('guests %1$s-%2$s', 'backstage-venue-manager'),
+                    /* translators: %1$s: lower guest-count boundary, %2$s: upper guest-count boundary. */ __('guests %1$s-%2$s', 'backstage-venue-manager'),
                     (isset($template_row['min_headcount']) && $template_row['min_headcount'] !== null && $template_row['min_headcount'] !== '')
                         ? (int) $template_row['min_headcount']
                         : 0,
