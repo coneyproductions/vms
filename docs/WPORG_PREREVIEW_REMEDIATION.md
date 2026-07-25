@@ -51,10 +51,10 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 
 | ID | Category | Severity | Confidence | Primary reference | Summary | Change risk | Batch |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `A1` | A, L | High | Confirmed | `includes/admin/addons/class-vms-admin-addons.php:15-45`; `includes/admin/addons/class-vms-addons-licensing.php:61-124`; `assets/admin/addons/manifest-addons.json:21-36` | Public package ships premium add-on discovery, installer, license storage, and Freemius remote unlock operations. | Medium | `WPORG-17B` |
+| `A1` | A, L | High | Confirmed | `includes/admin/addons/class-vms-admin-addons.php:15-45`; `includes/admin/addons/class-vms-addons-licensing.php:61-124`; `assets/admin/addons/manifest-addons.json:21-36` | The historical premium add-ons and Freemius licensing surface has been removed from the current public-core package; fresh package evidence shows no bundled add-ons installer, license-key UI, or Freemius traffic in the verified public boundary. | Medium | `WPORG-17B`, `WPORG-28Q` |
 | `J1` | J | High | Confirmed | `includes/core/registry/admin-menu.php:19-30`; `includes/core/registry/statuses.php:13-21` | Dynamic gettext wrapper and non-literal domain usage were remediated in the working tree; final `WPORG-18` verification now shows zero parser violations and zero actionable i18n Plugin Check findings. | Medium | `WPORG-18A`, `WPORG-18B` |
 | `J2` | J | High | Confirmed | `includes/admin/continuity-binder.php:266`; `includes/core/event-credits.php:380`; `includes/core/event-plan-save-profiler.php:1476`; `includes/modules/email-followups/admin-ui.php:604`; `vms/includes/modules/admissions/outreach-recipients.php:1861` | Translator-comment, placeholder-order, and final semantic comment-audit findings were remediated in the working tree; `WPORG-18D` corrected the remaining misleading heuristic comments and the final verification suite stayed clean. | Low to Medium | `WPORG-18B`, `WPORG-18D` |
-| `M1` | M | High | Confirmed | `vendor-management-system.php:3-13`; `readme.txt:4-9`; `vms-build.txt:1`; `vms/vendor-management-system.php:3-13`; `vms/readme.txt:4-9`; `vms/vms-build.txt:1` | Mirror release metadata says `1.0.0`; live local plugin says `1.1.0`. Packaging decision is blocked until versions are reconciled. | Low | `WPORG-28` |
+| `M1` | M | High | Confirmed | `vendor-management-system.php:3-13`; `readme.txt:4-9`; `vms-build.txt:1`; `vms/vendor-management-system.php:3-13`; `vms/readme.txt:4-9`; `vms/vms-build.txt:1` | The public-core release boundary is now explicitly defined and verified: mirror metadata and the fresh disposable package align on `1.2.0`, while the live local `vms` tree intentionally remains `1.1.0` pending separate production-convergence work. | Low | `WPORG-28Q` |
 | `H1` | D, H | High | Confirmed | `includes/admin/tax-profile-admin-metabox.php:102-118`; `includes/portal/vendor-tax-profile.php:121-137`; `includes/core/private-files.php:541-714` | `WPORG-20B` now routes admin and portal W-9 uploads through validated private-file helpers and brokered downloads; the historical `WPORG-21` H1 scope is fully completed by that committed work. | Medium | `WPORG-20B`, `WPORG-21` |
 | `K1` | K | High | Confirmed | `includes/admin-ui/context.php`; `includes/admin/admin-notices.php` | First-run notice now uses the shared VMS admin-notice screen predicate and no longer renders across unrelated WordPress admin screens. | Low | `WPORG-23` |
 | `K2` | K | High | Confirmed | `includes/admin-ui/context.php`; `includes/runtime-guards.php`; `includes/ticketing/ticket-integrity-payment-gateway-health.php` | Runtime diagnostics and payment-gateway health notices now use the same shared predicate and remain limited to VMS-owned screens, including the exact Ticket Integrity screen. | Low to Medium | `WPORG-23` |
@@ -92,7 +92,7 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 
 Status:
 
-- One confirmed public-package concern.
+- No current public-package blocker remains in the verified public-core artifact.
 - One important "already resolved / not a blocker by itself" clarification.
 
 ### `A1` Public premium add-ons installer and Freemius licensing surface
@@ -100,15 +100,15 @@ Status:
 - Severity: High
 - Confidence: Confirmed
 - References: `includes/admin/addons/class-vms-admin-addons.php:15-45`; `includes/admin/addons/class-vms-admin-addons.php:219-273`; `includes/admin/addons/class-vms-addons-licensing.php:61-124`; `includes/admin/addons/views/page-addons.php:15`; `assets/admin/addons/manifest-addons.json:21-36`
-- Why WordPress.org may object: the public plugin still exposes a `Premium Add-ons` admin area, ZIP installation/update actions, license-key storage, and Freemius activate/validate/deactivate operations. Even if premium code mostly lives in separate plugins, the shipped package still presents a monetized add-on control surface.
-- Recommended remediation: remove or heavily reduce the add-ons installer/licensing surface from the WordPress.org package, or convert it into a purely informational compatibility screen that does not upload, activate, validate, or monetize add-ons from within the public plugin.
+- Current status: this package-scope concern is resolved in the current public-core package. Fresh repository and packaged audits now show no bundled `Premium Add-ons` admin area, ZIP installer/update actions, license-key storage UI, Freemius activate/validate/deactivate operations, or Freemius disclosure in the public readme, while optional companion-plugin detection remains passive only.
+- Recommended remediation: already applied by `WPORG-17B`; the current package should continue shipping without the removed add-ons installer/licensing surface.
 - Compatibility or regression risk: Medium. The lowest-risk path is packaging-scope removal or conditional omission of the premium-management UI, not broad internal refactoring.
 - Suggested remediation batch ID: `WPORG-17B`
 
 Acceptable / already resolved notes:
 
 - The inspected core module registrations are all marked `'premium' => false`: `includes/modules/admissions/admissions.php:19-26`, `includes/modules/status-notices/status-notices.php:14-21`, `includes/modules/staff-tasks/staff-tasks.php:20-27`, `includes/modules/email-followups/email-followups.php:5-10`, `includes/modules/availability-date-dispatch/availability-date-dispatch.php:17-24`.
-- The current readme does disclose Freemius and other external services: `readme.txt:80-104`. Disclosure helps, but it does not by itself resolve the package-scope concern in `A1`.
+- The current readme discloses Cloudflare Turnstile, QRServer / goQR.me, vendor-provided ICS URLs, and operator-configured webhook endpoints only: `readme.txt:80-100`.
 
 ## B. Inline JavaScript and CSS
 
@@ -1384,7 +1384,7 @@ Explain-only note:
 
 Status:
 
-- One confirmed package-scope concern already tracked as `A1`.
+- No current package-scope licensing blocker remains in the verified public-core package.
 - One clean dependency inventory item worth preserving.
 
 Bundled / included dependency inventory from this pass:
@@ -1397,43 +1397,44 @@ External-service inventory visible in the current readme:
 
 - Cloudflare Turnstile: `readme.txt:80-84`
 - QRServer / goQR.me: `readme.txt:86-89`
-- Freemius: `readme.txt:91-94`
-- Vendor-provided ICS URLs: `readme.txt:96-99`
-- Operator-configured webhook endpoints: `readme.txt:101-104`
+- Vendor-provided ICS URLs: `readme.txt:92-95`
+- Operator-configured webhook endpoints: `readme.txt:97-100`
 
 Conclusion:
 
 - The bundled Driver.js dependency looks acceptable from the evidence inspected here.
-- The main licensing/dependency problem is not the MIT library; it is the add-ons / Freemius package-scope behavior already tracked in `A1`.
-- Recommended batch: `WPORG-27` for a final dependency and disclosure verification pass after functional remediation.
+- The historical add-ons / Freemius package-scope behavior tracked in `A1` is no longer present in the current public-core package.
+- `WPORG-27` remains appropriate only for any later broad dependency-inventory or tooling-reproducibility review beyond this verified public-package prereview.
 
 ## M. Release Metadata and Package Consistency
 
 Status:
 
-- One confirmed release blocker.
-- Two related product-owner decisions.
+- No repository-side release-metadata blocker remains after the fresh `WPORG-28Q` package verification.
+- Remaining WordPress.org submission actions and live-production convergence work stay separate from this resolved package boundary.
 
-### `M1` Mirror and live plugin metadata are out of sync
+### `M1` Public-core release metadata boundary is now defined and verified
 
 - Severity: High
 - Confidence: Confirmed
 - References: `vendor-management-system.php:3-13`; `readme.txt:4-9`; `vms-build.txt:1`; `vms/vendor-management-system.php:3-13`; `vms/readme.txt:4-9`; `vms/vms-build.txt:1`
-- Why WordPress.org may object: the mirror source intended for public-release work says `1.0.0`, while the live local plugin source says `1.1.0`. That makes the next package/version choice ambiguous and risks readme/header drift.
-- Recommended remediation: pick the intended public release version first, then synchronize plugin header, readme stable tag, build marker, changelog references, and any packaging provenance around that single version.
+- Current status: the mirror source and fresh disposable public package now align on public version `1.2.0`, public slug `backstage-venue-manager`, matching packaged header and readme metadata, and build marker `1.2.0`, while the sibling live local `vms` tree intentionally remains `1.1.0` as a separate production-convergence boundary rather than a public-package blocker.
+- Recommended remediation: complete the separate authorized WordPress.org artifact-preparation, upload/submission, and reviewer-communication steps using the verified `1.2.0` public package; do not treat this as authorization to change the live local `vms` runtime.
 - Compatibility or regression risk: Low.
-- Suggested remediation batch ID: `WPORG-28`
+- Suggested remediation batch ID: `WPORG-28Q`
 
 Decision notes:
 
 - The current release tooling now resolves the public package directory / slug expectation explicitly: public packages build as `backstage-venue-manager/`, while the local runtime directory may remain `vms`.
 - `vms.php:1-12` is currently a compatibility shim that delegates to `vendor-management-system.php`. That remains acceptable internally, and the release builder plus compatibility harness now validate the public ZIP folder and canonical public basename deliberately rather than inferring them from the checkout root.
+- The fresh `WPORG-28Q` package audit proved the packaged header version, readme stable tag, changelog, upgrade notice, and `vms-build.txt` marker all align on `1.2.0` without any runtime or release-metadata edit in this closeout.
 
 ## N. Plugin Check and Scanner Reproducibility
 
 Status:
 
-- Tooling is partially available, but current reproducibility is not clean enough to use as a release gate without another setup pass.
+- Packaged static Plugin Check is now reproducible enough to use as a final local prereview gate when invoked against a concrete extracted public package and its known leading WP-CLI deprecation noise is normalized away.
+- Live or runtime-oriented Plugin Check workflows still remain more brittle in this local environment.
 - This section records release-gate tooling context and is not part of the `15` confirmed / `6` likely remediation-item totals above.
 
 Commands run in this audit:
@@ -1460,12 +1461,9 @@ Historical project-specific audit assets already present:
 
 Conclusion:
 
-- Local source-based auditing was more reliable than a fresh full CLI rerun in this pass.
-- Release-gate reproducibility is currently incomplete because:
-  - `phpcs` is missing,
-  - WP-CLI emits PHP 8.5 deprecation noise,
-  - Plugin Check CLI behavior is brittle in this environment unless invoked with a concrete target and, for runtime checks, the additional `--require` setup.
-- Recommended release-gate batch: `WPORG-27`
+- The later `WPORG-28Q` closeout proved that a fresh packaged `wp plugin check` rerun can return exit `0` plus a valid strict-json payload when invoked against the extracted public package with a concrete target and the documented field export.
+- `phpcs` is still missing, WP-CLI still emits PHP 8.5 deprecation noise ahead of the JSON payload, and live or runtime `--require` workflows remain outside this verified packaged gate.
+- `WPORG-27` remains appropriate only for any future broader dependency-inventory or tooling review beyond this final public-package prereview.
 
 ## Proposed Codex Task Sequence
 
@@ -1514,12 +1512,12 @@ Recommended follow-up order, keeping each pass narrow:
 13. `WPORG-28 - Release metadata and packaging validation`
     - Scope: `M1`
     - Goal: choose the public version and validate final ZIP / slug expectations
+    - Result: completed by the `1.2.0` public-core decision, fresh disposable package validation, packaged strict-json Plugin Check rerun, and final documentation reconciliation under `WPORG-28Q`; the remaining WordPress.org upload/reviewer steps are external to the repository
 
 ## Findings Requiring User or Product-Owner Decisions
 
-1. Whether the WordPress.org package will ship any add-ons discovery/licensing UI at all, or whether that surface must be omitted entirely from the public build.
-2. Whether the next public version should be `1.0.0` or `1.1.0`, given the current mirror/live metadata drift.
-3. Whether the final public package folder / submission flow should preserve an internal `vms` compatibility bridge while presenting the WordPress.org slug as `backstage-venue-manager`.
+1. Whether to authorize final WordPress.org artifact preparation, slug-reservation request, corrected upload, and reviewer communication using the verified `1.2.0` public package.
+2. Whether to authorize the separate Outreach extraction, duplicate-core safety, and live-production replacement or migration sequence for the active `vms` runtime.
 
 ## Findings Requiring Explanation Rather Than Code Changes
 
@@ -1532,8 +1530,8 @@ Recommended follow-up order, keeping each pass narrow:
 
 ## Final Release-Gate Checklist
 
-- [ ] Decide whether the public package will retain any premium add-ons / licensing surface.
-- [ ] Resolve mirror vs live version drift and synchronize all public metadata markers.
+- [x] Decide whether the public package will retain any premium add-ons / licensing surface.
+- [x] Resolve the public-core release version and synchronize all public metadata markers.
 - [x] Run the final `WPORG-18B` parser/extraction audit after the `WPORG-18A` code remediation.
 - [x] Complete `WPORG-19A` nonce verification input normalization in legacy save, admin-post, AJAX, REST-wrapper, and frontend mutation handlers.
 - [x] Complete `WPORG-19B` missing-nonce and capability/authorization follow-up before packaging the final public submission build.
@@ -1542,9 +1540,9 @@ Recommended follow-up order, keeping each pass narrow:
 - [x] Complete `WPORG-20C` decoded JSON / structured-body validation after the ordinary request-global pass.
 - [x] Complete `WPORG-22` inline asset enqueue migration for B1-B5.
 - [x] Scope all admin notices to VMS-owned screens.
-- [ ] Re-run Plugin Check in a controlled release-gate environment with a concrete plugin target and documented runtime/static mode.
-- [ ] Reconfirm external-service disclosures after the package-scope decisions above.
-- [ ] Validate the final public ZIP folder, slug, and version before any packaging or submission work.
+- [x] Re-run Plugin Check in a controlled release-gate environment with a concrete plugin target and documented runtime/static mode.
+- [x] Reconfirm external-service disclosures after the package-scope decisions above.
+- [x] Validate the final public ZIP folder, slug, and version before any packaging or submission work.
 
 ## WPORG-17B Result
 
@@ -2580,8 +2578,40 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- The next active incomplete parent in the current ledger is `WPORG-28`, which covers the fresh packaged prereview and release-metadata decision.
+- `WPORG-28` is now terminal under `verified` after the final clean package proof recorded in `WPORG-28Q`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout` and `Review-13 Final Actions`.
+
+## WPORG-28Q Result
+
+Date: 2026-07-25
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28Q`
+- Starting mirror HEAD: `3dcd8e70ed00f8885f34334eaa3f0272bc2d3b62` (`Correct WPORG-25 remediation commit hashes`)
+- Starting parent: `c8c81d44ea9780a6196a0112049b07ceae4ae403`
+- Fresh build command: `php scripts/build-public-release.php --output-dir <temp> --force`
+- Fresh build result: `backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `b78cc45e49c096c4abc45221aa07842cc034e425154438bad3fc748fc987f532`
+- Fresh package identity: root `backstage-venue-manager/`, main plugin file `vendor-management-system.php`, public slug `backstage-venue-manager`, public version `1.2.0`
+- Fresh structure audit: `379` packaged files, `48` extracted directories including the package root, no symlinks, no broken links, no nested archives, no `docs/`, `tests/`, `scripts/`, `dist/`, or `AGENTS.md`, no `Freemius`, and no `Backstage Outreach` package content
+- Fresh metadata audit: packaged Plugin Name `Backstage Venue Manager`, Version `1.2.0`, Text Domain `backstage-venue-manager`, Requires at least `6.8`, Requires PHP `8.3`, Tested up to `7.0`, Stable tag `1.2.0`, changelog `1.2.0`, upgrade notice `1.2.0`, and `vms-build.txt` marker `1.2.0`
+- Compatibility boundary preserved: `vms.php` remains an internal compatibility shim only, `VMS_PLUGIN_SLUG` remains intentionally internal, and the public package does not reintroduce a slug or header mismatch
+- Focused verification reruns passed: `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php`
+- Fresh packaged Plugin Check command: `WP_CLI_PHP_ARGS='-d error_reporting=24575 -d display_errors=0' wp --path='<local-wp-root>' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '<temp>/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Fresh packaged Plugin Check result: exit `0`, leading WP-CLI PHP 8.5 deprecation noise normalized away before JSON parsing, `309` errors, `1709` warnings, `2018` total messages, accepted `OffloadedContent=1`, accepted `ExceptionNotEscaped=4`, and `MissingVersion=0`, `unexpected_markdown_file=0`, `MissingTranslatorsComment=0`
+- Readiness conclusion: the public package is now ready for explicitly authorized final WordPress.org artifact preparation and submission steps, while Outreach extraction, duplicate-core safety, and live production replacement or migration remain separate production-convergence work
+
+### What Changed
+
+- Rebuilt the public package from committed source in a disposable directory and audited the resulting ZIP and extracted package instead of relying on historical artifacts.
+- Re-ran the focused release harnesses and the packaged strict-json Plugin Check gate against the fresh extracted public package.
+- Reconciled the stale `WPORG-28`, `A1`, `M1`, Plugin Check gate, and release-checklist wording in `docs/WPORG_PREREVIEW_REMEDIATION.md` and `docs/wporg-remediation-ledger.md` to the fresh `1.2.0` package evidence.
+
+### Non-Actions
+
+- No runtime, test, release-metadata, builder, or live-tree file changed in this slice.
+- No upload, deployment, submission, reviewer reply, tag, push, production change, live replacement, or migration occurred.
 
 ## WPORG-20A-S Result
 
