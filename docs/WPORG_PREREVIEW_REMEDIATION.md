@@ -72,8 +72,8 @@ Ordered by combined security risk, WordPress.org rejection likelihood, and chang
 | `D3` | D | Medium | Confirmed | `includes/integrations/ticketing-phase-b.php:1919-2051`; `includes/integrations/ticketing-phase-b.php:9596-9729` | `WPORG-20C` now bounds, decodes, and shape-validates the Phase B tier, commit-item, and config/template JSON payloads before the existing per-field normalizers run. | Medium | `WPORG-20C` |
 | `D4` | D | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php:3082-3190`; `includes/integrations/ticketing-rules-v2.php:9089-9519` | `WPORG-20C` now bounds raw JSON-body reads and validates Ticketing Rules V2 atomic-add and silent-add payload shapes before any cart mutation or claim-assignment normalization occurs. | Medium | `WPORG-20C` |
 | `E1` | E | Medium | Likely | `docs/plugin-check-1.0.0-raw.txt:475`; `docs/plugin-check-1.0.0-raw.txt:733`; `docs/plugin-check-1.0.0-raw.txt:1770`; `docs/plugin-check-1.0.0-raw.txt:2115`; `docs/plugin-check-1.0.0-raw.txt:2438`; `docs/plugin-check-1.0.0-raw.txt:2906` | Historical packaged Plugin Check still points to large output-escaping hotspots that were not re-audited deeply in this pass. | Medium | `WPORG-24` |
-| `I1` | I | Medium | Likely | `includes/integrations/load.php:4-9`; `includes/integrations/ticketing.php:44-58` | Global AJAX output buffering only stays safe if every response path reaches the cleanup helper. | Medium | `WPORG-25` |
-| `I2` | I | Medium | Likely | `includes/integrations/ticketing-rules-v2.php:5860`; `includes/integrations/ticketing-rules-v2.php:7113` | Hook-scoped callback buffers in Ticketing Rules V2 are lifecycle-fragile and need architecture review before edits. | Medium | `WPORG-25` |
+| `I1` | I | Medium | Confirmed | `includes/integrations/load.php`; `includes/integrations/ticketing.php`; `includes/integrations/ticketing-phase-b.php`; `includes/integrations/ticketing-rules-v2.php`; `includes/integrations/ticketing-claims-customer.php` | `WPORG-25` now verifies the request-global AJAX opener is explicitly owned by legacy diagnostic cleanup wrappers, V2 cleanup-only wrappers, and the approved fast helper across every audited callback family; no direct-send responder remains beneath the opener. | Medium | `WPORG-25` |
+| `I2` | I | Medium | Confirmed | `includes/integrations/ticketing-rules-v2.php`; `tests/ticketing-my-tickets-notice-source-filter-remediation.php`; `tests/ticketing-server-mount-native-footer-remediation.php` | `WPORG-25` removed the My Tickets and server-mount full-page callback buffers. My Tickets now uses `tec_tickets_my_tickets_link_ticket_count_by_type`, reserved add-ons now use `tribe_template_before_include_html:tickets/v2/tickets/footer`, and disabled ticket suppression now uses native `tribe_tickets_get_tickets_query_args`. | Medium | `WPORG-25` |
 
 ## Findings Already Resolved, Acceptable, or Compatibility-Sensitive
 
@@ -1283,28 +1283,42 @@ Acceptable pattern:
 
 Status:
 
-- No direct confirmed defect from this pass.
-- Two likely lifecycle risks need an architecture-aware review.
+- Original reviewer lifecycle concerns are now closed under `WPORG-25`.
+- Current repository evidence shows the surviving output buffers in this scope are either same-function local captures or the one request-global AJAX opener with verified explicit ownership.
 
-### `I1` Global AJAX output buffer depends on all response paths reaching cleanup
-
-- Severity: Medium
-- Confidence: Likely
-- References: `includes/integrations/load.php:4-9`; `includes/integrations/ticketing.php:44-58`
-- Why WordPress.org may object: global buffering is fragile if any later response path bypasses the cleanup helper or nests buffers unexpectedly.
-- Recommended remediation: inventory every AJAX response path that relies on this buffer before changing the pattern, then tighten ownership of start/cleanup scope.
-- Compatibility or regression risk: Medium.
-- Suggested remediation batch ID: `WPORG-25`
-
-### `I2` Ticketing Rules V2 hook-scoped callback buffers are lifecycle-fragile
+### `I1` Global AJAX output buffer now has verified explicit response ownership
 
 - Severity: Medium
-- Confidence: Likely
-- References: `includes/integrations/ticketing-rules-v2.php:5860`; `includes/integrations/ticketing-rules-v2.php:7113`
-- Why WordPress.org may object: hook-scoped callback buffering can become difficult to reason about under early returns, nested buffering, or future hook-order changes.
-- Recommended remediation: review the full lifecycle before replacing these buffers; do not remove them as a scanner-only cleanup.
-- Compatibility or regression risk: Medium.
-- Suggested remediation batch ID: `WPORG-25`
+- Confidence: Confirmed
+- Historical reviewer citations from July 1, 2026: `includes/integrations/load.php:8` `ob_start();` plus the historical cleanup examples in `includes/integrations/ticketing.php`; these line numbers are preserved as reviewer-source history only.
+- Current runtime owner family:
+  - `includes/integrations/load.php` still opens one request-global AJAX buffer only under `DOING_AJAX` and the boolean ownership flag.
+  - The seven legacy ticketing admin callbacks in `includes/integrations/ticketing.php` now terminate through `vms_ticketing_ajax_send_success()` / `vms_ticketing_ajax_send_error()`, which route through `vms_ticketing_ajax_attach_noise()` and close the owned buffer in the same logical response flow.
+  - The three public V2 cart/context callbacks in `includes/integrations/ticketing-rules-v2.php` terminate through `vms_ticketing_v2_ajax_send_success()` / `vms_ticketing_v2_ajax_send_error()`, which discard the owned buffer before delegating to WordPress JSON responders.
+  - The eleven Phase B callbacks in `includes/integrations/ticketing-phase-b.php` terminate through those cleanup-only wrappers or the approved `vms_ticketing_v2_ajax_send_json_success_fast()` helper, which drains all active levels before sending the payload.
+  - The two customer-claims callbacks in `includes/integrations/ticketing-claims-customer.php` terminate through the same cleanup-only wrappers.
+- Direct evidence: `tests/ticketing-output-buffer-lifecycle-characterization.php`; `tests/ticketing-v2-ajax-output-buffer-ownership.php`; `tests/ticketing-phase-b-ajax-output-buffer-ownership.php`; `tests/ticketing-claims-ajax-output-buffer-ownership.php`.
+- Current verified outcome: no direct-send AJAX responder remains beneath the opener, no reachable nested plugin-owned buffer was found in the audited callback paths, and the remaining boolean ownership flag is a theoretical compatibility note rather than a demonstrated current defect.
+- Final status: `WPORG-25` verified this family without changing the request-global opener itself.
+
+### `I2` Ticketing Rules V2 full-page callback buffers were replaced with native TEC boundaries
+
+- Severity: Medium
+- Confidence: Confirmed
+- Historical reviewer citations from July 1, 2026: `includes/integrations/ticketing-rules-v2.php:5860` for the old My Tickets callback buffer and `includes/integrations/ticketing-rules-v2.php:7113` for the old server-mount callback buffer; these line numbers are preserved as historical reviewer-source references only because the cited runtime has now been removed.
+- Current My Tickets architecture:
+  - No My Tickets `template_redirect` buffer registration remains.
+  - No My Tickets `ob_start()` or full-page regex rewrite remains.
+  - Native ownership now uses `tec_tickets_my_tickets_link_ticket_count_by_type` via `vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type()`.
+  - The VMS active-ticket-count helper remains unchanged, zero count suppresses the notice, Event Tickets still owns singular or plural wording, and frontend `myActiveTicketCount` localization remains intact.
+- Current server-mount architecture:
+  - No server-mount `template_redirect` registration, boot callback, output callback, rendered-HTML disabled-row stripping, or PHP submit-button regex rewrite remains.
+  - Reserved add-ons now mount through `tribe_template_before_include_html:tickets/v2/tickets/footer` using `vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount()`.
+  - Disabled ticket products now suppress natively through `tribe_tickets_get_tickets_query_args` using `vms_ticketing_v2_filter_disabled_ticket_query_args()` after the unchanged cancelled-event filter.
+  - `vms_ticketing_v2_append_entitlements_to_tec_event()` remains as a fallback only when native footer placement did not succeed.
+  - Shortcode and manual renderer contracts remain intact, the PHP renderer remains declarative, and no inline-controller or runtime-sidecar dependency remains in PHP.
+- Direct evidence: `tests/ticketing-my-tickets-notice-source-filter-remediation.php`; `tests/ticketing-server-mount-native-footer-remediation.php`; `tests/ticketing-disabled-ticket-native-suppression-remediation.php`; `tests/ticketing-server-controls-inline-js-remediation.php`; `tests/ticketing-output-buffer-lifecycle-characterization.php`; `tests/event-plan-legacy-ticketing-integration-smoke.php`.
+- Final status: `WPORG-25` verified this family and no equivalent full-page callback-buffer residual remains.
 
 ## J. Internationalization
 
@@ -1490,6 +1504,7 @@ Recommended follow-up order, keeping each pass narrow:
 10. `WPORG-25 - Output buffer lifecycle review`
    - Scope: `I1`, `I2`
    - Goal: document and tighten buffer ownership without blind removals
+   - Result: completed by the characterization baseline `2f8d8e16bb5a6842f5e2aae60cb027aa1cb30d3e` (`Characterize ticketing output buffer lifecycle`), the implementation commits `b5de3cd85500a80a2e981398a2279495007e6111` (`Add explicit V2 AJAX buffer cleanup wrappers`), `e65d62db8562d01cf08c7e183be66d64d963bf4f` (`Normalize Phase B AJAX buffer cleanup ownership`), `92bc9ff8e226c716a851a639662b0e6943933ee4` (`Route customer-claims AJAX through cleanup wrappers`), `5458dad4e0e7e430bd2a8b0d961582decc44108c` (`Replace My Tickets full-page buffer with TEC count filter`), `3b23ec96b59be61fc06be68bd7faf00aed852352` (`Replace server-mount buffer with native footer placement`), and the documentation-only closeout below; no active `WPORG-25` lifecycle residual remains in the current repository
 11. `WPORG-26 - Prefix and collision review`
     - Scope: section F only
     - Goal: document why the existing `vms` internal namespace is intentional and compatibility-sensitive
@@ -1623,11 +1638,9 @@ Date: 2026-07-10
 
 ### Remaining Follow-Up Batches
 
-- `WPORG-22` — Inline asset enqueue migration
-- `WPORG-25` — Output buffer lifecycle review
-- `WPORG-26` — Prefix and collision review
-- `WPORG-27` — Dependency, licensing, and tooling reproducibility verification
-- `WPORG-28` — Release metadata and packaging validation
+- `WPORG-26` — Prefix and collision review if a dedicated explanation-only pass is later authorized
+- `WPORG-27` — Dependency, licensing, and tooling reproducibility verification for the final release gate
+- `WPORG-28` — Release metadata and packaged prereview validation
 
 ### Verification Results
 
@@ -2518,7 +2531,57 @@ Date: 2026-07-11
 
 The next actual incomplete batch order is now:
 
-1. `WPORG-25`
+1. `WPORG-28`
+
+## WPORG-25 Result
+
+Date: 2026-07-25
+
+### Summary
+
+- Result: `PASS`
+- Status: `verified`
+- Original reviewer requirement from July 1, 2026: every plugin-owned `ob_start()` must pair with an explicit close in the same logical flow, without hooks or bypassable paths.
+- Historical reviewer examples: the former My Tickets callback buffer in `includes/integrations/ticketing-rules-v2.php`, the request-global AJAX opener in `includes/integrations/load.php`, and the former Ticketing Rules V2 server-mount callback buffer in `includes/integrations/ticketing-rules-v2.php`.
+- `I1` outcome: the request-global AJAX opener remains in `includes/integrations/load.php`, but current source and focused tests now prove explicit responder ownership across all audited callback families.
+  - Seven legacy ticketing admin callbacks terminate through `vms_ticketing_ajax_send_success()` / `vms_ticketing_ajax_send_error()`.
+  - Three public V2 cart/context callbacks terminate through `vms_ticketing_v2_ajax_send_success()` / `vms_ticketing_v2_ajax_send_error()`.
+  - Eleven Phase B callbacks terminate through those cleanup-only wrappers or `vms_ticketing_v2_ajax_send_json_success_fast()`.
+  - Two customer-claims callbacks terminate through the cleanup-only wrappers.
+  - No direct-send AJAX responder remains beneath the opener, and no reachable nested plugin-owned buffer was found in the audited callback paths.
+- `I2` outcome: both original Ticketing Rules V2 full-page callback-buffer families were removed.
+  - My Tickets now uses native `tec_tickets_my_tickets_link_ticket_count_by_type` ownership through `vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type()`.
+  - Reserved add-ons now use native `tribe_template_before_include_html:tickets/v2/tickets/footer` ownership through `vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount()`.
+  - Disabled ticket products now use native `tribe_tickets_get_tickets_query_args` ownership through `vms_ticketing_v2_filter_disabled_ticket_query_args()`.
+  - The automatic append path remains fallback-only when native footer placement did not succeed, shortcode/manual renderer behavior remains intact, cancellation enforcement remains intact, and the main frontend bundle remains the controller owner.
+- Remaining buffer inventory inside `includes/`: `67` `ob_start()` sites, `67` `ob_get_clean()` sites, `3` `ob_end_clean()` sites, and `1` `ob_get_contents()` site.
+  - `66` `ob_start()` sites are same-function fragment or template captures that close with `ob_get_clean()` in the same logical flow, including `vms_admin_ui_render_shell()` and `vms_ticketing_v2_render_entitlements_block()`.
+  - The remaining request-global AJAX opener in `includes/integrations/load.php` is explicitly closed by `vms_ticketing_ajax_attach_noise()`, `vms_ticketing_ajax_discard_owned_buffer()`, or `vms_ticketing_v2_ajax_send_json_success_fast()`.
+  - No materially equivalent unowned lifecycle remains under `WPORG-25`.
+- Mirror/live result: exact parity was confirmed for the AJAX opener wrappers, My Tickets native filter, native footer placement, native disabled-ticket suppression, cancellation enforcement, shortcode callback, and automatic append fallback. Accepted unrelated drift remains in the live declarative renderer body plus two live-only V2 AJAX callback bodies and does not reopen this parent.
+- Boolean ownership limitation: the `vms_ajax_ob_started` flag remains a nonblocking theoretical compatibility note because it tracks one owned opener rather than stack depth, but the audited callback families do not demonstrate a reachable nested plugin-owned buffer or bypassed close.
+
+### Direct Evidence
+
+- `tests/ticketing-output-buffer-lifecycle-characterization.php` proves the surviving AJAX opener, wrapper ownership, native My Tickets ownership, native footer placement, and native disabled-ticket suppression architecture.
+- `tests/ticketing-v2-ajax-output-buffer-ownership.php` proves the three public V2 cart/context callbacks clean up before JSON termination.
+- `tests/ticketing-phase-b-ajax-output-buffer-ownership.php` proves the eleven Phase B callbacks clean up through the approved wrappers or fast helper.
+- `tests/ticketing-claims-ajax-output-buffer-ownership.php` proves both customer-claims callbacks clean up before JSON termination.
+- `tests/ticketing-my-tickets-notice-source-filter-remediation.php` proves My Tickets now uses the native TEC count-source filter rather than a full-page buffer.
+- `tests/ticketing-server-mount-native-footer-remediation.php` proves the former server-mount family is gone and reserved add-ons now mount through the native footer boundary.
+- `tests/ticketing-disabled-ticket-native-suppression-remediation.php` proves disabled ticket products now suppress through the native query boundary instead of post-render HTML stripping.
+- `tests/ticketing-server-controls-inline-js-remediation.php` proves PHP no longer owns the removed inline controller or dormant sidecar dependency.
+- `tests/ticket-claims-assignee-validation.php` and `tests/event-plan-legacy-ticketing-integration-smoke.php` provide continuity coverage across the affected ticketing flows.
+
+### Read-Only Design and Audit Chain
+
+- `WPORG-25B`, `WPORG-25D`, `WPORG-25F`, `WPORG-25H`, `WPORG-25I`, `WPORG-25K`, and `WPORG-25L` were architecture or audit gates only; no commit was expected for those read-only children.
+
+### Remaining Follow-Up
+
+- `WPORG-25` is terminal under `verified`.
+- The next active incomplete parent in the current ledger is `WPORG-28`, which covers the fresh packaged prereview and release-metadata decision.
+- External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout` and `Review-13 Final Actions`.
 
 ## WPORG-20A-S Result
 
