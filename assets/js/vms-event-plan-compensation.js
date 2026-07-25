@@ -164,14 +164,20 @@
     async function fetchDefaults() {
       var venueId = venueSel.value || '';
       var eventDate = dateInp.value || '';
+      var defaultsNonce = optionsWrap ? (optionsWrap.getAttribute('data-defaults-nonce') || '') : '';
       var form;
       var resp;
       var json;
 
       if (!venueId || !eventDate) return null;
+      if (!defaultsNonce) {
+        setHint('Security check failed. Please refresh the page and try again.', 'warn');
+        return null;
+      }
 
       form = new FormData();
       form.append('action', 'vms_get_venue_comp_defaults');
+      form.append('nonce', defaultsNonce);
       form.append('venue_id', venueId);
       form.append('event_date', eventDate);
 

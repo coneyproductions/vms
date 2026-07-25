@@ -4120,6 +4120,10 @@ class VMS_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
+        if (false === check_ajax_referer('vms_get_venue_comp_defaults', 'nonce', false)) {
+            wp_send_json_error(array('message' => __('Security check failed. Please refresh the page and try again.', 'backstage-venue-manager')), 403);
+        }
+
         $venue_id   = isset($_POST['venue_id']) ? absint($_POST['venue_id']) : 0;
         $event_date = isset($_POST['event_date']) ? sanitize_text_field(wp_unslash($_POST['event_date'])) : '';
 
@@ -8463,7 +8467,9 @@ class VMS_Admin_Event_Plans
     <?php $vms_title_html = $this->capture_event_plan_partial('title', get_defined_vars()); ?>
     <?php echo $vms_title_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
+    <?php $vms_comp_defaults_nonce = wp_create_nonce('vms_get_venue_comp_defaults'); ?>
     <?php $vms_compensation_html = $this->capture_event_plan_partial('compensation', get_defined_vars()); ?>
+    <?php $vms_compensation_html = str_replace('id="vms-comp-options" data-nonce="', 'id="vms-comp-options" data-defaults-nonce="' . esc_attr($vms_comp_defaults_nonce) . '" data-nonce="', $vms_compensation_html); ?>
     <?php echo $vms_compensation_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
     <?php
