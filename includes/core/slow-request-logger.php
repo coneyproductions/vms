@@ -396,9 +396,9 @@ if (!function_exists('vms_slow_request_logger_rotate_file')) {
 
 		$rotated = $path . '.1';
 		if (file_exists($rotated)) {
-			@unlink($rotated);
+			wp_delete_file_from_directory($rotated, dirname($path));
 		}
-		@rename($path, $rotated);
+		@rename($path, $rotated); // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Promote the plugin-controlled active log into its only retained same-directory generation with an atomic local rename during request shutdown; WP_Filesystem::move() can fall back to copy/delete or credential-mediated flows that would weaken this boundary.
 	}
 }
 
@@ -410,7 +410,7 @@ if (!function_exists('vms_slow_request_logger_write_entry')) {
 		if (!is_dir($directory) && function_exists('wp_mkdir_p')) {
 			wp_mkdir_p($directory);
 		}
-		if (!is_dir($directory) || !is_writable($directory)) {
+		if (!is_dir($directory) || !wp_is_writable($directory)) {
 			return;
 		}
 

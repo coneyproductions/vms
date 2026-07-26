@@ -145,6 +145,33 @@ function wp_mkdir_p(string $target): bool
 	return is_dir($target) || mkdir($target, 0777, true);
 }
 
+function wp_is_writable(string $path): bool
+{
+	return is_writable($path);
+}
+
+function wp_delete_file(string $path): bool
+{
+	return @unlink($path);
+}
+
+function wp_delete_file_from_directory(string $path, string $directory): bool
+{
+	$realPath = realpath($path);
+	$realDirectory = realpath($directory);
+	if ($realPath === false || $realDirectory === false) {
+		return false;
+	}
+
+	$normalizedPath = str_replace('\\', '/', $realPath);
+	$normalizedDirectory = rtrim(str_replace('\\', '/', $realDirectory), '/') . '/';
+	if (!str_starts_with($normalizedPath, $normalizedDirectory)) {
+		return false;
+	}
+
+	return wp_delete_file($path);
+}
+
 function add_filter(string $hook, $callback, int $priority = 10, int $acceptedArgs = 1): bool
 {
 	unset($hook, $callback, $priority, $acceptedArgs);
