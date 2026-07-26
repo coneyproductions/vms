@@ -111,12 +111,12 @@ class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
 		);
 
 		if (is_wp_error($response)) {
-			throw new RuntimeException((string) $response->get_error_message());
+			throw new RuntimeException((string) $response->get_error_message()); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook transport diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.
 		}
 
 		$code = (int) wp_remote_retrieve_response_code($response);
 		if ($code < 200 || $code >= 300) {
-			throw new RuntimeException('Webhook returned HTTP ' . $code);
+			throw new RuntimeException('Webhook returned HTTP ' . $code); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook status diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.
 		}
 
 		return array(
