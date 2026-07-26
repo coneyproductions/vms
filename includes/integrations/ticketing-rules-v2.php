@@ -8372,8 +8372,7 @@ function vms_ticketing_v2_store_api_checkout_update_order_meta($order): void
         return;
     }
 
-    throw new Exception(implode("
-", $messages));
+    throw new Exception(implode("\n", $messages)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Store API converts this plain-text validation summary into a JSON/REST error payload; escaping at construction would corrupt the consumer contract.
 }
 
 function vms_ticketing_v2_store_api_validate_add_to_cart($product, $request = array()): void
@@ -8429,7 +8428,7 @@ function vms_ticketing_v2_store_api_validate_add_to_cart($product, $request = ar
         $message = __('This item could not be added to cart.', 'backstage-venue-manager');
     }
 
-    throw new Exception($message);
+    throw new Exception($message); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Store API expects the first plain-text validation notice as the exception message for its JSON/REST error response; escaping belongs at the eventual output sink.
 }
 
 function vms_ticketing_v2_render_disabled_cart_checkout_button(): void
