@@ -72,8 +72,8 @@ if (!function_exists('vms_slow_request_logger_parse_request_uri')) {
 		if ($request_uri === '') {
 			$request_uri = '/';
 		}
-		$path = function_exists('wp_parse_url') ? (string) wp_parse_url($request_uri, PHP_URL_PATH) : (string) parse_url($request_uri, PHP_URL_PATH);
-		$query_string = function_exists('wp_parse_url') ? (string) wp_parse_url($request_uri, PHP_URL_QUERY) : (string) parse_url($request_uri, PHP_URL_QUERY);
+		$path = (string) wp_parse_url($request_uri, PHP_URL_PATH);
+		$query_string = (string) wp_parse_url($request_uri, PHP_URL_QUERY);
 		$query = array();
 		if ($query_string !== '') {
 			parse_str($query_string, $query);

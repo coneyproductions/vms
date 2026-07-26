@@ -52,7 +52,7 @@ function vms_ticketing_ajax_attach_noise(array $data): array
         $GLOBALS['vms_ajax_ob_started'] = false;
     }
 
-    $noise = trim(strip_tags((string) $noise));
+    $noise = wp_strip_all_tags((string) $noise, false);
     if ($noise !== '' && current_user_can('manage_options')) {
         $data['_vms_ajax_noise'] = mb_substr($noise, 0, 400);
     }
