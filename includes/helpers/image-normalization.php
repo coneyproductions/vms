@@ -21,9 +21,9 @@ if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
             return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));
         }
 
-        if ($target_dir === '' || !is_dir($target_dir) || !is_writable($target_dir)) {
-            return new WP_Error('save_failed', __('Could not save the normalized image. Please try again.', 'backstage-venue-manager'));
-        }
+		if ($target_dir === '' || !is_dir($target_dir) || !wp_is_writable($target_dir)) {
+			return new WP_Error('save_failed', __('Could not save the normalized image. Please try again.', 'backstage-venue-manager'));
+		}
 
         if ($filename_base === '') {
             $filename_base = 'proof-' . gmdate('Ymd-His');
@@ -83,13 +83,13 @@ if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
         }
 
         $saved_path = (string) $saved['path'];
-        @chmod($saved_path, 0640);
+		@chmod($saved_path, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Preserve 0640 permissions on the validated proof-image file written into the plugin-controlled target directory; WP_Filesystem would add incompatible credential-driven semantics.
 
         $filesize = (int) @filesize($saved_path);
         if ($max_output_bytes > 0 && $filesize > $max_output_bytes) {
-            @unlink($saved_path);
-            return new WP_Error('file_too_large', __('This image is still too large after processing. Try a screenshot or smaller JPG/PNG.', 'backstage-venue-manager'));
-        }
+			wp_delete_file($saved_path);
+			return new WP_Error('file_too_large', __('This image is still too large after processing. Try a screenshot or smaller JPG/PNG.', 'backstage-venue-manager'));
+		}
 
         return array(
             'path' => $saved_path,

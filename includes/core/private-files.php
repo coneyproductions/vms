@@ -399,7 +399,7 @@ if (!function_exists('vms_private_files_stream_path')) {
 			header('Content-Length: ' . (string) (int) $size);
 		}
 
-		readfile($path);
+			readfile($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Stream the validated local private-file response without buffering; callers supply authorized, path-checked files and WordPress has no equivalent streamed-response API.
 		exit;
 	}
 }
@@ -591,12 +591,12 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 				&& is_file($handled_file)
 				&& vms_private_files_path_is_safe($handled_file)
 			) {
-				@unlink($handled_file);
-			}
+					wp_delete_file($handled_file);
+				}
 
 			return new WP_Error('private_upload_move_failed', __('Could not store the uploaded file.', 'backstage-venue-manager'));
 		}
-		@chmod($destination, 0640);
+			@chmod($destination, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Preserve 0640 permissions on the validated private upload path so brokered files remain locally readable while denied to public web access; WP_Filesystem would add incompatible credential-driven semantics.
 
 		$mime = isset($validated_upload['mime']) ? sanitize_text_field((string) $validated_upload['mime']) : 'application/octet-stream';
 		if ($mime === '') {
@@ -611,8 +611,8 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 			$args
 		);
 		if (is_wp_error($registered)) {
-			@unlink($destination);
-			return $registered;
+				wp_delete_file($destination);
+				return $registered;
 		}
 
 		return (int) $registered;
@@ -634,8 +634,8 @@ if (!function_exists('vms_private_files_delete')) {
 
 		$path = vms_private_file_path((string) ($row['stored_filename'] ?? ''));
 		if ($path !== '' && vms_private_files_path_is_safe($path) && file_exists($path) && is_file($path)) {
-			@unlink($path);
-		}
+				wp_delete_file($path);
+			}
 
 		global $wpdb;
 		$table = vms_private_files_table();

@@ -69,6 +69,20 @@ if (!function_exists('apply_filters')) {
     }
 }
 
+if (!function_exists('wp_is_writable')) {
+    function wp_is_writable(string $path): bool
+    {
+        return is_writable($path);
+    }
+}
+
+if (!function_exists('wp_delete_file')) {
+    function wp_delete_file(string $path): bool
+    {
+        return @unlink($path);
+    }
+}
+
 if (!function_exists('sanitize_key')) {
     function sanitize_key(string $value): string
     {

@@ -794,10 +794,10 @@ if (!function_exists('vms_ticketing_verification_delete_proof_file')) {
             return;
         }
 
-        if (file_exists($path) && is_file($path)) {
-            @unlink($path);
-        }
-    }
+		if (file_exists($path) && is_file($path)) {
+			wp_delete_file($path);
+		}
+	}
 }
 
 if (!function_exists('vms_ticketing_verification_store_proof_file')) {
@@ -832,9 +832,9 @@ if (!function_exists('vms_ticketing_verification_store_proof_file')) {
         }
 
         $root = vms_ticketing_verification_upload_root();
-        if ($root === '' || !is_dir($root) || !is_writable($root)) {
-            return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
-        }
+		if ($root === '' || !is_dir($root) || !wp_is_writable($root)) {
+			return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
+		}
 
         $storage_key = function_exists('vms_private_files_generate_storage_key')
             ? vms_private_files_generate_storage_key('verifications', vms_ticketing_verification_image_extension_for_mime(vms_ticketing_verification_image_output_mime()))
@@ -880,11 +880,11 @@ if (!function_exists('vms_ticketing_verification_store_proof_file')) {
             )
             : new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
         if (is_wp_error($file_id)) {
-            if ($stored_path !== '' && file_exists($stored_path)) {
-                @unlink($stored_path);
-            }
-            return $file_id;
-        }
+			if ($stored_path !== '' && file_exists($stored_path)) {
+				wp_delete_file($stored_path);
+			}
+			return $file_id;
+		}
 
         return array(
             'file_id' => (int) $file_id,

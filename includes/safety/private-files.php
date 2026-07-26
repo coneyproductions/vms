@@ -260,7 +260,7 @@ if (!function_exists('vms_safety_private_file_download_handler')) {
 		header('Content-Disposition: attachment; filename="' . rawurlencode($name) . '"');
 		header('Content-Length: ' . (string) $size);
 		header('X-Content-Type-Options: nosniff');
-		readfile($path);
+		readfile($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Fallback stream for the nonce-gated safety private download when the shared private-file stream helper is unavailable; the path comes from brokered private storage and WordPress has no equivalent streamed-response API.
 		exit;
 	}
 }
