@@ -146,64 +146,225 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Current Category Triage
 
-| Category | Count | Representative files | Classification | Recommended strategy |
+- Fresh packaged post-`WPORG-28R-F6` baseline from `2026-07-26`: `265` errors, `1707` warnings, `1972` total findings, `20` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1843`.
+- The packaged scan reports `privateincludes/...` paths. The roadmap below uses the corresponding mirror `includes/...` ownership files that future implementation children must edit.
+- The `F` series removed the packaged alternative-function, `NEW_FINDING`, and `UNMAPPED` residuals only. It did not reduce the surviving `1843` blocker rows because those rows were always owned by the still-open DB/SQL, nonce/input, date/time, and logging families.
+
+| Category | Current packaged count | Representative files | Current classification | Current strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `1110` | `includes/cpt/event-plans.php`, `includes/vendor-applications.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php` | BLOCKER | `WPORG-12B` cleared the first bounded admin-only normalization slice in `includes/admin/settings-page.php`, `WPORG-12C` reduced the status-notices admin surface, and `WPORG-12D` reduced `includes/admin/ticket-integrity-page.php` to seven read-only `Recommended` warnings plus deferred non-nonce errors. Continue with `includes/admin/vendor-command-center.php`, then `includes/modules/staff-tasks/admin-ui.php`, and keep focused automated coverage as a prerequisite before ticketing, portal/public, upload, admissions-claim, or Event Plans/runtime hardening. |
-| Database and SQL safety | `1076` | `includes/modules/admissions/pass-claims.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/availability-date-dispatch/helpers.php` | BLOCKER | Keep DB/SQL paused unless a new isolated admin/reporting read slice appears that is materially safer than the next bounded admin-only mutation batch. |
-| Escaping and output safety | `145` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | BLOCKER | Keep the escape-only audit paused after `WPORG-06C`; the remaining candidates are shared allowed-HTML boundaries, public/portal surfaces, metabox/save flows, vendor-assignment dashboards, or excluded Event Plans slices rather than isolated admin-only display targets. |
-| I18n placeholder comments and ordering | `539` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, `includes/core/staffing.php` | SHOULD FIX BEFORE SUBMISSION | Pause targeted i18n after `WPORG-08B` unless another equivalently isolated admin-only translator-comment or placeholder-ordering slice is identified; otherwise switch back to blocker coverage. |
-| Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/helpers.php`, `includes/ticketing/ticket-integrity-monitor.php` | SHOULD FIX BEFORE SUBMISSION | Pause the date/time phase after `WPORG-09A` unless another admin-only display-only slice appears; the remaining higher-density candidates are scheduling, sales-window, notification, payables, portal-stamping, Event Plans, or shared runtime helpers. |
-| Development logging | `41` findings (`40` `error_log()` + `1` `debug_backtrace()`) | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php` | SHOULD FIX BEFORE SUBMISSION | Pause the logging phase after `WPORG-10A` unless another equivalently isolated admin-only dev-trace slice appears; the remaining files are operationally meaningful or runtime-sensitive. |
+| Nonce and input handling | `694` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/modules/staff-tasks/admin-ui.php`, `includes/portal/vendor-portal.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G1` through `WPORG-28R-G7` in order, beginning with the bounded admin-module form slice in `G1` before widening into CPT, public/portal, or ticketing flows. |
+| Database and SQL safety | `1082` | `includes/core/staffing.php`, `includes/modules/admissions/pass-claims.php`, `includes/modules/availability-date-dispatch/helpers.php`, `includes/social-share/queue-repo.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G8` through `WPORG-28R-G13`; land direct mutation / prepare fixes before cache-policy, reporting, and slow-meta-query follow-up. |
+| Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G14` and `WPORG-28R-G15` after the earlier request and query boundaries they depend on. |
+| Development logging | `42` | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G16` and `WPORG-28R-G17` after the earlier lifecycle work clarifies which logs remain operational, which are dev traces, and which can be safely gated or removed. |
+| Escaping and output safety | `127` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `1843` submission blockers. |
 
-## Nonce/Input Mutation Roadmap
+## Residual Submission-Blocker Roadmap
 
-- packaged current baseline
-  - counts now stand at `2985 / 865 / 2120` after `WPORG-12D`
-  - the top twenty nonce/input files now account for `724 / 1110` remaining findings
-  - `includes/admin/settings-page.php` and `includes/admin/ticket-integrity-page.php` now both sit outside the top twenty, while `includes/modules/status-notices/admin-ui.php` carries only read-only `Recommended` residue in the nonce/input group
-- next bounded admin-only code batches after `WPORG-12D`
+- `WPORG-28R-G0` now owns the complete residual blocker decomposition. Every current blocker row belongs to exactly one implementation child below.
+- Family sums reconcile exactly: `G1-G7 = 694`, `G8-G13 = 1082`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `1843`.
+- Every implementation child still reruns `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php` in addition to the focused suites listed below.
+- Every implementation child closes only its owned packaged rows; unrelated families must remain count-for-count unchanged except for documented same-file line movement.
 
-| Target | Workflow | Expected reduction | Guard pattern | Coverage gate | Why first |
-| --- | --- | ---: | --- | --- | --- |
-| `includes/admin/vendor-command-center.php` | admin onboarding email send and template-save request normalization | `~20-27` | keep existing capability and nonce scaffolding; normalize action and route values only | manual QA around email/template actions is required | still admin-only and bounded, but slightly riskier because it sends email |
-| `includes/modules/staff-tasks/admin-ui.php` | admin task transition, assign, generate, and create normalization | `~10-16` | keep existing capability and nonce scaffolding; normalize request values only | manual QA around task state transitions is required | still admin-only, but broader state mutation than ticket-integrity |
-| `includes/social-share/admin.php` | admin webhook/account/template save/delete normalization | `~12-18` | keep existing capability and nonce scaffolding; normalize request and action values only | manual QA around save/delete actions is required | still admin-only and bounded, with lower behavior risk than portal or ticketing flows |
+### Nonce/Input Children
 
-- deferred until after submission or until dedicated coverage exists
-  - `includes/cpt/event-plans.php`
-  - `includes/vendor-applications.php`
-  - `includes/integrations/ticketing-verifications.php`
-  - `includes/integrations/ticketing-claims-admin.php`
-  - `includes/portal/vendor-portal.php`
-  - `includes/portal/staff-portal.php`
-  - `includes/modules/admissions/pass-claims.php`
-  - `includes/cpt/venues.php`
-  - `includes/safety/admin.php`
-  - `includes/public/event-feedback.php`
-  - `includes/cpt/ratings.php`
-  - `includes/admin/schedule.php`
-- test recommendation
-  - the first admin-only normalization batch does not need new automated coverage if it stays limited to unslash/sanitize/allowlist handling around existing nonce and capability checks and is paired with manual admin QA
-  - add focused automated coverage before touching ticketing, portal/public submission, upload/import, admissions claim, or Event Plans/runtime nonce/input flows
+#### `WPORG-28R-G1 — Admin Module Form Boundaries`
 
-## Event Plans Conclusions
+- Count: `59` (`Recommended 38`, `InputNotSanitized 15`, `MissingUnslash 6`)
+- Files: `includes/modules/staff-tasks/admin-ui.php`, `includes/modules/email-followups/admin-ui.php`, `includes/admin/event-feedback.php`, `includes/admin/season-dates.php`
+- Lifecycle / subsystem: `ADMIN_PAGE`, `ADMIN_POST`, `FORM_SUBMISSION`; Staff Tasks, Email Follow-Ups, Event Feedback, Season Dates
+- Boundary: retain the existing capability and nonce gates on mutation paths; normalize unslashing, allowlisting, and read-only filter handling without adding blanket nonces to GET-only controls
+- Focused tests: `tests/strict-post-gate-remediation.php`, `tests/admin-request-method-wrapper-remediation.php`, `tests/administrator-explicit-notice-output-remediation.php`, `tests/authorization-boundary-hardening.php`
+- Closure / defers: owned packaged input rows `59 -> 0`; defer same-file DB rows to `G8` / `G13`, and accepted `OutputNotEscaped` rows stay outside the blocker roadmap
 
-- The Event Plans file remains the highest-density packaged file at `241` findings.
-- No Event Plans runtime findings were changed in `WPORG-08A`, `WPORG-08B`, `WPORG-09A`, `WPORG-10A`, `WPORG-11A`, the docs-only `WPORG-12A` pass, or the `WPORG-12B` settings-page handler batch.
-- The selected `pass-claims.php` pass stayed outside Event Plans runtime and mutation logic again.
-- The read-only nonce/input phase remains closed after `WPORG-05E`, the escape-only phase remains paused after `WPORG-06C`, and `WPORG-12A` only documented the deferred Event Plans roadmap.
-- `WPORG-12B` stayed inside `includes/admin/settings-page.php` and did not widen into Event Plans runtime, save, publish, cleanup, or integration behavior.
-- `WPORG-12D` stayed inside `includes/admin/ticket-integrity-page.php` and did not widen into Event Plans runtime, save, publish, cleanup, or integration behavior.
-- Remaining Event Plans findings are dominated by:
-  - `save_event_plan_meta()` and adjacent request/save logic
-  - the main Event Plan details render block tied to integration state
-  - cancellation/refund, legacy ticket cleanup, and TEC/ticketing side-effect paths
+#### `WPORG-28R-G2 — Admin Dashboard And Secondary Settings Boundaries`
+
+- Count: `140` (`Missing 10`, `Recommended 76`, `InputNotSanitized 28`, `MissingUnslash 26`)
+- Files: `includes/safety/admin.php`, `includes/admin/schedule.php`, `includes/admin/vendor-comp-packages.php`, `includes/admin/settings-page.php`, `includes/admin/integrity-calendar-reconcile.php`, `includes/admin/integrity-venue-reconcile.php`, `includes/admin/continuity-binder.php`, `includes/admin/vendor-details.php`, `includes/admin/venue-context.php`, `includes/admin/staff-tax-sidebar.php`, `includes/admin/venue-calendar.php`, `includes/admin/vendor-booking-onboarding.php`, `includes/admin/approvals-review-queue.php`, `includes/admin/menu.php`, `includes/admin/reference/keys-map.php`, `includes/admin/vendor-user-link.php`, `includes/admin/venue-comp-defaults.php`, `includes/admin/tax-bypass-ajax.php`, `includes/admin/settings/notifications-user-profile.php`, `includes/admin/settings/class-vms-settings-tours.php`, `includes/admin/staffing.php`, `includes/admin/vendor-command-center.php`, `includes/admin/express-bar.php`, `includes/admin/tax-profile-admin-metabox.php`, `includes/admin/vendor-staff-link.php`, `includes/admin/square-sync-protection.php`
+- Lifecycle / subsystem: `ADMIN_PAGE`, `FORM_SUBMISSION`, `ADMIN_AJAX`; mixed dashboard filters, secondary settings, review queues, and vendor/staff side tools
+- Boundary: distinguish read-only query-string filters from true state changes; preserve existing capability boundaries and avoid blanket nonce additions on dashboard views that do not mutate state
+- Focused tests: `tests/authorization-boundary-hardening.php`, `tests/vendor-compensation-inline-js-remediation.php`, `tests/administrator-explicit-notice-output-remediation.php`, `tests/strict-post-gate-remediation.php`
+- Closure / defers: owned packaged input rows `140 -> 0`; defer same-file DB rows to `G8`, `G11`, or `G13`, and defer same-file date rows to `G14`
+
+#### `WPORG-28R-G3 — Event Plan Editor And Core Request Boundaries`
+
+- Count: `164` (`Missing 23`, `Recommended 76`, `InputNotSanitized 30`, `InputNotValidated 3`, `MissingUnslash 32`)
+- Files: `includes/cpt/event-plans.php`, `includes/core/event-plan-performance.php`, `includes/core/event-plan-save-profiler.php`, `includes/core/event-plan-review.php`, `includes/cpt/event-plans/partials/workflow-status.php`
+- Lifecycle / subsystem: `CPT_SAVE_HANDLER`, `ADMIN_PAGE`, `REPORTING`; Event Plan editor, save path, save profiler, review and workflow helpers
+- Boundary: keep mutation, autosave, preview, and profiling paths distinct; preserve any raw values needed for signatures, IDs, or JSON payloads only where the current boundary proves that retention is intentional
+- Focused tests: `tests/event-plan-legacy-ticketing-integration-smoke.php`, `tests/event-plan-performance-request-id-remediation.php`, `tests/event-plan-readiness-details-output-remediation.php`, `tests/decoded-json-validation.php`
+- Closure / defers: owned packaged input rows `164 -> 0`; defer same-file DB/meta-query rows to `G13`, same-file logging rows to `G17`, and same-file date formatting rows to `G14`
+
+#### `WPORG-28R-G4 — Ancillary CPT Save Boundaries`
+
+- Count: `39` (`Missing 14`, `Recommended 10`, `InputNotSanitized 7`, `MissingUnslash 8`)
+- Files: `includes/cpt/venues.php`, `includes/cpt/ratings.php`, `includes/cpt/vendors.php`, `includes/cpt/staff.php`
+- Lifecycle / subsystem: `CPT_SAVE_HANDLER`; Venue, Ratings, Vendor, and Staff editors
+- Boundary: keep save-handler authorization and nonce proof separate from read-only admin filters; normalize scalar IDs, arrays, and unslashing at the save edge rather than deeper in persistence helpers
+- Focused tests: `tests/authorization-boundary-hardening.php`, `tests/vendor-tax-profile-strict-post-remediation.php`, `tests/request-input-sanitization.php`
+- Closure / defers: owned packaged input rows `39 -> 0`; defer `includes/cpt/vendors.php` DB rows to `G11` and `includes/cpt/ratings.php` DB rows to `G13`
+
+#### `WPORG-28R-G5 — Public, Portal, And Vendor-Application Request Boundaries`
+
+- Count: `103` (`Missing 12`, `Recommended 46`, `InputNotSanitized 29`, `MissingUnslash 16`)
+- Files: `includes/portal/vendor-portal.php`, `includes/public/event-feedback.php`, `includes/vendor-applications.php`, `includes/portal/staff-portal.php`, `includes/portal/vendor-tax-profile.php`, `includes/public/express-bar.php`, `includes/public/calendar-ics.php`, `includes/modules/status-notices/front.php`, `includes/core/vendor-application-confirmation.php`
+- Lifecycle / subsystem: `FRONTEND_RENDER`, `FORM_SUBMISSION`, `FRONTEND_AJAX`; vendor applications, vendor/staff portal flows, public feedback, and status-notice reads
+- Boundary: keep public read-only request parameters, authenticated frontend mutations, and portal form submissions separate; add nonce handling only where the request actually mutates state
+- Focused tests: `tests/vendor-portal-availability-autosave-remediation.php`, `tests/vendor-tax-profile-strict-post-remediation.php`, `tests/vendor-apply-turnstile-contract-remediation.php`, `tests/event-feedback-request-hash-characterization.php`
+- Closure / defers: owned packaged input rows `103 -> 0`; defer same-file DB rows to `G8` / `G11`, same-file date rows to `G15`, and same-file operational logging to `G16`
+
+#### `WPORG-28R-G6 — Ticketing, Admissions, And Availability Request Boundaries`
+
+- Count: `147` (`Missing 22`, `Recommended 94`, `InputNotSanitized 19`, `MissingUnslash 12`)
+- Files: `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php`, `includes/modules/admissions/pass-claims.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-phase-b.php`, `includes/modules/availability-date-dispatch/admin-ui.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/modules/admissions/admission-tokens.php`, `includes/integrations/ticketing.php`, `includes/integrations/ticketing-claims-customer.php`, `includes/modules/admissions/admin-ui.php`, `includes/modules/availability-date-dispatch/helpers.php`, `includes/ticketing/ticket-integrity-cron.php`
+- Lifecycle / subsystem: `ADMIN_PAGE`, `ADMIN_POST`, `FRONTEND_AJAX`, `REST`, `FORM_SUBMISSION`; admissions claims, ticketing admin/support flows, ticketing AJAX, and availability dispatch
+- Boundary: sequence request provenance fixes ahead of later SQL rewrites; preserve any raw payloads required for JSON bodies, signatures, or third-party cart semantics only where the current boundary proves that necessity
+- Focused tests: `tests/ticket-claims-assignee-validation.php`, `tests/ticketing-v2-ajax-output-buffer-ownership.php`, `tests/public-calendar-user-agent-view-characterization.php`, `tests/pass-claims-public-form-output-remediation.php`
+- Closure / defers: owned packaged input rows `147 -> 0`; defer same-file DB rows to `G9` / `G10`, same-file date rows to `G15`, and same-file logging rows to `G16`
+
+#### `WPORG-28R-G7 — Shared Request Helpers, Bootstrap, And Compatibility Reads`
+
+- Count: `42` (`Missing 4`, `Recommended 32`, `InputNotSanitized 6`)
+- Files: `includes/runtime-guards.php`, `includes/core/plugin.php`, `includes/core/registry/admin-menu.php`, `includes/helpers.php`, `includes/core/slow-request-logger.php`, `includes/core/tours/class-vms-tours.php`, `includes/tours/class-vms-tours-service.php`, `includes/tours/class-vms-tours-screen.php`, `includes/social-share/admin.php`, `includes/admin/data-tools/actions-event-plan-import.php`, `includes/taxonomies/vendor-category.php`
+- Lifecycle / subsystem: `BOOTSTRAP`, `TEST_OR_COMPATIBILITY`, `ADMIN_PAGE`, `OTHER`; shared guards, tours, bootstrap menus, import helpers, and taxonomy support reads
+- Boundary: keep bootstrap and compatibility reads narrowly scoped; avoid forcing nonce or sanitization behavior into routes that are intentionally read-only or initialized before a normal form boundary exists
+- Focused tests: `tests/request-input-sanitization.php`, `tests/runtime-stub-guards.php`, `tests/slow-request-logger-request-input-characterization.php`, `tests/event-plan-import-upload-api-remediation.php`
+- Closure / defers: owned packaged input rows `42 -> 0`; defer same-file DB rows to `G12` / `G13` and same-file operational logging to `G16`
+
+### DB/SQL Children
+
+#### `WPORG-28R-G8 — Staffing And Staff-Task Query Boundaries`
+
+- Count: `233` (`UnescapedDBParameter 36`, `DirectQuery 70`, `NoCaching 58`, `InterpolatedNotPrepared 36`, `NotPrepared 17`, `slow_meta_key 7`, `slow_meta_query 6`, `slow_meta_value 3`)
+- Files: `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/staff-tasks/admin-ui.php`, `includes/modules/staff-tasks/db.php`, `includes/modules/staff-tasks/generator.php`, `includes/admin/staffing.php`, `includes/admin/staff-list-columns.php`, `includes/admin/staff-user-link.php`, `includes/admin/staff-vendor-link.php`, `includes/portal/staff-portal.php`, `includes/admin/vendor-staff-link.php`
+- Lifecycle / subsystem: `ADMIN_PAGE`, `FORM_SUBMISSION`, `REPORTING`; staffing catalogs, task templates, assignments, roster views, and staff portal state
+- Boundary: land prepared-statement and mutation-path fixes before cache-policy follow-up; preserve justified direct custom-table access where a core API is not the right abstraction
+- Focused tests: `tests/staff-tasks-overrides-json-remediation.php`, `tests/staff-tasks-signature-json-remediation.php`, `tests/authorization-boundary-hardening.php`, `tests/vendor-portal-availability-autosave-remediation.php`
+- Closure / defers: owned packaged DB rows `233 -> 0`; defer same-file logging in `includes/modules/staff-tasks/generator.php` to `G17`
+
+#### `WPORG-28R-G9 — Admissions And Claim-State Query Boundaries`
+
+- Count: `255` (`UnescapedDBParameter 39`, `DirectQuery 82`, `NoCaching 74`, `InterpolatedNotPrepared 41`, `NotPrepared 7`, `UnfinishedPrepare 5`, `slow_meta_key 3`, `slow_meta_query 4`)
+- Files: `includes/modules/admissions/pass-claims.php`, `includes/modules/admissions/rest.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/modules/admissions/admission-tokens.php`, `includes/modules/admissions/db.php`, `includes/modules/admissions/admin-ui.php`, `includes/modules/admissions/audit.php`
+- Lifecycle / subsystem: `ADMIN_PAGE`, `ADMIN_POST`, `REST`, `FORM_SUBMISSION`; admissions claims, vendor guest portal, admission tokens, and admissions exports/support tools
+- Boundary: separate direct mutation queries, read-only custom-table lookups, and incomplete placeholder preparation; do not collapse public claim flows and administrator maintenance into one blanket query rewrite
+- Focused tests: `tests/pass-claims-public-form-output-remediation.php`, `tests/pass-claims-public-success-output-remediation.php`, `tests/pass-claims-public-status-output-remediation.php`, `tests/event-plan-legacy-ticketing-integration-smoke.php`
+- Closure / defers: owned packaged DB rows `255 -> 0`; defer same-file input rows to `G6` and same-file operational logging in `includes/modules/admissions/rest.php` to `G16`
+
+#### `WPORG-28R-G10 — Ticketing, Availability, And Integrity Query Boundaries`
+
+- Count: `248` (`UnescapedDBParameter 36`, `DirectQuery 68`, `NoCaching 60`, `InterpolatedNotPrepared 30`, `NotPrepared 28`, `slow_meta_key 9`, `slow_meta_query 16`, `slow_meta_value 1`)
+- Files: `includes/integrations/ticketing-claims-framework.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-phase-b.php`, `includes/integrations/ticketing.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php`, `includes/integrations/square-ticket-mirror.php`, `includes/integrations/square-sync-firewall.php`, `includes/ticketing/ticket-inventory-forensics.php`, `includes/ticketing/ticket-mutation-audit.php`, `includes/ticketing/ticket-integrity-daily-report.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/ticketing/ticket-integrity-cron.php`, `includes/modules/availability-date-dispatch/helpers.php`
+- Lifecycle / subsystem: `FRONTEND_AJAX`, `REST`, `BACKGROUND_QUEUE`, `REPORTING`, `ADMIN_PAGE`; ticketing claims, ticketing rules, availability dispatch, integrity monitors, and support diagnostics
+- Boundary: land prepared-SQL and mutation/input provenance fixes before revisiting `NoCaching` or slow-meta-query rows; keep read-only reporting queries distinct from cart or claims mutations
+- Focused tests: `tests/ticketing-output-buffer-lifecycle-characterization.php`, `tests/ticket-claims-assignee-validation.php`, `tests/public-calendar-user-agent-view-characterization.php`, `tests/event-plan-legacy-ticketing-integration-smoke.php`
+- Closure / defers: owned packaged DB rows `248 -> 0`; defer same-file input rows to `G6`, same-file date rows to `G15`, and same-file operational logging to `G16`
+
+#### `WPORG-28R-G11 — Vendor, Portal, And Payables Query Boundaries`
+
+- Count: `103` (`UnescapedDBParameter 9`, `DirectQuery 21`, `NoCaching 20`, `InterpolatedNotPrepared 9`, `NotPrepared 7`, `UnfinishedPrepare 2`, `slow_meta_key 10`, `slow_meta_query 25`)
+- Files: `includes/core/vendor-user-links.php`, `includes/portal/vendor-portal.php`, `includes/core/vendor-application-confirmation.php`, `includes/vendor-applications.php`, `includes/admin/vendor-command-center.php`, `includes/cpt/vendors.php`, `includes/core/vendor-booking-onboarding.php`, `includes/core/payables.php`, `includes/public/vendor-profiles.php`, `includes/taxonomies/vendor-category.php`, `includes/admin/vendors/tax-export-csv.php`
+- Lifecycle / subsystem: `ADMIN_PAGE`, `FORM_SUBMISSION`, `FRONTEND_RENDER`, `REPORTING`; vendor onboarding, vendor profiles, portal views, payables, and vendor-link state
+- Boundary: separate vendor/portal read models from onboarding or payables mutations; evaluate `NoCaching` rows per query instead of assuming every custom-table or meta lookup is replaceable
+- Focused tests: `tests/vendor-tax-profile-strict-post-remediation.php`, `tests/vendor-portal-availability-autosave-remediation.php`, `tests/vendor-apply-turnstile-contract-remediation.php`, `tests/authorization-boundary-hardening.php`
+- Closure / defers: owned packaged DB rows `103 -> 0`; defer same-file input rows to `G5` and same-file date / logging rows to `G15` / `G16`
+
+#### `WPORG-28R-G12 — Social Queue, Background Processing, And Private-File Query Boundaries`
+
+- Count: `115` (`UnescapedDBParameter 18`, `DirectQuery 39`, `NoCaching 31`, `InterpolatedNotPrepared 16`, `NotPrepared 5`, `slow_meta_key 2`, `slow_meta_query 4`)
+- Files: `includes/social-share/queue-repo.php`, `includes/social-share/installer.php`, `includes/social-share/audit.php`, `includes/social-share/template-engine.php`, `includes/social-share/event-plan-panel.php`, `includes/core/notifications.php`, `includes/modules/email-followups/recipients.php`, `includes/modules/email-followups/scheduler.php`, `includes/core/private-files.php`, `includes/safety/private-files.php`, `includes/services/event-plan-import/event-plan-import-engine.php`
+- Lifecycle / subsystem: `BACKGROUND_QUEUE`, `CRON`, `IMPORT_EXPORT`, `ADMIN_PAGE`; social queue persistence, background notifications, private-file indexes, and import-support lookups
+- Boundary: keep queue/audit persistence separate from import/export or private-file read models; revisit `NoCaching` only after direct query safety and placeholder correctness are fixed
+- Focused tests: `tests/social-share-queue-snapshot-json-remediation.php`, `tests/social-share-webhook-exception-boundary-remediation.php`, `tests/private-file-upload-api-remediation.php`, `tests/event-plan-import-upload-api-remediation.php`
+- Closure / defers: owned packaged DB rows `115 -> 0`; defer same-file operational logging to `G16`
+
+#### `WPORG-28R-G13 — Reporting, Schema, Meta-Query, And Cache-Policy Long Tail`
+
+- Count: `128` (`UnescapedDBParameter 5`, `DirectQuery 18`, `NoCaching 17`, `InterpolatedNotPrepared 5`, `NotPrepared 3`, `slow_meta_key 38`, `slow_meta_query 38`, `slow_meta_value 4`)
+- Files: `includes/core/registry/vendor-schema.php`, `includes/db/migrations.php`, `includes/cpt/event-plans.php`, `includes/cpt/ratings.php`, `includes/core/event-feedback.php`, `includes/helpers.php`, `includes/admin/settings-page.php`, `includes/admin/express-bar.php`, `includes/admin/event-command-center.php`, `includes/admin/budget-calculator.php`, `includes/admin/venue-duplicate-templates.php`, `includes/admin/settings/class-vms-settings-tours.php`, `includes/admin/event-feedback.php`, `includes/admin/integrity-calendar-reconcile.php`, `includes/admin/approvals-review-queue.php`, `includes/admin/schedule.php`, `includes/core/calendar-feed.php`, `includes/core/calendar-ticket-counts.php`, `includes/core/cancellation-adapters.php`, `includes/core/cli/stale-check.php`, `includes/core/event-credits.php`, `includes/core/ticket-sales-resolver.php`, `includes/schedule/schedule.php`, `includes/helpers/checkin-close.php`, `includes/core/goals-forecast.php`
+- Lifecycle / subsystem: `REPORTING`, `DIAGNOSTIC`, `CLI`, `OTHER`; schema helpers, long-tail admin reports, schedule summaries, event feedback aggregations, and slow-meta-query warnings
+- Boundary: this is the deliberate tail bucket for reporting, schema, and meta-query warnings that should not block higher-risk mutation work; every query still needs occurrence-specific review before any suppression
+- Focused tests: `tests/event-feedback-request-hash-characterization.php`, `tests/release-compatibility-harness.php`, `tests/public-release-build-pipeline.php`, `tests/runtime-stub-guards.php`
+- Closure / defers: owned packaged DB rows `128 -> 0`; defer same-file date rows to `G14` / `G15` and same-file diagnostic logging to `G17`
+
+### Date/Time Children
+
+#### `WPORG-28R-G14 — Display Formatting, Identifiers, And Admin Date Labels`
+
+- Count: `11` (`date_date 11`)
+- Files: `includes/helpers.php`, `includes/admin/ticket-integrity-page.php`, `includes/admin/staff-tax-sidebar.php`, `includes/admin/tax-profile-admin-metabox.php`, `includes/admin/square-sync-protection.php`, `includes/cpt/event-plans/partials/time-lineup.php`, `includes/schedule/season-dates.php`, `includes/core/cli/state-of-range.php`
+- Lifecycle / subsystem: `ADMIN_PAGE`, `CLI`, `FRONTEND_RENDER`; display formatting, report labels, export identifiers, and human-readable admin timestamps
+- Boundary: replace native `date()` only where `wp_date()`, `gmdate()`, or `DateTimeImmutable` preserve the existing display or identifier contract
+- Focused tests: `tests/public-calendar-user-agent-view-characterization.php`, `tests/authorization-boundary-hardening.php`, `tests/event-plan-legacy-ticketing-integration-smoke.php`
+- Closure / defers: owned packaged date rows `11 -> 0`; defer business-window and persisted-timestamp work to `G15`
+
+#### `WPORG-28R-G15 — Business Windows, Scheduling, And Persisted Timestamp Boundaries`
+
+- Count: `14` (`date_date 14`)
+- Files: `includes/modules/staff-tasks/notifications.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/integrations/ticketing-phase-b.php`, `includes/core/payables.php`, `includes/portal/vendor-tax-profile.php`, `includes/core/event-credits.php`
+- Lifecycle / subsystem: `CRON`, `REPORTING`, `FORM_SUBMISSION`, `FRONTEND_RENDER`; staff notifications, ticketing integrity windows, payables, vendor tax profile stamps, and event-credit business rules
+- Boundary: preserve timezone-sensitive comparisons and persisted values; use `wp_date()`, `current_time()`, `gmdate()`, or `DateTimeImmutable` according to the existing UTC/local business rule
+- Focused tests: `tests/vendor-tax-profile-strict-post-remediation.php`, `tests/event-plan-legacy-ticketing-integration-smoke.php`, `tests/ticket-integrity-query-filter-boundary-remediation.php`
+- Closure / defers: owned packaged date rows `14 -> 0`; no later date child remains
+
+### Logging Children
+
+#### `WPORG-28R-G16 — Operational Failure And Service Logging`
+
+- Count: `26` (`error_log 26`)
+- Files: `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/admin/data-tools/actions-event-plan-import.php`, `includes/taxonomies/vendor-type.php`, `includes/runtime-guards.php`, `includes/integrations/ticketing-phase-b.php`, `includes/core/notifications.php`, `includes/core/vendor-application-confirmation.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/admin/settings-page.php`, `includes/core/goals-forecast.php`
+- Lifecycle / subsystem: `FORM_SUBMISSION`, `REST`, `IMPORT_EXPORT`, `BACKGROUND_QUEUE`, `BOOTSTRAP`; operational failures, service-edge retries, and bounded runtime diagnostics
+- Boundary: preserve real operational failure evidence while removing dev-only noise, sensitive values, and recursion risks; do not route fatal-path logging through helpers that might require unavailable services
+- Focused tests: `tests/vendor-apply-turnstile-contract-remediation.php`, `tests/event-plan-import-upload-api-remediation.php`, `tests/request-input-sanitization.php`, `tests/ticket-claims-assignee-validation.php`
+- Closure / defers: owned packaged logging rows `26 -> 0`; defer development-only traces and profiler noise to `G17`
+
+#### `WPORG-28R-G17 — Development Diagnostics, Profiling, And Trace Logging`
+
+- Count: `16` (`error_log 15`, `debug_backtrace 1`)
+- Files: `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php`, `includes/ticketing/ticket-mutation-audit.php`, `includes/helpers.php`, `includes/tours/class-vms-tours-registry.php`, `includes/core/event-plan-save-profiler.php`, `includes/core/event-plan-performance.php`, `includes/admin/approvals-review-queue.php`, `includes/admin/menu.php`, `includes/admin/vendor-list-ui.php`
+- Lifecycle / subsystem: `DIAGNOSTIC`, `REPORTING`, `ADMIN_PAGE`; developer traces, profilers, mutation audits, and tours/admin helpers
+- Boundary: remove or gate pure dev traces, stack collection, and profiler leftovers after the earlier operational-logging child proves what must remain for production support
+- Focused tests: `tests/event-plan-performance-request-id-remediation.php`, `tests/slow-request-logger-request-input-characterization.php`, `tests/staff-tasks-signature-json-remediation.php`, `tests/ticketing-output-buffer-lifecycle-characterization.php`
+- Closure / defers: owned packaged logging rows `16 -> 0`; no later logging child remains
+
+## Dependency Order
+
+1. `WPORG-28R-G1` comes first because it reuses already-proven exact-POST and admin-form guard patterns in four bounded admin modules.
+2. `WPORG-28R-G2` depends on `G1` because the broader dashboard/settings batch should reuse the same request-boundary conventions before widening into less isolated admin screens.
+3. `WPORG-28R-G3` and `WPORG-28R-G4` depend on `G1` because CPT and Event Plan save flows are riskier than the admin-only module batch and should inherit the same normalization posture.
+4. `WPORG-28R-G5` depends on `G1` because public and portal flows should not be the first place new nonce/input decisions are introduced.
+5. `WPORG-28R-G6` depends on `G1` because ticketing and admissions mutations are broader, higher-risk surfaces that should follow the bounded admin request hardening pattern.
+6. `WPORG-28R-G8` follows `G1` because the staff-task SQL work shares the same runtime files and should not begin before the request provenance inside those files is stabilized.
+7. `WPORG-28R-G9` and `WPORG-28R-G10` depend on `G6` because query rewrites on admissions and ticketing code should follow the request-boundary fixes on the same flows.
+8. `WPORG-28R-G11` depends on `G5` because vendor/portal query work is safer after the public and portal request boundaries stop drifting.
+9. `WPORG-28R-G12` depends on `G7` because the background/queue and import-support queries share bootstrap and helper boundaries that must be characterized first.
+10. `WPORG-28R-G13` follows `G3`, `G4`, and `G8-G12` because it is the deliberate reporting/schema/meta-query tail bucket after higher-risk mutation and helper work lands.
+11. `WPORG-28R-G14` follows `G13` because display/identifier date formatting in shared report helpers should not be edited before the underlying reporting/query ownership is stable.
+12. `WPORG-28R-G15` follows `G5`, `G10`, `G11`, and `G14` because timezone-sensitive business windows and persisted timestamps depend on earlier portal, ticketing, payables, and display-boundary characterization.
+13. `WPORG-28R-G16` follows `G5`, `G6`, and `G12` because operational logging decisions are safer after the request and background lifecycles they describe are stabilized.
+14. `WPORG-28R-G17` is last because development traces and profiler leftovers should only be removed after the earlier children prove what operational evidence must remain.
+
+## First Implementation Child
+
+- Child: `WPORG-28R-G1 — Admin module form boundaries`
+- Exact ownership: `59` rows across `WordPress.Security.NonceVerification.Recommended` (`38`), `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized` (`15`), and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash` (`6`)
+- Exact files: `includes/modules/staff-tasks/admin-ui.php`, `includes/modules/email-followups/admin-ui.php`, `includes/admin/event-feedback.php`, `includes/admin/season-dates.php`
+- Why first: this is the cleanest bounded admin-only request slice with existing exact-POST characterization, existing capability/nonce scaffolding, and no need to start in public, portal, ticketing, or Event Plan mutation paths
+- Required source/test/doc scope: only the four mirror runtime files above plus the focused suites `tests/strict-post-gate-remediation.php`, `tests/admin-request-method-wrapper-remediation.php`, `tests/administrator-explicit-notice-output-remediation.php`, and `tests/authorization-boundary-hardening.php`, then the two remediation docs and ledger updates that record the owned delta
+- Required pre-edit characterization: confirm the current packaged `59`-row ownership from the fresh strict JSON, re-verify the exact POST helper and notice-shell contracts, and confirm no same-file DB/output rows are accidentally pulled into scope
+- Expected remediation outcome: close the owned packaged input rows by normalizing unslashing, allowlisting, and scalar handling while leaving read-only filters read-only and preserving existing mutation nonce/capability guards
+- Required package comparison: a fresh post-edit package rerun must show only the owned `G1` input rows gone from those four files, with no unrelated family increase
+- Completion criteria: `G1` owns the first exact packaged delta, `WPORG-28R` stays blocked, and the next child remains `WPORG-28R-G2`
+- Explicit defers: same-file DB rows in `includes/modules/staff-tasks/admin-ui.php` defer to `G8`; same-file DB rows in `includes/admin/event-feedback.php` and `includes/admin/season-dates.php` defer to `G13`; accepted `OutputNotEscaped` rows in the touched files remain outside the blocker roadmap
+
+## Parent Closeout Condition
+
+- `WPORG-28R-G0` is terminal only because the roadmap now reconciles all `1843` blocker rows with no unowned or multiply-owned occurrence.
+- `WPORG-28R` remains blocked until every `G1` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain open or blocked exactly as documented in the ledger.
+- Slug reservation, corrected upload, and reviewer communication remain unauthorized until the parent is closed and explicit authorization is given.
 
 ## Recommended Next Task
 
-- Next execution target
-  - start the next bounded admin-only nonce/input code batch in `includes/admin/vendor-command-center.php`
-- Scope
-  - keep the batch limited to request normalization around already-existing nonce and capability checks
-  - do not widen into behavior changes, new nonce fields, new actions, outbound-email rewrites, or adjacent ticketing/runtime rewrites
-  - keep DB/SQL, logging, date/time, targeted i18n, and escape-only follow-up paused unless a new isolated admin-only slice materially safer than the first nonce batch appears
+- Next execution target: `WPORG-28R-G1 — Admin module form boundaries`
+- Scope: keep the child limited to request normalization in `includes/modules/staff-tasks/admin-ui.php`, `includes/modules/email-followups/admin-ui.php`, `includes/admin/event-feedback.php`, and `includes/admin/season-dates.php`
+- Scope guardrails: do not widen into DB/SQL, output, logging, date/time, public/portal, admissions, ticketing, or Event Plan runtime work in that child

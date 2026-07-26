@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, `WPORG-28R-B` later reconciled the Cloudflare Turnstile `OffloadedContent` occurrence as a documented service boundary, `WPORG-28R-C1` later removed the two ticketing-owned `ExceptionNotEscaped` rows, `WPORG-28R-C2` later removed the two remaining webhook `ExceptionNotEscaped` rows, and `WPORG-28R-E1` plus `WPORG-28R-E2` later removed the full packaged `SuppressFilters` family, but `WPORG-28R` remains blocked because `UNMAPPED=39` and `SUBMISSION_BLOCKER=1843` still stand.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` now supersedes the stale `UNMAPPED=39` wording: the current packaged residual baseline is `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1843`, with the exact implementation roadmap now recorded as `WPORG-28R-G1` through `WPORG-28R-G17`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -2635,7 +2635,7 @@ Date: 2026-07-25
 - Initial rule-family classification totals from this pass: `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=128`, `NEW_FINDING=1`, `UNMAPPED=46`, `SUBMISSION_BLOCKER=1843`
 - Current parent totals after `WPORG-28R-F6`: `265` errors, `1707` warnings, `1972` total findings, `20` unique rule codes, with `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1843`
 - Defensible readiness outcome: `Outcome C — Reopen remediation`
-- Exact next action: no further ordered `WPORG-28R-F*` child remains; re-establish the fresh post-remediation packaged baseline and parent-level readiness state before any WordPress.org upload, reviewer reply, or final artifact-preparation step.
+- Exact next action: `WPORG-28R-G0` now replaces the former open-ended post-`F6` state with the ordered residual blocker roadmap in `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`; the exact next implementation child is `WPORG-28R-G1 — Admin module form boundaries`.
 
 ### Mapping Method
 
@@ -3290,6 +3290,58 @@ Date: 2026-07-26
 - The live `../../vms/includes/runtime-guards.php` file remained read-only and unchanged; no mirror/live copy or convergence work was attempted.
 - No ticketing runtime, build script, package manifest, release metadata file, sibling live tree file, or unrelated remediation family changed in this child.
 - No upload, deployment, submission, reviewer reply, push, tag, activation, deactivation, live replacement, migration, stash mutation, or WordPress.org action occurred.
+
+## WPORG-28R-G0 Result
+
+Date: 2026-07-26
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G0`
+- Starting mirror HEAD: `fc2976605aa45f3417c610e91ba8600900f95270` (`Document bounded runtime guard input stream`)
+- Starting parent: `a2ab76b254399dc0fe2cbc99cbc4605885bc70cd`
+- Scope: documentation and planning only; no runtime, test, builder, manifest, asset, or live-tree change was authorized
+- Fresh build command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg0.4SPYrI/build --force`
+- Fresh build result: `/tmp/wporg-28rg0.4SPYrI/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `a492923143612bb9264deabbc5e97ac2f82027eddccbdfc0ccc757a6c5bf46d4`
+- Fresh packaged Plugin Check result: exit `0`, `265` errors, `1707` warnings, `1972` total findings, and `20` unique rule codes, with `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1843`
+- Current blocker-family totals: DB/SQL `1082`, nonce/input `694`, date/time `25`, and logging `42`
+- Current packaged `WordPress.Security.EscapeOutput.OutputNotEscaped` remains `KNOWN_NONBLOCKING` and is not part of the `1843` blockers
+- Why the `F` series did not reduce `SUBMISSION_BLOCKER`: `WPORG-28R-F0` through `WPORG-28R-F6` removed only the packaged alternative-function, `NEW_FINDING`, and `UNMAPPED` residuals; the still-blocking DB/SQL, nonce/input, date/time, and logging rows reproduced unchanged and therefore required a new `G` roadmap instead of another `F` child
+- Complete child reconciliation now lives in `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, with exact family sums `G1-G7 = 694`, `G8-G13 = 1082`, `G14-G15 = 25`, and `G16-G17 = 42`
+- Exact next implementation child: `WPORG-28R-G1 — Admin module form boundaries` (`59` rows across `includes/modules/staff-tasks/admin-ui.php`, `includes/modules/email-followups/admin-ui.php`, `includes/admin/event-feedback.php`, and `includes/admin/season-dates.php`)
+
+### Ordered Roadmap
+
+1. `WPORG-28R-G1 — Admin module form boundaries` (`59`, input)
+2. `WPORG-28R-G2 — Admin dashboard and secondary settings boundaries` (`140`, input)
+3. `WPORG-28R-G3 — Event Plan editor and core request boundaries` (`164`, input)
+4. `WPORG-28R-G4 — Ancillary CPT save boundaries` (`39`, input)
+5. `WPORG-28R-G5 — Public, portal, and vendor-application request boundaries` (`103`, input)
+6. `WPORG-28R-G6 — Ticketing, admissions, and availability request boundaries` (`147`, input)
+7. `WPORG-28R-G7 — Shared request helpers, bootstrap, and compatibility reads` (`42`, input)
+8. `WPORG-28R-G8 — Staffing and staff-task query boundaries` (`233`, DB/SQL)
+9. `WPORG-28R-G9 — Admissions and claim-state query boundaries` (`255`, DB/SQL)
+10. `WPORG-28R-G10 — Ticketing, availability, and integrity query boundaries` (`248`, DB/SQL)
+11. `WPORG-28R-G11 — Vendor, portal, and payables query boundaries` (`103`, DB/SQL)
+12. `WPORG-28R-G12 — Social queue, background processing, and private-file query boundaries` (`115`, DB/SQL)
+13. `WPORG-28R-G13 — Reporting, schema, meta-query, and cache-policy long tail` (`128`, DB/SQL)
+14. `WPORG-28R-G14 — Display formatting, identifiers, and admin date labels` (`11`, date/time)
+15. `WPORG-28R-G15 — Business windows, scheduling, and persisted timestamp boundaries` (`14`, date/time)
+16. `WPORG-28R-G16 — Operational failure and service logging` (`26`, logging)
+17. `WPORG-28R-G17 — Development diagnostics, profiling, and trace logging` (`16`, logging)
+
+### Current Parent State
+
+- `WPORG-28R-G0` is terminal because the roadmap now reconciles all `1843` blocker rows with no unowned or multiply-owned occurrence.
+- `WPORG-28R` remains blocked until every `G1` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain open or blocked exactly as reflected in the ledger.
+- Slug reservation, corrected upload, and reviewer communication remain unauthorized while `WPORG-28R` stays blocked.
+
+### Non-Actions
+
+- No runtime, test, builder, release-metadata, or live-tree file changed in this slice.
+- No upload, submission, reviewer reply, push, tag, deployment, activation, deactivation, migration, or production change occurred.
 
 ## WPORG-20A-S Result
 
