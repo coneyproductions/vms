@@ -149,12 +149,12 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 				&& function_exists('vms_event_plan_import_path_is_safe')
 				&& vms_event_plan_import_path_is_safe($handled_file)
 			) {
-				@unlink($handled_file);
+				wp_delete_file($handled_file);
 			}
 
 			vms_event_plan_import_redirect_storage_failure();
 		}
-		@chmod($target_path, 0640);
+		@chmod($target_path, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Preserve 0640 permissions on the validated private staging CSV so administrator preview uploads remain stored under the private import bucket without widening web access; WP_Filesystem would add credential-driven semantics.
 
 		$options = array(
 			'auto_create_missing_vendors' => !empty($_POST['auto_create_missing_vendors']),
@@ -308,7 +308,7 @@ if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
 		nocache_headers();
 		header('Content-Type: text/csv; charset=utf-8');
 		header('Content-Disposition: attachment; filename="' . sanitize_file_name($filename) . '"');
-		readfile($path);
+		readfile($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Stream the validated private preview report CSV directly to the authorized administrator response; WordPress has no equivalent streamed file-download helper for this local staged file.
 		exit;
 	}
 }
@@ -459,7 +459,7 @@ if (!function_exists('vms_event_plan_import_handle_download_sample_csv')) {
 			'',
 		));
 
-		fclose($out);
+		fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the php://output sample-download stream after writing the fixed CSV template; WPCS allows the corresponding php://output fopen() but cannot infer the stream type here.
 		exit;
 	}
 }

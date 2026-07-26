@@ -288,7 +288,7 @@ if (!function_exists('vms_event_plan_import_delete_stored_file')) {
 	{
 		$path = vms_event_plan_import_storage_path($reference);
 		if ($path !== '' && file_exists($path) && is_file($path)) {
-			@unlink($path);
+			wp_delete_file($path);
 		}
 	}
 }
@@ -939,14 +939,14 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 			return new WP_Error('csv_missing', __('Uploaded CSV file is missing.', 'backstage-venue-manager'));
 		}
 
-		$fh = fopen($csv_path, 'rb');
+		$fh = fopen($csv_path, 'rb'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Incrementally read the validated local staged CSV from the private import bucket; WordPress has no equivalent streamed CSV reader and buffering the whole file would weaken the existing bounds.
 		if (!is_resource($fh)) {
 			return new WP_Error('csv_open_failed', __('Could not open CSV file for preview.', 'backstage-venue-manager'));
 		}
 
+		try {
 		$raw_headers = fgetcsv($fh);
 		if (!is_array($raw_headers) || empty($raw_headers)) {
-			fclose($fh);
 			return new WP_Error('csv_header_missing', __('CSV header row is missing.', 'backstage-venue-manager'));
 		}
 
@@ -962,7 +962,6 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 			}
 		}
 		if (!empty($missing)) {
-			fclose($fh);
 			return new WP_Error(
 				'csv_required_missing',
 				sprintf(
@@ -1114,13 +1113,13 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 							$venue_name
 						);
 					}
-					} else {
-						$errors[] = sprintf(
-							/* translators: %s: venue name */
-							__('Venue "%s" was not found in VMS Venues.', 'backstage-venue-manager'),
-							$venue_name
-						);
-					}
+				} else {
+					$errors[] = sprintf(
+						/* translators: %s: venue name */
+						__('Venue "%s" was not found in VMS Venues.', 'backstage-venue-manager'),
+						$venue_name
+					);
+				}
 			}
 
 			$primary_vendor_id = 0;
@@ -1463,7 +1462,9 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				'errors' => $errors,
 			);
 		}
-		fclose($fh);
+		} finally {
+			fclose($fh); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the validated local staged CSV stream on every success and early-return path; WPCS cannot track the safe local stream resource origin through fclose().
+		}
 
 		$rows_json_file = vms_event_plan_import_prepare_generated_path('json', $token, 'rows');
 		if (is_wp_error($rows_json_file)) {
@@ -1493,17 +1494,20 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 			return new WP_Error('rows_json_write_failed', __('Could not write preview row cache.', 'backstage-venue-manager'));
 		}
 
-		$report_fh = fopen($report_csv_path, 'wb');
+		$report_fh = fopen($report_csv_path, 'wb'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Stream the preview report CSV directly into the validated private import bucket path; WordPress has no equivalent incremental writer and WP_Filesystem would add credential-driven semantics.
 		if (!is_resource($report_fh)) {
 			vms_event_plan_import_delete_stored_file($rows_json_storage_key);
 			vms_event_plan_import_delete_stored_file($report_csv_storage_key);
 			return new WP_Error('report_csv_write_failed', __('Could not write preview report CSV.', 'backstage-venue-manager'));
 		}
-		fputcsv($report_fh, array('row_number', 'event_key', 'plan_id', 'action', 'messages'));
-		foreach ($report_rows as $report_row) {
-			vms_event_plan_import_report_row_to_csv($report_fh, $report_row);
+		try {
+			fputcsv($report_fh, array('row_number', 'event_key', 'plan_id', 'action', 'messages'));
+			foreach ($report_rows as $report_row) {
+				vms_event_plan_import_report_row_to_csv($report_fh, $report_row);
+			}
+		} finally {
+			fclose($report_fh); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the validated local preview-report writer after emitting the bounded CSV rows; WPCS cannot track the safe local stream resource origin through fclose().
 		}
-		fclose($report_fh);
 
 		$source_hash = sha1_file($csv_path);
 		if (!is_string($source_hash) || $source_hash === '') {

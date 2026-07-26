@@ -42,6 +42,9 @@ $assert(strpos($actionsSource, "vms_event_plan_import_with_scoped_upload_dir(") 
 $assert(strpos($actionsSource, "remove_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');") !== false, 'Event Plan import should remove the scoped upload_dir filter.');
 $assert(strpos($actionsSource, "basename(\$target_path)") !== false, 'Event Plan import should preserve the deterministic token-based source basename.');
 $assert(strpos($actionsSource, "vms_event_plan_import_path_is_safe(\$handled_file)") !== false, 'Event Plan import should only delete unexpected handled files when safe.');
+$assert(strpos($actionsSource, "wp_delete_file(\$handled_file);") !== false, 'Event Plan import should use wp_delete_file() for safe handled-file rollback.');
+$assert(strpos($actionsSource, '@unlink($handled_file);') === false, 'Event Plan import should not retain @unlink() for handled-file rollback.');
+$assert(strpos($actionsSource, "@chmod(\$target_path, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod") !== false, 'Event Plan import should retain only a line-specific chmod suppression for the staged CSV.');
 $assert(strpos($actionsSource, "\$handled['url']") === false && strpos($actionsSource, '$handled["url"]') === false, 'Event Plan import should not use the returned public URL from wp_handle_upload().');
 $assert(strpos($actionsSource, 'vms_private_files_store_validated_upload(') === false, 'Event Plan import should not route preview uploads through the shared private-file broker.');
 
@@ -58,34 +61,6 @@ $assert(strpos($actionsSource, "vms_event_plan_import_delete_preview_payload(\$t
 $assert(strpos($engineSource, "foreach (array('source_csv_storage_key', 'rows_json_storage_key', 'report_csv_storage_key') as \$storage_key_field)") !== false, 'Event Plan import preview cleanup should still delete source, rows, and report storage keys.');
 $assert(strpos($engineSource, "'source_csv_storage_key' => (string) (\$preview_payload['source_csv_storage_key'] ?? ''),") !== false, 'Event Plan import audit metadata should retain source_csv_storage_key.');
 $assert(strpos($engineSource, "'report_csv_storage_key' => (string) (\$preview_payload['report_csv_storage_key'] ?? ''),") !== false, 'Event Plan import audit metadata should retain report_csv_storage_key.');
-
-$runCommand = static function (string $command) use ($repoRoot): string {
-	if (!function_exists('shell_exec')) {
-		throw new RuntimeException('shell_exec() is required for this focused diff guard.');
-	}
-
-	$output = shell_exec('cd ' . escapeshellarg($repoRoot) . ' && ' . $command . ' 2>/dev/null');
-	return is_string($output) ? trim($output) : '';
-};
-
-$allChanged = $runCommand('git diff --name-only');
-$changedFiles = $allChanged === '' ? array() : preg_split('/\R+/', $allChanged);
-$changedFiles = array_values(array_filter(array_map('trim', (array) $changedFiles), static function (string $file): bool {
-	return $file !== '';
-}));
-$allowedChangedFiles = array(
-	'tests/event-plan-import-upload-api-remediation.php',
-	'docs/wporg-remediation-ledger.md',
-	'docs/WPORG_PREREVIEW_REMEDIATION.md',
-);
-$unexpectedFiles = array_values(array_filter($changedFiles, static function (string $file) use ($allowedChangedFiles): bool {
-	return !in_array($file, $allowedChangedFiles, true);
-}));
-$assert($unexpectedFiles === array(), 'Unexpected changed files detected for this closeout: ' . implode(', ', $unexpectedFiles));
-$assert($runCommand('git diff --name-only -- includes/admin/data-tools/actions-event-plan-import.php includes/admin/data-tools/page-event-plan-import.php includes/services/event-plan-import/event-plan-import-engine.php') === '', 'Event Plan production files should remain unchanged in this closeout.');
-$assert($runCommand('git diff --name-only -- includes/core/private-files.php assets') === '', 'Shared private-file core and assets should remain unchanged in this closeout.');
-$assert($runCommand('git diff --name-only -- includes/services/event-plan-import/event-plan-import-engine.php') === '', 'The Event Plan import engine should remain unchanged in this slice.');
-$assert(strpos($runCommand('git status --short'), '../../vms') === false, 'Installed-tree paths should not appear in the worktree status.');
 
 define('ABSPATH', __DIR__ . '/');
 
@@ -241,6 +216,17 @@ function wp_upload_bits(...$args): array
 	unset($args);
 	$GLOBALS['vms_test_forbidden_calls'][] = 'wp_upload_bits';
 	return array('error' => 'forbidden');
+}
+
+function wp_delete_file(string $path): bool
+{
+	$GLOBALS['vms_test_calls']['wp_delete_file'][] = $path;
+	if ($path === '' || !file_exists($path)) {
+		return false;
+	}
+
+	@unlink($path);
+	return !file_exists($path);
 }
 
 function vms_event_plan_import_admin_page_url(array $args = array()): string
@@ -620,6 +606,7 @@ $outsideNotice = end($GLOBALS['vms_test_calls']['vms_event_plan_import_set_notic
 $assert($outsideRedirect === '/wp-admin/admin.php?page=vms-import-event-plans', 'Unexpected handled paths outside the bucket should preserve the existing admin-page redirect.');
 $assert(is_array($outsideNotice) && $outsideNotice['message'] === 'Failed to store uploaded CSV file.', 'Unexpected handled paths outside the bucket should preserve the existing storage-failure notice.');
 $assert($GLOBALS['vms_test_calls']['vms_event_plan_import_build_preview_from_csv'] === array(), 'Unexpected handled paths outside the bucket should be rejected before preview building.');
+$assert(($GLOBALS['vms_test_calls']['wp_delete_file'] ?? array()) === array(), 'Unexpected handled paths outside the safe bucket should not call wp_delete_file().');
 $assert(file_exists((string) $GLOBALS['vms_test_case']['unexpected_path']), 'Unexpected handled paths outside the safe bucket should not be deleted unsafely.');
 $assert(($GLOBALS['vms_test_filters']['upload_dir'] ?? array()) === array(), 'Unexpected handled paths outside the bucket should still remove the scoped upload_dir filter.');
 vms_test_cleanup_case();
@@ -629,6 +616,7 @@ $insideRedirect = vms_test_run_preview_action();
 $insideNotice = end($GLOBALS['vms_test_calls']['vms_event_plan_import_set_notice']);
 $assert($insideRedirect === '/wp-admin/admin.php?page=vms-import-event-plans', 'Unexpected handled paths inside the bucket should preserve the existing admin-page redirect.');
 $assert(is_array($insideNotice) && $insideNotice['message'] === 'Failed to store uploaded CSV file.', 'Unexpected handled paths inside the bucket should preserve the existing storage-failure notice.');
+$assert(($GLOBALS['vms_test_calls']['wp_delete_file'] ?? array()) === array((string) $GLOBALS['vms_test_case']['unexpected_path']), 'Unexpected handled paths inside the bucket should delete the safe handled file through wp_delete_file().');
 $assert(!file_exists((string) $GLOBALS['vms_test_case']['unexpected_path']), 'Unexpected handled paths inside the safe bucket should be deleted when safe.');
 $assert(($GLOBALS['vms_test_filters']['upload_dir'] ?? array()) === array(), 'Unexpected handled paths inside the bucket should still remove the scoped upload_dir filter.');
 vms_test_cleanup_case();
