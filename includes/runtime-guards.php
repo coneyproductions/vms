@@ -291,7 +291,7 @@ if (!function_exists('vms_read_limited_stream')) {
 	function vms_read_limited_stream(string $stream_uri, int $max_bytes): array
 	{
 		$max_bytes = max(1, $max_bytes);
-		$handle = @fopen($stream_uri, 'rb');
+		$handle = @fopen($stream_uri, 'rb'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- The only current caller passes hardcoded php://input; this helper must open a bounded local request-body stream before any path-based WP_Filesystem API would apply.
 		if (!is_resource($handle)) {
 			return array(
 				'ok' => false,
@@ -309,9 +309,9 @@ if (!function_exists('vms_read_limited_stream')) {
 				break;
 			}
 
-			$chunk = fread($handle, min(8192, $remaining));
+			$chunk = fread($handle, min(8192, $remaining)); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread -- Keep the local stream read bounded to 8 KB chunks and at most $max_bytes + 1 bytes so oversized JSON request bodies fail closed without buffering the full body.
 			if (!is_string($chunk)) {
-				fclose($handle);
+				fclose($handle); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the same bounded local request-body stream on read failure before returning the safe failure payload.
 				return array(
 					'ok' => false,
 					'data' => '',
@@ -330,7 +330,7 @@ if (!function_exists('vms_read_limited_stream')) {
 			}
 		}
 
-		fclose($handle);
+		fclose($handle); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the successfully opened bounded local request-body stream after the capped read loop completes.
 
 		return array(
 			'ok' => true,
