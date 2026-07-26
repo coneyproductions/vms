@@ -118,7 +118,7 @@ add_action('admin_post_vms_square_sync_protection_csv', function (): void {
                 (int) ($row['meta_cleared'] ?? 0),
             ));
         }
-        fclose($out);
+        fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.
     }
     exit;
 });

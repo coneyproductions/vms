@@ -1490,7 +1490,7 @@ if (!function_exists('vms_pass_claims_handle_export_csv')) {
 				(string) ($row['created_at'] ?? ''),
 			));
 		}
-		fclose($out);
+		fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.
 
 		if (function_exists('vms_admission_audit_log')) {
 			vms_admission_audit_log(0, null, 'pass_tokens_export_csv', get_current_user_id(), 'admin', array(
@@ -1678,7 +1678,7 @@ if (!function_exists('vms_pass_claims_handle_report_export_csv')) {
 			}
 		}
 
-		fclose($out);
+		fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.
 
 		if (function_exists('vms_admission_audit_log')) {
 			vms_admission_audit_log(0, null, 'pass_reports_export_csv', get_current_user_id(), 'admin', array(

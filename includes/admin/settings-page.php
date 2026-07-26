@@ -566,7 +566,7 @@ function vms_handle_ticketing_stock_csv(): void
 
 	$rows = is_array($rep['results'] ?? null) ? (array) $rep['results'] : array();
 
-	@set_time_limit(0);
+	@set_time_limit(0); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Administrator-only ticketing stock CSV export streams a bounded transient report and WordPress does not provide a native execution-limit alternative.
 	header('Content-Type: text/csv; charset=utf-8');
 	header('Content-Disposition: attachment; filename=vms-ticketing-stock-' . $mode . '-report-' . gmdate('Ymd-His') . '.csv');
 
@@ -592,7 +592,7 @@ function vms_handle_ticketing_stock_csv(): void
 			(string) ($r['message'] ?? ''),
 		));
 	}
-	fclose($out);
+	fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.
 	exit;
 }
 

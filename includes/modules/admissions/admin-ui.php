@@ -163,7 +163,7 @@ if (!function_exists('vms_admission_export_csv')) {
 				$owner_vendor_name,
 			));
 		}
-		fclose($fh);
+		fclose($fh); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.
 
 		vms_admission_audit_log($event_plan_id, null, 'export_csv', get_current_user_id(), 'admin', array(
 			'row_count' => is_array($rows) ? count($rows) : 0,
