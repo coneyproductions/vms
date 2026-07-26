@@ -784,6 +784,7 @@ function vms_ticket_integrity_build_targets(array $args = array()): array
 				'update_post_term_cache' => false,
 				'cache_results' => false,
 				'lazy_load_term_meta' => false,
+				// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- Ticket Integrity scans require the canonical unfiltered event-plan dataset; query scope is bounded by published status, linked TEC event, the date window, and batch pagination.
 				'suppress_filters' => true,
 			)
 		);
