@@ -422,14 +422,15 @@
  		}
  
  		$secondary_type_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'secondary_vendor_type') ?: '_vms_secondary_vendor_type') : '_vms_secondary_vendor_type';
- 		$event_plan_ids = get_posts([
- 			'post_type' => 'vms_event_plan',
- 			'post_status' => 'any',
- 			'numberposts' => -1,
- 			'fields' => 'ids',
- 			'no_found_rows' => true,
- 			'suppress_filters' => true,
- 		]);
+		$event_plan_ids = get_posts([
+			'post_type' => 'vms_event_plan',
+			'post_status' => 'any',
+			'numberposts' => -1,
+			'fields' => 'ids',
+			'no_found_rows' => true,
+			// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- get_posts() already defaults suppress_filters to true; keep the explicit value to document this one-time canonical vendor-type migration across all event plans when normalizing legacy secondary vendor type meta.
+			'suppress_filters' => true,
+		]);
  
  		if (is_array($event_plan_ids)) {
  			foreach ($event_plan_ids as $event_plan_id) {
