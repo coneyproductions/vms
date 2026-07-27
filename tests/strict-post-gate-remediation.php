@@ -110,6 +110,7 @@ $seasonHelperSource = vms_test_extract_function($seasonSource, 'vms_sd_is_exact_
 $tasksHelperSource = vms_test_extract_function($tasksSource, 'vms_tasks_admin_is_exact_post_request');
 $portalHelperSource = vms_test_extract_function($portalSource, 'vms_staff_portal_is_exact_post_request');
 
+vms_test_assert(strpos($seasonSource, 'function vms_sd_query_arg(string $key): string') !== false, 'Season Dates should expose a dedicated read-only query helper.');
 vms_test_assert(substr_count($seasonSource, 'function vms_sd_is_exact_post_request(') === 1, 'Season Dates should define exactly one exact POST helper.');
 vms_test_assert(substr_count($tasksSource, 'function vms_tasks_admin_is_exact_post_request(') === 1, 'Staff Tasks should define exactly one exact POST helper.');
 vms_test_assert(substr_count($portalSource, 'function vms_staff_portal_is_exact_post_request(') === 1, 'Staff Portal should define exactly one exact POST helper.');
@@ -155,7 +156,7 @@ vms_test_assert_order(
 	array(
 		'if (!vms_sd_is_exact_post_request()) return;',
 		'if (empty($_POST[\'vms_season_dates_nonce\']) || empty($_POST[\'vms_action\'])) return;',
-		'$page_slug = isset($_GET[\'page\']) ? sanitize_key((string)$_GET[\'page\']) : \'\';',
+		'$page_slug = sanitize_key(vms_sd_query_arg(\'page\'));',
 		'$cap = apply_filters(\'vms_admin_capability\', \'manage_options\');',
 		'if (!current_user_can($cap)) return;',
 	),

@@ -16,6 +16,19 @@ if (!function_exists('vms_email_followups_admin_url')) {
 	}
 }
 
+if (!function_exists('vms_email_followups_query_arg')) {
+	function vms_email_followups_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Email Follow-Ups page state and redirect notices only affect admin display.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Email Follow-Ups query state is unslashed here and sanitized or allowlisted by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
 if (!function_exists('vms_email_followups_register_menu')) {
 	function vms_email_followups_register_menu(): void
 	{
@@ -43,7 +56,7 @@ add_filter('vms_admin_ui_shell_pages', 'vms_email_followups_register_shell_page'
 if (!function_exists('vms_email_followups_enqueue_admin_assets')) {
 	function vms_email_followups_enqueue_admin_assets(): void
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = sanitize_key(vms_email_followups_query_arg('page'));
 		if ($page !== vms_email_followups_admin_slug()) {
 			return;
 		}
@@ -67,7 +80,7 @@ add_action('admin_enqueue_scripts', 'vms_email_followups_enqueue_admin_assets', 
 if (!function_exists('vms_email_followups_current_tab')) {
 	function vms_email_followups_current_tab(): string
 	{
-		$tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'overview';
+		$tab = sanitize_key(vms_email_followups_query_arg('tab'));
 		$tabs = array('overview', 'templates', 'preview', 'logs');
 		return in_array($tab, $tabs, true) ? $tab : 'overview';
 	}
@@ -89,11 +102,11 @@ if (!function_exists('vms_email_followups_redirect_notice')) {
 if (!function_exists('vms_email_followups_render_notices')) {
 	function vms_email_followups_render_notices(): void
 	{
-		$notice = isset($_GET['vms_efu_notice']) ? sanitize_text_field(wp_unslash((string) $_GET['vms_efu_notice'])) : '';
+		$notice = sanitize_text_field(vms_email_followups_query_arg('vms_efu_notice'));
 		if ($notice === '') {
 			return;
 		}
-		$type = isset($_GET['vms_efu_notice_type']) ? sanitize_key((string) $_GET['vms_efu_notice_type']) : 'success';
+		$type = sanitize_key(vms_email_followups_query_arg('vms_efu_notice_type'));
 		if (!in_array($type, array('success', 'error', 'warning', 'info'), true)) {
 			$type = 'success';
 		}
@@ -315,7 +328,7 @@ if (!function_exists('vms_email_followups_selected_plan_id')) {
 	 */
 	function vms_email_followups_selected_plan_id(?array $event_choices = null): int
 	{
-		$raw = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
+		$raw = absint(vms_email_followups_query_arg('event_plan_id'));
 		if ($raw > 0) {
 			return $raw;
 		}
@@ -332,12 +345,12 @@ if (!function_exists('vms_email_followups_resolve_preview_state')) {
 	 */
 	function vms_email_followups_resolve_preview_state(): array
 	{
-		$selected_event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
+		$selected_event_plan_id = absint(vms_email_followups_query_arg('event_plan_id'));
 		$event_choices = function_exists('vms_email_followups_event_choices')
 			? vms_email_followups_event_choices(120, $selected_event_plan_id)
 			: vms_email_followups_upcoming_event_choices(80);
 		$event_plan_id = vms_email_followups_selected_plan_id($event_choices);
-		$email_key = isset($_GET['email_key']) ? sanitize_key((string) $_GET['email_key']) : 'know_before';
+		$email_key = sanitize_key(vms_email_followups_query_arg('email_key'));
 		$template_definitions = vms_email_followups_template_definitions();
 		if (!isset($template_definitions[$email_key])) {
 			$email_key = 'know_before';
@@ -458,7 +471,7 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 		echo '</article>';
 		echo '</section>';
 
-		$batch_token = isset($_GET['batch_token']) ? sanitize_key((string) $_GET['batch_token']) : '';
+		$batch_token = sanitize_key(vms_email_followups_query_arg('batch_token'));
 		$batch = $batch_token !== '' ? vms_email_followups_batch_get($batch_token) : array();
 		if (!empty($batch) && (int) ($batch['event_plan_id'] ?? 0) === $event_plan_id && sanitize_key((string) ($batch['email_key'] ?? '')) === $email_key) {
 			$remaining_count = count((array) ($batch['emails'] ?? array()));
@@ -551,8 +564,9 @@ if (!function_exists('vms_email_followups_save_settings_post')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		check_admin_referer('vms_email_followups_save_settings');
-		$input = isset($_POST['vms_email_followups']) && is_array($_POST['vms_email_followups']) ? (array) $_POST['vms_email_followups'] : array();
-		$tab = isset($_POST['tab']) ? sanitize_key((string) $_POST['tab']) : 'overview';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured settings arrays are fully sanitized by vms_email_followups_sanitize_settings().
+		$input = isset($_POST['vms_email_followups']) && is_array($_POST['vms_email_followups']) ? (array) wp_unslash($_POST['vms_email_followups']) : array();
+		$tab = isset($_POST['tab']) ? sanitize_key((string) wp_unslash($_POST['tab'])) : 'overview';
 		$input['_tab'] = $tab;
 		update_option(vms_email_followups_option_key(), vms_email_followups_sanitize_settings($input), false);
 		vms_email_followups_redirect_notice($tab, __('Email follow-up settings saved.', 'backstage-venue-manager'));
@@ -653,7 +667,9 @@ if (!function_exists('vms_email_followups_manual_send_post')) {
 			}
 			$recipient_emails = function_exists('vms_email_followups_normalize_recipient_emails') ? vms_email_followups_normalize_recipient_emails((array) ($batch['emails'] ?? array())) : array();
 		} elseif (!empty($_POST['recipient_selection_present'])) {
-			$selected = isset($_POST['selected_recipients']) && is_array($_POST['selected_recipients']) ? (array) wp_unslash($_POST['selected_recipients']) : array();
+			$selected = isset($_POST['selected_recipients']) && is_array($_POST['selected_recipients'])
+				? array_map('sanitize_email', (array) wp_unslash($_POST['selected_recipients']))
+				: array();
 			$recipient_emails = function_exists('vms_email_followups_normalize_recipient_emails') ? vms_email_followups_normalize_recipient_emails($selected) : array();
 			if (empty($recipient_emails)) {
 				vms_email_followups_redirect_notice('preview', __('No recipients were selected, so no emails were sent.', 'backstage-venue-manager'), 'warning', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key));

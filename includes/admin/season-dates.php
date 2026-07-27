@@ -64,6 +64,17 @@ function vms_sd_base_url(string $page_slug, int $venue_id): string
 	return remove_query_arg(['vms_notice', 'vms_error'], $url);
 }
 
+if (!function_exists('vms_sd_query_arg')) {
+	function vms_sd_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Season Dates query state only affects admin rendering and redirects.
+		if (!isset($_GET[$key])) return '';
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Season Dates query state is unslashed here and sanitized or cast by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
 function vms_sd_norm_mmdd(string $val): string
 {
 	$val = trim((string)$val);
@@ -194,6 +205,7 @@ function vms_sd_maybe_handle_post(): void
 	if (!function_exists('vms_sd_is_exact_post_request')) {
 		function vms_sd_is_exact_post_request(): bool
 		{
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Exact POST gate intentionally accepts only the literal REQUEST_METHOD value "POST".
 			$request_method = $_SERVER['REQUEST_METHOD'] ?? null;
 			if (!is_scalar($request_method)) {
 				return false;
@@ -206,7 +218,7 @@ function vms_sd_maybe_handle_post(): void
 	if (!vms_sd_is_exact_post_request()) return;
 	if (empty($_POST['vms_season_dates_nonce']) || empty($_POST['vms_action'])) return;
 
-	$page_slug = isset($_GET['page']) ? sanitize_key((string)$_GET['page']) : '';
+	$page_slug = sanitize_key(vms_sd_query_arg('page'));
 	if ($page_slug === '') return;
 	$cap = apply_filters('vms_admin_capability', 'manage_options');
 	if (!current_user_can($cap)) return;
@@ -535,13 +547,13 @@ function vms_render_season_dates_page(): void
 
 	vms_sd_require_engine();
 
-	$page_slug = isset($_GET['page']) ? sanitize_key((string)$_GET['page']) : '';
+	$page_slug = sanitize_key(vms_sd_query_arg('page'));
 	$base_url  = admin_url('admin.php?page=' . $page_slug);
 
 	$venue_ids = function_exists('vms_sch_get_all_venue_ids') ? vms_sch_get_all_venue_ids() : [];
 	$venue_ids = is_array($venue_ids) ? array_values(array_filter(array_map('absint', $venue_ids))) : [];
 
-	$selected_venue_id = isset($_REQUEST['venue_id']) ? absint($_REQUEST['venue_id']) : 0;
+	$selected_venue_id = absint(vms_sd_query_arg('venue_id'));
 	if ($selected_venue_id <= 0 && !empty($venue_ids)) {
 		$selected_venue_id = (int)$venue_ids[0];
 	}
@@ -605,8 +617,8 @@ function vms_render_season_dates_page(): void
 
 	$names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-	$notice = isset($_GET['vms_notice']) ? sanitize_key((string)$_GET['vms_notice']) : '';
-	$error  = isset($_GET['vms_error']) ? sanitize_key((string)$_GET['vms_error']) : '';
+	$notice = sanitize_key(vms_sd_query_arg('vms_notice'));
+	$error  = sanitize_key(vms_sd_query_arg('vms_error'));
 
 	echo '<div class="wrap vms-season-dates-admin">';
 	echo '<h1>' . esc_html__('Season Dates', 'backstage-venue-manager') . '</h1>';

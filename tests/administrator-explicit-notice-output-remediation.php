@@ -2529,6 +2529,7 @@ $passClaimsLoggedOutNotice = $renderPassClaimsNotices(
 $assert($passClaimsLoggedOutNotice === '', 'Pass Claims explicit notice callback should stay silent when no user is available for the stored-message family.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 0 && $GLOBALS['vms_test_transient_delete_calls'] === 0, 'Pass Claims stored-message rendering should not touch transients when no user is available.');
 
+$assert(strpos($emailFollowupsSource, 'function vms_email_followups_query_arg(string $key): string') !== false, 'Email Follow-Ups should expose a dedicated read-only query helper for page state.');
 $assert(strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void') !== false, 'Email Follow-Ups should preserve the dedicated primary redirect notice callback.');
 $emailNoticeStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void');
 $emailNoticeEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_tabs'))");
@@ -2558,19 +2559,19 @@ $emailPreviewTabStart = strpos($emailFollowupsSource, 'function vms_email_follow
 $emailPreviewTabEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_logs_tab'))");
 $assert($emailPreviewTabStart !== false && $emailPreviewTabEnd !== false && $emailPreviewTabEnd > $emailPreviewTabStart, 'Email Follow-Ups preview renderer body should be locatable.');
 $emailPreviewTabSource = substr($emailFollowupsSource, (int) $emailPreviewTabStart, (int) $emailPreviewTabEnd - (int) $emailPreviewTabStart);
-$assert(strpos($emailNoticeSource, 'sanitize_text_field(wp_unslash((string) $_GET[\'vms_efu_notice\']))') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice source.');
-$assert(strpos($emailNoticeSource, 'sanitize_key((string) $_GET[\'vms_efu_notice_type\'])') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice type source.');
+$assert(strpos($emailNoticeSource, 'sanitize_text_field(vms_email_followups_query_arg(\'vms_efu_notice\'))') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice source.');
+$assert(strpos($emailNoticeSource, 'sanitize_key(vms_email_followups_query_arg(\'vms_efu_notice_type\'))') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice type source.');
 $assert(strpos($emailNoticeSource, "array('success', 'error', 'warning', 'info')") !== false, 'Email Follow-Ups primary redirect notice callback should preserve the existing severity allowlist.');
 $assert(strpos($emailNoticeSource, '<div class="notice notice-') !== false && strpos($emailNoticeSource, 'is-dismissible') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the dismissible notice class family.');
 $assert(strpos($emailNoticeSource, 'esc_attr($type)') !== false && strpos($emailNoticeSource, 'esc_html($notice)') !== false, 'Email Follow-Ups primary redirect notice callback should preserve contextual escaping.');
 $assert(strpos($emailNoticeSource, '<strong>') === false && strpos($emailNoticeSource, '<a ') === false && strpos($emailNoticeSource, '<button') === false && strpos($emailNoticeSource, '<span') === false, 'Email Follow-Ups primary redirect notice callback should stay within the simple fragment contract.');
 $assert(strpos($emailNoticeSource, 'vms_email_followups_settings(') === false && strpos($emailNoticeSource, 'vms_email_followups_due_items(') === false && strpos($emailNoticeSource, 'vms_email_followups_mailpoet_status(') === false, 'Email Follow-Ups primary redirect notice callback should not resolve page providers or stored state.');
-$assert(strpos($emailSelectedPlanSource, 'isset($_GET[\'event_plan_id\']) ? absint($_GET[\'event_plan_id\']) : 0') !== false, 'Email Follow-Ups selected-plan helper should preserve the existing event plan input sanitation.');
+$assert(strpos($emailSelectedPlanSource, 'absint(vms_email_followups_query_arg(\'event_plan_id\'))') !== false, 'Email Follow-Ups selected-plan helper should preserve the existing event plan input sanitation.');
 $assert(strpos($emailSelectedPlanSource, 'vms_email_followups_event_choices(1)') !== false || strpos($emailSelectedPlanSource, 'vms_email_followups_upcoming_event_choices(1)') !== false, 'Email Follow-Ups selected-plan helper should preserve the original default-choice fallback path.');
-$assert(strpos($emailPreviewStateSource, 'isset($_GET[\'event_plan_id\']) ? absint($_GET[\'event_plan_id\']) : 0') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing event selection sanitation.');
+$assert(strpos($emailPreviewStateSource, 'absint(vms_email_followups_query_arg(\'event_plan_id\'))') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing event selection sanitation.');
 $assert(strpos($emailPreviewStateSource, 'vms_email_followups_event_choices(120, $selected_event_plan_id)') !== false, 'Email Follow-Ups preview-state resolver should preserve the full preview choice provider call.');
 $assert(strpos($emailPreviewStateSource, 'vms_email_followups_selected_plan_id($event_choices)') !== false, 'Email Follow-Ups preview-state resolver should derive the selected plan from the shared choice list.');
-$assert(strpos($emailPreviewStateSource, 'isset($_GET[\'email_key\']) ? sanitize_key((string) $_GET[\'email_key\']) : \'know_before\'') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing email-key sanitation.');
+$assert(strpos($emailPreviewStateSource, 'sanitize_key(vms_email_followups_query_arg(\'email_key\'))') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing email-key sanitation.');
 $assert(strpos($emailPreviewStateSource, 'vms_email_followups_template_definitions()') !== false, 'Email Follow-Ups preview-state resolver should preserve the template-definition provider.');
 $assert(strpos($emailPreviewStateSource, 'if (!isset($template_definitions[$email_key])) {') !== false, 'Email Follow-Ups preview-state resolver should preserve the unknown-template fallback.');
 $assert(strpos($emailPreviewWarningSource, 'if ($event_plan_id > 0) {') !== false, 'Email Follow-Ups preview warning helper should preserve the exact empty-state condition inverse.');
@@ -3131,6 +3132,8 @@ $assert(strpos($ticketIntegrityRenderedPage, 'State of the Range email failed to
 $assert(strpos($ticketIntegrityRenderedPage, 'Run Ticket Integrity Check Now') < strpos($ticketIntegrityRenderedPage, 'Monitor Settings'), 'Ticket Integrity shell output should preserve the original content ordering after the moved notice.');
 
 $assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_get_page_state(): array') !== false, 'Event Feedback should expose a dedicated page-state resolver for the selected Event Plan.');
+$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_query_arg(string $key): string') !== false, 'Event Feedback should expose a dedicated read-only query helper for page state.');
+$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_has_query_arg(string $key): bool') !== false, 'Event Feedback should expose a dedicated read-only query presence helper.');
 $assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(array $args = array()): void') !== false, 'Event Feedback should expose a dedicated explicit notice callback.');
 $assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_resolved_content(array $state, bool $render_missing_plan_notice = false): void') !== false, 'Event Feedback should expose a dedicated resolved-content renderer for the selected Event Plan state.');
 $assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_page_without_shell(): void') !== false, 'Event Feedback should expose a dedicated no-shell fallback renderer.');
@@ -3155,11 +3158,13 @@ $eventFeedbackPageStart = strpos($eventFeedbackSource, 'function vms_render_even
 $eventFeedbackPageEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_add_event_plan_metabox'))");
 $assert($eventFeedbackPageStart !== false && $eventFeedbackPageEnd !== false && $eventFeedbackPageEnd > $eventFeedbackPageStart, 'Event Feedback page renderer body should be locatable.');
 $eventFeedbackPageSource = substr($eventFeedbackSource, (int) $eventFeedbackPageStart, (int) $eventFeedbackPageEnd - (int) $eventFeedbackPageStart);
-$assert(strpos($eventFeedbackStateSource, 'isset($_GET[\'event_plan_id\']) ? absint($_GET[\'event_plan_id\']) : 0') !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan request normalization.');
+$assert(strpos($eventFeedbackStateSource, "vms_feedback_admin_has_query_arg('event_plan_id') ? wp_json_encode(vms_feedback_admin_query_arg('event_plan_id')) : 'missing'") !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan cache-key normalization.');
+$assert(strpos($eventFeedbackStateSource, 'absint(vms_feedback_admin_query_arg(\'event_plan_id\'))') !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan request normalization.');
 $assert(strpos($eventFeedbackStateSource, 'vms_feedback_get_event_context($selected_event_plan_id)') !== false, 'Event Feedback page-state resolver should preserve the existing Event Plan context lookup.');
 $assert(strpos($eventFeedbackStateSource, '\'show_missing_plan_notice\' => $show_missing_plan_notice') !== false, 'Event Feedback page-state resolver should preserve a dedicated missing-plan flag.');
-$assert(strpos($eventFeedbackNoticeSource, '!empty($_GET[\'vms_feedback_settings_saved\'])') !== false, 'Event Feedback explicit notice callback should preserve the existing saved-settings presence check.');
-$assert(strpos($eventFeedbackNoticeSource, 'sanitize_key((string) $_GET[\'vms_feedback_deleted\'])') !== false, 'Event Feedback explicit notice callback should preserve the sanitized delete-status source.');
+$assert(strpos($eventFeedbackNoticeSource, "vms_feedback_admin_query_arg('vms_feedback_settings_saved') !== ''") !== false, 'Event Feedback explicit notice callback should preserve the existing saved-settings presence check.');
+$assert(strpos($eventFeedbackNoticeSource, "vms_feedback_admin_has_query_arg('vms_feedback_deleted')") !== false, 'Event Feedback explicit notice callback should preserve the delete-status presence check.');
+$assert(strpos($eventFeedbackNoticeSource, 'sanitize_key(vms_feedback_admin_query_arg(\'vms_feedback_deleted\'))') !== false, 'Event Feedback explicit notice callback should preserve the sanitized delete-status source.');
 $assert(strpos($eventFeedbackNoticeSource, 'That Event Plan could not be found.') !== false, 'Event Feedback explicit notice callback should now own the missing-plan notice family.');
 $assert(strpos($eventFeedbackNoticeSource, 'include_missing_plan_notice') !== false, 'Event Feedback explicit notice callback should support including the missing-plan family without replacing the redirect notices.');
 $assert(substr_count($eventFeedbackNoticeSource, 'notice notice-success is-dismissible') === 2, 'Event Feedback explicit notice callback should preserve both success notice branches.');

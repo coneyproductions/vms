@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` now supersedes the stale `UNMAPPED=39` wording: the current packaged residual baseline is `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1843`, with the exact implementation roadmap now recorded as `WPORG-28R-G1` through `WPORG-28R-G17`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, and `WPORG-28R-G1` later removed the first `59` admin-module nonce/input blockers. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1784`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G2` through `WPORG-28R-G17`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -3342,6 +3342,79 @@ Date: 2026-07-26
 
 - No runtime, test, builder, release-metadata, or live-tree file changed in this slice.
 - No upload, submission, reviewer reply, push, tag, deployment, activation, deactivation, migration, or production change occurred.
+
+## WPORG-28R-G1 Result
+
+Date: 2026-07-27
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G1`
+- Starting mirror HEAD: `9d919a487b829015b64252f858e7bf54f96b84f1` (`Decompose remaining prereview blocker families`)
+- Starting parent: `fc2976605aa45f3417c610e91ba8600900f95270`
+- Authorized runtime scope: `includes/modules/staff-tasks/admin-ui.php`, `includes/modules/email-followups/admin-ui.php`, `includes/admin/event-feedback.php`, and `includes/admin/season-dates.php`
+- Authorized support scope used: `tests/strict-post-gate-remediation.php`, `tests/admin-request-method-wrapper-remediation.php`, `tests/administrator-explicit-notice-output-remediation.php`, `tests/authorization-boundary-hardening.php`, `docs/WPORG_PREREVIEW_REMEDIATION.md`, `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, and `docs/wporg-remediation-ledger.md`
+- Live-tree rule preserved: the sibling `../../vms/` tree remained read-only and unchanged throughout this child
+- Pre-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg1-pre.F3FPdk/build --force`
+- Pre-edit package result: `/tmp/wporg-28rg1-pre.F3FPdk/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `f035b9e43f8069b9eb4a7f2bfee935754d4408f16f15a3ae8896d7c0706b4ed5`
+- Pre-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 "$(which wp)" --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg1-pre.F3FPdk/extracted/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Packaged Plugin Check environment: PHP `8.5.3`, WP-CLI `2.12.0`, WordPress `7.0.1`, Plugin Check `2.0.0`, PHPCS `3.13.5`, WordPressCS `3.3.0`, and VIPWPCS `3.0.1`; the Homebrew `wp` phar's PHP `8.5` deprecation noise was normalized away by invoking `wp` through `php -d error_reporting=0 -d display_errors=0`
+- Pre-edit packaged Plugin Check result: exit `0`, `265` errors, `1707` warnings, `1972` total findings, `20` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1843`
+- Exact G1 ownership: `59` packaged rows (`WordPress.Security.NonceVerification.Recommended=38`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized=15`, `WordPress.Security.ValidatedSanitizedInput.MissingUnslash=6`) across the four authorized runtime files only
+
+### Exact Packaged Ownership
+
+- `includes/admin/event-feedback.php`: `40:17 Recommended`, `40:56 Recommended`, `125:52 Recommended`, `125:76 Recommended`, `125:76 InputNotSanitized`, `125:76 MissingUnslash`, `127:53 Recommended`, `134:35 Recommended`, `134:68 Recommended`, `165:15 Recommended`, `168:14 Recommended`, `169:37 Recommended`
+- `includes/admin/season-dates.php`: `197:22 InputNotSanitized`, `197:22 MissingUnslash`, `538:21 Recommended`, `538:59 Recommended`, `544:29 Recommended`, `544:61 Recommended`, `608:18 Recommended`, `608:62 Recommended`, `609:18 Recommended`, `609:61 Recommended`
+- `includes/modules/email-followups/admin-ui.php`: `46:17 Recommended`, `46:56 Recommended`, `70:16 Recommended`, `70:54 Recommended`, `92:19 Recommended`, `92:86 Recommended`, `96:17 Recommended`, `96:71 Recommended`, `318:16 Recommended`, `318:49 Recommended`, `335:35 Recommended`, `335:68 Recommended`, `340:22 Recommended`, `340:66 Recommended`, `461:24 Recommended`, `461:70 Recommended`, `554:102 InputNotSanitized`, `554:102 MissingUnslash`, `656:117 InputNotSanitized`
+- `includes/modules/staff-tasks/admin-ui.php`: `658:41 Recommended`, `663:23 Recommended`, `792:77 InputNotSanitized`, `876:63 InputNotSanitized`, `878:34 InputNotSanitized`, `880:77 InputNotSanitized`, `883:83 InputNotSanitized`, `1066:18 Recommended`, `1066:57 Recommended`, `1144:63 InputNotSanitized`, `1146:34 InputNotSanitized`, `1151:77 InputNotSanitized`, `1602:21 InputNotSanitized`, `1602:21 MissingUnslash`, `1637:50 InputNotSanitized`, `1787:33 InputNotSanitized`, `1787:33 MissingUnslash`, `1940:59 MissingUnslash`
+
+### Boundary Characterization
+
+- Email Follow-Ups and Event Feedback use `ADMIN_PAGE` read-only query-string state for page gating, tabs, selected event-plan context, preview context, cache keys, and redirect notices. Those reads remain capability-gated by the existing admin screen registration and were moved behind narrow unslashing helpers instead of adding inappropriate GET nonces.
+- Season Dates mixes `ADMIN_PAGE` display state (`page`, `venue_id`, `vms_notice`, `vms_error`) with existing state-changing administrator form handlers. The literal `REQUEST_METHOD === 'POST'` boundary must remain direct because `tests/strict-post-gate-remediation.php` and `tests/admin-request-method-wrapper-remediation.php` verify that exact POST gate contract.
+- Staff Tasks mixes read-only return-page and admin-page context with state-changing assignment, one-off task, checklist-template, and settings payloads. The return context stays allowlisted to known admin destinations; mutation handlers keep their existing nonce/capability boundaries while their scalar enums, due-date text, checklist order, offset text, and digest-time values are now normalized at the request edge.
+- Existing capability and nonce boundaries were preserved on every mutation path. No nonce was removed, no capability check was weakened, and no read-only admin filter or notice path was converted into a nonce-bearing state mutation.
+- Raw-value exceptions stayed narrow: the Email Follow-Ups structured settings array still flows to `vms_email_followups_sanitize_settings()` under a line-specific `InputNotSanitized` ignore, and the Season Dates / Staff Tasks exact POST helpers keep direct `REQUEST_METHOD` comparisons under line-specific `InputNotSanitized` + `MissingUnslash` ignores.
+- Outcome mix: direct correction handled the unslashing/sanitization/allowlisting changes; retained-boundary suppressions were limited to the new read-only request helpers, the two exact POST method gates, and the structured Email Follow-Ups settings-array handoff; no broader redesign or blocked `Outcome C` case was needed.
+
+### Runtime And Test Changes
+
+- Email Follow-Ups now centralizes read-only `$_GET` reads in `vms_email_followups_query_arg()`, keeps those reads unslashed and caller-sanitized, unslashes the structured settings payload before `vms_email_followups_sanitize_settings()`, unslashes the posted tab key, and sanitizes selected recipient emails before the existing normalization helper.
+- Event Feedback now centralizes read-only admin query state in `vms_feedback_admin_query_arg()` plus `vms_feedback_admin_has_query_arg()`, keeping page-state keys, selected plan IDs, and redirect notices unslashed while leaving sanitization and casting at the call sites.
+- Season Dates now uses `vms_sd_query_arg()` for read-only render-state inputs, while `vms_sd_maybe_handle_post()` retains the exact literal POST-method gate under an occurrence-specific suppression comment.
+- Staff Tasks now uses `vms_tasks_admin_request_arg()` for read-only redirect return context, keeps the page gate on the existing query helper, adds `sanitize_key()` before the custom enum sanitizers, normalizes due-date and offset text with `sanitize_text_field()`, unslashes `notify_digest_time`, and sanitizes checklist `priority_order` before integer casting.
+- `tests/strict-post-gate-remediation.php` now asserts that Season Dates exposes `vms_sd_query_arg()` and still normalizes its page slug through the read-only helper without weakening the exact POST gate contract.
+- `tests/authorization-boundary-hardening.php` now evaluates `vms_sd_query_arg()` before exercising `vms_sd_maybe_handle_post()`, keeping the pure-PHP authorization harness aligned with the extracted helper dependency.
+- `tests/administrator-explicit-notice-output-remediation.php` now asserts the new Email Follow-Ups and Event Feedback read-only helper boundaries while preserving the existing sanitized notice, selected-plan, cache-key, and delete-status contracts.
+- PHP syntax checks all passed: `php -l includes/modules/email-followups/admin-ui.php`, `php -l includes/admin/event-feedback.php`, `php -l includes/admin/season-dates.php`, and `php -l includes/modules/staff-tasks/admin-ui.php`.
+
+### Verification
+
+- Existing focused suites passed before and after the runtime edits: `php tests/strict-post-gate-remediation.php`, `php tests/admin-request-method-wrapper-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, and `php tests/authorization-boundary-hardening.php`
+- Required non-mutating regression gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg1-post.ZjwkDI/build --force --allow-dirty`
+- Post-edit package result: `/tmp/wporg-28rg1-post.ZjwkDI/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `7e5e34af6ee93beeb7ddc07849197211c58832057869b29608679f033240b5f5`
+- Post-edit packaged Plugin Check result: exit `0`, `265` errors, `1648` warnings, `1913` total findings, `20` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1784`
+- Exact G1 code deltas: `WordPress.Security.NonceVerification.Recommended 372 -> 334 (-38)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 134 -> 119 (-15)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 100 -> 94 (-6)`; every other rule-code count remained unchanged
+- Exact G1 row result: the `59` owned packaged rows listed above were removed exactly, no G1 row remained in the post-edit package, and no new G1 row appeared
+- Exact added-row audit: the only post-edit strict-json additions were same-file line shifts for deferred DB and accepted `OutputNotEscaped` rows at `includes/admin/event-feedback.php:242:13`, `:697:83`, `includes/admin/season-dates.php:741:142`, `includes/modules/staff-tasks/admin-ui.php:274:17`, `:275:4`, `:497:17`, `:1287:78`, `:1700:87`, `:1851:92`, and `:1964:86`; the matching removed rows were the same deferred families at their old line numbers
+- Deferred-family continuity: the same-file deferred DB counts in `includes/modules/staff-tasks/admin-ui.php`, `includes/admin/event-feedback.php`, and `includes/admin/season-dates.php` stayed exactly `5` rows (`DirectQuery=1`, `NoCaching=1`, `InterpolatedNotPrepared=1`, `slow_db_query_meta_key=2`), and the accepted packaged `WordPress.Security.EscapeOutput.OutputNotEscaped` total stayed exactly `127`
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G1`: DB/SQL `1082`, nonce/input `635`, date/time `25`, and logging `42`
+- `WPORG-28R-G1` is terminal under `verified`
+- `WPORG-28R` remains blocked until every remaining `G2` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain blocked or limited exactly as reflected in the ledger
+- Exact next implementation child: `WPORG-28R-G2 — Admin dashboard and secondary settings boundaries`
+
+### Non-Actions
+
+- No same-file DB/SQL remediation assigned to `G8` or `G13` was attempted.
+- No accepted `OutputNotEscaped` boundary was changed.
+- No sibling live-tree file, builder, manifest, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 
 ## WPORG-20A-S Result
 

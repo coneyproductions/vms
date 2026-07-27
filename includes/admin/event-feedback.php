@@ -37,7 +37,7 @@ if (!function_exists('vms_feedback_admin_enqueue_assets')) {
 	function vms_feedback_admin_enqueue_assets(string $hook): void
 	{
 		unset($hook);
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = sanitize_key(vms_feedback_admin_query_arg('page'));
 		if ($page !== 'vms-event-feedback') {
 			return;
 		}
@@ -55,6 +55,27 @@ if (!function_exists('vms_feedback_admin_redirect_url')) {
 			$args['event_plan_id'] = absint($event_plan_id);
 		}
 		return add_query_arg($args, admin_url('admin.php'));
+	}
+}
+
+if (!function_exists('vms_feedback_admin_query_arg')) {
+	function vms_feedback_admin_query_arg(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Event Feedback page state and redirect notices only affect admin display.
+		if (!isset($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Event Feedback page state is unslashed here and sanitized or cast by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
+if (!function_exists('vms_feedback_admin_has_query_arg')) {
+	function vms_feedback_admin_has_query_arg(string $key): bool
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presence-only check for read-only Event Feedback display state.
+		return array_key_exists($key, $_GET);
 	}
 }
 
@@ -122,16 +143,16 @@ if (!function_exists('vms_feedback_admin_get_page_state')) {
 		static $state = null;
 		static $cache_key = null;
 
-		$request_key = array_key_exists('event_plan_id', $_GET) ? wp_json_encode($_GET['event_plan_id']) : 'missing';
+		$request_key = vms_feedback_admin_has_query_arg('event_plan_id') ? wp_json_encode(vms_feedback_admin_query_arg('event_plan_id')) : 'missing';
 		if (!is_string($request_key)) {
-			$request_key = array_key_exists('event_plan_id', $_GET) ? 'non-scalar' : 'missing';
+			$request_key = vms_feedback_admin_has_query_arg('event_plan_id') ? 'non-scalar' : 'missing';
 		}
 
 		if (is_array($state) && $cache_key === $request_key) {
 			return $state;
 		}
 
-		$selected_event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
+		$selected_event_plan_id = absint(vms_feedback_admin_query_arg('event_plan_id'));
 		$context = array();
 		$show_missing_plan_notice = false;
 
@@ -162,11 +183,11 @@ if (!function_exists('vms_feedback_admin_render_notices')) {
 		$state = (isset($args['state']) && is_array($args['state'])) ? $args['state'] : null;
 
 		if ($include_redirect_notices) {
-			if (!empty($_GET['vms_feedback_settings_saved'])) {
+			if (vms_feedback_admin_query_arg('vms_feedback_settings_saved') !== '') {
 				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Event Feedback notification settings saved.', 'backstage-venue-manager') . '</p></div>';
 			}
-			if (isset($_GET['vms_feedback_deleted'])) {
-				$status = sanitize_key((string) $_GET['vms_feedback_deleted']);
+			if (vms_feedback_admin_has_query_arg('vms_feedback_deleted')) {
+				$status = sanitize_key(vms_feedback_admin_query_arg('vms_feedback_deleted'));
 				if ($status === '1') {
 					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Feedback response deleted.', 'backstage-venue-manager') . '</p></div>';
 				} elseif ($status === 'missing') {
