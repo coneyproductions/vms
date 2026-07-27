@@ -275,7 +275,10 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 
 	$actor_user_id = get_current_user_id();
 
-	$data = isset($_POST['vms_vul']) && is_array($_POST['vms_vul']) ? $_POST['vms_vul'] : array();
+		$data = (isset($_POST['vms_vul']) && is_array($_POST['vms_vul']))
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured vendor-user link payloads are unslashed here and normalized field-by-field below.
+			? (array) wp_unslash($_POST['vms_vul'])
+			: array();
 
 	// Update existing links
 	$posted_links = isset($data['links']) && is_array($data['links']) ? $data['links'] : array();

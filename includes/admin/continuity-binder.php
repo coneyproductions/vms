@@ -2,7 +2,8 @@
 defined('ABSPATH') || exit;
 
 function vms_continuity_binder_enqueue_assets($hook) {
-    $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder admin routing only controls asset loading for the current page.
+    $page = vms_request_read_key($_GET, 'page');
     if ($page !== 'vms-continuity-binder') {
         return;
     }
@@ -174,7 +175,8 @@ function vms_continuity_binder_render_nav($sections, $base_url) {
 }
 
 function vms_continuity_binder_render_updated_notice(): void {
-    if (!isset($_GET['updated']) || $_GET['updated'] !== '1') {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder notice state only affects admin feedback.
+    if (vms_request_read_scalar($_GET, 'updated') !== '1') {
         return;
     }
 
@@ -204,7 +206,8 @@ function vms_render_continuity_binder_page_content() {
     }
 
     $data      = vms_continuity_binder_get_data();
-    $is_edit   = isset($_GET['edit']) && $_GET['edit'] === '1';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder mode switching only affects the current admin view.
+    $is_edit   = (vms_request_read_scalar($_GET, 'edit') === '1');
     $is_saved  = !empty($data['updated_at']);
     $page_slug = 'vms-continuity-binder';
 
@@ -295,14 +298,17 @@ function vms_admin_post_save_continuity_binder() {
         wp_die(esc_html__('Invalid nonce.', 'backstage-venue-manager'));
     }
 
-    $incoming = isset($_POST['sections']) && is_array($_POST['sections']) ? $_POST['sections'] : array();
+    $incoming = (isset($_POST['sections']) && is_array($_POST['sections']))
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Binder section fields are unslashed once here and sanitized field-by-field below.
+        ? (array) wp_unslash($_POST['sections'])
+        : array();
 
     $defaults = vms_continuity_binder_default_data();
     $sections = array();
 
     foreach ($defaults['sections'] as $section_id => $section_def) {
-        $raw_title = isset($incoming[$section_id]['title']) ? wp_unslash($incoming[$section_id]['title']) : $section_def['title'];
-        $raw_body  = isset($incoming[$section_id]['content']) ? wp_unslash($incoming[$section_id]['content']) : $section_def['content'];
+        $raw_title = isset($incoming[$section_id]['title']) ? $incoming[$section_id]['title'] : $section_def['title'];
+        $raw_body  = isset($incoming[$section_id]['content']) ? $incoming[$section_id]['content'] : $section_def['content'];
 
         $sections[$section_id] = array(
             'title'   => sanitize_text_field((string) $raw_title),

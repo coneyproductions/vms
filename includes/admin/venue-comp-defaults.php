@@ -61,7 +61,8 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     $incoming = isset($_POST['vms_venue_comp_by_dow']) && is_array($_POST['vms_venue_comp_by_dow'])
-        ? (array) $_POST['vms_venue_comp_by_dow']
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured venue compensation defaults are unslashed here and normalized field-by-field below.
+        ? (array) wp_unslash($_POST['vms_venue_comp_by_dow'])
         : array();
 
     $out = array();
@@ -70,22 +71,22 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     for ($dow = 0; $dow <= 6; $dow++) {
         $row = isset($incoming[$dow]) && is_array($incoming[$dow]) ? $incoming[$dow] : array();
 
-        $structure = isset($row['structure']) ? sanitize_text_field(wp_unslash($row['structure'])) : '';
+        $structure = isset($row['structure']) ? sanitize_key((string) $row['structure']) : '';
         if (!in_array($structure, array('flat_fee', 'flat_fee_door_split', 'door_split'), true)) {
             $structure = 'flat_fee';
         }
 
         // Numbers: allow blank -> '' (meaning “no default provided”)
-        $flat  = isset($row['flat_fee_amount']) ? trim((string) wp_unslash($row['flat_fee_amount'])) : '';
-        $split = isset($row['door_split_percent']) ? trim((string) wp_unslash($row['door_split_percent'])) : '';
-        $comm  = isset($row['commission_percent']) ? trim((string) wp_unslash($row['commission_percent'])) : '';
+        $flat  = isset($row['flat_fee_amount']) ? trim((string) $row['flat_fee_amount']) : '';
+        $split = isset($row['door_split_percent']) ? trim((string) $row['door_split_percent']) : '';
+        $comm  = isset($row['commission_percent']) ? trim((string) $row['commission_percent']) : '';
 
         $flat_val  = ($flat === '') ? '' : (float) $flat;
         $split_val = ($split === '') ? '' : (float) $split;
         $comm_val  = ($comm === '') ? '' : (float) $comm;
 
         // Commission mode
-        $comm_mode = isset($row['commission_mode']) ? sanitize_text_field(wp_unslash($row['commission_mode'])) : 'artist_fee';
+        $comm_mode = isset($row['commission_mode']) ? sanitize_key((string) $row['commission_mode']) : 'artist_fee';
         if (!in_array($comm_mode, array('artist_fee', 'gross'), true)) {
             $comm_mode = 'artist_fee';
         }

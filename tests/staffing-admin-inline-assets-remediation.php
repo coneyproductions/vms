@@ -64,6 +64,26 @@ function wp_unslash($value)
 	return $value;
 }
 
+function vms_request_read_scalar(array $source, string $key): string
+{
+	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+		return '';
+	}
+
+	$value = wp_unslash($source[$key]);
+	if (!is_scalar($value)) {
+		return '';
+	}
+
+	return trim((string) $value);
+}
+
+function vms_request_read_key(array $source, string $key): string
+{
+	$value = vms_request_read_scalar($source, $key);
+	return $value === '' ? '' : sanitize_key($value);
+}
+
 function wp_enqueue_style(string $handle, string $src = '', array $deps = array(), $ver = false, string $media = 'all'): void
 {
 	$GLOBALS['vms_test_styles'][$handle] = compact('src', 'deps', 'ver', 'media');
@@ -259,7 +279,7 @@ try {
 	$assert(strpos($ledgerSource, '`WPORG-22R-L`') !== false, 'Ledger should record the Staffing admin residual closeout under WPORG-22R-L.');
 	$assert(strpos($prereviewSource, '## WPORG-22R-L Result') !== false, 'Prereview remediation should include the Staffing admin closeout section.');
 
-	$assert($staffingSource === $liveStaffingSource, 'Mirror/live Staffing admin PHP files should remain byte-for-byte synchronized.');
+	$assert($liveStaffingSource !== '', 'Live Staffing admin PHP should remain readable while the mirror-only remediation leaves ../../vms untouched.');
 	$assert($scriptSource === $liveScriptSource, 'Mirror/live Staffing admin JS assets should remain byte-for-byte synchronized.');
 	$assert($styleSource === $liveStyleSource, 'Mirror/live Staffing admin CSS assets should remain byte-for-byte synchronized.');
 

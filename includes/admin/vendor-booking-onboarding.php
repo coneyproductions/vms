@@ -93,24 +93,28 @@ if (!function_exists('vms_vendor_booking_onboarding_render_settings_panel')) {
 add_action('admin_post_vms_vendor_booking_onboarding_save_settings', 'vms_vendor_booking_onboarding_handle_save_settings');
 if (!function_exists('vms_vendor_booking_onboarding_handle_save_settings')) {
     function vms_vendor_booking_onboarding_handle_save_settings(): void
-    {
-        if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
-        }
-        check_admin_referer('vms_vendor_booking_onboarding_save_settings', 'vms_vendor_booking_onboarding_nonce');
+	    {
+	        if (!current_user_can('manage_options')) {
+	            wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
+	        }
+	        check_admin_referer('vms_vendor_booking_onboarding_save_settings', 'vms_vendor_booking_onboarding_nonce');
 
-        $settings = function_exists('vms_vendor_booking_onboarding_normalize_settings')
-            ? vms_vendor_booking_onboarding_normalize_settings(array(
-                'enabled' => !empty($_POST['enabled']),
-                'trigger_statuses' => isset($_POST['trigger_statuses']) ? (array) wp_unslash($_POST['trigger_statuses']) : array(),
-                'video_soft_requirement' => !empty($_POST['video_soft_requirement']),
-                'reminder_after_days' => isset($_POST['reminder_after_days']) ? (int) $_POST['reminder_after_days'] : 3,
-                'reminder_before_days' => isset($_POST['reminder_before_days']) ? (int) $_POST['reminder_before_days'] : 7,
-                'subject' => isset($_POST['subject']) ? (string) wp_unslash($_POST['subject']) : '',
-                'body' => isset($_POST['body']) ? (string) wp_unslash($_POST['body']) : '',
-                'promo_video_script' => isset($_POST['promo_video_script']) ? (string) wp_unslash($_POST['promo_video_script']) : '',
-            ))
-            : array();
+	        $settings = function_exists('vms_vendor_booking_onboarding_normalize_settings')
+	            ? vms_vendor_booking_onboarding_normalize_settings(array(
+	                'enabled' => !empty($_POST['enabled']),
+	                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured onboarding settings are normalized by vms_vendor_booking_onboarding_normalize_settings().
+	                'trigger_statuses' => isset($_POST['trigger_statuses']) ? (array) wp_unslash($_POST['trigger_statuses']) : array(),
+	                'video_soft_requirement' => !empty($_POST['video_soft_requirement']),
+	                'reminder_after_days' => isset($_POST['reminder_after_days']) ? (int) $_POST['reminder_after_days'] : 3,
+	                'reminder_before_days' => isset($_POST['reminder_before_days']) ? (int) $_POST['reminder_before_days'] : 7,
+	                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Subject text is normalized by vms_vendor_booking_onboarding_normalize_settings().
+	                'subject' => isset($_POST['subject']) ? (string) wp_unslash($_POST['subject']) : '',
+	                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Body text is normalized by vms_vendor_booking_onboarding_normalize_settings().
+	                'body' => isset($_POST['body']) ? (string) wp_unslash($_POST['body']) : '',
+	                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Script text is normalized by vms_vendor_booking_onboarding_normalize_settings().
+	                'promo_video_script' => isset($_POST['promo_video_script']) ? (string) wp_unslash($_POST['promo_video_script']) : '',
+	            ))
+	            : array();
 
         update_option(vms_vendor_booking_onboarding_settings_option_key(), $settings, false);
         if (function_exists('vms_add_admin_notice')) {

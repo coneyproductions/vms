@@ -13,9 +13,8 @@ if (!function_exists('vms_admin_reference_keys_map_enqueue_assets')) {
       return;
     }
 
-    $page = (isset($_GET['page']) && !is_array($_GET['page']))
-      ? sanitize_key(wp_unslash((string) $_GET['page']))
-      : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only reference-map routing only controls whether assets load for this admin page.
+    $page = vms_request_read_key($_GET, 'page');
     if ($page !== vms_admin_reference_keys_map_page_slug()) {
       return;
     }

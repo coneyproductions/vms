@@ -180,7 +180,8 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 }, 20, 3);
 
 add_action('admin_post_vms_create_staff_from_vendor', function (): void {
-	$vendor_id = isset($_GET['vendor_id']) ? absint((string) $_GET['vendor_id']) : 0;
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This admin-post action verifies a vendor-specific nonce immediately below before creating the staff record.
+	$vendor_id = vms_request_read_absint($_GET, 'vendor_id');
 	if ($vendor_id <= 0) {
 		wp_safe_redirect(admin_url('edit.php?post_type=vms_vendor'));
 		exit;

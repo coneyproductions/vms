@@ -214,7 +214,8 @@ if (!function_exists('vms_render_square_sync_protection_rows')) {
 if (!function_exists('vms_square_sync_protection_render_admin_notice')) {
     function vms_square_sync_protection_render_admin_notice(): void
     {
-        $notice = isset($_GET['vms_square_notice']) ? sanitize_key((string) $_GET['vms_square_notice']) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Square Sync notice state only affects admin feedback.
+        $notice = vms_request_read_key($_GET, 'vms_square_notice');
         if ($notice === 'scan_done') {
             echo '<div class="notice notice-info"><p>' . esc_html__('Square Sync Protection scan complete.', 'backstage-venue-manager') . '</p></div>';
         } elseif ($notice === 'repair_done') {

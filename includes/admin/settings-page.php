@@ -1752,7 +1752,8 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
 
 function vms_render_settings_page_notices(): void
 {
-  if (isset($_GET['vms_notice']) && (string) $_GET['vms_notice'] === 'default_venue_set') {
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only settings notice state only affects admin feedback.
+  if (vms_request_read_key($_GET, 'vms_notice') === 'default_venue_set') {
     echo '<div class="notice notice-success"><p>' . esc_html__('Default venue updated.', 'backstage-venue-manager') . '</p></div>';
   }
 }
@@ -2485,7 +2486,8 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   echo '<span class="description vms-ml-10">Creates missing pages and restores any that are trashed.</span>';
   echo '</p>';
 
-		if (isset($_GET['vms_entitlement_image_sync_done'])) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only settings notice state only affects admin feedback.
+			if (vms_request_read_scalar($_GET, 'vms_entitlement_image_sync_done') === '1') {
 			$img_sync = get_transient('vms_entitlement_image_sync_last');
 			if (is_array($img_sync)) {
 				$ts_readable = wp_date('Y-m-d H:i', (int) ($img_sync['ts'] ?? 0), wp_timezone());
@@ -2596,9 +2598,14 @@ function vms_get_settings_page_ticketing_stock_notice_state(bool $refresh = fals
     ? vms_ticketing_stock_preview_transient_key(get_current_user_id())
     : 'vms_ticketing_stock_preview_' . max(1, get_current_user_id());
 
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only ticketing-stock notice state only affects admin messaging.
+  $preview_done = (vms_request_read_scalar($_GET, 'vms_ticketing_stock_preview_done') === '1');
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only ticketing-stock notice state only affects admin messaging.
+  $commit_done = (vms_request_read_scalar($_GET, 'vms_ticketing_stock_commit_done') === '1');
+
   $state = array(
-    'preview_done' => isset($_GET['vms_ticketing_stock_preview_done']),
-    'commit_done' => isset($_GET['vms_ticketing_stock_commit_done']),
+    'preview_done' => $preview_done,
+    'commit_done' => $commit_done,
     'preview_report' => get_transient($preview_key),
     'commit_report' => false,
   );
@@ -2895,7 +2902,8 @@ function vms_get_settings_page_integrity_scan_result_context(bool $refresh = fal
     return $context;
   }
 
-  $scan_done_requested = isset($_GET['vms_scan_done']);
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity-scan notice state only affects admin messaging.
+  $scan_done_requested = (vms_request_read_scalar($_GET, 'vms_scan_done') === '1');
   $stored_result = $scan_done_requested ? get_transient('vms_integrity_scan_last') : false;
   $context = vms_build_settings_page_integrity_scan_result_context($stored_result, $scan_done_requested);
 

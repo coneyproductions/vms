@@ -189,7 +189,8 @@ function vms_handle_create_event_plan(): void
         wp_die('Insufficient permissions.');
     }
 
-    $ymd = isset($_GET['date']) ? sanitize_text_field((string) $_GET['date']) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The create-event-plan link verifies an action-specific nonce before any mutation occurs.
+    $ymd = vms_request_read_text_field($_GET, 'date');
     if (!$ymd) {
         wp_die('Missing date.');
     }
@@ -205,7 +206,7 @@ function vms_handle_create_event_plan(): void
     }
 
     // Prefer explicit venue_id from the calendar link; fallback to current selected venue.
-    $venue_id = isset($_GET['venue_id']) ? absint($_GET['venue_id']) : 0;
+    $venue_id = vms_request_read_absint($_GET, 'venue_id');
     if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
         $venue_id = (int) vms_get_current_venue_id();
     }
@@ -381,7 +382,11 @@ function vms_render_schedule_page_content(): void
         : '_vms_current_venue_id';
 
     // View + scope come from URL (view mode only; do NOT store as current venue).
-    $view = isset($_GET['view']) ? sanitize_text_field((string) $_GET['view']) : 'calendar';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule view selection only changes the current admin display mode.
+    $view = vms_request_read_text_field($_GET, 'view');
+    if ($view === '') {
+        $view = 'calendar';
+    }
     if ($view !== 'list' && $view !== 'calendar') {
         $view = 'calendar';
     }
@@ -390,7 +395,8 @@ function vms_render_schedule_page_content(): void
         ? (string) VMS_SCH_CURRENT_SCOPE_META_KEY
         : '_vms_schedule_scope';
 
-    $incoming_scope = isset($_GET['scope']) ? sanitize_key((string) $_GET['scope']) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule scope selection only affects this admin view and stored user preference state.
+    $incoming_scope = vms_request_read_key($_GET, 'scope');
     if ($incoming_scope !== 'venue' && $incoming_scope !== 'all') {
         $incoming_scope = '';
     }
@@ -410,10 +416,11 @@ function vms_render_schedule_page_content(): void
 
     // If URL explicitly specifies a venue_id, save it as the new numeric "current venue".
     // IMPORTANT: This never saves 'all'. All-venues is controlled by $scope only.
-    if (isset($_GET['venue_id'])) {
-        $venue_int = absint($_GET['venue_id']);
-        if (vms_sch_is_valid_venue_post_id((int) $venue_int)) {
-            update_user_meta($user_id, $sch_venue_meta_key, (string) $venue_int);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule venue selection only updates the viewer's own admin preference state.
+    $requested_venue_id = vms_request_read_absint($_GET, 'venue_id');
+    if ($requested_venue_id > 0) {
+        if (vms_sch_is_valid_venue_post_id($requested_venue_id)) {
+            update_user_meta($user_id, $sch_venue_meta_key, (string) $requested_venue_id);
         }
     }
 
@@ -470,8 +477,10 @@ function vms_render_schedule_page_content(): void
         $months_back = 12;
     }
 
-    if (isset($_GET['lb'])) {
-        $requested_lb = absint($_GET['lb']);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule lookback selection only updates the viewer's own admin preference state.
+    $requested_lb_raw = vms_request_read_scalar($_GET, 'lb');
+    if ($requested_lb_raw !== '') {
+        $requested_lb = absint($requested_lb_raw);
         if (in_array($requested_lb, array(0, 1, 12), true)) {
             $months_back = (int) $requested_lb;
             update_user_meta($user_id, $lb_key, (string) $months_back);
@@ -488,8 +497,10 @@ function vms_render_schedule_page_content(): void
         ? ((function_exists('vms_user_pref_get_include_drafts')) ? (bool) vms_user_pref_get_include_drafts((int) $user_id) : false)
         : true;
 
-    if (isset($_GET['include_drafts'])) {
-        $include_drafts = (absint($_GET['include_drafts']) === 1);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule visibility selection only updates the viewer's own admin preference state.
+    $include_drafts_raw = vms_request_read_scalar($_GET, 'include_drafts');
+    if ($include_drafts_raw !== '') {
+        $include_drafts = (absint($include_drafts_raw) === 1);
         if (function_exists('vms_user_pref_set_include_drafts')) {
             vms_user_pref_set_include_drafts((bool) $include_drafts, (int) $user_id);
         } else {
@@ -515,7 +526,11 @@ function vms_render_schedule_page_content(): void
     echo '<p>High-level view of dates, booked vendors, and event plan status.</p>';
 
     // Lookback control (mirrors vendor portal lookback selector)
-    $page_slug = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : 'vms-schedule';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule form routing only preserves the current admin page slug.
+    $page_slug = vms_request_read_key($_GET, 'page');
+    if ($page_slug === '') {
+        $page_slug = 'vms-schedule';
+    }
     echo '<form method="get" class="vms-sch-lookback vms-js-auto-submit-form">';
     echo '<input type="hidden" name="page" value="' . esc_attr($page_slug) . '">';
     echo '<input type="hidden" name="scope" value="' . esc_attr($scope) . '">';
@@ -792,8 +807,10 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
     $opts = (array) get_option('vms_settings', array());
     $hide_past_default = array_key_exists('sch_hide_past_default', $opts) ? (int) $opts['sch_hide_past_default'] : 1;
 
-    $show_past = isset($_GET['show_past']) ? (int) $_GET['show_past'] : 0;
-    $force_hide_past = isset($_GET['hide_past']) ? (int) $_GET['hide_past'] : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule filters only affect which dates are shown in the current admin view.
+    $show_past = vms_request_read_absint($_GET, 'show_past');
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule filters only affect which dates are shown in the current admin view.
+    $force_hide_past = vms_request_read_absint($_GET, 'hide_past');
 
     // show_past wins if both are present
     if ($show_past === 1) {

@@ -130,6 +130,98 @@ if (!function_exists('wp_unslash')) {
 	}
 }
 
+if (!function_exists('sanitize_textarea_field')) {
+	function sanitize_textarea_field($value): string
+	{
+		return sanitize_text_field($value);
+	}
+}
+
+if (!function_exists('sanitize_email')) {
+	function sanitize_email($value): string
+	{
+		return sanitize_text_field($value);
+	}
+}
+
+if (!function_exists('vms_request_read_scalar')) {
+	function vms_request_read_scalar(array $source, string $key): string
+	{
+		if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+			return '';
+		}
+
+		$value = wp_unslash($source[$key]);
+		return is_scalar($value) ? trim((string) $value) : '';
+	}
+}
+
+if (!function_exists('vms_request_read_text_field')) {
+	function vms_request_read_text_field(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_text_field($value);
+	}
+}
+
+if (!function_exists('vms_request_read_textarea_field')) {
+	function vms_request_read_textarea_field(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_textarea_field($value);
+	}
+}
+
+if (!function_exists('vms_request_read_email')) {
+	function vms_request_read_email(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_email($value);
+	}
+}
+
+if (!function_exists('vms_request_read_key')) {
+	function vms_request_read_key(array $source, string $key): string
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? '' : sanitize_key($value);
+	}
+}
+
+if (!function_exists('vms_request_read_absint')) {
+	function vms_request_read_absint(array $source, string $key): int
+	{
+		$value = vms_request_read_scalar($source, $key);
+		return $value === '' ? 0 : absint($value);
+	}
+}
+
+if (!function_exists('vms_request_read_bool_flag')) {
+	function vms_request_read_bool_flag(array $source, string $key): bool
+	{
+		if (!array_key_exists($key, $source)) {
+			return false;
+		}
+
+		$value = $source[$key];
+		if (is_array($value) || is_object($value)) {
+			return false;
+		}
+
+		$value = wp_unslash($value);
+		if (!is_scalar($value)) {
+			return false;
+		}
+
+		$value = strtolower(trim((string) $value));
+		if ($value === '') {
+			return false;
+		}
+
+		return !in_array($value, array('0', 'false', 'off', 'no'), true);
+	}
+}
+
 if (!function_exists('admin_url')) {
 	function admin_url(string $path = ''): string
 	{
@@ -1298,8 +1390,16 @@ $assert(strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_intro'
 $assert(strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_page_intro();') !== false && strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_page_sections();') !== false, 'Venue Reconciliation content callback should render the intro and ordinary page sections.');
 $assert(strpos($venueContentSource, 'vms_msg') === false && strpos($venueContentSource, 'vms_changed') === false, 'Venue Reconciliation content callback should no longer read the moved notice query parameters.');
 $assert(strpos($venueContentSource, 'Confirmation required.') === false && strpos($venueContentSource, 'Nothing selected.') === false && strpos($venueContentSource, 'Action complete.') === false, 'Venue Reconciliation content callback should no longer emit the moved rich notice family.');
-$assert(strpos($venueNoticeSource, "sanitize_key((string) \$_GET['vms_msg'])") !== false, 'Venue Reconciliation rich notice callback should preserve sanitize_key() normalization for vms_msg.');
-$assert(strpos($venueNoticeSource, "(int) \$_GET['vms_changed']") !== false, 'Venue Reconciliation rich notice callback should preserve integer normalization for vms_changed.');
+$assert(
+	strpos($venueNoticeSource, "sanitize_key((string) \$_GET['vms_msg'])") !== false
+	|| strpos($venueNoticeSource, "vms_request_read_key(\$_GET, 'vms_msg')") !== false,
+	'Venue Reconciliation rich notice callback should preserve sanitized message normalization for vms_msg.'
+);
+$assert(
+	strpos($venueNoticeSource, "(int) \$_GET['vms_changed']") !== false
+	|| strpos($venueNoticeSource, "vms_request_read_absint(\$_GET, 'vms_changed')") !== false,
+	'Venue Reconciliation rich notice callback should preserve integer normalization for vms_changed.'
+);
 $assert(strpos($venueNoticeSource, '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>') !== false, 'Venue Reconciliation rich notice callback should preserve the confirmation-required warning fragment.');
 $assert(strpos($venueNoticeSource, '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>') !== false, 'Venue Reconciliation rich notice callback should preserve the nothing-selected warning fragment.');
 $assert(strpos($venueNoticeSource, '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ') !== false, 'Venue Reconciliation rich notice callback should preserve the success fragment.');
@@ -1460,8 +1560,16 @@ $assert($calendarFallbackHeadingPos !== false && $calendarFallbackIntroPos !== f
 $assert(strpos($calendarContentSource, 'vms_render_integrity_calendar_reconcile_page_intro();') !== false && strpos($calendarContentSource, 'vms_render_integrity_calendar_reconcile_page_sections();') !== false, 'Calendar Reconciliation content callback should render the intro and ordinary page sections.');
 $assert(strpos($calendarContentSource, 'vms_msg') === false && strpos($calendarContentSource, 'vms_changed') === false, 'Calendar Reconciliation content callback should no longer read the moved notice query parameters.');
 $assert(strpos($calendarContentSource, 'Confirmation required.') === false && strpos($calendarContentSource, 'Nothing selected.') === false && strpos($calendarContentSource, 'Action complete.') === false, 'Calendar Reconciliation content callback should no longer emit the moved rich notice family.');
-$assert(strpos($calendarNoticeSource, "sanitize_key((string) \$_GET['vms_msg'])") !== false, 'Calendar Reconciliation rich notice callback should preserve sanitize_key() normalization for vms_msg.');
-$assert(strpos($calendarNoticeSource, "(int) \$_GET['vms_changed']") !== false, 'Calendar Reconciliation rich notice callback should preserve integer normalization for vms_changed.');
+$assert(
+	strpos($calendarNoticeSource, "sanitize_key((string) \$_GET['vms_msg'])") !== false
+	|| strpos($calendarNoticeSource, "vms_request_read_key(\$_GET, 'vms_msg')") !== false,
+	'Calendar Reconciliation rich notice callback should preserve sanitized message normalization for vms_msg.'
+);
+$assert(
+	strpos($calendarNoticeSource, "(int) \$_GET['vms_changed']") !== false
+	|| strpos($calendarNoticeSource, "vms_request_read_absint(\$_GET, 'vms_changed')") !== false,
+	'Calendar Reconciliation rich notice callback should preserve integer normalization for vms_changed.'
+);
 $assert(strpos($calendarNoticeSource, '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>') !== false, 'Calendar Reconciliation rich notice callback should preserve the confirmation-required warning fragment.');
 $assert(strpos($calendarNoticeSource, '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>') !== false, 'Calendar Reconciliation rich notice callback should preserve the nothing-selected warning fragment.');
 $assert(strpos($calendarNoticeSource, '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ') !== false, 'Calendar Reconciliation rich notice callback should preserve the success fragment.');
@@ -1626,7 +1734,11 @@ $assert(strpos($settingsContentSource, "get_transient('vms_ticketing_stock_recon
 $assert(strpos($settingsContentSource, 'vms_get_settings_page_ticketing_stock_notice_state()') !== false, 'Settings content callback should reuse the resolved ticketing stock notice state.');
 $assert(strpos($settingsContentSource, 'vms_settings_page_ticketing_stock_notice_placeholder()') !== false, 'Settings content callback should preserve the historical no-shell insertion point with a page-local placeholder.');
 $assert(strpos($settingsSource, "return '<!-- vms-settings-ticketing-stock-notice -->';") !== false, 'Settings should define a dedicated placeholder marker for fallback ticketing stock notice replacement.');
-$assert(strpos($settingsNoticeSource, "isset(\$_GET['vms_notice']) && (string) \$_GET['vms_notice'] === 'default_venue_set'") !== false, 'Settings explicit notice callback should preserve the exact raw redirect-status comparison.');
+$assert(
+	strpos($settingsNoticeSource, "isset(\$_GET['vms_notice']) && (string) \$_GET['vms_notice'] === 'default_venue_set'") !== false
+	|| strpos($settingsNoticeSource, "vms_request_read_key(\$_GET, 'vms_notice') === 'default_venue_set'") !== false,
+	'Settings explicit notice callback should preserve the default-venue redirect-status comparison.'
+);
 $assert(strpos($settingsNoticeSource, "<div class=\"notice notice-success\"><p>") !== false, 'Settings explicit notice callback should preserve the fixed simple notice fragment.');
 $assert(strpos($settingsNoticeSource, 'Default venue updated.') !== false, 'Settings explicit notice callback should preserve the fixed translated notice copy.');
 $assert(strpos($settingsNoticeSource, '<strong>') === false && strpos($settingsNoticeSource, '<a ') === false && strpos($settingsNoticeSource, '<button') === false && strpos($settingsNoticeSource, '<span') === false, 'Settings explicit notice callback should stay within the simple fragment contract.');
@@ -1634,7 +1746,17 @@ $assert(strpos($settingsNoticeSource, 'get_option(') === false && strpos($settin
 $assert(strpos($settingsNoticeSource, 'apply_filters(') === false && strpos($settingsNoticeSource, 'do_action(') === false && strpos($settingsNoticeSource, 'settings_errors(') === false && strpos($settingsNoticeSource, 'add_settings_error(') === false, 'Settings explicit notice callback should remain page-local and outside Settings API notice ownership.');
 $assert(strpos($settingsNoticeBarSource, 'vms_render_settings_page_notices();') !== false && strpos($settingsNoticeBarSource, 'vms_render_settings_page_ticketing_stock_notices(vms_get_settings_page_ticketing_stock_notice_state());') !== false, 'Settings composed notice bar should preserve the default-venue notice before the ticketing stock family.');
 $assert(strpos($settingsNoticeBarSource, 'get_transient(') === false && strpos($settingsNoticeBarSource, 'set_transient(') === false && strpos($settingsNoticeBarSource, 'delete_transient(') === false, 'Settings composed notice bar should not perform direct storage reads or mutations.');
-$assert(strpos($settingsStateSource, "isset(\$_GET['vms_ticketing_stock_preview_done'])") !== false && strpos($settingsStateSource, "isset(\$_GET['vms_ticketing_stock_commit_done'])") !== false, 'Settings ticketing stock notice-state resolver should preserve the raw query-flag vocabulary for preview and commit branches.');
+$assert(
+	(
+		strpos($settingsStateSource, "isset(\$_GET['vms_ticketing_stock_preview_done'])") !== false
+		&& strpos($settingsStateSource, "isset(\$_GET['vms_ticketing_stock_commit_done'])") !== false
+	)
+	|| (
+		strpos($settingsStateSource, "vms_request_read_scalar(\$_GET, 'vms_ticketing_stock_preview_done')") !== false
+		&& strpos($settingsStateSource, "vms_request_read_scalar(\$_GET, 'vms_ticketing_stock_commit_done')") !== false
+	),
+	'Settings ticketing stock notice-state resolver should preserve the preview and commit query-flag vocabulary.'
+);
 $assert(strpos($settingsStateSource, 'vms_ticketing_stock_preview_transient_key(get_current_user_id())') !== false && strpos($settingsStateSource, "get_transient('vms_ticketing_stock_reconcile_last')") !== false, 'Settings ticketing stock notice-state resolver should preserve the per-user preview transient lookup and the global commit transient lookup.');
 $assert(strpos($settingsStateSource, 'set_transient(') === false && strpos($settingsStateSource, 'delete_transient(') === false, 'Settings ticketing stock notice-state resolver should not mutate storage.');
 $assert(strpos($settingsTicketingNoticeSource, "esc_html(sprintf('Ticketing stock preview ready: checked=%d would_update=%d skipped=%d errors=%d'") !== false, 'Settings ticketing stock notice renderer should preserve the preview message template.');
@@ -1813,8 +1935,8 @@ $settingsPreviewEmptyFlagNotice = $renderSettingsTicketingStockNotices(
 	)
 );
 $assert(
-	$settingsPreviewEmptyFlagNotice === '<div class="notice notice-info"><p>Ticketing stock preview ready: checked=2 would_update=1 skipped=0 errors=0</p></div>',
-	'Settings ticketing stock preview notice should still render when the query flag is present but empty.'
+	$settingsPreviewEmptyFlagNotice === '',
+	'Settings ticketing stock preview notice should stay silent when the query flag is present but not equal to 1.'
 );
 
 $settingsPreviewMalformedFlagNotice = $renderSettingsTicketingStockNotices(
@@ -1831,8 +1953,8 @@ $settingsPreviewMalformedFlagNotice = $renderSettingsTicketingStockNotices(
 	)
 );
 $assert(
-	$settingsPreviewMalformedFlagNotice === '<div class="notice notice-info"><p>Ticketing stock preview ready: checked=4 would_update=3 skipped=2 errors=1</p></div>',
-	'Settings ticketing stock preview notice should still render when the query flag contains malformed HTML-like text because the branch remains presence-based.'
+	$settingsPreviewMalformedFlagNotice === '',
+	'Settings ticketing stock preview notice should stay silent when the query flag contains malformed HTML-like text instead of the exact 1 sentinel.'
 );
 
 $settingsPreviewMissingStateNotice = $renderSettingsTicketingStockNotices(
@@ -2096,7 +2218,11 @@ $contentStart = strpos($continuitySource, 'function vms_render_continuity_binder
 $contentEnd = strpos($continuitySource, 'function vms_admin_post_save_continuity_binder()');
 $assert($contentStart !== false && $contentEnd !== false && $contentEnd > $contentStart, 'Continuity Binder content callback body should be locatable.');
 $continuityContentSource = substr($continuitySource, (int) $contentStart, (int) $contentEnd - (int) $contentStart);
-$assert(strpos($updatedNoticeSource, '$_GET[\'updated\'] !== \'1\'') !== false, 'Continuity Binder explicit notice callback should preserve the existing exact display condition.');
+$assert(
+	strpos($updatedNoticeSource, '$_GET[\'updated\'] !== \'1\'') !== false
+	|| strpos($updatedNoticeSource, "vms_request_read_scalar(\$_GET, 'updated') !== '1'") !== false,
+	'Continuity Binder explicit notice callback should preserve the existing exact display condition.'
+);
 $assert(strpos($updatedNoticeSource, 'esc_html__(\'Binder updated.\'') !== false, 'Continuity Binder explicit notice callback should keep contextual escaping for notice text.');
 $assert(strpos($updatedNoticeSource, '<div class="notice notice-success is-dismissible"><p>') !== false, 'Continuity Binder explicit notice callback should keep the fixed simple notice fragment.');
 $assert(strpos($updatedNoticeSource, '<strong>') === false && strpos($updatedNoticeSource, '<a ') === false && strpos($updatedNoticeSource, '<button') === false, 'Continuity Binder explicit notice callback should not introduce richer markup.');
@@ -2190,7 +2316,11 @@ $squareContentStart = strpos($squareSyncProtectionSource, 'function vms_render_s
 $squareContentEnd = strpos($squareSyncProtectionSource, 'function vms_render_square_sync_protection_page(): void');
 $assert($squareContentStart !== false && $squareContentEnd !== false && $squareContentEnd > $squareContentStart, 'Square Sync Protection content callback body should be locatable.');
 $squareContentSource = substr($squareSyncProtectionSource, (int) $squareContentStart, (int) $squareContentEnd - (int) $squareContentStart);
-$assert(strpos($squareNoticeSource, 'sanitize_key((string) $_GET[\'vms_square_notice\'])') !== false, 'Square Sync Protection explicit notice callback should preserve the existing sanitized notice source.');
+$assert(
+	strpos($squareNoticeSource, 'sanitize_key((string) $_GET[\'vms_square_notice\'])') !== false
+	|| strpos($squareNoticeSource, "vms_request_read_key(\$_GET, 'vms_square_notice')") !== false,
+	'Square Sync Protection explicit notice callback should preserve the existing sanitized notice source.'
+);
 $assert(strpos($squareNoticeSource, 'scan_done') !== false && strpos($squareNoticeSource, 'repair_done') !== false, 'Square Sync Protection explicit notice callback should preserve the existing notice conditions.');
 $assert(strpos($squareNoticeSource, '<div class="notice notice-info"><p>') !== false, 'Square Sync Protection explicit notice callback should preserve the scan info notice fragment.');
 $assert(strpos($squareNoticeSource, '<div class="notice notice-success"><p>') !== false, 'Square Sync Protection explicit notice callback should preserve the repair success notice fragment.');

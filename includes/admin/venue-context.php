@@ -88,9 +88,11 @@ function vms_render_current_venue_selector(): void
         : '_vms_current_venue_id';
 
     // Prefer explicit venue_id in URL, else user meta.
-    $current = isset($_GET['venue_id'])
-        ? absint($_GET['venue_id'])
-        : absint(get_user_meta($user_id, $meta_key, true));
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue selection only determines the current admin view and stored user context.
+    $current = vms_request_read_absint($_GET, 'venue_id');
+    if ($current <= 0) {
+        $current = absint(get_user_meta($user_id, $meta_key, true));
+    }
 
     // Fallback to Default Venue if none selected yet.
     if ($current <= 0 && function_exists('vms_get_default_venue_id')) {
@@ -201,7 +203,7 @@ add_action('admin_post_vms_set_current_venue', function () {
 
     $redirect = vms_request_local_redirect(
         wp_get_referer() ?: admin_url('admin.php?page=vms-schedule'),
-        $_POST['redirect_to'] ?? ''
+        vms_request_read_scalar($_POST, 'redirect_to')
     );
 
     // Ensure redirect reflects the newly selected venue_id.
@@ -259,7 +261,7 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
 
     $redirect = vms_request_local_redirect(
         wp_get_referer() ?: admin_url('admin.php?page=vms-dashboard'),
-        $_POST['redirect_to'] ?? ''
+        vms_request_read_scalar($_POST, 'redirect_to')
     );
 
     wp_safe_redirect($redirect);

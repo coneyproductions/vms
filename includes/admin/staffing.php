@@ -265,6 +265,7 @@ if (!function_exists('vms_staffing_admin_save_role_term_meta')) {
 		}
 
 		$raw = isset($_POST['vms_staffing_role_meta']) && is_array($_POST['vms_staffing_role_meta'])
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured role-term meta is unslashed here and normalized by vms_staffing_role_meta_save().
 			? (array) wp_unslash($_POST['vms_staffing_role_meta'])
 			: null;
 		if (!is_array($raw)) return;
@@ -344,9 +345,8 @@ if (!function_exists('vms_staffing_admin_screen_is_role_target')) {
 if (!function_exists('vms_staffing_admin_is_templates_page')) {
 	function vms_staffing_admin_is_templates_page(): bool
 	{
-		$page = (isset($_GET['page']) && !is_array($_GET['page']))
-			? sanitize_key(wp_unslash((string) $_GET['page']))
-			: '';
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Staffing templates routing only controls whether admin assets load.
+			$page = vms_request_read_key($_GET, 'page');
 
 		return $page === 'vms-staffing-templates';
 	}

@@ -1941,11 +1941,11 @@ if (!function_exists('vms_vendor_command_center_handle_send_onboarding')) {
 
         check_admin_referer('vms_vendor_command_center_send_onboarding', 'vms_vendor_command_center_nonce');
 
-        $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
-        $to_email = isset($_POST['to_email']) ? sanitize_email((string) wp_unslash($_POST['to_email'])) : '';
-        $subject = isset($_POST['subject']) ? sanitize_text_field(vms_vendor_command_center_decode_human_text((string) wp_unslash($_POST['subject']))) : '';
-        $message = isset($_POST['message']) ? vms_vendor_command_center_decode_human_text((string) wp_unslash($_POST['message'])) : '';
-        $message_text = vms_vendor_command_center_prepare_plain_email_text($message);
+	        $vendor_id = vms_request_read_absint($_POST, 'vendor_id');
+	        $to_email = vms_request_read_email($_POST, 'to_email');
+	        $subject = sanitize_text_field(vms_vendor_command_center_decode_human_text(vms_request_read_scalar($_POST, 'subject')));
+	        $message = sanitize_textarea_field(vms_vendor_command_center_decode_human_text(vms_request_read_scalar($_POST, 'message')));
+	        $message_text = vms_vendor_command_center_prepare_plain_email_text($message);
 
         if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor')) {
             if (function_exists('vms_add_admin_notice')) {

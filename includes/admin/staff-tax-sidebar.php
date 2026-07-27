@@ -145,7 +145,8 @@ if (!function_exists('vms_staff_tax_clear_complete_url')) {
 }
 
 add_action('admin_post_vms_staff_tax_mark_complete', function (): void {
-    $staff_id = isset($_GET['staff_id']) ? (int) $_GET['staff_id'] : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This admin-post action verifies a staff-specific nonce immediately below before mutating staff tax state.
+    $staff_id = vms_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
     check_admin_referer('vms_staff_tax_mark_complete_' . $staff_id);
@@ -164,7 +165,8 @@ add_action('admin_post_vms_staff_tax_mark_complete', function (): void {
 });
 
 add_action('admin_post_vms_staff_tax_clear_complete', function (): void {
-    $staff_id = isset($_GET['staff_id']) ? (int) $_GET['staff_id'] : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This admin-post action verifies a staff-specific nonce immediately below before mutating staff tax state.
+    $staff_id = vms_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
     check_admin_referer('vms_staff_tax_clear_complete_' . $staff_id);
@@ -181,11 +183,12 @@ add_action('admin_post_vms_staff_tax_clear_complete', function (): void {
 });
 
 add_action('admin_notices', function (): void {
-    if (empty($_GET['vms_staff_tax_notice'])) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only staff tax notice state only affects admin feedback.
+    $notice = vms_request_read_key($_GET, 'vms_staff_tax_notice');
+    if ($notice === '') {
         return;
     }
 
-    $notice = sanitize_key((string) wp_unslash($_GET['vms_staff_tax_notice']));
     if ($notice === 'complete') {
         echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Staff tax profile marked complete.', 'backstage-venue-manager') . '</p></div>';
     } elseif ($notice === 'cleared') {
@@ -385,8 +388,9 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
         return;
     }
 
-    $flag = function (string $key): int {
-        return isset($_POST[$key]) ? 1 : 0;
+    $flag = static function (string $key): int {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save path verifies vms_staff_employee_packet_save before reading employee-packet flags.
+        return vms_request_read_bool_flag($_POST, $key) ? 1 : 0;
     };
 
     $w4 = $flag('vms_emp_w4');

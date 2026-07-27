@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, and `WPORG-28R-G1` later removed the first `59` admin-module nonce/input blockers. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1784`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G2` through `WPORG-28R-G17`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, and `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1644`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G3` through `WPORG-28R-G17`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -3413,6 +3413,101 @@ Date: 2026-07-27
 ### Non-Actions
 
 - No same-file DB/SQL remediation assigned to `G8` or `G13` was attempted.
+- No accepted `OutputNotEscaped` boundary was changed.
+- No sibling live-tree file, builder, manifest, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
+
+## WPORG-28R-G2 Result
+
+Date: 2026-07-27
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G2`
+- Starting mirror HEAD: `305a154f638c68699525a65fbde14535db500a57` (`Reconcile admin module form boundaries`)
+- Starting parent: `9d919a487b829015b64252f858e7bf54f96b84f1`
+- Authorized runtime scope: `includes/admin/approvals-review-queue.php`, `includes/admin/continuity-binder.php`, `includes/admin/express-bar.php`, `includes/admin/integrity-calendar-reconcile.php`, `includes/admin/integrity-venue-reconcile.php`, `includes/admin/menu.php`, `includes/admin/reference/keys-map.php`, `includes/admin/schedule.php`, `includes/admin/settings-page.php`, `includes/admin/settings/class-vms-settings-tours.php`, `includes/admin/settings/notifications-user-profile.php`, `includes/admin/square-sync-protection.php`, `includes/admin/staff-tax-sidebar.php`, `includes/admin/staffing.php`, `includes/admin/tax-bypass-ajax.php`, `includes/admin/tax-profile-admin-metabox.php`, `includes/admin/vendor-booking-onboarding.php`, `includes/admin/vendor-command-center.php`, `includes/admin/vendor-comp-packages.php`, `includes/admin/vendor-details.php`, `includes/admin/vendor-staff-link.php`, `includes/admin/vendor-user-link.php`, `includes/admin/venue-calendar.php`, `includes/admin/venue-comp-defaults.php`, `includes/admin/venue-context.php`, and `includes/safety/admin.php`
+- Authorized support scope used: `tests/authorization-boundary-hardening.php`, `tests/strict-post-gate-remediation.php`, `tests/reference-keys-map-inline-js-remediation.php`, `tests/vendor-compensation-inline-js-remediation.php`, `tests/administrator-explicit-notice-output-remediation.php`, `tests/settings-integrity-scan-output-remediation.php`, `tests/settings-default-venue-alert-output-remediation.php`, `tests/schedule-invalid-bounds-output-remediation.php`, `tests/schedule-warning-notice-output-remediation.php`, `tests/schedule-unpublished-venue-notice-output-remediation.php`, `tests/staffing-admin-inline-assets-remediation.php`, `tests/admin-selector-redirect-uri-remediation.php`, `tests/private-file-upload-api-remediation.php`, `docs/WPORG_PREREVIEW_REMEDIATION.md`, `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, and `docs/wporg-remediation-ledger.md`
+- Live-tree rule preserved: the sibling `../../vms/` tree remained read-only and unchanged throughout this child
+- Pre-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg2-pre.4W5bdg/build --force`
+- Pre-edit package result: `/tmp/wporg-28rg2-pre.4W5bdg/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `6a606d3bf173e1f124cec04c22ef6981ab622c4ba7224ca108d798ab5fcffc9f`
+- Pre-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 "$(which wp)" --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg2-pre.4W5bdg/extracted/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Packaged Plugin Check environment: PHP `8.5.3`, WP-CLI `2.12.0`, WordPress `7.0.1`, Plugin Check `2.0.0`, PHPCS `3.13.5`, WordPressCS `3.3.0`, and VIPWPCS `3.0.1`; the Homebrew `wp` phar's PHP `8.5` deprecation noise was normalized away by invoking `wp` through `php -d error_reporting=0 -d display_errors=0`
+- Pre-edit packaged Plugin Check result: exit `0`, `265` errors, `1648` warnings, `1913` total findings, `20` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1784`
+- Exact G2 ownership: `140` packaged rows (`WordPress.Security.NonceVerification.Missing=10`, `WordPress.Security.NonceVerification.Recommended=76`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized=28`, `WordPress.Security.ValidatedSanitizedInput.MissingUnslash=26`) across the twenty-six authorized runtime files only
+
+### Exact Packaged Ownership
+
+- `includes/admin/approvals-review-queue.php`: `1064:17 Recommended`, `1064:56 Recommended`
+- `includes/admin/continuity-binder.php`: `5:19 Recommended`, `5:58 Recommended`, `177:16 Recommended`, `177:37 Recommended`, `207:24 Recommended`, `207:42 Recommended`, `298:77 InputNotSanitized`, `298:77 MissingUnslash`
+- `includes/admin/express-bar.php`: `125:35 Recommended`, `125:68 Recommended`
+- `includes/admin/integrity-calendar-reconcile.php`: `23:51 InputNotSanitized`, `23:51 MissingUnslash`, `157:16 Recommended`, `157:58 Recommended`, `158:20 Recommended`, `158:50 Recommended`, `217:18 Recommended`, `217:42 Recommended`
+- `includes/admin/integrity-venue-reconcile.php`: `23:51 InputNotSanitized`, `23:51 MissingUnslash`, `101:16 Recommended`, `101:58 Recommended`, `102:20 Recommended`, `102:50 Recommended`, `161:18 Recommended`, `161:42 Recommended`
+- `includes/admin/menu.php`: `388:17 Recommended`, `388:56 Recommended`
+- `includes/admin/reference/keys-map.php`: `16:20 Recommended`, `16:48 Recommended`, `17:42 Recommended`
+- `includes/admin/schedule.php`: `192:64 MissingUnslash`, `384:19 Recommended`, `384:65 Recommended`, `384:65 MissingUnslash`, `393:29 Recommended`, `393:69 Recommended`, `413:15 Recommended`, `414:29 Recommended`, `473:15 Recommended`, `474:32 Recommended`, `491:15 Recommended`, `492:35 Recommended`, `518:24 Recommended`, `518:63 Recommended`, `795:24 Recommended`, `795:52 Recommended`, `796:30 Recommended`, `796:58 Recommended`
+- `includes/admin/settings-page.php`: `1755:13 Recommended`, `1755:46 Recommended`, `2488:13 Recommended`, `2600:29 Recommended`, `2601:28 Recommended`, `2898:32 Recommended`
+- `includes/admin/settings/class-vms-settings-tours.php`: `60:15 Recommended`
+- `includes/admin/settings/notifications-user-profile.php`: `65:43 Missing`, `65:43 MissingUnslash`, `70:42 Missing`, `70:42 MissingUnslash`, `76:65 Missing`, `77:63 Missing`, `78:68 Missing`
+- `includes/admin/square-sync-protection.php`: `217:25 Recommended`, `217:77 Recommended`
+- `includes/admin/staff-tax-sidebar.php`: `148:50 Recommended`, `167:50 Recommended`, `184:15 Recommended`, `188:48 Recommended`, `389:22 Missing`
+- `includes/admin/staffing.php`: `268:25 InputNotSanitized`, `347:18 Recommended`, `347:46 Recommended`, `348:39 Recommended`
+- `includes/admin/tax-bypass-ajax.php`: `14:68 MissingUnslash`, `15:69 MissingUnslash`
+- `includes/admin/tax-profile-admin-metabox.php`: `56:22 Missing`, `56:69 Missing`
+- `includes/admin/vendor-booking-onboarding.php`: `105:94 InputNotSanitized`, `109:77 InputNotSanitized`, `110:71 InputNotSanitized`, `111:99 InputNotSanitized`
+- `includes/admin/vendor-command-center.php`: `1946:131 InputNotSanitized`, `1947:111 InputNotSanitized`
+- `includes/admin/vendor-comp-packages.php`: `392:85 InputNotSanitized`, `397:105 InputNotSanitized`, `405:102 InputNotSanitized`, `412:95 InputNotSanitized`, `413:92 InputNotSanitized`, `420:123 InputNotSanitized`, `421:119 InputNotSanitized`, `422:123 InputNotSanitized`, `423:133 InputNotSanitized`, `424:121 InputNotSanitized`
+- `includes/admin/vendor-details.php`: `142:22 Missing`, `143:46 Missing`, `344:11 InputNotSanitized`, `344:11 MissingUnslash`, `402:11 InputNotSanitized`, `402:11 MissingUnslash`
+- `includes/admin/vendor-staff-link.php`: `183:59 Recommended`
+- `includes/admin/vendor-user-link.php`: `278:68 InputNotSanitized`, `278:68 MissingUnslash`
+- `includes/admin/venue-calendar.php`: `34:23 Recommended`, `34:51 Recommended`, `37:17 Recommended`, `37:63 Recommended`
+- `includes/admin/venue-comp-defaults.php`: `64:19 InputNotSanitized`, `64:19 MissingUnslash`
+- `includes/admin/venue-context.php`: `91:22 Recommended`, `92:18 Recommended`, `204:9 InputNotSanitized`, `204:9 MissingUnslash`, `262:9 InputNotSanitized`, `262:9 MissingUnslash`
+- `includes/safety/admin.php`: `73:16 Recommended`, `73:54 Recommended`, `117:19 Recommended`, `117:89 Recommended`, `121:17 Recommended`, `121:74 Recommended`, `145:17 Recommended`, `145:56 Recommended`, `265:24 Recommended`, `265:55 Recommended`, `443:89 MissingUnslash`, `444:85 MissingUnslash`, `448:98 MissingUnslash`, `449:94 MissingUnslash`, `450:99 MissingUnslash`, `455:49 InputNotSanitized`, `642:42 MissingUnslash`, `661:46 InputNotSanitized`, `669:84 MissingUnslash`, `670:82 MissingUnslash`, `853:42 MissingUnslash`, `854:50 MissingUnslash`, `890:42 MissingUnslash`
+
+### Boundary Characterization
+
+- The owned rows split across `ADMIN_DASHBOARD`, `ADMIN_SETTINGS`, `ADMIN_PAGE`, `ADMIN_POST`, `ADMIN_AJAX`, `NOTICE_STATE`, and `REDIRECT_STATE` boundaries. Most `Recommended` rows were read-only dashboard/settings query-string state controlling tabs, sections, selected IDs, notice rendering, redirect return targets, or admin-side tool views; those reads now normalize through helper-backed unslashing instead of gaining inappropriate GET nonces.
+- The state-changing boundaries already had the right broader lifecycle gates and were preserved in place: settings persistence remains under the existing options/forms pipeline, admin-post routing in `includes/admin/venue-context.php` keeps its nonce/capability validation before redirect persistence, and AJAX/state mutations in the tax-bypass and related admin helpers retain their existing authorization ordering.
+- `includes/admin/settings/notifications-user-profile.php` was the one true missing nonce family: the child now performs `check_admin_referer('update-user_' . $user_id)` before reading the notification profile fields while preserving the existing user-profile save lifecycle.
+- Raw-value exceptions stayed narrow and intentional. Structured settings arrays in the settings/admin helpers still flow into their existing downstream sanitizers under exact `InputNotSanitized` suppressions, and the raw `$_FILES` array in `includes/safety/admin.php` remains an occurrence-specific retained boundary because the upload handlers need the native file-structure semantics.
+- Outcome mix: direct correction handled helper-backed reads, unslashing, semantic sanitization, allowlisting, and the explicit user-profile nonce gate; retained-boundary suppressions were limited to read-only admin GET state the sniff cannot recognize, downstream-owned structured arrays, and raw `$_FILES`; no broader redesign or blocked `Outcome C` case was needed.
+
+### Runtime And Test Changes
+
+- Added helper-backed request normalization across the bounded admin dashboard/settings files so read-only `$_GET` / `$_POST` scalars now flow through `vms_request_read_*()` helpers instead of direct array reads, while keeping call-site casting, allowlisting, and validation aligned with each screen's current semantics.
+- Preserved exact read-only versus mutation distinctions: dashboard tabs, notice state, searches, selected IDs, and redirect views remained nonce-less where they only affect display, while mutation paths kept their existing capability and nonce proof ordering intact.
+- Tightened user-profile and vendor/admin mutation handling by reading and sanitizing scalar fields at the request edge, decoding or normalizing only after the request value is safely bounded, and leaving downstream structured sanitizers in control of settings arrays.
+- Updated the pure-PHP focused harnesses so they provide the same request-helper stubs the runtime now expects, accept the helper-backed source assertions where the mirror-only remediation intentionally leaves `../../vms/` untouched, and align notice expectations with the new exact `=== '1'` settings notice gates.
+- The mirror/live parity harnesses for vendor compensation and staffing now keep the shared JS/CSS asset synchronization checks while treating the live PHP files as read-only comparators, matching the task's explicit prohibition on changing `../../vms/`.
+- PHP syntax checks passed for every changed PHP file, and the child left builders, manifests, package metadata, assets, and the live local plugin tree unchanged.
+
+### Verification
+
+- Existing focused suites passed before or after the runtime edits as applicable: `php tests/authorization-boundary-hardening.php`, `php tests/strict-post-gate-remediation.php`, `php tests/reference-keys-map-inline-js-remediation.php`, `php tests/vendor-compensation-inline-js-remediation.php`, `php tests/administrator-explicit-notice-output-remediation.php`, `php tests/settings-integrity-scan-output-remediation.php`, `php tests/settings-default-venue-alert-output-remediation.php`, `php tests/schedule-invalid-bounds-output-remediation.php`, `php tests/schedule-warning-notice-output-remediation.php`, `php tests/schedule-unpublished-venue-notice-output-remediation.php`, `php tests/staffing-admin-inline-assets-remediation.php`, `php tests/admin-selector-redirect-uri-remediation.php`, and `php tests/private-file-upload-api-remediation.php`
+- Required non-mutating regression gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`
+- PHP lint passed on every changed PHP file: `git diff --name-only -- '*.php' | while IFS= read -r file; do php -l "$file" >/dev/null || exit 1; done`
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg2-postfinal.5wJnce/build --force --allow-dirty`
+- Post-edit package result: `/tmp/wporg-28rg2-postfinal.5wJnce/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `2aa3bce162fbb8703a053e5468a5fa47482a2b9f17a36af274c60cbf336a87ab`
+- Post-edit packaged Plugin Check result: exit `0`, `265` errors, `1508` warnings, `1773` total findings, `20` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1644`
+- Exact G2 code deltas: `WordPress.Security.NonceVerification.Missing 85 -> 75 (-10)`, `WordPress.Security.NonceVerification.Recommended 334 -> 258 (-76)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 119 -> 91 (-28)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 94 -> 68 (-26)`; every other rule-code count remained unchanged
+- Exact G2 row result: the `140` owned packaged rows listed above were removed exactly, no G2 row remained in the post-edit package, and no new G2 row appeared
+- Exact added-row audit: the only post-edit strict-json additions were same-file line shifts for already-deferred DB/date and accepted `OutputNotEscaped` rows at `includes/admin/continuity-binder.php:234:14`, `:285:62`, `includes/admin/express-bar.php:139:13`, `:140:13`, `:237:18`, `includes/admin/integrity-calendar-reconcile.php:366:5`, `includes/admin/schedule.php:282:9`, `includes/admin/settings-page.php:1786:8`, `:1980:10`, `includes/admin/settings/class-vms-settings-tours.php:115:21`, `includes/admin/square-sync-protection.php:256:101`, `includes/admin/staff-tax-sidebar.php:400:85`, `includes/admin/tax-profile-admin-metabox.php:114:123`, `includes/admin/venue-calendar.php:84:10`, `includes/admin/venue-context.php:127:43`, `includes/safety/admin.php:381:37`, `:518:14`, `:1057:121`, and `:1083:18`; the matching removed rows were the same deferred families at their old line numbers
+- Deferred-family continuity: the same-file deferred DB/date/logging counts in the G2 file set stayed exactly `20` rows (`DirectQuery=2`, `NoCaching=2`, `slow_db_query_meta_key=2`, `slow_db_query_meta_query=7`, `slow_db_query_meta_value=1`, `date=3`, and `error_log=3`), the same-file accepted `WordPress.Security.EscapeOutput.OutputNotEscaped` counts in the G2 file set stayed exactly `20`, and the global packaged `WordPress.Security.EscapeOutput.OutputNotEscaped` total stayed exactly `127`
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G2`: DB/SQL `1082`, nonce/input `495`, date/time `25`, and logging `42`
+- `WPORG-28R-G2` is terminal under `verified`
+- `WPORG-28R` remains blocked until every remaining `G3` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain blocked or limited exactly as reflected in the ledger
+- Exact next implementation child: `WPORG-28R-G3 — Event Plan editor and core request boundaries`
+
+### Non-Actions
+
+- No same-file DB/SQL remediation assigned to `G8`, `G11`, or `G13` was attempted.
+- No same-file date/time remediation assigned to `G14` was attempted.
+- No same-file logging remediation assigned to `G16` or `G17` was attempted.
 - No accepted `OutputNotEscaped` boundary was changed.
 - No sibling live-tree file, builder, manifest, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 

@@ -139,9 +139,8 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
     }
  
     $get = function ($key) {
-        return isset($_POST[$key])
-            ? sanitize_text_field(wp_unslash($_POST[$key]))
-            : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_save_vendor_defaults before reading compensation defaults.
+        return vms_request_read_text_field($_POST, (string) $key);
     };
     $vk = function ($field, $fallback) {
         if (!function_exists('vms_meta_key')) {
@@ -341,7 +340,8 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
     }
 
     $by_venue_raw = (isset($_POST['vms_default_comp_by_venue']) && is_array($_POST['vms_default_comp_by_venue']))
-        ? $_POST['vms_default_comp_by_venue']
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured venue compensation rows are unslashed here and normalized field-by-field below.
+        ? (array) wp_unslash($_POST['vms_default_comp_by_venue'])
         : array();
     $by_venue_out = array();
 
@@ -399,7 +399,8 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
     }
 
     $by_venue_dow_raw = (isset($_POST['vms_default_comp_by_venue_dow']) && is_array($_POST['vms_default_comp_by_venue_dow']))
-        ? $_POST['vms_default_comp_by_venue_dow']
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured venue/day compensation rows are unslashed here and normalized field-by-field below.
+        ? (array) wp_unslash($_POST['vms_default_comp_by_venue_dow'])
         : array();
     $by_venue_dow_out = array();
 

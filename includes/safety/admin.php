@@ -67,10 +67,14 @@ if (!function_exists('vms_safety_admin_tabs')) {
 }
 
 if (!function_exists('vms_safety_admin_current_tab')) {
-	function vms_safety_admin_current_tab(): string
-	{
-		$tabs = vms_safety_admin_tabs();
-		$tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'incidents';
+		function vms_safety_admin_current_tab(): string
+		{
+			$tabs = vms_safety_admin_tabs();
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Safety tab selection only controls the current admin view.
+			$tab = vms_request_read_key($_GET, 'tab');
+			if ($tab === '') {
+				$tab = 'incidents';
+		}
 		return isset($tabs[$tab]) ? $tab : 'incidents';
 	}
 }
@@ -114,11 +118,16 @@ if (!function_exists('vms_safety_admin_notice')) {
 if (!function_exists('vms_safety_render_notices')) {
 	function vms_safety_render_notices(): void
 	{
-		$notice = isset($_GET['vms_safety_notice']) ? sanitize_text_field(wp_unslash((string) $_GET['vms_safety_notice'])) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Safety notice state only affects admin feedback.
+		$notice = vms_request_read_text_field($_GET, 'vms_safety_notice');
 		if ($notice === '') {
 			return;
 		}
-		$type = isset($_GET['vms_safety_notice_type']) ? sanitize_key((string) $_GET['vms_safety_notice_type']) : 'success';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Safety notice state only affects admin feedback.
+		$type = vms_request_read_key($_GET, 'vms_safety_notice_type');
+		if ($type === '') {
+			$type = 'success';
+		}
 		$class = in_array($type, array('success', 'error', 'warning', 'info'), true) ? $type : 'success';
 		echo '<div class="notice notice-' . esc_attr($class) . ' is-dismissible"><p>' . esc_html($notice) . '</p></div>';
 	}
@@ -142,7 +151,8 @@ add_action('admin_menu', 'vms_safety_register_admin_menu', 44);
 if (!function_exists('vms_safety_enqueue_admin_assets')) {
 	function vms_safety_enqueue_admin_assets(): void
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Safety admin routing only controls whether assets load for this page.
+		$page = vms_request_read_key($_GET, 'page');
 		if ($page !== 'vms-safety') {
 			return;
 		}
@@ -262,7 +272,8 @@ if (!function_exists('vms_safety_incident_severity_options')) {
 if (!function_exists('vms_safety_render_incidents_tab')) {
 	function vms_safety_render_incidents_tab(): void
 	{
-		$incident_id = isset($_GET['incident_id']) ? absint($_GET['incident_id']) : 0;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only incident selection only changes which incident is displayed for editing.
+		$incident_id = vms_request_read_absint($_GET, 'incident_id');
 		$editing = $incident_id > 0 ? get_post($incident_id) : null;
 		if (!$editing instanceof WP_Post || $editing->post_type !== 'vms_incident') {
 			$editing = null;
@@ -429,8 +440,14 @@ if (!function_exists('vms_safety_handle_save_incident')) {
 		}
 
 		$incident_id = (int) $result;
-		$severity = isset($_POST['incident_severity']) ? sanitize_key((string) $_POST['incident_severity']) : 'low';
-		$status = isset($_POST['incident_status']) ? sanitize_key((string) $_POST['incident_status']) : 'draft';
+		$severity = vms_request_read_key($_POST, 'incident_severity');
+		if ($severity === '') {
+			$severity = 'low';
+		}
+		$status = vms_request_read_key($_POST, 'incident_status');
+		if ($status === '') {
+			$status = 'draft';
+		}
 		$valid_severity = array_keys(vms_safety_incident_severity_options());
 		$valid_status = array_keys(vms_safety_incident_status_options());
 		if (!in_array($severity, $valid_severity, true)) {
@@ -440,18 +457,19 @@ if (!function_exists('vms_safety_handle_save_incident')) {
 			$status = 'draft';
 		}
 
-		update_post_meta($incident_id, 'vms_incident_datetime', sanitize_text_field((string) ($_POST['incident_datetime'] ?? '')));
-		update_post_meta($incident_id, 'vms_incident_zone', sanitize_text_field((string) ($_POST['incident_zone'] ?? '')));
+		update_post_meta($incident_id, 'vms_incident_datetime', vms_request_read_text_field($_POST, 'incident_datetime'));
+		update_post_meta($incident_id, 'vms_incident_zone', vms_request_read_text_field($_POST, 'incident_zone'));
 		update_post_meta($incident_id, 'vms_incident_severity', $severity);
 		update_post_meta($incident_id, 'vms_incident_status', $status);
-		update_post_meta($incident_id, 'vms_incident_event_plan_id', absint($_POST['incident_event_plan_id'] ?? 0));
-		update_post_meta($incident_id, 'vms_incident_actions_taken', sanitize_textarea_field((string) ($_POST['incident_actions_taken'] ?? '')));
-		update_post_meta($incident_id, 'vms_incident_witnesses', sanitize_textarea_field((string) ($_POST['incident_witnesses'] ?? '')));
-		update_post_meta($incident_id, 'vms_incident_internal_notes', sanitize_textarea_field((string) ($_POST['incident_internal_notes'] ?? '')));
+		update_post_meta($incident_id, 'vms_incident_event_plan_id', vms_request_read_absint($_POST, 'incident_event_plan_id'));
+		update_post_meta($incident_id, 'vms_incident_actions_taken', vms_request_read_textarea_field($_POST, 'incident_actions_taken'));
+		update_post_meta($incident_id, 'vms_incident_witnesses', vms_request_read_textarea_field($_POST, 'incident_witnesses'));
+		update_post_meta($incident_id, 'vms_incident_internal_notes', vms_request_read_textarea_field($_POST, 'incident_internal_notes'));
 
 		$attachment_ids = get_post_meta($incident_id, 'vms_incident_attachments', true);
 		$attachment_ids = is_array($attachment_ids) ? $attachment_ids : array();
 		if (isset($_FILES['incident_attachments']) && is_array($_FILES['incident_attachments'])) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw upload arrays are normalized by vms_safety_normalize_multi_upload() before storage; unslashing is not appropriate for FILES data.
 			$uploads = vms_safety_normalize_multi_upload($_FILES['incident_attachments']);
 			foreach ($uploads as $upload) {
 				if ((int) ($upload['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
@@ -639,7 +657,7 @@ if (!function_exists('vms_safety_handle_save_doc')) {
 		}
 		check_admin_referer('vms_safety_save_doc');
 
-		$title = sanitize_text_field((string) ($_POST['doc_title'] ?? ''));
+		$title = vms_request_read_text_field($_POST, 'doc_title');
 		if ($title === '') {
 			vms_safety_admin_redirect(array('tab' => 'documents', 'vms_safety_notice' => rawurlencode(__('Document title is required.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
@@ -658,6 +676,7 @@ if (!function_exists('vms_safety_handle_save_doc')) {
 		}
 		$doc_id = (int) $doc_id;
 
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw upload arrays are handed to the private-file broker; FILES payloads are not unslashed and are validated downstream.
 		$file_id = vms_safety_store_private_upload($_FILES['doc_file'], array('related_post_type' => 'vms_doc', 'related_post_id' => $doc_id));
 		if (is_wp_error($file_id)) {
 			wp_delete_post($doc_id, true);
@@ -665,11 +684,11 @@ if (!function_exists('vms_safety_handle_save_doc')) {
 		}
 
 		update_post_meta($doc_id, 'vms_doc_private_file_id', (int) $file_id);
-		update_post_meta($doc_id, 'vms_doc_category', sanitize_key((string) ($_POST['doc_category'] ?? 'other')));
-		update_post_meta($doc_id, 'vms_doc_last_reviewed', sanitize_text_field((string) ($_POST['doc_last_reviewed'] ?? '')));
-		update_post_meta($doc_id, 'vms_doc_next_review', sanitize_text_field((string) ($_POST['doc_next_review'] ?? '')));
-		update_post_meta($doc_id, 'vms_doc_related_event_plan_id', absint($_POST['doc_related_event_plan_id'] ?? 0));
-		update_post_meta($doc_id, 'vms_doc_related_vendor_id', absint($_POST['doc_related_vendor_id'] ?? 0));
+		update_post_meta($doc_id, 'vms_doc_category', vms_request_read_key($_POST, 'doc_category') ?: 'other');
+		update_post_meta($doc_id, 'vms_doc_last_reviewed', vms_request_read_text_field($_POST, 'doc_last_reviewed'));
+		update_post_meta($doc_id, 'vms_doc_next_review', vms_request_read_text_field($_POST, 'doc_next_review'));
+		update_post_meta($doc_id, 'vms_doc_related_event_plan_id', vms_request_read_absint($_POST, 'doc_related_event_plan_id'));
+		update_post_meta($doc_id, 'vms_doc_related_vendor_id', vms_request_read_absint($_POST, 'doc_related_vendor_id'));
 		update_post_meta($doc_id, 'vms_doc_version_parent', absint($_POST['doc_version_parent'] ?? 0));
 
 		$version_parent = (int) get_post_meta($doc_id, 'vms_doc_version_parent', true);
@@ -850,8 +869,8 @@ if (!function_exists('vms_safety_handle_save_checklist_tpl')) {
 		}
 		check_admin_referer('vms_safety_save_checklist_tpl');
 
-		$title = sanitize_text_field((string) ($_POST['tpl_title'] ?? ''));
-		$items_raw = sanitize_textarea_field((string) ($_POST['tpl_items'] ?? ''));
+		$title = vms_request_read_text_field($_POST, 'tpl_title');
+		$items_raw = vms_request_read_textarea_field($_POST, 'tpl_items');
 		if ($title === '' || trim($items_raw) === '') {
 			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Template title and items are required.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}
@@ -869,8 +888,8 @@ if (!function_exists('vms_safety_handle_save_checklist_tpl')) {
 		$items = vms_safety_parse_checklist_lines($items_raw);
 		update_post_meta($tpl_id, 'vms_chk_tpl_title', $title);
 		update_post_meta($tpl_id, 'vms_chk_tpl_items', $items);
-		update_post_meta($tpl_id, 'vms_chk_tpl_applies_to', sanitize_key((string) ($_POST['tpl_applies_to'] ?? 'event')));
-		update_post_meta($tpl_id, 'vms_chk_tpl_autocreate_on_event_status', sanitize_key((string) ($_POST['tpl_autocreate_on_event_status'] ?? '')));
+		update_post_meta($tpl_id, 'vms_chk_tpl_applies_to', vms_request_read_key($_POST, 'tpl_applies_to') ?: 'event');
+		update_post_meta($tpl_id, 'vms_chk_tpl_autocreate_on_event_status', vms_request_read_key($_POST, 'tpl_autocreate_on_event_status'));
 
 		vms_safety_audit_log('checklist_created', array('template_id' => $tpl_id, 'type' => 'template'));
 		vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist template saved.', 'backstage-venue-manager'))));
@@ -886,8 +905,8 @@ if (!function_exists('vms_safety_handle_create_checklist')) {
 		}
 		check_admin_referer('vms_safety_create_checklist');
 
-		$template_id = absint($_POST['template_id'] ?? 0);
-		$title = sanitize_text_field((string) ($_POST['checklist_title'] ?? ''));
+		$template_id = vms_request_read_absint($_POST, 'template_id');
+		$title = vms_request_read_text_field($_POST, 'checklist_title');
 		if ($template_id <= 0 || $title === '') {
 			vms_safety_admin_redirect(array('tab' => 'checklists', 'vms_safety_notice' => rawurlencode(__('Checklist title and template are required.', 'backstage-venue-manager')), 'vms_safety_notice_type' => 'error'));
 		}

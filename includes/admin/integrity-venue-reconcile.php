@@ -19,9 +19,10 @@ function vms_handle_integrity_venue_links_action(): void
 
   check_admin_referer('vms_integrity_venue_links_action');
 
-  $action = isset($_POST['vms_action']) ? sanitize_key((string) $_POST['vms_action']) : '';
-  $plan_ids = isset($_POST['plan_ids']) ? (array) $_POST['plan_ids'] : array();
-  $plan_ids = array_values(array_filter(array_map('absint', $plan_ids)));
+  $action = vms_request_read_key($_POST, 'vms_action');
+  $plan_ids = (isset($_POST['plan_ids']) && is_array($_POST['plan_ids']))
+    ? array_values(array_filter(array_map('absint', (array) wp_unslash($_POST['plan_ids']))))
+    : array();
 
   // Safety: bound bulk operations.
   if (count($plan_ids) > 500) {
@@ -36,7 +37,7 @@ function vms_handle_integrity_venue_links_action(): void
   }
 
   // Step gate: require explicit confirm checkbox for any writes.
-  $confirmed = !empty($_POST['vms_confirm']);
+  $confirmed = vms_request_read_bool_flag($_POST, 'vms_confirm');
   if (!$confirmed) {
     wp_safe_redirect(add_query_arg(array('vms_msg' => 'confirm_required'), $redirect_base));
     exit;
@@ -98,8 +99,10 @@ function vms_handle_integrity_venue_links_action(): void
 
 function vms_render_integrity_venue_reconcile_notice(): void
 {
-  $msg = isset($_GET['vms_msg']) ? sanitize_key((string) $_GET['vms_msg']) : '';
-  $changed = isset($_GET['vms_changed']) ? (int) $_GET['vms_changed'] : 0;
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity notice state only affects admin messaging.
+  $msg = vms_request_read_key($_GET, 'vms_msg');
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity notice state only affects admin messaging.
+  $changed = vms_request_read_absint($_GET, 'vms_changed');
 
   if ($msg === 'confirm_required') {
     echo '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>';
@@ -158,7 +161,8 @@ function vms_render_integrity_venue_reconcile_page_content(): void
 
 function vms_render_integrity_venue_reconcile_page_sections(): void
 {
-  $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 500;
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity filters only bound the diagnostic result size.
+  $limit = vms_request_read_absint($_GET, 'limit');
   if ($limit < 1) $limit = 500;
   if ($limit > 5000) $limit = 5000;
 

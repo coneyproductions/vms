@@ -57,9 +57,10 @@ if (!class_exists('VMS_Settings_Tours')) {
 		public static function render_section_intro(): void
 		{
 			echo '<p>Controls for VMS guided tours and drift health surfacing.</p>';
-			if (!empty($_GET['vms_tours_reset'])) {
-				echo '<p><strong>' . esc_html__('Tour progress reset for current user.', 'backstage-venue-manager') . '</strong></p>';
-			}
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only guided-tour reset notice only affects admin feedback.
+				if (vms_request_read_scalar($_GET, 'vms_tours_reset') === '1') {
+					echo '<p><strong>' . esc_html__('Tour progress reset for current user.', 'backstage-venue-manager') . '</strong></p>';
+				}
 		}
 
 		public static function render_enabled_field(): void

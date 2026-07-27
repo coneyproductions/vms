@@ -53,7 +53,8 @@ add_action('save_post', function ($post_id, $post) {
     }
 
     $t = function ($key) {
-        return isset($_POST[$key]) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_tax_admin_save before reading tax-profile fields.
+        return vms_request_read_text_field($_POST, (string) $key);
     };
     $k = function ($field, $fallback) {
         if (!function_exists('vms_meta_key')) {

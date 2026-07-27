@@ -1061,7 +1061,8 @@ if (!function_exists('vms_approvals_queue_print_styles')) {
 			return;
 		}
 
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only approvals queue routing only affects admin display state.
+		$page = vms_request_read_key($_GET, 'page');
 		if ($page !== 'vms-approvals' && $page !== 'vms-dashboard' && $page !== 'vms-verifications') {
 			return;
 		}

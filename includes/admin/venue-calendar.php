@@ -31,10 +31,15 @@ function vms_render_admin_venue_calendar_page(): void
         'order'          => 'ASC',
     ]);
 
-    $venue_id = isset($_GET['venue_id']) ? absint($_GET['venue_id']) : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue-calendar filters only change which venue is displayed.
+    $venue_id = vms_request_read_absint($_GET, 'venue_id');
     if ($venue_id <= 0 && !empty($venues)) $venue_id = (int) $venues[0]->ID;
 
-    $ym = isset($_GET['ym']) ? sanitize_text_field(wp_unslash($_GET['ym'])) : gmdate('Y-m');
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue-calendar filters only change which month is displayed.
+    $ym = vms_request_read_text_field($_GET, 'ym');
+    if ($ym === '') {
+        $ym = gmdate('Y-m');
+    }
 
     $data = vms_get_event_plans_for_venue_month($venue_id, $ym);
     $month = $data['month'];

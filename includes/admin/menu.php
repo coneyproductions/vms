@@ -385,7 +385,8 @@ add_submenu_page(
 add_action('admin_head', function () {
   if (!is_admin()) return;
 
-  $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+  // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin-head routing only controls which styles/scripts render.
+  $page = vms_request_read_key($_GET, 'page');
   if ($page === '') return;
 
   $known = [

@@ -389,41 +389,50 @@ add_action('save_post_vms_comp_package', function ($post_id, $post) {
         return max($min, (int) floor((float) $value));
     };
 
-    $flat_fee = isset($_POST['vms_flat_fee']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_flat_fee'])) : '';
+    $flat_fee = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_flat_fee'));
 
-    $split_basis = isset($_POST['vms_split_basis']) ? sanitize_key((string) wp_unslash($_POST['vms_split_basis'])) : 'gross';
+    $split_basis = vms_request_read_key($_POST, 'vms_split_basis');
+    if ($split_basis === '') {
+        $split_basis = 'gross';
+    }
     if (!in_array($split_basis, array('gross', 'net'), true)) $split_basis = 'gross';
 
-    $split_pct_artist = isset($_POST['vms_split_percent_artist']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_split_percent_artist'])) : '';
+    $split_pct_artist = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_split_percent_artist'));
     if ($split_pct_artist !== '' && $split_pct_artist > 100) {
         $split_pct_artist = 100.0;
     }
 
-    $commission_mode = isset($_POST['vms_commission_mode']) ? sanitize_key((string) wp_unslash($_POST['vms_commission_mode'])) : 'none';
+    $commission_mode = vms_request_read_key($_POST, 'vms_commission_mode');
+    if ($commission_mode === '') {
+        $commission_mode = 'none';
+    }
     if (!in_array($commission_mode, array('none', 'add_on_top', 'deduct_from_artist'), true)) $commission_mode = 'none';
 
-    $commission_pct  = isset($_POST['vms_commission_percent']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_commission_percent'])) : '';
+    $commission_pct  = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_commission_percent'));
     if ($commission_pct !== '' && $commission_pct > 100) {
         $commission_pct = 100.0;
     }
-    $commission_base = isset($_POST['vms_commission_base']) ? sanitize_key((string) wp_unslash($_POST['vms_commission_base'])) : 'flat_fee';
+    $commission_base = vms_request_read_key($_POST, 'vms_commission_base');
+    if ($commission_base === '') {
+        $commission_base = 'flat_fee';
+    }
     if (!in_array($commission_base, array('flat_fee', 'gross', 'net'), true)) $commission_base = 'flat_fee';
 
-    $min_guarantee = isset($_POST['vms_min_guarantee']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_min_guarantee'])) : '';
-    $cap_amount    = isset($_POST['vms_cap_amount']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_cap_amount'])) : '';
+    $min_guarantee = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_min_guarantee'));
+    $cap_amount    = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_cap_amount'));
 
-    $attendance_bonus_mode = isset($_POST['vms_attendance_bonus_mode']) ? sanitize_key((string) wp_unslash($_POST['vms_attendance_bonus_mode'])) : '';
+    $attendance_bonus_mode = vms_request_read_key($_POST, 'vms_attendance_bonus_mode');
     if (!in_array($attendance_bonus_mode, array('step', 'continuous'), true)) {
         $attendance_bonus_mode = '';
     }
 
-    $attendance_bonus_start_count = isset($_POST['vms_attendance_bonus_start_count']) ? $parse_nonnegative_int(wp_unslash($_POST['vms_attendance_bonus_start_count'])) : '';
-    $attendance_bonus_step_size = isset($_POST['vms_attendance_bonus_step_size']) ? $parse_nonnegative_int(wp_unslash($_POST['vms_attendance_bonus_step_size']), 1) : '';
-    $attendance_bonus_step_bonus = isset($_POST['vms_attendance_bonus_step_bonus']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_attendance_bonus_step_bonus'])) : '';
-    $attendance_bonus_per_ticket_rate = isset($_POST['vms_attendance_bonus_per_ticket_rate']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_attendance_bonus_per_ticket_rate'])) : '';
-    $attendance_bonus_max_bonus = isset($_POST['vms_attendance_bonus_max_bonus']) ? $parse_nonnegative_float(wp_unslash($_POST['vms_attendance_bonus_max_bonus'])) : '';
+    $attendance_bonus_start_count = $parse_nonnegative_int(vms_request_read_scalar($_POST, 'vms_attendance_bonus_start_count'));
+    $attendance_bonus_step_size = $parse_nonnegative_int(vms_request_read_scalar($_POST, 'vms_attendance_bonus_step_size'), 1);
+    $attendance_bonus_step_bonus = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_attendance_bonus_step_bonus'));
+    $attendance_bonus_per_ticket_rate = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_attendance_bonus_per_ticket_rate'));
+    $attendance_bonus_max_bonus = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_attendance_bonus_max_bonus'));
 
-    $notes = isset($_POST['vms_notes']) ? sanitize_textarea_field(wp_unslash($_POST['vms_notes'])) : '';
+    $notes = vms_request_read_textarea_field($_POST, 'vms_notes');
 
     update_post_meta($post_id, '_vms_venue_id', $venue_id);
     update_post_meta($post_id, '_vms_comp_type', $type);

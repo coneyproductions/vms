@@ -145,6 +145,56 @@ if (!function_exists('absint')) {
     }
 }
 
+if (!function_exists('sanitize_textarea_field')) {
+    function sanitize_textarea_field($value): string
+    {
+        return sanitize_text_field($value);
+    }
+}
+
+if (!function_exists('sanitize_email')) {
+    function sanitize_email($value): string
+    {
+        return sanitize_text_field($value);
+    }
+}
+
+if (!function_exists('vms_request_read_scalar')) {
+    function vms_request_read_scalar(array $source, string $key): string
+    {
+        if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+            return '';
+        }
+
+        $value = wp_unslash($source[$key]);
+        return is_scalar($value) ? trim((string) $value) : '';
+    }
+}
+
+if (!function_exists('vms_request_read_text_field')) {
+    function vms_request_read_text_field(array $source, string $key): string
+    {
+        $value = vms_request_read_scalar($source, $key);
+        return $value === '' ? '' : sanitize_text_field($value);
+    }
+}
+
+if (!function_exists('vms_request_read_key')) {
+    function vms_request_read_key(array $source, string $key): string
+    {
+        $value = vms_request_read_scalar($source, $key);
+        return $value === '' ? '' : sanitize_key($value);
+    }
+}
+
+if (!function_exists('vms_request_read_absint')) {
+    function vms_request_read_absint(array $source, string $key): int
+    {
+        $value = vms_request_read_scalar($source, $key);
+        return $value === '' ? 0 : absint($value);
+    }
+}
+
 if (!function_exists('current_user_can')) {
     function current_user_can(string $capability, ...$args): bool
     {

@@ -161,7 +161,11 @@ foreach (
 ) {
     vms_test_admin_selector_redirect_assert_contains("current_user_can('manage_options')", $source, $label . ' should preserve the capability check.');
     vms_test_admin_selector_redirect_assert_contains('wp_verify_nonce($nonce, \'vms_set_current_venue\')', $source, $label . ' should preserve the schedule nonce check.');
-    vms_test_admin_selector_redirect_assert_contains("\$_POST['redirect_to'] ?? ''", $source, $label . ' should continue reading submitted redirect_to.');
+    vms_test_admin_selector_redirect_assert(
+        strpos($source, "\$_POST['redirect_to'] ?? ''") !== false
+        || strpos($source, "vms_request_read_scalar(\$_POST, 'redirect_to')") !== false,
+        $label . ' should continue reading submitted redirect_to through the validated local redirect path.'
+    );
     vms_test_admin_selector_redirect_assert_contains('vms_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
     vms_test_admin_selector_redirect_assert_contains("wp_get_referer() ?: admin_url('admin.php?page=vms-schedule')", $source, $label . ' should preserve the schedule POST fallback.');
     vms_test_admin_selector_redirect_assert_contains("add_query_arg('venue_id', (string) \$venue_id, \$redirect)", $source, $label . ' should preserve schedule venue_id addition.');
@@ -177,7 +181,11 @@ foreach (
 ) {
     vms_test_admin_selector_redirect_assert_contains("current_user_can('manage_options')", $source, $label . ' should preserve the capability check.');
     vms_test_admin_selector_redirect_assert_contains('wp_verify_nonce($nonce, \'vms_set_dashboard_venue\')', $source, $label . ' should preserve the dashboard nonce check.');
-    vms_test_admin_selector_redirect_assert_contains("\$_POST['redirect_to'] ?? ''", $source, $label . ' should continue reading submitted redirect_to.');
+    vms_test_admin_selector_redirect_assert(
+        strpos($source, "\$_POST['redirect_to'] ?? ''") !== false
+        || strpos($source, "vms_request_read_scalar(\$_POST, 'redirect_to')") !== false,
+        $label . ' should continue reading submitted redirect_to through the validated local redirect path.'
+    );
     vms_test_admin_selector_redirect_assert_contains('vms_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
     vms_test_admin_selector_redirect_assert_contains("wp_get_referer() ?: admin_url('admin.php?page=vms-dashboard')", $source, $label . ' should preserve the dashboard POST fallback.');
     vms_test_admin_selector_redirect_assert_contains('wp_safe_redirect($redirect);', $source, $label . ' should preserve the safe redirect sink.');
