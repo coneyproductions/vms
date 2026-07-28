@@ -1341,6 +1341,46 @@ if (!function_exists('vms_event_plan_review_render_status_note')) {
 }
 add_action('manage_vms_event_plan_posts_custom_column', 'vms_event_plan_review_render_status_note', 20, 2);
 
+if (!function_exists('vms_event_plan_review_post_data')) {
+    function vms_event_plan_review_post_data(): array
+    {
+        static $request = null;
+        if (is_array($request)) {
+            return $request;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Review fallback inspects editor POST only to read the action after local nonce verification.
+        $request = (isset($_POST) && is_array($_POST)) ? wp_unslash($_POST) : array();
+        return is_array($request) ? $request : array();
+    }
+}
+
+if (!function_exists('vms_event_plan_review_editor_action')) {
+    function vms_event_plan_review_editor_action(): string
+    {
+        if (function_exists('vms_event_plan_editor_verified_post_data')) {
+            $request = vms_event_plan_editor_verified_post_data();
+            return isset($request['vms_event_plan_action']) ? sanitize_key((string) $request['vms_event_plan_action']) : '';
+        }
+
+        $request = vms_event_plan_review_post_data();
+        if (!isset($request['vms_event_plan_details_nonce']) || is_array($request['vms_event_plan_details_nonce'])) {
+            return '';
+        }
+
+        $nonce = sanitize_text_field((string) $request['vms_event_plan_details_nonce']);
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+            return '';
+        }
+
+        if (!isset($request['vms_event_plan_action']) || is_array($request['vms_event_plan_action'])) {
+            return '';
+        }
+
+        return sanitize_key((string) $request['vms_event_plan_action']);
+    }
+}
+
 if (!function_exists('vms_event_plan_review_after_save')) {
     function vms_event_plan_review_after_save(int $post_id, WP_Post $post): void
     {
@@ -1354,7 +1394,7 @@ if (!function_exists('vms_event_plan_review_after_save')) {
             return;
         }
 
-        $action = isset($_POST['vms_event_plan_action']) ? sanitize_key((string) wp_unslash($_POST['vms_event_plan_action'])) : '';
+        $action = vms_event_plan_review_editor_action();
         if ($action === 'publish_now') {
             vms_event_plan_review_mark_published($post_id, 'event_plan_editor');
             return;

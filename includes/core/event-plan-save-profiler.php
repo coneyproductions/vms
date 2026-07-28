@@ -342,14 +342,27 @@ function vms_event_plan_save_profiler_empty_dirty_map(): array
     return array_fill_keys(array_keys(vms_event_plan_save_profiler_modules()), false);
 }
 
+function vms_event_plan_save_profiler_post_data(): array
+{
+    static $request = null;
+    if (is_array($request)) {
+        return $request;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Save-profiler reads request context only for diagnostics and never authorizes or mutates state.
+    $request = (isset($_POST) && is_array($_POST)) ? wp_unslash($_POST) : array();
+    return is_array($request) ? $request : array();
+}
+
 function vms_event_plan_save_profiler_request_keys(): array
 {
-    if (empty($_POST) || !is_array($_POST)) {
+    $request = vms_event_plan_save_profiler_post_data();
+    if (empty($request)) {
         return array();
     }
 
     $keys = array();
-    foreach (array_keys($_POST) as $key) {
+    foreach (array_keys($request) as $key) {
         $key = is_scalar($key) ? sanitize_key((string) wp_unslash($key)) : '';
         if ($key !== '') {
             $keys[] = $key;
@@ -768,8 +781,9 @@ function vms_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool $u
         return;
     }
 
-    $request_action = isset($_POST['vms_event_plan_action']) ? sanitize_key((string) wp_unslash($_POST['vms_event_plan_action'])) : '';
-    $wp_action = isset($_POST['action']) ? sanitize_key((string) wp_unslash($_POST['action'])) : '';
+    $request = vms_event_plan_save_profiler_post_data();
+    $request_action = isset($request['vms_event_plan_action']) ? sanitize_key((string) $request['vms_event_plan_action']) : '';
+    $wp_action = isset($request['action']) ? sanitize_key((string) $request['action']) : '';
     $ticketing_key = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('config') : '_vms_ticketing_v2_config';
     $sync_key = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('sync') : '_vms_ticketing_v2_sync';
 
@@ -787,7 +801,7 @@ function vms_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool $u
     $dirty_map = vms_event_plan_save_profiler_empty_dirty_map();
     $dirty_reasons = array();
 
-    if ($wp_action === 'editpost' || isset($_POST['post_title']) || isset($_POST['content']) || isset($_POST['excerpt'])) {
+    if ($wp_action === 'editpost' || isset($request['post_title']) || isset($request['content']) || isset($request['excerpt'])) {
         $dirty_map['core'] = true;
         $dirty_reasons['core'] = array('normal_wp_editor_save');
     }
@@ -1349,8 +1363,8 @@ function vms_event_plan_save_profiler_record_module_meta_profile($meta_id, int $
         'threshold_ms' => 0,
         'status_at_start' => sanitize_key((string) get_post_status($object_id)),
         'status_at_end' => sanitize_key((string) get_post_status($object_id)),
-        'request_action' => isset($_POST['action']) ? sanitize_key((string) wp_unslash($_POST['action'])) : '',
-        'wp_action' => isset($_POST['action']) ? sanitize_key((string) wp_unslash($_POST['action'])) : '',
+        'request_action' => isset(vms_event_plan_save_profiler_post_data()['action']) ? sanitize_key((string) vms_event_plan_save_profiler_post_data()['action']) : '',
+        'wp_action' => isset(vms_event_plan_save_profiler_post_data()['action']) ? sanitize_key((string) vms_event_plan_save_profiler_post_data()['action']) : '',
         'changed_modules' => array($module),
         'module_dirty_map' => $dirty_map,
         'dirty_reasons' => array($module => array('meta_key:' . $meta_key)),

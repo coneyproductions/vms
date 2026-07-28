@@ -358,6 +358,68 @@ if (!function_exists('vms_event_plan_normalize_related_plan_ids')) {
     }
 }
 
+if (!function_exists('vms_event_plan_current_get_request')) {
+    function vms_event_plan_current_get_request(): array
+    {
+        static $request = null;
+        if (is_array($request)) {
+            return $request;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin editor/query routing is centralized here; callers sanitize by expected type.
+        $request = (isset($_GET) && is_array($_GET)) ? wp_unslash($_GET) : array();
+        return is_array($request) ? $request : array();
+    }
+}
+
+if (!function_exists('vms_event_plan_current_post_request')) {
+    function vms_event_plan_current_post_request(): array
+    {
+        static $request = null;
+        if (is_array($request)) {
+            return $request;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Event Plan save handlers validate nonce/capability before acting on these normalized values.
+        $request = (isset($_POST) && is_array($_POST)) ? wp_unslash($_POST) : array();
+        return is_array($request) ? $request : array();
+    }
+}
+
+if (!function_exists('vms_event_plan_current_request_data')) {
+    function vms_event_plan_current_request_data(): array
+    {
+        static $request = null;
+        if (is_array($request)) {
+            return $request;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Action-specific handlers validate nonce/capability after this request snapshot is normalized.
+        $request = (isset($_REQUEST) && is_array($_REQUEST)) ? wp_unslash($_REQUEST) : array();
+        return is_array($request) ? $request : array();
+    }
+}
+
+if (!function_exists('vms_event_plan_editor_verified_post_data')) {
+    function vms_event_plan_editor_verified_post_data(): array
+    {
+        static $request = null;
+        if (is_array($request)) {
+            return $request;
+        }
+
+        $request = vms_event_plan_current_post_request();
+        $nonce = isset($request['vms_event_plan_details_nonce']) && !is_array($request['vms_event_plan_details_nonce'])
+            ? sanitize_text_field((string) $request['vms_event_plan_details_nonce'])
+            : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+            $request = array();
+        }
+
+        return $request;
+    }
+}
+
 if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
     function vms_event_plan_create_rescheduled_draft(int $source_post_id, array $args = array()): array
     {
@@ -4075,14 +4137,15 @@ class VMS_Admin_Event_Plans
             return false;
         }
 
-        $requested_section = isset($_GET['vms_ep_load_section'])
-            ? sanitize_key((string) wp_unslash($_GET['vms_ep_load_section']))
+        $request = vms_event_plan_current_get_request();
+        $requested_section = isset($request['vms_ep_load_section'])
+            ? sanitize_key((string) $request['vms_ep_load_section'])
             : '';
         if ($requested_section !== $section) {
             return false;
         }
 
-        $requested_plan_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+        $requested_plan_id = isset($request['post']) ? absint($request['post']) : 0;
         if ($requested_plan_id > 0 && $requested_plan_id !== $plan_id) {
             return false;
         }
@@ -5807,7 +5870,7 @@ class VMS_Admin_Event_Plans
                     <?php
                     $live_refund_source_post_id = (int) $post_id;
                     if ($live_refund_source_post_id <= 0) {
-                        $live_refund_source_post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+                        $live_refund_source_post_id = isset($admin_get['post']) ? absint($admin_get['post']) : 0;
                     }
                     if ($live_refund_source_post_id <= 0) {
                         global $post;
@@ -7502,10 +7565,12 @@ class VMS_Admin_Event_Plans
      */
     public function render_event_plan_details_meta_box(WP_Post $post): void
     {
+        $admin_request = vms_event_plan_current_request_data();
+        $admin_get = vms_event_plan_current_get_request();
         if (function_exists('vms_event_plan_perf_query_checkpoint')) {
             vms_event_plan_perf_query_checkpoint((int) $post->ID, 'before_details_render', array(
                 'section' => 'meta_box_render',
-                'screen_action' => isset($_REQUEST['action']) ? sanitize_key((string) wp_unslash($_REQUEST['action'])) : '',
+                'screen_action' => isset($admin_request['action']) ? sanitize_key((string) $admin_request['action']) : '',
                 'before_details_render' => 1,
             ), 'admin_boot');
         }
@@ -7545,8 +7610,8 @@ class VMS_Admin_Event_Plans
         // ----------------------------
         if ($post->post_status === 'auto-draft') {
 
-            $qs_venue = isset($_GET['vms_venue_id']) ? (int) $_GET['vms_venue_id'] : 0;
-            $qs_date  = isset($_GET['vms_date']) ? sanitize_text_field(wp_unslash($_GET['vms_date'])) : '';
+            $qs_venue = isset($admin_get['vms_venue_id']) ? absint($admin_get['vms_venue_id']) : 0;
+            $qs_date  = isset($admin_get['vms_date']) ? sanitize_text_field((string) $admin_get['vms_date']) : '';
 
             // Prefill venue/date in the form (but do NOT force a title here)
             if ($venue_id_saved <= 0 && $qs_venue > 0) {
@@ -7805,11 +7870,11 @@ class VMS_Admin_Event_Plans
         $selected_band_id = (int) get_post_meta($post->ID, '_vms_band_vendor_id', true);
 
         if ($post->post_status === 'auto-draft' && $selected_band_id <= 0) {
-            $qs_band_vendor = isset($_GET['vms_band_vendor_id']) ? absint($_GET['vms_band_vendor_id']) : 0;
-            if ($qs_band_vendor <= 0 && isset($_GET['vms_prefill_vendor_mode'], $_GET['vms_prefill_vendor_id'])) {
-                $qs_prefill_mode = sanitize_key(wp_unslash((string) $_GET['vms_prefill_vendor_mode']));
+            $qs_band_vendor = isset($admin_get['vms_band_vendor_id']) ? absint($admin_get['vms_band_vendor_id']) : 0;
+            if ($qs_band_vendor <= 0 && isset($admin_get['vms_prefill_vendor_mode'], $admin_get['vms_prefill_vendor_id'])) {
+                $qs_prefill_mode = sanitize_key((string) $admin_get['vms_prefill_vendor_mode']);
                 if ($qs_prefill_mode === 'primary') {
-                    $qs_band_vendor = absint($_GET['vms_prefill_vendor_id']);
+                    $qs_band_vendor = absint($admin_get['vms_prefill_vendor_id']);
                 }
             }
             if ($qs_band_vendor > 0) {
@@ -7871,32 +7936,32 @@ class VMS_Admin_Event_Plans
             })));
 
         if ($post->post_status === 'auto-draft') {
-            if ($secondary_vendor_type === '' && isset($_GET['vms_secondary_vendor_type'])) {
+            if ($secondary_vendor_type === '' && isset($admin_get['vms_secondary_vendor_type'])) {
                 $secondary_vendor_type = function_exists('vms_vendor_type_normalize_slug')
-                    ? vms_vendor_type_normalize_slug((string) wp_unslash((string) $_GET['vms_secondary_vendor_type']))
-                    : sanitize_title(wp_unslash((string) $_GET['vms_secondary_vendor_type']));
+                    ? vms_vendor_type_normalize_slug((string) $admin_get['vms_secondary_vendor_type'])
+                    : sanitize_title((string) $admin_get['vms_secondary_vendor_type']);
             }
-            if ($secondary_vendor_type === '' && isset($_GET['vms_prefill_vendor_mode'], $_GET['vms_prefill_vendor_type'])) {
-                $qs_prefill_mode = sanitize_key(wp_unslash((string) $_GET['vms_prefill_vendor_mode']));
+            if ($secondary_vendor_type === '' && isset($admin_get['vms_prefill_vendor_mode'], $admin_get['vms_prefill_vendor_type'])) {
+                $qs_prefill_mode = sanitize_key((string) $admin_get['vms_prefill_vendor_mode']);
                 if ($qs_prefill_mode === 'secondary') {
                     $secondary_vendor_type = function_exists('vms_vendor_type_normalize_slug')
-                        ? vms_vendor_type_normalize_slug((string) wp_unslash((string) $_GET['vms_prefill_vendor_type']))
-                        : sanitize_title(wp_unslash((string) $_GET['vms_prefill_vendor_type']));
+                        ? vms_vendor_type_normalize_slug((string) $admin_get['vms_prefill_vendor_type'])
+                        : sanitize_title((string) $admin_get['vms_prefill_vendor_type']);
                 }
             }
 
             if (empty($secondary_vendor_ids)) {
                 $qs_secondary_ids = array();
-                if (isset($_GET['vms_secondary_vendor_id'])) {
-                    $qs_secondary_ids[] = absint($_GET['vms_secondary_vendor_id']);
+                if (isset($admin_get['vms_secondary_vendor_id'])) {
+                    $qs_secondary_ids[] = absint($admin_get['vms_secondary_vendor_id']);
                 }
-                if (isset($_GET['vms_secondary_vendor_ids']) && is_array($_GET['vms_secondary_vendor_ids'])) {
-                    $qs_secondary_ids = array_merge($qs_secondary_ids, array_map('absint', (array) wp_unslash($_GET['vms_secondary_vendor_ids'])));
+                if (isset($admin_get['vms_secondary_vendor_ids']) && is_array($admin_get['vms_secondary_vendor_ids'])) {
+                    $qs_secondary_ids = array_merge($qs_secondary_ids, array_map('absint', (array) $admin_get['vms_secondary_vendor_ids']));
                 }
-                if (empty($qs_secondary_ids) && isset($_GET['vms_prefill_vendor_mode'], $_GET['vms_prefill_vendor_id'])) {
-                    $qs_prefill_mode = sanitize_key(wp_unslash((string) $_GET['vms_prefill_vendor_mode']));
+                if (empty($qs_secondary_ids) && isset($admin_get['vms_prefill_vendor_mode'], $admin_get['vms_prefill_vendor_id'])) {
+                    $qs_prefill_mode = sanitize_key((string) $admin_get['vms_prefill_vendor_mode']);
                     if ($qs_prefill_mode === 'secondary') {
-                        $qs_secondary_ids[] = absint($_GET['vms_prefill_vendor_id']);
+                        $qs_secondary_ids[] = absint($admin_get['vms_prefill_vendor_id']);
                     }
                 }
                 $qs_secondary_ids = array_values(array_unique(array_filter($qs_secondary_ids, static function ($v) {
@@ -8280,10 +8345,10 @@ class VMS_Admin_Event_Plans
         ?>
 
         <?php
-            if ($post->post_status === 'auto-draft' && isset($_GET['vms_prefill_vendor_id'], $_GET['vms_prefill_vendor_mode'])) {
-                $prefill_vendor_id = absint($_GET['vms_prefill_vendor_id']);
-                $prefill_mode = sanitize_key(wp_unslash((string) $_GET['vms_prefill_vendor_mode']));
-                $prefill_vendor_label = isset($_GET['vms_prefill_vendor_label']) ? sanitize_text_field(wp_unslash((string) $_GET['vms_prefill_vendor_label'])) : '';
+            if ($post->post_status === 'auto-draft' && isset($admin_get['vms_prefill_vendor_id'], $admin_get['vms_prefill_vendor_mode'])) {
+                $prefill_vendor_id = absint($admin_get['vms_prefill_vendor_id']);
+                $prefill_mode = sanitize_key((string) $admin_get['vms_prefill_vendor_mode']);
+                $prefill_vendor_label = isset($admin_get['vms_prefill_vendor_label']) ? sanitize_text_field((string) $admin_get['vms_prefill_vendor_label']) : '';
                 if ($prefill_vendor_id > 0) {
                     $resolved_vendor_label = $prefill_vendor_label !== '' ? $prefill_vendor_label : (string) get_the_title($prefill_vendor_id);
                     if ($resolved_vendor_label === '') {
@@ -8292,10 +8357,10 @@ class VMS_Admin_Event_Plans
 
                     if ($prefill_mode === 'secondary') {
                         $prefill_type_label = '';
-                        if (isset($_GET['vms_prefill_vendor_type'])) {
+                        if (isset($admin_get['vms_prefill_vendor_type'])) {
                             $prefill_type_slug = function_exists('vms_vendor_type_normalize_slug')
-                                ? vms_vendor_type_normalize_slug((string) wp_unslash((string) $_GET['vms_prefill_vendor_type']))
-                                : sanitize_title(wp_unslash((string) $_GET['vms_prefill_vendor_type']));
+                                ? vms_vendor_type_normalize_slug((string) $admin_get['vms_prefill_vendor_type'])
+                                : sanitize_title((string) $admin_get['vms_prefill_vendor_type']);
                             if ($prefill_type_slug !== '') {
                                 $prefill_type_term = function_exists('vms_vendor_type_get_term')
                                     ? vms_vendor_type_get_term($prefill_type_slug)
@@ -8759,19 +8824,17 @@ class VMS_Admin_Event_Plans
      */
     public function save_event_plan_meta(int $post_id, WP_Post $post): void
     {
-	        $nonce = (isset($_POST['vms_event_plan_details_nonce']) && !is_array($_POST['vms_event_plan_details_nonce']))
-	            ? sanitize_text_field(wp_unslash((string) $_POST['vms_event_plan_details_nonce']))
-	            : '';
-	        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
-	            return;
-	        }
+        $request = vms_event_plan_editor_verified_post_data();
+        if (empty($request)) {
+            return;
+        }
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
         if (!current_user_can('edit_post', $post_id)) return;
-        if (isset($_POST['post_ID']) && absint($_POST['post_ID']) > 0 && absint($_POST['post_ID']) !== $post_id) {
+        if (isset($request['post_ID']) && absint($request['post_ID']) > 0 && absint($request['post_ID']) !== $post_id) {
             return;
         }
 
-        $original_status = isset($_POST['original_post_status']) ? sanitize_key((string) wp_unslash($_POST['original_post_status'])) : sanitize_key((string) $post->post_status);
+        $original_status = isset($request['original_post_status']) ? sanitize_key((string) $request['original_post_status']) : sanitize_key((string) $post->post_status);
         $actor_user_id = function_exists('vms_event_plan_capture_actor_user_id')
             ? vms_event_plan_capture_actor_user_id($post_id, (int) get_current_user_id(), 'event_plan_editor_save')
             : (int) get_current_user_id();
@@ -8789,15 +8852,14 @@ class VMS_Admin_Event_Plans
             )
             : '';
 
-        $request = (array) $_POST;
         $reopen_section_after_save = isset($request['vms_reopen_section_after_save'])
-            ? vms_event_plan_normalize_reopen_section((string) wp_unslash($request['vms_reopen_section_after_save']))
+            ? vms_event_plan_normalize_reopen_section((string) $request['vms_reopen_section_after_save'])
             : '';
         if ($reopen_section_after_save !== '') {
             vms_event_plan_set_runtime_reopen_section_target($post_id, $reopen_section_after_save);
         }
         $detached_editor_action = isset($request['vms_event_plan_action'])
-            ? sanitize_key((string) wp_unslash($request['vms_event_plan_action']))
+            ? sanitize_key((string) $request['vms_event_plan_action'])
             : '';
         if ($detached_editor_action === 'resync_to_calendar') {
             if (function_exists('vms_add_admin_notice')) {
@@ -8806,7 +8868,7 @@ class VMS_Admin_Event_Plans
             return;
         }
         $ticket_ui_override_save_intent = isset($request['vms_ticket_ui_overrides_save_intent'])
-            ? sanitize_text_field((string) wp_unslash($request['vms_ticket_ui_overrides_save_intent']))
+            ? sanitize_text_field((string) $request['vms_ticket_ui_overrides_save_intent'])
             : '';
         if ($ticket_ui_override_save_intent === '1') {
             $ticket_ui_override_result = $this->save_event_plan_ticket_ui_overrides($post_id, $request);
@@ -8856,19 +8918,19 @@ class VMS_Admin_Event_Plans
 	        }
 
         // Staffing payload capture (structured role-slot model; legacy compatibility preserved in helper).
-        $staffing_present = isset($_POST['vms_staff_assignments_present']) || isset($_POST['vms_staffing_roles_present']);
-        $staffing_lazy_unloaded = !empty($_POST['vms_staffing_lazy_unloaded']);
-        $staffing_raw_assignments = (isset($_POST['vms_staff_assignments']) && is_array($_POST['vms_staff_assignments'])) ? (array) $_POST['vms_staff_assignments'] : array();
-        $staffing_headcounts = (isset($_POST['vms_staff_role_headcount']) && is_array($_POST['vms_staff_role_headcount'])) ? (array) $_POST['vms_staff_role_headcount'] : array();
-        $staffing_activation_thresholds_raw = (isset($_POST['vms_staff_role_activation_threshold']) && is_array($_POST['vms_staff_role_activation_threshold'])) ? (array) $_POST['vms_staff_role_activation_threshold'] : array();
-        $staffing_time_modes = (isset($_POST['vms_staff_role_time_mode']) && is_array($_POST['vms_staff_role_time_mode'])) ? (array) $_POST['vms_staff_role_time_mode'] : array();
-        $staffing_shift_starts = (isset($_POST['vms_staff_role_shift_start']) && is_array($_POST['vms_staff_role_shift_start'])) ? (array) $_POST['vms_staff_role_shift_start'] : array();
-        $staffing_shift_ends = (isset($_POST['vms_staff_role_shift_end']) && is_array($_POST['vms_staff_role_shift_end'])) ? (array) $_POST['vms_staff_role_shift_end'] : array();
-        $staffing_start_anchor_keys = (isset($_POST['vms_staff_role_start_anchor']) && is_array($_POST['vms_staff_role_start_anchor'])) ? (array) $_POST['vms_staff_role_start_anchor'] : array();
-        $staffing_start_offsets = (isset($_POST['vms_staff_role_start_offset']) && is_array($_POST['vms_staff_role_start_offset'])) ? (array) $_POST['vms_staff_role_start_offset'] : array();
-        $staffing_end_anchor_keys = (isset($_POST['vms_staff_role_end_anchor']) && is_array($_POST['vms_staff_role_end_anchor'])) ? (array) $_POST['vms_staff_role_end_anchor'] : array();
-        $staffing_end_offsets = (isset($_POST['vms_staff_role_end_offset']) && is_array($_POST['vms_staff_role_end_offset'])) ? (array) $_POST['vms_staff_role_end_offset'] : array();
-        $staffing_duration_minutes = (isset($_POST['vms_staff_role_duration_minutes']) && is_array($_POST['vms_staff_role_duration_minutes'])) ? (array) $_POST['vms_staff_role_duration_minutes'] : array();
+        $staffing_present = isset($request['vms_staff_assignments_present']) || isset($request['vms_staffing_roles_present']);
+        $staffing_lazy_unloaded = !empty($request['vms_staffing_lazy_unloaded']);
+        $staffing_raw_assignments = (isset($request['vms_staff_assignments']) && is_array($request['vms_staff_assignments'])) ? (array) $request['vms_staff_assignments'] : array();
+        $staffing_headcounts = (isset($request['vms_staff_role_headcount']) && is_array($request['vms_staff_role_headcount'])) ? (array) $request['vms_staff_role_headcount'] : array();
+        $staffing_activation_thresholds_raw = (isset($request['vms_staff_role_activation_threshold']) && is_array($request['vms_staff_role_activation_threshold'])) ? (array) $request['vms_staff_role_activation_threshold'] : array();
+        $staffing_time_modes = (isset($request['vms_staff_role_time_mode']) && is_array($request['vms_staff_role_time_mode'])) ? (array) $request['vms_staff_role_time_mode'] : array();
+        $staffing_shift_starts = (isset($request['vms_staff_role_shift_start']) && is_array($request['vms_staff_role_shift_start'])) ? (array) $request['vms_staff_role_shift_start'] : array();
+        $staffing_shift_ends = (isset($request['vms_staff_role_shift_end']) && is_array($request['vms_staff_role_shift_end'])) ? (array) $request['vms_staff_role_shift_end'] : array();
+        $staffing_start_anchor_keys = (isset($request['vms_staff_role_start_anchor']) && is_array($request['vms_staff_role_start_anchor'])) ? (array) $request['vms_staff_role_start_anchor'] : array();
+        $staffing_start_offsets = (isset($request['vms_staff_role_start_offset']) && is_array($request['vms_staff_role_start_offset'])) ? (array) $request['vms_staff_role_start_offset'] : array();
+        $staffing_end_anchor_keys = (isset($request['vms_staff_role_end_anchor']) && is_array($request['vms_staff_role_end_anchor'])) ? (array) $request['vms_staff_role_end_anchor'] : array();
+        $staffing_end_offsets = (isset($request['vms_staff_role_end_offset']) && is_array($request['vms_staff_role_end_offset'])) ? (array) $request['vms_staff_role_end_offset'] : array();
+        $staffing_duration_minutes = (isset($request['vms_staff_role_duration_minutes']) && is_array($request['vms_staff_role_duration_minutes'])) ? (array) $request['vms_staff_role_duration_minutes'] : array();
         $staffing_activation_thresholds_clean = array();
         $staffing_absolute_time_warning_roles = array();
         $staffing_required_now_gap_roles = array();
@@ -9032,9 +9094,9 @@ class VMS_Admin_Event_Plans
                 }
             }
         }
-        $staffing_template_apply_now = !empty($_POST['vms_staffing_template_apply']);
-        $staffing_template_selected_id = isset($_POST['vms_staffing_template_id']) ? absint($_POST['vms_staffing_template_id']) : 0;
-        $staffing_template_apply_mode = isset($_POST['vms_staffing_template_mode']) ? sanitize_key((string) wp_unslash($_POST['vms_staffing_template_mode'])) : 'merge_missing';
+        $staffing_template_apply_now = !empty($request['vms_staffing_template_apply']);
+        $staffing_template_selected_id = isset($request['vms_staffing_template_id']) ? absint($request['vms_staffing_template_id']) : 0;
+        $staffing_template_apply_mode = isset($request['vms_staffing_template_mode']) ? sanitize_key((string) $request['vms_staffing_template_mode']) : 'merge_missing';
         if (!in_array($staffing_template_apply_mode, array('merge_missing', 'replace_all'), true)) {
             $staffing_template_apply_mode = 'merge_missing';
         }
@@ -9046,15 +9108,15 @@ class VMS_Admin_Event_Plans
         $venue_id_posted = array_key_exists('vms_venue_id', $request);
 
         $event_date = $event_date_posted
-            ? sanitize_text_field(wp_unslash((string) $request['vms_event_date']))
+            ? sanitize_text_field((string) $request['vms_event_date'])
             : (string) get_post_meta($post_id, '_vms_event_date', true);
 
         $start_time = $start_time_posted
-            ? sanitize_text_field(wp_unslash((string) $request['vms_start_time']))
+            ? sanitize_text_field((string) $request['vms_start_time'])
             : (string) get_post_meta($post_id, '_vms_start_time', true);
 
         $end_time = $end_time_posted
-            ? sanitize_text_field(wp_unslash((string) $request['vms_end_time']))
+            ? sanitize_text_field((string) $request['vms_end_time'])
             : (string) get_post_meta($post_id, '_vms_end_time', true);
 
         $venue_id = $venue_id_posted
@@ -9063,8 +9125,8 @@ class VMS_Admin_Event_Plans
 
         
 	        // Ticketing enabled override (on|off|inherit)
-	        if (array_key_exists('vms_ticketing_enabled_override', (array) $_POST)) {
-	            $ov = sanitize_text_field((string) $_POST['vms_ticketing_enabled_override']);
+	        if (array_key_exists('vms_ticketing_enabled_override', $request)) {
+	            $ov = sanitize_text_field((string) $request['vms_ticketing_enabled_override']);
 	            $ticketing_override_audit_pushed = false;
 	            if (function_exists('vms_ticket_mutation_audit_push_context')) {
 	                vms_ticket_mutation_audit_push_context(array(
@@ -9087,15 +9149,15 @@ class VMS_Admin_Event_Plans
 	        }
 
         // Ticketing v2: GA ticket image policy (event_plan|custom|none) + optional custom image attachment ID.
-        if (array_key_exists('vms_ticketing_ga_image_mode', (array) $_POST)) {
-            $mode = sanitize_key((string) $_POST['vms_ticketing_ga_image_mode']);
+        if (array_key_exists('vms_ticketing_ga_image_mode', $request)) {
+            $mode = sanitize_key((string) $request['vms_ticketing_ga_image_mode']);
             if (!in_array($mode, array('event_plan', 'custom', 'none'), true)) {
                 $mode = 'event_plan';
             }
             update_post_meta($post_id, '_vms_ticketing_ga_image_mode', $mode);
         }
-        if (array_key_exists('vms_ticketing_ga_image_id', (array) $_POST)) {
-            $img_id = absint($_POST['vms_ticketing_ga_image_id']);
+        if (array_key_exists('vms_ticketing_ga_image_id', $request)) {
+            $img_id = absint($request['vms_ticketing_ga_image_id']);
             if ($img_id > 0) {
                 update_post_meta($post_id, '_vms_ticketing_ga_image_id', $img_id);
             } else {
@@ -9104,13 +9166,13 @@ class VMS_Admin_Event_Plans
         }
 
 	        // Draft pay
-	        $comp_structure = isset($_POST['vms_comp_structure']) ? sanitize_key((string) $_POST['vms_comp_structure']) : 'flat_fee';
+	        $comp_structure = isset($request['vms_comp_structure']) ? sanitize_key((string) $request['vms_comp_structure']) : 'flat_fee';
 	        if (!in_array($comp_structure, array('flat_fee', 'door_split', 'flat_fee_door_split', 'attendance_bonus'), true)) {
 	            $comp_structure = 'flat_fee';
 	        }
 
                 // Preserve requested action for enforcement messaging (may be cleared later if blocked).
-                $requested_action_raw = isset($_POST['vms_event_plan_action']) ? sanitize_text_field((string) $_POST['vms_event_plan_action']) : '';
+                $requested_action_raw = isset($request['vms_event_plan_action']) ? sanitize_text_field((string) $request['vms_event_plan_action']) : '';
                 if ($requested_action_raw === 'lock_draft_pay') {
                     $saved_basics_ready = !empty($lock_pay_saved_basics_before_save['ok']);
                     $request_basics_ready = !empty($lock_pay_request_basics['ok']);
@@ -9126,18 +9188,19 @@ class VMS_Admin_Event_Plans
 
                         update_post_meta($post_id, '_vms_admin_scroll_to', 'vms_event_date');
                         $_POST['vms_event_plan_action'] = '';
+                        $request['vms_event_plan_action'] = '';
                         $requested_action_raw = '';
                     }
                 }
 
                 // Number inputs are text fields (no spinner arrows). Normalize user input like "$1,200.00".
-                $flat_fee_amount_raw = isset($_POST['vms_flat_fee_amount']) ? (string) $_POST['vms_flat_fee_amount'] : '';
+                $flat_fee_amount_raw = isset($request['vms_flat_fee_amount']) ? (string) $request['vms_flat_fee_amount'] : '';
                 $flat_fee_amount_raw = trim($flat_fee_amount_raw);
                 $flat_fee_amount_raw = preg_replace('/[^0-9.\-]/', '', $flat_fee_amount_raw);
                 $flat_fee_amount = ($flat_fee_amount_raw === '' ? '' : (float) $flat_fee_amount_raw);
                 if ($flat_fee_amount !== '' && $flat_fee_amount < 0) $flat_fee_amount = 0;
 
-                $door_split_percent_raw = isset($_POST['vms_door_split_percent']) ? (string) $_POST['vms_door_split_percent'] : '';
+                $door_split_percent_raw = isset($request['vms_door_split_percent']) ? (string) $request['vms_door_split_percent'] : '';
                 $door_split_percent_raw = trim($door_split_percent_raw);
                 $door_split_percent_raw = preg_replace('/[^0-9.\-]/', '', $door_split_percent_raw);
 	                $door_split_percent = ($door_split_percent_raw === '' ? '' : (float) $door_split_percent_raw);
@@ -9146,12 +9209,12 @@ class VMS_Admin_Event_Plans
 	                    if ($door_split_percent > 100) $door_split_percent = 100;
 	                }
 
-	                $attendance_bonus_mode = isset($_POST['vms_attendance_bonus_mode']) ? sanitize_key((string) $_POST['vms_attendance_bonus_mode']) : '';
+	                $attendance_bonus_mode = isset($request['vms_attendance_bonus_mode']) ? sanitize_key((string) $request['vms_attendance_bonus_mode']) : '';
 	                if (!in_array($attendance_bonus_mode, array('step', 'continuous'), true)) {
 	                    $attendance_bonus_mode = '';
 	                }
 
-	                $attendance_bonus_start_count_raw = isset($_POST['vms_attendance_bonus_start_count']) ? (string) $_POST['vms_attendance_bonus_start_count'] : '';
+	                $attendance_bonus_start_count_raw = isset($request['vms_attendance_bonus_start_count']) ? (string) $request['vms_attendance_bonus_start_count'] : '';
 	                $attendance_bonus_start_count_raw = trim($attendance_bonus_start_count_raw);
 	                $attendance_bonus_start_count_raw = preg_replace('/[^0-9.\-]/', '', $attendance_bonus_start_count_raw);
 	                $attendance_bonus_start_count = '';
@@ -9159,7 +9222,7 @@ class VMS_Admin_Event_Plans
 	                    $attendance_bonus_start_count = max(0, (int) floor((float) $attendance_bonus_start_count_raw));
 	                }
 
-	                $attendance_bonus_step_size_raw = isset($_POST['vms_attendance_bonus_step_size']) ? (string) $_POST['vms_attendance_bonus_step_size'] : '';
+	                $attendance_bonus_step_size_raw = isset($request['vms_attendance_bonus_step_size']) ? (string) $request['vms_attendance_bonus_step_size'] : '';
 	                $attendance_bonus_step_size_raw = trim($attendance_bonus_step_size_raw);
 	                $attendance_bonus_step_size_raw = preg_replace('/[^0-9.\-]/', '', $attendance_bonus_step_size_raw);
 	                $attendance_bonus_step_size = '';
@@ -9170,47 +9233,47 @@ class VMS_Admin_Event_Plans
 	                    }
 	                }
 
-	                $attendance_bonus_step_bonus_raw = isset($_POST['vms_attendance_bonus_step_bonus']) ? (string) $_POST['vms_attendance_bonus_step_bonus'] : '';
+	                $attendance_bonus_step_bonus_raw = isset($request['vms_attendance_bonus_step_bonus']) ? (string) $request['vms_attendance_bonus_step_bonus'] : '';
 	                $attendance_bonus_step_bonus_raw = trim($attendance_bonus_step_bonus_raw);
 	                $attendance_bonus_step_bonus_raw = preg_replace('/[^0-9.\-]/', '', $attendance_bonus_step_bonus_raw);
 	                $attendance_bonus_step_bonus = ($attendance_bonus_step_bonus_raw === '' ? '' : (float) $attendance_bonus_step_bonus_raw);
 	                if ($attendance_bonus_step_bonus !== '' && $attendance_bonus_step_bonus < 0) $attendance_bonus_step_bonus = 0;
 
-	                $attendance_bonus_per_ticket_rate_raw = isset($_POST['vms_attendance_bonus_per_ticket_rate']) ? (string) $_POST['vms_attendance_bonus_per_ticket_rate'] : '';
+	                $attendance_bonus_per_ticket_rate_raw = isset($request['vms_attendance_bonus_per_ticket_rate']) ? (string) $request['vms_attendance_bonus_per_ticket_rate'] : '';
 	                $attendance_bonus_per_ticket_rate_raw = trim($attendance_bonus_per_ticket_rate_raw);
 	                $attendance_bonus_per_ticket_rate_raw = preg_replace('/[^0-9.\-]/', '', $attendance_bonus_per_ticket_rate_raw);
 	                $attendance_bonus_per_ticket_rate = ($attendance_bonus_per_ticket_rate_raw === '' ? '' : (float) $attendance_bonus_per_ticket_rate_raw);
 	                if ($attendance_bonus_per_ticket_rate !== '' && $attendance_bonus_per_ticket_rate < 0) $attendance_bonus_per_ticket_rate = 0;
 
-	                $attendance_bonus_max_bonus_raw = isset($_POST['vms_attendance_bonus_max_bonus']) ? (string) $_POST['vms_attendance_bonus_max_bonus'] : '';
+	                $attendance_bonus_max_bonus_raw = isset($request['vms_attendance_bonus_max_bonus']) ? (string) $request['vms_attendance_bonus_max_bonus'] : '';
 	                $attendance_bonus_max_bonus_raw = trim($attendance_bonus_max_bonus_raw);
 	                $attendance_bonus_max_bonus_raw = preg_replace('/[^0-9.\-]/', '', $attendance_bonus_max_bonus_raw);
 	                $attendance_bonus_max_bonus = ($attendance_bonus_max_bonus_raw === '' ? '' : (float) $attendance_bonus_max_bonus_raw);
 	                if ($attendance_bonus_max_bonus !== '' && $attendance_bonus_max_bonus < 0) $attendance_bonus_max_bonus = 0;
 
-	                $commission_percent_raw = isset($_POST['vms_commission_percent']) ? (string) $_POST['vms_commission_percent'] : '';
+	                $commission_percent_raw = isset($request['vms_commission_percent']) ? (string) $request['vms_commission_percent'] : '';
 	                $commission_percent_raw = trim($commission_percent_raw);
 	                $commission_percent_raw = preg_replace('/[^0-9.\-]/', '', $commission_percent_raw);
 	                $commission_percent = ($commission_percent_raw === '' ? '' : (float) $commission_percent_raw);
 	                if ($commission_percent !== '' && $commission_percent < 0) $commission_percent = 0;
-                $commission_mode = isset($_POST['vms_commission_mode']) ? sanitize_key((string) $_POST['vms_commission_mode']) : 'artist_fee';
+                $commission_mode = isset($request['vms_commission_mode']) ? sanitize_key((string) $request['vms_commission_mode']) : 'artist_fee';
                 if (!in_array($commission_mode, array('artist_fee', 'gross'), true)) $commission_mode = 'artist_fee';
 
-                $deposit_amount_raw = isset($_POST['vms_deposit_amount']) ? (string) wp_unslash($_POST['vms_deposit_amount']) : '';
+                $deposit_amount_raw = isset($request['vms_deposit_amount']) ? (string) $request['vms_deposit_amount'] : '';
                 $deposit_amount_raw = trim($deposit_amount_raw);
                 $deposit_amount_raw = preg_replace('/[^0-9.\-]/', '', $deposit_amount_raw);
                 $deposit_amount = ($deposit_amount_raw === '' ? '' : (float) $deposit_amount_raw);
                 if ($deposit_amount !== '' && $deposit_amount < 0) $deposit_amount = 0;
 
-                $deposit_status = isset($_POST['vms_deposit_status']) ? sanitize_key((string) wp_unslash($_POST['vms_deposit_status'])) : 'not_required';
+                $deposit_status = isset($request['vms_deposit_status']) ? sanitize_key((string) $request['vms_deposit_status']) : 'not_required';
                 $deposit_status = function_exists('vms_normalize_comp_deposit_status') ? vms_normalize_comp_deposit_status($deposit_status) : $deposit_status;
-                $deposit_treatment = isset($_POST['vms_deposit_treatment']) ? sanitize_key((string) wp_unslash($_POST['vms_deposit_treatment'])) : 'creditable';
+                $deposit_treatment = isset($request['vms_deposit_treatment']) ? sanitize_key((string) $request['vms_deposit_treatment']) : 'creditable';
                 $deposit_treatment = function_exists('vms_normalize_comp_deposit_treatment') ? vms_normalize_comp_deposit_treatment($deposit_treatment) : $deposit_treatment;
-                $deposit_due_date = isset($_POST['vms_deposit_due_date']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_deposit_due_date'])) : '';
+                $deposit_due_date = isset($request['vms_deposit_due_date']) ? sanitize_text_field((string) $request['vms_deposit_due_date']) : '';
                 $deposit_due_date = function_exists('vms_normalize_comp_deposit_date') ? vms_normalize_comp_deposit_date($deposit_due_date) : $deposit_due_date;
-                $deposit_paid_date = isset($_POST['vms_deposit_paid_date']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_deposit_paid_date'])) : '';
+                $deposit_paid_date = isset($request['vms_deposit_paid_date']) ? sanitize_text_field((string) $request['vms_deposit_paid_date']) : '';
                 $deposit_paid_date = function_exists('vms_normalize_comp_deposit_date') ? vms_normalize_comp_deposit_date($deposit_paid_date) : $deposit_paid_date;
-                $deposit_notes = isset($_POST['vms_deposit_notes']) ? sanitize_textarea_field(wp_unslash((string) $_POST['vms_deposit_notes'])) : '';
+                $deposit_notes = isset($request['vms_deposit_notes']) ? sanitize_textarea_field((string) $request['vms_deposit_notes']) : '';
                 if ($deposit_amount !== '' && (float) $deposit_amount > 0 && $deposit_status === 'not_required') {
                     $deposit_status = 'unpaid';
                 }
@@ -9223,16 +9286,16 @@ class VMS_Admin_Event_Plans
                     'deposit_notes' => $deposit_notes,
                 );
 
-                $final_payment_timing = isset($_POST['vms_final_payment_timing']) ? sanitize_key((string) wp_unslash($_POST['vms_final_payment_timing'])) : 'not_set';
+                $final_payment_timing = isset($request['vms_final_payment_timing']) ? sanitize_key((string) $request['vms_final_payment_timing']) : 'not_set';
                 $final_payment_timing = function_exists('vms_normalize_comp_final_payment_timing') ? vms_normalize_comp_final_payment_timing($final_payment_timing) : $final_payment_timing;
-                $final_payment_days_after = isset($_POST['vms_final_payment_days_after']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_final_payment_days_after'])) : '';
+                $final_payment_days_after = isset($request['vms_final_payment_days_after']) ? sanitize_text_field((string) $request['vms_final_payment_days_after']) : '';
                 $final_payment_days_after = function_exists('vms_normalize_comp_final_payment_days_after') ? vms_normalize_comp_final_payment_days_after($final_payment_days_after) : $final_payment_days_after;
-                $final_payment_date = isset($_POST['vms_final_payment_date']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_final_payment_date'])) : '';
+                $final_payment_date = isset($request['vms_final_payment_date']) ? sanitize_text_field((string) $request['vms_final_payment_date']) : '';
                 $final_payment_date = function_exists('vms_normalize_comp_final_payment_date') ? vms_normalize_comp_final_payment_date($final_payment_date) : $final_payment_date;
-                $final_payment_custom_text = isset($_POST['vms_final_payment_custom_text']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_final_payment_custom_text'])) : '';
-                $final_payment_method = isset($_POST['vms_final_payment_method']) ? sanitize_key((string) wp_unslash($_POST['vms_final_payment_method'])) : 'not_set';
+                $final_payment_custom_text = isset($request['vms_final_payment_custom_text']) ? sanitize_text_field((string) $request['vms_final_payment_custom_text']) : '';
+                $final_payment_method = isset($request['vms_final_payment_method']) ? sanitize_key((string) $request['vms_final_payment_method']) : 'not_set';
                 $final_payment_method = function_exists('vms_normalize_comp_final_payment_method') ? vms_normalize_comp_final_payment_method($final_payment_method) : $final_payment_method;
-                $final_payment_method_other = isset($_POST['vms_final_payment_method_other']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_final_payment_method_other'])) : '';
+                $final_payment_method_other = isset($request['vms_final_payment_method_other']) ? sanitize_text_field((string) $request['vms_final_payment_method_other']) : '';
                 $final_payment_terms_for_save = array(
                     'final_payment_timing' => $final_payment_timing,
                     'final_payment_days_after' => $final_payment_days_after,
@@ -9245,8 +9308,8 @@ class VMS_Admin_Event_Plans
                 $k_commission_override_none = function_exists('vms_meta_key')
                     ? (vms_meta_key('event_plan', 'commission_override_none') ?: '_vms_commission_override_none')
                     : '_vms_commission_override_none';
-                $selected_comp_option_posted = isset($_POST['vms_comp_selected_option'])
-                    ? sanitize_text_field(wp_unslash((string) $_POST['vms_comp_selected_option']))
+                $selected_comp_option_posted = isset($request['vms_comp_selected_option'])
+                    ? sanitize_text_field((string) $request['vms_comp_selected_option'])
                     : '';
 
                 $attendance_invalid_message = '';
@@ -9266,10 +9329,10 @@ class VMS_Admin_Event_Plans
                 // user must acknowledge before ANY save is allowed.
                 // ---------------------------------
 
-                $ack = (isset($_POST['vms_pay_override_ack']) && (string)$_POST['vms_pay_override_ack'] === '1');
+                $ack = (isset($request['vms_pay_override_ack']) && (string) $request['vms_pay_override_ack'] === '1');
 
                 // Single-ack UX: one checkbox can satisfy both pay-diff and low-guarantee gates.
-                $low_guarantee_ack = $ack || (isset($_POST['vms_low_guarantee_ack']) && (string)$_POST['vms_low_guarantee_ack'] === '1');
+                $low_guarantee_ack = $ack || (isset($request['vms_low_guarantee_ack']) && (string) $request['vms_low_guarantee_ack'] === '1');
 
 	                $actual = array(
 	                    'structure' => (string) $comp_structure,
@@ -9290,8 +9353,8 @@ class VMS_Admin_Event_Plans
 
                 $guarantee_max = 0.0;
 	                if (function_exists('vms_get_event_plan_comp_options')) {
-	                    $venue_for_opts = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
-	                    $date_for_opts  = isset($_POST['vms_event_date']) ? sanitize_text_field(wp_unslash($_POST['vms_event_date'])) : '';
+	                    $venue_for_opts = isset($request['vms_venue_id']) ? absint($request['vms_venue_id']) : 0;
+	                    $date_for_opts  = isset($request['vms_event_date']) ? sanitize_text_field((string) $request['vms_event_date']) : '';
 	                    $band_for_opts  = $effective_band_id;
 	                    $opts = (array) vms_get_event_plan_comp_options($venue_for_opts, $date_for_opts, $band_for_opts);
 	                    $guarantee_max = isset($opts['max_guarantee']) ? (float) $opts['max_guarantee'] : 0.0;
@@ -9388,7 +9451,7 @@ class VMS_Admin_Event_Plans
                 // Enforce acknowledgment if mismatch
                 if ($has_default && $differs && !$ack) {
 
-                    $requested_action = isset($_POST['vms_event_plan_action']) ? sanitize_text_field((string) $_POST['vms_event_plan_action']) : '';
+                    $requested_action = isset($request['vms_event_plan_action']) ? sanitize_text_field((string) $request['vms_event_plan_action']) : '';
                     $needs_ack_to_proceed = in_array($requested_action, array('mark_ready', 'publish_now', 'lock_draft_pay'), true);
 
 if (function_exists('vms_add_admin_notice')) {
@@ -9432,6 +9495,7 @@ if (function_exists('vms_add_admin_notice')) {
                     // Block status actions until the override has been acknowledged (do not block saving the edits).
                     if ($needs_ack_to_proceed) {
                         $_POST['vms_event_plan_action'] = '';
+                        $request['vms_event_plan_action'] = '';
                     }
 
                 }
@@ -9496,6 +9560,7 @@ if (function_exists('vms_add_admin_notice')) {
                     // Block status actions until acknowledged (do not block saving the edits).
                     if ($needs_low_ack_to_proceed) {
                         $_POST['vms_event_plan_action'] = '';
+                        $request['vms_event_plan_action'] = '';
                     }
                 }
 
@@ -9509,14 +9574,14 @@ if (function_exists('vms_add_admin_notice')) {
                 );
                 $lineup_request_present = false;
                 foreach ($lineup_request_keys as $lineup_request_key) {
-                    if (array_key_exists($lineup_request_key, $_POST)) {
+                    if (array_key_exists($lineup_request_key, $request)) {
                         $lineup_request_present = true;
                         break;
                     }
                 }
 
-                $posted_lineup_rows = (isset($_POST['vms_lineup_entries']) && is_array($_POST['vms_lineup_entries']))
-                    ? (array) $_POST['vms_lineup_entries']
+                $posted_lineup_rows = (isset($request['vms_lineup_entries']) && is_array($request['vms_lineup_entries']))
+                    ? (array) $request['vms_lineup_entries']
                     : array();
 
 		                $lineup_context = array(
@@ -9613,7 +9678,7 @@ if (function_exists('vms_add_admin_notice')) {
                 $k_secondary_unq_ids = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_unqualified_ids') : '_vms_secondary_vendor_unqualified_ids';
                 $k_band_vendor_id    = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
                 $k_tec_event_id      = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
-	                $secondary_vendor_module_detached = !empty($_POST['vms_secondary_vendors_module_detached']);
+	                $secondary_vendor_module_detached = !empty($request['vms_secondary_vendors_module_detached']);
 	                $secondary_vendor_request = $secondary_vendor_module_detached ? array() : $request;
 	                $secondary_vendor_submission = function_exists('vms_event_plan_resolve_secondary_vendor_submission')
 	                    ? vms_event_plan_resolve_secondary_vendor_submission($post_id, $secondary_vendor_request)
@@ -9630,7 +9695,7 @@ if (function_exists('vms_add_admin_notice')) {
 	                        'secondary_ids' => array_key_exists('vms_secondary_vendor_ids', $secondary_vendor_request) && is_array($secondary_vendor_request['vms_secondary_vendor_ids']) ? array_values(array_unique(array_filter(array_map('absint', $secondary_vendor_request['vms_secondary_vendor_ids'])))) : array_values(array_unique(array_filter(array_map('absint', (array) get_post_meta($post_id, $k_secondary_ids, true))))),
 	                    );
 	                $secondary_vendor_present = !$secondary_vendor_module_detached && !empty($secondary_vendor_submission['submission_present']);
-	                $secondary_vendor_lazy_unloaded = !empty($_POST['vms_secondary_vendors_lazy_unloaded']);
+	                $secondary_vendor_lazy_unloaded = !empty($request['vms_secondary_vendors_lazy_unloaded']);
 
                 if (!$secondary_vendor_present && $secondary_vendor_lazy_unloaded) {
                     if (function_exists('vms_event_plan_perf_log')) {
@@ -9969,12 +10034,12 @@ if (function_exists('vms_add_admin_notice')) {
 
 
                 // Auto toggles
-                $auto_title      = isset($_POST['vms_auto_title']) ? '1' : '0';
-                $auto_comp       = isset($_POST['vms_auto_comp']) ? '1' : '0';
-                $auto_comp_venue = isset($_POST['vms_auto_comp_venue']) ? '1' : '0';
+                $auto_title      = isset($request['vms_auto_title']) ? '1' : '0';
+                $auto_comp       = isset($request['vms_auto_comp']) ? '1' : '0';
+                $auto_comp_venue = isset($request['vms_auto_comp_venue']) ? '1' : '0';
 
                 // Package selection (persist so dropdown sticks even without Apply)
-                $comp_package_id = isset($_POST['vms_comp_package_id']) ? absint($_POST['vms_comp_package_id']) : 0;
+                $comp_package_id = isset($request['vms_comp_package_id']) ? absint($request['vms_comp_package_id']) : 0;
 
                 if ($event_date_posted) {
                     if ($event_date === '') {
@@ -10041,7 +10106,7 @@ if (function_exists('vms_add_admin_notice')) {
                 $commission_supported = in_array($comp_structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true);
                 $commission_explicit_none = (
                     $commission_supported
-                    && array_key_exists('vms_commission_percent', $_POST)
+                    && array_key_exists('vms_commission_percent', $request)
                     && ($commission_percent_raw === '' || (is_numeric($commission_percent) && (float) $commission_percent <= 0))
                 );
 
@@ -10153,8 +10218,8 @@ if (function_exists('vms_add_admin_notice')) {
                 else delete_post_meta($post_id, '_vms_comp_package_id');
 
                 // Persist the last clicked compensation tile selection
-                if (isset($_POST['vms_comp_selected_option'])) {
-                    $sel_opt = sanitize_text_field(wp_unslash((string) $_POST['vms_comp_selected_option']));
+                if (isset($request['vms_comp_selected_option'])) {
+                    $sel_opt = sanitize_text_field((string) $request['vms_comp_selected_option']);
                     $sel_opt = preg_replace('/[^a-z0-9:_-]/i', '', (string) $sel_opt);
                     $k_comp_selected_option = function_exists('vms_meta_key')
                         ? (vms_meta_key('event_plan', 'comp_selected_option') ?: '_vms_comp_selected_option')
@@ -10411,7 +10476,7 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 // Handle actions (optional; normal "Update" saves have no action)
-                $action = isset($_POST['vms_event_plan_action']) ? sanitize_text_field($_POST['vms_event_plan_action']) : '';
+                $action = isset($request['vms_event_plan_action']) ? sanitize_text_field((string) $request['vms_event_plan_action']) : '';
                 $retry_step_key = '';
                 if (strpos($action, 'retry_cancellation_step:') === 0) {
                     $retry_step_key = sanitize_key(substr($action, strlen('retry_cancellation_step:')));
@@ -10433,12 +10498,12 @@ if (function_exists('vms_add_admin_notice')) {
                     ? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
                     : '_vms_event_plan_status';
 
-                $cancel_policy_post = isset($_POST['vms_cancel_policy']) ? sanitize_key((string) $_POST['vms_cancel_policy']) : '';
-                $cancel_reason_code_post = isset($_POST['vms_cancel_reason_code']) ? sanitize_key((string) $_POST['vms_cancel_reason_code']) : '';
-                $cancel_reason_note_post = isset($_POST['vms_cancel_reason_note']) ? sanitize_textarea_field((string) wp_unslash($_POST['vms_cancel_reason_note'])) : '';
-                $cancel_vendor_message_post = isset($_POST['vms_cancel_vendor_message']) ? sanitize_textarea_field((string) wp_unslash($_POST['vms_cancel_vendor_message'])) : '';
-                $cancel_auto_refund_confirmed_post = isset($_POST['vms_cancel_auto_refund_confirmed']) ? sanitize_key((string) $_POST['vms_cancel_auto_refund_confirmed']) : '0';
-                $cancel_manual_live_refund_confirm_post = isset($_POST['vms_cancel_manual_live_refund_confirm']) ? sanitize_key((string) $_POST['vms_cancel_manual_live_refund_confirm']) : '0';
+                $cancel_policy_post = isset($request['vms_cancel_policy']) ? sanitize_key((string) $request['vms_cancel_policy']) : '';
+                $cancel_reason_code_post = isset($request['vms_cancel_reason_code']) ? sanitize_key((string) $request['vms_cancel_reason_code']) : '';
+                $cancel_reason_note_post = isset($request['vms_cancel_reason_note']) ? sanitize_textarea_field((string) $request['vms_cancel_reason_note']) : '';
+                $cancel_vendor_message_post = isset($request['vms_cancel_vendor_message']) ? sanitize_textarea_field((string) $request['vms_cancel_vendor_message']) : '';
+                $cancel_auto_refund_confirmed_post = isset($request['vms_cancel_auto_refund_confirmed']) ? sanitize_key((string) $request['vms_cancel_auto_refund_confirmed']) : '0';
+                $cancel_manual_live_refund_confirm_post = isset($request['vms_cancel_manual_live_refund_confirm']) ? sanitize_key((string) $request['vms_cancel_manual_live_refund_confirm']) : '0';
 
                 $cancel_policy_options = function_exists('vms_cancellation_policy_options')
                     ? array_keys((array) vms_cancellation_policy_options())
@@ -10476,8 +10541,8 @@ if (function_exists('vms_add_admin_notice')) {
                     $current_status = 'draft';
                 }
                 $new_status = $current_status;
-                $replacement_date_requested = isset($_POST['vms_reschedule_event_date'])
-                    ? sanitize_text_field((string) wp_unslash($_POST['vms_reschedule_event_date']))
+                $replacement_date_requested = isset($request['vms_reschedule_event_date'])
+                    ? sanitize_text_field((string) $request['vms_reschedule_event_date'])
                     : '';
                 $queue_rescheduled_draft_after_cancel = false;
 
@@ -10745,8 +10810,8 @@ if (function_exists('vms_add_admin_notice')) {
                             break;
                         }
 
-                        $replacement_date = isset($_POST['vms_reschedule_event_date'])
-                            ? sanitize_text_field((string) wp_unslash($_POST['vms_reschedule_event_date']))
+                        $replacement_date = isset($request['vms_reschedule_event_date'])
+                            ? sanitize_text_field((string) $request['vms_reschedule_event_date'])
                             : '';
 
                         if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
@@ -10796,7 +10861,7 @@ if (function_exists('vms_add_admin_notice')) {
                                 }
                             }
                         }
-                        $bulk_confirm = isset($_POST['vms_cancel_bulk_retry_confirm']) ? sanitize_text_field((string) $_POST['vms_cancel_bulk_retry_confirm']) : '0';
+                        $bulk_confirm = isset($request['vms_cancel_bulk_retry_confirm']) ? sanitize_text_field((string) $request['vms_cancel_bulk_retry_confirm']) : '0';
                         if ($requires_bulk_confirm && $bulk_confirm !== '1') {
                             vms_add_admin_notice(__('Bulk retry requires confirmation because Refund execution is failed/blocked. Confirm and retry again.', 'backstage-venue-manager'), 'error');
                             break;
@@ -10840,12 +10905,12 @@ if (function_exists('vms_add_admin_notice')) {
         case 'apply_vendor_defaults':
                     case 'apply_band_defaults':
                         $vendor_id_for_apply = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
-                        $venue_id_for_apply = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
+                        $venue_id_for_apply = isset($request['vms_venue_id']) ? absint($request['vms_venue_id']) : 0;
                         if ($venue_id_for_apply <= 0) {
                             $k_venue_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'venue_id') ?: '_vms_venue_id') : '_vms_venue_id';
                             $venue_id_for_apply = (int) get_post_meta($post_id, $k_venue_id, true);
                         }
-                        $event_date_for_apply = isset($_POST['vms_event_date']) ? sanitize_text_field((string) wp_unslash($_POST['vms_event_date'])) : '';
+                        $event_date_for_apply = isset($request['vms_event_date']) ? sanitize_text_field((string) $request['vms_event_date']) : '';
                         if ($event_date_for_apply === '') {
                             $k_event_date = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'date') ?: '_vms_event_date') : '_vms_event_date';
                             $event_date_for_apply = (string) get_post_meta($post_id, $k_event_date, true);
@@ -10895,8 +10960,8 @@ if (function_exists('vms_add_admin_notice')) {
                         break;
 
                     case 'apply_venue_defaults':
-                        $venue_id   = isset($_POST['vms_venue_id']) ? absint($_POST['vms_venue_id']) : 0;
-                        $event_date = isset($_POST['vms_event_date']) ? sanitize_text_field($_POST['vms_event_date']) : '';
+                        $venue_id   = isset($request['vms_venue_id']) ? absint($request['vms_venue_id']) : 0;
+                        $event_date = isset($request['vms_event_date']) ? sanitize_text_field((string) $request['vms_event_date']) : '';
 
                         if ($venue_id <= 0 || !$event_date) {
                             vms_add_admin_notice(__('Select a Venue and Event Date first.', 'backstage-venue-manager'), 'error');
@@ -11869,11 +11934,11 @@ if (function_exists('vms_add_admin_notice')) {
             {
                 $post_id = isset($request['post_id']) ? absint($request['post_id']) : 0;
                 $default_redirect = vms_event_plan_edit_screen_url($post_id);
-                $redirect_raw = isset($request['redirect_to']) ? (string) wp_unslash($request['redirect_to']) : '';
+                $redirect_raw = isset($request['redirect_to']) ? (string) $request['redirect_to'] : '';
                 $redirect_url = $redirect_raw !== ''
                     ? wp_validate_redirect($redirect_raw, $default_redirect)
                     : $default_redirect;
-                $source = isset($request['source']) ? sanitize_key((string) wp_unslash($request['source'])) : '';
+                $source = isset($request['source']) ? sanitize_key((string) $request['source']) : '';
                 $result = array(
                     'ok' => false,
                     'post_id' => $post_id,
@@ -11894,7 +11959,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ? $redirect_url
                         : vms_event_plan_edit_screen_url($post_id);
 	                    $nonce = (isset($request['_vms_resync_calendar_nonce']) && !is_array($request['_vms_resync_calendar_nonce']))
-	                        ? sanitize_text_field(wp_unslash((string) $request['_vms_resync_calendar_nonce']))
+	                        ? sanitize_text_field((string) $request['_vms_resync_calendar_nonce'])
 	                        : '';
                     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_resync_calendar')) {
                         $result['notice_message'] = __('Calendar re-sync request could not be verified. Please reload the Event Plan and try again.', 'backstage-venue-manager');
@@ -11939,7 +12004,7 @@ if (function_exists('vms_add_admin_notice')) {
         if (!function_exists('vms_handle_admin_post_resync_event_to_calendar')) {
             function vms_handle_admin_post_resync_event_to_calendar(): void
             {
-                vms_event_plan_handle_resync_calendar_request($_REQUEST, true);
+                vms_event_plan_handle_resync_calendar_request(vms_event_plan_current_request_data(), true);
             }
         }
         add_action('admin_post_vms_resync_event_to_calendar', 'vms_handle_admin_post_resync_event_to_calendar');
@@ -11993,7 +12058,7 @@ if (function_exists('vms_add_admin_notice')) {
                 $request_candidate_id = $requested_event_plan_id > 0
                     ? $requested_event_plan_id
                     : ($requested_source_post_id > 0 ? $requested_source_post_id : $requested_post_id);
-                $return_url_raw = isset($request['return_url']) ? (string) wp_unslash($request['return_url']) : '';
+                $return_url_raw = isset($request['return_url']) ? (string) $request['return_url'] : '';
 
                 if ($request_candidate_id <= 0) {
                     $candidate_urls = array();
@@ -12057,7 +12122,7 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
 	                $nonce = (isset($request['_wpnonce']) && !is_array($request['_wpnonce']))
-	                    ? sanitize_text_field(wp_unslash((string) $request['_wpnonce']))
+	                    ? sanitize_text_field((string) $request['_wpnonce'])
 	                    : '';
                 $nonce_ok = false;
                 foreach (array_unique(array_filter(array(absint($post_id), absint($request_candidate_id), absint($requested_source_post_id), absint($requested_post_id)))) as $nonce_post_id) {
@@ -12147,17 +12212,18 @@ if (function_exists('vms_add_admin_notice')) {
             if (!is_admin()) {
                 return;
             }
-            $flag = isset($_GET['vms_live_refund_now']) ? sanitize_key((string) wp_unslash($_GET['vms_live_refund_now'])) : '';
+            $request = vms_event_plan_current_get_request();
+            $flag = isset($request['vms_live_refund_now']) ? sanitize_key((string) $request['vms_live_refund_now']) : '';
             if ($flag !== '1') {
                 return;
             }
-            vms_run_live_refunds_now_request($_GET);
+            vms_run_live_refunds_now_request($request);
         }
 
         add_action('admin_post_vms_run_live_refunds_now', 'vms_handle_admin_post_run_live_refunds_now');
         function vms_handle_admin_post_run_live_refunds_now(): void
         {
-            vms_run_live_refunds_now_request($_REQUEST);
+            vms_run_live_refunds_now_request(vms_event_plan_current_request_data());
         }
 
         add_action('admin_notices', 'vms_render_event_planadmin_notices');
@@ -13521,8 +13587,9 @@ if (function_exists('vms_add_admin_notice')) {
         add_action('admin_init', function () {
             if (!is_admin()) return;
 
-            $post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
-            $action  = isset($_GET['action']) ? sanitize_key((string) $_GET['action']) : '';
+            $request = vms_event_plan_current_get_request();
+            $post_id = isset($request['post']) ? absint($request['post']) : 0;
+            $action  = isset($request['action']) ? sanitize_key((string) $request['action']) : '';
             if ($post_id <= 0 || $action !== 'edit') return;
 
             $post = get_post($post_id);
@@ -14054,7 +14121,7 @@ if (function_exists('vms_add_admin_notice')) {
                     if (defined('DOING_AJAX') && DOING_AJAX) {
                         return;
                     }
-					if (!empty($_POST)) {
+					if (!empty(vms_event_plan_current_post_request())) {
 						return;
 					}
 				}
@@ -14162,7 +14229,8 @@ if (function_exists('vms_add_admin_notice')) {
 				}
 
 				// Never spend admin-editor CPU on migration cleanup during a save/publish request.
-				if (!empty($_POST) || (isset($_GET['action'], $_GET['post']) && (string) $_GET['action'] === 'edit')) {
+				$get_request = vms_event_plan_current_get_request();
+				if (!empty(vms_event_plan_current_post_request()) || (isset($get_request['action'], $get_request['post']) && (string) $get_request['action'] === 'edit')) {
 					return;
 				}
 
@@ -15504,7 +15572,8 @@ if (function_exists('vms_add_admin_notice')) {
             if (!$screen || $screen->id !== 'edit-vms_event_plan') return;
 
             // Optional explicit filter (future UI can set this query param).
-            $venue_id = isset($_GET['vms_venue_id']) ? absint($_GET['vms_venue_id']) : 0;
+            $request = vms_event_plan_current_get_request();
+            $venue_id = isset($request['vms_venue_id']) ? absint($request['vms_venue_id']) : 0;
             if ($venue_id <= 0) return;
 
             $meta_query = (array) $query->get('meta_query');

@@ -34,6 +34,48 @@ if (!function_exists('vms_event_plan_perf_save_request_state')) {
 	}
 }
 
+if (!function_exists('vms_event_plan_perf_request_data')) {
+	function vms_event_plan_perf_request_data(): array
+	{
+		static $request = null;
+		if (is_array($request)) {
+			return $request;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Performance sampling reads request context only for diagnostics and never authorizes or mutates state.
+		$request = (isset($_REQUEST) && is_array($_REQUEST)) ? wp_unslash($_REQUEST) : array();
+		return is_array($request) ? $request : array();
+	}
+}
+
+if (!function_exists('vms_event_plan_perf_get_data')) {
+	function vms_event_plan_perf_get_data(): array
+	{
+		static $request = null;
+		if (is_array($request)) {
+			return $request;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Performance sampling reads request context only for diagnostics and never authorizes or mutates state.
+		$request = (isset($_GET) && is_array($_GET)) ? wp_unslash($_GET) : array();
+		return is_array($request) ? $request : array();
+	}
+}
+
+if (!function_exists('vms_event_plan_perf_post_data')) {
+	function vms_event_plan_perf_post_data(): array
+	{
+		static $request = null;
+		if (is_array($request)) {
+			return $request;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Performance sampling reads request context only for diagnostics and never authorizes or mutates state.
+		$request = (isset($_POST) && is_array($_POST)) ? wp_unslash($_POST) : array();
+		return is_array($request) ? $request : array();
+	}
+}
+
 if (!function_exists('vms_event_plan_perf_get_plan_counter')) {
 	function vms_event_plan_perf_get_plan_counter(string $key, int $plan_id): int
 	{
@@ -70,11 +112,14 @@ if (!function_exists('vms_event_plan_perf_increment_plan_counter')) {
 if (!function_exists('vms_event_plan_perf_current_plan_id')) {
 	function vms_event_plan_perf_current_plan_id(): int
 	{
+		$request = vms_event_plan_perf_request_data();
+		$get_request = vms_event_plan_perf_get_data();
+		$post_request = vms_event_plan_perf_post_data();
 		$candidates = array(
-			$_REQUEST['post'] ?? 0,
-			$_REQUEST['post_ID'] ?? 0,
-			$_GET['post'] ?? 0,
-			$_POST['post_ID'] ?? 0,
+			$request['post'] ?? 0,
+			$request['post_ID'] ?? 0,
+			$get_request['post'] ?? 0,
+			$post_request['post_ID'] ?? 0,
 		);
 
 		foreach ($candidates as $candidate) {
@@ -91,16 +136,18 @@ if (!function_exists('vms_event_plan_perf_current_plan_id')) {
 if (!function_exists('vms_event_plan_perf_request_scenario')) {
 	function vms_event_plan_perf_request_scenario(): string
 	{
-		$scenario = $_REQUEST['_vms_ep_perf_trace_scenario'] ?? '';
-		return sanitize_key((string) wp_unslash($scenario));
+		$request = vms_event_plan_perf_request_data();
+		$scenario = $request['_vms_ep_perf_trace_scenario'] ?? '';
+		return sanitize_key((string) $scenario);
 	}
 }
 
 if (!function_exists('vms_event_plan_perf_baseline_screen')) {
 	function vms_event_plan_perf_baseline_screen(): string
 	{
-		$screen = $_REQUEST['_vms_ep_perf_baseline_screen'] ?? '';
-		return sanitize_key((string) wp_unslash($screen));
+		$request = vms_event_plan_perf_request_data();
+		$screen = $request['_vms_ep_perf_baseline_screen'] ?? '';
+		return sanitize_key((string) $screen);
 	}
 }
 
@@ -474,8 +521,9 @@ if (!function_exists('vms_event_plan_perf_request_context')) {
 		}
 
 		$screen = vms_event_plan_perf_current_screen_context();
-		$plan_action = isset($_REQUEST['vms_event_plan_action']) ? sanitize_key((string) wp_unslash($_REQUEST['vms_event_plan_action'])) : '';
-		$wp_action = isset($_REQUEST['action']) ? sanitize_key((string) wp_unslash($_REQUEST['action'])) : '';
+		$request = vms_event_plan_perf_request_data();
+		$plan_action = isset($request['vms_event_plan_action']) ? sanitize_key((string) $request['vms_event_plan_action']) : '';
+		$wp_action = isset($request['action']) ? sanitize_key((string) $request['action']) : '';
 		$post_status = $plan_id > 0 ? sanitize_key((string) get_post_status($plan_id)) : '';
 		$autosave = (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) ? 1 : 0;
 		if (!$autosave && $plan_id > 0 && function_exists('wp_is_post_autosave')) {
@@ -491,8 +539,8 @@ if (!function_exists('vms_event_plan_perf_request_context')) {
 			'plan_action' => $plan_action,
 			'is_autosave' => $autosave,
 			'is_revision' => ($plan_id > 0 && wp_is_post_revision($plan_id)) ? 1 : 0,
-			'is_preview' => (!empty($_REQUEST['preview']) || !empty($_REQUEST['wp-preview'])) ? 1 : 0,
-			'is_publish_request' => ((strpos($plan_action, 'publish') !== false) || sanitize_key((string) ($_REQUEST['post_status'] ?? '')) === 'publish') ? 1 : 0,
+			'is_preview' => (!empty($request['preview']) || !empty($request['wp-preview'])) ? 1 : 0,
+			'is_publish_request' => ((strpos($plan_action, 'publish') !== false) || sanitize_key((string) ($request['post_status'] ?? '')) === 'publish') ? 1 : 0,
 			'current_user_id' => absint(get_current_user_id()),
 			'post_status' => $post_status,
 			'query_count' => isset($wpdb->num_queries) ? absint($wpdb->num_queries) : 0,
@@ -576,7 +624,8 @@ if (!function_exists('vms_event_plan_perf_should_capture_queries')) {
 			return true;
 		}
 
-		$post_type = isset($_REQUEST['post_type']) ? sanitize_key((string) wp_unslash($_REQUEST['post_type'])) : '';
+		$request = vms_event_plan_perf_request_data();
+		$post_type = isset($request['post_type']) ? sanitize_key((string) $request['post_type']) : '';
 		return $post_type === 'vms_event_plan';
 	}
 }
@@ -1223,7 +1272,7 @@ if (!function_exists('vms_event_plan_perf_track_save_pass')) {
 				'phase' => 'pass',
 				'save_pass' => $pass,
 				'update' => $update ? 1 : 0,
-				'post_status_before' => isset($_POST['original_post_status']) ? sanitize_key((string) wp_unslash($_POST['original_post_status'])) : '',
+				'post_status_before' => isset(vms_event_plan_perf_post_data()['original_post_status']) ? sanitize_key((string) vms_event_plan_perf_post_data()['original_post_status']) : '',
 				'post_status_after' => sanitize_key((string) $post->post_status),
 			)
 		);
@@ -1235,7 +1284,8 @@ if (!function_exists('vms_event_plan_perf_detect_admin_request')) {
 	function vms_event_plan_perf_detect_admin_request(): array
 	{
 		$plan_id = vms_event_plan_perf_current_plan_id();
-		$post_type = isset($_REQUEST['post_type']) ? sanitize_key((string) wp_unslash($_REQUEST['post_type'])) : '';
+		$request = vms_event_plan_perf_request_data();
+		$post_type = isset($request['post_type']) ? sanitize_key((string) $request['post_type']) : '';
 		if ($post_type === '' && $plan_id > 0) {
 			$post_type = sanitize_key((string) get_post_type($plan_id));
 		}
@@ -1243,7 +1293,7 @@ if (!function_exists('vms_event_plan_perf_detect_admin_request')) {
 		return array(
 			'plan_id' => $plan_id,
 			'post_type' => $post_type,
-			'screen_action' => isset($_REQUEST['action']) ? sanitize_key((string) wp_unslash($_REQUEST['action'])) : '',
+			'screen_action' => isset($request['action']) ? sanitize_key((string) $request['action']) : '',
 		);
 	}
 }

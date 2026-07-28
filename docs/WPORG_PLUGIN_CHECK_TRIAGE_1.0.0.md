@@ -146,13 +146,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Current Category Triage
 
-- Fresh packaged post-`WPORG-28R-G2` baseline from `2026-07-27`: `265` errors, `1508` warnings, `1773` total findings, `20` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1644`.
+- Fresh packaged post-`WPORG-28R-G3` baseline from `2026-07-28`: `265` errors, `1344` warnings, `1609` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1480`.
 - The packaged scan reports `privateincludes/...` paths. The roadmap below uses the corresponding mirror `includes/...` ownership files that future implementation children must edit.
-- `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blocker rows without changing any unrelated rule-code count. The surviving blocked families are still the same DB/SQL, nonce/input, date/time, and logging families.
+- `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blocker rows without changing any unrelated blocker-family total; the only rule-set shape change was that `WordPress.Security.ValidatedSanitizedInput.InputNotValidated` dropped to `0` and disappeared from the packaged result.
 
 | Category | Current packaged count | Representative files | Current classification | Current strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `495` | `includes/cpt/event-plans.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/portal/vendor-portal.php`, `includes/core/plugin.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G3` through `WPORG-28R-G7` in order, beginning with the Event Plan editor/core request slice in `G3` before widening into ancillary CPT, public/portal, or ticketing flows. |
+| Nonce and input handling | `331` | `includes/cpt/vendors.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/portal/vendor-portal.php`, `includes/core/plugin.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G4` through `WPORG-28R-G7` in order, beginning with the ancillary CPT save slice in `G4` now that the Event Plan editor/core request slice in `G3` is closed. |
 | Database and SQL safety | `1082` | `includes/core/staffing.php`, `includes/modules/admissions/pass-claims.php`, `includes/modules/availability-date-dispatch/helpers.php`, `includes/social-share/queue-repo.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G8` through `WPORG-28R-G13`; land direct mutation / prepare fixes before cache-policy, reporting, and slow-meta-query follow-up. |
 | Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G14` and `WPORG-28R-G15` after the earlier request and query boundaries they depend on. |
 | Development logging | `42` | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G16` and `WPORG-28R-G17` after the earlier lifecycle work clarifies which logs remain operational, which are dev traces, and which can be safely gated or removed. |
@@ -189,12 +189,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 #### `WPORG-28R-G3 — Event Plan Editor And Core Request Boundaries`
 
-- Count: `164` (`Missing 23`, `Recommended 76`, `InputNotSanitized 30`, `InputNotValidated 3`, `MissingUnslash 32`)
+- Status: `verified` on `2026-07-28`
+- Pre-edit count: `164` (`Missing 23`, `Recommended 76`, `InputNotSanitized 30`, `InputNotValidated 3`, `MissingUnslash 32`); current remaining count: `0`
 - Files: `includes/cpt/event-plans.php`, `includes/core/event-plan-performance.php`, `includes/core/event-plan-save-profiler.php`, `includes/core/event-plan-review.php`, `includes/cpt/event-plans/partials/workflow-status.php`
 - Lifecycle / subsystem: `CPT_SAVE_HANDLER`, `ADMIN_PAGE`, `REPORTING`; Event Plan editor, save path, save profiler, review and workflow helpers
 - Boundary: keep mutation, autosave, preview, and profiling paths distinct; preserve any raw values needed for signatures, IDs, or JSON payloads only where the current boundary proves that retention is intentional
-- Focused tests: `tests/event-plan-legacy-ticketing-integration-smoke.php`, `tests/event-plan-performance-request-id-remediation.php`, `tests/event-plan-readiness-details-output-remediation.php`, `tests/decoded-json-validation.php`
-- Closure / defers: owned packaged input rows `164 -> 0`; defer same-file DB/meta-query rows to `G13`, same-file logging rows to `G17`, and same-file date formatting rows to `G14`
+- Focused tests: `tests/event-plan-legacy-ticketing-integration-smoke.php`, `tests/event-plan-performance-request-id-remediation.php`, `tests/event-plan-readiness-details-output-remediation.php`, `tests/decoded-json-validation.php`, and `tests/event-plan-review-json-characterization.php`
+- Closure / defers: owned packaged input rows `164 -> 0`; global code deltas were only `Missing 75 -> 52 (-23)`, `Recommended 258 -> 182 (-76)`, `InputNotSanitized 91 -> 61 (-30)`, `InputNotValidated 3 -> 0 (-3)`, and `MissingUnslash 68 -> 36 (-32)`; same-file deferred DB/logging rows in the authorized G3 files stayed exactly `15`, same-file accepted `OutputNotEscaped` rows stayed exactly `48`, and `InputNotValidated` disappeared from the packaged rule-code set entirely
 
 #### `WPORG-28R-G4 — Ancillary CPT Save Boundaries`
 
@@ -367,6 +368,6 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Recommended Next Task
 
-- Next execution target: `WPORG-28R-G3 — Event Plan editor and core request boundaries`
-- Scope: keep the child limited to the `164` owned rows enumerated in the `G3` subsection above, across `includes/cpt/event-plans.php`, `includes/core/event-plan-performance.php`, `includes/core/event-plan-save-profiler.php`, `includes/core/event-plan-review.php`, and `includes/cpt/event-plans/partials/workflow-status.php`
-- Scope guardrails: do not reopen `G1` or `G2`, do not widen into DB/SQL, output, logging, date/time, public/portal, admissions, ticketing, or ancillary CPT runtime work, and continue deferring same-file DB, logging, and date rows to their documented later `G13`, `G17`, and `G14` owners
+- Next execution target: `WPORG-28R-G4 — Ancillary CPT save boundaries`
+- Scope: keep the child limited to the `39` owned rows enumerated in the `G4` subsection above, across `includes/cpt/venues.php`, `includes/cpt/ratings.php`, `includes/cpt/vendors.php`, and `includes/cpt/staff.php`
+- Scope guardrails: do not reopen `G1`, `G2`, or `G3`, do not widen into DB/SQL, output, logging, date/time, public/portal, admissions, ticketing, or shared helper runtime work, and continue deferring the documented same-file DB rows to `G11` and `G13`

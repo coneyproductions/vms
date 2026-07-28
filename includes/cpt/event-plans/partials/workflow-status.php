@@ -76,7 +76,12 @@
             : array();
     ?>
 
-    <?php $reschedule_date_value = isset($_POST['vms_reschedule_event_date']) ? sanitize_text_field((string) wp_unslash($_POST['vms_reschedule_event_date'])) : ''; ?>
+    <?php
+        $workflow_request = function_exists('vms_event_plan_editor_verified_post_data')
+            ? vms_event_plan_editor_verified_post_data()
+            : array();
+        $reschedule_date_value = isset($workflow_request['vms_reschedule_event_date']) ? sanitize_text_field((string) $workflow_request['vms_reschedule_event_date']) : '';
+    ?>
 
     <hr />
     <p>
