@@ -146,22 +146,22 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Current Category Triage
 
-- Fresh packaged post-`WPORG-28R-G3` baseline from `2026-07-28`: `265` errors, `1344` warnings, `1609` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1480`.
+- Fresh packaged post-`WPORG-28R-G4` baseline from `2026-07-28`: `265` errors, `1305` warnings, `1570` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1441`.
 - The packaged scan reports `privateincludes/...` paths. The roadmap below uses the corresponding mirror `includes/...` ownership files that future implementation children must edit.
-- `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blocker rows without changing any unrelated blocker-family total; the only rule-set shape change was that `WordPress.Security.ValidatedSanitizedInput.InputNotValidated` dropped to `0` and disappeared from the packaged result.
+- `WPORG-28R-G4` removed the next `39` ancillary CPT save nonce/input blocker rows without changing any unrelated blocker-family total; the only global rule-count deltas were `WordPress.Security.NonceVerification.Missing 52 -> 38`, `WordPress.Security.NonceVerification.Recommended 182 -> 172`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 61 -> 54`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 36 -> 28`.
 
 | Category | Current packaged count | Representative files | Current classification | Current strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `331` | `includes/cpt/vendors.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/portal/vendor-portal.php`, `includes/core/plugin.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G4` through `WPORG-28R-G7` in order, beginning with the ancillary CPT save slice in `G4` now that the Event Plan editor/core request slice in `G3` is closed. |
+| Nonce and input handling | `292` | `includes/integrations/ticketing-claims-admin.php`, `includes/portal/vendor-portal.php`, `includes/core/plugin.php`, `includes/vendor-applications.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G5` through `WPORG-28R-G7` in order, beginning with the public, portal, and vendor-application request slice in `G5` now that the ancillary CPT save slice in `G4` is closed. |
 | Database and SQL safety | `1082` | `includes/core/staffing.php`, `includes/modules/admissions/pass-claims.php`, `includes/modules/availability-date-dispatch/helpers.php`, `includes/social-share/queue-repo.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G8` through `WPORG-28R-G13`; land direct mutation / prepare fixes before cache-policy, reporting, and slow-meta-query follow-up. |
 | Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G14` and `WPORG-28R-G15` after the earlier request and query boundaries they depend on. |
 | Development logging | `42` | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G16` and `WPORG-28R-G17` after the earlier lifecycle work clarifies which logs remain operational, which are dev traces, and which can be safely gated or removed. |
-| Escaping and output safety | `127` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `1644` submission blockers. |
+| Escaping and output safety | `127` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `1441` submission blockers. |
 
 ## Residual Submission-Blocker Roadmap
 
 - `WPORG-28R-G0` now owns the complete residual blocker decomposition. Every current blocker row belongs to exactly one implementation child below.
-- Family sums reconcile exactly: `G3-G7 = 495`, `G8-G13 = 1082`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `1644`.
+- Family sums reconcile exactly: `G5-G7 = 292`, `G8-G13 = 1082`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `1441`.
 - Every implementation child still reruns `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php` in addition to the focused suites listed below.
 - Every implementation child closes only its owned packaged rows; unrelated families must remain count-for-count unchanged except for documented same-file line movement.
 
@@ -199,12 +199,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 #### `WPORG-28R-G4 — Ancillary CPT Save Boundaries`
 
-- Count: `39` (`Missing 14`, `Recommended 10`, `InputNotSanitized 7`, `MissingUnslash 8`)
+- Status: `verified` on `2026-07-28`
+- Pre-edit count: `39` (`Missing 14`, `Recommended 10`, `InputNotSanitized 7`, `MissingUnslash 8`); current remaining count: `0`
 - Files: `includes/cpt/venues.php`, `includes/cpt/ratings.php`, `includes/cpt/vendors.php`, `includes/cpt/staff.php`
 - Lifecycle / subsystem: `CPT_SAVE_HANDLER`; Venue, Ratings, Vendor, and Staff editors
 - Boundary: keep save-handler authorization and nonce proof separate from read-only admin filters; normalize scalar IDs, arrays, and unslashing at the save edge rather than deeper in persistence helpers
 - Focused tests: `tests/authorization-boundary-hardening.php`, `tests/vendor-tax-profile-strict-post-remediation.php`, `tests/request-input-sanitization.php`
-- Closure / defers: owned packaged input rows `39 -> 0`; defer `includes/cpt/vendors.php` DB rows to `G11` and `includes/cpt/ratings.php` DB rows to `G13`
+- Closure / defers: owned packaged input rows `39 -> 0`; global code deltas were only `Missing 52 -> 38 (-14)`, `Recommended 182 -> 172 (-10)`, `InputNotSanitized 61 -> 54 (-7)`, and `MissingUnslash 36 -> 28 (-8)`; same-file deferred DB rows in `includes/cpt/vendors.php` and `includes/cpt/ratings.php` stayed exactly `4`, and the same-file accepted `WordPress.Security.EscapeOutput.OutputNotEscaped` rows in `includes/cpt/venues.php` and `includes/cpt/vendors.php` stayed exactly `2`
 
 #### `WPORG-28R-G5 — Public, Portal, And Vendor-Application Request Boundaries`
 
@@ -361,13 +362,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Parent Closeout Condition
 
-- `WPORG-28R-G0` is terminal only because the roadmap now reconciles all remaining `1644` blocker rows with no unowned or multiply-owned occurrence.
+- `WPORG-28R-G0` is terminal only because the roadmap now reconciles all remaining `1441` blocker rows with no unowned or multiply-owned occurrence.
 - `WPORG-28R` remains blocked until every `G1` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
 - `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain open or blocked exactly as documented in the ledger.
 - Slug reservation, corrected upload, and reviewer communication remain unauthorized until the parent is closed and explicit authorization is given.
 
 ## Recommended Next Task
 
-- Next execution target: `WPORG-28R-G4 — Ancillary CPT save boundaries`
-- Scope: keep the child limited to the `39` owned rows enumerated in the `G4` subsection above, across `includes/cpt/venues.php`, `includes/cpt/ratings.php`, `includes/cpt/vendors.php`, and `includes/cpt/staff.php`
-- Scope guardrails: do not reopen `G1`, `G2`, or `G3`, do not widen into DB/SQL, output, logging, date/time, public/portal, admissions, ticketing, or shared helper runtime work, and continue deferring the documented same-file DB rows to `G11` and `G13`
+- Next execution target: `WPORG-28R-G5 — Public, portal, and vendor-application request boundaries`
+- Scope: keep the child limited to the `103` owned rows enumerated in the `G5` subsection above, across `includes/portal/vendor-portal.php`, `includes/public/event-feedback.php`, `includes/vendor-applications.php`, `includes/portal/staff-portal.php`, `includes/portal/vendor-tax-profile.php`, `includes/public/express-bar.php`, `includes/public/calendar-ics.php`, `includes/modules/status-notices/front.php`, and `includes/core/vendor-application-confirmation.php`
+- Scope guardrails: do not reopen `G1`, `G2`, `G3`, or `G4`, do not widen into DB/SQL, output, logging, date/time, admissions, ticketing, or shared-helper runtime work, and continue deferring the documented same-file DB, date/time, and logging rows to their assigned later children

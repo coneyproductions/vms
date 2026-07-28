@@ -699,6 +699,7 @@ eval(vms_test_extract_named_function($helpersPath, 'vms_vendor_handle_mark_revie
 eval(vms_test_extract_named_function($venueTemplatesPath, 'vms_handle_create_venue_from_template'));
 eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_query_arg'));
 eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_maybe_handle_post'));
+eval(vms_test_extract_named_function($eventPlansPath, 'vms_event_plan_current_get_request'));
 $GLOBALS['vms_test_event_plan_admin_guard'] = eval(
 	'return ' . vms_test_extract_inline_closure($eventPlansPath, "add_action('admin_init', function () {") . ';'
 );

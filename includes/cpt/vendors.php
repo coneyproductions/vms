@@ -189,6 +189,14 @@ if (!function_exists('vms_vendor_has_public_profile_type')) {
     }
 }
 
+if (!function_exists('vms_vendor_availability_snapshot_month')) {
+    function vms_vendor_availability_snapshot_month(): string
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only availability snapshot month only changes which calendar view is displayed.
+        return vms_request_read_text_field($_GET, 'vms_vendor_month');
+    }
+}
+
 /**
  * Admin functionality for VMS Vendors.
  */
@@ -407,10 +415,7 @@ class VMS_Admin_Vendors
     public function render_vendor_availability_snapshot_meta_box($post)
     {
         $post_id = (int) $post->ID;
-        $month = '';
-        if (isset($_GET['vms_vendor_month'])) {
-            $month = sanitize_text_field((string) wp_unslash($_GET['vms_vendor_month']));
-        }
+        $month = vms_vendor_availability_snapshot_month();
 
         if (function_exists('vms_render_vendor_availability_vendor_profile_calendar')) {
             vms_render_vendor_availability_vendor_profile_calendar($post_id, $month);
@@ -426,12 +431,8 @@ class VMS_Admin_Vendors
     public function save_vendor_meta($post_id, $post)
     {
         // Check nonce(s). Either meta box nonce should allow saving its own fields.
-        $details_nonce = (isset($_POST['vms_vendor_details_nonce']) && !is_array($_POST['vms_vendor_details_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_details_nonce']))
-            : '';
-        $profile_nonce = (isset($_POST['vms_vendor_public_profile_nonce']) && !is_array($_POST['vms_vendor_public_profile_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_public_profile_nonce']))
-            : '';
+        $details_nonce = vms_request_read_text_field($_POST, 'vms_vendor_details_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Details nonce is required before local verification.
+        $profile_nonce = vms_request_read_text_field($_POST, 'vms_vendor_public_profile_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Public Profile nonce is required before local verification.
         $details_ok = ($details_nonce !== '' && wp_verify_nonce($details_nonce, 'vms_save_vendor_details'));
         $profile_ok = ($profile_nonce !== '' && wp_verify_nonce($profile_nonce, 'vms_save_vendor_public_profile'));
 
@@ -459,10 +460,10 @@ class VMS_Admin_Vendors
             // Sanitize and save Vendor Details-only fields.
             // City/State intentionally live only in Tax Profile (Admin) to avoid duplicate shared inputs.
             $fields = array(
-                $k_contact_name  => isset($_POST['vms_contact_name']) ? sanitize_text_field($_POST['vms_contact_name']) : '',
-                $k_primary_email => isset($_POST['vms_primary_email']) ? sanitize_email($_POST['vms_primary_email']) : '',
-                $k_primary_phone => isset($_POST['vms_primary_phone']) ? sanitize_text_field($_POST['vms_primary_phone']) : '',
-                $k_website       => isset($_POST['vms_website_url']) ? esc_url_raw($_POST['vms_website_url']) : '',
+                $k_contact_name  => vms_request_read_text_field($_POST, 'vms_contact_name'),
+                $k_primary_email => vms_request_read_email($_POST, 'vms_primary_email'),
+                $k_primary_phone => vms_request_read_text_field($_POST, 'vms_primary_phone'),
+                $k_website       => esc_url_raw(vms_request_read_scalar($_POST, 'vms_website_url')),
             );
 
             foreach ($fields as $meta_key => $value) {
@@ -508,9 +509,12 @@ class VMS_Admin_Vendors
                 '_vms_vendor_social_youtube',
                 '_vms_vendor_social_spotify',
             );
-            $social_raw = isset($_POST['vms_vendor_social']) && is_array($_POST['vms_vendor_social']) ? (array) $_POST['vms_vendor_social'] : array();
+            $social_raw = (isset($_POST['vms_vendor_social']) && is_array($_POST['vms_vendor_social']))
+                ? (array) wp_unslash($_POST['vms_vendor_social']) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Vendor social URLs are unslashed here and sanitized element-by-element below.
+                : array();
             foreach ($social_keys as $social_key) {
-                $value = isset($social_raw[$social_key]) ? esc_url_raw((string) wp_unslash($social_raw[$social_key])) : '';
+                $raw_value = $social_raw[$social_key] ?? '';
+                $value = is_scalar($raw_value) ? esc_url_raw((string) $raw_value) : '';
                 if ($value === '') {
                     delete_post_meta($post_id, $social_key);
                 } else {

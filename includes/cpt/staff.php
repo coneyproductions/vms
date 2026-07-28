@@ -77,15 +77,54 @@ add_action('admin_init', function () {
     update_option('vms_staff_roles_seeded', 1);
 });
 
+if (!function_exists('vms_staff_has_verified_editor_request')) {
+    function vms_staff_has_verified_editor_request(int $post_id): bool
+    {
+        $post_id = absint($post_id);
+        if ($post_id <= 0) {
+            return false;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the core post nonce is required before verification on this save_post boundary.
+        $post_nonce = vms_request_read_text_field($_POST, '_wpnonce');
+        if ($post_nonce !== '' && wp_verify_nonce($post_nonce, 'update-post_' . $post_id)) {
+            return true;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Inline and bulk edit saves use a separate core edit nonce.
+        $inline_nonce = vms_request_read_text_field($_POST, '_inline_edit');
+        if ($inline_nonce !== '' && (wp_verify_nonce($inline_nonce, 'inlineeditnonce') || wp_verify_nonce($inline_nonce, 'taxinlineeditnonce'))) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('vms_staff_submitted_tax_input')) {
+    function vms_staff_submitted_tax_input(): array
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Caller verifies the core editor nonce before this taxonomy read.
+        if (!isset($_POST['tax_input']) || !is_array($_POST['tax_input'])) {
+            return array();
+        }
+
+        $tax_input = wp_unslash($_POST['tax_input']); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Caller verifies the core editor nonce before this taxonomy read, and the save hook normalizes term IDs after unslashing the submitted taxonomy assignments.
+
+        return is_array($tax_input) ? $tax_input : array();
+    }
+}
+
 add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $update): void {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
     if (!taxonomy_exists('vms_staff_role')) return;
-    if (!isset($_POST['tax_input']) || !is_array($_POST['tax_input'])) return;
-    if (!array_key_exists('vms_staff_role', $_POST['tax_input'])) return;
+    if (!vms_staff_has_verified_editor_request($post_id)) return;
+    $tax_input = vms_staff_submitted_tax_input();
+    if (!array_key_exists('vms_staff_role', $tax_input)) return;
 
-    $raw_terms = wp_unslash($_POST['tax_input']['vms_staff_role']);
+    $raw_terms = $tax_input['vms_staff_role'] ?? array();
     $term_ids = is_array($raw_terms)
         ? array_values(array_filter(array_map('absint', $raw_terms)))
         : array();
@@ -321,9 +360,11 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
         : '';
     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_qualifications_save')) return;
 
-    $rows = (isset($_POST['vms_staff_qualifications']) && is_array($_POST['vms_staff_qualifications']))
-        ? (array) wp_unslash($_POST['vms_staff_qualifications'])
-        : array();
+    $rows = array();
+    if (isset($_POST['vms_staff_qualifications']) && is_array($_POST['vms_staff_qualifications'])) {
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured qualification rows are normalized element-by-element in the staffing save helpers.
+        $rows = (array) wp_unslash($_POST['vms_staff_qualifications']);
+    }
     if (function_exists('vms_staffing_save_staff_qualifications_with_review')) {
         vms_staffing_save_staff_qualifications_with_review($post_id, $rows, get_current_user_id());
     } elseif (function_exists('vms_staffing_save_staff_qualifications')) {

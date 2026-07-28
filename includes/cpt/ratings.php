@@ -1,31 +1,47 @@
 <?php
 defined('ABSPATH') || exit;
 
+if (!function_exists('vms_rating_request_source')) {
+    function vms_rating_request_source(): array
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public rating form repopulation reads submitted POST state; mutation remains nonce-gated in vms_handle_rating_submission().
+        return is_array($_POST) ? $_POST : array();
+    }
+}
+
+if (!function_exists('vms_rating_request_query_absint')) {
+    function vms_rating_request_query_absint(string $key): int
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only rating-link query arguments only select the display context.
+        return vms_request_read_absint($_GET, $key);
+    }
+}
+
 if (!function_exists('vms_rating_submitted_text_field')) {
     function vms_rating_submitted_text_field(string $key): string
     {
-        return vms_request_read_text_field($_POST, $key);
+        return vms_request_read_text_field(vms_rating_request_source(), $key);
     }
 }
 
 if (!function_exists('vms_rating_submitted_email')) {
     function vms_rating_submitted_email(string $key): string
     {
-        return vms_request_read_email($_POST, $key);
+        return vms_request_read_email(vms_rating_request_source(), $key);
     }
 }
 
 if (!function_exists('vms_rating_submitted_comment')) {
     function vms_rating_submitted_comment(): string
     {
-        return vms_request_read_textarea_field($_POST, 'vms_rating_comment');
+        return vms_request_read_textarea_field(vms_rating_request_source(), 'vms_rating_comment');
     }
 }
 
 if (!function_exists('vms_rating_submitted_value')) {
     function vms_rating_submitted_value(string $key): int
     {
-        $value = vms_request_read_absint($_POST, $key);
+        $value = vms_request_read_absint(vms_rating_request_source(), $key);
         return ($value >= 1 && $value <= 5) ? $value : 0;
     }
 }
@@ -300,8 +316,15 @@ function vms_rate_band_shortcode($atts) {
     ), $atts, 'vms_rate_band');
 
     // Allow event/band to come from query string as well.
-    $event_id = isset($_GET['event']) ? vms_request_read_absint($_GET, 'event') : absint($atts['event']);
-    $band_id  = isset($_GET['band'])  ? vms_request_read_absint($_GET, 'band')  : absint($atts['band']);
+    $event_id = vms_rating_request_query_absint('event');
+    if ($event_id <= 0) {
+        $event_id = absint($atts['event']);
+    }
+
+    $band_id = vms_rating_request_query_absint('band');
+    if ($band_id <= 0) {
+        $band_id = absint($atts['band']);
+    }
 
     // If we don't even have IDs, bail.
     if (!$event_id || !$band_id) {
@@ -354,7 +377,7 @@ function vms_rate_band_shortcode($atts) {
 
     // Handle form submission
     $message = '';
-    if (vms_request_method() === 'post' && isset($_POST['vms_rating_submit'])) {
+    if (vms_request_method() === 'post' && vms_request_read_bool_flag(vms_rating_request_source(), 'vms_rating_submit')) {
         $result  = vms_handle_rating_submission($event_id, $band_id);
         $message = $result['message'];
     }

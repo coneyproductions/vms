@@ -118,6 +118,22 @@ if (!function_exists('vms_get_venue_location_data')) {
     }
 }
 
+if (!function_exists('vms_venue_submitted_nonce')) {
+    function vms_venue_submitted_nonce(string $key): string
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted venue nonce is required before local verification.
+        return vms_request_read_text_field($_POST, $key);
+    }
+}
+
+if (!function_exists('vms_venue_notice_request_post_id')) {
+    function vms_venue_notice_request_post_id(): int
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue notice state only affects admin feedback.
+        return vms_request_read_absint($_GET, 'post');
+    }
+}
+
 if (!function_exists('vms_sync_tec_venue_from_vms_venue')) {
     function vms_sync_tec_venue_from_vms_venue(int $vms_venue_id, int $tec_venue_id = 0): int
     {
@@ -263,15 +279,14 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_venue_location_nonce']) && !is_array($_POST['vms_venue_location_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_location_nonce']))
-        : '';
+    $nonce = vms_venue_submitted_nonce('vms_venue_location_nonce');
     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_location')) {
         return;
     }
 
     $read_text = static function (string $key): string {
-        return isset($_POST[$key]) ? sanitize_text_field(wp_unslash((string) $_POST[$key])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_save_venue_location before reading location fields.
+        return vms_request_read_text_field($_POST, $key);
     };
 
     $address = $read_text('vms_venue_address');
@@ -532,21 +547,25 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_venue_schedule_nonce']) && !is_array($_POST['vms_venue_schedule_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_schedule_nonce']))
-        : '';
+    $nonce = vms_venue_submitted_nonce('vms_venue_schedule_nonce');
     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_schedule')) {
         return;
     }
 
-    $open_days = isset($_POST['vms_venue_open_days']) ? (array) $_POST['vms_venue_open_days'] : array();
+    $open_days = (isset($_POST['vms_venue_open_days']) && is_array($_POST['vms_venue_open_days']))
+        ? (array) wp_unslash($_POST['vms_venue_open_days']) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Venue schedule arrays are unslashed here and normalized element-by-element below.
+        : array();
     $open_days = array_values(array_unique(array_map('intval', $open_days)));
     $open_days = array_values(array_filter($open_days, fn($d) => $d >= 0 && $d <= 6));
 
-    $year_round = !empty($_POST['vms_venue_open_year_round']) ? 1 : 0;
+    $year_round = vms_request_read_bool_flag($_POST, 'vms_venue_open_year_round') ? 1 : 0;
 
-    $starts = isset($_POST['vms_venue_season_start']) ? (array) $_POST['vms_venue_season_start'] : array();
-    $ends   = isset($_POST['vms_venue_season_end'])   ? (array) $_POST['vms_venue_season_end']   : array();
+    $starts = (isset($_POST['vms_venue_season_start']) && is_array($_POST['vms_venue_season_start']))
+        ? (array) wp_unslash($_POST['vms_venue_season_start']) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Venue season dates are unslashed here and validated per entry below.
+        : array();
+    $ends   = (isset($_POST['vms_venue_season_end']) && is_array($_POST['vms_venue_season_end']))
+        ? (array) wp_unslash($_POST['vms_venue_season_end']) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Venue season dates are unslashed here and validated per entry below.
+        : array();
 
     $seasons = array();
     for ($i = 0; $i < 2; $i++) {
@@ -590,9 +609,19 @@ add_filter('wp_insert_post_data', function ($data, $postarr) {
     // Prefer the just-submitted value during a publish attempt.
     // wp_insert_post_data runs before save_post_* updates post_meta, so relying only on saved meta can incorrectly block first-time publishes.
     $open_days_raw = null;
+    $submitted_open_days = array();
+    $has_submitted_open_days = false;
+    $schedule_nonce = vms_venue_submitted_nonce('vms_venue_schedule_nonce');
+    $has_verified_schedule_request = ($schedule_nonce !== '' && wp_verify_nonce($schedule_nonce, 'vms_save_venue_schedule'));
 
-    if (isset($_POST['vms_venue_open_days'])) {
-        $open_days_raw = wp_unslash($_POST['vms_venue_open_days']);
+    if ($has_verified_schedule_request) {
+        $submitted_open_days = (isset($_POST['vms_venue_open_days']) && is_array($_POST['vms_venue_open_days']))
+            ? (array) wp_unslash($_POST['vms_venue_open_days']) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The publish gate reads submitted open days only after verifying the schedule nonce.
+            : array();
+    }
+    if (!empty($submitted_open_days)) {
+        $open_days_raw = $submitted_open_days;
+        $has_submitted_open_days = true;
     } else {
         $open_days_raw = get_post_meta($post_id, '_vms_venue_open_days', true);
     }
@@ -619,7 +648,7 @@ add_filter('wp_insert_post_data', function ($data, $postarr) {
     $open_days = array_values(array_unique($open_days_clean));
 
     // Persist normalized values so future reads behave consistently.
-    if (!empty($open_days) && (isset($_POST['vms_venue_open_days']) || !is_array($open_days_raw))) {
+    if (!empty($open_days) && ($has_submitted_open_days || !is_array($open_days_raw))) {
         update_post_meta($post_id, '_vms_venue_open_days', $open_days);
     }
 
@@ -639,7 +668,7 @@ add_action('admin_notices', function () {
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if (!$screen || $screen->base !== 'post' || $screen->post_type !== 'vms_venue') return;
 
-    $post_id = isset($_GET['post']) ? (int) $_GET['post'] : 0;
+    $post_id = vms_venue_notice_request_post_id();
     if ($post_id <= 0) return;
 
     $key = 'vms_venue_schedule_notice_' . $post_id;
@@ -699,8 +728,7 @@ add_action('untrash_post', function ($post_id) {
 }, 5);
 
 add_action('admin_notices', function () {
-    if (empty($_GET['post'])) return;
-    $post_id = (int) $_GET['post'];
+    $post_id = vms_venue_notice_request_post_id();
     if ($post_id <= 0) return;
     if (get_post_type($post_id) !== 'vms_venue') return;
 

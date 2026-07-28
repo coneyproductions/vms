@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers, and `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blockers. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1480`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G4` through `WPORG-28R-G17`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers, `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blockers, and `WPORG-28R-G4` has now removed the next `39` ancillary CPT save nonce/input blockers. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1441`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G5` through `WPORG-28R-G17`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -3569,6 +3569,69 @@ Date: 2026-07-28
 - No same-file DB/SQL remediation assigned to `G13` was attempted.
 - No same-file logging remediation assigned to `G17` was attempted.
 - No same-file date/time remediation assigned to `G14` was attempted.
+- No accepted `OutputNotEscaped` boundary was changed.
+- No sibling live-tree file, builder, manifest, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
+
+## WPORG-28R-G4 Result
+
+Date: 2026-07-28
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G4`
+- Starting mirror HEAD: `e92586b30dc0c23158515b3330967f8f73365fbc` (`Reconcile Event Plan editor request boundaries`)
+- Starting parent: `eafb553c20127e9b3d55735a567681bf97902046`
+- Authorized runtime scope: `includes/cpt/venues.php`, `includes/cpt/ratings.php`, `includes/cpt/vendors.php`, and `includes/cpt/staff.php`
+- Authorized support scope used: `tests/authorization-boundary-hardening.php`, `docs/WPORG_PREREVIEW_REMEDIATION.md`, `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, and `docs/wporg-remediation-ledger.md`
+- Live-tree rule preserved: the sibling `../../vms/` tree remained read-only and unchanged throughout this child
+- Pre-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg4-pre.W2caxN/build --force`
+- Pre-edit package result: `/tmp/wporg-28rg4-pre.W2caxN/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `6b3a8b55379aeca6820e0e19a6368e42764f998affcd7e5d60d48c7b0722a5dd`
+- Pre-edit packaged Plugin Check result: exit `0`, `265` errors, `1344` warnings, `1609` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1480`
+- Exact G4 ownership: `39` packaged rows (`WordPress.Security.NonceVerification.Missing=14`, `WordPress.Security.NonceVerification.Recommended=10`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized=7`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash=8`) across the four authorized runtime files only
+
+### Boundary Characterization
+
+- The owned rows split across `CPT_SAVE_POST`, `READ_ONLY_FILTER`, and `CPT_NOTICE_STATE` boundaries inside the Venue, Ratings, Vendor, and Staff editor save flows. The child kept core edit/save mutations distinct from harmless read-only admin filter and notice state.
+- Venue remediation stayed limited to the existing location and schedule save closures plus the publish gate and admin notice reads. Mutation reads now prove the schedule nonce before touching structured day/season arrays, while notice routing remains a read-only GET helper with no new mutation nonce.
+- Ratings remediation stayed limited to the public rating form and shortcode reads. Frontend mutation reads now flow through a request-source helper that preserves the existing public submit contract, while read-only `event` and `band` query arguments now flow through a dedicated GET helper instead of generic raw request access.
+- Vendor and Staff remediation preserved the current object-specific capability and lifecycle behavior. Vendor detail/profile saves continue to accept either existing meta-box nonce while moving scalar fields through the shared request helpers, and the Staff taxonomy save now recognizes both the core edit nonce and the inline-edit nonce before reading taxonomy assignments.
+- The same-file deferred families remained unchanged by design: DB rows in `includes/cpt/vendors.php` still belong to `WPORG-28R-G11`, DB rows in `includes/cpt/ratings.php` still belong to `WPORG-28R-G13`, and the same-file accepted packaged `WordPress.Security.EscapeOutput.OutputNotEscaped` rows in `includes/cpt/venues.php` and `includes/cpt/vendors.php` remain outside the blocker roadmap.
+
+### Runtime And Test Changes
+
+- Added request-edge helper routing in `includes/cpt/ratings.php` so submitted rating fields now read through `vms_rating_request_source()`, the submit gate uses `vms_request_read_bool_flag()`, and the shortcode `event` / `band` query arguments read through a dedicated helper-backed GET path.
+- Tightened `includes/cpt/venues.php` around the existing save and publish boundaries by introducing `vms_venue_submitted_nonce()` and `vms_venue_notice_request_post_id()`, then unslashing and normalizing the submitted schedule arrays only after the verified schedule nonce succeeds.
+- Narrowed `includes/cpt/vendors.php` to helper-backed scalar reads for the Vendor Details fields, corrected the retained submitted-nonce access to the exact `NonceVerification.Missing` rule, and kept the structured public-profile social array under a bounded inline unslash-and-sanitize pass.
+- Added `vms_staff_has_verified_editor_request()` and `vms_staff_submitted_tax_input()` in `includes/cpt/staff.php` so the taxonomy save accepts both core edit and inline-edit request paths while keeping the retained raw taxonomy array access limited to one exact save boundary with occurrence-specific suppression.
+- Updated `tests/authorization-boundary-hardening.php` to extract `vms_event_plan_current_get_request()` before running the existing helper assertions, which keeps the shared request-helper suite aligned with the current mirror runtime after the G3/G4 request-boundary split.
+
+### Verification
+
+- PHP lint passed for every changed runtime file: `php -l includes/cpt/venues.php`, `php -l includes/cpt/ratings.php`, `php -l includes/cpt/vendors.php`, and `php -l includes/cpt/staff.php`
+- Focused G4 suites passed: `php tests/authorization-boundary-hardening.php`, `php tests/vendor-tax-profile-strict-post-remediation.php`, and `php tests/request-input-sanitization.php`
+- Required broader gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`
+- Known non-gate source assertion: `php tests/staff-cpt-inline-js-remediation.php` still fails with `Mirror/live Staff CPT PHP files should remain byte-for-byte synchronized.` because this child explicitly forbids updating `../../vms/`; the failure was treated as expected evidence that the live tree remained untouched, not as a G4 regression
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg4-post.7QGYI6/build --force --allow-dirty`
+- Post-edit package result: `/tmp/wporg-28rg4-post.7QGYI6/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `e4e51ba60f3cd006ba68b8955945a686b2be29c740340684e449e44ef7325e0f`
+- Post-edit packaged Plugin Check result: exit `0`, `265` errors, `1305` warnings, `1570` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1441`
+- Exact G4 code deltas: `WordPress.Security.NonceVerification.Missing 52 -> 38 (-14)`, `WordPress.Security.NonceVerification.Recommended 182 -> 172 (-10)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 61 -> 54 (-7)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 36 -> 28 (-8)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no blocker family total increased
+- Exact G4 row result: the `39` owned packaged rows were removed exactly, no G4-owned nonce/input row remained in the post-edit package, no new G4-owned nonce/input row appeared, and no owned row migrated into another nonce/input code
+- Deferred-family continuity: the same-file deferred DB count in the G4 runtime file set stayed exactly `4`, the same-file accepted `WordPress.Security.EscapeOutput.OutputNotEscaped` count in the G4 runtime file set stayed exactly `2`, the global packaged `WordPress.Security.EscapeOutput.OutputNotEscaped` total stayed exactly `127`, the global date/time total stayed exactly `25`, and the global logging total stayed exactly `42`
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G4`: DB/SQL `1082`, nonce/input `292`, date/time `25`, and logging `42`
+- `WPORG-28R-G4` is terminal under `verified`
+- `WPORG-28R` remains blocked until every remaining `G5` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain blocked or limited exactly as reflected in the ledger
+- Exact next implementation child: `WPORG-28R-G5 — Public, portal, and vendor-application request boundaries`
+
+### Non-Actions
+
+- No `G5` through `G17` runtime remediation was attempted.
+- No same-file DB/SQL remediation assigned to `G11` or `G13` was attempted.
+- No same-file date/time or logging remediation assigned to `G14` through `G17` was attempted.
 - No accepted `OutputNotEscaped` boundary was changed.
 - No sibling live-tree file, builder, manifest, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 
