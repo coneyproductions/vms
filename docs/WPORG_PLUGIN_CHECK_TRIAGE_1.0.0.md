@@ -204,8 +204,8 @@ No previously unseen Plugin Check codes appeared in this pass.
 - Files: `includes/cpt/venues.php`, `includes/cpt/ratings.php`, `includes/cpt/vendors.php`, `includes/cpt/staff.php`
 - Lifecycle / subsystem: `CPT_SAVE_HANDLER`; Venue, Ratings, Vendor, and Staff editors
 - Boundary: keep save-handler authorization and nonce proof separate from read-only admin filters; normalize scalar IDs, arrays, and unslashing at the save edge rather than deeper in persistence helpers
-- Focused tests: `tests/authorization-boundary-hardening.php`, `tests/vendor-tax-profile-strict-post-remediation.php`, `tests/request-input-sanitization.php`
-- Closure / defers: owned packaged input rows `39 -> 0`; global code deltas were only `Missing 52 -> 38 (-14)`, `Recommended 182 -> 172 (-10)`, `InputNotSanitized 61 -> 54 (-7)`, and `MissingUnslash 36 -> 28 (-8)`; same-file deferred DB rows in `includes/cpt/vendors.php` and `includes/cpt/ratings.php` stayed exactly `4`, and the same-file accepted `WordPress.Security.EscapeOutput.OutputNotEscaped` rows in `includes/cpt/venues.php` and `includes/cpt/vendors.php` stayed exactly `2`
+- Focused tests: `tests/staff-cpt-inline-js-remediation.php`, `tests/authorization-boundary-hardening.php`, `tests/vendor-tax-profile-strict-post-remediation.php`, and `tests/request-input-sanitization.php`
+- Closure / defers: owned packaged input rows `39 -> 0`; global code deltas were only `Missing 52 -> 38 (-14)`, `Recommended 182 -> 172 (-10)`, `InputNotSanitized 61 -> 54 (-7)`, and `MissingUnslash 36 -> 28 (-8)`; same-file deferred DB rows in `includes/cpt/vendors.php` and `includes/cpt/ratings.php` stayed exactly `4`, and the same-file accepted `WordPress.Security.EscapeOutput.OutputNotEscaped` rows in `includes/cpt/venues.php` and `includes/cpt/vendors.php` stayed exactly `2`.<br>Follow-up `WPORG-28R-G4-T1` then aligned the obsolete Staff CPT PHP mirror/live byte-identity assertion so the focused harness now proves the untouched live hash plus the expected mirror-only G4 divergence while keeping the Staff JS asset parity check exact.
 
 #### `WPORG-28R-G5 — Public, Portal, And Vendor-Application Request Boundaries`
 

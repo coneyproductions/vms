@@ -3611,7 +3611,7 @@ Date: 2026-07-28
 - PHP lint passed for every changed runtime file: `php -l includes/cpt/venues.php`, `php -l includes/cpt/ratings.php`, `php -l includes/cpt/vendors.php`, and `php -l includes/cpt/staff.php`
 - Focused G4 suites passed: `php tests/authorization-boundary-hardening.php`, `php tests/vendor-tax-profile-strict-post-remediation.php`, and `php tests/request-input-sanitization.php`
 - Required broader gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`
-- Known non-gate source assertion: `php tests/staff-cpt-inline-js-remediation.php` still fails with `Mirror/live Staff CPT PHP files should remain byte-for-byte synchronized.` because this child explicitly forbids updating `../../vms/`; the failure was treated as expected evidence that the live tree remained untouched, not as a G4 regression
+- Time-of-child note: `php tests/staff-cpt-inline-js-remediation.php` still failed during the original G4 closeout with `Mirror/live Staff CPT PHP files should remain byte-for-byte synchronized.` because this child explicitly forbade updating `../../vms/`; follow-up `WPORG-28R-G4-T1` later aligned that obsolete parity assumption without changing the G4 runtime or packaged evidence
 - Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg4-post.7QGYI6/build --force --allow-dirty`
 - Post-edit package result: `/tmp/wporg-28rg4-post.7QGYI6/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `e4e51ba60f3cd006ba68b8955945a686b2be29c740340684e449e44ef7325e0f`
 - Post-edit packaged Plugin Check result: exit `0`, `265` errors, `1305` warnings, `1570` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1441`
@@ -3634,6 +3634,34 @@ Date: 2026-07-28
 - No same-file date/time or logging remediation assigned to `G14` through `G17` was attempted.
 - No accepted `OutputNotEscaped` boundary was changed.
 - No sibling live-tree file, builder, manifest, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
+
+## WPORG-28R-G4-T1 Result
+
+Date: 2026-07-29
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G4-T1`
+- Starting mirror HEAD: `38671c7172fca9d26e0959c0248eac0de564eaba` (`Reconcile ancillary CPT save boundaries`)
+- Starting parent: `e92586b30dc0c23158515b3330967f8f73365fbc`
+- Authorized scope: `tests/staff-cpt-inline-js-remediation.php` plus the G4 tracker documents only
+- Pre-edit failure: `php tests/staff-cpt-inline-js-remediation.php` failed only on the obsolete assertion `Mirror/live Staff CPT PHP files should remain byte-for-byte synchronized.`
+- Relevant mirror/live runtime files: mirror `includes/cpt/staff.php` SHA-256 `7dcec966c888e2bad13a69a23b458419ac8cdcf31f350b359a46a310e2e11ba5`; live `../../vms/includes/cpt/staff.php` SHA-256 `148bd26964f6197bd7568f05e9fc4bd49edd59854999546150ac1d6f84d32432`
+- G4 parity characterization: the Staff JS asset still remains byte-identical across mirror/live, while the Staff PHP file intentionally diverges because G4 added the mirror-only request-boundary helpers `vms_staff_has_verified_editor_request()` and `vms_staff_submitted_tax_input()` and left the live tree untouched
+
+### What Changed
+
+- Replaced the obsolete Staff PHP full-file equality assertion in `tests/staff-cpt-inline-js-remediation.php` with bounded divergence assertions that now prove the live Staff CPT file remains on the untouched pre-G4 hash, the mirror Staff CPT file intentionally differs after G4, the mirror retains the exact G4 save-boundary helpers and call sites, and the live file still lacks those mirror-only helpers while live-tree convergence remains deferred and unauthorized.
+- Kept the Staff JS asset parity assertion exact so the harness still proves that the current mirror and live `assets/js/vms-staff-cpt-admin.js` files remain byte-for-byte synchronized.
+- Updated the G4 tracker entries so they no longer treat the stale Staff CPT parity assertion as an expected red test and now record `WPORG-28R-G4-T1` as the follow-up harness alignment while preserving the existing G4 runtime/package evidence and counts unchanged.
+
+### Current Parent State
+
+- `WPORG-28R-G4-T1` is terminal under `verified`
+- `WPORG-28R-G4` remains terminal under `verified`; its runtime and packaged `39 -> 0` proof is unchanged
+- `WPORG-28R` remains blocked, submission readiness remains blocked, and the exact next implementation child remains `WPORG-28R-G5 — Public, portal, and vendor-application request boundaries`
+- No runtime source, live-tree file, builder, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred in this child
 
 ## WPORG-20A-S Result
 

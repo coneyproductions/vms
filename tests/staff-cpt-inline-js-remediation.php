@@ -108,6 +108,10 @@ try {
     $adminUiAssetsSource = $readFile($adminUiAssetsPath);
     $liveStaffSource = $readFile($liveStaffPath);
     $liveAssetSource = $readFile($liveAssetPath);
+    $staffHash = hash('sha256', $staffSource);
+    $liveStaffHash = hash('sha256', $liveStaffSource);
+    $assetHash = hash('sha256', $assetSource);
+    $liveAssetHash = hash('sha256', $liveAssetSource);
 
     $assert(strpos($staffSource, '<script') === false, 'Staff CPT PHP should no longer emit an executable inline <script> block.');
     $assert(strpos($staffSource, 'document.getElementById(\'vms-staff-qualification-add\')') === false, 'Staff CPT PHP should no longer own the add-button JavaScript helper.');
@@ -197,8 +201,17 @@ try {
     $assert(strpos($ledgerSource, '`WPORG-22R-K`') !== false, 'Ledger should record the Staff CPT residual closeout under WPORG-22R-K.');
     $assert(strpos($prereviewSource, '## WPORG-22R-K Result') !== false, 'Prereview remediation should include the Staff CPT closeout section.');
 
-    $assert($staffSource === $liveStaffSource, 'Mirror/live Staff CPT PHP files should remain byte-for-byte synchronized.');
-    $assert($assetSource === $liveAssetSource, 'Mirror/live Staff CPT JS assets should remain byte-for-byte synchronized.');
+    // G4 intentionally remediated the mirror Staff CPT only; live-tree convergence remains deferred and unauthorized here.
+    $assert($liveStaffHash === '148bd26964f6197bd7568f05e9fc4bd49edd59854999546150ac1d6f84d32432', 'Live Staff CPT PHP should remain on the untouched pre-G4 source hash until live-tree convergence is explicitly authorized.');
+    $assert($staffHash !== $liveStaffHash, 'Mirror/live Staff CPT PHP hashes should intentionally differ after the mirror-only G4 request-boundary remediation.');
+    $assert(strpos($staffSource, 'function vms_staff_has_verified_editor_request(int $post_id): bool') !== false, 'Mirror Staff CPT should retain the G4 verified-editor-request helper.');
+    $assert(strpos($staffSource, 'function vms_staff_submitted_tax_input(): array') !== false, 'Mirror Staff CPT should retain the G4 submitted tax_input helper.');
+    $assert(strpos($staffSource, 'if (!vms_staff_has_verified_editor_request($post_id)) return;') !== false, 'Mirror Staff CPT should gate taxonomy writes behind the G4 verified editor request boundary.');
+    $assert(strpos($staffSource, '$tax_input = vms_staff_submitted_tax_input();') !== false, 'Mirror Staff CPT should read taxonomy input through the G4 helper.');
+    $assert(strpos($liveStaffSource, 'function vms_staff_has_verified_editor_request(int $post_id): bool') === false, 'Live Staff CPT should remain free of the mirror-only G4 verified-editor-request helper until live convergence is authorized.');
+    $assert(strpos($liveStaffSource, 'function vms_staff_submitted_tax_input(): array') === false, 'Live Staff CPT should remain free of the mirror-only G4 submitted tax_input helper until live convergence is authorized.');
+    $assert(strpos($liveStaffSource, "if (!isset(\$_POST['tax_input']) || !is_array(\$_POST['tax_input'])) return;") !== false, 'Live Staff CPT should still reflect the untouched pre-G4 taxonomy gate while live convergence remains deferred.');
+    $assert($assetHash === $liveAssetHash, 'Mirror/live Staff CPT JS asset hashes should remain byte-for-byte synchronized because G4 changed only the Staff CPT PHP request boundary.');
 
     fwrite(STDOUT, "staff cpt inline js remediation: PASS\n");
 } catch (Throwable $e) {
