@@ -80,6 +80,8 @@ function wp_get_current_user(): WP_User
 	return $user;
 }
 function vms_request_method(): string { return 'get'; }
+function vms_request_read_scalar(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? trim((string) $source[$key]) : ''; }
+function vms_request_read_text_field(array $source, string $key): string { return sanitize_text_field(vms_request_read_scalar($source, $key)); }
 function vms_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
 function vms_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
 function vms_asset_url(string $asset_rel): string { return VMS_PLUGIN_URL . ltrim($asset_rel, '/'); }
@@ -264,9 +266,9 @@ $assert(strpos($helperSource, 'get_option(') === false, 'Complete-configuration 
 
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_is_rate_limited')) === '082c25ed3a27c59ae785ccafd9e57b2a1b40a760fa6ee76aa5ed2131fca982c1', 'Rate limiting function should remain unchanged.');
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_parse_turnstile_siteverify_body')) === 'b16d36431e7d78f48cd52a69548498425a4671e5c54eb6ec1b97586855b42c7d', 'Turnstile siteverify parser should remain unchanged.');
-$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_verify_turnstile')) === '7b1acd071b3f2fe14655414c3d243b10c730fc04ca9cec9ea9ed7c044bc1d546', 'Turnstile verification function should remain unchanged.');
+$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_verify_turnstile')) === '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile verification function should remain unchanged.');
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_request_fingerprint')) === 'e6700ad7ba8ff855318160c10640fb4443f1f832384276cd5b49cbc160d06827', 'Request fingerprinting should remain unchanged.');
-$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_handle_frontend_post')) === '8eaa46e3e63ffbf7e9e533c031cc80a27f66191a40e5e4595c0d8cd6b6e2ad21', 'Frontend POST handler should remain unchanged.');
+$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_handle_frontend_post')) === '375e812b9016e3200c4e2dc8c14f69a8ae6f8f7b72f068949d2e5508543530d4', 'Frontend POST handler should remain unchanged.');
 $assert(hash('sha256', $assetSource) === '1856166b2a3785803148bc9019867e7b9e387e6b953f2099959ebb2af99e685c', 'Unrelated Vendor Application asset should remain unchanged.');
 
 $shortcodeSource = $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_shortcode');

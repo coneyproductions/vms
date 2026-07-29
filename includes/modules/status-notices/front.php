@@ -1,6 +1,20 @@
 <?php
 defined('ABSPATH') || exit;
 
+if (!function_exists('vms_status_notice_admin_page_slug')) {
+	function vms_status_notice_admin_page_slug(): string
+	{
+		return vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin page routing here is read-only notice display context, not a mutation boundary.
+	}
+}
+
+if (!function_exists('vms_status_notice_debug_requested')) {
+	function vms_status_notice_debug_requested(): bool
+	{
+		return vms_request_read_bool_flag($_GET, 'vms_notice_debug'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The runtime debug flag only changes read-only notice display diagnostics for already-authorized viewers.
+	}
+}
+
 if (!function_exists('vms_status_notice_runtime_context_front')) {
 	function vms_status_notice_runtime_context_front(): array
 	{
@@ -34,7 +48,7 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 		}
 
 		$can_debug = current_user_can(vms_status_notices_capability()) ? 1 : 0;
-		$debug_enabled = ($can_debug && isset($_GET['vms_notice_debug']) && (string) $_GET['vms_notice_debug'] === '1') ? 1 : 0;
+		$debug_enabled = ($can_debug && vms_status_notice_debug_requested()) ? 1 : 0;
 
 		return array(
 			'is_admin' => 0,
@@ -59,14 +73,14 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 if (!function_exists('vms_status_notice_runtime_context_admin')) {
 	function vms_status_notice_runtime_context_admin(): array
 	{
-		$page = vms_request_read_key($_GET, 'page');
+		$page = vms_status_notice_admin_page_slug();
 		$roles = array();
 		$user = wp_get_current_user();
 		if ($user instanceof WP_User) {
 			$roles = array_values(array_map('sanitize_key', (array) $user->roles));
 		}
 		$can_debug = current_user_can(vms_status_notices_capability()) ? 1 : 0;
-		$debug_enabled = ($can_debug && isset($_GET['vms_notice_debug']) && (string) $_GET['vms_notice_debug'] === '1') ? 1 : 0;
+		$debug_enabled = ($can_debug && vms_status_notice_debug_requested()) ? 1 : 0;
 
 		return array(
 			'is_admin' => 1,

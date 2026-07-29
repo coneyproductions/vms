@@ -57,6 +57,58 @@ if (!function_exists('vms_vendor_portal_admin_can_preview')) {
     }
 }
 
+if (!function_exists('vms_vendor_portal_preview_request_absint')) {
+    function vms_vendor_portal_preview_request_absint(string $key): int
+    {
+        return vms_request_read_absint($_REQUEST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin preview vendor selection is read-only request state and separately nonce-verified.
+    }
+}
+
+if (!function_exists('vms_vendor_portal_query_key')) {
+    function vms_vendor_portal_query_key(string $key): string
+    {
+        return vms_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Vendor portal tab and filter query args are read-only navigation state.
+    }
+}
+
+if (!function_exists('vms_vendor_portal_query_absint')) {
+    function vms_vendor_portal_query_absint(string $key): int
+    {
+        return vms_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Vendor portal tab and filter query args are read-only navigation state.
+    }
+}
+
+if (!function_exists('vms_vendor_portal_post_absint')) {
+    function vms_vendor_portal_post_absint(string $key): int
+    {
+        return vms_request_read_absint($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Portal action fields are only used inside action-specific nonce-verified submission handlers.
+    }
+}
+
+if (!function_exists('vms_vendor_portal_post_return_url')) {
+    function vms_vendor_portal_post_return_url(string $fallback): string
+    {
+        return vms_request_local_redirect($fallback, vms_request_read_scalar($_POST, 'return_url')); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Portal return URLs are only used inside action-specific nonce-verified submission handlers.
+    }
+}
+
+if (!function_exists('vms_vendor_portal_post_array')) {
+    function vms_vendor_portal_post_array(string $key): array
+    {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $value = isset($_POST[$key]) && is_array($_POST[$key]) ? wp_unslash($_POST[$key]) : array();
+        // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        return is_array($value) ? $value : array();
+    }
+}
+
+if (!function_exists('vms_vendor_portal_read_uploaded_file_request')) {
+    function vms_vendor_portal_read_uploaded_file_request(string $field_name)
+    {
+        return vms_upload_read_file($_FILES, $field_name); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Upload validation helpers are only reached from nonce-verified portal submission handlers.
+    }
+}
+
 if (!function_exists('vms_vendor_portal_get_preview_vendor_id')) {
     function vms_vendor_portal_get_preview_vendor_id(): int
     {
@@ -66,9 +118,9 @@ if (!function_exists('vms_vendor_portal_get_preview_vendor_id')) {
 
         $raw_vendor_id = 0;
         if (array_key_exists('vms_preview_vendor', $_REQUEST)) {
-            $raw_vendor_id = vms_request_read_absint($_REQUEST, 'vms_preview_vendor');
+            $raw_vendor_id = vms_vendor_portal_preview_request_absint('vms_preview_vendor');
         } elseif (array_key_exists('preview_vendor_id', $_REQUEST)) {
-            $raw_vendor_id = vms_request_read_absint($_REQUEST, 'preview_vendor_id');
+            $raw_vendor_id = vms_vendor_portal_preview_request_absint('preview_vendor_id');
         }
 
         if ($raw_vendor_id <= 0) {
@@ -298,7 +350,7 @@ if (!function_exists('vms_vendor_portal_get_requested_tab')) {
             $default = in_array('dashboard', $allowed_tabs, true) ? 'dashboard' : (string) $allowed_tabs[0];
         }
 
-        $requested_tab = vms_request_read_key($_GET, 'tab');
+        $requested_tab = vms_vendor_portal_query_key('tab');
         if ($requested_tab === '') {
             return $default;
         }
@@ -310,7 +362,7 @@ if (!function_exists('vms_vendor_portal_get_requested_tab')) {
 if (!function_exists('vms_vendor_portal_get_requested_vendor_id')) {
     function vms_vendor_portal_get_requested_vendor_id(): int
     {
-        return vms_request_read_absint($_GET, 'vendor_id');
+        return vms_vendor_portal_query_absint('vendor_id');
     }
 }
 
@@ -322,7 +374,7 @@ if (!function_exists('vms_vendor_portal_get_requested_lookback')) {
             $default = !empty($allowed) ? (int) $allowed[0] : 0;
         }
 
-        $requested = vms_request_read_absint($_GET, 'lb');
+        $requested = vms_vendor_portal_query_absint('lb');
         if ($requested <= 0) {
             return $default;
         }
@@ -2924,7 +2976,7 @@ if (!function_exists('vms_vendor_portal_validate_public_image_upload')) {
      */
     function vms_vendor_portal_validate_public_image_upload(string $field_name)
     {
-        $upload = vms_upload_read_file($_FILES, $field_name);
+        $upload = vms_vendor_portal_read_uploaded_file_request($field_name);
         if (is_wp_error($upload)) {
             return $upload;
         }
@@ -2973,7 +3025,7 @@ if (!function_exists('vms_vendor_portal_validate_headliner_promo_video_upload'))
      */
     function vms_vendor_portal_validate_headliner_promo_video_upload(string $field_name)
     {
-        $upload = vms_upload_read_file($_FILES, $field_name);
+        $upload = vms_vendor_portal_read_uploaded_file_request($field_name);
         if (is_wp_error($upload)) {
             return $upload;
         }
@@ -3612,14 +3664,18 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_upload')) {
         }
 
         $user_id = (int) get_current_user_id();
-        $vendor_id = vms_request_read_absint($_REQUEST, 'vendor_id');
-        $plan_id = vms_request_read_absint($_REQUEST, 'plan_id');
-        $return_url = vms_request_local_redirect(home_url('/vendor-portal/?tab=dashboard'), $_REQUEST['return_url'] ?? null);
-        $nonce = (isset($_REQUEST['_vms_headliner_promo_video_nonce']) && !is_array($_REQUEST['_vms_headliner_promo_video_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_headliner_promo_video_nonce']))
+        $plan_id = vms_vendor_portal_post_absint('plan_id');
+        $nonce = (isset($_POST['_vms_headliner_promo_video_nonce']) && !is_array($_POST['_vms_headliner_promo_video_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['_vms_headliner_promo_video_nonce']))
             : '';
 
-        if ($plan_id <= 0 || $vendor_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_upload_' . $plan_id)) {
+        if ($plan_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_upload_' . $plan_id)) {
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
+        }
+
+        $vendor_id = vms_vendor_portal_post_absint('vendor_id');
+        $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/?tab=dashboard'));
+        if ($vendor_id <= 0) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
@@ -3678,14 +3734,18 @@ if (!function_exists('vms_vendor_portal_handle_headliner_promo_video_remove')) {
         }
 
         $user_id = (int) get_current_user_id();
-        $vendor_id = vms_request_read_absint($_REQUEST, 'vendor_id');
-        $plan_id = vms_request_read_absint($_REQUEST, 'plan_id');
-        $return_url = vms_request_local_redirect(home_url('/vendor-portal/?tab=dashboard'), $_REQUEST['return_url'] ?? null);
-        $nonce = (isset($_REQUEST['_vms_headliner_promo_video_remove_nonce']) && !is_array($_REQUEST['_vms_headliner_promo_video_remove_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_headliner_promo_video_remove_nonce']))
+        $plan_id = vms_vendor_portal_post_absint('plan_id');
+        $nonce = (isset($_POST['_vms_headliner_promo_video_remove_nonce']) && !is_array($_POST['_vms_headliner_promo_video_remove_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['_vms_headliner_promo_video_remove_nonce']))
             : '';
 
-        if ($plan_id <= 0 || $vendor_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_remove_' . $plan_id)) {
+        if ($plan_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_portal_headliner_promo_video_remove_' . $plan_id)) {
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
+        }
+
+        $vendor_id = vms_vendor_portal_post_absint('vendor_id');
+        $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/?tab=dashboard'));
+        if ($vendor_id <= 0) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
@@ -4292,7 +4352,7 @@ if (!function_exists('vms_vendor_portal_handle_interest_submit')) {
         $user_id = get_current_user_id();
         $vendor_id = vms_request_read_absint($_REQUEST, 'vendor_id');
         $event_plan_id = vms_request_read_absint($_REQUEST, 'event_plan_id');
-        $return_url = vms_request_local_redirect(home_url('/vendor-portal/?tab=availability'), $_REQUEST['return_url'] ?? null);
+        $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/?tab=availability'));
 
         $can_access = false;
         if (function_exists('vms_user_can_access_vendor')) {
@@ -4340,7 +4400,7 @@ if (!function_exists('vms_vendor_portal_handle_interest_withdraw')) {
         $user_id = get_current_user_id();
         $vendor_id = vms_request_read_absint($_REQUEST, 'vendor_id');
         $event_plan_id = vms_request_read_absint($_REQUEST, 'event_plan_id');
-        $return_url = vms_request_local_redirect(home_url('/vendor-portal/?tab=availability'), $_REQUEST['return_url'] ?? null);
+        $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/?tab=availability'));
 
         $can_access = false;
         if (function_exists('vms_user_can_access_vendor')) {
@@ -4386,7 +4446,7 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
 
         $user_id = get_current_user_id();
         $vendor_id = vms_request_read_absint($_REQUEST, 'vendor_id');
-        $return_url = vms_request_local_redirect(home_url('/vendor-portal/'), $_REQUEST['return_url'] ?? null);
+        $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/'));
         $user = get_userdata($user_id);
         $user_email = $user instanceof WP_User ? sanitize_email((string) $user->user_email) : '';
         $matched_vendor_ids = function_exists('vms_vendor_user_link_find_vendor_matches_for_email')
@@ -5262,10 +5322,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                 if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_availability')) {
                     echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
-                    $incoming = array();
-                    if (isset($_POST['vms_availability']) && is_array($_POST['vms_availability'])) {
-                        $incoming = (array) wp_unslash($_POST['vms_availability']);
-                    }
+                    $incoming = vms_vendor_portal_post_array('vms_availability');
 
                     $active_lookup = array_flip($active_dates);
                     $new_manual = array();
@@ -5310,14 +5367,12 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $days = array();
-                    if (isset($_POST['vms_pattern_days']) && is_array($_POST['vms_pattern_days'])) {
-                        foreach ((array) wp_unslash($_POST['vms_pattern_days']) as $d) {
-                            if (!is_scalar($d)) {
-                                continue;
-                            }
-                            $d = (int) $d;
-                            if ($d >= 0 && $d <= 6) $days[] = $d;
+                    foreach (vms_vendor_portal_post_array('vms_pattern_days') as $d) {
+                        if (!is_scalar($d)) {
+                            continue;
                         }
+                        $d = (int) $d;
+                        if ($d >= 0 && $d <= 6) $days[] = $d;
                     }
                     $days = array_values(array_unique($days));
 
@@ -6711,7 +6766,7 @@ if (!function_exists('vms_vendor_portal_store_tech_doc_upload')) {
     {
         $vendor_id = absint($vendor_id);
         $field_name = trim($field_name);
-        $upload = vms_upload_read_file($_FILES, $field_name);
+        $upload = vms_vendor_portal_read_uploaded_file_request($field_name);
         if (is_wp_error($upload)) {
             return $upload;
         }
@@ -6982,10 +7037,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                 $state         = vms_request_read_text_field($_POST, 'vms_state');
                 $featured_video_url = esc_url_raw(vms_request_read_scalar($_POST, 'vms_vendor_featured_video_url'));
                 $social_values = array();
-                $posted_social = array();
-                if (isset($_POST['vms_vendor_social']) && is_array($_POST['vms_vendor_social'])) {
-                    $posted_social = (array) wp_unslash($_POST['vms_vendor_social']);
-                }
+                $posted_social = vms_vendor_portal_post_array('vms_vendor_social');
                 foreach ($social_meta_map as $social_slug => $social_meta_key) {
                     $social_raw = isset($posted_social[$social_slug]) && is_scalar($posted_social[$social_slug])
                         ? trim((string) $posted_social[$social_slug])

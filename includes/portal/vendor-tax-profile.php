@@ -49,14 +49,29 @@ function vms_tax_provider_instructions(string $provider): string
  * This portal view calls vms_vendor_tax_profile_is_complete() from that helper.
  */
 
+function vms_vendor_tax_post_text_field(string $key): string
+{
+	return vms_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Tax profile fields are only read after the form nonce has been verified.
+}
+
+function vms_vendor_tax_post_bool_flag(string $key): bool
+{
+	return vms_request_read_bool_flag($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Tax profile checkbox fields are only read after the form nonce has been verified.
+}
+
 function vms_vendor_tax_is_exact_post_request(): bool
 {
-	$request_method = $_SERVER['REQUEST_METHOD'] ?? null;
+	$request_method = $_SERVER['REQUEST_METHOD'] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- The local exact-post helper intentionally preserves raw method casing while unslashing before comparison.
 	if (!is_scalar($request_method)) {
 		return false;
 	}
 
-	return 'POST' === wp_unslash($request_method);
+	$request_method = wp_unslash($request_method);
+	if (!is_string($request_method)) {
+		return false;
+	}
+
+	return 'POST' === $request_method;
 }
 
 function vms_vendor_portal_render_tax_profile($vendor_id)
@@ -108,7 +123,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 		} else {
 
 			$t = function ($key) {
-				return isset($_POST[$key]) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
+				return vms_vendor_tax_post_text_field((string) $key);
 			};
 
 			update_post_meta($vendor_id, $k_legal,  $t('vms_payee_legal_name'));
@@ -150,7 +165,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 
 			} else {
 
-				$attest = isset($_POST['vms_w9_offsite_attest']) ? (string) $_POST['vms_w9_offsite_attest'] : '';
+				$attest = vms_vendor_tax_post_bool_flag('vms_w9_offsite_attest') ? '1' : '';
 				$was_attested = (int) get_post_meta($vendor_id, $k_attest, true);
 
 				if ($attest === '1') {

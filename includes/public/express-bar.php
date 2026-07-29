@@ -169,7 +169,15 @@ if (!function_exists('vms_express_bar_validate_add_to_cart')) {
             return $passed;
         }
 
-        $event_plan_id = absint($_POST['vms_express_bar_event_plan_id']);
+        $nonce = (isset($_POST['vms_express_bar_nonce']) && !is_array($_POST['vms_express_bar_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['vms_express_bar_nonce']))
+            : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_express_bar_add_' . $product_id)) {
+            wc_add_notice(__('That Express Bar request could not be verified. Please try again.', 'backstage-venue-manager'), 'error');
+            return false;
+        }
+
+        $event_plan_id = vms_request_read_absint($_POST, 'vms_express_bar_event_plan_id');
         $cfg = vms_express_bar_get_event_meta($event_plan_id);
         if (empty($cfg['enabled']) || !in_array($product_id, (array) $cfg['product_ids'], true)) {
             wc_add_notice(__('That product is not enabled for this event’s Express Bar menu.', 'backstage-venue-manager'), 'error');
@@ -184,11 +192,19 @@ add_filter('woocommerce_add_to_cart_validation', 'vms_express_bar_validate_add_t
 if (!function_exists('vms_express_bar_maybe_redirect_after_add')) {
     function vms_express_bar_maybe_redirect_after_add(string $url): string
     {
-        if (empty($_REQUEST['vms_express_bar_redirect'])) {
+        if (empty($_POST['vms_express_bar']) || empty($_POST['vms_express_bar_redirect'])) {
             return $url;
         }
-        $redirect = esc_url_raw(wp_unslash($_REQUEST['vms_express_bar_redirect']));
-        return $redirect !== '' ? $redirect : $url;
+
+        $product_id = isset($_POST['add-to-cart']) ? absint($_POST['add-to-cart']) : 0;
+        $nonce = (isset($_POST['vms_express_bar_nonce']) && !is_array($_POST['vms_express_bar_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['vms_express_bar_nonce']))
+            : '';
+        if ($product_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_express_bar_add_' . $product_id)) {
+            return $url;
+        }
+
+        return vms_request_local_redirect($url, vms_request_read_scalar($_POST, 'vms_express_bar_redirect'));
     }
 }
 add_filter('woocommerce_add_to_cart_redirect', 'vms_express_bar_maybe_redirect_after_add');

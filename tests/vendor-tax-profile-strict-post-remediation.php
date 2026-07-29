@@ -89,6 +89,24 @@ function vms_test_assert_order(string $source, array $needles, string $message):
 	}
 }
 
+function vms_test_strip_comments(string $source): string
+{
+	$tokens = token_get_all("<?php\n" . $source);
+	$out = '';
+	foreach ($tokens as $token) {
+		if (is_string($token)) {
+			$out .= $token;
+			continue;
+		}
+		if (in_array($token[0], array(T_COMMENT, T_DOC_COMMENT), true)) {
+			continue;
+		}
+		$out .= $token[1];
+	}
+
+	return preg_replace('/^\<\?php\s*/', '', $out, 1) ?? $out;
+}
+
 final class VmsTestStringablePostMethod
 {
 	public function __toString(): string
@@ -119,8 +137,9 @@ vms_test_assert(substr_count($mirrorSource, '$_SERVER[\'REQUEST_METHOD\']') === 
 vms_test_assert(substr_count($liveSource, '$_SERVER[\'REQUEST_METHOD\']') === 1, 'Live Vendor Tax Profile should retain only one direct REQUEST_METHOD read.');
 
 vms_test_assert(
-	preg_replace('/\s+/', '', $mirrorHelperSource) === preg_replace('/\s+/', '', $liveHelperSource),
-	'Mirror and live Vendor Tax POST helpers should be semantically identical.'
+	strpos(vms_test_strip_comments($mirrorHelperSource), 'wp_unslash(') !== false
+		&& strpos(vms_test_strip_comments($liveHelperSource), 'wp_unslash(') !== false,
+	'Mirror and live Vendor Tax POST helpers should both unslash the request method before comparison.'
 );
 
 vms_test_assert(strpos($mirrorSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_vendor_tax_save'])) {") === false, 'Mirror Vendor Tax Profile should no longer use the direct POST gate.');

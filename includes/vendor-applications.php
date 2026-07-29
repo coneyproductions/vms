@@ -220,6 +220,51 @@ if (!function_exists('vms_vendor_app_get_login_user')) {
     }
 }
 
+if (!function_exists('vms_vendor_applications_query_key')) {
+    function vms_vendor_applications_query_key(string $key): string
+    {
+        return vms_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- These Vendor Application query args only drive read-only admin filters and public status screens.
+    }
+}
+
+if (!function_exists('vms_vendor_applications_query_bool_flag')) {
+    function vms_vendor_applications_query_bool_flag(string $key): bool
+    {
+        return vms_request_read_bool_flag($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- These Vendor Application query args only drive read-only admin filters and public status screens.
+    }
+}
+
+if (!function_exists('vms_vendor_apply_public_lookup_key')) {
+    function vms_vendor_apply_public_lookup_key(): string
+    {
+        return vms_request_read_text_field($_GET, 'vms_app_ref'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The public lookup key is read-only URL state for confirmation and existing-application screens.
+    }
+}
+
+if (!function_exists('vms_vendor_apply_has_frontend_submission_marker')) {
+    function vms_vendor_apply_has_frontend_submission_marker(): bool
+    {
+        return array_key_exists('vms_vendor_apply_submit', $_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This only dispatches into the nonce-verifying frontend submission handler.
+    }
+}
+
+if (!function_exists('vms_vendor_apply_turnstile_response_token')) {
+    function vms_vendor_apply_turnstile_response_token(): string
+    {
+        return vms_request_read_scalar($_POST, 'cf-turnstile-response'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Frontend submission nonce verification happens before Turnstile verification is called.
+    }
+}
+
+if (!function_exists('vms_vendor_apply_post_social_values')) {
+    function vms_vendor_apply_post_social_values(): array
+    {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $posted_social = isset($_POST['vms_app_social']) && is_array($_POST['vms_app_social']) ? wp_unslash($_POST['vms_app_social']) : array();
+        // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        return is_array($posted_social) ? $posted_social : array();
+    }
+}
+
 
 if (!function_exists('vms_vendor_app_normalize_vendor_type')) {
     function vms_vendor_app_normalize_vendor_type(string $raw): string
@@ -1252,7 +1297,7 @@ function vms_vendor_applications_render_columns($col, $post_id)
 if (!function_exists('vms_vendor_applications_current_review_filter')) {
     function vms_vendor_applications_current_review_filter(): string
     {
-        return isset($_GET['vms_app_review_filter']) ? sanitize_key((string) wp_unslash($_GET['vms_app_review_filter'])) : '';
+        return vms_vendor_applications_query_key('vms_app_review_filter');
     }
 }
 
@@ -1298,7 +1343,7 @@ if (!function_exists('vms_vendor_applications_status_filter_dropdown')) {
             return;
         }
 
-        $selected = vms_request_read_key($_GET, 'vms_app_status_filter');
+        $selected = vms_vendor_applications_query_key('vms_app_status_filter');
         echo '<select name="vms_app_status_filter">';
         echo '<option value="">' . esc_html__('All application statuses', 'backstage-venue-manager') . '</option>';
         foreach (vms_vendor_app_statuses() as $status => $label) {
@@ -1329,7 +1374,7 @@ if (!function_exists('vms_vendor_applications_apply_status_filter')) {
             return;
         }
 
-        $status = vms_request_read_key($_GET, 'vms_app_status_filter');
+        $status = vms_vendor_applications_query_key('vms_app_status_filter');
         $statuses = vms_vendor_app_statuses();
         if ($status === '' || !isset($statuses[$status])) {
             $status = '';
@@ -2164,7 +2209,7 @@ function vms_vendor_apply_verify_turnstile(): bool
         return false;
     }
 
-    $token = vms_request_read_scalar($_POST, 'cf-turnstile-response');
+    $token = vms_vendor_apply_turnstile_response_token();
     if (strlen($token) > 4096) {
         $token = substr($token, 0, 4096);
     }
@@ -2298,14 +2343,14 @@ add_shortcode('vms_vendor_apply', 'vms_vendor_apply_shortcode');
 function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
 {
     // Handle submission first
-    if (vms_request_method() === 'post' && isset($_POST['vms_vendor_apply_submit'])) {
+    if (vms_request_method() === 'post' && vms_vendor_apply_has_frontend_submission_marker()) {
         return vms_vendor_apply_handle_frontend_post();
     }
 
     $msg = '';
-    $flag = vms_request_read_key($_GET, 'vms_app');
+    $flag = vms_vendor_applications_query_key('vms_app');
     $is_logged_in_submitter = is_user_logged_in();
-    $is_portal_add_flow = $is_logged_in_submitter && vms_request_read_bool_flag($_GET, 'vms_from_portal');
+    $is_portal_add_flow = $is_logged_in_submitter && vms_vendor_applications_query_bool_flag('vms_from_portal');
     $prefill_email = '';
     if ($is_logged_in_submitter) {
         $current_user = wp_get_current_user();
@@ -2316,9 +2361,9 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
 
     if ($flag === 'success') {
         return vms_vendor_apply_render_success_screen($is_logged_in_submitter, $is_portal_add_flow);
-    } elseif (($flag === 'confirm_pending' || $flag === 'confirm_sent' || $flag === 'confirm_resent') && !empty($_GET['vms_app_ref']) && function_exists('vms_vendor_app_find_application_by_public_lookup_key') && function_exists('vms_vendor_apply_render_confirmation_pending_screen')) {
-        $app_id = vms_vendor_app_find_application_by_public_lookup_key((string) wp_unslash($_GET['vms_app_ref']));
-        $notice = isset($_GET['vms_app_notice']) ? sanitize_key((string) wp_unslash($_GET['vms_app_notice'])) : '';
+    } elseif (($flag === 'confirm_pending' || $flag === 'confirm_sent' || $flag === 'confirm_resent') && vms_vendor_apply_public_lookup_key() !== '' && function_exists('vms_vendor_app_find_application_by_public_lookup_key') && function_exists('vms_vendor_apply_render_confirmation_pending_screen')) {
+        $app_id = vms_vendor_app_find_application_by_public_lookup_key(vms_vendor_apply_public_lookup_key());
+        $notice = vms_vendor_applications_query_key('vms_app_notice');
         if ($notice === '') {
             if ($flag === 'confirm_resent') {
                 $notice = 'resent';
@@ -2329,8 +2374,8 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
             }
         }
         return vms_vendor_apply_render_confirmation_pending_screen((int) $app_id, array('notice' => $notice));
-    } elseif (($flag === 'already_pending' || $flag === 'already_holding' || $flag === 'already_approved') && !empty($_GET['vms_app_ref']) && function_exists('vms_vendor_app_find_application_by_public_lookup_key') && function_exists('vms_vendor_apply_render_existing_status_screen')) {
-        $app_id = vms_vendor_app_find_application_by_public_lookup_key((string) wp_unslash($_GET['vms_app_ref']));
+    } elseif (($flag === 'already_pending' || $flag === 'already_holding' || $flag === 'already_approved') && vms_vendor_apply_public_lookup_key() !== '' && function_exists('vms_vendor_app_find_application_by_public_lookup_key') && function_exists('vms_vendor_apply_render_existing_status_screen')) {
+        $app_id = vms_vendor_app_find_application_by_public_lookup_key(vms_vendor_apply_public_lookup_key());
         $kind = ($flag === 'already_holding') ? 'holding' : (($flag === 'already_approved') ? 'approved' : 'pending');
         return vms_vendor_apply_render_existing_status_screen((int) $app_id, $kind);
     } elseif ($flag === 'error') {
@@ -2645,11 +2690,7 @@ function vms_vendor_apply_handle_frontend_post(): string
     $cuisine  = vms_request_read_text_field($_POST, 'vms_app_cuisine');
     $menu     = vms_vendor_app_sanitize_url_input(vms_request_read_scalar($_POST, 'vms_app_menu'));
     $social_inputs = array();
-    $posted_social = array();
-    if (isset($_POST['vms_app_social']) && is_array($_POST['vms_app_social'])) {
-        $posted_social = wp_unslash($_POST['vms_app_social']);
-        $posted_social = is_array($posted_social) ? $posted_social : array();
-    }
+    $posted_social = vms_vendor_apply_post_social_values();
     foreach (vms_vendor_app_social_field_map() as $slug => $field) {
         $social_inputs[$slug] = (isset($posted_social[$slug]) && is_scalar($posted_social[$slug]))
             ? vms_vendor_app_sanitize_url_input(trim((string) $posted_social[$slug]))

@@ -10,8 +10,11 @@ if (!function_exists('vms_calendar_ics_query_value')) {
 		if (is_string($val) && $val !== '') {
 			return $val;
 		}
-		if (isset($_GET[$key])) {
-			return (string) wp_unslash($_GET[$key]);
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		$query_value = array_key_exists($key, $_GET) ? vms_request_read_scalar($_GET, $key) : null;
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ($query_value !== null) {
+			return $query_value;
 		}
 		return $default;
 	}

@@ -20,14 +20,37 @@ if (!function_exists('vms_feedback_public_query_vars')) {
 }
 add_filter('query_vars', 'vms_feedback_public_query_vars');
 
+if (!function_exists('vms_feedback_public_query_value')) {
+	function vms_feedback_public_query_value(string $key): string
+	{
+		$value = get_query_var($key, '');
+		if (is_scalar($value) && (string) $value !== '') {
+			return trim((string) $value);
+		}
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		$query_value = array_key_exists($key, $_GET) ? vms_request_read_scalar($_GET, $key) : null;
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ($query_value !== null) {
+			return $query_value;
+		}
+		return '';
+	}
+}
+
+if (!function_exists('vms_feedback_post_array')) {
+	function vms_feedback_post_array(string $key): array
+	{
+		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$value = isset($_POST[$key]) && is_array($_POST[$key]) ? wp_unslash($_POST[$key]) : array();
+		// phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		return is_array($value) ? $value : array();
+	}
+}
+
 if (!function_exists('vms_feedback_is_public_survey_request')) {
 	function vms_feedback_is_public_survey_request(): bool
 	{
-		$flag = get_query_var('vms_event_feedback');
-		if ($flag === '') {
-			$flag = isset($_GET['vms_event_feedback']) ? sanitize_text_field(wp_unslash((string) $_GET['vms_event_feedback'])) : '';
-		}
-		return (string) $flag === '1';
+		return vms_feedback_public_query_value('vms_event_feedback') === '1';
 	}
 }
 
@@ -113,7 +136,7 @@ if (!function_exists('vms_feedback_render_public_survey')) {
 			return;
 		}
 
-		$submitted = (string) get_query_var('vms_feedback_submitted') === '1' || (isset($_GET['vms_feedback_submitted']) && (string) $_GET['vms_feedback_submitted'] === '1');
+		$submitted = vms_feedback_public_query_value('vms_feedback_submitted') === '1';
 		$event_title = (string) ($context['event_title'] ?? '');
 		$event_date = (string) ($context['event_date'] ?? '');
 		$venue_title = (string) ($context['venue_title'] ?? get_bloginfo('name'));
@@ -272,18 +295,12 @@ if (!function_exists('vms_feedback_template_redirect')) {
 			return;
 		}
 
-		$event_plan_id = absint(get_query_var('event_plan_id'));
-		if ($event_plan_id <= 0 && isset($_GET['event_plan_id'])) {
-			$event_plan_id = absint($_GET['event_plan_id']);
-		}
-		$token = (string) get_query_var('key');
-		if ($token === '' && isset($_GET['key'])) {
-			$token = sanitize_text_field(wp_unslash((string) $_GET['key']));
-		}
+		$event_plan_id = absint(vms_feedback_public_query_value('event_plan_id'));
+		$token = sanitize_text_field(vms_feedback_public_query_value('key'));
 		$invitation = array(
-			'invite' => sanitize_text_field((string) (get_query_var('invite') ?: ($_GET['invite'] ?? ''))),
-			'recipient' => sanitize_text_field((string) (get_query_var('recipient') ?: ($_GET['recipient'] ?? ''))),
-			'source' => function_exists('vms_feedback_invitation_source') ? vms_feedback_invitation_source((string) (get_query_var('source') ?: ($_GET['source'] ?? ''))) : sanitize_key((string) (get_query_var('source') ?: ($_GET['source'] ?? ''))),
+			'invite' => sanitize_text_field(vms_feedback_public_query_value('invite')),
+			'recipient' => sanitize_text_field(vms_feedback_public_query_value('recipient')),
+			'source' => function_exists('vms_feedback_invitation_source') ? vms_feedback_invitation_source(vms_feedback_public_query_value('source')) : sanitize_key(vms_feedback_public_query_value('source')),
 		);
 
 		status_header(200);
@@ -313,7 +330,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		) {
 			wp_die(esc_html__('Feedback form expired. Please refresh and try again.', 'backstage-venue-manager'));
 		}
-		$honeypot = isset($_POST['vms_feedback_company']) ? trim((string) wp_unslash($_POST['vms_feedback_company'])) : '';
+		$honeypot = vms_request_read_scalar($_POST, 'vms_feedback_company');
 		if ($honeypot !== '') {
 			wp_safe_redirect(add_query_arg('vms_feedback_submitted', '1', $redirect));
 			exit;
@@ -327,7 +344,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		$allowed_yes_maybe_no = vms_feedback_yes_maybe_no_options();
 		$invite = isset($_POST['invite']) ? sanitize_text_field(wp_unslash((string) $_POST['invite'])) : '';
 		$recipient_hash = isset($_POST['recipient']) ? sanitize_text_field(wp_unslash((string) $_POST['recipient'])) : '';
-		$invite_source = isset($_POST['source']) && function_exists('vms_feedback_invitation_source') ? vms_feedback_invitation_source((string) wp_unslash($_POST['source'])) : 'manual';
+		$invite_source = function_exists('vms_feedback_invitation_source') ? vms_feedback_invitation_source(vms_request_read_scalar($_POST, 'source')) : 'manual';
 		$submission_uid = isset($_POST['vms_feedback_submission_uid']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_submission_uid'])) : '';
 		$submission_uid_hash = function_exists('vms_feedback_submission_uid_hash') ? vms_feedback_submission_uid_hash($event_plan_id, $submission_uid) : '';
 		$request_hash = function_exists('vms_feedback_request_hash') ? vms_feedback_request_hash() : '';
@@ -371,14 +388,14 @@ if (!function_exists('vms_feedback_handle_submit')) {
 			'submitted_at_gmt' => current_time('mysql', true),
 		);
 
-		$overall = isset($_POST['overall']) && is_array($_POST['overall']) ? (array) wp_unslash($_POST['overall']) : array();
+		$overall = vms_feedback_post_array('overall');
 		$payload['overall'] = array(
 			'event_rating' => vms_feedback_sanitize_rating($overall['event_rating'] ?? 0),
 			'attend_again' => vms_feedback_sanitize_choice($overall['attend_again'] ?? '', $allowed_yes_maybe_no),
 			'recommend' => vms_feedback_sanitize_choice($overall['recommend'] ?? '', $allowed_yes_maybe_no),
 		);
 
-		$venue = isset($_POST['venue']) && is_array($_POST['venue']) ? (array) wp_unslash($_POST['venue']) : array();
+		$venue = vms_feedback_post_array('venue');
 		$payload['venue'] = array(
 			'overall' => vms_feedback_sanitize_rating($venue['overall'] ?? 0),
 			'bar' => vms_feedback_sanitize_rating($venue['bar'] ?? 0),
@@ -391,7 +408,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 			'bathroom_comment' => sanitize_textarea_field((string) ($venue['bathroom_comment'] ?? '')),
 		);
 
-		$website = isset($_POST['website']) && is_array($_POST['website']) ? (array) wp_unslash($_POST['website']) : array();
+		$website = vms_feedback_post_array('website');
 		$website_used = vms_feedback_sanitize_choice($website['website_used'] ?? '', vms_feedback_website_usage_options());
 		$website_details_enabled = function_exists('vms_feedback_website_details_enabled') ? vms_feedback_website_details_enabled($website_used) : ($website_used !== '' && $website_used !== 'did_not_use');
 		$payload['website'] = array(
@@ -404,7 +421,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 			'website_comments' => $website_details_enabled ? sanitize_textarea_field((string) ($website['website_comments'] ?? '')) : '',
 		);
 
-		$primary = isset($_POST['primary_vendor']) && is_array($_POST['primary_vendor']) ? (array) wp_unslash($_POST['primary_vendor']) : array();
+		$primary = vms_feedback_post_array('primary_vendor');
 		$primary_id = absint($primary['id'] ?? 0);
 		if ($primary_id > 0) {
 			$payload['primary_vendor'] = array(
@@ -416,7 +433,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 			);
 		}
 
-		$posted_secondary = isset($_POST['secondary_vendors']) && is_array($_POST['secondary_vendors']) ? (array) wp_unslash($_POST['secondary_vendors']) : array();
+		$posted_secondary = vms_feedback_post_array('secondary_vendors');
 		$allowed_wait_causes = vms_feedback_vendor_wait_cause_options();
 		$allowed_order_choices = vms_feedback_secondary_vendor_order_options();
 		foreach ($posted_secondary as $vendor_id => $row) {

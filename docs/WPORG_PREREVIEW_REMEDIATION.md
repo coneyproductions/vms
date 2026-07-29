@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers, `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blockers, and `WPORG-28R-G4` has now removed the next `39` ancillary CPT save nonce/input blockers. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1441`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G5` through `WPORG-28R-G17`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers, `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blockers, `WPORG-28R-G4` removed the next `39` ancillary CPT save nonce/input blockers, and `WPORG-28R-G5` has now removed the next `103` public, portal, and vendor-application nonce/input blockers. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1338`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G6` through `WPORG-28R-G17`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -3660,8 +3660,72 @@ Date: 2026-07-29
 
 - `WPORG-28R-G4-T1` is terminal under `verified`
 - `WPORG-28R-G4` remains terminal under `verified`; its runtime and packaged `39 -> 0` proof is unchanged
-- `WPORG-28R` remains blocked, submission readiness remains blocked, and the exact next implementation child remains `WPORG-28R-G5 — Public, portal, and vendor-application request boundaries`
+- `WPORG-28R` remains blocked, submission readiness remains blocked, and the exact next implementation child is now `WPORG-28R-G6 — Ticketing, admissions, and availability request boundaries`
 - No runtime source, live-tree file, builder, asset, package metadata, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred in this child
+
+## WPORG-28R-G5 Result
+
+Date: 2026-07-29
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G5`
+- Starting mirror HEAD: `9647f377a943e0a57091f3c00df264a5ba560a93` (`Align Staff CPT mirror parity harness`)
+- Starting parent: `38671c7172fca9d26e0959c0248eac0de564eaba`
+- Authorized runtime scope: `includes/portal/vendor-portal.php`, `includes/public/event-feedback.php`, `includes/vendor-applications.php`, `includes/portal/staff-portal.php`, `includes/portal/vendor-tax-profile.php`, `includes/public/express-bar.php`, `includes/public/calendar-ics.php`, `includes/modules/status-notices/front.php`, and `includes/core/vendor-application-confirmation.php`
+- Authorized support scope used: `tests/vendor-apply-turnstile-contract-remediation.php`, `tests/vendor-tax-profile-strict-post-remediation.php`, `docs/WPORG_PREREVIEW_REMEDIATION.md`, `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, and `docs/wporg-remediation-ledger.md`
+- Live-tree rule preserved: the sibling `../../vms/` tree remained read-only and unchanged throughout this child
+- Pre-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg5-pre.gjFlnO/build --force`
+- Pre-edit package result: `/tmp/wporg-28rg5-pre.gjFlnO/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `267d3c291a32baaa64895b885d78c8b53d51506512816d7bd71d5c2e8e4b42b6`
+- Pre-edit package identity: root `backstage-venue-manager/`, main plugin file `vendor-management-system.php`, public version `1.2.0`, and public slug/text domain `backstage-venue-manager`
+- Pre-edit packaged Plugin Check result: exit `0`, `265` errors, `1305` warnings, `1570` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1441`
+- Exact G5 ownership: `103` packaged rows (`WordPress.Security.NonceVerification.Missing=12`, `WordPress.Security.NonceVerification.Recommended=46`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized=29`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash=16`) across the nine authorized runtime files only
+
+### Boundary Characterization
+
+- The owned rows split across `PUBLIC_READ_ONLY`, `PUBLIC_FORM_SUBMISSION`, `AUTHENTICATED_PORTAL_VIEW`, `AUTHENTICATED_PORTAL_MUTATION`, `VENDOR_APPLICATION_FORM`, `VENDOR_APPLICATION_SUBMISSION`, `NOTICE_STATE`, and `REDIRECT_STATE` boundaries. The child kept public read-only URL state separate from authenticated or browser-driven mutations instead of adding blanket nonces to every request read.
+- Public read-only navigation in Status Notices, Calendar ICS, Vendor Application status screens, Vendor Application confirmation routing, and portal tab/filter selection now flows through helper-backed GET reads that preserve the existing lookup semantics while removing direct superglobal access.
+- Portal, confirmation, and vendor-application mutations preserved the existing record-specific nonce sequence, ownership boundaries, upload validation, Turnstile verification, and redirect behavior while narrowing request sources to `$_POST` or `$_FILES` only where the lifecycle was already method-specific.
+- The same-file deferred families remained intentionally unchanged: the authorized G5 runtime set still carries exactly `61` deferred DB/SQL rows for later `G8` / `G11` work, `1` deferred date/time row for `G15`, `10` deferred logging rows for `G16`, `4` accepted packaged `WordPress.Security.EscapeOutput.OutputNotEscaped` rows outside the blocker roadmap, and the unchanged `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent` row in `includes/vendor-applications.php`.
+
+### Runtime And Test Changes
+
+- Added read-only request helpers in `includes/modules/status-notices/front.php`, `includes/public/calendar-ics.php`, `includes/vendor-applications.php`, `includes/portal/vendor-portal.php`, and `includes/core/vendor-application-confirmation.php` so public or portal GET state now reads through bounded helper-backed unslashing without introducing inappropriate mutation nonces.
+- Tightened the public mutation edges in `includes/public/express-bar.php`, `includes/public/event-feedback.php`, `includes/vendor-applications.php`, and `includes/core/vendor-application-confirmation.php` so existing POST actions now verify the expected nonce before reading redirect, social-array, Turnstile, resend, or structured feedback payload state.
+- Added nonce-scoped POST helper coverage in `includes/portal/vendor-tax-profile.php` and `includes/portal/staff-portal.php`; both exact-POST helpers now unslash the request method once before comparison, and the Staff portal certification upload now reads the last formerly direct `vms_certification_name` field through the existing nonce-scoped helper.
+- Narrowed the authenticated vendor portal request edges in `includes/portal/vendor-portal.php` so preview IDs, tab/filter state, return URLs, upload reads, availability arrays, pattern-day arrays, and social arrays now use bounded GET/POST/FILES helpers that preserve the existing record and upload lifecycle.
+- Updated `tests/vendor-apply-turnstile-contract-remediation.php` for the new helper-backed request reads and refreshed `tests/vendor-tax-profile-strict-post-remediation.php` to assert the bounded exact-POST unslash contract without requiring obsolete mirror/live helper source identity.
+
+### Verification
+
+- PHP lint passed for every changed PHP file: `php -l includes/core/vendor-application-confirmation.php`, `php -l includes/modules/status-notices/front.php`, `php -l includes/portal/staff-portal.php`, `php -l includes/portal/vendor-portal.php`, `php -l includes/portal/vendor-tax-profile.php`, `php -l includes/public/calendar-ics.php`, `php -l includes/public/event-feedback.php`, `php -l includes/public/express-bar.php`, `php -l includes/vendor-applications.php`, `php -l tests/vendor-apply-turnstile-contract-remediation.php`, and `php -l tests/vendor-tax-profile-strict-post-remediation.php`
+- Focused G5 suites passed: `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/vendor-tax-profile-strict-post-remediation.php`, `php tests/vendor-apply-turnstile-contract-remediation.php`, `php tests/event-feedback-request-hash-characterization.php`, `php tests/authorization-boundary-hardening.php`, `php tests/strict-post-gate-remediation.php`, and `php tests/vendor-application-confirmation-output-remediation.php`
+- Required broader gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`
+- Local G5 nonce/input subset gate passed with zero remaining rows across the nine authorized runtime files: `phpcs --standard=WordPress --sniffs=WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput --report=json ...`
+- Packaged Plugin Check environment: PHP `8.5.3`, WordPress `7.0.1`, WP-CLI `2.12.0`, Plugin Check `2.0.0`, PHPCS `3.13.5`, WordPressCS `3.3.0`, and VIPWPCS `3.0.1`
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg5-post2.IWfzrj/build --force --allow-dirty`
+- Post-edit package result: `/tmp/wporg-28rg5-post2.IWfzrj/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `96c9dd16c5f6af8de8f5170adf33162503363461d57506773c8f0a2145f39e40`
+- Post-edit packaged Plugin Check result: exit `0`, `265` errors, `1202` warnings, `1467` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1338`
+- Exact G5 code deltas: `WordPress.Security.NonceVerification.Missing 38 -> 26 (-12)`, `WordPress.Security.NonceVerification.Recommended 172 -> 126 (-46)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 54 -> 25 (-29)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 28 -> 12 (-16)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no blocker-family total increased
+- Exact G5 row result: the `103` owned packaged rows were removed exactly, no G5-owned nonce/input row remained in the post-edit package, no new G5-owned nonce/input row appeared, and no owned row migrated into another nonce/input code
+- Deferred-family continuity: the same-file deferred DB count in the G5 runtime file set stayed exactly `61`, the same-file deferred date/time count stayed exactly `1`, the same-file deferred logging count stayed exactly `10`, the same-file accepted `WordPress.Security.EscapeOutput.OutputNotEscaped` count stayed exactly `4`, the same-file `PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent` count stayed exactly `1`, the global packaged `WordPress.Security.EscapeOutput.OutputNotEscaped` total stayed exactly `127`, the global date/time total stayed exactly `25`, and the global logging total stayed exactly `42`
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G5`: DB/SQL `1082`, nonce/input `189`, date/time `25`, and logging `42`
+- `WPORG-28R-G5` is terminal under `verified`
+- `WPORG-28R` remains blocked until every remaining `G6` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain blocked or limited exactly as reflected in the ledger
+- Exact next implementation child: `WPORG-28R-G6 — Ticketing, admissions, and availability request boundaries`
+
+### Non-Actions
+
+- No `G6` or `G7` runtime remediation was attempted.
+- No same-file DB/SQL remediation assigned to `G8` or `G11` was attempted.
+- No same-file date/time or logging remediation assigned to `G15` or `G16` was attempted.
+- No accepted `OutputNotEscaped` boundary or the accepted `OffloadedContent` boundary was changed.
+- No sibling live-tree file, builder, manifest, asset, package metadata outside the documented disposable artifacts, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 
 ## WPORG-20A-S Result
 

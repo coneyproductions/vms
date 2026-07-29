@@ -149,6 +149,20 @@ if (!function_exists('vms_vendor_app_add_confirmation_query_var')) {
 }
 add_filter('query_vars', 'vms_vendor_app_add_confirmation_query_var');
 
+if (!function_exists('vms_vendor_app_confirmation_query_value')) {
+    function vms_vendor_app_confirmation_query_value(string $key): string
+    {
+        return vms_request_read_scalar($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public confirmation links use read-only URL parameters for routing and one-time token lookup.
+    }
+}
+
+if (!function_exists('vms_vendor_app_resend_request_text_field')) {
+    function vms_vendor_app_resend_request_text_field(string $key): string
+    {
+        return vms_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- The resend form lookup key only scopes the nonce action before the request is verified.
+    }
+}
+
 if (!function_exists('vms_vendor_app_maybe_flush_confirmation_rewrite')) {
     function vms_vendor_app_maybe_flush_confirmation_rewrite(): void
     {
@@ -173,7 +187,7 @@ if (!function_exists('vms_vendor_app_is_confirmation_request')) {
             return true;
         }
 
-        return vms_request_read_scalar($_GET, 'vms_vendor_app_confirm') === '1';
+        return vms_vendor_app_confirmation_query_value('vms_vendor_app_confirm') === '1';
     }
 }
 
@@ -1581,16 +1595,20 @@ if (!function_exists('vms_vendor_app_redirect_after_resend')) {
 if (!function_exists('vms_vendor_app_handle_resend_confirmation')) {
     function vms_vendor_app_handle_resend_confirmation(): void
     {
-        $app_ref = vms_request_read_text_field($_REQUEST, 'vms_app_ref');
-        $nonce = (isset($_REQUEST['_vms_vendor_app_resend_nonce']) && !is_array($_REQUEST['_vms_vendor_app_resend_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_REQUEST['_vms_vendor_app_resend_nonce']))
+        if (strtoupper(vms_request_method('get')) !== 'POST') {
+            wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
+        }
+
+        $app_ref = vms_vendor_app_resend_request_text_field('vms_app_ref');
+        $nonce = (isset($_POST['_vms_vendor_app_resend_nonce']) && !is_array($_POST['_vms_vendor_app_resend_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['_vms_vendor_app_resend_nonce']))
             : '';
-        $return_url = vms_request_local_redirect('', $_REQUEST['return_url'] ?? null);
 
         if ($app_ref === '' || !$nonce || !wp_verify_nonce($nonce, 'vms_vendor_app_resend_confirmation_' . $app_ref)) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
+        $return_url = vms_request_local_redirect('', vms_request_read_scalar($_POST, 'return_url'));
         $app_id = vms_vendor_app_find_application_by_public_lookup_key($app_ref);
         if ($app_id <= 0) {
             wp_safe_redirect(function_exists('vms_vendor_app_get_application_page_url') ? vms_vendor_app_get_application_page_url() : home_url('/vendor-application/'));
@@ -1680,7 +1698,7 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
             exit;
         }
 
-        $token = vms_request_read_text_field($_GET, 'token');
+        $token = sanitize_text_field(vms_vendor_app_confirmation_query_value('token'));
         $title = __('Vendor Application Confirmation', 'backstage-venue-manager');
         $content = '';
 
