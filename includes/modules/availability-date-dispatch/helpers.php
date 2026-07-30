@@ -1078,7 +1078,7 @@ if (!function_exists('vms_add_dispatch_get_request_token')) {
 			return rawurldecode($token);
 		}
 
-		$token = vms_request_read_scalar($_GET, 'vms_add_dispatch_token');
+		$token = vms_request_read_scalar($_GET, 'vms_add_dispatch_token'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public response-token fallback preserves the established scalar token contract before verification.
 		if ($token !== '') {
 			return rawurldecode($token);
 		}
@@ -1095,7 +1095,7 @@ if (!function_exists('vms_add_dispatch_get_request_token')) {
 if (!function_exists('vms_add_dispatch_get_request_choice')) {
 	function vms_add_dispatch_get_request_choice(): string
 	{
-		$choice = vms_request_read_key($_GET, 'choice');
+		$choice = vms_request_read_key($_GET, 'choice'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive response-choice state remains nonce-free while rejecting malformed choice values.
 		if ($choice === 'yes') {
 			return 'available';
 		}

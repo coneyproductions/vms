@@ -234,7 +234,8 @@ try {
 	$assert($GLOBALS['vms_test_inline_styles'] === array(), 'ADD menu-badge remediation should not rely on wp_add_inline_style().');
 	$assert($GLOBALS['vms_test_inline_scripts'] === array(), 'ADD menu-badge remediation should not rely on wp_add_inline_script().');
 
-	$assert($addSource === $liveAddSource, 'Mirror and live ADD admin PHP should remain byte-for-byte synchronized.');
+	$assert($addSource !== $liveAddSource, 'Mirror ADD admin PHP should now diverge from the untouched live counterpart because T3 normalizes mirror-only request boundaries.');
+	$assert(strpos($liveAddSource, "isset(\$_GET['page']) ? sanitize_key((string) \$_GET['page']) : '';") !== false, 'Live ADD admin PHP should remain on the untouched pre-T3 page-routing implementation.');
 	$assert($menuCssSource === $liveMenuCssSource, 'Mirror and live admin-menu CSS should remain byte-for-byte synchronized.');
 	$assert($menuJsSource === $liveMenuJsSource, 'Mirror and live admin-menu JS should remain byte-for-byte synchronized.');
 

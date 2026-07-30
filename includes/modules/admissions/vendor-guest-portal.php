@@ -972,7 +972,10 @@ if (!function_exists('vms_admission_vendor_guest_portal_screen_key')) {
 		if (!is_user_logged_in() || !is_page('vendor-portal')) {
 			return $screen_key;
 		}
-		$tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'dashboard';
+		$tab = vms_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive vendor-portal tab navigation remains nonce-free while rejecting malformed tab values.
+		if ($tab === '') {
+			$tab = 'dashboard';
+		}
 		if ($tab === 'guest-list') {
 			return 'frontend:vms-vendor-portal-guest-list';
 		}
@@ -1086,7 +1089,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 			return true;
 		}
 		$max_party = max(1, (int) (vms_admission_settings()['max_party_size'] ?? 6));
-		$selected_event = isset($_GET['guest_event']) ? absint((string) wp_unslash($_GET['guest_event'])) : 0;
+		$selected_event = vms_request_read_absint($_GET, 'guest_event'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive guest-event selection remains nonce-free while rejecting malformed identifier values.
 		$event_index = 0;
 		foreach ($events as $event) {
 			$event_plan_id = (int) ($event['event_plan_id'] ?? 0);

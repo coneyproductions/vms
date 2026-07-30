@@ -339,7 +339,13 @@ if (!function_exists('vms_admission_scan_template_router')) {
 		}
 		$token = get_query_var('vms_admission_scan_token');
 		if (!is_string($token) || $token === '') {
-			$token = isset($_GET['vms_admission_scan_token']) ? (string) $_GET['vms_admission_scan_token'] : '';
+			$token = '';
+			if (array_key_exists('vms_admission_scan_token', $_GET) && is_scalar($_GET['vms_admission_scan_token'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public scan-token fallback preserves the existing token lookup contract without adding a nonce to navigation.
+				$raw_token = wp_unslash($_GET['vms_admission_scan_token']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve the exact unslashed scan token before raw decoding and token lookup.
+				if (is_scalar($raw_token)) {
+					$token = (string) $raw_token;
+				}
+			}
 		}
 		$token = sanitize_text_field(rawurldecode($token));
 		if ($token === '') {
@@ -384,7 +390,7 @@ if (!function_exists('vms_admission_scan_template_router')) {
 		} else {
 			echo '<!doctype html><html><head><meta charset="' . esc_attr(get_bloginfo('charset')) . '"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>';
 		}
-		$print_class = !empty($_GET['vms_print_pass']) ? ' vms-pass-public-page--print' : '';
+		$print_class = vms_request_read_bool_flag($_GET, 'vms_print_pass') ? ' vms-pass-public-page--print' : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only print-mode state stays nonce-free while rejecting malformed array/object input.
 		echo '<main id="primary" class="site-main vms-pass-public-page' . esc_attr($print_class) . '" role="main"><div class="vms-pass-wrap"><div class="vms-pass-card">';
 		if (!is_array($row)) {
 			echo '<h1>' . esc_html__('Pass Not Found', 'backstage-venue-manager') . '</h1><p class="vms-pass-error">' . esc_html__('This admission pass was not found.', 'backstage-venue-manager') . '</p>';

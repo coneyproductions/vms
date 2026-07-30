@@ -28,7 +28,7 @@ if (!function_exists('vms_pass_claims_is_admin_page')) {
 		if (!is_admin()) {
 			return false;
 		}
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only Pass Claims page routing remains nonce-free while rejecting malformed page values.
 		return $page === vms_pass_claims_menu_slug();
 	}
 }
@@ -1694,7 +1694,7 @@ add_action('admin_post_vms_pass_report_export_csv', 'vms_pass_claims_handle_repo
 if (!function_exists('vms_pass_claims_render_admin_notices')) {
 	function vms_pass_claims_render_admin_notices(): void
 	{
-		$result = isset($_GET['result']) ? sanitize_key((string) $_GET['result']) : '';
+		$result = vms_request_read_key($_GET, 'result'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only admin notice state remains bookmarkable and does not require a nonce.
 		if ($result === 'source_saved') {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Source saved.', 'backstage-venue-manager') . '</p></div>';
 		}
@@ -2056,7 +2056,7 @@ if (!function_exists('vms_pass_claims_render_preview_summary')) {
 	if (!function_exists('vms_pass_claims_render_passes_tab')) {
 	function vms_pass_claims_render_passes_tab(): void
 	{
-		$batch_id = isset($_GET['batch_id']) ? absint((string) $_GET['batch_id']) : 0;
+		$batch_id = vms_request_read_absint($_GET, 'batch_id'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only batch filtering remains nonce-free while rejecting malformed identifier shapes.
 		$tokens = vms_pass_claims_get_tokens($batch_id, 300);
 		$export_url = vms_pass_claims_export_url($batch_id);
 
@@ -2315,7 +2315,10 @@ if (!function_exists('vms_pass_claims_render_admin_page')) {
 			wp_die(esc_html__('You do not have permission to manage Pass Claims.', 'backstage-venue-manager'));
 		}
 
-		$tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'sources';
+		$tab = vms_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only tab navigation remains nonce-free while rejecting malformed tab values.
+		if ($tab === '') {
+			$tab = 'sources';
+		}
 		if (!in_array($tab, array('sources', 'batches', 'passes', 'reports'), true)) {
 			$tab = 'sources';
 		}
@@ -2399,9 +2402,15 @@ if (!function_exists('vms_pass_claims_get_request_token')) {
 			return rawurldecode($token);
 		}
 
-		$token = isset($_GET['vms_pass_claim_token']) ? (string) $_GET['vms_pass_claim_token'] : '';
+		$token = '';
+		if (array_key_exists('vms_pass_claim_token', $_GET) && is_scalar($_GET['vms_pass_claim_token'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public claim-token fallback preserves the existing token lookup contract without adding a nonce to navigation.
+			$raw_token = wp_unslash($_GET['vms_pass_claim_token']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve the exact unslashed claim token before raw decoding and verification.
+			if (is_scalar($raw_token)) {
+				$token = (string) $raw_token;
+			}
+		}
 		if ($token !== '') {
-			return rawurldecode(wp_unslash($token));
+			return rawurldecode($token);
 		}
 
 		$uri = vms_request_current_uri();

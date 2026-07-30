@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_add_dispatch_enqueue_admin_assets')) {
 	function vms_add_dispatch_enqueue_admin_assets(): void
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive ADD admin page routing remains nonce-free while rejecting malformed page values.
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 		$is_event_plan = is_object($screen) && !empty($screen->post_type) && (string) $screen->post_type === 'vms_event_plan';
 		if ($page !== vms_add_dispatch_page_slug() && !$is_event_plan) {
@@ -74,7 +74,7 @@ if (!function_exists('vms_add_dispatch_current_pending_count')) {
 if (!function_exists('vms_add_dispatch_should_render_shell_count')) {
 	function vms_add_dispatch_should_render_shell_count(): bool
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive ADD shell-count routing remains nonce-free while rejecting malformed page values.
 		if ($page === vms_add_dispatch_page_slug() || $page === 'vms-dashboard') {
 			return true;
 		}
@@ -618,10 +618,10 @@ if (!function_exists('vms_add_dispatch_dashboard_filters')) {
 	function vms_add_dispatch_dashboard_filters(array $source = array()): array
 	{
 		return array(
-			'show_full_groups' => !empty($source['show_full_groups']),
-			'show_over_capacity_groups' => !empty($source['show_over_capacity_groups']),
-			'include_past_events' => !empty($source['include_past_events']),
-			'include_cancelled_events' => !empty($source['include_cancelled_events']),
+			'show_full_groups' => vms_request_read_bool_flag($source, 'show_full_groups'),
+			'show_over_capacity_groups' => vms_request_read_bool_flag($source, 'show_over_capacity_groups'),
+			'include_past_events' => vms_request_read_bool_flag($source, 'include_past_events'),
+			'include_cancelled_events' => vms_request_read_bool_flag($source, 'include_cancelled_events'),
 		);
 	}
 }
@@ -701,7 +701,7 @@ if (!function_exists('vms_add_dispatch_assignment_review_url')) {
 if (!function_exists('vms_add_dispatch_render_assignment_review')) {
 	function vms_add_dispatch_render_assignment_review(int $response_id): void
 	{
-		$selected_type = isset($_GET['assign_as']) ? sanitize_key((string) wp_unslash($_GET['assign_as'])) : '';
+		$selected_type = vms_request_read_key($_GET, 'assign_as'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive assignment-review selection remains nonce-free while rejecting malformed choice values.
 		$review = vms_add_dispatch_assignment_review($response_id, $selected_type);
 		echo '<div class="vms-add-card vms-add-assignment-review" data-vms-tour="add-dispatch.assignment-review">';
 		echo '<h2>' . esc_html__('Review ADD Assignment', 'backstage-venue-manager') . '</h2>';
@@ -804,7 +804,7 @@ if (!function_exists('vms_add_dispatch_render_dashboard_home')) {
 	function vms_add_dispatch_render_dashboard_home(): void
 	{
 		$counts = vms_add_dispatch_get_dashboard_counts();
-		$dashboard_filters = vms_add_dispatch_dashboard_filters(isset($_GET) && is_array($_GET) ? (array) wp_unslash($_GET) : array());
+		$dashboard_filters = vms_add_dispatch_dashboard_filters($_GET); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive ADD dashboard filters remain nonce-free while the helper normalizes each allowed boolean flag.
 		$need_scan = function_exists('vms_add_dispatch_get_event_plan_need_scan')
 			? vms_add_dispatch_get_event_plan_need_scan(12, 8, $dashboard_filters)
 			: array('contexts' => array(), 'excluded' => array());

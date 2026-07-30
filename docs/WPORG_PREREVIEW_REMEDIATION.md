@@ -3857,6 +3857,72 @@ Date: 2026-07-30
 - No same-file date/time or logging remediation assigned to `G15` or `G16` was attempted.
 - No sibling live-tree file, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 
+## WPORG-28R-G6-T3 Result
+
+Date: 2026-07-30
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G6-T3`
+- Title: `Admissions and availability read-only navigation/token state`
+- Starting mirror HEAD: `395665758114fa24aef58e9b8900c3e57ed06811` (`Normalize ticketing mutation request boundaries`)
+- Starting parent: `6418bf3cd5c0a28082dda15f081bbbba594b77ad`
+- Authorized runtime scope: `includes/modules/admissions/admin-ui.php`, `includes/modules/admissions/admission-tokens.php`, `includes/modules/admissions/pass-claims.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/modules/availability-date-dispatch/admin-ui.php`, and `includes/modules/availability-date-dispatch/helpers.php`
+- Authorized support scope used: `tests/admissions-rest-permissions.php`, `tests/pass-claims-public-form-output-remediation.php`, `tests/pass-claims-public-shell-output-remediation.php`, `tests/pass-claims-public-status-output-remediation.php`, `tests/pass-claims-public-success-output-remediation.php`, `tests/portal-notice-sink-remediation.php`, `tests/add-dispatch-menu-badge-inline-assets-remediation.php`, `tests/admissions-read-only-request-state-remediation.php`, `tests/admission-token-request-state-remediation.php`, `tests/availability-date-dispatch-request-state-remediation.php`, `docs/WPORG_PREREVIEW_REMEDIATION.md`, `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, and `docs/wporg-remediation-ledger.md`
+- Live-tree rule preserved: the sibling `../../vms/` tree remained read-only and unchanged throughout this child; mirror changed, live untouched, and post-edit parity was intentionally not restored
+- Preserved inventory evidence: `/tmp/wporg-28rg6-inventory.cXX8Of` remained intact and unchanged, including `plugin-check.strict.json` SHA-256 `4c2c2c0f9fb02adbb669b192cd64025d9d960988bdfa7140e815faafdb65f5e3`, `g6-family-rows.jsonl` SHA-256 `958f88e5dea2abf63dc442caf5d49e10bb690787de52e5d98cbeb4a05784dece`, and `g6-family-rows.tsv` SHA-256 `4d8ad0cb9c2f8c162f006afcd5a945130aae93c4e219e72d550c41da34667cc3`
+- Pre-edit packaged baseline: `265` errors, `1103` warnings, `1368` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1239`
+- Exact G6-T3 ownership: `34` packaged rows across the six authorized PHP runtime files only (`Missing 0`, `Recommended 30`, `InputNotSanitized 2`, `MissingUnslash 2`) covering `16` distinct request boundaries
+
+### Boundary Characterization
+
+- This child stayed inside the admissions and availability read-only navigation/token surface: admin-page routing, notices, tab/page/filter state, selected record IDs, passive enqueue/render state, admission token reads, pass-claim token reads, and availability-dispatch token and response-choice reads.
+- Existing capability, authentication, ownership, eligibility, record-access, redirect, render, AJAX, admin-post, and nonce-verification boundaries stayed intact. Read-only GET navigation remained nonce-free, while verifier-facing token reads now reject malformed array/object input before unslashing and sanitation.
+- Availability dashboard filter state no longer unslashes the whole `$_GET` array eagerly; instead it normalizes only the bounded boolean flags the subsystem already understands. The sibling live tree also remained untouched.
+- The lone same-file nonce/input row left in the six touched runtime files is `includes/modules/admissions/vendor-guest-portal.php:912:21` on `$_POST['vms_vendor_guest_rules']`, which the preserved G6 inventory assigns to `WPORG-28R-G6-T5` rather than to this child.
+
+### Runtime And Test Changes
+
+- Updated `includes/modules/admissions/admin-ui.php` so admission admin asset enqueue state now reads `post` through `vms_request_read_absint()` while preserving the existing global post fallback.
+- Updated `includes/modules/admissions/admission-tokens.php` so the scan-template router accepts only scalar query-string tokens before `wp_unslash()`, preserves the existing token contract before `rawurldecode()` plus `sanitize_text_field()`, and normalizes the print-page flag through `vms_request_read_bool_flag()`.
+- Updated `includes/modules/admissions/pass-claims.php` so page, result, batch, and tab state now read through narrow request helpers and the pass-claim token fallback now rejects array/object input while preserving query-var precedence plus existing verifier semantics.
+- Updated `includes/modules/admissions/vendor-guest-portal.php` so passive portal tab and selected event reads now use helper-backed scalar and integer readers without touching the deferred nested `vms_vendor_guest_rules` mutation boundary.
+- Updated `includes/modules/availability-date-dispatch/admin-ui.php` plus `includes/modules/availability-date-dispatch/helpers.php` so page, assign-as, dashboard filter, token, and choice reads now use subsystem-local scalar/boolean helpers, and updated `tests/add-dispatch-menu-badge-inline-assets-remediation.php` so its parity assertions reflect the intentional mirror-only divergence in the ADD admin PHP file while keeping the JS/CSS parity assertions exact.
+- Added the new focused suites `tests/admissions-read-only-request-state-remediation.php`, `tests/admission-token-request-state-remediation.php`, and `tests/availability-date-dispatch-request-state-remediation.php`.
+
+### Verification
+
+- PHP lint passed for every changed PHP file and every changed or new PHP test file: `php -l includes/modules/admissions/admin-ui.php`, `php -l includes/modules/admissions/admission-tokens.php`, `php -l includes/modules/admissions/pass-claims.php`, `php -l includes/modules/admissions/vendor-guest-portal.php`, `php -l includes/modules/availability-date-dispatch/admin-ui.php`, `php -l includes/modules/availability-date-dispatch/helpers.php`, `php -l tests/admissions-read-only-request-state-remediation.php`, `php -l tests/admission-token-request-state-remediation.php`, `php -l tests/availability-date-dispatch-request-state-remediation.php`, and `php -l tests/add-dispatch-menu-badge-inline-assets-remediation.php`
+- Focused T3 suites passed: `php tests/admissions-rest-permissions.php`, `php tests/pass-claims-public-form-output-remediation.php`, `php tests/pass-claims-public-shell-output-remediation.php`, `php tests/pass-claims-public-status-output-remediation.php`, `php tests/pass-claims-public-success-output-remediation.php`, `php tests/portal-notice-sink-remediation.php`, `php tests/add-dispatch-menu-badge-inline-assets-remediation.php`, `php tests/admissions-read-only-request-state-remediation.php`, `php tests/admission-token-request-state-remediation.php`, and `php tests/availability-date-dispatch-request-state-remediation.php`
+- Accepted unchanged baseline conditions were preserved and not treated as T3 defects: `php tests/add-dispatch-assignment-review.php` still reports `Could not locate wp-load.php.` and `php tests/add-dispatch-open-vendor-needs.php` still reports `ADD open vendor needs visibility regression: FAIL - Future Event Plan with missing Primary Vendor should appear in ADD open needs.`
+- Required broader gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, `php tests/authorization-boundary-hardening.php`, `php tests/strict-post-gate-remediation.php`, and `php tests/request-input-sanitization.php`
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg6-t3-post.ldgG1s --force --allow-dirty`
+- Post-edit package result: `/tmp/wporg-28rg6-t3-post.ldgG1s/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `eab8f987bcc09b3e595714710884ed72a1fdde2cffcb3fc879c344f8a22dca01`
+- Post-edit extracted package root and build audit: extracted package root `/tmp/wporg-28rg6-t3-post.ldgG1s/extracted/backstage-venue-manager`; build report `PASS`; exclusions and package-root checks passed
+- Post-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 "$(which wp)" --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg6-t3-post.ldgG1s/extracted/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Post-edit packaged Plugin Check result: exit `0`, empty stderr, `265` errors, `1069` warnings, `1334` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and inferred `SUBMISSION_BLOCKER=1205`; normalized strict JSON is recorded at `/tmp/wporg-28rg6-t3-post.ldgG1s/plugin-check.strict.json`, with the raw stdout preserved at `/tmp/wporg-28rg6-t3-post.ldgG1s/plugin-check.stdout.raw`
+- Exact G6-T3 code deltas: `WordPress.Security.NonceVerification.Missing 8 -> 8 (0)`, `WordPress.Security.NonceVerification.Recommended 62 -> 32 (-30)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 14 -> 12 (-2)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 6 -> 4 (-2)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no unrelated packaged code count increased
+- Exact G6-T3 row result: the `34` owned packaged rows were removed exactly, no `G6-T3`-owned nonce/input row remained in the post-edit package, no new `G6-T3`-owned nonce/input row appeared, and no owned row migrated into another nonce/input code
+- Residual continuity: the remaining nonce/input family now stands at `Missing 8`, `Recommended 32`, `InputNotSanitized 12`, and `MissingUnslash 4` (`56` total); the only same-file nonce/input residual in the six touched runtime files is the preserved `T5` `vendor-guest-portal.php:912:21` `InputNotSanitized` row, and no nonce/input row remains in the other five touched runtime files
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G6-T3`: DB/SQL `1082`, nonce/input `56`, date/time `25`, and logging `42`
+- `WPORG-28R-G6-T3` is terminal under `verified`
+- `WPORG-28R-G6` remains open; do not mark the whole G6 family complete from this child alone
+- `WPORG-28R` remains blocked until every remaining `G6-T4` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain blocked or limited exactly as reflected in the ledger
+- Exact next implementation child: `WPORG-28R-G6-T4 — Shared wrappers, tours, and passive display-state helpers`
+
+### Non-Actions
+
+- No `WPORG-28R-G6-T4` or `WPORG-28R-G6-T5` runtime remediation was attempted.
+- No admissions or availability runtime file outside the six authorized T3 PHP files was changed.
+- No same-file DB/SQL remediation assigned to `G9` or `G10` was attempted.
+- No same-file date/time, logging, or shared-helper remediation assigned to `G14`, `G15`, `G16`, or `G17` was attempted.
+- No sibling live-tree file, builder, manifest, asset, package metadata outside the documented disposable artifacts, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
+
 ## WPORG-20A-S Result
 
 Date: 2026-07-21
