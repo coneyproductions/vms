@@ -99,6 +99,20 @@ function sanitize_email(string $value): string
 	return strtolower(trim($value));
 }
 
+function vms_request_read_absint(array $source, string $key): int
+{
+	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+		return 0;
+	}
+
+	$value = wp_unslash($source[$key]);
+	if (!is_scalar($value)) {
+		return 0;
+	}
+
+	return absint($value);
+}
+
 function get_user_by(string $field, string $value)
 {
 	if ($field !== 'email') {
@@ -219,6 +233,15 @@ $assert = static function (bool $condition, string $message): void {
 };
 
 require dirname(__DIR__) . '/includes/integrations/ticketing-claims-customer.php';
+
+$_GET = array();
+$assert(vms_ticketing_claims_account_should_expand() === false, 'Benefits panel should stay collapsed when the flag is missing.');
+
+$_GET['vms_benefits'] = '1';
+$assert(vms_ticketing_claims_account_should_expand() === true, 'Benefits panel should expand when the scalar benefits flag is 1.');
+
+$_GET['vms_benefits'] = array('1');
+$assert(vms_ticketing_claims_account_should_expand() === false, 'Benefits panel should reject array-shaped benefits flags.');
 
 $runHandler = static function (array $post, bool $loggedIn): Vms_Test_Json_Response {
 	$_POST = $post;

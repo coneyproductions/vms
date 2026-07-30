@@ -60,6 +60,16 @@ function sanitize_text_field($value): string
 	return is_string($sanitized) ? trim($sanitized) : '';
 }
 
+function sanitize_key($value): string
+{
+	if (!is_scalar($value)) {
+		return '';
+	}
+
+	$sanitized = preg_replace('/[^a-z0-9_\-]/i', '', strtolower((string) $value));
+	return is_string($sanitized) ? $sanitized : '';
+}
+
 function wp_unslash($value)
 {
 	if (is_array($value)) {
@@ -67,6 +77,34 @@ function wp_unslash($value)
 	}
 
 	return is_string($value) ? stripslashes($value) : $value;
+}
+
+function vms_request_read_text_field(array $source, string $key): string
+{
+	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+		return '';
+	}
+
+	$value = wp_unslash($source[$key]);
+	if (!is_scalar($value)) {
+		return '';
+	}
+
+	return sanitize_text_field((string) $value);
+}
+
+function vms_request_read_key(array $source, string $key): string
+{
+	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+		return '';
+	}
+
+	$value = wp_unslash($source[$key]);
+	if (!is_scalar($value)) {
+		return '';
+	}
+
+	return sanitize_key((string) $value);
 }
 
 function wp_parse_url(string $url, int $component = -1)
@@ -89,33 +127,33 @@ function vms_request_current_uri(string $fallback = ''): string
 }
 
 $pluginRoot = dirname(__DIR__);
-$livePluginRoot = dirname(dirname($pluginRoot)) . '/vms';
 $mirrorPath = $pluginRoot . '/includes/integrations/ticketing-rules-v2.php';
-$livePath = $livePluginRoot . '/includes/integrations/ticketing-rules-v2.php';
 
 $mirrorSource = file_get_contents($mirrorPath);
-$liveSource = file_get_contents($livePath);
 
 vms_test_ticketing_request_path_assert(is_string($mirrorSource) && $mirrorSource !== '', 'Mirror Ticketing Rules V2 source should be readable.');
-vms_test_ticketing_request_path_assert(is_string($liveSource) && $liveSource !== '', 'Live Ticketing Rules V2 source should be readable.');
 
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, '$_SERVER') === false, 'Mirror Ticketing Rules V2 source should not retain direct $_SERVER reads.');
-vms_test_ticketing_request_path_assert(strpos($liveSource, '$_SERVER') === false, 'Live Ticketing Rules V2 source should not retain direct $_SERVER reads.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'function vms_ticketing_v2_request_key(string $key): string') !== false, 'Mirror Ticketing Rules V2 should expose the read-only wc-ajax helper.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return vms_request_read_key(\$_REQUEST, \$key);") !== false, 'Mirror Ticketing Rules V2 should route wc-ajax reads through the shared scalar helper.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'function vms_ticketing_v2_request_has_key(string $key): bool') !== false, 'Mirror Ticketing Rules V2 should expose the presence-only request probe helper.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return isset(\$_REQUEST[\$key]);") !== false, 'Mirror Ticketing Rules V2 should preserve the presence-only add-to-cart probe.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'function vms_ticketing_v2_query_text(string $key): string') !== false, 'Mirror Ticketing Rules V2 should expose the read-only rest_route helper.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return vms_request_read_text_field(\$_GET, \$key);") !== false, 'Mirror Ticketing Rules V2 should route rest_route through the shared text helper.');
 vms_test_ticketing_request_path_assert(substr_count($mirrorSource, 'vms_request_current_uri()') === 1, 'Mirror Ticketing Rules V2 should own one helper-backed URI fallback.');
-vms_test_ticketing_request_path_assert(substr_count($liveSource, 'vms_request_current_uri()') === 1, 'Live Ticketing Rules V2 should own one helper-backed URI fallback.');
-vms_test_ticketing_request_path_assert(strpos($mirrorSource, "if (isset(\$_GET['rest_route'])) {") !== false, 'Mirror Ticketing Rules V2 should preserve the rest_route precedence branch.');
-vms_test_ticketing_request_path_assert(strpos($liveSource, "if (isset(\$_GET['rest_route'])) {") !== false, 'Live Ticketing Rules V2 should preserve the rest_route precedence branch.');
-vms_test_ticketing_request_path_assert(strpos($mirrorSource, "sanitize_text_field(wp_unslash((string) \$_GET['rest_route']))") !== false, 'Mirror Ticketing Rules V2 should preserve rest_route sanitization.');
-vms_test_ticketing_request_path_assert(strpos($liveSource, "sanitize_text_field(wp_unslash((string) \$_GET['rest_route']))") !== false, 'Live Ticketing Rules V2 should preserve rest_route sanitization.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, "vms_ticketing_v2_query_text('rest_route')") !== false, 'Mirror Ticketing Rules V2 should preserve the rest_route precedence branch through the local helper.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'wp_parse_url(vms_request_current_uri(), PHP_URL_PATH)') !== false, 'Mirror Ticketing Rules V2 should derive the fallback path from the shared request URI helper.');
-vms_test_ticketing_request_path_assert(strpos($liveSource, 'wp_parse_url(vms_request_current_uri(), PHP_URL_PATH)') !== false, 'Live Ticketing Rules V2 should derive the fallback path from the shared request URI helper.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'return strtolower(trim((string) $route));') !== false, 'Mirror Ticketing Rules V2 should preserve lowercase and trim normalization.');
-vms_test_ticketing_request_path_assert(strpos($liveSource, 'return strtolower(trim((string) $route));') !== false, 'Live Ticketing Rules V2 should preserve lowercase and trim normalization.');
 
+eval(vms_test_ticketing_request_path_extract_named_function($mirrorPath, 'vms_ticketing_v2_request_key'));
+eval(vms_test_ticketing_request_path_extract_named_function($mirrorPath, 'vms_ticketing_v2_request_has_key'));
+eval(vms_test_ticketing_request_path_extract_named_function($mirrorPath, 'vms_ticketing_v2_query_text'));
+eval(vms_test_ticketing_request_path_extract_named_function($mirrorPath, 'vms_ticketing_v2_request_is_add_to_cart'));
 eval(vms_test_ticketing_request_path_extract_named_function($mirrorPath, 'vms_ticketing_v2_store_api_request_path'));
 
 $resetRuntime = static function (): void {
 	$_GET = array();
+	$_REQUEST = array();
 	$GLOBALS['vms_test_ticketing_request_path_current_uri'] = '';
 	$GLOBALS['vms_test_ticketing_request_path_current_uri_calls'] = 0;
 };
@@ -152,6 +190,27 @@ vms_test_ticketing_request_path_assert(
 vms_test_ticketing_request_path_assert(
 	$GLOBALS['vms_test_ticketing_request_path_current_uri_calls'] === 1,
 	'Ticketing Rules V2 should still consult the helper once before preserving the empty fallback result.'
+);
+
+$resetRuntime();
+$_REQUEST['add-to-cart'] = array('unexpected');
+vms_test_ticketing_request_path_assert(
+	vms_ticketing_v2_request_is_add_to_cart() === true,
+	'Ticketing Rules V2 should preserve presence-only add-to-cart routing when the key exists.'
+);
+
+$resetRuntime();
+$_REQUEST['wc-ajax'] = 'add_to_cart';
+vms_test_ticketing_request_path_assert(
+	vms_ticketing_v2_request_is_add_to_cart() === true,
+	'Ticketing Rules V2 should still treat wc-ajax add_to_cart as an active cart-add request.'
+);
+
+$resetRuntime();
+$_REQUEST['wc-ajax'] = array('add_to_cart');
+vms_test_ticketing_request_path_assert(
+	vms_ticketing_v2_request_is_add_to_cart() === false,
+	'Ticketing Rules V2 should reject array-shaped wc-ajax values when a scalar route key is expected.'
 );
 
 fwrite(STDOUT, "Ticketing Rules V2 request path normalization OK.\n");

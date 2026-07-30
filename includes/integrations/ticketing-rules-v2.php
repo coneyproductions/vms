@@ -5614,13 +5614,28 @@ function vms_ticketing_v2_async_woo_ticket_email_dispatch_active(?bool $set = nu
     return $active;
 }
 
+function vms_ticketing_v2_request_key(string $key): string
+{
+    return vms_request_read_key($_REQUEST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Woo request routing state only selects cart and checkout behavior.
+}
+
+function vms_ticketing_v2_request_has_key(string $key): bool
+{
+    return isset($_REQUEST[$key]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presence-only probe for read-only Woo request routing state.
+}
+
+function vms_ticketing_v2_query_text(string $key): string
+{
+    return vms_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Store API route state only selects request routing behavior.
+}
+
 function vms_ticketing_v2_is_wc_ajax_checkout_request(): bool
 {
     if (!function_exists('wp_doing_ajax') || !wp_doing_ajax()) {
         return false;
     }
 
-    $ajax_action = isset($_REQUEST['wc-ajax']) ? sanitize_key((string) wp_unslash($_REQUEST['wc-ajax'])) : '';
+    $ajax_action = vms_ticketing_v2_request_key('wc-ajax');
     return $ajax_action === 'checkout';
 }
 
@@ -8012,14 +8027,11 @@ function vms_ticketing_v2_clear_success_notices(): void
  */
 function vms_ticketing_v2_request_is_add_to_cart(): bool
 {
-    if (isset($_REQUEST['add-to-cart']) || isset($_REQUEST['added-to-cart'])) {
+    if (vms_ticketing_v2_request_has_key('add-to-cart') || vms_ticketing_v2_request_has_key('added-to-cart')) {
         return true;
     }
 
-    $wc_ajax = '';
-    if (isset($_REQUEST['wc-ajax'])) {
-        $wc_ajax = sanitize_key(wp_unslash((string) $_REQUEST['wc-ajax']));
-    }
+    $wc_ajax = vms_ticketing_v2_request_key('wc-ajax');
 
     return ($wc_ajax === 'add_to_cart');
 }
@@ -8318,10 +8330,7 @@ function vms_ticketing_v2_cart_has_checkout_blockers(): bool
 
 function vms_ticketing_v2_store_api_request_path(): string
 {
-    $route = '';
-    if (isset($_GET['rest_route'])) {
-        $route = sanitize_text_field(wp_unslash((string) $_GET['rest_route']));
-    }
+    $route = vms_ticketing_v2_query_text('rest_route');
 
     if ($route === '') {
         $request_path = wp_parse_url(vms_request_current_uri(), PHP_URL_PATH);

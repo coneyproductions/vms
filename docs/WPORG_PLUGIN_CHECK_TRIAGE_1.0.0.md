@@ -146,22 +146,22 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Current Category Triage
 
-- Fresh packaged post-`WPORG-28R-G5` baseline from `2026-07-29`: `265` errors, `1202` warnings, `1467` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1338`.
+- Fresh packaged post-`WPORG-28R-G6-T1` baseline from `2026-07-30`: `265` errors, `1136` warnings, `1401` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1272`.
 - The packaged scan reports `privateincludes/...` paths. The roadmap below uses the corresponding mirror `includes/...` ownership files that future implementation children must edit.
-- `WPORG-28R-G5` removed the next `103` public, portal, and vendor-application nonce/input blocker rows without changing any unrelated blocker-family total; the only global rule-count deltas were `WordPress.Security.NonceVerification.Missing 38 -> 26`, `WordPress.Security.NonceVerification.Recommended 172 -> 126`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 54 -> 25`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 28 -> 12`.
+- `WPORG-28R-G6-T1` removed the first `66` ticketing claims and verification nonce/input blocker rows without changing any unrelated blocker-family total; the only global rule-count deltas were `WordPress.Security.NonceVerification.Recommended 126 -> 62`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 25 -> 24`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 12 -> 11`, while `WordPress.Security.NonceVerification.Missing` stayed at `26`.
 
 | Category | Current packaged count | Representative files | Current classification | Current strategy |
 | --- | ---: | --- | --- | --- |
-| Nonce and input handling | `189` | `includes/integrations/ticketing-claims-admin.php`, `includes/modules/admissions/pass-claims.php`, `includes/core/plugin.php`, `includes/modules/availability-date-dispatch/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G6` and `WPORG-28R-G7` in order, beginning with the ticketing, admissions, and availability request slice in `G6` now that the public, portal, and vendor-application request slice in `G5` is closed. |
+| Nonce and input handling | `123` | `includes/integrations/ticketing-claims-admin.php`, `includes/modules/admissions/pass-claims.php`, `includes/core/plugin.php`, `includes/modules/availability-date-dispatch/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G6-T2` and then the remaining `WPORG-28R-G6` / `WPORG-28R-G7` slices in order, beginning with the ticketing claims and verification mutation/request-shape slice now that `WPORG-28R-G6-T1` is closed. |
 | Database and SQL safety | `1082` | `includes/core/staffing.php`, `includes/modules/admissions/pass-claims.php`, `includes/modules/availability-date-dispatch/helpers.php`, `includes/social-share/queue-repo.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G8` through `WPORG-28R-G13`; land direct mutation / prepare fixes before cache-policy, reporting, and slow-meta-query follow-up. |
 | Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G14` and `WPORG-28R-G15` after the earlier request and query boundaries they depend on. |
 | Development logging | `42` | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G16` and `WPORG-28R-G17` after the earlier lifecycle work clarifies which logs remain operational, which are dev traces, and which can be safely gated or removed. |
-| Escaping and output safety | `127` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `1338` submission blockers. |
+| Escaping and output safety | `127` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `1272` submission blockers. |
 
 ## Residual Submission-Blocker Roadmap
 
 - `WPORG-28R-G0` now owns the complete residual blocker decomposition. Every current blocker row belongs to exactly one implementation child below.
-- Family sums reconcile exactly: `G6-G7 = 189`, `G8-G13 = 1082`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `1338`.
+- Family sums reconcile exactly: `G6-G7 = 123`, `G8-G13 = 1082`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `1272`.
 - Every implementation child still reruns `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php` in addition to the focused suites listed below.
 - Every implementation child closes only its owned packaged rows; unrelated families must remain count-for-count unchanged except for documented same-file line movement.
 
@@ -219,12 +219,23 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 #### `WPORG-28R-G6 — Ticketing, Admissions, And Availability Request Boundaries`
 
-- Count: `147` (`Missing 22`, `Recommended 94`, `InputNotSanitized 19`, `MissingUnslash 12`)
+- Status: `in progress` after verified child `WPORG-28R-G6-T1` on `2026-07-30`
+- Original pre-edit count: `147` (`Missing 22`, `Recommended 94`, `InputNotSanitized 19`, `MissingUnslash 12`); current remaining count: `81`
 - Files: `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php`, `includes/modules/admissions/pass-claims.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-phase-b.php`, `includes/modules/availability-date-dispatch/admin-ui.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/modules/admissions/admission-tokens.php`, `includes/integrations/ticketing.php`, `includes/integrations/ticketing-claims-customer.php`, `includes/modules/admissions/admin-ui.php`, `includes/modules/availability-date-dispatch/helpers.php`, `includes/ticketing/ticket-integrity-cron.php`
 - Lifecycle / subsystem: `ADMIN_PAGE`, `ADMIN_POST`, `FRONTEND_AJAX`, `REST`, `FORM_SUBMISSION`; admissions claims, ticketing admin/support flows, ticketing AJAX, and availability dispatch
 - Boundary: sequence request provenance fixes ahead of later SQL rewrites; preserve any raw payloads required for JSON bodies, signatures, or third-party cart semantics only where the current boundary proves that necessity
 - Focused tests: `tests/ticket-claims-assignee-validation.php`, `tests/ticketing-v2-ajax-output-buffer-ownership.php`, `tests/public-calendar-user-agent-view-characterization.php`, `tests/pass-claims-public-form-output-remediation.php`
-- Closure / defers: owned packaged input rows `147 -> 0`; defer same-file DB rows to `G9` / `G10`, same-file date rows to `G15`, and same-file logging rows to `G16`
+- Closure / defers: `WPORG-28R-G6-T1` removed the first `66` owned rows exactly, leaving `81` rows for `WPORG-28R-G6-T2` plus the later admissions/availability slices; current same-file residual nonce/input rows in the five touched T1 runtime files map only to `T2` or `T5`; defer same-file DB rows to `G9` / `G10`, same-file date rows to `G15`, and same-file logging rows to `G16`
+
+##### `WPORG-28R-G6-T1 — Normalize Ticketing Claims And Verification Request State`
+
+- Status: `verified` on `2026-07-30`
+- Owned packaged rows: `66 -> 0` across `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-claims-customer.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-verifications.php`, and `includes/integrations/ticketing.php`
+- Distinct boundaries: `46`
+- Exact rule distribution: `Recommended 64`, `InputNotSanitized 1`, `MissingUnslash 1`, `Missing 0`
+- Boundary: moved read-only ticketing claims, verification-panel, Woo request-path, customer benefits, and admin asset-state URL reads behind subsystem-local helper wrappers with narrow read-only suppressions; preserved the existing mutation, nonce, upload, AJAX, REST, redirect, and capability boundaries untouched
+- Focused tests: `tests/ticket-claims-assignee-validation.php`, `tests/ticketing-claims-ajax-output-buffer-ownership.php`, `tests/ticketing-rules-v2-request-path-normalization.php`, `tests/ticketing-v2-ajax-output-buffer-ownership.php`, `tests/ticketing-output-buffer-lifecycle-characterization.php`, `tests/verification-proof-normalization.php`, `tests/private-file-upload-api-remediation.php`, `tests/private-file-operations-boundary-remediation.php`, `tests/event-plan-legacy-ticketing-integration-smoke.php`, `tests/ticketing-claims-admin-request-state-remediation.php`, and `tests/ticketing-verifications-request-state-remediation.php`
+- Closure / defers: post-edit package landed at `265` errors, `1136` warnings, `1401` total findings, and `19` unique rule codes with `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1272`; the global nonce/input family now stands at `Missing 26`, `Recommended 62`, `InputNotSanitized 24`, and `MissingUnslash 11` (`123` total); same-file residual nonce/input rows in the five touched files now total `35` and all map to later `T2` or `T5` ownership; the sibling live tree remained untouched and post-edit parity was intentionally not restored
 
 #### `WPORG-28R-G7 — Shared Request Helpers, Bootstrap, And Compatibility Reads`
 
@@ -363,13 +374,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Parent Closeout Condition
 
-- `WPORG-28R-G0` is terminal only because the roadmap now reconciles all remaining `1338` blocker rows with no unowned or multiply-owned occurrence.
+- `WPORG-28R-G0` is terminal only because the roadmap now reconciles all remaining `1272` blocker rows with no unowned or multiply-owned occurrence.
 - `WPORG-28R` remains blocked until every `G1` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
 - `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain open or blocked exactly as documented in the ledger.
 - Slug reservation, corrected upload, and reviewer communication remain unauthorized until the parent is closed and explicit authorization is given.
 
 ## Recommended Next Task
 
-- Next execution target: `WPORG-28R-G6 — Ticketing, admissions, and availability request boundaries`
-- Scope: keep the child limited to the `147` owned rows enumerated in the `G6` subsection above, across `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php`, `includes/modules/admissions/pass-claims.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-phase-b.php`, `includes/modules/availability-date-dispatch/admin-ui.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/modules/admissions/admission-tokens.php`, `includes/integrations/ticketing.php`, `includes/integrations/ticketing-claims-customer.php`, `includes/modules/admissions/admin-ui.php`, `includes/modules/availability-date-dispatch/helpers.php`, and `includes/ticketing/ticket-integrity-cron.php`
-- Scope guardrails: do not reopen `G1` through `G5`, do not widen into DB/SQL, output, logging, date/time, or shared-helper runtime work, and continue deferring the documented same-file DB, date/time, and logging rows to their assigned later children
+- Next execution target: `WPORG-28R-G6-T2 — Ticketing claims and verification mutation/request-shape boundaries`
+- Scope: keep the child limited to the `33` owned rows enumerated for `T2`, across `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-claims-customer.php`, `includes/integrations/ticketing-verifications.php`, and `includes/integrations/ticketing.php`
+- Scope guardrails: do not reopen `G1` through `G5` or `WPORG-28R-G6-T1`, do not widen into admissions, availability, DB/SQL, output, logging, date/time, or shared-helper runtime work, and continue deferring the documented same-file DB, date/time, and logging rows to their assigned later children

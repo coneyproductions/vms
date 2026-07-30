@@ -36,6 +36,11 @@ function vms_ticketing_can_manage_plan(int $plan_id): bool
     return current_user_can('edit_post', $plan_id);
 }
 
+function vms_ticketing_admin_query_absint(string $key): int
+{
+    return vms_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin ticketing screen state only scopes asset localization.
+}
+
 
 /**
  * AJAX helpers: keep JSON responses valid even if something prints output.
@@ -396,9 +401,8 @@ function vms_ticketing_admin_enqueue_assets($hook): void
     }
 
     $plan_id = 0;
-    if (!empty($_GET['post'])) {
-        $plan_id = absint($_GET['post']);
-    } else {
+    $plan_id = vms_ticketing_admin_query_absint('post');
+    if ($plan_id <= 0) {
         // post-new.php can still have a real post ID (auto-draft). Prefer the global post when available.
         global $post;
         if ($post && isset($post->ID)) {
