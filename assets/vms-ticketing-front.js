@@ -4150,7 +4150,10 @@
     payload.set('event_id', String(state.tecEventId || cfg.tecEventId || 0));
     payload.set('ticket_key', String(access.ticket_key || ''));
     payload.set('assignee_email', local.email);
-    payload.set('existing_counts', JSON.stringify(collectTicketClaimVerifiedCounts(ticketModel, rowState.seat)));
+    var existingCounts = collectTicketClaimVerifiedCounts(ticketModel, rowState.seat);
+    Object.keys(existingCounts).forEach(function (emailKey) {
+      payload.set('existing_counts[' + emailKey + ']', String(existingCounts[emailKey]));
+    });
 
     fetch(normalizeUrl(cfg.claimsValidateUrl), {
       method: 'POST',

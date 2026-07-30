@@ -99,6 +99,22 @@ if (!function_exists('vms_ticketing_claims_parse_existing_counts_payload')) {
 	}
 }
 
+if (!function_exists('vms_ticketing_claims_post_existing_counts')) {
+	function vms_ticketing_claims_post_existing_counts(): array
+	{
+		if (!isset($_POST['existing_counts']) || !is_array($_POST['existing_counts'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- existing_counts is consumed only after the assignee-validation AJAX nonce and logged-in gates pass.
+			return array();
+		}
+
+		$raw_existing_counts = wp_unslash($_POST['existing_counts']); // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- existing_counts accepts only a nonce-gated assignee=>count map and is normalized by the existing helper below.
+		if (!is_array($raw_existing_counts)) {
+			return array();
+		}
+
+		return vms_ticketing_claims_parse_existing_counts_payload($raw_existing_counts);
+	}
+}
+
 if (!function_exists('vms_ticketing_claims_account_event_date_text')) {
 	function vms_ticketing_claims_account_event_date_text(int $event_id): string
 	{
@@ -416,11 +432,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		$event_id = isset($_POST['event_id']) ? absint(wp_unslash($_POST['event_id'])) : 0;
 		$ticket_key = isset($_POST['ticket_key']) ? sanitize_key((string) wp_unslash($_POST['ticket_key'])) : '';
 		$assignee_email = isset($_POST['assignee_email']) ? sanitize_email((string) wp_unslash($_POST['assignee_email'])) : '';
-			$existing_counts = array();
-			if (isset($_POST['existing_counts'])) {
-				$raw_existing_counts = wp_unslash($_POST['existing_counts']);
-				$existing_counts = vms_ticketing_claims_parse_existing_counts_payload($raw_existing_counts);
-			}
+			$existing_counts = vms_ticketing_claims_post_existing_counts();
 
 		if ($product_id <= 0 || $assignee_email === '') {
 			vms_ticketing_v2_ajax_send_error(array(

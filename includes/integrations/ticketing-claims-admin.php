@@ -61,6 +61,20 @@ if (!function_exists('vms_ticketing_claims_query_absint')) {
 	}
 }
 
+if (!function_exists('vms_ticketing_claims_post_absint')) {
+	function vms_ticketing_claims_post_absint(string $key): int
+	{
+		return vms_request_read_absint($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Claims admin mutation handlers use this only after capability checks and to resolve IDs within an existing verified admin-post flow, including the submitted dynamic nonce action.
+	}
+}
+
+if (!function_exists('vms_ticketing_claims_post_local_redirect')) {
+	function vms_ticketing_claims_post_local_redirect(string $key, string $fallback = ''): string
+	{
+		return vms_request_local_redirect($fallback, vms_request_read_scalar($_POST, $key)); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Claims admin referer redirects are consumed only after the caller has verified the current admin-post mutation nonce.
+	}
+}
+
 if (!function_exists('vms_ticketing_claims_is_admin_page')) {
 	function vms_ticketing_claims_is_admin_page(): bool
 	{
@@ -1329,9 +1343,9 @@ if (!function_exists('vms_ticketing_claims_handle_update_grant_note')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
-		$event_plan_id = vms_request_read_absint($_POST, 'event_plan_id');
-		$grant_id = vms_request_read_absint($_POST, 'grant_id');
+		$grant_id = vms_ticketing_claims_post_absint('grant_id');
 		check_admin_referer('vms_ticketing_claims_update_grant_note_' . $grant_id);
+		$event_plan_id = vms_ticketing_claims_post_absint('event_plan_id');
 		if ($grant_id <= 0) {
 			wp_safe_redirect(vms_ticketing_claims_event_edit_url($event_plan_id, array('vms_claim_notice' => 'invalid_request')));
 			exit;
@@ -1382,9 +1396,9 @@ if (!function_exists('vms_ticketing_claims_handle_set_grant_status')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
-		$event_plan_id = vms_request_read_absint($_POST, 'event_plan_id');
-		$grant_id = vms_request_read_absint($_POST, 'grant_id');
+		$grant_id = vms_ticketing_claims_post_absint('grant_id');
 		check_admin_referer('vms_ticketing_claims_set_grant_status_' . $grant_id);
+		$event_plan_id = vms_ticketing_claims_post_absint('event_plan_id');
 		if ($grant_id <= 0) {
 			wp_safe_redirect(vms_ticketing_claims_event_edit_url($event_plan_id, array('vms_claim_notice' => 'invalid_request')));
 			exit;
@@ -1451,7 +1465,7 @@ if (!function_exists('vms_ticketing_claims_redirect_after_post_action')) {
 		$event_plan_id = absint($event_plan_id);
 		$notice = sanitize_key($notice);
 
-		$target = vms_request_local_redirect('', $_POST['_wp_http_referer'] ?? null);
+		$target = vms_ticketing_claims_post_local_redirect('_wp_http_referer');
 		if ($target === '') {
 			$target = $event_plan_id > 0 ? vms_ticketing_claims_event_edit_url($event_plan_id) : vms_ticketing_claims_admin_page_url();
 		}

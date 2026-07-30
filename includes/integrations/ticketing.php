@@ -514,7 +514,7 @@ function vms_ticketing_ajax_search_tec_events(): void
         vms_ticketing_ajax_send_error(array('message' => 'tec_inactive'), 400);
     }
 
-    $q = isset($_POST['q']) ? sanitize_text_field((string) $_POST['q']) : '';
+    $q = vms_request_read_text_field($_POST, 'q');
     $q = trim($q);
     if (strlen($q) < 2) {
         vms_ticketing_ajax_send_success(array('items' => array()));
@@ -585,7 +585,7 @@ function vms_ticketing_ajax_search_products(): void
         vms_ticketing_ajax_send_error(array('message' => 'woo_inactive'), 400);
     }
 
-    $q = isset($_POST['q']) ? sanitize_text_field((string) $_POST['q']) : '';
+    $q = vms_request_read_text_field($_POST, 'q');
     $q = trim($q);
     if (strlen($q) < 2) {
         vms_ticketing_ajax_send_success(array('items' => array()));

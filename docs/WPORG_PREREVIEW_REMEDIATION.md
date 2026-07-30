@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers, `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blockers, `WPORG-28R-G4` removed the next `39` ancillary CPT save nonce/input blockers, `WPORG-28R-G5` removed the next `103` public, portal, and vendor-application nonce/input blockers, and `WPORG-28R-G6-T1` has now removed the first `66` ticketing claims and verification request-state blockers inside `G6`. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1272`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G6-T2` through `WPORG-28R-G17`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers, `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blockers, `WPORG-28R-G4` removed the next `39` ancillary CPT save nonce/input blockers, `WPORG-28R-G5` removed the next `103` public, portal, and vendor-application nonce/input blockers, `WPORG-28R-G6-T1` removed the first `66` ticketing claims and verification request-state blockers inside `G6`, and `WPORG-28R-G6-T2` has now removed the next `33` ticketing claims and verification mutation/request-shape blockers while aligning the front-end `existing_counts` payload with the new array-shaped POST boundary. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1239`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G6-T3` through `WPORG-28R-G17`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -3783,7 +3783,7 @@ Date: 2026-07-30
 - `WPORG-28R-G6` remains open; do not mark the whole G6 family complete from this child alone
 - `WPORG-28R` remains blocked until every remaining `G6-T2` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
 - `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain blocked or limited exactly as reflected in the ledger
-- Exact next implementation child: `WPORG-28R-G6-T2 — Ticketing claims and verification mutation/request-shape boundaries`
+- Exact next implementation child: `WPORG-28R-G6-T2 — Normalize ticketing mutation request boundaries`
 
 ### Non-Actions
 
@@ -3792,6 +3792,70 @@ Date: 2026-07-30
 - No same-file DB/SQL remediation assigned to `G9` or `G10` was attempted.
 - No same-file date/time or logging remediation assigned to `G15` or `G16` was attempted.
 - No sibling live-tree file, builder, manifest, asset, package metadata outside the documented disposable artifacts, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
+
+## WPORG-28R-G6-T2 Result
+
+Date: 2026-07-30
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G6-T2`
+- Title: `Normalize ticketing mutation request boundaries`
+- Starting mirror HEAD: `6418bf3cd5c0a28082dda15f081bbbba594b77ad` (`Normalize ticketing claims and verification request state`)
+- Starting parent: `05bf92ece0010e2cc25190c74ee40f5a0ce7b2a2`
+- Authorized runtime scope: `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-claims-customer.php`, `includes/integrations/ticketing-verifications.php`, `includes/integrations/ticketing.php`, and the mirror-only front-end payload alignment in `assets/vms-ticketing-front.js`
+- Authorized support scope used: `tests/ticketing-claims-ajax-output-buffer-ownership.php`, `tests/ticketing-claims-mutation-request-remediation.php`, `tests/ticketing-verifications-mutation-request-remediation.php`, `tests/ticketing-search-request-remediation.php`, `docs/WPORG_PREREVIEW_REMEDIATION.md`, `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`, and `docs/wporg-remediation-ledger.md`
+- Live-tree rule preserved: the sibling `../../vms/` tree remained read-only and unchanged throughout this child; mirror changed, live untouched, and post-edit parity was intentionally not restored
+- Preserved inventory evidence: `/tmp/wporg-28rg6-inventory.cXX8Of` remained intact and unchanged, including `plugin-check.strict.json` SHA-256 `4c2c2c0f9fb02adbb669b192cd64025d9d960988bdfa7140e815faafdb65f5e3`, `g6-family-rows.jsonl` SHA-256 `958f88e5dea2abf63dc442caf5d49e10bb690787de52e5d98cbeb4a05784dece`, and `g6-family-rows.tsv` SHA-256 `4d8ad0cb9c2f8c162f006afcd5a945130aae93c4e219e72d550c41da34667cc3`
+- Pre-edit packaged baseline: `265` errors, `1136` warnings, `1401` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1272`
+- Exact G6-T2 ownership: `33` packaged rows across the four authorized PHP runtime files only (`Missing 18`, `InputNotSanitized 10`, `MissingUnslash 5`, `Recommended 0`) covering `23` distinct request boundaries
+
+### Boundary Characterization
+
+- This child stayed inside the remaining ticketing claims and verification mutation/request-shape surface: grant-note and grant-status admin-post handlers, claims redirect state, customer assignee-validation counts, verification submit/save/decision/profile handlers, and the legacy ticketing search AJAX scalar reads.
+- Existing admin-post, AJAX, redirect, capability, and user-profile nonce boundaries stayed intact. Dynamic nonce action derivation on claims and verification mutations still reads the bounded identifier first, verifies the existing nonce second, and only then reads the remaining mutation fields.
+- The claims `existing_counts` boundary and the verification labels, allowances, upload settings, profile arrays, and local redirects now fail closed on malformed top-level shapes before unslashing. The mirror front-end bundle now submits `existing_counts[...]` array fields instead of a scalar JSON string so the buyer-side claims validator still supplies the current cart counts to the tightened POST boundary.
+- The deferred whole-`$_POST` `includes/integrations/ticketing-rules-v2.php` rows were intentionally left untouched and remain assigned to `WPORG-28R-G6-T5`. The sibling live tree also remained untouched.
+
+### Runtime And Test Changes
+
+- Added claims-admin POST helpers in `includes/integrations/ticketing-claims-admin.php` so the two grant mutations now read `grant_id` before `check_admin_referer()`, defer `event_plan_id` until after nonce verification, and consume `_wp_http_referer` through a local redirect helper.
+- Added `vms_ticketing_claims_post_existing_counts()` in `includes/integrations/ticketing-claims-customer.php` so assignee validation now accepts only top-level array-shaped `existing_counts` input and still routes normalization through the shared parser. Updated `assets/vms-ticketing-front.js` so the buyer-side validation request now submits `existing_counts[...]` POST fields that match that contract.
+- Added subsystem-local verification POST helpers in `includes/integrations/ticketing-verifications.php`, tightened nested-shape rejection in the upload-settings and allowance sanitizers, moved all owned array/scalar reads behind those helpers, and preserved the existing decision-handler nonce order while local redirects continue to validate against same-origin fallbacks.
+- Updated `includes/integrations/ticketing.php` so the two legacy ticket-search AJAX handlers now read `q` through the shared scalar text helper instead of direct `$_POST` access.
+- Extended `tests/ticketing-claims-mutation-request-remediation.php` to assert the front-end `existing_counts[...]` payload shape, and added the new focused suites `tests/ticketing-verifications-mutation-request-remediation.php` and `tests/ticketing-search-request-remediation.php`.
+
+### Verification
+
+- PHP lint passed for every changed PHP file and changed PHP test file: `php -l includes/integrations/ticketing-claims-admin.php`, `php -l includes/integrations/ticketing-claims-customer.php`, `php -l includes/integrations/ticketing-verifications.php`, `php -l includes/integrations/ticketing.php`, and `php -l tests/ticketing-claims-mutation-request-remediation.php`
+- JavaScript syntax lint passed for the corrected front-end bundle: `node --check assets/vms-ticketing-front.js`
+- Focused G6-T2 suites passed: `php tests/ticket-claims-assignee-validation.php`, `php tests/ticketing-claims-ajax-output-buffer-ownership.php`, `php tests/ticketing-claims-mutation-request-remediation.php`, `php tests/ticketing-verifications-mutation-request-remediation.php`, `php tests/ticketing-search-request-remediation.php`, `php tests/ticketing-output-buffer-lifecycle-characterization.php`, `php tests/verification-proof-normalization.php`, `php tests/private-file-upload-api-remediation.php`, `php tests/private-file-operations-boundary-remediation.php`, `php tests/event-plan-legacy-ticketing-integration-smoke.php`, `php tests/ticketing-claims-admin-request-state-remediation.php`, and `php tests/ticketing-verifications-request-state-remediation.php`
+- Required broader gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, `php tests/authorization-boundary-hardening.php`, `php tests/strict-post-gate-remediation.php`, and `php tests/request-input-sanitization.php`
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg6-t2-post-fix.YIVQdN --force --allow-dirty`
+- Post-edit package result: `/tmp/wporg-28rg6-t2-post-fix.YIVQdN/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `48786e8eb192ae33b77b67e9508d2f7d6eb7914f1b28005d0e9324512eb46bca`
+- Post-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 "$(which wp)" --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg6-t2-post-fix.YIVQdN/extracted/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Post-edit packaged Plugin Check result: exit `0`, `265` errors, `1103` warnings, `1368` total findings, `19` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and inferred `SUBMISSION_BLOCKER=1239`; normalized strict JSON is recorded at `/tmp/wporg-28rg6-t2-post-fix.YIVQdN/plugin-check.strict.json`
+- Exact G6-T2 code deltas: `WordPress.Security.NonceVerification.Missing 26 -> 8 (-18)`, `WordPress.Security.NonceVerification.Recommended 62 -> 62 (0)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 24 -> 14 (-10)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 11 -> 6 (-5)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no blocker-family total increased
+- Exact G6-T2 row result: the `33` owned packaged rows were removed exactly, no G6-T2-owned nonce/input row remained in the post-edit package, no new G6-T2-owned nonce/input row appeared, and no owned row migrated into another nonce/input code
+- Residual continuity: no nonce/input row remains in `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-claims-customer.php`, `includes/integrations/ticketing-verifications.php`, or `includes/integrations/ticketing.php`; the remaining nonce/input family now stands at `Missing 8`, `Recommended 62`, `InputNotSanitized 14`, and `MissingUnslash 6` (`90` total)
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G6-T2`: DB/SQL `1082`, nonce/input `90`, date/time `25`, and logging `42`
+- `WPORG-28R-G6-T2` is terminal under `verified`
+- `WPORG-28R-G6` remains open; do not mark the whole G6 family complete from this child alone
+- `WPORG-28R` remains blocked until every remaining `G6-T3` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
+- `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain blocked or limited exactly as reflected in the ledger
+- Exact next implementation child: `WPORG-28R-G6-T3 — Admissions and availability read-only navigation/token state`
+
+### Non-Actions
+
+- No `WPORG-28R-G6-T3`, `T4`, or `T5` runtime remediation was attempted.
+- No admissions or availability runtime file outside the authorized T2 PHP files was changed.
+- No same-file DB/SQL remediation assigned to `G9` or `G10` was attempted.
+- No same-file date/time or logging remediation assigned to `G15` or `G16` was attempted.
+- No sibling live-tree file, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 
 ## WPORG-20A-S Result
 

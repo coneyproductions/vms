@@ -327,6 +327,7 @@ try {
 	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_error');
 	$clientLogBody = vms_test_extract_function($claimsSource, 'vms_ticketing_claims_handle_client_log_action');
 	$assigneeBody = vms_test_extract_function($claimsSource, 'vms_ticketing_claims_handle_validate_assignee');
+	$existingCountsHelperBody = vms_test_extract_function($claimsSource, 'vms_ticketing_claims_post_existing_counts');
 
 	eval($discardBody . "\n" . $v2SuccessWrapperBody . "\n" . $v2ErrorWrapperBody);
 
@@ -444,14 +445,32 @@ PHP,
 	vms_test_assert_not_contains('JSON_', $assigneeBody, 'Assignee validation should not gain JSON flags.');
 	vms_test_assert_not_contains('json_decode(', $assigneeBody, 'Mirror assignee validation should keep helper-backed existing_counts parsing.');
 	vms_test_assert_code_contains(
-		<<<'PHP'
-if (isset($_POST['existing_counts'])) {
-	$raw_existing_counts = wp_unslash($_POST['existing_counts']);
-	$existing_counts = vms_ticketing_claims_parse_existing_counts_payload($raw_existing_counts);
-}
-PHP,
+		"\$existing_counts = vms_ticketing_claims_post_existing_counts();",
 		$assigneeBody,
 		'Mirror assignee validation should keep helper-backed existing_counts parsing.'
+	);
+	vms_test_assert_code_contains(
+		"if (!isset(\$_POST['existing_counts']) || !is_array(\$_POST['existing_counts'])) {",
+		$existingCountsHelperBody,
+		'Mirror assignee validation should reject non-array existing_counts payloads before unslashing.'
+	);
+	vms_test_assert_code_order(
+		"if (!isset(\$_POST['existing_counts']) || !is_array(\$_POST['existing_counts'])) {",
+		"\$raw_existing_counts = wp_unslash(\$_POST['existing_counts']);",
+		$existingCountsHelperBody,
+		'Mirror assignee validation should reject non-array existing_counts payloads before unslashing.'
+	);
+	vms_test_assert_code_contains(
+		<<<'PHP'
+$raw_existing_counts = wp_unslash($_POST['existing_counts']);
+PHP,
+		$existingCountsHelperBody,
+		'Mirror assignee validation should unslash existing_counts only after confirming the top-level array shape.'
+	);
+	vms_test_assert_code_contains(
+		"return vms_ticketing_claims_parse_existing_counts_payload(\$raw_existing_counts);",
+		$existingCountsHelperBody,
+		'Mirror assignee validation should keep the shared existing_counts normalization helper.'
 	);
 	vms_test_assert_code_contains(
 		<<<'PHP'
