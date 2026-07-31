@@ -116,6 +116,20 @@ function wp_unslash($value)
 	return $value;
 }
 
+function vms_request_read_scalar(array $source, string $key): string
+{
+	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+		return '';
+	}
+
+	$value = wp_unslash($source[$key]);
+	if (!is_scalar($value)) {
+		return '';
+	}
+
+	return trim((string) $value);
+}
+
 function wp_parse_url(string $url, int $component = -1)
 {
 	if ($component === -1) {

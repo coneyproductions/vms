@@ -112,7 +112,7 @@ if (!class_exists('VMS_Tours_Service')) {
 			$screen_key = $this->screen->resolve_screen_key();
 			$this->storage->remember_seen_screen($screen_key);
 
-			$page = vms_request_read_key($_GET, 'page');
+			$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours admin asset scope only selects read-only screen context and remains nonce-free.
 			$settings = $this->storage->get_site_settings();
 			$screen_tours = $this->registry->for_screen($screen_key);
 

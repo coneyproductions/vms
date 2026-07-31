@@ -909,14 +909,15 @@ if (!function_exists('vms_resource_fingerprint_compact_value_deep')) {
 if (!function_exists('vms_resource_fingerprint_current_admin_page')) {
 	function vms_resource_fingerprint_current_admin_page(): string
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
+		$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin fingerprinting only reads page scope for diagnostics and remains nonce-free.
 		if ($page !== '') {
 			return $page;
 		}
 
-		$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
-		if ($post_type === '' && !empty($_GET['post'])) {
-			$post_type = sanitize_key((string) get_post_type(absint($_GET['post'])));
+		$post_type = vms_request_read_key($_GET, 'post_type'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin fingerprinting only reads post-type scope for diagnostics and remains nonce-free.
+		$post_id = vms_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin fingerprinting only reads post IDs to derive read-only screen scope and remains nonce-free.
+		if ($post_type === '' && $post_id > 0) {
+			$post_type = sanitize_key((string) get_post_type($post_id));
 		}
 		if ($post_type !== '') {
 			return $post_type;
@@ -939,9 +940,10 @@ if (!function_exists('vms_admin_guard_current_screen_id')) {
 			return sanitize_key((string) $screen->id);
 		}
 
-		$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
-		if ($post_type === '' && !empty($_GET['post'])) {
-			$post_type = sanitize_key((string) get_post_type(absint($_GET['post'])));
+		$post_type = vms_request_read_key($_GET, 'post_type'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin-screen detection only reads post-type scope for diagnostics and remains nonce-free.
+		$post_id = vms_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin-screen detection only reads post IDs to derive read-only screen scope and remains nonce-free.
+		if ($post_type === '' && $post_id > 0) {
+			$post_type = sanitize_key((string) get_post_type($post_id));
 		}
 		if ($post_type !== '') {
 			$pagenow = isset($GLOBALS['pagenow']) ? sanitize_key((string) $GLOBALS['pagenow']) : '';
@@ -971,10 +973,20 @@ if (!function_exists('vms_admin_guard_request_method')) {
 if (!function_exists('vms_admin_guard_request_value')) {
 	function vms_admin_guard_request_value(string $key): string
 	{
-		if (!isset($_REQUEST[$key]) || is_array($_REQUEST[$key])) {
+		static $allowed_keys = array(
+			'action',
+			'action2',
+			'vms_admin_heavy_action',
+			'vms_admin_heavy_nonce',
+			'_vms_admin_heavy_nonce',
+			'_wpnonce',
+		);
+
+		if (!in_array($key, $allowed_keys, true)) {
 			return '';
 		}
-		return trim((string) wp_unslash($_REQUEST[$key]));
+
+		return vms_request_read_scalar($_REQUEST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Shared admin guard request keys are allowlisted and only gate passive admin probes plus existing nonce lookup.
 	}
 }
 
@@ -1003,12 +1015,12 @@ if (!function_exists('vms_admin_guard_is_tec_admin_request')) {
 			return true;
 		}
 
-		$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+		$post_type = vms_request_read_key($_GET, 'post_type'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive TEC admin detection only reads post-type scope for diagnostics and remains nonce-free.
 		if ($post_type === 'tribe_events') {
 			return true;
 		}
 
-		$post_id = !empty($_GET['post']) ? absint($_GET['post']) : 0;
+		$post_id = vms_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive TEC admin detection only reads post IDs to derive screen scope and remains nonce-free.
 		return $post_id > 0 && get_post_type($post_id) === 'tribe_events';
 	}
 }
@@ -1479,7 +1491,7 @@ if (!function_exists('vms_resource_fingerprint_sensitive_admin_scope')) {
 			);
 		}
 
-		$post_id = !empty($_GET['post']) ? absint($_GET['post']) : 0;
+		$post_id = vms_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive sensitive-scope detection only reads post IDs to derive admin scope and remains nonce-free.
 		if ($post_id > 0 && get_post_type($post_id) === 'vms_event_plan') {
 			return array(
 				'page' => ($page !== '') ? $page : 'vms_event_plan',

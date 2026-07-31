@@ -78,8 +78,11 @@ if (!function_exists('vms_slow_request_logger_parse_request_uri')) {
 		if ($query_string !== '') {
 			parse_str($query_string, $query);
 		}
-		if (!isset($query['action']) && isset($_REQUEST['action'])) {
-			$query['action'] = (string) wp_unslash($_REQUEST['action']);
+		if (!isset($query['action'])) {
+			$request_action = vms_request_read_scalar($_REQUEST, 'action'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive slow-request diagnostics only mirror read-only request routing state and remain nonce-free.
+			if ($request_action !== '') {
+				$query['action'] = $request_action;
+			}
 		}
 
 		return array(

@@ -25,7 +25,7 @@ if (!class_exists('VMS_Tours_Screen')) {
 
 		public function resolve_admin_screen_key(): string
 		{
-			$page = vms_request_read_text_field($_GET, 'page');
+			$page = vms_request_read_text_field($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours screen resolution only selects read-only admin context and remains nonce-free.
 			if ($page !== '') {
 				if ($page === 'vms') {
 					$page = 'vms-dashboard';
@@ -56,7 +56,7 @@ if (!class_exists('VMS_Tours_Screen')) {
 				return false;
 			}
 
-			$page = vms_request_read_key($_GET, 'page');
+			$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours screen detection only selects read-only admin context and remains nonce-free.
 			if ($page === 'vms' || $page === 'vms-dashboard' || strpos($page, 'vms-') === 0) {
 				return true;
 			}

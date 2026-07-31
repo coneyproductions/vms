@@ -358,6 +358,8 @@ $liveStorageSource = (string) file_get_contents($liveRoot . '/includes/tours/cla
 $liveCoreSource = (string) file_get_contents($liveRoot . '/includes/core/tours/class-vms-tours.php');
 $liveRuntimeJsSource = (string) file_get_contents($liveRoot . '/assets/js/vms-tours-runtime.js');
 $liveLegacyJsSource = (string) file_get_contents($liveRoot . '/assets/js/vms-tours.js');
+$coreHash = hash('sha256', $coreSource);
+$liveCoreHash = hash('sha256', $liveCoreSource);
 
 vms_test_assert_true($storageSource !== '', 'Storage source should be readable.');
 vms_test_assert_true($coreSource !== '', 'Legacy Tours source should be readable.');
@@ -367,9 +369,17 @@ vms_test_assert_true($runtimeJsSource !== '', 'Tours runtime JS should be readab
 vms_test_assert_true($legacyJsSource !== '', 'Tours legacy JS should be readable.');
 
 vms_test_assert_same($storageSource, $liveStorageSource, 'Mirror/live storage PHP must remain byte-identical.');
-vms_test_assert_same($coreSource, $liveCoreSource, 'Mirror/live legacy Tours PHP must remain byte-identical.');
 vms_test_assert_same($runtimeJsSource, $liveRuntimeJsSource, 'Mirror/live Tours runtime JS must remain byte-identical.');
 vms_test_assert_same($legacyJsSource, $liveLegacyJsSource, 'Mirror/live Tours legacy JS must remain byte-identical.');
+vms_test_assert_same(
+	'bdbbd7f5df1c30c9de79530e962fc37487d7bc066e353fdf91ff44e555eb6343',
+	$liveCoreHash,
+	'Live legacy Tours PHP should remain on the untouched pre-T4 source hash until live-tree convergence is explicitly authorized.'
+);
+vms_test_assert_true(
+	$coreHash !== $liveCoreHash,
+	'Mirror/live legacy Tours PHP hashes should intentionally differ after the mirror-only T4 passive request-state remediation.'
+);
 
 vms_test_assert_same(1, substr_count($storageSource, 'json_decode('), 'Storage runtime should retain exactly one raw json_decode() call.');
 vms_test_assert_same(1, substr_count($coreSource, 'json_decode('), 'Legacy Tours runtime should retain exactly one raw json_decode() call.');

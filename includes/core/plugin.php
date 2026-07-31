@@ -31,7 +31,7 @@ add_filter('admin_body_class', function (string $classes): string {
 	// Ensure VMS admin styling applies on:
 	// - VMS admin pages (page=vms, page=vms-*)
 	// - VMS CPT edit screens (Event Plans, Vendors, Venues)
-	$page = vms_request_read_key($_GET, 'page');
+	$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin-body page state only scopes read-only styling and remains nonce-free.
 
 	$is_vms_page = false;
 	if ($page === 'vms') {
@@ -78,7 +78,7 @@ add_filter('admin_body_class', function (string $classes): string {
  */
 add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 
-	$page = vms_request_read_key($_GET, 'page');
+	$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin asset page state only scopes read-only styling and remains nonce-free.
 
 	// Only load assets on VMS admin pages.
 	$is_vms_page = false;

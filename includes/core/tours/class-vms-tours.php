@@ -103,7 +103,7 @@ if (!class_exists('VMS_Tours')) {
 			if (!is_admin()) {
 				return false;
 			}
-			$page = vms_request_read_key($_GET, 'page');
+			$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours page routing only selects read-only admin context and remains nonce-free.
 			if ($page === 'vms' || strpos($page, 'vms-') === 0) {
 				return true;
 			}
@@ -402,7 +402,7 @@ if (!class_exists('VMS_Tours')) {
 			}
 
 			$current_context = self::get_current_context_key();
-			$page            = vms_request_read_key($_GET, 'page');
+			$page            = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours asset scope only selects read-only admin context and remains nonce-free.
 			$needs_assets    = ($current_context !== '' || $page === 'vms-tour-maintenance' || $page === 'vms' || $page === 'vms-dashboard');
 			if (!$needs_assets) {
 				return;
@@ -469,7 +469,7 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function get_current_context_key(): string
 		{
-			$page   = vms_request_read_key($_GET, 'page');
+			$page   = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours context lookup only selects read-only admin context and remains nonce-free.
 			$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 			$sid    = ($screen && isset($screen->id)) ? (string) $screen->id : '';
 			$url    = self::get_current_admin_relative_url();

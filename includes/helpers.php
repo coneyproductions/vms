@@ -4215,7 +4215,7 @@ function vms_dash_render_venue_selector(): void
 // Canonical boot uses includes/core/plugin.php for asset loading.
 if (!function_exists('vms_core')) {
     add_action('admin_enqueue_scripts', function () {
-        $page = vms_request_read_key($_GET, 'page');
+        $page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive legacy admin asset page state only scopes read-only styling and remains nonce-free.
         if ($page === '' || strpos($page, 'vms') !== 0) {
             return;
         }

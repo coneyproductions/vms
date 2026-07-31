@@ -3925,6 +3925,60 @@ Date: 2026-07-30
 
 ## WPORG-20A-S Result
 
+## WPORG-28R-G6-T4 Result
+
+Date: 2026-07-30
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G6-T4`
+- Scope completed in this slice: only the preserved shared-wrapper, tours, and passive display-state nonce/input boundaries assigned to `WPORG-28R-G6-T4`
+- Owned packaged rows: `34 -> 0` across `includes/core/plugin.php`, `includes/core/registry/admin-menu.php`, `includes/core/slow-request-logger.php`, `includes/core/tours/class-vms-tours.php`, `includes/helpers.php`, `includes/runtime-guards.php`, `includes/tours/class-vms-tours-screen.php`, and `includes/tours/class-vms-tours-service.php`
+- Distinct boundaries: `20`
+- Exact rule distribution: `WordPress.Security.NonceVerification.Recommended 32` and `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 2`
+- Preserved next child: `WPORG-28R-G6-T5 — Phase-B/V2 mutation arrays and remaining shared mutation helpers` with `22` remaining packaged nonce/input rows (`Missing 8`, `Recommended 0`, `InputNotSanitized 10`, `MissingUnslash 4`)
+- Mirror/live boundary: pre-edit T4 parity was mixed, the live `../../vms/` tree remained untouched throughout this child, and the stale Tours full-file parity assertion was replaced with the same drift-aware mirror/live contract already accepted for mirror-only request-boundary work
+
+### Runtime And Test Changes
+
+- Updated `includes/core/plugin.php`, `includes/core/tours/class-vms-tours.php`, `includes/helpers.php`, `includes/tours/class-vms-tours-screen.php`, and `includes/tours/class-vms-tours-service.php` only to keep the existing helper-backed passive page reads in place while documenting the exact read-only nonce-free context at each T4-owned boundary.
+- Updated `includes/core/registry/admin-menu.php` so the missing-callback page slug now reads through `vms_request_read_key($_GET, 'page')` instead of directly normalizing `$_GET['page']`, preserving the existing sanitized scalar contract while rejecting malformed array input.
+- Updated `includes/core/slow-request-logger.php` so the diagnostics-only `action` fallback now reads through `vms_request_read_scalar($_REQUEST, 'action')`, preserving the same read-only query fallback semantics while rejecting malformed array input before the logger stores the bounded action key.
+- Updated `includes/runtime-guards.php` so passive admin page, post-type, and post-ID probes now route through the existing scalar and integer readers; the dynamic request-value helper now rejects unexpected keys through a finite allowlist (`action`, `action2`, `vms_admin_heavy_action`, `vms_admin_heavy_nonce`, `_vms_admin_heavy_nonce`, `_wpnonce`); and the existing guard, screen, and fingerprint semantics remain unchanged aside from stricter malformed-input rejection.
+- Modified the directly relevant existing suites `tests/slow-request-logger-request-input-characterization.php` and `tests/slow-request-logger-url-helper-remediation.php` to add local `vms_request_read_scalar()` stubs for the extracted logger function, and updated `tests/tours-user-state-json-characterization.php` so its legacy Tours parity check now proves the intentional mirror-only PHP drift while keeping storage and JS parity assertions exact.
+- Added the new focused suites `tests/runtime-guard-request-state-remediation.php`, `tests/passive-display-state-remediation.php`, and `tests/tours-passive-request-state-remediation.php`. No fourth new test was needed.
+
+### Verification
+
+- PHP lint passed for every changed runtime PHP file and every changed or new PHP test file: `php -l includes/core/plugin.php`, `php -l includes/core/registry/admin-menu.php`, `php -l includes/core/slow-request-logger.php`, `php -l includes/core/tours/class-vms-tours.php`, `php -l includes/helpers.php`, `php -l includes/runtime-guards.php`, `php -l includes/tours/class-vms-tours-screen.php`, `php -l includes/tours/class-vms-tours-service.php`, `php -l tests/slow-request-logger-request-input-characterization.php`, `php -l tests/slow-request-logger-url-helper-remediation.php`, `php -l tests/tours-user-state-json-characterization.php`, `php -l tests/runtime-guard-request-state-remediation.php`, `php -l tests/passive-display-state-remediation.php`, and `php -l tests/tours-passive-request-state-remediation.php`
+- Focused T4 suites passed: `php tests/reference-keys-map-inline-js-remediation.php`, `php tests/slow-request-logger-request-input-characterization.php`, `php tests/slow-request-logger-url-helper-remediation.php`, `php tests/slow-request-logger-rotation-boundary-remediation.php`, `php tests/admin-selector-redirect-uri-remediation.php`, `php tests/tours-user-state-json-characterization.php`, `php tests/guided-tours-reset-notice-output-remediation.php`, `php tests/runtime-guard-request-state-remediation.php`, `php tests/passive-display-state-remediation.php`, and `php tests/tours-passive-request-state-remediation.php`
+- Required broader gates passed: `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, `php tests/authorization-boundary-hardening.php`, `php tests/strict-post-gate-remediation.php`, `php tests/request-input-sanitization.php`, and `php tests/admin-request-method-wrapper-remediation.php`
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg6-t4-post.tWCP83 --force --allow-dirty`
+- Post-edit package result: `/tmp/wporg-28rg6-t4-post.tWCP83/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `48c864ee7dac65722ec87f99478529c55024139e969a8cd6d0b84b1fffdccde6`
+- Post-edit extracted package root and build audit: extracted package root `/tmp/wporg-28rg6-t4-post.tWCP83/extracted/backstage-venue-manager`; build report `PASS`; entry file `vendor-management-system.php`; packaged version `1.2.0`; text domain `backstage-venue-manager`; and `release-public-excludes.txt` rules were honored
+- Post-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 "$(which wp)" --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check backstage-venue-manager --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Post-edit packaged Plugin Check environment note: the local `plugin check` command accepted only installed plugin names rather than an arbitrary extracted-path argument, so the already-built extracted package was copied temporarily into the local site plugin directory as an inactive `backstage-venue-manager` install for the scan and removed immediately afterward; the live `../../vms/` tree remained untouched
+- Post-edit packaged Plugin Check result: exit `0`, empty stderr, `265` errors, `1035` warnings, `1300` total findings, `18` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and inferred `SUBMISSION_BLOCKER=1171`; normalized strict JSON is recorded at `/tmp/wporg-28rg6-t4-post.tWCP83/plugin-check.strict.json`, with the raw stdout preserved at `/tmp/wporg-28rg6-t4-post.tWCP83/plugin-check.stdout.raw`
+- Exact G6-T4 code deltas: `WordPress.Security.NonceVerification.Missing 8 -> 8 (0)`, `WordPress.Security.NonceVerification.Recommended 32 -> 0 (-32)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 12 -> 10 (-2)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 4 -> 4 (0)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no unrelated packaged code count increased
+- Exact G6-T4 row result: the `34` owned packaged rows were removed exactly, no `G6-T4`-owned nonce/input row remained in the post-edit package, all `22` preserved `T5` rows still remained, and the post-edit evidence manifest at `/tmp/wporg-28rg6-t4-post.tWCP83/t4-manifest.txt` records `t4_post_owned_rows: 0`, `t5_post_rows: 22`, `no_new_rule_code: true`, and `no_unrelated_rule_count_increase: true`
+- Residual continuity: the remaining nonce/input family now stands at `Missing 8`, `Recommended 0`, `InputNotSanitized 10`, and `MissingUnslash 4` (`22` total); the only same-file nonce/input residuals in the T4-modified runtime files are the `T5` `runtime-guards.php` rows `B104`, `B113`, and `B114` plus the `tours/class-vms-tours-service.php` prefs-array row `B122`; no nonce/input row remains in the other six T4 runtime files
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G6-T4`: DB/SQL `1082`, nonce/input `22`, date/time `25`, and logging `42`
+- `WPORG-28R-G6-T4` is terminal under `verified`
+- `WPORG-28R-G6` remains open; only the preserved `WPORG-28R-G6-T5` nonce/input child remains active inside `G6`
+- `WPORG-28R-G7` remains retired and must not be recreated as a standalone nonce/input child
+- `WPORG-28R` remains blocked until `WPORG-28R-G6-T5` through `WPORG-28R-G17` close and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`
+- Exact next implementation child: `WPORG-28R-G6-T5 — Phase-B/V2 mutation arrays and remaining shared mutation helpers`
+
+### Non-Actions
+
+- No `WPORG-28R-G6-T5` runtime remediation was attempted.
+- No runtime, asset, or tracker path outside the eight authorized T4 runtime files, the three authorized new tests, the three directly relevant existing tests, and the three tracker documents was changed.
+- No sibling live-tree file, commit, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
+
 Date: 2026-07-21
 
 ### Summary

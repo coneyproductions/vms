@@ -500,7 +500,7 @@ add_action('vms_admin_register_pages', 'vms_admin_menu_register_core_page_metada
 if (!function_exists('vms_admin_menu_render_missing_callback_page')) {
 	function vms_admin_menu_render_missing_callback_page(): void
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive fallback page display only reports the missing renderer slug and remains nonce-free.
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html(__('VMS Page Unavailable', 'backstage-venue-manager')) . '</h1>';
 		echo '<p>' . esc_html(__('This VMS admin page is registered, but its page renderer is not currently available.', 'backstage-venue-manager')) . '</p>';
