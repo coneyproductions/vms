@@ -389,6 +389,7 @@ $cron_source = vms_test_read_file($cron_path);
 $daily_report_source = vms_test_read_file($daily_report_path);
 $build_targets_source = vms_test_extract_function($monitor_source, 'vms_ticket_integrity_build_targets');
 $scan_all_source = vms_test_extract_function($monitor_source, 'vms_ticket_integrity_scan_all');
+$vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'vms_vendor_type_maybe_canonicalize_terms');
 
 vms_test_assert_same(
 	1,
@@ -400,15 +401,48 @@ vms_test_assert_contains(
 	$monitor_source,
 	'Ticket Integrity suppression should explain the bounded canonical-query requirement.'
 );
-vms_test_assert_not_contains(
-	'WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters',
-	$vendor_type_source,
-	'Deferred vendor-type occurrence must remain unsuppressed for WPORG-28R-E2.'
+$vendor_type_suppression = "// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- get_posts() already defaults suppress_filters to true; keep the explicit value to document this one-time canonical vendor-type migration across all event plans when normalizing legacy secondary vendor type meta.";
+vms_test_assert_same(
+	1,
+	substr_count($vendor_type_source, 'WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters'),
+	'Vendor-type canonicalization should contain exactly one verified E2 SuppressFilters suppression.'
 );
 vms_test_assert_contains(
-	"'suppress_filters' => true",
+	$vendor_type_suppression,
+	$vendor_type_canonicalize_source,
+	'Vendor-type canonicalization should preserve the exact E2 suppression rationale.'
+);
+vms_test_assert_same(
+	1,
+	vms_test_count_pattern("/'suppress_filters'\s*=>\s*true/", $vendor_type_canonicalize_source),
+	'Vendor-type canonicalization should contain exactly one explicit suppress_filters=true query argument.'
+);
+vms_test_assert_true(
+	(bool) preg_match(
+		"/get_posts\(\[\s*'post_type'\s*=>\s*'vms_event_plan',\s*'post_status'\s*=>\s*'any',\s*'numberposts'\s*=>\s*-1,\s*'fields'\s*=>\s*'ids',\s*'no_found_rows'\s*=>\s*true,\s*\/\/ phpcs:ignore WordPressVIPMinimum\.Performance\.WPQueryParams\.SuppressFilters_suppress_filters -- get_posts\(\) already defaults suppress_filters to true; keep the explicit value to document this one-time canonical vendor-type migration across all event plans when normalizing legacy secondary vendor type meta\.\s*'suppress_filters'\s*=>\s*true,\s*\]\);/",
+		$vendor_type_canonicalize_source
+	),
+	'Vendor-type canonicalization should preserve the exact bounded event-plan get_posts() query.'
+);
+vms_test_assert_contains(
+	"if (!taxonomy_exists('vms_vendor_type')) {",
+	$vendor_type_canonicalize_source,
+	'Vendor-type canonicalization should remain scoped to the registered vendor-type taxonomy.'
+);
+vms_test_assert_contains(
+	"add_action('init', 'vms_vendor_type_maybe_canonicalize_terms', 22);",
 	$vendor_type_source,
-	'Deferred vendor-type occurrence must remain visible in source.'
+	'Vendor-type canonicalization should remain registered on init at priority 22 with the default accepted-argument count.'
+);
+vms_test_assert_same(
+	1,
+	vms_test_count_pattern("/add_action\(\s*'init'\s*,\s*'vms_vendor_type_maybe_canonicalize_terms'\s*,\s*22\s*\);/", $vendor_type_source),
+	'Vendor-type canonicalization should have exactly one init hook registration.'
+);
+vms_test_assert_not_contains(
+	'add_filter(',
+	$vendor_type_canonicalize_source,
+	'Vendor-type canonicalization should not add broad global query filters.'
 );
 vms_test_assert_same(
 	2,
@@ -446,7 +480,7 @@ vms_test_assert_contains(
 	'Daily report refresh should continue to reuse the full Ticket Integrity scan path.'
 );
 vms_test_assert_same(
-	'4ae832840023a8cd2d4c9a805e839927b003f71b29e0efa61bc1415944ff8c87',
+	'ac036bef295173d9d26b7165871a09797de2a61add12247ee985a547f3f74b4e',
 	hash_file('sha256', $vendor_type_path),
 	'Vendor-type source should remain unchanged in this child.'
 );
