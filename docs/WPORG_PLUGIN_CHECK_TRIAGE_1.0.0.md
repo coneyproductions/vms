@@ -288,12 +288,22 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 #### `WPORG-28R-G8 — Staffing And Staff-Task Query Boundaries`
 
+- Status: `in progress` on `2026-08-01` after the documentation-only boundary decomposition preserved at `/tmp/wporg-28rg8-inventory.Z0hOmS`
 - Count: `233` (`UnescapedDBParameter 36`, `DirectQuery 70`, `NoCaching 58`, `InterpolatedNotPrepared 36`, `NotPrepared 17`, `slow_meta_key 7`, `slow_meta_query 6`, `slow_meta_value 3`)
+- Distinct boundaries: `52`
 - Files: `includes/core/staffing.php`, `includes/modules/staff-tasks/store.php`, `includes/modules/staff-tasks/admin-ui.php`, `includes/modules/staff-tasks/db.php`, `includes/modules/staff-tasks/generator.php`, `includes/admin/staffing.php`, `includes/admin/staff-list-columns.php`, `includes/admin/staff-user-link.php`, `includes/admin/staff-vendor-link.php`, `includes/portal/staff-portal.php`, `includes/admin/vendor-staff-link.php`
 - Lifecycle / subsystem: `ADMIN_PAGE`, `FORM_SUBMISSION`, `REPORTING`; staffing catalogs, task templates, assignments, roster views, and staff portal state
 - Boundary: land prepared-statement and mutation-path fixes before cache-policy follow-up; preserve justified direct custom-table access where a core API is not the right abstraction
 - Focused tests: `tests/staff-tasks-overrides-json-remediation.php`, `tests/staff-tasks-signature-json-remediation.php`, `tests/authorization-boundary-hardening.php`, `tests/vendor-portal-availability-autosave-remediation.php`
-- Closure / defers: owned packaged DB rows `233 -> 0`; defer same-file logging in `includes/modules/staff-tasks/generator.php` to `G17`
+- Fresh baseline evidence: `2026-08-01` public package and packaged strict-json reruns reproduced `265` errors, `1013` warnings, `1278` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1149`; blocker-family totals stayed `DB/SQL 1082`, `nonce/input 0`, `date/time 25`, and `logging 42`, with empty build/plugin-check stderr.
+- Decomposition:
+  `WPORG-28R-G8-T1 — Staff Tasks template, checklist, and admin selector repositories` owns `48` rows across `13` boundaries in `includes/modules/staff-tasks/store.php`, `includes/modules/staff-tasks/admin-ui.php`, and `includes/modules/staff-tasks/db.php`; it is the selected first child because the touched query functions are all byte-identical across mirror/live, the slice stays inside bounded store abstractions, and it avoids the policy-heavy slow-meta decisions reserved for `T5`.
+  `WPORG-28R-G8-T2 — Task-instance assignment, supersession, and staff-portal read models` owns `53` rows across `12` boundaries in `includes/modules/staff-tasks/store.php` and `includes/portal/staff-portal.php`; follow it after `T1` because the instance and portal lifecycles reuse the same Staff Tasks store abstractions.
+  `WPORG-28R-G8-T3 — Staffing template and event-slot repositories` owns `62` rows across `12` boundaries in `includes/core/staffing.php`; land it before `T4` because the later matrix and rollup work consumes the same template, slot, and assignment repository contracts.
+  `WPORG-28R-G8-T4 — Staffing matrix, rollup, and reporting repositories` owns `56` rows across `6` boundaries in `includes/core/staffing.php` and `includes/admin/staffing.php`; keep it after `T3` because it mixes the riskiest staffing mutations, recompute lifecycles, and reporting reads.
+  `WPORG-28R-G8-T5 — Slow meta queries and reverse-link fallbacks` owns the remaining `14` rows across `9` boundaries in `includes/admin/staff-list-columns.php`, `includes/admin/staff-user-link.php`, `includes/admin/staff-vendor-link.php`, `includes/admin/vendor-staff-link.php`, `includes/core/staffing.php`, `includes/modules/staff-tasks/admin-ui.php`, and `includes/modules/staff-tasks/generator.php`; leave it last because it is the most policy- and architecture-sensitive slice and may need narrow accepted fallbacks or an explicit G13 handoff for genuine schema/index work.
+- Mirror/live audit: `6` of the `11` owned files are byte-identical end to end; the other `5` files diverge at file level, but every G8-owned function inside them remains byte-identical across mirror/live, so future runtime work can stay line-local in both trees without whole-file synchronization.
+- Closure / defers: owned packaged DB rows `233 -> 0`; future completion target after a successful full G8 closeout is `849` remaining DB/SQL blockers and `916` projected overall blockers; defer same-file logging in `includes/modules/staff-tasks/generator.php` to `G17`
 
 #### `WPORG-28R-G9 — Admissions And Claim-State Query Boundaries`
 
@@ -419,6 +429,6 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Recommended Next Task
 
-- Next execution target: `WPORG-28R-G8 — Staffing And Staff-Task Query Boundaries`
-- Scope: begin the DB/SQL roadmap with the staffing and staff-task query boundaries now that the packaged nonce/input family is zero and `WPORG-28R-G6` is verified.
-- Scope guardrails: do not reopen `G1` through `G6`, do not recreate a standalone `WPORG-28R-G7` nonce/input child, and continue deferring the documented later DB/SQL, date/time, and logging work to their assigned children.
+- Next execution target: `WPORG-28R-G8-T1 — Staff Tasks template, checklist, and admin selector repositories`
+- Scope: execute the first `48`-row / `13`-boundary Staff Tasks store slice now that the packaged nonce/input family is zero, `WPORG-28R-G6` is verified, and the G8 inventory has been decomposed into a finite `T1`-`T5` sequence.
+- Scope guardrails: do not reopen `G1` through `G6`, do not recreate a standalone `WPORG-28R-G7` nonce/input child, keep `T2` through `T5` for later commits, and continue deferring the documented later DB/SQL, date/time, and logging work to their assigned children.

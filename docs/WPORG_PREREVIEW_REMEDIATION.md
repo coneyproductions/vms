@@ -4028,6 +4028,46 @@ Date: 2026-08-01
 - No same-file DB/SQL, date/time, logging, or accepted output boundary was changed.
 - No sibling live-tree file, staging, commit, push, tag, upload, deployment, activation, deactivation, package submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 
+## WPORG-28R-G8 Result
+
+Date: 2026-08-01
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G8`
+- Scope completed in this slice: documentation-only inventory, characterization, mirror/live audit, test inventory, and finite decomposition of the staffing and staff-task DB/SQL blocker family; no runtime remediation was attempted
+- Fresh evidence directory: `/tmp/wporg-28rg8-inventory.Z0hOmS`
+- Fresh packaged baseline reproduced exactly: `265` errors, `1013` warnings, `1278` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1149`
+- Fresh blocker-family totals remained exact: DB/SQL `1082`, nonce/input `0`, date/time `25`, and logging `42`
+- Exact G8 ownership reconciled to `233` packaged rows across `52` unique function/lifecycle boundaries and the tracker-owned `11` packaged runtime files
+- Exact G8 rule distribution remained `UnescapedDBParameter 36`, `DirectQuery 70`, `NoCaching 58`, `InterpolatedNotPrepared 36`, `NotPrepared 17`, `slow_meta_key 7`, `slow_meta_query 6`, and `slow_meta_value 3`
+- Finite child split selected from the fresh boundary map: `WPORG-28R-G8-T1 48 rows / 13 boundaries`, `WPORG-28R-G8-T2 53 / 12`, `WPORG-28R-G8-T3 62 / 12`, `WPORG-28R-G8-T4 56 / 6`, and `WPORG-28R-G8-T5 14 / 9`
+
+### Verification
+
+- Fresh tracker audit at `/tmp/wporg-28rg8-inventory.Z0hOmS/tracker-pre-edit-audit.md` confirmed that the current governed docs still treated `WPORG-28R-G8` as the next unresolved child, still owned the same `233` rows and `11` files, did not define subchildren yet, and did not repeat the historical `SUBMISSION_BLOCKER=0` transcription error.
+- Fresh package command: `php scripts/build-public-release.php --output-dir '/tmp/wporg-28rg8-inventory.Z0hOmS/pre-build' --force`
+- Fresh package result: `/tmp/wporg-28rg8-inventory.Z0hOmS/pre-build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `754c88d428a4efd966d580a58180153a525f54de7547a41338153528fc43fbdf`
+- Fresh packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 /opt/homebrew/bin/wp --path=/Users/treyconey/Local\ Sites/serenade-range-local-test-site/app/public --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg8-inventory.Z0hOmS/plugin-check/extracted.1785616170/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Fresh packaged Plugin Check result: exit `0`, valid strict JSON, empty stderr, exact aggregate counts unchanged, DB/SQL family exactly `1082`, and nonce/input family still exactly `0`
+- Fresh boundary artifacts are preserved at `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-boundaries.tsv`, `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-row-to-boundary.tsv`, `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-boundary-summary.md`, `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-boundary-characterization.md`, `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-remediation-classification.tsv`, `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-proposed-children.tsv`, and `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-proposed-children.md`
+- Fresh mirror/live audit at `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-mirror-live-parity.tsv` and `/tmp/wporg-28rg8-inventory.Z0hOmS/g8-mirror-live-analysis.md` found that `6` G8-owned files are byte-identical end to end, the remaining `5` files diverge at whole-file level, and every G8-owned function inside those divergent files remains byte-identical across mirror/live, so later runtime work can stay line-local in both trees without whole-file synchronization
+- Fresh non-mutating focused tests all passed: `php tests/staff-tasks-overrides-json-remediation.php`, `php tests/staff-tasks-signature-json-remediation.php`, `php tests/authorization-boundary-hardening.php`, `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`
+
+### Current G8 State
+
+- `WPORG-28R-G8` now moves to `in progress` with no runtime delta yet; only the finite decomposition and supporting evidence were added in this slice
+- Exact selected first implementation child: `WPORG-28R-G8-T1 — Staff Tasks template, checklist, and admin selector repositories`
+- Child-order rationale: `T1` is the smallest safe opener because the touched functions are byte-identical across mirror/live, the slice stays inside bounded Staff Tasks store abstractions plus one schema probe and one selector helper, and it avoids the policy-heavy slow-meta decisions deferred to `T5`; `T2` follows `T1` because it reuses the same store abstractions, `T3` must land before `T4` because the later staffing matrix/rollup work consumes the same slot and assignment repository contracts, and `T5` stays last because it is the most policy- and architecture-sensitive slice
+- Planning-only future target after a complete successful G8 closeout: remaining DB/SQL blockers `849` and projected overall blockers `916`; these are completion targets only, not current results
+- `WPORG-28R` remains blocked, `WPORG-28R-G6` remains terminally verified, and `WPORG-28R-G7` remains retired
+
+### Non-Actions
+
+- No runtime PHP, tests, assets, build scripts, package metadata, or sibling live-tree files were modified
+- No SQL remediation, cache logic, PHPCS suppressions, schema/index work, migrations, mirror/live synchronization, staging, push, tag, deployment, upload, submission, reviewer reply, activation, deactivation, or stash mutation occurred
+
 Date: 2026-07-21
 
 ### Summary
