@@ -182,6 +182,15 @@ if (!class_exists('VMS_Tours_Service')) {
 			echo '</div>';
 		}
 
+		/**
+		 * @return array<string,mixed>
+		 */
+		private function read_ajax_prefs_from_request(array $source): array
+		{
+			$prefs = vms_request_read_array($source, 'prefs');
+			return is_array($prefs) ? $prefs : array();
+		}
+
 		public function ajax_save_prefs(): void
 		{
 			if (!is_user_logged_in() || !current_user_can('read')) {
@@ -197,13 +206,13 @@ if (!class_exists('VMS_Tours_Service')) {
 				}
 			}
 
-			$incoming = isset($_POST['prefs']) && is_array($_POST['prefs']) ? (array) wp_unslash($_POST['prefs']) : array();
+			$incoming = $this->read_ajax_prefs_from_request($_POST);
 			$existing = $this->storage->get_user_prefs($user_id);
 
-			if (array_key_exists('auto_run_enabled', $incoming)) {
+			if (array_key_exists('auto_run_enabled', $incoming) && !is_array($incoming['auto_run_enabled']) && !is_object($incoming['auto_run_enabled'])) {
 				$existing['auto_run_enabled'] = !empty($incoming['auto_run_enabled']);
 			}
-			if (array_key_exists('level', $incoming)) {
+			if (array_key_exists('level', $incoming) && is_scalar($incoming['level'])) {
 				$existing['level'] = sanitize_key((string) $incoming['level']);
 			}
 			if (array_key_exists('dismissed_tours', $incoming) && is_array($incoming['dismissed_tours'])) {
@@ -213,6 +222,9 @@ if (!class_exists('VMS_Tours_Service')) {
 				foreach ((array) $incoming['dismissed_tours'] as $tour_id => $value) {
 					$id = $this->sanitize_tour_id((string) $tour_id);
 					if ($id === '') {
+						continue;
+					}
+					if (is_array($value) || is_object($value)) {
 						continue;
 					}
 					$dismissed[$id] = !empty($value);

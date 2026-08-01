@@ -130,19 +130,57 @@ if (!function_exists('vms_request_read_bool_flag')) {
 	}
 }
 
+if (!function_exists('vms_request_read_array')) {
+	/**
+	 * @return array<mixed>|null
+	 */
+	function vms_request_read_array(array $source, string $key): ?array
+	{
+		if (!array_key_exists($key, $source) || !is_array($source[$key])) {
+			return null;
+		}
+
+		$value = wp_unslash($source[$key]);
+		return is_array($value) ? $value : null;
+	}
+}
+
 if (!function_exists('vms_request_server_value')) {
 	function vms_request_server_value(string $key): string
 	{
+		$allowed_keys = array(
+			'CONTENT_TYPE',
+			'HTTP_ACCEPT',
+			'HTTP_ACCEPT_LANGUAGE',
+			'HTTP_CF_CONNECTING_IP',
+			'HTTP_USER_AGENT',
+			'HTTP_X_FORWARDED_FOR',
+			'REMOTE_ADDR',
+			'REQUEST_METHOD',
+			'REQUEST_TIME_FLOAT',
+			'REQUEST_URI',
+		);
+		if (!in_array($key, $allowed_keys, true)) {
+			return '';
+		}
+
 		if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
 			return '';
 		}
 
-		$value = wp_unslash($_SERVER[$key]);
+		$value = wp_unslash($_SERVER[$key]); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Server key is finite allowlisted and callers apply context-specific validation or escaping.
 		if (!is_scalar($value)) {
 			return '';
 		}
 
 		return trim((string) $value);
+	}
+}
+
+if (!function_exists('vms_request_has_post_data')) {
+	function vms_request_has_post_data(): bool
+	{
+		return !empty($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Passive request-shape probe only rejects POST-like traffic before read-only admin diagnostics; it does not consume submitted values.
 	}
 }
 
@@ -1034,7 +1072,7 @@ if (!function_exists('vms_admin_guard_is_passive_admin_list_request')) {
 		if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (defined('REST_REQUEST') && REST_REQUEST)) {
 			return false;
 		}
-		if (vms_admin_guard_request_method() !== 'get' || !empty($_POST)) {
+		if (vms_admin_guard_request_method() !== 'get' || vms_request_has_post_data()) {
 			return false;
 		}
 
@@ -1204,7 +1242,7 @@ if (!function_exists('vms_admin_guard_should_probe_passive_tec_request')) {
 		if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (defined('REST_REQUEST') && REST_REQUEST)) {
 			return false;
 		}
-		if (vms_admin_guard_request_method() !== 'get' || !empty($_POST)) {
+		if (vms_admin_guard_request_method() !== 'get' || vms_request_has_post_data()) {
 			return false;
 		}
 		if (!vms_admin_guard_is_tec_admin_request()) {

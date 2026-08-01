@@ -1920,6 +1920,36 @@ function vms_ticketing_payload_is_object_like_array(array $value): bool {
     return empty($value) || !vms_array_is_list_compat($value);
 }
 
+function vms_ticketing_b_request_payload_value(array $source, string $key, &$present = null, &$valid = null, &$raw_string_bytes = null) {
+    $present = array_key_exists($key, $source);
+    $valid = false;
+    $raw_string_bytes = 0;
+    if (!$present) {
+        return null;
+    }
+
+    if (is_array($source[$key])) {
+        $value = wp_unslash($source[$key]);
+        if (!is_array($value)) {
+            return null;
+        }
+        $valid = true;
+        return $value;
+    }
+
+    if (is_scalar($source[$key])) {
+        $raw_string_bytes = is_string($source[$key]) ? strlen($source[$key]) : 0;
+        $value = wp_unslash($source[$key]);
+        if (!is_scalar($value)) {
+            return null;
+        }
+        $valid = true;
+        return (string) $value;
+    }
+
+    return null;
+}
+
 /**
  * @return array{ok:bool,value:array<int,mixed>}
  */
@@ -2054,18 +2084,19 @@ function vms_ticketing_b_ajax_save_tiers(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
+    $plan_id = vms_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    $tiers_in_raw = isset($_POST['tiers']) ? $_POST['tiers'] : null;
-
-    // Harden: WP may slash JSON strings; browsers may send nested arrays.
-    if (is_string($tiers_in_raw)) {
-        $tiers_in_raw = wp_unslash($tiers_in_raw);
+    $tiers_present = false;
+    $tiers_valid = false;
+    $tiers_in_raw = vms_ticketing_b_request_payload_value($_POST, 'tiers', $tiers_present, $tiers_valid);
+    if (!$tiers_valid) {
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_tiers'), 400);
     }
 
+    // Harden: WP may slash JSON strings; browsers may send nested arrays.
     $tiers_in = null;
     if (is_array($tiers_in_raw)) {
         if (vms_ticketing_b_validate_tier_rows_payload($tiers_in_raw)) {
@@ -2139,15 +2170,16 @@ function vms_ticketing_b_ajax_commit_sync(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
+    $plan_id = vms_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    $items_raw = isset($_POST['items']) ? $_POST['items'] : null;
-
-    if (is_string($items_raw)) {
-        $items_raw = wp_unslash($items_raw);
+    $items_present = false;
+    $items_valid = false;
+    $items_raw = vms_ticketing_b_request_payload_value($_POST, 'items', $items_present, $items_valid);
+    if (!$items_valid) {
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_items'), 400);
     }
 
     $items = null;
@@ -9736,15 +9768,17 @@ function vms_ticketing_v2_ajax_save_config(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
+    $plan_id = vms_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    $raw = $_POST['config'] ?? null;
-    $raw_config_bytes = is_string($raw) ? strlen($raw) : 0;
-    if (is_string($raw)) {
-        $raw = wp_unslash($raw);
+    $config_present = false;
+    $config_valid = false;
+    $raw_config_bytes = 0;
+    $raw = vms_ticketing_b_request_payload_value($_POST, 'config', $config_present, $config_valid, $raw_config_bytes);
+    if (!$config_valid) {
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
     }
 
     $cfg_in = null;
@@ -9846,36 +9880,41 @@ function vms_ticketing_v2_ajax_save_template(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
+    $plan_id = vms_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-	$name = isset($_POST['name']) ? sanitize_text_field((string) $_POST['name']) : '';
-	$cfg_raw = isset($_POST['config']) ? wp_unslash($_POST['config']) : null;
-	if (is_string($cfg_raw) && $cfg_raw !== '') {
-		$cfg_raw = trim($cfg_raw);
-		if (strlen($cfg_raw) > 262144) {
-			vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
-		}
-		$decoded = vms_json_decode_associative($cfg_raw, 64);
-		if (
-			empty($decoded['ok'])
-			|| !is_array($decoded['value'])
-			|| !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
-			|| !vms_ticketing_v2_validate_config_payload($decoded['value'])
-		) {
-			vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
-		}
-		$cfg_in = $decoded['value'];
-	} elseif (is_array($cfg_raw)) {
-		if (!vms_ticketing_v2_validate_config_payload($cfg_raw)) {
-			vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
-		}
-		$cfg_in = $cfg_raw;
-	} else {
-		$cfg_in = array();
-	}
+    $name = sanitize_text_field(vms_request_read_scalar($_POST, 'name'));
+    $config_present = false;
+    $config_valid = false;
+    $cfg_raw = vms_ticketing_b_request_payload_value($_POST, 'config', $config_present, $config_valid);
+    if ($config_present && !$config_valid) {
+        vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
+    }
+    if (is_string($cfg_raw) && $cfg_raw !== '') {
+        $cfg_raw = trim($cfg_raw);
+        if (strlen($cfg_raw) > 262144) {
+            vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
+        }
+        $decoded = vms_json_decode_associative($cfg_raw, 64);
+        if (
+            empty($decoded['ok'])
+            || !is_array($decoded['value'])
+            || !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+            || !vms_ticketing_v2_validate_config_payload($decoded['value'])
+        ) {
+            vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
+        }
+        $cfg_in = $decoded['value'];
+    } elseif (is_array($cfg_raw)) {
+        if (!vms_ticketing_v2_validate_config_payload($cfg_raw)) {
+            vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
+        }
+        $cfg_in = $cfg_raw;
+    } else {
+        $cfg_in = array();
+    }
 
     $res = vms_ticketing_v2_templates_save($name, $cfg_in);
     if (empty($res['ok'])) {
@@ -10086,12 +10125,12 @@ function vms_ticketing_v2_ajax_commit_sync(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
+    $plan_id = vms_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    $preview_id = isset($_POST['preview_id']) ? trim((string) wp_unslash($_POST['preview_id'])) : '';
+    $preview_id = sanitize_key(vms_request_read_scalar($_POST, 'preview_id'));
     if ($preview_id === '') {
         vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_preview_id'), 400);
     }

@@ -263,6 +263,11 @@ add_action('vms_vendor_type_edit_form_fields', function ($term) {
 });
 
 if (!function_exists('vms_vendor_type_save_category_label_meta')) {
+	function vms_vendor_type_category_label_from_post(array $source): string
+	{
+		return vms_request_read_text_field($source, 'vms_vendor_type_category_label');
+	}
+
 	function vms_vendor_type_save_category_label_meta($term_id): void
 	{
 		$term_id = absint($term_id);
@@ -270,9 +275,7 @@ if (!function_exists('vms_vendor_type_save_category_label_meta')) {
 			return;
 		}
 
-		$value = isset($_POST['vms_vendor_type_category_label'])
-			? sanitize_text_field((string) wp_unslash($_POST['vms_vendor_type_category_label']))
-			: '';
+		$value = vms_vendor_type_category_label_from_post($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Vendor Type term create/edit hooks run under WordPress taxonomy admin nonce handling; this helper only normalizes the bounded optional label meta field.
 
 		if ($value === '') {
 			delete_term_meta($term_id, '_vms_vendor_type_category_label');

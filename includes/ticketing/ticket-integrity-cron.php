@@ -502,6 +502,11 @@ function vms_ticket_integrity_run_spot_scan(int $plan_id): void
 }
 add_action('vms_ticket_integrity_spot_scan', 'vms_ticket_integrity_run_spot_scan', 10, 1);
 
+function vms_ticket_integrity_plan_save_request_action(array $source): string
+{
+	return vms_request_read_key($source, 'vms_event_plan_action');
+}
+
 function vms_ticket_integrity_plan_save_should_queue(int $post_id, WP_Post $post, bool $update): bool
 {
 	$post_id = absint($post_id);
@@ -513,7 +518,7 @@ function vms_ticket_integrity_plan_save_should_queue(int $post_id, WP_Post $post
 		return false;
 	}
 
-	$request_action = isset($_POST['vms_event_plan_action']) ? sanitize_key((string) wp_unslash($_POST['vms_event_plan_action'])) : '';
+	$request_action = vms_ticket_integrity_plan_save_request_action($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- save_post already represents the accepted Event Plan save boundary; this helper only gates whether an existing post-save integrity scan should be queued.
 	if (in_array($request_action, array('publish_now', 'mark_cancelled', 'run_live_refunds_now'), true)) {
 		return true;
 	}

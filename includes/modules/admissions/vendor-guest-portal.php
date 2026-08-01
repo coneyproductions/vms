@@ -885,6 +885,36 @@ if (!function_exists('vms_admission_render_vendor_guest_config')) {
 	}
 }
 
+if (!function_exists('vms_admission_vendor_guest_rules_from_post')) {
+	function vms_admission_vendor_guest_rules_from_post(array $source): ?array
+	{
+		return vms_request_read_array($source, 'vms_vendor_guest_rules');
+	}
+}
+
+if (!function_exists('vms_admission_vendor_guest_flag_value')) {
+	function vms_admission_vendor_guest_flag_value($value): int
+	{
+		return (is_array($value) || is_object($value) || empty($value)) ? 0 : 1;
+	}
+}
+
+if (!function_exists('vms_admission_vendor_guest_absint_value')) {
+	function vms_admission_vendor_guest_absint_value($value): int
+	{
+		if (!is_scalar($value)) {
+			return 0;
+		}
+
+		$value = trim((string) $value);
+		if ($value === '' || !ctype_digit($value)) {
+			return 0;
+		}
+
+		return (int) $value;
+	}
+}
+
 if (!function_exists('vms_admission_save_vendor_guest_config')) {
 	function vms_admission_save_vendor_guest_config(int $post_id, WP_Post $post): void
 	{
@@ -906,31 +936,31 @@ if (!function_exists('vms_admission_save_vendor_guest_config')) {
 		if (!current_user_can('edit_post', $post_id)) {
 			return;
 		}
-		if (!isset($_POST['vms_vendor_guest_rules'])) {
-			return;
-		}
-		$raw = wp_unslash($_POST['vms_vendor_guest_rules']);
-		if (!is_array($raw)) {
+		$raw = vms_admission_vendor_guest_rules_from_post($_POST);
+		if ($raw === null) {
 			return;
 		}
 		$allowed_vendor_ids = vms_admission_get_event_vendor_ids($post_id);
 		$allowed_lookup = array_fill_keys($allowed_vendor_ids, true);
 		$existing_rules = vms_admission_vendor_guest_get_rules($post_id);
 		$normalized = array(
-			'enabled' => !empty($raw['enabled']) ? 1 : 0,
+			'enabled' => vms_admission_vendor_guest_flag_value($raw['enabled'] ?? 0),
 			'first_time_only' => !empty($existing_rules['first_time_only']) ? 1 : 0,
 			'vendors' => array(),
 		);
-		foreach ((array) ($raw['vendors'] ?? array()) as $vendor_id => $rule) {
+		$vendor_rules = isset($raw['vendors']) && is_array($raw['vendors']) ? $raw['vendors'] : array();
+		foreach ($vendor_rules as $vendor_id => $rule) {
 			$vendor_id = absint($vendor_id);
 			if ($vendor_id <= 0 || !isset($allowed_lookup[$vendor_id])) {
 				continue;
 			}
-			$rule = is_array($rule) ? $rule : array();
+			if (!is_array($rule)) {
+				continue;
+			}
 			$normalized['vendors'][$vendor_id] = array(
-				'enabled' => !empty($rule['enabled']) ? 1 : 0,
-				'allotment' => max(0, absint($rule['allotment'] ?? 0)),
-				'first_time_only' => !empty($rule['first_time_only']) ? 1 : 0,
+				'enabled' => vms_admission_vendor_guest_flag_value($rule['enabled'] ?? 0),
+				'allotment' => vms_admission_vendor_guest_absint_value($rule['allotment'] ?? 0),
+				'first_time_only' => vms_admission_vendor_guest_flag_value($rule['first_time_only'] ?? 0),
 			);
 		}
 		update_post_meta($post_id, vms_admission_vendor_guest_meta_key(), $normalized);

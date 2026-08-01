@@ -189,6 +189,38 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 }
 add_action('admin_post_vms_event_plan_import_preview', 'vms_event_plan_import_handle_preview_action');
 
+if (!function_exists('vms_event_plan_import_read_selected_rows_from_post')) {
+	/**
+	 * @return array<int,int>
+	 */
+	function vms_event_plan_import_read_selected_rows_from_post(array $source): array
+	{
+		$selected_rows_raw = vms_request_read_array($source, 'selected_rows');
+		if ($selected_rows_raw === null) {
+			return array();
+		}
+
+		$selected_rows = array();
+		foreach ($selected_rows_raw as $row_number) {
+			if (!is_scalar($row_number)) {
+				continue;
+			}
+
+			$row_number = trim((string) $row_number);
+			if ($row_number === '' || !ctype_digit($row_number)) {
+				continue;
+			}
+
+			$row_number = (int) $row_number;
+			if ($row_number > 0) {
+				$selected_rows[] = $row_number;
+			}
+		}
+
+		return array_values(array_unique($selected_rows));
+	}
+}
+
 if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 	function vms_event_plan_import_handle_commit_action(): void
 	{
@@ -214,10 +246,7 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 
 		$commit_scope_raw = isset($_POST['commit_scope']) ? sanitize_key((string) $_POST['commit_scope']) : 'all';
 		$commit_scope = in_array($commit_scope_raw, array('all', 'selected'), true) ? $commit_scope_raw : 'all';
-		$selected_rows_raw = isset($_POST['selected_rows']) ? (array) wp_unslash($_POST['selected_rows']) : array();
-		$selected_rows = array_values(array_unique(array_filter(array_map('absint', $selected_rows_raw), static function ($row_number): bool {
-			return $row_number > 0;
-		})));
+		$selected_rows = vms_event_plan_import_read_selected_rows_from_post($_POST);
 
 		if ($commit_scope === 'selected' && empty($selected_rows)) {
 			vms_event_plan_import_set_notice('error', __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager'));

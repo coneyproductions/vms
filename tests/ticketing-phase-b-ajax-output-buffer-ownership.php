@@ -444,7 +444,7 @@ try {
 	$saveTemplateBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_save_template');
 	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $saveTemplateBody, 'Save template should keep the bad_nonce 403 contract.');
 	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $saveTemplateBody, 'Save template should keep the forbidden 403 contract.');
-	vms_test_assert_code_count(3, "vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);", $saveTemplateBody, 'Save template should keep all invalid_payload_config 400 branches.');
+	vms_test_assert_code_count(4, "vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);", $saveTemplateBody, 'Save template should keep all invalid_payload_config 400 branches, including malformed request-shape rejection.');
 	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => \$res['message'] ?? 'error'), 400);", $saveTemplateBody, 'Save template should still forward save_fail-style messages unchanged.');
 	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(array( 'template_id' => (string) (\$res['template_id'] ?? ''), 'templates' => \$list, ));", $saveTemplateBody, 'Save template should keep the final template success payload.');
 

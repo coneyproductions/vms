@@ -655,6 +655,18 @@ if (!function_exists('vms_social_handle_delete_venue_map')) {
 }
 add_action('admin_post_vms_social_delete_venue_map', 'vms_social_handle_delete_venue_map');
 
+if (!function_exists('vms_social_template_body_from_post')) {
+	function vms_social_template_body_from_post(array $source): string
+	{
+		if (!array_key_exists('body', $source) || !is_scalar($source['body'])) {
+			return '';
+		}
+
+		$body = wp_unslash($source['body']);
+		return is_scalar($body) ? (string) $body : '';
+	}
+}
+
 if (!function_exists('vms_social_handle_save_template')) {
 	function vms_social_handle_save_template(): void
 	{
@@ -662,9 +674,9 @@ if (!function_exists('vms_social_handle_save_template')) {
 		check_admin_referer('vms_social_save_template');
 
 		$id = vms_social_template_save(array(
-			'platform' => sanitize_key(wp_unslash((string) ($_POST['platform'] ?? ''))),
-			'name' => sanitize_text_field(wp_unslash((string) ($_POST['name'] ?? ''))),
-			'body' => wp_unslash((string) ($_POST['body'] ?? '')),
+			'platform' => vms_request_read_key($_POST, 'platform'),
+			'name' => vms_request_read_text_field($_POST, 'name'),
+			'body' => vms_social_template_body_from_post($_POST),
 			'is_default' => isset($_POST['is_default']) ? 1 : 0,
 			'settings_json' => array(),
 		));

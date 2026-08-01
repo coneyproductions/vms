@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` removed the first `59` admin-module nonce/input blockers, `WPORG-28R-G2` removed the next `140` admin dashboard and secondary-settings nonce/input blockers, `WPORG-28R-G3` removed the next `164` Event Plan editor/core nonce-input blockers, `WPORG-28R-G4` removed the next `39` ancillary CPT save nonce/input blockers, `WPORG-28R-G5` removed the next `103` public, portal, and vendor-application nonce/input blockers, `WPORG-28R-G6-T1` removed the first `66` ticketing claims and verification request-state blockers inside `G6`, and `WPORG-28R-G6-T2` has now removed the next `33` ticketing claims and verification mutation/request-shape blockers while aligning the front-end `existing_counts` payload with the new array-shaped POST boundary. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1239`, with the remaining ordered implementation roadmap recorded as `WPORG-28R-G6-T3` through `WPORG-28R-G17`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, and `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1149`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G8`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -3978,6 +3978,55 @@ Date: 2026-07-30
 - No `WPORG-28R-G6-T5` runtime remediation was attempted.
 - No runtime, asset, or tracker path outside the eight authorized T4 runtime files, the three authorized new tests, the three directly relevant existing tests, and the three tracker documents was changed.
 - No sibling live-tree file, commit, push, tag, upload, deployment, submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
+
+## WPORG-28R-G6-T5 Result
+
+Date: 2026-08-01
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G6-T5`
+- Scope completed in this slice: only the preserved Phase-B/V2 mutation arrays and remaining shared mutation helpers assigned to `WPORG-28R-G6-T5`
+- Owned packaged rows: `22 -> 0` across `includes/admin/data-tools/actions-event-plan-import.php`, `includes/integrations/ticketing-phase-b.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/runtime-guards.php`, `includes/social-share/admin.php`, `includes/taxonomies/vendor-category.php`, `includes/ticketing/ticket-integrity-cron.php`, and `includes/tours/class-vms-tours-service.php`
+- Distinct boundaries: `17 -> 0`
+- Exact rule distribution: `WordPress.Security.NonceVerification.Missing 8`, `WordPress.Security.NonceVerification.Recommended 0`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 10`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 4`
+- Evidence directory: `/tmp/wporg-28rg6-t5-work.H3iuzL`
+- Mirror/live boundary: the sibling `../../vms/` tree remained read-only and unchanged; mirror/live divergence in the nine runtime files was recorded before and after instead of forcing parity.
+
+### Runtime And Test Changes
+
+- Added `vms_request_read_array()` and `vms_request_has_post_data()` to `includes/runtime-guards.php`, finite-allowlisted `vms_request_server_value()` server keys, and used targeted inline justifications only where Plugin Check cannot infer finite helper internals or passive request-shape probes.
+- Normalized structured mutation arrays for Event Plan Import `selected_rows`, Ticketing Phase-B tiers/items/config/template/preview inputs, Ticketing Rules V2 form fallbacks, Vendor Guest rules, Tours prefs, Social Share template bodies, Vendor Type labels, and Ticket Integrity save-action queue gates.
+- Preserved existing nonce names, nonce actions, capabilities, authentication, ownership checks, hooks, redirects, notices, JSON responses, cron behavior, persistence keys, package identity, and release exclusions.
+- Added `tests/wporg-28r-g6-t5-mutation-request-boundaries.php` and narrowly updated `tests/ticketing-phase-b-ajax-output-buffer-ownership.php` because the edited save-template config boundary now has an additional malformed-shape `invalid_payload_config` branch.
+
+### Verification
+
+- PHP lint passed for every changed PHP file, including all nine runtime files, `tests/wporg-28r-g6-t5-mutation-request-boundaries.php`, and `tests/ticketing-phase-b-ajax-output-buffer-ownership.php`.
+- Focused T5 suite passed: `php tests/wporg-28r-g6-t5-mutation-request-boundaries.php`.
+- The frozen 49-command support inventory in `/tmp/wporg-28rg6-t5-work.H3iuzL/pre-edit-support-scope.txt` passed after the final source edits, including all four repaired baseline harnesses, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`.
+- Post-edit package command: `php scripts/build-public-release.php --output-dir /tmp/wporg-28rg6-t5-work.H3iuzL/post-build --allow-dirty --force`
+- Post-edit package result: `/tmp/wporg-28rg6-t5-work.H3iuzL/post-build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `c07e34a156a41f6d0971da225470968b16ce8477fb8ec27679fdf315b8b49087`
+- Post-edit extracted package root and build audit: extracted package root `backstage-venue-manager/`; entry file `vendor-management-system.php`; packaged version `1.2.0`; text domain `backstage-venue-manager`; development-only `tests/` and `docs/` directories excluded; `release-public-excludes.txt` rules honored.
+- Post-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 /opt/homebrew/bin/wp --path=/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check /tmp/wporg-28rg6-t5-work.H3iuzL/post-plugin-check/extracted.1785608614/backstage-venue-manager --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Post-edit packaged Plugin Check result: exit `0`, empty stderr, `265` errors, `1013` warnings, `1278` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1149`; normalized strict JSON is recorded at `/tmp/wporg-28rg6-t5-work.H3iuzL/post-plugin-check/plugin-check.strict.json`, with raw stdout preserved at `/tmp/wporg-28rg6-t5-work.H3iuzL/post-plugin-check/plugin-check.stdout.raw`.
+- Exact G6-T5 code deltas: `WordPress.Security.NonceVerification.Missing 8 -> 0 (-8)`, `WordPress.Security.NonceVerification.Recommended 0 -> 0 (0)`, `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized 10 -> 0 (-10)`, and `WordPress.Security.ValidatedSanitizedInput.MissingUnslash 4 -> 0 (-4)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no unrelated packaged code count increased.
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G6-T5`: DB/SQL `1082`, nonce/input `0`, date/time `25`, and logging `42`.
+- `WPORG-28R-G6-T5` is terminal under `verified`.
+- `WPORG-28R-G6` is terminal under `verified`: `T1 66`, `T2 33`, `T3 34`, `T4 34`, and `T5 22` reconcile to `189` rows; `T1 46`, `T2 23`, `T3 16`, `T4 20`, and `T5 17` reconcile to `122` boundaries.
+- `WPORG-28R-G7` remains retired and must not be recreated as a standalone nonce/input child unless future strict-JSON evidence creates newly unmapped nonce/input rows.
+- `WPORG-28R` remains blocked until `WPORG-28R-G8` through `WPORG-28R-G17` close and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+- Exact next implementation child: `WPORG-28R-G8 — Staffing And Staff-Task Query Boundaries`.
+
+### Non-Actions
+
+- No `WPORG-28R-G8` through `WPORG-28R-G17` runtime remediation was attempted.
+- No same-file DB/SQL, date/time, logging, or accepted output boundary was changed.
+- No sibling live-tree file, staging, commit, push, tag, upload, deployment, activation, deactivation, package submission, reviewer reply, stash mutation, or external WordPress.org action occurred.
 
 Date: 2026-07-21
 

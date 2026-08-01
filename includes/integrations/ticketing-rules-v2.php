@@ -3299,6 +3299,16 @@ function vms_ticketing_v2_validate_silent_add_payload(array $data): bool
     return true;
 }
 
+function vms_ticketing_v2_read_form_request_payload(array $source): array
+{
+    if (empty($source)) {
+        return array();
+    }
+
+    $payload = wp_unslash($source);
+    return is_array($payload) ? $payload : array();
+}
+
 /**
  * @return array{ok:bool,present:bool,payload:array<string,mixed>,error:string}
  */
@@ -8690,7 +8700,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
 
     $data = $request_payload['present'] ? $request_payload['payload'] : null;
     if (!is_array($data)) {
-        $data = $_POST;
+        $data = vms_ticketing_v2_read_form_request_payload($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Form fallback is shape-normalized only to extract and verify the existing atomic-add nonce before any cart mutation.
     }
     if (!is_array($data) || !vms_ticketing_v2_validate_atomic_add_payload($data)) {
         vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
@@ -9084,7 +9094,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
 
     $data = $request_payload['present'] ? $request_payload['payload'] : null;
     if (!is_array($data)) {
-        $data = $_POST;
+        $data = vms_ticketing_v2_read_form_request_payload($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Silent-add form fallback preserves the existing optional nonce contract and only normalizes payload shape before cart validation.
     }
     if (!is_array($data) || !vms_ticketing_v2_validate_silent_add_payload($data)) {
         vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
