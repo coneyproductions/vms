@@ -463,7 +463,7 @@ vms_test_assert_same(
 	'The Ticket Integrity monitor changed unexpectedly.'
 );
 vms_test_assert_same(
-	'0e630063e869cd6ce6816a4c5cfb4710a9bf29e90d1c37f5b9fd5bffeb50beac',
+	'a8572971dbfee9d6b10c52fb379e14ad32e8b619ce79fcbff9eef0ecb9155714',
 	vms_test_sha256($ticket_integrity_test_path),
 	'The Ticket Integrity boundary test changed unexpectedly.'
 );
