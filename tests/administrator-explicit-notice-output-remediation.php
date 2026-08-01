@@ -2544,7 +2544,11 @@ $passClaimsContentStart = strpos($passClaimsPageSource, '$content = static funct
 $passClaimsShellStart = strpos($passClaimsPageSource, "if (function_exists('vms_admin_ui_render_shell')) {");
 $assert($passClaimsContentStart !== false && $passClaimsShellStart !== false && $passClaimsShellStart > $passClaimsContentStart, 'Pass Claims content callback body should be locatable.');
 $passClaimsContentSource = substr($passClaimsPageSource, (int) $passClaimsContentStart, (int) $passClaimsShellStart - (int) $passClaimsContentStart);
-$assert(strpos($passClaimsNoticeSource, 'sanitize_key((string) $_GET[\'result\'])') !== false, 'Pass Claims explicit notice callback should preserve the sanitized result query source.');
+$assert(
+	strpos($passClaimsNoticeSource, "\$result = vms_request_read_key(\$_GET, 'result');") !== false
+	&& preg_match('~\$_(?:GET|POST|REQUEST)\s*\[\s*[\'"]result[\'"]\s*\]~', $passClaimsNoticeSource) === 0,
+	'Pass Claims explicit notice callback should read the result query key through the scalar-safe request helper.'
+);
 $assert(strpos($passClaimsNoticeSource, 'vms_pass_claims_pop_user_message();') !== false, 'Pass Claims explicit notice callback should preserve the destructive user-message pop source.');
 $assert(strpos($passClaimsPopSource, 'get_transient($key);') !== false && strpos($passClaimsPopSource, 'delete_transient($key);') !== false, 'Pass Claims user-message pop should remain a transient read-and-delete operation.');
 $assert(strpos($passClaimsNoticeSource, '<div class="notice notice-success is-dismissible"><p>') !== false, 'Pass Claims explicit notice callback should preserve the fixed dismissible success notice fragments.');
@@ -2645,6 +2649,9 @@ $assert(
 
 $passClaimsMalformedNotice = $renderPassClaimsNotices(array('result' => '<script>token_voided</script>'));
 $assert($passClaimsMalformedNotice === '', 'Pass Claims explicit notice callback should stay silent for malformed or unknown result codes when no stored message exists.');
+
+$passClaimsArrayResultNotice = $renderPassClaimsNotices(array('result' => array('token_voided')));
+$assert($passClaimsArrayResultNotice === '', 'Pass Claims explicit notice callback should stay silent when result query input is array-shaped.');
 
 $passClaimsLoggedOutNotice = $renderPassClaimsNotices(
 	array(),
