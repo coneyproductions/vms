@@ -303,8 +303,18 @@ try {
 	$pluginRoot = dirname(__DIR__);
 	$ticketingRulesPath = $pluginRoot . '/includes/integrations/ticketing-rules-v2.php';
 	$webhookPath = $pluginRoot . '/includes/social-share/providers/class-provider-webhook.php';
+	$queueRunnerPath = $pluginRoot . '/includes/social-share/queue-runner.php';
+	$queueRepoPath = $pluginRoot . '/includes/social-share/queue-repo.php';
+	$socialAdminPath = $pluginRoot . '/includes/social-share/admin.php';
+	$socialEventPanelPath = $pluginRoot . '/includes/social-share/event-plan-panel.php';
+	$socialAuditPath = $pluginRoot . '/includes/social-share/audit.php';
 	$ticketingRulesSource = vms_test_read_file($ticketingRulesPath);
 	$webhookSource = vms_test_read_file($webhookPath);
+	$queueRunnerSource = vms_test_read_file($queueRunnerPath);
+	$queueRepoSource = vms_test_read_file($queueRepoPath);
+	$socialAdminSource = vms_test_read_file($socialAdminPath);
+	$socialEventPanelSource = vms_test_read_file($socialEventPanelPath);
+	$socialAuditSource = vms_test_read_file($socialAuditPath);
 
 	$ignoreToken = 'phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped';
 	vms_test_assert_same(
@@ -313,9 +323,51 @@ try {
 		'Ticketing Store API exception remediation should keep exactly two line-specific ExceptionNotEscaped suppressions.'
 	);
 	vms_test_assert_same(
-		0,
+		2,
 		substr_count($webhookSource, $ignoreToken),
-		'Webhook exception findings must remain untouched in this child.'
+		'Webhook exception findings should remain limited to the two completed WPORG-28R-C2 boundaries.'
+	);
+
+	$webhookPublishSource = vms_test_extract_function($webhookSource, 'publish');
+	vms_test_assert_same(
+		2,
+		substr_count($webhookPublishSource, $ignoreToken),
+		'Accepted webhook exception findings should remain inside VMS_Social_Provider_Webhook::publish().'
+	);
+	vms_test_assert_contains(
+		"throw new RuntimeException((string) \$response->get_error_message()); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook transport diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.",
+		$webhookPublishSource,
+		'Webhook transport diagnostics should keep the exact WPORG-28R-C2 bounded exception boundary.'
+	);
+	vms_test_assert_contains(
+		"throw new RuntimeException('Webhook returned HTTP ' . \$code); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook status diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.",
+		$webhookPublishSource,
+		'Webhook status diagnostics should keep the exact WPORG-28R-C2 bounded exception boundary.'
+	);
+	vms_test_assert_contains(
+		"\$message = sanitize_text_field((string) (\$class['message'] ?? \$error->getMessage()));",
+		$queueRunnerSource,
+		'Webhook exception diagnostics should still be sanitized by the queue runner before storage.'
+	);
+	vms_test_assert_contains(
+		"if (\$k === 'last_error_message' || \$k === 'destination_id' || \$k === 'platform_post_id') {\n\t\t\t\t\$v = sanitize_text_field((string) \$v);",
+		$queueRepoSource,
+		'Webhook exception diagnostics should still be sanitized by the queue repository update boundary.'
+	);
+	vms_test_assert_contains(
+		"echo '<td>' . esc_html((string) \$row['last_error_message']) . '</td>';",
+		$socialAdminSource,
+		'Webhook exception diagnostics should remain escaped in the Social Sharing admin queue table.'
+	);
+	vms_test_assert_contains(
+		"echo '<p class=\"description\">' . esc_html((string) \$last_queue['last_error_message']) . '</p>';",
+		$socialEventPanelSource,
+		'Webhook exception diagnostics should remain escaped in the Social Sharing event panel.'
+	);
+	vms_test_assert_contains(
+		"\$details_json = wp_json_encode(\$sanitized_details);",
+		$socialAuditSource,
+		'Webhook exception diagnostics should remain JSON-encoded in Social Sharing audit details.'
 	);
 
 	$checkoutUpdateSource = vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_store_api_checkout_update_order_meta');
