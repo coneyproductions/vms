@@ -271,10 +271,12 @@ if (!function_exists('vms_tasks_admin_get_event_type_options')) {
 		global $wpdb;
 		$postmeta = $wpdb->postmeta;
 		$types = array();
-		$rows = $wpdb->get_col($wpdb->prepare(
-			"SELECT DISTINCT meta_value FROM {$postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY meta_value ASC",
-			'_vms_event_type'
-		));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks admin selector reads distinct event-type values from wp_postmeta with prepared identifier/filter values, and the selector must stay request-fresh after Event Plan meta edits.
+			$rows = $wpdb->get_col($wpdb->prepare(
+				'SELECT DISTINCT meta_value FROM %i WHERE meta_key = %s AND meta_value <> \'\' ORDER BY meta_value ASC',
+				$postmeta,
+				'_vms_event_type'
+			));
 		if (is_array($rows)) {
 			foreach ($rows as $row) {
 				$key = sanitize_key((string) $row);

@@ -218,10 +218,11 @@ if (!function_exists('vms_tasks_log_task_action')) {
 			$actor_user_id = null;
 		}
 
-		$wpdb->insert(
-			$table,
-			array(
-				'task_instance_id' => $task_instance_id,
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staff Tasks task-action logs write normalized custom-table audit rows through wpdb::insert(); no core API preserves this repository contract.
+			$wpdb->insert(
+				$table,
+				array(
+					'task_instance_id' => $task_instance_id,
 				'action' => $action,
 				'actor_user_id' => $actor_user_id,
 				'details' => ($details !== '' ? $details : null),
@@ -243,12 +244,14 @@ if (!function_exists('vms_tasks_has_task_action_log')) {
 			return false;
 		}
 
-		$found = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT id FROM {$table} WHERE task_instance_id = %d AND action = %s LIMIT 1",
-				$task_instance_id,
-				$action
-			)
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks task-action log lookups read a custom repository table with %i/%d/%s-prepared values, and the generator/notification flows must observe fresh request-local state after writes.
+			$found = $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT id FROM %i WHERE task_instance_id = %d AND action = %s LIMIT 1',
+					$table,
+					$task_instance_id,
+					$action
+				)
 		);
 		return !empty($found);
 	}
@@ -264,7 +267,11 @@ if (!function_exists('vms_tasks_get_task_template')) {
 		if ($table === '' || $template_id <= 0) {
 			return null;
 		}
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d LIMIT 1", $template_id), ARRAY_A);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks task-template reads target a custom repository table with %i/%d-prepared identifiers and IDs, and template edits must remain immediately visible without a persistent cache layer.
+			$row = $wpdb->get_row(
+				$wpdb->prepare('SELECT * FROM %i WHERE id = %d LIMIT 1', $table, $template_id),
+				ARRAY_A
+			);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -282,23 +289,58 @@ if (!function_exists('vms_tasks_get_task_templates')) {
 			return array();
 		}
 
-		$where = array('1=1');
-		$args = array();
-		if (array_key_exists('is_active', $filters)) {
-			$where[] = 'is_active = %d';
-			$args[] = !empty($filters['is_active']) ? 1 : 0;
-		}
-		if (!empty($filters['scope'])) {
-			$where[] = 'scope = %s';
-			$args[] = vms_tasks_sanitize_scope((string) $filters['scope']);
+		$has_is_active = array_key_exists('is_active', $filters);
+		$is_active = $has_is_active && !empty($filters['is_active']) ? 1 : 0;
+		$scope = !empty($filters['scope']) ? vms_tasks_sanitize_scope((string) $filters['scope']) : '';
+
+		if ($has_is_active && $scope !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks task-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect task-template mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND is_active = %d AND scope = %s ORDER BY is_active DESC, title ASC, id ASC',
+					$table,
+					$is_active,
+					$scope
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
 		}
 
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY is_active DESC, title ASC, id ASC';
-		if (!empty($args)) {
-			$sql = $wpdb->prepare($sql, $args);
+		if ($has_is_active) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks task-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect task-template mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND is_active = %d ORDER BY is_active DESC, title ASC, id ASC',
+					$table,
+					$is_active
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
 		}
 
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		if ($scope !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks task-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect task-template mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND scope = %s ORDER BY is_active DESC, title ASC, id ASC',
+					$table,
+					$scope
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks task-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect task-template mutations immediately.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE 1=1 ORDER BY is_active DESC, title ASC, id ASC',
+				$table
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -362,20 +404,22 @@ if (!function_exists('vms_tasks_upsert_task_template')) {
 		);
 		$formats = array('%s', '%s', '%d', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s');
 
-		$template_id = absint($template_id);
-		if ($template_id > 0) {
-			$ok = $wpdb->update($table, $data, array('id' => $template_id), $formats, array('%d'));
-			if ($ok === false) {
-				return new WP_Error('vms_tasks_template_update_failed', __('Failed to update task template.', 'backstage-venue-manager'));
+			$template_id = absint($template_id);
+			if ($template_id > 0) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks task-template updates mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
+				$ok = $wpdb->update($table, $data, array('id' => $template_id), $formats, array('%d'));
+				if ($ok === false) {
+					return new WP_Error('vms_tasks_template_update_failed', __('Failed to update task template.', 'backstage-venue-manager'));
 			}
 			return $template_id;
-		}
+			}
 
-		$data['created_at'] = $now;
-		$formats[] = '%s';
-		$ok = $wpdb->insert($table, $data, $formats);
-		if ($ok !== 1) {
-			return new WP_Error('vms_tasks_template_insert_failed', __('Failed to create task template.', 'backstage-venue-manager'));
+			$data['created_at'] = $now;
+			$formats[] = '%s';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staff Tasks task-template inserts persist normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
+			$ok = $wpdb->insert($table, $data, $formats);
+			if ($ok !== 1) {
+				return new WP_Error('vms_tasks_template_insert_failed', __('Failed to create task template.', 'backstage-venue-manager'));
 		}
 		return (int) $wpdb->insert_id;
 	}
@@ -391,10 +435,14 @@ if (!function_exists('vms_tasks_get_checklist_template')) {
 		if ($table === '' || $checklist_id <= 0) {
 			return null;
 		}
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d LIMIT 1", $checklist_id), ARRAY_A);
-		return is_array($row) ? $row : null;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template reads target a custom repository table with %i/%d-prepared identifiers and IDs, and checklist edits must remain immediately visible without a persistent cache layer.
+			$row = $wpdb->get_row(
+				$wpdb->prepare('SELECT * FROM %i WHERE id = %d LIMIT 1', $table, $checklist_id),
+				ARRAY_A
+			);
+			return is_array($row) ? $row : null;
+		}
 	}
-}
 
 if (!function_exists('vms_tasks_get_checklist_templates')) {
 	/**
@@ -409,26 +457,115 @@ if (!function_exists('vms_tasks_get_checklist_templates')) {
 			return array();
 		}
 
-		$where = array('1=1');
-		$args = array();
-		if (array_key_exists('is_active', $filters)) {
-			$where[] = 'is_active = %d';
-			$args[] = !empty($filters['is_active']) ? 1 : 0;
-		}
-		if (!empty($filters['apply_mode'])) {
-			$where[] = 'apply_mode = %s';
-			$args[] = vms_tasks_sanitize_apply_mode((string) $filters['apply_mode']);
-		}
-		if (!empty($filters['scope'])) {
-			$where[] = 'scope = %s';
-			$args[] = vms_tasks_sanitize_scope((string) $filters['scope']);
+		$has_is_active = array_key_exists('is_active', $filters);
+		$is_active = $has_is_active && !empty($filters['is_active']) ? 1 : 0;
+		$apply_mode = !empty($filters['apply_mode']) ? vms_tasks_sanitize_apply_mode((string) $filters['apply_mode']) : '';
+		$scope = !empty($filters['scope']) ? vms_tasks_sanitize_scope((string) $filters['scope']) : '';
+
+		if ($has_is_active && $apply_mode !== '' && $scope !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND is_active = %d AND apply_mode = %s AND scope = %s ORDER BY is_active DESC, priority_order ASC, id ASC',
+					$table,
+					$is_active,
+					$apply_mode,
+					$scope
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
 		}
 
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY is_active DESC, priority_order ASC, id ASC';
-		if (!empty($args)) {
-			$sql = $wpdb->prepare($sql, $args);
+		if ($has_is_active && $apply_mode !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND is_active = %d AND apply_mode = %s ORDER BY is_active DESC, priority_order ASC, id ASC',
+					$table,
+					$is_active,
+					$apply_mode
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
 		}
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+
+		if ($has_is_active && $scope !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND is_active = %d AND scope = %s ORDER BY is_active DESC, priority_order ASC, id ASC',
+					$table,
+					$is_active,
+					$scope
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
+		}
+
+		if ($has_is_active) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND is_active = %d ORDER BY is_active DESC, priority_order ASC, id ASC',
+					$table,
+					$is_active
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
+		}
+
+		if ($apply_mode !== '' && $scope !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND apply_mode = %s AND scope = %s ORDER BY is_active DESC, priority_order ASC, id ASC',
+					$table,
+					$apply_mode,
+					$scope
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
+		}
+
+		if ($apply_mode !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND apply_mode = %s ORDER BY is_active DESC, priority_order ASC, id ASC',
+					$table,
+					$apply_mode
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
+		}
+
+		if ($scope !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE 1=1 AND scope = %s ORDER BY is_active DESC, priority_order ASC, id ASC',
+					$table,
+					$scope
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template lists read a custom repository with prepared identifier/filter values, and admin pages must reflect checklist mutations immediately.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE 1=1 ORDER BY is_active DESC, priority_order ASC, id ASC',
+				$table
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -487,20 +624,22 @@ if (!function_exists('vms_tasks_upsert_checklist_template')) {
 		);
 		$formats = array('%s', '%d', '%d', '%s', '%s', '%d', '%s', '%s');
 
-		$checklist_id = absint($checklist_id);
-		if ($checklist_id > 0) {
-			$ok = $wpdb->update($table, $data, array('id' => $checklist_id), $formats, array('%d'));
-			if ($ok === false) {
-				return new WP_Error('vms_tasks_checklist_update_failed', __('Failed to update checklist template.', 'backstage-venue-manager'));
+			$checklist_id = absint($checklist_id);
+			if ($checklist_id > 0) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-template updates mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
+				$ok = $wpdb->update($table, $data, array('id' => $checklist_id), $formats, array('%d'));
+				if ($ok === false) {
+					return new WP_Error('vms_tasks_checklist_update_failed', __('Failed to update checklist template.', 'backstage-venue-manager'));
 			}
 			return $checklist_id;
-		}
+			}
 
-		$data['created_at'] = vms_tasks_now_utc_mysql();
-		$formats[] = '%s';
-		$ok = $wpdb->insert($table, $data, $formats);
-		if ($ok !== 1) {
-			return new WP_Error('vms_tasks_checklist_insert_failed', __('Failed to create checklist template.', 'backstage-venue-manager'));
+			$data['created_at'] = vms_tasks_now_utc_mysql();
+			$formats[] = '%s';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staff Tasks checklist-template inserts persist normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
+			$ok = $wpdb->insert($table, $data, $formats);
+			if ($ok !== 1) {
+				return new WP_Error('vms_tasks_checklist_insert_failed', __('Failed to create checklist template.', 'backstage-venue-manager'));
 		}
 		return (int) $wpdb->insert_id;
 	}
@@ -522,7 +661,8 @@ if (!function_exists('vms_tasks_replace_checklist_items')) {
 		$checklist = vms_tasks_get_checklist_template($checklist_id);
 		$checklist_scope = vms_tasks_sanitize_scope((string) ($checklist['scope'] ?? 'event'));
 
-		$wpdb->delete($table, array('checklist_id' => $checklist_id), array('%d'));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-item replacement clears the custom child rows directly before reinserting the normalized ordered set, and no persistent cache contract safely spans this mutation batch.
+			$wpdb->delete($table, array('checklist_id' => $checklist_id), array('%d'));
 
 		$sort_order = 0;
 		foreach ($items as $item) {
@@ -561,10 +701,11 @@ if (!function_exists('vms_tasks_replace_checklist_items')) {
 				$payload['due_offset_minutes'] = (int) $overrides['due_offset_minutes'];
 			}
 
-			$wpdb->insert(
-				$table,
-				array(
-					'checklist_id' => $checklist_id,
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staff Tasks checklist-item replacement persists normalized child rows through wpdb::insert(); no core API preserves this checklist repository contract.
+				$wpdb->insert(
+					$table,
+					array(
+						'checklist_id' => $checklist_id,
 					'task_template_id' => $template_id,
 					'sort_order' => isset($item['sort_order']) ? (int) $item['sort_order'] : $sort_order,
 					'overrides_json' => !empty($payload) ? wp_json_encode($payload) : null,
@@ -781,15 +922,20 @@ if (!function_exists('vms_tasks_get_checklist_items')) {
 			return array();
 		}
 
-		$sql = $wpdb->prepare(
-			"SELECT ci.*, tt.title AS template_title, tt.is_active AS template_active, tt.scope AS template_scope
-			 FROM {$t_items} ci
-			 LEFT JOIN {$t_templates} tt ON tt.id = ci.task_template_id
-			 WHERE ci.checklist_id = %d
-			 ORDER BY ci.sort_order ASC, ci.id ASC",
-			$checklist_id
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-item reads join custom repository tables with %i/%d-prepared identifiers and must remain request-fresh after checklist and template edits.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT ci.*, tt.title AS template_title, tt.is_active AS template_active, tt.scope AS template_scope
+				 FROM %i ci
+				 LEFT JOIN %i tt ON tt.id = ci.task_template_id
+				 WHERE ci.checklist_id = %d
+				 ORDER BY ci.sort_order ASC, ci.id ASC',
+				$t_items,
+				$t_templates,
+				$checklist_id
+			),
+			ARRAY_A
 		);
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		if (!is_array($rows)) {
 			return array();
 		}
@@ -820,27 +966,61 @@ if (!function_exists('vms_tasks_get_applicable_checklists')) {
 
 		$event_type = sanitize_key($event_type);
 		$venue_id = absint($venue_id);
+		$has_venue = $venue_id > 0;
+		$has_event_type = $event_type !== '';
 
-		$where = array('is_active = 1', "scope = 'event'");
-		$args = array();
-		$where_modes = array("apply_mode = 'default_all_events'");
-		if ($venue_id > 0) {
-			$where_modes[] = '(apply_mode = %s AND venue_id = %d)';
-			$args[] = 'by_venue';
-			$args[] = $venue_id;
+		if ($has_venue && $has_event_type) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks applicable-checklist selection reads a custom repository with prepared identifier/filter values, and generator/admin consumers must see checklist applicability changes immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE is_active = 1 AND scope = \'event\' AND (apply_mode = \'default_all_events\' OR (apply_mode = %s AND venue_id = %d) OR (apply_mode = %s AND event_type = %s)) ORDER BY priority_order ASC, id ASC',
+					$table,
+					'by_venue',
+					$venue_id,
+					'by_event_type',
+					$event_type
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
 		}
-		if ($event_type !== '') {
-			$where_modes[] = '(apply_mode = %s AND event_type = %s)';
-			$args[] = 'by_event_type';
-			$args[] = $event_type;
-		}
-		$where[] = '(' . implode(' OR ', $where_modes) . ')';
 
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY priority_order ASC, id ASC';
-		if (!empty($args)) {
-			$sql = $wpdb->prepare($sql, $args);
+		if ($has_venue) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks applicable-checklist selection reads a custom repository with prepared identifier/filter values, and generator/admin consumers must see checklist applicability changes immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE is_active = 1 AND scope = \'event\' AND (apply_mode = \'default_all_events\' OR (apply_mode = %s AND venue_id = %d)) ORDER BY priority_order ASC, id ASC',
+					$table,
+					'by_venue',
+					$venue_id
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
 		}
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+
+		if ($has_event_type) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks applicable-checklist selection reads a custom repository with prepared identifier/filter values, and generator/admin consumers must see checklist applicability changes immediately.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE is_active = 1 AND scope = \'event\' AND (apply_mode = \'default_all_events\' OR (apply_mode = %s AND event_type = %s)) ORDER BY priority_order ASC, id ASC',
+					$table,
+					'by_event_type',
+					$event_type
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks applicable-checklist selection reads a custom repository with prepared identifier/filter values, and generator/admin consumers must see checklist applicability changes immediately.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE is_active = 1 AND scope = \'event\' AND (apply_mode = \'default_all_events\') ORDER BY priority_order ASC, id ASC',
+				$table
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }

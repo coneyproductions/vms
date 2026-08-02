@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, and `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1149`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G8`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, and `WPORG-28R-G8-T1` removed the first `48` Staff Tasks DB/SQL rows. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1101`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G8-T2`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4057,9 +4057,10 @@ Date: 2026-08-01
 
 ### Current G8 State
 
-- `WPORG-28R-G8` now moves to `in progress` with no runtime delta yet; only the finite decomposition and supporting evidence were added in this slice
-- Exact selected first implementation child: `WPORG-28R-G8-T1 — Staff Tasks template, checklist, and admin selector repositories`
-- Child-order rationale: `T1` is the smallest safe opener because the touched functions are byte-identical across mirror/live, the slice stays inside bounded Staff Tasks store abstractions plus one schema probe and one selector helper, and it avoids the policy-heavy slow-meta decisions deferred to `T5`; `T2` follows `T1` because it reuses the same store abstractions, `T3` must land before `T4` because the later staffing matrix/rollup work consumes the same slot and assignment repository contracts, and `T5` stays last because it is the most policy- and architecture-sensitive slice
+- `WPORG-28R-G8` remains `in progress`; the docs-only decomposition is still the governing roadmap, and verified child `WPORG-28R-G8-T1` later removed the first `48` rows across `13` boundaries.
+- Current remaining G8 inventory: `185` rows across `39` boundaries with `UnescapedDBParameter 29`, `DirectQuery 54`, `NoCaching 46`, `InterpolatedNotPrepared 30`, `NotPrepared 10`, `slow_meta_key 7`, `slow_meta_query 6`, and `slow_meta_value 3`.
+- Exact next implementation child: `WPORG-28R-G8-T2 — Task-instance assignment, supersession, and staff-portal read models`
+- Child-order rationale: `T1` proved to be the smallest safe opener because the touched functions were byte-identical across mirror/live, the slice stayed inside bounded Staff Tasks store abstractions plus one schema probe and one selector helper, and it avoided the policy-heavy slow-meta decisions deferred to `T5`; `T2` follows because it reuses the same store abstractions, `T3` must land before `T4` because the later staffing matrix/rollup work consumes the same slot and assignment repository contracts, and `T5` stays last because it is the most policy- and architecture-sensitive slice
 - Planning-only future target after a complete successful G8 closeout: remaining DB/SQL blockers `849` and projected overall blockers `916`; these are completion targets only, not current results
 - `WPORG-28R` remains blocked, `WPORG-28R-G6` remains terminally verified, and `WPORG-28R-G7` remains retired
 
@@ -4067,6 +4068,52 @@ Date: 2026-08-01
 
 - No runtime PHP, tests, assets, build scripts, package metadata, or sibling live-tree files were modified
 - No SQL remediation, cache logic, PHPCS suppressions, schema/index work, migrations, mirror/live synchronization, staging, push, tag, deployment, upload, submission, reviewer reply, activation, deactivation, or stash mutation occurred
+
+## WPORG-28R-G8-T1 Result
+
+Date: 2026-08-01
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G8-T1`
+- Scope completed in this slice: only the Staff Tasks template, checklist, and admin selector repositories in `includes/modules/staff-tasks/store.php`, `includes/modules/staff-tasks/admin-ui.php`, and `includes/modules/staff-tasks/db.php`, plus the synchronized live counterparts under `../../vms/`
+- Owned packaged rows: `48 -> 0`
+- Distinct boundaries: `13 -> 0`
+- Exact rule distribution: `UnescapedDBParameter 7`, `DirectQuery 16`, `NoCaching 12`, `InterpolatedNotPrepared 6`, and `NotPrepared 7`
+- Evidence directory: `/tmp/wporg-28rg8-t1-work.2rY5sN`
+- Mirror/live boundary: `store.php` and `db.php` stayed byte-identical across mirror/live after the edits; `admin-ui.php` still diverges only outside the owned selector helper, and every untouched live region stayed preserved
+
+### Runtime And Test Changes
+
+- Completed bounded identifier and preparation handling across the `11` owned `store.php` helpers, including explicit branch SQL construction in the list and applicability readers so Plugin Check no longer flags unfinished preparation on the built query strings.
+- Updated `vms_tasks_admin_get_event_type_options()` to query the allowlisted `%i` `postmeta` identifier with line-local `DirectQuery` / `NoCaching` justification.
+- Updated `vms_tasks_db_ready()` to probe Staff Tasks table existence with `SHOW TABLES LIKE %s` against `esc_like($table)` and line-local `DirectQuery` / `NoCaching` justification.
+- Added and expanded `tests/staff-tasks-repository-sql-remediation.php` to assert exact SQL shapes, argument ordering, suppression inventory, and mirror/live target parity.
+
+### Verification
+
+- Focused suite passed: `php tests/staff-tasks-repository-sql-remediation.php`.
+- Support reruns passed: `php tests/staff-tasks-overrides-json-remediation.php`, `php tests/staff-tasks-signature-json-remediation.php`, `php tests/authorization-boundary-hardening.php`, `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`.
+- PHP lint passed for mirror/live `store.php`, `admin-ui.php`, and `db.php`, plus `tests/staff-tasks-repository-sql-remediation.php`; `git diff --check` also passed.
+- Post-edit package command: `php scripts/build-public-release.php --output-dir '/tmp/wporg-28rg8-t1-work.2rY5sN/post-build-final.1785626108' --allow-dirty --force`
+- Post-edit package result: `/tmp/wporg-28rg8-t1-work.2rY5sN/post-build-final.1785626108/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `318fc1c913f664a9778eaeedf8a88816eab44444a2cba8a47ecb753c788486a8`
+- Post-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 /opt/homebrew/bin/wp --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg8-t1-work.2rY5sN/post-plugin-check-final.1785626169/extracted.1785626169/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Post-edit packaged Plugin Check result: exit `0`, empty stderr, `254` errors, `976` warnings, `1230` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1101`; `plugin-list.cmp=0`, and the final strict JSON is `/tmp/wporg-28rg8-t1-work.2rY5sN/post-plugin-check-final.1785626169/plugin-check.strict.json`.
+- Exact T1 code deltas: `UnescapedDBParameter 143 -> 136 (-7)`, `DirectQuery 298 -> 282 (-16)`, `NoCaching 260 -> 248 (-12)`, `InterpolatedNotPrepared 137 -> 131 (-6)`, and `NotPrepared 67 -> 60 (-7)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no unrelated blocker family increased.
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G8-T1`: DB/SQL `1034`, nonce/input `0`, date/time `25`, and logging `42`.
+- `WPORG-28R-G8-T1` is terminal under `verified`.
+- `WPORG-28R-G8` remains `in progress` with `185` rows across `39` boundaries; the remaining G8 rule mix is `UnescapedDBParameter 29`, `DirectQuery 54`, `NoCaching 46`, `InterpolatedNotPrepared 30`, `NotPrepared 10`, `slow_meta_key 7`, `slow_meta_query 6`, and `slow_meta_value 3`.
+- Exact next implementation child: `WPORG-28R-G8-T2 — Task-instance assignment, supersession, and staff-portal read models`.
+- `WPORG-28R` remains blocked until `WPORG-28R-G8-T2` through `WPORG-28R-G17` close and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+
+### Non-Actions
+
+- No runtime outside the authorized mirror/live Staff Tasks files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this child.
+- No commit, push, tag, deployment, upload, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
 
 Date: 2026-07-21
 

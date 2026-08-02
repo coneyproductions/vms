@@ -47,14 +47,16 @@ if (!function_exists('vms_tasks_db_ready')) {
 			vms_tasks_table_name('task_logs'),
 		);
 
-		foreach ($required as $table) {
-			if ($table === '') {
-				return false;
-			}
-			$exists = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
-			if ($exists !== $table) {
-				return false;
-			}
+			foreach ($required as $table) {
+				if ($table === '') {
+					return false;
+				}
+				$table_like = $wpdb->esc_like($table);
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks schema readiness probes custom tables directly because no core API exposes these module tables, and upgrade/runtime checks must observe the latest schema state.
+				$exists = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_like));
+				if ($exists !== $table) {
+					return false;
+				}
 		}
 
 		return true;
