@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, `WPORG-28R-G8-T1` removed the first `48` Staff Tasks DB/SQL rows, and `WPORG-28R-G8-T2` removed the next `53` task-instance and staff-portal rows. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=1048`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G8-T3`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, and `WPORG-28R-G8-T1` through `WPORG-28R-G8-T3` then removed `163` Staff Tasks and staffing DB/SQL rows across `37` boundaries. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=986`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G8-T4`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4162,6 +4162,54 @@ Date: 2026-08-02
 ### Non-Actions
 
 - No runtime outside the authorized mirror/live Staff Tasks and Staff Portal files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this child.
+- No commit, push, tag, deployment, upload, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
+
+## WPORG-28R-G8-T3 Result
+
+Date: 2026-08-02
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G8-T3`
+- Scope completed in this slice: only the staffing template and event-slot repositories in mirror/live `includes/core/staffing.php`, plus the new focused verification inventory in `tests/staffing-repository-sql-remediation.php`
+- Owned packaged rows: `62 -> 0`
+- Distinct boundaries: `12 -> 0`
+- Exact rule distribution: `DirectQuery 21`, `InterpolatedNotPrepared 10`, `NoCaching 16`, `NotPrepared 4`, and `UnescapedDBParameter 11`
+- Evidence directory: `/tmp/wporg-28rg8-t3-work.qiAdPz`
+- Mirror/live boundary: the full `staffing.php` files still diverge outside the owned functions, but the extracted target-function bundles remained byte-identical after sync, the parity `cmp` passed, and the line-local patch preserved untouched live regions
+
+### Runtime And Test Changes
+
+- Normalized the attendance-band and activation-threshold schema probes to inline prepared `%i` `DESC` queries with line-local `DirectQuery` and `NoCaching` justification while keeping the audit-log insert as a documented direct custom-table write.
+- Reworked the staffing template, template-slot, and event-slot repository reads to prepared `%i` and sentinel-filter queries, including the bounded prepared assignment `IN (...)` hydration path and the active-slot count gate used by the template seeding lifecycle.
+- Preserved the direct custom-table mutation paths for template save, delete, apply, slot sync, and seed lifecycles, but narrowed every retained `wpdb::insert()`, `wpdb::update()`, and `wpdb::query()` justification to the exact line-local custom-table boundary.
+- Added `tests/staffing-repository-sql-remediation.php` to freeze the exact 21 T3 suppression rows, reject unknown suppressions, prove mirror/live parity for the 12 owned functions, and exercise the runtime template, slot, assignment, sync, and seeding contracts without reopening `T1` or `T2`.
+
+### Verification
+
+- Focused suites passed: `php tests/staffing-repository-sql-remediation.php`, `php tests/staff-task-instance-and-portal-repository-sql-remediation.php`, and `php tests/staff-tasks-repository-sql-remediation.php`.
+- Support reruns passed: `php tests/staff-tasks-overrides-json-remediation.php`, `php tests/staff-tasks-signature-json-remediation.php`, `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/authorization-boundary-hardening.php`, `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`.
+- PHP lint passed for mirror/live `staffing.php` and `tests/staffing-repository-sql-remediation.php`.
+- Post-edit package command: `php scripts/build-public-release.php --output-dir '/tmp/wporg-28rg8-t3-work.qiAdPz/post-build-final.1785651766' --allow-dirty --force`
+- Post-edit package result: `/tmp/wporg-28rg8-t3-work.qiAdPz/post-build-final.1785651766/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `8fb40748ecd07c761db9971a2136d34c8841341214354f324280c79e5f9dff82`
+- Post-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 /opt/homebrew/bin/wp --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg8-t3-work.qiAdPz/plugin-check-post-final.1785651766/extracted.1785651766/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Post-edit packaged Plugin Check result: exit `0`, empty stderr, `239` errors, `876` warnings, `1115` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=986`; `plugin-list.cmp=0`, and the final strict JSON is `/tmp/wporg-28rg8-t3-work.qiAdPz/plugin-check-post-final.1785651766/plugin-check.strict.json`.
+- Exact T3 code deltas: `UnescapedDBParameter 128 -> 117 (-11)`, `DirectQuery 267 -> 246 (-21)`, `NoCaching 234 -> 218 (-16)`, `InterpolatedNotPrepared 123 -> 113 (-10)`, and `NotPrepared 54 -> 50 (-4)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no unrelated blocker family increased.
+- Current packaged target-row audit at `/tmp/wporg-28rg8-t3-work.qiAdPz/plugin-check-post-final.1785651766/t3-post-summary.tsv` proves `owned_rows=0` and `owned_boundaries=0`.
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G8-T3`: DB/SQL `919`, nonce/input `0`, date/time `25`, and logging `42`.
+- `WPORG-28R-G8-T1`, `WPORG-28R-G8-T2`, and `WPORG-28R-G8-T3` are terminal under `verified`.
+- `WPORG-28R-G8` remains `in progress` with `70` rows across `15` boundaries; the remaining G8 rule mix is `UnescapedDBParameter 10`, `DirectQuery 18`, `NoCaching 16`, `InterpolatedNotPrepared 12`, `slow_meta_key 6`, `slow_meta_query 6`, and `slow_meta_value 2`.
+- Exact next implementation child: `WPORG-28R-G8-T4 — Staffing matrix, rollup, and reporting repositories`.
+- Preserved mapping note: the preserved `g8-boundaries.tsv` still assigns `G8-B002` to `vms_staff_user_link_metabox_render()` lines `26-79`, but the current packaged slow-meta query is the later `save_post_vms_staff` closure at line `131`; that stale mapping does not affect `T1`, `T2`, or `T3` ownership counts.
+- `WPORG-28R` remains blocked until `WPORG-28R-G8-T4` through `WPORG-28R-G17` close and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+
+### Non-Actions
+
+- No runtime outside the authorized mirror/live `staffing.php` files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this child.
 - No commit, push, tag, deployment, upload, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
 
 Date: 2026-07-21

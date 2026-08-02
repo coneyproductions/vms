@@ -43,7 +43,8 @@ if (!function_exists('vms_staffing_templates_have_attendance_band_columns')) {
 			return false;
 		}
 
-		$columns = $wpdb->get_col("DESC {$table}", 0);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- This request-local DESC probe gates custom-table compatibility behavior; no core API exposes the schema state and stale cache risks masking migrations.
+		$columns = $wpdb->get_col($wpdb->prepare('DESC %i', $table), 0);
 		if (!is_array($columns) || empty($columns)) {
 			return false;
 		}
@@ -86,7 +87,8 @@ if (!function_exists('vms_staffing_template_slots_have_activation_threshold_colu
 			return false;
 		}
 
-		$columns = $wpdb->get_col("DESC {$table}", 0);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- This request-local DESC probe gates custom template-slot compatibility behavior; no core API exposes the schema state and stale cache risks masking migrations.
+		$columns = $wpdb->get_col($wpdb->prepare('DESC %i', $table), 0);
 		if (!is_array($columns) || empty($columns)) {
 			return false;
 		}
@@ -1226,6 +1228,7 @@ if (!function_exists('vms_staffing_audit_log')) {
 			$actor_user_id = null;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staffing audit snapshots persist to a plugin-owned custom table through wpdb::insert(); no core API preserves this repository contract.
 		$wpdb->insert(
 			$table,
 			array(
@@ -1248,22 +1251,21 @@ if (!function_exists('vms_staffing_get_templates')) {
 		$t = vms_staffing_table_name('templates');
 		if ($t === '') return array();
 
-		$where = array('1=1');
-		$args = array();
-		if (array_key_exists('is_active', $filters)) {
-			$where[] = 'is_active = %d';
-			$args[] = !empty($filters['is_active']) ? 1 : 0;
-		}
-		if (array_key_exists('auto_apply', $filters)) {
-			$where[] = 'auto_apply_on_event_create = %d';
-			$args[] = !empty($filters['auto_apply']) ? 1 : 0;
-		}
+		$is_active_filter = array_key_exists('is_active', $filters) ? (!empty($filters['is_active']) ? 1 : 0) : -1;
+		$auto_apply_filter = array_key_exists('auto_apply', $filters) ? (!empty($filters['auto_apply']) ? 1 : 0) : -1;
 
-		$sql = "SELECT * FROM {$t} WHERE " . implode(' AND ', $where) . " ORDER BY priority DESC, template_id ASC";
-		if (!empty($args)) {
-			$sql = $wpdb->prepare($sql, $args);
-		}
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template lists read a custom repository with %i/%d-prepared identifiers and filters, and template edits must remain immediately visible without a persistent cache layer.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE (%d = -1 OR is_active = %d) AND (%d = -1 OR auto_apply_on_event_create = %d) ORDER BY priority DESC, template_id ASC',
+				$t,
+				$is_active_filter,
+				$is_active_filter,
+				$auto_apply_filter,
+				$auto_apply_filter
+			),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -1278,7 +1280,8 @@ if (!function_exists('vms_staffing_get_template')) {
 		$t = vms_staffing_table_name('templates');
 		if ($t === '') return null;
 
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$t} WHERE template_id = %d", $template_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template reads target a custom repository table with %i/%d-prepared identifiers and IDs, and template edits must remain immediately visible without a persistent cache layer.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE template_id = %d', $t, $template_id), ARRAY_A);
 		if (!is_array($row)) return null;
 
 		$row['slots'] = vms_staffing_get_template_slots($template_id);
@@ -1300,7 +1303,9 @@ if (!function_exists('vms_staffing_delete_template')) {
 		$actor_user_id = $actor_user_id !== null ? absint($actor_user_id) : absint(get_current_user_id());
 		$before = vms_staffing_get_template($template_id);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template deletion clears custom child rows directly before deleting the parent repository row, and no persistent cache contract safely spans this mutation pair.
 		$wpdb->delete($t_slot, array('template_id' => $template_id), array('%d'));
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template deletion removes the plugin-owned parent repository row directly; no core API preserves this two-step cascade behavior.
 		$deleted = $wpdb->delete($t_tpl, array('template_id' => $template_id), array('%d'));
 		if ($deleted) {
 			vms_staffing_audit_log('template_delete', null, is_array($before) ? $before : array(), array('template_id' => $template_id), $actor_user_id);
@@ -1320,8 +1325,11 @@ if (!function_exists('vms_staffing_get_template_slots')) {
 		$t = vms_staffing_table_name('template_slots');
 		if ($t === '') return array();
 
-		$sql = $wpdb->prepare("SELECT * FROM {$t} WHERE template_id = %d ORDER BY template_slot_id ASC", $template_id);
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template-slot reads target a custom repository table with %i/%d-prepared identifiers, and template edits must remain immediately visible without a persistent cache layer.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare('SELECT * FROM %i WHERE template_id = %d ORDER BY template_slot_id ASC', $t, $template_id),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -1451,6 +1459,7 @@ if (!function_exists('vms_staffing_save_template')) {
 
 		$now = vms_staffing_now_mysql_utc();
 		if ($template_id > 0) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template updates mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
 			$wpdb->update(
 				$t_tpl,
 				array(
@@ -1471,6 +1480,7 @@ if (!function_exists('vms_staffing_save_template')) {
 				array('%d')
 			);
 		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staffing template inserts persist normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
 			$wpdb->insert(
 				$t_tpl,
 				array(
@@ -1497,8 +1507,10 @@ if (!function_exists('vms_staffing_save_template')) {
 			return array('ok' => false, 'error' => 'save_failed');
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template saves replace the ordered custom child rows directly before reinserting the normalized slot set, and no persistent cache contract safely spans this mutation batch.
 		$wpdb->delete($t_slot, array('template_id' => $template_id), array('%d'));
 		foreach ($slots as $slot) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staffing template saves persist normalized custom child rows through wpdb::insert(); no core API preserves this ordered slot repository contract.
 			$wpdb->insert(
 				$t_slot,
 				array(
@@ -1714,13 +1726,16 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 			foreach ($existing_slots as $slot) {
 				$slot_id = isset($slot['slot_id']) ? absint($slot['slot_id']) : 0;
 				if ($slot_id <= 0) continue;
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template replacement cancels active assignment rows in the plugin-owned repository before reseeding slots, and no persistent cache contract safely spans this mutation batch.
 				$wpdb->query($wpdb->prepare(
-					"UPDATE {$t_asn} SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
+					"UPDATE %i SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
+					$t_asn,
 					vms_staffing_now_mysql_utc(),
 					$actor_user_id > 0 ? $actor_user_id : 0,
 					$slot_id
 				));
 			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template replacement clears the existing event-slot repository rows directly before reseeding the normalized set, and no persistent cache contract safely spans this mutation batch.
 			$wpdb->delete($t_slot, array('event_plan_id' => $event_plan_id), array('%d'));
 			$existing_by_role = array();
 			$thresholds = array();
@@ -1742,6 +1757,7 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 				continue;
 			}
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Template application persists normalized event-slot rows through wpdb::insert(); no core API preserves this staffing repository lifecycle.
 			$wpdb->insert(
 				$t_slot,
 				array(
@@ -1946,15 +1962,18 @@ if (!function_exists('vms_staffing_sync_assignment_shift_timestamps_for_slot')) 
 		$t_asn = vms_staffing_table_name('assignments');
 		if ($t_slot === '' || $t_asn === '') return;
 
-		$slot = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$t_slot} WHERE slot_id = %d", $slot_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Slot timestamp sync reads one custom repository row with %i/%d-prepared identifiers and IDs, and assignment updates must observe immediate slot edits.
+		$slot = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE slot_id = %d', $t_slot, $slot_id), ARRAY_A);
 		if (!is_array($slot) || empty($slot['event_plan_id'])) return;
 
 		$window = vms_staffing_resolve_slot_window((int) $slot['event_plan_id'], $slot);
 		$start_ts = isset($window['start_ts']) ? $window['start_ts'] : null;
 		$end_ts = isset($window['end_ts']) ? $window['end_ts'] : null;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Slot timestamp sync mutates the plugin-owned assignment repository directly after recalculating one slot window, and no persistent cache contract safely spans this immediate write path.
 		$wpdb->query($wpdb->prepare(
-			"UPDATE {$t_asn} SET shift_start_ts = %s, shift_end_ts = %s, updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
+			"UPDATE %i SET shift_start_ts = %s, shift_end_ts = %s, updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
+			$t_asn,
 			$start_ts !== null ? (string) (int) $start_ts : null,
 			$end_ts !== null ? (string) (int) $end_ts : null,
 			vms_staffing_now_mysql_utc(),
@@ -1975,12 +1994,17 @@ if (!function_exists('vms_staffing_get_event_slots')) {
 		$t_asn = vms_staffing_table_name('assignments');
 		if ($t_slot === '' || $t_asn === '') return array();
 
-		$sql = "SELECT * FROM {$t_slot} WHERE event_plan_id = %d";
-		if (!$include_canceled) {
-			$sql .= " AND status = 'active'";
-		}
-		$sql .= " ORDER BY slot_id ASC";
-		$slots = $wpdb->get_results($wpdb->prepare($sql, $event_plan_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Event-slot reads target a custom repository table with %i/%d-prepared identifiers and filters, and staffing/admin flows must observe request-fresh state after slot mutations.
+		$slots = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM %i WHERE event_plan_id = %d AND (%d = 1 OR status = %s) ORDER BY slot_id ASC",
+				$t_slot,
+				$event_plan_id,
+				$include_canceled ? 1 : 0,
+				'active'
+			),
+			ARRAY_A
+		);
 		if (!is_array($slots) || empty($slots)) return array();
 
 		$slot_ids = array_values(array_unique(array_filter(array_map(function ($s) {
@@ -1991,8 +2015,14 @@ if (!function_exists('vms_staffing_get_event_slots')) {
 
 		$assign_by_slot = array();
 		if (!empty($slot_ids)) {
-			$in = implode(',', array_map('intval', $slot_ids));
-			$rows = $wpdb->get_results("SELECT * FROM {$t_asn} WHERE slot_id IN ({$in}) ORDER BY assignment_id ASC", ARRAY_A);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Event-slot enrichment reads assignment rows from a custom repository with %i/%d-prepared identifiers and bounded slot IDs, and staffing/admin flows must observe request-fresh state after assignment mutations.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE slot_id IN (' . implode(', ', array_fill(0, count($slot_ids), '%d')) . ') ORDER BY assignment_id ASC',
+					array_merge(array($t_asn), $slot_ids)
+				),
+				ARRAY_A
+			);
 			if (is_array($rows)) {
 				foreach ($rows as $r) {
 					$sid = isset($r['slot_id']) ? absint($r['slot_id']) : 0;
@@ -2103,8 +2133,10 @@ if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
 
 		$actor_user_id = $actor_user_id !== null ? absint($actor_user_id) : absint(get_current_user_id());
 		if (!$force) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Seed gating reads the custom event-slot repository with %i/%d-prepared identifiers before inserting, and request-fresh state is required after slot mutations.
 			$count_active = (int) $wpdb->get_var($wpdb->prepare(
-				"SELECT COUNT(*) FROM {$t_slot} WHERE event_plan_id = %d AND status = 'active'",
+				"SELECT COUNT(*) FROM %i WHERE event_plan_id = %d AND status = 'active'",
+				$t_slot,
 				$event_plan_id
 			));
 			if ($count_active > 0) {
@@ -2140,6 +2172,7 @@ if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
 			$headcount = isset($row['base_headcount']) ? max(0, (int) $row['base_headcount']) : 0;
 			if ($headcount <= 0) continue;
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Template seeding persists normalized event-slot rows through wpdb::insert(); no core API preserves this staffing repository lifecycle.
 			$wpdb->insert(
 				$t_slot,
 				array(
