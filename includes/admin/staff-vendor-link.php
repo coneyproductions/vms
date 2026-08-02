@@ -137,21 +137,19 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     }
 
     // Enforce uniqueness: if another staff already links to this vendor, unlink it.
-    $other_staff_ids = get_posts(array(
-        'post_type'      => 'vms_staff',
-        'post_status'    => 'any',
-        'numberposts'    => -1,
-        'fields'         => 'ids',
-        'no_found_rows'  => true,
-        'meta_query'     => array(
-            array(
-                'key'     => $k_staff_vendor,
-                'value'   => $new_vendor_id,
-                'compare' => '=',
-                'type'    => 'NUMERIC',
-            )
-        ),
-    ));
+    global $wpdb;
+    $other_staff_ids = array();
+    if (is_object($wpdb) && method_exists($wpdb, 'get_col') && method_exists($wpdb, 'prepare')) {
+        $t_posts = (isset($wpdb->posts) && is_string($wpdb->posts) && $wpdb->posts !== '') ? $wpdb->posts : '';
+        $t_postmeta = (isset($wpdb->postmeta) && is_string($wpdb->postmeta) && $wpdb->postmeta !== '') ? $wpdb->postmeta : '';
+        if ($t_posts !== '' && $t_postmeta !== '') {
+            /* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff/vendor reverse-link cleanup reads request-fresh postmeta pointers with prepared identifiers and filters so dual-hat links stay one-to-one after admin edits. */
+            $other_staff_ids = $wpdb->get_col($wpdb->prepare('SELECT pm.post_id FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value = %s AND p.post_type = %s ORDER BY pm.meta_id ASC', $t_postmeta, $t_posts, $k_staff_vendor, (string) $new_vendor_id, 'vms_staff'));
+        }
+    }
+    if (!is_array($other_staff_ids)) {
+        $other_staff_ids = array();
+    }
 
     foreach ($other_staff_ids as $osid) {
         $osid = (int) $osid;

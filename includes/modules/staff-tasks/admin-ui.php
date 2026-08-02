@@ -496,14 +496,25 @@ if (!function_exists('vms_tasks_admin_get_event_options')) {
 				'post_status' => array('publish', 'private', 'draft', 'pending', 'future'),
 				'posts_per_page' => 200,
 				'fields' => 'ids',
-				'meta_key' => $k_date,
-				'orderby' => 'meta_value',
+				'orderby' => 'ID',
 				'order' => 'ASC',
 				'no_found_rows' => true,
 				'update_post_meta_cache' => true,
 				'update_post_term_cache' => false,
 			));
-			$event_ids = is_array($fallback_ids) ? $fallback_ids : array();
+			$event_ids = is_array($fallback_ids) ? array_values(array_filter(array_map('absint', $fallback_ids))) : array();
+			$event_dates = array();
+			foreach ($event_ids as $event_id) {
+				$event_date = trim((string) get_post_meta($event_id, $k_date, true));
+				if ($event_date !== '') {
+					$event_dates[$event_id] = $event_date;
+				}
+			}
+			$event_ids = array_keys($event_dates);
+			usort($event_ids, static function (int $left, int $right) use ($event_dates): int {
+				$cmp = strcmp($event_dates[$left], $event_dates[$right]);
+				return 0 !== $cmp ? $cmp : ($left <=> $right);
+			});
 		}
 
 		$venues = vms_tasks_admin_get_venues();

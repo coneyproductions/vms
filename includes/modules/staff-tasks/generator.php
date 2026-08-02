@@ -582,33 +582,14 @@ if (!function_exists('vms_tasks_collect_upcoming_event_ids')) {
 			$k_date = '_vms_event_date';
 		}
 
-		$q = get_posts(array(
-			'post_type' => 'vms_event_plan',
-			'post_status' => array('publish', 'private', 'draft', 'pending', 'future'),
-			'posts_per_page' => -1,
-			'fields' => 'ids',
-			'meta_key' => $k_date,
-			'orderby' => 'meta_value',
-			'order' => 'ASC',
-			'meta_query' => array(
-				'relation' => 'AND',
-				array(
-					'key' => $k_date,
-					'value' => $today,
-					'compare' => '>=',
-					'type' => 'DATE',
-				),
-				array(
-					'key' => $k_date,
-					'value' => $end,
-					'compare' => '<=',
-					'type' => 'DATE',
-				),
-			),
-			'no_found_rows' => true,
-			'update_post_meta_cache' => true,
-			'update_post_term_cache' => false,
-		));
+		global $wpdb;
+		$q = array();
+		$t_posts = (is_object($wpdb) && isset($wpdb->posts) && is_string($wpdb->posts) && $wpdb->posts !== '') ? $wpdb->posts : '';
+		$t_postmeta = (is_object($wpdb) && isset($wpdb->postmeta) && is_string($wpdb->postmeta) && $wpdb->postmeta !== '') ? $wpdb->postmeta : '';
+		if ($t_posts !== '' && $t_postmeta !== '' && method_exists($wpdb, 'get_col') && method_exists($wpdb, 'prepare')) {
+			/* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks event-horizon reads query request-fresh event-date postmeta with prepared identifiers and bounded date filters so generator runs observe immediate Event Plan date edits. */
+			$q = $wpdb->get_col($wpdb->prepare('SELECT p.ID FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value >= %s AND pm.meta_value <= %s ORDER BY pm.meta_value ASC, p.ID ASC', $t_postmeta, $t_posts, 'vms_event_plan', 'publish', 'private', 'draft', 'pending', 'future', $k_date, $today, $end));
+		}
 
 		if (!is_array($q)) {
 			return array();

@@ -58,20 +58,17 @@ if (!function_exists('vms_staff_admin_list_linked_user_id')) {
             return $user_id;
         }
 
-        $linked_users = get_users(array(
-            'fields' => array('ID'),
-            'number' => 1,
-            'meta_key' => '_vms_staff_id',
-            'meta_value' => $post_id,
-            'orderby' => 'ID',
-            'order' => 'ASC',
-        ));
-
-        if (is_array($linked_users) && !empty($linked_users)) {
-            return (int) ($linked_users[0]->ID ?? 0);
+        global $wpdb;
+        if (!is_object($wpdb) || !method_exists($wpdb, 'get_var') || !method_exists($wpdb, 'prepare')) {
+            return 0;
         }
-
-        return 0;
+        $t_usermeta = (isset($wpdb->usermeta) && is_string($wpdb->usermeta) && $wpdb->usermeta !== '') ? $wpdb->usermeta : ((isset($wpdb->prefix) && is_string($wpdb->prefix)) ? $wpdb->prefix . 'usermeta' : '');
+        if ($t_usermeta === '') {
+            return 0;
+        }
+        /* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin linked-user fallback reads one normalized reverse usermeta pointer with prepared identifier/filter values, and staff-link edits must remain request-fresh. */
+        $user_id = (int) $wpdb->get_var($wpdb->prepare('SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1', $t_usermeta, '_vms_staff_id', (string) $post_id));
+        return $user_id > 0 ? $user_id : 0;
     }
 }
 

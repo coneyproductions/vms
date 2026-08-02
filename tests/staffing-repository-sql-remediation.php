@@ -790,6 +790,12 @@ $expected_t4_inventory = array(
 	'includes/core/staffing.php:3779:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
+$expected_t5_inventory = array(
+	'includes/core/staffing.php:710:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3815:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3915:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+);
+
 $actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path, $staff_portal_path, $staffing_path));
 vms_test_reconcile_directquery_inventory_groups(
 	$actual_inventory,
@@ -798,6 +804,7 @@ vms_test_reconcile_directquery_inventory_groups(
 		't2' => $expected_t2_inventory,
 		't3' => $expected_t3_inventory,
 		't4' => $expected_t4_inventory,
+		't5' => $expected_t5_inventory,
 	)
 );
 $invented_inventory = $actual_inventory;
@@ -811,12 +818,13 @@ try {
 			't2' => $expected_t2_inventory,
 			't3' => $expected_t3_inventory,
 			't4' => $expected_t4_inventory,
+			't5' => $expected_t5_inventory,
 		)
 	);
 } catch (RuntimeException $exception) {
 	$negative_control_rejected = true;
 	vms_test_assert_contains(
-		'Every DirectQuery/NoCaching suppression must be classified as T1, T2, T3, or T4.',
+		'Every DirectQuery/NoCaching suppression must be classified as T1, T2, T3, T4, or T5.',
 		$exception->getMessage(),
 		'Synthetic negative control should fail because the invented suppression is unclassified.'
 	);

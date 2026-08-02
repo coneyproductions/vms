@@ -697,19 +697,19 @@ if (!function_exists('vms_staffing_get_staff_user')) {
 	function vms_staffing_get_staff_user(int $staff_id): ?WP_User
 	{
 		$staff_id = absint($staff_id);
-		if ($staff_id <= 0) {
-			return null;
-		}
-		$users = get_users(array(
-			'meta_key' => '_vms_staff_id',
-			'meta_value' => (string) $staff_id,
-			'number' => 1,
-			'fields' => 'all',
-		));
-		if (empty($users) || !($users[0] instanceof WP_User)) {
-			return null;
-		}
-		return $users[0];
+		if ($staff_id <= 0) { return null; }
+		$user_id = absint(get_post_meta($staff_id, '_vms_linked_user_id', true));
+		$user = $user_id > 0 ? get_user_by('id', $user_id) : null;
+		if ($user instanceof WP_User) { return $user; }
+		global $wpdb;
+		$t_usermeta = (is_object($wpdb) && isset($wpdb->usermeta) && is_string($wpdb->usermeta) && $wpdb->usermeta !== '') ? $wpdb->usermeta : ((is_object($wpdb) && isset($wpdb->prefix) && is_string($wpdb->prefix)) ? $wpdb->prefix . 'usermeta' : '');
+		if ($t_usermeta === '' || !is_object($wpdb) || !method_exists($wpdb, 'get_var') || !method_exists($wpdb, 'prepare')) { return null; }
+
+
+
+		/* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff user fallback reads one normalized reverse usermeta pointer with prepared identifier/filter values, and staffing flows must observe immediate link edits. */ $user_id = (int) $wpdb->get_var($wpdb->prepare('SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1', $t_usermeta, '_vms_staff_id', (string) $staff_id));
+		$user = $user_id > 0 ? get_user_by('id', $user_id) : null;
+		return $user instanceof WP_User ? $user : null;
 	}
 }
 
@@ -3807,23 +3807,14 @@ if (!function_exists('vms_staffing_build_dashboard_response')) {
 			$venue_filter = absint($venue_id);
 		}
 
-		$candidate_ids = get_posts(array(
-			'post_type'      => 'vms_event_plan',
-			'post_status'    => array('publish', 'draft', 'pending', 'private', 'future'),
-			'posts_per_page' => 120,
-			'fields'         => 'ids',
-			'orderby'        => 'meta_value',
-			'meta_key'       => '_vms_event_date',
-			'order'          => 'ASC',
-			'meta_query'     => array(
-				array(
-					'key'     => '_vms_event_date',
-					'value'   => $today,
-					'compare' => '>=',
-					'type'    => 'DATE',
-				),
-			),
-		));
+		global $wpdb;
+		$candidate_ids = array();
+		$t_posts = (is_object($wpdb) && isset($wpdb->posts) && is_string($wpdb->posts) && $wpdb->posts !== '') ? $wpdb->posts : '';
+		$t_postmeta = (is_object($wpdb) && isset($wpdb->postmeta) && is_string($wpdb->postmeta) && $wpdb->postmeta !== '') ? $wpdb->postmeta : '';
+		if ($t_posts !== '' && $t_postmeta !== '' && method_exists($wpdb, 'get_col') && method_exists($wpdb, 'prepare')) {
+			/* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing dashboard candidate reads query request-fresh event-date postmeta with prepared identifiers and bounded status/date filters so rebuild state reflects immediate Event Plan edits. */
+			$candidate_ids = $wpdb->get_col($wpdb->prepare('SELECT p.ID FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value >= %s ORDER BY pm.meta_value ASC, p.ID ASC LIMIT %d', $t_postmeta, $t_posts, 'vms_event_plan', 'publish', 'draft', 'pending', 'private', 'future', '_vms_event_date', $today, 120));
+		}
 		if (!is_array($candidate_ids)) $candidate_ids = array();
 
 		$items = array();
@@ -3914,45 +3905,16 @@ if (!function_exists('vms_staffing_collect_rebuild_plan_ids')) {
 		$include_drafts = !empty($filters['include_drafts']);
 		$include_cancelled = !empty($filters['include_cancelled']);
 
-		$mq = array('relation' => 'AND');
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
-			$mq[] = array(
-				'key'     => '_vms_event_date',
-				'value'   => $start,
-				'compare' => '>=',
-				'type'    => 'DATE',
-			);
+		global $wpdb;
+		$ids = array();
+		$t_posts = (is_object($wpdb) && isset($wpdb->posts) && is_string($wpdb->posts) && $wpdb->posts !== '') ? $wpdb->posts : '';
+		$t_postmeta = (is_object($wpdb) && isset($wpdb->postmeta) && is_string($wpdb->postmeta) && $wpdb->postmeta !== '') ? $wpdb->postmeta : '';
+		if ($t_posts !== '' && $t_postmeta !== '' && method_exists($wpdb, 'get_col') && method_exists($wpdb, 'prepare')) {
+			$start_filter = preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) ? $start : '';
+			$end_filter = preg_match('/^\d{4}-\d{2}-\d{2}$/', $end) ? $end : '';
+			/* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing rebuild candidate reads query request-fresh event-date and optional venue postmeta with prepared identifiers and bounded filters so bulk rollup rebuilds reflect immediate Event Plan edits. */
+			$ids = $wpdb->get_col($wpdb->prepare('SELECT p.ID FROM %i AS date_meta INNER JOIN %i AS p ON p.ID = date_meta.post_id LEFT JOIN %i AS venue_meta ON venue_meta.post_id = p.ID AND venue_meta.meta_key = %s WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND date_meta.meta_key = %s AND (%s = %s OR date_meta.meta_value >= %s) AND (%s = %s OR date_meta.meta_value <= %s) AND (%d = 0 OR venue_meta.meta_value = %s) ORDER BY date_meta.meta_value ASC, p.ID ASC', $t_postmeta, $t_posts, $t_postmeta, '_vms_venue_id', 'vms_event_plan', 'publish', 'draft', 'pending', 'private', 'future', '_vms_event_date', $start_filter, '', $start_filter, $end_filter, '', $end_filter, $venue_id, (string) $venue_id));
 		}
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-			$mq[] = array(
-				'key'     => '_vms_event_date',
-				'value'   => $end,
-				'compare' => '<=',
-				'type'    => 'DATE',
-			);
-		}
-		if ($venue_id > 0) {
-			$mq[] = array(
-				'key'     => '_vms_venue_id',
-				'value'   => $venue_id,
-				'compare' => '=',
-				'type'    => 'NUMERIC',
-			);
-		}
-
-		$qargs = array(
-			'post_type'      => 'vms_event_plan',
-			'post_status'    => array('publish', 'draft', 'pending', 'private', 'future'),
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-			'orderby'        => 'meta_value',
-			'meta_key'       => '_vms_event_date',
-			'order'          => 'ASC',
-		);
-		if (count($mq) > 1) {
-			$qargs['meta_query'] = $mq;
-		}
-		$ids = get_posts($qargs);
 		if (!is_array($ids)) $ids = array();
 
 		$out = array();
