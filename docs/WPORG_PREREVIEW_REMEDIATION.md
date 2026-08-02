@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, and `WPORG-28R-G8-T1` through `WPORG-28R-G8-T3` then removed `163` Staff Tasks and staffing DB/SQL rows across `37` boundaries. The current packaged residual baseline is now `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=986`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G8-T4`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, and `WPORG-28R-G8-T1` through `WPORG-28R-G8-T4` then removed `219` Staff Tasks and staffing DB/SQL rows across `43` boundaries. The current packaged residual baseline is now `239` errors, `820` warnings, `1059` total findings, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=930`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G8-T5`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4057,10 +4057,13 @@ Date: 2026-08-01
 
 ### Current G8 State
 
-- `WPORG-28R-G8` remains `in progress`; the docs-only decomposition is still the governing roadmap, and verified children `WPORG-28R-G8-T1` plus `WPORG-28R-G8-T2` later removed the first `101` rows across `25` boundaries.
-- Current remaining G8 inventory: `132` rows across `27` boundaries with `UnescapedDBParameter 21`, `DirectQuery 39`, `NoCaching 32`, `InterpolatedNotPrepared 22`, `NotPrepared 4`, `slow_meta_key 6`, `slow_meta_query 6`, and `slow_meta_value 2`.
-- Exact next implementation child: `WPORG-28R-G8-T3 — Staffing template and event-slot repositories`
-- Child-order rationale: `T1` proved to be the smallest safe opener because the touched functions were byte-identical across mirror/live, the slice stayed inside bounded Staff Tasks store abstractions plus one schema probe and one selector helper, and it avoided the policy-heavy slow-meta decisions deferred to `T5`; `T2` then reused the same store abstractions plus the portal read models, `T3` must land before `T4` because the later staffing matrix/rollup work consumes the same slot and assignment repository contracts, and `T5` stays last because it is the most policy- and architecture-sensitive slice
+- `WPORG-28R-G8` remains `in progress`; the docs-only decomposition is still the governing roadmap, and verified children `WPORG-28R-G8-T1` through `WPORG-28R-G8-T4` later removed the first `219` rows across `43` boundaries.
+- Current post-`T4` packaged baseline: `239` errors, `820` warnings, `1059` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=930`.
+- Current blocker-family totals after `WPORG-28R-G8-T4`: DB/SQL `863`, nonce/input `0`, date/time `25`, and logging `42`.
+- Current remaining G8 inventory: `14` rows across `9` boundaries with `slow_meta_key 6`, `slow_meta_query 6`, and `slow_meta_value 2`.
+- Exact next implementation child: `WPORG-28R-G8-T5 — Slow meta queries and reverse-link fallbacks`
+- Child-order rationale: `T1` proved to be the smallest safe opener because the touched functions were byte-identical across mirror/live, the slice stayed inside bounded Staff Tasks store abstractions plus one schema probe and one selector helper, `T2` then reused the same store abstractions plus the portal read models, `T3` had to land before `T4` because the later staffing matrix and rollup work consumes the same slot and assignment repository contracts, `T4` then closed the staffing matrix, dirty-mark, rollup, and reporting repositories, and `T5` stays last because it is the most policy- and architecture-sensitive slice.
+- Preserved mapping note: the preserved `g8-boundaries.tsv` still assigns `G8-B002` to `vms_staff_user_link_metabox_render()` lines `26-79`, but the current packaged slow-meta query is the later `save_post_vms_staff` closure at line `131`; the post-`T4` `T5` summary therefore uses `/tmp/wporg-28rg8-t4-work.4CeoYs/post-plugin-check-v2/current-boundary-ranges.tsv`, and the stale mapping does not affect `T1` through `T4` ownership counts.
 - Planning-only future target after a complete successful G8 closeout: remaining DB/SQL blockers `849` and projected overall blockers `916`; these are completion targets only, not current results
 - `WPORG-28R` remains blocked, `WPORG-28R-G6` remains terminally verified, and `WPORG-28R-G7` remains retired
 
@@ -4211,6 +4214,53 @@ Date: 2026-08-02
 
 - No runtime outside the authorized mirror/live `staffing.php` files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this child.
 - No commit, push, tag, deployment, upload, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
+
+## WPORG-28R-G8-T4 Result
+
+Date: 2026-08-02
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G8-T4`
+- Scope completed in this slice: only the staffing matrix, rollup, and reporting repositories in mirror/live `includes/core/staffing.php` and mirror/live `includes/admin/staffing.php`, plus the new focused suite `tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php` and the continuity inventory update in `tests/staffing-repository-sql-remediation.php`
+- Owned packaged rows: `56 -> 0`
+- Distinct boundaries: `6 -> 0`
+- Exact rule distribution: `DirectQuery 18`, `InterpolatedNotPrepared 12`, `NoCaching 16`, and `UnescapedDBParameter 10`
+- Evidence directory: `/tmp/wporg-28rg8-t4-work.4CeoYs`
+- Mirror/live boundary: the full admin and core staffing files still diverge outside the owned functions, but the T4 target-function bundles remained byte-identical after sync and the focused parity suite proves owned-function parity only
+
+### Runtime And Test Changes
+
+- Normalized the admissions headcount probe/read, staffing matrix slot and assignment repository reads, dirty-mark upsert, rollup recompute upsert, rollup read, and rollups-admin dirty-count read to prepared `%i` custom-table queries with narrow line-local `DirectQuery` / `NoCaching` justification where the custom-table boundary remains intentional.
+- Preserved the existing staffing mutation, cancellation, and rollup lifecycle behavior while converting the remaining interpolated table identifiers and bounded `IN (...)` assignment hydration path to explicit prepared SQL shapes.
+- Added `tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php` to classify the exact `T1` through `T4` suppression inventories, reject invented suppressions, enforce owned-function mirror/live parity for the `T4` boundaries, and exercise the rollup/reporting repository contracts without weakening the earlier `T1` through `T3` harnesses.
+
+### Verification
+
+- Focused suites passed: `php tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php`, `php tests/staffing-repository-sql-remediation.php`, `php tests/staff-task-instance-and-portal-repository-sql-remediation.php`, and `php tests/staff-tasks-repository-sql-remediation.php`.
+- Support reruns passed: `php tests/staff-tasks-overrides-json-remediation.php`, `php tests/staff-tasks-signature-json-remediation.php`, `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/authorization-boundary-hardening.php`, `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`.
+- PHP lint passed for mirror/live `includes/admin/staffing.php` and `includes/core/staffing.php`, plus `tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php` and `tests/staffing-repository-sql-remediation.php`.
+- Post-edit package command: `php scripts/build-public-release.php --output-dir '/tmp/wporg-28rg8-t4-work.4CeoYs/post-build-v2' --allow-dirty --force`
+- Post-edit package result: `/tmp/wporg-28rg8-t4-work.4CeoYs/post-build-v2/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `df54605b68647c4b503dc30795b8e78e0aa76eaff0300dd7e90e2f630b75c8c5`
+- Post-edit packaged Plugin Check command: `php -d error_reporting=0 -d display_errors=0 /opt/homebrew/bin/wp --path='/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public' --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check '/tmp/wporg-28rg8-t4-work.4CeoYs/post-plugin-check-v2/extracted.Ph30Ib/backstage-venue-manager' --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
+- Post-edit packaged Plugin Check result: exit `0`, empty stderr, `239` errors, `820` warnings, `1059` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=930`; the final strict JSON is `/tmp/wporg-28rg8-t4-work.4CeoYs/post-plugin-check-v2/plugin-check.strict.json`.
+- Exact `T4` code deltas: `UnescapedDBParameter 117 -> 107 (-10)`, `DirectQuery 246 -> 228 (-18)`, `NoCaching 218 -> 202 (-16)`, `InterpolatedNotPrepared 113 -> 101 (-12)`, and `NotPrepared 50 -> 50 (0)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no unrelated blocker family increased.
+- Current packaged target-row audit at `/tmp/wporg-28rg8-t4-work.4CeoYs/post-plugin-check-v2/t4-post-summary.tsv` proves `owned_rows=0` and `owned_boundaries=0`, and `/tmp/wporg-28rg8-t4-work.4CeoYs/post-plugin-check-v2/t5-post-summary.tsv` proves the remaining `T5` ownership is exactly `14` rows across `9` boundaries.
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G8-T4`: DB/SQL `863`, nonce/input `0`, date/time `25`, and logging `42`.
+- `WPORG-28R-G8-T1`, `WPORG-28R-G8-T2`, `WPORG-28R-G8-T3`, and `WPORG-28R-G8-T4` are terminal under `verified`.
+- `WPORG-28R-G8` remains `in progress` with `14` rows across `9` boundaries; the remaining G8 rule mix is `slow_meta_key 6`, `slow_meta_query 6`, and `slow_meta_value 2`.
+- Exact next implementation child: `WPORG-28R-G8-T5 — Slow meta queries and reverse-link fallbacks`.
+- Preserved mapping note: the preserved `g8-boundaries.tsv` still assigns `G8-B002` to `vms_staff_user_link_metabox_render()` lines `26-79`, but the current packaged slow-meta query is the later `save_post_vms_staff` closure at line `131`; the post-`T4` `T5` summary therefore uses `/tmp/wporg-28rg8-t4-work.4CeoYs/post-plugin-check-v2/current-boundary-ranges.tsv`, and the stale mapping does not affect `T1` through `T4` ownership counts.
+- `WPORG-28R` remains blocked until `WPORG-28R-G8-T5` through `WPORG-28R-G17` close and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+
+### Non-Actions
+
+- No runtime outside the authorized mirror/live `includes/core/staffing.php` and `includes/admin/staffing.php` files, no unrelated live-tree region, and no package metadata or release exclusions were changed.
+- No upload, deployment, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
 
 Date: 2026-07-21
 

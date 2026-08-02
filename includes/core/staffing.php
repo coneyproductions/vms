@@ -2482,24 +2482,27 @@ if (!function_exists('vms_staffing_get_event_plan_headcount_context')) {
 		$ticket_resolved = !empty($ticket_snapshot['resolved']);
 
 		$admissions_headcount = 0;
-		if (function_exists('vms_admission_table_entries')) {
-			global $wpdb;
-			$table = vms_admission_table_entries();
-			if ($wpdb && is_string($table) && $table !== '') {
-				static $table_exists_cache = array();
-				if (!array_key_exists($table, $table_exists_cache)) {
-					$table_exists_cache[$table] = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table);
-				}
-				if (!empty($table_exists_cache[$table])) {
-					$admissions_headcount = max(0, (int) $wpdb->get_var($wpdb->prepare(
-						"SELECT COALESCE(SUM(CASE WHEN status <> 'canceled' THEN party_size ELSE 0 END), 0)
-						 FROM {$table}
-						 WHERE event_plan_id = %d",
-						$event_plan_id
-					)));
+			if (function_exists('vms_admission_table_entries')) {
+				global $wpdb;
+				$table = vms_admission_table_entries();
+				if ($wpdb && is_string($table) && $table !== '') {
+					static $table_exists_cache = array();
+					if (!array_key_exists($table, $table_exists_cache)) {
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- This request-local admissions table-existence probe gates the headcount fallback, and no core API or persistent cache safely reflects custom-table creation during the request.
+						$table_exists_cache[$table] = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table);
+					}
+					if (!empty($table_exists_cache[$table])) {
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Headcount context reads the admissions entries repository with request-fresh custom-table state and a %i/%d-prepared identifier plus event filter.
+						$admissions_headcount = max(0, (int) $wpdb->get_var($wpdb->prepare(
+							"SELECT COALESCE(SUM(CASE WHEN status <> 'canceled' THEN party_size ELSE 0 END), 0)
+							 FROM %i
+							 WHERE event_plan_id = %d",
+							$table,
+							$event_plan_id
+						)));
+					}
 				}
 			}
-		}
 
 		$expected_total = max(0, $ticket_qty + $admissions_headcount);
 		if ($ticket_resolved || $admissions_headcount > 0) {
@@ -3061,16 +3064,18 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 		if (function_exists('vms_event_plan_save_profiler_mark_module')) {
 			vms_event_plan_save_profiler_mark_module('staffing', 'event_roles_matrix_changed');
 		}
-		if (function_exists('vms_event_plan_save_profiler_note_heavy_action')) {
-			vms_event_plan_save_profiler_note_heavy_action('staffing_event_roles_matrix', 'triggered', 'payload_changed');
-		}
+			if (function_exists('vms_event_plan_save_profiler_note_heavy_action')) {
+				vms_event_plan_save_profiler_note_heavy_action('staffing_event_roles_matrix', 'triggered', 'payload_changed');
+			}
 
-		$existing_rows = $wpdb->get_results($wpdb->prepare(
-			"SELECT * FROM {$t_slot} WHERE event_plan_id = %d ORDER BY slot_id ASC",
-			$event_plan_id
-		), ARRAY_A);
-		$existing_by_role = array();
-		if (is_array($existing_rows)) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves read the existing custom event-slot repository with %i/%d-prepared identifiers before comparing and mutating the request-fresh slot set.
+			$existing_rows = $wpdb->get_results($wpdb->prepare(
+				"SELECT * FROM %i WHERE event_plan_id = %d ORDER BY slot_id ASC",
+				$t_slot,
+				$event_plan_id
+			), ARRAY_A);
+			$existing_by_role = array();
+			if (is_array($existing_rows)) {
 			foreach ($existing_rows as $r) {
 				$rid = isset($r['role_id']) ? absint($r['role_id']) : 0;
 				if ($rid <= 0) continue;
@@ -3123,29 +3128,32 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 				$end_offset = 0;
 			}
 
-			$existing = isset($existing_by_role[$role_id]) && !empty($existing_by_role[$role_id]) ? $existing_by_role[$role_id][0] : null;
-			$slot_id = $existing && isset($existing['slot_id']) ? absint($existing['slot_id']) : 0;
+				$existing = isset($existing_by_role[$role_id]) && !empty($existing_by_role[$role_id]) ? $existing_by_role[$role_id][0] : null;
+				$slot_id = $existing && isset($existing['slot_id']) ? absint($existing['slot_id']) : 0;
 
-			if ($headcount <= 0 && empty($staff_ids)) {
-				if ($slot_id > 0) {
-					$wpdb->update(
-						$t_slot,
-						array(
-							'headcount_needed' => 0,
+				if ($headcount <= 0 && empty($staff_ids)) {
+					if ($slot_id > 0) {
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel obsolete custom event-slot rows directly, and no persistent cache safely spans the paired slot and assignment mutations.
+						$wpdb->update(
+							$t_slot,
+							array(
+								'headcount_needed' => 0,
 							'status'           => 'canceled',
 							'updated_at'       => $now,
 							'updated_by'       => $actor_user_id > 0 ? $actor_user_id : null,
 						),
 						array('slot_id' => $slot_id),
-						array('%d', '%s', '%s', '%d'),
-						array('%d')
-					);
-					$wpdb->query($wpdb->prepare(
-						"UPDATE {$t_asn} SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
-						$now,
-						$actor_user_id > 0 ? $actor_user_id : 0,
-						$slot_id
-					));
+							array('%d', '%s', '%s', '%d'),
+							array('%d')
+						);
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel active assignment rows in the plugin-owned repository immediately after canceling an obsolete slot, and no persistent cache safely spans this mutation pair.
+						$wpdb->query($wpdb->prepare(
+							"UPDATE %i SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
+							$t_asn,
+							$now,
+							$actor_user_id > 0 ? $actor_user_id : 0,
+							$slot_id
+						));
 				}
 				continue;
 			}
@@ -3154,16 +3162,17 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 				$headcount = isset($meta['default_headcount']) ? max(1, (int) $meta['default_headcount']) : 1;
 			}
 
-			$pay_type = isset($meta['default_pay_type']) ? (string) $meta['default_pay_type'] : 'none';
-			if (!in_array($pay_type, array('hourly', 'flat', 'none'), true)) $pay_type = 'none';
-			$pay_rate = isset($meta['default_rate']) && $meta['default_rate'] !== null ? (float) $meta['default_rate'] : null;
-			$notes = isset($meta['default_notes']) ? (string) $meta['default_notes'] : '';
+				$pay_type = isset($meta['default_pay_type']) ? (string) $meta['default_pay_type'] : 'none';
+				if (!in_array($pay_type, array('hourly', 'flat', 'none'), true)) $pay_type = 'none';
+				$pay_rate = isset($meta['default_rate']) && $meta['default_rate'] !== null ? (float) $meta['default_rate'] : null;
+				$notes = isset($meta['default_notes']) ? (string) $meta['default_notes'] : '';
 
-			if ($slot_id > 0) {
-				$wpdb->update(
-					$t_slot,
-					array(
-						'headcount_needed'      => $headcount,
+				if ($slot_id > 0) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves update the custom event-slot repository directly so request-local slot, legacy-meta, and rollup recompute state stay in sync.
+					$wpdb->update(
+						$t_slot,
+						array(
+							'headcount_needed'      => $headcount,
 						'shift_time_mode'       => $mode,
 						'shift_start_local'     => $sh,
 						'shift_end_local'       => $eh,
@@ -3180,14 +3189,15 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 						'updated_by'        => $actor_user_id > 0 ? $actor_user_id : null,
 					),
 					array('slot_id' => $slot_id),
-					array('%d', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%f', '%s', '%s', '%s', '%d'),
-					array('%d')
-				);
-			} else {
-				$wpdb->insert(
-					$t_slot,
-					array(
-						'event_plan_id'         => $event_plan_id,
+						array('%d', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%f', '%s', '%s', '%s', '%d'),
+						array('%d')
+					);
+				} else {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Matrix saves insert normalized custom event-slot rows directly; no core API preserves this staffing repository lifecycle.
+					$wpdb->insert(
+						$t_slot,
+						array(
+							'event_plan_id'         => $event_plan_id,
 						'role_id'               => $role_id,
 						'headcount_needed'      => $headcount,
 						'shift_time_mode'       => $mode,
@@ -3212,17 +3222,19 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 				$slot_id = (int) $wpdb->insert_id;
 			}
 
-			if ($slot_id <= 0) {
-				continue;
-			}
-			$slot_count++;
+				if ($slot_id <= 0) {
+					continue;
+				}
+				$slot_count++;
 
-			$existing_asn = $wpdb->get_results($wpdb->prepare(
-				"SELECT assignment_id, staff_id, status FROM {$t_asn} WHERE slot_id = %d ORDER BY assignment_id ASC",
-				$slot_id
-			), ARRAY_A);
-			$existing_by_staff = array();
-			if (is_array($existing_asn)) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves read current assignment rows from the custom repository with %i/%d-prepared identifiers before reconciling the normalized staff set.
+				$existing_asn = $wpdb->get_results($wpdb->prepare(
+					'SELECT assignment_id, staff_id, status FROM %i WHERE slot_id = %d ORDER BY assignment_id ASC',
+					$t_asn,
+					$slot_id
+				), ARRAY_A);
+				$existing_by_staff = array();
+				if (is_array($existing_asn)) {
 				foreach ($existing_asn as $a) {
 					$sid = isset($a['staff_id']) ? absint($a['staff_id']) : 0;
 					if ($sid <= 0) continue;
@@ -3232,27 +3244,29 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 				}
 			}
 
-			foreach ($staff_ids as $staff_id) {
-				if (isset($existing_by_staff[$staff_id])) {
-					$aid = isset($existing_by_staff[$staff_id]['assignment_id']) ? absint($existing_by_staff[$staff_id]['assignment_id']) : 0;
-					if ($aid > 0) {
-						$wpdb->update(
-							$t_asn,
-							array(
-								'status'     => 'proposed',
+				foreach ($staff_ids as $staff_id) {
+					if (isset($existing_by_staff[$staff_id])) {
+						$aid = isset($existing_by_staff[$staff_id]['assignment_id']) ? absint($existing_by_staff[$staff_id]['assignment_id']) : 0;
+						if ($aid > 0) {
+							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves revive matching assignment rows directly in the plugin-owned repository so the slot reconciliation observes immediate state.
+							$wpdb->update(
+								$t_asn,
+								array(
+									'status'     => 'proposed',
 								'updated_at' => $now,
 								'updated_by' => $actor_user_id > 0 ? $actor_user_id : null,
 							),
 							array('assignment_id' => $aid),
 							array('%s', '%s', '%d'),
-							array('%d')
-						);
-					}
-				} else {
-					$wpdb->insert(
-						$t_asn,
-						array(
-							'slot_id'     => $slot_id,
+								array('%d')
+							);
+						}
+					} else {
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Matrix saves insert new assignment rows directly into the plugin-owned repository; no core API preserves this lifecycle.
+						$wpdb->insert(
+							$t_asn,
+							array(
+								'slot_id'     => $slot_id,
 							'staff_id'    => $staff_id,
 							'status'      => 'proposed',
 							'created_at'  => $now,
@@ -3266,15 +3280,16 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 				$assignment_count++;
 			}
 
-			if (!empty($existing_by_staff)) {
-				foreach ($existing_by_staff as $sid => $a) {
-					if (in_array((int) $sid, $staff_ids, true)) continue;
-					$aid = isset($a['assignment_id']) ? absint($a['assignment_id']) : 0;
-					if ($aid <= 0) continue;
-					$wpdb->update(
-						$t_asn,
-						array(
-							'status'     => 'canceled',
+				if (!empty($existing_by_staff)) {
+					foreach ($existing_by_staff as $sid => $a) {
+						if (in_array((int) $sid, $staff_ids, true)) continue;
+						$aid = isset($a['assignment_id']) ? absint($a['assignment_id']) : 0;
+						if ($aid <= 0) continue;
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel assignment rows omitted from the desired staff set directly in the repository so downstream rollup recompute sees immediate state.
+						$wpdb->update(
+							$t_asn,
+							array(
+								'status'     => 'canceled',
 							'updated_at' => $now,
 							'updated_by' => $actor_user_id > 0 ? $actor_user_id : null,
 						),
@@ -3334,8 +3349,9 @@ if (!function_exists('vms_staffing_mark_rollup_dirty')) {
 		if ($dirty_reason === '') $dirty_reason = 'manual';
 
 		$now = vms_staffing_now_mysql_utc();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup dirty-flag writes update the plugin-owned rollups repository with a %i-prepared identifier so rebuild and dashboard flows observe immediate request-fresh state.
 		$wpdb->query($wpdb->prepare(
-			"INSERT INTO {$t} (event_plan_id, venue_id, event_status, event_start_local, dirty, dirty_reason, computed_at, calc_version)
+			"INSERT INTO %i (event_plan_id, venue_id, event_status, event_start_local, dirty, dirty_reason, computed_at, calc_version)
 			 VALUES (%d, %d, %s, %s, 1, %s, %s, %s)
 			 ON DUPLICATE KEY UPDATE
 				venue_id = VALUES(venue_id),
@@ -3343,6 +3359,7 @@ if (!function_exists('vms_staffing_mark_rollup_dirty')) {
 				event_start_local = VALUES(event_start_local),
 				dirty = 1,
 				dirty_reason = VALUES(dirty_reason)",
+			$t,
 			$event_plan_id,
 			$venue_id > 0 ? $venue_id : 0,
 			$status,
@@ -3412,17 +3429,19 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 		}
 
 		$t_slot = vms_staffing_table_name('event_slots');
-		$t_asn = vms_staffing_table_name('assignments');
-		$t_roll = vms_staffing_table_name('rollups');
-		if ($t_slot === '' || $t_asn === '' || $t_roll === '') {
-			return array('ok' => false, 'error' => 'missing_table');
-		}
+			$t_asn = vms_staffing_table_name('assignments');
+			$t_roll = vms_staffing_table_name('rollups');
+			if ($t_slot === '' || $t_asn === '' || $t_roll === '') {
+				return array('ok' => false, 'error' => 'missing_table');
+			}
 
-		$slots = $wpdb->get_results($wpdb->prepare(
-			"SELECT * FROM {$t_slot} WHERE event_plan_id = %d AND status = 'active' ORDER BY slot_id ASC",
-			$event_plan_id
-		), ARRAY_A);
-		if (!is_array($slots)) $slots = array();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute reads the custom event-slot repository with %i/%d-prepared identifiers so staffing reports and rebuilds observe request-fresh slot state.
+			$slots = $wpdb->get_results($wpdb->prepare(
+				"SELECT * FROM %i WHERE event_plan_id = %d AND status = 'active' ORDER BY slot_id ASC",
+				$t_slot,
+				$event_plan_id
+			), ARRAY_A);
+			if (!is_array($slots)) $slots = array();
 
 		$slot_ids = array_values(array_unique(array_filter(array_map(function ($r) {
 			return isset($r['slot_id']) ? absint($r['slot_id']) : 0;
@@ -3430,14 +3449,21 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 			return $n > 0;
 		})));
 
-		$assignments_by_slot = array();
-		if (!empty($slot_ids)) {
-			$in = implode(',', array_map('intval', $slot_ids));
-			$as_rows = $wpdb->get_results("SELECT * FROM {$t_asn} WHERE slot_id IN ({$in}) ORDER BY assignment_id ASC", ARRAY_A);
-			if (is_array($as_rows)) {
-				foreach ($as_rows as $a) {
-					$sid = isset($a['slot_id']) ? absint($a['slot_id']) : 0;
-					if ($sid <= 0) continue;
+			$assignments_by_slot = array();
+			if (!empty($slot_ids)) {
+				$assignment_prepare_args = array_merge(array($t_asn), $slot_ids);
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute reads assignment rows with a %i-prepared repository identifier and a bounded prepared IN-list so slot grouping and ordering stay exact.
+				$as_rows = $wpdb->get_results(
+					$wpdb->prepare(
+						'SELECT * FROM %i WHERE slot_id IN (' . implode(', ', array_fill(0, count($slot_ids), '%d')) . ') ORDER BY assignment_id ASC',
+						$assignment_prepare_args
+					),
+					ARRAY_A
+				);
+				if (is_array($as_rows)) {
+					foreach ($as_rows as $a) {
+						$sid = isset($a['slot_id']) ? absint($a['slot_id']) : 0;
+						if ($sid <= 0) continue;
 					if (!isset($assignments_by_slot[$sid])) $assignments_by_slot[$sid] = array();
 					$assignments_by_slot[$sid][] = $a;
 				}
@@ -3564,25 +3590,28 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 			$staff_id = isset($w['staff_id']) ? absint($w['staff_id']) : 0;
 			$aid = isset($w['assignment_id']) ? absint($w['assignment_id']) : 0;
 			$start_ts = isset($w['start_ts']) ? $w['start_ts'] : null;
-			$end_ts = isset($w['end_ts']) ? $w['end_ts'] : null;
-			if ($staff_id <= 0 || $aid <= 0 || $start_ts === null || $end_ts === null) continue;
-			if ($end_ts <= $start_ts) continue;
+				$end_ts = isset($w['end_ts']) ? $w['end_ts'] : null;
+				if ($staff_id <= 0 || $aid <= 0 || $start_ts === null || $end_ts === null) continue;
+				if ($end_ts <= $start_ts) continue;
 
-			$cnt = (int) $wpdb->get_var($wpdb->prepare(
-				"SELECT COUNT(*) FROM {$t_asn} a
-				 INNER JOIN {$t_slot} s ON s.slot_id = a.slot_id
-				 WHERE a.staff_id = %d
-				   AND a.status = 'confirmed'
-				   AND a.assignment_id <> %d
-				   AND s.event_plan_id <> %d
-				   AND a.shift_start_ts IS NOT NULL
-				   AND a.shift_end_ts IS NOT NULL
-				   AND a.shift_start_ts < %d
-				   AND a.shift_end_ts > %d",
-				$staff_id,
-				$aid,
-				$event_plan_id,
-				$end_ts,
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute performs a bounded custom-table overlap count across assignments and slots with %i/%d-prepared identifiers and windows, and request-fresh state is required during recompute.
+				$cnt = (int) $wpdb->get_var($wpdb->prepare(
+					"SELECT COUNT(*) FROM %i a
+					 INNER JOIN %i s ON s.slot_id = a.slot_id
+					 WHERE a.staff_id = %d
+					   AND a.status = 'confirmed'
+					   AND a.assignment_id <> %d
+					   AND s.event_plan_id <> %d
+					   AND a.shift_start_ts IS NOT NULL
+					   AND a.shift_end_ts IS NOT NULL
+					   AND a.shift_start_ts < %d
+					   AND a.shift_end_ts > %d",
+					$t_asn,
+					$t_slot,
+					$staff_id,
+					$aid,
+					$event_plan_id,
+					$end_ts,
 				$start_ts
 			));
 			if ($cnt > 0) {
@@ -3656,16 +3685,17 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 			'readiness_status'          => $readiness_status,
 			'missing_summary'           => $missing_summary,
 			'conflict_summary'          => $conflict_summary,
-		);
-		$calc_hash = md5(wp_json_encode($calc_data));
-		$computed_at = vms_staffing_now_mysql_utc();
+			);
+			$calc_hash = md5(wp_json_encode($calc_data));
+			$computed_at = vms_staffing_now_mysql_utc();
 
-		$wpdb->query($wpdb->prepare(
-			"INSERT INTO {$t_roll}
-			 (event_plan_id, venue_id, event_status, event_start_local, slots_total, headcount_needed_total, headcount_filled_total, open_headcount_total, open_slots_count, critical_slots_total, critical_open_headcount, critical_open_slots_count, conflict_count, unavailable_assigned_count, red_flag_reason_mask, readiness_status, est_labor_cost_total, est_hours_total, missing_summary_json, conflict_summary_json, calc_version, calc_hash, computed_at, dirty, dirty_reason)
-			 VALUES (%d, %d, %s, %s, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %s, %s, %s, 0, %s)
-			 ON DUPLICATE KEY UPDATE
-				venue_id = VALUES(venue_id),
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute upserts the plugin-owned rollup repository directly with a %i-prepared identifier so dashboard and rebuild reads see the freshly computed state.
+			$wpdb->query($wpdb->prepare(
+				"INSERT INTO %i
+				 (event_plan_id, venue_id, event_status, event_start_local, slots_total, headcount_needed_total, headcount_filled_total, open_headcount_total, open_slots_count, critical_slots_total, critical_open_headcount, critical_open_slots_count, conflict_count, unavailable_assigned_count, red_flag_reason_mask, readiness_status, est_labor_cost_total, est_hours_total, missing_summary_json, conflict_summary_json, calc_version, calc_hash, computed_at, dirty, dirty_reason)
+				 VALUES (%d, %d, %s, %s, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %s, %s, %s, 0, %s)
+				 ON DUPLICATE KEY UPDATE
+					venue_id = VALUES(venue_id),
 				event_status = VALUES(event_status),
 				event_start_local = VALUES(event_start_local),
 				slots_total = VALUES(slots_total),
@@ -3686,13 +3716,14 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 				conflict_summary_json = VALUES(conflict_summary_json),
 				calc_version = VALUES(calc_version),
 				calc_hash = VALUES(calc_hash),
-				computed_at = VALUES(computed_at),
-				dirty = 0,
-				dirty_reason = ''",
-			$event_plan_id,
-			$venue_id > 0 ? $venue_id : 0,
-			$status,
-			$event_start_local,
+					computed_at = VALUES(computed_at),
+					dirty = 0,
+					dirty_reason = ''",
+				$t_roll,
+				$event_plan_id,
+				$venue_id > 0 ? $venue_id : 0,
+				$status,
+				$event_start_local,
 			$slots_total,
 			$headcount_needed_total,
 			$headcount_filled_total,
@@ -3740,15 +3771,16 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 if (!function_exists('vms_staffing_get_rollup')) {
 	function vms_staffing_get_rollup(int $event_plan_id): ?array
 	{
-		global $wpdb;
-		$event_plan_id = absint($event_plan_id);
-		if ($event_plan_id <= 0) return null;
-		$t = vms_staffing_table_name('rollups');
-		if ($t === '') return null;
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$t} WHERE event_plan_id = %d", $event_plan_id), ARRAY_A);
-		return is_array($row) ? $row : null;
+			global $wpdb;
+			$event_plan_id = absint($event_plan_id);
+			if ($event_plan_id <= 0) return null;
+			$t = vms_staffing_table_name('rollups');
+			if ($t === '') return null;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Single rollup reads target the custom repository with a %i/%d-prepared identifier and event key, and admin/reporting flows must observe request-fresh state after rebuilds.
+			$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE event_plan_id = %d', $t, $event_plan_id), ARRAY_A);
+			return is_array($row) ? $row : null;
+		}
 	}
-}
 
 if (!function_exists('vms_staffing_dashboard_readiness_label')) {
 	function vms_staffing_dashboard_readiness_label(string $status): string

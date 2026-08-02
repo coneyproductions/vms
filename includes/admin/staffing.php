@@ -866,6 +866,7 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 		$t_roll = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('rollups') : '';
 		$dirty_count = 0;
 		if ($t_roll !== '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup dirty-count reads the plugin-owned rollups repository with a %i/%d-prepared identifier and filter, and the admin page must show request-fresh state after rebuild and dirty-flag mutations.
 			$dirty_count = (int) $wpdb->get_var(
 				$wpdb->prepare('SELECT COUNT(*) FROM %i WHERE dirty = %d', $t_roll, 1)
 			);

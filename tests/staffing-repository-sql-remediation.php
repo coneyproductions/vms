@@ -499,6 +499,26 @@ function vms_test_sort_inventory(array $inventory): array
 }
 
 /**
+ * @param array<int,string> $group_names
+ */
+function vms_test_format_group_list(array $group_names): string
+{
+	$labels = array_values(array_map('strtoupper', $group_names));
+	if ($labels === array()) {
+		return '';
+	}
+	if (count($labels) === 1) {
+		return $labels[0];
+	}
+	if (count($labels) === 2) {
+		return $labels[0] . ' or ' . $labels[1];
+	}
+
+	$last = array_pop($labels);
+	return implode(', ', $labels) . ', or ' . $last;
+}
+
+/**
  * @param array<int,string>                $actual_inventory
  * @param array<string,array<int,string>>  $expected_groups
  * @return array<string,array<int,string>>
@@ -557,7 +577,11 @@ function vms_test_reconcile_directquery_inventory_groups(array $actual_inventory
 		$classifications[] = $entry;
 	}
 
-	vms_test_assert_same(array(), $unknown_inventory, 'Every DirectQuery/NoCaching suppression must be classified as T1, T2, or T3.');
+	vms_test_assert_same(
+		array(),
+		$unknown_inventory,
+		'Every DirectQuery/NoCaching suppression must be classified as ' . vms_test_format_group_list($group_names) . '.'
+	);
 	foreach ($expected_groups as $group_name => $entries) {
 		vms_test_assert_same($entries, $actual_groups[$group_name], 'The accepted ' . strtoupper($group_name) . ' DirectQuery/NoCaching inventory should remain exact.');
 	}
@@ -568,7 +592,7 @@ function vms_test_reconcile_directquery_inventory_groups(array $actual_inventory
 	vms_test_assert_same(
 		vms_test_sort_inventory($expected_union),
 		vms_test_sort_inventory($actual_inventory),
-		'The combined T1/T2/T3 DirectQuery/NoCaching inventories should reconcile to the complete actual inventory.'
+		'The combined DirectQuery/NoCaching inventories should reconcile to the complete actual inventory.'
 	);
 	vms_test_assert_same($actual_inventory, $classifications, 'The classified DirectQuery/NoCaching inventory should preserve the full actual inventory order.');
 
@@ -746,6 +770,26 @@ $expected_t3_inventory = array(
 	'includes/core/staffing.php:2175:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 );
 
+$expected_t4_inventory = array(
+	'includes/core/staffing.php:2491:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2495:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3071:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3136:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3149:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3171:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3196:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3230:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3251:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3265:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3288:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3352:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3438:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3455:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3597:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3692:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3779:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+);
+
 $actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path, $staff_portal_path, $staffing_path));
 vms_test_reconcile_directquery_inventory_groups(
 	$actual_inventory,
@@ -753,6 +797,7 @@ vms_test_reconcile_directquery_inventory_groups(
 		't1' => $expected_t1_inventory,
 		't2' => $expected_t2_inventory,
 		't3' => $expected_t3_inventory,
+		't4' => $expected_t4_inventory,
 	)
 );
 $invented_inventory = $actual_inventory;
@@ -765,12 +810,13 @@ try {
 			't1' => $expected_t1_inventory,
 			't2' => $expected_t2_inventory,
 			't3' => $expected_t3_inventory,
+			't4' => $expected_t4_inventory,
 		)
 	);
 } catch (RuntimeException $exception) {
 	$negative_control_rejected = true;
 	vms_test_assert_contains(
-		'Every DirectQuery/NoCaching suppression must be classified as T1, T2, or T3.',
+		'Every DirectQuery/NoCaching suppression must be classified as T1, T2, T3, or T4.',
 		$exception->getMessage(),
 		'Synthetic negative control should fail because the invented suppression is unclassified.'
 	);
