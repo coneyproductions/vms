@@ -738,21 +738,23 @@ if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
             return array();
         }
 
-        $sql = $wpdb->prepare(
-            'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
-                    s.slot_id, s.role_id, s.display_label_override, s.shift_start_local, s.shift_end_local
-             FROM %i a
-             INNER JOIN %i s ON s.slot_id = a.slot_id
-             WHERE s.event_plan_id = %d
-               AND s.status = \'active\'
-               AND a.status IN (\'proposed\',\'confirmed\')
-             ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.slot_id ASC, a.assignment_id ASC',
-            $t_assignments,
-            $t_slots,
-            $plan_id
-        );
-
-        $raw_rows = $wpdb->get_results($sql, ARRAY_A);
+	        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff portal crew reads join normalized staffing tables with prepared identifier/filter values, and shift-glance consumers must observe immediate staffing changes without a persistent cache layer.
+	        $raw_rows = $wpdb->get_results(
+	            $wpdb->prepare(
+	                'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
+	                        s.slot_id, s.role_id, s.display_label_override, s.shift_start_local, s.shift_end_local
+	                 FROM %i a
+	                 INNER JOIN %i s ON s.slot_id = a.slot_id
+	                 WHERE s.event_plan_id = %d
+	                   AND s.status = \'active\'
+	                   AND a.status IN (\'proposed\',\'confirmed\')
+	                 ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.slot_id ASC, a.assignment_id ASC',
+	                $t_assignments,
+	                $t_slots,
+	                $plan_id
+	            ),
+	            ARRAY_A
+	        );
         if (!is_array($raw_rows) || empty($raw_rows)) {
             $cache[$plan_id] = array();
             return $cache[$plan_id];
@@ -1203,25 +1205,27 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
             return array();
         }
 
-        $sql = $wpdb->prepare(
-            'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
-                    s.slot_id, s.event_plan_id, s.role_id, s.display_label_override, s.shift_time_mode,
-                    s.shift_start_local, s.shift_end_local, s.start_anchor_key, s.start_offset_minutes,
-                    s.end_anchor_key, s.end_offset_minutes, s.duration_minutes, s.notes AS slot_notes
-             FROM %i a
-             INNER JOIN %i s ON s.slot_id = a.slot_id
-             WHERE a.staff_id = %d
-               AND a.status IN (\'proposed\',\'confirmed\')
-               AND s.status = \'active\'
-             ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.event_plan_id ASC, s.slot_id ASC
-             LIMIT %d',
-            $t_assignments,
-            $t_slots,
-            $staff_id,
-            $limit
-        );
-
-        $raw_rows = $wpdb->get_results($sql, ARRAY_A);
+	        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff portal assignment reads join normalized staffing tables with prepared identifier/filter values, and the portal timeline must observe immediate staffing changes without a persistent cache layer.
+	        $raw_rows = $wpdb->get_results(
+	            $wpdb->prepare(
+	                'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
+	                        s.slot_id, s.event_plan_id, s.role_id, s.display_label_override, s.shift_time_mode,
+	                        s.shift_start_local, s.shift_end_local, s.start_anchor_key, s.start_offset_minutes,
+	                        s.end_anchor_key, s.end_offset_minutes, s.duration_minutes, s.notes AS slot_notes
+	                 FROM %i a
+	                 INNER JOIN %i s ON s.slot_id = a.slot_id
+	                 WHERE a.staff_id = %d
+	                   AND a.status IN (\'proposed\',\'confirmed\')
+	                   AND s.status = \'active\'
+	                 ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.event_plan_id ASC, s.slot_id ASC
+	                 LIMIT %d',
+	                $t_assignments,
+	                $t_slots,
+	                $staff_id,
+	                $limit
+	            ),
+	            ARRAY_A
+	        );
         if (!is_array($raw_rows) || empty($raw_rows)) {
             return array();
         }

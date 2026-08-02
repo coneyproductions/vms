@@ -1077,18 +1077,22 @@ if (!function_exists('vms_tasks_get_event_context')) {
 
 if (!function_exists('vms_tasks_get_instance')) {
 	/** @return array<string,mixed>|null */
-	function vms_tasks_get_instance(int $instance_id): ?array
-	{
-		global $wpdb;
-		$table = vms_tasks_table_name('task_instances');
-		$instance_id = absint($instance_id);
-		if ($table === '' || $instance_id <= 0) {
-			return null;
+		function vms_tasks_get_instance(int $instance_id): ?array
+		{
+			global $wpdb;
+			$table = vms_tasks_table_name('task_instances');
+			$instance_id = absint($instance_id);
+			if ($table === '' || $instance_id <= 0) {
+				return null;
+			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance reads target the normalized custom repository with %i/%d-prepared identifiers and IDs, and assignment/status flows must observe fresh state after writes.
+			$row = $wpdb->get_row(
+				$wpdb->prepare('SELECT * FROM %i WHERE id = %d LIMIT 1', $table, $instance_id),
+				ARRAY_A
+			);
+			return is_array($row) ? $row : null;
 		}
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d LIMIT 1", $instance_id), ARRAY_A);
-		return is_array($row) ? $row : null;
 	}
-}
 
 if (!function_exists('vms_tasks_get_instances_for_event')) {
 	/**
@@ -1113,64 +1117,37 @@ if (!function_exists('vms_tasks_get_instances')) {
 	 * @param array<string,mixed> $filters
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_tasks_get_instances(array $filters = array()): array
-	{
-		global $wpdb;
-		$t_instances = vms_tasks_table_name('task_instances');
-		if ($t_instances === '') {
-			return array();
-		}
-
-		$where = array('1=1');
-		$args = array();
-
-		if (!empty($filters['task_instance_id'])) {
-			$where[] = 'id = %d';
-			$args[] = absint($filters['task_instance_id']);
-		}
-		if (!empty($filters['event_id'])) {
-			$where[] = 'event_id = %d';
-			$args[] = absint($filters['event_id']);
-		}
-		if (!empty($filters['event_linkage'])) {
-			$linkage = sanitize_key((string) $filters['event_linkage']);
-			if ($linkage === 'event') {
-				$where[] = 'event_id IS NOT NULL AND event_id > 0';
-			} elseif ($linkage === 'non_event') {
-				$where[] = '(event_id IS NULL OR event_id = 0)';
+		function vms_tasks_get_instances(array $filters = array()): array
+		{
+			global $wpdb;
+			$t_instances = vms_tasks_table_name('task_instances');
+			if ($t_instances === '') {
+				return array();
 			}
-		}
-		if (!empty($filters['status'])) {
-			$where[] = 'status = %s';
-			$args[] = vms_tasks_sanitize_status((string) $filters['status']);
-		}
-		if (!empty($filters['exclude_status'])) {
-			$where[] = 'status <> %s';
-			$args[] = vms_tasks_sanitize_status((string) $filters['exclude_status']);
-		}
-		if (!empty($filters['assignee_user_id'])) {
-			$where[] = 'assignee_user_id = %d';
-			$args[] = absint($filters['assignee_user_id']);
-		}
-		if (!empty($filters['role_key'])) {
-			$where[] = 'role_key = %s';
-			$args[] = sanitize_key((string) $filters['role_key']);
-		}
-		if (!empty($filters['venue_id'])) {
-			$where[] = 'venue_id = %d';
-			$args[] = absint($filters['venue_id']);
-		}
-		if (!empty($filters['required_only'])) {
-			$where[] = 'is_required = 1';
-		}
-		if (!empty($filters['due_before'])) {
-			$where[] = 'due_at_local IS NOT NULL AND due_at_local <= %s';
-			$args[] = sanitize_text_field((string) $filters['due_before']);
-		}
-		if (!empty($filters['due_after'])) {
-			$where[] = 'due_at_local IS NOT NULL AND due_at_local >= %s';
-			$args[] = sanitize_text_field((string) $filters['due_after']);
-		}
+
+			$has_task_instance_id = !empty($filters['task_instance_id']) ? 1 : 0;
+			$task_instance_id = $has_task_instance_id ? absint($filters['task_instance_id']) : 0;
+			$has_event_id = !empty($filters['event_id']) ? 1 : 0;
+			$event_id = $has_event_id ? absint($filters['event_id']) : 0;
+			$event_linkage = !empty($filters['event_linkage']) ? sanitize_key((string) $filters['event_linkage']) : '';
+			if (!in_array($event_linkage, array('event', 'non_event'), true)) {
+				$event_linkage = '';
+			}
+			$has_status = !empty($filters['status']) ? 1 : 0;
+			$status = $has_status ? vms_tasks_sanitize_status((string) $filters['status']) : '';
+			$has_exclude_status = !empty($filters['exclude_status']) ? 1 : 0;
+			$exclude_status = $has_exclude_status ? vms_tasks_sanitize_status((string) $filters['exclude_status']) : '';
+			$has_assignee_user_id = !empty($filters['assignee_user_id']) ? 1 : 0;
+			$assignee_user_id = $has_assignee_user_id ? absint($filters['assignee_user_id']) : 0;
+			$has_role_key = !empty($filters['role_key']) ? 1 : 0;
+			$role_key = $has_role_key ? sanitize_key((string) $filters['role_key']) : '';
+			$has_venue_id = !empty($filters['venue_id']) ? 1 : 0;
+			$venue_id = $has_venue_id ? absint($filters['venue_id']) : 0;
+			$required_only = !empty($filters['required_only']) ? 1 : 0;
+			$has_due_before = !empty($filters['due_before']) ? 1 : 0;
+			$due_before = $has_due_before ? sanitize_text_field((string) $filters['due_before']) : '';
+			$has_due_after = !empty($filters['due_after']) ? 1 : 0;
+			$due_after = $has_due_after ? sanitize_text_field((string) $filters['due_after']) : '';
 
 		$limit = isset($filters['limit']) ? absint($filters['limit']) : 200;
 		if ($limit <= 0) {
@@ -1178,87 +1155,140 @@ if (!function_exists('vms_tasks_get_instances')) {
 		}
 		$limit = min(1000, $limit);
 
-		$sql = "SELECT * FROM {$t_instances} WHERE " . implode(' AND ', $where) . ' ORDER BY (due_at_local IS NULL) ASC, due_at_local ASC, id ASC LIMIT ' . (int) $limit;
-		if (!empty($args)) {
-			$sql = $wpdb->prepare($sql, $args);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance lists read the normalized custom repository with prepared identifier/filter values, and assignment, supersession, and recurrence flows must see request-fresh state.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i
+					 WHERE (%d = 0 OR id = %d)
+					   AND (%d = 0 OR event_id = %d)
+					   AND (
+					       %s = \'\'
+					       OR (%s = \'event\' AND event_id IS NOT NULL AND event_id > 0)
+					       OR (%s = \'non_event\' AND (event_id IS NULL OR event_id = 0))
+					   )
+					   AND (%d = 0 OR status = %s)
+					   AND (%d = 0 OR status <> %s)
+					   AND (%d = 0 OR assignee_user_id = %d)
+					   AND (%d = 0 OR role_key = %s)
+					   AND (%d = 0 OR venue_id = %d)
+					   AND (%d = 0 OR is_required = 1)
+					   AND (%d = 0 OR (due_at_local IS NOT NULL AND due_at_local <= %s))
+					   AND (%d = 0 OR (due_at_local IS NOT NULL AND due_at_local >= %s))
+					 ORDER BY (due_at_local IS NULL) ASC, due_at_local ASC, id ASC
+					 LIMIT %d',
+					$t_instances,
+					$has_task_instance_id,
+					$task_instance_id,
+					$has_event_id,
+					$event_id,
+					$event_linkage,
+					$event_linkage,
+					$event_linkage,
+					$has_status,
+					$status,
+					$has_exclude_status,
+					$exclude_status,
+					$has_assignee_user_id,
+					$assignee_user_id,
+					$has_role_key,
+					$role_key,
+					$has_venue_id,
+					$venue_id,
+					$required_only,
+					$has_due_before,
+					$due_before,
+					$has_due_after,
+					$due_after,
+					$limit
+				),
+				ARRAY_A
+			);
+			return is_array($rows) ? $rows : array();
 		}
-
-		$rows = $wpdb->get_results($sql, ARRAY_A);
-		return is_array($rows) ? $rows : array();
 	}
-}
 
 if (!function_exists('vms_tasks_count_instances')) {
 	/**
 	 * @param array<string,mixed> $filters
 	 */
-	function vms_tasks_count_instances(array $filters = array()): int
-	{
-		global $wpdb;
-		$t_instances = vms_tasks_table_name('task_instances');
-		if ($t_instances === '') {
-			return 0;
-		}
-
-		$where = array('1=1');
-		$args = array();
-
-		if (!empty($filters['task_instance_id'])) {
-			$where[] = 'id = %d';
-			$args[] = absint($filters['task_instance_id']);
-		}
-		if (!empty($filters['event_id'])) {
-			$where[] = 'event_id = %d';
-			$args[] = absint($filters['event_id']);
-		}
-		if (!empty($filters['event_linkage'])) {
-			$linkage = sanitize_key((string) $filters['event_linkage']);
-			if ($linkage === 'event') {
-				$where[] = 'event_id IS NOT NULL AND event_id > 0';
-			} elseif ($linkage === 'non_event') {
-				$where[] = '(event_id IS NULL OR event_id = 0)';
+		function vms_tasks_count_instances(array $filters = array()): int
+		{
+			global $wpdb;
+			$t_instances = vms_tasks_table_name('task_instances');
+			if ($t_instances === '') {
+				return 0;
 			}
-		}
-		if (!empty($filters['status'])) {
-			$where[] = 'status = %s';
-			$args[] = vms_tasks_sanitize_status((string) $filters['status']);
-		}
-		if (!empty($filters['exclude_status'])) {
-			$where[] = 'status <> %s';
-			$args[] = vms_tasks_sanitize_status((string) $filters['exclude_status']);
-		}
-		if (!empty($filters['assignee_user_id'])) {
-			$where[] = 'assignee_user_id = %d';
-			$args[] = absint($filters['assignee_user_id']);
-		}
-		if (!empty($filters['role_key'])) {
-			$where[] = 'role_key = %s';
-			$args[] = sanitize_key((string) $filters['role_key']);
-		}
-		if (!empty($filters['venue_id'])) {
-			$where[] = 'venue_id = %d';
-			$args[] = absint($filters['venue_id']);
-		}
-		if (!empty($filters['required_only'])) {
-			$where[] = 'is_required = 1';
-		}
-		if (!empty($filters['due_before'])) {
-			$where[] = 'due_at_local IS NOT NULL AND due_at_local <= %s';
-			$args[] = sanitize_text_field((string) $filters['due_before']);
-		}
-		if (!empty($filters['due_after'])) {
-			$where[] = 'due_at_local IS NOT NULL AND due_at_local >= %s';
-			$args[] = sanitize_text_field((string) $filters['due_after']);
-		}
 
-		$sql = "SELECT COUNT(*) FROM {$t_instances} WHERE " . implode(' AND ', $where);
-		if (!empty($args)) {
-			$sql = $wpdb->prepare($sql, $args);
-		}
+			$has_task_instance_id = !empty($filters['task_instance_id']) ? 1 : 0;
+			$task_instance_id = $has_task_instance_id ? absint($filters['task_instance_id']) : 0;
+			$has_event_id = !empty($filters['event_id']) ? 1 : 0;
+			$event_id = $has_event_id ? absint($filters['event_id']) : 0;
+			$event_linkage = !empty($filters['event_linkage']) ? sanitize_key((string) $filters['event_linkage']) : '';
+			if (!in_array($event_linkage, array('event', 'non_event'), true)) {
+				$event_linkage = '';
+			}
+			$has_status = !empty($filters['status']) ? 1 : 0;
+			$status = $has_status ? vms_tasks_sanitize_status((string) $filters['status']) : '';
+			$has_exclude_status = !empty($filters['exclude_status']) ? 1 : 0;
+			$exclude_status = $has_exclude_status ? vms_tasks_sanitize_status((string) $filters['exclude_status']) : '';
+			$has_assignee_user_id = !empty($filters['assignee_user_id']) ? 1 : 0;
+			$assignee_user_id = $has_assignee_user_id ? absint($filters['assignee_user_id']) : 0;
+			$has_role_key = !empty($filters['role_key']) ? 1 : 0;
+			$role_key = $has_role_key ? sanitize_key((string) $filters['role_key']) : '';
+			$has_venue_id = !empty($filters['venue_id']) ? 1 : 0;
+			$venue_id = $has_venue_id ? absint($filters['venue_id']) : 0;
+			$required_only = !empty($filters['required_only']) ? 1 : 0;
+			$has_due_before = !empty($filters['due_before']) ? 1 : 0;
+			$due_before = $has_due_before ? sanitize_text_field((string) $filters['due_before']) : '';
+			$has_due_after = !empty($filters['due_after']) ? 1 : 0;
+			$due_after = $has_due_after ? sanitize_text_field((string) $filters['due_after']) : '';
 
-		return (int) $wpdb->get_var($sql);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance counts read the normalized custom repository with prepared identifier/filter values, and assignment, supersession, and recurrence flows must see request-fresh state.
+			return (int) $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT COUNT(*) FROM %i
+					 WHERE (%d = 0 OR id = %d)
+					   AND (%d = 0 OR event_id = %d)
+					   AND (
+					       %s = \'\'
+					       OR (%s = \'event\' AND event_id IS NOT NULL AND event_id > 0)
+					       OR (%s = \'non_event\' AND (event_id IS NULL OR event_id = 0))
+					   )
+					   AND (%d = 0 OR status = %s)
+					   AND (%d = 0 OR status <> %s)
+					   AND (%d = 0 OR assignee_user_id = %d)
+					   AND (%d = 0 OR role_key = %s)
+					   AND (%d = 0 OR venue_id = %d)
+					   AND (%d = 0 OR is_required = 1)
+					   AND (%d = 0 OR (due_at_local IS NOT NULL AND due_at_local <= %s))
+					   AND (%d = 0 OR (due_at_local IS NOT NULL AND due_at_local >= %s))',
+					$t_instances,
+					$has_task_instance_id,
+					$task_instance_id,
+					$has_event_id,
+					$event_id,
+					$event_linkage,
+					$event_linkage,
+					$event_linkage,
+					$has_status,
+					$status,
+					$has_exclude_status,
+					$exclude_status,
+					$has_assignee_user_id,
+					$assignee_user_id,
+					$has_role_key,
+					$role_key,
+					$has_venue_id,
+					$venue_id,
+					$required_only,
+					$has_due_before,
+					$due_before,
+					$has_due_after,
+					$due_after
+				)
+			);
+		}
 	}
-}
 
 if (!function_exists('vms_tasks_insert_instance')) {
 	/**
@@ -1329,11 +1359,12 @@ if (!function_exists('vms_tasks_insert_instance')) {
 			'updated_at' => $now,
 		);
 
-		$ok = $wpdb->insert(
-			$table,
-			$data,
-			array('%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%s')
-		);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Task-instance inserts persist normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
+			$ok = $wpdb->insert(
+				$table,
+				$data,
+				array('%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%s')
+			);
 		if ($ok !== 1) {
 			return new WP_Error('vms_tasks_instance_insert_failed', __('Failed to create task instance.', 'backstage-venue-manager'));
 		}
@@ -1387,11 +1418,12 @@ if (!function_exists('vms_tasks_update_instance_assignment')) {
 			$log_payload['role_key'] = $effective_role;
 		}
 
-		$updated = $wpdb->update(
-			$table,
-			$data,
-			array('id' => $instance_id),
-			$formats,
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance assignment updates mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
+			$updated = $wpdb->update(
+				$table,
+				$data,
+				array('id' => $instance_id),
+				$formats,
 			array('%d')
 		);
 		if ($updated === false) {
@@ -1560,10 +1592,11 @@ if (!function_exists('vms_tasks_transition_instance_status')) {
 			$formats[] = '%s';
 		}
 
-		$ok = $wpdb->update($table, $data, array('id' => $instance_id), $formats, array('%d'));
-		if ($ok === false) {
-			return new WP_Error('vms_tasks_status_update_failed', __('Failed to update task status.', 'backstage-venue-manager'));
-		}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance status transitions mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
+			$ok = $wpdb->update($table, $data, array('id' => $instance_id), $formats, array('%d'));
+			if ($ok === false) {
+				return new WP_Error('vms_tasks_status_update_failed', __('Failed to update task status.', 'backstage-venue-manager'));
+			}
 
 		$action = 'status_changed';
 		if ($new_status === 'done') {
@@ -1641,17 +1674,21 @@ if (!function_exists('vms_tasks_spawn_next_recurrence_instance')) {
 			$root_id = $instance_id;
 		}
 
-		$existing_id = (int) $wpdb->get_var($wpdb->prepare(
-			"SELECT id FROM {$table}
-			 WHERE (id = %d OR recurrence_root_instance_id = %d)
-			   AND due_at_local = %s
-			   AND status <> %s
-			 LIMIT 1",
-			$root_id,
-			$root_id,
-			$next_due,
-			'superseded'
-		));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance recurrence checks read the normalized custom repository with prepared identifier/filter values, and completion flows must detect existing successors immediately.
+			$existing_id = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT id FROM %i
+					 WHERE (id = %d OR recurrence_root_instance_id = %d)
+					   AND due_at_local = %s
+					   AND status <> %s
+					 LIMIT 1',
+					$table,
+					$root_id,
+					$root_id,
+					$next_due,
+					'superseded'
+				)
+			);
 		if ($existing_id > 0) {
 			return $existing_id;
 		}
@@ -1727,29 +1764,37 @@ if (!function_exists('vms_tasks_resolve_scheduled_role_user_id')) {
 			return array('status' => 'none', 'assignee_user_id' => 0, 'staff_ids' => array());
 		}
 
-		global $wpdb;
-		$t_slots = function_exists('vms_staffing_table_name') ? (string) vms_staffing_table_name('event_slots') : '';
-		$t_assign = function_exists('vms_staffing_table_name') ? (string) vms_staffing_table_name('assignments') : '';
-		if ($t_slots === '' || $t_assign === '') {
-			$t_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
-			$t_assign = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
-		}
+			global $wpdb;
+			$t_slots = function_exists('vms_staffing_table_name') ? (string) vms_staffing_table_name('event_slots') : '';
+			$t_assign = function_exists('vms_staffing_table_name') ? (string) vms_staffing_table_name('assignments') : '';
+			if ($t_slots === '' || $t_assign === '') {
+				$t_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
+				$t_assign = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
+			}
+			$t_usermeta = (property_exists($wpdb, 'usermeta') && is_string($wpdb->usermeta) && $wpdb->usermeta !== '')
+				? $wpdb->usermeta
+				: $wpdb->prefix . 'usermeta';
 
-		$staff_ids = $wpdb->get_col($wpdb->prepare(
-			"SELECT DISTINCT a.staff_id
-			 FROM {$t_slots} s
-			 INNER JOIN {$t_assign} a ON a.slot_id = s.slot_id
-			 WHERE s.event_plan_id = %d
-			   AND s.role_id = %d
-			   AND s.status = %s
-			   AND a.status IN (%s, %s, %s)",
-			$event_id,
-			$role_id,
-			'active',
-			'proposed',
-			'confirmed',
-			'checked_in'
-		));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled-role resolution reads the staffing repositories with prepared identifier/filter values, and portal/task assignment flows must observe immediate staffing changes.
+			$staff_ids = $wpdb->get_col(
+				$wpdb->prepare(
+					'SELECT DISTINCT a.staff_id
+					 FROM %i s
+					 INNER JOIN %i a ON a.slot_id = s.slot_id
+					 WHERE s.event_plan_id = %d
+					   AND s.role_id = %d
+					   AND s.status = %s
+					   AND a.status IN (%s, %s, %s)',
+					$t_slots,
+					$t_assign,
+					$event_id,
+					$role_id,
+					'active',
+					'proposed',
+					'confirmed',
+					'checked_in'
+				)
+			);
 
 		$staff_ids = array_values(array_unique(array_filter(array_map('absint', is_array($staff_ids) ? $staff_ids : array()))));
 		if (count($staff_ids) === 0) {
@@ -1759,19 +1804,19 @@ if (!function_exists('vms_tasks_resolve_scheduled_role_user_id')) {
 			return array('status' => 'multiple', 'assignee_user_id' => 0, 'staff_ids' => $staff_ids);
 		}
 
-		$staff_id = $staff_ids[0];
-		$user_id = absint(get_post_meta($staff_id, '_vms_linked_user_id', true));
-		if ($user_id <= 0) {
-			$users = get_users(array(
-				'number' => 1,
-				'fields' => array('ID'),
-				'meta_key' => '_vms_staff_id',
-				'meta_value' => $staff_id,
-			));
-			if (is_array($users) && !empty($users[0]) && isset($users[0]->ID)) {
-				$user_id = absint($users[0]->ID);
+			$staff_id = $staff_ids[0];
+			$user_id = absint(get_post_meta($staff_id, '_vms_linked_user_id', true));
+			if ($user_id <= 0) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled-role fallback reads a single normalized usermeta link with prepared identifier/filter values, and portal/task assignment flows must observe immediate link changes.
+				$user_id = (int) $wpdb->get_var(
+					$wpdb->prepare(
+						'SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1',
+						$t_usermeta,
+						'_vms_staff_id',
+						(string) $staff_id
+					)
+				);
 			}
-		}
 
 		if ($user_id <= 0) {
 			return array('status' => 'none', 'assignee_user_id' => 0, 'staff_ids' => $staff_ids);
@@ -1798,34 +1843,49 @@ if (!function_exists('vms_tasks_select_existing_open_instance')) {
 			return null;
 		}
 
-		if ($strict_due) {
-			if ($due_at_local === null || $due_at_local === '') {
-				$row = $wpdb->get_row($wpdb->prepare(
-					"SELECT * FROM {$table} WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND due_at_local IS NULL ORDER BY id DESC LIMIT 1",
-					$event_id,
-					$template_id,
-					$origin_checklist_id,
-					'open'
-				), ARRAY_A);
+			if ($strict_due) {
+				if ($due_at_local === null || $due_at_local === '') {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Existing-open-instance selection reads the normalized custom repository with prepared identifier/filter values, and regeneration/supersession flows must observe the latest request-local state.
+					$row = $wpdb->get_row(
+						$wpdb->prepare(
+							'SELECT * FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND due_at_local IS NULL ORDER BY id DESC LIMIT 1',
+							$table,
+							$event_id,
+							$template_id,
+							$origin_checklist_id,
+							'open'
+						),
+						ARRAY_A
+					);
+				} else {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Existing-open-instance selection reads the normalized custom repository with prepared identifier/filter values, and regeneration/supersession flows must observe the latest request-local state.
+					$row = $wpdb->get_row(
+						$wpdb->prepare(
+							'SELECT * FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND due_at_local = %s ORDER BY id DESC LIMIT 1',
+							$table,
+							$event_id,
+							$template_id,
+							$origin_checklist_id,
+							'open',
+							$due_at_local
+						),
+						ARRAY_A
+					);
+				}
 			} else {
-				$row = $wpdb->get_row($wpdb->prepare(
-					"SELECT * FROM {$table} WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND due_at_local = %s ORDER BY id DESC LIMIT 1",
-					$event_id,
-					$template_id,
-					$origin_checklist_id,
-					'open',
-					$due_at_local
-				), ARRAY_A);
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Existing-open-instance selection reads the normalized custom repository with prepared identifier/filter values, and regeneration/supersession flows must observe the latest request-local state.
+				$row = $wpdb->get_row(
+					$wpdb->prepare(
+						'SELECT * FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s ORDER BY id DESC LIMIT 1',
+						$table,
+						$event_id,
+						$template_id,
+						$origin_checklist_id,
+						'open'
+					),
+					ARRAY_A
+				);
 			}
-		} else {
-			$row = $wpdb->get_row($wpdb->prepare(
-				"SELECT * FROM {$table} WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s ORDER BY id DESC LIMIT 1",
-				$event_id,
-				$template_id,
-				$origin_checklist_id,
-				'open'
-			), ARRAY_A);
-		}
 
 		return is_array($row) ? $row : null;
 	}
@@ -1849,14 +1909,19 @@ if (!function_exists('vms_tasks_supersede_open_instances')) {
 			return 0;
 		}
 
-		$rows = $wpdb->get_results($wpdb->prepare(
-			"SELECT id FROM {$table} WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND id <> %d",
-			$event_id,
-			$template_id,
-			$origin_checklist_id,
-			'open',
-			$new_instance_id
-		), ARRAY_A);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Open-instance supersession reads the normalized custom repository with prepared identifier/filter values, and regeneration flows must observe the latest request-local state before mutating siblings.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT id FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND id <> %d',
+					$table,
+					$event_id,
+					$template_id,
+					$origin_checklist_id,
+					'open',
+					$new_instance_id
+				),
+				ARRAY_A
+			);
 
 		if (!is_array($rows) || empty($rows)) {
 			return 0;
@@ -1868,10 +1933,11 @@ if (!function_exists('vms_tasks_supersede_open_instances')) {
 			if ($instance_id <= 0) {
 				continue;
 			}
-			$updated = $wpdb->update(
-				$table,
-				array(
-					'status' => 'superseded',
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Open-instance supersession mutates sibling repository rows through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
+				$updated = $wpdb->update(
+					$table,
+					array(
+						'status' => 'superseded',
 					'superseded_by_instance_id' => $new_instance_id,
 					'updated_at' => vms_tasks_now_utc_mysql(),
 				),

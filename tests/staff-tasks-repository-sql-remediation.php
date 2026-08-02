@@ -425,6 +425,81 @@ function vms_test_collect_db_phpcs_inventory(array $paths): array
 }
 
 /**
+ * @param array<int,string> $inventory
+ * @return array<int,string>
+ */
+function vms_test_sort_inventory(array $inventory): array
+{
+	$sorted = array_values($inventory);
+	sort($sorted, SORT_STRING);
+	return $sorted;
+}
+
+/**
+ * @param array<int,string> $actual_inventory
+ * @param array<int,string> $expected_t1_inventory
+ * @param array<int,string> $expected_t2_inventory
+ * @return array{t1: array<int,string>, t2: array<int,string>, classified: array<int,string>}
+ */
+function vms_test_reconcile_directquery_inventory(
+	array $actual_inventory,
+	array $expected_t1_inventory,
+	array $expected_t2_inventory
+): array {
+	$overlap = array_values(array_intersect($expected_t1_inventory, $expected_t2_inventory));
+	vms_test_assert_same(array(), $overlap, 'T1 and T2 DirectQuery/NoCaching ownership must not overlap.');
+
+	$duplicate_inventory = array_keys(
+		array_filter(
+			array_count_values($actual_inventory),
+			static function (int $count): bool {
+				return $count > 1;
+			}
+		)
+	);
+	vms_test_assert_same(array(), $duplicate_inventory, 'DirectQuery/NoCaching inventory should not contain duplicate suppression entries.');
+
+	$expected_t1_lookup = array_fill_keys($expected_t1_inventory, true);
+	$expected_t2_lookup = array_fill_keys($expected_t2_inventory, true);
+	$actual_t1_inventory = array();
+	$actual_t2_inventory = array();
+	$classified_inventory = array();
+	$unknown_inventory = array();
+
+	foreach ($actual_inventory as $entry) {
+		if (isset($expected_t1_lookup[$entry])) {
+			$actual_t1_inventory[] = $entry;
+			$classified_inventory[] = $entry;
+			continue;
+		}
+
+		if (isset($expected_t2_lookup[$entry])) {
+			$actual_t2_inventory[] = $entry;
+			$classified_inventory[] = $entry;
+			continue;
+		}
+
+		$unknown_inventory[] = $entry;
+	}
+
+	vms_test_assert_same(array(), $unknown_inventory, 'Every DirectQuery/NoCaching suppression must be classified as T1 or T2.');
+	vms_test_assert_same($expected_t1_inventory, $actual_t1_inventory, 'The accepted T1 DirectQuery/NoCaching inventory should remain exact.');
+	vms_test_assert_same($expected_t2_inventory, $actual_t2_inventory, 'The accepted T2 DirectQuery/NoCaching inventory should remain exact.');
+	vms_test_assert_same(
+		vms_test_sort_inventory(array_merge($actual_t1_inventory, $actual_t2_inventory)),
+		vms_test_sort_inventory($actual_inventory),
+		'The combined T1/T2 DirectQuery/NoCaching inventories should reconcile to the complete actual inventory.'
+	);
+	vms_test_assert_same($actual_inventory, $classified_inventory, 'The classified DirectQuery/NoCaching inventory should preserve the full actual inventory order.');
+
+	return array(
+		't1' => $actual_t1_inventory,
+		't2' => $actual_t2_inventory,
+		'classified' => $classified_inventory,
+	);
+}
+
+/**
  * @return array<string,string>
  */
 function vms_test_collect_target_hashes(string $source, array $function_names): array
@@ -489,6 +564,7 @@ $live_plugin_root = dirname($plugin_root, 2) . '/vms';
 $store_path = $plugin_root . '/includes/modules/staff-tasks/store.php';
 $db_path = $plugin_root . '/includes/modules/staff-tasks/db.php';
 $admin_ui_path = $plugin_root . '/includes/modules/staff-tasks/admin-ui.php';
+$staff_portal_path = $plugin_root . '/includes/portal/staff-portal.php';
 $live_store_path = $live_plugin_root . '/includes/modules/staff-tasks/store.php';
 $live_db_path = $live_plugin_root . '/includes/modules/staff-tasks/db.php';
 $live_admin_ui_path = $live_plugin_root . '/includes/modules/staff-tasks/admin-ui.php';
@@ -500,7 +576,7 @@ $live_store_source = (string) file_get_contents($live_store_path);
 $live_db_source = (string) file_get_contents($live_db_path);
 $live_admin_ui_source = (string) file_get_contents($live_admin_ui_path);
 
-	$expected_inventory = array(
+$expected_t1_inventory = array(
 		'includes/modules/staff-tasks/store.php:221:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 		'includes/modules/staff-tasks/store.php:247:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 		'includes/modules/staff-tasks/store.php:270:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
@@ -531,8 +607,40 @@ $live_admin_ui_source = (string) file_get_contents($live_admin_ui_path);
 		'includes/modules/staff-tasks/admin-ui.php:274:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 		'includes/modules/staff-tasks/db.php:55:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	);
-$actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path));
-vms_test_assert_same($expected_inventory, $actual_inventory, 'The accepted T1 DirectQuery/NoCaching inventory should remain exact.');
+$expected_t2_inventory = array(
+	'includes/modules/staff-tasks/store.php:1088:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1158:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1246:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1362:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/modules/staff-tasks/store.php:1421:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1595:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1677:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1778:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1810:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1848:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1861:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1876:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1912:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:1936:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/portal/staff-portal.php:741:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/portal/staff-portal.php:1208:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+);
+$actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path, $staff_portal_path));
+vms_test_reconcile_directquery_inventory($actual_inventory, $expected_t1_inventory, $expected_t2_inventory);
+$invented_inventory = $actual_inventory;
+$invented_inventory[] = 'includes/portal/staff-portal.php:999999:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching';
+$negative_control_rejected = false;
+try {
+	vms_test_reconcile_directquery_inventory($invented_inventory, $expected_t1_inventory, $expected_t2_inventory);
+} catch (RuntimeException $exception) {
+	$negative_control_rejected = true;
+	vms_test_assert_contains(
+		'Every DirectQuery/NoCaching suppression must be classified as T1 or T2.',
+		$exception->getMessage(),
+		'Synthetic negative control should fail because the invented suppression is unclassified.'
+	);
+}
+vms_test_assert_true($negative_control_rejected, 'Synthetic negative control should reject an invented DirectQuery/NoCaching suppression.');
 vms_test_assert_true(strpos($store_source, 'PluginCheck.Security.DirectDB') === false, 'No DirectDB suppression should remain in the mirror store repository.');
 vms_test_assert_true(strpos($admin_ui_source, 'PluginCheck.Security.DirectDB') === false, 'No DirectDB suppression should remain in the mirror admin selector repository.');
 vms_test_assert_true(strpos($db_source, 'PluginCheck.Security.DirectDB') === false, 'No DirectDB suppression should remain in the mirror schema repository.');
