@@ -134,8 +134,10 @@ if (!function_exists('vms_admission_export_csv')) {
 
 		global $wpdb;
 		$table = vms_admission_table_entries();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CSV exports read the plugin-owned admissions repository with a %i/%d-prepared identifier and filter, and the download must reflect request-fresh event-plan state.
 		$rows = $wpdb->get_results($wpdb->prepare(
-			"SELECT guest_name, guest_email, party_size, phone, notes, status, source, owner_vendor_id FROM {$table} WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC",
+			'SELECT guest_name, guest_email, party_size, phone, notes, status, source, owner_vendor_id FROM %i WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC',
+			$table,
 			$event_plan_id
 		), ARRAY_A);
 

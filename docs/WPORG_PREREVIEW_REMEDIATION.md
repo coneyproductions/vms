@@ -4118,7 +4118,7 @@ Date: 2026-08-01
 
 ## WPORG-28R-G8-T2 Result
 
-Date: 2026-08-02
+Date: 2026-08-03
 
 ### Summary
 
@@ -4306,6 +4306,51 @@ Date: 2026-08-02
 ### Non-Actions
 
 - No runtime outside the authorized staffing-family mirror/live files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this child.
+- No upload, deployment, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
+
+## WPORG-28R-G9 Result
+
+Date: 2026-08-02
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G9`
+- Scope completed in this slice: only the admissions and claim-state DB/SQL boundaries in mirror/live `includes/modules/admissions/admin-ui.php`, `includes/modules/admissions/admission-tokens.php`, `includes/modules/admissions/audit.php`, `includes/modules/admissions/db.php`, `includes/modules/admissions/pass-claims.php`, `includes/modules/admissions/rest.php`, and `includes/modules/admissions/vendor-guest-portal.php`
+- Owned packaged rows: `255 -> 0`
+- Owned packaged boundaries: `39 -> 0`
+- Exact rule distribution: `UnescapedDBParameter 39`, `DirectQuery 82`, `NoCaching 74`, `InterpolatedNotPrepared 41`, `NotPrepared 7`, `UnfinishedPrepare 5`, `slow_meta_key 3`, and `slow_meta_query 4`
+- Evidence directories: `/tmp/wporg-28rg9-work.4s75wi` and `/tmp/wporg-28rg9-finalize.mpwQFZ`
+- Mirror/live boundary: `includes/modules/admissions/rest.php`, `includes/modules/admissions/audit.php`, and `includes/modules/admissions/admission-tokens.php` remained byte-identical across mirror/live after sync, while `includes/modules/admissions/admin-ui.php`, `includes/modules/admissions/db.php`, `includes/modules/admissions/pass-claims.php`, and `includes/modules/admissions/vendor-guest-portal.php` stayed synchronized only inside the owned G9 query boundaries and still diverge outside those regions
+
+### Runtime And Test Changes
+
+- Completed the admissions export, audit, schema-backfill, token, REST, vendor-portal, and public-claim query rewrites using `%i` identifier preparation where required, completed placeholder coverage in the remaining unfinished prepare sites, and added occurrence-specific direct-query or no-cache annotations only where the bounded custom-table access is intentional.
+- Narrowed the public claim-state and token flows so the claim lock, claim counts, token source or batch bookkeeping, pass-token lookup, portal duplicate or history reads, and scan or check-in helpers all use the owned prepared boundaries without widening into the deferred same-file input or logging families.
+- Preserved the documented mirror/live parity model by fully synchronizing `rest.php`, `audit.php`, and `admission-tokens.php`, while syncing only the owned G9 regions in the intentionally divergent admissions files.
+- Added the dedicated G9 inventory harness `tests/admissions-claim-state-query-boundaries-remediation.php` and the narrow validation-only updates in `tests/admissions-rest-patch-restore.php` plus `tests/staffing-final-repository-sql-remediation.php` that were required to keep the August 3, 2026 continuity reruns aligned with the current G9 implementation and date baseline.
+
+### Verification
+
+- Dedicated G9 inventory harness passed: `php tests/admissions-claim-state-query-boundaries-remediation.php`.
+- Admissions and claim-state suites passed: `php tests/pass-claims-public-form-output-remediation.php`, `php tests/pass-claims-public-shell-output-remediation.php`, `php tests/pass-claims-public-status-output-remediation.php`, `php tests/pass-claims-public-success-output-remediation.php`, `php tests/pass-claims-public-claimed-card-output-remediation.php`, `php tests/admissions-rest-permissions.php`, `php tests/admissions-rest-patch-restore.php`, `php tests/admissions-read-only-request-state-remediation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`.
+- G8 continuity plus support reruns passed: `php tests/staffing-final-repository-sql-remediation.php`, `php tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php`, `php tests/staffing-repository-sql-remediation.php`, `php tests/staff-task-instance-and-portal-repository-sql-remediation.php`, `php tests/staff-tasks-repository-sql-remediation.php`, `php tests/staff-tasks-overrides-json-remediation.php`, `php tests/staff-tasks-signature-json-remediation.php`, `php tests/vendor-portal-availability-autosave-remediation.php`, `php tests/authorization-boundary-hardening.php`, `php tests/runtime-stub-guards.php`, `php tests/release-compatibility-harness.php`, and `php tests/public-release-build-pipeline.php`.
+- PHP lint passed for mirror/live `includes/modules/admissions/admin-ui.php`, `includes/modules/admissions/admission-tokens.php`, `includes/modules/admissions/audit.php`, `includes/modules/admissions/db.php`, `includes/modules/admissions/pass-claims.php`, `includes/modules/admissions/rest.php`, `includes/modules/admissions/vendor-guest-portal.php`, plus `tests/admissions-claim-state-query-boundaries-remediation.php`, `tests/admissions-rest-patch-restore.php`, and `tests/staffing-final-repository-sql-remediation.php`.
+- Post-edit package result: `/tmp/wporg-28rg9-finalize.mpwQFZ/post-build-rerun/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `a402d8dedf4146becd36cbedeaa8a8b1d937ad9b1614b6c6d75242fb529f8bd8`.
+- Post-edit packaged Plugin Check result: exit `0`, empty stderr, `228` errors, `562` warnings, `790` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=661`; the raw strict JSON is `/tmp/wporg-28rg9-finalize.mpwQFZ/post-plugin-check-rerun/plugin-check.stdout.raw`.
+- Exact G9 code deltas: `UnescapedDBParameter 107 -> 68 (-39)`, `DirectQuery 228 -> 146 (-82)`, `NoCaching 202 -> 128 (-74)`, `InterpolatedNotPrepared 101 -> 60 (-41)`, `NotPrepared 50 -> 43 (-7)`, `UnfinishedPrepare 7 -> 2 (-5)`, `slow_meta_key 62 -> 59 (-3)`, and `slow_meta_query 87 -> 83 (-4)`; every other packaged rule-code count stayed unchanged, no new rule code appeared, and no unrelated blocker family increased.
+
+### Current Parent State
+
+- Current blocker-family totals after `WPORG-28R-G9`: DB/SQL `594`, nonce/input `0`, date/time `25`, and logging `42`.
+- `WPORG-28R-G9` is terminal under `verified`.
+- Remaining admissions packaged rows now belong only to same-file non-G9 output or logging families: `includes/modules/admissions/pass-claims.php` `OutputNotEscaped 4`, `includes/modules/admissions/vendor-guest-portal.php` `OutputNotEscaped 11`, and `includes/modules/admissions/rest.php` `error_log_error_log 4`.
+- Exact next implementation child: `WPORG-28R-G10 — Ticketing, Availability, And Integrity Query Boundaries`.
+- `WPORG-28R` remains blocked until `WPORG-28R-G10` through `WPORG-28R-G17` close and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+
+### Non-Actions
+
+- No runtime outside the authorized admissions-family mirror/live files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this child.
 - No upload, deployment, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
 
 Date: 2026-07-21

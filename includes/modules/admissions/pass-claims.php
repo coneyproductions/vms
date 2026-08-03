@@ -256,16 +256,16 @@ if (!function_exists('vms_pass_claims_get_published_event_plans')) {
 			),
 		);
 
-		$ids = get_posts(array(
-			'post_type' => 'vms_event_plan',
-			'post_status' => array('publish', 'draft', 'pending', 'private', 'future'),
-			'posts_per_page' => max(1, min(500, $limit)),
-			'fields' => 'ids',
-			'meta_key' => '_vms_event_date',
-			'orderby' => 'meta_value',
-			'order' => 'ASC',
-			'meta_query' => $meta_query,
-		));
+			$ids = get_posts(array(
+				'post_type' => 'vms_event_plan',
+				'post_status' => array('publish', 'draft', 'pending', 'private', 'future'),
+				'posts_per_page' => max(1, min(500, $limit)),
+				'fields' => 'ids',
+				'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Published event-plan lists intentionally sort by the existing event-date postmeta contract and remain bounded to the current admin request.
+				'orderby' => 'meta_value',
+				'order' => 'ASC',
+				'meta_query' => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Published event-plan lists intentionally filter by the existing event-date/status postmeta contract and remain bounded to the current admin request.
+			));
 
 		$out = array();
 		foreach ((array) $ids as $id) {
@@ -284,14 +284,16 @@ if (!function_exists('vms_pass_claims_get_sources')) {
 		global $wpdb;
 		$table = vms_admission_table_pass_sources();
 		if ($include_inactive) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-source lists read the plugin-owned pass-source table with a %i-prepared identifier so admin edits are immediately visible without a persistent cache layer.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					'SELECT * FROM %i ORDER BY source_name ASC, id DESC LIMIT 500',
 					$table
 				),
 				ARRAY_A
-			);
+				);
 		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active pass-source lists read the plugin-owned pass-source table with a %i/%s-prepared identifier and status filter so admin edits are immediately visible without a persistent cache layer.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					'SELECT * FROM %i WHERE status = %s ORDER BY source_name ASC, id DESC LIMIT 500',
@@ -313,6 +315,7 @@ if (!function_exists('vms_pass_claims_get_source_by_id')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_pass_sources();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-source reads target the plugin-owned pass-source table with a %i/%d-prepared identifier and ID, and admin maintenance must observe request-fresh state.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				'SELECT * FROM %i WHERE id = %d',
@@ -332,6 +335,7 @@ if (!function_exists('vms_pass_claims_get_batches')) {
 		$table = vms_admission_table_pass_batches();
 		$sources = vms_admission_table_pass_sources();
 		$limit = max(1, min(500, $limit));
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-batch lists read plugin-owned batch and source tables with %i/%d-prepared identifiers and bounds so admin maintenance reflects immediate writes.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				'SELECT b.*, s.source_name
@@ -357,6 +361,7 @@ if (!function_exists('vms_pass_claims_get_batch_by_id')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_pass_batches();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-batch reads target the plugin-owned batch table with a %i/%d-prepared identifier and ID, and admin maintenance must observe request-fresh state.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				'SELECT * FROM %i WHERE id = %d',
@@ -377,6 +382,7 @@ if (!function_exists('vms_pass_claims_get_token_by_id')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_pass_tokens();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-token reads target the plugin-owned token table with a %i/%d-prepared identifier and ID, and admin/public claim flows must observe request-fresh state.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				'SELECT * FROM %i WHERE id = %d',
@@ -399,6 +405,7 @@ if (!function_exists('vms_pass_claims_get_tokens')) {
 		$entries = vms_admission_table_entries();
 		$limit = max(1, min(10000, $limit));
 		if ($batch_id > 0) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch-scoped pass-token lists join plugin-owned token, batch, claim, and admissions tables with prepared identifiers and bounds so admin maintenance reflects immediate writes.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					'SELECT t.*, b.batch_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
@@ -417,8 +424,9 @@ if (!function_exists('vms_pass_claims_get_tokens')) {
 					$limit
 				),
 				ARRAY_A
-			);
+				);
 		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Global pass-token lists join plugin-owned token, batch, claim, and admissions tables with prepared identifiers and bounds so admin maintenance reflects immediate writes.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					'SELECT t.*, b.batch_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
@@ -515,6 +523,7 @@ if (!function_exists('vms_pass_claims_reports_by_source')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-source reporting joins plugin-owned source, batch, token, claim, and admissions tables with prepared identifiers so admin reporting reflects immediate request-fresh state.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT
@@ -558,6 +567,7 @@ if (!function_exists('vms_pass_claims_reports_by_batch')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-batch reporting joins plugin-owned batch, source, token, claim, and admissions tables with prepared identifiers so admin reporting reflects immediate request-fresh state.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT
@@ -606,6 +616,7 @@ if (!function_exists('vms_pass_claims_reports_source_events')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass source-by-event reporting joins plugin-owned claim, source, and admissions tables with prepared identifiers so admin reporting reflects immediate request-fresh state.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT
@@ -641,6 +652,7 @@ if (!function_exists('vms_pass_claims_reports_by_event')) {
 		$entries = vms_admission_table_entries();
 		$entries = vms_admission_table_entries();
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass event reporting joins plugin-owned claim and admissions tables with prepared identifiers so admin reporting reflects immediate request-fresh state.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT
@@ -921,15 +933,17 @@ if (!function_exists('vms_pass_claims_generate_tokens_for_batch')) {
 			return new WP_Error('invalid_batch_generation', __('Batch generation parameters are invalid.', 'backstage-venue-manager'));
 		}
 
-		global $wpdb;
-		$table = vms_admission_table_pass_tokens();
-		$now = vms_admission_now_mysql();
-		$samples = array();
+			global $wpdb;
+			$table = vms_admission_table_pass_tokens();
+			$now = vms_admission_now_mysql();
+			$samples = array();
 
-		$wpdb->query('START TRANSACTION');
-		for ($i = 0; $i < $quantity; $i += 1) {
-			$public_key = vms_pass_claims_generate_public_key();
-			$inserted = $wpdb->insert(
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation uses an explicit transaction on the plugin-owned token tables so partial token writes can roll back atomically.
+			$wpdb->query('START TRANSACTION');
+			for ($i = 0; $i < $quantity; $i += 1) {
+				$public_key = vms_pass_claims_generate_public_key();
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Batch generation writes directly to the plugin-owned pass-token table because no core API exposes this repository.
+				$inserted = $wpdb->insert(
 				$table,
 				array(
 					'batch_id' => $batch_id,
@@ -941,12 +955,13 @@ if (!function_exists('vms_pass_claims_generate_tokens_for_batch')) {
 					'created_by' => $created_by,
 				),
 				array('%d', '%d', '%s', '%s', '%s', '%s', '%d')
-			);
+				);
 
-			if ($inserted === false) {
-				$wpdb->query('ROLLBACK');
-				return new WP_Error('batch_token_insert_failed', __('Could not generate pass tokens.', 'backstage-venue-manager'));
-			}
+				if ($inserted === false) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation rolls back the explicit token transaction immediately when any token insert fails.
+					$wpdb->query('ROLLBACK');
+					return new WP_Error('batch_token_insert_failed', __('Could not generate pass tokens.', 'backstage-venue-manager'));
+				}
 
 			$token_id = (int) $wpdb->insert_id;
 			$token_row = array(
@@ -955,24 +970,27 @@ if (!function_exists('vms_pass_claims_generate_tokens_for_batch')) {
 				'token_public_key' => $public_key,
 				'created_at' => $now,
 			);
-			$raw_token = vms_pass_claims_build_raw_token($token_row);
-			if ($raw_token === '') {
-				$wpdb->query('ROLLBACK');
-				return new WP_Error('batch_token_signature_failed', __('Could not sign pass tokens.', 'backstage-venue-manager'));
-			}
+				$raw_token = vms_pass_claims_build_raw_token($token_row);
+				if ($raw_token === '') {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation rolls back the explicit token transaction immediately when token signing fails.
+					$wpdb->query('ROLLBACK');
+					return new WP_Error('batch_token_signature_failed', __('Could not sign pass tokens.', 'backstage-venue-manager'));
+				}
 
-			$hash = hash('sha256', $raw_token);
-			$updated = $wpdb->update(
-				$table,
-				array('token_hash' => $hash),
+				$hash = hash('sha256', $raw_token);
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation writes the finalized token hash directly to the plugin-owned token table inside the open transaction.
+				$updated = $wpdb->update(
+					$table,
+					array('token_hash' => $hash),
 				array('id' => $token_id),
 				array('%s'),
 				array('%d')
-			);
-			if ($updated === false) {
-				$wpdb->query('ROLLBACK');
-				return new WP_Error('batch_token_hash_failed', __('Could not finalize pass tokens.', 'backstage-venue-manager'));
-			}
+				);
+				if ($updated === false) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation rolls back the explicit token transaction immediately when any token hash write fails.
+					$wpdb->query('ROLLBACK');
+					return new WP_Error('batch_token_hash_failed', __('Could not finalize pass tokens.', 'backstage-venue-manager'));
+				}
 
 			if (count($samples) < 5) {
 				$samples[] = array(
@@ -980,24 +998,28 @@ if (!function_exists('vms_pass_claims_generate_tokens_for_batch')) {
 					'claim_url' => home_url('/pass/claim/' . rawurlencode($raw_token)),
 				);
 			}
-		}
+			}
 
-		$batches = vms_admission_table_pass_batches();
-		$batch_update = $wpdb->query($wpdb->prepare(
-			"UPDATE {$batches} SET generated_count = generated_count + %d, generated_at = %s, updated_at = %s, updated_by = %d WHERE id = %d",
-			$quantity,
-			$now,
-			$now,
+			$batches = vms_admission_table_pass_batches();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation updates the plugin-owned batch table directly with a %i-prepared identifier so generated counts persist in the same request transaction.
+			$batch_update = $wpdb->query($wpdb->prepare(
+				"UPDATE %i SET generated_count = generated_count + %d, generated_at = %s, updated_at = %s, updated_by = %d WHERE id = %d",
+				$batches,
+				$quantity,
+				$now,
+				$now,
 			$created_by,
 			$batch_id
-		));
+			));
 
-		if ($batch_update === false) {
-			$wpdb->query('ROLLBACK');
-			return new WP_Error('batch_update_failed', __('Could not finalize batch generation.', 'backstage-venue-manager'));
-		}
+			if ($batch_update === false) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation rolls back the explicit token transaction immediately when the batch aggregate write fails.
+				$wpdb->query('ROLLBACK');
+				return new WP_Error('batch_update_failed', __('Could not finalize batch generation.', 'backstage-venue-manager'));
+			}
 
-		$wpdb->query('COMMIT');
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch generation commits the explicit token transaction after all token and batch writes succeed.
+			$wpdb->query('COMMIT');
 		return array(
 			'generated_count' => $quantity,
 			'samples' => $samples,
@@ -1081,11 +1103,12 @@ if (!function_exists('vms_pass_claims_handle_source_save')) {
 			exit;
 		}
 
-		global $wpdb;
-		$table = vms_admission_table_pass_sources();
-		$now = vms_admission_now_mysql();
-		$user_id = get_current_user_id();
-		$inserted = $wpdb->insert(
+			global $wpdb;
+			$table = vms_admission_table_pass_sources();
+			$now = vms_admission_now_mysql();
+			$user_id = get_current_user_id();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Pass-source creation writes directly to the plugin-owned source table because no core API exposes this repository.
+			$inserted = $wpdb->insert(
 			$table,
 			array(
 				'source_name' => $source_name,
@@ -1185,10 +1208,11 @@ if (!function_exists('vms_pass_claims_handle_batch_generate')) {
 			exit;
 		}
 
-		global $wpdb;
-		$now = vms_admission_now_mysql();
-		$table = vms_admission_table_pass_batches();
-		$insert = $wpdb->insert(
+			global $wpdb;
+			$now = vms_admission_now_mysql();
+			$table = vms_admission_table_pass_batches();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Pass-batch creation writes directly to the plugin-owned batch table because no core API exposes this repository.
+			$insert = $wpdb->insert(
 			$table,
 			array(
 				'source_id' => (int) $payload['source_id'],
@@ -1223,12 +1247,13 @@ if (!function_exists('vms_pass_claims_handle_batch_generate')) {
 			exit;
 		}
 
-		$batch_id = (int) $wpdb->insert_id;
-		$generated = vms_pass_claims_generate_tokens_for_batch($batch_id, (int) $payload['quantity'], (int) $payload['source_id'], $user_id);
-		if (is_wp_error($generated)) {
-			$wpdb->delete($table, array('id' => $batch_id), array('%d'));
-			vms_pass_claims_set_user_message('error', $generated->get_error_message());
-			wp_safe_redirect(vms_pass_claims_admin_page_url(array('tab' => 'batches')));
+			$batch_id = (int) $wpdb->insert_id;
+			$generated = vms_pass_claims_generate_tokens_for_batch($batch_id, (int) $payload['quantity'], (int) $payload['source_id'], $user_id);
+			if (is_wp_error($generated)) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch-create rollback deletes the plugin-owned batch row directly when token generation fails inside the same request.
+				$wpdb->delete($table, array('id' => $batch_id), array('%d'));
+				vms_pass_claims_set_user_message('error', $generated->get_error_message());
+				wp_safe_redirect(vms_pass_claims_admin_page_url(array('tab' => 'batches')));
 			exit;
 		}
 
@@ -1304,11 +1329,12 @@ if (!function_exists('vms_pass_claims_handle_token_status_change')) {
 				vms_pass_claims_set_user_message('error', __('Claimed passes cannot be voided from this screen.', 'backstage-venue-manager'));
 				wp_safe_redirect(vms_pass_claims_admin_page_url(array('tab' => 'passes', 'batch_id' => (int) ($token_row['batch_id'] ?? $batch_id))));
 				exit;
-			}
-			if ($current_status !== 'void') {
-				$updated = $wpdb->update(
-					$table,
-					array(
+				}
+				if ($current_status !== 'void') {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-token status changes write directly to the plugin-owned token table so admin maintenance immediately reflects voided tokens.
+					$updated = $wpdb->update(
+						$table,
+						array(
 						'status' => 'void',
 						'voided_at' => $now,
 					),
@@ -1336,15 +1362,16 @@ if (!function_exists('vms_pass_claims_handle_token_status_change')) {
 			exit;
 		}
 
-		if ($current_status !== 'void') {
-			vms_pass_claims_set_user_message('error', __('Only void passes can be restored.', 'backstage-venue-manager'));
-			wp_safe_redirect(vms_pass_claims_admin_page_url(array('tab' => 'passes', 'batch_id' => (int) ($token_row['batch_id'] ?? $batch_id))));
-			exit;
-		}
+			if ($current_status !== 'void') {
+				vms_pass_claims_set_user_message('error', __('Only void passes can be restored.', 'backstage-venue-manager'));
+				wp_safe_redirect(vms_pass_claims_admin_page_url(array('tab' => 'passes', 'batch_id' => (int) ($token_row['batch_id'] ?? $batch_id))));
+				exit;
+			}
 
-		$updated = $wpdb->update(
-			$table,
-			array(
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-token status restoration writes directly to the plugin-owned token table so admin maintenance immediately reflects restored tokens.
+			$updated = $wpdb->update(
+				$table,
+				array(
 				'status' => 'unclaimed',
 				'voided_at' => null,
 			),
@@ -2439,9 +2466,10 @@ if (!function_exists('vms_pass_claims_find_token_by_raw')) {
 			return null;
 		}
 
-		global $wpdb;
-		$table = vms_admission_table_pass_tokens();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE token_public_key = %s", $public_key), ARRAY_A);
+			global $wpdb;
+			$table = vms_admission_table_pass_tokens();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Public pass-token reads target the plugin-owned token table with a %i/%s-prepared identifier and public key so claim validation observes request-fresh token state.
+			$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE token_public_key = %s', $table, $public_key), ARRAY_A);
 		if (!is_array($row)) {
 			return null;
 		}
@@ -2512,16 +2540,16 @@ if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
 			);
 		}
 
-		$ids = get_posts(array(
-			'post_type' => 'vms_event_plan',
-			'post_status' => array('publish', 'draft', 'pending', 'private', 'future'),
-			'posts_per_page' => 300,
-			'fields' => 'ids',
-			'meta_key' => '_vms_event_date',
-			'orderby' => 'meta_value',
-			'order' => 'ASC',
-			'meta_query' => $meta_query,
-		));
+			$ids = get_posts(array(
+				'post_type' => 'vms_event_plan',
+				'post_status' => array('publish', 'draft', 'pending', 'private', 'future'),
+				'posts_per_page' => 300,
+				'fields' => 'ids',
+				'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Eligible-event lists intentionally sort by the existing event-date postmeta contract and remain bounded to the active pass-claim request.
+				'orderby' => 'meta_value',
+				'order' => 'ASC',
+				'meta_query' => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Eligible-event lists intentionally filter by the existing event-date/status/venue postmeta contract and remain bounded to the active pass-claim request.
+			));
 
 		$out = array();
 		foreach ((array) $ids as $id) {
@@ -2594,6 +2622,30 @@ if (!function_exists('vms_pass_claims_rate_limit_hit')) {
 	}
 }
 
+if (!function_exists('vms_pass_claims_lock_token_for_claim')) {
+	function vms_pass_claims_lock_token_for_claim(string $tokens_table, int $token_id): int
+	{
+		if ($token_id <= 0) {
+			return 0;
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-state locking writes directly to the plugin-owned token table with a %i/%d-prepared identifier and ID so concurrent claim attempts serialize immediately.
+		return (int) $wpdb->query($wpdb->prepare("UPDATE %i SET status = 'claiming' WHERE id = %d AND status = 'unclaimed'", $tokens_table, $token_id));
+	}
+}
+
+if (!function_exists('vms_pass_claims_reset_token_unclaimed')) {
+	function vms_pass_claims_reset_token_unclaimed(string $tokens_table, int $token_id): void
+	{
+		if ($token_id <= 0) {
+			return;
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-state rollback writes directly to the plugin-owned token table with a %i/%d-prepared identifier and ID so failed claims release the token immediately.
+		$wpdb->query($wpdb->prepare("UPDATE %i SET status = 'unclaimed' WHERE id = %d", $tokens_table, $token_id));
+	}
+}
+
 if (!function_exists('vms_pass_claims_create_claim')) {
 	function vms_pass_claims_create_claim(array $token_row, array $batch, array $event_plan, array $input)
 	{
@@ -2603,14 +2655,14 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 		$entries_table = vms_admission_table_entries();
 
 		$token_id = (int) ($token_row['id'] ?? 0);
-		if ($token_id <= 0) {
-			return new WP_Error('invalid_token', __('Invalid pass token.', 'backstage-venue-manager'));
-		}
+			if ($token_id <= 0) {
+				return new WP_Error('invalid_token', __('Invalid pass token.', 'backstage-venue-manager'));
+			}
 
-		$lock = $wpdb->query($wpdb->prepare("UPDATE {$tokens_table} SET status = 'claiming' WHERE id = %d AND status = 'unclaimed'", $token_id));
-		if ($lock !== 1) {
-			return new WP_Error('already_claimed', __('This pass has already been claimed.', 'backstage-venue-manager'));
-		}
+			$lock = vms_pass_claims_lock_token_for_claim($tokens_table, $token_id);
+			if ($lock !== 1) {
+				return new WP_Error('already_claimed', __('This pass has already been claimed.', 'backstage-venue-manager'));
+			}
 
 		$first_name = sanitize_text_field((string) ($input['first_name'] ?? ''));
 		$last_name = sanitize_text_field((string) ($input['last_name'] ?? ''));
@@ -2627,56 +2679,63 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 		$venue_id = (int) ($event_plan['venue_id'] ?? 0);
 		$batch_id = (int) ($batch['id'] ?? 0);
 		$source_id = (int) ($batch['source_id'] ?? 0);
-		$now = vms_admission_now_mysql();
+			$now = vms_admission_now_mysql();
 
-		if ($first_name === '' || $last_name === '' || $phone_norm === '' || $event_plan_id <= 0) {
-			$wpdb->query($wpdb->prepare("UPDATE {$tokens_table} SET status = 'unclaimed' WHERE id = %d", $token_id));
-			return new WP_Error('invalid_claim_input', __('First name, last name, phone, and event are required.', 'backstage-venue-manager'));
-		}
-
-		$max_per_phone = max(0, (int) ($batch['max_per_phone'] ?? 0));
-		if ($max_per_phone > 0) {
-			$existing = (int) $wpdb->get_var($wpdb->prepare(
-				"SELECT COUNT(1) FROM {$claims_table} WHERE batch_id = %d AND phone_norm = %s",
-				$batch_id,
-				$phone_norm
-			));
-			if ($existing >= $max_per_phone) {
-				$wpdb->query($wpdb->prepare("UPDATE {$tokens_table} SET status = 'unclaimed' WHERE id = %d", $token_id));
-				return new WP_Error('phone_limit', __('This phone number has reached the claim limit for this pass batch.', 'backstage-venue-manager'));
+			if ($first_name === '' || $last_name === '' || $phone_norm === '' || $event_plan_id <= 0) {
+				vms_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+				return new WP_Error('invalid_claim_input', __('First name, last name, phone, and event are required.', 'backstage-venue-manager'));
 			}
-		}
 
-		$max_per_email = max(0, (int) ($batch['max_per_email'] ?? 0));
-		if ($max_per_email > 0 && $email !== '') {
-			$existing_email = (int) $wpdb->get_var($wpdb->prepare(
-				"SELECT COUNT(1) FROM {$claims_table} WHERE batch_id = %d AND email = %s",
-				$batch_id,
-				$email
-			));
-			if ($existing_email >= $max_per_email) {
-				$wpdb->query($wpdb->prepare("UPDATE {$tokens_table} SET status = 'unclaimed' WHERE id = %d", $token_id));
-				return new WP_Error('email_limit', __('This email address has reached the claim limit for this pass batch.', 'backstage-venue-manager'));
+			$max_per_phone = max(0, (int) ($batch['max_per_phone'] ?? 0));
+			if ($max_per_phone > 0) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-limit counts read the plugin-owned claims table with a %i/%d/%s-prepared identifier and filters so public claims reflect immediate prior submissions.
+				$existing = (int) $wpdb->get_var($wpdb->prepare(
+					"SELECT COUNT(1) FROM %i WHERE batch_id = %d AND phone_norm = %s",
+					$claims_table,
+					$batch_id,
+					$phone_norm
+				));
+				if ($existing >= $max_per_phone) {
+					vms_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+					return new WP_Error('phone_limit', __('This phone number has reached the claim limit for this pass batch.', 'backstage-venue-manager'));
+				}
 			}
-		}
 
-		$total_admission_cap = max(0, (int) ($batch['total_admission_cap'] ?? 0));
-		if ($total_admission_cap > 0) {
-			$claimed_headcount = (int) $wpdb->get_var($wpdb->prepare(
-				"SELECT COALESCE(SUM(party_size), 0) FROM {$entries_table} WHERE pass_batch_id = %d AND status <> 'canceled'",
-				$batch_id
-			));
-			if (($claimed_headcount + $party_size) > $total_admission_cap) {
-				$wpdb->query($wpdb->prepare("UPDATE {$tokens_table} SET status = 'unclaimed' WHERE id = %d", $token_id));
-				return new WP_Error('batch_capacity_limit', __('This pass batch does not have enough admissions remaining for that group size.', 'backstage-venue-manager'));
+			$max_per_email = max(0, (int) ($batch['max_per_email'] ?? 0));
+			if ($max_per_email > 0 && $email !== '') {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-limit counts read the plugin-owned claims table with a %i/%d/%s-prepared identifier and filters so public claims reflect immediate prior submissions.
+				$existing_email = (int) $wpdb->get_var($wpdb->prepare(
+					"SELECT COUNT(1) FROM %i WHERE batch_id = %d AND email = %s",
+					$claims_table,
+					$batch_id,
+					$email
+				));
+				if ($existing_email >= $max_per_email) {
+					vms_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+					return new WP_Error('email_limit', __('This email address has reached the claim limit for this pass batch.', 'backstage-venue-manager'));
+				}
 			}
-		}
 
-		$ip = vms_request_remote_addr();
-		$user_agent = vms_request_user_agent();
+			$total_admission_cap = max(0, (int) ($batch['total_admission_cap'] ?? 0));
+			if ($total_admission_cap > 0) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admission-cap counts read the plugin-owned admissions table with a %i/%d-prepared identifier and batch filter so public claims reflect immediate reservation writes.
+				$claimed_headcount = (int) $wpdb->get_var($wpdb->prepare(
+					"SELECT COALESCE(SUM(party_size), 0) FROM %i WHERE pass_batch_id = %d AND status <> 'canceled'",
+					$entries_table,
+					$batch_id
+				));
+				if (($claimed_headcount + $party_size) > $total_admission_cap) {
+					vms_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+					return new WP_Error('batch_capacity_limit', __('This pass batch does not have enough admissions remaining for that group size.', 'backstage-venue-manager'));
+				}
+			}
 
-		$insert_claim = $wpdb->insert(
-			$claims_table,
+			$ip = vms_request_remote_addr();
+			$user_agent = vms_request_user_agent();
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Public claim creation writes directly to the plugin-owned claims table because no core API exposes this repository.
+			$insert_claim = $wpdb->insert(
+				$claims_table,
 			array(
 				'token_id' => $token_id,
 				'batch_id' => $batch_id,
@@ -2693,11 +2752,11 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 				'created_at' => $now,
 			),
 			array('%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s')
-		);
-		if ($insert_claim === false) {
-			$wpdb->query($wpdb->prepare("UPDATE {$tokens_table} SET status = 'unclaimed' WHERE id = %d", $token_id));
-			return new WP_Error('claim_insert_failed', __('Could not create claim.', 'backstage-venue-manager'));
-		}
+			);
+			if ($insert_claim === false) {
+				vms_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+				return new WP_Error('claim_insert_failed', __('Could not create claim.', 'backstage-venue-manager'));
+			}
 		$claim_id = (int) $wpdb->insert_id;
 
 		$guest_name = trim($first_name . ' ' . $last_name);
@@ -2708,13 +2767,14 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 
 		$entry_ids = array();
 		$admission_tokens = array();
-		for ($slot = 1; $slot <= $party_size; $slot += 1) {
-			$slot_reference = $party_size > 1 ? sprintf('pc:%d:%d', $token_id, $slot) : $claim_reference;
-			$slot_notes = $party_size > 1
-				? sprintf('Pass claim from batch #%1$d. Individual pass %2$d of %3$d.', $batch_id, $slot, $party_size)
-				: $notes;
-			$insert_entry = $wpdb->insert(
-				$entries_table,
+			for ($slot = 1; $slot <= $party_size; $slot += 1) {
+				$slot_reference = $party_size > 1 ? sprintf('pc:%d:%d', $token_id, $slot) : $claim_reference;
+				$slot_notes = $party_size > 1
+					? sprintf('Pass claim from batch #%1$d. Individual pass %2$d of %3$d.', $batch_id, $slot, $party_size)
+					: $notes;
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Public claim reservation writes directly to the plugin-owned admissions table because no core API exposes this repository.
+				$insert_entry = $wpdb->insert(
+					$entries_table,
 				array(
 					'event_plan_id' => $event_plan_id,
 					'venue_id' => $venue_id,
@@ -2749,15 +2809,17 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 					'created_at' => $now,
 				),
 				array('%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%f', '%s', '%s', '%d', '%s')
-			);
-			if ($insert_entry === false) {
-				foreach ($entry_ids as $created_entry_id) {
-					$wpdb->delete($entries_table, array('id' => (int) $created_entry_id), array('%d'));
+				);
+				if ($insert_entry === false) {
+					foreach ($entry_ids as $created_entry_id) {
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Reservation rollback deletes directly from the plugin-owned admissions table so partial public-claim writes are fully reverted in-request.
+						$wpdb->delete($entries_table, array('id' => (int) $created_entry_id), array('%d'));
+					}
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Reservation rollback deletes the plugin-owned claim row directly when an admissions insert fails.
+					$wpdb->delete($claims_table, array('id' => $claim_id), array('%d'));
+					vms_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+					return new WP_Error('reservation_insert_failed', __('Could not create reservation.', 'backstage-venue-manager'));
 				}
-				$wpdb->delete($claims_table, array('id' => $claim_id), array('%d'));
-				$wpdb->query($wpdb->prepare("UPDATE {$tokens_table} SET status = 'unclaimed' WHERE id = %d", $token_id));
-				return new WP_Error('reservation_insert_failed', __('Could not create reservation.', 'backstage-venue-manager'));
-			}
 			$new_entry_id = (int) $wpdb->insert_id;
 			$entry_ids[] = $new_entry_id;
 			$new_token = function_exists('vms_admission_ensure_entry_token') ? vms_admission_ensure_entry_token($new_entry_id) : '';
@@ -2770,20 +2832,22 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 				);
 			}
 		}
-		$entry_id = (int) ($entry_ids[0] ?? 0);
-		$admission_token = (string) ($admission_tokens[0]['token'] ?? '');
+			$entry_id = (int) ($entry_ids[0] ?? 0);
+			$admission_token = (string) ($admission_tokens[0]['token'] ?? '');
 
-		$wpdb->update(
-			$claims_table,
-			array('reservation_entry_id' => $entry_id),
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim finalization writes the plugin-owned claims table directly so the reservation pointer persists with the freshly created admissions rows.
+			$wpdb->update(
+				$claims_table,
+				array('reservation_entry_id' => $entry_id),
 			array('id' => $claim_id),
 			array('%d'),
-			array('%d')
-		);
+				array('%d')
+			);
 
-		$token_update = $wpdb->update(
-			$tokens_table,
-			array(
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim finalization writes the plugin-owned token table directly so the claimed state and reservation pointer persist immediately.
+			$token_update = $wpdb->update(
+				$tokens_table,
+				array(
 				'status' => 'claimed',
 				'claimed_at' => $now,
 				'claim_id' => $claim_id,
@@ -2792,21 +2856,24 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 			array('id' => $token_id),
 			array('%s', '%s', '%d', '%d'),
 			array('%d')
-		);
+			);
 
-		if ($token_update === false) {
-			$wpdb->update(
-				$tokens_table,
-				array('status' => 'unclaimed', 'claimed_at' => null, 'claim_id' => null, 'reservation_entry_id' => null),
+			if ($token_update === false) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-finalization rollback writes the plugin-owned token table directly to release the token when the claimed-state write fails.
+				$wpdb->update(
+					$tokens_table,
+					array('status' => 'unclaimed', 'claimed_at' => null, 'claim_id' => null, 'reservation_entry_id' => null),
 				array('id' => $token_id),
 				array('%s', '%s', '%d', '%d'),
-				array('%d')
-			);
-			$wpdb->delete($claims_table, array('id' => $claim_id), array('%d'));
-			foreach ($entry_ids as $created_entry_id) {
-				$wpdb->delete($entries_table, array('id' => (int) $created_entry_id), array('%d'));
-			}
-			return new WP_Error('token_finalize_failed', __('Could not finalize claim token.', 'backstage-venue-manager'));
+					array('%d')
+				);
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-finalization rollback deletes the plugin-owned claim row directly when the token state cannot be finalized.
+				$wpdb->delete($claims_table, array('id' => $claim_id), array('%d'));
+				foreach ($entry_ids as $created_entry_id) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-finalization rollback deletes plugin-owned admissions rows directly when the token state cannot be finalized.
+					$wpdb->delete($entries_table, array('id' => (int) $created_entry_id), array('%d'));
+				}
+				return new WP_Error('token_finalize_failed', __('Could not finalize claim token.', 'backstage-venue-manager'));
 		}
 
 		if (function_exists('vms_admission_audit_log')) {

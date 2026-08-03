@@ -496,14 +496,18 @@ if (!function_exists('vms_admission_find_duplicate_entry_count')) {
 			$identity_where[] = 'guest_name_norm = %s';
 			$params[] = $guest_name_norm;
 		}
-		if (empty($identity_where)) {
-			return array('count' => 0);
-		}
-		$where[] = '(' . implode(' OR ', $identity_where) . ')';
-		$count = (int) $wpdb->get_var($wpdb->prepare(
-			"SELECT COUNT(1) FROM {$table} WHERE " . implode(' AND ', $where),
-			$params
-		));
+			if (empty($identity_where)) {
+				return array('count' => 0);
+			}
+			$where[] = '(' . implode(' OR ', $identity_where) . ')';
+			// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Duplicate-entry counts assemble a bounded WHERE clause from the literal placeholder fragments above, and the portal/admin validator must read request-fresh admissions state after writes.
+				$count = (int) $wpdb->get_var(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The duplicate-entry count prepares only bounded literal placeholder fragments plus the custom-table identifier assembled above.
+					$wpdb->prepare(
+						"SELECT COUNT(1) FROM {$table} WHERE " . implode(' AND ', $where), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The duplicate-entry count query string is assembled only from bounded literal placeholder fragments plus the plugin-owned table identifier.
+						$params
+					)
+				);
 		return array('count' => $count);
 	}
 }
@@ -645,14 +649,19 @@ if (!function_exists('vms_admission_vendor_guest_comp_history')) {
 			$identity[] = 'guest_name_norm = %s';
 			$params[] = $guest_name_norm;
 		}
-		if (empty($identity)) {
-			return array('count' => 0, 'event_ids' => array());
-		}
-		$where[] = '(' . implode(' OR ', $identity) . ')';
-		$rows = $wpdb->get_results($wpdb->prepare(
-			"SELECT DISTINCT event_plan_id FROM {$table} WHERE " . implode(' AND ', $where) . ' LIMIT 20',
-			$params
-		), ARRAY_A);
+			if (empty($identity)) {
+				return array('count' => 0, 'event_ids' => array());
+			}
+			$where[] = '(' . implode(' OR ', $identity) . ')';
+			// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest comp-history reads assemble a bounded admissions WHERE clause from literal placeholder fragments, and validation must stay request-fresh after portal/admin writes.
+				$rows = $wpdb->get_results(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The comp-history query prepares only bounded literal placeholder fragments plus the plugin-owned table identifier.
+					$wpdb->prepare(
+						"SELECT DISTINCT event_plan_id FROM {$table} WHERE " . implode(' AND ', $where) . ' LIMIT 20', // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The comp-history query string is assembled only from bounded literal placeholder fragments plus the plugin-owned table identifier.
+						$params
+					),
+					ARRAY_A
+			);
 		$event_ids = array_values(array_unique(array_filter(array_map(static function ($row): int {
 				return isset($row['event_plan_id']) ? (int) $row['event_plan_id'] : 0;
 			}, (array) $rows))));
@@ -668,13 +677,18 @@ if (!function_exists('vms_admission_vendor_guest_comp_history')) {
 			if ($phone_norm !== '') {
 				$claim_identity[] = 'phone_norm = %s';
 				$claim_params[] = $phone_norm;
-			}
-			if (!empty($claim_identity)) {
-				$claim_where[] = '(' . implode(' OR ', $claim_identity) . ')';
-				$claim_rows = $wpdb->get_results($wpdb->prepare(
-					"SELECT DISTINCT event_plan_id FROM {$claims_table} WHERE " . implode(' AND ', $claim_where) . ' LIMIT 20',
-					$claim_params
-				), ARRAY_A);
+				}
+				if (!empty($claim_identity)) {
+					$claim_where[] = '(' . implode(' OR ', $claim_identity) . ')';
+					// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest claim-history reads assemble a bounded pass-claims WHERE clause from literal placeholder fragments so validation sees request-fresh claim state.
+					$claim_rows = $wpdb->get_results(
+						// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The claim-history query prepares only bounded literal placeholder fragments plus the plugin-owned pass-claims table identifier.
+						$wpdb->prepare(
+							"SELECT DISTINCT event_plan_id FROM {$claims_table} WHERE " . implode(' AND ', $claim_where) . ' LIMIT 20', // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The claim-history query string is assembled only from bounded literal placeholder fragments plus the plugin-owned pass-claims table identifier.
+							$claim_params
+						),
+						ARRAY_A
+					);
 				foreach ((array) $claim_rows as $row) {
 					$event_id = isset($row['event_plan_id']) ? (int) $row['event_plan_id'] : 0;
 					if ($event_id > 0) {
@@ -722,10 +736,15 @@ if (!function_exists('vms_admission_vendor_guest_entries_for_vendor')) {
 		if (!$include_canceled) {
 			$where .= " AND status <> 'canceled'";
 		}
-		$rows = $wpdb->get_results($wpdb->prepare(
-			"SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC, id DESC",
-			$params
-		), ARRAY_A);
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest lists assemble a bounded WHERE clause from literal placeholder fragments, and the vendor portal must reflect request-fresh admissions state after writes.
+			$rows = $wpdb->get_results(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The vendor guest list query prepares only bounded literal placeholder fragments plus the plugin-owned table identifier.
+				$wpdb->prepare(
+					"SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC, id DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The vendor guest list query string is assembled only from bounded literal placeholder fragments plus the plugin-owned table identifier.
+					$params
+				),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -768,16 +787,16 @@ if (!function_exists('vms_admission_vendor_guest_portal_events')) {
 		$band_key = $band_key !== '' ? $band_key : '_vms_band_vendor_id';
 		$secondary_idx_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
 		$secondary_idx_key = $secondary_idx_key !== '' ? $secondary_idx_key : '_vms_secondary_vendor_id';
-		$posts = get_posts(array(
-			'post_type' => 'vms_event_plan',
-			'post_status' => array('publish', 'private', 'draft', 'pending'),
-			'posts_per_page' => 25,
-			'orderby' => 'meta_value',
-			'meta_key' => '_vms_event_date',
-			'order' => 'ASC',
-			'meta_query' => array(
-				'relation' => 'AND',
-				array(
+			$posts = get_posts(array(
+				'post_type' => 'vms_event_plan',
+				'post_status' => array('publish', 'private', 'draft', 'pending'),
+				'posts_per_page' => 25,
+				'orderby' => 'meta_value',
+				'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor portal event lists intentionally sort by the existing event-date postmeta contract and stay tightly bounded to near-term events.
+				'order' => 'ASC',
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor portal event lists intentionally filter by existing event-date and vendor postmeta so the current portal contract stays intact while remaining tightly bounded.
+					'relation' => 'AND',
+					array(
 					'key' => '_vms_event_date',
 					'value' => $today,
 					'compare' => '>=',
@@ -1253,11 +1272,12 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 		}
 		$flash_type = 'success';
 		$flash_message = __('Guest list updated.', 'backstage-venue-manager');
-		if ($mode === 'cancel') {
-			$entry_id = isset($_POST['entry_id']) ? absint((string) wp_unslash($_POST['entry_id'])) : 0;
-			global $wpdb;
-			$table = vms_admission_table_entries();
-			$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+			if ($mode === 'cancel') {
+				$entry_id = isset($_POST['entry_id']) ? absint((string) wp_unslash($_POST['entry_id'])) : 0;
+				global $wpdb;
+				$table = vms_admission_table_entries();
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest cancellations read one admissions row from the plugin-owned table with a %i/%d-prepared identifier and ID before ownership checks.
+				$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $entry_id), ARRAY_A);
 			if (!is_array($row)) {
 				$flash_type = 'error';
 				$flash_message = __('That guest entry could not be found.', 'backstage-venue-manager');
@@ -1268,12 +1288,13 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 				$flash_type = 'error';
 				$flash_message = __('This event is not currently open for vendor-managed guest entries.', 'backstage-venue-manager');
 			} else {
-				$claim_meta = $row['claim_meta'] ?? '';
-				$bridge = vms_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta);
-				vms_admission_vendor_guest_bridge_cancel($bridge, __('Vendor guest entry removed before check-in.', 'backstage-venue-manager'));
-				$updated = $wpdb->update(
-					$table,
-					array(
+					$claim_meta = $row['claim_meta'] ?? '';
+					$bridge = vms_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta);
+					vms_admission_vendor_guest_bridge_cancel($bridge, __('Vendor guest entry removed before check-in.', 'backstage-venue-manager'));
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest cancellations write directly to the plugin-owned admissions table so the portal and door list immediately reflect the canceled state.
+					$updated = $wpdb->update(
+						$table,
+						array(
 						'status' => 'canceled',
 						'updated_by' => $user_id,
 						'updated_at' => vms_admission_now_mysql(),
@@ -1424,10 +1445,11 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 								'group_key' => $group_key,
 								'group_size' => count($validated_guests),
 								'group_primary_name' => (string) ($validated_guests[0]['name'] ?? ''),
-							);
-							$insert = $wpdb->insert(
-								$table,
-								array(
+								);
+								// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Vendor guest submissions write directly to the plugin-owned admissions table because no core API exposes this repository.
+								$insert = $wpdb->insert(
+									$table,
+									array(
 									'event_plan_id' => $event_plan_id,
 									'venue_id' => $venue_id,
 									'admission_kind' => 'comp',
@@ -1474,14 +1496,15 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 								'group_size' => count($validated_guests),
 							));
 						}
-						if ($insert_failed) {
-							foreach ($created_bridges as $bridge) {
-								vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge rollback after partial vendor guest failure.', 'backstage-venue-manager'));
-							}
-							foreach ($created_rows as $entry_id) {
-								$wpdb->delete($table, array('id' => $entry_id), array('%d'));
-							}
-						} else {
+							if ($insert_failed) {
+								foreach ($created_bridges as $bridge) {
+									vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge rollback after partial vendor guest failure.', 'backstage-venue-manager'));
+								}
+								foreach ($created_rows as $entry_id) {
+									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest rollback deletes directly from the plugin-owned admissions table so partial portal writes are fully reverted in-request.
+									$wpdb->delete($table, array('id' => $entry_id), array('%d'));
+								}
+							} else {
 							$total_added = count($validated_guests);
 							if ($email_count > 0 && $email_count === $total_added) {
 								/* translators: %d: number of items described in this message. */

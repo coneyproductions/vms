@@ -200,6 +200,20 @@ if (!function_exists('vms_admission_prepare_row')) {
 	}
 }
 
+if (!function_exists('vms_admission_rest_entry_row')) {
+	function vms_admission_rest_entry_row(int $entry_id): ?array
+	{
+		if ($entry_id <= 0) {
+			return null;
+		}
+		global $wpdb;
+		$table = vms_admission_table_entries();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions REST single-row reads target the plugin-owned entries table with a %i/%d-prepared identifier and ID, and request-fresh state is required after create/check-in/update mutations.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $entry_id), ARRAY_A);
+		return is_array($row) ? $row : null;
+	}
+}
+
 
 if (!function_exists('vms_admission_source_label')) {
 	function vms_admission_source_label(string $source, string $kind = ''): string
@@ -314,6 +328,7 @@ if (!function_exists('vms_admission_rest_list')) {
 			LIMIT %d";
 		$params[] = $limit;
 
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions list queries assemble a bounded WHERE clause from the literal placeholder fragments above, and the request-fresh door/admin list must reflect immediate custom-table writes.
 		$rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
 		if (!is_array($rows)) {
 			return vms_admission_rest_error('db_error', __('Could not load admissions.', 'backstage-venue-manager'), 500);
@@ -370,6 +385,7 @@ if (!function_exists('vms_admission_rest_create')) {
 			: array('count' => 0);
 		$duplicate_count = (int) ($duplicate_check['count'] ?? 0);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admissions create writes directly to the plugin-owned entries table because no core API exposes this custom repository.
 		$insert = $wpdb->insert(
 			$table,
 			array(
@@ -402,7 +418,7 @@ if (!function_exists('vms_admission_rest_create')) {
 		if (function_exists('vms_admission_ensure_entry_token')) {
 			vms_admission_ensure_entry_token($entry_id);
 		}
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		$row = vms_admission_rest_entry_row($entry_id);
 		vms_admission_audit_log($event_plan_id, $entry_id, 'entry_create', get_current_user_id(), 'admin', array(
 			'duplicate_count' => $duplicate_count,
 		));
@@ -429,7 +445,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 
 		global $wpdb;
 		$table = vms_admission_table_entries();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		$row = vms_admission_rest_entry_row($entry_id);
 		if (!is_array($row)) {
 			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
@@ -523,6 +539,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 		$formats[] = '%d';
 		$formats[] = '%s';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions edit writes target the plugin-owned entries table directly so admin edits remain immediately visible to door and reporting flows.
 		$ok = $wpdb->update($table, $updates, array('id' => $entry_id), $formats, array('%d'));
 		if ($ok === false) {
 			error_log('VMS Admission update failed: ' . (string) $wpdb->last_error);
@@ -532,7 +549,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 		$action = ($status === 'canceled') ? 'entry_cancel' : 'entry_update';
 		vms_admission_audit_log((int) $row['event_plan_id'], $entry_id, $action, get_current_user_id(), 'admin', $details);
 
-		$fresh = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		$fresh = vms_admission_rest_entry_row($entry_id);
 		return vms_admission_rest_ok(array('item' => vms_admission_prepare_row(is_array($fresh) ? $fresh : $row)));
 	}
 }
@@ -559,7 +576,7 @@ if (!function_exists('vms_admission_rest_checkin')) {
 		$now = vms_admission_now_mysql();
 		$user_id = get_current_user_id();
 
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		$row = vms_admission_rest_entry_row($entry_id);
 		if (!is_array($row)) {
 			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
@@ -583,8 +600,9 @@ if (!function_exists('vms_admission_rest_checkin')) {
 		$new_qty = min($party_size, $checked_in_qty + $qty);
 		$new_status = ($new_qty >= $party_size) ? 'checked_in' : 'partial';
 
-		$sql = $wpdb->prepare(
-			"UPDATE {$table}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions check-in writes the plugin-owned entries table directly with a %i-prepared identifier so door actions persist immediately.
+		$updated = $wpdb->query($wpdb->prepare(
+			"UPDATE %i
 			SET status = %s,
 				checked_in_qty = %d,
 				checked_in_at = %s,
@@ -592,6 +610,7 @@ if (!function_exists('vms_admission_rest_checkin')) {
 				updated_at = %s,
 				updated_by = %d
 			WHERE id = %d AND status <> 'canceled'",
+			$table,
 			$new_status,
 			$new_qty,
 			$now,
@@ -599,14 +618,13 @@ if (!function_exists('vms_admission_rest_checkin')) {
 			$now,
 			$user_id,
 			$entry_id
-		);
-		$updated = $wpdb->query($sql);
+		));
 		if ($updated === false) {
 			error_log('VMS Admission checkin failed: ' . (string) $wpdb->last_error);
 			return vms_admission_rest_error('db_error', __('Could not check in guest.', 'backstage-venue-manager'), 500);
 		}
 
-		$fresh = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		$fresh = vms_admission_rest_entry_row($entry_id);
 		if (!is_array($fresh)) {
 			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
@@ -648,7 +666,7 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 		$now = vms_admission_now_mysql();
 		$user_id = get_current_user_id();
 
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		$row = vms_admission_rest_entry_row($entry_id);
 		if (!is_array($row)) {
 			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
@@ -668,8 +686,9 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 		$new_status = ($new_qty <= 0) ? 'active' : 'partial';
 
 		if ($new_qty <= 0) {
-			$sql = $wpdb->prepare(
-				"UPDATE {$table}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions uncheck-in writes the plugin-owned entries table directly with a %i-prepared identifier so door/admin reversals persist immediately.
+			$updated = $wpdb->query($wpdb->prepare(
+				"UPDATE %i
 				SET status = 'active',
 					checked_in_qty = 0,
 					checked_in_at = NULL,
@@ -677,32 +696,33 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 					updated_at = %s,
 					updated_by = %d
 				WHERE id = %d AND status <> 'canceled'",
+				$table,
 				$now,
 				$user_id,
 				$entry_id
-			);
+			));
 		} else {
-			$sql = $wpdb->prepare(
-				"UPDATE {$table}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions uncheck-in writes the plugin-owned entries table directly with a %i-prepared identifier so door/admin reversals persist immediately.
+			$updated = $wpdb->query($wpdb->prepare(
+				"UPDATE %i
 				SET status = 'partial',
 					checked_in_qty = %d,
 					updated_at = %s,
 					updated_by = %d
 				WHERE id = %d AND status <> 'canceled'",
+				$table,
 				$new_qty,
 				$now,
 				$user_id,
 				$entry_id
-			);
+			));
 		}
-
-		$updated = $wpdb->query($sql);
 		if ($updated === false) {
 			error_log('VMS Admission uncheckin failed: ' . (string) $wpdb->last_error);
 			return vms_admission_rest_error('db_error', __('Could not undo check-in.', 'backstage-venue-manager'), 500);
 		}
 
-		$fresh = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		$fresh = vms_admission_rest_entry_row($entry_id);
 		if (!is_array($fresh)) {
 			return vms_admission_rest_error('invalid_entry', __('Entry not found.', 'backstage-venue-manager'), 404);
 		}
@@ -732,13 +752,13 @@ if (!function_exists('vms_admission_rest_scan')) {
 
 		global $wpdb;
 		$table = vms_admission_table_entries();
-		$where = 'admission_token = %s';
-		$params = array($token);
 		if ($event_plan_id > 0) {
-			$where .= ' AND event_plan_id = %d';
-			$params[] = $event_plan_id;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions scan reads one request-fresh custom-table row with %i/%s/%d-prepared values so door validation reflects current token and event state.
+			$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE admission_token = %s AND event_plan_id = %d LIMIT 1', $table, $token, $event_plan_id), ARRAY_A);
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions scan reads one request-fresh custom-table row with %i/%s-prepared values so door validation reflects current token state.
+			$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE admission_token = %s LIMIT 1', $table, $token), ARRAY_A);
 		}
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE {$where} LIMIT 1", $params), ARRAY_A);
 		if (!is_array($row)) {
 			return vms_admission_rest_error('not_found', __('Admission not found for this event.', 'backstage-venue-manager'), 404);
 		}
@@ -787,17 +807,18 @@ if (!function_exists('vms_admission_rest_summary')) {
 
 		global $wpdb;
 		$table = vms_admission_table_entries();
-		$sql = $wpdb->prepare(
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions summary reads aggregate the plugin-owned entries table with a %i/%d-prepared identifier and event filter, and dashboard/door totals must stay request-fresh after writes.
+		$totals = $wpdb->get_row($wpdb->prepare(
 			"SELECT
 			SUM(CASE WHEN status <> 'canceled' THEN 1 ELSE 0 END) AS total_entries,
 			SUM(CASE WHEN status <> 'canceled' THEN party_size ELSE 0 END) AS total_headcount,
 			SUM(CASE WHEN status <> 'canceled' AND checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
 			SUM(CASE WHEN status <> 'canceled' THEN checked_in_qty ELSE 0 END) AS checked_in_headcount
-			FROM {$table}
+			FROM %i
 			WHERE event_plan_id = %d",
+			$table,
 			$event_plan_id
-		);
-		$totals = $wpdb->get_row($sql, ARRAY_A);
+		), ARRAY_A);
 		if (!is_array($totals)) {
 			return vms_admission_rest_error('db_error', __('Could not load summary.', 'backstage-venue-manager'), 500);
 		}
@@ -820,14 +841,14 @@ if (!function_exists('vms_admission_rest_event_plans_today')) {
 		}
 
 		$today = wp_date('Y-m-d', time(), wp_timezone());
-		$ids = get_posts(array(
-			'post_type' => 'vms_event_plan',
-			'post_status' => array('publish', 'draft', 'pending', 'private', 'future'),
-			'posts_per_page' => 50,
-			'fields' => 'ids',
-			'meta_query' => array(
-				array(
-					'key' => '_vms_event_date',
+			$ids = get_posts(array(
+				'post_type' => 'vms_event_plan',
+				'post_status' => array('publish', 'draft', 'pending', 'private', 'future'),
+				'posts_per_page' => 50,
+				'fields' => 'ids',
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Admissions door-plan lists intentionally filter by the existing event-date postmeta contract and remain tightly bounded to the current day view.
+					array(
+						'key' => '_vms_event_date',
 					'value' => $today,
 					'compare' => '=',
 				),

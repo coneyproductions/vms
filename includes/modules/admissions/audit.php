@@ -36,6 +36,7 @@ if (!function_exists('vms_admission_audit_log')) {
 		global $wpdb;
 
 		$table = vms_admission_table_audit();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admissions audit logging writes directly to the plugin-owned audit table because no core API exposes this repository.
 		$result = $wpdb->insert(
 			$table,
 			array(

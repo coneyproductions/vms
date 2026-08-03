@@ -92,12 +92,26 @@ final class VMS_Test_WPDB
 
 	public function prepare(string $query, ...$args): string
 	{
-		foreach ($args as $arg) {
-			$replacement = is_numeric($arg) ? (string) $arg : "'" . str_replace("'", "\\'", (string) $arg) . "'";
-			$query = preg_replace('/%[ds]/', $replacement, $query, 1) ?? $query;
-		}
+		$arg_index = 0;
+		return (string) preg_replace_callback(
+			'/(?<!%)%(?:\d+\$)?[ids]/',
+			static function (array $matches) use (&$arg_index, $args): string {
+				$placeholder = $matches[0];
+				$value = $args[$arg_index] ?? null;
+				$arg_index++;
 
-		return $query;
+				$type = substr($placeholder, -1);
+				if ($type === 'd') {
+					return (string) (int) $value;
+				}
+				if ($type === 'i') {
+					return '`' . str_replace('`', '``', (string) $value) . '`';
+				}
+
+				return "'" . str_replace(array('\\', "'"), array('\\\\', "\\'"), (string) $value) . "'";
+			},
+			$query
+		);
 	}
 
 	public function get_row(string $query, string $output = ARRAY_A): ?array

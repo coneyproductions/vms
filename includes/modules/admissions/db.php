@@ -241,9 +241,11 @@ if (!function_exists('vms_admission_maybe_upgrade_schema')) {
 		dbDelta($sql_claims);
 
 		// Backfill: checked-in rows from older schema should count as fully checked in.
-		$wpdb->query("UPDATE {$entries} SET checked_in_qty = party_size WHERE status = 'checked_in' AND (checked_in_qty IS NULL OR checked_in_qty = 0)");
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills write the plugin-owned admissions table directly because no core API exposes these custom rows during upgrades.
+		$wpdb->query($wpdb->prepare("UPDATE %i SET checked_in_qty = party_size WHERE status = 'checked_in' AND (checked_in_qty IS NULL OR checked_in_qty = 0)", $entries));
 
-		$rows = $wpdb->get_results("SELECT id, guest_email, phone FROM {$entries} WHERE (guest_email IS NOT NULL AND guest_email <> '' AND (guest_email_norm IS NULL OR guest_email_norm = '')) OR (phone IS NOT NULL AND phone <> '' AND (phone_norm IS NULL OR phone_norm = ''))", ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills read request-fresh admissions rows with missing normalized identity fields from the plugin-owned table before repair writes.
+		$rows = $wpdb->get_results($wpdb->prepare("SELECT id, guest_email, phone FROM %i WHERE (guest_email IS NOT NULL AND guest_email <> '' AND (guest_email_norm IS NULL OR guest_email_norm = '')) OR (phone IS NOT NULL AND phone <> '' AND (phone_norm IS NULL OR phone_norm = ''))", $entries), ARRAY_A);
 		foreach ((array) $rows as $row) {
 			$entry_id = isset($row['id']) ? (int) $row['id'] : 0;
 			if ($entry_id <= 0) {
@@ -251,6 +253,7 @@ if (!function_exists('vms_admission_maybe_upgrade_schema')) {
 			}
 			$email_norm = vms_admission_normalize_email((string) ($row['guest_email'] ?? ''));
 			$phone_norm = vms_admission_normalize_phone((string) ($row['phone'] ?? ''));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills write normalized identity fields directly to the plugin-owned admissions table during upgrades.
 			$wpdb->update(
 				$entries,
 				array(
@@ -264,7 +267,8 @@ if (!function_exists('vms_admission_maybe_upgrade_schema')) {
 		}
 
 		// Backfill native admission scan tokens for existing VMS admissions.
-		$token_rows = $wpdb->get_results("SELECT id FROM {$entries} WHERE admission_token = '' OR admission_token IS NULL LIMIT 5000", ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills read a bounded set of admissions rows that still need scan tokens from the plugin-owned table before calling the token repair helper.
+		$token_rows = $wpdb->get_results($wpdb->prepare("SELECT id FROM %i WHERE admission_token = '' OR admission_token IS NULL LIMIT 5000", $entries), ARRAY_A);
 		foreach ((array) $token_rows as $token_row) {
 			$entry_id = isset($token_row['id']) ? (int) $token_row['id'] : 0;
 			if ($entry_id > 0 && function_exists('vms_admission_ensure_entry_token')) {

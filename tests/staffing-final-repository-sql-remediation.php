@@ -380,14 +380,24 @@ function absint($value): int
 	return abs((int) $value);
 }
 
+function vms_test_today_ymd(): string
+{
+	return '2026-08-03';
+}
+
+function vms_test_horizon_ymd(int $days): string
+{
+	return (new DateTimeImmutable(vms_test_today_ymd(), new DateTimeZone('UTC')))->modify('+' . $days . ' days')->format('Y-m-d');
+}
+
 function wp_date(string $format, ?int $timestamp = null, ?DateTimeZone $timezone = null): string
 {
 	if ($timestamp === null) {
 		if ($format === 'Y-m-d') {
-			return '2026-08-02';
+			return vms_test_today_ymd();
 		}
 
-		return '2026-08-02 12:00:00';
+		return vms_test_today_ymd() . ' 12:00:00';
 	}
 
 	$timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone('UTC');
@@ -1301,7 +1311,7 @@ try {
 	vms_test_assert_same(array(201), $GLOBALS['vms_test_compute_rollup_calls'], 'Dashboard response should recompute only dirty rollups.');
 	vms_test_assert_same('READY', $response['items'][0]['readiness_label'], 'Dashboard response should format readiness labels through the shared helper.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT p.ID FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value >= %s ORDER BY pm.meta_value ASC, p.ID ASC LIMIT %d');
-	vms_test_assert_same(array('wp_postmeta', 'wp_posts', 'vms_event_plan', 'publish', 'draft', 'pending', 'private', 'future', '_vms_event_date', '2026-08-02', 120), $prepare['args'], 'Dashboard response should prepare the postmeta/posts identifiers, bounded statuses, event-date key, today boundary, and hard limit.');
+	vms_test_assert_same(array('wp_postmeta', 'wp_posts', 'vms_event_plan', 'publish', 'draft', 'pending', 'private', 'future', '_vms_event_date', vms_test_today_ymd(), 120), $prepare['args'], 'Dashboard response should prepare the postmeta/posts identifiers, bounded statuses, event-date key, today boundary, and hard limit.');
 	vms_test_assert_no_placeholders($prepare['final_sql'], 'Dashboard response final SQL should not retain placeholders.');
 
 	$wpdb = vms_test_reset_runtime();
@@ -1354,7 +1364,7 @@ try {
 	$ids = vms_tasks_collect_upcoming_event_ids(30);
 	vms_test_assert_same(array(81, 82), $ids, 'Generator horizon reads should dedupe prepared-query results and discard non-positive IDs.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT p.ID FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value >= %s AND pm.meta_value <= %s ORDER BY pm.meta_value ASC, p.ID ASC');
-	vms_test_assert_same(array('wp_postmeta', 'wp_posts', 'vms_event_plan', 'publish', 'private', 'draft', 'pending', 'future', '_vms_event_date', '2026-08-02', '2026-09-01'), $prepare['args'], 'Generator horizon reads should prepare postmeta/posts identifiers, bounded statuses, the event-date key, and the date window.');
+	vms_test_assert_same(array('wp_postmeta', 'wp_posts', 'vms_event_plan', 'publish', 'private', 'draft', 'pending', 'future', '_vms_event_date', vms_test_today_ymd(), vms_test_horizon_ymd(30)), $prepare['args'], 'Generator horizon reads should prepare postmeta/posts identifiers, bounded statuses, the event-date key, and the date window.');
 	vms_test_assert_no_placeholders($prepare['final_sql'], 'Generator horizon final SQL should not retain placeholders.');
 
 	fwrite(STDOUT, "staffing final repository sql remediation: PASS\n");

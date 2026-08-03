@@ -56,7 +56,8 @@ if (!function_exists('vms_admission_group_entries')) {
 		if ($claim_id <= 0) {
 			return $entry_id > 0 ? array($row) : array();
 		}
-		$rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE pass_claim_id = %d AND status <> 'canceled' ORDER BY id ASC", $claim_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-group reads target the plugin-owned admissions table with a %i/%d-prepared identifier and filter, and pass rendering must observe request-fresh claim state.
+		$rows = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE pass_claim_id = %d AND status <> \'canceled\' ORDER BY id ASC', $table, $claim_id), ARRAY_A);
 		if (!is_array($rows) || empty($rows)) {
 			return $entry_id > 0 ? array($row) : array();
 		}
@@ -126,7 +127,8 @@ if (!function_exists('vms_admission_ensure_entry_token')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_entries();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT id, admission_token FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Token issuance reads one admissions row from the plugin-owned table with a %i/%d-prepared identifier and ID before conditional mutation.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT id, admission_token FROM %i WHERE id = %d', $table, $entry_id), ARRAY_A);
 		if (!is_array($row)) {
 			return '';
 		}
@@ -136,6 +138,7 @@ if (!function_exists('vms_admission_ensure_entry_token')) {
 		}
 		for ($i = 0; $i < 5; $i += 1) {
 			$token = vms_admission_generate_public_token();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Token issuance writes directly to the plugin-owned admissions table because no core API exposes this repository and the retry loop must persist immediately.
 			$updated = $wpdb->update(
 				$table,
 				array(
@@ -148,7 +151,8 @@ if (!function_exists('vms_admission_ensure_entry_token')) {
 				array('%d', '%s')
 			);
 			if ($updated !== false) {
-				$fresh = (string) $wpdb->get_var($wpdb->prepare("SELECT admission_token FROM {$table} WHERE id = %d", $entry_id));
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Token issuance re-reads the freshly written admissions token from the plugin-owned table with a %i/%d-prepared identifier and ID.
+				$fresh = (string) $wpdb->get_var($wpdb->prepare('SELECT admission_token FROM %i WHERE id = %d', $table, $entry_id));
 				if ($fresh !== '') {
 					return $fresh;
 				}
@@ -168,7 +172,8 @@ if (!function_exists('vms_admission_event_comp_headcount')) {
 		}
 		global $wpdb;
 		$table = vms_admission_table_entries();
-		return max(0, (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(party_size), 0) FROM {$table} WHERE event_plan_id = %d AND status <> 'canceled'", $event_plan_id)));
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions headcount reads aggregate the plugin-owned entries table with a %i/%d-prepared identifier and event filter so staffing and admission flows see fresh counts.
+		return max(0, (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(party_size), 0) FROM %i WHERE event_plan_id = %d AND status <> 'canceled'", $table, $event_plan_id)));
 	}
 }
 
@@ -192,7 +197,8 @@ if (!function_exists('vms_admission_email_pass_result')) {
 	{
 		global $wpdb;
 		$table = vms_admission_table_entries();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-email composition reads one admissions row from the plugin-owned table with a %i/%d-prepared identifier and ID before building the outbound message.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $entry_id), ARRAY_A);
 		if (!is_array($row)) {
 			$result = array('sent' => false, 'code' => 'entry_not_found', 'message' => __('Admission entry was not found.', 'backstage-venue-manager'));
 			vms_admission_email_set_result($result);
@@ -303,7 +309,8 @@ if (!function_exists('vms_admission_email_pass_result')) {
 					$updates['admission_emailed_at'] = $now;
 					$formats[] = '%s';
 				}
-				$wpdb->update($table, $updates, array('id' => $gid), $formats, array('%d'));
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-email bookkeeping writes the plugin-owned admissions table directly so resend and audit flows observe the persisted email state immediately.
+					$wpdb->update($table, $updates, array('id' => $gid), $formats, array('%d'));
 			}
 		}
 		if (function_exists('vms_admission_audit_log')) {
@@ -354,7 +361,8 @@ if (!function_exists('vms_admission_scan_template_router')) {
 
 		global $wpdb;
 		$table = vms_admission_table_entries();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE admission_token = %s LIMIT 1", $token), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Public scan rendering reads one admissions row from the plugin-owned table with a %i/%s-prepared identifier and token, and the ticket surface must reflect request-fresh status.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE admission_token = %s LIMIT 1', $table, $token), ARRAY_A);
 		$status = is_array($row) ? (string) ($row['status'] ?? '') : '';
 		$name = is_array($row) ? (string) ($row['guest_name'] ?? '') : '';
 		$event_plan_id = is_array($row) ? (int) ($row['event_plan_id'] ?? 0) : 0;
