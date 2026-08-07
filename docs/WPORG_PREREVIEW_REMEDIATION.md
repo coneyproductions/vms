@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, and `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` then removed the full `233` Staff Tasks and staffing DB/SQL rows across `52` boundaries. The current packaged residual baseline is now `239` errors, `806` warnings, `1045` total findings, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=916`, with the remaining ordered implementation roadmap now beginning at `WPORG-28R-G9`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` then removed the full `233` Staff Tasks and staffing DB/SQL rows across `52` boundaries, `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows, and the current `WPORG-28R-G10` checkpoint has already removed the verified `132` ticketing-claims and availability-date-dispatch DB/SQL rows. The current packaged residual baseline is now `198` errors, `460` warnings, `658` total findings, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=529`, with the active ordered implementation roadmap now continuing inside `WPORG-28R-G10` at the remaining Ticketing Phase B query-boundary slice.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4351,6 +4351,52 @@ Date: 2026-08-02
 ### Non-Actions
 
 - No runtime outside the authorized admissions-family mirror/live files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this child.
+- No upload, deployment, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
+
+## WPORG-28R-G10 Result
+
+Date: 2026-08-07
+
+### Summary
+
+- Result: `PASS`
+- Exact finding identifier: `WPORG-28R-G10`
+- Checkpoint status: `in progress`; this closeout records the current verified `G10` checkpoint only and does not claim the whole `G10` family is complete
+- Scope completed in this checkpoint: only the availability-date-dispatch repository SQL slice in mirror/live `includes/modules/availability-date-dispatch/helpers.php`, the ticketing claims repository SQL slice in mirror/live `includes/integrations/ticketing-claims-framework.php`, and the narrow ADD bootstrap alignment in `tests/add-dispatch-assignment-review.php`
+- Checkpoint packaged delta from the preserved clean-head baseline: `228 -> 198` errors, `562 -> 460` warnings, `790 -> 658` total findings, `661 -> 529` submission blockers, and `594 -> 462` DB/SQL
+- Exact slice deltas: `includes/modules/availability-date-dispatch/helpers.php 85 -> 2 (-83)` and `includes/integrations/ticketing-claims-framework.php 49 -> 0 (-49)`
+- Exact checkpoint code deltas from the preserved clean-head baseline: `DirectQuery 146 -> 108 (-38)`, `NoCaching 128 -> 95 (-33)`, `UnescapedDBParameter 68 -> 46 (-22)`, `InterpolatedNotPrepared 60 -> 38 (-22)`, and `NotPrepared 43 -> 26 (-17)`; no new rule code appeared and no unrelated file count changed
+- Evidence directories: `/tmp/wporg-28r-reconcile.cC41Ka`, `/tmp/wporg-28rg10-adddispatch.rGuUaR`, and `/tmp/wporg-28rg10-ticketclaims-final.yEYxQm`
+- Mirror/live boundary: `includes/integrations/ticketing-claims-framework.php` is now byte-identical across mirror/live, while the owned ADD helper functions remain synchronized inside the intentionally divergent `includes/modules/availability-date-dispatch/helpers.php` file and the only remaining whole-file drift is the preserved unrelated request-token/request-choice comment boundary outside the owned G10 slice
+
+### Runtime And Test Changes
+
+- Completed the ADD helper repository SQL slice by converting the owned request/response, portal-interest, and assignment-review custom-table reads to `%i`/value-prepared boundaries, adding occurrence-specific direct-query/no-cache ownership comments only where the bounded custom-table access is intentional, and preserving the deferred `vms_add_dispatch_get_event_plan_need_scan()` slow-meta rows at lines `453` and `457`.
+- Added the dedicated ADD repository harness `tests/add-dispatch-repository-sql-remediation.php` and aligned `tests/add-dispatch-assignment-review.php` to the shared WordPress bootstrap resolver so the existing assignment-review regression can run from this mirror workspace.
+- Completed the ticketing claims repository SQL slice by converting the owned grants, reservations, logs, and recent-assignee helper repositories in `includes/integrations/ticketing-claims-framework.php` to `%i`-prepared or bounded-literal prepared access, adding direct-mutation ownership comments for the intentional custom-table writes, and clearing the file from the packaged inventory without widening into the remaining ticketing families.
+
+### Verification
+
+- ADD repository verification passed: `php tests/add-dispatch-repository-sql-remediation.php`, `php tests/add-dispatch-assignment-review.php`, and `php tests/availability-date-dispatch-request-state-remediation.php`.
+- Ticketing claims verification passed: `php tests/ticketing-claims-repository-sql-remediation.php`, `php tests/ticket-claims-assignee-validation.php`, and `php tests/event-plan-legacy-ticketing-integration-smoke.php`.
+- PHP lint passed for mirror/live `includes/modules/availability-date-dispatch/helpers.php` and `includes/integrations/ticketing-claims-framework.php`, plus `tests/add-dispatch-assignment-review.php`, `tests/add-dispatch-repository-sql-remediation.php`, and `tests/ticketing-claims-repository-sql-remediation.php`.
+- `git diff --check` passed.
+- Final checkpoint package result: `/tmp/wporg-28rg10-ticketclaims-final.yEYxQm/build/backstage-venue-manager-1.2.0-public-release.zip` with SHA-256 `c2cb0d8dd84d165cf9cfdb27ee041c9d7968c68d230c09ca6f7123e87c527058`.
+- Final packaged Plugin Check result: exit `0`, empty stderr, `198` errors, `460` warnings, `658` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=529`; the raw strict JSON is `/tmp/wporg-28rg10-ticketclaims-final.yEYxQm/plugin-check/plugin-check.strict.json`.
+- Known unrelated baseline note preserved: `php tests/add-dispatch-open-vendor-needs.php` still reflects the preexisting open-needs visibility failure in the untouched `vms_add_dispatch_get_event_plan_need_scan()` path and was not part of this checkpoint closeout.
+
+### Current Parent State
+
+- Current blocker-family totals after this `WPORG-28R-G10` checkpoint: DB/SQL `462`, nonce/input `0`, date/time `25`, and logging `42`.
+- `WPORG-28R-G10` remains `in progress`; do not mark the whole `G10` family complete from this checkpoint alone.
+- The completed checkpoint now leaves the remaining G10-family packaged inventory led by `includes/integrations/ticketing-phase-b.php` `25`, `includes/integrations/ticketing-rules-v2.php` `23`, `includes/ticketing/ticket-inventory-forensics.php` `15`, `includes/integrations/ticketing.php` `14`, `includes/ticketing/ticket-mutation-audit.php` `14`, `includes/admin/ticket-integrity-page.php` `3`, and `includes/modules/availability-date-dispatch/helpers.php` `2`.
+- Exact next handoff: continue `WPORG-28R-G10` with the remaining Ticketing Phase B query-boundary slice in `includes/integrations/ticketing-phase-b.php`.
+- `WPORG-28R` remains blocked until the remaining `G10` work plus `WPORG-28R-G11` through `WPORG-28R-G17` close and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
+
+### Non-Actions
+
+- No runtime outside the authorized ADD and ticketing-claims mirror/live files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this checkpoint.
+- Did not start `queue-repo.php`, `ticketing-phase-b.php`, or any other new remediation family.
 - No upload, deployment, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
 
 Date: 2026-07-21

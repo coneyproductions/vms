@@ -861,8 +861,10 @@ if (!function_exists('vms_add_dispatch_vendor_previously_contacted')) {
 			return false;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD recipient-history reads query the plugin-owned responses table with %i/%d-prepared values so request composition reflects fresh outreach state.
 		$count = (int) $wpdb->get_var($wpdb->prepare(
-			"SELECT COUNT(1) FROM {$table} WHERE event_plan_id = %d AND vendor_id = %d",
+			'SELECT COUNT(1) FROM %i WHERE event_plan_id = %d AND vendor_id = %d',
+			$table,
 			$event_plan_id,
 			$vendor_id
 		));
@@ -1116,7 +1118,8 @@ if (!function_exists('vms_add_dispatch_get_response')) {
 			return null;
 		}
 
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $response_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD response reads query the plugin-owned responses table with %i/%d-prepared values so admin/public flows can reload fresh custom-table state after mutations.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $response_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -1146,7 +1149,8 @@ if (!function_exists('vms_add_dispatch_find_response_by_raw_token')) {
 			return null;
 		}
 
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE token_public_key = %s", $public_key), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD token lookups query the plugin-owned responses table with %i/%s-prepared values so public response validation sees fresh token state.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE token_public_key = %s', $table, $public_key), ARRAY_A);
 		if (!is_array($row)) {
 			return null;
 		}
@@ -1198,6 +1202,7 @@ if (!function_exists('vms_add_dispatch_log')) {
 			return false;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- ADD audit logging persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository contract.
 		$ok = $wpdb->insert(
 			$table,
 			array(
@@ -1230,7 +1235,8 @@ if (!function_exists('vms_add_dispatch_get_request')) {
 			return null;
 		}
 
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $request_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD request reads query the plugin-owned requests table with %i/%d-prepared values so admin workflows can reload fresh custom-table state after writes.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $request_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -1246,23 +1252,27 @@ if (!function_exists('vms_add_dispatch_get_requests_for_event_plan')) {
 		}
 
 		$limit = max(1, min(100, $limit));
-		$sql = $wpdb->prepare(
-			"SELECT r.*,
-				COUNT(resp.id) AS recipient_total,
-				SUM(CASE WHEN resp.response_status = 'available' THEN 1 ELSE 0 END) AS available_count,
-				SUM(CASE WHEN resp.response_status = 'unavailable' THEN 1 ELSE 0 END) AS unavailable_count,
-				SUM(CASE WHEN resp.response_status = 'requested' THEN 1 ELSE 0 END) AS requested_count
-			FROM {$requests} r
-			LEFT JOIN {$responses} resp ON resp.request_id = r.id
-			WHERE r.event_plan_id = %d
-			GROUP BY r.id
-			ORDER BY r.created_at DESC
-			LIMIT %d",
-			$event_plan_id,
-			$limit
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD request rollups read the plugin-owned request/response tables with %i/%d-prepared values so dashboard history reflects immediate recipient mutations.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT r.*,
+					COUNT(resp.id) AS recipient_total,
+					SUM(CASE WHEN resp.response_status = 'available' THEN 1 ELSE 0 END) AS available_count,
+					SUM(CASE WHEN resp.response_status = 'unavailable' THEN 1 ELSE 0 END) AS unavailable_count,
+					SUM(CASE WHEN resp.response_status = 'requested' THEN 1 ELSE 0 END) AS requested_count
+				FROM %i AS r
+				LEFT JOIN %i AS resp ON resp.request_id = r.id
+				WHERE r.event_plan_id = %d
+				GROUP BY r.id
+				ORDER BY r.created_at DESC
+				LIMIT %d",
+				$requests,
+				$responses,
+				$event_plan_id,
+				$limit
+			),
+			ARRAY_A
 		);
-
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -1278,21 +1288,25 @@ if (!function_exists('vms_add_dispatch_get_recent_requests')) {
 		}
 
 		$limit = max(1, min(100, $limit));
-		$sql = $wpdb->prepare(
-			"SELECT r.*,
-				COUNT(resp.id) AS recipient_total,
-				SUM(CASE WHEN resp.response_status = 'available' THEN 1 ELSE 0 END) AS available_count,
-				SUM(CASE WHEN resp.response_status = 'unavailable' THEN 1 ELSE 0 END) AS unavailable_count,
-				SUM(CASE WHEN resp.response_status = 'requested' THEN 1 ELSE 0 END) AS requested_count
-			FROM {$requests} r
-			LEFT JOIN {$responses} resp ON resp.request_id = r.id
-			GROUP BY r.id
-			ORDER BY r.created_at DESC
-			LIMIT %d",
-			$limit
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD recent-request rollups read the plugin-owned request/response tables with %i/%d-prepared values so dashboard history reflects immediate recipient mutations.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT r.*,
+					COUNT(resp.id) AS recipient_total,
+					SUM(CASE WHEN resp.response_status = 'available' THEN 1 ELSE 0 END) AS available_count,
+					SUM(CASE WHEN resp.response_status = 'unavailable' THEN 1 ELSE 0 END) AS unavailable_count,
+					SUM(CASE WHEN resp.response_status = 'requested' THEN 1 ELSE 0 END) AS requested_count
+				FROM %i AS r
+				LEFT JOIN %i AS resp ON resp.request_id = r.id
+				GROUP BY r.id
+				ORDER BY r.created_at DESC
+				LIMIT %d",
+				$requests,
+				$responses,
+				$limit
+			),
+			ARRAY_A
 		);
-
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -1306,8 +1320,9 @@ if (!function_exists('vms_add_dispatch_get_responses_for_request')) {
 			return array();
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD response lists read the plugin-owned responses table with %i/%d-prepared values so admin review shows fresh response state after writes.
 		$rows = $wpdb->get_results(
-			$wpdb->prepare("SELECT * FROM {$table} WHERE request_id = %d ORDER BY responded_at DESC, created_at ASC", $request_id),
+			$wpdb->prepare('SELECT * FROM %i WHERE request_id = %d ORDER BY responded_at DESC, created_at ASC', $table, $request_id),
 			ARRAY_A
 		);
 		if (!is_array($rows)) {
@@ -1333,12 +1348,16 @@ if (!function_exists('vms_add_dispatch_get_recent_responses_for_event_plan')) {
 		}
 
 		$limit = max(1, min(100, $limit));
-		$sql = $wpdb->prepare(
-			"SELECT * FROM {$table} WHERE event_plan_id = %d ORDER BY created_at DESC LIMIT %d",
-			$event_plan_id,
-			$limit
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD recent-response reads query the plugin-owned responses table with %i/%d-prepared values so dashboard history stays request-fresh after writes.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE event_plan_id = %d ORDER BY created_at DESC LIMIT %d',
+				$table,
+				$event_plan_id,
+				$limit
+			),
+			ARRAY_A
 		);
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		if (!is_array($rows)) {
 			return array();
 		}
@@ -1372,6 +1391,7 @@ if (!function_exists('vms_add_dispatch_create_request')) {
 		}
 
 		$now = vms_add_dispatch_now_mysql();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- ADD request creation persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
 		$inserted = $wpdb->insert(
 			$requests_table,
 			array(
@@ -1416,6 +1436,7 @@ if (!function_exists('vms_add_dispatch_create_request')) {
 			$raw_token = $public_key . '.' . vms_add_dispatch_token_signature($public_key, $request_id, $vendor_id, $now);
 			$token_hash = hash('sha256', $raw_token);
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- ADD recipient creation persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
 			$response_inserted = $wpdb->insert(
 				$responses_table,
 				array(
@@ -1449,10 +1470,12 @@ if (!function_exists('vms_add_dispatch_create_request')) {
 		}
 
 		if (empty($responses)) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD request rollback deletes the plugin-owned request row directly so partial recipient batches are fully reverted in-request.
 			$wpdb->delete($requests_table, array('id' => $request_id), array('%d'));
 			return new WP_Error('add_dispatch_response_insert_failed', __('The ADD request could not create any valid recipient rows.', 'backstage-venue-manager'));
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD request finalization writes the plugin-owned request row directly so recipient totals remain consistent with the freshly inserted response rows.
 		$wpdb->update(
 			$requests_table,
 			array(
@@ -1519,6 +1542,7 @@ if (!function_exists('vms_add_dispatch_prepare_resend')) {
 
 		$now = vms_add_dispatch_now_mysql();
 		$expires_at = wp_date('Y-m-d H:i:s', time() + (14 * DAY_IN_SECONDS), function_exists('wp_timezone') ? wp_timezone() : null);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD resend writes the plugin-owned response row directly so fresh token expiry and send counts persist immediately.
 		$updated = $wpdb->update(
 			$responses_table,
 			array(
@@ -1562,6 +1586,7 @@ if (!function_exists('vms_add_dispatch_close_request')) {
 			return new WP_Error('add_dispatch_request_missing', __('The ADD request could not be found.', 'backstage-venue-manager'));
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD request closure writes the plugin-owned request row directly so admin close actions persist immediately.
 		$updated = $wpdb->update(
 			$table,
 			array(
@@ -1683,6 +1708,7 @@ if (!function_exists('vms_add_dispatch_record_public_response')) {
 		}
 
 		$now = vms_add_dispatch_now_mysql();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD public-response writes the plugin-owned response row directly so availability choices and audit fields persist immediately.
 		$updated = $wpdb->update(
 			$responses_table,
 			array(
@@ -1841,23 +1867,49 @@ if (!function_exists('vms_add_dispatch_get_portal_interest_response')) {
 			return null;
 		}
 
-		$sql = "
-			SELECT resp.*, req.status AS request_status, req.vendor_type, req.target_mode
-			FROM {$responses_table} resp
-			INNER JOIN {$requests_table} req ON req.id = resp.request_id
-			WHERE resp.event_plan_id = %d
-			  AND resp.vendor_id = %d
-			  AND resp.response_source = %s
-		";
-		$params = array($event_plan_id, $vendor_id, 'portal_interest');
-
 		if ($require_active) {
-			$sql .= " AND req.status = %s";
-			$params[] = 'active';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Portal-interest reads join the plugin-owned request/response tables with %i-prepared identifiers so portal/admin flows see fresh assignment state after writes.
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT resp.*, req.status AS request_status, req.vendor_type, req.target_mode
+					FROM %i AS resp
+					INNER JOIN %i AS req ON req.id = resp.request_id
+					WHERE resp.event_plan_id = %d
+					  AND resp.vendor_id = %d
+					  AND resp.response_source = %s
+					  AND req.status = %s
+					ORDER BY resp.id DESC
+					LIMIT 1",
+					$responses_table,
+					$requests_table,
+					$event_plan_id,
+					$vendor_id,
+					'portal_interest',
+					'active'
+				),
+				ARRAY_A
+			);
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Portal-interest reads join the plugin-owned request/response tables with %i-prepared identifiers so portal/admin flows see fresh assignment state after writes.
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT resp.*, req.status AS request_status, req.vendor_type, req.target_mode
+					FROM %i AS resp
+					INNER JOIN %i AS req ON req.id = resp.request_id
+					WHERE resp.event_plan_id = %d
+					  AND resp.vendor_id = %d
+					  AND resp.response_source = %s
+					ORDER BY resp.id DESC
+					LIMIT 1",
+					$responses_table,
+					$requests_table,
+					$event_plan_id,
+					$vendor_id,
+					'portal_interest'
+				),
+				ARRAY_A
+			);
 		}
-
-		$sql .= " ORDER BY resp.id DESC LIMIT 1";
-		$row = $wpdb->get_row($wpdb->prepare($sql, $params), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -1878,14 +1930,17 @@ if (!function_exists('vms_add_dispatch_pending_portal_interest_count')) {
 			return 0;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Portal-interest counters join the plugin-owned request/response tables with %i-prepared identifiers, and this request-local dashboard cache must start from fresh custom-table state.
 		$request_cache = (int) $wpdb->get_var($wpdb->prepare(
 			"SELECT COUNT(1)
-			 FROM {$responses_table} resp
-			 INNER JOIN {$requests_table} req ON req.id = resp.request_id
+			 FROM %i AS resp
+			 INNER JOIN %i AS req ON req.id = resp.request_id
 			 WHERE req.status = %s
 			   AND resp.response_source = %s
 			   AND resp.response_status = %s
 			   AND resp.assigned_at IS NULL",
+			$responses_table,
+			$requests_table,
 			'active',
 			'portal_interest',
 			'available'
@@ -1906,19 +1961,24 @@ if (!function_exists('vms_add_dispatch_get_vendor_portal_interest_rows')) {
 		}
 
 		$limit = max(1, min(200, $limit));
-		$sql = $wpdb->prepare(
-			"SELECT resp.*, req.status AS request_status, req.vendor_type, req.target_mode
-			 FROM {$responses_table} resp
-			 INNER JOIN {$requests_table} req ON req.id = resp.request_id
-			 WHERE resp.vendor_id = %d
-			   AND resp.response_source = %s
-			 ORDER BY COALESCE(resp.responded_at, resp.created_at) DESC, resp.created_at DESC
-			 LIMIT %d",
-			$vendor_id,
-			'portal_interest',
-			$limit
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Portal-interest history reads join the plugin-owned request/response tables with %i-prepared identifiers so vendor/admin review sees fresh custom-table state after writes.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT resp.*, req.status AS request_status, req.vendor_type, req.target_mode
+				 FROM %i AS resp
+				 INNER JOIN %i AS req ON req.id = resp.request_id
+				 WHERE resp.vendor_id = %d
+				   AND resp.response_source = %s
+				 ORDER BY COALESCE(resp.responded_at, resp.created_at) DESC, resp.created_at DESC
+				 LIMIT %d",
+				$responses_table,
+				$requests_table,
+				$vendor_id,
+				'portal_interest',
+				$limit
+			),
+			ARRAY_A
 		);
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
@@ -2123,6 +2183,7 @@ if (!function_exists('vms_add_dispatch_reactivate_portal_interest')) {
 		}
 
 		$now = vms_add_dispatch_now_mysql();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Portal-interest reactivation writes the plugin-owned response row directly so restored availability state persists immediately.
 		$updated = $wpdb->update(
 			$responses_table,
 			array(
@@ -2189,6 +2250,7 @@ if (!function_exists('vms_add_dispatch_withdraw_portal_interest')) {
 		}
 
 		$now = vms_add_dispatch_now_mysql();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Portal-interest withdrawal writes the plugin-owned response row directly so withdrawn availability state persists immediately.
 		$updated = $wpdb->update(
 			$responses_table,
 			array(
@@ -2512,6 +2574,7 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 		global $wpdb;
 		$responses_table = vms_add_dispatch_table_name('responses');
 		$now = vms_add_dispatch_now_mysql();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD assignment finalization writes the plugin-owned response row directly so assigned markers persist immediately after plan writes.
 		$updated = $wpdb->update(
 			$responses_table,
 			array(
@@ -2566,15 +2629,20 @@ if (!function_exists('vms_add_dispatch_get_recent_responses')) {
 		}
 
 		$limit = max(1, min(100, $limit));
-		$sql = $wpdb->prepare(
-			"SELECT resp.*, req.vendor_type, req.target_mode, req.status AS request_status
-			 FROM {$responses} resp
-			 LEFT JOIN {$requests} req ON req.id = resp.request_id
-			 ORDER BY COALESCE(resp.responded_at, resp.created_at) DESC, resp.created_at DESC
-			 LIMIT %d",
-			$limit
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- ADD recent-response reads join the plugin-owned request/response tables with %i-prepared identifiers so dashboard history stays request-fresh after writes.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT resp.*, req.vendor_type, req.target_mode, req.status AS request_status
+				 FROM %i AS resp
+				 LEFT JOIN %i AS req ON req.id = resp.request_id
+				 ORDER BY COALESCE(resp.responded_at, resp.created_at) DESC, resp.created_at DESC
+				 LIMIT %d",
+				$responses,
+				$requests,
+				$limit
+			),
+			ARRAY_A
 		);
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		if (!is_array($rows)) {
 			return array();
 		}
@@ -2601,20 +2669,25 @@ if (!function_exists('vms_add_dispatch_get_pending_portal_interest_rows')) {
 		}
 
 		$limit = max(1, min(100, $limit));
-		$sql = $wpdb->prepare(
-			"SELECT resp.*, req.status AS request_status, req.vendor_type, req.target_mode
-			 FROM {$responses} resp
-			 INNER JOIN {$requests} req ON req.id = resp.request_id
-			 WHERE resp.response_source = %s
-			   AND resp.response_status = %s
-			   AND resp.assigned_at IS NULL
-			 ORDER BY COALESCE(resp.responded_at, resp.created_at) DESC, resp.created_at DESC
-			 LIMIT %d",
-			'portal_interest',
-			'available',
-			$limit
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pending portal-interest reads join the plugin-owned request/response tables with %i-prepared identifiers so assignment review starts from fresh custom-table state.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT resp.*, req.status AS request_status, req.vendor_type, req.target_mode
+				 FROM %i AS resp
+				 INNER JOIN %i AS req ON req.id = resp.request_id
+				 WHERE resp.response_source = %s
+				   AND resp.response_status = %s
+				   AND resp.assigned_at IS NULL
+				 ORDER BY COALESCE(resp.responded_at, resp.created_at) DESC, resp.created_at DESC
+				 LIMIT %d",
+				$responses,
+				$requests,
+				'portal_interest',
+				'available',
+				$limit
+			),
+			ARRAY_A
 		);
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		if (!is_array($rows)) {
 			return array();
 		}

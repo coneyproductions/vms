@@ -343,9 +343,11 @@ if (!function_exists('vms_ticketing_claims_grant_reservation_counts')) {
 
 		global $wpdb;
 		$table = vms_ticketing_claims_table_reservations();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation counts read the plugin-owned reservations table with %i/%d-prepared values so grant state reflects immediate reservation mutations.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT status, COUNT(1) AS cnt FROM {$table} WHERE direct_grant_id = %d GROUP BY status",
+				'SELECT status, COUNT(1) AS cnt FROM %i WHERE direct_grant_id = %d GROUP BY status',
+				$table,
 				$grant_id
 			),
 			ARRAY_A
@@ -536,8 +538,10 @@ if (!function_exists('vms_ticketing_claims_find_active_direct_grant')) {
 			$params = array_merge($params, $allowed_programs);
 		}
 
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . " ORDER BY (ticket_product_id > 0) DESC, (ticket_key <> '') DESC, id DESC LIMIT 1";
-		$prepared = $wpdb->prepare($sql, $params);
+		$sql = 'SELECT * FROM %i WHERE ' . implode(' AND ', $where) . " ORDER BY (ticket_product_id > 0) DESC, (ticket_key <> '') DESC, id DESC LIMIT 1"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims grant lookups assemble only bounded literal WHERE fragments plus a %i-prepared custom-table identifier.
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims grant lookups prepare only bounded literal WHERE fragments, sanitized program placeholders, and the plugin-owned grants table identifier.
+		$prepared = $wpdb->prepare($sql, array_merge(array($table), $params));
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims grant lookups read the plugin-owned grants table so eligibility checks see fresh reservation/grant state after writes.
 		$row = $wpdb->get_row($prepared, ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
@@ -709,6 +713,7 @@ if (!function_exists('vms_ticketing_claims_log_result')) {
 		$context_json = is_array($context) ? wp_json_encode($context) : '';
 		$context_json = is_string($context_json) ? $context_json : '';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Ticketing Claims audit logging persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
 		$ok = $wpdb->insert(
 			$table,
 			array(
@@ -781,6 +786,7 @@ if (!function_exists('vms_ticketing_claims_create_direct_grant')) {
 		$actor_user_id = absint($grant['actor_user_id'] ?? 0);
 		$now = current_time('mysql', true);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Ticketing Claims direct grant creation persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository lifecycle.
 		$ok = $wpdb->insert(
 			$table,
 			array(
@@ -847,7 +853,8 @@ if (!function_exists('vms_ticketing_claims_get_direct_grant')) {
 
 		global $wpdb;
 		$table = vms_ticketing_claims_table_direct_grants();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $grant_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims grant reads query the plugin-owned grants table with %i/%d-prepared values so admin and runtime flows reload fresh grant state after writes.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $grant_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -903,9 +910,10 @@ if (!function_exists('vms_ticketing_claims_get_direct_grants')) {
 			$params[] = $credential_program;
 		}
 
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC';
-		$sql .= $wpdb->prepare(' LIMIT %d OFFSET %d', $limit, $offset);
-		$prepared = !empty($params) ? $wpdb->prepare($sql, $params) : $sql;
+		$sql = 'SELECT * FROM %i WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d'; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims grant list queries assemble only bounded literal WHERE fragments plus prepared identifier and pagination placeholders.
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims grant list queries prepare only bounded literal WHERE fragments and the plugin-owned grants table identifier.
+		$prepared = $wpdb->prepare($sql, array_merge(array($table), $params, array($limit, $offset)));
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims grant list reads query the plugin-owned grants table so admin/customer views reload fresh grant state after writes.
 		$rows = $wpdb->get_results($prepared, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
@@ -922,6 +930,7 @@ if (!function_exists('vms_ticketing_claims_update_direct_grant_note')) {
 		global $wpdb;
 		$table = vms_ticketing_claims_table_direct_grants();
 		$note = sanitize_text_field($note);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims grant-note updates write the plugin-owned grants table directly through wpdb::update(); no core API preserves this repository lifecycle.
 		$ok = $wpdb->update(
 			$table,
 			array(
@@ -979,6 +988,7 @@ if (!function_exists('vms_ticketing_claims_set_direct_grant_status')) {
 			$update_formats[] = '%d';
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims grant-status transitions write the plugin-owned grants table directly through wpdb::update(); no core API preserves this repository lifecycle.
 		$ok = $wpdb->update(
 			$table,
 			$update,
@@ -1002,7 +1012,8 @@ if (!function_exists('vms_ticketing_claims_get_reservation')) {
 		}
 		global $wpdb;
 		$table = vms_ticketing_claims_table_reservations();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $reservation_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation reads query the plugin-owned reservations table with %i/%d-prepared values so admin/runtime flows reload fresh reservation state after writes.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $reservation_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -1063,9 +1074,10 @@ if (!function_exists('vms_ticketing_claims_get_reservations')) {
 			$params[] = $ticket_key;
 		}
 
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC';
-		$sql .= $wpdb->prepare(' LIMIT %d OFFSET %d', $limit, $offset);
-		$prepared = !empty($params) ? $wpdb->prepare($sql, $params) : $sql;
+		$sql = 'SELECT * FROM %i WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d'; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims reservation list queries assemble only bounded literal WHERE fragments plus prepared identifier and pagination placeholders.
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims reservation list queries prepare only bounded literal WHERE fragments and the plugin-owned reservations table identifier.
+		$prepared = $wpdb->prepare($sql, array_merge(array($table), $params, array($limit, $offset)));
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation list reads query the plugin-owned reservations table so admin/runtime flows reload fresh reservation state after writes.
 		$rows = $wpdb->get_results($prepared, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
@@ -1081,6 +1093,7 @@ if (!function_exists('vms_ticketing_claims_release_reservation')) {
 
 		global $wpdb;
 		$table = vms_ticketing_claims_table_reservations();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation releases write the plugin-owned reservations table directly through wpdb::update(); no core API preserves this repository lifecycle.
 		$ok = $wpdb->update(
 			$table,
 			array(
@@ -1098,13 +1111,15 @@ if (!function_exists('vms_ticketing_claims_release_reservation')) {
 		$grant_id = absint($row['direct_grant_id'] ?? 0);
 		if ($grant_id > 0) {
 			$grants_table = vms_ticketing_claims_table_direct_grants();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation releases write the plugin-owned grants table directly with %i/%s/%d-prepared values so grant usage is restored in the same request.
 			$wpdb->query(
 				$wpdb->prepare(
-					"UPDATE {$grants_table}
+					'UPDATE %i
 					 SET qty_used = IF(qty_used > 0, qty_used - 1, 0),
 						 updated_at = %s,
 						 updated_by = %d
-					 WHERE id = %d",
+					 WHERE id = %d',
+					$grants_table,
 					current_time('mysql', true),
 					absint($actor_user_id),
 					$grant_id
@@ -1193,9 +1208,10 @@ if (!function_exists('vms_ticketing_claims_get_logs')) {
 			$params[] = '%"reservation_status":"' . $reservation_status . '"%';
 		}
 
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC';
-		$sql .= $wpdb->prepare(' LIMIT %d OFFSET %d', $limit, $offset);
-		$prepared = !empty($params) ? $wpdb->prepare($sql, $params) : $sql;
+		$sql = 'SELECT * FROM %i WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d'; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims log list queries assemble only bounded literal WHERE fragments plus prepared identifier and pagination placeholders.
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims log list queries prepare only bounded literal WHERE fragments and the plugin-owned log table identifier.
+		$prepared = $wpdb->prepare($sql, array_merge(array($table), $params, array($limit, $offset)));
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims log list reads query the plugin-owned audit table so admin views reload fresh validation history after writes.
 		$rows = $wpdb->get_results($prepared, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
@@ -1281,8 +1297,10 @@ if (!function_exists('vms_ticketing_claims_recent_assignee_emails_for_buyer')) {
 			$params[] = $event_id;
 		}
 
-		$sql = "SELECT assignee_email FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC LIMIT 250';
-		$prepared = $wpdb->prepare($sql, $params);
+		$sql = 'SELECT assignee_email FROM %i WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC, id DESC LIMIT %d'; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims helper-email lookups assemble only bounded literal WHERE fragments plus prepared identifier/limit placeholders.
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Ticketing Claims helper-email lookups prepare only bounded literal WHERE fragments and the plugin-owned log table identifier.
+		$prepared = $wpdb->prepare($sql, array_merge(array($table), $params, array(250)));
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims helper-email reads query the plugin-owned log table so customer flows can surface request-fresh prior assignee history.
 		$rows = $wpdb->get_col($prepared);
 		if (!is_array($rows) || empty($rows)) {
 			return array();
