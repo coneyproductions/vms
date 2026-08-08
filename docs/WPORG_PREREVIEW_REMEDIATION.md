@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G5` removed the first `505` nonce/input blockers, `WPORG-28R-G6-T1` through `WPORG-28R-G6-T5` removed the full `189`-row / `122`-boundary ticketing, admissions, availability, and shared-helper nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` then removed the full `233` Staff Tasks and staffing DB/SQL rows across `52` boundaries, `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows, and the current `WPORG-28R-G10` checkpoint has already removed the verified `132` ticketing-claims and availability-date-dispatch DB/SQL rows. The current packaged residual baseline is now `198` errors, `460` warnings, `658` total findings, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=529`, with the active ordered implementation roadmap now continuing inside `WPORG-28R-G10` at the remaining Ticketing Phase B query-boundary slice.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` then verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. The current packaged residual baseline is `175` errors, `345` warnings, `520` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=395`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4398,6 +4398,50 @@ Date: 2026-08-07
 - No runtime outside the authorized ADD and ticketing-claims mirror/live files, no unrelated live-tree region, and no package metadata or release exclusions were changed in this checkpoint.
 - Did not start `queue-repo.php`, `ticketing-phase-b.php`, or any other new remediation family.
 - No upload, deployment, submission, reviewer reply, activation, deactivation, or stash mutation occurred.
+
+## Coordinated Wave 1 Result
+
+Date: 2026-08-07
+
+### Summary
+
+- Result: `PASS`
+- Scope: the remaining Ticketing Phase B DB/SQL slice, the vendor-user-links DB/SQL slice, the social-queue repository DB/SQL slice, and coordinator-owned public-release safety boundaries.
+- Primary source commit scanned: `01fe8668e40c3ff7a3db800dd1eaadaaa191dea1`.
+- Primary commits: `e788084` (`Harden public release safety boundaries`), `565946b` plus `fbce45c` (Phase B), `80c2d4c` (vendor user links), and `003f826` plus `01fe866` (social queue).
+- Durable current counts and provenance: `docs/wporg-current-scan-state.json`.
+
+### Runtime And Release-Boundary Changes
+
+- `includes/integrations/ticketing-phase-b.php` DB/SQL moved `21 -> 0` while retaining only the separately owned `2` date, `1` logging, and `1` mapped nonblocking output rows.
+- `includes/core/vendor-user-links.php` DB/SQL moved `36 -> 0` while preserving active/include-inactive filters, legacy fallbacks, primary reassignment ordering, upsert/update/delete semantics, and request-fresh authorization reads.
+- `includes/social-share/queue-repo.php` DB/SQL moved `73 -> 0` while preserving queue filters and ordering, due-item eligibility, default-template ordering, atomic claim predicates, update allowlists, snapshots, retry/cancel behavior, and affected-row semantics.
+- `release-public-excludes.txt` now excludes the dormant, unbootstrapped `includes/safety/` prototype. This removed its `4` DB/SQL blockers and `4` mapped nonblocking output rows from the public package without deleting source files.
+- Activation now adopts or repairs only pages whose ownership is proven by a plugin marker, stored page option, or required shortcode; ordinary activation no longer rewrites an unrelated page that happens to share a required slug.
+- Vendor ICS fetching now validates the configured URL, uses `wp_safe_remote_get()`, and enforces a two-MiB response ceiling before parsing or metadata mutation.
+- The public external-services disclosure now covers vendor-selected video/oEmbed providers, including server-side discovery and browser contact.
+- `tests/check-package-integrity.php` now validates the actual public slug `backstage-venue-manager`.
+
+### Verification
+
+- Dedicated executable SQL-contract suites passed: `tests/ticketing-phase-b-repository-sql-remediation.php`, `tests/vendor-user-links-repository-sql-remediation.php`, and `tests/social-share-queue-repository-sql-remediation.php`.
+- Coordinator safety suites passed: `tests/activation-public-page-ownership-remediation.php`, `tests/vendor-ics-safe-fetch-remediation.php`, and `tests/external-services-disclosure-remediation.php`.
+- Relevant ticketing, authorization, portal, social-share, upload/private-file, runtime-guard, compatibility-harness, and public-release-pipeline continuities passed.
+- Mirror/live parity is exact for the vendor-user-links and social-queue files. Ticketing Phase B remained synchronized only inside its owned functions, and the preexisting unrelated live divergence was preserved.
+- Final public build passed at `/tmp/wporg-wave1-integrated.TBbwkn/build-final/backstage-venue-manager-1.2.0-public-release.zip`, SHA-256 `c248890a532e616a9a33b8929dff98a094886dd0baa9115f0b54d9e3c5e41002`.
+- The builder staged `372` files, linted `269` packaged PHP files, syntax-checked `55` JavaScript files, passed all five release regressions, passed all four optional-dependency load-smokes, and passed archive-integrity validation.
+- Final packaged Plugin Check exited `0` with empty stderr. Normalized strict JSON is `/tmp/wporg-wave1-integrated.TBbwkn/plugin-check/plugin-check.final.strict.json`; before/after activation-state snapshots are byte-identical.
+- Final scan: `175` errors, `345` warnings, `520` total, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=395`.
+- Final blocker families: DB/SQL `328`, nonce/input `0`, date/time `25`, and logging `42`.
+- Exact rule deltas from the prior G10 checkpoint were `UnescapedDBParameter 46 -> 25`, `DirectQuery 108 -> 71`, `NoCaching 95 -> 62`, `InterpolatedNotPrepared 38 -> 18`, `NotPrepared 26 -> 15`, `UnfinishedPrepare 2 -> 0`, `slow_meta_query 83 -> 73`, and mapped `OutputNotEscaped 127 -> 123`; every other rule-code count stayed unchanged.
+
+### Current Parent State
+
+- `WPORG-28R-G10` remains `in progress` with `95` DB/SQL rows after the verified Phase B slice.
+- `WPORG-28R-G11` remains `in progress` with `67` DB/SQL rows after the verified vendor-user-links slice.
+- `WPORG-28R-G12` remains `in progress` with `38` DB/SQL rows after the verified social-queue and package-boundary slices.
+- `WPORG-28R-G13` retains `128` DB/SQL rows; `G14-G15` retain `25` date rows; `G16-G17` retain `42` logging rows.
+- `WPORG-28R` remains blocked. No final artifact, upload, slug reservation, reviewer reply, deployment, or production convergence is authorized from this checkpoint.
 
 Date: 2026-07-21
 

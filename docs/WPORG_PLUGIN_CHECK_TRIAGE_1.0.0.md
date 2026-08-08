@@ -146,22 +146,23 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Current Category Triage
 
-- Fresh packaged post-`WPORG-28R-G8-T5` baseline from `2026-08-02`: `239` errors, `806` warnings, `1045` total findings, `15` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=129`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=916`.
+- Fresh packaged coordinated-Wave-1 baseline from `2026-08-07`: `175` errors, `345` warnings, `520` total findings, `14` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=395`.
+- Durable machine-readable counts and provenance are in `docs/wporg-current-scan-state.json`; normalized strict JSON is `/tmp/wporg-wave1-integrated.TBbwkn/plugin-check/plugin-check.final.strict.json`.
 - The packaged scan reports `privateincludes/...` paths. The roadmap below uses the corresponding mirror `includes/...` ownership files that future implementation children must edit.
-- `WPORG-28R-G8-T5` removed the final `14` G8-owned DB/SQL blocker rows without changing any non-DB blocker-family total; the global DB/SQL deltas were `slow_meta_key 68 -> 62 (-6)`, `slow_meta_query 93 -> 87 (-6)`, and `slow_meta_value 7 -> 5 (-2)`.
+- Coordinated Wave 1 removed the exact `21` Phase B, `36` vendor-user-link, and `73` social-queue DB/SQL rows, while excluding the dormant `includes/safety/` prototype removed another `4` DB/SQL and `4` mapped nonblocking output rows from the public package. No unrelated file/code count increased.
 
 | Category | Current packaged count | Representative files | Current classification | Current strategy |
 | --- | ---: | --- | --- | --- |
 | Nonce and input handling | `0` | closed by `WPORG-28R-G1` through `WPORG-28R-G6-T5` | `verified` | No packaged nonce/input blocker rows remain; keep `WPORG-28R-G7` retired unless a future strict-JSON rerun creates newly unmapped nonce/input rows. |
-| Database and SQL safety | `849` | `includes/modules/admissions/pass-claims.php`, `includes/modules/availability-date-dispatch/helpers.php`, `includes/social-share/queue-repo.php`, `includes/integrations/ticketing-phase-b.php` | `SUBMISSION_BLOCKER` | Continue with `WPORG-28R-G9` through `WPORG-28R-G13`; `WPORG-28R-G8` is now closed and the next unresolved DB/SQL slice starts in admissions and claim-state repositories. |
+| Database and SQL safety | `328` | `includes/integrations/ticketing-rules-v2.php`, `includes/core/vendor-application-confirmation.php`, `includes/core/goals-forecast.php`, `includes/core/registry/vendor-schema.php` | `SUBMISSION_BLOCKER` | Continue the independent remaining `G10` through `G13` repositories; Phase B, vendor-user-links, and social queue are now scanner-zero for DB/SQL. |
 | Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G14` and `WPORG-28R-G15` after the earlier request and query boundaries they depend on. |
 | Development logging | `42` | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G16` and `WPORG-28R-G17` after the earlier lifecycle work clarifies which logs remain operational, which are dev traces, and which can be safely gated or removed. |
-| Escaping and output safety | `127` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `916` submission blockers. |
+| Escaping and output safety | `123` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `395` submission blockers; the four-row decrease is solely the excluded dormant Safety prototype. |
 
 ## Residual Submission-Blocker Roadmap
 
 - `WPORG-28R-G0` now owns the complete residual blocker decomposition. Every current blocker row belongs to exactly one implementation child below.
-- Family sums reconcile exactly: `G9-G13 = 849`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `916`. The nonce/input family is now closed at `0`.
+- Remaining family sums reconcile exactly: `G10 95 + G11 67 + G12 38 + G13 128 = 328`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `395`. The nonce/input family is closed at `0`.
 - Every implementation child still reruns `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php` in addition to the focused suites listed below.
 - Every implementation child closes only its owned packaged rows; unrelated families must remain count-for-count unchanged except for documented same-file line movement.
 
@@ -317,33 +318,37 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 #### `WPORG-28R-G10 — Ticketing, Availability, And Integrity Query Boundaries`
 
+- Status: `in progress`; verified completed DB/SQL ownership is `153` (`132` from ADD plus ticketing claims and `21` from Phase B), leaving `95`.
 - Count: `248` (`UnescapedDBParameter 36`, `DirectQuery 68`, `NoCaching 60`, `InterpolatedNotPrepared 30`, `NotPrepared 28`, `slow_meta_key 9`, `slow_meta_query 16`, `slow_meta_value 1`)
 - Files: `includes/integrations/ticketing-claims-framework.php`, `includes/integrations/ticketing-rules-v2.php`, `includes/integrations/ticketing-phase-b.php`, `includes/integrations/ticketing.php`, `includes/integrations/ticketing-claims-admin.php`, `includes/integrations/ticketing-verifications.php`, `includes/integrations/square-ticket-mirror.php`, `includes/integrations/square-sync-firewall.php`, `includes/ticketing/ticket-inventory-forensics.php`, `includes/ticketing/ticket-mutation-audit.php`, `includes/ticketing/ticket-integrity-daily-report.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/ticketing/ticket-integrity-cron.php`, `includes/modules/availability-date-dispatch/helpers.php`
 - Lifecycle / subsystem: `FRONTEND_AJAX`, `REST`, `BACKGROUND_QUEUE`, `REPORTING`, `ADMIN_PAGE`; ticketing claims, ticketing rules, availability dispatch, integrity monitors, and support diagnostics
 - Boundary: land prepared-SQL and mutation/input provenance fixes before revisiting `NoCaching` or slow-meta-query rows; keep read-only reporting queries distinct from cart or claims mutations
 - Focused tests: `tests/ticketing-output-buffer-lifecycle-characterization.php`, `tests/ticket-claims-assignee-validation.php`, `tests/public-calendar-user-agent-view-characterization.php`, `tests/event-plan-legacy-ticketing-integration-smoke.php`
-- Closure / defers: owned packaged DB rows `248 -> 0`; defer same-file input rows to `G6`, same-file date rows to `G15`, and same-file operational logging to `G16`
+- Closure / defers: owned packaged DB rows currently `248 -> 95`; Phase B DB/SQL is `21 -> 0` and retains only `2` date, `1` logging, and `1` mapped nonblocking output rows; defer those non-DB rows to `G15`, `G16`, and the accepted output inventory
 
 #### `WPORG-28R-G11 — Vendor, Portal, And Payables Query Boundaries`
 
+- Status: `in progress`; `includes/core/vendor-user-links.php` DB/SQL is verified `36 -> 0`, leaving `67`.
 - Count: `103` (`UnescapedDBParameter 9`, `DirectQuery 21`, `NoCaching 20`, `InterpolatedNotPrepared 9`, `NotPrepared 7`, `UnfinishedPrepare 2`, `slow_meta_key 10`, `slow_meta_query 25`)
 - Files: `includes/core/vendor-user-links.php`, `includes/portal/vendor-portal.php`, `includes/core/vendor-application-confirmation.php`, `includes/vendor-applications.php`, `includes/admin/vendor-command-center.php`, `includes/cpt/vendors.php`, `includes/core/vendor-booking-onboarding.php`, `includes/core/payables.php`, `includes/public/vendor-profiles.php`, `includes/taxonomies/vendor-category.php`, `includes/admin/vendors/tax-export-csv.php`
 - Lifecycle / subsystem: `ADMIN_PAGE`, `FORM_SUBMISSION`, `FRONTEND_RENDER`, `REPORTING`; vendor onboarding, vendor profiles, portal views, payables, and vendor-link state
 - Boundary: separate vendor/portal read models from onboarding or payables mutations; evaluate `NoCaching` rows per query instead of assuming every custom-table or meta lookup is replaceable
 - Focused tests: `tests/vendor-tax-profile-strict-post-remediation.php`, `tests/vendor-portal-availability-autosave-remediation.php`, `tests/vendor-apply-turnstile-contract-remediation.php`, `tests/authorization-boundary-hardening.php`
-- Closure / defers: owned packaged DB rows `103 -> 0`; defer same-file input rows to `G5` and same-file date / logging rows to `G15` / `G16`
+- Closure / defers: owned packaged DB rows currently `103 -> 67`; defer same-file input rows to `G5` and same-file date / logging rows to `G15` / `G16`
 
 #### `WPORG-28R-G12 — Social Queue, Background Processing, And Private-File Query Boundaries`
 
+- Status: `in progress`; `includes/social-share/queue-repo.php` DB/SQL is verified `73 -> 0`, and excluding the dormant `includes/safety/` prototype removes its `4` DB/SQL rows from the public boundary, leaving `38`.
 - Count: `115` (`UnescapedDBParameter 18`, `DirectQuery 39`, `NoCaching 31`, `InterpolatedNotPrepared 16`, `NotPrepared 5`, `slow_meta_key 2`, `slow_meta_query 4`)
 - Files: `includes/social-share/queue-repo.php`, `includes/social-share/installer.php`, `includes/social-share/audit.php`, `includes/social-share/template-engine.php`, `includes/social-share/event-plan-panel.php`, `includes/core/notifications.php`, `includes/modules/email-followups/recipients.php`, `includes/modules/email-followups/scheduler.php`, `includes/core/private-files.php`, `includes/safety/private-files.php`, `includes/services/event-plan-import/event-plan-import-engine.php`
 - Lifecycle / subsystem: `BACKGROUND_QUEUE`, `CRON`, `IMPORT_EXPORT`, `ADMIN_PAGE`; social queue persistence, background notifications, private-file indexes, and import-support lookups
 - Boundary: keep queue/audit persistence separate from import/export or private-file read models; revisit `NoCaching` only after direct query safety and placeholder correctness are fixed
 - Focused tests: `tests/social-share-queue-snapshot-json-remediation.php`, `tests/social-share-webhook-exception-boundary-remediation.php`, `tests/private-file-upload-api-remediation.php`, `tests/event-plan-import-upload-api-remediation.php`
-- Closure / defers: owned packaged DB rows `115 -> 0`; defer same-file operational logging to `G16`
+- Closure / defers: owned packaged DB rows currently `115 -> 38`; defer same-file operational logging to `G16`
 
 #### `WPORG-28R-G13 — Reporting, Schema, Meta-Query, And Cache-Policy Long Tail`
 
+- Status: `in progress` under the coordinated execution plan; the verified Wave 1 scan still assigns all `128` rows here, and the independent goals/forecast repository slice is the first active G13 boundary.
 - Count: `128` (`UnescapedDBParameter 5`, `DirectQuery 18`, `NoCaching 17`, `InterpolatedNotPrepared 5`, `NotPrepared 3`, `slow_meta_key 38`, `slow_meta_query 38`, `slow_meta_value 4`)
 - Files: `includes/core/registry/vendor-schema.php`, `includes/db/migrations.php`, `includes/cpt/event-plans.php`, `includes/cpt/ratings.php`, `includes/core/event-feedback.php`, `includes/helpers.php`, `includes/admin/settings-page.php`, `includes/admin/express-bar.php`, `includes/admin/event-command-center.php`, `includes/admin/budget-calculator.php`, `includes/admin/venue-duplicate-templates.php`, `includes/admin/settings/class-vms-settings-tours.php`, `includes/admin/event-feedback.php`, `includes/admin/integrity-calendar-reconcile.php`, `includes/admin/approvals-review-queue.php`, `includes/admin/schedule.php`, `includes/core/calendar-feed.php`, `includes/core/calendar-ticket-counts.php`, `includes/core/cancellation-adapters.php`, `includes/core/cli/stale-check.php`, `includes/core/event-credits.php`, `includes/core/ticket-sales-resolver.php`, `includes/schedule/schedule.php`, `includes/helpers/checkin-close.php`, `includes/core/goals-forecast.php`
 - Lifecycle / subsystem: `REPORTING`, `DIAGNOSTIC`, `CLI`, `OTHER`; schema helpers, long-tail admin reports, schedule summaries, event feedback aggregations, and slow-meta-query warnings
@@ -423,13 +428,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Parent Closeout Condition
 
-- `WPORG-28R-G0` is terminal only because the roadmap now reconciles all remaining `1149` blocker rows with no unowned or multiply-owned occurrence.
+- `WPORG-28R-G0` remains terminal because its original `1149`-row roadmap had no unowned or multiply-owned occurrence; subsequent verified children have reduced the current blocker total to `395` without changing ownership rules.
 - `WPORG-28R` remains blocked until every `G1` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
 - `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain open or blocked exactly as documented in the ledger.
 - Slug reservation, corrected upload, and reviewer communication remain unauthorized until the parent is closed and explicit authorization is given.
 
 ## Recommended Next Task
 
-- Next execution target: `WPORG-28R-G9 — Admissions And Claim-State Query Boundaries`
-- Scope: execute the `255`-row admissions and claim-state DB/SQL slice in `includes/modules/admissions/pass-claims.php`, `includes/modules/admissions/rest.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/modules/admissions/admission-tokens.php`, `includes/modules/admissions/db.php`, `includes/modules/admissions/admin-ui.php`, and `includes/modules/admissions/audit.php` now that `WPORG-28R-G8` is terminal under `verified`.
-- Scope guardrails: do not reopen `G1` through `G8` or retired `G7`; keep public claim flows, administrator maintenance, and custom-table reporting boundaries distinct, and continue deferring the documented later DB/SQL, date/time, and logging work to their assigned children.
+- Active execution targets: `WPORG-28R-G10` Ticketing Rules V2 (`23` DB/SQL), `WPORG-28R-G11` vendor-application confirmation (`27` DB/SQL), and the independent `WPORG-28R-G13` goals/forecast repository (`31` DB/SQL).
+- Scope: keep each target in an isolated worktree with its own executable SQL-contract test, synchronize only owned functions into intentionally divergent live files, and let the coordinator own shared docs, the aggregate package, and strict-json comparison.
+- Scope guardrails: do not reopen verified `G1` through `G9` or retired `G7`; do not pull the same-file logging rows into these DB/SQL slices; do not treat the package as submission-ready until `G10` through `G17` close and the strict-json blocker count reaches zero.
