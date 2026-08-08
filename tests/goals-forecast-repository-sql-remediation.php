@@ -451,8 +451,8 @@ $owned_baseline = array(
 	'DirectQuery' => 13,
 	'NoCaching' => 12,
 	'InterpolatedNotPrepared' => 2,
-	'slow_meta_key' => 1,
-	'slow_meta_query' => 1,
+	'slow_db_query_meta_key' => 1,
+	'slow_db_query_meta_query' => 1,
 );
 goal_same(31, array_sum($owned_baseline), 'G13 goals DB baseline should remain explicitly reconciled.');
 preg_match_all('/\\$wpdb->(?:get_var|get_results|get_row|update|insert|query|delete)\\s*\\(/', $source, $db_operations);
@@ -461,8 +461,10 @@ goal_same(13, substr_count($source, 'WordPress.DB.DirectDatabaseQuery.DirectQuer
 goal_same(12, substr_count($source, 'WordPress.DB.DirectDatabaseQuery.NoCaching'), 'Every read/update/delete direct operation should have one narrow NoCaching annotation.');
 goal_same(0, substr_count($source, 'PluginCheck.Security.DirectDB.UnescapedDBParameter'), 'Prepared table identifiers should eliminate UnescapedDBParameter findings without suppression.');
 goal_same(0, substr_count($source, 'WordPress.DB.PreparedSQL.InterpolatedNotPrepared'), 'Prepared table identifiers should eliminate interpolation findings without suppression.');
-goal_same(1, substr_count($source, 'WordPress.DB.SlowDBQuery.slow_meta_key'), 'Only the intentional Event Plan date-order key should carry a slow-meta-key annotation.');
-goal_same(1, substr_count($source, 'WordPress.DB.SlowDBQuery.slow_meta_query'), 'Only the intentional Event Plan date-period query should carry a slow-meta-query annotation.');
+goal_same(1, substr_count($source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_key'), 'Only the intentional Event Plan date-order key should carry the exact scanner slow-meta-key annotation.');
+goal_same(1, substr_count($source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query'), 'Only the intentional Event Plan date-period query should carry the exact scanner slow-meta-query annotation.');
+preg_match_all('/phpcs:(?:disable|ignoreFile)\\b/i', $source, $broad_suppressions);
+goal_same(0, count($broad_suppressions[0]), 'Goals remediation must not use file-wide or block-wide PHPCS suppression.');
 goal_check(strpos($source, 'UPDATE {' . '$table}') === false, 'Goals SQL must not interpolate custom-table identifiers.');
 goal_same(1, substr_count($source, 'error_log('), 'The deferred logging inventory should remain exactly one row.');
 goal_contains("error_log('[VMS Goals] ' . " . '$message' . ');', $source, 'The deferred operational logging statement must remain untouched.');

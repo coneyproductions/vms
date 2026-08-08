@@ -1108,10 +1108,10 @@ if (!function_exists('vms_goals_get_event_ids_in_period')) {
 			'posts_per_page' => $posts_per_page,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_meta_key -- Goal progress intentionally orders the bounded Event Plan period query by its canonical event-date metadata.
+			'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Goal progress intentionally orders the bounded Event Plan period query by its canonical event-date metadata.
 			'orderby' => 'meta_value',
 			'order' => 'ASC',
-			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_meta_query -- Goal progress intentionally bounds Event Plans by the canonical event-date metadata; no equivalent indexed domain field exists.
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Goal progress intentionally bounds Event Plans by the canonical event-date metadata; no equivalent indexed domain field exists.
 				array(
 					'key' => '_vms_event_date',
 					'value' => array($start_date, $end_date),
