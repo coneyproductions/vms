@@ -53,8 +53,8 @@ function vms_vendor_user_links_table_exists(): bool
     global $wpdb;
     $t = vms_vendor_user_links_table();
     $like = $wpdb->esc_like($t);
-    $sql = $wpdb->prepare("SHOW TABLES LIKE %s", $like);
-    $found = $wpdb->get_var($sql);
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- This request-local schema probe gates the authoritative link repository; stale cached absence would incorrectly force legacy authorization fallbacks after migrations.
+    $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $like));
     return is_string($found) && $found === $t;
 }
 
@@ -122,20 +122,29 @@ function vms_vendor_user_links_get_by_user(int $user_id, bool $include_inactive 
     global $wpdb;
     $t = vms_vendor_user_links_table();
 
-    $where = "user_id = %d";
-    if (!$include_inactive) {
-        $where .= " AND link_status = 'active'";
+    if ($include_inactive) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user authorization reads target the plugin-owned link repository with prepared identifier/value placeholders and must observe request-fresh link mutations.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT vendor_id, user_role, link_status, is_primary FROM %i WHERE user_id = %d ORDER BY is_primary DESC, vendor_id ASC',
+                $t,
+                $user_id
+            ),
+            ARRAY_A
+        );
+    } else {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active vendor/user authorization reads target the plugin-owned link repository with prepared identifier/value placeholders and must observe request-fresh link mutations.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT vendor_id, user_role, link_status, is_primary FROM %i WHERE user_id = %d AND link_status = %s ORDER BY is_primary DESC, vendor_id ASC',
+                $t,
+                $user_id,
+                'active'
+            ),
+            ARRAY_A
+        );
     }
 
-    $sql = $wpdb->prepare(
-        "SELECT vendor_id, user_role, link_status, is_primary
-         FROM {$t}
-         WHERE {$where}
-         ORDER BY is_primary DESC, vendor_id ASC",
-        $user_id
-    );
-
-    $rows = $wpdb->get_results($sql, ARRAY_A);
     if (!is_array($rows)) return array();
 
     $out = array();
@@ -180,7 +189,7 @@ function vms_vendor_user_links_get_by_user_legacy(int $user_id): array
         'post_status'    => array('publish', 'draft', 'private'),
         'fields'         => 'ids',
         'posts_per_page' => -1,
-        'meta_query'     => array(
+        'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Compatibility fallback runs only when the authoritative link table is unavailable and must honor the legacy vendor-primary-user pointer.
             array(
                 'key'   => VMS_VENDOR_PRIMARY_USER_META_KEY,
                 'value' => (string) $user_id,
@@ -323,21 +332,29 @@ function vms_vendor_user_links_set_primary_for_user(int $user_id, int $vendor_id
     $now = current_time('mysql', true);
 
     // Clear existing primaries for this user
-    $wpdb->query($wpdb->prepare(
-        "UPDATE {$t} SET is_primary = 0, updated_at = %s, updated_by = %d WHERE user_id = %d",
-        $now,
-        (int) $actor_user_id,
-        $user_id
-    ));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Primary reassignment writes the plugin-owned link repository directly so the following set operation observes the cleared state in the same request.
+    $wpdb->query(
+        $wpdb->prepare(
+            'UPDATE %i SET is_primary = 0, updated_at = %s, updated_by = %d WHERE user_id = %d',
+            $t,
+            $now,
+            (int) $actor_user_id,
+            $user_id
+        )
+    );
 
     // Set for the requested vendor
-    $updated = $wpdb->query($wpdb->prepare(
-        "UPDATE {$t} SET is_primary = 1, updated_at = %s, updated_by = %d WHERE user_id = %d AND vendor_id = %d",
-        $now,
-        (int) $actor_user_id,
-        $user_id,
-        $vendor_id
-    ));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Primary reassignment immediately writes the selected plugin-owned link row after clearing prior primaries; no persistent cache spans this ordered mutation pair.
+    $updated = $wpdb->query(
+        $wpdb->prepare(
+            'UPDATE %i SET is_primary = 1, updated_at = %s, updated_by = %d WHERE user_id = %d AND vendor_id = %d',
+            $t,
+            $now,
+            (int) $actor_user_id,
+            $user_id,
+            $vendor_id
+        )
+    );
 
     return ($updated !== false);
 }
@@ -367,20 +384,29 @@ function vms_vendor_user_links_get_by_vendor(int $vendor_id, bool $include_inact
     global $wpdb;
     $t = vms_vendor_user_links_table();
 
-    $where = "vendor_id = %d";
-    if (!$include_inactive) {
-        $where .= " AND link_status = 'active'";
+    if ($include_inactive) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor link administration reads the plugin-owned repository with prepared identifier/value placeholders and must reflect request-fresh link changes.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT user_id, user_role, link_status FROM %i WHERE vendor_id = %d ORDER BY link_status ASC, user_role ASC, user_id ASC',
+                $t,
+                $vendor_id
+            ),
+            ARRAY_A
+        );
+    } else {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active vendor link administration reads the plugin-owned repository with prepared identifier/value placeholders and must reflect request-fresh link changes.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT user_id, user_role, link_status FROM %i WHERE vendor_id = %d AND link_status = %s ORDER BY link_status ASC, user_role ASC, user_id ASC',
+                $t,
+                $vendor_id,
+                'active'
+            ),
+            ARRAY_A
+        );
     }
 
-    $sql = $wpdb->prepare(
-        "SELECT user_id, user_role, link_status
-         FROM {$t}
-         WHERE {$where}
-         ORDER BY link_status ASC, user_role ASC, user_id ASC",
-        $vendor_id
-    );
-
-    $rows = $wpdb->get_results($sql, ARRAY_A);
     if (!is_array($rows)) return array();
 
     $out = array();
@@ -486,7 +512,7 @@ if (!function_exists('vms_vendor_user_link_find_vendor_matches_for_email')) {
             'orderby' => 'title',
             'order' => 'ASC',
             'no_found_rows' => true,
-            'meta_query' => $meta_query,
+            'meta_query' => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Self-service matching must compare the normalized email against the finite legacy/current vendor-email key set and return request-fresh candidates.
         ));
 
         if (empty($query->posts)) {
@@ -1015,29 +1041,31 @@ function vms_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args =
     $is_primary = $set_primary_for_user ? 1 : 0;
 
     // Insert or update in a single statement.
-    $sql = $wpdb->prepare(
-        "INSERT INTO {$t}
-            (vendor_id, user_id, user_role, link_status, is_primary, created_at, created_by, updated_at, updated_by)
-         VALUES
-            (%d, %d, %s, %s, %d, %s, %d, %s, %d)
-         ON DUPLICATE KEY UPDATE
-            user_role   = VALUES(user_role),
-            link_status = VALUES(link_status),
-            is_primary  = IF(VALUES(is_primary)=1, 1, is_primary),
-            updated_at  = VALUES(updated_at),
-            updated_by  = VALUES(updated_by)",
-        $vendor_id,
-        $user_id,
-        $role,
-        $status,
-        $is_primary,
-        $now,
-        (int) $actor_user_id,
-        $now,
-        (int) $actor_user_id
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user upserts persist authoritative plugin-owned link state with a prepared identifier and values; authorization and portal reads must observe the mutation immediately.
+    $ok = $wpdb->query(
+        $wpdb->prepare(
+            'INSERT INTO %i
+                (vendor_id, user_id, user_role, link_status, is_primary, created_at, created_by, updated_at, updated_by)
+             VALUES
+                (%d, %d, %s, %s, %d, %s, %d, %s, %d)
+             ON DUPLICATE KEY UPDATE
+                user_role   = VALUES(user_role),
+                link_status = VALUES(link_status),
+                is_primary  = IF(VALUES(is_primary)=1, 1, is_primary),
+                updated_at  = VALUES(updated_at),
+                updated_by  = VALUES(updated_by)',
+            $t,
+            $vendor_id,
+            $user_id,
+            $role,
+            $status,
+            $is_primary,
+            $now,
+            (int) $actor_user_id,
+            $now,
+            (int) $actor_user_id
+        )
     );
-
-    $ok = $wpdb->query($sql);
     if ($ok === false) return false;
 
     // If requested, enforce unique primary for this user.
@@ -1115,6 +1143,7 @@ function vms_vendor_user_link_update(int $vendor_id, int $user_id, array $fields
     );
     $where_fmt = array('%d', '%d');
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user role and status changes write the authoritative plugin-owned link row directly and must be visible to authorization checks in the same request.
     $res = $wpdb->update($t, $data, $where, $fmt, $where_fmt);
     return ($res !== false);
 }
@@ -1146,6 +1175,7 @@ function vms_vendor_user_link_delete(int $vendor_id, int $user_id, int $actor_us
     global $wpdb;
     $t = vms_vendor_user_links_table();
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user unlinking removes the authoritative plugin-owned link row directly before selecting any replacement primary in the same request.
     $res = $wpdb->delete($t, array(
         'vendor_id' => $vendor_id,
         'user_id'   => $user_id,
