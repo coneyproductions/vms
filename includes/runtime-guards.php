@@ -735,7 +735,7 @@ if (!function_exists('vms_render_admin_diagnostics')) {
 				continue;
 			}
 
-			error_log('[VMS] ' . $message);
+			vms_record_operational_issue('admin_diagnostic', array('diagnostic_code' => sanitize_key((string) $code)), $message);
 			echo '<div class="notice notice-warning"><p>' . esc_html($message) . '</p></div>';
 			$seen[sanitize_key((string) $code)] = time();
 		}
@@ -885,6 +885,233 @@ if (!function_exists('vms_resource_fingerprint_max_markers')) {
 	{
 		$limit = (int) apply_filters('vms_resource_fingerprint_marker_limit', 24);
 		return max(6, $limit);
+	}
+}
+
+if (!function_exists('vms_operational_issue_value_is_tainted')) {
+	function vms_operational_issue_value_is_tainted(string $value): bool
+	{
+		$value = trim($value);
+		if ($value === '') {
+			return false;
+		}
+
+		$normalized = str_replace('\\', '/', $value);
+		foreach (array(defined('ABSPATH') ? ABSPATH : '', defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH : '') as $root) {
+			$root = rtrim(str_replace('\\', '/', (string) $root), '/');
+			if ($root !== '' && $root !== '/' && strpos($normalized, $root . '/') === 0) {
+				return true;
+			}
+		}
+
+		if (preg_match('#^(?:[a-z]:/|/(?:users|home|private|var|tmp|etc|usr|opt|srv|volumes|applications)(?:/|$))#i', $normalized)) {
+			return true;
+		}
+		if (preg_match('/(?:^|[^a-z])(token|secret|nonce|cookie|password|authorization|bearer|recipient[_-]?sentinel|email[_-]?sentinel|user[_-]?agent|ua[_-]?sentinel)(?:[^a-z]|$)/i', $value)) {
+			return true;
+		}
+		if (strpos($value, '@') !== false || strpos($value, '?') !== false || strpos($value, '&') !== false || strpos($value, '=') !== false) {
+			return true;
+		}
+		if (preg_match('#(?:[a-z][a-z0-9+.-]*:)?//#i', $value)) {
+			return true;
+		}
+		if (preg_match('/(?<![0-9])(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?![0-9])/', $value) || filter_var($value, FILTER_VALIDATE_IP)) {
+			return true;
+		}
+		if (preg_match('/(?:^|[^a-z0-9])(?:sk|pk)_(?:live|test)_[a-z0-9]{8,}(?:[^a-z0-9]|$)/i', $value)) {
+			return true;
+		}
+		if (preg_match('/(?:^|[^a-z0-9_-])[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}(?:[^a-z0-9_-]|$)/i', $value)) {
+			return true;
+		}
+		if (preg_match('/(?:^|[^a-f0-9])[a-f0-9]{32,}(?:[^a-f0-9]|$)/i', $value)) {
+			return true;
+		}
+		if (preg_match('/(?:^|[^a-z0-9+_-])[a-z0-9+_-]{40,}={0,2}(?:[^a-z0-9+_=-]|$)/i', $value)) {
+			return true;
+		}
+
+		return false;
+	}
+}
+
+if (!function_exists('vms_operational_issue_request_path')) {
+	function vms_operational_issue_request_path(string $request_uri = ''): string
+	{
+		$request_uri = trim($request_uri !== '' ? $request_uri : vms_request_current_uri());
+		if ($request_uri === '') {
+			return '';
+		}
+
+		$normalized = str_replace('\\', '/', $request_uri);
+		if (preg_match('#^(?:[a-z]:/|/(?:users|home|private|var|tmp|etc|usr|opt|srv|volumes|applications)(?:/|$))#i', $normalized)) {
+			return '';
+		}
+		if (preg_match('#(?:^|/)\.\.(?:/|$)#', $normalized)) {
+			return '';
+		}
+
+		$encoded_path = parse_url($request_uri, PHP_URL_PATH);
+		if (!is_string($encoded_path) || $encoded_path === '') {
+			return '';
+		}
+		$path = rawurldecode($encoded_path);
+		if (preg_match('/[\x00-\x1F\x7F]/', $path)) {
+			return '';
+		}
+		$path = (string) preg_replace('/[\x00-\x1F\x7F]+/', '', $path);
+		$path = '/' . ltrim($path, '/');
+		if (preg_match('#(?:^|/)\.\.(?:/|$)#', $path) || vms_operational_issue_value_is_tainted($path)) {
+			return '';
+		}
+		$decoded_preview = rawurldecode($path);
+		if (
+			stripos($path, '%25') !== false
+			|| preg_match('/[\x00-\x1F\x7F]/', $decoded_preview)
+			|| preg_match('#(?:^|/)\.\.(?:/|$)#', $decoded_preview)
+			|| vms_operational_issue_value_is_tainted($decoded_preview)
+		) {
+			return '';
+		}
+
+		return substr($path, 0, 180);
+	}
+}
+
+if (!function_exists('vms_operational_issue_error_identity')) {
+	function vms_operational_issue_error_identity($error): array
+	{
+		$error_class = '';
+		$error_code = '';
+		$fingerprint_source = '';
+
+		$is_wp_error = function_exists('is_wp_error') && is_wp_error($error);
+		if ($is_wp_error && is_object($error)) {
+			$error_class = get_class($error);
+			$raw_code = method_exists($error, 'get_error_code') ? $error->get_error_code() : '';
+			$error_code = is_scalar($raw_code) ? (string) $raw_code : '';
+			$messages = method_exists($error, 'get_error_messages') ? $error->get_error_messages() : array();
+			if (is_array($messages)) {
+				foreach ($messages as $message) {
+					if (is_scalar($message)) {
+						$fingerprint_source .= (string) $message . "\n";
+					}
+				}
+			}
+		} elseif ($error instanceof Throwable) {
+			$error_class = get_class($error);
+			$error_code = (string) $error->getCode();
+			$fingerprint_source = $error->getMessage();
+		} elseif (is_string($error)) {
+			$error_class = 'string';
+			$fingerprint_source = $error;
+		} else {
+			return array();
+		}
+
+		$error_class = substr(sanitize_key(str_replace('\\', '_', $error_class)), 0, 64);
+		$raw_error_code = trim($error_code);
+		$error_code = strtolower($raw_error_code);
+		if ($error_code === '' || vms_operational_issue_value_is_tainted($error_code) || !preg_match('/^[a-z0-9_-]+$/', $error_code)) {
+			$error_code = '';
+		} else {
+			$error_code = substr($error_code, 0, 64);
+		}
+		$identity = array(
+			'error_class' => $error_class,
+			'error_fingerprint' => substr(hash('sha256', $error_class . "\n" . $raw_error_code . "\n" . $fingerprint_source), 0, 24),
+		);
+		if ($error_code !== '') {
+			$identity['error_code'] = $error_code;
+		}
+		return $identity;
+	}
+}
+
+if (!function_exists('vms_operational_issue_context')) {
+	function vms_operational_issue_context(array $context): array
+	{
+		$string_keys = array(
+			'hook',
+			'action',
+			'decision',
+			'reason',
+			'diagnostic_code',
+			'admin_page',
+			'screen_id',
+			'service',
+			'operation',
+			'stage',
+			'status',
+			'provider',
+			'entity_type',
+			'trigger',
+			'mode',
+			'source_scope',
+			'event_key',
+			'correlation',
+		);
+		$path_keys = array('request_path', 'request_uri', 'route');
+		$integer_keys = array(
+			'http_status',
+			'attempt',
+			'retry_count',
+			'count',
+			'line',
+			'entity_id',
+			'vendor_id',
+			'event_id',
+			'plan_id',
+			'product_id',
+			'post_id',
+			'fatal_type',
+			'memory_exhausted',
+		);
+		$decimal_keys = array('elapsed_ms', 'runtime_ms', 'memory_mb', 'peak_memory_mb');
+		$clean = array();
+
+		foreach ($context as $key => $value) {
+			$key = sanitize_key((string) $key);
+			if ($key === '' || !is_scalar($value)) {
+				continue;
+			}
+
+			if (in_array($key, $path_keys, true)) {
+				$path = vms_operational_issue_request_path((string) $value);
+				if ($path !== '') {
+					$clean[$key] = $path;
+				}
+				continue;
+			}
+
+			if (in_array($key, $integer_keys, true) || in_array($key, $decimal_keys, true)) {
+				if (!is_numeric($value)) {
+					continue;
+				}
+				$number = (float) $value;
+				if (!is_finite($number) || $number < 0) {
+					continue;
+				}
+				$number = min($number, 1000000000);
+				$clean[$key] = in_array($key, $integer_keys, true) ? (int) $number : round($number, 1);
+				continue;
+			}
+
+			if (!in_array($key, $string_keys, true)) {
+				continue;
+			}
+			$value = strtolower(trim((string) $value));
+			if ($value === '' || vms_operational_issue_value_is_tainted($value)) {
+				continue;
+			}
+			if (!preg_match('/^[a-z0-9_-]+$/', $value)) {
+				continue;
+			}
+			$clean[$key] = substr($value, 0, 80);
+		}
+
+		return $clean;
 	}
 }
 
@@ -1202,34 +1429,36 @@ if (!function_exists('vms_admin_guard_should_allow_heavy_block')) {
 if (!function_exists('vms_admin_guard_trace')) {
 	function vms_admin_guard_trace(string $hook_name, string $decision, array $context = array(), float $started_at = 0.0): void
 	{
-		$hook_name = sanitize_key($hook_name);
-		if ($hook_name === '') {
-			$hook_name = 'heavy_admin_block';
-		}
-
+		$trace_context = vms_operational_issue_context(array(
+			'hook' => $hook_name,
+			'action' => (string) ($context['task'] ?? ''),
+			'decision' => $decision,
+			'reason' => (string) ($context['reason'] ?? ''),
+			'admin_page' => vms_resource_fingerprint_current_admin_page(),
+			'screen_id' => vms_admin_guard_current_screen_id(),
+		));
+		$hook_name = (string) ($trace_context['hook'] ?? 'heavy_admin_block');
+		$action = (string) ($trace_context['action'] ?? '');
+		$decision = (string) ($trace_context['decision'] ?? '');
+		$reason = (string) ($trace_context['reason'] ?? '');
+		$admin_page = (string) ($trace_context['admin_page'] ?? '');
+		$screen_id = (string) ($trace_context['screen_id'] ?? '');
 		$elapsed_ms = $started_at > 0 ? max(0.0, round((microtime(true) - $started_at) * 1000, 1)) : 0.0;
 		$payload = array(
 			'hook' => $hook_name,
-			'action' => sanitize_key((string) ($context['task'] ?? '')),
-			'decision' => sanitize_key($decision),
-			'reason' => sanitize_key((string) ($context['reason'] ?? '')),
-			'request_uri' => vms_resource_fingerprint_compact_value(vms_admin_guard_request_uri()),
-			'admin_page' => vms_resource_fingerprint_current_admin_page(),
-			'screen_id' => vms_admin_guard_current_screen_id(),
+			'action' => $action,
+			'decision' => $decision,
+			'reason' => $reason,
+			'request_uri' => vms_operational_issue_request_path(vms_admin_guard_request_uri()),
+			'admin_page' => $admin_page,
+			'screen_id' => $screen_id,
 			'elapsed_ms' => $elapsed_ms,
 			'memory_mb' => round(((int) memory_get_usage(true)) / 1048576, 1),
 		);
 
-		foreach ($context as $key => $value) {
-			if (in_array($key, array('task', 'reason'), true)) {
-				continue;
-			}
-			$payload[sanitize_key((string) $key)] = vms_resource_fingerprint_compact_value($value);
-		}
-
 		vms_resource_fingerprint_flag('heavy_admin_guard', $payload);
 		vms_resource_fingerprint_add_marker('heavy_admin_guard.' . $hook_name, $elapsed_ms, $payload);
-		error_log('[VMS TRACE] ' . wp_json_encode($payload));
+		vms_record_operational_issue('admin_guard_trace', $payload);
 	}
 }
 
@@ -1759,7 +1988,7 @@ if (!function_exists('vms_resource_fingerprint_action_scheduler_counts')) {
 			);
 		} catch (Throwable $e) {
 			return array(
-				'error' => vms_resource_fingerprint_compact_value($e->getMessage()),
+				'error' => vms_operational_issue_error_identity($e),
 			);
 		}
 	}
@@ -1773,6 +2002,84 @@ if (!function_exists('vms_resource_fingerprint_store_entry')) {
 		$entries[] = $entry;
 		$entries = array_slice($entries, -1 * vms_resource_fingerprint_log_limit());
 		update_option(vms_resource_fingerprint_option_key(), $entries, false);
+	}
+}
+
+if (!function_exists('vms_record_operational_issue')) {
+	function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+	{
+		static $in_progress = false;
+
+		$event_code = strtolower(trim($event_code));
+		if ($event_code === '' || vms_operational_issue_value_is_tainted($event_code) || !preg_match('/^[a-z0-9_-]+$/', $event_code)) {
+			return false;
+		}
+		$event_code = substr($event_code, 0, 64);
+		if (
+			$event_code === ''
+			|| !function_exists('get_option')
+			|| !function_exists('update_option')
+			|| !function_exists('vms_resource_fingerprint_store_entry')
+		) {
+			return false;
+		}
+		if ($in_progress) {
+			return false;
+		}
+
+		$in_progress = true;
+		try {
+			$safe_context = vms_operational_issue_context($context);
+			$error_identity = vms_operational_issue_error_identity($error);
+			$issue = array(
+				'event_code' => $event_code,
+				'context' => $safe_context,
+			);
+			if (!empty($error_identity)) {
+				$issue['error'] = $error_identity;
+			}
+
+			$request_path = '';
+			foreach (array('request_uri', 'request_path', 'route') as $path_key) {
+				if (!empty($safe_context[$path_key])) {
+					$request_path = (string) $safe_context[$path_key];
+					break;
+				}
+			}
+			$admin_page = isset($safe_context['admin_page']) ? (string) $safe_context['admin_page'] : vms_resource_fingerprint_current_admin_page();
+			$screen_id = isset($safe_context['screen_id']) ? (string) $safe_context['screen_id'] : vms_admin_guard_current_screen_id();
+			$runtime_ms = (float) ($safe_context['runtime_ms'] ?? ($safe_context['elapsed_ms'] ?? 0.0));
+			$memory_mb = (float) ($safe_context['peak_memory_mb'] ?? ($safe_context['memory_mb'] ?? 0.0));
+
+			vms_resource_fingerprint_store_entry(array(
+				'captured_at_gmt' => gmdate('Y-m-d H:i:s'),
+				'runtime_ms' => (int) round(max(0.0, $runtime_ms)),
+				'peak_memory_mb' => round(max(0.0, $memory_mb), 1),
+				'request_uri' => $request_path,
+				'request_method' => vms_admin_guard_request_method(),
+				'admin_page' => substr(sanitize_key($admin_page), 0, 80),
+				'screen_id' => substr(sanitize_key($screen_id), 0, 80),
+				'user_id' => 0,
+				'context' => array(
+					'admin' => function_exists('is_admin') && is_admin() ? 1 : 0,
+					'ajax' => function_exists('wp_doing_ajax') && wp_doing_ajax() ? 1 : 0,
+					'rest' => defined('REST_REQUEST') && REST_REQUEST ? 1 : 0,
+					'cron' => function_exists('wp_doing_cron') && wp_doing_cron() ? 1 : 0,
+					'wp_cli' => defined('WP_CLI') && WP_CLI ? 1 : 0,
+				),
+				'flags' => array('operational_issue' => array($issue)),
+				'markers' => array(),
+				'notes' => array(),
+				'due_wp_cron' => array(),
+				'action_scheduler' => array(),
+			));
+
+			return true;
+		} catch (Throwable $e) {
+			return false;
+		} finally {
+			$in_progress = false;
+		}
 	}
 }
 
@@ -1831,7 +2138,7 @@ if (!function_exists('vms_resource_fingerprint_shutdown')) {
 				'captured_at_gmt' => gmdate('Y-m-d H:i:s'),
 				'runtime_ms' => (int) round($runtime_seconds * 1000),
 				'peak_memory_mb' => round($peak_memory_bytes / 1048576, 1),
-				'request_uri' => vms_resource_fingerprint_compact_value(vms_admin_guard_request_uri()),
+				'request_uri' => vms_operational_issue_request_path(vms_admin_guard_request_uri()),
 				'request_method' => vms_admin_guard_request_method(),
 				'admin_page' => vms_resource_fingerprint_current_admin_page(),
 				'screen_id' => (is_object($screen) && !empty($screen->id)) ? sanitize_key((string) $screen->id) : '',
