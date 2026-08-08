@@ -134,6 +134,22 @@ if (!function_exists('vms_tasks_notifications_default_due_soon_window_minutes'))
 	}
 }
 
+if (!function_exists('vms_tasks_notification_format_floating_local_datetime')) {
+	function vms_tasks_notification_format_floating_local_datetime(string $format, string $expression): string
+	{
+		$utc = new DateTimeZone('UTC');
+		try {
+			$datetime = trim($expression) === ''
+				? new DateTimeImmutable('@0')
+				: new DateTimeImmutable($expression, $utc);
+		} catch (Exception) {
+			$datetime = new DateTimeImmutable('@0');
+		}
+
+		return $datetime->setTimezone($utc)->format($format);
+	}
+}
+
 if (!function_exists('vms_tasks_notification_scan_due_soon')) {
 	function vms_tasks_notification_scan_due_soon(): void
 	{
@@ -144,7 +160,7 @@ if (!function_exists('vms_tasks_notification_scan_due_soon')) {
 
 		$now = vms_tasks_now_local_mysql();
 		$window_minutes = vms_tasks_notifications_default_due_soon_window_minutes();
-		$due_before = date('Y-m-d H:i:s', strtotime($now . ' +' . $window_minutes . ' minutes'));
+		$due_before = vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', $now . ' +' . $window_minutes . ' minutes');
 		$rows = vms_tasks_get_instances(array(
 			'status' => 'open',
 			'due_after' => $now,
@@ -231,12 +247,12 @@ if (!function_exists('vms_tasks_notification_digest_window_end')) {
 	{
 		$window = sanitize_key($window);
 		if ($window === 'today') {
-			return date('Y-m-d 23:59:59', strtotime($now));
+			return vms_tasks_notification_format_floating_local_datetime('Y-m-d 23:59:59', $now);
 		}
 		if ($window === 'next7') {
-			return date('Y-m-d H:i:s', strtotime($now . ' +7 days'));
+			return vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', $now . ' +7 days');
 		}
-		return date('Y-m-d H:i:s', strtotime($now . ' +3 days'));
+		return vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', $now . ' +3 days');
 	}
 }
 
@@ -249,7 +265,7 @@ if (!function_exists('vms_tasks_notification_run_digest')) {
 		}
 
 		$now = vms_tasks_now_local_mysql();
-		$today = date('Y-m-d', strtotime($now));
+		$today = vms_tasks_notification_format_floating_local_datetime('Y-m-d', $now);
 		$time = (string) ($settings['notify_digest_time'] ?? '08:00');
 		$run_after = $today . ' ' . $time . ':00';
 		if (strtotime($now) < strtotime($run_after)) {
