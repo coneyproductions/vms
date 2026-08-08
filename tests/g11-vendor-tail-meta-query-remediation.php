@@ -61,6 +61,45 @@ function g11_projection(string $source, string $function_name): string
 	);
 }
 
+function g11_project_g15_payables_dates(string $source): string
+{
+	$current_bill = "        \$ymd = gmdate('Ymd');";
+	$historical_bill = "        \$ymd = date('Ymd');";
+	g11_same(1, substr_count($source, $current_bill), 'Current Payables UTC bill fallback must occur exactly once.');
+	$source = str_replace($current_bill, $historical_bill, $source, $bill_count);
+	g11_same(1, $bill_count, 'Payables bill fallback projection must reverse exactly one statement.');
+
+	$current_add_days = g11_extract_function($source, 'vms_payables_add_days');
+	g11_same(1, substr_count($current_add_days, "new DateTimeImmutable(\$ymd . ' 00:00:00', \$utc)"), 'Current Payables add-days must construct with explicit UTC.');
+	g11_same(1, substr_count($current_add_days, '$date = $date->setTimezone($utc);'), 'Current Payables add-days must re-normalize embedded timezone tokens to UTC.');
+	g11_same(0, preg_match_all('/(?<![A-Za-z0-9_])date\(/', $current_add_days), 'Current Payables add-days must not retain native date().');
+	$historical_add_days = <<<'PHP'
+function vms_payables_add_days(string $ymd, int $days): string
+{
+    $ymd  = trim((string) $ymd);
+    $days = (int) $days;
+
+    if ($ymd === '') {
+        return '';
+    }
+
+    $ts = strtotime($ymd . ' 00:00:00');
+    if (!$ts) {
+        return '';
+    }
+
+    if ($days !== 0) {
+        $ts = strtotime(($days >= 0 ? '+' : '') . $days . ' days', $ts);
+    }
+
+    return date('Y-m-d', $ts);
+}
+PHP;
+	$source = str_replace($current_add_days, $historical_add_days, $source, $add_count);
+	g11_same(1, $add_count, 'Payables add-days projection must reverse exactly one function.');
+	return $source;
+}
+
 /**
  * @param array<string,string>                                 $sources Source contents keyed by owned source name.
  * @param string[]                                             $allowed_codes Exact source codes permitted by this slice.
@@ -175,6 +214,10 @@ foreach ($relative_paths as $source_name => $relative_path) {
 	$shadow_sources[$source_name] = (string) file_get_contents($shadow_path);
 	g11_assert($mirror_sources[$source_name] !== '' && $shadow_sources[$source_name] !== '', 'Owned source must be readable: ' . $relative_path);
 }
+$baseline_mirror_sources = $mirror_sources;
+$baseline_shadow_sources = $shadow_sources;
+$baseline_mirror_sources['payables'] = g11_project_g15_payables_dates($mirror_sources['payables']);
+$baseline_shadow_sources['payables'] = g11_project_g15_payables_dates($shadow_sources['payables']);
 
 $meta_key_code = 'WordPress.DB.SlowDBQuery.slow_db_query_meta_key';
 $meta_query_code = 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query';
@@ -199,7 +242,7 @@ ksort($expected_code_counts);
 g11_same($expected_code_counts, $code_counts, 'Artifact-derived rule split must remain K2/Q8.');
 
 foreach ($inventory as $row) {
-	$lines = preg_split('/\R/', $mirror_sources[$row['source']]);
+	$lines = preg_split('/\R/', $baseline_mirror_sources[$row['source']]);
 	g11_assert(is_array($lines) && isset($lines[$row['line'] - 1]), 'Artifact-owned line should exist: ' . $row['file'] . ':' . $row['line']);
 	$line = $lines[$row['line'] - 1];
 	g11_contains($row['anchor'], $line, 'Owned annotation must remain attached to its exact query anchor: ' . $row['file'] . ':' . $row['line']);
@@ -266,8 +309,8 @@ $shadow_expected_annotations = array_map(
 	},
 	$inventory
 );
-g11_same(array(), g11_db_annotation_errors($mirror_sources, $allowed_codes, $mirror_expected_annotations), 'Mirror DB annotations must equal the exact K2/Q8 inventory.');
-g11_same(array(), g11_db_annotation_errors($shadow_sources, $allowed_codes, $shadow_expected_annotations), 'Shadow DB annotations must equal the exact K2/Q8 inventory.');
+g11_same(array(), g11_db_annotation_errors($baseline_mirror_sources, $allowed_codes, $mirror_expected_annotations), 'Mirror DB annotations must equal the exact K2/Q8 inventory after reversing G15 validation-only changes.');
+g11_same(array(), g11_db_annotation_errors($baseline_shadow_sources, $allowed_codes, $shadow_expected_annotations), 'Shadow DB annotations must equal the exact K2/Q8 inventory after reversing G15 validation-only changes.');
 
 $negative_annotations = array(
 	'block disable' => '// phpcs:disable WordPress.DB',
@@ -282,7 +325,7 @@ $negative_annotations = array(
 	'mixed installed codes' => '// phpcs:ignore ' . $meta_key_code . ',' . $meta_query_code . ' -- forbidden mixed-list suppression',
 );
 foreach ($negative_annotations as $label => $annotation) {
-	$mutated_sources = $mirror_sources;
+	$mutated_sources = $baseline_mirror_sources;
 	$mutated_sources['tax_export'] .= "\n" . $annotation . "\n";
 	g11_assert(g11_db_annotation_errors($mutated_sources, $allowed_codes, $mirror_expected_annotations) !== array(), 'Annotation audit must reject negative control: ' . $label);
 }
@@ -349,7 +392,7 @@ $projection_hashes = array(
 
 $stripped_sources = array('mirror' => array(), 'shadow' => array());
 $total_removed = 0;
-foreach (array('mirror' => $mirror_sources, 'shadow' => $shadow_sources) as $tree => $sources) {
+foreach (array('mirror' => $baseline_mirror_sources, 'shadow' => $baseline_shadow_sources) as $tree => $sources) {
 	foreach ($sources as $source_name => $source) {
 		g11_same($whole_hashes[$tree][$source_name], hash('sha256', $source), $tree . ' whole-source hash changed: ' . $source_name);
 		$stripped = g11_strip_owned_annotations($source, $annotation_specs[$source_name], $tree . ':' . $source_name);
@@ -389,12 +432,13 @@ foreach (array('vendors', 'vendor_category') as $divergent_source) {
 	g11_assert($mirror_sources[$divergent_source] !== $shadow_sources[$divergent_source], 'Intentional whole-file divergence must remain: ' . $divergent_source);
 }
 
-$payables_lines = preg_split('/\R/', $mirror_sources['payables']);
 $vendor_lines = preg_split('/\R/', $mirror_sources['vendors']);
-g11_assert(is_array($payables_lines) && is_array($vendor_lines), 'Deferred source lines should split.');
-g11_contains("date('Ymd')", $payables_lines[87], 'Deferred Payables date row 88 changed.');
-g11_contains("date('Y-m-d', \$ts)", $payables_lines[118], 'Deferred Payables date row 119 changed.');
-g11_assert(strpos($payables_lines[87], 'phpcs:') === false && strpos($payables_lines[118], 'phpcs:') === false, 'Deferred Payables date rows must remain unsuppressed.');
+g11_assert(is_array($vendor_lines), 'Deferred Vendors source lines should split.');
+g11_same(1, substr_count($mirror_sources['payables'], "        \$ymd = gmdate('Ymd');"), 'Remediated Payables bill fallback must remain exact.');
+$payables_add_days = g11_extract_function($mirror_sources['payables'], 'vms_payables_add_days');
+g11_contains("new DateTimeImmutable(\$ymd . ' 00:00:00', \$utc)", $payables_add_days, 'Remediated Payables add-days constructor changed.');
+g11_contains('$date = $date->setTimezone($utc);', $payables_add_days, 'Remediated Payables UTC re-normalization changed.');
+g11_assert(strpos($payables_add_days, 'phpcs:') === false, 'Remediated Payables add-days must remain unsuppressed.');
 g11_contains("sprintf(esc_html__('Photo %d URL'", $vendor_lines[395], 'Deferred Vendors output row 396 changed.');
 g11_assert(strpos($vendor_lines[395], 'phpcs:') === false, 'Deferred Vendors output row must remain unsuppressed.');
 

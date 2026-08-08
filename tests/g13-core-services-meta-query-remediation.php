@@ -233,10 +233,14 @@ foreach ($negative_annotations as $label => $annotation) {
 	g13_assert(g13_db_annotation_errors($mutated_sources, $allowed_codes, $mirror_expected_annotations) !== array(), 'Annotation audit must reject negative control: ' . $label);
 }
 
-$date_lines = preg_split('/\R/', $mirror_sources['event_credits']);
-g13_assert(is_array($date_lines) && isset($date_lines[843]), 'Adjacent Event Credits date finding line must remain present.');
-g13_contains(": date('Y-m-d')", $date_lines[843], 'Adjacent Event Credits date() finding must remain untouched.');
-g13_assert(strpos($date_lines[843], 'phpcs:') === false, 'Adjacent Event Credits date() finding must remain unsuppressed.');
+$event_credit_current_date = "\t\t\t\$today = wp_date('Y-m-d', time(), wp_timezone());";
+$event_credit_historical_date = "\t\t\t\$today = function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d');";
+foreach (array('mirror' => $mirror_sources['event_credits'], 'shadow' => $shadow_sources['event_credits']) as $tree_name => $event_credit_source) {
+	$date_lines = preg_split('/\R/', $event_credit_source);
+	g13_assert(is_array($date_lines) && isset($date_lines[843]), 'Adjacent Event Credits date boundary line must remain present: ' . $tree_name);
+	g13_same($event_credit_current_date, $date_lines[843], 'Adjacent Event Credits date boundary must use the direct site-local WordPress API: ' . $tree_name);
+	g13_assert(strpos($date_lines[843], 'phpcs:') === false, 'Adjacent Event Credits date boundary must remain unsuppressed: ' . $tree_name);
+}
 
 $baseline_hashes = array(
 	'mirror' => array(
@@ -269,6 +273,11 @@ foreach (array('mirror' => $mirror_sources, 'shadow' => $shadow_sources) as $tre
 			}
 		));
 		$projection = g13_strip_owned_annotations($source, $rows, $tree_name . ' ' . $source_name);
+		if ($source_name === 'event_credits') {
+			$date_projection_count = 0;
+			$projection['source'] = str_replace($event_credit_current_date, $event_credit_historical_date, $projection['source'], $date_projection_count);
+			g13_same(1, $date_projection_count, ucfirst($tree_name) . ' Event Credits date projection must restore exactly one historical statement.');
+		}
 		g13_same($baseline_hashes[$tree_name][$source_name], hash('sha256', $projection['source']), $tree_name . ' ' . $source_name . ' must remain annotation-only.');
 		$projected_sources[$tree_name][$source_name] = $projection['source'];
 		$total_removed += $projection['removed'];

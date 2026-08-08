@@ -155,7 +155,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 					} else {
 						update_post_meta($vendor_id, $k_upload, (int) $file_id);
 						update_post_meta($vendor_id, $k_upload_kind, 'private_file');
-						update_post_meta($vendor_id, $k_recv, function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d'));
+						update_post_meta($vendor_id, $k_recv, wp_date('Y-m-d', time(), wp_timezone()));
 						if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
 							vms_private_files_delete($previous_upload_id);
 						}

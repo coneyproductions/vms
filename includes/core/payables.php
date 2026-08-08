@@ -85,7 +85,7 @@ function vms_payables_build_bill_no(string $event_date, int $venue_id, int $vend
     $ymd = preg_replace('/[^0-9]/', '', (string) $event_date); // supports YYYY-MM-DD → YYYYMMDD
     if (strlen($ymd) !== 8) {
         // fallback: today
-        $ymd = date('Ymd');
+        $ymd = gmdate('Ymd');
     }
 
     if ($venue_slug === '') {
@@ -107,16 +107,26 @@ function vms_payables_add_days(string $ymd, int $days): string
         return '';
     }
 
-    $ts = strtotime($ymd . ' 00:00:00');
-    if (!$ts) {
+    $utc = new DateTimeZone('UTC');
+    try {
+        $date = new DateTimeImmutable($ymd . ' 00:00:00', $utc);
+    } catch (Exception $exception) {
+        return '';
+    }
+    $date = $date->setTimezone($utc);
+
+    if ($date->getTimestamp() === 0) {
         return '';
     }
 
     if ($days !== 0) {
-        $ts = strtotime(($days >= 0 ? '+' : '') . $days . ' days', $ts);
+        $date = $date->modify(($days >= 0 ? '+' : '') . $days . ' days');
+        if (!$date instanceof DateTimeImmutable) {
+            return '';
+        }
     }
 
-    return date('Y-m-d', $ts);
+    return $date->format('Y-m-d');
 }
 
 /**

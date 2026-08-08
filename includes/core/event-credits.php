@@ -841,7 +841,7 @@ if (!function_exists('vms_event_credit_product_is_eligible')) {
 				return false;
 			}
 			$event_date = sanitize_text_field((string) get_post_meta($product_plan_id, '_vms_event_date', true));
-			$today = function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d');
+			$today = wp_date('Y-m-d', time(), wp_timezone());
 			if ($event_date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date) && $event_date < $today) {
 				return false;
 			}
