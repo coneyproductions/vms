@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. Coordinated Wave 2 on `2026-08-08` then verified Ticketing Rules V2 `23 -> 0`, vendor-application confirmation `27 -> 0`, and goals/forecast `31 -> 0`. The current packaged residual baseline is `166` errors, `273` warnings, `439` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=314`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. Coordinated Wave 2 on `2026-08-08` then verified Ticketing Rules V2 `23 -> 0`, vendor-application confirmation `27 -> 0`, and goals/forecast `31 -> 0`. Coordinated Wave 3 verified ticket diagnostics `27 -> 0`, vendor portal `22 -> 0`, and schema/check-in descriptors `29 -> 0`. The current packaged residual baseline is `166` errors, `195` warnings, `361` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=236`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4484,6 +4484,45 @@ Date: 2026-08-08
 - `WPORG-28R-G11` remains `in progress` with `40` DB/SQL rows after the verified vendor-application confirmation slice.
 - `WPORG-28R-G12` remains `in progress` with `38` DB/SQL rows.
 - `WPORG-28R-G13` remains `in progress` with `97` DB/SQL rows after the verified goals/forecast slice; `G14-G15` retain `25` date rows; `G16-G17` retain `42` logging rows.
+- `WPORG-28R` remains blocked. No upload, slug reservation, reviewer reply, deployment, or production convergence is authorized from this checkpoint.
+
+## Coordinated Wave 3 Result
+
+Date: 2026-08-08
+
+### Summary
+
+- Result: `PASS`
+- Scope: ticket-inventory forensics and mutation-audit DB/SQL, vendor-portal DB/SQL, vendor-schema descriptor false positives, and the check-in-close returned descriptor false positive.
+- Primary source commit scanned: `5b6adb0c0505a7284d7d47535f2be85020ee46d8`.
+- Primary runtime commits: `7c682b5` (schema/check-in descriptors), `568320e` (vendor portal), and `5b6adb0` (ticket diagnostics).
+- Durable current counts and provenance: `docs/wporg-current-scan-state.json`.
+
+### Runtime Changes
+
+- `includes/ticketing/ticket-inventory-forensics.php` plus `includes/ticketing/ticket-mutation-audit.php` DB/SQL moved `27 -> 0`. Custom table identifiers now use `%i`; value placeholders, 90-day pruning, fresh DESC history reads, bounded limits, insert formats, failure/zero-row semantics, and return identities remain unchanged. Mutation Audit's separate `error_log` and `debug_backtrace` rows remain deferred.
+- `includes/portal/vendor-portal.php` DB/SQL moved `22 -> 0` through exact annotations on four already-prepared fresh custom-table operations and seven required portal meta-query boundaries. No SQL, query arguments, caching, authentication, authorization, or output behavior changed.
+- `includes/core/registry/vendor-schema.php` descriptor rows moved `28 -> 0`, and the returned `meta_key` descriptor in `includes/helpers/checkin-close.php` moved `1 -> 0`. These are annotation-only lexical false-positive remediations; neither boundary executes a query.
+- Shared runtime was synchronized to the real local plugin only inside the reviewed ownership boundaries. Full parity was retained for the two ticket-diagnostics files, vendor schema, and check-in close; the intentionally divergent vendor-portal file was patched only at the exact owned occurrences.
+
+### Verification
+
+- New executable focused suites passed: `tests/ticket-diagnostics-repository-sql-remediation.php`, `tests/vendor-portal-repository-sql-remediation.php`, and `tests/vendor-schema-descriptor-slow-query-remediation.php`.
+- Independent reviewers reconciled each slice to the Wave 2 strict JSON, reproduced the parent findings with installed PHPCS, proved current target findings zero, audited annotation truthfulness and behavior, and returned clean approvals before integration.
+- Primary-tree focused tests, mirror/live lints and parity checks, release-compatibility harness self-tests, runtime-stub guards, and all `18` public-release pipeline cases passed.
+- Authoritative public build passed at `/tmp/wporg-wave3-integrated.ZxiaOt/build-authoritative/backstage-venue-manager-1.2.0-public-release.zip`, SHA-256 `56dbf1983afaff8d9bb9a4f47a27363aa5300e74147d573a6fed82fc50e94e7d`.
+- The builder used a clean source commit, staged `372` files, linted `269` packaged PHP files, syntax-checked `55` JavaScript files, passed all five release regressions and four optional-dependency load-smokes, and passed archive-integrity validation. Its only warnings remain the absent version-matched build notes and intentionally omitted mutating activation-hook smoke.
+- Final packaged Plugin Check exited `0` with empty stderr. Strict JSON is `/tmp/wporg-wave3-integrated.ZxiaOt/plugin-check/plugin-check.strict.json`, SHA-256 `3fcc51cd1311afa47bac1b4cc9c958a38293ec86f5a2b78ec14127a7259ef38a`; before/after activation-state snapshots are byte-identical and their stderr files are empty.
+- Final scan: `166` errors, `195` warnings, `361` total, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=236`.
+- Final blocker families: DB/SQL `169`, nonce/input `0`, date/time `25`, and logging `42`.
+- Exact Wave 3 deltas were `UnescapedDBParameter 17 -> 12 (-5)`, `DirectQuery 42 -> 31 (-11)`, `NoCaching 35 -> 26 (-9)`, `InterpolatedNotPrepared 14 -> 9 (-5)`, `slow_meta_key 58 -> 17 (-41)`, and `slow_meta_query 66 -> 59 (-7)`; every other rule count remained unchanged.
+
+### Current Parent State
+
+- `WPORG-28R-G10` remains `in progress` with `45` DB/SQL rows after the verified ticket-diagnostics slice.
+- `WPORG-28R-G11` remains `in progress` with `18` DB/SQL rows after the verified vendor-portal slice.
+- `WPORG-28R-G12` remains `in progress` with `38` DB/SQL rows; this is the next three-lane execution family.
+- `WPORG-28R-G13` remains `in progress` with `68` DB/SQL rows after the verified schema/check-in descriptor slice; `G14-G15` retain `25` date rows; `G16-G17` retain `42` logging rows.
 - `WPORG-28R` remains blocked. No upload, slug reservation, reviewer reply, deployment, or production convergence is authorized from this checkpoint.
 
 Date: 2026-07-21
