@@ -156,7 +156,11 @@ try {
 	$passClaimsSource = vms_test_read_file($passClaimsPath);
 
 	$combinedSource = implode("\n", array($settingsSource, $squareSource, $admissionsSource, $passClaimsSource));
-	vms_test_assert_same(6, vms_test_count_pattern('/phpcs:ignore/', $combinedSource), 'The F2 runtime files should keep exactly six line-specific PHPCS suppressions.');
+	vms_test_assert_same(
+		6,
+		vms_test_count_pattern('/phpcs:ignore (?:WordPress\.WP\.AlternativeFunctions\.file_system_operations_fclose|Squiz\.PHP\.DiscouragedFunctions\.Discouraged)/', $combinedSource),
+		'The F2 runtime files should keep exactly the six owned stream-boundary suppressions while allowing later, separately tested remediation annotations in the same files.'
+	);
 	vms_test_assert_same(
 		5,
 		vms_test_count_pattern('/phpcs:ignore WordPress\.WP\.AlternativeFunctions\.file_system_operations_fclose/', $combinedSource),
@@ -213,7 +217,9 @@ try {
 			'current_user_can(vms_admission_manage_capability())',
 			"wp_verify_nonce(\$nonce, 'vms_admissions_export_csv_' . \$event_plan_id)",
 			'$rows = $wpdb->get_results($wpdb->prepare(',
-			"FROM {\$table} WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC",
+			'FROM %i WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC',
+			'$table,',
+			'$event_plan_id',
 			"header('Content-Type: text/csv; charset=utf-8');",
 			"header('Content-Disposition: attachment; filename=' . \$filename);",
 			"fclose(\$fh); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.",
