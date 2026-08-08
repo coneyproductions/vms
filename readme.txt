@@ -99,6 +99,13 @@ Used by: webhook-based social sharing and publishing workflows, when configured.
 Data sent: event identifiers, venue summary fields, rendered caption text, destination URL, featured image URL, queue metadata, and an HMAC signature when a signing secret is configured.
 Service terms and privacy: depend on the configured webhook destination selected by the operator.
 
+5. Vendor-selected video and oEmbed providers
+Used by: optional vendor profile and promotional video embeds, when a vendor or operator saves a supported external video URL.
+Server-side contact: WordPress may request the selected URL and its provider endpoints to discover and render the embed.
+Browser contact: when an embedded video is displayed, the visitor's browser may connect directly to the selected provider.
+Data sent: the selected video URL and ordinary server request metadata during discovery; browser contact may disclose the visitor IP address, browser or device information, request headers, page URL or referrer, and provider cookies according to that provider's policies.
+Service docs, terms, and privacy: supported providers are described at https://wordpress.org/documentation/article/embeds/; terms and privacy depend on the provider selected by the vendor or operator.
+
 == Privacy / Data Retention ==
 
 Backstage Venue Manager retains operational data by default on uninstall to reduce the risk of accidental data loss.

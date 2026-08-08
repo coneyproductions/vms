@@ -645,15 +645,39 @@ if (function_exists('add_action')) {
 
 /**
  * Ensure a WP Page exists by slug. Creates it if missing.
- * If a page exists in trash, restores it.
+ * Existing pages are adopted only when plugin ownership can be established.
+ * A managed page is rewritten only for an explicit repair request.
  *
  * @return int Page ID (0 on failure)
  */
+function vms_public_page_is_managed(WP_Post $page, array $args): bool
+{
+	$managed_key = isset($args['managed_key']) ? sanitize_key((string) $args['managed_key']) : '';
+	if ($managed_key !== '') {
+		if ((string) get_post_meta($page->ID, '_vms_managed_public_page', true) === $managed_key) {
+			return true;
+		}
+
+		if (absint(get_option('vms_page_' . $managed_key, 0)) === (int) $page->ID) {
+			return true;
+		}
+	}
+
+	$content = isset($args['content']) ? (string) $args['content'] : '';
+	if (!preg_match('/\[\s*([A-Za-z0-9_-]+)/', $content, $matches)) {
+		return false;
+	}
+
+	return function_exists('has_shortcode') && has_shortcode((string) $page->post_content, (string) $matches[1]);
+}
+
 function vms_ensure_page_exists(array $args): int
 {
 	$slug    = isset($args['slug']) ? sanitize_title((string) $args['slug']) : '';
 	$title   = isset($args['title']) ? sanitize_text_field((string) $args['title']) : '';
 	$content = isset($args['content']) ? (string) $args['content'] : '';
+	$managed_key = isset($args['managed_key']) ? sanitize_key((string) $args['managed_key']) : '';
+	$repair_existing = !empty($args['repair_existing']);
 
 	if ($slug === '' || $title === '') {
 		return 0;
@@ -662,17 +686,27 @@ function vms_ensure_page_exists(array $args): int
 	$existing = get_page_by_path($slug, OBJECT, 'page');
 
 	if ($existing instanceof WP_Post) {
-		$update = [
-			'ID'           => $existing->ID,
-			'post_title'   => $title,
-			'post_content' => $content,
-		];
-
-		if ($existing->post_status === 'trash') {
-			$update['post_status'] = 'draft';
+		if (!vms_public_page_is_managed($existing, $args)) {
+			return 0;
 		}
 
-		wp_update_post($update);
+		if ($repair_existing) {
+			$update = [
+				'ID'           => $existing->ID,
+				'post_title'   => $title,
+				'post_content' => $content,
+			];
+
+			if ($existing->post_status === 'trash') {
+				$update['post_status'] = 'draft';
+			}
+
+			wp_update_post($update);
+		}
+
+		if ($managed_key !== '') {
+			update_post_meta($existing->ID, '_vms_managed_public_page', $managed_key);
+		}
 		return (int) $existing->ID;
 	}
 
@@ -686,6 +720,10 @@ function vms_ensure_page_exists(array $args): int
 
 	if (is_wp_error($new_id) || !$new_id) {
 		return 0;
+	}
+
+	if ($managed_key !== '') {
+		update_post_meta((int) $new_id, '_vms_managed_public_page', $managed_key);
 	}
 
 	return (int) $new_id;
@@ -723,6 +761,7 @@ function vms_install_public_pages(): void
 		);
 
 	foreach ($pages as $key => $p) {
+		$p['managed_key'] = sanitize_key((string) $key);
 		$page_id = vms_ensure_page_exists($p);
 		if ($page_id > 0) {
 			update_option('vms_page_' . $key, $page_id, false);

@@ -565,6 +565,7 @@ $tests['repository exclusion manifest contains a narrow AGENTS rule'] = static f
 	}
 
 	vms_public_release_test_assert(in_array('AGENTS.md', $patterns, true), 'Expected repository exclusion manifest to exclude AGENTS.md exactly.');
+	vms_public_release_test_assert(in_array('includes/safety/', $patterns, true), 'Expected the dormant, unbootstrapped Safety prototype to stay outside public packages.');
 	vms_public_release_test_assert(!in_array('*.md', $patterns, true), 'Expected repository exclusion manifest to avoid a broad *.md wildcard.');
 	vms_public_release_test_assert(!in_array('**/*.md', $patterns, true), 'Expected repository exclusion manifest to avoid a broad **/*.md wildcard.');
 	vms_public_release_test_assert(!in_array('readme.txt', $patterns, true), 'Expected repository exclusion manifest to keep readme.txt packaged.');
@@ -831,11 +832,12 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		$packagedFiles = array_values(array_filter($zipEntries, static function (string $entryName): bool {
 			return substr($entryName, -1) !== '/';
 		}));
-		vms_public_release_test_assert(count($packagedFiles) === 379, 'Expected the current repository public package to contain 379 files.');
+		vms_public_release_test_assert(count($packagedFiles) === 372, 'Expected the current repository public package to contain 372 files after excluding the dormant Safety prototype.');
 
 		foreach ($zipEntries as $entryName) {
 			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected AGENTS.md to stay out of the packaged public ZIP.');
 			vms_public_release_test_assert(strpos($entryName, '/outreach/') === false, 'Expected Outreach runtime paths to stay out of the packaged public ZIP.');
+			vms_public_release_test_assert(strpos($entryName, '/includes/safety/') === false, 'Expected the dormant Safety prototype to stay out of the packaged public ZIP.');
 		}
 
 		$packagedHeader = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_basename());

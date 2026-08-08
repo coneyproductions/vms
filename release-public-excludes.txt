@@ -18,6 +18,8 @@ docs/
 scripts/
 dist/
 _attic/
+# Dormant prototype code that is explicitly outside the canonical bootstrap.
+includes/safety/
 BUILD-NOTES-*.md
 local-event-plan-perf-*.md
 vms-test-plan-*.md

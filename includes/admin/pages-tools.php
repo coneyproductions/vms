@@ -35,6 +35,8 @@ add_action('admin_post_vms_repair_pages', function () {
             break;
         }
 
+        $spec['managed_key'] = sanitize_key((string) $key);
+        $spec['repair_existing'] = true;
         $page_id = (int) vms_ensure_page_exists($spec);
 
         if ($page_id > 0) {

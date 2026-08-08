@@ -22,9 +22,16 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
         return array('ok' => false, 'error' => __('No ICS URL saved for this vendor.', 'backstage-venue-manager'));
     }
 
-    $response = wp_remote_get($ics_url, array(
+    $validated_url = wp_http_validate_url($ics_url);
+    if (!is_string($validated_url) || $validated_url === '') {
+        return array('ok' => false, 'error' => __('The saved ICS feed URL is not allowed.', 'backstage-venue-manager'));
+    }
+
+    $max_response_bytes = 2 * MB_IN_BYTES;
+    $response = wp_safe_remote_get($validated_url, array(
         'timeout' => 15,
         'redirection' => 3,
+        'limit_response_size' => $max_response_bytes + 1,
         'headers' => array('Accept' => 'text/calendar'),
     ));
 
@@ -39,6 +46,9 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
     }
 
     $raw = (string) wp_remote_retrieve_body($response);
+    if (strlen($raw) > $max_response_bytes) {
+        return array('ok' => false, 'error' => __('ICS feed content is too large.', 'backstage-venue-manager'));
+    }
     if ($raw === '') {
         return array('ok' => false, 'error' => __('ICS feed returned empty content.', 'backstage-venue-manager'));
     }

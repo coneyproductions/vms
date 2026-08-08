@@ -35,7 +35,7 @@ require_once __DIR__ . '/portal/load.php';
 require_once __DIR__ . '/social-share/load.php';
 
 // Intentionally not bootstrapped from core in this build:
-// - includes/safety/* (present in code, not yet part of canonical live bootstrap)
+// - includes/safety/* (source-only prototype, excluded from the public release)
 // - Express Bar (moved to a standalone module)
 
 if (is_admin()) {
