@@ -284,43 +284,84 @@ function event_plan_extract_function(string $source, string $name): string
 	throw new RuntimeException('Unable to parse function ' . $name . '.');
 }
 
-function event_plan_owned_projection(string $source, array $names): string
+function event_plan_normalize_sql(string $sql): string
 {
-	foreach ($names as $name) {
-		$source = str_replace(event_plan_extract_function($source, $name), '/* owned function: ' . $name . ' */', $source);
+	$normalized = preg_replace('/\s+/', ' ', trim($sql));
+	if (!is_string($normalized)) {
+		throw new RuntimeException('Unable to normalize prepared SQL.');
 	}
-	return $source;
+	return $normalized;
 }
 
-function event_plan_validate_narrow_suppressions(string $scope): void
+/**
+ * @param array<string,array{function:string,directive:string,target:string,context:string}> $occurrences
+ * @return array{source:string,removed:int}
+ */
+function event_plan_strip_owned_annotations(string $source, array $occurrences): array
 {
-	foreach (array('phpcs:disable', 'phpcs:enable', 'phpcs:ignoreFile') as $forbidden) {
-		if (strpos($scope, $forbidden) !== false) {
-			throw new RuntimeException('Broad PHPCS suppression is forbidden: ' . $forbidden);
-		}
+	$removed = 0;
+	foreach ($occurrences as $id => $occurrence) {
+		$pattern = '/^[ \t]*' . preg_quote($occurrence['directive'], '/') . '(?:\r\n|\n|\r)/m';
+		$matches = preg_match_all($pattern, $source);
+		event_plan_same(1, $matches, 'Owned annotation must occur exactly once in the whole source: ' . $id . '.');
+		$source = (string) preg_replace($pattern, '', $source, 1, $count);
+		event_plan_same(1, $count, 'Owned annotation removal failed: ' . $id . '.');
+		$removed += $count;
 	}
-	$allowed = array(
-		'WordPress.DB.SlowDBQuery.slow_db_query_meta_query' => true,
-		'WordPress.DB.PreparedSQL.NotPrepared' => true,
-		'WordPress.DB.DirectDatabaseQuery.DirectQuery' => true,
-		'WordPress.DB.DirectDatabaseQuery.NoCaching' => true,
-	);
-	foreach (preg_split('/\R/', $scope) ?: array() as $line) {
-		if (strpos($line, 'phpcs:') === false) {
-			continue;
-		}
-		if (!preg_match('/phpcs:ignore ([^\s]+) -- (.+)$/', $line, $match)) {
-			throw new RuntimeException('Every suppression must be exact, line-local, and justified: ' . $line);
-		}
-		foreach (explode(',', $match[1]) as $code) {
-			if (!isset($allowed[$code])) {
-				throw new RuntimeException('Broad or unowned suppression code: ' . $code);
+	return array('source' => $source, 'removed' => $removed);
+}
+
+/**
+ * @param array<string,array{function:string,directive:string,target:string,context:string}> $occurrences
+ * @return array<string,array<int,string>>
+ */
+function event_plan_validate_occurrence_anchors(string $source, array $occurrences): array
+{
+	$actual_codes = array();
+	foreach ($occurrences as $id => $occurrence) {
+		$function_source = event_plan_extract_function($source, $occurrence['function']);
+		$lines = preg_split('/\R/', $function_source) ?: array();
+		$directive_indexes = array();
+		foreach ($lines as $index => $line) {
+			if (trim($line) === $occurrence['directive']) {
+				$directive_indexes[] = $index;
 			}
 		}
-		if (strlen(trim($match[2])) < 32) {
-			throw new RuntimeException('Suppression reason is not occurrence-specific.');
+		event_plan_same(1, count($directive_indexes), 'Occurrence directive must be unique inside its function: ' . $id . '.');
+		$directive_index = $directive_indexes[0];
+		$target_line = $lines[$directive_index + 1] ?? '';
+		event_plan_same($occurrence['target'], trim($target_line), 'Occurrence directive moved away from its exact target: ' . $id . '.');
+		if ($occurrence['context'] !== '') {
+			$nearby = implode("\n", array_slice($lines, $directive_index + 1, 10));
+			event_plan_contains($occurrence['context'], $nearby, 'Occurrence context changed: ' . $id . '.');
 		}
+		if (!preg_match('/^\/\/ phpcs:ignore ([^\s]+) -- (.+)$/', $occurrence['directive'], $match)) {
+			throw new RuntimeException('Occurrence directive is not an exact justified ignore: ' . $id . '.');
+		}
+		$actual_codes[$id] = explode(',', $match[1]);
+		event_plan_assert(strlen(trim($match[2])) >= 32, 'Occurrence reason is not specific enough: ' . $id . '.');
 	}
+	return $actual_codes;
+}
+
+/**
+ * @param array<int,string> $expected_directives
+ */
+function event_plan_validate_owned_db_annotations(string $scope, array $expected_directives): void
+{
+	if (preg_match('/phpcs:(?:disable|enable|ignoreFile)/', $scope) === 1) {
+		throw new RuntimeException('Block, file, and broad PHPCS directives are forbidden in the owned source.');
+	}
+	$actual_directives = array();
+	foreach (preg_split('/\R/', $scope) ?: array() as $line) {
+		if (strpos($line, 'phpcs:') === false || strpos($line, 'WordPress.DB') === false) {
+			continue;
+		}
+		$actual_directives[] = trim($line);
+	}
+	sort($actual_directives);
+	sort($expected_directives);
+	event_plan_same($expected_directives, $actual_directives, 'Every DB-related PHPCS annotation must be one of the seven exact owned directives.');
 }
 
 $root = dirname(__DIR__);
@@ -338,6 +379,67 @@ $owned_functions = array(
 	'vms_integrity_scan_event_plans_for_missing_vendors',
 	'vms_event_plan_legacy_ticket_meta_candidate_ids',
 );
+$slow_query_code = 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query';
+$prepared_code = 'WordPress.DB.PreparedSQL.NotPrepared';
+$direct_code = 'WordPress.DB.DirectDatabaseQuery.DirectQuery';
+$no_cache_code = 'WordPress.DB.DirectDatabaseQuery.NoCaching';
+$owned_occurrences = array(
+	'Q1' => array(
+		'function' => 'vms_integrity_scan_event_plans_for_orphaned_venues',
+		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate positive Venue references before repairing broken links.',
+		'target' => "'meta_query' => array(",
+		'context' => "'key' => '_vms_venue_id'",
+	),
+	'Q2' => array(
+		'function' => 'vms_integrity_list_event_plans_with_venue_issues',
+		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only reconciliation list must locate positive Venue references for operator review.',
+		'target' => "'meta_query' => array(",
+		'context' => "'key' => '_vms_venue_id'",
+	),
+	'Q3' => array(
+		'function' => 'vms_integrity_list_event_plans_with_calendar_issues',
+		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only reconciliation list must combine linked calendar IDs with publish-ready plans to report integrity issues.',
+		'target' => "'meta_query' => array(",
+		'context' => "'key' => '_vms_tec_event_id'",
+	),
+	'Q4' => array(
+		'function' => 'vms_integrity_scan_event_plans_for_orphaned_calendar_events',
+		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must combine linked calendar IDs with publish-ready plans before repairs.',
+		'target' => "'meta_query' => array(",
+		'context' => "'key' => '_vms_tec_event_id'",
+	),
+	'Q5' => array(
+		'function' => 'vms_integrity_scan_event_plans_for_missing_vendors',
+		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate positive primary Vendor references before repairing broken links.',
+		'target' => "'meta_query' => array(",
+		'context' => "'key' => '_vms_band_vendor_id'",
+	),
+	'Q6' => array(
+		'function' => 'vms_integrity_scan_event_plans_for_missing_vendors',
+		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate serialized secondary Vendor assignments before validating each ID.',
+		'target' => "'meta_query' => array(",
+		'context' => "'key' => '_vms_secondary_vendor_ids'",
+	),
+	'D1/N1/P1' => array(
+		'function' => 'vms_event_plan_legacy_ticket_meta_candidate_ids',
+		'directive' => '// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Legacy-ticket cleanup executes this immediately prepared ID batch and must read current metadata before deleting it.',
+		'target' => '$rows = $wpdb->get_col($wpdb->prepare($sql, ...$params));',
+		'context' => '$wpdb->prepare($sql, ...$params)',
+	),
+);
+
+// Immutable Wave 3 strict-JSON evidence: nine packaged rows on seven physical occurrences.
+$artifact_rows = array(
+	'Q1' => array('line' => 12994, 'code' => $slow_query_code, 'occurrence' => 'Q1'),
+	'Q2' => array('line' => 13083, 'code' => $slow_query_code, 'occurrence' => 'Q2'),
+	'Q3' => array('line' => 13189, 'code' => $slow_query_code, 'occurrence' => 'Q3'),
+	'Q4' => array('line' => 13294, 'code' => $slow_query_code, 'occurrence' => 'Q4'),
+	'Q5' => array('line' => 13442, 'code' => $slow_query_code, 'occurrence' => 'Q5'),
+	'Q6' => array('line' => 13463, 'code' => $slow_query_code, 'occurrence' => 'Q6'),
+	'P1' => array('line' => 14104, 'code' => $prepared_code, 'occurrence' => 'D1/N1/P1'),
+	'D1' => array('line' => 14104, 'code' => $direct_code, 'occurrence' => 'D1/N1/P1'),
+	'N1' => array('line' => 14104, 'code' => $no_cache_code, 'occurrence' => 'D1/N1/P1'),
+);
 $owned_source = '';
 foreach ($owned_functions as $function) {
 	$function_source = event_plan_extract_function($source, $function);
@@ -345,31 +447,64 @@ foreach ($owned_functions as $function) {
 	$owned_source .= "\n" . $function_source;
 }
 event_plan_assert(hash('sha256', $source) !== hash('sha256', $shadow_source), 'Intentional whole-file Event Plan divergence should remain preserved.');
-event_plan_same('fc6caaa83c0772709038aa0f82425bbdebb1445a881b3aabcca8e296746bc181', hash('sha256', event_plan_owned_projection($source, $owned_functions)), 'Mirror content outside the six owned functions changed.');
-event_plan_same('965636d50000dda90c9e940c46a08c515201127044bd8efb95c3d776747f1da0', hash('sha256', event_plan_owned_projection($shadow_source, $owned_functions)), 'Shadow-live content outside the six owned functions changed.');
+$mirror_actual_codes = event_plan_validate_occurrence_anchors($source, $owned_occurrences);
+$shadow_actual_codes = event_plan_validate_occurrence_anchors($shadow_source, $owned_occurrences);
+event_plan_same($mirror_actual_codes, $shadow_actual_codes, 'Mirror/shadow occurrence directives and anchors should remain identical.');
 
-$scanner_inventory = array(
-	'WordPress.DB.DirectDatabaseQuery.DirectQuery' => 1,
-	'WordPress.DB.DirectDatabaseQuery.NoCaching' => 1,
-	'WordPress.DB.PreparedSQL.NotPrepared' => 1,
-	'WordPress.DB.SlowDBQuery.slow_db_query_meta_query' => 6,
-);
-event_plan_same(9, array_sum($scanner_inventory), 'Historical Event Plan scanner inventory should remain exactly nine rows.');
-$covered_rows = 0;
-foreach ($scanner_inventory as $code => $expected) {
-	event_plan_same($expected, substr_count($owned_source, $code), 'Owned scanner coverage count changed for ' . $code . '.');
-	$covered_rows += $expected;
+$expected_directives = array_column($owned_occurrences, 'directive');
+event_plan_validate_owned_db_annotations($owned_source, $expected_directives);
+$mirror_baseline = event_plan_strip_owned_annotations($source, $owned_occurrences);
+$shadow_baseline = event_plan_strip_owned_annotations($shadow_source, $owned_occurrences);
+event_plan_same(7, $mirror_baseline['removed'], 'The authoritative mirror projection must strip exactly seven owned comments.');
+event_plan_same(7, $shadow_baseline['removed'], 'The authoritative shadow projection must strip exactly seven owned comments.');
+event_plan_same('9f79047a6eaf35cc47e877bf6f65415d6ef66e0ab3013f9749cd30bde93b677a', hash('sha256', $mirror_baseline['source']), 'Mirror whole-source baseline changed outside the seven owned comments.');
+event_plan_same('2378e0d997513114f04a65804170969c78868af64d496bb1442b03a974630f8d', hash('sha256', $shadow_baseline['source']), 'Shadow whole-source baseline changed outside the seven owned comments.');
+
+foreach (array(
+	'mirror' => array($mirror_baseline['source'], '9f79047a6eaf35cc47e877bf6f65415d6ef66e0ab3013f9749cd30bde93b677a'),
+	'shadow' => array($shadow_baseline['source'], '2378e0d997513114f04a65804170969c78868af64d496bb1442b03a974630f8d'),
+) as $tree => $baseline_case) {
+	$mutated_source = str_replace('ORDER BY p.ID ASC', 'ORDER BY p.ID DESC', $baseline_case[0], $mutation_count);
+	event_plan_same(1, $mutation_count, 'The non-comment runtime mutation control should change one SQL ordering token: ' . $tree . '.');
+	event_plan_assert(hash('sha256', $mutated_source) !== $baseline_case[1], 'The immutable whole-source baseline must reject non-comment runtime mutation: ' . $tree . '.');
 }
-event_plan_same(7, substr_count($owned_source, 'phpcs:ignore'), 'There should be exactly seven occurrence-specific annotations for nine rows.');
-event_plan_same(0, array_sum($scanner_inventory) - $covered_rows, 'All nine owned historical rows should have zero residual intent.');
-event_plan_validate_narrow_suppressions($owned_source);
+
+$artifact_counts = array_count_values(array_column($artifact_rows, 'code'));
+ksort($artifact_counts);
+$expected_artifact_counts = array(
+	$direct_code => 1,
+	$no_cache_code => 1,
+	$prepared_code => 1,
+	$slow_query_code => 6,
+);
+ksort($expected_artifact_counts);
+event_plan_same($expected_artifact_counts, $artifact_counts, 'Artifact row identities should derive the exact Q6/D1/N1/P1 inventory.');
+
+$covered_artifact_rows = array();
+foreach ($owned_occurrences as $occurrence_id => $occurrence) {
+	$artifact_codes = array();
+	foreach ($artifact_rows as $artifact_id => $artifact_row) {
+		if ($artifact_row['occurrence'] === $occurrence_id) {
+			$artifact_codes[] = $artifact_row['code'];
+			$covered_artifact_rows[$artifact_id] = $artifact_row;
+		}
+	}
+	event_plan_same($artifact_codes, $mirror_actual_codes[$occurrence_id], 'Artifact rows no longer match the exact directive codes at occurrence ' . $occurrence_id . '.');
+}
+$residual_artifact_rows = array_diff_key($artifact_rows, $covered_artifact_rows);
+event_plan_same(array(), $residual_artifact_rows, 'Every artifact row must be covered by one exact anchored occurrence.');
+event_plan_same(array_keys($artifact_rows), array_keys($covered_artifact_rows), 'Artifact coverage must preserve every row identity, not just aggregate counts.');
+
 foreach (array(
 	$owned_source . "\n// phpcs:disable WordPress.DB",
+	$owned_source . "\n// phpcs:ignore WordPress.DB -- invented broad category suppression",
 	$owned_source . "\n// phpcs:ignore WordPress.DB.SlowDBQuery -- invented broad family suppression",
+	$owned_source . "\n// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query,WordPress.Security.EscapeOutput.OutputNotEscaped -- invented mixed-category suppression",
+	$owned_source . "\n// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query,WordPress.DB.DirectDatabaseQuery.DirectQuery -- invented mixed-occurrence suppression",
 ) as $negative_scope) {
 	$rejected = false;
 	try {
-		event_plan_validate_narrow_suppressions($negative_scope);
+		event_plan_validate_owned_db_annotations($negative_scope, $expected_directives);
 	} catch (RuntimeException $exception) {
 		$rejected = true;
 	}
@@ -381,7 +516,7 @@ foreach ($owned_functions as $function) {
 	eval(event_plan_extract_function($source, $function));
 }
 
-// Every integrity occurrence retains its exact WP_Query/get_posts contract and empty-result shape.
+// Whole-source hashes above are authoritative for every runtime query/SQL token; spies below also lock exact calls and behavioral results.
 event_plan_reset_runtime();
 WP_Query::$queue = array(array(), array(), array(), array(), array(), array());
 $empty_venue_scan = vms_integrity_scan_event_plans_for_orphaned_venues(17);
@@ -390,28 +525,33 @@ $empty_calendar_list = vms_integrity_list_event_plans_with_calendar_issues(19);
 $empty_calendar_scan = vms_integrity_scan_event_plans_for_orphaned_calendar_events(-4);
 $empty_vendor_scan = vms_integrity_scan_event_plans_for_missing_vendors(23);
 event_plan_same(6, count(WP_Query::$calls), 'The five integrity functions should retain six query occurrences.');
-$expected_limits = array(17, 500, 19, 500, 23, 23);
-foreach (WP_Query::$calls as $index => $args) {
-	event_plan_same('vms_event_plan', $args['post_type'], 'Integrity post type changed at query ' . $index . '.');
-	event_plan_same(array('publish', 'draft'), $args['post_status'], 'Integrity post statuses changed at query ' . $index . '.');
-	event_plan_same($expected_limits[$index], $args['posts_per_page'], 'Integrity finite batch limit changed at query ' . $index . '.');
-	event_plan_same('ids', $args['fields'], 'Integrity query should remain ID-only at query ' . $index . '.');
-	event_plan_same(true, $args['no_found_rows'], 'Integrity count suppression changed at query ' . $index . '.');
-	event_plan_same('ID', $args['orderby'], 'Integrity ordering key changed at query ' . $index . '.');
-	event_plan_same('DESC', $args['order'], 'Integrity ordering direction changed at query ' . $index . '.');
-}
 $venue_meta_query = array(array('key' => '_vms_venue_id', 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC'));
 $calendar_meta_query = array(
 	'relation' => 'OR',
 	array('key' => '_vms_tec_event_id', 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC'),
 	array('key' => '_vms_event_plan_status', 'value' => array('published', 'ready'), 'compare' => 'IN'),
 );
-event_plan_same($venue_meta_query, WP_Query::$calls[0]['meta_query'], 'Orphaned-Venue scan meta query changed.');
-event_plan_same($venue_meta_query, WP_Query::$calls[1]['meta_query'], 'Venue reconciliation meta query changed.');
-event_plan_same($calendar_meta_query, WP_Query::$calls[2]['meta_query'], 'Calendar reconciliation meta query changed.');
-event_plan_same($calendar_meta_query, WP_Query::$calls[3]['meta_query'], 'Calendar scan meta query changed.');
-event_plan_same(array(array('key' => '_vms_band_vendor_id', 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC')), WP_Query::$calls[4]['meta_query'], 'Primary-Vendor meta query changed.');
-event_plan_same(array(array('key' => '_vms_secondary_vendor_ids', 'compare' => 'EXISTS')), WP_Query::$calls[5]['meta_query'], 'Secondary-Vendor meta query changed.');
+$integrity_query_args = static function (int $limit, array $meta_query): array {
+	return array(
+		'post_type' => 'vms_event_plan',
+		'post_status' => array('publish', 'draft'),
+		'posts_per_page' => $limit,
+		'fields' => 'ids',
+		'no_found_rows' => true,
+		'orderby' => 'ID',
+		'order' => 'DESC',
+		'meta_query' => $meta_query,
+	);
+};
+$expected_query_calls = array(
+	$integrity_query_args(17, $venue_meta_query),
+	$integrity_query_args(500, $venue_meta_query),
+	$integrity_query_args(19, $calendar_meta_query),
+	$integrity_query_args(500, $calendar_meta_query),
+	$integrity_query_args(23, array(array('key' => '_vms_band_vendor_id', 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC'))),
+	$integrity_query_args(23, array(array('key' => '_vms_secondary_vendor_ids', 'compare' => 'EXISTS'))),
+);
+event_plan_same($expected_query_calls, WP_Query::$calls, 'All six WP_Query/get_posts argument arrays must remain exact, including the absence of extra arguments.');
 event_plan_same(array('checked' => 0, 'flagged_missing_venue' => 0, 'flagged_trashed_venue' => 0, 'flagged_venue_unpublished' => 0, 'cleared_venue_refs' => 0, 'forced_draft' => 0), $empty_venue_scan, 'Empty Venue scan result changed.');
 event_plan_same(array('trashed' => array(), 'missing' => array(), 'unpublished' => array()), $empty_venue_list, 'Empty Venue list result changed.');
 event_plan_same(array('trashed' => array(), 'missing' => array(), 'unpublished' => array(), 'unlinked' => array()), $empty_calendar_list, 'Empty calendar list result changed.');
@@ -437,19 +577,32 @@ event_plan_same('Event Plan #102', $venue_issues['trashed'][0]['plan_title'], 'V
 event_plan_same('Trashed Venue', $venue_issues['trashed'][0]['venue_title'], 'Venue list title lookup changed.');
 
 event_plan_reset_runtime();
-WP_Query::$queue[] = array(105, 106);
+WP_Query::$queue[] = array(105, 106, 107, 108);
 $GLOBALS['event_plan_meta'] = array(
 	105 => array('_vms_venue_id' => 205, '_vms_event_plan_status' => 'published'),
 	106 => array('_vms_venue_id' => 206, '_vms_event_plan_status' => 'ready'),
+	107 => array('_vms_venue_id' => 207, '_vms_event_plan_status' => 'ready'),
+	108 => array('_vms_venue_id' => 208, '_vms_event_plan_status' => 'published'),
 );
-$GLOBALS['event_plan_venue_states'] = array(205 => 'missing', 206 => 'ok');
+$GLOBALS['event_plan_venue_states'] = array(205 => 'missing', 206 => 'ok', 207 => 'trashed', 208 => 'unpublished');
 $GLOBALS['event_plan_posts'][105] = new WP_Post(105, 'vms_event_plan', 'publish', 'Broken Venue Plan');
-$venue_scan = vms_integrity_scan_event_plans_for_orphaned_venues(2);
-event_plan_same(array('checked' => 2, 'flagged_missing_venue' => 1, 'flagged_trashed_venue' => 0, 'flagged_venue_unpublished' => 0, 'cleared_venue_refs' => 1, 'forced_draft' => 1), $venue_scan, 'Venue repair scan counters changed.');
+$GLOBALS['event_plan_posts'][107] = new WP_Post(107, 'vms_event_plan', 'publish', 'Trashed Venue Plan');
+$GLOBALS['event_plan_posts'][108] = new WP_Post(108, 'vms_event_plan', 'publish', 'Unpublished Venue Plan');
+$GLOBALS['event_plan_posts'][207] = new WP_Post(207, 'vms_venue', 'trash', 'Trashed Scan Venue');
+$GLOBALS['event_plan_posts'][208] = new WP_Post(208, 'vms_venue', 'draft', 'Draft Scan Venue');
+$venue_scan = vms_integrity_scan_event_plans_for_orphaned_venues(4);
+event_plan_same(array('checked' => 4, 'flagged_missing_venue' => 1, 'flagged_trashed_venue' => 1, 'flagged_venue_unpublished' => 1, 'cleared_venue_refs' => 1, 'forced_draft' => 3), $venue_scan, 'Venue repair scan counters changed.');
 event_plan_same(0, $GLOBALS['event_plan_meta'][105]['_vms_venue_id'], 'Missing Venue reference should still be cleared.');
 event_plan_same('draft', $GLOBALS['event_plan_meta'][105]['_vms_event_plan_status'], 'Broken published plan should still be forced to Draft.');
-event_plan_same(array(array('missing_venue', array(105, 205, ''))), $GLOBALS['event_plan_flags'], 'Missing Venue flag call changed.');
-event_plan_same('event_plan_force_draft_scan_vendor_or_venue', $GLOBALS['event_plan_perf_updates'][0]['context'], 'Venue scan update context changed.');
+event_plan_same(207, $GLOBALS['event_plan_meta'][107]['_vms_venue_id'], 'Trashed Venue reference should remain available for operator repair.');
+event_plan_same(208, $GLOBALS['event_plan_meta'][108]['_vms_venue_id'], 'Unpublished Venue reference should remain available for operator repair.');
+event_plan_same(array(
+	array('missing_venue', array(105, 205, '')),
+	array('trashed_venue', array(107, 207, 'Trashed Scan Venue')),
+	array('venue_unpublished', array(108, 208, 'Draft Scan Venue')),
+), $GLOBALS['event_plan_flags'], 'Venue scan flag calls changed.');
+event_plan_same(array(105, 107, 108), array_column($GLOBALS['event_plan_perf_updates'], 'plan_id'), 'Venue scan Draft update targets changed.');
+event_plan_same(array_fill(0, 3, 'event_plan_force_draft_scan_vendor_or_venue'), array_column($GLOBALS['event_plan_perf_updates'], 'context'), 'Venue scan update contexts changed.');
 
 // Calendar list/scan results preserve unlinked, missing, trashed, unpublished, suppression, and stale-flag behavior.
 event_plan_reset_runtime();
@@ -543,6 +696,8 @@ event_plan_same(1, count($wpdb->prepares), 'Legacy candidate query should prepar
 event_plan_same(1, count($wpdb->reads), 'Legacy candidate query should execute exactly once.');
 $expected_prepare_args = array('publish', 'private', 'draft', 'pending', 'future', '_vms_legacy_ticket_product_id', '_vms_legacy_ticket_price', 0, 200);
 event_plan_same($expected_prepare_args, $wpdb->prepares[0]['args'], 'Legacy candidate prepare argument order changed.');
+$expected_prepared_sql = "SELECT DISTINCT p.ID FROM wp_cleanup_posts p INNER JOIN wp_cleanup_postmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'vms_event_plan' AND p.post_status IN ('publish','private','draft','pending','future') AND pm.meta_key IN ('_vms_legacy_ticket_product_id','_vms_legacy_ticket_price') AND p.ID > 0 ORDER BY p.ID ASC LIMIT 200";
+event_plan_same($expected_prepared_sql, event_plan_normalize_sql($wpdb->prepares[0]['sql']), 'Normalized prepared legacy candidate SQL changed.');
 event_plan_contains('SELECT DISTINCT p.ID', $wpdb->prepares[0]['sql'], 'Legacy candidate DISTINCT selection changed.');
 event_plan_contains('FROM wp_cleanup_posts p', $wpdb->prepares[0]['sql'], 'Legacy candidate posts table changed.');
 event_plan_contains('INNER JOIN wp_cleanup_postmeta pm ON pm.post_id = p.ID', $wpdb->prepares[0]['sql'], 'Legacy candidate postmeta join changed.');
