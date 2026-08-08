@@ -29,7 +29,7 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         'no_found_rows'          => true,
         'update_post_term_cache' => false,
         'update_post_meta_cache' => false,
-        'meta_query'             => array(
+        'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor deletion must enumerate the complete all-status Event Plan set with this exact primary-vendor link so every broken reference is cleared and flagged.
             array(
                 'key'     => $band_key,
                 'value'   => $vendor_id,
@@ -47,7 +47,7 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         'no_found_rows'          => true,
         'update_post_term_cache' => false,
         'update_post_meta_cache' => false,
-        'meta_query'             => array(
+        'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor deletion must enumerate the complete all-status Event Plan set with this exact indexed secondary-vendor link so every broken reference is removed and flagged.
             array(
                 'key'     => $secondary_idx_key,
                 'value'   => $vendor_id,

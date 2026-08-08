@@ -197,7 +197,7 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
         'fields'         => 'ids',
         'orderby'        => 'ID',
         'order'          => 'ASC',
-        'meta_query'     => [
+        'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- A payables export must include the complete Event Plan set for one requested date, finite venue list, and allowlisted workflow statuses so no payable line is omitted.
             'relation' => 'AND',
             [
                 'key'     => $k_date,

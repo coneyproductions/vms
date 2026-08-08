@@ -40,7 +40,7 @@ function vms_vendor_tax_export_csv_adminpost()
 		'posts_per_page' => -1,
 		'orderby'        => 'title',
 		'order'          => 'ASC',
-		'meta_query'     => array(
+		'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The nonce- and capability-gated 1099 export intentionally enumerates every Vendor with completed tax-profile metadata so the CSV is complete.
 			array('key' => $k_done, 'compare' => 'EXISTS'),
 		),
 		'fields'         => 'ids',

@@ -730,8 +730,8 @@ if (!function_exists('vms_vendor_profiles_find_next_upcoming_event')) {
             'posts_per_page' => 12,
             'orderby'        => 'meta_value',
             'order'          => 'ASC',
-            'meta_key'       => $date_key,
-            'meta_query'     => array(
+            'meta_key'       => $date_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The public Vendor profile intentionally orders its bounded 12-plan candidate query by canonical event-date metadata to select the next valid linked event.
+            'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The public Vendor profile limits this vendor/date/linked-event metadata filter to 12 upcoming Event Plan candidates before validating the first public event.
                 'relation' => 'AND',
                 array(
                     'key'   => $band_key,

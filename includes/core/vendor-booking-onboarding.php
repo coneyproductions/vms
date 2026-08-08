@@ -903,8 +903,8 @@ if (!function_exists('vms_vendor_booking_onboarding_daily_runner')) {
             'post_status' => array('publish', 'draft', 'private', 'pending'),
             'posts_per_page' => -1,
             'fields' => 'ids',
-            'meta_key' => '_vms_event_date',
-            'meta_query' => array(
+            'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The daily onboarding runner intentionally identifies canonical event-date metadata while scanning the complete one-year reminder window across eligible Event Plan statuses.
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The daily onboarding runner intentionally scans the complete Event Plan set inside its fixed one-year event-date window so every due headliner reminder is evaluated.
                 array(
                     'key' => '_vms_event_date',
                     'value' => array($today_ymd, $window_end),

@@ -307,7 +307,7 @@ if (!function_exists('vms_vendor_categories_get_related_event_plan_ids')) {
 			'no_found_rows'          => true,
 			'update_post_term_cache' => false,
 			'update_post_meta_cache' => false,
-			'meta_query'             => [[
+			'meta_query'             => [[ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor save propagation must enumerate the complete all-status Event Plan set with this exact primary-vendor link so every category snapshot stays current.
 				'key'     => $band_key,
 				'value'   => $vendor_id,
 				'compare' => '=',
@@ -323,7 +323,7 @@ if (!function_exists('vms_vendor_categories_get_related_event_plan_ids')) {
 			'no_found_rows'          => true,
 			'update_post_term_cache' => false,
 			'update_post_meta_cache' => false,
-			'meta_query'             => [[
+			'meta_query'             => [[ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor save propagation must enumerate the complete all-status Event Plan set with this exact indexed secondary-vendor link so every category snapshot stays current.
 				'key'     => $secondary_idx_key,
 				'value'   => $vendor_id,
 				'compare' => '=',
