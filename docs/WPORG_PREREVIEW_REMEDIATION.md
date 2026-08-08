@@ -5359,6 +5359,51 @@ Date: 2026-08-08
 - Execute only the remaining `WPORG-28R-G17` developer-diagnostic slice, then rerun one final clean packaged strict scan.
 - `WPORG-28R` remains blocked until a fresh clean package proves `SUBMISSION_BLOCKER=0`; external WordPress.org actions remain separately unauthorized.
 
+## Final G17 Technical Remediation Packaged Closeout
+
+Date: 2026-08-08
+
+### Summary
+
+- Result: `PASS`
+- This section supersedes the preceding G16 checkpoint as the current technical scanner state while preserving that checkpoint as historical evidence.
+- Source commit: `a14b4a67a2f8273bb45b8b4569b6282efb6d5743`
+- Clean public package: `/tmp/wporg-final-g17.BmolWv/build/backstage-venue-manager-1.2.0-public-release.zip`
+- Package SHA-256: `27d2fdd8b7d7bf3020807eb5ccb3b5654d733fd0a0eb4150d4e388a307c82d82`
+- Clean build completed at `2026-08-08T21:00:43+00:00`.
+- Canonical strict JSON: `/tmp/wporg-final-g17.BmolWv/plugin-check.strict.json`
+- Strict-JSON SHA-256: `3c23ee9d81d601c73a73cae5e82a2917e023273eb1ca500314fd8af33b707a73`
+- Plugin Check exited `0`; scanner stderr is empty.
+- Final scan: `125` errors, `0` warnings, `125` total findings, `3` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=0`.
+- Final blocker families: DB/SQL `0`, nonce/input `0`, date/time `0`, logging `0`.
+- `WPORG-28R` technical scanner status is `verified`, and its blocker closeout condition is satisfied. This is a scanner-gate conclusion only, not authorization for any external action.
+
+### Verified Family State
+
+- All active `WPORG-28R-G1`-`G6` and `WPORG-28R-G8`-`G17` technical children are scanner-verified closed; `WPORG-28R-G7` remains retired with no owned residual. The final extracted package contains no nonce/input, `WordPress.DB.*`, `PluginCheck.Security.DirectDB.*`, `WordPress.DateTime.RestrictedFunctions.date_date`, `error_log`, or `debug_backtrace` blocker finding.
+- `WPORG-28R-G14` remains scanner-verified complete at `11 -> 0` date findings. `WPORG-28R-G15` remains scanner-verified complete: Staff Notifications `5 -> 0`, Ticket Integrity and Phase B `5 -> 0`, and Payables/Vendor Tax/Event Credits `4 -> 0`.
+- `WPORG-28R-G16` remains scanner-verified complete: runtime guards `2 -> 0`, Group A `11 -> 0`, Group B `9 -> 0`, and Group C `4 -> 0`.
+- `WPORG-28R-G17` is scanner-verified complete: Slice A Event Plan performance diagnostics `6 -> 0`, Slice B admin and metadata logging `5 -> 0`, and Slice C staff/ticket diagnostics `5 -> 0`, reconciling exactly to `16 -> 0`. The sole former `debug_backtrace` row is scanner-zero through one exact line-local suppression that retains `DEBUG_BACKTRACE_IGNORE_ARGS`, depth `40`, and immediate reduction to sanitized function-only frames.
+- The `125` nonblocking findings remain exactly `OutputNotEscaped 123`, `OffloadedContent 1`, and `NonEnqueuedStylesheet 1`; no new or unmapped rule appeared.
+- The final `125`-row semantic multiset is identical to the G16 nonlogging inventory; only the same `/privateincludes/helpers.php` `OutputNotEscaped` location moved from line `4190` to `4200`.
+
+### Build And Safety Evidence
+
+- The builder staged `372` files, linted `269` packaged PHP files, syntax-checked `55` JavaScript files, passed all release regressions and four optional-dependency load smokes, and passed ZIP root, manifest, traversal, path, URL, credential, zero-byte, nested-archive, and symlink checks.
+- Manual-review notes preserved from the build report: no version-matched `BUILD-NOTES` file exists for `1.2.0`, and the activation-hook smoke was intentionally skipped because it would mutate a WordPress site. These are not scanner blockers.
+- G17 isolated commits `901ed6e4eeff6860842904cc0b11eaa4611d820d` (A), `12f834d0a3ee62aaad69d9da1e66b6a5c41e545a` (B), and `43b9857d358be6fc9e85475a1dfd2c6505ac7bff` (C) each received an independent `CLEAN` review that reproduced focused/scanner, lint, diff, and representative continuity evidence. Primary integration commits are `1b71e50b7a7ba742a84519677396af34f5dc6a50` (A), `be2fa558e7ddd9a0585449d24ee0542da30e550a` (B), and `a14b4a67a2f8273bb45b8b4569b6282efb6d5743` (C).
+- The focused G17 suites are `tests/g17-development-diagnostics-eventplan-performance.php`, `tests/g17-operational-logging-admin-meta.php`, and `tests/g17-development-diagnostics-group-c.php`, with the documented semantic companion, release, runtime-guard, scanner, lint, and diff gates also passing.
+- The earlier G16 checkpoint exposed one `WordPress.WP.AlternativeFunctions.parse_url_parse_url` blocker in the new bounded adapter. Commit `d4079b0bf2c8affb1f50ac587ddb858aa94197e2` replaced it with `wp_parse_url()`, and the final G17 package contains only the three expected nonblocking codes with no alternative-function finding.
+- Mirror/live synchronization was verified at every owned G10-G17 boundary while preserving intentional structural divergence outside those boundaries.
+- Scanner activation-state snapshots were not measured for this checkpoint; no activation command was issued.
+- No push, deployment, WordPress.org upload, reviewer reply, slug reservation, production change, staging change, tag, production convergence, or protected-stash mutation occurred.
+
+### Next Action
+
+- `STOP / AWAIT EXPLICIT AUTHORIZATION`. No technical-remediation or scanner-blocker child remains.
+- If separately authorized, `Review-2 Name/Slug Closeout` may accept the final artifact, handle WordPress.org-side slug reservation, and perform the corrected upload; `Review-13 Final Actions` may then handle the reviewer reply under its own authorization.
+- This closeout does not authorize or claim a push, deployment, upload, reviewer reply, slug reservation, tag, staging/production change, or production convergence.
+
 ## Public Release Slug Separation Result
 
 Date: 2026-07-22

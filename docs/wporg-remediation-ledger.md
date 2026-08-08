@@ -380,7 +380,7 @@ Every completed remediation task must append or update the relevant row with:
 - Future remediation batches must not assume every differing shared file should be made byte-identical.
 - Each batch must determine whether the relevant remediation lines should match, whether surrounding divergence is intentional, whether the live-only or newer feature sits outside the public package, or whether an unexplained mismatch requires correction.
 
-## `WPORG-28R` Current Addendum After G16 Operational Logging
+## Historical `WPORG-28R` Addendum After G16 Operational Logging
 
 - This addendum supersedes the older “current” status language in the historical checkpoint table and coordinated-Wave-4 addendum above. Historical counts remain preserved as evidence of those checkpoints. In particular, the historical `WPORG-28`, `WPORG-28Q`, `WPORG-28R`, and `WPORG-28R-G10` table rows retain their then-current counts and handoffs and must not be read as the current packaged state.
 - Current status: `blocked` only because `WPORG-28R-G17` remains. The DB/SQL, nonce/input, date/time, and G16 operational-logging families are terminal under `verified`.
@@ -402,7 +402,7 @@ Every completed remediation task must append or update the relevant row with:
 - The build staged `372` files, linted `269` PHP and `55` JavaScript files, passed all release regressions and dependency load smokes, and passed package-integrity checks. Scanner activation-state snapshots were not measured for this checkpoint; no activation command was issued.
 - No push, deployment, WordPress.org upload, reviewer reply, tag, production/staging change, or protected-stash mutation occurred.
 
-## Recommended Remaining Work Order
+## Historical Recommended Remaining Work Order After G16
 
 1. Complete `WPORG-28R-G17`, consuming the G16 adapter for genuine failures while removing unsafe developer traces and default public-path performance logging.
 2. Build and scan a final clean package; update the durable state only when it proves `SUBMISSION_BLOCKER=0` and the mapped nonblocking set remains unchanged.
@@ -411,3 +411,32 @@ Every completed remediation task must append or update the relevant row with:
 - Separate production-convergence work remains outside this WordPress.org order: Backstage Outreach extraction, duplicate-core safety, and live `vms 1.1.0` replacement or migration.
 
 - This order is a recommended execution sequence only. It is not proof that every listed remaining item is a confirmed defect.
+
+## `WPORG-28R` Final Technical Scanner Closeout
+
+- This addendum supersedes all older “current” status language above while preserving the older table rows and coordinated checkpoints as historical evidence. In particular, the historical `WPORG-28`, `WPORG-28Q`, `WPORG-28R`, and `WPORG-28R-G10` counts, statuses, and handoffs are not the current packaged scanner state.
+- Current technical status: `verified`; `WPORG-28R` has satisfied its blocker closeout condition. All active `WPORG-28R-G1`-`G6` and `WPORG-28R-G8`-`G17` technical children are terminal under `verified`, `WPORG-28R-G7` remains retired with no owned residual, and the final clean extracted-package scan proves `SUBMISSION_BLOCKER=0`.
+- `Review-2 Name/Slug Closeout` and `Review-13 Final Actions` remain separately `blocked` pending explicit authorization. Their older references to unresolved `WPORG-28R` technical findings are superseded by this closeout; no external WordPress.org action is implied.
+- Durable machine-readable state: `docs/wporg-current-scan-state.json`.
+- Current clean source commit: `a14b4a67a2f8273bb45b8b4569b6282efb6d5743`.
+- Current public package: `/tmp/wporg-final-g17.BmolWv/build/backstage-venue-manager-1.2.0-public-release.zip`, SHA-256 `27d2fdd8b7d7bf3020807eb5ccb3b5654d733fd0a0eb4150d4e388a307c82d82`; the clean builder finished at `2026-08-08T21:00:43+00:00` after staging `372` files, linting `269` PHP files, and syntax-checking `55` JavaScript files.
+- Current strict JSON: `/tmp/wporg-final-g17.BmolWv/plugin-check.strict.json`, SHA-256 `3c23ee9d81d601c73a73cae5e82a2917e023273eb1ca500314fd8af33b707a73`; canonical Plugin Check exited `0` with empty stderr.
+- Current packaged baseline: `125` errors, `0` warnings, `125` total findings, `3` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=0`.
+- Current blocker-family totals: DB/SQL `0`, nonce/input `0`, date/time `0`, logging `0`.
+- `WPORG-28R-G10`, `WPORG-28R-G11`, `WPORG-28R-G12`, and `WPORG-28R-G13` remain scanner-verified at `0` DB/SQL rows; `WPORG-28R-G14` and `WPORG-28R-G15` remain scanner-verified at `0` date/time rows; `WPORG-28R-G16` remains scanner-verified at `26 -> 0` operational-logging rows.
+- `WPORG-28R-G17` is terminal under `verified`: Slice A Event Plan performance diagnostics `6 -> 0`, Slice B admin and metadata logging `5 -> 0`, and Slice C staff/ticket diagnostics `5 -> 0`, reconciling exactly to `16 -> 0`. The sole former `debug_backtrace` row is scanner-zero through one exact line-local suppression that retains `DEBUG_BACKTRACE_IGNORE_ARGS`, depth `40`, and immediate reduction to sanitized function-only frames.
+- G17 isolated commits `901ed6e4eeff6860842904cc0b11eaa4611d820d` (A), `12f834d0a3ee62aaad69d9da1e66b6a5c41e545a` (B), and `43b9857d358be6fc9e85475a1dfd2c6505ac7bff` (C) each received an independent `CLEAN` review that reproduced focused/scanner, lint, diff, and representative continuity evidence. Primary integration commits are `1b71e50b7a7ba742a84519677396af34f5dc6a50` (A), `be2fa558e7ddd9a0585449d24ee0542da30e550a` (B), and `a14b4a67a2f8273bb45b8b4569b6282efb6d5743` (C).
+- The exact remaining accepted nonblocking set is `OutputNotEscaped 123 + OffloadedContent 1 + NonEnqueuedStylesheet 1 = 125`; no new or unmapped code appeared. Its semantic multiset is identical to the G16 nonlogging inventory; only the same `/privateincludes/helpers.php` `OutputNotEscaped` location moved from line `4190` to `4200`.
+- State deltas reconcile exactly: from the post-G10 checkpoint, `658 -> 125` total findings removes `533` and `529 -> 0` blockers removes `529`; from Wave 1, `520 -> 125` and `395 -> 0` remove `395`; from Wave 2, `439 -> 125` and `314 -> 0` remove `314`; from Wave 3, `361 -> 125` and `236 -> 0` remove `236`; from Wave 4, `307 -> 125` and `182 -> 0` remove `182`; logging is `42 -> 0` from each of those baselines.
+- The earlier G16 checkpoint exposed one `parse_url()` alternative-function blocker in the bounded adapter. Commit `d4079b0bf2c8affb1f50ac587ddb858aa94197e2` replaced it with `wp_parse_url()`, and the final strict JSON contains no alternative-function finding.
+- Manual-review notes from the final build remain: no version-matched `BUILD-NOTES` file exists for `1.2.0`, and the activation-hook smoke was intentionally skipped because it would mutate a WordPress site. Scanner activation-state snapshots were not measured, and no activation command was issued.
+- No push, deployment, WordPress.org upload, reviewer reply, slug reservation, tag, production/staging change, production convergence, or protected-stash mutation occurred.
+
+## Recommended Authorized-Action Gate
+
+1. `STOP / AWAIT EXPLICIT AUTHORIZATION`; no technical-remediation or scanner-blocker child remains.
+2. If separately authorized, let `Review-2 Name/Slug Closeout` accept the final artifact, handle WordPress.org-side slug reservation, and perform the corrected upload.
+3. If separately authorized after the Review-2 boundary is satisfied, let `Review-13 Final Actions` handle the reviewer reply.
+
+- Separate production-convergence work remains outside this WordPress.org order: Backstage Outreach extraction, duplicate-core safety, and live `vms 1.1.0` replacement or migration.
+- This sequence records prerequisites only; it grants no authorization for an external or production action.

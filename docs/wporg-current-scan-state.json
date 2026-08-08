@@ -1,52 +1,56 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-08-08T19:58:04Z",
-  "source_commit": "d4079b0bf2c8affb1f50ac587ddb858aa94197e2",
+  "generated_at_utc": "2026-08-08T21:10:04Z",
+  "source_commit": "a14b4a67a2f8273bb45b8b4569b6282efb6d5743",
   "artifact": {
-    "path": "/tmp/wporg-g16-checkpoint-final.aOSh8U/build/backstage-venue-manager-1.2.0-public-release.zip",
-    "sha256": "6a9b45cd6e2cbb1fd6723f064b1c867a425b99c8604750791badfedfb2f62798",
-    "build_finished_at_utc": "2026-08-08T19:52:45+00:00",
+    "path": "/tmp/wporg-final-g17.BmolWv/build/backstage-venue-manager-1.2.0-public-release.zip",
+    "sha256": "27d2fdd8b7d7bf3020807eb5ccb3b5654d733fd0a0eb4150d4e388a307c82d82",
+    "build_finished_at_utc": "2026-08-08T21:00:43+00:00",
     "packaged_files": 372,
-    "strict_json_path": "/tmp/wporg-g16-checkpoint-final.aOSh8U/plugin-check.strict.json",
-    "strict_json_sha256": "b0ebbddec1d17ce9a8770ae9ec385665f49962c6ebc1a3f2f1520e81d281b49c",
+    "packaged_php_files_linted": 269,
+    "packaged_javascript_files_syntax_checked": 55,
+    "strict_json_path": "/tmp/wporg-final-g17.BmolWv/plugin-check.strict.json",
+    "strict_json_sha256": "3c23ee9d81d601c73a73cae5e82a2917e023273eb1ca500314fd8af33b707a73",
     "plugin_check_stderr_bytes": 0,
     "activation_state_unchanged": null,
     "activation_snapshot_sha256": null,
-    "activation_state_note": "Not measured for this checkpoint; canonical Plugin Check used --skip-plugins and no activation-state mutation command."
+    "activation_state_note": "Not measured for this checkpoint; canonical Plugin Check used --skip-plugins and no activation-state mutation command.",
+    "manual_review_notes": [
+      "No version-matched BUILD-NOTES file was found for plugin version 1.2.0.",
+      "The activation-hook smoke was intentionally skipped because it would mutate a WordPress site."
+    ]
   },
   "scan": {
     "errors": 125,
-    "warnings": 16,
-    "total": 141,
-    "unique_codes": 5,
+    "warnings": 0,
+    "total": 125,
+    "unique_codes": 3,
     "classifications": {
       "known_accepted": 0,
       "known_nonblocking": 125,
       "new_finding": 0,
       "unmapped": 0,
-      "submission_blocker": 16
+      "submission_blocker": 0
     },
     "blocker_families": {
       "database_sql": 0,
       "nonce_input": 0,
       "date_time": 0,
-      "logging": 16
+      "logging": 0
     },
     "code_counts": {
       "PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent": 1,
-      "WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace": 1,
-      "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 15,
       "WordPress.Security.EscapeOutput.OutputNotEscaped": 123,
       "WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet": 1
     }
   },
   "verified_delta_from_post_g10_checkpoint": {
     "baseline_total": 658,
-    "current_total": 141,
-    "removed_total": 517,
+    "current_total": 125,
+    "removed_total": 533,
     "baseline_submission_blocker": 529,
-    "current_submission_blocker": 16,
-    "removed_submission_blocker": 513,
+    "current_submission_blocker": 0,
+    "removed_submission_blocker": 529,
     "baseline_database_sql": 462,
     "current_database_sql": 0,
     "removed_database_sql": 462,
@@ -54,8 +58,8 @@
     "current_date_time": 0,
     "removed_date_time": 25,
     "baseline_logging": 42,
-    "current_logging": 16,
-    "removed_logging": 26,
+    "current_logging": 0,
+    "removed_logging": 42,
     "slices": {
       "ticketing_phase_b_database_sql": "21 -> 0",
       "vendor_user_links_database_sql": "36 -> 0",
@@ -89,58 +93,61 @@
       "g16_runtime_guard_operational_logging": "2 -> 0",
       "g16_group_a_operational_logging": "11 -> 0",
       "g16_group_b_operational_logging": "9 -> 0",
-      "g16_group_c_operational_logging": "4 -> 0"
+      "g16_group_c_operational_logging": "4 -> 0",
+      "g17_event_plan_performance_diagnostics": "6 -> 0",
+      "g17_admin_metadata_logging": "5 -> 0",
+      "g17_staff_ticket_diagnostics": "5 -> 0"
     }
   },
   "verified_delta_from_wave1": {
     "baseline_total": 520,
-    "current_total": 141,
-    "removed_total": 379,
+    "current_total": 125,
+    "removed_total": 395,
     "baseline_submission_blocker": 395,
-    "current_submission_blocker": 16,
-    "removed_submission_blocker": 379,
+    "current_submission_blocker": 0,
+    "removed_submission_blocker": 395,
     "baseline_database_sql": 328,
     "current_database_sql": 0,
     "removed_database_sql": 328,
     "baseline_logging": 42,
-    "current_logging": 16,
-    "removed_logging": 26
+    "current_logging": 0,
+    "removed_logging": 42
   },
   "verified_delta_from_wave2": {
     "baseline_total": 439,
-    "current_total": 141,
-    "removed_total": 298,
+    "current_total": 125,
+    "removed_total": 314,
     "baseline_submission_blocker": 314,
-    "current_submission_blocker": 16,
-    "removed_submission_blocker": 298,
+    "current_submission_blocker": 0,
+    "removed_submission_blocker": 314,
     "baseline_database_sql": 247,
     "current_database_sql": 0,
     "removed_database_sql": 247,
     "baseline_logging": 42,
-    "current_logging": 16,
-    "removed_logging": 26
+    "current_logging": 0,
+    "removed_logging": 42
   },
   "verified_delta_from_wave3": {
     "baseline_total": 361,
-    "current_total": 141,
-    "removed_total": 220,
+    "current_total": 125,
+    "removed_total": 236,
     "baseline_submission_blocker": 236,
-    "current_submission_blocker": 16,
-    "removed_submission_blocker": 220,
+    "current_submission_blocker": 0,
+    "removed_submission_blocker": 236,
     "baseline_database_sql": 169,
     "current_database_sql": 0,
     "removed_database_sql": 169,
     "baseline_logging": 42,
-    "current_logging": 16,
-    "removed_logging": 26
+    "current_logging": 0,
+    "removed_logging": 42
   },
   "verified_delta_from_wave4": {
     "baseline_total": 307,
-    "current_total": 141,
-    "removed_total": 166,
+    "current_total": 125,
+    "removed_total": 182,
     "baseline_submission_blocker": 182,
-    "current_submission_blocker": 16,
-    "removed_submission_blocker": 166,
+    "current_submission_blocker": 0,
+    "removed_submission_blocker": 182,
     "baseline_database_sql": 115,
     "current_database_sql": 0,
     "removed_database_sql": 115,
@@ -148,8 +155,8 @@
     "current_date_time": 0,
     "removed_date_time": 25,
     "baseline_logging": 42,
-    "current_logging": 16,
-    "removed_logging": 26
+    "current_logging": 0,
+    "removed_logging": 42
   },
   "remaining_roadmap": {
     "WPORG-28R-G10": 0,
@@ -159,13 +166,16 @@
     "WPORG-28R-G14": 0,
     "WPORG-28R-G15": 0,
     "WPORG-28R-G16": 0,
-    "WPORG-28R-G17": 16
+    "WPORG-28R-G17": 0
   },
   "external_actions": {
     "push": false,
     "deployment": false,
     "wordpress_org_upload": false,
     "reviewer_reply": false,
+    "slug_reservation": false,
+    "tag": false,
+    "production_convergence": false,
     "protected_stash_changed": false
   }
 }
