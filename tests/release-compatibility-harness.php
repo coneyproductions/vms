@@ -301,6 +301,33 @@ $tests['dependency discovery supports direct and packages repository layouts'] =
 	}
 };
 
+$tests['authenticated admin follow-up is the authoritative login signal'] = static function (): void {
+	$authenticatedFollowUp = array(
+		'ok' => true,
+		'status_code' => 200,
+	);
+	vms_release_compat_test_assert(
+		VMS_Release_Compatibility_Tooling::isConfirmedAdminSession($authenticatedFollowUp, true, false, false),
+		'Expected authenticated wp-admin markup from the cookie-backed follow-up to confirm the session.'
+	);
+	vms_release_compat_test_assert(
+		!VMS_Release_Compatibility_Tooling::isConfirmedAdminSession($authenticatedFollowUp, false, false, false),
+		'Expected a response without authenticated admin markup to be rejected.'
+	);
+	vms_release_compat_test_assert(
+		!VMS_Release_Compatibility_Tooling::isConfirmedAdminSession($authenticatedFollowUp, true, true, false),
+		'Expected a login-form response to be rejected.'
+	);
+	vms_release_compat_test_assert(
+		!VMS_Release_Compatibility_Tooling::isConfirmedAdminSession($authenticatedFollowUp, true, false, true),
+		'Expected a cross-origin response to be rejected.'
+	);
+	vms_release_compat_test_assert(
+		!VMS_Release_Compatibility_Tooling::isConfirmedAdminSession(array('ok' => true, 'status_code' => 500), true, false, false),
+		'Expected an error response to be rejected.'
+	);
+};
+
 $tests['scheduled work comparison detects duplicate cron and action scheduler jobs'] = static function (): void {
 	$comparison = VMS_Release_Compatibility_Tooling::compareScheduledWorkSnapshots(
 		array(

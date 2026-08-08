@@ -522,6 +522,21 @@ final class VMS_Release_Compatibility_Tooling
 		return (string) ($rankedCandidates[0]['path'] ?? dirname($pluginRoot));
 	}
 
+	public static function isConfirmedAdminSession(
+		array $followUp,
+		bool $hasAdminMarker,
+		bool $looksLikeLoginForm,
+		bool $originMismatchDetected
+	): bool {
+		$statusCode = (int) ($followUp['status_code'] ?? 0);
+		return !empty($followUp['ok'])
+			&& $statusCode >= 200
+			&& $statusCode < 400
+			&& $hasAdminMarker
+			&& !$looksLikeLoginForm
+			&& !$originMismatchDetected;
+	}
+
 	private static function normalizeConfig(array $config): array
 	{
 		$pluginRoot = isset($config['plugin_root']) ? (string) $config['plugin_root'] : dirname(__DIR__, 2);
@@ -1944,10 +1959,17 @@ final class VMS_Release_Compatibility_Site
 			|| strpos($body, 'adminmenuwrap') !== false
 			|| strpos($body, 'wpbody-content') !== false;
 		$looksLikeLoginForm = strpos($body, 'id="loginform"') !== false || strpos($body, 'name="log"') !== false;
-		$ok = !empty($response['ok']) && !empty($followUp['ok']) && $hasAdminMarker && !$looksLikeLoginForm && !$originMismatchDetected;
+		$ok = VMS_Release_Compatibility_Tooling::isConfirmedAdminSession(
+			$followUp,
+			$hasAdminMarker,
+			$looksLikeLoginForm,
+			$originMismatchDetected
+		);
 
 		return array(
 			'ok' => $ok,
+			'post_request_ok' => !empty($response['ok']),
+			'post_status_code' => (int) ($response['status_code'] ?? 0),
 			'status_code' => (int) ($followUp['status_code'] ?? 0),
 			'final_url' => (string) ($followUp['final_url'] ?? ''),
 			'origin_mismatch_detected' => $originMismatchDetected,
