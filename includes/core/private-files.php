@@ -349,7 +349,8 @@ if (!function_exists('vms_private_file_get')) {
 
 		global $wpdb;
 		$table = vms_private_files_table();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $file_id), ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Authorization-sensitive private-file reads must observe the current plugin-owned index row; stale cached metadata could expose a deleted or reassigned file.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $file_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
@@ -472,6 +473,7 @@ if (!function_exists('vms_private_files_register_path')) {
 
 		global $wpdb;
 		$table = vms_private_files_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Private-file registration persists one validated metadata row in the plugin-owned index through wpdb::insert(); no core API owns this repository.
 		$inserted = $wpdb->insert(
 			$table,
 			array(
@@ -639,6 +641,7 @@ if (!function_exists('vms_private_files_delete')) {
 
 		global $wpdb;
 		$table = vms_private_files_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Private-file deletion removes the current plugin-owned index row immediately after bounded local-file cleanup; no core deletion or cache API owns this repository.
 		$deleted = $wpdb->delete($table, array('id' => $file_id), array('%d'));
 
 		return $deleted !== false;

@@ -357,6 +357,7 @@ if (!function_exists('vms_notify_insert_log')) {
 			$channel = 'email';
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Notification audit writes persist one normalized row in the plugin-owned log table through wpdb::insert(); no core API owns this repository.
 		$ok = $wpdb->insert(
 			$table,
 			array(
@@ -742,13 +743,14 @@ if (!function_exists('vms_notify_recent_logs')) {
 		if ($table === '') {
 			return array();
 		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Notification schema readiness must observe the newly created plugin-owned log table in the current request, so this prepared probe is intentionally uncached.
 		$exists = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ($exists !== $table) {
 			return array();
 		}
 		$limit = max(1, min(100, absint($limit)));
-		$sql = "SELECT * FROM {$table} ORDER BY id DESC LIMIT " . (int) $limit;
-		$rows = $wpdb->get_results($sql, ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Notification history must read request-fresh audit rows from the plugin-owned log table after sends, failures, or skips.
+		$rows = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i ORDER BY id DESC LIMIT %d', $table, $limit), ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
