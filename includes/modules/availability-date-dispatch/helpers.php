@@ -450,11 +450,11 @@ if (!function_exists('vms_add_dispatch_get_event_plan_need_scan')) {
 			'posts_per_page' => max(50, min(300, max(1, $limit) * 20)),
 			'orderby' => 'meta_value',
 			'order' => 'ASC',
-			'meta_key' => $date_key,
+			'meta_key' => $date_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- ADD intentionally orders its bounded 50-to-300 Event Plan candidate sample by canonical event-date metadata before selecting open vendor needs.
 			'fields' => 'ids',
 		);
 		if (!$include_past) {
-			$candidate_args['meta_query'] = array(
+			$candidate_args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- ADD applies the canonical event-date lower bound only to the same bounded 50-to-300 candidate sample when past events are excluded.
 				array(
 					'key' => $date_key,
 					'value' => $today,

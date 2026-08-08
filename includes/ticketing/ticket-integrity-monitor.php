@@ -762,11 +762,11 @@ function vms_ticket_integrity_build_targets(array $args = array()): array
 				'paged' => $paged,
 				'fields' => 'ids',
 				'no_found_rows' => false,
-				'meta_key' => '_vms_event_date',
+				'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.
 				'orderby' => 'meta_value',
 				'meta_type' => 'DATE',
 				'order' => 'ASC',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket Integrity intentionally paginates the complete published, linked Event Plan set inside the configured date window before applying ticketing and activity checks.
 					array(
 						'key' => '_vms_event_date',
 						'value' => array($start_date, $end_date),

@@ -692,7 +692,7 @@ function vms_ticket_integrity_watch_ticketing_meta(int $meta_id, int $object_id,
 			$object_id,
 			array(
 				'job_name' => 'ticket_integrity_ticketing_meta',
-				'meta_key' => $meta_key,
+				'meta_key' => $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This diagnostic payload field records the exact watched metadata key; it is not a WordPress query argument.
 			)
 		);
 	}

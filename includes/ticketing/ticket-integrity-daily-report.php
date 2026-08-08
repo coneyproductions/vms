@@ -452,6 +452,7 @@ function vms_ticket_integrity_report_table_exists(string $table_name): bool
 		return false;
 	}
 
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema readiness performs a prepared exact-name probe for each of two WooCommerce lookup tables; the result must reflect current schema availability.
 	return ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name)) === $table_name);
 }
 
@@ -515,15 +516,16 @@ function vms_ticket_integrity_report_lookup_metrics(array $product_ids, array $s
 			COALESCE(SUM(product_lookup.product_qty), 0) AS qty,
 			COALESCE(SUM(product_lookup.product_net_revenue), 0) AS net_revenue,
 			COALESCE(SUM(product_lookup.product_gross_revenue), 0) AS gross_revenue
-		FROM {$lookup_table} product_lookup
-		INNER JOIN {$stats_table} order_stats
+		FROM %i product_lookup
+		INNER JOIN %i order_stats
 			ON order_stats.order_id = product_lookup.order_id
 		WHERE product_lookup.product_id IN ({$pid_placeholders})
 		  AND order_stats.status IN ({$status_placeholders})
 		GROUP BY product_lookup.product_id
 	";
 
-	$args = array_merge($product_ids, $statuses);
+	$args = array_merge(array($lookup_table, $stats_table), $product_ids, $statuses);
+	// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The daily report prepares both table identifiers and every product/status value before one request-fresh aggregate; no WooCommerce API exposes this grouped metric contract.
 	$rows = $wpdb->get_results($wpdb->prepare($sql, $args), ARRAY_A);
 	$result = $empty;
 	$result['provider'] = 'woo_lookup_completed';

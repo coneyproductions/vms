@@ -387,9 +387,31 @@ $vendor_type_source = vms_test_read_file($vendor_type_path);
 $admin_page_source = vms_test_read_file($admin_page_path);
 $cron_source = vms_test_read_file($cron_path);
 $daily_report_source = vms_test_read_file($daily_report_path);
+$live_monitor_source = vms_test_read_file($live_monitor_path);
 $build_targets_source = vms_test_extract_function($monitor_source, 'vms_ticket_integrity_build_targets');
 $scan_all_source = vms_test_extract_function($monitor_source, 'vms_ticket_integrity_scan_all');
 $vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'vms_vendor_type_maybe_canonicalize_terms');
+
+$live_monitor_projection = $live_monitor_source;
+$live_monitor_projection_removals = 0;
+$live_monitor_annotations = array(
+	' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.',
+	' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket Integrity intentionally paginates the complete published, linked Event Plan set inside the configured date window before applying ticketing and activity checks.',
+);
+foreach ($live_monitor_annotations as $annotation) {
+	vms_test_assert_same(
+		1,
+		substr_count($live_monitor_projection, $annotation),
+		'Live Ticket Integrity monitor should contain each exact G10 query annotation once.'
+	);
+	$live_monitor_projection = str_replace($annotation, '', $live_monitor_projection, $removals);
+	$live_monitor_projection_removals += $removals;
+}
+vms_test_assert_same(
+	2,
+	$live_monitor_projection_removals,
+	'Live Ticket Integrity monitor projection should strip exactly the two authorized G10 query annotations.'
+);
 
 vms_test_assert_same(
 	1,
@@ -486,8 +508,8 @@ vms_test_assert_same(
 );
 vms_test_assert_same(
 	'066eeaf16b910c930d4ad23eeca2b48669dbc889713d62dafcc80a7c58848122',
-	hash_file('sha256', $live_monitor_path),
-	'Live Ticket Integrity monitor must remain unchanged in this mirror-only child.'
+	hash('sha256', $live_monitor_projection),
+	'Live Ticket Integrity monitor must remain unchanged after projecting the two authorized G10 query annotations.'
 );
 
 vms_test_reset_runtime_state();
