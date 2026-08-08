@@ -239,6 +239,7 @@ if (!function_exists('vms_feedback_recent_event_plans')) {
 			'post_type' => 'vms_event_plan',
 			'post_status' => array('publish', 'draft', 'pending', 'future', 'private'),
 			'posts_per_page' => $limit,
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The only admin selector call uses the 75-plan default and canonical date ordering.
 			'meta_key' => $date_key,
 			'orderby' => 'meta_value',
 			'order' => 'DESC',

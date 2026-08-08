@@ -136,7 +136,9 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
             'limit' => 100,
             'orderby' => 'date',
             'order' => 'DESC',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The capability-gated admin queue is capped at 100 orders and filters on its plugin-owned marker.
             'meta_key' => '_vms_express_bar_order',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- The exact marker value restricts the capped admin queue to Express Bar orders.
             'meta_value' => '1',
             'status' => array_keys(wc_get_order_statuses()),
         ));

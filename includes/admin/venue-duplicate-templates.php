@@ -321,7 +321,9 @@ function vms_render_create_from_template_panel(WP_Post $post): void
         'posts_per_page' => -1,
         'orderby'        => 'title',
         'order'          => 'ASC',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The add-venue admin selector intentionally enumerates all venues carrying the plugin-owned template marker.
         'meta_key'       => VMS_VENUE_TEMPLATE_META_KEY,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- The exact marker value limits the selector to venue templates.
         'meta_value'     => '1',
     ]);
 

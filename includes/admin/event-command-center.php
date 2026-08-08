@@ -455,6 +455,7 @@ if (!function_exists('vms_event_command_center_get_plan_ids')) {
             'posts_per_page' => 200,
             'fields' => 'ids',
             'orderby' => 'meta_value',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This admin selector is capped at 200 plan IDs and uses the canonical date key only for ordering.
             'meta_key' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date',
             'order' => 'ASC',
             'no_found_rows' => true,

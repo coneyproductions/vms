@@ -152,6 +152,7 @@ function vms_handle_sync_entitlement_images(): void
 		'posts_per_page' => -1,
 		'fields' => 'ids',
 		'no_found_rows' => true,
+		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This capability- and nonce-gated sync must enumerate every product carrying one of the plugin-owned ticketing markers.
 		'meta_query' => array(
 			'relation' => 'OR',
 			array(
@@ -323,6 +324,7 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 		'posts_per_page' => -1,
 		'fields' => 'ids',
 		'no_found_rows' => true,
+		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Stock preview and repair must enumerate the complete set of products carrying plugin-owned entitlement markers.
 		'meta_query' => array(
 			'relation' => 'OR',
 			array(

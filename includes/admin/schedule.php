@@ -279,6 +279,7 @@ function vms_handle_create_event_plan(): void
         'post_status'    => array('publish', 'draft', 'pending', 'future', 'private'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Duplicate prevention must inspect every plan matching this exact validated date-and-venue pair.
         'meta_query'     => array(
             'relation' => 'AND',
             array(

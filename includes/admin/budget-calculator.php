@@ -277,6 +277,7 @@ function vms_budget_calculator_collect_event_plans_for_year(int $year, bool $inc
     'post_status'    => array('publish', 'draft', 'pending', 'future', 'private'),
     'posts_per_page' => -1,
     'fields'         => 'ids',
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The year-scoped admin report must inspect every plan carrying a canonical date inside this bounded year.
     'meta_query'     => array(
       array(
         'key'     => $date_key,
@@ -289,6 +290,7 @@ function vms_budget_calculator_collect_event_plans_for_year(int $year, bool $inc
 
   $plan_ids = get_posts($args);
   if (empty($plan_ids)) {
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The legacy fallback intentionally removes the meta join and inspects all Event Plans; PHP below revalidates canonical dates and the selected year.
     $args['meta_query'] = array();
     $plan_ids = get_posts($args);
   }

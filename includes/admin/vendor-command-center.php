@@ -716,7 +716,9 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
             'fields' => 'ids',
             'orderby' => 'meta_value',
             'order' => 'ASC',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The admin map uses the plugin-owned event date for ordering inside its finite 485-day window.
             'meta_key' => '_vms_event_date',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This complete admin map is bounded to plans from 120 days ago through 365 days ahead.
             'meta_query' => array(
                 array(
                     'key' => '_vms_event_date',

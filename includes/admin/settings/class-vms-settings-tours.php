@@ -112,6 +112,7 @@ if (!class_exists('VMS_Settings_Tours')) {
 
 				global $wpdb;
 				if (isset($wpdb->usermeta)) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The capability- and nonce-gated reset immediately bulk-deletes this user's plugin-owned tour keys; the raw affected-row/false result is intentionally not reused or cached before redirect.
 					$wpdb->query(
 						$wpdb->prepare(
 							"DELETE FROM {$wpdb->usermeta} WHERE user_id = %d AND meta_key LIKE %s",
