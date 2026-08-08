@@ -274,6 +274,33 @@ $tests['installed plugin basename resolution keeps build-version lookup stable a
 	}
 };
 
+$tests['dependency discovery supports direct and packages repository layouts'] = static function (): void {
+	$workspace = vms_release_compat_test_temp_dir('vms release compat dependency roots ');
+	try {
+		$pluginsDir = $workspace . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins';
+		$woocommerceDir = $pluginsDir . DIRECTORY_SEPARATOR . 'woocommerce';
+		$directPluginRoot = $pluginsDir . DIRECTORY_SEPARATOR . 'vms-github-reconcile';
+		$packagesPluginRoot = $pluginsDir . DIRECTORY_SEPARATOR . 'packages' . DIRECTORY_SEPARATOR . 'vms-github-reconcile';
+		foreach (array($woocommerceDir, $directPluginRoot, $packagesPluginRoot) as $directory) {
+			if (!mkdir($directory, 0775, true) && !is_dir($directory)) {
+				throw new RuntimeException('Could not create dependency root fixture: ' . $directory);
+			}
+		}
+		file_put_contents($woocommerceDir . DIRECTORY_SEPARATOR . 'woocommerce.php', "<?php\n");
+
+		vms_release_compat_test_assert(
+			VMS_Release_Compatibility_Tooling::discoverPluginsWorkspaceRoot($directPluginRoot) === realpath($pluginsDir),
+			'Expected a directly nested repository to resolve its sibling plugin workspace.'
+		);
+		vms_release_compat_test_assert(
+			VMS_Release_Compatibility_Tooling::discoverPluginsWorkspaceRoot($packagesPluginRoot) === realpath($pluginsDir),
+			'Expected a packages-nested repository to resolve the shared plugin workspace.'
+		);
+	} finally {
+		VMS_Release_Compatibility_Tooling::deletePath($workspace);
+	}
+};
+
 $tests['scheduled work comparison detects duplicate cron and action scheduler jobs'] = static function (): void {
 	$comparison = VMS_Release_Compatibility_Tooling::compareScheduledWorkSnapshots(
 		array(

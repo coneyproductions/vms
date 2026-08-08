@@ -474,6 +474,54 @@ final class VMS_Release_Compatibility_Tooling
 		return implode("\n", $lines) . "\n";
 	}
 
+	public static function discoverPluginsWorkspaceRoot(string $pluginRoot, string $wordpressSourceRoot = ''): string
+	{
+		$pluginRoot = rtrim($pluginRoot, DIRECTORY_SEPARATOR);
+		$candidates = array(
+			dirname($pluginRoot),
+			dirname(dirname($pluginRoot)),
+		);
+
+		$wordpressSourceRoot = rtrim(trim($wordpressSourceRoot), DIRECTORY_SEPARATOR);
+		if ($wordpressSourceRoot !== '') {
+			$candidates[] = $wordpressSourceRoot . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins';
+		}
+
+		$rankedCandidates = array();
+		$seen = array();
+		foreach ($candidates as $index => $candidate) {
+			$resolved = realpath($candidate);
+			$candidate = is_string($resolved) && $resolved !== '' ? $resolved : $candidate;
+			if (isset($seen[$candidate])) {
+				continue;
+			}
+			$seen[$candidate] = true;
+
+			$dependencyCount = 0;
+			foreach (self::DEPENDENCIES as $definition) {
+				$mainFile = $candidate
+					. DIRECTORY_SEPARATOR . (string) $definition['directory']
+					. DIRECTORY_SEPARATOR . (string) $definition['main_file'];
+				if (is_file($mainFile)) {
+					$dependencyCount++;
+				}
+			}
+
+			$rankedCandidates[] = array(
+				'path' => $candidate,
+				'dependency_count' => $dependencyCount,
+				'order' => $index,
+			);
+		}
+
+		usort($rankedCandidates, static function (array $left, array $right): int {
+			$countComparison = $right['dependency_count'] <=> $left['dependency_count'];
+			return $countComparison !== 0 ? $countComparison : ($left['order'] <=> $right['order']);
+		});
+
+		return (string) ($rankedCandidates[0]['path'] ?? dirname($pluginRoot));
+	}
+
 	private static function normalizeConfig(array $config): array
 	{
 		$pluginRoot = isset($config['plugin_root']) ? (string) $config['plugin_root'] : dirname(__DIR__, 2);
@@ -505,7 +553,7 @@ final class VMS_Release_Compatibility_Tooling
 
 		return array(
 			'plugin_root' => $pluginRoot,
-			'plugins_workspace_root' => dirname($pluginRoot),
+			'plugins_workspace_root' => self::discoverPluginsWorkspaceRoot($pluginRoot, $wordpressSourceRoot),
 			'working_dir' => $workingDir,
 			'output_dir' => $outputDir,
 			'artifact_path' => $artifactPath,
