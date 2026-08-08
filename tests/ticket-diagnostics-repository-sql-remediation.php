@@ -568,9 +568,9 @@ diag_same(0, substr_count($mutation_source, 'WordPress.DB.PreparedSQL.Interpolat
 preg_match_all('/^[^\n]*[\x27]meta_key[\x27]\s*=>[^\n]*phpcs:ignore WordPress\.DB\.SlowDBQuery\.slow_db_query_meta_key[^\n]*$/m', $inventory_source, $inventory_meta_annotations);
 preg_match_all('/^[^\n]*[\x27]meta_key[\x27]\s*=>[^\n]*phpcs:ignore WordPress\.DB\.SlowDBQuery\.slow_db_query_meta_key[^\n]*$/m', $mutation_source, $mutation_meta_annotations);
 diag_same(2, count($inventory_meta_annotations[0]), 'Forensics should annotate only its two descriptor-array meta_key occurrences.');
-diag_same(3, count($mutation_meta_annotations[0]), 'Mutation audit should annotate only its three descriptor-array meta_key occurrences.');
+diag_same(2, count($mutation_meta_annotations[0]), 'Mutation audit should annotate only its two retained descriptor-array meta_key occurrences.');
 diag_same(2, substr_count($inventory_source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_key'), 'Forensics should carry exactly two occurrence-specific slow-meta-key annotations.');
-diag_same(3, substr_count($mutation_source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_key'), 'Mutation audit should carry exactly three occurrence-specific slow-meta-key annotations.');
+diag_same(2, substr_count($mutation_source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_key'), 'Mutation audit should carry exactly two retained occurrence-specific slow-meta-key annotations.');
 
 diag_check(!diag_has_broad_suppression($inventory_source), 'Forensics remediation must reject file-wide and block-wide PHPCS suppression.');
 diag_check(!diag_has_broad_suppression($mutation_source), 'Mutation remediation must reject file-wide and block-wide PHPCS suppression.');
@@ -584,8 +584,10 @@ diag_contains('Product-filtered forensics history must read request-fresh', $inv
 diag_contains('Plan-wide forensics history must read request-fresh', $inventory_source, 'Plan-wide forensics read annotation should stay operation-specific.');
 diag_contains('Ninety-day retention pruning deletes expired rows from the plugin-owned mutation audit table', $mutation_source, 'Mutation prune annotation should stay operation-specific.');
 diag_contains('Mutation history must read request-fresh', $mutation_source, 'Mutation-history read annotation should stay operation-specific.');
-diag_same(1, substr_count($mutation_source, 'error_log('), 'Deferred mutation trace logging should remain exactly one row.');
-diag_same(1, substr_count($mutation_source, 'debug_backtrace('), 'Deferred mutation backtrace logging should remain exactly one row.');
+diag_same(0, substr_count($mutation_source, 'error_log('), 'Mutation trace fallback should use the bounded operational adapter.');
+diag_same(1, substr_count($mutation_source, 'debug_backtrace('), 'Mutation source detection should retain exactly one bounded backtrace call.');
+diag_same(1, substr_count($mutation_source, 'WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace'), 'Mutation source detection should carry exactly one narrow backtrace annotation.');
+diag_contains("vms_record_operational_issue('ticket_mutation_audit_trace'", $mutation_source, 'Mutation trace fallback should retain its fixed operational event.');
 
 // Baseline and remediated shared runtime stay byte-identical across the isolated mirror/shadow pair.
 $shadow_root = dirname($plugin_root, 2) . '/vms';

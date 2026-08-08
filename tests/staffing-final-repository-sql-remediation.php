@@ -1364,7 +1364,9 @@ try {
 	$ids = vms_tasks_collect_upcoming_event_ids(30);
 	vms_test_assert_same(array(81, 82), $ids, 'Generator horizon reads should dedupe prepared-query results and discard non-positive IDs.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT p.ID FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value >= %s AND pm.meta_value <= %s ORDER BY pm.meta_value ASC, p.ID ASC');
-	vms_test_assert_same(array('wp_postmeta', 'wp_posts', 'vms_event_plan', 'publish', 'private', 'draft', 'pending', 'future', '_vms_event_date', vms_test_today_ymd(), vms_test_horizon_ymd(30)), $prepare['args'], 'Generator horizon reads should prepare postmeta/posts identifiers, bounded statuses, the event-date key, and the date window.');
+	$generator_today = wp_date('Y-m-d', time(), wp_timezone());
+	$generator_horizon = wp_date('Y-m-d', time() + (30 * DAY_IN_SECONDS), wp_timezone());
+	vms_test_assert_same(array('wp_postmeta', 'wp_posts', 'vms_event_plan', 'publish', 'private', 'draft', 'pending', 'future', '_vms_event_date', $generator_today, $generator_horizon), $prepare['args'], 'Generator horizon reads should prepare postmeta/posts identifiers, bounded statuses, the event-date key, and the runtime-relative date window.');
 	vms_test_assert_no_placeholders($prepare['final_sql'], 'Generator horizon final SQL should not retain placeholders.');
 
 	fwrite(STDOUT, "staffing final repository sql remediation: PASS\n");

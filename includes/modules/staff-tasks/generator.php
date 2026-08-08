@@ -602,7 +602,14 @@ if (!function_exists('vms_tasks_run_nightly_generator')) {
 	function vms_tasks_run_nightly_generator(): void
 	{
 		if (!vms_tasks_db_ready()) {
-			error_log('[VMS Tasks] Nightly generator skipped: DB schema not ready.');
+			vms_record_operational_issue(
+				'staff_tasks_schema_not_ready',
+				array(
+					'service' => 'staff_tasks',
+					'operation' => 'nightly_generate',
+					'status' => 'skipped',
+				)
+			);
 			return;
 		}
 
@@ -620,6 +627,16 @@ if (!function_exists('vms_tasks_run_nightly_generator')) {
 		foreach ($plan_ids as $event_id) {
 			$run = vms_tasks_generate_for_event($event_id, array('allow_supersede' => false));
 			if (is_wp_error($run)) {
+				vms_record_operational_issue(
+					'staff_tasks_nightly_event_failed',
+					array(
+						'service' => 'staff_tasks',
+						'operation' => 'nightly_generate',
+						'status' => 'failed',
+						'plan_id' => absint($event_id),
+					),
+					$run
+				);
 				$summary['warnings']++;
 				continue;
 			}
@@ -630,7 +647,6 @@ if (!function_exists('vms_tasks_run_nightly_generator')) {
 			$summary['warnings'] += is_array($run['warnings'] ?? null) ? count((array) $run['warnings']) : 0;
 		}
 
-		error_log('[VMS Tasks] nightly_generator ' . wp_json_encode($summary));
 	}
 }
 
@@ -674,7 +690,16 @@ if (!function_exists('vms_tasks_generate_for_event_safe')) {
 			'actor_user_id' => $actor_user_id,
 		));
 		if (is_wp_error($run)) {
-			error_log('[VMS Tasks] event generation failed: ' . $run->get_error_message());
+			vms_record_operational_issue(
+				'staff_tasks_event_generation_failed',
+				array(
+					'service' => 'staff_tasks',
+					'operation' => 'generate_for_event',
+					'status' => 'failed',
+					'plan_id' => absint($post_id),
+				),
+				$run
+			);
 		}
 	}
 }

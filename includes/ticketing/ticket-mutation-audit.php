@@ -266,22 +266,14 @@ function vms_ticket_mutation_audit_trace(string $decision, array $context = arra
 		return;
 	}
 
-	$elapsed_ms = $started_at > 0 ? max(0.0, round((microtime(true) - $started_at) * 1000, 1)) : 0.0;
-	error_log('[VMS TRACE] ' . wp_json_encode(array(
+	vms_record_operational_issue('ticket_mutation_audit_trace', array(
 		'hook' => sanitize_key((string) ($context['hook_name'] ?? 'ticket_mutation_audit')),
 		'action' => 'ticket_mutation_audit',
 		'decision' => sanitize_key($decision),
 		'reason' => $payload['reason'],
-		'request_uri' => function_exists('vms_admin_guard_request_uri') ? vms_admin_guard_request_uri() : vms_request_current_uri(''),
-		'screen_id' => function_exists('vms_admin_guard_current_screen_id') ? vms_admin_guard_current_screen_id() : '',
-		'elapsed_ms' => $elapsed_ms,
-		'memory_mb' => round(((int) memory_get_usage(true)) / 1048576, 1),
-		'meta_key' => $payload['meta_key'], // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This fallback trace payload reports the mutation metadata key; it does not configure a database query.
-		'object_id' => $payload['object_id'],
 		'operation' => $payload['operation'],
-		'source_hook' => $payload['source_hook'],
-		'source_function' => $payload['source_function'],
-	)));
+		'plan_id' => $payload['object_id'],
+	));
 }
 
 function vms_ticket_mutation_audit_resolve_source(array $context = array(), string $fallback_hook = ''): array
@@ -315,7 +307,20 @@ function vms_ticket_mutation_audit_resolve_source(array $context = array(), stri
 
 function vms_ticket_mutation_audit_capture_source_trace(): array
 {
-	return debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 40);
+	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- Mutation-source detection needs a bounded argument-free stack, and every frame is immediately reduced to a sanitized function identity.
+	$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 40);
+	$projected = array();
+	foreach ($trace as $frame) {
+		if (!is_array($frame)) {
+			continue;
+		}
+		$function = substr(sanitize_key((string) ($frame['function'] ?? '')), 0, 80);
+		if ($function !== '') {
+			$projected[] = array('function' => $function);
+		}
+	}
+
+	return array_slice($projected, 0, 40);
 }
 
 function vms_ticket_mutation_audit_detect_source(array $trace = array()): array
