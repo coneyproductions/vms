@@ -28,7 +28,7 @@ add_action('pre_get_posts', 'vms_admin_vendor_list_filters_apply', 50);
 
 /**
  * Convert meta values to a display-safe scalar.
- * - If we cannot derive a scalar, return '' and log (no silent failures).
+ * - If we cannot derive a scalar, return '' and record a bounded operational issue.
  */
 function vms_admin_vendor_list_get_meta_scalar(int $post_id, string $meta_key): string
 {
@@ -48,7 +48,16 @@ function vms_admin_vendor_list_get_meta_scalar(int $post_id, string $meta_key): 
 
     // If a plugin/theme accidentally stored an array/object, do NOT render garbage.
     if (is_array($v) || is_object($v)) {
-        error_log('[VMS] vendor-list-ui: non-scalar meta for key ' . $meta_key . ' on post_id ' . $post_id);
+        if (function_exists('vms_record_operational_issue')) {
+            vms_record_operational_issue(
+                'vendor_list_meta_shape_invalid',
+                array(
+                    'vendor_id' => $post_id,
+                    'operation' => 'read_meta',
+                    'status' => 'invalid',
+                )
+            );
+        }
         return '';
     }
 

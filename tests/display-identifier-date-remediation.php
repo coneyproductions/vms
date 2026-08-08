@@ -104,6 +104,25 @@ function g14_validate_no_date_suppressions(string $source): void
 	}
 }
 
+function g14_restore_g17_helper_logging(string $source): string
+{
+	$current = <<<'CURRENT'
+            if (function_exists('vms_record_operational_issue')) {
+                vms_record_operational_issue(
+                    'tax_profile_meta_shape_invalid',
+                    array(
+                        'entity_id' => $id,
+                        'entity_type' => 'vendor',
+                        'operation' => 'read_meta',
+                        'status' => 'invalid',
+                    )
+                );
+            }
+CURRENT;
+	$historical = "            error_log('[VMS] tax missing_items: non-scalar meta for key ' . \$key . ' on post_id ' . \$id);";
+	return g14_replace_once($source, $current, $historical, 'G17 helper logging projection changed');
+}
+
 $root = dirname(__DIR__);
 $shadow_root = dirname($root, 2) . '/vms';
 $owned_files = array(
@@ -289,6 +308,10 @@ foreach (array('mirror', 'shadow') as $tree) {
 		$current = $sources[$tree][$file];
 		$projected = $current;
 		$current_outside = $current;
+		if ($file === 'includes/helpers.php') {
+			$projected = g14_restore_g17_helper_logging($projected);
+			$current_outside = g14_restore_g17_helper_logging($current_outside);
+		}
 		foreach ($occurrences as $occurrence_id => $occurrence) {
 			if ($occurrence['file'] !== $file) {
 				continue;
@@ -338,7 +361,7 @@ foreach (array_diff($owned_files, $full_match_files) as $file) {
 
 $mutated = str_replace('return false; // closed until configured', 'return true; // mutation control', $sources['mirror']['includes/helpers.php'], $mutation_count);
 g14_same(1, $mutation_count, 'Runtime mutation control must alter one non-owned helper branch.');
-$mutated_projected = $mutated;
+$mutated_projected = g14_restore_g17_helper_logging($mutated);
 foreach ($occurrences as $occurrence_id => $occurrence) {
 	if ($occurrence['file'] !== 'includes/helpers.php') {
 		continue;

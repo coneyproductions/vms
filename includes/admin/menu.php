@@ -13,10 +13,6 @@ if (!function_exists('vms_admin_render_season_dates_page')) {
     echo '<h1>Season Dates</h1>';
     echo '<p>Season Dates page renderer is missing. Expected function <code>vms_render_season_dates_page()</code>.</p>';
     echo '</div>';
-
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-      error_log('VMS: Season Dates renderer missing. Expected vms_render_season_dates_page().');
-    }
   }
 }
 

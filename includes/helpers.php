@@ -2685,7 +2685,17 @@ function vms_vendor_tax_profile_missing_items(int $vendor_id): array
     $m = function (int $id, string $key): string {
         $v = get_post_meta($id, $key, true);
         if (is_array($v) || is_object($v)) {
-            error_log('[VMS] tax missing_items: non-scalar meta for key ' . $key . ' on post_id ' . $id);
+            if (function_exists('vms_record_operational_issue')) {
+                vms_record_operational_issue(
+                    'tax_profile_meta_shape_invalid',
+                    array(
+                        'entity_id' => $id,
+                        'entity_type' => 'vendor',
+                        'operation' => 'read_meta',
+                        'status' => 'invalid',
+                    )
+                );
+            }
             return '';
         }
         return trim((string) $v);

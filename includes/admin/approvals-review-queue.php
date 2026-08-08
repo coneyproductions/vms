@@ -12,17 +12,28 @@ if (!function_exists('vms_approvals_queue_notice_transient_key')) {
 if (!function_exists('vms_approvals_queue_log')) {
 	/**
 	 * @param array<string,mixed> $context
+	 * @param mixed               $error
 	 */
-	function vms_approvals_queue_log(string $message, array $context = array()): void
+	function vms_approvals_queue_log(string $event_code, array $context = array(), $error = null): void
 	{
-		$line = '[VMS Approvals] ' . trim($message);
-		if (!empty($context)) {
-			$json = wp_json_encode($context);
-			if (is_string($json) && $json !== '') {
-				$line .= ' ' . $json;
-			}
+		if (!function_exists('vms_record_operational_issue')) {
+			return;
 		}
-		error_log($line);
+
+		$safe_context = array();
+		foreach (array('provider', 'operation', 'status') as $key) {
+			$value = $context[$key] ?? '';
+			if (!is_scalar($value)) {
+				continue;
+			}
+			$safe_context[$key] = substr(sanitize_key((string) $value), 0, 80);
+		}
+
+		vms_record_operational_issue(
+			$event_code,
+			$safe_context,
+			$error
+		);
 	}
 }
 
@@ -233,11 +244,13 @@ if (!function_exists('vms_approvals_queue_provider_url')) {
 				}
 			} catch (Throwable $e) {
 				vms_approvals_queue_log(
-					'Provider screen URL callback failed.',
+					'approvals_provider_url_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
-						'error' => $e->getMessage(),
-					)
+						'operation' => 'resolve_url',
+						'status' => 'failed',
+					),
+					$e
 				);
 			}
 		}
@@ -255,8 +268,12 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 		$callback = $provider['pending_count_callback'] ?? null;
 		if (!is_callable($callback)) {
 			vms_approvals_queue_log(
-				'Provider missing pending_count_callback.',
-				array('provider' => (string) ($provider['id'] ?? ''))
+				'approvals_provider_pending_callback_missing',
+				array(
+					'provider' => (string) ($provider['id'] ?? ''),
+					'operation' => 'count_pending',
+					'status' => 'missing',
+				)
 			);
 			return 0;
 		}
@@ -265,11 +282,13 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 			$value = call_user_func($callback, $provider);
 			if (is_wp_error($value)) {
 				vms_approvals_queue_log(
-					'Provider count callback returned WP_Error.',
+					'approvals_provider_pending_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
-						'error' => $value->get_error_message(),
-					)
+						'operation' => 'count_pending',
+						'status' => 'failed',
+					),
+					$value
 				);
 				vms_approvals_queue_add_admin_notice(
 					__('Approvals count refresh failed for one queue. Check logs for details.', 'backstage-venue-manager'),
@@ -281,11 +300,13 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 			return max(0, absint($value));
 		} catch (Throwable $e) {
 			vms_approvals_queue_log(
-				'Provider count callback threw an exception.',
+				'approvals_provider_pending_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
-					'error' => $e->getMessage(),
-				)
+					'operation' => 'count_pending',
+					'status' => 'failed',
+				),
+				$e
 			);
 			vms_approvals_queue_add_admin_notice(
 				__('Approvals count refresh failed for one queue. Check logs for details.', 'backstage-venue-manager'),
@@ -332,11 +353,13 @@ if (!function_exists('vms_approvals_queue_provider_summary_items')) {
 			return array_slice($items, 0, 5);
 		} catch (Throwable $e) {
 			vms_approvals_queue_log(
-				'Provider summary callback threw an exception.',
+				'approvals_provider_summary_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
-					'error' => $e->getMessage(),
-				)
+					'operation' => 'summarize',
+					'status' => 'failed',
+				),
+				$e
 			);
 			return array();
 		}
@@ -371,8 +394,12 @@ if (!function_exists('vms_approvals_queue_collect_snapshot')) {
 			$screen_url = vms_approvals_queue_provider_url($provider);
 			if ($screen_url === '') {
 				vms_approvals_queue_log(
-					'Provider screen URL is empty.',
-					array('provider' => (string) ($provider['id'] ?? ''))
+					'approvals_provider_url_missing',
+					array(
+						'provider' => (string) ($provider['id'] ?? ''),
+						'operation' => 'resolve_url',
+						'status' => 'missing',
+					)
 				);
 			}
 
@@ -811,17 +838,6 @@ if (!function_exists('vms_approvals_queue_record_transition')) {
 		$existing[] = $entry;
 		$existing = array_values(array_slice($existing, -300, 300, true));
 		update_option(vms_approvals_queue_audit_option_key(), $existing, false);
-
-		vms_approvals_queue_log(
-			'Status transition recorded.',
-			array(
-				'queue_id' => $queue_id,
-				'item_id' => $item_id,
-				'from_status' => $from_status,
-				'to_status' => $to_status,
-				'actor_id' => (int) get_current_user_id(),
-			)
-		);
 	}
 }
 

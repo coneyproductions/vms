@@ -171,26 +171,22 @@ if (!class_exists('VMS_Tours_Registry')) {
 			$required_keys = array('id', 'title', 'screen', 'version', 'level', 'audience', 'steps');
 			foreach ($required_keys as $required_key) {
 				if (!array_key_exists($required_key, $tour_def)) {
-					$this->debug('Rejected tour registration (missing key): ' . $required_key);
 					return array();
 				}
 			}
 
 			$id = $this->sanitize_id((string) $tour_def['id']);
 			if ($id === '') {
-				$this->debug('Rejected tour registration (invalid id).');
 				return array();
 			}
 
 			$screen = $this->sanitize_screen_key((string) $tour_def['screen']);
 			if ($screen === '') {
-				$this->debug('Rejected tour registration (invalid screen): ' . $id);
 				return array();
 			}
 
 			$version = trim((string) $tour_def['version']);
 			if ($version === '') {
-				$this->debug('Rejected tour registration (empty version): ' . $id);
 				return array();
 			}
 
@@ -203,7 +199,6 @@ if (!class_exists('VMS_Tours_Registry')) {
 			$audience = $this->normalize_audience($tour_def['audience']);
 			$steps = $this->normalize_steps($tour_def['steps']);
 			if (empty($steps)) {
-				$this->debug('Rejected tour registration (no valid steps): ' . $id);
 				return array();
 			}
 
@@ -472,7 +467,6 @@ if (!class_exists('VMS_Tours_Registry')) {
 		{
 			$placement = sanitize_key($placement);
 			if (!in_array($placement, array('top', 'right', 'bottom', 'left', 'auto'), true)) {
-				$this->debug('Invalid placement detected; converted to auto.');
 				return 'auto';
 			}
 			return $placement;
@@ -570,11 +564,5 @@ if (!class_exists('VMS_Tours_Registry')) {
 			return true;
 		}
 
-		private function debug(string $message): void
-		{
-			if (defined('VMS_TOURS_DEBUG') && VMS_TOURS_DEBUG) {
-				error_log('[VMS Tours] ' . $message);
-			}
-		}
 	}
 }
