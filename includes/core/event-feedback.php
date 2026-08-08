@@ -674,7 +674,7 @@ if (!function_exists('vms_feedback_get_responses')) {
 			'no_found_rows' => true,
 		);
 		if ($event_plan_id > 0) {
-			$args['meta_query'] = array(
+			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The response list applies this exact Event Plan metadata filter only when requested; the caller-supplied limit continues to control result scope.
 				array(
 					'key' => vms_feedback_meta_key('event_plan_id'),
 					'value' => absint($event_plan_id),
@@ -898,7 +898,7 @@ if (!function_exists('vms_feedback_existing_response_by_meta')) {
 			'posts_per_page' => 1,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Submission deduplication performs one single-ID response lookup by the exact Event Plan and selected metadata token.
 				'relation' => 'AND',
 				array(
 					'key' => vms_feedback_meta_key('event_plan_id'),
@@ -932,7 +932,7 @@ if (!function_exists('vms_feedback_existing_recent_duplicate')) {
 			'posts_per_page' => 1,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Recent-submission deduplication performs one single-ID lookup by exact identity fingerprints inside the configured UTC window.
 				'relation' => 'AND',
 				array(
 					'key' => vms_feedback_meta_key('event_plan_id'),

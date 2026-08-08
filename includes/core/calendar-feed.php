@@ -1017,10 +1017,10 @@ if (!function_exists('vms_get_calendar_events')) {
 			'post_status' => array('publish', 'private', 'draft', 'pending', 'future'),
 			'posts_per_page' => -1,
 			'fields' => 'ids',
-			'meta_key' => $k_date,
+			'meta_key' => $k_date, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Calendar feed ordering intentionally uses canonical event-date metadata for the complete requested date/venue result set before response caching.
 			'orderby' => 'meta_value',
 			'order' => 'ASC',
-			'meta_query' => $meta_query,
+			'meta_query' => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Calendar feed intentionally retrieves the complete Event Plan ID set within the requested date and optional Venue bounds before response caching.
 			'no_found_rows' => true,
 			'update_post_meta_cache' => true,
 			'update_post_term_cache' => false,

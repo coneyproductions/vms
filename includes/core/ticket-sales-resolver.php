@@ -44,7 +44,7 @@ if (!function_exists('vms_ticket_sales_resolver_attendee_ids_for_order_item')) {
             'no_found_rows' => true,
             'orderby' => 'ID',
             'order' => 'ASC',
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket-sales resolution retrieves the complete attendee ID set for one exact order and order-item pair once per request-local cache key.
                 'relation' => 'AND',
                 array(
                     'key' => '_tribe_wooticket_order',

@@ -198,7 +198,7 @@ if (!function_exists('vms_cancellation_get_event_refundable_product_ids')) {
 					'posts_per_page' => -1,
 					'post_status' => array('publish', 'future', 'draft', 'pending', 'private'),
 					'fields' => 'ids',
-					'meta_query' => $meta_query,
+					'meta_query' => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cancellation discovery intentionally retrieves every product ID linked to the Event Plan or TEC event so refund and sales-stop processing cannot omit products.
 				));
 				$ids = array_merge($ids, array_map('absint', (array) $found));
 			}
@@ -547,7 +547,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 				'posts_per_page' => -1,
 				'post_status' => array('publish', 'future', 'draft', 'pending', 'private'),
 				'fields' => 'ids',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- When the provider API yields no RSVP tickets, cancellation fallback intentionally retrieves every RSVP ticket ID for the exact TEC event before disabling it.
 					array(
 						'key' => $rsvp_event_key,
 						'value' => (string) $tec_event_id,
@@ -1378,8 +1378,8 @@ if (!function_exists('vms_cancellation_resolve_staff_notification_recipient')) {
 		);
 		if ($linked_user['email'] === '') {
 			$user_ids = get_users(array(
-				'meta_key' => '_vms_staff_id',
-				'meta_value' => (string) $staff_id,
+				'meta_key' => '_vms_staff_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Staff notification resolution performs one single-user fallback by the canonical Staff-link meta key only when the direct link has no usable email.
+				'meta_value' => (string) $staff_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Staff notification resolution performs one single-user fallback by the exact Staff ID only when the direct link has no usable email.
 				'number' => 1,
 				'fields' => 'ids',
 			));

@@ -179,7 +179,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'post_status' => array('publish', 'draft', 'private', 'pending', 'future'),
 				'posts_per_page' => 300,
 				'fields' => 'ids',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- BUG-01 stale-check intentionally samples at most 300 Event Plan IDs with draft workflow status and linked TEC metadata for diagnosis.
 					'relation' => 'AND',
 					array('key' => $k_status, 'value' => 'draft', 'compare' => '='),
 					array('key' => $k_tec, 'compare' => 'EXISTS'),
@@ -334,7 +334,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'post_status' => array('publish', 'draft', 'private', 'pending', 'future'),
 				'posts_per_page' => 150,
 				'fields' => 'ids',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- BUG-03 stale-check intentionally samples at most 150 Event Plan IDs missing either start- or end-time metadata for diagnosis.
 					'relation' => 'OR',
 					array('key' => '_vms_start_time', 'compare' => 'NOT EXISTS'),
 					array('key' => '_vms_end_time', 'compare' => 'NOT EXISTS'),
@@ -1095,7 +1095,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'post_status' => array('publish', 'draft', 'private', 'pending', 'future'),
 				'posts_per_page' => 300,
 				'fields' => 'ids',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- CAN-01 stale-check intentionally samples at most 300 cancelled Event Plan IDs to audit their cancellation-job state.
 					array('key' => $k_status, 'value' => 'cancelled', 'compare' => '='),
 				),
 			));

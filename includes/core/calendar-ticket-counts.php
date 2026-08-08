@@ -174,7 +174,7 @@ if (!function_exists('vms_calendar_ticket_counts_find_plan_ids_by_tec_event')) {
 			'posts_per_page' => -1,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket-count refresh intentionally retrieves every Event Plan ID linked to the exact TEC event so each affected plan count is recalculated.
 				array(
 					'key' => vms_calendar_ticket_counts_tec_key(),
 					'value' => $tec_event_id,
@@ -276,7 +276,7 @@ if (!function_exists('vms_calendar_ticket_counts_nightly_scan')) {
 			'posts_per_page' => -1,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Nightly ticket-count maintenance intentionally retrieves the complete Event Plan ID set in its configured future date window before recalculation.
 				'relation' => 'AND',
 				array(
 					'key' => vms_calendar_ticket_counts_date_key(),

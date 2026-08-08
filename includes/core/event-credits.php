@@ -122,8 +122,8 @@ if (!function_exists('vms_event_credit_generate_code')) {
 				'post_status' => array('publish', 'private', 'draft'),
 				'fields' => 'ids',
 				'posts_per_page' => 1,
-				'meta_key' => '_vms_event_credit_code',
-				'meta_value' => $code,
+				'meta_key' => '_vms_event_credit_code', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Credit-code generation performs at most 20 single-ID collision checks against the canonical event-credit code meta key.
+				'meta_value' => $code, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Credit-code generation performs at most 20 single-ID collision checks for each generated exact credit-code value.
 			));
 			if ($exists <= 0 && empty($existing_credit)) {
 				return $code;
@@ -162,7 +162,7 @@ if (!function_exists('vms_event_credit_find_existing')) {
 			'posts_per_page' => 1,
 			'orderby' => 'ID',
 			'order' => 'DESC',
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Credit issuance performs one single-ID lookup by the exact original Event Plan and order pair to preserve idempotency.
 				'relation' => 'AND',
 				array(
 					'key' => '_vms_event_credit_original_event_plan_id',
