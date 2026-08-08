@@ -205,7 +205,7 @@ function vms_ticket_mutation_audit_guard_decision(string $hook_name, int $object
 		'reason' => 'unknown',
 		'hook_name' => $hook_name,
 		'object_id' => absint($object_id),
-		'meta_key' => (string) $meta_key,
+		'meta_key' => (string) $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This guard descriptor records the mutation metadata key; it does not configure a database query.
 		'source_hook' => $source_hook,
 		'source_function' => sanitize_text_field((string) ($context['source_function'] ?? '')),
 	);
@@ -250,7 +250,7 @@ function vms_ticket_mutation_audit_trace(string $decision, array $context = arra
 		'task' => 'ticket_mutation_audit',
 		'reason' => sanitize_key((string) ($context['reason'] ?? '')),
 		'object_id' => absint($context['object_id'] ?? 0),
-		'meta_key' => (string) ($context['meta_key'] ?? ''),
+		'meta_key' => (string) ($context['meta_key'] ?? ''), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This trace payload records the mutation metadata key; it does not configure a database query.
 		'operation' => sanitize_key((string) ($context['operation'] ?? '')),
 		'source_hook' => sanitize_key((string) ($context['source_hook'] ?? '')),
 		'source_function' => sanitize_text_field((string) ($context['source_function'] ?? '')),
@@ -276,7 +276,7 @@ function vms_ticket_mutation_audit_trace(string $decision, array $context = arra
 		'screen_id' => function_exists('vms_admin_guard_current_screen_id') ? vms_admin_guard_current_screen_id() : '',
 		'elapsed_ms' => $elapsed_ms,
 		'memory_mb' => round(((int) memory_get_usage(true)) / 1048576, 1),
-		'meta_key' => $payload['meta_key'],
+		'meta_key' => $payload['meta_key'], // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This fallback trace payload reports the mutation metadata key; it does not configure a database query.
 		'object_id' => $payload['object_id'],
 		'operation' => $payload['operation'],
 		'source_hook' => $payload['source_hook'],
@@ -731,7 +731,8 @@ function vms_ticket_mutation_audit_prune_logs(): void
 	global $wpdb;
 	$table = vms_ticket_mutation_audit_table_name();
 	$cutoff = gmdate('Y-m-d H:i:s', time() - (90 * DAY_IN_SECONDS));
-	$wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE created_at_gmt < %s", $cutoff));
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ninety-day retention pruning deletes expired rows from the plugin-owned mutation audit table; no core API owns this repository.
+	$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE created_at_gmt < %s', $table, $cutoff));
 }
 
 function vms_ticket_mutation_audit_insert(array $row): int
@@ -743,6 +744,7 @@ function vms_ticket_mutation_audit_insert(array $row): int
 	}
 
 	$table = vms_ticket_mutation_audit_table_name();
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Mutation auditing persists one normalized row in the plugin-owned audit table through wpdb::insert(); no core API owns this repository.
 	$ok = $wpdb->insert(
 		$table,
 		array(
@@ -1251,8 +1253,9 @@ function vms_ticket_mutation_audit_recent_logs(int $plan_id, int $limit = 5): ar
 
 	global $wpdb;
 	$table = vms_ticket_mutation_audit_table_name();
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Mutation history must read request-fresh plugin-owned audit rows so newly recorded state is immediately visible.
 	$rows = $wpdb->get_results(
-		$wpdb->prepare("SELECT * FROM {$table} WHERE plan_id = %d ORDER BY id DESC LIMIT %d", $plan_id, $limit),
+		$wpdb->prepare('SELECT * FROM %i WHERE plan_id = %d ORDER BY id DESC LIMIT %d', $table, $plan_id, $limit),
 		ARRAY_A
 	);
 

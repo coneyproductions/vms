@@ -206,7 +206,7 @@ function vms_ticket_inventory_forensics_guard_decision(
 		'reason' => 'unknown',
 		'hook_name' => $hook_name,
 		'object_id' => absint($object_id),
-		'meta_key' => (string) $meta_key,
+		'meta_key' => (string) $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This guard descriptor records the mutation metadata key; it does not configure a database query.
 		'source_hook' => $source_hook,
 		'source_function' => $source_function,
 	);
@@ -257,7 +257,7 @@ function vms_ticket_inventory_forensics_trace(string $decision, array $context =
 		'task' => 'ticket_inventory_forensics',
 		'reason' => sanitize_key((string) ($context['reason'] ?? '')),
 		'object_id' => absint($context['object_id'] ?? 0),
-		'meta_key' => (string) ($context['meta_key'] ?? ''),
+		'meta_key' => (string) ($context['meta_key'] ?? ''), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This trace payload records the mutation metadata key; it does not configure a database query.
 		'operation' => sanitize_key((string) ($context['operation'] ?? '')),
 		'source_hook' => sanitize_key((string) ($context['source_hook'] ?? '')),
 		'source_function' => sanitize_text_field((string) ($context['source_function'] ?? '')),
@@ -1274,7 +1274,8 @@ function vms_ticket_inventory_forensics_prune_logs(): void
 	global $wpdb;
 	$table = vms_ticket_inventory_forensics_table_name();
 	$cutoff = gmdate('Y-m-d H:i:s', time() - (90 * DAY_IN_SECONDS));
-	$wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE created_at_gmt < %s", $cutoff));
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ninety-day retention pruning deletes expired rows from the plugin-owned forensics table; no core API owns this repository.
+	$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE created_at_gmt < %s', $table, $cutoff));
 }
 
 function vms_ticket_inventory_forensics_insert(array $row): int
@@ -1286,6 +1287,7 @@ function vms_ticket_inventory_forensics_insert(array $row): int
 	}
 
 	$table = vms_ticket_inventory_forensics_table_name();
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Forensics recording persists one normalized row in the plugin-owned audit table through wpdb::insert(); no core API owns this repository.
 	$ok = $wpdb->insert(
 		$table,
 		array(
@@ -1610,13 +1612,15 @@ function vms_ticket_inventory_forensics_recent_logs(int $plan_id, int $limit = 8
 	global $wpdb;
 	$table = vms_ticket_inventory_forensics_table_name();
 	if ($product_id > 0) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Product-filtered forensics history must read request-fresh plugin-owned audit rows after mutations.
 		$rows = $wpdb->get_results(
-			$wpdb->prepare("SELECT * FROM {$table} WHERE plan_id = %d AND product_id = %d ORDER BY id DESC LIMIT %d", $plan_id, $product_id, $limit),
+			$wpdb->prepare('SELECT * FROM %i WHERE plan_id = %d AND product_id = %d ORDER BY id DESC LIMIT %d', $table, $plan_id, $product_id, $limit),
 			ARRAY_A
 		);
 	} else {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plan-wide forensics history must read request-fresh plugin-owned audit rows after mutations.
 		$rows = $wpdb->get_results(
-			$wpdb->prepare("SELECT * FROM {$table} WHERE plan_id = %d ORDER BY id DESC LIMIT %d", $plan_id, $limit),
+			$wpdb->prepare('SELECT * FROM %i WHERE plan_id = %d ORDER BY id DESC LIMIT %d', $table, $plan_id, $limit),
 			ARRAY_A
 		);
 	}
