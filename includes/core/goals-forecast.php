@@ -11,7 +11,11 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_goals_log')) {
 	function vms_goals_log(string $message): void
 	{
-		error_log('[VMS Goals] ' . $message);
+		vms_record_operational_issue('goals_legacy_issue', array(
+			'service'   => 'goals_forecast',
+			'operation' => 'legacy_log',
+			'status'    => 'reported',
+		), $message);
 	}
 }
 
@@ -521,7 +525,12 @@ if (!function_exists('vms_goals_provider_has_hard_errors')) {
 			try {
 				return (bool) vms_square_actuals_has_hard_errors($raw);
 			} catch (Throwable $e) {
-				vms_goals_log('Hard-error check failed (square): ' . $e->getMessage());
+				vms_record_operational_issue('goals_provider_hard_error_check_failed', array(
+					'service'   => 'goals_forecast',
+					'provider'  => 'square',
+					'operation' => 'hard_error_check',
+					'status'    => 'failed',
+				), $e);
 			}
 		}
 
@@ -643,7 +652,13 @@ if (!function_exists('vms_pos_get_event_actuals')) {
 					}
 					return vms_goals_normalize_provider_actuals('square', $raw);
 				} catch (Throwable $e) {
-					vms_goals_log('Provider call failed (square): ' . $e->getMessage());
+					vms_record_operational_issue('goals_provider_call_failed', array(
+						'service'   => 'goals_forecast',
+						'provider'  => 'square',
+						'operation' => 'fetch_actuals',
+						'status'    => 'failed',
+						'event_id'  => $event_plan_id,
+					), $e);
 					return array(
 						'ok' => false,
 						'provider' => 'square',
@@ -673,7 +688,13 @@ if (!function_exists('vms_goals_refresh_event_actuals')) {
 		$result = vms_pos_get_event_actuals($event_plan_id, $args);
 		if (empty($result['ok'])) {
 			$msg = !empty($result['errors']) ? implode(' | ', (array) $result['errors']) : 'Provider returned no data.';
-			vms_goals_log('Actuals refresh failed for event ' . $event_plan_id . ': ' . $msg);
+			vms_record_operational_issue('goals_actuals_refresh_failed', array(
+				'service'   => 'goals_forecast',
+				'provider'  => sanitize_key((string) ($result['provider'] ?? 'none')),
+				'operation' => 'refresh_actuals',
+				'status'    => 'failed',
+				'event_id'  => $event_plan_id,
+			), $msg);
 			return array('ok' => false, 'message' => $msg, 'data' => $result);
 		}
 
@@ -1154,7 +1175,14 @@ if (!function_exists('vms_goals_compute_goal_progress')) {
 		$is_truncated = (count($event_ids) > $max_events);
 		if ($is_truncated) {
 			$event_ids = array_slice($event_ids, 0, $max_events);
-			vms_goals_log('Goal progress evaluation capped at ' . $max_events . ' events for performance.');
+			vms_record_operational_issue('goals_progress_capped', array(
+				'service'     => 'goals_forecast',
+				'operation'   => 'compute_progress',
+				'status'      => 'capped',
+				'count'       => $max_events,
+				'entity_type' => 'goal',
+				'entity_id'   => absint($goal['id'] ?? 0),
+			));
 		}
 
 		$today = wp_date('Y-m-d', null, wp_timezone());

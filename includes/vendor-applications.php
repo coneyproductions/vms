@@ -761,8 +761,13 @@ if (!function_exists('vms_vendor_app_get_or_create_vendor')) {
         ), true);
 
         if (is_wp_error($vendor_id) || $vendor_id <= 0) {
-            $error_message = is_wp_error($vendor_id) ? $vendor_id->get_error_message() : 'unknown error';
-            error_log('[VMS] vendor-applications: failed creating vendor for app_id ' . $app_id . ' (' . $error_message . ')');
+            vms_record_operational_issue('vendor_app_vendor_create_failed', array(
+                'service'     => 'wordpress',
+                'operation'   => 'create_vendor',
+                'status'      => 'failed',
+                'entity_type' => 'vendor_application',
+                'post_id'     => $app_id,
+            ), $vendor_id);
             return 0;
         }
 
@@ -792,7 +797,15 @@ if (!function_exists('vms_vendor_app_link_submitting_user_to_vendor')) {
 
         $user = get_userdata($user_id);
         if (!$user) {
-            error_log('[VMS] vendor-applications: submitting user missing for app_id ' . $app_id . ' (user_id ' . $user_id . ')');
+            vms_record_operational_issue('vendor_app_submitting_user_missing', array(
+                'service'     => 'wordpress',
+                'operation'   => 'link_submitting_user',
+                'status'      => 'missing',
+                'entity_type' => 'user',
+                'entity_id'   => $user_id,
+                'vendor_id'   => $vendor_id,
+                'post_id'     => $app_id,
+            ));
             return new WP_Error('vms_vendor_app_missing_user', __('The submitting website account no longer exists.', 'backstage-venue-manager'));
         }
 
@@ -823,7 +836,15 @@ if (!function_exists('vms_vendor_app_link_submitting_user_to_vendor')) {
             return true;
         }
 
-        error_log('[VMS] vendor-applications: failed linking submitting user ' . $user_id . ' to vendor ' . $vendor_id . ' for app_id ' . $app_id);
+        vms_record_operational_issue('vendor_app_user_link_failed', array(
+            'service'     => 'wordpress',
+            'operation'   => 'link_submitting_user',
+            'status'      => 'failed',
+            'entity_type' => 'user',
+            'entity_id'   => $user_id,
+            'vendor_id'   => $vendor_id,
+            'post_id'     => $app_id,
+        ));
         return new WP_Error('vms_vendor_app_link_failed', __('The website account link could not be saved.', 'backstage-venue-manager'));
     }
 }
@@ -2208,7 +2229,13 @@ function vms_vendor_apply_verify_turnstile(): bool
 
     // If keys are not configured, fail closed to stop spam.
     if ($site_key === '' || $secret === '') {
-        error_log('[VMS] vendor-apply: Turnstile keys missing; blocking submission.');
+        vms_record_operational_issue('vendor_apply_turnstile_config_missing', array(
+            'service'   => 'turnstile',
+            'provider'  => 'cloudflare',
+            'operation' => 'siteverify',
+            'status'    => 'blocked',
+            'reason'    => 'missing_configuration',
+        ));
         return false;
     }
 
@@ -2236,7 +2263,13 @@ function vms_vendor_apply_verify_turnstile(): bool
     );
 
     if (is_wp_error($resp)) {
-        error_log('[VMS] vendor-apply: Turnstile siteverify request failed: ' . $resp->get_error_message());
+        vms_record_operational_issue('vendor_apply_turnstile_request_failed', array(
+            'service'   => 'turnstile',
+            'provider'  => 'cloudflare',
+            'operation' => 'siteverify',
+            'status'    => 'failed',
+            'reason'    => 'transport_error',
+        ), $resp);
         return false;
     }
 
@@ -2244,13 +2277,26 @@ function vms_vendor_apply_verify_turnstile(): bool
     $body = (string) wp_remote_retrieve_body($resp);
 
     if ($code < 200 || $code >= 300 || $body === '') {
-        error_log('[VMS] vendor-apply: Turnstile siteverify non-2xx or empty body. HTTP ' . $code);
+        vms_record_operational_issue('vendor_apply_turnstile_response_failed', array(
+            'service'     => 'turnstile',
+            'provider'    => 'cloudflare',
+            'operation'   => 'siteverify',
+            'status'      => 'failed',
+            'reason'      => 'unusable_response',
+            'http_status' => $code,
+        ));
         return false;
     }
 
     $json = vms_vendor_apply_parse_turnstile_siteverify_body($body);
     if (empty($json)) {
-        error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');
+        vms_record_operational_issue('vendor_apply_turnstile_payload_invalid', array(
+            'service'   => 'turnstile',
+            'provider'  => 'cloudflare',
+            'operation' => 'decode_response',
+            'status'    => 'failed',
+            'reason'    => 'invalid_json',
+        ));
         return false;
     }
 
@@ -2995,13 +3041,25 @@ function vms_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id
                 continue;
             }
 
-            error_log('[VMS] vendor-applications: unknown vendor type slug "' . $slug . '" on app_id ' . $app_id . '; not assigning taxonomy term.');
+            vms_record_operational_issue('vendor_app_vendor_type_unresolved', array(
+                'service'   => 'wordpress',
+                'operation' => 'resolve_vendor_type',
+                'status'    => 'skipped',
+                'reason'    => 'term_unresolved',
+                'post_id'   => $app_id,
+            ), $slug);
         }
 
         if (!empty($term_ids)) {
             $set = wp_set_object_terms($vendor_id, $term_ids, 'vms_vendor_type', false);
             if (is_wp_error($set)) {
-                error_log('[VMS] vendor-applications: failed setting vms_vendor_type terms for vendor_id ' . $vendor_id . ' (app_id ' . $app_id . ')');
+                vms_record_operational_issue('vendor_app_vendor_type_assignment_failed', array(
+                    'service'   => 'wordpress',
+                    'operation' => 'assign_vendor_type',
+                    'status'    => 'failed',
+                    'vendor_id' => $vendor_id,
+                    'post_id'   => $app_id,
+                ), $set);
             }
         }
     }

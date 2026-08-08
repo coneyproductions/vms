@@ -447,6 +447,11 @@ foreach ($owned_functions as $function) {
 		$function . ' should remain mirror/shadow-live identical.'
 	);
 }
+vms_same(
+	vms_extract_function($source, 'vms_vendor_app_send_review_ready_admin_notification'),
+	vms_extract_function($live_source, 'vms_vendor_app_send_review_ready_admin_notification'),
+	'G16 review-ready mail failure boundary should remain mirror/shadow-live identical.'
+);
 
 $scanner_inventory = array(
 	'PluginCheck.Security.DirectDB.UnescapedDBParameter' => 4,
@@ -460,7 +465,10 @@ vms_same(27, array_sum($scanner_inventory), 'The test should inventory exactly t
 vms_same(4, substr_count($source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query'), 'Exactly four bounded meta queries should carry operation-specific annotations.');
 vms_same(9, substr_count($source, 'WordPress.DB.DirectDatabaseQuery.DirectQuery'), 'Each direct custom-table operation branch should have one narrow annotation.');
 vms_same(8, substr_count($source, 'WordPress.DB.DirectDatabaseQuery.NoCaching'), 'Each request-fresh custom-table operation branch should have one narrow no-cache annotation.');
-vms_same(1, substr_count($source, 'error_log('), 'The unrelated accepted logging row should remain untouched.');
+vms_same(0, substr_count($source, 'error_log('), 'The deferred G16 logging row should be migrated without suppression.');
+vms_same(1, substr_count($source, "vms_record_operational_issue('vendor_app_review_ready_mail_failed'"), 'The G16 mail-failure event should occur exactly once.');
+vms_contains("'post_id'     => \$app_id", $source, 'The mail-failure event should retain only the safe application identity.');
+vms_assert(strpos($source, "error_log('[VMS] vendor-apply: review-ready admin notification failed") === false, 'The historical raw server-log sink should be absent.');
 vms_assert(strpos($source, 'phpcs:disable') === false && strpos($source, 'phpcs:ignoreFile') === false, 'Repository remediation should not use blanket suppression.');
 foreach (array('FROM {$table}', '"UPDATE " . vms_vendor_app_confirm_tokens_table()', '$wpdb->get_row($wpdb->prepare($sql') as $unsafe) {
 	vms_assert(strpos($source, $unsafe) === false, 'Legacy scanner target should be absent: ' . $unsafe);

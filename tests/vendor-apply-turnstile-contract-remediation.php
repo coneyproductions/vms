@@ -209,6 +209,28 @@ $extractFunctionSource = static function (string $path, string $functionName) us
 	throw new RuntimeException('Unable to isolate function source for ' . $functionName . '.');
 };
 
+$restoreTurnstileLoggingBaseline = static function (string $source) use ($assert): string {
+	$historical = array(
+		'vendor_apply_turnstile_config_missing' => "error_log('[VMS] vendor-apply: Turnstile keys missing; blocking submission.');",
+		'vendor_apply_turnstile_request_failed' => "error_log('[VMS] vendor-apply: Turnstile siteverify request failed: ' . \$resp->get_error_message());",
+		'vendor_apply_turnstile_response_failed' => "error_log('[VMS] vendor-apply: Turnstile siteverify non-2xx or empty body. HTTP ' . \$code);",
+		'vendor_apply_turnstile_payload_invalid' => "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');",
+	);
+	foreach ($historical as $eventCode => $statement) {
+		$needle = "vms_record_operational_issue('" . $eventCode . "'";
+		$assert(substr_count($source, $needle) === 1, 'Known G16 Turnstile call count changed: ' . $eventCode);
+		$call = strpos($source, $needle);
+		$lineStart = strrpos(substr($source, 0, (int) $call), "\n");
+		$lineStart = $lineStart === false ? 0 : $lineStart + 1;
+		$callEnd = strpos($source, ");\n", (int) $call);
+		$assert($callEnd !== false, 'Known G16 Turnstile call must end on its own line: ' . $eventCode);
+		$callEnd += 3;
+		$indent = substr($source, $lineStart, (int) $call - $lineStart);
+		$source = substr($source, 0, $lineStart) . $indent . $statement . "\n" . substr($source, $callEnd);
+	}
+	return $source;
+};
+
 $assertApplicationJsonOnly = static function (string $html, string $context) use ($assert): void {
 	preg_match_all('~<script\b([^>]*)>(.*?)</script>~is', $html, $matches, PREG_SET_ORDER);
 	$assert(count($matches) === 1, $context . ' should only render the JSON configuration payload script.');
@@ -266,7 +288,12 @@ $assert(strpos($helperSource, 'get_option(') === false, 'Complete-configuration 
 
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_is_rate_limited')) === '082c25ed3a27c59ae785ccafd9e57b2a1b40a760fa6ee76aa5ed2131fca982c1', 'Rate limiting function should remain unchanged.');
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_parse_turnstile_siteverify_body')) === 'b16d36431e7d78f48cd52a69548498425a4671e5c54eb6ec1b97586855b42c7d', 'Turnstile siteverify parser should remain unchanged.');
-$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_verify_turnstile')) === '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile verification function should remain unchanged.');
+$turnstileVerifySource = $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_verify_turnstile');
+$turnstileHistoricalProjection = $restoreTurnstileLoggingBaseline($turnstileVerifySource);
+$assert(hash('sha256', $turnstileHistoricalProjection) === '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile verification should differ from its immutable baseline only by the known G16 logging migration.');
+$turnstileMutation = str_replace("'timeout' => 8", "'timeout' => 9", $turnstileHistoricalProjection, $turnstileMutationCount);
+$assert($turnstileMutationCount === 1 && hash('sha256', $turnstileMutation) !== '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile immutable projection must reject a non-logging runtime mutation.');
+$assert(substr_count($turnstileVerifySource, 'vms_record_operational_issue(') === 4, 'Mirror Turnstile verification should contain exactly four structured operational branches.');
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_request_fingerprint')) === 'e6700ad7ba8ff855318160c10640fb4443f1f832384276cd5b49cbc160d06827', 'Request fingerprinting should remain unchanged.');
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_handle_frontend_post')) === '375e812b9016e3200c4e2dc8c14f69a8ae6f8f7b72f068949d2e5508543530d4', 'Frontend POST handler should remain unchanged.');
 $assert(hash('sha256', $assetSource) === '1856166b2a3785803148bc9019867e7b9e387e6b953f2099959ebb2af99e685c', 'Unrelated Vendor Application asset should remain unchanged.');

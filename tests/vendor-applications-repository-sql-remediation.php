@@ -295,6 +295,45 @@ function g11_vendor_strip_directives(string $source, array $directives): string
 	return $source;
 }
 
+function g11_vendor_restore_operational_call(string $source, string $event_code, string $historical): string
+{
+	$needle = "vms_record_operational_issue('" . $event_code . "'";
+	g11_vendor_same(1, substr_count($source, $needle), 'Known G16 call count changed: ' . $event_code);
+	$call = strpos($source, $needle);
+	$line_start = strrpos(substr($source, 0, (int) $call), "\n");
+	$line_start = $line_start === false ? 0 : $line_start + 1;
+	$call_end = strpos($source, ");\n", (int) $call);
+	g11_vendor_assert($call_end !== false, 'Known G16 call must end on its own line: ' . $event_code);
+	$call_end += 3;
+	$indent = substr($source, $line_start, (int) $call - $line_start);
+	$replacement = '';
+	foreach (explode("\n", $historical) as $line) {
+		$replacement .= $indent . $line . "\n";
+	}
+	return substr($source, 0, $line_start) . $replacement . substr($source, $call_end);
+}
+
+function g11_vendor_restore_g16_baseline(string $source): string
+{
+	$historical = array(
+		'vendor_app_vendor_create_failed' => "\$error_message = is_wp_error(\$vendor_id) ? \$vendor_id->get_error_message() : 'unknown error';\nerror_log('[VMS] vendor-applications: failed creating vendor for app_id ' . \$app_id . ' (' . \$error_message . ')');",
+		'vendor_app_submitting_user_missing' => "error_log('[VMS] vendor-applications: submitting user missing for app_id ' . \$app_id . ' (user_id ' . \$user_id . ')');",
+		'vendor_app_user_link_failed' => "error_log('[VMS] vendor-applications: failed linking submitting user ' . \$user_id . ' to vendor ' . \$vendor_id . ' for app_id ' . \$app_id);",
+		'vendor_apply_turnstile_config_missing' => "error_log('[VMS] vendor-apply: Turnstile keys missing; blocking submission.');",
+		'vendor_apply_turnstile_request_failed' => "error_log('[VMS] vendor-apply: Turnstile siteverify request failed: ' . \$resp->get_error_message());",
+		'vendor_apply_turnstile_response_failed' => "error_log('[VMS] vendor-apply: Turnstile siteverify non-2xx or empty body. HTTP ' . \$code);",
+		'vendor_app_vendor_type_unresolved' => "error_log('[VMS] vendor-applications: unknown vendor type slug \"' . \$slug . '\" on app_id ' . \$app_id . '; not assigning taxonomy term.');",
+		'vendor_app_vendor_type_assignment_failed' => "error_log('[VMS] vendor-applications: failed setting vms_vendor_type terms for vendor_id ' . \$vendor_id . ' (app_id ' . \$app_id . ')');",
+	);
+	if (strpos($source, "vms_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false) {
+		$historical['vendor_apply_turnstile_payload_invalid'] = "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');";
+	}
+	foreach ($historical as $event_code => $statement) {
+		$source = g11_vendor_restore_operational_call($source, $event_code, $statement);
+	}
+	return $source;
+}
+
 function g11_vendor_normalize_sql(string $sql): string
 {
 	$normalized = preg_replace('/\s+/', ' ', trim($sql));
@@ -352,21 +391,23 @@ foreach ($directive_anchors as $directive => $anchor) {
 
 $stripped_source = g11_vendor_strip_directives($source, $directives);
 $stripped_shadow_source = g11_vendor_strip_directives($shadow_source, $directives);
+$baseline_source = g11_vendor_restore_g16_baseline($stripped_source);
+$baseline_shadow_source = g11_vendor_restore_g16_baseline($stripped_shadow_source);
 g11_vendor_same(
 	'9dcab9c95561bd23815dc0c755fb730f06c538e2ed383dd3243d3b15e6375f95',
-	hash('sha256', $stripped_source),
-	'Mirror runtime changed beyond the four approved comments.'
+	hash('sha256', $baseline_source),
+	'Mirror runtime changed beyond the four approved comments and known G16 logging migration.'
 );
 g11_vendor_same(
 	'e440227fc398fe14234d897d89bc62fe8c37f7bebe13367dcb99e9a8b8d2cfdd',
-	hash('sha256', $stripped_shadow_source),
-	'Shadow runtime changed beyond the four approved comments.'
+	hash('sha256', $baseline_shadow_source),
+	'Shadow runtime changed beyond the four approved comments and known G16 logging migration.'
 );
 g11_vendor_assert(hash('sha256', $source) !== hash('sha256', $shadow_source), 'Intentional whole-file mirror/shadow divergence must remain.');
 
-$mutated_source = preg_replace("/('posts_per_page' => )-1,/", '${1}1,', $stripped_source, 1, $mutation_count);
+$mutated_source = preg_replace("/('posts_per_page' => )-1,/", '${1}1,', $baseline_source, 1, $mutation_count);
 g11_vendor_same(1, $mutation_count, 'Runtime mutation control must alter one exhaustive backfill limit.');
-g11_vendor_assert(is_string($mutated_source) && hash('sha256', $mutated_source) !== hash('sha256', $stripped_source), 'Stripped-source hash must reject a non-comment runtime mutation.');
+g11_vendor_assert(is_string($mutated_source) && hash('sha256', $mutated_source) !== hash('sha256', $baseline_source), 'Reconstructed baseline hash must reject a non-comment runtime mutation.');
 
 g11_vendor_assert(is_file($artifact_path), 'Authoritative Wave 4 strict-JSON artifact is missing.');
 g11_vendor_same(
@@ -454,7 +495,9 @@ foreach ($invalid_directives as $invalid_directive) {
 	);
 }
 
-g11_vendor_same(9, substr_count($source, 'error_log('), 'All nine adjacent error_log findings must remain present.');
+g11_vendor_same(0, substr_count($source, 'error_log('), 'All nine G16 operational logging rows must be migrated without suppression.');
+g11_vendor_same(9, substr_count($source, 'vms_record_operational_issue('), 'Mirror must contain the exact nine G16 operational calls.');
+g11_vendor_same(8, substr_count($shadow_source, 'vms_record_operational_issue('), 'Shadow must contain only the eight corresponding G16 operational calls.');
 g11_vendor_contains('https://challenges.cloudflare.com/turnstile/v0/api.js', $source, 'Adjacent Turnstile offloaded-content finding must remain present.');
 g11_vendor_contains('echo $msg;', $source, 'Adjacent unescaped message output must remain present.');
 g11_vendor_contains('<?php echo $variant_map_json; ?>', $source, 'Adjacent unescaped JSON output must remain present.');

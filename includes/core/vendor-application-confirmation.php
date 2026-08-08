@@ -1001,7 +1001,13 @@ if (!function_exists('vms_vendor_app_send_review_ready_admin_notification')) {
 
         $sent = wp_mail($to, $subject, implode("\n", $body_lines));
         if (!$sent) {
-            error_log('[VMS] vendor-apply: review-ready admin notification failed for app_id ' . $app_id);
+            vms_record_operational_issue('vendor_app_review_ready_mail_failed', array(
+                'service'     => 'wp_mail',
+                'operation'   => 'review_ready_notification',
+                'status'      => 'failed',
+                'entity_type' => 'vendor_application',
+                'post_id'     => $app_id,
+            ));
         }
 
         return (bool) $sent;

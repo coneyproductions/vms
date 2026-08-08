@@ -445,7 +445,7 @@ goal_same(
 	'Goal progress should preserve per-event allocation semantics.'
 );
 
-// Exact scanner-target inventory: 31 DB rows are removed while the one logging row remains untouched.
+// Exact scanner-target inventory: 31 DB rows remain reconciled independently of G16 logging migration.
 $owned_baseline = array(
 	'UnescapedDBParameter' => 2,
 	'DirectQuery' => 13,
@@ -466,7 +466,17 @@ goal_same(1, substr_count($source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_
 preg_match_all('/phpcs:(?:disable|ignoreFile)\\b/i', $source, $broad_suppressions);
 goal_same(0, count($broad_suppressions[0]), 'Goals remediation must not use file-wide or block-wide PHPCS suppression.');
 goal_check(strpos($source, 'UPDATE {' . '$table}') === false, 'Goals SQL must not interpolate custom-table identifiers.');
-goal_same(1, substr_count($source, 'error_log('), 'The deferred logging inventory should remain exactly one row.');
-goal_contains("error_log('[VMS Goals] ' . " . '$message' . ');', $source, 'The deferred operational logging statement must remain untouched.');
+goal_same(0, substr_count($source, 'error_log('), 'The deferred G16 logging sink should be migrated without suppression.');
+goal_same(5, substr_count($source, 'vms_record_operational_issue('), 'The compatibility shim and four producers should use exact fixed operational events.');
+goal_contains("vms_record_operational_issue('goals_legacy_issue'", $source, 'The legacy compatibility shim should retain its fixed event identity.');
+goal_contains("), \$message);", $source, 'The legacy compatibility shim should pass raw text only through the adapter error argument.');
+foreach (array(
+	'goals_provider_hard_error_check_failed',
+	'goals_provider_call_failed',
+	'goals_actuals_refresh_failed',
+	'goals_progress_capped',
+) as $event_code) {
+	goal_same(1, substr_count($source, "vms_record_operational_issue('" . $event_code . "'"), 'Each direct G16 goals producer should occur exactly once: ' . $event_code);
+}
 
 fwrite(STDOUT, "goals forecast repository SQL remediation: PASS\n");
