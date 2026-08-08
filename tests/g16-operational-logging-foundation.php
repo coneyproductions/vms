@@ -681,9 +681,12 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 		'elapsed_ms' => 12.3,
 	), $issue['context'] ?? array(), $tree . ' issue context must retain only strict allowlisted finite scalars.');
 	g16_same($identity_one, $issue['error'] ?? array(), $tree . ' stored Throwable identity must match the deterministic safe projection.');
+	g16_same(true, vms_record_operational_issue('vendor_app_vendor_type_assignment_failed', array('status' => 'failed')), $tree . ' long semantic fixed event codes must not be mistaken for secret-shaped values.');
+	$semantic_event_entry = end($GLOBALS['g16_options']['vms_resource_fingerprint_log']);
+	g16_same('vendor_app_vendor_type_assignment_failed', $semantic_event_entry['flags']['operational_issue'][0]['event_code'] ?? '', $tree . ' accepted semantic event code changed.');
 
-	$before_rejected = count($entries);
-	foreach (array('TOKEN-SENTINEL', 'Human readable event', 'private.person@example.test', 'sk_live_1234567890abcdef') as $unsafe_event_code) {
+	$before_rejected = count($GLOBALS['g16_options']['vms_resource_fingerprint_log']);
+	foreach (array('TOKEN-SENTINEL', 'Human readable event', 'private.person@example.test', 'sk_live_1234567890abcdef', str_repeat('a', 40), str_repeat('a', 65)) as $unsafe_event_code) {
 		g16_same(false, vms_record_operational_issue($unsafe_event_code, array('status' => 'failed')), $tree . ' prose, PII, and secret-shaped event codes must be rejected: ' . $unsafe_event_code);
 	}
 	g16_same($before_rejected, count($GLOBALS['g16_options']['vms_resource_fingerprint_log']), $tree . ' rejected events must not mutate storage.');

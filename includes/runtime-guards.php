@@ -2011,10 +2011,16 @@ if (!function_exists('vms_record_operational_issue')) {
 		static $in_progress = false;
 
 		$event_code = strtolower(trim($event_code));
-		if ($event_code === '' || vms_operational_issue_value_is_tainted($event_code) || !preg_match('/^[a-z0-9_-]+$/', $event_code)) {
+		if (
+			$event_code === ''
+			|| strlen($event_code) > 64
+			|| !preg_match('/^[a-z0-9_-]+$/', $event_code)
+			|| preg_match('/(?:^|[_-])(?:token|secret|nonce|cookie|password|authorization|bearer)(?:[_-]|$)/', $event_code)
+			|| preg_match('/^(?:sk|pk)_(?:live|test)_/', $event_code)
+			|| preg_match('/^[a-z0-9]{40,64}$/', $event_code)
+		) {
 			return false;
 		}
-		$event_code = substr($event_code, 0, 64);
 		if (
 			$event_code === ''
 			|| !function_exists('get_option')
