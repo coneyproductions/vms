@@ -12991,6 +12991,7 @@ if (function_exists('vms_add_admin_notice')) {
         		'no_found_rows' => true,
         		'orderby' => 'ID',
         		'order' => 'DESC',
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate positive Venue references before repairing broken links.
         		'meta_query' => array(
         			array(
         				'key' => '_vms_venue_id',
@@ -13080,6 +13081,7 @@ if (function_exists('vms_add_admin_notice')) {
         		'no_found_rows' => true,
         		'orderby' => 'ID',
         		'order' => 'DESC',
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only reconciliation list must locate positive Venue references for operator review.
         		'meta_query' => array(
         			array(
         				'key' => '_vms_venue_id',
@@ -13186,6 +13188,7 @@ if (function_exists('vms_add_admin_notice')) {
         		'no_found_rows' => true,
         		'orderby' => 'ID',
         		'order' => 'DESC',
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only reconciliation list must combine linked calendar IDs with publish-ready plans to report integrity issues.
         		'meta_query' => array(
         			'relation' => 'OR',
         			array(
@@ -13291,6 +13294,7 @@ if (function_exists('vms_add_admin_notice')) {
         		'no_found_rows' => true,
         		'orderby' => 'ID',
         		'order' => 'DESC',
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must combine linked calendar IDs with publish-ready plans before repairs.
         		'meta_query' => array(
         			'relation' => 'OR',
         			array(
@@ -13439,6 +13443,7 @@ if (function_exists('vms_add_admin_notice')) {
         		'no_found_rows' => true,
         		'orderby' => 'ID',
         		'order' => 'DESC',
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate positive primary Vendor references before repairing broken links.
         		'meta_query' => array(
         			array(
         				'key' => '_vms_band_vendor_id',
@@ -13460,6 +13465,7 @@ if (function_exists('vms_add_admin_notice')) {
         		'no_found_rows' => true,
         		'orderby' => 'ID',
         		'order' => 'DESC',
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate serialized secondary Vendor assignments before validating each ID.
         		'meta_query' => array(
         			array(
         				'key' => '_vms_secondary_vendor_ids',
@@ -14101,6 +14107,7 @@ if (function_exists('vms_add_admin_notice')) {
 				";
 
 				$params = array_merge($statuses, $legacy_keys, array($after_id, $limit));
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Legacy-ticket cleanup executes this immediately prepared ID batch and must read current metadata before deleting it.
 				$rows = $wpdb->get_col($wpdb->prepare($sql, ...$params));
 				if (!is_array($rows) || empty($rows)) {
 					return array();
