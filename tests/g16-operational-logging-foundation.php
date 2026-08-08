@@ -111,6 +111,8 @@ function g16_static_contract(string $root, string $shadow_root): array
 	foreach ($sources as $tree => $source) {
 		g16_same(0, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', $source), $tree . ' must contain zero direct server-log calls.');
 		g16_same(0, preg_match_all('/phpcs:(?:ignore|disable)[^\n]*(?:DevelopmentFunctions|error_log)/i', $source), $tree . ' must not suppress logging findings.');
+		g16_same(0, preg_match_all('/(?<![A-Za-z0-9_])parse_url\s*\(/', $source), $tree . ' must not use native parse_url().');
+		g16_same(1, substr_count($source, 'wp_parse_url($request_uri, PHP_URL_PATH)'), $tree . ' must use wp_parse_url() at the owned path boundary.');
 		g16_same(3, substr_count($source, 'vms_record_operational_issue('), $tree . ' must contain one adapter definition and two owned calls.');
 		g16_same(1, substr_count($source, "vms_record_operational_issue('admin_diagnostic'"), $tree . ' must record admin diagnostics once.');
 		g16_same(1, substr_count($source, "vms_record_operational_issue('admin_guard_trace'"), $tree . ' must record admin guard traces once.');
@@ -310,6 +312,11 @@ function sanitize_email($value): string
 {
 	$value = sanitize_text_field($value);
 	return filter_var($value, FILTER_VALIDATE_EMAIL) ? $value : '';
+}
+
+function wp_parse_url($url, int $component = -1)
+{
+	return parse_url((string) $url, $component);
 }
 
 function wp_unslash($value)

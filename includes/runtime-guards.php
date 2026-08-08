@@ -952,7 +952,7 @@ if (!function_exists('vms_operational_issue_request_path')) {
 			return '';
 		}
 
-		$encoded_path = parse_url($request_uri, PHP_URL_PATH);
+		$encoded_path = wp_parse_url($request_uri, PHP_URL_PATH);
 		if (!is_string($encoded_path) || $encoded_path === '') {
 			return '';
 		}
