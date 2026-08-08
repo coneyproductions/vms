@@ -246,6 +246,7 @@ function vms_ticketing_get_ticket_product_ids_for_tec_event(int $tec_event_id): 
         'post_status'    => array('publish', 'draft', 'private'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket statistics require an exhaustive ID-only lookup of every ticket product linked to this single TEC event; the native meta relation is the compatibility contract.
         'meta_query'     => array(
             array(
                 'key'     => '_tribe_wooticket_for_event',
@@ -288,10 +289,12 @@ function vms_ticketing_compute_stats(array $product_ids): array
     $has_lookup = false;
     $cols = array();
     if ($wpdb && is_string($lookup_table)) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Woo Analytics capability detection must inspect current lookup-table existence before selecting the statistics fallback; no WordPress API exposes this table state.
         $tbl = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $lookup_table));
         if ($tbl === $lookup_table) {
             $has_lookup = true;
-            $cols_raw = $wpdb->get_col("SHOW COLUMNS FROM {$lookup_table}");
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Woo Analytics capability detection must inspect current lookup-table columns before choosing compatible quantity and revenue fields; no WordPress API exposes this schema.
+            $cols_raw = $wpdb->get_col($wpdb->prepare('SHOW COLUMNS FROM %i', $lookup_table));
             if (is_array($cols_raw)) {
                 $cols = array_flip(array_map('strtolower', $cols_raw));
             }
@@ -299,7 +302,7 @@ function vms_ticketing_compute_stats(array $product_ids): array
     }
 
     if ($has_lookup) {
-        $in = implode(',', array_map('absint', $product_ids));
+        $product_id_placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
 
         $qty_col   = isset($cols['product_qty']) ? 'product_qty' : '';
         $gross_col = isset($cols['product_gross_revenue']) ? 'product_gross_revenue' : '';
@@ -309,8 +312,12 @@ function vms_ticketing_compute_stats(array $product_ids): array
             $rev_col = $gross_col !== '' ? $gross_col : $net_col;
             $label   = $gross_col !== '' ? 'Gross revenue (Woo analytics)' : 'Net revenue (Woo analytics)';
 
-            $sql = "SELECT SUM({$qty_col}) AS qty, SUM({$rev_col}) AS revenue FROM {$lookup_table} WHERE product_id IN ({$in})";
-            $row = $wpdb->get_row($sql, ARRAY_A);
+            $sql = 'SELECT SUM(%i) AS qty, SUM(%i) AS revenue FROM %i WHERE product_id IN (' . $product_id_placeholders . ')'; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The dynamic fragment is only the counted product-ID placeholder list; every identifier and product ID is prepared below.
+            $prepare_args = array_merge(array($qty_col, $rev_col, $lookup_table), $product_ids);
+            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The aggregate contains only prepared allowlisted column identifiers, the Woo lookup-table identifier, and integer product IDs.
+            $prepared = $wpdb->prepare($sql, $prepare_args);
+            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticket statistics require request-fresh Woo lookup aggregates using the detected compatible columns; no WooCommerce API preserves this exact result contract.
+            $row = $wpdb->get_row($prepared, ARRAY_A);
 
             $qty = isset($row['qty']) ? (int) $row['qty'] : 0;
             $rev = isset($row['revenue']) ? (float) $row['revenue'] : 0.0;
@@ -544,6 +551,7 @@ function vms_ticketing_ajax_search_tec_events(): void
         );
     }
 
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- This authenticated AJAX search executes one of the two immediately prepared catalog queries and must return current TEC event matches.
     $ids = $wpdb->get_col($sql);
 
     $items = array();
