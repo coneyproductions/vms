@@ -346,11 +346,13 @@ if (!function_exists('vms_goals_list')) {
 	{
 		global $wpdb;
 		$table = vms_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goals table readiness must reflect the current custom schema before each repository read; no core API owns this table.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return array();
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal lists read the plugin-owned table directly so administration reflects immediate goal mutations.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare('SELECT * FROM %i ORDER BY is_active DESC, updated_at_utc DESC, id DESC', $table),
 			ARRAY_A
@@ -367,6 +369,7 @@ if (!function_exists('vms_goals_get_goal')) {
 			return array();
 		}
 		$table = vms_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal reads query the plugin-owned table with %i/%d-prepared values so callers observe current repository state.
 		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d LIMIT 1', $table, $goal_id), ARRAY_A);
 		return is_array($row) ? $row : array();
 	}
@@ -377,10 +380,12 @@ if (!function_exists('vms_goals_get_active_goal')) {
 	{
 		global $wpdb;
 		$table = vms_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active-goal table readiness must reflect the current custom schema before each repository read.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return array();
 		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active-goal reads query request-fresh plugin-owned state so activation changes are visible immediately.
 		$row = $wpdb->get_row(
 			$wpdb->prepare('SELECT * FROM %i WHERE is_active = 1 ORDER BY updated_at_utc DESC, id DESC LIMIT 1', $table),
 			ARRAY_A
@@ -397,12 +402,14 @@ if (!function_exists('vms_goals_save_goal')) {
 		$payload = vms_goals_normalize_goal_payload($input);
 		$now = gmdate('Y-m-d H:i:s');
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal-save table readiness must reflect the current custom schema before mutation.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return array('ok' => false, 'message' => 'Goals table is unavailable.');
 		}
 
 		if ($goal_id > 0) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal updates write the plugin-owned table directly so normalized goal state persists immediately.
 			$ok = $wpdb->update(
 				$table,
 				array_merge($payload, array('updated_at_utc' => $now)),
@@ -415,6 +422,7 @@ if (!function_exists('vms_goals_save_goal')) {
 			}
 			$saved_id = $goal_id;
 		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Goal creation persists a normalized custom-table row through wpdb::insert(); no core API preserves this repository contract.
 			$ok = $wpdb->insert(
 				$table,
 				array_merge($payload, array('created_at_utc' => $now, 'updated_at_utc' => $now)),
@@ -427,7 +435,8 @@ if (!function_exists('vms_goals_save_goal')) {
 		}
 
 		if (!empty($payload['is_active'])) {
-			$wpdb->query($wpdb->prepare("UPDATE {$table} SET is_active = 0 WHERE id <> %d", $saved_id));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active-goal exclusivity updates the plugin-owned table with a fully prepared identifier and saved goal ID in the same mutation flow.
+			$wpdb->query($wpdb->prepare('UPDATE %i SET is_active = 0 WHERE id <> %d', $table, $saved_id));
 		}
 
 		return array('ok' => true, 'goal_id' => $saved_id, 'message' => 'Goal saved.');
@@ -442,6 +451,7 @@ if (!function_exists('vms_goals_delete_goal')) {
 			return false;
 		}
 		$table = vms_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal deletion removes the plugin-owned row immediately; no core deletion API owns this custom table.
 		$deleted = $wpdb->delete($table, array('id' => $goal_id), array('%d'));
 		return $deleted !== false;
 	}
@@ -455,12 +465,15 @@ if (!function_exists('vms_goals_set_active_goal')) {
 			return false;
 		}
 		$table = vms_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal-activation table readiness must reflect the current custom schema before mutation.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return false;
 		}
 
-		$wpdb->query("UPDATE {$table} SET is_active = 0");
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal activation first clears the plugin-owned active flag with a prepared table identifier to preserve single-active ordering.
+		$wpdb->query($wpdb->prepare('UPDATE %i SET is_active = 0', $table));
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal activation writes the selected plugin-owned row immediately after clearing prior active flags.
 		$updated = $wpdb->update(
 			$table,
 			array(
@@ -1095,10 +1108,10 @@ if (!function_exists('vms_goals_get_event_ids_in_period')) {
 			'posts_per_page' => $posts_per_page,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_key' => '_vms_event_date',
+			'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_meta_key -- Goal progress intentionally orders the bounded Event Plan period query by its canonical event-date metadata.
 			'orderby' => 'meta_value',
 			'order' => 'ASC',
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_meta_query -- Goal progress intentionally bounds Event Plans by the canonical event-date metadata; no equivalent indexed domain field exists.
 				array(
 					'key' => '_vms_event_date',
 					'value' => array($start_date, $end_date),
