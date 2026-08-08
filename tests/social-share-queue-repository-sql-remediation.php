@@ -451,5 +451,22 @@ same(
 	'Every direct custom-table operation should have exactly one narrow DirectQuery annotation.'
 );
 same(2, substr_count($source, 'PluginCheck.Security.DirectDB.UnescapedDBParameter'), 'Only the bounded dynamic queue-list boundary should require Plugin Check parameter annotations.');
+preg_match_all('/\\$rows = \\$wpdb->get_results\\(\\$(?:query|sql), ARRAY_A\\);/', $source, $prepared_variable_executions);
+preg_match_all(
+	'/\\/\\/ phpcs:ignore [^\\n]*WordPress\\.DB\\.PreparedSQL\\.NotPrepared[^\\n]*\\n\\s*\\$rows = \\$wpdb->get_results\\(\\$(?:query|sql), ARRAY_A\\);/',
+	$source,
+	$annotated_prepared_variable_executions
+);
+same(5, count($prepared_variable_executions[0]), 'Prepared-variable execution inventory should remain explicit.');
+same(
+	count($prepared_variable_executions[0]),
+	count($annotated_prepared_variable_executions[0]),
+	'Every prepared-variable execution should carry its occurrence-specific NotPrepared annotation.'
+);
+same(
+	4,
+	substr_count($source, '// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching'),
+	'The four integrated-scan residuals should remain explicitly mapped to their narrow execution annotations.'
+);
 
 fwrite(STDOUT, "social-share queue repository SQL remediation: PASS\n");

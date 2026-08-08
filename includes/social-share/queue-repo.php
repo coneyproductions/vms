@@ -49,7 +49,7 @@ if (!function_exists('vms_social_account_rows')) {
 		} else {
 			$query = $wpdb->prepare('SELECT * FROM %i WHERE platform = %s ORDER BY id DESC', $table, $platform);
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social account lists query the plugin-owned accounts table with %i/%s-prepared values so administration reflects immediate account mutations.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social account lists execute the immediately prepared query variable so administration reflects immediate account mutations.
 		$rows = $wpdb->get_results($query, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
@@ -175,7 +175,7 @@ if (!function_exists('vms_social_venue_map_rows')) {
 		} else {
 			$sql = $wpdb->prepare('SELECT * FROM %i ORDER BY id DESC', $table);
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social venue-map lists query the plugin-owned mapping table with %i/%d-prepared values so routing reflects immediate mapping mutations.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social venue-map lists execute the immediately prepared query variable so routing reflects immediate mapping mutations.
 		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
@@ -274,7 +274,7 @@ if (!function_exists('vms_social_templates_all')) {
 		} else {
 			$query = $wpdb->prepare('SELECT * FROM %i WHERE platform = %s ORDER BY id DESC', $table, $platform);
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social template lists query the plugin-owned templates table with %i/%s-prepared values so administration reflects immediate template mutations.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social template lists execute the immediately prepared query variable so administration reflects immediate template mutations.
 		$rows = $wpdb->get_results($query, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
@@ -498,7 +498,7 @@ if (!function_exists('vms_social_queue_due_items')) {
 			$now,
 			$limit
 		);
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Due-item selection reads request-fresh queue state with fully prepared identifiers, times, and limits so ordering/retry eligibility remains current for workers.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Due-item selection executes the immediately prepared query variable so ordering/retry eligibility remains current for workers.
 		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
