@@ -2484,6 +2484,7 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
                     'post_status' => array('publish', 'private', 'draft', 'pending'),
                     'fields' => 'ids',
                     'posts_per_page' => -1,
+                    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket-limit grouping must collect all current and legacy product variants for one event/ticket key; the complete ID set is retained in a request-local cache.
                     'meta_query' => array(
                         array(
                             'key' => $qset['event_meta'],
@@ -2803,20 +2804,26 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
         $oi = $wpdb->prefix . 'woocommerce_order_items';
         $oim = $wpdb->prefix . 'woocommerce_order_itemmeta';
         $stats_table = $wpdb->prefix . 'wc_order_stats';
-        $has_order_items = function_exists('vms_ticketing_v2_table_exists')
-            ? (vms_ticketing_v2_table_exists($oi) && vms_ticketing_v2_table_exists($oim))
-            : (($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oi)) === $oi) && ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oim)) === $oim));
-        $has_stats = function_exists('vms_ticketing_v2_table_exists')
-            ? vms_ticketing_v2_table_exists($stats_table)
-            : ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $stats_table)) === $stats_table);
+        if (function_exists('vms_ticketing_v2_table_exists')) {
+            $has_order_items = vms_ticketing_v2_table_exists($oi) && vms_ticketing_v2_table_exists($oim);
+            $has_stats = vms_ticketing_v2_table_exists($stats_table);
+        } else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The load-order fallback performs prepared WooCommerce capability probes before the request-cached purchased-quantity read; no core API exposes table availability.
+            $has_order_items = (($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oi)) === $oi) && ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oim)) === $oim));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The load-order fallback performs a prepared WooCommerce stats-table capability probe before the request-cached purchased-quantity read.
+            $has_stats = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $stats_table)) === $stats_table);
+        }
 
         if ($has_order_items && $has_stats) {
             $pid_placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
             $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
             $orders_table = $wpdb->prefix . 'wc_orders';
-            $has_wc_orders = function_exists('vms_ticketing_v2_table_exists')
-                ? vms_ticketing_v2_table_exists($orders_table)
-                : ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $orders_table)) === $orders_table);
+            if (function_exists('vms_ticketing_v2_table_exists')) {
+                $has_wc_orders = vms_ticketing_v2_table_exists($orders_table);
+            } else {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The load-order fallback performs a prepared HPOS-orders capability probe so refund-type detection can select the correct storage branch.
+                $has_wc_orders = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $orders_table)) === $orders_table);
+            }
 
             // HPOS stores the canonical refund type in wp_wc_orders.type. On those sites,
             // wp_posts may contain only a shop_order_placehold row for the refund ID.
@@ -2825,10 +2832,10 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
             $refund_order_join_sql = '';
             $refund_type_conditions = array("refund_posts.post_type = 'shop_order_refund'");
             if ($has_wc_orders) {
-                $refund_order_join_sql = "
-                    LEFT JOIN {$orders_table} refund_orders
+                $refund_order_join_sql = $wpdb->prepare("
+                    LEFT JOIN %i refund_orders
                         ON refund_orders.id = refund_items.order_id
-                ";
+                ", $orders_table);
                 $refund_type_conditions[] = "refund_orders.type = 'shop_order_refund'";
             }
             $refund_type_where_sql = 'AND (' . implode(' OR ', $refund_type_conditions) . ')';
@@ -2842,29 +2849,29 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
                         MAX(CASE WHEN oim.meta_key = '_product_id' THEN CAST(oim.meta_value AS UNSIGNED) ELSE 0 END) AS product_id,
                         MAX(CASE WHEN oim.meta_key = '_variation_id' THEN CAST(oim.meta_value AS UNSIGNED) ELSE 0 END) AS variation_id,
                         MAX(CASE WHEN oim.meta_key = '_qty' THEN CAST(oim.meta_value AS SIGNED) ELSE 0 END) AS qty
-                    FROM {$oi} oi
-                    INNER JOIN {$oim} oim
+                    FROM %i oi
+                    INNER JOIN %i oim
                         ON oim.order_item_id = oi.order_item_id
                     WHERE oi.order_item_type = 'line_item'
                       AND oim.meta_key IN ('_product_id', '_variation_id', '_qty')
                     GROUP BY oi.order_item_id, oi.order_id
                     HAVING product_id IN ({$pid_placeholders}) OR variation_id IN ({$pid_placeholders})
                 ) line_items
-                INNER JOIN {$stats_table} stats
+                INNER JOIN %i stats
                     ON stats.order_id = line_items.order_id
                    AND stats.customer_id = %d
                 LEFT JOIN (
                     SELECT
                         CAST(refunded_item.meta_value AS UNSIGNED) AS refunded_item_id,
                         SUM(ABS(CAST(refund_qty.meta_value AS SIGNED))) AS refunded_qty
-                    FROM {$oi} refund_items
-                    INNER JOIN {$oim} refunded_item
+                    FROM %i refund_items
+                    INNER JOIN %i refunded_item
                         ON refunded_item.order_item_id = refund_items.order_item_id
                        AND refunded_item.meta_key = '_refunded_item_id'
-                    INNER JOIN {$oim} refund_qty
+                    INNER JOIN %i refund_qty
                         ON refund_qty.order_item_id = refund_items.order_item_id
                        AND refund_qty.meta_key = '_qty'
-                    LEFT JOIN {$wpdb->posts} refund_posts
+                    LEFT JOIN %i refund_posts
                         ON refund_posts.ID = refund_items.order_id
                     {$refund_order_join_sql}
                     WHERE refund_items.order_item_type = 'line_item'
@@ -2874,9 +2881,11 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
                     ON refunds.refunded_item_id = line_items.order_item_id
                 WHERE line_items.qty > 0
                   AND stats.status IN ({$status_placeholders})
-            ";
-            $params = array_merge($product_ids, $product_ids, array($user_id), $statuses);
+            "; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic fragments are bounded product/status placeholder lists plus one pre-prepared HPOS refund join and fixed refund-type conditions; identifiers and values remain wpdb-prepared.
+            $params = array_merge(array($oi, $oim), $product_ids, $product_ids, array($stats_table, $user_id, $oi, $oim, $oim, $wpdb->posts), $statuses);
+            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The purchased-quantity aggregate contains only prepared identifiers/values and bounded placeholder/storage fragments.
             $prepared = $wpdb->prepare($sql, $params);
+            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticket-limit enforcement requires a fresh WooCommerce order/refund aggregate on the first request-local cache lookup; no WooCommerce API preserves the grouped product/variation semantics.
             $cache[$cache_key] = max(0, absint($wpdb->get_var($prepared)));
             return max(0, absint($cache[$cache_key]));
         }
@@ -2974,8 +2983,11 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
     static $lookup_supported = null;
 
     if ($lookup_supported === null) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Assignee lookup capability is probed once per request with a prepared WooCommerce lookup-table name.
         $has_lookup = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $lookup_table)) === $lookup_table);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Assignee lookup capability is probed once per request with a prepared WooCommerce stats-table name.
         $has_stats = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $stats_table)) === $stats_table);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Assignee lookup capability is probed once per request with a prepared WooCommerce itemmeta-table name.
         $has_itemmeta = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $itemmeta_table)) === $itemmeta_table);
         $lookup_supported = ($has_lookup && $has_stats && $has_itemmeta);
     }
@@ -2988,20 +3000,23 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
 
         $sql = "
             SELECT lookup.order_item_id, claim_meta.meta_value AS assignments_json
-            FROM {$lookup_table} lookup
-            INNER JOIN {$stats_table} stats ON stats.order_id = lookup.order_id
-            INNER JOIN {$itemmeta_table} event_meta
+            FROM %i lookup
+            INNER JOIN %i stats ON stats.order_id = lookup.order_id
+            INNER JOIN %i event_meta
                 ON event_meta.order_item_id = lookup.order_item_id
                AND event_meta.meta_key = '_vms_tec_event_post_id'
-            LEFT JOIN {$itemmeta_table} claim_meta
+            LEFT JOIN %i claim_meta
                 ON claim_meta.order_item_id = lookup.order_item_id
                AND claim_meta.meta_key = '_vms_claim_assignments'
             WHERE stats.status IN ({$status_placeholders})
               AND (lookup.product_id IN ({$pid_placeholders}) OR lookup.variation_id IN ({$pid_placeholders}))
               AND CAST(event_meta.meta_value AS UNSIGNED) = %d
-        ";
-        $params = array_merge($statuses, $product_ids, $product_ids, array($event_id));
-        $rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
+        "; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic fragments are bounded status/product placeholder lists; all WooCommerce identifiers and filter values remain wpdb-prepared.
+        $params = array_merge(array($lookup_table, $stats_table, $itemmeta_table, $itemmeta_table), $statuses, $product_ids, $product_ids, array($event_id));
+        // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The assignee lookup contains only prepared identifiers/values and bounded placeholder lists.
+        $prepared = $wpdb->prepare($sql, $params);
+        // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-limit enforcement requires request-fresh assignment rows, and no WooCommerce API can join the event and plugin claim metadata with product/variation lookup rows.
+        $rows = $wpdb->get_results($prepared, ARRAY_A);
 
         foreach ((array) $rows as $row) {
             $assignments_json = (string) ($row['assignments_json'] ?? '');
@@ -7577,6 +7592,7 @@ function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $tec_event_id): int
         'post_type'      => 'vms_event_plan',
         'posts_per_page' => 1,
         'post_status'    => array('publish','draft','pending','private'),
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The unusual-load-order fallback performs one exact, single-result TEC-event marker lookup with deterministic modified ordering.
         'meta_query'     => array(
             array(
                 'key'     => $tec_key,
