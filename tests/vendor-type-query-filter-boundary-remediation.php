@@ -94,6 +94,33 @@ function vms_test_sha256(string $path): string
 	return $hash;
 }
 
+/** @param array<int,array{current:string,historical:string,units:int}> $specs */
+function vms_test_project_known_fragments(string $source, array $specs, string $label): array
+{
+	$units = 0;
+	foreach ($specs as $index => $spec) {
+		vms_test_assert_same(1, substr_count($source, $spec['current']), $label . ' fragment count changed at index ' . $index . '.');
+		$count = 0;
+		$source = str_replace($spec['current'], $spec['historical'], $source, $count);
+		vms_test_assert_same(1, $count, $label . ' must project each known fragment once.');
+		$units += $spec['units'];
+	}
+	return array('source' => $source, 'units' => $units);
+}
+
+function vms_test_strip_known_region(string $source, string $start_marker, string $end_marker, string $label): array
+{
+	vms_test_assert_same(1, substr_count($source, $start_marker), $label . ' start-marker count changed.');
+	vms_test_assert_same(1, substr_count($source, $end_marker), $label . ' end-marker count changed.');
+	$start = strpos($source, $start_marker);
+	$end = strpos($source, $end_marker, $start === false ? 0 : $start);
+	if ($start === false || $end === false) {
+		vms_test_fail('Unable to project known region: ' . $label);
+	}
+	$end += strlen($end_marker);
+	return array('source' => substr($source, 0, $start) . substr($source, $end), 'regions' => 1);
+}
+
 /**
  * @param array<int,array<string,mixed>> $calls
  * @return array<int,int>
@@ -434,6 +461,8 @@ $ticket_integrity_path = dirname(__DIR__) . '/includes/ticketing/ticket-integrit
 $ticket_integrity_test_path = __DIR__ . '/ticket-integrity-query-filter-boundary-remediation.php';
 
 $source = vms_test_read_file($vendor_type_path);
+$ticket_integrity_source = vms_test_read_file($ticket_integrity_path);
+$ticket_integrity_test_source = vms_test_read_file($ticket_integrity_test_path);
 
 $suppression = "// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- get_posts() already defaults suppress_filters to true; keep the explicit value to document this one-time canonical vendor-type migration across all event plans when normalizing legacy secondary vendor type meta.";
 vms_test_assert_true(strpos($source, $suppression) !== false, 'The vendor-type suppress_filters suppression is missing or changed.');
@@ -457,15 +486,98 @@ vms_test_assert_same(
 	vms_test_sha256($live_vendor_type_path),
 	'The live vendor-type file changed unexpectedly.'
 );
+$monitor_projection_specs = array(
+	array(
+		'current' => ' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.',
+		'historical' => '',
+		'units' => 1,
+	),
+	array(
+		'current' => ' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket Integrity intentionally paginates the complete published, linked Event Plan set inside the configured date window before applying ticketing and activity checks.',
+		'historical' => '',
+		'units' => 1,
+	),
+	array(
+		'current' => "\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());",
+		'historical' => "\tif (function_exists('wp_date')) {\n\t\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());\n\t}\n\n\treturn date('Y-m-d g:i a', \$timestamp);",
+		'units' => 1,
+	),
+	array(
+		'current' => "\t\$tz = wp_timezone();\n\t\$start_date = wp_date('Y-m-d', \$now, \$tz);\n\t\$end_date = wp_date('Y-m-d', \$cutoff, \$tz);",
+		'historical' => "\t\$tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');\n\t\$start_date = function_exists('wp_date') ? wp_date('Y-m-d', \$now, \$tz) : date('Y-m-d', \$now);\n\t\$end_date = function_exists('wp_date') ? wp_date('Y-m-d', \$cutoff, \$tz) : date('Y-m-d', \$cutoff);",
+		'units' => 2,
+	),
+);
+$monitor_projection = vms_test_project_known_fragments($ticket_integrity_source, $monitor_projection_specs, 'Ticket Integrity monitor G10+G15');
+vms_test_assert_same(5, $monitor_projection['units'], 'Monitor projection must strip exactly two G10 and three G15 owned rows.');
 vms_test_assert_same(
 	'27770ef0be288290a7f7d5e5e7a92ee27e93f79e55d9f95d29637671415dcdfc',
-	vms_test_sha256($ticket_integrity_path),
-	'The Ticket Integrity monitor changed unexpectedly.'
+	hash('sha256', $monitor_projection['source']),
+	'Ticket Integrity monitor changed outside known G10+G15 ownership.'
 );
+$mutated_monitor = str_replace("'post_status' => 'publish'", "'post_status' => 'draft'", $ticket_integrity_source, $mutation_count);
+vms_test_assert_same(1, $mutation_count, 'Monitor negative control must mutate one non-owned query argument.');
+$mutated_monitor_projection = vms_test_project_known_fragments($mutated_monitor, $monitor_projection_specs, 'mutated Ticket Integrity monitor');
+vms_test_assert_true(
+	hash('sha256', $mutated_monitor_projection['source']) !== '27770ef0be288290a7f7d5e5e7a92ee27e93f79e55d9f95d29637671415dcdfc',
+	'Monitor semantic projection must reject a non-owned runtime mutation.'
+);
+
+$boundary_projection = vms_test_strip_known_region(
+	$ticket_integrity_test_source,
+	'$live_monitor_g15_projection_rows = 0;',
+	"vms_test_assert_same(3, \$live_monitor_g15_projection_rows, 'Live monitor projection must reverse exactly three G15 date rows.');\n",
+	'Ticket Integrity boundary G15 projection block'
+);
+vms_test_assert_same(1, $boundary_projection['regions'], 'Boundary projection must strip one exact G15 block covering three date rows.');
+$boundary_projection = vms_test_strip_known_region(
+	$boundary_projection['source'],
+	"\n\$live_monitor_projection = \$live_monitor_source;",
+	"vms_test_assert_same(\n\t2,\n\t\$live_monitor_projection_removals,\n\t'Live Ticket Integrity monitor projection should strip exactly the two authorized G10 query annotations.'\n);\n",
+	'Ticket Integrity boundary G10 projection block'
+);
+$boundary_g10_specs = array(
+	array(
+		'current' => "\$live_monitor_source = vms_test_read_file(\$live_monitor_path);\n",
+		'historical' => '',
+		'units' => 1,
+	),
+	array(
+		'current' => "\thash('sha256', \$live_monitor_projection),\n\t'Live Ticket Integrity monitor must retain its semantic baseline after projecting G10 annotations and G15 date calls.'",
+		'historical' => "\thash_file('sha256', \$live_monitor_path),\n\t'Live Ticket Integrity monitor must remain unchanged in this mirror-only child.'",
+		'units' => 1,
+	),
+);
+$boundary_projection = vms_test_project_known_fragments($boundary_projection['source'], $boundary_g10_specs, 'Ticket Integrity boundary G10 companions');
+vms_test_assert_same(2, $boundary_projection['units'], 'Boundary projection must strip the two remaining exact G10 companion changes.');
 vms_test_assert_same(
 	'a8572971dbfee9d6b10c52fb379e14ad32e8b619ce79fcbff9eef0ecb9155714',
-	vms_test_sha256($ticket_integrity_test_path),
-	'The Ticket Integrity boundary test changed unexpectedly.'
+	hash('sha256', $boundary_projection['source']),
+	'Ticket Integrity boundary test changed outside known G10+G15 companion ownership.'
+);
+$mutated_boundary = str_replace(
+	'Ticket Integrity target query should stay scoped to Event Plans.',
+	'MUTATED target scope assertion.',
+	$ticket_integrity_test_source,
+	$boundary_mutation_count
+);
+vms_test_assert_same(1, $boundary_mutation_count, 'Boundary negative control must mutate one non-owned assertion.');
+$mutated_boundary = vms_test_strip_known_region(
+	$mutated_boundary,
+	'$live_monitor_g15_projection_rows = 0;',
+	"vms_test_assert_same(3, \$live_monitor_g15_projection_rows, 'Live monitor projection must reverse exactly three G15 date rows.');\n",
+	'mutated Ticket Integrity boundary G15 block'
+);
+$mutated_boundary = vms_test_strip_known_region(
+	$mutated_boundary['source'],
+	"\n\$live_monitor_projection = \$live_monitor_source;",
+	"vms_test_assert_same(\n\t2,\n\t\$live_monitor_projection_removals,\n\t'Live Ticket Integrity monitor projection should strip exactly the two authorized G10 query annotations.'\n);\n",
+	'mutated Ticket Integrity boundary G10 block'
+);
+$mutated_boundary = vms_test_project_known_fragments($mutated_boundary['source'], $boundary_g10_specs, 'mutated Ticket Integrity boundary companions');
+vms_test_assert_true(
+	hash('sha256', $mutated_boundary['source']) !== 'a8572971dbfee9d6b10c52fb379e14ad32e8b619ce79fcbff9eef0ecb9155714',
+	'Boundary semantic projection must reject a non-owned assertion mutation.'
 );
 
 eval(vms_test_extract_function($source, 'vms_vendor_type_registry'));

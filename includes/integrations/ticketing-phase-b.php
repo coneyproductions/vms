@@ -1612,8 +1612,8 @@ function vms_ticketing_b_create_woo_ticket(int $tec_event_id, array $tier): arra
  * does not fail with provider payload validation.
  */
 function vms_ticketing_b_resolve_sales_window(int $tec_event_id, array $tier): array {
-    $tz = function_exists('wp_timezone') ? wp_timezone() : null;
-    $now = function_exists('wp_date') ? wp_date('Y-m-d H:i:s', time(), $tz) : date('Y-m-d H:i:s');
+    $tz = wp_timezone();
+    $now = wp_date('Y-m-d H:i:s', time(), $tz);
 
     $tec_event_id = absint($tec_event_id);
     $event_start = vms_ticketing_v2_normalize_sales_window_value(vms_ticketing_b_get_tec_event_start($tec_event_id));
@@ -3080,11 +3080,9 @@ function vms_ticketing_v2_apply_relative_and_guarded_ticket_dates(array $ticket,
 
 function vms_ticketing_v2_get_plan_sales_window_defaults(int $plan_id): array {
     $plan_id = absint($plan_id);
-    $tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
+    $tz = wp_timezone();
 
-    $sales_start = function_exists('wp_date')
-        ? wp_date('Y-m-d H:i:s', time(), $tz)
-        : date('Y-m-d H:i:s');
+    $sales_start = wp_date('Y-m-d H:i:s', time(), $tz);
     $sales_end = '';
 
     if ($plan_id > 0) {

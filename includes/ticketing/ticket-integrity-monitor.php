@@ -614,11 +614,7 @@ function vms_ticket_integrity_format_datetime(int $timestamp): string
 		return __('Never', 'backstage-venue-manager');
 	}
 
-	if (function_exists('wp_date')) {
-		return wp_date('Y-m-d g:i a', $timestamp, wp_timezone());
-	}
-
-	return date('Y-m-d g:i a', $timestamp);
+	return wp_date('Y-m-d g:i a', $timestamp, wp_timezone());
 }
 
 function vms_ticket_integrity_acquire_scan_lock(string $owner = ''): bool
@@ -743,9 +739,9 @@ function vms_ticket_integrity_build_targets(array $args = array()): array
 	$include_inactive = !empty($args['include_inactive']);
 	$now = time();
 	$cutoff = $now + ($days_ahead * DAY_IN_SECONDS);
-	$tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
-	$start_date = function_exists('wp_date') ? wp_date('Y-m-d', $now, $tz) : date('Y-m-d', $now);
-	$end_date = function_exists('wp_date') ? wp_date('Y-m-d', $cutoff, $tz) : date('Y-m-d', $cutoff);
+	$tz = wp_timezone();
+	$start_date = wp_date('Y-m-d', $now, $tz);
+	$end_date = wp_date('Y-m-d', $cutoff, $tz);
 	$tec_event_meta_key = function_exists('vms_ticketing_b_meta_key')
 		? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
 		: '_vms_tec_event_id';

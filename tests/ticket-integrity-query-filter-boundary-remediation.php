@@ -412,6 +412,26 @@ vms_test_assert_same(
 	$live_monitor_projection_removals,
 	'Live Ticket Integrity monitor projection should strip exactly the two authorized G10 query annotations.'
 );
+$live_monitor_g15_projection_rows = 0;
+$live_monitor_g15_fragments = array(
+	array(
+		'current' => "\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());",
+		'historical' => "\tif (function_exists('wp_date')) {\n\t\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());\n\t}\n\n\treturn date('Y-m-d g:i a', \$timestamp);",
+		'rows' => 1,
+	),
+	array(
+		'current' => "\t\$tz = wp_timezone();\n\t\$start_date = wp_date('Y-m-d', \$now, \$tz);\n\t\$end_date = wp_date('Y-m-d', \$cutoff, \$tz);",
+		'historical' => "\t\$tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');\n\t\$start_date = function_exists('wp_date') ? wp_date('Y-m-d', \$now, \$tz) : date('Y-m-d', \$now);\n\t\$end_date = function_exists('wp_date') ? wp_date('Y-m-d', \$cutoff, \$tz) : date('Y-m-d', \$cutoff);",
+		'rows' => 2,
+	),
+);
+foreach ($live_monitor_g15_fragments as $fragment) {
+	vms_test_assert_same(1, substr_count($live_monitor_projection, $fragment['current']), 'Live monitor should contain each exact G15 date replacement once.');
+	$live_monitor_projection = str_replace($fragment['current'], $fragment['historical'], $live_monitor_projection, $removals);
+	vms_test_assert_same(1, $removals, 'Live monitor projection should reverse each exact G15 date replacement once.');
+	$live_monitor_g15_projection_rows += $fragment['rows'];
+}
+vms_test_assert_same(3, $live_monitor_g15_projection_rows, 'Live monitor projection must reverse exactly three G15 date rows.');
 
 vms_test_assert_same(
 	1,
@@ -509,7 +529,7 @@ vms_test_assert_same(
 vms_test_assert_same(
 	'066eeaf16b910c930d4ad23eeca2b48669dbc889713d62dafcc80a7c58848122',
 	hash('sha256', $live_monitor_projection),
-	'Live Ticket Integrity monitor must remain unchanged after projecting the two authorized G10 query annotations.'
+	'Live Ticket Integrity monitor must retain its semantic baseline after projecting G10 annotations and G15 date calls.'
 );
 
 vms_test_reset_runtime_state();

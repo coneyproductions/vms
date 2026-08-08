@@ -194,6 +194,34 @@ function g10_strip_owned_annotations(string $source, array $specs, string $label
 	return array('source' => $source, 'comments' => $comments, 'codes' => $codes);
 }
 
+/** @return array{source:string,replacements:int,rows:int} */
+function g10_project_g15_monitor_dates(string $source, string $label): array
+{
+	$specs = array(
+		array(
+			'current' => "\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());",
+			'historical' => "\tif (function_exists('wp_date')) {\n\t\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());\n\t}\n\n\treturn date('Y-m-d g:i a', \$timestamp);",
+			'rows' => 1,
+		),
+		array(
+			'current' => "\t\$tz = wp_timezone();\n\t\$start_date = wp_date('Y-m-d', \$now, \$tz);\n\t\$end_date = wp_date('Y-m-d', \$cutoff, \$tz);",
+			'historical' => "\t\$tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');\n\t\$start_date = function_exists('wp_date') ? wp_date('Y-m-d', \$now, \$tz) : date('Y-m-d', \$now);\n\t\$end_date = function_exists('wp_date') ? wp_date('Y-m-d', \$cutoff, \$tz) : date('Y-m-d', \$cutoff);",
+			'rows' => 2,
+		),
+	);
+	$replacements = 0;
+	$rows = 0;
+	foreach ($specs as $spec) {
+		g10_same(1, substr_count($source, $spec['current']), $label . ' must contain each exact G15 date replacement once.');
+		$count = 0;
+		$source = str_replace($spec['current'], $spec['historical'], $source, $count);
+		g10_same(1, $count, $label . ' must project each exact G15 date replacement once.');
+		$replacements += $count;
+		$rows += $spec['rows'];
+	}
+	return array('source' => $source, 'replacements' => $replacements, 'rows' => $rows);
+}
+
 /**
  * @param array<string,string> $function_sources
  * @param array<string,array<int,string>> $expected
@@ -659,14 +687,23 @@ $projection_hashes = array(
 $stripped_sources = array('mirror' => array(), 'shadow' => array());
 $total_comments = 0;
 $total_codes = 0;
+$g15_date_projection_rows = 0;
 foreach (array('mirror' => $mirror_sources, 'shadow' => $shadow_sources) as $tree => $sources) {
 	foreach ($sources as $source_key => $source) {
-		g10_same($whole_hashes[$tree][$source_key], hash('sha256', $source), $tree . ' whole-source hash changed: ' . $source_key);
-		$stripped = g10_strip_owned_annotations($source, $annotation_specs[$source_key], $tree . ':' . $source_key);
+		$hash_source = $source;
+		if ($source_key === 'monitor') {
+			$g15_projection = g10_project_g15_monitor_dates($hash_source, $tree . ':monitor');
+			g10_same(2, $g15_projection['replacements'], $tree . ' monitor G15 projection replacement count changed.');
+			g10_same(3, $g15_projection['rows'], $tree . ' monitor G15 projection row count changed.');
+			$g15_date_projection_rows += $g15_projection['rows'];
+			$hash_source = $g15_projection['source'];
+		}
+		g10_same($whole_hashes[$tree][$source_key], hash('sha256', $hash_source), $tree . ' projected whole-source hash changed: ' . $source_key);
+		$stripped = g10_strip_owned_annotations($hash_source, $annotation_specs[$source_key], $tree . ':' . $source_key);
 		g10_same($stripped_hashes[$tree][$source_key], hash('sha256', $stripped['source']), $tree . ' annotation-stripped source changed: ' . $source_key);
 		g10_same(
 			$projection_hashes[$tree][$source_key],
-			hash('sha256', g10_projection($source, $projection_functions[$source_key])),
+			hash('sha256', g10_projection($hash_source, $projection_functions[$source_key])),
 			$tree . ' outside-owned-function projection changed: ' . $source_key
 		);
 		$stripped_sources[$tree][$source_key] = $stripped['source'];
@@ -674,6 +711,7 @@ foreach (array('mirror' => $mirror_sources, 'shadow' => $shadow_sources) as $tre
 		$total_codes += $stripped['codes'];
 	}
 }
+g10_same(6, $g15_date_projection_rows, 'Mirror and shadow must project exactly three G15 monitor date rows each.');
 g10_same(14, $total_comments, 'Mirror and shadow must each contain exactly seven owned annotations.');
 g10_same(22, $total_codes, 'Mirror and shadow annotations must each cover exactly 11 artifact codes.');
 $mutated_monitor = str_replace(
@@ -718,14 +756,17 @@ g10_assert($mirror_sources['add'] !== $shadow_sources['add'], 'ADD whole-file di
 
 $monitor_lines = preg_split('/\R/', $mirror_sources['monitor']);
 g10_assert(is_array($monitor_lines), 'Monitor source should split into lines.');
-foreach (array(482, 621, 747, 748) as $deferred_line) {
-	g10_assert(isset($monitor_lines[$deferred_line - 1]), 'Deferred monitor row should remain present: ' . $deferred_line);
-	g10_assert(strpos($monitor_lines[$deferred_line - 1], 'phpcs:') === false, 'Deferred monitor row must remain unsuppressed: ' . $deferred_line);
-}
+g10_assert(isset($monitor_lines[481]), 'Deferred monitor logging row should remain present at line 482.');
+g10_assert(strpos($monitor_lines[481], 'phpcs:') === false, 'Deferred monitor logging row must remain unsuppressed.');
 g10_contains('error_log(', $monitor_lines[481], 'Deferred monitor logging row changed.');
-g10_contains("return date('Y-m-d g:i a'", $monitor_lines[620], 'Deferred monitor date fallback changed.');
-g10_contains("date('Y-m-d', \$now)", $monitor_lines[746], 'Deferred monitor start-date fallback changed.');
-g10_contains("date('Y-m-d', \$cutoff)", $monitor_lines[747], 'Deferred monitor end-date fallback changed.');
+$monitor_format_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_format_datetime');
+$monitor_target_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_build_targets');
+g10_contains("return wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());", $monitor_format_source, 'G15 monitor formatter remediation changed.');
+g10_contains("\$tz = wp_timezone();", $monitor_target_source, 'G15 monitor target timezone resolution changed.');
+g10_contains("\$start_date = wp_date('Y-m-d', \$now, \$tz);", $monitor_target_source, 'G15 monitor start-date remediation changed.');
+g10_contains("\$end_date = wp_date('Y-m-d', \$cutoff, \$tz);", $monitor_target_source, 'G15 monitor end-date remediation changed.');
+g10_same(0, preg_match_all('/(?<![A-Za-z0-9_])date\s*\(/', $monitor_format_source . "\n" . $monitor_target_source), 'G15 monitor functions must contain zero native date() calls.');
+g10_assert(strpos($monitor_format_source . $monitor_target_source, 'WordPress.DateTime') === false, 'G15 monitor date remediation must not add DateTime suppressions.');
 
 eval(g10_extract_function($mirror_sources['daily'], 'vms_ticket_integrity_report_statuses'));
 eval(g10_extract_function($mirror_sources['daily'], 'vms_ticket_integrity_report_table_exists'));
