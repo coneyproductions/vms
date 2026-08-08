@@ -275,6 +275,7 @@ function vms_get_band_rating_summary($band_id, $verified_only = true)
         'post_type'      => 'vms_rating',
         'posts_per_page' => -1,
         'post_status'    => 'publish',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The band summary intentionally reads every published rating linked to one band so its average and count remain complete.
         'meta_query'     => $meta_query,
         'fields'         => 'ids',
     ));
@@ -520,6 +521,7 @@ function vms_handle_rating_submission($event_id, $band_id)
         'post_type'      => 'vms_rating',
         'posts_per_page' => 1,
         'post_status'    => 'any',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Duplicate prevention is capped at one rating and matches the exact band, event, and reviewer email tuple.
         'meta_query'     => array(
             'relation' => 'AND',
             array(

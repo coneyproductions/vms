@@ -363,6 +363,7 @@ function vms_render_integrity_calendar_reconcile_page_sections(): void
     'no_found_rows'  => true,
     'orderby'        => 'ID',
     'order'          => 'DESC',
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The diagnostic list is capped by the request limit clamped to 1–5000 and filters the exact plugin suppression marker.
     'meta_query'     => array(
       array(
         'key'     => $k_sup,

@@ -64,6 +64,7 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
         'post_status'    => array('publish', 'draft', 'pending', 'future', 'private'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The complete schedule lookup is bounded by one venue and the caller's explicit date window.
         'meta_query'     => array(
             'relation' => 'AND',
             array(
@@ -85,6 +86,7 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
 
     // Safety net: if BETWEEN yields nothing, widen then filter manually.
     if (empty($plan_ids)) {
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The legacy fallback removes the date bound, scans all plans for this venue, and reapplies the caller's window in PHP below.
         $args['meta_query'] = array(
             array(
                 'key'     => vms_meta_key('event_plan', 'venue_id'),
@@ -155,6 +157,7 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
         'post_status'    => array('publish', 'draft', 'pending', 'future', 'private'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The complete schedule lookup is bounded by the caller's finite venue set and explicit date window.
         'meta_query'     => array(
             'relation' => 'AND',
             array(
@@ -176,6 +179,7 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
 
     // Safety net: if BETWEEN yields nothing, widen then filter manually.
     if (empty($plan_ids)) {
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The legacy fallback removes the date bound, scans all plans for the selected venues, and reapplies the caller's window in PHP below.
         $args['meta_query'] = array(
             array(
                 'key'     => vms_meta_key('event_plan', 'venue_id'),

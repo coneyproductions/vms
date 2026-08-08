@@ -341,6 +341,7 @@ function vms_resolve_event_plan_for_tec_event($tec_event_id)
         'post_type'      => 'vms_event_plan',
         'posts_per_page' => -1,
         'post_status'    => array('publish', 'draft', 'pending', 'private'),
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The lifecycle resolver examines every Event Plan linked to one TEC event so deterministic ranking can select the current record.
         'meta_query'     => array(
             array(
                 'key'     => '_vms_tec_event_id',
@@ -453,6 +454,7 @@ function vms_get_ticket_product_ids_for_event($event_id)
         'post_type'      => 'product',
         'posts_per_page' => -1,
         'post_status'    => array('publish','future','draft','pending','private'),
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket lookup intentionally returns every product linked to this one TEC event for complete downstream handling.
         'meta_query'     => array(
             array(
                 'key'   => '_tribe_wooticket_for_event',
@@ -553,6 +555,7 @@ function vms_get_event_titles_by_date(array $active_dates): array
         'post_status'    => array('publish', 'draft', 'pending'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This legacy helper scans every dated TEC event, then filters against the caller's finite active-date set in PHP.
         'meta_query'     => array(
             array('key' => '_EventStartDate', 'compare' => 'EXISTS'),
         ),
@@ -665,6 +668,7 @@ function vms_get_comp_packages_for_venue(int $venue_id, bool $include_global = t
         'posts_per_page' => -1,
         'orderby'        => 'title',
         'order'          => 'ASC',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The selector returns every published or draft package in the requested venue and optional global scope so choices remain complete.
         'meta_query'     => $meta_query,
     ));
 }

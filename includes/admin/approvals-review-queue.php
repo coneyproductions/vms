@@ -668,6 +668,7 @@ if (!function_exists('vms_approvals_queue_vendor_summary')) {
 			'orderby' => 'date',
 			'order' => 'DESC',
 			'no_found_rows' => true,
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The review-queue summary is capped at five applications and filters exact pending plus confirmed-or-legacy states.
 			'meta_query' => array(
 				'relation' => 'AND',
 				array(
