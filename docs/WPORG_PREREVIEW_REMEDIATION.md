@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. Coordinated Wave 2 on `2026-08-08` then verified Ticketing Rules V2 `23 -> 0`, vendor-application confirmation `27 -> 0`, and goals/forecast `31 -> 0`. Coordinated Wave 3 verified ticket diagnostics `27 -> 0`, vendor portal `22 -> 0`, and schema/check-in descriptors `29 -> 0`. Coordinated Wave 4 verified G12 core `14 -> 0`, social support `18 -> 0`, background meta-query boundaries `6 -> 0`, and vendor-link migrations `16 -> 0`. The current packaged residual baseline is `160` errors, `147` warnings, `307` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=182`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. Coordinated Wave 2 on `2026-08-08` then verified Ticketing Rules V2 `23 -> 0`, vendor-application confirmation `27 -> 0`, and goals/forecast `31 -> 0`. Coordinated Wave 3 verified ticket diagnostics `27 -> 0`, vendor portal `22 -> 0`, and schema/check-in descriptors `29 -> 0`. Coordinated Wave 4 verified G12 core `14 -> 0`, social support `18 -> 0`, background meta-query boundaries `6 -> 0`, and vendor-link migrations `16 -> 0`. That coordinated-Wave-4 packaged checkpoint was `160` errors, `147` warnings, `307` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=182`; the later DB-zero/G14 section and `docs/wporg-current-scan-state.json` hold the superseding current evidence.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -5320,6 +5320,42 @@ This audit did not:
 - or modify production data.
 
 That note applied to the earlier docs-only audit pass; later result sections capture subsequent remediation batches that changed runtime code in the mirror and live trees.
+
+## DB-Zero And G14 Packaged Checkpoint
+
+Date: 2026-08-08
+
+### Summary
+
+- Result: `PASS`
+- Source commit: `2c8f790b9128d547b8bc0a27a714253fb6671bea`
+- Clean public package: `/tmp/wporg-dbzero-g14.qulnlt/build/backstage-venue-manager-1.2.0-public-release.zip`
+- Package SHA-256: `fec238a519108c7013659b4114e69e9aad93c5c6f864551d4290737d30a609e5`
+- Canonical strict JSON: `/tmp/wporg-dbzero-g14.qulnlt/plugin-check.strict.json`
+- Strict-JSON SHA-256: `c5fe4d23b3cdf632f239632a23f2c58f9ccf7b8e293ff4b9e71f65101527aa17`
+- Plugin Check exited `0`; scanner stderr is empty.
+- Current scan: `139` errors, `42` warnings, `181` total findings, `6` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=56`.
+- Current blocker families: DB/SQL `0`, nonce/input `0`, date/time `14`, logging `42`.
+
+### Verified Family State
+
+- `WPORG-28R-G10`, `WPORG-28R-G11`, `WPORG-28R-G12`, and `WPORG-28R-G13` are scanner-verified complete for DB/SQL. The extracted package contains no `WordPress.DB.*` or `PluginCheck.Security.DirectDB.*` finding.
+- `WPORG-28R-G14` is scanner-verified complete at `11 -> 0` date findings.
+- `WPORG-28R-G15` owns the exact remaining `14` date rows: Staff Notifications `5`, Ticket Integrity and Phase B `5`, and Payables/Vendor Tax/Event Credits `4`.
+- `WPORG-28R-G16` owns `26` operational logging rows. `WPORG-28R-G17` owns `16` developer-diagnostic rows, including the sole `debug_backtrace` row.
+- The `125` nonblocking findings remain exactly `OutputNotEscaped 123`, `OffloadedContent 1`, and `NonEnqueuedStylesheet 1`; no new or unmapped rule appeared.
+
+### Build And Safety Evidence
+
+- The builder staged `372` files, linted `269` packaged PHP files, syntax-checked `55` JavaScript files, passed all release regressions and four optional-dependency load smokes, and passed ZIP root, manifest, traversal, path, URL, credential, zero-byte, nested-archive, and symlink checks.
+- The only build warnings remain the absent version-matched `BUILD-NOTES` file and the intentionally skipped activation-hook smoke, which would mutate a WordPress site.
+- Mirror/live synchronization was verified at every owned G10/G11/G13/G14 boundary while preserving intentional structural divergence outside those boundaries.
+- No push, deployment, WordPress.org upload, reviewer reply, production change, staging change, tag, or protected-stash mutation occurred.
+
+### Next Action
+
+- Execute `WPORG-28R-G15` in the three isolated date-contract partitions above, rerun a clean packaged strict scan, then execute the security-reviewed G16 operational logger and G17 developer-diagnostic slices.
+- `WPORG-28R` remains blocked until a fresh clean package proves `SUBMISSION_BLOCKER=0`; external WordPress.org actions remain separately unauthorized.
 
 ## Public Release Slug Separation Result
 
