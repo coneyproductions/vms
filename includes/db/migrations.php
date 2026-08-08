@@ -542,7 +542,7 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 		'post_status'    => array('publish', 'draft', 'private'),
 		'fields'         => 'ids',
 		'posts_per_page' => -1,
-		'meta_query'     => array(
+		'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- One-time idempotent migration enumerates every vendor carrying the legacy user pointer so each link can be backfilled.
 			array(
 				'key'     => $vendor_user_meta_key,
 				'compare' => 'EXISTS',
@@ -569,7 +569,7 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 			}
 
 			$sql = $wpdb->prepare(
-				"INSERT INTO {$t_links}
+				"INSERT INTO %i
 					(vendor_id, user_id, user_role, link_status, is_primary, created_at, created_by, updated_at, updated_by)
 				 VALUES
 					(%d, %d, %s, %s, %d, %s, %d, %s, %d)
@@ -579,6 +579,7 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 					is_primary  = IF(VALUES(is_primary)=1, 1, is_primary),
 					updated_at  = VALUES(updated_at),
 					updated_by  = VALUES(updated_by)",
+				$t_links,
 				$vendor_id,
 				$user_id,
 				'primary_contact',
@@ -590,6 +591,7 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 				0
 			);
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- The idempotent migration writes the prepared upsert built immediately above to the plugin-owned link table; no core API owns this relation.
 			$wpdb->query($sql);
 		}
 	}
@@ -597,7 +599,7 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 	// B) User → vendor pointer (primary vendor)
 	$users = get_users(array(
 		'fields'    => array('ID'),
-		'meta_key'  => $user_primary_vendor_meta_key,
+		'meta_key'  => $user_primary_vendor_meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One-time idempotent migration enumerates users carrying the legacy primary-vendor pointer; no indexed domain field exists.
 		'orderby'   => 'ID',
 		'order'     => 'ASC',
 	));
@@ -614,7 +616,7 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 			if (!$p || $p->post_type !== 'vms_vendor') continue;
 
 			$sql = $wpdb->prepare(
-				"INSERT INTO {$t_links}
+				"INSERT INTO %i
 					(vendor_id, user_id, user_role, link_status, is_primary, created_at, created_by, updated_at, updated_by)
 				 VALUES
 					(%d, %d, %s, %s, %d, %s, %d, %s, %d)
@@ -623,6 +625,7 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 					link_status = 'active',
 					updated_at  = VALUES(updated_at),
 					updated_by  = VALUES(updated_by)",
+				$t_links,
 				$vendor_id,
 				$user_id,
 				'manager',
@@ -634,11 +637,14 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 				0
 			);
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- The idempotent migration writes the prepared primary-link upsert built immediately above to the plugin-owned link table; no core API owns this relation.
 			$wpdb->query($sql);
 
 			// Enforce single primary per user.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The migration immediately normalizes other rows in the plugin-owned link table so each user has one primary vendor.
 			$wpdb->query($wpdb->prepare(
-				"UPDATE {$t_links} SET is_primary = 0, updated_at = %s, updated_by = %d WHERE user_id = %d AND vendor_id <> %d",
+				"UPDATE %i SET is_primary = 0, updated_at = %s, updated_by = %d WHERE user_id = %d AND vendor_id <> %d",
+				$t_links,
 				$now,
 				0,
 				$user_id,
