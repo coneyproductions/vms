@@ -221,8 +221,8 @@ if (!function_exists('vms_email_followups_event_choices')) {
 			'posts_per_page' => 200,
 			'orderby' => 'meta_value',
 			'order' => 'DESC',
-			'meta_key' => '_vms_event_date',
-			'meta_query' => array(
+			'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Event choices intentionally order the bounded two-year Event Plan window by canonical event-date metadata.
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Event choices intentionally filter the bounded two-year Event Plan window by canonical event-date metadata; no indexed domain date field exists.
 				array(
 					'key' => '_vms_event_date',
 					'value' => array($from, $to),

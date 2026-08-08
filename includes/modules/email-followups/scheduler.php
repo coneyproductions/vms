@@ -70,8 +70,8 @@ if (!function_exists('vms_email_followups_due_items')) {
 			'fields' => 'ids',
 			'orderby' => 'meta_value',
 			'order' => 'ASC',
-			'meta_key' => '_vms_event_date',
-			'meta_query' => array(
+			'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The hourly cron query intentionally orders at most 100 Event Plans across its 130-day window by canonical event-date metadata.
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The hourly cron query intentionally filters at most 100 Event Plans to its 130-day window by canonical event-date metadata.
 				array(
 					'key' => '_vms_event_date',
 					'value' => array($from, $to),

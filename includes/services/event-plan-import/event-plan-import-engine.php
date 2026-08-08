@@ -819,7 +819,7 @@ if (!function_exists('vms_event_plan_import_find_existing_plan_lookup')) {
 			'posts_per_page' => -1,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Preview and commit each build the complete existing import-key map once before row processing; the canonical import key has no indexed domain field.
 				array(
 					'key' => $import_key_meta,
 					'compare' => 'EXISTS',
@@ -2113,7 +2113,7 @@ if (!function_exists('vms_event_plan_import_find_plan_id_by_key')) {
 			'posts_per_page' => 1,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Commit performs this exact one-row import-key fallback only when the key is absent from the complete prebuilt map, preserving late or concurrent plan discovery.
 				array(
 					'key' => $meta_key,
 					'value' => $event_key,
