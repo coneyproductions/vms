@@ -2588,7 +2588,7 @@ function vms_ticketing_v2_reporting_category_candidate_ids(int $after_id = 0, in
         $limit
     );
 
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The bounded reporting-category backfill reads distinct product IDs with prepared core-table identifiers and must observe current product metadata before advancing its cursor.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- The bounded reporting-category backfill reads distinct product IDs with prepared core-table identifiers and must observe current product metadata before advancing its cursor.
     $rows = $wpdb->get_col($sql);
     if (!is_array($rows)) {
         return array();

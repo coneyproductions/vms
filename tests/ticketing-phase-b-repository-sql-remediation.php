@@ -174,6 +174,33 @@ $owned_inventory = array(
 	'WordPress.DB.SlowDBQuery.slow_db_query_meta_query' => 8,
 );
 vms_test_same(21, array_sum($owned_inventory), 'Owned scanner inventory should remain exactly 21 baseline rows.');
+$covered_owned_rows = 0;
+$execution_suppressions = array(
+	'vms_ticketing_v2_reporting_category_candidate_ids' => array(
+		'fragment' => 'phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared',
+		'rows' => 3,
+	),
+	'vms_ticketing_v2_table_exists' => array(
+		'fragment' => 'phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'rows' => 2,
+	),
+	'vms_ticketing_v2_calc_sold_qty_for_product_via_lookup' => array(
+		'fragment' => 'phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'rows' => 4,
+	),
+	'vms_ticketing_v2_calc_sold_qty_for_product_via_order_items' => array(
+		'fragment' => 'phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'rows' => 4,
+	),
+);
+foreach ($execution_suppressions as $function => $suppression) {
+	vms_test_contains(
+		$suppression['fragment'],
+		vms_test_extract_function($source, $function),
+		$function . ' must retain its exact occurrence-specific scanner suppression.'
+	);
+	$covered_owned_rows += $suppression['rows'];
+}
 
 $slow_functions = array(
 	'vms_entitlements_get_entitlement_image_context',
@@ -188,7 +215,9 @@ $slow_functions = array(
 foreach ($slow_functions as $function) {
 	$body = vms_test_extract_function($source, $function);
 	vms_test_contains('WordPress.DB.SlowDBQuery.slow_db_query_meta_query', $body, $function . ' must retain its narrow slow-meta justification.');
+	$covered_owned_rows++;
 }
+vms_test_same(0, array_sum($owned_inventory) - $covered_owned_rows, 'All 21 owned baseline rows should have zero residual findings after occurrence-specific remediation.');
 
 // Reporting IDs: table identifiers and all values are prepared; result normalization is unchanged.
 $wpdb = new VMS_Phase_B_WPDB_Spy('wp_report_');
