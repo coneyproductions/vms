@@ -1316,10 +1316,6 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
     }
 
     vms_event_plan_save_profiler_store_profile($post_id, $profile);
-
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('[VMS Event Plan Save Profile] ' . wp_json_encode($profile));
-    }
 }
 add_action('save_post_vms_event_plan', 'vms_event_plan_save_profiler_finish', PHP_INT_MAX, 3);
 

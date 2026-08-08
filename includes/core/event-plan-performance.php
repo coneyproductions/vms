@@ -564,38 +564,32 @@ if (!function_exists('vms_event_plan_perf_log')) {
 		$entry = array(
 			'logged_at_gmt' => gmdate('Y-m-d H:i:s'),
 			'request_id' => vms_event_plan_perf_request_id(),
-			'hook_name' => sanitize_text_field($hook_name),
+			'hook_name' => substr(sanitize_key($hook_name), 0, 80),
 			'event_plan_id' => $plan_id,
-			'pid' => vms_event_plan_perf_pid(),
 			'ticket_count' => absint($ticket_snapshot['effective_ticket_count'] ?? 0),
-			'ticket_mode' => sanitize_key((string) ($ticket_snapshot['mode'] ?? '')),
-		) + vms_event_plan_perf_request_context($plan_id);
+			'ticket_mode' => substr(sanitize_key((string) ($ticket_snapshot['mode'] ?? '')), 0, 40),
+		);
 
+		$integer_keys = array('count');
+		$timing_keys = array('elapsed_ms', 'runtime_ms', 'duration_ms', 'total_elapsed_ms');
 		foreach ($context as $key => $value) {
 			$key = sanitize_key((string) $key);
-			if ($key === '') {
+			if (!in_array($key, $integer_keys, true) && !in_array($key, $timing_keys, true)) {
+				continue;
+			}
+			if (!is_numeric($value)) {
 				continue;
 			}
 
-			if (is_scalar($value) || $value === null) {
-				if (is_string($value)) {
-					$entry[$key] = sanitize_text_field($value);
-				} else {
-					$entry[$key] = $value;
-				}
+			$number = (float) $value;
+			if (!is_finite($number) || $number < 0) {
 				continue;
 			}
-
-			$encoded = wp_json_encode($value);
-			$entry[$key] = is_string($encoded) ? $encoded : '';
+			$number = min($number, 1000000000);
+			$entry[$key] = in_array($key, $integer_keys, true) ? (int) $number : round($number, 3);
 		}
 
-		$line = wp_json_encode($entry);
-		if (!is_string($line) || $line === '') {
-			return;
-		}
-
-		error_log($line . PHP_EOL, 3, vms_event_plan_perf_log_path());
+		do_action('vms_event_plan_perf_trace', $entry);
 	}
 }
 

@@ -14180,15 +14180,6 @@ if (function_exists('vms_add_admin_notice')) {
 						update_option('vms_event_plan_legacy_ticket_cleanup_last_run', $summary, false);
 						delete_option($cursor_option);
 						delete_option($progress_option);
-						error_log(sprintf(
-							'[VMS] Legacy ticket meta cleanup complete: version=%s scanned=%d cleaned=%d deleted_keys=%d template_applied=%d skipped_no_v2=%d',
-							$target_version,
-							(int) $summary['scanned'],
-							(int) $summary['cleaned_plans'],
-							(int) $summary['deleted_keys'],
-							(int) $summary['template_applied'],
-							(int) $summary['skipped_no_v2_config']
-						));
 						break;
 					}
 
@@ -14908,7 +14899,15 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 if (!function_exists('tribe_update_event')) {
-                    error_log('VMS TEC: tribe_update_event() not available. Is The Events Calendar active?');
+                    if (function_exists('vms_record_operational_issue')) {
+                        vms_record_operational_issue('event_plan_tec_provider_unavailable', array(
+                            'service' => 'the_events_calendar',
+                            'operation' => 'resync_event',
+                            'status' => 'unavailable',
+                            'plan_id' => $post_id,
+                            'event_id' => $existing_tec_id,
+                        ));
+                    }
                     return false;
                 }
 
@@ -14929,8 +14928,15 @@ if (function_exists('vms_add_admin_notice')) {
 
                 $updated_id = tribe_update_event($existing_tec_id, $args);
                 if (!$updated_id || is_wp_error($updated_id)) {
-                    $msg = is_wp_error($updated_id) ? $updated_id->get_error_message() : 'Unknown error';
-                    error_log('VMS TEC: Failed to re-sync plan ' . $post_id . ' to TEC event ' . $existing_tec_id . ': ' . $msg);
+                    if (function_exists('vms_record_operational_issue')) {
+                        vms_record_operational_issue('event_plan_tec_resync_failed', array(
+                            'service' => 'the_events_calendar',
+                            'operation' => 'resync_event',
+                            'status' => 'failed',
+                            'plan_id' => $post_id,
+                            'event_id' => $existing_tec_id,
+                        ), is_wp_error($updated_id) ? $updated_id : 'tribe_update_event_failed');
+                    }
                     return false;
                 }
 
@@ -15375,8 +15381,15 @@ if (function_exists('vms_add_admin_notice')) {
             }
 
             if (!$updated || is_wp_error($updated)) {
-                $msg = is_wp_error($updated) ? $updated->get_error_message() : 'Unknown error';
-                error_log('VMS TEC: Failed to sync TEC event extras for plan ' . $plan_id . ' (TEC event ' . $tec_event_id . '): ' . $msg);
+                if (function_exists('vms_record_operational_issue')) {
+                    vms_record_operational_issue('event_plan_tec_extras_sync_failed', array(
+                        'service' => 'the_events_calendar',
+                        'operation' => 'sync_event_extras',
+                        'status' => 'failed',
+                        'plan_id' => $plan_id,
+                        'event_id' => $tec_event_id,
+                    ), is_wp_error($updated) ? $updated : 'tribe_update_event_failed');
+                }
             }
         }
 
