@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` then verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. The current packaged residual baseline is `175` errors, `345` warnings, `520` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=395`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. Coordinated Wave 2 on `2026-08-08` then verified Ticketing Rules V2 `23 -> 0`, vendor-application confirmation `27 -> 0`, and goals/forecast `31 -> 0`. The current packaged residual baseline is `166` errors, `273` warnings, `439` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=314`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4442,6 +4442,49 @@ Date: 2026-08-07
 - `WPORG-28R-G12` remains `in progress` with `38` DB/SQL rows after the verified social-queue and package-boundary slices.
 - `WPORG-28R-G13` retains `128` DB/SQL rows; `G14-G15` retain `25` date rows; `G16-G17` retain `42` logging rows.
 - `WPORG-28R` remains blocked. No final artifact, upload, slug reservation, reviewer reply, deployment, or production convergence is authorized from this checkpoint.
+
+## Coordinated Wave 2 Result
+
+Date: 2026-08-08
+
+### Summary
+
+- Result: `PASS`
+- Scope: Ticketing Rules V2 DB/SQL, vendor-application confirmation DB/SQL, goals/forecast DB/SQL, and release-compatibility harness evidence corrections.
+- Primary source commit scanned: `b4bd105c37c86e9526ce1357014357f0ed76ae30`.
+- Primary runtime commits: `f4aae22` (Ticketing Rules V2), `36ca2eb` (vendor-application confirmation), and `709bb54` plus `b4bd105` (goals/forecast and exact slow-query rule correction).
+- Release-harness commits: `6c740e8` (packaged-mirror dependency discovery) and `18fef69` (authenticated admin follow-up diagnostic).
+- Durable current counts and provenance: `docs/wporg-current-scan-state.json`.
+
+### Runtime And Tooling Changes
+
+- `includes/integrations/ticketing-rules-v2.php` DB/SQL moved `23 -> 0` while preserving HPOS/CPT refund handling, product/variation and status filters, assignee counts, request-local caching, fallbacks, and read-only behavior.
+- `includes/core/vendor-application-confirmation.php` DB/SQL moved `27 -> 0` while preserving token selection, expiry, invalidation, creation, consumption, duplicate-application checks, and existing authorization/request boundaries. Its separate operational logging row remains deferred.
+- `includes/core/goals-forecast.php` DB/SQL moved `31 -> 0` while preserving repository CRUD contracts, active-goal ordering, period selection, and forecast arithmetic. Its separate operational logging row remains deferred.
+- The compatibility harness now discovers sibling dependency plugins from direct or `plugins/packages/` mirror layouts instead of assuming one fixed directory depth.
+- The login probe now treats an authenticated same-origin wp-admin follow-up as the authoritative cookie-session signal and records the initial POST status separately; this removes a false warning when the initial POST reports a transport failure after setting a valid session cookie.
+
+### Verification
+
+- Dedicated executable SQL-contract suites passed: `tests/ticketing-rules-v2-repository-sql-remediation.php`, `tests/vendor-application-confirmation-repository-sql-remediation.php`, and `tests/goals-forecast-repository-sql-remediation.php`.
+- Independent reviewers approved all three runtime slices. The goals review caught two near-miss slow-query rule names before integration; follow-up commit `b4bd105` corrected them to the installed scanner's exact `slow_db_query_meta_key` and `slow_db_query_meta_query` sources and added a broad-suppression guard.
+- Mirror/live parity is exact for goals/forecast and for every owned Ticketing Rules V2 and vendor-confirmation function. Preexisting unrelated live divergences were preserved.
+- Integrated runtime guards, compatibility-harness self-tests, and all `18` public-release pipeline cases passed from the primary branch.
+- Final public build passed at `/tmp/wporg-wave2-integrated.Rl4Lum/build/backstage-venue-manager-1.2.0-public-release.zip`, SHA-256 `0b3838568b87ee5a61b9b29406ba02b5bebaefa2db07fcb0a5e823abe5dd1cb0`.
+- The builder staged `372` files, linted `269` packaged PHP files, syntax-checked `55` JavaScript files, passed all five release regressions, passed all four optional-dependency load-smokes, and passed archive-integrity validation.
+- Final packaged Plugin Check exited `0` with empty stderr. Normalized strict JSON is `/tmp/wporg-wave2-integrated.Rl4Lum/plugin-check/plugin-check.strict.json`; before/after activation-state snapshots are byte-identical.
+- Final scan: `166` errors, `273` warnings, `439` total, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=314`.
+- Final blocker families: DB/SQL `247`, nonce/input `0`, date/time `25`, and logging `42`.
+- Exact rule deltas from Wave 1 were `UnescapedDBParameter 25 -> 17`, `DirectQuery 71 -> 42`, `NoCaching 62 -> 35`, `InterpolatedNotPrepared 18 -> 14`, `NotPrepared 15 -> 10`, `slow_meta_key 59 -> 58`, and `slow_meta_query 73 -> 66`; every non-DB code count stayed unchanged.
+- The full disposable compatibility matrix ran all seven dependency scenarios plus clean install/reactivation, baseline upgrade, interrupted-migration resume, and uninstall. It recorded zero fatals and zero PHP warnings; all sampled deprecations came from The Events Calendar under PHP `8.5.3`. The supported-stack recheck after `18fef69` confirmed authenticated wp-admin and public requests with the warning state attributable only to those third-party deprecations.
+
+### Current Parent State
+
+- `WPORG-28R-G10` remains `in progress` with `72` DB/SQL rows after the verified Ticketing Rules V2 slice.
+- `WPORG-28R-G11` remains `in progress` with `40` DB/SQL rows after the verified vendor-application confirmation slice.
+- `WPORG-28R-G12` remains `in progress` with `38` DB/SQL rows.
+- `WPORG-28R-G13` remains `in progress` with `97` DB/SQL rows after the verified goals/forecast slice; `G14-G15` retain `25` date rows; `G16-G17` retain `42` logging rows.
+- `WPORG-28R` remains blocked. No upload, slug reservation, reviewer reply, deployment, or production convergence is authorized from this checkpoint.
 
 Date: 2026-07-21
 
