@@ -6,9 +6,9 @@ Date: 2026-06-22
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
 - Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
-- Scan target for current counts: `/tmp/wporg-datezero-g15.0zTh76/scan/backstage-venue-manager`, extracted from the clean public package at source commit `d96d7d1c703f1b67d936d57fbb44c06e4f99cfcb`; the local `vms/` install was not used as the scan target
-- Current artifact SHA-256: `1d95cef55abf61d3ab7ccd6866d1c04f464e5335c7fec5629766694423222317`
-- Current strict-JSON SHA-256: `e0acd72b19d164c92958a99d9d1c58361fc90a8fcd1a0bf2c8d6f07b1ef9ef5a`
+- Scan target for current counts: `/tmp/wporg-g16-checkpoint-final.aOSh8U/extracted/backstage-venue-manager`, extracted from the clean public package at source commit `d4079b0bf2c8affb1f50ac587ddb858aa94197e2`; the local `vms/` install was not used as the scan target
+- Current artifact SHA-256: `6a9b45cd6e2cbb1fd6723f064b1c867a425b99c8604750791badfedfb2f62798`
+- Current strict-JSON SHA-256: `b0ebbddec1d17ce9a8770ae9ec385665f49962c6ebc1a3f2f1520e81d281b49c`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
 - Event Plans audit companion: `docs/WPORG_EVENT_PLANS_HARDENING_MAP_1.0.0.md`
 
@@ -147,23 +147,23 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Current Category Triage
 
-- Fresh packaged DB-zero / date-zero G15 checkpoint from `2026-08-08`: `125` errors, `42` warnings, `167` total findings, `5` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=42`.
-- Durable machine-readable counts and provenance are in `docs/wporg-current-scan-state.json`; normalized strict JSON is `/tmp/wporg-datezero-g15.0zTh76/plugin-check.strict.json`.
+- Fresh packaged G16 operational-logging checkpoint from `2026-08-08`: `125` errors, `16` warnings, `141` total findings, `5` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=16`.
+- Durable machine-readable counts and provenance are in `docs/wporg-current-scan-state.json`; normalized strict JSON is `/tmp/wporg-g16-checkpoint-final.aOSh8U/plugin-check.strict.json`.
 - The packaged scan reports `privateincludes/...` paths. The roadmap below uses the corresponding mirror `includes/...` ownership files that future implementation children must edit.
-- Coordinated Waves 1-4 removed their previously documented SQL slices. The later G10/G11/G13 closeout slices removed the remaining `115` Wave-4 DB/SQL rows, G14 removed its exact `11` date rows, and G15 removed the final `14`. The current package therefore has `0` DB/SQL, `0` nonce/input, `0` date/time, and `42` logging blockers, with no newly unmapped code.
+- Coordinated Waves 1-4 removed their previously documented SQL slices. The later G10/G11/G13 closeout slices removed the remaining `115` Wave-4 DB/SQL rows, G14 removed its exact `11` date rows, G15 removed the final `14`, and G16 removed its exact `26` operational-logging rows. The current package therefore has `0` DB/SQL, `0` nonce/input, `0` date/time, and `16` logging blockers, with no newly unmapped code.
 
 | Category | Current packaged count | Representative files | Current classification | Current strategy |
 | --- | ---: | --- | --- | --- |
 | Nonce and input handling | `0` | closed by `WPORG-28R-G1` through `WPORG-28R-G6-T5` | `verified` | No packaged nonce/input blocker rows remain; keep `WPORG-28R-G7` retired unless a future strict-JSON rerun creates newly unmapped nonce/input rows. |
 | Database and SQL safety | `0` | closed by `WPORG-28R-G8` through `WPORG-28R-G13` | `verified` | Keep the SQL family closed; the fresh extracted-package scan contains no WordPress DB or PluginCheck DirectDB code. |
 | Date/time API usage | `0` | closed by `WPORG-28R-G14` and `WPORG-28R-G15` | `verified` | Keep the date family closed; the fresh extracted-package scan contains no `WordPress.DateTime.RestrictedFunctions.date_date` code. |
-| Development logging | `42` | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G16` and `WPORG-28R-G17` after the earlier lifecycle work clarifies which logs remain operational, which are dev traces, and which can be safely gated or removed. |
-| Escaping and output safety | `123` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `42` submission blockers. |
+| Development logging | `16` | `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php`, `includes/ticketing/ticket-mutation-audit.php` | `SUBMISSION_BLOCKER` | `WPORG-28R-G16` is scanner-verified closed at `26 -> 0`; execute the final `WPORG-28R-G17` developer-diagnostic slice. |
+| Escaping and output safety | `123` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `16` submission blockers. |
 
 ## Residual Submission-Blocker Roadmap
 
 - `WPORG-28R-G0` now owns the complete residual blocker decomposition. Every current blocker row belongs to exactly one implementation child below.
-- Remaining family sums reconcile exactly: `G10 0 + G11 0 + G12 0 + G13 0 = 0`, `G14 0 + G15 0 = 0`, and `G16 26 + G17 16 = 42`, grand total `42`. The nonce/input family remains closed at `0`.
+- Remaining family sums reconcile exactly: `G10 0 + G11 0 + G12 0 + G13 0 = 0`, `G14 0 + G15 0 = 0`, and `G16 0 + G17 16 = 16`, grand total `16`. The nonce/input family remains closed at `0`.
 - Every implementation child still reruns `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php` in addition to the focused suites listed below.
 - Every implementation child closes only its owned packaged rows; unrelated families must remain count-for-count unchanged except for documented same-file line movement.
 
@@ -383,12 +383,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 #### `WPORG-28R-G16 — Operational Failure And Service Logging`
 
-- Count: `26` (`error_log 26`)
+- Status: `verified` by the clean package and strict scan from source commit `d4079b0bf2c8affb1f50ac587ddb858aa94197e2`
+- Original count: `26` (`error_log 26`); current remaining count: `0`
 - Files: `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/admin/data-tools/actions-event-plan-import.php`, `includes/taxonomies/vendor-type.php`, `includes/runtime-guards.php`, `includes/integrations/ticketing-phase-b.php`, `includes/core/notifications.php`, `includes/core/vendor-application-confirmation.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/admin/settings-page.php`, `includes/core/goals-forecast.php`
 - Lifecycle / subsystem: `FORM_SUBMISSION`, `REST`, `IMPORT_EXPORT`, `BACKGROUND_QUEUE`, `BOOTSTRAP`; operational failures, service-edge retries, and bounded runtime diagnostics
 - Boundary: preserve real operational failure evidence while removing dev-only noise, sensitive values, and recursion risks; do not route fatal-path logging through helpers that might require unavailable services
-- Focused tests: `tests/vendor-apply-turnstile-contract-remediation.php`, `tests/event-plan-import-upload-api-remediation.php`, `tests/request-input-sanitization.php`, `tests/ticket-claims-assignee-validation.php`
-- Closure / defers: owned packaged logging rows `26 -> 0`; defer development-only traces and profiler noise to `G17`
+- Focused tests: `tests/g16-operational-logging-foundation.php`, `tests/g16-operational-logging-group-a.php`, `tests/g16-operational-logging-group-b.php`, `tests/g16-operational-logging-group-c.php`, plus the existing G10-G15 semantic companions, `tests/runtime-stub-guards.php`, `tests/release-compatibility-harness.php`, and `tests/public-release-build-pipeline.php`
+- Closure / defers: runtime guards `2 -> 0`, Group A `11 -> 0`, Group B `9 -> 0`, and Group C `4 -> 0`; the final clean extracted-package scan proves G16 `26 -> 0` while preserving the exact `16` G17 rows. An initial checkpoint scan exposed one `parse_url()` alternative-function blocker in the new adapter; `d4079b0bf2c8affb1f50ac587ddb858aa94197e2` replaced that call with `wp_parse_url()`, and the final scan contains no alternative-function finding. Development-only traces and profiler noise remain deferred only to `G17`.
 
 #### `WPORG-28R-G17 — Development Diagnostics, Profiling, And Trace Logging`
 
@@ -431,13 +432,13 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Parent Closeout Condition
 
-- `WPORG-28R-G0` remains terminal because its original roadmap had no unowned or multiply-owned occurrence; subsequent verified children have reduced the current blocker total to `42` without changing ownership rules.
+- `WPORG-28R-G0` remains terminal because its original roadmap had no unowned or multiply-owned occurrence; subsequent verified children have reduced the current blocker total to `16` without changing ownership rules.
 - `WPORG-28R` remains blocked until every `G1` through `G17` child closes and a fresh packaged strict-json rerun proves `SUBMISSION_BLOCKER=0`.
 - `WPORG-28`, `WPORG-28Q`, `Review-2 Name/Slug Closeout`, and `Review-13 Final Actions` all remain open or blocked exactly as documented in the ledger.
 - Slug reservation, corrected upload, and reviewer communication remain unauthorized until the parent is closed and explicit authorization is given.
 
 ## Recommended Next Task
 
-- Active execution target: `WPORG-28R-G16`, beginning with the bounded operational-issue adapter in `includes/runtime-guards.php`, then the exact operational failure partitions from `/tmp/wporg-datezero-g15.0zTh76/plugin-check.strict.json`.
-- Scope: preserve useful operational evidence in bounded private storage while redacting messages, recipients, tokens, full URIs, paths, SQL, IPs, and other sensitive values; keep shutdown/fatal paths independently safe and behavior-covered.
-- Scope guardrails: do not reopen verified nonce/input, DB/SQL, or date families; do not pull development-only traces into G16; do not treat the package as submission-ready until `G16` and `G17` close and a fresh strict-json scan proves `SUBMISSION_BLOCKER=0`.
+- Active execution target: `WPORG-28R-G17`, consuming the bounded G16 adapter for genuine operational failures while removing or safely gating the exact remaining developer traces, profiler leftovers, and stack collection from `/tmp/wporg-g16-checkpoint-final.aOSh8U/plugin-check.strict.json`.
+- Scope: close only the exact `15` `error_log` rows and sole `debug_backtrace` row owned by G17 while preserving necessary operational evidence, existing hooks, report behavior, and bounded diagnostic contracts.
+- Scope guardrails: do not reopen verified nonce/input, DB/SQL, date, or G16 operational-logging families; do not treat the package as submission-ready until G17 closes and a fresh final strict-json scan proves `SUBMISSION_BLOCKER=0`.

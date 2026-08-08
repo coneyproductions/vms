@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-08-08T16:27:08Z",
-  "source_commit": "d96d7d1c703f1b67d936d57fbb44c06e4f99cfcb",
+  "generated_at_utc": "2026-08-08T19:58:04Z",
+  "source_commit": "d4079b0bf2c8affb1f50ac587ddb858aa94197e2",
   "artifact": {
-    "path": "/tmp/wporg-datezero-g15.0zTh76/build/backstage-venue-manager-1.2.0-public-release.zip",
-    "sha256": "1d95cef55abf61d3ab7ccd6866d1c04f464e5335c7fec5629766694423222317",
+    "path": "/tmp/wporg-g16-checkpoint-final.aOSh8U/build/backstage-venue-manager-1.2.0-public-release.zip",
+    "sha256": "6a9b45cd6e2cbb1fd6723f064b1c867a425b99c8604750791badfedfb2f62798",
+    "build_finished_at_utc": "2026-08-08T19:52:45+00:00",
     "packaged_files": 372,
-    "strict_json_path": "/tmp/wporg-datezero-g15.0zTh76/plugin-check.strict.json",
-    "strict_json_sha256": "e0acd72b19d164c92958a99d9d1c58361fc90a8fcd1a0bf2c8d6f07b1ef9ef5a",
+    "strict_json_path": "/tmp/wporg-g16-checkpoint-final.aOSh8U/plugin-check.strict.json",
+    "strict_json_sha256": "b0ebbddec1d17ce9a8770ae9ec385665f49962c6ebc1a3f2f1520e81d281b49c",
     "plugin_check_stderr_bytes": 0,
     "activation_state_unchanged": null,
     "activation_snapshot_sha256": null,
@@ -15,43 +16,46 @@
   },
   "scan": {
     "errors": 125,
-    "warnings": 42,
-    "total": 167,
+    "warnings": 16,
+    "total": 141,
     "unique_codes": 5,
     "classifications": {
       "known_accepted": 0,
       "known_nonblocking": 125,
       "new_finding": 0,
       "unmapped": 0,
-      "submission_blocker": 42
+      "submission_blocker": 16
     },
     "blocker_families": {
       "database_sql": 0,
       "nonce_input": 0,
       "date_time": 0,
-      "logging": 42
+      "logging": 16
     },
     "code_counts": {
       "PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent": 1,
       "WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace": 1,
-      "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 41,
+      "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 15,
       "WordPress.Security.EscapeOutput.OutputNotEscaped": 123,
       "WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet": 1
     }
   },
   "verified_delta_from_post_g10_checkpoint": {
     "baseline_total": 658,
-    "current_total": 167,
-    "removed_total": 491,
+    "current_total": 141,
+    "removed_total": 517,
     "baseline_submission_blocker": 529,
-    "current_submission_blocker": 42,
-    "removed_submission_blocker": 487,
+    "current_submission_blocker": 16,
+    "removed_submission_blocker": 513,
     "baseline_database_sql": 462,
     "current_database_sql": 0,
     "removed_database_sql": 462,
     "baseline_date_time": 25,
     "current_date_time": 0,
     "removed_date_time": 25,
+    "baseline_logging": 42,
+    "current_logging": 16,
+    "removed_logging": 26,
     "slices": {
       "ticketing_phase_b_database_sql": "21 -> 0",
       "vendor_user_links_database_sql": "36 -> 0",
@@ -81,55 +85,71 @@
       "g14_date_time": "11 -> 0",
       "g15_staff_notification_date_time": "5 -> 0",
       "g15_ticketing_date_time": "5 -> 0",
-      "g15_finance_date_time": "4 -> 0"
+      "g15_finance_date_time": "4 -> 0",
+      "g16_runtime_guard_operational_logging": "2 -> 0",
+      "g16_group_a_operational_logging": "11 -> 0",
+      "g16_group_b_operational_logging": "9 -> 0",
+      "g16_group_c_operational_logging": "4 -> 0"
     }
   },
   "verified_delta_from_wave1": {
     "baseline_total": 520,
-    "current_total": 167,
-    "removed_total": 353,
+    "current_total": 141,
+    "removed_total": 379,
     "baseline_submission_blocker": 395,
-    "current_submission_blocker": 42,
-    "removed_submission_blocker": 353,
+    "current_submission_blocker": 16,
+    "removed_submission_blocker": 379,
     "baseline_database_sql": 328,
     "current_database_sql": 0,
-    "removed_database_sql": 328
+    "removed_database_sql": 328,
+    "baseline_logging": 42,
+    "current_logging": 16,
+    "removed_logging": 26
   },
   "verified_delta_from_wave2": {
     "baseline_total": 439,
-    "current_total": 167,
-    "removed_total": 272,
+    "current_total": 141,
+    "removed_total": 298,
     "baseline_submission_blocker": 314,
-    "current_submission_blocker": 42,
-    "removed_submission_blocker": 272,
+    "current_submission_blocker": 16,
+    "removed_submission_blocker": 298,
     "baseline_database_sql": 247,
     "current_database_sql": 0,
-    "removed_database_sql": 247
+    "removed_database_sql": 247,
+    "baseline_logging": 42,
+    "current_logging": 16,
+    "removed_logging": 26
   },
   "verified_delta_from_wave3": {
     "baseline_total": 361,
-    "current_total": 167,
-    "removed_total": 194,
+    "current_total": 141,
+    "removed_total": 220,
     "baseline_submission_blocker": 236,
-    "current_submission_blocker": 42,
-    "removed_submission_blocker": 194,
+    "current_submission_blocker": 16,
+    "removed_submission_blocker": 220,
     "baseline_database_sql": 169,
     "current_database_sql": 0,
-    "removed_database_sql": 169
+    "removed_database_sql": 169,
+    "baseline_logging": 42,
+    "current_logging": 16,
+    "removed_logging": 26
   },
   "verified_delta_from_wave4": {
     "baseline_total": 307,
-    "current_total": 167,
-    "removed_total": 140,
+    "current_total": 141,
+    "removed_total": 166,
     "baseline_submission_blocker": 182,
-    "current_submission_blocker": 42,
-    "removed_submission_blocker": 140,
+    "current_submission_blocker": 16,
+    "removed_submission_blocker": 166,
     "baseline_database_sql": 115,
     "current_database_sql": 0,
     "removed_database_sql": 115,
     "baseline_date_time": 25,
     "current_date_time": 0,
-    "removed_date_time": 25
+    "removed_date_time": 25,
+    "baseline_logging": 42,
+    "current_logging": 16,
+    "removed_logging": 26
   },
   "remaining_roadmap": {
     "WPORG-28R-G10": 0,
@@ -138,7 +158,7 @@
     "WPORG-28R-G13": 0,
     "WPORG-28R-G14": 0,
     "WPORG-28R-G15": 0,
-    "WPORG-28R-G16": 26,
+    "WPORG-28R-G16": 0,
     "WPORG-28R-G17": 16
   },
   "external_actions": {
