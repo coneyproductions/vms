@@ -516,6 +516,7 @@ if (!function_exists('vms_square_firewall_query_product_ids')) {
         $after_id = max(0, absint($after_id));
         $limit = max(1, min(1000, absint($limit)));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Incremental firewall enforcement reads the current product table directly with an ID cursor and a batch limit clamped to 1-1000.
         $ids = $wpdb->get_col($wpdb->prepare(
             "SELECT ID FROM {$wpdb->posts}
              WHERE post_type IN ('product', 'product_variation')

@@ -1457,6 +1457,7 @@ function vms_square_ticket_mirror_log(int $product_id, string $action, array $ar
     );
 
     $format = array('%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s');
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Append-only Square mirror diagnostics must be inserted immediately so the caller's action/result ordering remains authoritative.
     $wpdb->insert($table, $data, $format);
 }
 
@@ -1472,11 +1473,13 @@ function vms_square_ticket_mirror_recent_logs(int $product_id, int $limit = 8): 
 
     $table = vms_square_ticket_mirror_log_table_name();
     $sql = $wpdb->prepare(
-        "SELECT * FROM {$table} WHERE product_id = %d ORDER BY id DESC LIMIT %d",
+        "SELECT * FROM %i WHERE product_id = %d ORDER BY id DESC LIMIT %d",
+        $table,
         $product_id,
         $limit
     );
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Request-fresh diagnostics read the immediately prepared identifier/value query for one product with a limit clamped to 1-50.
     $rows = $wpdb->get_results($sql, ARRAY_A);
     return is_array($rows) ? $rows : array();
 }

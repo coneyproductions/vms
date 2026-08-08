@@ -665,6 +665,7 @@ if (!function_exists('vms_ticketing_verification_migrate_legacy_post_type_once')
             $canonical,
             $legacy
         );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- One-time option-guarded post-type migration executes the immediately prepared UPDATE before recording its completion marker; a mutation result cannot be served from cache.
         $wpdb->query($sql);
         update_option($marker, '1', false);
     }
@@ -1150,7 +1151,9 @@ if (!function_exists('vms_ticketing_verification_get_latest_request')) {
             'orderby'        => 'date',
             'order'          => 'DESC',
             'no_found_rows'  => true,
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Exact-user verification lookup is restricted to the established user_id key and returns at most the single latest request.
             'meta_key'       => 'user_id',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Exact-user verification lookup is restricted to one normalized user ID and returns at most the single latest request.
             'meta_value'     => (string) $user_id,
         ));
 
@@ -2959,6 +2962,7 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
             'no_found_rows'  => true,
         );
         if ($program_filter !== 'all') {
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Capability-gated admin listing is capped at 250 requests and applies one exact configured-program filter.
             $query_args['meta_query'] = array(
                 array(
                     'key' => 'program',

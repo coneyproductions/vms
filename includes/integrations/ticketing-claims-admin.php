@@ -439,6 +439,7 @@ if (!function_exists('vms_ticketing_claims_event_ticket_options')) {
 				'post_status' => array('publish', 'private', 'draft', 'pending'),
 				'fields' => 'ids',
 				'posts_per_page' => 200,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Event-scoped fallback is capped at 200 products and checks only the two established exact event-link keys.
 				'meta_query' => array(
 					'relation' => 'OR',
 					array(
@@ -637,12 +638,14 @@ if (!function_exists('vms_ticketing_claims_reservation_usage_map')) {
 
 		global $wpdb;
 		$table = vms_ticketing_claims_table_reservations();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Request-fresh reservation counts drive immediate claim availability; the event-scoped grouped read uses a prepared identifier/value and must not persist stale state.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT direct_grant_id, status, COUNT(1) AS cnt
-				 FROM {$table}
+				 FROM %i
 				 WHERE event_id = %d AND direct_grant_id > 0
 				 GROUP BY direct_grant_id, status",
+				$table,
 				$event_id
 			),
 			ARRAY_A
@@ -1582,6 +1585,7 @@ if (!function_exists('vms_ticketing_claims_get_event_verified_ticket_contexts'))
 			'post_status' => array('publish', 'private', 'draft', 'pending'),
 			'fields' => 'ids',
 			'posts_per_page' => 300,
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Event-scoped verified-ticket discovery is capped at 300 products across the two established exact event-link keys.
 			'meta_query' => array(
 				'relation' => 'OR',
 				array(
