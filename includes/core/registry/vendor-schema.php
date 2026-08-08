@@ -36,7 +36,7 @@ function vms_vendor_schema(): array
 		 */
 		'primary_email' => [
 			'storage'     => 'meta',
-			'meta_key'    => (function_exists('vms_meta_key') ? vms_meta_key('vendor','primary_email') : '_vms_vendor_primary_email'),
+			'meta_key'    => (function_exists('vms_meta_key') ? vms_meta_key('vendor','primary_email') : '_vms_vendor_primary_email'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required'    => false,
 			'type'        => 'email',
 			'label'       => 'Primary Contact Email',
@@ -45,7 +45,7 @@ function vms_vendor_schema(): array
 
 		'primary_phone' => [
 			'storage'  => 'meta',
-			'meta_key' => (function_exists('vms_meta_key') ? vms_meta_key('vendor','primary_phone') : '_vms_vendor_primary_phone'),
+			'meta_key' => (function_exists('vms_meta_key') ? vms_meta_key('vendor','primary_phone') : '_vms_vendor_primary_phone'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'Primary Phone',
@@ -57,7 +57,7 @@ function vms_vendor_schema(): array
 		 */
 		'email' => [
 			'storage'    => 'meta',
-			'meta_key'   => vms_meta_key('vendor', 'email'), // _vms_vendor_email
+			'meta_key'   => vms_meta_key('vendor', 'email'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here. _vms_vendor_email
 			'required'   => false,
 			'type'       => 'email',
 			'label'      => 'Email (Legacy)',
@@ -66,7 +66,7 @@ function vms_vendor_schema(): array
 
 		'phone' => [
 			'storage'    => 'meta',
-			'meta_key'   => vms_meta_key('vendor', 'phone'), // _vms_vendor_phone
+			'meta_key'   => vms_meta_key('vendor', 'phone'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here. _vms_vendor_phone
 			'required'   => false,
 			'type'       => 'string',
 			'label'      => 'Phone (Legacy)',
@@ -75,7 +75,7 @@ function vms_vendor_schema(): array
 
 		'website' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'website'),
+			'meta_key' => vms_meta_key('vendor', 'website'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'url',
 			'label'    => 'Website',
@@ -94,7 +94,7 @@ function vms_vendor_schema(): array
 		 */
 		'payee_legal_name' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'payee_legal_name'),
+			'meta_key' => vms_meta_key('vendor', 'payee_legal_name'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'Legal / Payee Name (as on W-9)',
@@ -102,7 +102,7 @@ function vms_vendor_schema(): array
 
 		'payee_dba' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'payee_dba'),
+			'meta_key' => vms_meta_key('vendor', 'payee_dba'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'Business Name / DBA (optional)',
@@ -110,7 +110,7 @@ function vms_vendor_schema(): array
 
 		'entity_type' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'entity_type'),
+			'meta_key' => vms_meta_key('vendor', 'entity_type'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'Entity Type',
@@ -118,7 +118,7 @@ function vms_vendor_schema(): array
 
 		'w9_received_date' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'w9_received_date'),
+			'meta_key' => vms_meta_key('vendor', 'w9_received_date'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'W-9 Received Date',
@@ -126,7 +126,7 @@ function vms_vendor_schema(): array
 
 		'w9_attested_at' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'w9_attested_at'),
+			'meta_key' => vms_meta_key('vendor', 'w9_attested_at'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'int',
 			'label'    => 'W-9 Attested Timestamp',
@@ -134,7 +134,7 @@ function vms_vendor_schema(): array
 
 		'w9_provider' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'w9_provider'),
+			'meta_key' => vms_meta_key('vendor', 'w9_provider'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'W-9 Offsite Provider',
@@ -142,7 +142,7 @@ function vms_vendor_schema(): array
 
 			'tax_profile_type' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_profile_type'),
+				'meta_key' => vms_meta_key('vendor', 'tax_profile_type'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax Profile Type',
@@ -150,7 +150,7 @@ function vms_vendor_schema(): array
 
 			'tax_tin_type' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_tin_type'),
+				'meta_key' => vms_meta_key('vendor', 'tax_tin_type'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax ID Type',
@@ -158,7 +158,7 @@ function vms_vendor_schema(): array
 
 			'tax_business_or_last_name' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_business_or_last_name'),
+				'meta_key' => vms_meta_key('vendor', 'tax_business_or_last_name'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax Legal Name (Business or Last)',
@@ -166,7 +166,7 @@ function vms_vendor_schema(): array
 
 			'tax_first_name' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_first_name'),
+				'meta_key' => vms_meta_key('vendor', 'tax_first_name'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax First Name',
@@ -174,7 +174,7 @@ function vms_vendor_schema(): array
 
 			'tax_middle_name' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_middle_name'),
+				'meta_key' => vms_meta_key('vendor', 'tax_middle_name'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax Middle Name',
@@ -182,7 +182,7 @@ function vms_vendor_schema(): array
 
 			'tax_suffix' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_suffix'),
+				'meta_key' => vms_meta_key('vendor', 'tax_suffix'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax Name Suffix',
@@ -196,7 +196,7 @@ function vms_vendor_schema(): array
 		 */
 			'tax_email' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_email'),
+				'meta_key' => vms_meta_key('vendor', 'tax_email'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'email',
 				'label'    => 'Tax Contact Email',
@@ -204,7 +204,7 @@ function vms_vendor_schema(): array
 
 			'tax_phone' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_phone'),
+				'meta_key' => vms_meta_key('vendor', 'tax_phone'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax Contact Phone',
@@ -212,7 +212,7 @@ function vms_vendor_schema(): array
 
 			'tax_country' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_country'),
+				'meta_key' => vms_meta_key('vendor', 'tax_country'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax Country',
@@ -237,7 +237,7 @@ function vms_vendor_schema(): array
 		 */
 			'tax_attention_to' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'tax_attention_to'),
+				'meta_key' => vms_meta_key('vendor', 'tax_attention_to'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Tax Attention To',
@@ -245,7 +245,7 @@ function vms_vendor_schema(): array
 
 			'tax_address_1' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'addr1'),
+				'meta_key' => vms_meta_key('vendor', 'addr1'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Address Line 1',
@@ -253,7 +253,7 @@ function vms_vendor_schema(): array
 
 			'tax_address_2' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'addr2'),
+				'meta_key' => vms_meta_key('vendor', 'addr2'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'Address Line 2',
@@ -261,7 +261,7 @@ function vms_vendor_schema(): array
 
 			'tax_city' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'city'),
+				'meta_key' => vms_meta_key('vendor', 'city'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'City',
@@ -269,7 +269,7 @@ function vms_vendor_schema(): array
 
 			'tax_state' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'state'),
+				'meta_key' => vms_meta_key('vendor', 'state'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'State / Province',
@@ -277,7 +277,7 @@ function vms_vendor_schema(): array
 
 			'tax_postal_code' => [
 				'storage'  => 'meta',
-				'meta_key' => vms_meta_key('vendor', 'zip'),
+				'meta_key' => vms_meta_key('vendor', 'zip'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 				'required' => false,
 				'type'     => 'string',
 				'label'    => 'ZIP / Postal Code',
@@ -288,7 +288,7 @@ function vms_vendor_schema(): array
 		 */
 		'availability' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'availability'),
+			'meta_key' => vms_meta_key('vendor', 'availability'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'Availability',
@@ -296,7 +296,7 @@ function vms_vendor_schema(): array
 
 		'notes_internal' => [
 			'storage'  => 'meta',
-			'meta_key' => vms_meta_key('vendor', 'notes_internal'),
+			'meta_key' => vms_meta_key('vendor', 'notes_internal'), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Vendor-schema result descriptor only; no query is executed here.
 			'required' => false,
 			'type'     => 'string',
 			'label'    => 'Internal Notes',

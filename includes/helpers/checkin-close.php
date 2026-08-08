@@ -175,7 +175,7 @@ if (!function_exists('vms_event_plan_store_checkin_close_meta')) {
 
         $resolved['stored'] = $value !== '';
         $resolved['checkin_close_at'] = $value;
-        $resolved['meta_key'] = $meta_key;
+        $resolved['meta_key'] = $meta_key; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Check-in result descriptor only; no query is executed here.
 
         return $resolved;
     }
