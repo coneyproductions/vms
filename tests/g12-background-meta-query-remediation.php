@@ -60,6 +60,93 @@ function g12_extract_function(string $source, string $name): string
 	throw new RuntimeException('Unable to parse function ' . $name . '.');
 }
 
+/**
+ * @param array<string, string>                                              $sources Source contents keyed by owned source name.
+ * @param string[]                                                          $allowed_codes Exact installed source codes permitted by this slice.
+ * @param array<int, array{source: string, line: int, code: string}>         $expected_rows Expected DB annotation inventory.
+ * @return string[]
+ */
+function g12_db_annotation_errors(array $sources, array $allowed_codes, array $expected_rows): array
+{
+	$errors = array();
+	$actual_rows = array();
+
+	foreach ($sources as $source_name => $source) {
+		$lines = preg_split('/\R/', $source);
+		if (!is_array($lines)) {
+			$errors[] = 'Unable to split source into lines: ' . $source_name;
+			continue;
+		}
+
+		foreach ($lines as $index => $line) {
+			if (strpos($line, 'phpcs:') === false || preg_match('/(?:WordPress\.DB|PluginCheck\.Security\.DirectDB)/i', $line) !== 1) {
+				continue;
+			}
+
+			$directive = substr($line, (int) strpos($line, 'phpcs:'));
+			$reason_offset = strpos($directive, ' -- ');
+			if ($reason_offset !== false) {
+				$directive = substr($directive, 0, $reason_offset);
+			}
+			$directive = trim($directive);
+
+			if (preg_match('/^phpcs:([a-z]+)\b(?:\s+(.+))?$/i', $directive, $matches) !== 1) {
+				$errors[] = sprintf('%s:%d has an unparseable DB-related PHPCS annotation.', $source_name, $index + 1);
+				continue;
+			}
+
+			$verb = strtolower($matches[1]);
+			$code = isset($matches[2]) ? trim($matches[2]) : '';
+			if ($verb !== 'ignore') {
+				$errors[] = sprintf('%s:%d uses forbidden phpcs:%s DB suppression.', $source_name, $index + 1, $verb);
+				continue;
+			}
+			if (!in_array($code, $allowed_codes, true)) {
+				$errors[] = sprintf('%s:%d uses a non-exact DB source code: %s', $source_name, $index + 1, $code);
+				continue;
+			}
+
+			$actual_rows[] = array(
+				'source' => $source_name,
+				'line' => $index + 1,
+				'code' => $code,
+			);
+		}
+	}
+
+	$signature = static function (array $row): string {
+		return $row['source'] . ':' . $row['line'] . ':' . $row['code'];
+	};
+	$actual_signatures = array_map($signature, $actual_rows);
+	$expected_signatures = array_map($signature, $expected_rows);
+	sort($actual_signatures);
+	sort($expected_signatures);
+	if ($actual_signatures !== $expected_signatures) {
+		$errors[] = 'DB annotation occurrences differ from the exact expected inventory.';
+	}
+
+	return $errors;
+}
+
+/**
+ * @param array<int, array{code: string, reason: string}> $owned_rows Owned annotations to remove.
+ * @return array{source: string, removed: int}
+ */
+function g12_strip_owned_annotations(string $source, array $owned_rows, string $label): array
+{
+	$removed = 0;
+	foreach ($owned_rows as $row) {
+		$annotation = ' // phpcs:ignore ' . $row['code'] . ' -- ' . $row['reason'];
+		g12_same(1, substr_count($source, $annotation), $label . ' must contain each owned annotation exactly once before projection.');
+		$replacement_count = 0;
+		$source = str_replace($annotation, '', $source, $replacement_count);
+		g12_same(1, $replacement_count, $label . ' must strip each owned annotation exactly once.');
+		$removed += $replacement_count;
+	}
+
+	return array('source' => $source, 'removed' => $removed);
+}
+
 /** @return int[] */
 function g12_post_ids(array $posts): array
 {
@@ -267,10 +354,100 @@ foreach ($wave3_inventory as $row) {
 }
 g12_same(0, count($wave3_inventory) - $resolved_rows, 'All six owned Wave 3 rows should project to zero residual target findings.');
 
+$allowed_db_codes = array($meta_key_rule, $meta_query_rule);
+$mirror_expected_annotations = array_map(
+	static function (array $row): array {
+		return array('source' => $row['source'], 'line' => $row['line'], 'code' => $row['code']);
+	},
+	$wave3_inventory
+);
+$shadow_expected_annotations = array(
+	array('source' => 'recipients', 'line' => 224, 'code' => $meta_key_rule),
+	array('source' => 'recipients', 'line' => 225, 'code' => $meta_query_rule),
+	array('source' => 'scheduler', 'line' => 73, 'code' => $meta_key_rule),
+	array('source' => 'scheduler', 'line' => 74, 'code' => $meta_query_rule),
+	array('source' => 'import', 'line' => 666, 'code' => $meta_query_rule),
+	array('source' => 'import', 'line' => 1875, 'code' => $meta_query_rule),
+);
+g12_same(
+	array(),
+	g12_db_annotation_errors($mirror_sources, $allowed_db_codes, $mirror_expected_annotations),
+	'Mirror DB-related PHPCS annotations must use only the two exact installed source codes at the six owned occurrences.'
+);
+g12_same(
+	array(),
+	g12_db_annotation_errors($shadow_sources, $allowed_db_codes, $shadow_expected_annotations),
+	'Shadow-live DB-related PHPCS annotations must use only the two exact installed source codes at the six owned occurrences.'
+);
+
+$broad_ignore_controls = array(
+	'slow-query family' => '// phpcs:ignore WordPress.DB.SlowDBQuery -- forbidden broad family suppression',
+	'DB category' => '// phpcs:ignore WordPress.DB -- forbidden broad category suppression',
+	'prepared-SQL family' => '// phpcs:ignore WordPress.DB.PreparedSQL -- forbidden adjacent family suppression',
+	'Plugin Check direct-DB family' => '// phpcs:ignore PluginCheck.Security.DirectDB -- forbidden broad family suppression',
+	'multiple installed codes' => '// phpcs:ignore ' . $meta_key_rule . ',' . $meta_query_rule . ' -- forbidden multi-code suppression',
+);
+foreach ($broad_ignore_controls as $control_name => $control_annotation) {
+	$mutated_sources = $mirror_sources;
+	$mutated_sources['import'] .= "\n" . $control_annotation . "\n";
+	g12_assert(
+		g12_db_annotation_errors($mutated_sources, $allowed_db_codes, $mirror_expected_annotations) !== array(),
+		'The DB annotation audit must reject the negative control: ' . $control_name
+	);
+}
+
 $combined_source = implode("\n", $mirror_sources);
 g12_same(2, substr_count($combined_source, $meta_key_rule), 'Owned sources should contain exactly two slow-meta-key annotations.');
 g12_same(4, substr_count($combined_source, $meta_query_rule), 'Owned sources should contain exactly four slow-meta-query annotations.');
 g12_same(0, preg_match_all('/phpcs:(?:disable|enable|ignoreFile)\b/i', $combined_source), 'G12 remediation must not use file-wide or block-wide PHPCS suppression.');
+
+$projection_baselines = array(
+	'mirror' => array(
+		'recipients' => '68c8a7804077207dcbba0bdc58d6b56cb5d53af6bbd478059d38fba1f4f8d7eb',
+		'scheduler' => 'f60b72dacfd2150abf77524fde694928fe5961ba09db77cd410c718788b06973',
+		'import' => '1e298d59ed6afecfc5f0cbcdd7015d0b1c8de64d76470ab43a2fbfacf3000b4b',
+	),
+	'shadow' => array(
+		'recipients' => '68c8a7804077207dcbba0bdc58d6b56cb5d53af6bbd478059d38fba1f4f8d7eb',
+		'scheduler' => 'f60b72dacfd2150abf77524fde694928fe5961ba09db77cd410c718788b06973',
+		'import' => '28476d864096c8e8ceba2d5c2421fada58e6ec86e2c35359089688bdc43086d2',
+	),
+);
+$projected_sources = array();
+foreach (array('mirror' => $mirror_sources, 'shadow' => $shadow_sources) as $tree_name => $sources) {
+	$tree_removed = 0;
+	foreach ($sources as $source_name => $source) {
+		$owned_rows = array_values(array_filter(
+			$wave3_inventory,
+			static function (array $row) use ($source_name): bool {
+				return $row['source'] === $source_name;
+			}
+		));
+		$projection = g12_strip_owned_annotations($source, $owned_rows, $tree_name . ' ' . $source_name);
+		g12_same(2, $projection['removed'], $tree_name . ' ' . $source_name . ' must project exactly two owned comments.');
+		g12_same(
+			$projection_baselines[$tree_name][$source_name],
+			hash('sha256', $projection['source']),
+			$tree_name . ' ' . $source_name . ' must be annotation-only relative to its immutable baseline.'
+		);
+		$projected_sources[$tree_name][$source_name] = $projection['source'];
+		$tree_removed += $projection['removed'];
+	}
+	g12_same(6, $tree_removed, ucfirst($tree_name) . ' projection must strip exactly the six owned comments.');
+}
+
+$mutation_count = 0;
+$mutated_projection = str_replace(
+	"'posts_per_page' => 200,",
+	"'posts_per_page' => 201,",
+	$projected_sources['mirror']['recipients'],
+	$mutation_count
+);
+g12_same(1, $mutation_count, 'Projection drift negative control must mutate exactly one recipient query argument.');
+g12_assert(
+	!hash_equals($projection_baselines['mirror']['recipients'], hash('sha256', $mutated_projection)),
+	'Immutable projection hash must detect a non-annotation runtime mutation.'
+);
 
 $preview_source = g12_extract_function($mirror_sources['import'], 'vms_event_plan_import_build_preview_from_csv');
 $commit_source = g12_extract_function($mirror_sources['import'], 'vms_event_plan_import_run_commit');
