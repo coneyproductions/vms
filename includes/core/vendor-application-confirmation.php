@@ -267,7 +267,7 @@ if (!function_exists('vms_vendor_app_find_application_by_public_lookup_key')) {
             'no_found_rows' => true,
             'update_post_meta_cache' => false,
             'update_post_term_cache' => false,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Public confirmation and resend routes require an exact lookup across the finite application lookup-key metadata, bounded to one application ID.
                 array(
                     'key' => $key_name,
                     'value' => $lookup_key,
@@ -346,13 +346,15 @@ if (!function_exists('vms_vendor_app_get_latest_confirmation_token_row')) {
         }
 
         $table = vms_vendor_app_confirm_tokens_table();
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Confirmation state reads query the plugin-owned token repository with prepared identifier/value placeholders and must observe immediate lifecycle mutations.
         $row = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT *
-                 FROM {$table}
+                 FROM %i
                  WHERE application_id = %d
                  ORDER BY id DESC
                  LIMIT 1",
+                $table,
                 $app_id
             ),
             ARRAY_A
@@ -372,20 +374,42 @@ if (!function_exists('vms_vendor_app_get_latest_open_confirmation_token_row')) {
             return null;
         }
 
-        $table = vms_vendor_app_confirm_tokens_table();
-        $sql = "SELECT *
-                FROM {$table}
-                WHERE application_id = %d
-                  AND consumed_at IS NULL
-                  AND invalidated_at IS NULL";
-        $args = array($app_id);
         if ($require_unexpired) {
-            $sql .= " AND expires_at >= %s";
-            $args[] = current_time('mysql', true);
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Resend gating reads request-fresh open token state from the plugin-owned repository and applies prepared identifier, application, and expiry values.
+            $row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT *
+                     FROM %i
+                     WHERE application_id = %d
+                       AND consumed_at IS NULL
+                       AND invalidated_at IS NULL
+                       AND expires_at >= %s
+                     ORDER BY id DESC
+                     LIMIT 1",
+                    vms_vendor_app_confirm_tokens_table(),
+                    $app_id,
+                    current_time('mysql', true)
+                ),
+                ARRAY_A
+            );
+        } else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Resend and state refresh paths read request-fresh open token state from the plugin-owned repository with prepared identifier and application values.
+            $row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT *
+                     FROM %i
+                     WHERE application_id = %d
+                       AND consumed_at IS NULL
+                       AND invalidated_at IS NULL
+                     ORDER BY id DESC
+                     LIMIT 1",
+                    vms_vendor_app_confirm_tokens_table(),
+                    $app_id
+                ),
+                ARRAY_A
+            );
         }
-        $sql .= " ORDER BY id DESC LIMIT 1";
 
-        $row = $wpdb->get_row($wpdb->prepare($sql, $args), ARRAY_A);
         return is_array($row) ? $row : null;
     }
 }
@@ -401,13 +425,15 @@ if (!function_exists('vms_vendor_app_get_confirmation_token_row_by_hash')) {
         }
 
         $table = vms_vendor_app_confirm_tokens_table();
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Public one-time-token validation reads request-fresh lifecycle state from the plugin-owned repository so consumed or invalidated tokens cannot be replayed.
         $row = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT *
-                 FROM {$table}
+                 FROM %i
                  WHERE token_hash = %s
                  ORDER BY id DESC
                  LIMIT 1",
+                $table,
                 $token_hash
             ),
             ARRAY_A
@@ -427,6 +453,7 @@ if (!function_exists('vms_vendor_app_invalidate_confirmation_token')) {
             return;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Token invalidation writes the authoritative plugin-owned lifecycle row and subsequent validation must observe it in the same request.
         $wpdb->update(
             vms_vendor_app_confirm_tokens_table(),
             array(
@@ -454,14 +481,16 @@ if (!function_exists('vms_vendor_app_invalidate_open_confirmation_tokens')) {
             return;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Token rotation and confirmation invalidate all request-fresh open rows in the plugin-owned repository before the next lifecycle mutation.
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE " . vms_vendor_app_confirm_tokens_table() . "
+                "UPDATE %i
                  SET invalidated_at = %s,
                      invalidated_reason = %s
                  WHERE application_id = %d
                    AND consumed_at IS NULL
                    AND invalidated_at IS NULL",
+                vms_vendor_app_confirm_tokens_table(),
                 current_time('mysql', true),
                 sanitize_key($reason),
                 $app_id
@@ -492,6 +521,7 @@ if (!function_exists('vms_vendor_app_create_confirmation_token')) {
         $created_at = current_time('mysql', true);
         $expires_at = gmdate('Y-m-d H:i:s', time() + vms_vendor_app_confirmation_window_seconds());
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Confirmation creation persists a normalized one-time-token row in the plugin-owned repository; no WordPress core data API represents this lifecycle record.
         $inserted = $wpdb->insert(
             vms_vendor_app_confirm_tokens_table(),
             array(
@@ -536,6 +566,7 @@ if (!function_exists('vms_vendor_app_mark_confirmation_token_sent')) {
             return;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Delivery state is stored on the authoritative plugin-owned token row and must be visible to resend throttling immediately.
         $wpdb->update(
             vms_vendor_app_confirm_tokens_table(),
             array('sent_at' => current_time('mysql', true)),
@@ -559,6 +590,7 @@ if (!function_exists('vms_vendor_app_mark_confirmation_token_consumed')) {
         $ip = vms_request_remote_addr();
         $ua = vms_request_user_agent();
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Consumption atomically records the authoritative token lifecycle result and request context before remaining open tokens are invalidated.
         $wpdb->update(
             vms_vendor_app_confirm_tokens_table(),
             array(
@@ -1169,7 +1201,7 @@ if (!function_exists('vms_vendor_app_find_duplicate_open_application')) {
             'orderby' => 'date',
             'order' => 'DESC',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Duplicate prevention first performs one bounded exact email-meta lookup across application posts before comparing normalized business names and lifecycle states.
                 array(
                     'key' => $email_key,
                     'value' => $email,
@@ -1262,7 +1294,7 @@ if (!function_exists('vms_vendor_app_find_recent_application_for_user')) {
             'orderby' => 'date',
             'order' => 'DESC',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Applicant continuity requires the finite application set for the authenticated user's exact email before evaluating current status and confirmation state.
                 array(
                     'key' => $email_key,
                     'value' => $user_email,
@@ -1804,7 +1836,7 @@ if (!function_exists('vms_vendor_app_expire_stale_confirmations')) {
             'posts_per_page' => -1,
             'fields' => 'ids',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The scheduled expiry transition must find all unconfirmed applications whose bounded last-sent timestamp is older than the confirmation window.
                 'relation' => 'AND',
                 array(
                     'key' => $state_key,
