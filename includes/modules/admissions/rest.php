@@ -410,7 +410,18 @@ if (!function_exists('vms_admission_rest_create')) {
 		);
 
 		if ($insert === false) {
-			error_log('VMS Admission create failed: ' . (string) $wpdb->last_error);
+			vms_record_operational_issue(
+				'admission_create_failed',
+				array(
+					'service' => 'admissions',
+					'entity_type' => 'admission',
+					'operation' => 'create',
+					'stage' => 'database_write',
+					'status' => 'failed',
+					'plan_id' => $event_plan_id,
+				),
+				null
+			);
 			return vms_admission_rest_error('db_error', __('Could not create admission entry.', 'backstage-venue-manager'), 500);
 		}
 
@@ -542,7 +553,19 @@ if (!function_exists('vms_admission_rest_patch')) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions edit writes target the plugin-owned entries table directly so admin edits remain immediately visible to door and reporting flows.
 		$ok = $wpdb->update($table, $updates, array('id' => $entry_id), $formats, array('%d'));
 		if ($ok === false) {
-			error_log('VMS Admission update failed: ' . (string) $wpdb->last_error);
+			vms_record_operational_issue(
+				'admission_update_failed',
+				array(
+					'service' => 'admissions',
+					'entity_type' => 'admission',
+					'operation' => 'update',
+					'stage' => 'database_write',
+					'status' => 'failed',
+					'plan_id' => absint($row['event_plan_id'] ?? 0),
+					'entity_id' => $entry_id,
+				),
+				null
+			);
 			return vms_admission_rest_error('db_error', __('Could not update entry.', 'backstage-venue-manager'), 500);
 		}
 
@@ -620,7 +643,19 @@ if (!function_exists('vms_admission_rest_checkin')) {
 			$entry_id
 		));
 		if ($updated === false) {
-			error_log('VMS Admission checkin failed: ' . (string) $wpdb->last_error);
+			vms_record_operational_issue(
+				'admission_checkin_failed',
+				array(
+					'service' => 'admissions',
+					'entity_type' => 'admission',
+					'operation' => 'checkin',
+					'stage' => 'database_write',
+					'status' => 'failed',
+					'plan_id' => absint($row['event_plan_id'] ?? 0),
+					'entity_id' => $entry_id,
+				),
+				null
+			);
 			return vms_admission_rest_error('db_error', __('Could not check in guest.', 'backstage-venue-manager'), 500);
 		}
 
@@ -718,7 +753,19 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 			));
 		}
 		if ($updated === false) {
-			error_log('VMS Admission uncheckin failed: ' . (string) $wpdb->last_error);
+			vms_record_operational_issue(
+				'admission_uncheckin_failed',
+				array(
+					'service' => 'admissions',
+					'entity_type' => 'admission',
+					'operation' => 'uncheckin',
+					'stage' => 'database_write',
+					'status' => 'failed',
+					'plan_id' => absint($row['event_plan_id'] ?? 0),
+					'entity_id' => $entry_id,
+				),
+				null
+			);
 			return vms_admission_rest_error('db_error', __('Could not undo check-in.', 'backstage-venue-manager'), 500);
 		}
 

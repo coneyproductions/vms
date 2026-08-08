@@ -94,6 +94,48 @@ function vms_test_count_pattern(string $pattern, string $contents): int
 	return $count;
 }
 
+function vms_test_project_g16_vendor_logging(string $source): string
+{
+	$specs = array(
+		array(
+			'current' => "\t\t\t\tvms_record_operational_issue(\n"
+				. "\t\t\t\t\t'vendor_type_default_term_ensure_failed',\n"
+				. "\t\t\t\t\tarray(\n"
+				. "\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
+				. "\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
+				. "\t\t\t\t\t\t'operation' => 'ensure_default',\n"
+				. "\t\t\t\t\t\t'stage' => 'term_insert',\n"
+				. "\t\t\t\t\t\t'status' => 'failed',\n"
+				. "\t\t\t\t\t),\n"
+				. "\t\t\t\t\t\$created\n"
+				. "\t\t\t\t);",
+			'historical' => " \t\t\t\terror_log('[VMS] vendor-type: failed to ensure default term ' . \$slug . ' (' . \$created->get_error_message() . ')');",
+		),
+		array(
+			'current' => "\t\t\t\t\tvms_record_operational_issue(\n"
+				. "\t\t\t\t\t\t'vendor_type_duplicate_term_delete_failed',\n"
+				. "\t\t\t\t\t\tarray(\n"
+				. "\t\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
+				. "\t\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
+				. "\t\t\t\t\t\t\t'operation' => 'delete_duplicate',\n"
+				. "\t\t\t\t\t\t\t'stage' => 'canonicalization',\n"
+				. "\t\t\t\t\t\t\t'status' => 'failed',\n"
+				. "\t\t\t\t\t\t\t'entity_id' => (int) \$term->term_id,\n"
+				. "\t\t\t\t\t\t),\n"
+				. "\t\t\t\t\t\t\$deleted\n"
+				. "\t\t\t\t\t);",
+			'historical' => " \t\t\t\t\terror_log('[VMS] vendor-type: failed deleting duplicate term #' . (int) \$term->term_id . ' (' . \$deleted->get_error_message() . ')');",
+		),
+	);
+	foreach ($specs as $index => $spec) {
+		vms_test_assert_same(1, substr_count($source, $spec['current']), 'G16 vendor projection fragment changed at index ' . $index . '.');
+		$count = 0;
+		$source = str_replace($spec['current'], $spec['historical'], $source, $count);
+		vms_test_assert_same(1, $count, 'G16 vendor projection must restore each historical statement once.');
+	}
+	return $source;
+}
+
 function vms_test_collect_suppress_filters_true_occurrences(string $directory): array
 {
 	$matches = array();
@@ -521,11 +563,21 @@ vms_test_assert_contains(
 	$daily_report_source,
 	'Daily report refresh should continue to reuse the full Ticket Integrity scan path.'
 );
+$vendor_type_projection = vms_test_project_g16_vendor_logging($vendor_type_source);
 vms_test_assert_same(
 	'ac036bef295173d9d26b7165871a09797de2a61add12247ee985a547f3f74b4e',
-	hash_file('sha256', $vendor_type_path),
-	'Vendor-type source should remain unchanged in this child.'
+	hash('sha256', $vendor_type_projection),
+	'Vendor-type semantic baseline should remain unchanged outside G16 group B.'
 );
+$mutated_vendor_type = str_replace("'stage' => 'canonicalization'", "'stage' => 'unexpected_stage'", $vendor_type_source, $vendor_mutation_count);
+vms_test_assert_same(1, $vendor_mutation_count, 'Vendor projection mutation control must alter one owned stage.');
+$vendor_mutation_rejected = false;
+try {
+	vms_test_project_g16_vendor_logging($mutated_vendor_type);
+} catch (RuntimeException $exception) {
+	$vendor_mutation_rejected = true;
+}
+vms_test_assert_true($vendor_mutation_rejected, 'Vendor projection must reject a mutated owned logging context.');
 vms_test_assert_same(
 	'066eeaf16b910c930d4ad23eeca2b48669dbc889713d62dafcc80a7c58848122',
 	hash('sha256', $live_monitor_projection),

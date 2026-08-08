@@ -97,6 +97,16 @@ function is_wp_error($thing): bool
 	return $thing instanceof WP_Error;
 }
 
+function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+{
+	$GLOBALS['vms_test_calls']['vms_record_operational_issue'][] = array(
+		'event_code' => $event_code,
+		'context' => $context,
+		'error' => $error,
+	);
+	return false;
+}
+
 function __(string $text, string $domain = ''): string
 {
 	unset($domain);
@@ -519,6 +529,7 @@ function vms_test_reset_case(string $mode = 'success'): void
 		'vms_event_plan_import_delete_stored_file' => array(),
 		'vms_event_plan_import_set_preview_payload' => array(),
 		'vms_event_plan_import_set_notice' => array(),
+		'vms_record_operational_issue' => array(),
 		'wp_safe_redirect' => array(),
 	);
 	$GLOBALS['vms_test_filters'] = array();
@@ -622,12 +633,21 @@ $assert(($GLOBALS['vms_test_filters']['upload_dir'] ?? array()) === array(), 'Un
 vms_test_cleanup_case();
 
 vms_test_reset_case('success');
-$GLOBALS['vms_test_case']['build_preview_result'] = new WP_Error('preview_failed', 'Preview build failed.');
+$previewBuildError = new WP_Error('preview_failed', 'Preview build failed.');
+$GLOBALS['vms_test_case']['build_preview_result'] = $previewBuildError;
 $previewFailureRedirect = vms_test_run_preview_action();
 $previewFailureNotice = end($GLOBALS['vms_test_calls']['vms_event_plan_import_set_notice']);
 $assert($previewFailureRedirect === '/wp-admin/admin.php?page=vms-import-event-plans', 'Preview-build failures should preserve the existing admin-page redirect.');
 $assert(is_array($previewFailureNotice) && $previewFailureNotice['type'] === 'error' && $previewFailureNotice['message'] === 'Preview build failed.', 'Preview-build failures should continue surfacing the preview builder error message.');
 $assert($GLOBALS['vms_test_calls']['vms_event_plan_import_delete_stored_file'] === array('event-plan-imports/epcsv_test_token-source.csv'), 'Preview-build failures should still delete the stored source key.');
+$assert(
+	$GLOBALS['vms_test_calls']['vms_record_operational_issue'] === array(array(
+		'event_code' => 'event_plan_import_preview_failed',
+		'context' => array('service' => 'event_plan_import', 'operation' => 'preview', 'stage' => 'build_preview', 'status' => 'failed'),
+		'error' => $previewBuildError,
+	)),
+	'A false-returning operational adapter should receive only the fixed preview context and must not change cleanup, notice, or redirect behavior.'
+);
 $assert($GLOBALS['vms_test_calls']['vms_event_plan_import_set_preview_payload'] === array(), 'Preview-build failures should not store preview payload state.');
 $assert(($GLOBALS['vms_test_filters']['upload_dir'] ?? array()) === array(), 'Preview-build failures should still remove the scoped upload_dir filter.');
 vms_test_cleanup_case();

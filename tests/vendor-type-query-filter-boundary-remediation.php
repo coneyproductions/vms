@@ -121,6 +121,36 @@ function vms_test_strip_known_region(string $source, string $start_marker, strin
 	return array('source' => substr($source, 0, $start) . substr($source, $end), 'regions' => 1);
 }
 
+function vms_test_project_ticket_boundary_g16_companion(string $source, string $label): array
+{
+	$helper = vms_test_strip_known_region(
+		$source,
+		"\nfunction vms_test_project_g16_vendor_logging(string \$source): string",
+		"\treturn \$source;\n}\n",
+		$label . ' G16 vendor helper'
+	);
+	$startMarker = '$vendor_type_projection = vms_test_project_g16_vendor_logging($vendor_type_source);';
+	$endMarker = "vms_test_assert_true(\$vendor_mutation_rejected, 'Vendor projection must reject a mutated owned logging context.');\n";
+	vms_test_assert_same(1, substr_count($helper['source'], $startMarker), $label . ' G16 assertion start changed.');
+	vms_test_assert_same(1, substr_count($helper['source'], $endMarker), $label . ' G16 assertion end changed.');
+	$start = strpos($helper['source'], $startMarker);
+	$end = strpos($helper['source'], $endMarker, (int) $start);
+	vms_test_assert_true($start !== false && $end !== false, $label . ' G16 assertion region must be present.');
+	$end += strlen($endMarker);
+	$historicalAssertion = "vms_test_assert_same(\n"
+		. "\t'ac036bef295173d9d26b7165871a09797de2a61add12247ee985a547f3f74b4e',\n"
+		. "\thash_file('sha256', \$vendor_type_path),\n"
+		. "\t'Vendor-type source should remain unchanged in this child.'\n"
+		. ");\n";
+	$projected = substr($helper['source'], 0, (int) $start)
+		. $historicalAssertion
+		. substr($helper['source'], $end);
+	return array(
+		'source' => $projected,
+		'regions' => $helper['regions'] + 1,
+	);
+}
+
 /**
  * @param array<int,array<string,mixed>> $calls
  * @return array<int,int>
@@ -481,11 +511,56 @@ vms_test_assert_true(
 	'The canonicalization hook registration must remain on init priority 22.'
 );
 
+$vendor_logging_projection_specs = array(
+	array(
+		'current' => "\t\t\t\tvms_record_operational_issue(\n"
+			. "\t\t\t\t\t'vendor_type_default_term_ensure_failed',\n"
+			. "\t\t\t\t\tarray(\n"
+			. "\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
+			. "\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
+			. "\t\t\t\t\t\t'operation' => 'ensure_default',\n"
+			. "\t\t\t\t\t\t'stage' => 'term_insert',\n"
+			. "\t\t\t\t\t\t'status' => 'failed',\n"
+			. "\t\t\t\t\t),\n"
+			. "\t\t\t\t\t\$created\n"
+			. "\t\t\t\t);",
+		'historical' => " \t\t\t\terror_log('[VMS] vendor-type: failed to ensure default term ' . \$slug . ' (' . \$created->get_error_message() . ')');",
+		'units' => 1,
+	),
+	array(
+		'current' => "\t\t\t\t\tvms_record_operational_issue(\n"
+			. "\t\t\t\t\t\t'vendor_type_duplicate_term_delete_failed',\n"
+			. "\t\t\t\t\t\tarray(\n"
+			. "\t\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
+			. "\t\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
+			. "\t\t\t\t\t\t\t'operation' => 'delete_duplicate',\n"
+			. "\t\t\t\t\t\t\t'stage' => 'canonicalization',\n"
+			. "\t\t\t\t\t\t\t'status' => 'failed',\n"
+			. "\t\t\t\t\t\t\t'entity_id' => (int) \$term->term_id,\n"
+			. "\t\t\t\t\t\t),\n"
+			. "\t\t\t\t\t\t\$deleted\n"
+			. "\t\t\t\t\t);",
+		'historical' => " \t\t\t\t\terror_log('[VMS] vendor-type: failed deleting duplicate term #' . (int) \$term->term_id . ' (' . \$deleted->get_error_message() . ')');",
+		'units' => 1,
+	),
+);
+$live_vendor_source = vms_test_read_file($live_vendor_type_path);
+$live_vendor_projection = vms_test_project_known_fragments($live_vendor_source, $vendor_logging_projection_specs, 'Live vendor G16 group-B');
+vms_test_assert_same(2, $live_vendor_projection['units'], 'Live vendor projection must strip exactly two G16 group-B calls.');
 vms_test_assert_same(
 	'4ae832840023a8cd2d4c9a805e839927b003f71b29e0efa61bc1415944ff8c87',
-	vms_test_sha256($live_vendor_type_path),
-	'The live vendor-type file changed unexpectedly.'
+	hash('sha256', $live_vendor_projection['source']),
+	'The live vendor-type semantic baseline changed outside G16 group B.'
 );
+$mutated_live_vendor = str_replace("'stage' => 'term_insert'", "'stage' => 'unexpected_stage'", $live_vendor_source, $vendor_mutation_count);
+vms_test_assert_same(1, $vendor_mutation_count, 'Vendor projection mutation control must alter one owned stage.');
+$vendor_mutation_rejected = false;
+try {
+	vms_test_project_known_fragments($mutated_live_vendor, $vendor_logging_projection_specs, 'Mutated live vendor G16 group-B');
+} catch (RuntimeException $exception) {
+	$vendor_mutation_rejected = true;
+}
+vms_test_assert_true($vendor_mutation_rejected, 'Vendor projection must reject a mutated owned logging context.');
 $monitor_projection_specs = array(
 	array(
 		'current' => ' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.',
@@ -523,8 +598,10 @@ vms_test_assert_true(
 	'Monitor semantic projection must reject a non-owned runtime mutation.'
 );
 
+$boundary_projection = vms_test_project_ticket_boundary_g16_companion($ticket_integrity_test_source, 'Ticket Integrity boundary');
+vms_test_assert_same(2, $boundary_projection['regions'], 'Boundary projection must strip the exact G16 helper and assertion regions.');
 $boundary_projection = vms_test_strip_known_region(
-	$ticket_integrity_test_source,
+	$boundary_projection['source'],
 	'$live_monitor_g15_projection_rows = 0;',
 	"vms_test_assert_same(3, \$live_monitor_g15_projection_rows, 'Live monitor projection must reverse exactly three G15 date rows.');\n",
 	'Ticket Integrity boundary G15 projection block'
@@ -562,8 +639,10 @@ $mutated_boundary = str_replace(
 	$boundary_mutation_count
 );
 vms_test_assert_same(1, $boundary_mutation_count, 'Boundary negative control must mutate one non-owned assertion.');
+$mutated_boundary = vms_test_project_ticket_boundary_g16_companion($mutated_boundary, 'mutated Ticket Integrity boundary');
+vms_test_assert_same(2, $mutated_boundary['regions'], 'Mutated boundary projection must strip the exact G16 helper and assertion regions.');
 $mutated_boundary = vms_test_strip_known_region(
-	$mutated_boundary,
+	$mutated_boundary['source'],
 	'$live_monitor_g15_projection_rows = 0;',
 	"vms_test_assert_same(3, \$live_monitor_g15_projection_rows, 'Live monitor projection must reverse exactly three G15 date rows.');\n",
 	'mutated Ticket Integrity boundary G15 block'

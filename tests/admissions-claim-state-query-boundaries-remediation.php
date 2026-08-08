@@ -335,6 +335,44 @@ function vms_test_find_boundary_name(array $functions, int $lineNumber): string
 	throw new RuntimeException('Unable to map line ' . $lineNumber . ' to a function boundary.');
 }
 
+function vms_test_project_g16_admissions_logging(string $source): string
+{
+	$historical = array(
+		'admission_create_failed' => "error_log('VMS Admission create failed: ' . (string) \$wpdb->last_error);",
+		'admission_update_failed' => "error_log('VMS Admission update failed: ' . (string) \$wpdb->last_error);",
+		'admission_checkin_failed' => "error_log('VMS Admission checkin failed: ' . (string) \$wpdb->last_error);",
+		'admission_uncheckin_failed' => "error_log('VMS Admission uncheckin failed: ' . (string) \$wpdb->last_error);",
+	);
+
+	foreach ($historical as $eventCode => $oldStatement) {
+		vms_test_assert_same(1, substr_count($source, "'{$eventCode}'"), 'G16 admissions projection event inventory changed: ' . $eventCode);
+		$eventOffset = strpos($source, "'{$eventCode}'");
+		$callStart = strrpos(substr($source, 0, (int) $eventOffset), 'vms_record_operational_issue(');
+		vms_test_assert_true($callStart !== false, 'G16 admissions projection call missing: ' . $eventCode);
+		$open = strpos($source, '(', (int) $callStart);
+		$depth = 0;
+		$callEnd = null;
+		for ($offset = (int) $open, $length = strlen($source); $offset < $length; $offset++) {
+			if ($source[$offset] === '(') {
+				$depth++;
+			} elseif ($source[$offset] === ')') {
+				$depth--;
+				if ($depth === 0) {
+					$callEnd = $offset + (($source[$offset + 1] ?? '') === ';' ? 2 : 1);
+					break;
+				}
+			}
+		}
+		vms_test_assert_true(is_int($callEnd), 'G16 admissions projection call was not closed: ' . $eventCode);
+		$currentCall = substr($source, (int) $callStart, (int) $callEnd - (int) $callStart);
+		$count = 0;
+		$source = str_replace($currentCall, $oldStatement, $source, $count);
+		vms_test_assert_same(1, $count, 'G16 admissions projection must restore one historical statement: ' . $eventCode);
+	}
+
+	return $source;
+}
+
 /**
  * @param array<int,string> $relativePaths
  * @param array<string,bool> $wantedCodes
@@ -349,11 +387,12 @@ function vms_test_collect_actual_suppression_inventory(array $relativePaths, arr
 	foreach ($relativePaths as $relativePath) {
 		$path = $pluginRoot . '/' . $relativePath;
 		$source = (string) file_get_contents($path);
-		$functions = vms_test_parse_functions($source);
-		$lines = file($path, FILE_IGNORE_NEW_LINES);
-		if ($lines === false) {
-			throw new RuntimeException('Unable to read ' . $path . '.');
+		if ($relativePath === 'includes/modules/admissions/rest.php') {
+			$source = vms_test_project_g16_admissions_logging($source);
 		}
+		$functions = vms_test_parse_functions($source);
+		$lines = preg_split('/\R/', $source);
+		vms_test_assert_true(is_array($lines), 'Unable to split ' . $path . ' into projected lines.');
 
 		foreach ($lines as $index => $line) {
 			if (strpos($line, 'phpcs:ignore') === false) {

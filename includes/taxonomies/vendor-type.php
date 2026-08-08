@@ -333,7 +333,17 @@
  
  			$created = wp_insert_term($label, 'vms_vendor_type', ['slug' => $slug]);
  			if (is_wp_error($created)) {
- 				error_log('[VMS] vendor-type: failed to ensure default term ' . $slug . ' (' . $created->get_error_message() . ')');
+				vms_record_operational_issue(
+					'vendor_type_default_term_ensure_failed',
+					array(
+						'service' => 'vendor_taxonomy',
+						'entity_type' => 'vendor_type',
+						'operation' => 'ensure_default',
+						'stage' => 'term_insert',
+						'status' => 'failed',
+					),
+					$created
+				);
  			}
  		}
  	}
@@ -416,7 +426,18 @@
  
  				$deleted = wp_delete_term((int) $term->term_id, 'vms_vendor_type');
  				if (is_wp_error($deleted)) {
- 					error_log('[VMS] vendor-type: failed deleting duplicate term #' . (int) $term->term_id . ' (' . $deleted->get_error_message() . ')');
+					vms_record_operational_issue(
+						'vendor_type_duplicate_term_delete_failed',
+						array(
+							'service' => 'vendor_taxonomy',
+							'entity_type' => 'vendor_type',
+							'operation' => 'delete_duplicate',
+							'stage' => 'canonicalization',
+							'status' => 'failed',
+							'entity_id' => (int) $term->term_id,
+						),
+						$deleted
+					);
  				}
  			}
  		}

@@ -164,7 +164,16 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$preview = vms_event_plan_import_build_preview_from_csv($target_path, $source_name, $options, $token, $target_key);
 		if (is_wp_error($preview)) {
 			vms_event_plan_import_delete_stored_file($target_key);
-			error_log('[VMS EPCSV] Preview build failed: ' . $preview->get_error_message());
+			vms_record_operational_issue(
+				'event_plan_import_preview_failed',
+				array(
+					'service' => 'event_plan_import',
+					'operation' => 'preview',
+					'stage' => 'build_preview',
+					'status' => 'failed',
+				),
+				$preview
+			);
 			vms_event_plan_import_set_notice('error', $preview->get_error_message());
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
@@ -259,7 +268,16 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 			'selected_rows' => $selected_rows,
 		));
 		if (is_wp_error($result)) {
-			error_log('[VMS EPCSV] Commit failed: ' . $result->get_error_message());
+			vms_record_operational_issue(
+				'event_plan_import_commit_failed',
+				array(
+					'service' => 'event_plan_import',
+					'operation' => 'commit',
+					'stage' => 'run_commit',
+					'status' => 'failed',
+				),
+				$result
+			);
 			vms_event_plan_import_set_notice('error', $result->get_error_message());
 			wp_safe_redirect(vms_event_plan_import_admin_page_url(array('preview_token' => $token)));
 			exit;
@@ -354,7 +372,16 @@ if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
 
 		$result = vms_event_plan_import_revert_last_run();
 		if (is_wp_error($result)) {
-			error_log('[VMS EPCSV] Revert failed: ' . $result->get_error_message());
+			vms_record_operational_issue(
+				'event_plan_import_revert_failed',
+				array(
+					'service' => 'event_plan_import',
+					'operation' => 'revert',
+					'stage' => 'run_revert',
+					'status' => 'failed',
+				),
+				$result
+			);
 			vms_event_plan_import_set_notice('error', $result->get_error_message());
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
