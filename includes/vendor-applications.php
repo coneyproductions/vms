@@ -1049,6 +1049,7 @@ function vms_vendor_app_count_pending(): int
         'post_status'    => array('publish', 'draft', 'pending', 'private'),
         'posts_per_page' => 1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The approvals badge intentionally counts every pending application in the exact confirmed-or-legacy state while returning only one ID.
         'meta_query'     => array(
             'relation' => 'AND',
             array(
@@ -1129,6 +1130,7 @@ if (!function_exists('vms_vendor_app_count_by_review_filter')) {
             'post_status' => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => 1,
             'fields' => 'ids',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The review filter intentionally counts every application in the selected exact confirmation state while returning only one ID.
             'meta_query' => $meta_query,
         ));
 
@@ -1199,6 +1201,7 @@ if (!function_exists('vms_vendor_applications_migrate_legacy_post_type_once')) {
             $canonical,
             $legacy
         );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- One-time option-guarded post-type migration executes the immediately prepared UPDATE before recording its completion marker; a mutation result cannot be served from cache.
         $wpdb->query($sql);
         update_option($marker, '1', false);
     }
@@ -3210,6 +3213,7 @@ if (!function_exists('vms_vendor_app_backfill_vendor_sot_once')) {
                 'no_found_rows' => true,
                 'update_post_meta_cache' => false,
                 'update_post_term_cache' => false,
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The lock-guarded one-time backfill intentionally scans every approved application so no existing vendor source-of-truth link is skipped.
                 'meta_query' => array(
                     array(
                         'key' => '_vms_app_status',
