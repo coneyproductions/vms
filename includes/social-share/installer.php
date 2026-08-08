@@ -244,7 +244,8 @@ if (!function_exists('vms_social_seed_default_templates')) {
 	{
 		global $wpdb;
 		$table = vms_social_table_templates();
-		$count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template seeding must inspect current plugin-owned rows once during installation before deciding whether defaults are needed.
+		$count = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i', $table));
 		if ($count > 0) {
 			return;
 		}
@@ -278,6 +279,7 @@ if (!function_exists('vms_social_seed_default_templates')) {
 		);
 
 		foreach ($seed as $index => $row) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Default-template seeding appends the fixed ordered rows to the plugin-owned templates table; no core persistence API owns this repository.
 			$wpdb->insert(
 				$table,
 				array(

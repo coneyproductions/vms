@@ -108,6 +108,7 @@ if (!function_exists('vms_social_template_get')) {
 		}
 		global $wpdb;
 		$table = vms_social_table_templates();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template selection must read current plugin-owned template state after administrator mutations.
 		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $template_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
@@ -122,6 +123,7 @@ if (!function_exists('vms_social_template_default_for_platform')) {
 		$platform = sanitize_key($platform);
 		global $wpdb;
 		$table = vms_social_table_templates();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Default-template selection must read current plugin-owned ordering after administrator mutations.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				'SELECT * FROM %i WHERE platform = %s ORDER BY is_default DESC, id ASC LIMIT 1',

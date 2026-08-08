@@ -72,6 +72,7 @@ if (!function_exists('vms_social_audit_log')) {
 			$details_json = '{}';
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Social audit writes append an authoritative row to the plugin-owned audit table; no core persistence API owns this repository.
 		$wpdb->insert(
 			$table,
 			array(
@@ -99,12 +100,14 @@ if (!function_exists('vms_social_audit_recent')) {
 		$search = trim($search);
 
 		if ($search === '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Recent audit history must read request-fresh plugin-owned rows after queue and provider mutations.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare('SELECT * FROM %i ORDER BY id DESC LIMIT %d', $table, $limit),
 				ARRAY_A
 			);
 		} else {
 			$like = '%' . $wpdb->esc_like($search) . '%';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Filtered audit history must read request-fresh plugin-owned rows while preserving the existing three-field search.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
 					'SELECT * FROM %i WHERE action LIKE %s OR platform LIKE %s OR details_json LIKE %s ORDER BY id DESC LIMIT %d',

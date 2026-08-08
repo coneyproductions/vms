@@ -111,8 +111,9 @@ if (!function_exists('vms_social_event_has_posted_queue')) {
 	{
 		global $wpdb;
 		$table = vms_social_table_queue();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Draft-status handling must read current posted queue state from the plugin-owned repository after queue mutations.
 		$count = (int) $wpdb->get_var(
-			$wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE event_plan_id = %d AND status = 'posted'", $event_plan_id)
+			$wpdb->prepare("SELECT COUNT(*) FROM %i WHERE event_plan_id = %d AND status = 'posted'", $table, $event_plan_id)
 		);
 		return $count > 0;
 	}
