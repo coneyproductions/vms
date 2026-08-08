@@ -2570,14 +2570,16 @@ function vms_ticketing_v2_reporting_category_candidate_ids(int $after_id = 0, in
 
     $sql = $wpdb->prepare(
         "SELECT DISTINCT p.ID
-        FROM {$wpdb->posts} p
-        INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
+        FROM %i p
+        INNER JOIN %i pm ON pm.post_id = p.ID
         WHERE p.post_type = 'product'
           AND p.post_status NOT IN ('trash', 'auto-draft', 'inherit')
           AND p.ID > %d
           AND pm.meta_key IN (%s, %s, %s, %s)
         ORDER BY p.ID ASC
         LIMIT %d",
+        $wpdb->posts,
+        $wpdb->postmeta,
         $after_id,
         vms_ticketing_v2_product_meta_key('product_role'),
         vms_ticketing_v2_product_meta_key('ticketing_entitlement_id'),
@@ -2586,6 +2588,7 @@ function vms_ticketing_v2_reporting_category_candidate_ids(int $after_id = 0, in
         $limit
     );
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The bounded reporting-category backfill reads distinct product IDs with prepared core-table identifiers and must observe current product metadata before advancing its cursor.
     $rows = $wpdb->get_col($sql);
     if (!is_array($rows)) {
         return array();
@@ -4835,6 +4838,7 @@ function vms_entitlements_get_entitlement_image_context($entitlement_id, int $pl
             'posts_per_page' => -1,
             'fields' => 'ids',
             'no_found_rows' => true,
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Entitlement image discovery must locate plans carrying the ticketing configuration key; the complete ID list is built once and retained in a request-local static cache.
             'meta_query' => array(
                 array(
                     'key' => vms_ticketing_v2_k('config'),
@@ -5501,6 +5505,7 @@ function vms_ticketing_v2_table_exists(string $table_name): bool {
         return false;
     }
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- WooCommerce table capability probes have no core API equivalent; the prepared result is cached for the remainder of the request while remaining deployment-fresh on the first probe.
     $cache[$table_name] = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name)) === $table_name);
     return (bool) $cache[$table_name];
 }
@@ -5536,17 +5541,20 @@ function vms_ticketing_v2_calc_sold_qty_for_product_via_lookup(int $product_id, 
     }
 
     $status_placeholders = implode(', ', array_fill(0, count($paid_statuses), '%s'));
-    $sql = "
+    $sql = '
         SELECT COALESCE(SUM(product_lookup.product_qty), 0)
-        FROM {$lookup_table} product_lookup
-        INNER JOIN {$stats_table} order_stats
+        FROM %i product_lookup
+        INNER JOIN %i order_stats
             ON order_stats.order_id = product_lookup.order_id
         WHERE (product_lookup.product_id = %d OR product_lookup.variation_id = %d)
-          AND order_stats.status IN ({$status_placeholders})
-    ";
+          AND order_stats.status IN (' . $status_placeholders . ')
+    '; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The status placeholder list is derived only from the count of sanitized paid-status slugs; identifiers and values remain wpdb-prepared.
 
-    $prepare_args = array_merge(array($product_id, $product_id), $paid_statuses);
-    $value = $wpdb->get_var($wpdb->prepare($sql, $prepare_args));
+    $prepare_args = array_merge(array($lookup_table, $stats_table, $product_id, $product_id), $paid_statuses);
+    // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The aggregate query contains only prepared identifiers/values and a bounded placeholder list derived from sanitized status count.
+    $prepared = $wpdb->prepare($sql, $prepare_args);
+    // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Sold-quantity reconciliation needs a fresh aggregate from WooCommerce lookup tables, and no WooCommerce API provides the equivalent product/variation result.
+    $value = $wpdb->get_var($prepared);
     if ($value === null) {
         return null;
     }
@@ -5574,10 +5582,10 @@ function vms_ticketing_v2_calc_sold_qty_for_product_via_order_items(int $product
     $order_status_sql = '';
 
     if (vms_ticketing_v2_table_exists($order_stats_table)) {
-        $order_join = "INNER JOIN {$order_stats_table} order_stats ON order_stats.order_id = line_items.order_id";
+        $order_join = $wpdb->prepare('INNER JOIN %i order_stats ON order_stats.order_id = line_items.order_id', $order_stats_table);
         $order_status_sql = "AND order_stats.status IN ({$status_placeholders})";
     } else {
-        $order_join = "INNER JOIN {$wpdb->posts} orders ON orders.ID = line_items.order_id AND orders.post_type = 'shop_order'";
+        $order_join = $wpdb->prepare("INNER JOIN %i orders ON orders.ID = line_items.order_id AND orders.post_type = 'shop_order'", $wpdb->posts);
         $order_status_sql = "AND orders.post_status IN ({$status_placeholders})";
     }
 
@@ -5590,8 +5598,8 @@ function vms_ticketing_v2_calc_sold_qty_for_product_via_order_items(int $product
                 MAX(CASE WHEN oim.meta_key = '_product_id' THEN CAST(oim.meta_value AS UNSIGNED) ELSE 0 END) AS product_id,
                 MAX(CASE WHEN oim.meta_key = '_variation_id' THEN CAST(oim.meta_value AS UNSIGNED) ELSE 0 END) AS variation_id,
                 MAX(CASE WHEN oim.meta_key = '_qty' THEN CAST(oim.meta_value AS SIGNED) ELSE 0 END) AS qty
-            FROM {$oi} oi
-            INNER JOIN {$oim} oim
+            FROM %i oi
+            INNER JOIN %i oim
                 ON oim.order_item_id = oi.order_item_id
             WHERE oi.order_item_type = 'line_item'
               AND oim.meta_key IN ('_product_id', '_variation_id', '_qty')
@@ -5603,14 +5611,14 @@ function vms_ticketing_v2_calc_sold_qty_for_product_via_order_items(int $product
             SELECT
                 CAST(refunded_item.meta_value AS UNSIGNED) AS refunded_item_id,
                 SUM(ABS(CAST(refund_qty.meta_value AS SIGNED))) AS refunded_qty
-            FROM {$oi} refund_items
-            INNER JOIN {$oim} refunded_item
+            FROM %i refund_items
+            INNER JOIN %i refunded_item
                 ON refunded_item.order_item_id = refund_items.order_item_id
                AND refunded_item.meta_key = '_refunded_item_id'
-            INNER JOIN {$oim} refund_qty
+            INNER JOIN %i refund_qty
                 ON refund_qty.order_item_id = refund_items.order_item_id
                AND refund_qty.meta_key = '_qty'
-            INNER JOIN {$wpdb->posts} refund_posts
+            INNER JOIN %i refund_posts
                 ON refund_posts.ID = refund_items.order_id
                AND refund_posts.post_type = 'shop_order_refund'
             WHERE refund_items.order_item_type = 'line_item'
@@ -5619,10 +5627,13 @@ function vms_ticketing_v2_calc_sold_qty_for_product_via_order_items(int $product
             ON refunds.refunded_item_id = line_items.order_item_id
         WHERE line_items.qty > 0
           {$order_status_sql}
-    ";
+    "; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Join/status fragments select one of two bounded WooCommerce storage branches; table identifiers, product IDs, and sanitized paid statuses remain wpdb-prepared.
 
-    $prepare_args = array_merge(array($product_id, $product_id), $paid_statuses);
-    $value = $wpdb->get_var($wpdb->prepare($sql, $prepare_args));
+    $prepare_args = array_merge(array($oi, $oim, $product_id, $product_id, $oi, $oim, $oim, $wpdb->posts), $paid_statuses);
+    // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The aggregate query contains only prepared identifiers/values plus bounded WooCommerce storage and status-placeholder fragments.
+    $prepared = $wpdb->prepare($sql, $prepare_args);
+    // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Sold-quantity reconciliation needs current order/refund aggregates, and no WooCommerce API preserves the product/variation and refund-subtraction contract.
+    $value = $wpdb->get_var($prepared);
     if ($value === null) {
         return null;
     }
@@ -5695,6 +5706,7 @@ function vms_ticketing_v2_find_product_ids_by_sku(string $sku): array {
         'posts_per_page' => 25,
         'fields' => 'ids',
         'no_found_rows' => true,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Duplicate-SKU recovery intentionally returns every bounded product-status match, including trash; the single-result WooCommerce SKU helper cannot preserve that contract.
         'meta_query' => array(
             array(
                 'key' => '_sku',
@@ -5829,6 +5841,7 @@ function vms_ticketing_v2_calc_sold_qty_for_entitlement_scope(int $plan_id, stri
         'posts_per_page' => 25,
         'fields' => 'ids',
         'no_found_rows' => true,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Entitlement reconciliation requires the bounded intersection of plan and entitlement markers before combining canonical and SKU-derived product IDs.
         'meta_query' => array(
             array(
                 'key' => vms_ticketing_v2_product_meta_key('event_plan_id'),
@@ -5896,6 +5909,7 @@ function vms_ticketing_v2_find_entitlement_product(int $plan_id, string $entitle
         'post_status' => array('publish', 'draft', 'private'),
         'fields' => 'ids',
         'posts_per_page' => 5,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Entitlement lookup requires an exact bounded intersection of the plan and entitlement marker keys so ambiguity remains visible to callers.
         'meta_query' => array(
             array(
                 'key' => vms_ticketing_v2_product_meta_key('event_plan_id'),
@@ -6050,6 +6064,7 @@ function vms_ticketing_v2_find_plan_id_by_tec_event(int $tec_event_id): int {
         'post_status' => array('publish', 'draft', 'private'),
         'fields' => 'ids',
         'posts_per_page' => 1,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Legacy plan recovery performs one bounded exact lookup by the configured TEC event marker when no direct relationship API exists.
         'meta_query' => array(
             array(
                 'key' => $k_tec,
@@ -6118,6 +6133,7 @@ function vms_ticketing_v2_find_legacy_entitlement_product_by_key(int $plan_id, i
         'post_status' => array('publish', 'draft', 'private'),
         'fields' => 'ids',
         'posts_per_page' => 10,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Legacy entitlement recovery must combine bounded SKU-token and event-marker alternatives to distinguish one reusable product from ambiguous duplicates.
         'meta_query' => array(
             'relation' => 'AND',
             array(
@@ -6267,6 +6283,7 @@ function vms_ticketing_v2_cleanup_legacy_sr_duplicates(int $plan_id, int $tec_ev
         'post_status' => array('publish', 'draft', 'private'),
         'fields' => 'ids',
         'posts_per_page' => 200,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Legacy duplicate cleanup intentionally inspects a bounded SR-* candidate set across event-marker alternatives before applying reversible retirement metadata.
         'meta_query' => array(
             'relation' => 'AND',
             array(
@@ -6358,6 +6375,7 @@ function vms_ticketing_v2_legacy_cleanup_runner(): void {
         'post_status' => array('publish'),
         'fields' => 'ids',
         'posts_per_page' => 200,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The hourly legacy cleanup begins with a bounded published SR-* SKU candidate scan, then validates event and plan identity before any reversible mutation.
         'meta_query' => array(
             array(
                 'key' => '_sku',
