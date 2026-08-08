@@ -280,6 +280,22 @@ function g13_strip_owned_annotations(string $source): string
 	);
 }
 
+function g13_project_g16_settings_logging(string $source, string $label): string
+{
+	$fixture = (string) file_get_contents(__DIR__ . '/g16-operational-logging-group-c.php');
+	$start = strpos($fixture, "\$g16c_reverse_specs['settings'] = array(");
+	$end = strpos($fixture, "\n\$g16c_reverse_specs['notifications']", (int) $start);
+	g13_assert($start !== false && $end !== false, $label . ' G16 settings fixture bounds changed.');
+	eval(substr($fixture, (int) $start, (int) $end - (int) $start));
+	g13_assert(isset($g16c_reverse_specs['settings']), $label . ' G16 settings fixture failed to load.');
+	foreach ($g16c_reverse_specs['settings'] as $index => $spec) {
+		g13_same(1, substr_count($source, $spec['current']), $label . ' G16 settings fragment count changed at ' . $index . '.');
+		$source = str_replace($spec['current'], $spec['historical'], $source, $count);
+		g13_same(1, $count, $label . ' G16 settings reverse count changed at ' . $index . '.');
+	}
+	return $source;
+}
+
 function g13_validate_narrow_suppressions(string $scope): void
 {
 	if (preg_match('/phpcs:(?:disable|enable|ignoreFile)/', $scope) === 1) {
@@ -362,8 +378,10 @@ $shadow_baselines = array(
 	'includes/admin/venue-duplicate-templates.php' => '8d7f5484f32db6e7610b6601244095abe8ef41e657dc47b80439a32c3e3459ee',
 );
 foreach ($relative_files as $relative_file) {
-	g13_same($mirror_baselines[$relative_file], hash('sha256', g13_strip_owned_annotations($mirror_sources[$relative_file])), 'Mirror projection outside owned annotations changed: ' . $relative_file);
-	g13_same($shadow_baselines[$relative_file], hash('sha256', g13_strip_owned_annotations($shadow_sources[$relative_file])), 'Shadow projection outside owned annotations changed: ' . $relative_file);
+	$mirror_projection = $relative_file === 'includes/admin/settings-page.php' ? g13_project_g16_settings_logging($mirror_sources[$relative_file], 'mirror settings') : $mirror_sources[$relative_file];
+	$shadow_projection = $relative_file === 'includes/admin/settings-page.php' ? g13_project_g16_settings_logging($shadow_sources[$relative_file], 'shadow settings') : $shadow_sources[$relative_file];
+	g13_same($mirror_baselines[$relative_file], hash('sha256', g13_strip_owned_annotations($mirror_projection)), 'Mirror projection outside owned annotations changed: ' . $relative_file);
+	g13_same($shadow_baselines[$relative_file], hash('sha256', g13_strip_owned_annotations($shadow_projection)), 'Shadow projection outside owned annotations changed: ' . $relative_file);
 }
 
 foreach (array('includes/admin/budget-calculator.php', 'includes/admin/venue-duplicate-templates.php') as $full_parity_file) {
@@ -443,12 +461,14 @@ foreach (array(
 }
 
 $all_runtime_source = implode("\n", $mirror_sources);
-g13_contains('error_log(', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings error_log finding should remain present.');
+g13_same(0, substr_count($mirror_sources['includes/admin/settings-page.php'], 'error_log('), 'G16 settings must contain no direct logging fallback.');
+g13_contains("vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must prefer the PhaseB adapter.');
+g13_contains("vms_record_operational_issue('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must retain the foundation fallback.');
 g13_contains('implode(\'\', $website_rows)', $mirror_sources['includes/admin/event-feedback.php'], 'The neighboring feedback output finding should remain present.');
 g13_contains('echo vms_express_bar_action_form(', $mirror_sources['includes/admin/express-bar.php'], 'The neighboring Express Bar output findings should remain present.');
 g13_contains('echo $content_html;', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings content output finding should remain present.');
 g13_contains('echo vms_settings_page_ticketing_stock_notice_placeholder();', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings placeholder output finding should remain present.');
-g13_same(0, substr_count($all_runtime_source, 'WordPress.PHP.DevelopmentFunctions.error_log_error_log'), 'The neighboring error_log finding must remain unsuppressed.');
+g13_same(0, substr_count($all_runtime_source, 'WordPress.PHP.DevelopmentFunctions.error_log_error_log'), 'The G16 settings remediation must not add a logging suppression.');
 g13_same(0, substr_count($all_runtime_source, 'WordPress.Security.EscapeOutput.OutputNotEscaped'), 'The neighboring output findings must remain unsuppressed.');
 
 foreach (array(

@@ -84,6 +84,27 @@ function vms_test_extract_function(string $source, string $name): string
 	vms_test_fail('Unable to locate closing brace for ' . $name . '.');
 }
 
+function vms_test_project_g16_monitor_logging(string $source): string
+{
+	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
+	$last = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$last_start = strpos($source, $last, (int) $start);
+	vms_test_assert_true($start !== false && $last_start !== false, 'G16 monitor helper bounds changed.');
+	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
+	vms_test_assert_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'G16 monitor helper block changed.');
+	$source = str_replace($block . "\n\n", '', $source, $count);
+	vms_test_assert_same(1, $count, 'G16 monitor helper removal changed.');
+	$current = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	vms_test_assert_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), 'G16 monitor shutdown changed.');
+	$fixture = vms_test_read_file(__DIR__ . '/g16-operational-logging-group-c.php');
+	vms_test_assert_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), 'G16 historical shutdown fixture changed.');
+	$historical = base64_decode($match[1], true);
+	vms_test_assert_true(is_string($historical) && $historical !== '', 'G16 historical shutdown decode failed.');
+	$source = str_replace($current, $historical, $source, $count);
+	vms_test_assert_same(1, $count, 'G16 shutdown reverse count changed.');
+	return $source;
+}
+
 function vms_test_count_pattern(string $pattern, string $contents): int
 {
 	$count = preg_match_all($pattern, $contents);
@@ -434,7 +455,7 @@ $build_targets_source = vms_test_extract_function($monitor_source, 'vms_ticket_i
 $scan_all_source = vms_test_extract_function($monitor_source, 'vms_ticket_integrity_scan_all');
 $vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'vms_vendor_type_maybe_canonicalize_terms');
 
-$live_monitor_projection = $live_monitor_source;
+$live_monitor_projection = vms_test_project_g16_monitor_logging($live_monitor_source);
 $live_monitor_projection_removals = 0;
 $live_monitor_annotations = array(
 	' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.',

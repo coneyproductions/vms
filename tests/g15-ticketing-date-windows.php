@@ -91,6 +91,44 @@ function g15_prepare_eval_function(string $source, string $name, string $test_na
 	return $function;
 }
 
+function g15_project_g16_phase_logging(string $source, string $label): string
+{
+	$fixture = g15_read(__DIR__ . '/g16-operational-logging-group-c.php');
+	$start = strpos($fixture, "\$g16c_reverse_specs['phase'] = array(");
+	$end = strpos($fixture, "\n\$g16c_ticket_shutdown_historical", (int) $start);
+	g15_assert($start !== false && $end !== false, $label . ' G16 PhaseB projection fixture bounds changed.');
+	$code = substr($fixture, (int) $start, (int) $end - (int) $start);
+	eval($code);
+	g15_assert(isset($g16c_reverse_specs['phase']) && is_array($g16c_reverse_specs['phase']), $label . ' G16 PhaseB projection fixture failed to load.');
+	foreach ($g16c_reverse_specs['phase'] as $index => $spec) {
+		g15_same(1, substr_count($source, $spec['current']), $label . ' G16 PhaseB fragment count changed at ' . $index . '.');
+		$source = str_replace($spec['current'], $spec['historical'], $source, $count);
+		g15_same(1, $count, $label . ' G16 PhaseB reverse count changed at ' . $index . '.');
+	}
+	return $source;
+}
+
+function g15_project_g16_monitor_logging(string $source, string $label): string
+{
+	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
+	$last = g15_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$last_start = strpos($source, $last, (int) $start);
+	g15_assert($start !== false && $last_start !== false, $label . ' G16 monitor helper bounds changed.');
+	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
+	g15_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), $label . ' G16 monitor helper block changed.');
+	$source = str_replace($block . "\n\n", '', $source, $count);
+	g15_same(1, $count, $label . ' G16 monitor helper removal changed.');
+	$current = g15_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	g15_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), $label . ' G16 monitor shutdown changed.');
+	$fixture = g15_read(__DIR__ . '/g16-operational-logging-group-c.php');
+	g15_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), $label . ' G16 historical shutdown fixture changed.');
+	$historical = base64_decode($match[1], true);
+	g15_assert(is_string($historical) && $historical !== '', $label . ' G16 historical shutdown decode failed.');
+	$source = str_replace($current, $historical, $source, $count);
+	g15_same(1, $count, $label . ' G16 shutdown reverse count changed.');
+	return $source;
+}
+
 function g15_ends_with(string $haystack, string $needle): bool
 {
 	return $needle === '' || substr($haystack, -strlen($needle)) === $needle;
@@ -213,8 +251,10 @@ $historical_hashes = array(
 );
 
 foreach (array('mirror', 'shadow') as $tree) {
-	$monitor_projection = g15_project_historical_source($sources[$tree]['monitor'], $monitor_specs, $tree . ':monitor');
-	$phase_projection = g15_project_historical_source($sources[$tree]['phase_b'], $phase_specs, $tree . ':phase_b');
+	$monitor_pre_g16 = g15_project_g16_monitor_logging($sources[$tree]['monitor'], $tree . ':monitor');
+	$phase_pre_g16 = g15_project_g16_phase_logging($sources[$tree]['phase_b'], $tree . ':phase_b');
+	$monitor_projection = g15_project_historical_source($monitor_pre_g16, $monitor_specs, $tree . ':monitor');
+	$phase_projection = g15_project_historical_source($phase_pre_g16, $phase_specs, $tree . ':phase_b');
 	g15_same(2, $monitor_projection['replacements'], $tree . ' monitor projection replacement count changed.');
 	g15_same(3, $monitor_projection['rows'], $tree . ' monitor projected row count changed.');
 	g15_same(2, $phase_projection['replacements'], $tree . ' Phase B projection replacement count changed.');
@@ -225,7 +265,8 @@ foreach (array('mirror', 'shadow') as $tree) {
 
 $mutated_monitor = str_replace("'post_status' => 'publish'", "'post_status' => 'draft'", $sources['mirror']['monitor'], $mutation_count);
 g15_same(1, $mutation_count, 'Mutation control must alter one non-G15 monitor argument.');
-$mutated_projection = g15_project_historical_source($mutated_monitor, $monitor_specs, 'mutated:monitor');
+$mutated_pre_g16 = g15_project_g16_monitor_logging($mutated_monitor, 'mutated:monitor');
+$mutated_projection = g15_project_historical_source($mutated_pre_g16, $monitor_specs, 'mutated:monitor');
 g15_assert(
 	hash('sha256', $mutated_projection['source']) !== $historical_hashes['mirror']['monitor'],
 	'Historical projection must reject a non-G15 runtime mutation.'

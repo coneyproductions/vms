@@ -222,6 +222,12 @@ function vms_notify_redact_payload_for_log($value)
 	return $value;
 }
 
+function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+{
+	$GLOBALS['g12_operational_calls'][] = array($event_code, $context, $error);
+	return (bool) ($GLOBALS['g12_operational_result'] ?? false);
+}
+
 function vms_private_files_table(): string
 {
 	return (string) $GLOBALS['g12_private_table'];
@@ -471,8 +477,9 @@ g12_contains("'SELECT * FROM %i ORDER BY id DESC LIMIT %d'", $notify_recent_sour
 g12_not_contains('$sql = "SELECT * FROM {$table} ORDER BY id DESC LIMIT "', $notify_recent_source, 'Notification history must not rebuild concatenated SQL.');
 g12_contains("'SELECT * FROM %i WHERE id = %d'", $private_get_source, 'Private-file lookup should prepare its table identifier and file ID.');
 g12_not_contains('SELECT * FROM {$table} WHERE id = %d', $private_get_source, 'Private-file lookup must not interpolate its table identifier.');
-g12_same(1, substr_count($notify_source, 'error_log('), 'The adjacent G16 notification error_log row must remain exactly unchanged.');
-g12_not_contains('DevelopmentFunctions.error_log_error_log', $notify_source, 'This DB slice must not suppress the deferred G16 notification log row.');
+g12_same(1, substr_count($notify_source, 'error_log('), 'The G16 notification direct fallback count changed.');
+g12_same(1, substr_count($notify_source, 'DevelopmentFunctions.error_log_error_log'), 'The G16 notification fallback must retain one exact line-local suppression.');
+g12_contains("if (!\$recorded && function_exists('error_log'))", $notify_insert_source, 'The G16 fallback must require adapter failure and an available logger.');
 g12_same(1, substr_count($private_source, '@chmod($destination, 0640)'), 'Private upload permissions must retain the exact 0640 boundary.');
 g12_same(3, substr_count($private_source, 'wp_delete_file('), 'Private-file mismatch, rollback, and deletion cleanup paths must remain intact.');
 
@@ -491,6 +498,8 @@ $GLOBALS['g12_private_paths'] = array();
 $GLOBALS['g12_safe_paths'] = array();
 $GLOBALS['g12_deleted_paths'] = array();
 $GLOBALS['g12_current_time_calls'] = array();
+$GLOBALS['g12_operational_calls'] = array();
+$GLOBALS['g12_operational_result'] = false;
 
 // Invalid notification repository state fails closed before any database access.
 vms_notify_insert_log(array('event_key' => 'ignored'));
@@ -563,7 +572,8 @@ ini_set('error_log', is_string($previous_error_log) ? $previous_error_log : '');
 ini_set('log_errors', is_string($previous_log_errors) ? $previous_log_errors : '1');
 $failure_log = (string) file_get_contents($log_path);
 unlink($log_path);
-g12_contains('[VMS Notify] Failed to insert notification log row for event_key=failedevent', $failure_log, 'Notification insert failure logging changed.');
+g12_contains('[BVM operational] event=notification_log_insert_failed event_key=failedevent', $failure_log, 'Notification insert failure fallback changed.');
+g12_same('notification_log_insert_failed', $GLOBALS['g12_operational_calls'][0][0], 'Notification failure adapter event changed.');
 
 // Schema failure stops before history reads and preserves the prepared SHOW probe.
 $wpdb->reset();

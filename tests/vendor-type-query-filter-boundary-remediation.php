@@ -74,6 +74,43 @@ function vms_test_extract_function(string $source, string $name): string
 	vms_test_fail('Unable to locate closing brace for ' . $name . '.');
 }
 
+function vms_test_project_g16_monitor_logging(string $source): string
+{
+	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
+	$last = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$last_start = strpos($source, $last, (int) $start);
+	vms_test_assert_true($start !== false && $last_start !== false, 'G16 monitor helper bounds changed.');
+	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
+	vms_test_assert_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'G16 monitor helper block changed.');
+	$source = str_replace($block . "\n\n", '', $source, $count);
+	vms_test_assert_same(1, $count, 'G16 monitor helper removal changed.');
+	$current = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	vms_test_assert_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), 'G16 monitor shutdown changed.');
+	$fixture = vms_test_read_file(__DIR__ . '/g16-operational-logging-group-c.php');
+	vms_test_assert_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), 'G16 historical shutdown fixture changed.');
+	$historical = base64_decode($match[1], true);
+	vms_test_assert_true(is_string($historical) && $historical !== '', 'G16 historical shutdown decode failed.');
+	$source = str_replace($current, $historical, $source, $count);
+	vms_test_assert_same(1, $count, 'G16 shutdown reverse count changed.');
+	return $source;
+}
+
+function vms_test_project_ticket_boundary_g16_c_companion(string $source, string $label): array
+{
+	$helper_function = vms_test_extract_function($source, 'vms_test_project_g16_monitor_logging');
+	$helper_fragment = "\n" . $helper_function . "\n";
+	vms_test_assert_same(1, substr_count($source, $helper_fragment), $label . ' G16-C monitor helper count changed.');
+	$helper_source = str_replace($helper_fragment, '', $source, $helper_count);
+	vms_test_assert_same(1, $helper_count, $label . ' G16-C monitor helper removal changed.');
+	$specs = array(array(
+		'current' => '$live_monitor_projection = vms_test_project_g16_monitor_logging($live_monitor_source);',
+		'historical' => '$live_monitor_projection = $live_monitor_source;',
+		'units' => 1,
+	));
+	$projection = vms_test_project_known_fragments($helper_source, $specs, $label . ' G16-C monitor assertion');
+	return array('source' => $projection['source'], 'regions' => 1 + $projection['units']);
+}
+
 function vms_test_count_pattern(string $pattern, string $contents): int
 {
 	$count = preg_match_all($pattern, $contents);
@@ -123,18 +160,17 @@ function vms_test_strip_known_region(string $source, string $start_marker, strin
 
 function vms_test_project_ticket_boundary_g16_companion(string $source, string $label): array
 {
-	$helper = vms_test_strip_known_region(
-		$source,
-		"\nfunction vms_test_project_g16_vendor_logging(string \$source): string",
-		"\treturn \$source;\n}\n",
-		$label . ' G16 vendor helper'
-	);
+	$helper_function = vms_test_extract_function($source, 'vms_test_project_g16_vendor_logging');
+	$helper_fragment = "\n" . $helper_function . "\n";
+	vms_test_assert_same(1, substr_count($source, $helper_fragment), $label . ' G16-B vendor helper count changed.');
+	$helper_source = str_replace($helper_fragment, '', $source, $helper_count);
+	vms_test_assert_same(1, $helper_count, $label . ' G16-B vendor helper removal changed.');
 	$startMarker = '$vendor_type_projection = vms_test_project_g16_vendor_logging($vendor_type_source);';
 	$endMarker = "vms_test_assert_true(\$vendor_mutation_rejected, 'Vendor projection must reject a mutated owned logging context.');\n";
-	vms_test_assert_same(1, substr_count($helper['source'], $startMarker), $label . ' G16 assertion start changed.');
-	vms_test_assert_same(1, substr_count($helper['source'], $endMarker), $label . ' G16 assertion end changed.');
-	$start = strpos($helper['source'], $startMarker);
-	$end = strpos($helper['source'], $endMarker, (int) $start);
+	vms_test_assert_same(1, substr_count($helper_source, $startMarker), $label . ' G16 assertion start changed.');
+	vms_test_assert_same(1, substr_count($helper_source, $endMarker), $label . ' G16 assertion end changed.');
+	$start = strpos($helper_source, $startMarker);
+	$end = strpos($helper_source, $endMarker, (int) $start);
 	vms_test_assert_true($start !== false && $end !== false, $label . ' G16 assertion region must be present.');
 	$end += strlen($endMarker);
 	$historicalAssertion = "vms_test_assert_same(\n"
@@ -142,12 +178,12 @@ function vms_test_project_ticket_boundary_g16_companion(string $source, string $
 		. "\thash_file('sha256', \$vendor_type_path),\n"
 		. "\t'Vendor-type source should remain unchanged in this child.'\n"
 		. ");\n";
-	$projected = substr($helper['source'], 0, (int) $start)
+	$projected = substr($helper_source, 0, (int) $start)
 		. $historicalAssertion
-		. substr($helper['source'], $end);
+		. substr($helper_source, $end);
 	return array(
 		'source' => $projected,
-		'regions' => $helper['regions'] + 1,
+		'regions' => 2,
 	);
 }
 
@@ -583,7 +619,8 @@ $monitor_projection_specs = array(
 		'units' => 2,
 	),
 );
-$monitor_projection = vms_test_project_known_fragments($ticket_integrity_source, $monitor_projection_specs, 'Ticket Integrity monitor G10+G15');
+$monitor_pre_g16 = vms_test_project_g16_monitor_logging($ticket_integrity_source);
+$monitor_projection = vms_test_project_known_fragments($monitor_pre_g16, $monitor_projection_specs, 'Ticket Integrity monitor G10+G15');
 vms_test_assert_same(5, $monitor_projection['units'], 'Monitor projection must strip exactly two G10 and three G15 owned rows.');
 vms_test_assert_same(
 	'27770ef0be288290a7f7d5e5e7a92ee27e93f79e55d9f95d29637671415dcdfc',
@@ -592,14 +629,17 @@ vms_test_assert_same(
 );
 $mutated_monitor = str_replace("'post_status' => 'publish'", "'post_status' => 'draft'", $ticket_integrity_source, $mutation_count);
 vms_test_assert_same(1, $mutation_count, 'Monitor negative control must mutate one non-owned query argument.');
-$mutated_monitor_projection = vms_test_project_known_fragments($mutated_monitor, $monitor_projection_specs, 'mutated Ticket Integrity monitor');
+$mutated_monitor_pre_g16 = vms_test_project_g16_monitor_logging($mutated_monitor);
+$mutated_monitor_projection = vms_test_project_known_fragments($mutated_monitor_pre_g16, $monitor_projection_specs, 'mutated Ticket Integrity monitor');
 vms_test_assert_true(
 	hash('sha256', $mutated_monitor_projection['source']) !== '27770ef0be288290a7f7d5e5e7a92ee27e93f79e55d9f95d29637671415dcdfc',
 	'Monitor semantic projection must reject a non-owned runtime mutation.'
 );
 
-$boundary_projection = vms_test_project_ticket_boundary_g16_companion($ticket_integrity_test_source, 'Ticket Integrity boundary');
-vms_test_assert_same(2, $boundary_projection['regions'], 'Boundary projection must strip the exact G16 helper and assertion regions.');
+$boundary_projection = vms_test_project_ticket_boundary_g16_c_companion($ticket_integrity_test_source, 'Ticket Integrity boundary');
+vms_test_assert_same(2, $boundary_projection['regions'], 'Boundary projection must strip the exact G16-C helper and assertion changes.');
+$boundary_projection = vms_test_project_ticket_boundary_g16_companion($boundary_projection['source'], 'Ticket Integrity boundary');
+vms_test_assert_same(2, $boundary_projection['regions'], 'Boundary projection must strip the exact G16-B helper and assertion regions.');
 $boundary_projection = vms_test_strip_known_region(
 	$boundary_projection['source'],
 	'$live_monitor_g15_projection_rows = 0;',
@@ -639,8 +679,10 @@ $mutated_boundary = str_replace(
 	$boundary_mutation_count
 );
 vms_test_assert_same(1, $boundary_mutation_count, 'Boundary negative control must mutate one non-owned assertion.');
-$mutated_boundary = vms_test_project_ticket_boundary_g16_companion($mutated_boundary, 'mutated Ticket Integrity boundary');
-vms_test_assert_same(2, $mutated_boundary['regions'], 'Mutated boundary projection must strip the exact G16 helper and assertion regions.');
+$mutated_boundary = vms_test_project_ticket_boundary_g16_c_companion($mutated_boundary, 'mutated Ticket Integrity boundary');
+vms_test_assert_same(2, $mutated_boundary['regions'], 'Mutated boundary projection must strip the exact G16-C helper and assertion changes.');
+$mutated_boundary = vms_test_project_ticket_boundary_g16_companion($mutated_boundary['source'], 'mutated Ticket Integrity boundary');
+vms_test_assert_same(2, $mutated_boundary['regions'], 'Mutated boundary projection must strip the exact G16-B helper and assertion regions.');
 $mutated_boundary = vms_test_strip_known_region(
 	$mutated_boundary['source'],
 	'$live_monitor_g15_projection_rows = 0;',

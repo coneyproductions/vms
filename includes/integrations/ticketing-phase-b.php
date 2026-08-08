@@ -4707,8 +4707,25 @@ function vms_ticketing_v2_hash_entitlement(array $ent): string {
     return sha1($json);
 }
 
-function vms_entitlements_sync_image_log(string $message): void {
-    error_log('[VMS Entitlement Image Sync] ' . $message);
+function vms_entitlements_sync_image_log(string $event_code, array $context = array(), $error = null): void {
+    if (!function_exists('vms_record_operational_issue')) {
+        return;
+    }
+
+    if (func_num_args() === 1) {
+        vms_record_operational_issue(
+            'entitlement_image_sync_legacy',
+            array(
+                'service' => 'ticketing',
+                'operation' => 'sync_image',
+                'status' => 'legacy',
+            ),
+            $event_code
+        );
+        return;
+    }
+
+    vms_record_operational_issue($event_code, $context, $error);
 }
 
 function vms_entitlements_find_config_entitlement(int $plan_id, string $entitlement_id): array {
@@ -4936,7 +4953,14 @@ function vms_entitlements_sync_product_image_with_result(int $product_id, $entit
         $result['status'] = 'error_missing_product';
         $result['message'] = 'missing_product';
         vms_entitlements_sync_image_log(
-            sprintf('status=%s product_id=%d entitlement_id=%s', $result['status'], $product_id, $entitlement_id)
+            'entitlement_image_sync_product_failed',
+            array(
+                'service' => 'ticketing',
+                'operation' => 'sync_image',
+                'stage' => 'validate_product',
+                'status' => $result['status'],
+                'product_id' => $product_id,
+            )
         );
         return $result;
     }
@@ -4966,13 +4990,17 @@ function vms_entitlements_sync_product_image_with_result(int $product_id, $entit
             } catch (Throwable $e) {
                 $wc_save_warning = 'wc_save_failed: ' . $e->getMessage();
                 vms_entitlements_sync_image_log(
-                    sprintf(
-                        'status=warning_wc_save_failed product_id=%d entitlement_id=%s image_id=%d detail=%s',
-                        $product_id,
-                        $entitlement_id,
-                        $img_id,
-                        $e->getMessage()
-                    )
+                    'entitlement_image_sync_product_save_failed',
+                    array(
+                        'service' => 'ticketing',
+                        'operation' => 'sync_image',
+                        'stage' => 'product_save',
+                        'status' => 'warning_wc_save_failed',
+                        'product_id' => $product_id,
+                        'plan_id' => absint($result['plan_id']),
+                        'post_id' => $img_id,
+                    ),
+                    $e
                 );
             }
         }
@@ -4984,13 +5012,15 @@ function vms_entitlements_sync_product_image_with_result(int $product_id, $entit
         $result['status'] = 'updated';
         $result['message'] = ($wc_save_warning !== '') ? ('updated_with_warning: ' . $wc_save_warning) : 'updated';
         vms_entitlements_sync_image_log(
-            sprintf(
-                'status=%s product_id=%d entitlement_id=%s plan_id=%d image_id=%d',
-                $result['status'],
-                $product_id,
-                $entitlement_id,
-                absint($result['plan_id']),
-                $img_id
+            'entitlement_image_sync_product_completed',
+            array(
+                'service' => 'ticketing',
+                'operation' => 'sync_image',
+                'stage' => 'apply_image',
+                'status' => $result['status'],
+                'product_id' => $product_id,
+                'plan_id' => absint($result['plan_id']),
+                'post_id' => $img_id,
             )
         );
         return $result;
@@ -5018,14 +5048,15 @@ function vms_entitlements_sync_product_image_with_result(int $product_id, $entit
     }
 
     vms_entitlements_sync_image_log(
-        sprintf(
-            'status=%s product_id=%d entitlement_id=%s plan_id=%d image_id=%d detail=%s',
-            (string) $result['status'],
-            $product_id,
-            $entitlement_id,
-            absint($result['plan_id']),
-            $img_id,
-            (string) $result['message']
+        'entitlement_image_sync_product_result',
+        array(
+            'service' => 'ticketing',
+            'operation' => 'sync_image',
+            'stage' => 'resolve_image',
+            'status' => (string) $result['status'],
+            'product_id' => $product_id,
+            'plan_id' => absint($result['plan_id']),
+            'post_id' => $img_id,
         )
     );
 
@@ -5394,13 +5425,13 @@ function vms_entitlements_sync_plan_image_changes(int $plan_id, array $cfg_befor
             );
             $results[] = $res;
             vms_entitlements_sync_image_log(
-                sprintf(
-                    'status=%s product_id=%d entitlement_id=%s plan_id=%d detail=%s',
-                    $res['status'],
-                    0,
-                    $entitlement_id,
-                    $plan_id,
-                    $res['message']
+                'entitlement_image_sync_plan_skipped',
+                array(
+                    'service' => 'ticketing',
+                    'operation' => 'sync_image',
+                    'stage' => 'resolve_product',
+                    'status' => $res['status'],
+                    'plan_id' => $plan_id,
                 )
             );
             continue;

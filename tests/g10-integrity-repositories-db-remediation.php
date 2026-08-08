@@ -222,6 +222,25 @@ function g10_project_g15_monitor_dates(string $source, string $label): array
 	return array('source' => $source, 'replacements' => $replacements, 'rows' => $rows);
 }
 
+function g10_project_g16_monitor_logging(string $source, string $label): string
+{
+	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
+	$last = g10_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$last_start = strpos($source, $last, (int) $start);
+	g10_assert($start !== false && $last_start !== false, $label . ' G16 helper bounds changed.');
+	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
+	g10_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), $label . ' G16 helper block changed.');
+	$source = str_replace($block . "\n\n", '', $source, $count);
+	g10_same(1, $count, $label . ' G16 helper removal count changed.');
+	$current = g10_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	g10_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), $label . ' G16 shutdown contract changed.');
+	$fixture = (string) file_get_contents(__DIR__ . '/g16-operational-logging-group-c.php');
+	g10_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), $label . ' G16 historical shutdown fixture changed.');
+	$historical = base64_decode($match[1], true);
+	g10_assert(is_string($historical) && $historical !== '', $label . ' G16 historical shutdown decode failed.');
+	return str_replace($current, $historical, $source, $count);
+}
+
 /**
  * @param array<string,string> $function_sources
  * @param array<string,array<int,string>> $expected
@@ -692,6 +711,7 @@ foreach (array('mirror' => $mirror_sources, 'shadow' => $shadow_sources) as $tre
 	foreach ($sources as $source_key => $source) {
 		$hash_source = $source;
 		if ($source_key === 'monitor') {
+			$hash_source = g10_project_g16_monitor_logging($hash_source, $tree . ':monitor');
 			$g15_projection = g10_project_g15_monitor_dates($hash_source, $tree . ':monitor');
 			g10_same(2, $g15_projection['replacements'], $tree . ' monitor G15 projection replacement count changed.');
 			g10_same(3, $g15_projection['rows'], $tree . ' monitor G15 projection row count changed.');
@@ -754,11 +774,10 @@ g10_assert($mirror_sources['monitor'] !== $shadow_sources['monitor'], 'Monitor w
 g10_assert($mirror_sources['cron'] !== $shadow_sources['cron'], 'Cron whole-file divergence must remain preserved.');
 g10_assert($mirror_sources['add'] !== $shadow_sources['add'], 'ADD whole-file divergence must remain preserved.');
 
-$monitor_lines = preg_split('/\R/', $mirror_sources['monitor']);
-g10_assert(is_array($monitor_lines), 'Monitor source should split into lines.');
-g10_assert(isset($monitor_lines[481]), 'Deferred monitor logging row should remain present at line 482.');
-g10_assert(strpos($monitor_lines[481], 'phpcs:') === false, 'Deferred monitor logging row must remain unsuppressed.');
-g10_contains('error_log(', $monitor_lines[481], 'Deferred monitor logging row changed.');
+$monitor_shutdown_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_fatal_guard_shutdown');
+g10_same(1, substr_count($monitor_shutdown_source, 'error_log('), 'G16 monitor direct fallback count changed.');
+g10_same(1, substr_count($monitor_shutdown_source, 'DevelopmentFunctions.error_log_error_log'), 'G16 monitor fallback must retain one exact line-local suppression.');
+g10_contains("if (function_exists('error_log'))", $monitor_shutdown_source, 'G16 monitor fallback availability guard changed.');
 $monitor_format_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_format_datetime');
 $monitor_target_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_build_targets');
 g10_contains("return wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());", $monitor_format_source, 'G15 monitor formatter remediation changed.');

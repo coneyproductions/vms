@@ -259,17 +259,17 @@ function vms_handle_sync_entitlement_images(): void
 
 	set_transient('vms_entitlement_image_sync_last', $summary, 10 * MINUTE_IN_SECONDS);
 
-	$summary_msg = sprintf(
-		'Backfill complete: checked=%d updated=%d skipped=%d errors=%d',
-		(int) $summary['checked'],
-		(int) $summary['updated'],
-		(int) $summary['skipped'],
-		(int) $summary['errors']
+	$operational_context = array(
+		'service' => 'ticketing',
+		'operation' => 'sync_image_backfill',
+		'stage' => 'complete',
+		'status' => ((int) $summary['errors'] > 0) ? 'completed_with_errors' : 'completed',
+		'count' => (int) $summary['errors'],
 	);
 	if (function_exists('vms_entitlements_sync_image_log')) {
-		vms_entitlements_sync_image_log($summary_msg);
-	} else {
-		error_log('[VMS Ticket Product Image Sync] ' . $summary_msg);
+		vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
+	} elseif (function_exists('vms_record_operational_issue')) {
+		vms_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
 	}
 
 	wp_safe_redirect(add_query_arg(array(

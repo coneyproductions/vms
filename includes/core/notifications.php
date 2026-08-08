@@ -378,7 +378,20 @@ if (!function_exists('vms_notify_insert_log')) {
 			array('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
 		);
 		if ($ok !== 1) {
-			error_log('[VMS Notify] Failed to insert notification log row for event_key=' . sanitize_key((string) ($entry['event_key'] ?? 'unknown')));
+			$event_key = substr(sanitize_key((string) ($entry['event_key'] ?? 'unknown')), 0, 80);
+			$recorded = function_exists('vms_record_operational_issue') && vms_record_operational_issue(
+				'notification_log_insert_failed',
+				array(
+					'service' => 'notifications',
+					'operation' => 'insert_log',
+					'status' => 'failed',
+					'event_key' => $event_key,
+				)
+			);
+			if (!$recorded && function_exists('error_log')) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Preserve one minimal fallback when both the notification-table insert and the bounded option-backed operational adapter are unavailable; payload is limited to a fixed event and sanitized bounded event key.
+				error_log('[BVM operational] event=notification_log_insert_failed event_key=' . $event_key);
+			}
 		}
 	}
 }

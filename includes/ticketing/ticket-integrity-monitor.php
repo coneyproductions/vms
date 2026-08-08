@@ -328,6 +328,69 @@ function vms_ticket_integrity_is_memory_fatal(?array $error): bool
 	return ($message !== '' && strpos($message, 'allowed memory size') !== false);
 }
 
+function vms_ticket_integrity_fatal_operation(string $operation): string
+{
+	$operation = sanitize_key($operation);
+	return in_array($operation, array('scan', 'daily_report'), true) ? $operation : 'unknown';
+}
+
+function vms_ticket_integrity_fatal_source_scope(string $fatal_file): string
+{
+	if (!defined('VMS_PLUGIN_PATH')) {
+		return 'external';
+	}
+
+	$plugin_root = rtrim(str_replace('\\', '/', (string) VMS_PLUGIN_PATH), '/');
+	$fatal_file = str_replace('\\', '/', trim($fatal_file));
+	if (
+		$plugin_root === ''
+		|| $fatal_file === ''
+		|| strpos($fatal_file, $plugin_root . '/') !== 0
+		|| preg_match('#(?:^|/)\.\.(?:/|$)#', $fatal_file)
+	) {
+		return 'external';
+	}
+
+	$relative = substr($fatal_file, strlen($plugin_root) + 1);
+	$scope = substr(sanitize_key(str_replace('/', '_', $relative)), 0, 80);
+	return $scope !== '' ? $scope : 'external';
+}
+
+/**
+ * @return array{direct:array<string,mixed>,option:array<string,mixed>}
+ */
+function vms_ticket_integrity_fatal_operational_context(string $guard_id, string $operation, array $business_context, array $error, float $peak_memory_mb): array
+{
+	$operation = vms_ticket_integrity_fatal_operation($operation);
+	$fatal_type = max(0, (int) ($error['type'] ?? 0));
+	$fatal_line = max(0, (int) ($error['line'] ?? 0));
+	$fatal_file = trim((string) ($error['file'] ?? ''));
+	$fatal_message = trim((string) ($error['message'] ?? ''));
+	$memory_exhausted = vms_ticket_integrity_is_memory_fatal($error) ? 1 : 0;
+	$correlation = substr(hash('sha256', implode("\n", array($guard_id, $operation, $fatal_type, $fatal_line, $fatal_file, $fatal_message))), 0, 24);
+
+	$direct = array(
+		'operation' => $operation,
+		'memory_exhausted' => $memory_exhausted,
+		'fatal_type' => $fatal_type,
+		'line' => $fatal_line,
+		'source_scope' => vms_ticket_integrity_fatal_source_scope($fatal_file),
+		'correlation' => $correlation,
+	);
+	$option = $direct;
+	$trigger = substr(sanitize_key((string) ($business_context['trigger'] ?? '')), 0, 80);
+	$mode = substr(sanitize_key((string) ($business_context['mode'] ?? '')), 0, 80);
+	if ($trigger !== '') {
+		$option['trigger'] = $trigger;
+	}
+	if ($mode !== '') {
+		$option['mode'] = $mode;
+	}
+	$option['peak_memory_mb'] = round(max(0.0, $peak_memory_mb), 1);
+
+	return array('direct' => $direct, 'option' => $option);
+}
+
 function vms_ticket_integrity_memory_limit_bytes(): int
 {
 	$raw = trim((string) ini_get('memory_limit'));
@@ -440,11 +503,6 @@ function vms_ticket_integrity_fatal_guard_shutdown(): void
 	unset($GLOBALS['vms_ticket_integrity_fatal_guard_reserve']);
 
 	$is_memory_fatal = vms_ticket_integrity_is_memory_fatal($error);
-	$fatal_message = trim((string) ($error['message'] ?? ''));
-	$fatal_file = trim((string) ($error['file'] ?? ''));
-	if ($fatal_file !== '' && defined('ABSPATH')) {
-		$fatal_file = str_replace(ABSPATH, '', $fatal_file);
-	}
 	$peak_memory_mb = function_exists('memory_get_peak_usage')
 		? round(((int) memory_get_peak_usage(true)) / 1048576, 1)
 		: 0.0;
@@ -454,14 +512,11 @@ function vms_ticket_integrity_fatal_guard_shutdown(): void
 			continue;
 		}
 
-		$operation = sanitize_key((string) ($guard['operation'] ?? 'unknown'));
-		$context = is_array($guard['context'] ?? null) ? $guard['context'] : array();
-		$context['fatal_type'] = (int) ($error['type'] ?? 0);
-		$context['fatal_message'] = $fatal_message;
-		$context['fatal_file'] = $fatal_file;
-		$context['fatal_line'] = (int) ($error['line'] ?? 0);
-		$context['peak_memory_mb'] = $peak_memory_mb;
-		$context['memory_exhausted'] = $is_memory_fatal ? 1 : 0;
+		$operation = vms_ticket_integrity_fatal_operation((string) ($guard['operation'] ?? 'unknown'));
+		$business_context = is_array($guard['context'] ?? null) ? $guard['context'] : array();
+		$contexts = vms_ticket_integrity_fatal_operational_context((string) $guard_id, $operation, $business_context, $error, $peak_memory_mb);
+		$direct_context = $contexts['direct'];
+		$operational_context = $contexts['option'];
 
 		$event_type = 'scan_failed';
 		$message = __('Ticket integrity scan hit a fatal error.', 'backstage-venue-manager');
@@ -478,19 +533,16 @@ function vms_ticket_integrity_fatal_guard_shutdown(): void
 		}
 
 		if (function_exists('error_log')) {
-			$encoded_context = function_exists('wp_json_encode') ? wp_json_encode($context) : json_encode($context);
-			error_log(
-				sprintf(
-					'[VMS TICKET INTEGRITY FATAL] operation=%1$s memory_exhausted=%2$d type=%3$d file=%4$s line=%5$d message=%6$s context=%7$s',
-					$operation,
-					$is_memory_fatal ? 1 : 0,
-					(int) ($error['type'] ?? 0),
-					$fatal_file,
-					(int) ($error['line'] ?? 0),
-					$fatal_message,
-					is_string($encoded_context) ? $encoded_context : ''
-				)
-			);
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Fatal shutdown may lack memory or database-backed WordPress storage; retain one fixed, allowlisted, correlation-only last-resort record before attempting state or option writes.
+			error_log(sprintf(
+				'[BVM operational] event=ticket_integrity_fatal_shutdown operation=%1$s memory_exhausted=%2$d fatal_type=%3$d line=%4$d source_scope=%5$s correlation=%6$s',
+				(string) $direct_context['operation'],
+				(int) $direct_context['memory_exhausted'],
+				(int) $direct_context['fatal_type'],
+				(int) $direct_context['line'],
+				(string) $direct_context['source_scope'],
+				(string) $direct_context['correlation']
+			));
 		}
 
 		if ($operation === 'daily_report' && function_exists('vms_ticket_integrity_patch_daily_report_state')) {
@@ -498,19 +550,19 @@ function vms_ticket_integrity_fatal_guard_shutdown(): void
 				'last_status' => 'failed',
 				'last_error' => $is_memory_fatal ? 'fatal_memory_exhausted' : 'fatal_error',
 			);
-			if (!empty($context['trigger'])) {
-				$state_changes['last_trigger'] = sanitize_key((string) $context['trigger']);
+			if (!empty($business_context['trigger'])) {
+				$state_changes['last_trigger'] = sanitize_key((string) $business_context['trigger']);
 			}
-			if (!empty($context['mode'])) {
-				$state_changes['last_mode'] = sanitize_key((string) $context['mode']);
+			if (!empty($business_context['mode'])) {
+				$state_changes['last_mode'] = sanitize_key((string) $business_context['mode']);
 			}
-			if (!empty($context['recipient'])) {
-				$state_changes['last_recipient'] = sanitize_email((string) $context['recipient']);
+			if (!empty($business_context['recipient'])) {
+				$state_changes['last_recipient'] = sanitize_email((string) $business_context['recipient']);
 			}
 			vms_ticket_integrity_patch_daily_report_state($state_changes);
 		}
 
-		vms_ticket_integrity_log_event($event_type, $message, $context);
+		vms_ticket_integrity_log_event($event_type, $message, $operational_context);
 		$guards[$guard_id]['finalized'] = true;
 	}
 
