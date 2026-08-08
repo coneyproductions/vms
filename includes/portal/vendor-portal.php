@@ -586,12 +586,14 @@ if (!function_exists('vms_vendor_portal_get_admissions_headcount')) {
 
         static $table_exists_cache = array();
         if (!array_key_exists($table, $table_exists_cache)) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions schema readiness is reused only within this request, and the prepared SHOW probe gates the plugin-owned aggregate table.
             $table_exists_cache[$table] = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table);
         }
         if (empty($table_exists_cache[$table])) {
             return 0;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Portal headcount must read current plugin-owned admission rows; the prepared aggregate intentionally has no persistent cache.
         return max(0, (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COALESCE(SUM(CASE WHEN status <> 'canceled' THEN party_size ELSE 0 END), 0)
              FROM %i
@@ -976,9 +978,11 @@ if (!function_exists('vms_vendor_portal_get_guest_admissions_count')) {
         if ($wpdb && is_string($table) && $table !== '') {
             static $table_exists_cache = array();
             if (!array_key_exists($table, $table_exists_cache)) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Guest-admission schema readiness is reused only within this request, and the prepared SHOW probe gates the plugin-owned aggregate table.
                 $table_exists_cache[$table] = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table);
             }
             if (!empty($table_exists_cache[$table])) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The first per-plan guest count reads current plugin-owned admission rows before the existing request-local result cache is populated.
                 $guest_qty = max(0, (int) $wpdb->get_var($wpdb->prepare(
                     "SELECT COALESCE(SUM(CASE WHEN status <> 'canceled' THEN party_size ELSE 0 END), 0)
                      FROM %i
@@ -1358,10 +1362,10 @@ if (!function_exists('vms_vendor_portal_get_bonus_progress_cards')) {
             'post_status' => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => $limit * 3,
             'orderby' => 'meta_value',
-            'meta_key' => '_vms_event_date',
+            'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Bonus progress intentionally orders the bounded upcoming Event Plan query by its canonical event-date metadata.
             'order' => 'ASC',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bonus progress requires canonical event-date and primary-vendor assignment metadata; no equivalent indexed domain fields exist.
                 'relation' => 'AND',
                 array(
                     'key' => '_vms_event_date',
@@ -1421,10 +1425,10 @@ if (!function_exists('vms_vendor_portal_get_recent_bonus_history_cards')) {
             'post_status' => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => $limit * 4,
             'orderby' => 'meta_value',
-            'meta_key' => '_vms_event_date',
+            'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Bonus history intentionally orders the bounded past Event Plan query by its canonical event-date metadata.
             'order' => 'DESC',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bonus history requires canonical event-date and primary-vendor assignment metadata; no equivalent indexed domain fields exist.
                 'relation' => 'AND',
                 array(
                     'key' => '_vms_event_date',
@@ -1662,10 +1666,10 @@ if (!function_exists('vms_vendor_portal_get_secondary_sales_snapshot_cards')) {
             'post_status' => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => $limit * 4,
             'orderby' => 'meta_value',
-            'meta_key' => '_vms_event_date',
+            'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Secondary sales snapshots intentionally order the bounded upcoming Event Plan query by canonical event-date metadata.
             'order' => 'ASC',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Secondary sales snapshots require canonical event-date and secondary-vendor assignment metadata; no equivalent indexed domain fields exist.
                 'relation' => 'AND',
                 array(
                     'key' => '_vms_event_date',
@@ -1760,10 +1764,10 @@ if (!function_exists('vms_vendor_portal_get_secondary_sales_history_cards')) {
             'post_status' => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => $limit * 4,
             'orderby' => 'meta_value',
-            'meta_key' => '_vms_event_date',
+            'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Secondary sales history intentionally orders the bounded past Event Plan query by canonical event-date metadata.
             'order' => 'DESC',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Secondary sales history requires canonical event-date and secondary-vendor assignment metadata; no equivalent indexed domain fields exist.
                 'relation' => 'AND',
                 array(
                     'key' => '_vms_event_date',
@@ -1831,10 +1835,10 @@ if (!function_exists('vms_vendor_portal_get_past_assigned_event_rows')) {
             'post_status' => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => $limit * 5,
             'orderby' => 'meta_value',
-            'meta_key' => '_vms_event_date',
+            'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Assigned-event history intentionally orders the bounded past Event Plan query by canonical event-date metadata.
             'order' => 'DESC',
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Assigned-event history requires canonical date plus primary, secondary, or lineup vendor metadata; no equivalent indexed relationship exists.
                 'relation' => 'AND',
                 array(
                     'key' => '_vms_event_date',
@@ -3335,9 +3339,9 @@ if (!function_exists('vms_vendor_portal_get_next_headliner_booking')) {
             'post_status'    => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => 1,
             'orderby'        => 'meta_value',
-            'meta_key'       => $date_key,
+            'meta_key'       => $date_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The next-headliner lookup intentionally orders one upcoming Event Plan by the canonical event-date metadata.
             'order'          => 'ASC',
-            'meta_query'     => array(
+            'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The next-headliner lookup requires canonical date and primary-vendor assignment metadata; no equivalent indexed domain fields exist.
                 'relation' => 'AND',
                 array(
                     'key'   => $band_key,
@@ -4918,9 +4922,9 @@ function vms_vendor_portal_shortcode($atts = []): string
             'post_status'    => array('publish', 'draft', 'pending', 'private'),
             'posts_per_page' => 5,
             'orderby'        => 'meta_value',
-            'meta_key'       => '_vms_event_date',
+            'meta_key'       => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The portal dashboard intentionally orders its five upcoming bookings by canonical Event Plan date metadata.
             'order'          => 'ASC',
-            'meta_query'     => array(
+            'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Upcoming bookings require canonical date plus primary, secondary, or lineup vendor metadata; no equivalent indexed relationship exists.
                 'relation' => 'AND',
                 array(
                     'key'     => '_vms_event_date',
