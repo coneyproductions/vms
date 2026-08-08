@@ -2579,7 +2579,7 @@ Date: 2026-07-25
 ### Remaining Follow-Up
 
 - `WPORG-25` is terminal under `verified`.
-- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. Coordinated Wave 2 on `2026-08-08` then verified Ticketing Rules V2 `23 -> 0`, vendor-application confirmation `27 -> 0`, and goals/forecast `31 -> 0`. Coordinated Wave 3 verified ticket diagnostics `27 -> 0`, vendor portal `22 -> 0`, and schema/check-in descriptors `29 -> 0`. The current packaged residual baseline is `166` errors, `195` warnings, `361` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=236`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
+- `WPORG-28Q` still proves that the public package can be rebuilt, validated, and rescanned on `2026-07-25`, and `WPORG-28R-A` through `WPORG-28R-F6` later removed the packaged `NEW_FINDING`, `UNMAPPED`, and alternative-function residuals without changing the surviving blocker families. `WPORG-28R-G0` then decomposed the remaining blocker roadmap, `WPORG-28R-G1` through `WPORG-28R-G6-T5` removed the full nonce/input family, `WPORG-28R-G8-T1` through `WPORG-28R-G8-T5` removed the full `233` Staff Tasks and staffing DB/SQL rows, and `WPORG-28R-G9` removed the full `255` admissions and claim-state DB/SQL rows. Coordinated Wave 1 on `2026-08-07` verified Phase B DB/SQL `21 -> 0`, vendor-user-links `36 -> 0`, social queue `73 -> 0`, and removed the dormant unbootstrapped Safety prototype's `4` DB/SQL plus `4` mapped nonblocking output rows from the public boundary. Coordinated Wave 2 on `2026-08-08` then verified Ticketing Rules V2 `23 -> 0`, vendor-application confirmation `27 -> 0`, and goals/forecast `31 -> 0`. Coordinated Wave 3 verified ticket diagnostics `27 -> 0`, vendor portal `22 -> 0`, and schema/check-in descriptors `29 -> 0`. Coordinated Wave 4 verified G12 core `14 -> 0`, social support `18 -> 0`, background meta-query boundaries `6 -> 0`, and vendor-link migrations `16 -> 0`. The current packaged residual baseline is `160` errors, `147` warnings, `307` total findings, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=182`; durable machine-readable provenance is in `docs/wporg-current-scan-state.json`.
 - External slug-reservation, corrected-upload, and reviewer-reply work remain separately blocked under `Review-2 Name/Slug Closeout`, `WPORG-28R`, and `Review-13 Final Actions`.
 
 ## WPORG-28Q Result
@@ -4523,6 +4523,47 @@ Date: 2026-08-08
 - `WPORG-28R-G11` remains `in progress` with `18` DB/SQL rows after the verified vendor-portal slice.
 - `WPORG-28R-G12` remains `in progress` with `38` DB/SQL rows; this is the next three-lane execution family.
 - `WPORG-28R-G13` remains `in progress` with `68` DB/SQL rows after the verified schema/check-in descriptor slice; `G14-G15` retain `25` date rows; `G16-G17` retain `42` logging rows.
+- `WPORG-28R` remains blocked. No upload, slug reservation, reviewer reply, deployment, or production convergence is authorized from this checkpoint.
+
+## Coordinated Wave 4 Result
+
+Date: 2026-08-08
+
+### Summary
+
+- Result: `PASS`
+- Scope: the remaining G12 core, social-support, and background query boundaries plus the G13 vendor-link migration slice.
+- Primary source commit scanned: `e8afc44417169a0447a22ee968e41e34e6fc7841`.
+- Primary runtime commits: `9d243ba` (vendor-link migrations), `7f8ff14` (notifications/private-files), `e078136` (social support), and `adaf553` plus `e8afc44` (background runtime and hardened proof).
+- Durable current counts and provenance: `docs/wporg-current-scan-state.json`.
+
+### Runtime Changes
+
+- `includes/db/migrations.php` DB/SQL moved `16 -> 0`. Three controlled custom-table identifiers now use `%i`; already-prepared value placeholders, both vendor-to-user and user-to-vendor flow order, idempotent upserts, zero/false continuation semantics, and one-primary-link normalization remain unchanged. Two bounded legacy meta queries carry exact slow-query annotations.
+- G12 core repositories moved `14 -> 0`: notifications `7 -> 0` and private files `7 -> 0`. Query identifiers and bounded values are prepared; direct repository operations have exact operation-specific annotations. The adjacent notifications `error_log` remains unchanged for later logging ownership, and mirror-only `includes/core/private-files.php` remains absent from the live plugin by design.
+- G12 social-support repositories moved `18 -> 0`: audit `5`, installer `5`, Event Plan panel `4`, and template engine `4`. Two custom-table count boundaries now prepare identifiers with `%i`; remaining fresh repository operations use exact direct/no-cache annotations. Audit writes, queue-state booleans, seeding, template selection/fallback, redaction, and public behavior remain unchanged.
+- G12 background boundaries moved `6 -> 0`: Email Follow-Ups recipients `2`, scheduler `2`, and Event Plan import engine `2`. These are six exact finite or lifecycle-required meta-query annotations with no query-shape change. The proof rejects broad one-line suppressions, locks four immutable annotation-stripped baseline hashes, and includes a negative runtime-drift control.
+- Shared runtime was synchronized to the real local plugin only inside reviewed ownership boundaries. Full-file parity was retained where the Wave 3 parent matched live; mirror-only private files were not created in live; the divergent social Event Plan panel and import engine were patched only at owned functions.
+
+### Verification
+
+- New executable focused suites passed: `tests/vendor-links-migration-sql-remediation.php`, `tests/g12-core-repository-sql-remediation.php`, `tests/social-share-support-repository-sql-remediation.php`, and `tests/g12-background-meta-query-remediation.php`.
+- Independent reviewers reconciled each runtime slice to the Wave 3 strict JSON, reproduced all `54` parent rows with installed PHPCS/Plugin Check sniffs, proved current targets zero, and audited behavior, annotation truthfulness, parity, and suppression discipline before integration. The background proof's two review conditions were fixed and committed before acceptance.
+- Primary focused tests, PHP lints across every changed runtime boundary, mirror/live parity checks, release-compatibility harness, runtime-stub guards, and all `18` public-release pipeline cases passed. The sandboxed pipeline attempt could not access the local database; the required approved rerun passed and introduced no source change.
+- Authoritative public build passed at `/tmp/wporg-wave4-integrated.nTzezu/build-authoritative/backstage-venue-manager-1.2.0-public-release.zip`, SHA-256 `9ce12818e4c19bb684d6e1daa67b31ab7550188b9b10b33d0079af4ae7f06be7`.
+- The builder used a clean source commit, staged `372` files, linted `269` packaged PHP files, syntax-checked `55` JavaScript files, passed all five release regressions and four optional-dependency load-smokes, and passed archive-integrity validation. Its only warnings remain the absent version-matched build notes and intentionally omitted mutating activation-hook smoke.
+- Canonical packaged Plugin Check exited `0` with empty stderr using `--slug=backstage-venue-manager --format=strict-json --fields=file,line,column,type,code,message,docs`. Strict JSON is `/tmp/wporg-wave4-integrated.nTzezu/plugin-check/plugin-check.strict.json`, SHA-256 `278819f58c585c226824fd89d541fc5ab107c11897240e281683fa6abad8d179`; before/after activation snapshots are byte-identical at SHA-256 `3f06f750e24caf2b6349173e3e45caea017f6fd2da66fcccc766e6c87237cb53`, and all snapshot stderr files are empty.
+- A stale triage-header recipe using internal `--slug=vms --format=json` was detected and rejected before counts were accepted because it emitted a non-strict per-file report plus false public text-domain mismatches. That diagnostic is preserved at `/tmp/wporg-wave4-integrated.nTzezu/plugin-check/plugin-check.rejected-wrong-slug.raw.txt`; the triage command is corrected to the canonical public-package invocation.
+- Final scan: `160` errors, `147` warnings, `307` total, `14` unique codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=182`.
+- Final blocker families: DB/SQL `115`, nonce/input `0`, date/time `25`, and logging `42`.
+- The Wave 3-to-Wave 4 multiset comparison removed exactly `54` rows and added `0`. Exact deltas were `UnescapedDBParameter 12 -> 5 (-7)`, `DirectQuery 31 -> 14 (-17)`, `NoCaching 26 -> 13 (-13)`, `InterpolatedNotPrepared 9 -> 3 (-6)`, `NotPrepared 10 -> 7 (-3)`, `slow_meta_key 17 -> 14 (-3)`, and `slow_meta_query 59 -> 54 (-5)`; every other rule count remained unchanged.
+
+### Current Parent State
+
+- `WPORG-28R-G10` remains `in progress` with `45` DB/SQL rows.
+- `WPORG-28R-G11` remains `in progress` with `18` DB/SQL rows.
+- `WPORG-28R-G12` is now terminal under `verified` with `0` DB/SQL rows.
+- `WPORG-28R-G13` remains `in progress` with `52` DB/SQL rows after the verified migration slice. The completed but not-yet-integrated Event Plans (`9`) and admin/report (`15`) slices are in independent review; `G14-G15` retain `25` date rows and `G16-G17` retain `42` logging rows.
 - `WPORG-28R` remains blocked. No upload, slug reservation, reviewer reply, deployment, or production convergence is authorized from this checkpoint.
 
 Date: 2026-07-21

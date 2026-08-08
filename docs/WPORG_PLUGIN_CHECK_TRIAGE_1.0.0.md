@@ -5,7 +5,7 @@ Date: 2026-06-22
 ## Scope
 
 - Raw output saved at `docs/plugin-check-1.0.0-raw.txt`
-- Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=vms --mode=new --format=json`
+- Tool: `wp --skip-plugins=event-tickets,event-tickets-plus,the-events-calendar,woocommerce,woocommerce-square,vms plugin check <extracted-package-dir> --slug=backstage-venue-manager --mode=new --format=strict-json --fields=file,line,column,type,code,message,docs`
 - Scan target for current counts: extracted packaged directory from `dist/wporg-12d/vms-1.0.0-public-release.zip` under a disposable temp path outside the local site tree, leaving the local `vms/` install untouched
 - Current artifact SHA-256: `be5008b2dd6afd04d2c1c06eedbe60f931b3e1d25c8acff0801159792abf0384`
 - Heatmap companion: `docs/WPORG_PLUGIN_CHECK_HEATMAP_1.0.0.md`
@@ -146,23 +146,23 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Current Category Triage
 
-- Fresh packaged coordinated-Wave-3 baseline from `2026-08-08`: `166` errors, `195` warnings, `361` total findings, `14` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=236`.
-- Durable machine-readable counts and provenance are in `docs/wporg-current-scan-state.json`; normalized strict JSON is `/tmp/wporg-wave3-integrated.ZxiaOt/plugin-check/plugin-check.strict.json`.
+- Fresh packaged coordinated-Wave-4 baseline from `2026-08-08`: `160` errors, `147` warnings, `307` total findings, `14` unique rule codes, `KNOWN_ACCEPTED=0`, `KNOWN_NONBLOCKING=125`, `NEW_FINDING=0`, `UNMAPPED=0`, and `SUBMISSION_BLOCKER=182`.
+- Durable machine-readable counts and provenance are in `docs/wporg-current-scan-state.json`; normalized strict JSON is `/tmp/wporg-wave4-integrated.nTzezu/plugin-check/plugin-check.strict.json`.
 - The packaged scan reports `privateincludes/...` paths. The roadmap below uses the corresponding mirror `includes/...` ownership files that future implementation children must edit.
-- Coordinated Wave 1 removed the exact `21` Phase B, `36` vendor-user-link, and `73` social-queue DB/SQL rows, while excluding the dormant `includes/safety/` prototype removed another `4` DB/SQL and `4` mapped nonblocking output rows from the public package. Coordinated Wave 2 then removed the exact `23` Ticketing Rules V2, `27` vendor-application confirmation, and `31` goals/forecast DB/SQL rows. Coordinated Wave 3 removed the exact `27` ticket-diagnostics, `22` vendor-portal, and `29` schema/check-in descriptor DB/SQL rows. No unrelated file/code count increased.
+- Coordinated Wave 1 removed the exact `21` Phase B, `36` vendor-user-link, and `73` social-queue DB/SQL rows, while excluding the dormant `includes/safety/` prototype removed another `4` DB/SQL and `4` mapped nonblocking output rows from the public package. Coordinated Wave 2 then removed the exact `23` Ticketing Rules V2, `27` vendor-application confirmation, and `31` goals/forecast DB/SQL rows. Coordinated Wave 3 removed the exact `27` ticket-diagnostics, `22` vendor-portal, and `29` schema/check-in descriptor DB/SQL rows. Coordinated Wave 4 removed the exact `14` G12 core, `18` social-support, `6` background meta-query, and `16` vendor-link migration DB/SQL rows. No unrelated file/code count increased.
 
 | Category | Current packaged count | Representative files | Current classification | Current strategy |
 | --- | ---: | --- | --- | --- |
 | Nonce and input handling | `0` | closed by `WPORG-28R-G1` through `WPORG-28R-G6-T5` | `verified` | No packaged nonce/input blocker rows remain; keep `WPORG-28R-G7` retired unless a future strict-JSON rerun creates newly unmapped nonce/input rows. |
-| Database and SQL safety | `169` | `includes/db/migrations.php`, `includes/integrations/ticketing.php`, `includes/core/notifications.php`, `includes/core/private-files.php` | `SUBMISSION_BLOCKER` | Continue the independent remaining `G10` through `G13` repositories; the completed ticket-diagnostics, vendor-portal, schema-descriptor, and check-in-descriptor slices are now scanner-zero for DB/SQL. |
+| Database and SQL safety | `115` | `includes/integrations/ticketing.php`, `includes/vendor-applications.php`, `includes/cpt/event-plans.php`, `includes/helpers.php` | `SUBMISSION_BLOCKER` | Continue the independent remaining `G10`, `G11`, and `G13` repositories; `G12` and the completed migration slice are now scanner-zero for their owned DB/SQL rows. |
 | Date/time API usage | `25` | `includes/modules/staff-tasks/notifications.php`, `includes/ticketing/ticket-integrity-monitor.php`, `includes/helpers.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G14` and `WPORG-28R-G15` after the earlier request and query boundaries they depend on. |
 | Development logging | `42` | `includes/vendor-applications.php`, `includes/modules/admissions/rest.php`, `includes/cpt/event-plans.php`, `includes/modules/staff-tasks/generator.php` | `SUBMISSION_BLOCKER` | Execute `WPORG-28R-G16` and `WPORG-28R-G17` after the earlier lifecycle work clarifies which logs remain operational, which are dev traces, and which can be safely gated or removed. |
-| Escaping and output safety | `123` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `236` submission blockers; the four-row decrease from the post-G10 checkpoint is solely the excluded dormant Safety prototype. |
+| Escaping and output safety | `123` `OutputNotEscaped` findings | `includes/portal/staff-portal.php`, `includes/modules/admissions/vendor-guest-portal.php`, `includes/cpt/event-plans.php`, `includes/modules/availability-date-dispatch/admin-ui.php` | `KNOWN_NONBLOCKING` | Keep paused. The current packaged `OutputNotEscaped` family is already mapped to accepted `WPORG-24` / `WPORG-24R` boundaries and is not part of the `182` submission blockers; the four-row decrease from the post-G10 checkpoint is solely the excluded dormant Safety prototype. |
 
 ## Residual Submission-Blocker Roadmap
 
 - `WPORG-28R-G0` now owns the complete residual blocker decomposition. Every current blocker row belongs to exactly one implementation child below.
-- Remaining family sums reconcile exactly: `G10 45 + G11 18 + G12 38 + G13 68 = 169`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `236`. The nonce/input family is closed at `0`.
+- Remaining family sums reconcile exactly: `G10 45 + G11 18 + G12 0 + G13 52 = 115`, `G14-G15 = 25`, `G16-G17 = 42`, grand total `182`. The nonce/input family is closed at `0`.
 - Every implementation child still reruns `php tests/release-compatibility-harness.php`, `php tests/public-release-build-pipeline.php`, and `php tests/runtime-stub-guards.php` in addition to the focused suites listed below.
 - Every implementation child closes only its owned packaged rows; unrelated families must remain count-for-count unchanged except for documented same-file line movement.
 
@@ -338,23 +338,23 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 #### `WPORG-28R-G12 — Social Queue, Background Processing, And Private-File Query Boundaries`
 
-- Status: `in progress`; `includes/social-share/queue-repo.php` DB/SQL is verified `73 -> 0`, and excluding the dormant `includes/safety/` prototype removes its `4` DB/SQL rows from the public boundary, leaving `38`.
+- Status: `verified`; `includes/social-share/queue-repo.php` is `73 -> 0`, the dormant `includes/safety/` prototype's `4` DB/SQL rows are excluded from the public boundary, G12 core repositories are `14 -> 0`, social-support repositories are `18 -> 0`, and background meta-query boundaries are `6 -> 0`, leaving `0`.
 - Count: `115` (`UnescapedDBParameter 18`, `DirectQuery 39`, `NoCaching 31`, `InterpolatedNotPrepared 16`, `NotPrepared 5`, `slow_meta_key 2`, `slow_meta_query 4`)
 - Files: `includes/social-share/queue-repo.php`, `includes/social-share/installer.php`, `includes/social-share/audit.php`, `includes/social-share/template-engine.php`, `includes/social-share/event-plan-panel.php`, `includes/core/notifications.php`, `includes/modules/email-followups/recipients.php`, `includes/modules/email-followups/scheduler.php`, `includes/core/private-files.php`, `includes/safety/private-files.php`, `includes/services/event-plan-import/event-plan-import-engine.php`
 - Lifecycle / subsystem: `BACKGROUND_QUEUE`, `CRON`, `IMPORT_EXPORT`, `ADMIN_PAGE`; social queue persistence, background notifications, private-file indexes, and import-support lookups
 - Boundary: keep queue/audit persistence separate from import/export or private-file read models; revisit `NoCaching` only after direct query safety and placeholder correctness are fixed
 - Focused tests: `tests/social-share-queue-snapshot-json-remediation.php`, `tests/social-share-webhook-exception-boundary-remediation.php`, `tests/private-file-upload-api-remediation.php`, `tests/event-plan-import-upload-api-remediation.php`
-- Closure / defers: owned packaged DB rows currently `115 -> 38`; defer same-file operational logging to `G16`
+- Closure / defers: owned packaged DB rows are `115 -> 0`; same-file operational logging remains deferred to `G16`
 
 #### `WPORG-28R-G13 — Reporting, Schema, Meta-Query, And Cache-Policy Long Tail`
 
-- Status: `in progress` under the coordinated execution plan; goals/forecast is verified `31 -> 0`, vendor-schema descriptors are verified `28 -> 0`, and the check-in-close result descriptor is verified `1 -> 0`, leaving `68` rows.
+- Status: `in progress` under the coordinated execution plan; goals/forecast is `31 -> 0`, vendor-schema descriptors are `28 -> 0`, the check-in-close result descriptor is `1 -> 0`, and vendor-link migrations are `16 -> 0`, leaving `52` rows.
 - Count: `128` (`UnescapedDBParameter 5`, `DirectQuery 18`, `NoCaching 17`, `InterpolatedNotPrepared 5`, `NotPrepared 3`, `slow_meta_key 38`, `slow_meta_query 38`, `slow_meta_value 4`)
 - Files: `includes/core/registry/vendor-schema.php`, `includes/db/migrations.php`, `includes/cpt/event-plans.php`, `includes/cpt/ratings.php`, `includes/core/event-feedback.php`, `includes/helpers.php`, `includes/admin/settings-page.php`, `includes/admin/express-bar.php`, `includes/admin/event-command-center.php`, `includes/admin/budget-calculator.php`, `includes/admin/venue-duplicate-templates.php`, `includes/admin/settings/class-vms-settings-tours.php`, `includes/admin/event-feedback.php`, `includes/admin/integrity-calendar-reconcile.php`, `includes/admin/approvals-review-queue.php`, `includes/admin/schedule.php`, `includes/core/calendar-feed.php`, `includes/core/calendar-ticket-counts.php`, `includes/core/cancellation-adapters.php`, `includes/core/cli/stale-check.php`, `includes/core/event-credits.php`, `includes/core/ticket-sales-resolver.php`, `includes/schedule/schedule.php`, `includes/helpers/checkin-close.php`, `includes/core/goals-forecast.php`
 - Lifecycle / subsystem: `REPORTING`, `DIAGNOSTIC`, `CLI`, `OTHER`; schema helpers, long-tail admin reports, schedule summaries, event feedback aggregations, and slow-meta-query warnings
 - Boundary: this is the deliberate tail bucket for reporting, schema, and meta-query warnings that should not block higher-risk mutation work; every query still needs occurrence-specific review before any suppression
 - Focused tests: `tests/event-feedback-request-hash-characterization.php`, `tests/release-compatibility-harness.php`, `tests/public-release-build-pipeline.php`, `tests/runtime-stub-guards.php`
-- Closure / defers: owned packaged DB rows currently `128 -> 68`; defer same-file date rows to `G14` / `G15` and same-file diagnostic logging to `G17`
+- Closure / defers: owned packaged DB rows currently `128 -> 52`; defer same-file date rows to `G14` / `G15` and same-file diagnostic logging to `G17`
 
 ### Date/Time Children
 
@@ -435,6 +435,6 @@ No previously unseen Plugin Check codes appeared in this pass.
 
 ## Recommended Next Task
 
-- Active execution targets: close the exact `38`-row G12 residual from `/tmp/wporg-wave3-integrated.ZxiaOt/plugin-check/plugin-check.strict.json` in three independent slices: core notifications/private-files (`14`), social support repositories (`18`), and Email Follow-Ups/Event Plan import meta-query boundaries (`6`).
-- Scope: keep each target in an isolated worktree with its own executable SQL-contract test, synchronize only owned functions into intentionally divergent live files, and let the coordinator own shared docs, the aggregate package, and strict-json comparison.
+- Active execution targets: independently review and integrate the completed Event Plans (`9`) and admin/report (`15`) G13 slices, then partition the remaining `28` G13 long-tail rows from `/tmp/wporg-wave4-integrated.nTzezu/plugin-check/plugin-check.strict.json` without reopening verified G12 work.
+- Scope: keep each target in an isolated worktree with its own executable query-contract test, synchronize only owned functions into intentionally divergent live files, and let the coordinator own shared docs, aggregate packages, and strict-json comparisons.
 - Scope guardrails: do not reopen verified `G1` through `G9` or retired `G7`; do not pull the same-file logging rows into these DB/SQL slices; do not treat the package as submission-ready until `G10` through `G17` close and the strict-json blocker count reaches zero.
