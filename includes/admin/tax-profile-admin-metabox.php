@@ -111,7 +111,7 @@ add_action('save_post', function ($post_id, $post) {
         if (!is_wp_error($file_id)) {
             update_post_meta($post_id, $k_w9_upload, (int) $file_id);
             update_post_meta($post_id, $k_w9_upload_kind, 'private_file');
-            update_post_meta($post_id, $k_w9_recv, function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d'));
+            update_post_meta($post_id, $k_w9_recv, wp_date('Y-m-d', time(), wp_timezone()));
             if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
                 vms_private_files_delete($previous_upload_id);
             }

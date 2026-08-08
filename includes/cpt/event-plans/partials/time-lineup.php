@@ -224,9 +224,7 @@
                                 <?php endif; ?>
 
                                 <?php
-                                    $tax_bypass_default_until = function_exists('wp_date')
-                                        ? wp_date('Y-m-d', strtotime('+30 days'), wp_timezone())
-                                        : date('Y-m-d', strtotime('+30 days'));
+                                    $tax_bypass_default_until = wp_date('Y-m-d', strtotime('+30 days'), wp_timezone());
                                 ?>
                                 <div id="vms-tax-bypass-inline"
                                      class="vms-tax-bypass-inline"

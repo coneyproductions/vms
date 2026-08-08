@@ -602,9 +602,7 @@ function vms_ticket_integrity_report_text_value($value): string
 function vms_ticket_integrity_build_event_report_markdown(array $event): string
 {
 	$lines = array();
-	$generated_at = function_exists('wp_date')
-		? wp_date('Y-m-d H:i:s T', time(), wp_timezone())
-		: date('Y-m-d H:i:s');
+	$generated_at = wp_date('Y-m-d H:i:s T', time(), wp_timezone());
 	$lines[] = '# ' . trim((string) ($event['event_title'] ?? __('Ticket Integrity Report', 'backstage-venue-manager')));
 	$lines[] = '';
 	$lines[] = '- Generated: ' . $generated_at;
@@ -829,7 +827,7 @@ function vms_ticket_integrity_handle_export_report(): void
 		);
 	}
 
-	$filename = 'ticket-integrity-report-plan-' . $plan_id . '-' . (function_exists('wp_date') ? wp_date('Ymd-His', time(), wp_timezone()) : date('Ymd-His')) . '.md';
+	$filename = 'ticket-integrity-report-plan-' . $plan_id . '-' . wp_date('Ymd-His', time(), wp_timezone()) . '.md';
 	nocache_headers();
 	header('Content-Type: text/markdown; charset=' . get_option('blog_charset'));
 	header('Content-Disposition: attachment; filename="' . $filename . '"');

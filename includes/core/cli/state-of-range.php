@@ -238,7 +238,7 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 				return 'Never';
 			}
 
-			return date('Y-m-d H:i:s', $timestamp);
+			return wp_date('Y-m-d H:i:s', $timestamp, wp_timezone());
 		}
 
 		/**

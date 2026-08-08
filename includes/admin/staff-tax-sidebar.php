@@ -397,7 +397,7 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     $i9 = $flag('vms_emp_i9');
     $dd = $flag('vms_emp_dd');
 
-    $today = function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d');
+    $today = wp_date('Y-m-d', time(), wp_timezone());
 
     vms_staff_employee_packet_set_flag($staff_id, vms_staff_employee_w4_received_key(), '_vms_employee_w4_received_date', $w4, $today);
     vms_staff_employee_packet_set_flag($staff_id, vms_staff_employee_i9_verified_key(), '_vms_employee_i9_verified_date', $i9, $today);

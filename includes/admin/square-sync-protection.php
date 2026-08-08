@@ -253,7 +253,7 @@ if (!function_exists('vms_render_square_sync_protection_page_content')) {
             echo '<h2>' . esc_html__('Last report', 'backstage-venue-manager') . '</h2>';
             if (!empty($report['ts'])) {
                 $ts = (int) $report['ts'];
-                $readable = function_exists('wp_date') ? wp_date('Y-m-d H:i', $ts, wp_timezone()) : date('Y-m-d H:i', $ts);
+                $readable = wp_date('Y-m-d H:i', $ts, wp_timezone());
                 echo '<p class="description">' . esc_html($readable) . '</p>';
             }
             vms_render_square_sync_protection_summary_table($report);

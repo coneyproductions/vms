@@ -625,7 +625,7 @@ if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
                     if (!$ts_from || !$ts_to) continue;
 
                     for ($ts = $ts_from; $ts <= $ts_to; $ts = strtotime('+1 day', $ts)) {
-                        $d = date('Y-m-d', $ts);
+                        $d = gmdate('Y-m-d', $ts);
                         if (!isset($out[$d])) $out[$d] = array();
                         if ($note !== '' && !in_array($note, $out[$d], true)) {
                             $out[$d][] = $note;

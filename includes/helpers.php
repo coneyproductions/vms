@@ -3321,8 +3321,8 @@ function vms_get_venue_schedule_config(int $venue_id): array
             continue;
         }
         // Normalize to Y-m-d.
-        $start = date('Y-m-d', strtotime($start));
-        $end   = date('Y-m-d', strtotime($end));
+        $start = gmdate('Y-m-d', strtotime($start));
+        $end   = gmdate('Y-m-d', strtotime($end));
         if ($start > $end) {
             continue;
         }
@@ -3381,7 +3381,7 @@ function vms_venue_is_open_on_date(int $venue_id, string $ymd): bool
         return false; // closed until configured
     }
 
-    $w = intval(date('w', strtotime($ymd))); // 0=Sun..6=Sat
+    $w = intval(gmdate('w', strtotime($ymd))); // 0=Sun..6=Sat
     if (!in_array($w, $open_days, true)) {
         return false;
     }
