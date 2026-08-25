@@ -492,7 +492,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
             return array(
                 'ok' => false,
                 'error' => 'duplicate_failed',
-                'error_message' => __('VMS could not create the replacement Event Plan draft.', 'backstage-venue-manager'),
+                'error_message' => __('Backstage Venue Manager could not create the replacement Event Plan draft.', 'backstage-venue-manager'),
             );
         }
 
@@ -10696,7 +10696,7 @@ if (function_exists('vms_add_admin_notice')) {
                         }
                         vms_add_admin_notice(__('Event plan marked Cancelled.', 'backstage-venue-manager'), 'success');
                         if ($queue_rescheduled_draft_after_cancel) {
-                            vms_add_admin_notice(__('Replacement date captured. VMS will create a linked Draft Event Plan after this cancellation save completes.', 'backstage-venue-manager'), 'info');
+                            vms_add_admin_notice(__('Replacement date captured. Backstage Venue Manager will create a linked Draft Event Plan after this cancellation save completes.', 'backstage-venue-manager'), 'info');
                         }
                         if ($cancel_policy_post !== 'status_only') {
                             vms_add_admin_notice(__('Cancellation job captured. Review the Cancellation Job panel for step outcomes and refund activity.', 'backstage-venue-manager'), 'warning');
@@ -10825,7 +10825,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ));
 
                         if (empty($created['ok'])) {
-                            $err = (string) ($created['error_message'] ?? __('VMS could not create the rescheduled draft.', 'backstage-venue-manager'));
+                            $err = (string) ($created['error_message'] ?? __('Backstage Venue Manager could not create the rescheduled draft.', 'backstage-venue-manager'));
                             vms_add_admin_notice(sanitize_text_field($err), 'error');
                             break;
                         }
@@ -11233,7 +11233,7 @@ if (function_exists('vms_add_admin_notice')) {
                         ));
 
                         if (empty($created['ok'])) {
-                            $err = (string) ($created['error_message'] ?? __('VMS could not create the rescheduled draft.', 'backstage-venue-manager'));
+                            $err = (string) ($created['error_message'] ?? __('Backstage Venue Manager could not create the rescheduled draft.', 'backstage-venue-manager'));
                             vms_add_admin_notice(sanitize_text_field($err), 'error');
                         } else {
                             $new_plan_id = absint($created['new_post_id'] ?? 0);

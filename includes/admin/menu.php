@@ -103,11 +103,12 @@ add_action('admin_menu', function () {
   */
   $parent_slug = 'vms-dashboard';
   $capability  = 'manage_options';
+	$top_level_menu_label = __('Backstage Venue Manager', 'backstage-venue-manager');
 
   // Top-level menu → Dashboard
   add_menu_page(
-    __('Vendor Management System', 'backstage-venue-manager'),
-    (function_exists('vms_staff_certifications_pending_count') && function_exists('vms_staff_certifications_admin_badge_markup') ? 'VMS' . vms_staff_certifications_admin_badge_markup(vms_staff_certifications_pending_count()) : 'VMS'),
+	$top_level_menu_label,
+	(function_exists('vms_staff_certifications_pending_count') && function_exists('vms_staff_certifications_admin_badge_markup') ? $top_level_menu_label . vms_staff_certifications_admin_badge_markup(vms_staff_certifications_pending_count()) : $top_level_menu_label),
     $capability,
     $parent_slug,
     'vms_render_dashboard_page',
@@ -456,7 +457,7 @@ function vms_render_dashboard_page(): void
 
 function vms_render_dashboard_page_content(): void
 {
-  echo '<p class="vms-dashboard-welcome" data-vms-tour="dashboard_welcome">' . esc_html__('Welcome to the Venue Management System dashboard—tune the filters below before reviewing cards and tour health signals.', 'backstage-venue-manager') . '</p>';
+  echo '<p class="vms-dashboard-welcome" data-vms-tour="dashboard_welcome">' . esc_html__('Welcome to the Backstage Venue Manager dashboard—tune the filters below before reviewing cards and tour health signals.', 'backstage-venue-manager') . '</p>';
 
   $user_id = (int) get_current_user_id();
   $has_inc_drafts = (function_exists('vms_user_pref_has_include_drafts'))

@@ -56,7 +56,7 @@ if (!class_exists('VMS_Settings_Tours')) {
 
 		public static function render_section_intro(): void
 		{
-			echo '<p>Controls for VMS guided tours and drift health surfacing.</p>';
+			echo '<p>Controls for Backstage Venue Manager guided tours and drift health surfacing.</p>';
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only guided-tour reset notice only affects admin feedback.
 				if (vms_request_read_scalar($_GET, 'vms_tours_reset') === '1') {
 					echo '<p><strong>' . esc_html__('Tour progress reset for current user.', 'backstage-venue-manager') . '</strong></p>';
@@ -65,7 +65,7 @@ if (!class_exists('VMS_Settings_Tours')) {
 
 		public static function render_enabled_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_ENABLED, 'Enable guided tours across VMS admin screens.');
+			self::render_checkbox(VMS_Tours::OPT_ENABLED, 'Enable guided tours across Backstage Venue Manager admin screens.');
 		}
 
 		public static function render_autostart_field(): void
@@ -75,17 +75,17 @@ if (!class_exists('VMS_Settings_Tours')) {
 
 		public static function render_notice_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_DRIFT_NOTICE_ENABLED, 'Show admin drift notice on VMS pages when anchors are missing.');
+			self::render_checkbox(VMS_Tours::OPT_DRIFT_NOTICE_ENABLED, 'Show admin drift notice on Backstage Venue Manager pages when anchors are missing.');
 		}
 
 		public static function render_badge_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_DRIFT_BADGE_ENABLED, 'Show red badge on VMS menu when anchor drift exists.');
+			self::render_checkbox(VMS_Tours::OPT_DRIFT_BADGE_ENABLED, 'Show red badge on the Backstage Venue Manager menu when anchor drift exists.');
 		}
 
 		public static function render_autoscan_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_AUTO_SCAN_ON_UPDATE, 'Set pending scan automatically when VMS version changes.');
+			self::render_checkbox(VMS_Tours::OPT_AUTO_SCAN_ON_UPDATE, 'Set pending scan automatically when the Backstage Venue Manager version changes.');
 		}
 
 		public static function render_reset_field(): void

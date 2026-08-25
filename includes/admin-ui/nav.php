@@ -234,7 +234,7 @@ if (!function_exists('vms_admin_ui_nav_clusters')) {
 				'items' => array(
 					array('label' => 'Data Tools', 'url' => vms_admin_ui_page_url('vms-data-tools')),
 					array('label' => 'Ticket Integrity', 'url' => vms_admin_ui_page_url('vms-ticket-integrity')),
-					array('label' => 'VMS Ops Console', 'url' => $ops_console_url),
+					array('label' => 'Ops Console', 'url' => $ops_console_url),
 				),
 			),
 		);
@@ -415,7 +415,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 			$active_cluster = (string) $active;
 		}
 
-		echo '<nav class="vms-admin-topnav" aria-label="VMS top navigation"';
+		echo '<nav class="vms-admin-topnav" aria-label="Backstage Venue Manager top navigation"';
 		if ($active_cluster !== '') {
 			echo ' data-vms-cluster="' . esc_attr($active_cluster) . '"';
 		}
@@ -506,7 +506,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 
 			$version = defined('VMS_VERSION') ? trim((string) VMS_VERSION) : '';
 			if ($version !== '') {
-				echo '<div class="vms-admin-topnav__build">VMS v' . esc_html($version) . '</div>';
+				echo '<div class="vms-admin-topnav__build">Backstage Venue Manager v' . esc_html($version) . '</div>';
 			}
 
 			echo '</nav>';
@@ -581,8 +581,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 
 			add_submenu_page(
 				'vms-dashboard',
-				__('VMS Ops Console', 'backstage-venue-manager'),
-				__('VMS Ops Console', 'backstage-venue-manager'),
+				__('Ops Console', 'backstage-venue-manager'),
+				__('Ops Console', 'backstage-venue-manager'),
 				$menu_cap,
 				$ops_slug,
 				$ops_callback
@@ -610,8 +610,8 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 			if (function_exists('vms_ops_admin_render_settings_page')) {
 				add_submenu_page(
 					'vms-dashboard',
-					__('VMS Ops Console Hub', 'backstage-venue-manager'),
-					__('VMS Ops Console Hub', 'backstage-venue-manager'),
+					__('Ops Console Hub', 'backstage-venue-manager'),
+					__('Ops Console Hub', 'backstage-venue-manager'),
 					$menu_cap,
 					'vms-ops-console-hub',
 					'vms_admin_ui_render_ops_console_page'
@@ -798,7 +798,7 @@ if (!function_exists('vms_admin_ui_compact_left_menu')) {
 	 * The left rail is only a launcher list for the primary VMS categories.
 	 * Registered pages/modules still belong to their declared sections, but
 	 * those detailed lists live inside VMS top navigation, section hubs, and
-	 * All VMS Pages. This prevents the WP sidebar from becoming a full module
+	 * All Backstage Venue Manager Pages. This prevents the WP sidebar from becoming a full module
 	 * directory again.
 	 */
 	function vms_admin_ui_compact_left_menu(): void
@@ -1175,7 +1175,7 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 				vms_admin_ui_render_shell(
 					array(
 						'title' => __('Data Tools', 'backstage-venue-manager'),
-						'subtitle' => __('Importers, reports, reconciliation, and maintenance tools inside the VMS admin shell.', 'backstage-venue-manager'),
+						'subtitle' => __('Importers, reports, reconciliation, and maintenance tools inside the Backstage Venue Manager admin shell.', 'backstage-venue-manager'),
 						'shell_id' => 'vms-data-tools-wrap',
 					),
 					$render_content
@@ -1190,7 +1190,7 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 		$render_content = static function (): void {
 			echo '<p class="vms-admin-hub-intro">Run integrity and operational maintenance workflows.</p>';
 			echo '<div class="vms-admin-hub-grid">';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-settings')) . '"><strong>Settings</strong><span>Global VMS settings and integrity scan controls.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-settings')) . '"><strong>Settings</strong><span>Global Backstage Venue Manager settings and integrity scan controls.</span></a>';
 			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-import-event-plans')) . '"><strong>Import Event Plans (CSV)</strong><span>Preview and commit VMS-only Event Plan upserts from CSV.</span></a>';
 			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-integrity-venue-links')) . '"><strong>Integrity: Venue Links</strong><span>Reconcile broken Event Plan venue links.</span></a>';
 			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-integrity-calendar-links')) . '"><strong>Integrity: Calendar Links</strong><span>Reconcile missing or stale calendar event links.</span></a>';
@@ -1299,13 +1299,13 @@ if (!function_exists('vms_admin_ui_render_ops_console_page')) {
 
 		if (function_exists('vms_admin_ui_render_shell')) {
 			vms_admin_ui_render_shell(
-				array('title' => __('VMS Ops Console', 'backstage-venue-manager')),
+				array('title' => __('Backstage Venue Manager Ops Console', 'backstage-venue-manager')),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('VMS Ops Console', 'backstage-venue-manager') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('Backstage Venue Manager Ops Console', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}

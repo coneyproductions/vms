@@ -197,7 +197,7 @@ if (!function_exists('vms_email_followups_render_overview_tab')) {
 		if (!empty($settings['mailpoet_list_id'])) {
 			echo '<p><strong>' . esc_html__('Configured list ID:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $settings['mailpoet_list_id']) . '</p>';
 		}
-		echo '<p class="description">' . esc_html__('VMS sends through WordPress email. If MailPoet is configured to send site emails, MailPoet handles delivery. Optional subscriber/list sync can also be enabled below.', 'backstage-venue-manager') . '</p>';
+		echo '<p class="description">' . esc_html__('Backstage Venue Manager sends through WordPress email. If MailPoet is configured to send site emails, MailPoet handles delivery. Optional subscriber/list sync can also be enabled below.', 'backstage-venue-manager') . '</p>';
 		echo '</article>';
 		echo '</section>';
 
@@ -526,7 +526,7 @@ if (!function_exists('vms_email_followups_render_preview_tab')) {
 		}
 		echo '<label class="vms-efu-check"><input type="checkbox" name="confirm_send" value="1" /> <span>' . esc_html__('I understand this sends to the selected eligible recipients above.', 'backstage-venue-manager') . '</span></label>';
 		/* translators: %d: number used in this message. */
-		echo '<p class="vms-efu-send-note">' . esc_html(sprintf(__('Manual sends are processed in batches of up to %d recipients to reduce timeout risk. If more remain, VMS will show a Continue Sending button after the page returns.', 'backstage-venue-manager'), vms_email_followups_manual_batch_size())) . '</p>';
+		echo '<p class="vms-efu-send-note">' . esc_html(sprintf(__('Manual sends are processed in batches of up to %d recipients to reduce timeout risk. If more remain, Backstage Venue Manager will show a Continue Sending button after the page returns.', 'backstage-venue-manager'), vms_email_followups_manual_batch_size())) . '</p>';
 		echo '<p class="vms-efu-send-progress" aria-live="polite"></p>';
 		echo '<button type="submit" class="button">' . esc_html__('Send to Selected Recipients', 'backstage-venue-manager') . '</button>';
 		echo '</form>';

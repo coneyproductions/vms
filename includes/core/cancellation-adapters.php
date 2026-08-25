@@ -1151,7 +1151,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 			continue;
 		}
 
-		$reason = sprintf('VMS cancellation refund for Event Plan #%d', $event_plan_id);
+		$reason = sprintf('Backstage Venue Manager cancellation refund for Event Plan #%d', $event_plan_id);
 		$refund = wc_create_refund(array(
 			'order_id' => $order_id,
 			'amount' => $refund_amount,
@@ -1951,7 +1951,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		$lines[] = '';
 		$lines[] = 'Reference: Event Plan #' . $event_plan_id;
 		$lines[] = '';
-		$lines[] = 'This automated notice was sent by VMS.';
+		$lines[] = 'This automated notice was sent by Backstage Venue Manager.';
 
 		return implode("\n", $lines);
 	};

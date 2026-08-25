@@ -485,7 +485,7 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 		}
 
 		if (method_exists($order, 'add_order_note')) {
-			$order->add_order_note(sprintf('VMS Event Credit %1$s issued for %2$s from cancelled Event Plan #%3$d.', $code, vms_event_credit_format_money($amount, $currency), $event_plan_id));
+			$order->add_order_note(sprintf('Backstage Venue Manager Event Credit %1$s issued for %2$s from cancelled Event Plan #%3$d.', $code, vms_event_credit_format_money($amount, $currency), $event_plan_id));
 		}
 
 		$email_sent = false;

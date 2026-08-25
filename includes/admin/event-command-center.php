@@ -1286,7 +1286,7 @@ if (!function_exists('vms_event_command_center_get_weather_snapshot')) {
             'label' => $active ? __('Weather tracking available', 'backstage-venue-manager') : __('Weather tracking not enabled in this build yet', 'backstage-venue-manager'),
             'summary' => $active
                 ? __('Open the weather workspace for live forecast, rain risk, wind, heat, and show-day weather notes.', 'backstage-venue-manager')
-                : __('Install or activate the VMS weather module to show event-level forecast, rain, wind, heat, and weather-watch notes here.', 'backstage-venue-manager'),
+                : __('Install or activate the Backstage Venue Manager weather module to show event-level forecast, rain, wind, heat, and weather-watch notes here.', 'backstage-venue-manager'),
             'url' => vms_event_command_center_get_weather_url(),
         );
     }
@@ -1348,7 +1348,7 @@ if (!function_exists('vms_event_command_center_collect_activity')) {
         if ($actuals_pulled !== '') {
             $items[] = array(
                 'title' => __('Actuals refreshed', 'backstage-venue-manager'),
-                'detail' => __('Provider-side event actuals were pulled into VMS.', 'backstage-venue-manager'),
+                'detail' => __('Provider-side event actuals were pulled into Backstage Venue Manager.', 'backstage-venue-manager'),
                 'when' => vms_event_command_center_time_ago_label($actuals_pulled, true),
                 'ts' => vms_event_command_center_parse_datetime($actuals_pulled, true) instanceof DateTimeImmutable ? vms_event_command_center_parse_datetime($actuals_pulled, true)->getTimestamp() : 0,
             );

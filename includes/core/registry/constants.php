@@ -92,7 +92,7 @@ if (!defined('VMS_VERSION')) {
 	// v0.2.24.596: hardens the compact VMS admin menu so secondary pages are physically removed from the WordPress left rail instead of relying on VMS-screen-only CSS.
 	// v0.2.24.588: fixes Guided Tours shell callback visibility, wraps Data Tools in the VMS admin shell, forces VMS parent highlighting for VMS pages, and tightens top-nav dropdown widths.
 	// v0.2.24.587: catalogs legacy/direct admin pages in the registry and centralizes the compact left-rail section specs while keeping direct callbacks intact.
-	// v0.2.24.586: tightens admin menu registry pass so only durable section pages remain in the left rail while all module/add-on pages stay discoverable in All VMS Pages.
+	// v0.2.24.586: tightens admin menu registry pass so only durable section pages remain in the left rail while all module/add-on pages stay discoverable in All Backstage Venue Manager Pages.
 	// v0.2.24.585: adds first-pass admin menu registry, page directory, and add-on-safe discovery.
 	// v0.2.24.584: adds Square Sync Protection firewall for VMS/TEC ticket, admission, and event add-on Woo products while preserving Square-owned normal catalog items.
 	// v0.2.24.583: adds the first Email Follow-Ups foundation with MailPoet detection, event-aware previews, test sends, logging, and off-by-default scheduled sends.

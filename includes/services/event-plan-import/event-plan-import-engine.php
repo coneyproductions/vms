@@ -1116,7 +1116,7 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				} else {
 					$errors[] = sprintf(
 						/* translators: %s: venue name */
-						__('Venue "%s" was not found in VMS Venues.', 'backstage-venue-manager'),
+						__('Venue "%s" was not found in Backstage Venue Manager Venues.', 'backstage-venue-manager'),
 						$venue_name
 					);
 				}

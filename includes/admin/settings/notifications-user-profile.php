@@ -20,7 +20,7 @@ if (!function_exists('vms_notify_render_user_profile_fields')) {
 		$sms_checked = !empty($sms_enabled);
 		$wa_checked = !empty($wa_enabled);
 
-		echo '<h2>' . esc_html__('VMS Notifications', 'backstage-venue-manager') . '</h2>';
+		echo '<h2>' . esc_html__('Backstage Venue Manager Notifications', 'backstage-venue-manager') . '</h2>';
 		echo '<table class="form-table" role="presentation">';
 		echo '<tr>';
 		echo '<th><label for="vms_locale_preference">' . esc_html__('Locale preference', 'backstage-venue-manager') . '</label></th>';

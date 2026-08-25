@@ -63,7 +63,7 @@ add_filter('cron_schedules', function (array $schedules): array {
 	if (!isset($schedules['vms_social_5m'])) {
 		$schedules['vms_social_5m'] = array(
 			'interval' => 5 * MINUTE_IN_SECONDS,
-			'display' => __('Every 5 Minutes (VMS Social)', 'backstage-venue-manager'),
+			'display' => __('Every 5 Minutes (Backstage Venue Manager Social)', 'backstage-venue-manager'),
 		);
 	}
 	return $schedules;

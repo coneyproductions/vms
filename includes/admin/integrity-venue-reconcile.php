@@ -257,5 +257,5 @@ function vms_render_integrity_venue_reconcile_page_sections(): void
 
   echo '</form>';
 
-  echo '<p class="description">Tip: run the Integrity Scan (VMS → Settings) first to force any impacted Event Plans back to Draft, then reconcile links here.</p>';
+  echo '<p class="description">Tip: run the Integrity Scan (Backstage Venue Manager → Settings) first to force any impacted Event Plans back to Draft, then reconcile links here.</p>';
 }

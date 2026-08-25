@@ -12,7 +12,7 @@ require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
 if (!class_exists('VMS_Admin_Event_Plans')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 final class VMS_Comp_Options_Test_Ajax_Exit extends RuntimeException

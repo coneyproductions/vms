@@ -45,7 +45,7 @@ if (!function_exists('vms_get_tour_registry')) {
 		$tours = array(
 			array(
 				'id'       => 'vms_welcome',
-				'title'    => 'VMS Guided Tour',
+				'title'    => 'Backstage Venue Manager Guided Tour',
 				'version'  => 1,
 				'contexts' => array(
 					array(
@@ -59,7 +59,7 @@ if (!function_exists('vms_get_tour_registry')) {
 					array(
 						'anchor'    => 'dashboard_welcome',
 						'title'     => 'Welcome',
-						'content'   => '<p>Welcome to the VMS dashboard; pick your venue and scope filters before anything else.</p>',
+						'content'   => '<p>Welcome to the Backstage Venue Manager dashboard; pick your venue and scope filters before anything else.</p>',
 						'placement' => 'bottom',
 					),
 					array(

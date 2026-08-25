@@ -529,7 +529,7 @@ if (!class_exists('VMS_Tours')) {
 			);
 
 			echo '<div class="notice notice-warning is-dismissible vms-tours-notice">';
-			echo '<p><strong>VMS Tour Drift:</strong> ' . esc_html((string) $count) . ' anchor(s) are missing. Run a scan and copy the report for Codex.</p>';
+			echo '<p><strong>Backstage Venue Manager Tour Drift:</strong> ' . esc_html((string) $count) . ' anchor(s) are missing. Run a scan and copy the report for Codex.</p>';
 			echo '<p><a class="button button-secondary" href="' . esc_url(admin_url('admin.php?page=vms-tour-maintenance')) . '">View Tour Maintenance</a> ';
 			echo '<a class="button" href="' . esc_url($dismiss_url) . '">Dismiss until new drift/scan</a></p>';
 			echo '</div>';
@@ -612,7 +612,7 @@ if (!class_exists('VMS_Tours')) {
 				if ($slug !== 'vms-dashboard') {
 					continue;
 				}
-				$title = isset($item[0]) ? (string) $item[0] : 'VMS';
+				$title = isset($item[0]) ? (string) $item[0] : 'Backstage Venue Manager';
 				if (strpos($title, 'plugin-count') !== false) {
 					return;
 				}

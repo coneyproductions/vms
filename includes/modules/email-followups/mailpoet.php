@@ -22,7 +22,7 @@ if (!function_exists('vms_email_followups_mailpoet_status')) {
 			'available' => false,
 			'setup_complete' => null,
 			'lists' => array(),
-			'message' => __('MailPoet API is not available. VMS can still use WordPress email delivery for tests/manual sends.', 'backstage-venue-manager'),
+			'message' => __('MailPoet API is not available. Backstage Venue Manager can still use WordPress email delivery for tests/manual sends.', 'backstage-venue-manager'),
 		);
 
 		$api = vms_email_followups_mailpoet_api();

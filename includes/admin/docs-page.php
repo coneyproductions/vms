@@ -15,7 +15,7 @@ function vms_docs_admin_menu() {
 
     add_submenu_page(
         $parent_slug,
-        'VMS Docs',
+		'Backstage Venue Manager Docs',
         'Docs',
         'manage_options',
         'vms-docs',
@@ -56,7 +56,7 @@ function vms_docs_admin_page_render() {
     }
 
     echo '<div class="wrap vms-docs-admin">';
-    echo '<h1>VMS Documentation</h1>';
+    echo '<h1>Backstage Venue Manager Documentation</h1>';
 
     echo '<div class="vms-docs-layout">';
 

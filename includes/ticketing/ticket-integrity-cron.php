@@ -21,7 +21,7 @@ function vms_ticket_integrity_register_cron_schedules(array $schedules): array
 	if (!isset($schedules['vms_ticket_integrity_fifteen_minutes'])) {
 		$schedules['vms_ticket_integrity_fifteen_minutes'] = array(
 			'interval' => 15 * MINUTE_IN_SECONDS,
-			'display' => __('Every 15 Minutes (VMS Ticket Integrity)', 'backstage-venue-manager'),
+			'display' => __('Every 15 Minutes (Backstage Venue Manager Ticket Integrity)', 'backstage-venue-manager'),
 		);
 	}
 
@@ -717,7 +717,7 @@ function vms_ticket_integrity_watch_vms_settings_change($old_value, $new_value, 
 	if (function_exists('vms_ticket_integrity_log_event')) {
 		vms_ticket_integrity_log_event(
 			'full_scan_queued',
-			__('Ticket integrity full scan queued after VMS settings change.', 'backstage-venue-manager'),
+			__('Ticket integrity full scan queued after a Backstage Venue Manager settings change.', 'backstage-venue-manager'),
 			array('option' => 'vms_settings')
 		);
 	}

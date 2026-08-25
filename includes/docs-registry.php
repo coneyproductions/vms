@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * VMS Docs Registry
+ * Backstage Venue Manager Docs Registry
  * Stores sources (core + addons) and the discovered docs in those sources.
  */
 
@@ -18,7 +18,7 @@ function vms_docs_sources() {
     // Register core docs by default.
     $sources[] = [
         'module' => 'vms',
-        'label'  => 'VMS Core',
+        'label'  => 'Backstage Venue Manager Core',
         'path'   => trailingslashit(plugin_dir_path(__DIR__)) . 'docs',
         'public_base' => 'vms',
     ];

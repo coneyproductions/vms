@@ -144,7 +144,7 @@ if (!function_exists('vms_add_dispatch_render_public_response')) {
 					/* translators: %s: human-readable value used in this message. */
 					: sprintf(__('Your response has been recorded as %s.', 'backstage-venue-manager'), $label);
 				$html .= '<p class="vms-add-success">' . esc_html($message) . '</p>';
-				$html .= '<p class="vms-add-note">' . esc_html__('Thank you. The operator can now use your response in VMS availability and Event Plan staffing decisions.', 'backstage-venue-manager') . '</p>';
+				$html .= '<p class="vms-add-note">' . esc_html__('Thank you. The operator can now use your response in Backstage Venue Manager availability and Event Plan staffing decisions.', 'backstage-venue-manager') . '</p>';
 				vms_add_dispatch_render_public_shell(__('Availability Response Recorded', 'backstage-venue-manager'), $html);
 			}
 		}

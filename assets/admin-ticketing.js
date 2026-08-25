@@ -2488,7 +2488,7 @@
       case 'bad_response':
         return 'Unexpected server response (bad_response). Open the details panel below for the raw response, then send that to Cadence if it repeats.';
       case 'timeout':
-        return 'The request timed out before the server finished responding. Open the details panel below to see what VMS knows so far.';
+        return 'The request timed out before the server finished responding. Open the details panel below to see what Backstage Venue Manager knows so far.';
       case 'network_error':
         return 'The browser could not complete the request. Open the details panel below to see the raw error.';
       case 'missing_tec_link':
@@ -2517,9 +2517,9 @@
       case 'invalid_product_for_disable':
         return 'The mapped Woo product could not be found or was no longer valid for disabling.';
       case 'retire_safety_check_failed':
-        return 'VMS refused to retire the old ticket product because it no longer proved that it was safe.';
+        return 'Backstage Venue Manager refused to retire the old ticket product because it no longer proved that it was safe.';
       case 'retire_failed':
-        return 'VMS could not retire the stale ticket product.';
+        return 'Backstage Venue Manager could not retire the stale ticket product.';
       case 'ticket_disabled_pending_sync':
         return 'This ticket was disabled in config before Commit finished syncing the public products.';
       default:

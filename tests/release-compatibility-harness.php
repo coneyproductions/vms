@@ -125,7 +125,7 @@ $tests['paths with spaces validate and CLI checksum mismatches fail cleanly'] = 
 		$zipPath = $zipDir . DIRECTORY_SEPARATOR . 'backstage-venue-manager-9.9.9-public-release.zip';
 		vms_release_compat_test_create_zip($zipPath, array(
 			'backstage-venue-manager/' => '',
-			'backstage-venue-manager/vendor-management-system.php' => "<?php\n/**\n * Plugin Name: VMS\n * Version: 9.9.9\n */\n",
+			'backstage-venue-manager/backstage-venue-manager.php' => "<?php\n/**\n * Plugin Name: Backstage Venue Manager\n * Version: 9.9.9\n */\n",
 			'backstage-venue-manager/includes/bootstrap.php' => "<?php\n",
 			'backstage-venue-manager/includes/core/plugin.php' => "<?php\n",
 			'backstage-venue-manager/includes/core/registry/constants.php' => "<?php\ndefine('VMS_VERSION', '9.9.9');\n",
@@ -163,6 +163,29 @@ $tests['paths with spaces validate and CLI checksum mismatches fail cleanly'] = 
 	}
 };
 
+$tests['legacy artifact basenames remain available only to upgrade compatibility inspection'] = static function (): void {
+	$workspace = vms_release_compat_test_temp_dir('vms release compat legacy artifact ');
+	try {
+		$zipPath = $workspace . DIRECTORY_SEPARATOR . 'vms-0.2.24.725.zip';
+		vms_release_compat_test_create_zip($zipPath, array(
+			'vms/' => '',
+			'vms/vendor-management-system.php' => "<?php\n/**\n * Plugin Name: Backstage Venue Manager\n * Version: 0.2.24.725\n */\n",
+		));
+
+		$identity = VMS_Release_Compatibility_Tooling::inspectCompatibleZipRoot($zipPath);
+		vms_release_compat_test_assert($identity['root_directory'] === 'vms', 'Expected the historical internal root to remain recognizable for baseline upgrades.');
+		vms_release_compat_test_assert($identity['plugin_basename'] === 'vms/vendor-management-system.php', 'Expected the historical main filename to remain recognizable for baseline upgrades.');
+		vms_release_compat_test_expect_exception(
+			static function () use ($zipPath): void {
+				VMS_Release_Compatibility_Tooling::inspectZipRoot($zipPath);
+			},
+			'one top-level backstage-venue-manager/ root directory'
+		);
+	} finally {
+		VMS_Release_Compatibility_Tooling::deletePath($workspace);
+	}
+};
+
 $tests['recognized plugin basenames accept internal and public installs only'] = static function (): void {
 	$recognized = VMS_Release_Compatibility_Tooling::recognizedPluginBasenames();
 	vms_release_compat_test_assert(
@@ -172,6 +195,14 @@ $tests['recognized plugin basenames accept internal and public installs only'] =
 	vms_release_compat_test_assert(
 		in_array(VMS_Release_Compatibility_Tooling::internalPluginBasename(), $recognized, true),
 		'Expected internal plugin basename to be recognized.'
+	);
+	vms_release_compat_test_assert(
+		in_array(VMS_Release_Compatibility_Tooling::legacyPublicPluginBasename(), $recognized, true),
+		'Expected the legacy public-folder basename to remain recognized.'
+	);
+	vms_release_compat_test_assert(
+		in_array(VMS_Release_Compatibility_Tooling::legacyInternalPluginBasename(), $recognized, true),
+		'Expected the legacy internal-folder basename to remain recognized.'
 	);
 	vms_release_compat_test_assert(
 		VMS_Release_Compatibility_Tooling::isRecognizedPluginBasename(VMS_Release_Compatibility_Tooling::publicPluginBasename()),
@@ -193,7 +224,7 @@ $tests['recognized plugin basenames accept internal and public installs only'] =
 
 $tests['repository public boundary keeps current metadata separate from internal compatibility basenames'] = static function (): void {
 	$pluginRoot = dirname(__DIR__);
-	$header = file_get_contents($pluginRoot . '/vendor-management-system.php');
+	$header = file_get_contents($pluginRoot . '/backstage-venue-manager.php');
 	$constants = file_get_contents($pluginRoot . '/includes/core/registry/constants.php');
 	$readme = file_get_contents($pluginRoot . '/readme.txt');
 	$build = file_get_contents($pluginRoot . '/vms-build.txt');
@@ -214,12 +245,20 @@ $tests['repository public boundary keeps current metadata separate from internal
 	vms_release_compat_test_assert(strpos($readme, 'Stable tag: 1.1.0') === false, 'Expected the live-only 1.1.0 marker to stay out of the public readme stable tag.');
 	vms_release_compat_test_assert(trim($build) !== '1.1.0', 'Expected the live-only 1.1.0 build marker to stay out of the public build source.');
 	vms_release_compat_test_assert(
-		VMS_Release_Compatibility_Tooling::publicPluginBasename() === 'backstage-venue-manager/vendor-management-system.php',
-		'Expected the public basename to remain backstage-venue-manager/vendor-management-system.php.'
+		VMS_Release_Compatibility_Tooling::publicPluginBasename() === 'backstage-venue-manager/backstage-venue-manager.php',
+		'Expected the public basename to use backstage-venue-manager/backstage-venue-manager.php.'
 	);
 	vms_release_compat_test_assert(
-		VMS_Release_Compatibility_Tooling::internalPluginBasename() === 'vms/vendor-management-system.php',
-		'Expected the internal compatibility basename to remain vms/vendor-management-system.php.'
+		VMS_Release_Compatibility_Tooling::internalPluginBasename() === 'vms/backstage-venue-manager.php',
+		'Expected the internal-folder canonical basename to use vms/backstage-venue-manager.php.'
+	);
+	vms_release_compat_test_assert(
+		VMS_Release_Compatibility_Tooling::legacyPublicPluginBasename() === 'backstage-venue-manager/vendor-management-system.php',
+		'Expected the legacy public-folder basename to remain recognized for upgrades.'
+	);
+	vms_release_compat_test_assert(
+		VMS_Release_Compatibility_Tooling::legacyInternalPluginBasename() === 'vms/vendor-management-system.php',
+		'Expected the legacy internal-folder basename to remain recognized for upgrades.'
 	);
 	vms_release_compat_test_assert(
 		strpos($constants, "define('VMS_REST_NAMESPACE', 'vms/v1');") !== false,

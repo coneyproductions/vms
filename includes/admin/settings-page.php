@@ -1095,7 +1095,7 @@ function vms_render_settings_default_venue_alert(array $context): void
   } elseif (($context['state'] ?? 'hidden') === 'selected_unpublished') {
     echo '<p><strong>Default Venue needs attention:</strong> The selected venue is not published (status: <strong>' . esc_html((string) ($context['status'] ?? '')) . '</strong>). Publish it or choose a published venue.</p>';
   } else {
-    echo '<p><strong>Default Venue is not set.</strong> This can cause parts of VMS to load with no venue context (especially in single-venue installs).</p>';
+    echo '<p><strong>Default Venue is not set.</strong> This can cause parts of Backstage Venue Manager to load with no venue context (especially in single-venue installs).</p>';
   }
 
   $primary_action = is_array($context['primary_action'] ?? null) ? $context['primary_action'] : array();
@@ -1230,7 +1230,7 @@ function vms_field_vendor_doc_submission_notifications()
   echo esc_html__('Send an email alert when a vendor submits tech docs, a W-9/tax step, or a promo video', 'backstage-venue-manager');
   echo '</label>';
 
-  echo '<p class="description">' . esc_html__('These submissions still flag the vendor as Needs review in VMS even if email alerts are turned off.', 'backstage-venue-manager') . '</p>';
+  echo '<p class="description">' . esc_html__('These submissions still flag the vendor as Needs review in Backstage Venue Manager even if email alerts are turned off.', 'backstage-venue-manager') . '</p>';
 
   echo '<p><label for="vms_vendor_doc_submission_notify_target"><strong>' . esc_html__('Send alerts to', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<select id="vms_vendor_doc_submission_notify_target" name="vms_settings[vendor_doc_submission_notify_target]" class="vms-minw-320">';
@@ -1767,7 +1767,7 @@ function vms_render_settings_page()
   if (function_exists('vms_admin_ui_render_shell')) {
     vms_admin_ui_render_shell(
       array(
-        'title' => __('VMS Settings', 'backstage-venue-manager'),
+        'title' => __('Backstage Venue Manager Settings', 'backstage-venue-manager'),
         'notices_callback' => 'vms_render_settings_page_notice_bar',
       ),
       'vms_render_settings_page_content'
@@ -1775,7 +1775,7 @@ function vms_render_settings_page()
     return;
   }
 
-  echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';
+  echo '<div class="wrap"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';
   vms_render_settings_page_notices();
   ob_start();
   vms_render_settings_page_content(true);
@@ -2337,7 +2337,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
     echo wp_kses($public_calendar_page_dropdown, vms_settings_page_dropdown_allowed_html());
   }
   echo '</p>';
-  echo '<p class="description">' . esc_html__('Choose the public page customers should use to browse events. Auto-detect first looks for the VMS public calendar page, then falls back to the TEC events archive.', 'backstage-venue-manager') . '</p>';
+  echo '<p class="description">' . esc_html__('Choose the public page customers should use to browse events. Auto-detect first looks for the Backstage Venue Manager public calendar page, then falls back to the TEC events archive.', 'backstage-venue-manager') . '</p>';
   echo '<p>';
   echo '<label for="vms_public_calendar_custom_url"><strong>' . esc_html__('Advanced custom URL override', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<input id="vms_public_calendar_custom_url" type="text" class="regular-text" name="vms_settings[public_calendar_custom_url]" value="' . esc_attr($public_calendar_custom_url) . '" placeholder="/events-calendar" />';
@@ -2432,7 +2432,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 
   echo '<hr class="vms-hr-spaced">';
   echo '<h2>Public Pages</h2>';
-  echo '<p class="description">VMS uses these pages for vendors and staff. If any are missing, you can repair them here.</p>';
+  echo '<p class="description">Backstage Venue Manager uses these pages for vendors and staff. If any are missing, you can repair them here.</p>';
 
   $pages = vms_required_public_pages();
 

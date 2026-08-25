@@ -8,9 +8,9 @@ This file now records the selected WordPress.org identity decisions currently ap
 
 | Item | Selected Value | Applied In Repo | Notes |
 | --- | --- | --- | --- |
-| Public plugin name | `Backstage Venue Manager` | Yes | Applied in `vendor-management-system.php` and root `readme.txt`. |
+| Public plugin name | `Backstage Venue Manager` | Yes | Applied in canonical `backstage-venue-manager.php`, public/admin identity strings, and root `readme.txt`; `vendor-management-system.php` is now a headerless filename bridge. |
 | Requested WordPress.org slug / text domain | `backstage-venue-manager` | Yes | Plugin header text domain and WordPress.org-facing identity docs now use `backstage-venue-manager`. Internal `vms` identifiers remain unchanged by request. |
-| First public version | `1.0.0` | Yes | Synced in `vendor-management-system.php`, `includes/core/registry/constants.php`, `vms-build.txt`, and root `readme.txt`. |
+| First public version | `1.0.0` | Yes | Historical first-public-version decision; current canonical version markers live in `backstage-venue-manager.php`, `includes/core/registry/constants.php`, `vms-build.txt`, and root `readme.txt`. |
 | Author | `Coney Productions` | Yes | Retained in the plugin header and readme. |
 | Author URI | `https://coneyproductions.booklivetalent.com/` | Yes | Added to the plugin header. |
 | Plugin URI | `https://coneyproductions.booklivetalent.com/vms/` | Yes | Added to the plugin header and readme. |

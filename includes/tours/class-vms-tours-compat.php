@@ -106,7 +106,7 @@ if (!class_exists('VMS_Tours_Compat')) {
 			}
 
 			echo '<div class="notice notice-warning is-dismissible">';
-			echo '<p><strong>' . esc_html__('VMS Guided Tours compatibility notice:', 'backstage-venue-manager') . '</strong> ' . esc_html__('legacy tour script handles were detected and deregistered on this VMS screen.', 'backstage-venue-manager') . '</p>';
+			echo '<p><strong>' . esc_html__('Backstage Venue Manager Guided Tours compatibility notice:', 'backstage-venue-manager') . '</strong> ' . esc_html__('legacy tour script handles were detected and deregistered on this Backstage Venue Manager screen.', 'backstage-venue-manager') . '</p>';
 			echo '<p><code>' . esc_html(implode(', ', $this->detected_legacy_handles)) . '</code></p>';
 			echo '</div>';
 		}

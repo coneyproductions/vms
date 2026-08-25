@@ -6110,7 +6110,7 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
 
 
 /**
- * Front-end helper: show VMS entitlement add-ons on TEC single event pages.
+ * Front-end helper: show Backstage Venue Manager entitlement add-ons on TEC single event pages.
  * Note: Entitlements are Woo products (not Event Tickets ticket types), so they will not appear in the native TEC Tickets block.
  * This file also ships a front-end UX helper that makes add-ons feel like a single submission with the GA ticket form.
  */

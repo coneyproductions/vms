@@ -765,7 +765,7 @@ if (!function_exists('vms_require_internal_file')) {
 
 		$feature_label = trim($feature_label);
 		if ($feature_label === '') {
-			$feature_label = 'The related VMS routine';
+			$feature_label = 'The related Backstage Venue Manager routine';
 		}
 
 		if ($diagnostic_code === '') {
@@ -775,7 +775,7 @@ if (!function_exists('vms_require_internal_file')) {
 		vms_queue_admin_diagnostic(
 			$diagnostic_code,
 			sprintf(
-				'Missing internal VMS file `%s`. %s has been disabled to avoid a public fatal.',
+				'Missing internal Backstage Venue Manager file `%s`. %s has been disabled to avoid a public fatal.',
 				$relative_path,
 				$feature_label
 			)
@@ -2199,7 +2199,7 @@ if (!function_exists('vms_render_resource_fingerprint_admin_screen')) {
 
 		$entries = vms_resource_fingerprint_recent_entries(25);
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('VMS Resource Fingerprints', 'backstage-venue-manager') . '</h1>';
+		echo '<h1>' . esc_html__('Backstage Venue Manager Resource Fingerprints', 'backstage-venue-manager') . '</h1>';
 		echo '<p>' . esc_html__('Threshold-based request and task snapshots for slow/heavy admin, cron, Action Scheduler, ECC, and DT work.', 'backstage-venue-manager') . '</p>';
 		if ($cleared) {
 			echo '<div class="notice notice-success"><p>' . esc_html__('Resource fingerprints cleared.', 'backstage-venue-manager') . '</p></div>';
@@ -2313,7 +2313,16 @@ if (!function_exists('vms_resource_fingerprint_track_plugin_lifecycle')) {
 	function vms_resource_fingerprint_track_plugin_lifecycle(string $flag, string $plugin_file): void
 	{
 		$plugin_file = trim($plugin_file);
-		if (!in_array($plugin_file, array('vms/vendor-management-system.php', 'backstage-venue-manager/vendor-management-system.php', 'vms-data-tools/vms-data-tools.php'), true)) {
+		$recognized_plugin_files = function_exists('vms_recognized_plugin_lifecycle_basenames')
+			? vms_recognized_plugin_lifecycle_basenames()
+			: array(
+				'backstage-venue-manager/backstage-venue-manager.php',
+				'backstage-venue-manager/vendor-management-system.php',
+				'vms/backstage-venue-manager.php',
+				'vms/vendor-management-system.php',
+			);
+		$recognized_plugin_files[] = 'vms-data-tools/vms-data-tools.php';
+		if (!in_array($plugin_file, array_values(array_unique($recognized_plugin_files)), true)) {
 			return;
 		}
 

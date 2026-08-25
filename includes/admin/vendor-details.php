@@ -631,7 +631,7 @@ function vms_render_vendor_defaults_metabox($post)
                     <div class="vms-field vms-field--full">
                         <label for="vms_create_comp_template_name"><?php esc_html_e('Create New Template from Current Defaults', 'backstage-venue-manager'); ?></label>
                         <input type="text" id="vms_create_comp_template_name" name="vms_create_comp_template_name" value="" placeholder="<?php echo esc_attr__('Example: Friday Bonus 150/200/250', 'backstage-venue-manager'); ?>">
-                        <div class="vms-help"><?php esc_html_e('Enter a name, click Update, and VMS will save the current Global Event Plan Defaults as a new editable template and select it for this vendor.', 'backstage-venue-manager'); ?></div>
+                        <div class="vms-help"><?php esc_html_e('Enter a name, click Update, and Backstage Venue Manager will save the current Global Event Plan Defaults as a new editable template and select it for this vendor.', 'backstage-venue-manager'); ?></div>
                     </div>
                 </div>
 

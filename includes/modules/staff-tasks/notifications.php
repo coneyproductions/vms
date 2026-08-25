@@ -350,7 +350,7 @@ if (!function_exists('vms_tasks_notifications_register_cron_schedules')) {
 		if (!isset($schedules['vms_tasks_fifteen_minutes'])) {
 			$schedules['vms_tasks_fifteen_minutes'] = array(
 				'interval' => 15 * MINUTE_IN_SECONDS,
-				'display' => __('Every 15 Minutes (VMS Staff Tasks)', 'backstage-venue-manager'),
+				'display' => __('Every 15 Minutes (Backstage Venue Manager Staff Tasks)', 'backstage-venue-manager'),
 			);
 		}
 		return $schedules;

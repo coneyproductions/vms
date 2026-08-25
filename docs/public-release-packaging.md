@@ -60,7 +60,9 @@ The ZIP is not uploaded or deployed by this command.
 ## Public package identity
 
 - Public slug, public ZIP root, and plugin header `Text Domain`: `backstage-venue-manager`
-- Public bootstrap path inside the ZIP: `backstage-venue-manager/vendor-management-system.php`
+- Canonical public bootstrap path inside the ZIP: `backstage-venue-manager/backstage-venue-manager.php`
+- Headerless legacy filename bridge inside the ZIP: `backstage-venue-manager/vendor-management-system.php`
+- The canonical bootstrap is the package's only WordPress plugin-header file, so the bridge does not create a duplicate Plugins-screen entry
 - Internal compatibility identifiers may remain `vms`, including `VMS_PLUGIN_SLUG`, `vms-build.txt`, and the sibling live local plugin folder `../../vms`
 - The source checkout folder does not determine the public package root
 
@@ -243,7 +245,7 @@ That command:
 
 The compatibility harness is opt-in because it mutates disposable databases, installs plugins, and may take several minutes.
 
-The packaged ZIP is expected to install as `backstage-venue-manager/vendor-management-system.php`. The compatibility harness still recognizes historical/internal `vms/vendor-management-system.php` baselines and local live installs when comparing lifecycle state.
+The packaged ZIP is expected to install as `backstage-venue-manager/backstage-venue-manager.php`. The compatibility harness recognizes canonical public/internal basenames plus the historical `backstage-venue-manager/vendor-management-system.php` and `vms/vendor-management-system.php` baselines when comparing lifecycle state. The headerless legacy bridge supports same-directory active-basename migration; a `vms/` to `backstage-venue-manager/` directory transition remains an explicit controlled replacement step.
 
 It does not:
 

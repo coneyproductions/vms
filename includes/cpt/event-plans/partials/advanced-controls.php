@@ -224,9 +224,9 @@
 						<?php elseif (!$can_phase_b) : ?>
 							<p class="description"><?php esc_html_e('Event Tickets (WooCommerce) is not available. Activate Event Tickets, Event Tickets Plus, and WooCommerce.', 'backstage-venue-manager'); ?></p>
 						<?php elseif ($linked_tec_id <= 0) : ?>
-							<p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and VMS will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'backstage-venue-manager'); ?></p>
+							<p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and Backstage Venue Manager will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'backstage-venue-manager'); ?></p>
 						<?php else : ?>
-							<p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by VMS.', 'backstage-venue-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by Backstage Venue Manager.', 'backstage-venue-manager'); ?></p>
 						<?php endif; ?>
 
 						<?php if (!empty($recon_v2_warnings)) : ?>
@@ -289,7 +289,7 @@
 
 						<div class="vms-ticketing__box vms-ticketing__helpcopy-box">
 							<h4 class="vms-ticketing__box-title"><?php esc_html_e('Public help copy overrides', 'backstage-venue-manager'); ?></h4>
-							<p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from VMS Settings.', 'backstage-venue-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from Backstage Venue Manager Settings.', 'backstage-venue-manager'); ?></p>
 							<div class="vms-ticketing__help-label-grid">
 								<p>
 									<label for="vms_ticket_ui_addons_heading_override"><strong><?php esc_html_e('Add-on section heading override', 'backstage-venue-manager'); ?></strong></label><br />
@@ -418,7 +418,7 @@
 						</div>
 							<?php endif; ?>
 
-						<p class="description"><?php esc_html_e('Linking does not modify the calendar event. Use “Re-sync to Calendar” if you want VMS to update it.', 'backstage-venue-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Linking does not modify the calendar event. Use “Re-sync to Calendar” if you want Backstage Venue Manager to update it.', 'backstage-venue-manager'); ?></p>
             </div>
 
             <?php

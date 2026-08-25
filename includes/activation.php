@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) exit;
 function vms_activate_plugin(): void
 {
 	if (function_exists('vms_resource_fingerprint_flag')) {
-		vms_resource_fingerprint_flag('plugin_activation', basename(dirname(__DIR__)) . '/vendor-management-system.php');
+		vms_resource_fingerprint_flag('plugin_activation', vms_plugin_lifecycle_basename());
 	}
 
 	if (function_exists('vms_run_legacy_square_nightly_sync_cleanup')) {
@@ -64,7 +64,7 @@ function vms_activate_plugin(): void
 function vms_deactivate_plugin(): void
 {
 	if (function_exists('vms_resource_fingerprint_flag')) {
-		vms_resource_fingerprint_flag('plugin_deactivation', basename(dirname(__DIR__)) . '/vendor-management-system.php');
+		vms_resource_fingerprint_flag('plugin_deactivation', vms_plugin_lifecycle_basename());
 	}
 
 	if (function_exists('vms_run_legacy_square_nightly_sync_cleanup')) {

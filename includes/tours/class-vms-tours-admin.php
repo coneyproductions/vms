@@ -87,7 +87,7 @@ if (!class_exists('VMS_Tours_Admin')) {
 
 		public function render_settings_intro(): void
 		{
-			echo '<p>' . esc_html__('Use one consistent guided tour framework across VMS modules and screens.', 'backstage-venue-manager') . '</p>';
+			echo '<p>' . esc_html__('Use one consistent guided tour framework across Backstage Venue Manager modules and screens.', 'backstage-venue-manager') . '</p>';
 		}
 
 		public function render_page(): void

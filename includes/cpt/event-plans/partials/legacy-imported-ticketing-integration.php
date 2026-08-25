@@ -86,7 +86,7 @@ $manual_ticket_pids = isset($manual_ticket_pids) && is_array($manual_ticket_pids
             <?php if (!class_exists('WooCommerce')) : ?>
                 <p class="description"><?php esc_html_e('WooCommerce is not active, so product-based ticket stats are unavailable.', 'backstage-venue-manager'); ?></p>
             <?php else : ?>
-                <p class="description"><?php esc_html_e('If your legacy tickets were sold as normal Woo products (not created inside TEC), attach those products here so VMS can calculate sold + revenue.', 'backstage-venue-manager'); ?></p>
+                <p class="description"><?php esc_html_e('If your legacy tickets were sold as normal Woo products (not created inside TEC), attach those products here so Backstage Venue Manager can calculate sold + revenue.', 'backstage-venue-manager'); ?></p>
 
                 <div id="vms-ticketing-manual-list">
                     <?php if (empty($manual_ticket_pids)) : ?>

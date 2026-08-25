@@ -756,7 +756,7 @@ if (!function_exists('vms_staffing_mail_headers')) {
 		$site_name = trim(preg_replace('/[
 ]+/', ' ', $site_name));
 		if ($site_name === '') {
-			$site_name = 'VMS';
+			$site_name = 'Backstage Venue Manager';
 		}
 		return array('From: ' . $site_name . ' <' . $from_email . '>');
 	}
@@ -836,8 +836,8 @@ if (!function_exists('vms_staffing_send_staff_qualification_submission_notificat
 			sprintf(__('Review link: %s', 'backstage-venue-manager'), $review_url),
 		));
 		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, 'submitted') as $email) {
-			/* translators: %s: [vms] staff certification pending review. */
-			wp_mail($email, sprintf(__('[VMS] Staff certification pending review: %s', 'backstage-venue-manager'), $qualification), $admin_body, vms_staffing_mail_headers());
+			/* translators: %s: staff certification pending review. */
+			wp_mail($email, sprintf(__('[Backstage Venue Manager] Staff certification pending review: %s', 'backstage-venue-manager'), $qualification), $admin_body, vms_staffing_mail_headers());
 		}
 
 		$user = $submitter_user_id ? get_user_by('id', absint($submitter_user_id)) : vms_staffing_get_staff_user($staff_id);
@@ -914,7 +914,7 @@ if (!function_exists('vms_staffing_send_staff_qualification_review_notification'
 		);
 		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, $status_event) as $email) {
 			/* translators: 1: certification review action such as approved or rejected, 2: certification name. */
-			wp_mail($email, sprintf(__('[VMS] Staff certification %1$s: %2$s', 'backstage-venue-manager'), $status_event, $qualification), vms_staffing_staff_qualification_mail_lines($admin_lines), vms_staffing_mail_headers());
+			wp_mail($email, sprintf(__('[Backstage Venue Manager] Staff certification %1$s: %2$s', 'backstage-venue-manager'), $status_event, $qualification), vms_staffing_staff_qualification_mail_lines($admin_lines), vms_staffing_mail_headers());
 		}
 	}
 }

@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 if (!function_exists('vms_cancellation_run_step')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 $assert = static function (bool $condition, string $message): void {

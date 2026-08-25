@@ -1448,7 +1448,7 @@ function vms_event_plan_save_profiler_add_meta_box(): void
 
     add_meta_box(
         'vms_event_plan_save_profile',
-        __('VMS Save Profile', 'backstage-venue-manager'),
+        __('Backstage Venue Manager Save Profile', 'backstage-venue-manager'),
         'vms_event_plan_save_profiler_render_meta_box',
         'vms_event_plan',
         'side',

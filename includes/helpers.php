@@ -47,7 +47,7 @@ if (!function_exists('vms_plugin_main_file')) {
             return VMS_PLUGIN_FILE;
         }
 
-        return vms_plugin_root_path() . 'vendor-management-system.php';
+        return vms_plugin_root_path() . 'backstage-venue-manager.php';
     }
 }
 
@@ -4115,7 +4115,7 @@ function vms_dash_render_venue_selector(): void
     ));
 
     if (empty($venues_all)) {
-        echo '<div class="notice notice-warning"><p><strong>VMS:</strong> No venues exist yet. Create one under VMS → Venues.</p></div>';
+        echo '<div class="notice notice-warning"><p><strong>Backstage Venue Manager:</strong> No venues exist yet. Create one under Backstage Venue Manager → Venues.</p></div>';
         return;
     }
 
@@ -4139,7 +4139,7 @@ function vms_dash_render_venue_selector(): void
         $edit_url = ($only_id > 0) ? get_edit_post_link($only_id, '') : '';
 
         echo '<div class="notice notice-error">';
-        echo '<p><strong>VMS:</strong> Action required — no Published venues are available.</p>';
+        echo '<p><strong>Backstage Venue Manager:</strong> Action required — no Published venues are available.</p>';
         if ($only_id > 0) {
             echo '<p><strong>Your only venue is currently ' . esc_html($only_status_label) . ':</strong> ' . esc_html($only_title) . '</p>';
         } else {

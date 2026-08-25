@@ -115,7 +115,7 @@ if (!function_exists('vms_add_dispatch_add_menu_badge')) {
 				if ($slug !== 'vms-dashboard') {
 					continue;
 				}
-				$label = function_exists('vms_add_dispatch_strip_menu_badge_markup') ? vms_add_dispatch_strip_menu_badge_markup((string) ($item[0] ?? 'VMS')) : (string) ($item[0] ?? 'VMS');
+				$label = function_exists('vms_add_dispatch_strip_menu_badge_markup') ? vms_add_dispatch_strip_menu_badge_markup((string) ($item[0] ?? 'Backstage Venue Manager')) : (string) ($item[0] ?? 'Backstage Venue Manager');
 				$menu[$index][0] = $label . $markup;
 				break;
 			}

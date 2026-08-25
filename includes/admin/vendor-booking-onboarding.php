@@ -39,7 +39,7 @@ if (!function_exists('vms_vendor_booking_onboarding_render_settings_panel')) {
         echo '<input type="hidden" name="action" value="vms_vendor_booking_onboarding_save_settings">';
 
         echo '<div class="vms-vcc-compose__grid">';
-        echo '<p><label><input type="checkbox" name="enabled" value="1"' . checked(!empty($settings['enabled']), true, false) . '> <strong>' . esc_html__('Enable automatic booked-vendor emails', 'backstage-venue-manager') . '</strong></label><br><span class="description">' . esc_html__('When enabled, VMS sends the booked email automatically when an Event Plan with scheduled vendors is saved into one of the selected workflow states.', 'backstage-venue-manager') . '</span></p>';
+        echo '<p><label><input type="checkbox" name="enabled" value="1"' . checked(!empty($settings['enabled']), true, false) . '> <strong>' . esc_html__('Enable automatic booked-vendor emails', 'backstage-venue-manager') . '</strong></label><br><span class="description">' . esc_html__('When enabled, Backstage Venue Manager sends the booked email automatically when an Event Plan with scheduled vendors is saved into one of the selected workflow states.', 'backstage-venue-manager') . '</span></p>';
         echo '<p><strong>' . esc_html__('Send automatically when Event Plan status is', 'backstage-venue-manager') . '</strong><br>';
         foreach (array('ready' => __('Ready', 'backstage-venue-manager'), 'published' => __('Published', 'backstage-venue-manager')) as $status => $label) {
             echo '<label>';

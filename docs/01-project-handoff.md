@@ -163,7 +163,7 @@ Run the packaged qualified-ticket regression for `0.2.24.579`, with special atte
 
 ## Build notes
 
-- Keep `vendor-management-system.php`, `includes/core/registry/constants.php`, and `vms-build.txt` synchronized.
+- Keep `backstage-venue-manager.php`, `includes/core/registry/constants.php`, and `vms-build.txt` synchronized.
 - Keep the docs in this folder updated whenever a meaningful pass lands.
 
 

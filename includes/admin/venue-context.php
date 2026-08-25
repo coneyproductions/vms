@@ -109,7 +109,7 @@ function vms_render_current_venue_selector(): void
     ));
 
     if (empty($venues)) {
-        echo '<div class="notice notice-warning"><p><strong>VMS:</strong> No venues exist yet. Create one under VMS → Venues.</p></div>';
+        echo '<div class="notice notice-warning"><p><strong>Backstage Venue Manager:</strong> No venues exist yet. Create one under Backstage Venue Manager → Venues.</p></div>';
         return;
     }
 

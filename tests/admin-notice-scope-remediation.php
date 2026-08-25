@@ -446,8 +446,8 @@ $seedPaymentState();
 
 $firstRunHtml = $capture($firstRunCallback);
 $assert(strpos($firstRunHtml, 'notice-success') !== false, 'First-run notice should retain its success class on VMS screens.');
-$assert(strpos($firstRunHtml, 'Vendor Management System is activated.') !== false, 'First-run notice text should remain unchanged on VMS screens.');
-$assert(strpos($firstRunHtml, 'Open VMS') !== false, 'First-run notice CTA should remain present on VMS screens.');
+$assert(strpos($firstRunHtml, 'Backstage Venue Manager is activated.') !== false, 'First-run notice should use the canonical product name on plugin screens.');
+$assert(strpos($firstRunHtml, 'Open Backstage Venue Manager') !== false, 'First-run notice CTA should use the canonical product name.');
 $assert(strpos($firstRunHtml, 'vms_dismiss_first_run_notice=1') !== false, 'First-run dismissal link should remain present on VMS screens.');
 
 $runtimeHtml = $capture($runtimeCallback);
@@ -467,7 +467,7 @@ $setScreen(
 	array(101 => 'vms_event_plan')
 );
 $seedFirstRunState();
-$assert(strpos($capture($firstRunCallback), 'Vendor Management System is activated.') !== false, 'First-run notice should remain eligible on Event Plan edit screens.');
+$assert(strpos($capture($firstRunCallback), 'Backstage Venue Manager is activated.') !== false, 'First-run notice should remain eligible on Event Plan edit screens.');
 
 $setScreen(
 	array('page' => 'vms-ticket-integrity'),

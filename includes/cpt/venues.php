@@ -219,7 +219,7 @@ function vms_render_venue_location_box($post)
 
     echo '<div class="vms-venue-location-admin">';
     echo '<p class="description vms-venue-location-admin__intro">' .
-        esc_html__('Store the real physical venue address here. Meta Ads uses this for radius targeting, and VMS can also sync it to the linked TEC venue record.', 'backstage-venue-manager') .
+        esc_html__('Store the real physical venue address here. Meta Ads uses this for radius targeting, and Backstage Venue Manager can also sync it to the linked TEC venue record.', 'backstage-venue-manager') .
     '</p>';
 
     echo '<div class="vms-venue-location-admin__grid">';
@@ -882,7 +882,7 @@ add_action('admin_notices', function (): void {
     $only_edit = ($only_id > 0) ? get_edit_post_link($only_id, '') : '';
 
     echo '<div class="notice notice-error">';
-    echo '<p><strong>VMS:</strong> Action required — no Published venues are available. Schedule will appear empty until at least one venue is Published.</p>';
+    echo '<p><strong>Backstage Venue Manager:</strong> Action required — no Published venues are available. Schedule will appear empty until at least one venue is Published.</p>';
 
     if ($only_id > 0) {
         $only_status_label = $only_status !== '' ? ucfirst($only_status) : 'Draft';

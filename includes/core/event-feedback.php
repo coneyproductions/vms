@@ -650,7 +650,7 @@ if (!function_exists('vms_feedback_send_new_submission_notification')) {
 			$lines[] = wp_strip_all_tags($final_comment);
 		}
 		$lines[] = '';
-		$lines[] = __('Review privately in VMS:', 'backstage-venue-manager');
+		$lines[] = __('Review privately in Backstage Venue Manager:', 'backstage-venue-manager');
 		$lines[] = $admin_url;
 		$lines[] = '';
 		$lines[] = __('Reminder: keep raw comments private unless you intentionally curate or anonymize them.', 'backstage-venue-manager');

@@ -119,7 +119,9 @@ final class VMS_Release_Compatibility_Tooling
 
 	private const INTERNAL_PLUGIN_SLUG = 'vms';
 
-	private const MAIN_PLUGIN_FILE = 'vendor-management-system.php';
+	private const MAIN_PLUGIN_FILE = 'backstage-venue-manager.php';
+
+	private const LEGACY_MAIN_PLUGIN_FILE = 'vendor-management-system.php';
 
 	public const FIXTURE_OPTION = 'vms_compat_upgrade_fixture_manifest';
 
@@ -138,6 +140,11 @@ final class VMS_Release_Compatibility_Tooling
 		return self::MAIN_PLUGIN_FILE;
 	}
 
+	public static function legacyMainPluginFile(): string
+	{
+		return self::LEGACY_MAIN_PLUGIN_FILE;
+	}
+
 	public static function publicPluginBasename(): string
 	{
 		return self::PUBLIC_PLUGIN_SLUG . '/' . self::MAIN_PLUGIN_FILE;
@@ -148,11 +155,23 @@ final class VMS_Release_Compatibility_Tooling
 		return self::INTERNAL_PLUGIN_SLUG . '/' . self::MAIN_PLUGIN_FILE;
 	}
 
+	public static function legacyPublicPluginBasename(): string
+	{
+		return self::PUBLIC_PLUGIN_SLUG . '/' . self::LEGACY_MAIN_PLUGIN_FILE;
+	}
+
+	public static function legacyInternalPluginBasename(): string
+	{
+		return self::INTERNAL_PLUGIN_SLUG . '/' . self::LEGACY_MAIN_PLUGIN_FILE;
+	}
+
 	public static function recognizedPluginBasenames(): array
 	{
 		return array(
 			self::publicPluginBasename(),
 			self::internalPluginBasename(),
+			self::legacyPublicPluginBasename(),
+			self::legacyInternalPluginBasename(),
 		);
 	}
 
@@ -325,6 +344,11 @@ final class VMS_Release_Compatibility_Tooling
 		return self::inspectArtifactRoot($artifactPath, true);
 	}
 
+	public static function inspectCompatibleZipRoot(string $artifactPath): array
+	{
+		return self::inspectArtifactRoot($artifactPath, false);
+	}
+
 	private static function inspectArtifactRoot(string $artifactPath, bool $requirePublicRoot): array
 	{
 		$zip = new ZipArchive();
@@ -334,12 +358,14 @@ final class VMS_Release_Compatibility_Tooling
 		}
 
 		$roots = array();
+		$entries = array();
 		for ($index = 0; $index < $zip->numFiles; $index++) {
 			$entryName = (string) $zip->getNameIndex($index);
 			if ($entryName === '') {
 				continue;
 			}
 			$entryName = ltrim($entryName, '/');
+			$entries[$entryName] = true;
 			$parts = explode('/', $entryName);
 			$root = $parts[0] ?? '';
 			if ($root !== '') {
@@ -366,9 +392,23 @@ final class VMS_Release_Compatibility_Tooling
 			throw new RuntimeException('Artifact ZIP must contain exactly one recognized top-level backstage-venue-manager/ or vms/ root directory.');
 		}
 
+		$mainPluginFile = '';
+		foreach (array(self::mainPluginFile(), self::legacyMainPluginFile()) as $candidateMainPluginFile) {
+			if (isset($entries[$rootDirectory . '/' . $candidateMainPluginFile])) {
+				$mainPluginFile = $candidateMainPluginFile;
+				break;
+			}
+		}
+		if ($mainPluginFile === '') {
+			throw new RuntimeException('Artifact ZIP does not contain a recognized Backstage Venue Manager main plugin file.');
+		}
+		if ($requirePublicRoot && $mainPluginFile !== self::mainPluginFile()) {
+			throw new RuntimeException('Public artifact must use backstage-venue-manager/backstage-venue-manager.php as its canonical plugin basename.');
+		}
+
 		return array(
 			'root_directory' => $rootDirectory,
-			'plugin_basename' => $rootDirectory . '/' . self::mainPluginFile(),
+			'plugin_basename' => $rootDirectory . '/' . $mainPluginFile,
 		);
 	}
 

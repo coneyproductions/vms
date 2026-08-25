@@ -291,10 +291,10 @@ if (!function_exists('vms_vendor_submission_dispatch_alert')) {
 
         $site_name = wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES);
         /* translators: 1: Site name. 2: Vendor name. */
-        $subject = sprintf(__('[%1$s] Vendor document submitted: %2$s', 'backstage-venue-manager'), $site_name !== '' ? $site_name : 'VMS', (string) $payload['vendor_name']);
+        $subject = sprintf(__('[%1$s] Vendor document submitted: %2$s', 'backstage-venue-manager'), $site_name !== '' ? $site_name : 'Backstage Venue Manager', (string) $payload['vendor_name']);
 
         $lines = array(
-            __('A vendor submitted a document in VMS.', 'backstage-venue-manager'),
+            __('A vendor submitted a document in Backstage Venue Manager.', 'backstage-venue-manager'),
             '',
             /* translators: %s: Vendor name. */
             sprintf(__('Vendor: %s', 'backstage-venue-manager'), (string) $payload['vendor_name']),

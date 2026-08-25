@@ -90,7 +90,7 @@
     </p>
 
     <?php if ($plan_status !== 'cancelled') : ?>
-        <p class="description"><?php esc_html_e('Optional. If you enter a replacement date and click “Mark Cancelled,” VMS will cancel this plan and immediately create a linked Draft Event Plan for the new date.', 'backstage-venue-manager'); ?></p>
+        <p class="description"><?php esc_html_e('Optional. If you enter a replacement date and click “Mark Cancelled,” Backstage Venue Manager will cancel this plan and immediately create a linked Draft Event Plan for the new date.', 'backstage-venue-manager'); ?></p>
     <?php endif; ?>
 
     <?php if ($plan_status === 'cancelled') : ?>
@@ -125,7 +125,7 @@
                 <?php esc_html_e('Create Rescheduled Draft', 'backstage-venue-manager'); ?>
             </button>
         </p>
-        <p class="description"><?php esc_html_e('Creates a new Draft Event Plan linked to this cancelled one. VMS copies the useful planning details, but clears live calendar, ticket, sales, and cancellation state so you can review safely before republishing.', 'backstage-venue-manager'); ?></p>
+        <p class="description"><?php esc_html_e('Creates a new Draft Event Plan linked to this cancelled one. Backstage Venue Manager copies the useful planning details, but clears live calendar, ticket, sales, and cancellation state so you can review safely before republishing.', 'backstage-venue-manager'); ?></p>
     <?php endif; ?>
     </div>
     <div data-vms-collapsible-break="1"></div>

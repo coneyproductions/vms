@@ -40,15 +40,15 @@ add_action('admin_notices', function () {
     echo '<div style="font-size:24px;line-height:1;">🎉</div>';
     echo '<div style="flex:1;">';
 
-    echo '<p style="margin:0 0 6px;"><strong>Vendor Management System is activated.</strong></p>';
+    echo '<p style="margin:0 0 6px;"><strong>Backstage Venue Manager is activated.</strong></p>';
     echo '<p style="margin:0 0 10px;" class="description">';
     echo 'Here’s the recommended first-time setup checklist to get you running smoothly.';
     echo '</p>';
 
     echo '<ol style="margin:0 0 10px 18px;">';
-    echo '<li><strong>Create a Venue</strong> (VMS → Venues)</li>';
+    echo '<li><strong>Create a Venue</strong> (Backstage Venue Manager → Venues)</li>';
     echo '<li><strong>Set Venue Defaults</strong> (hours, comp-by-day, holiday rules if using)</li>';
-    echo '<li><strong>Create Vendors</strong> and fill out Tax Profile basics (VMS → Vendors)</li>';
+    echo '<li><strong>Create Vendors</strong> and fill out Tax Profile basics (Backstage Venue Manager → Vendors)</li>';
     echo '<li><strong>Create Comp Packages</strong> (optional, but recommended)</li>';
     echo '<li><strong>Create your first Event Plan</strong> and try: Venue Defaults → Review → Lock Draft Pay</li>';
     echo '</ol>';
@@ -58,7 +58,7 @@ add_action('admin_notices', function () {
     echo '</p>';
 
     echo '<p style="margin:0;">';
-    echo '<a href="' . esc_url(admin_url('admin.php?page=vms-season-board')) . '" class="button button-primary">Open VMS</a> ';
+    echo '<a href="' . esc_url(admin_url('admin.php?page=vms-season-board')) . '" class="button button-primary">Open Backstage Venue Manager</a> ';
     echo '<a href="' . esc_url($dismiss_url) . '" class="button">Dismiss</a>';
     echo '</p>';
 

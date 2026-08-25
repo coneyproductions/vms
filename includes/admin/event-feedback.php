@@ -560,7 +560,7 @@ if (!function_exists('vms_feedback_admin_render_link_card')) {
 		$edit_url = get_edit_post_link($event_plan_id, 'raw');
 		echo '<div class="vms-feedback-admin-card" data-vms-tour="event-feedback.link">';
 		echo '<h2>' . esc_html__('Private survey link', 'backstage-venue-manager') . '</h2>';
-		echo '<p>' . esc_html__('Share this link with ticket buyers or attendees. Responses stay private in VMS.', 'backstage-venue-manager') . '</p>';
+		echo '<p>' . esc_html__('Share this link with ticket buyers or attendees. Responses stay private in Backstage Venue Manager.', 'backstage-venue-manager') . '</p>';
 		echo '<div class="vms-feedback-link-row"><input type="text" class="large-text code" readonly value="' . esc_attr($survey_url) . '"></div>';
 		echo '<p class="description">' . esc_html__('Tip: copy the full URL above and send it by email, text, or a private post-event message.', 'backstage-venue-manager') . '</p>';
 		$email_preview_url = add_query_arg(array(

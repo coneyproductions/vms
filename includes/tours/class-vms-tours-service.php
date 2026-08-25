@@ -428,7 +428,7 @@ if (!class_exists('VMS_Tours_Service')) {
 		{
 			$this->register_tour(array(
 				'id' => 'vms.dashboard.basics',
-				'title' => __('VMS Dashboard Basics', 'backstage-venue-manager'),
+				'title' => __('Backstage Venue Manager Dashboard Basics', 'backstage-venue-manager'),
 				'screen' => 'admin:vms-dashboard',
 				'version' => '1.0.0',
 				'level' => 'beginner',

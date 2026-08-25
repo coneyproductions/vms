@@ -288,7 +288,7 @@ if (!function_exists('vms_admission_vendor_guest_internal_comp_product_id')) {
 			'post_type' => 'product',
 			'post_status' => 'private',
 			'post_title' => __('Complimentary Admission', 'backstage-venue-manager'),
-			'post_excerpt' => __('Internal scanner-native comp admission product used by VMS for non-public guest passes.', 'backstage-venue-manager'),
+			'post_excerpt' => __('Internal scanner-native comp admission product used by Backstage Venue Manager for non-public guest passes.', 'backstage-venue-manager'),
 			'post_content' => '',
 			'post_author' => get_current_user_id() ?: 1,
 		);

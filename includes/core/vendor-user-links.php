@@ -763,7 +763,7 @@ if (!function_exists('vms_vendor_user_link_notify_admin')) {
         }
 
         /* translators: %s: Vendor title. */
-        $subject = sprintf(__('[VMS] Vendor account linked: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
+        $subject = sprintf(__('[Backstage Venue Manager] Vendor account linked: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
 
         $lines = array(
             __('A vendor profile was linked to a website account.', 'backstage-venue-manager'),
@@ -893,7 +893,7 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
         }
 
         /* translators: %s: Vendor title. */
-        $subject = sprintf(__('[VMS] Vendor portal link requested: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
+        $subject = sprintf(__('[Backstage Venue Manager] Vendor portal link requested: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
 
         $lines = array(
             __('A website user requested to be linked to a vendor profile.', 'backstage-venue-manager'),

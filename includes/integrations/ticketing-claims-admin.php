@@ -2249,7 +2249,7 @@ if (!function_exists('vms_ticketing_claims_render_user_profile_summary')) {
 			'inspector_email' => (string) $user->user_email,
 		));
 
-		echo '<h2>' . esc_html__('VMS Eligibility Summary', 'backstage-venue-manager') . '</h2>';
+		echo '<h2>' . esc_html__('Backstage Venue Manager Eligibility Summary', 'backstage-venue-manager') . '</h2>';
 		echo '<p class="description">' . esc_html__('Credential approvals, event-specific grants, and recent claim activity for this account.', 'backstage-venue-manager') . '</p>';
 		echo '<p><strong>' . esc_html__('Approved credential types', 'backstage-venue-manager') . ':</strong> ' . (!empty($program_labels) ? esc_html(implode(', ', $program_labels)) : esc_html__('None', 'backstage-venue-manager')) . '</p>';
 		echo '<p><a class="button" href="' . esc_url($inspector_url) . '">' . esc_html__('Open Full Eligibility Inspector', 'backstage-venue-manager') . '</a></p>';

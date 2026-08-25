@@ -128,7 +128,7 @@ function vms_public_release_test_public_slug(): string
 
 function vms_public_release_test_public_basename(): string
 {
-	return vms_public_release_test_public_slug() . '/vendor-management-system.php';
+	return vms_public_release_test_public_slug() . '/backstage-venue-manager.php';
 }
 
 function vms_public_release_test_fixture(array $options = array()): string
@@ -146,7 +146,7 @@ function vms_public_release_test_fixture(array $options = array()): string
 	$releaseExcludeLines = array_values(array_map('strval', (array) ($options['release_exclude_lines'] ?? vms_public_release_test_default_release_excludes())));
 
 	$files = array(
-		'vendor-management-system.php' => <<<PHP
+		'backstage-venue-manager.php' => <<<PHP
 <?php
 /**
  * Plugin Name: VMS
@@ -373,7 +373,7 @@ function vms_public_release_test_fixture_package_entries(array $overrides = arra
 
 	$entries = array(
 		$publicSlug . '/' => '',
-		$publicSlug . '/vendor-management-system.php' => <<<PHP
+		$publicSlug . '/backstage-venue-manager.php' => <<<PHP
 <?php
 /**
  * Plugin Name: VMS
@@ -832,7 +832,7 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		$packagedFiles = array_values(array_filter($zipEntries, static function (string $entryName): bool {
 			return substr($entryName, -1) !== '/';
 		}));
-		vms_public_release_test_assert(count($packagedFiles) === 372, 'Expected the current repository public package to contain 372 files after excluding the dormant Safety prototype.');
+		vms_public_release_test_assert(count($packagedFiles) === 374, 'Expected the current repository public package to contain 374 files after adding the canonical bootstrap and basename compatibility layer.');
 
 		foreach ($zipEntries as $entryName) {
 			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected AGENTS.md to stay out of the packaged public ZIP.');
@@ -841,11 +841,14 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		}
 
 		$packagedHeader = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_basename());
+		$packagedLegacyBridge = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/vendor-management-system.php');
 		$packagedConstants = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/includes/core/registry/constants.php');
 		$packagedReadme = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/readme.txt');
 		$packagedBuild = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/vms-build.txt');
 
 		vms_public_release_test_assert(strpos($packagedHeader, 'Version: 1.2.0') !== false, 'Expected the packaged plugin header version to resolve to 1.2.0.');
+		vms_public_release_test_assert($packagedLegacyBridge !== '', 'Expected the headerless legacy filename bridge to remain in the public package.');
+		vms_public_release_test_assert(preg_match('/^\s*\*\s*Plugin Name:/m', $packagedLegacyBridge) !== 1, 'Expected the legacy filename bridge to avoid a duplicate plugin header.');
 		vms_public_release_test_assert(
 			strpos($packagedConstants, "define('VMS_VERSION', '1.2.0');") !== false,
 			'Expected the packaged VMS_VERSION constant to resolve to 1.2.0.'
@@ -855,7 +858,7 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		vms_public_release_test_assert(trim($packagedBuild) === '1.2.0', 'Expected the packaged build marker to resolve to 1.2.0.');
 
 		vms_public_release_test_assert(
-			$packagedHeader === (string) file_get_contents($pluginRoot . '/vendor-management-system.php'),
+			$packagedHeader === (string) file_get_contents($pluginRoot . '/backstage-venue-manager.php'),
 			'Expected the packaged plugin header file to match the mirror source.'
 		);
 		vms_public_release_test_assert(

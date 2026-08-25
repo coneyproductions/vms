@@ -1438,7 +1438,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'manual' => 'MANUAL',
 			);
 
-			WP_CLI::log('VMS stale-check report');
+			WP_CLI::log('Backstage Venue Manager stale-check report');
 			WP_CLI::log(str_repeat('-', 72));
 
 			$counts = array('pass' => 0, 'warn' => 0, 'manual' => 0);

@@ -1051,7 +1051,7 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
             /* translators: %d: number of overdue payable items. */
             $snapshot['label'] = sprintf(_n('Overdue (%d)', 'Overdue (%d)', $count, 'backstage-venue-manager'), $count);
             $snapshot['tone'] = 'danger';
-            $snapshot['title'] = __('At least one Event Plan payable is past due and still open in VMS.', 'backstage-venue-manager');
+            $snapshot['title'] = __('At least one Event Plan payable is past due and still open in Backstage Venue Manager.', 'backstage-venue-manager');
             return $snapshot;
         }
 
@@ -1071,14 +1071,14 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
             /* translators: %d: number of upcoming payable items. */
             $snapshot['label'] = sprintf(_n('Upcoming (%d)', 'Upcoming (%d)', $count, 'backstage-venue-manager'), $count);
             $snapshot['tone'] = 'info';
-            $snapshot['title'] = __('This vendor has upcoming Event Plan payable items with no current overdue balance in VMS.', 'backstage-venue-manager');
+            $snapshot['title'] = __('This vendor has upcoming Event Plan payable items with no current overdue balance in Backstage Venue Manager.', 'backstage-venue-manager');
             return $snapshot;
         }
 
         $snapshot['status'] = 'clear';
         $snapshot['label'] = __('No open items', 'backstage-venue-manager');
         $snapshot['tone'] = 'success';
-        $snapshot['title'] = __('Past Event Plan payables exist, but no current open items were found in the current VMS payables view.', 'backstage-venue-manager');
+        $snapshot['title'] = __('Past Event Plan payables exist, but no current open items were found in the current Backstage Venue Manager payables view.', 'backstage-venue-manager');
         return $snapshot;
     }
 }

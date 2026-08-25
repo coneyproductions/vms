@@ -1186,7 +1186,7 @@ function vms_ticket_integrity_render_daily_report_status_panel(array $settings):
 	echo '</div>';
 
 	if (absint($status['scheduled_hook_count'] ?? 0) !== 1) {
-		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html__('The report hook count is not exactly one. VMS will repair duplicates or missing hooks on the next runtime-maintenance pass.', 'backstage-venue-manager') . '</p>';
+		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html__('The report hook count is not exactly one. Backstage Venue Manager will repair duplicates or missing hooks on the next runtime-maintenance pass.', 'backstage-venue-manager') . '</p>';
 	}
 	if ((string) ($state['last_error'] ?? '') !== '') {
 		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html__('The last run recorded a delivery or render error. Use Preview or Dry-Run Diagnostic below before sending a live test email.', 'backstage-venue-manager') . '</p>';
@@ -2395,7 +2395,7 @@ function vms_ticket_integrity_add_menu_alert_badge(): void
 			if (strpos((string) ($item[0] ?? ''), 'vms-ticket-integrity-alert-badge') !== false) {
 				break;
 			}
-			$menu[$index][0] = (string) ($item[0] ?? 'VMS') . $markup;
+			$menu[$index][0] = (string) ($item[0] ?? 'Backstage Venue Manager') . $markup;
 			break;
 		}
 	}

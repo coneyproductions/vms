@@ -4,7 +4,7 @@ This file documents the intended live bootstrap path for the current stabilizati
 
 ## Canonical live entry
 
-1. `vendor-management-system.php`
+1. `backstage-venue-manager.php`
 2. `includes/bootstrap.php`
 3. area loaders:
    - `includes/core/load.php`
@@ -25,6 +25,7 @@ This file documents the intended live bootstrap path for the current stabilizati
 These files still exist so older references do not fatal, but they should not be treated as primary load paths:
 
 - `vms.php`
+- `vendor-management-system.php` (headerless same-directory active-basename migration bridge)
 - `includes/core/bootstrap.php`
 - `admin/load.php`
 - `admin/docs-page.php`

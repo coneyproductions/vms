@@ -37,7 +37,9 @@ function vms_dashboard_enqueue_assets($hook)
   $page = sanitize_key(vms_dashboard_query_arg('page'));
   if ($page !== 'vms' && $page !== 'vms-dashboard') return;
 
-  $plugin_file = dirname(__DIR__, 2) . '/vendor-management-system.php';
+  $plugin_file = function_exists('vms_plugin_main_file')
+    ? vms_plugin_main_file()
+    : dirname(__DIR__, 2) . '/backstage-venue-manager.php';
   $src         = plugin_dir_url($plugin_file) . 'assets/admin-dashboard.js';
   $ver         = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
   wp_enqueue_script(

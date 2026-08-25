@@ -61,7 +61,7 @@ add_action('admin_post_vms_repair_pages', function () {
         $notices[] = [
             'type' => 'success',
             'msg'  => sprintf(
-                'VMS Pages repaired. OK: %d. Created: %d. Restored: %d.',
+                'Backstage Venue Manager pages repaired. OK: %d. Created: %d. Restored: %d.',
                 (int) $ok,
                 (int) $created,
                 (int) $restored

@@ -5,7 +5,7 @@ require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
 if (!class_exists('VMS_Admin_Event_Plans')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 if (!function_exists('vms_render_vendor_availability_list_view')) {
 	require_once dirname(__DIR__) . '/includes/admin/vendor-availability.php';

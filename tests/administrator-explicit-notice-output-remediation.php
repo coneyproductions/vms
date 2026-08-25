@@ -1720,8 +1720,8 @@ $assert($settingsTicketingNoticeStart !== false && $settingsTicketingNoticeEnd !
 $settingsTicketingNoticeSource = substr($settingsSource, (int) $settingsTicketingNoticeStart, (int) $settingsTicketingNoticeEnd - (int) $settingsTicketingNoticeStart);
 $assert(strpos($settingsPageSource, "'notices_callback' => 'vms_render_settings_page_notice_bar'") !== false, 'Settings shell call should route the default-venue and ticketing-stock notice families through the composed explicit notice callback.');
 $assert(strpos($settingsPageSource, "'rich_notices_callback' =>") === false, 'Settings should remain on the simple explicit notice sink only for this pass.');
-$assert(strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';") !== false, 'Settings no-shell fallback heading should remain locatable.');
-$settingsFallbackHeadingPos = strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';");
+$assert(strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';") !== false, 'Settings no-shell fallback heading should remain locatable.');
+$settingsFallbackHeadingPos = strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';");
 $settingsFallbackNoticePos = strpos($settingsPageSource, 'vms_render_settings_page_notices();');
 $settingsFallbackBufferPos = strpos($settingsPageSource, 'vms_render_settings_page_content(true);');
 $settingsFallbackReplacePos = strpos($settingsPageSource, 'vms_get_settings_page_ticketing_stock_notice_markup()');
@@ -1874,7 +1874,7 @@ $renderSettingsFallbackPage = static function (array $query, array $transients) 
 	$resetSettingsTicketingStockNoticeState($transients);
 	vms_get_settings_page_ticketing_stock_notice_state(true);
 	ob_start();
-	echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';
+	echo '<div class="wrap"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';
 	vms_render_settings_page_notices();
 	ob_start();
 	vms_render_settings_page_content(true);

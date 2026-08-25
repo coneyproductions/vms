@@ -492,7 +492,7 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 		$snapshot = vms_approvals_queue_collect_snapshot(true);
 		$total_pending = max(0, (int) ($snapshot['total_pending'] ?? 0));
 
-		// Top-level VMS badge.
+		// Top-level Backstage Venue Manager badge.
 		if (is_array($menu)) {
 			foreach ($menu as $index => $item) {
 				if (!is_array($item) || (string) ($item[2] ?? '') !== 'vms-dashboard') {
@@ -500,7 +500,7 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 				}
 				$menu[$index] = vms_approvals_queue_update_menu_entry(
 					$item,
-					__('VMS', 'backstage-venue-manager'),
+					__('Backstage Venue Manager', 'backstage-venue-manager'),
 					$total_pending
 				);
 				break;

@@ -284,7 +284,7 @@ function vms_render_staff_tax_status_metabox($post)
     echo '<p class="vms-mini"><strong>' . esc_html__('W-9 source of truth:', 'backstage-venue-manager') . '</strong> ' . esc_html($provider_label) . '</p>';
 
     if ($provider !== 'upload') {
-        echo '<p class="vms-mini">' . esc_html__('This staff member should complete their W-9/tax step through the secure off-site workflow. Use the buttons below to confirm or clear admin completion in VMS.', 'backstage-venue-manager') . '</p>';
+        echo '<p class="vms-mini">' . esc_html__('This staff member should complete their W-9/tax step through the secure off-site workflow. Use the buttons below to confirm or clear admin completion in Backstage Venue Manager.', 'backstage-venue-manager') . '</p>';
     }
 
     if ($attested_at > 0) {

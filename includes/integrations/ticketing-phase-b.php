@@ -2839,7 +2839,7 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
     if (!function_exists('vms_build_tec_event_args')) {
         return array(
             'ok'      => false,
-            'message' => __('VMS could not build the calendar event payload (internal missing function).', 'backstage-venue-manager'),
+            'message' => __('Backstage Venue Manager could not build the calendar event payload (internal missing function).', 'backstage-venue-manager'),
         );
     }
 
@@ -7873,7 +7873,7 @@ function vms_ticketing_v2_preview_sync(int $plan_id): array {
             $unclaimed_existing_ticket_pids = array_values(array_diff($unclaimed_existing_ticket_pids, array($matched_pid)));
         } elseif (($match['status'] ?? '') === 'ambiguous') {
             $row['action'] = 'error';
-            $row['notes'] = 'Multiple exact-title ticket products are attached to this event. Resolve or retire duplicates before committing so VMS does not create another public ticket path.';
+            $row['notes'] = 'Multiple exact-title ticket products are attached to this event. Resolve or retire duplicates before committing so Backstage Venue Manager does not create another public ticket path.';
             $actions[] = $row;
             $blocked = true;
             continue;
@@ -8214,13 +8214,13 @@ function vms_ticketing_v2_commit_error_summary(string $code): string {
     $code = sanitize_key($code);
     switch ($code) {
         case 'invalid_payload':
-            return __('VMS could not start the commit because the request payload was incomplete.', 'backstage-venue-manager');
+            return __('Backstage Venue Manager could not start the commit because the request payload was incomplete.', 'backstage-venue-manager');
         case 'forbidden':
             return __('Your account does not have permission to commit ticket changes for this Event Plan.', 'backstage-venue-manager');
         case 'missing_preview':
-            return __('VMS could not find the Preview snapshot for this commit. The preview may have expired or never finished saving.', 'backstage-venue-manager');
+            return __('Backstage Venue Manager could not find the Preview snapshot for this commit. The preview may have expired or never finished saving.', 'backstage-venue-manager');
         case 'preview_owner_mismatch':
-            return __('The Preview snapshot belongs to a different user session, so VMS refused to apply it.', 'backstage-venue-manager');
+            return __('The Preview snapshot belongs to a different user session, so Backstage Venue Manager refused to apply it.', 'backstage-venue-manager');
         case 'preview_blocked':
             return __('The last Preview is still blocked by one or more ticketing issues, so Commit was stopped on purpose.', 'backstage-venue-manager');
         case 'preview_not_managed':
@@ -8231,13 +8231,13 @@ function vms_ticketing_v2_commit_error_summary(string $code): string {
         case 'ticket_product_mapping_conflict':
             return __('Two or more ticket rows are trying to control the same Woo ticket product, so Commit was stopped to protect existing sales.', 'backstage-venue-manager');
         case 'missing_tec_link':
-            return __('No linked TEC event was available for this commit, so VMS had nowhere safe to attach the tickets.', 'backstage-venue-manager');
+            return __('No linked TEC event was available for this commit, so Backstage Venue Manager had nowhere safe to attach the tickets.', 'backstage-venue-manager');
         case 'commit_not_ready_to_finalize':
-            return __('Commit batching had not finished preparing all ticket actions, so VMS refused to finalize a partial sync.', 'backstage-venue-manager');
+            return __('Commit batching had not finished preparing all ticket actions, so Backstage Venue Manager refused to finalize a partial sync.', 'backstage-venue-manager');
         case 'event_tickets_woo_unavailable':
-            return __('Event Tickets (WooCommerce) is not available right now, so VMS cannot create or sync tickets.', 'backstage-venue-manager');
+            return __('Event Tickets (WooCommerce) is not available right now, so Backstage Venue Manager cannot create or sync tickets.', 'backstage-venue-manager');
         default:
-            return __('Commit failed before VMS could safely apply the ticket changes.', 'backstage-venue-manager');
+            return __('Commit failed before Backstage Venue Manager could safely apply the ticket changes.', 'backstage-venue-manager');
     }
 }
 
@@ -8257,13 +8257,13 @@ function vms_ticketing_v2_commit_error_steps(string $code, array $diagnostics = 
             $steps[] = __('Set Mode to “VMS-managed”, click “Save config”, then run “Preview sync” again before committing.', 'backstage-venue-manager');
             break;
         case 'stale_config':
-            $steps[] = __('Run “Preview sync” again so VMS can compare the current config before committing.', 'backstage-venue-manager');
+            $steps[] = __('Run “Preview sync” again so Backstage Venue Manager can compare the current config before committing.', 'backstage-venue-manager');
             break;
         case 'ticket_product_mapping_conflict':
             $steps[] = __('Review the ticket Preview for duplicate product IDs, then save/preview again after each ticket row points to its own product or has no mapped product.', 'backstage-venue-manager');
             break;
         case 'missing_tec_link':
-            $steps[] = __('Run “Preview sync” again so VMS can create or relink the TEC event before committing.', 'backstage-venue-manager');
+            $steps[] = __('Run “Preview sync” again so Backstage Venue Manager can create or relink the TEC event before committing.', 'backstage-venue-manager');
             break;
         case 'commit_not_ready_to_finalize':
             $steps[] = __('Run “Preview sync” again to rebuild the action list, then retry Commit from the beginning.', 'backstage-venue-manager');
@@ -8283,7 +8283,7 @@ function vms_ticketing_v2_commit_error_steps(string $code, array $diagnostics = 
     if (!empty($untracked)) {
         $steps[] = sprintf(
             /* translators: %s: comma-separated linked TEC ticket product IDs VMS is not tracking. */
-            __('This linked TEC event already has ticket products VMS is not tracking: %s. VMS will not delete them automatically.', 'backstage-venue-manager'),
+            __('This linked TEC event already has ticket products Backstage Venue Manager is not tracking: %s. Backstage Venue Manager will not delete them automatically.', 'backstage-venue-manager'),
             '#' . implode(', #', $untracked)
         );
     }
@@ -9704,7 +9704,7 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
         && (string) ($saved_sync['config_hash'] ?? '') === $cfg_hash_now
     );
     if (!$sync_persist_ok) {
-        $recon_warnings[] = __('Commit completed, but VMS could not verify sync persistence. Refresh this page and run Preview again before any further Commit.', 'backstage-venue-manager');
+        $recon_warnings[] = __('Commit completed, but Backstage Venue Manager could not verify sync persistence. Refresh this page and run Preview again before any further Commit.', 'backstage-venue-manager');
         $recon_warnings = array_values(array_unique(array_filter(array_map('strval', $recon_warnings))));
         $reconciliation['warnings'] = $recon_warnings;
         $reconciliation['sync_status'] = 'mismatch';

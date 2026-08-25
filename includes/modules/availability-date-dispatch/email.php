@@ -30,7 +30,7 @@ if (!function_exists('vms_add_dispatch_email_body_text')) {
 		$no_url = vms_add_dispatch_build_response_url($response, 'unavailable');
 
 		$lines = array(
-			__('Availability request from VMS', 'backstage-venue-manager'),
+			__('Availability request from Backstage Venue Manager', 'backstage-venue-manager'),
 			'',
 		);
 

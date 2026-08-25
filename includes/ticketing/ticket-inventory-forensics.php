@@ -1705,7 +1705,7 @@ function vms_ticket_inventory_forensics_sellability_label(string $state): string
 {
 	switch (sanitize_key($state)) {
 		case 'open':
-			return __('Open in VMS config', 'backstage-venue-manager');
+			return __('Open in Backstage Venue Manager config', 'backstage-venue-manager');
 		case 'gated_open':
 			return __('Qualified / gated open', 'backstage-venue-manager');
 		case 'hidden_open':

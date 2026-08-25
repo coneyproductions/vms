@@ -4,7 +4,7 @@ declare(strict_types=1);
 final class VMS_Public_Release_Tooling
 {
 	private const REQUIRED_RUNTIME_FILES = array(
-		'vendor-management-system.php',
+		'backstage-venue-manager.php',
 		'includes/bootstrap.php',
 		'includes/core/plugin.php',
 		'includes/db/migrations.php',
@@ -462,6 +462,12 @@ final class VMS_Public_Release_Tooling
 	{
 		return array(
 			array(
+				'id' => 'plugin-identity-alignment',
+				'label' => 'Canonical plugin identity and basename migration regression',
+				'path' => 'tests/plugin-identity-alignment.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'admissions-rest-permissions',
 				'label' => 'Admissions REST permission regression',
 				'path' => 'tests/admissions-rest-permissions.php',
@@ -528,7 +534,7 @@ final class VMS_Public_Release_Tooling
 
 	private static function collectSourceMetadata(string $pluginRoot): array
 	{
-		$entryFile = $pluginRoot . DIRECTORY_SEPARATOR . 'vendor-management-system.php';
+		$entryFile = $pluginRoot . DIRECTORY_SEPARATOR . 'backstage-venue-manager.php';
 		$constantsFile = $pluginRoot . DIRECTORY_SEPARATOR . 'includes/core/registry/constants.php';
 		$buildFile = $pluginRoot . DIRECTORY_SEPARATOR . 'vms-build.txt';
 		$migrationsFile = $pluginRoot . DIRECTORY_SEPARATOR . 'includes/db/migrations.php';
@@ -551,7 +557,7 @@ final class VMS_Public_Release_Tooling
 			'slug' => $publicSlug,
 			'internal_plugin_slug' => self::normalizeSlug($internalSlug),
 			'public_plugin_slug' => $publicSlug,
-			'public_plugin_basename' => $publicSlug . '/vendor-management-system.php',
+			'public_plugin_basename' => $publicSlug . '/backstage-venue-manager.php',
 			'header_version' => (string) ($header['Version'] ?? ''),
 			'header_text_domain' => (string) ($header['Text Domain'] ?? ''),
 			'header_requires_php' => (string) ($header['Requires PHP'] ?? ''),
@@ -985,7 +991,7 @@ final class VMS_Public_Release_Tooling
 		}
 
 		try {
-			$pluginEntryFile = $stagedRoot . DIRECTORY_SEPARATOR . 'vendor-management-system.php';
+			$pluginEntryFile = $stagedRoot . DIRECTORY_SEPARATOR . 'backstage-venue-manager.php';
 			$scriptContents = <<<'PHP'
 <?php
 declare(strict_types=1);

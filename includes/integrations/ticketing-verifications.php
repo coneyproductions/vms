@@ -347,11 +347,11 @@ if (!function_exists('vms_ticketing_verification_role_label_for_program')) {
     {
         $program = sanitize_key($program);
         if ($program === '') {
-            return __('VMS Verified Member', 'backstage-venue-manager');
+            return __('Backstage Venue Manager Verified Member', 'backstage-venue-manager');
         }
         $program_label = vms_ticketing_verification_program_label($program);
         /* translators: %s: human-readable value used in this message. */
-        return sprintf(__('VMS Verified %s', 'backstage-venue-manager'), $program_label);
+        return sprintf(__('Backstage Venue Manager Verified %s', 'backstage-venue-manager'), $program_label);
     }
 }
 
@@ -2111,7 +2111,7 @@ if (!function_exists('vms_ticketing_verification_send_submission_notification'))
         $subject = sprintf(
             /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
             __('[%1$s] New eligibility verification pending: %2$s', 'backstage-venue-manager'),
-            $site_name !== '' ? $site_name : 'VMS',
+            $site_name !== '' ? $site_name : 'Backstage Venue Manager',
             $program_label
         );
         $subject = (string) apply_filters('vms_ticketing_verification_submission_email_subject', $subject, $context);
@@ -2679,7 +2679,7 @@ if (!function_exists('vms_ticketing_verification_render_user_credential_fields')
         $verified_programs = vms_ticketing_get_user_verified_programs($user_id);
         $verified_lookup = array_fill_keys(array_map('sanitize_key', $verified_programs), true);
         ?>
-        <h2><?php echo esc_html__('VMS Verified Ticket Credentials', 'backstage-venue-manager'); ?></h2>
+        <h2><?php echo esc_html__('Backstage Venue Manager Verified Ticket Credentials', 'backstage-venue-manager'); ?></h2>
         <p class="description"><?php echo esc_html__('Manually approve or revoke verified ticket eligibility for this user. This is useful for customer support, corrections, and testing the public verification flow.', 'backstage-venue-manager'); ?></p>
         <input type="hidden" name="vms_verified_programs_profile_present" value="1" />
         <table class="form-table" role="presentation">
@@ -2815,7 +2815,7 @@ if (!function_exists('vms_ticketing_verification_render_user_allowance_fields'))
             return;
         }
         ?>
-        <h2><?php echo esc_html__('VMS Verified Allowances', 'backstage-venue-manager'); ?></h2>
+        <h2><?php echo esc_html__('Backstage Venue Manager Verified Allowances', 'backstage-venue-manager'); ?></h2>
         <table class="form-table" role="presentation">
             <tbody>
                 <?php foreach ($programs as $program_key => $program_label) : ?>
@@ -3119,7 +3119,7 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                                         value=""
                                         placeholder="<?php echo esc_attr__('Example: Active Military', 'backstage-venue-manager'); ?>"
                                     />
-                                    <p class="description"><?php echo esc_html__('Leave blank to skip. VMS will create the internal key automatically.', 'backstage-venue-manager'); ?></p>
+                                    <p class="description"><?php echo esc_html__('Leave blank to skip. Backstage Venue Manager will create the internal key automatically.', 'backstage-venue-manager'); ?></p>
                                 </td>
                             </tr>
                         <?php endfor; ?>

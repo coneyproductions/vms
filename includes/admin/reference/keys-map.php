@@ -70,7 +70,7 @@ if (!function_exists('vms_admin_reference_keys_map_page')) {
     $out .= "Timestamp: " . gmdate('Y-m-d H:i') . " UTC\n";
     ?>
     <div class="wrap">
-      <h1><?php echo esc_html__('VMS Reference: Keys + Identifiers', 'backstage-venue-manager'); ?></h1>
+      <h1><?php echo esc_html__('Backstage Venue Manager Reference: Keys + Identifiers', 'backstage-venue-manager'); ?></h1>
 
       <p><?php echo esc_html__('Admin-only. Naming and key identifiers only. No runtime values are printed.', 'backstage-venue-manager'); ?></p>
 
