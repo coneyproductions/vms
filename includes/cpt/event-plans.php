@@ -14862,6 +14862,56 @@ if (function_exists('bvmgr_add_admin_notice')) {
 	        }
         add_action('save_post_vms_event_plan', 'bvmgr_event_plan_sync_linked_tec_featured_image_on_save', 50, 3);
 
+        /**
+         * Keep native ticket sale windows aligned after a pre-closure occurrence change.
+         *
+         * Completed occurrences are deliberately not reopened here. A separate,
+         * explicit Reschedule workflow must own that exceptional transition.
+         */
+        function bvmgr_event_plan_sync_ticket_windows_after_calendar_change(
+            int $post_id,
+            int $tec_event_id,
+            bool $occurrence_changed,
+            bool $event_was_closed
+        ): bool {
+            if (!$occurrence_changed || !function_exists('bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change')) {
+                return true;
+            }
+
+            $result = bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change(
+                $post_id,
+                $tec_event_id,
+                $event_was_closed
+            );
+
+            if (!empty($result['skipped']) && (string) ($result['reason'] ?? '') === 'completed_event_not_reopened') {
+                update_post_meta($post_id, '_vms_ticketing_reschedule_required_v1', array(
+                    'tec_event_id' => absint($tec_event_id),
+                    'recorded_at' => time(),
+                    'reason' => 'completed_occurrence_changed',
+                ));
+                bvmgr_add_admin_notice(
+                    __('The calendar occurrence was updated, but VMS did not reopen ticket sale windows because the previous occurrence had already completed. Use the future explicit Reschedule workflow for an event that did not actually occur.', 'backstage-venue-manager'),
+                    'warning'
+                );
+                return true;
+            }
+
+            if (empty($result['ok'])) {
+                bvmgr_add_admin_notice(
+                    __('The calendar occurrence updated, but one or more mapped ticket sale windows could not be synchronized. Review ticket mappings before relying on the public sale state.', 'backstage-venue-manager'),
+                    'error'
+                );
+                return false;
+            }
+
+            if (empty($result['skipped'])) {
+                delete_post_meta($post_id, '_vms_ticketing_reschedule_required_v1');
+            }
+
+            return true;
+        }
+
         function bvmgr_publish_event_to_calendar(int $post_id, WP_Post $post): bool
         {
             $trace = function_exists('bvmgr_event_plan_perf_span_start')
@@ -14883,6 +14933,16 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
                 $existing_tec_id = (int) get_post_meta($post_id, $tec_key_id, true);
                 $tec_event_id = 0;
+                $calendar_occurrence_changed = false;
+                $existing_event_was_closed = false;
+
+                if ($existing_tec_id > 0 && function_exists('bvmgr_ticketing_v2_plan_calendar_alignment')) {
+                    $alignment_before = bvmgr_ticketing_v2_plan_calendar_alignment($post_id, $existing_tec_id);
+                    $calendar_occurrence_changed = empty($alignment_before['checkable']) || empty($alignment_before['aligned']);
+                }
+                if ($existing_tec_id > 0 && function_exists('bvmgr_ticketing_v2_calendar_event_was_closed')) {
+                    $existing_event_was_closed = bvmgr_ticketing_v2_calendar_event_was_closed($existing_tec_id);
+                }
 
                 $args = bvmgr_build_tec_event_args($post_id, $existing_tec_id);
                 if (empty($args)) {
@@ -14914,6 +14974,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         && $existing_tec_post->post_status !== 'trash'
                         && $sync_signature !== ''
                         && hash_equals($sync_signature, $last_signature)
+                        && !$calendar_occurrence_changed
                     ) {
                         $tec_event_id = $existing_tec_id;
                     } else {
@@ -14963,6 +15024,15 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
                 if (function_exists('bvmgr_event_plan_sync_checkin_close_meta_to_tec')) {
                     bvmgr_event_plan_sync_checkin_close_meta_to_tec($post_id, $tec_event_id);
+                }
+
+                if (!bvmgr_event_plan_sync_ticket_windows_after_calendar_change(
+                    $post_id,
+                    $tec_event_id,
+                    $calendar_occurrence_changed,
+                    $existing_event_was_closed
+                )) {
+                    return false;
                 }
 
                 if (function_exists('bvmgr_event_plan_schedule_calendar_maintenance')) {
@@ -15018,6 +15088,16 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     $args = bvmgr_event_plan_apply_tec_author_args($post_id, $args, $existing_tec_id, 'vms_resync_event_to_calendar');
                 }
 
+                $calendar_occurrence_changed = true;
+                $existing_event_was_closed = false;
+                if (function_exists('bvmgr_ticketing_v2_plan_calendar_alignment')) {
+                    $alignment_before = bvmgr_ticketing_v2_plan_calendar_alignment($post_id, $existing_tec_id);
+                    $calendar_occurrence_changed = empty($alignment_before['checkable']) || empty($alignment_before['aligned']);
+                }
+                if (function_exists('bvmgr_ticketing_v2_calendar_event_was_closed')) {
+                    $existing_event_was_closed = bvmgr_ticketing_v2_calendar_event_was_closed($existing_tec_id);
+                }
+
                 $plan_thumb = absint(get_post_thumbnail_id($post_id));
                 $tec_thumb  = absint(get_post_thumbnail_id($existing_tec_id));
                 if ($plan_thumb <= 0 && $tec_thumb > 0 && isset($args['FeaturedImage'])) {
@@ -15067,6 +15147,15 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
                 if (function_exists('bvmgr_event_plan_sync_checkin_close_meta_to_tec')) {
                     bvmgr_event_plan_sync_checkin_close_meta_to_tec($post_id, $tec_event_id);
+                }
+
+                if (!bvmgr_event_plan_sync_ticket_windows_after_calendar_change(
+                    $post_id,
+                    $tec_event_id,
+                    $calendar_occurrence_changed,
+                    $existing_event_was_closed
+                )) {
+                    return false;
                 }
 
                 if (function_exists('bvmgr_event_plan_schedule_calendar_maintenance')) {

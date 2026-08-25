@@ -804,6 +804,99 @@ function bvmgr_ticketing_v2_qualifying_ticket_product_ids_for_plan(int $plan_id)
     return $out;
 }
 
+/**
+ * Whether the active native TEC flow exposes a purchasable qualifying ticket.
+ */
+function bvmgr_ticketing_v2_has_purchasable_qualifying_native_ticket(int $tec_event_id, int $plan_id): bool
+{
+    $tec_event_id = absint($tec_event_id);
+    $plan_id = absint($plan_id);
+    if (
+        $tec_event_id <= 0
+        || $plan_id <= 0
+        || !class_exists('Tribe__Tickets__Tickets')
+        || !method_exists('Tribe__Tickets__Tickets', 'get_event_tickets')
+        || !function_exists('wc_get_product')
+    ) {
+        return false;
+    }
+
+    $qualifying_ids = bvmgr_ticketing_v2_qualifying_ticket_product_ids_for_plan($plan_id);
+    if (empty($qualifying_ids)) {
+        return false;
+    }
+
+    // The sync map can retain disabled rows for safe product retirement. Limit the
+    // public availability check to currently enabled ticket definitions.
+    $cfg = bvmgr_ticketing_v2_get_config($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
+    $ticket_map = (isset($sync['map']['tickets']) && is_array($sync['map']['tickets'])) ? $sync['map']['tickets'] : array();
+    $enabled_ids = array();
+    $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
+    foreach ($tickets as $ticket) {
+        if (!is_array($ticket) || (array_key_exists('enabled', $ticket) && empty($ticket['enabled']))) {
+            continue;
+        }
+        $counts_toward_unlock = array_key_exists('counts_toward_unlock', $ticket)
+            ? !empty($ticket['counts_toward_unlock'])
+            : true;
+        if (!$counts_toward_unlock) {
+            continue;
+        }
+        $ticket_key = sanitize_key((string) ($ticket['ticket_key'] ?? $ticket['key'] ?? ''));
+        $product_id = ($ticket_key !== '' && isset($ticket_map[$ticket_key]) && is_array($ticket_map[$ticket_key]))
+            ? absint($ticket_map[$ticket_key]['woo_product_id'] ?? 0)
+            : 0;
+        if ($product_id <= 0 && $ticket_key === 'ga') {
+            $product_id = absint($sync['map']['ga']['woo_product_id'] ?? 0);
+        }
+        if ($product_id > 0) {
+            $enabled_ids[] = $product_id;
+        }
+    }
+    $qualifying_ids = array_values(array_intersect($qualifying_ids, array_values(array_unique($enabled_ids))));
+    if (empty($qualifying_ids)) {
+        return false;
+    }
+
+    try {
+        $tickets_for_event = (array) Tribe__Tickets__Tickets::get_event_tickets($tec_event_id);
+    } catch (Throwable $e) {
+        return false;
+    }
+
+    foreach ($tickets_for_event as $ticket) {
+        if (!is_object($ticket)) {
+            continue;
+        }
+        $product_id = isset($ticket->ID) ? absint($ticket->ID) : 0;
+        if ($product_id <= 0 || !in_array($product_id, $qualifying_ids, true)) {
+            continue;
+        }
+        if (method_exists($ticket, 'date_in_range')) {
+            try {
+                if (!$ticket->date_in_range()) {
+                    continue;
+                }
+            } catch (Throwable $e) {
+                continue;
+            }
+        }
+        if ((string) get_post_status($product_id) !== 'publish') {
+            continue;
+        }
+
+        $product = wc_get_product($product_id);
+        if (!$product || !$product->is_purchasable() || !$product->is_in_stock()) {
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
 function bvmgr_ticketing_v2_entitlement_product_ids_by_pool_for_plan(int $plan_id, array $cfg = array()): array
 {
     $plan_id = absint($plan_id);
@@ -7763,11 +7856,12 @@ function bvmgr_ticketing_v2_render_entitlements_block(int $tec_event_id, int $pl
         return '';
     }
 
-    // v0.2.24.645: Do not hide mapped add-ons just because the GA sale-window helper
-    // returns false. Some live events can still have valid ticket/add-on UI while that
-    // helper is out of sync with TEC/Woo timing. Visibility should be driven by active
-    // event status plus mapped entitlement products; qualification and stock validation
-    // still happen below and at add-to-cart/checkout.
+    $uses_external_ticketing = function_exists('bvmgr_event_plan_is_externally_ticketed')
+        && bvmgr_event_plan_is_externally_ticketed($plan_id);
+    $native_qualifying_ticket_available = true;
+    if (!$uses_external_ticketing) {
+        $native_qualifying_ticket_available = bvmgr_ticketing_v2_has_purchasable_qualifying_native_ticket($tec_event_id, $plan_id);
+    }
 
     $map  = (isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     $emap = (isset($map['entitlements']) && is_array($map['entitlements'])) ? $map['entitlements'] : array();
@@ -7848,6 +7942,14 @@ function bvmgr_ticketing_v2_render_entitlements_block(int $tec_event_id, int $pl
         $resolved_elig = bvmgr_ticketing_v2_resolve_eligibility_for_product($pid, $plan_id, $ent);
         $pool_key = sanitize_key((string) ($resolved_elig['pool_key'] ?? ''));
         $min_per = absint($resolved_elig['min_ga_per_unit'] ?? 0);
+        if (
+            !$uses_external_ticketing
+            && $min_per > 0
+            && empty($resolved_elig['allow_without_ga'])
+            && !$native_qualifying_ticket_available
+        ) {
+            continue;
+        }
         $pool_max_total = absint($resolved_elig['pool_max_total'] ?? 0);
         $image_id = absint($ent['image_id'] ?? 0);
         $image_url = '';

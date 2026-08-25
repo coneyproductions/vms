@@ -1677,6 +1677,240 @@ function bvmgr_ticketing_b_resolve_sales_window(int $tec_event_id, array $tier):
 }
 
 /**
+ * Compare the Event Plan occurrence with its linked TEC event.
+ *
+ * Ticket sale windows are clamped to the linked TEC event. A native ticket
+ * preview/commit must therefore never run while the plan and calendar event
+ * describe different occurrences.
+ */
+function bvmgr_ticketing_v2_plan_calendar_alignment(int $plan_id, int $tec_event_id): array {
+    $plan_id = absint($plan_id);
+    $tec_event_id = absint($tec_event_id);
+    $out = array(
+        'checkable' => false,
+        'aligned' => false,
+        'expected_start' => '',
+        'expected_end' => '',
+        'current_start' => '',
+        'current_end' => '',
+    );
+
+    if ($plan_id <= 0 || $tec_event_id <= 0 || !function_exists('bvmgr_build_tec_event_args')) {
+        return $out;
+    }
+
+    $args = bvmgr_build_tec_event_args($plan_id, $tec_event_id);
+    if (empty($args)) {
+        return $out;
+    }
+
+    $out['expected_start'] = bvmgr_ticketing_v2_normalize_sales_window_value(
+        trim((string) ($args['EventStartDate'] ?? '')) . ' ' . trim((string) ($args['EventStartTime'] ?? ''))
+    );
+    $out['expected_end'] = bvmgr_ticketing_v2_normalize_sales_window_value(
+        trim((string) ($args['EventEndDate'] ?? '')) . ' ' . trim((string) ($args['EventEndTime'] ?? ''))
+    );
+    $out['current_start'] = bvmgr_ticketing_v2_normalize_sales_window_value(bvmgr_ticketing_b_get_tec_event_start($tec_event_id));
+    $out['current_end'] = function_exists('bvmgr_ticketing_b_get_tec_event_end')
+        ? bvmgr_ticketing_v2_normalize_sales_window_value(bvmgr_ticketing_b_get_tec_event_end($tec_event_id))
+        : '';
+
+    $out['checkable'] = (
+        $out['expected_start'] !== ''
+        && $out['expected_end'] !== ''
+        && $out['current_start'] !== ''
+        && $out['current_end'] !== ''
+    );
+    $out['aligned'] = (
+        $out['checkable']
+        && hash_equals($out['expected_start'], $out['current_start'])
+        && hash_equals($out['expected_end'], $out['current_end'])
+    );
+
+    return $out;
+}
+
+/**
+ * Whether the linked calendar occurrence had already completed before a change.
+ */
+function bvmgr_ticketing_v2_calendar_event_was_closed(int $tec_event_id): bool {
+    $tec_event_id = absint($tec_event_id);
+    if ($tec_event_id <= 0 || !function_exists('bvmgr_ticketing_b_get_tec_event_end')) {
+        return false;
+    }
+
+    $event_end = bvmgr_ticketing_v2_normalize_sales_window_value(bvmgr_ticketing_b_get_tec_event_end($tec_event_id));
+    if ($event_end === '') {
+        return false;
+    }
+
+    $tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
+    try {
+        $end = new DateTimeImmutable($event_end, $tz);
+        return $end->getTimestamp() < time();
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Invalidate object, Woo, Event Tickets, and page caches affected by a window sync.
+ */
+function bvmgr_ticketing_v2_invalidate_calendar_ticket_caches(int $tec_event_id, array $product_ids): void {
+    $tec_event_id = absint($tec_event_id);
+    $product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
+
+    foreach ($product_ids as $product_id) {
+        if (function_exists('clean_post_cache')) {
+            clean_post_cache($product_id);
+        }
+        if (function_exists('wc_delete_product_transients')) {
+            wc_delete_product_transients($product_id);
+        }
+        if (function_exists('wp_cache_post_change')) {
+            wp_cache_post_change($product_id);
+        }
+    }
+
+    if ($tec_event_id > 0) {
+        if (function_exists('clean_post_cache')) {
+            clean_post_cache($tec_event_id);
+        }
+        if (function_exists('wp_cache_post_change')) {
+            wp_cache_post_change($tec_event_id);
+        }
+        if (function_exists('tribe_tickets')) {
+            try {
+                $provider = tribe_tickets('woo');
+                if (is_object($provider) && method_exists($provider, 'clear_ticket_cache_for_post')) {
+                    $provider->clear_ticket_cache_for_post($tec_event_id);
+                }
+            } catch (Throwable $e) {
+            }
+        }
+    }
+}
+
+/**
+ * Re-derive mapped native ticket windows after a legitimate calendar date change.
+ *
+ * This intentionally refuses to reopen an occurrence that was already completed.
+ * A future explicit Reschedule workflow owns that exceptional business operation.
+ */
+function bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change(
+    int $plan_id,
+    int $tec_event_id,
+    bool $event_was_closed
+): array {
+    $plan_id = absint($plan_id);
+    $tec_event_id = absint($tec_event_id);
+    $out = array(
+        'ok' => true,
+        'skipped' => false,
+        'reason' => '',
+        'updated_product_ids' => array(),
+        'checked_product_ids' => array(),
+        'errors' => array(),
+    );
+
+    if ($plan_id <= 0 || $tec_event_id <= 0) {
+        $out['ok'] = false;
+        $out['reason'] = 'invalid_event_context';
+        return $out;
+    }
+    if ($event_was_closed) {
+        $out['skipped'] = true;
+        $out['reason'] = 'completed_event_not_reopened';
+        return $out;
+    }
+    if (function_exists('bvmgr_event_plan_is_externally_ticketed') && bvmgr_event_plan_is_externally_ticketed($plan_id)) {
+        $out['skipped'] = true;
+        $out['reason'] = 'external_ticketing';
+        return $out;
+    }
+
+    $cfg = bvmgr_ticketing_v2_get_config($plan_id);
+    if ((string) ($cfg['mode'] ?? 'read_only') !== 'vms_managed') {
+        $out['skipped'] = true;
+        $out['reason'] = 'mode_not_managed';
+        return $out;
+    }
+
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
+    $map = (isset($sync['map']['tickets']) && is_array($sync['map']['tickets'])) ? $sync['map']['tickets'] : array();
+    $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
+
+    foreach ($tickets as $ticket) {
+        if (!is_array($ticket) || (array_key_exists('enabled', $ticket) && empty($ticket['enabled']))) {
+            continue;
+        }
+
+        $ticket_key = sanitize_key((string) ($ticket['ticket_key'] ?? $ticket['key'] ?? ''));
+        $map_row = ($ticket_key !== '' && isset($map[$ticket_key]) && is_array($map[$ticket_key])) ? $map[$ticket_key] : array();
+        $product_id = absint($map_row['woo_product_id'] ?? 0);
+        if ($product_id <= 0 && $ticket_key === 'ga') {
+            $product_id = absint($sync['map']['ga']['woo_product_id'] ?? 0);
+        }
+        if ($product_id <= 0) {
+            continue;
+        }
+
+        $out['checked_product_ids'][] = $product_id;
+        if (
+            get_post_type($product_id) !== 'product'
+            || absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true)) !== $tec_event_id
+        ) {
+            $out['errors'][] = array('product_id' => $product_id, 'code' => 'invalid_ticket_mapping');
+            continue;
+        }
+
+        $expected = bvmgr_ticketing_b_resolve_sales_window($tec_event_id, $ticket);
+        $expected_start = bvmgr_ticketing_v2_normalize_sales_window_value((string) ($expected['start'] ?? ''));
+        $expected_end = bvmgr_ticketing_v2_normalize_sales_window_value((string) ($expected['end'] ?? ''));
+        $current_start = bvmgr_ticketing_v2_normalize_sales_window_value((string) get_post_meta($product_id, '_ticket_start_date', true));
+        $current_end = bvmgr_ticketing_v2_normalize_sales_window_value((string) get_post_meta($product_id, '_ticket_end_date', true));
+
+        if ($expected_start !== $current_start) {
+            if ($expected_start === '') {
+                delete_post_meta($product_id, '_ticket_start_date');
+            } else {
+                update_post_meta($product_id, '_ticket_start_date', $expected_start);
+            }
+        }
+        if ($expected_end !== $current_end) {
+            if ($expected_end === '') {
+                delete_post_meta($product_id, '_ticket_end_date');
+            } else {
+                update_post_meta($product_id, '_ticket_end_date', $expected_end);
+            }
+        }
+
+        $verified_start = bvmgr_ticketing_v2_normalize_sales_window_value((string) get_post_meta($product_id, '_ticket_start_date', true));
+        $verified_end = bvmgr_ticketing_v2_normalize_sales_window_value((string) get_post_meta($product_id, '_ticket_end_date', true));
+        if ($verified_start !== $expected_start || $verified_end !== $expected_end) {
+            $out['errors'][] = array('product_id' => $product_id, 'code' => 'sales_window_verification_failed');
+            continue;
+        }
+
+        if ($current_start !== $expected_start || $current_end !== $expected_end) {
+            $out['updated_product_ids'][] = $product_id;
+        }
+    }
+
+    $out['checked_product_ids'] = array_values(array_unique($out['checked_product_ids']));
+    $out['updated_product_ids'] = array_values(array_unique($out['updated_product_ids']));
+    $out['ok'] = empty($out['errors']);
+    if (!$out['ok']) {
+        $out['reason'] = 'ticket_sales_window_sync_failed';
+    }
+
+    bvmgr_ticketing_v2_invalidate_calendar_ticket_caches($tec_event_id, $out['checked_product_ids']);
+    do_action('vms_ticketing_v2_calendar_sales_windows_synced', $plan_id, $tec_event_id, $out);
+
+    return $out;
+}
+
+/**
  * Best-effort TEC event start datetime in 'Y-m-d H:i:s' (site timezone).
  */
 function bvmgr_ticketing_b_get_tec_event_start(int $tec_event_id): string {
@@ -1685,7 +1919,14 @@ function bvmgr_ticketing_b_get_tec_event_start(int $tec_event_id): string {
         return '';
     }
 
-    // Prefer TEC helper if available.
+    // Read canonical local-time meta first. TEC date helpers may retain the prior
+    // occurrence in request-local caches immediately after tribe_update_event().
+    $meta = get_post_meta($tec_event_id, '_EventStartDate', true);
+    $meta = is_string($meta) ? trim($meta) : '';
+    if ($meta !== '') {
+        return $meta;
+    }
+
     if (function_exists('tribe_get_start_date')) {
         $s = tribe_get_start_date($tec_event_id, true, 'Y-m-d H:i:s');
         $s = is_string($s) ? trim($s) : '';
@@ -1694,13 +1935,6 @@ function bvmgr_ticketing_b_get_tec_event_start(int $tec_event_id): string {
         }
     }
 
-    // Fallback to meta.
-    $meta = get_post_meta($tec_event_id, '_EventStartDate', true);
-    $meta = is_string($meta) ? trim($meta) : '';
-    if ($meta !== '') {
-        // TEC commonly stores 'Y-m-d H:i:s'.
-        return $meta;
-    }
     return '';
 }
 
@@ -1713,6 +1947,14 @@ function bvmgr_ticketing_b_get_tec_event_end(int $tec_event_id): string {
         return '';
     }
 
+    // See the start-date helper above: prefer the just-persisted canonical meta
+    // over a possibly stale request-local TEC object.
+    $meta = get_post_meta($tec_event_id, '_EventEndDate', true);
+    $meta = is_string($meta) ? trim($meta) : '';
+    if ($meta !== '') {
+        return $meta;
+    }
+
     if (function_exists('tribe_get_end_date')) {
         $s = tribe_get_end_date($tec_event_id, true, 'Y-m-d H:i:s');
         $s = is_string($s) ? trim($s) : '';
@@ -1721,9 +1963,7 @@ function bvmgr_ticketing_b_get_tec_event_end(int $tec_event_id): string {
         }
     }
 
-    $meta = get_post_meta($tec_event_id, '_EventEndDate', true);
-    $meta = is_string($meta) ? trim($meta) : '';
-    return $meta;
+    return '';
 }
 
 function bvmgr_ticketing_b_commit_sync(int $plan_id, array $preview_items): array {
@@ -6925,6 +7165,7 @@ function bvmgr_ticketing_v2_inspect_enabled_ticket_product(int $product_id, arra
         'needs_visibility_restore' => false,
         'needs_inventory_repair' => false,
         'needs_purchase_limit_repair' => false,
+        'needs_sales_window_repair' => false,
         'changes' => array(),
         'notes' => array(),
         'post_status' => '',
@@ -6963,6 +7204,31 @@ function bvmgr_ticketing_v2_inspect_enabled_ticket_product(int $product_id, arra
     $out['manage_stock'] = !empty($inventory_state['manage_stock']);
 
     if (!empty($ticket_cfg)) {
+        $tec_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
+        if ($tec_event_id > 0) {
+            $expected_window = bvmgr_ticketing_b_resolve_sales_window($tec_event_id, $ticket_cfg);
+            $expected_start = bvmgr_ticketing_v2_normalize_sales_window_value((string) ($expected_window['start'] ?? ''));
+            $expected_end = bvmgr_ticketing_v2_normalize_sales_window_value((string) ($expected_window['end'] ?? ''));
+            $current_start = bvmgr_ticketing_v2_normalize_sales_window_value((string) get_post_meta($product_id, '_ticket_start_date', true));
+            $current_end = bvmgr_ticketing_v2_normalize_sales_window_value((string) get_post_meta($product_id, '_ticket_end_date', true));
+            $has_explicit_start = (
+                bvmgr_ticketing_v2_normalize_sales_window_value((string) ($ticket_cfg['sales_start'] ?? '')) !== ''
+                || bvmgr_ticketing_v2_normalize_relative_days($ticket_cfg['sales_start_relative_days'] ?? '') !== ''
+            );
+            $start_drifted = $has_explicit_start && $current_start !== $expected_start;
+            $end_drifted = $current_end !== $expected_end;
+
+            if ($start_drifted || $end_drifted) {
+                $out['needs_restore'] = true;
+                $out['needs_sales_window_repair'] = true;
+                $out['changes'][] = 'sales_window';
+                $out['notes'][] = 'Mapped ticket sale dates are out of sync with the linked calendar occurrence. Rebuild will re-derive the Event Tickets sale window.';
+                if ($out['skip_reason_code'] === 'already_in_sync') {
+                    $out['skip_reason_code'] = 'sales_window_out_of_sync';
+                }
+            }
+        }
+
         $inventory_total = max(0, absint($ticket_cfg['inventory_total'] ?? 0));
         $window_open = bvmgr_ticketing_v2_config_window_is_open(
             (string) ($ticket_cfg['sales_start'] ?? ''),
@@ -7010,6 +7276,7 @@ function bvmgr_ticketing_v2_compose_enabled_ticket_preview_note(bool $config_cha
     $needs_status_restore = !empty($repair['needs_status_restore']);
     $needs_visibility_restore = !empty($repair['needs_visibility_restore']);
     $needs_inventory_repair = !empty($repair['needs_inventory_repair']);
+    $needs_sales_window_repair = !empty($repair['needs_sales_window_repair']);
 
     if ($config_changed) {
         if ($needs_status_restore && $needs_visibility_restore && $needs_inventory_repair) {
@@ -7035,6 +7302,9 @@ function bvmgr_ticketing_v2_compose_enabled_ticket_preview_note(bool $config_cha
     }
     if ($needs_inventory_repair) {
         return 'Mapped ticket is still customer-facing in config but live inventory has drifted into a false sold-out state. Will recalculate it.';
+    }
+    if ($needs_sales_window_repair) {
+        return 'Mapped ticket sale dates are out of sync with the linked calendar occurrence. Will re-derive the Event Tickets sale window.';
     }
     if ($needs_status_restore) {
         return 'Mapped ticket exists but is unpublished. Will restore and republish.';
@@ -7638,6 +7908,23 @@ function bvmgr_ticketing_v2_preview_sync(int $plan_id): array {
     $actions = array();
     $warnings = array();
     $blocked = false;
+    $calendar_alignment = array();
+    $reschedule_required = get_post_meta($plan_id, '_vms_ticketing_reschedule_required_v1', true);
+    if (
+        $mode === 'vms_managed'
+        && is_array($reschedule_required)
+        && absint($reschedule_required['tec_event_id'] ?? 0) === $tec_event_id
+    ) {
+        $warnings[] = __('This completed occurrence was changed after closure. Native ticket windows remain closed until a future explicit Reschedule workflow resolves the event.', 'backstage-venue-manager');
+        $blocked = true;
+    }
+    if ($mode === 'vms_managed' && $tec_event_id > 0) {
+        $calendar_alignment = bvmgr_ticketing_v2_plan_calendar_alignment($plan_id, $tec_event_id);
+        if (empty($calendar_alignment['checkable']) || empty($calendar_alignment['aligned'])) {
+            $warnings[] = __('The Event Plan date or time does not match the linked calendar event. Publish or re-sync the calendar occurrence before committing ticket changes.', 'backstage-venue-manager');
+            $blocked = true;
+        }
+    }
 
     // Multi-ticket sync preview
     $existing_ticket_pids = array();
@@ -8119,6 +8406,8 @@ function bvmgr_ticketing_v2_preview_sync(int $plan_id): array {
         'created_calendar_event' => $created_calendar_event,
         'calendar_event_status' => $created_calendar_event ? 'draft' : '',
         'mode' => $mode,
+        'calendar_alignment' => $calendar_alignment,
+        'reschedule_required' => is_array($reschedule_required) ? $reschedule_required : array(),
         'config_hash' => $cfg_hash,
         'actions' => $actions,
         'warnings' => $warnings,
@@ -8138,6 +8427,8 @@ function bvmgr_ticketing_v2_preview_sync(int $plan_id): array {
         'tec_event_id' => $tec_event_id,
         'created_calendar_event' => $created_calendar_event,
         'calendar_event_status' => $created_calendar_event ? 'draft' : '',
+        'calendar_alignment' => $calendar_alignment,
+        'reschedule_required' => is_array($reschedule_required) ? $reschedule_required : array(),
         'blocked' => $blocked,
         'warnings' => $warnings,
         'reconciliation' => $reconciliation,
@@ -8246,6 +8537,12 @@ function bvmgr_ticketing_v2_commit_error_summary(string $code): string {
             return __('Two or more ticket rows are trying to control the same Woo ticket product, so Commit was stopped to protect existing sales.', 'backstage-venue-manager');
         case 'missing_tec_link':
             return __('No linked TEC event was available for this commit, so Backstage Venue Manager had nowhere safe to attach the tickets.', 'backstage-venue-manager');
+        case 'calendar_event_out_of_sync':
+            return __('The Event Plan occurrence does not match its linked calendar event, so Backstage Venue Manager refused to derive ticket sale dates from stale calendar data.', 'backstage-venue-manager');
+        case 'stale_calendar_occurrence':
+            return __('The Event Plan or linked calendar occurrence changed after Preview, so that Preview is no longer safe to commit.', 'backstage-venue-manager');
+        case 'completed_event_reschedule_required':
+            return __('Backstage Venue Manager will not reopen native ticket sales for an occurrence that had already completed. An explicit Reschedule workflow is required.', 'backstage-venue-manager');
         case 'commit_not_ready_to_finalize':
             return __('Commit batching had not finished preparing all ticket actions, so Backstage Venue Manager refused to finalize a partial sync.', 'backstage-venue-manager');
         case 'event_tickets_woo_unavailable':
@@ -8278,6 +8575,15 @@ function bvmgr_ticketing_v2_commit_error_steps(string $code, array $diagnostics 
             break;
         case 'missing_tec_link':
             $steps[] = __('Run “Preview sync” again so Backstage Venue Manager can create or relink the TEC event before committing.', 'backstage-venue-manager');
+            break;
+        case 'calendar_event_out_of_sync':
+            $steps[] = __('Publish or re-sync the Event Plan to its calendar event, then run “Preview sync” again.', 'backstage-venue-manager');
+            break;
+        case 'stale_calendar_occurrence':
+            $steps[] = __('Run “Preview sync” again after the calendar occurrence is synchronized.', 'backstage-venue-manager');
+            break;
+        case 'completed_event_reschedule_required':
+            $steps[] = __('Leave the completed occurrence closed. Use the future explicit Reschedule workflow if the event did not actually occur.', 'backstage-venue-manager');
             break;
         case 'commit_not_ready_to_finalize':
             $steps[] = __('Run “Preview sync” again to rebuild the action list, then retry Commit from the beginning.', 'backstage-venue-manager');
@@ -8776,6 +9082,55 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
             'current_config_hash' => $cfg_hash_now,
             'preview_config_hash' => (string) ($payload['config_hash'] ?? ''),
         ));
+    }
+
+    $reschedule_required = get_post_meta($plan_id, '_vms_ticketing_reschedule_required_v1', true);
+    if (
+        is_array($reschedule_required)
+        && absint($reschedule_required['tec_event_id'] ?? 0) === $tec_event_id
+    ) {
+        return bvmgr_ticketing_v2_commit_error_response($plan_id, 'completed_event_reschedule_required', array(
+            'stage' => 'completed_event_guard',
+            'http' => 409,
+            'requested_preview_id' => $preview_id_raw,
+            'sanitized_preview_id' => $preview_id,
+            'preview_payload' => $payload,
+            'reschedule_required' => $reschedule_required,
+            'current_config_hash' => $cfg_hash_now,
+            'preview_config_hash' => (string) ($payload['config_hash'] ?? ''),
+        ));
+    }
+
+    $calendar_alignment = bvmgr_ticketing_v2_plan_calendar_alignment($plan_id, $tec_event_id);
+    if (empty($calendar_alignment['checkable']) || empty($calendar_alignment['aligned'])) {
+        return bvmgr_ticketing_v2_commit_error_response($plan_id, 'calendar_event_out_of_sync', array(
+            'stage' => 'calendar_alignment_guard',
+            'http' => 409,
+            'requested_preview_id' => $preview_id_raw,
+            'sanitized_preview_id' => $preview_id,
+            'preview_payload' => $payload,
+            'calendar_alignment' => $calendar_alignment,
+            'current_config_hash' => $cfg_hash_now,
+            'preview_config_hash' => (string) ($payload['config_hash'] ?? ''),
+        ));
+    }
+
+    $preview_calendar_alignment = is_array($payload['calendar_alignment'] ?? null) ? $payload['calendar_alignment'] : array();
+    if (!empty($preview_calendar_alignment)) {
+        foreach (array('expected_start', 'expected_end', 'current_start', 'current_end') as $alignment_key) {
+            if ((string) ($preview_calendar_alignment[$alignment_key] ?? '') !== (string) ($calendar_alignment[$alignment_key] ?? '')) {
+                return bvmgr_ticketing_v2_commit_error_response($plan_id, 'stale_calendar_occurrence', array(
+                    'stage' => 'calendar_alignment_guard',
+                    'http' => 409,
+                    'requested_preview_id' => $preview_id_raw,
+                    'sanitized_preview_id' => $preview_id,
+                    'preview_payload' => $payload,
+                    'calendar_alignment' => $calendar_alignment,
+                    'current_config_hash' => $cfg_hash_now,
+                    'preview_config_hash' => (string) ($payload['config_hash'] ?? ''),
+                ));
+            }
+        }
     }
 
     if ($requested_phase === 'prepare') {
