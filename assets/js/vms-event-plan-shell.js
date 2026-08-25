@@ -2,6 +2,36 @@
   var hasInitializedScroll = false;
   var shellController = null;
 
+  function initTicketingDestinationFields(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('[data-vms-ticketing-destination]').forEach(function (container) {
+      var mode = container.querySelector('[data-vms-ticketing-sales-mode]');
+      var externalFields = container.querySelector('[data-vms-external-ticketing-fields]');
+      var relationship = container.querySelector('[data-vms-event-relationship]');
+      var producerFields = container.querySelector('[data-vms-external-producer-fields]');
+      if (!mode || !externalFields) return;
+
+      function update() {
+        var isExternal = String(mode.value || '') === 'external';
+        externalFields.hidden = !isExternal;
+        externalFields.setAttribute('aria-hidden', isExternal ? 'false' : 'true');
+
+        if (relationship && producerFields) {
+          var isHosted = isExternal && String(relationship.value || '') === 'hosted_third_party';
+          producerFields.hidden = !isHosted;
+          producerFields.setAttribute('aria-hidden', isHosted ? 'false' : 'true');
+        }
+      }
+
+      if (!container.dataset.vmsTicketingDestinationBound) {
+        container.dataset.vmsTicketingDestinationBound = '1';
+        mode.addEventListener('change', update);
+        if (relationship) relationship.addEventListener('change', update);
+      }
+      update();
+    });
+  }
+
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -464,6 +494,7 @@
     }
 
     function initCollapsibleSections() {
+	  initTicketingDestinationFields(shellRoot);
       Array.from(shellRoot.querySelectorAll('.vms-collapsible-section[data-section-key]')).forEach(initExistingSection);
 
       var titles = getBareTitles();
@@ -553,9 +584,13 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initScrollTarget, { once: true });
+    document.addEventListener('DOMContentLoaded', function () {
+	  initScrollTarget();
+	  initTicketingDestinationFields(document);
+	}, { once: true });
   } else {
     initScrollTarget();
+	initTicketingDestinationFields(document);
   }
 
   if (!initShellController()) {

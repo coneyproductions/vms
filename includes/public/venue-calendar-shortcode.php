@@ -773,6 +773,8 @@ if (!function_exists('bvmgr_public_calendar_render_list_view')) {
 		foreach ($events as $event) {
 			$date_key = trim((string) ($event['date_key'] ?? ''));
 			$event_url = trim((string) ($event['public_url'] ?? ''));
+			$ticket_url = trim((string) ($event['ticket_url'] ?? ''));
+			$ticket_is_external = !empty($event['ticket_is_external']);
 			$image_url = trim((string) ($event['image_url'] ?? ''));
 			$excerpt = trim((string) ($event['excerpt'] ?? ''));
 			$title = trim((string) ($event['title'] ?? ''));
@@ -857,9 +859,11 @@ if (!function_exists('bvmgr_public_calendar_render_list_view')) {
 			if ($excerpt !== '') {
 				echo '<p class="vms-public-cal-rich-excerpt">' . esc_html($excerpt) . '</p>';
 			}
-			if ($event_url !== '' && !$is_past_event) {
-				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager');
-				echo '<div class="vms-public-cal-rich-actions"><a class="vms-public-cal-rich-ticket" href="' . esc_url($event_url) . '">' . esc_html($action_label) . '</a></div>';
+			$action_url = $is_cancelled ? $event_url : $ticket_url;
+			if ($action_url !== '' && !$is_past_event) {
+				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : ($ticket_is_external ? __('Buy Tickets', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager'));
+				$external_attrs = (!$is_cancelled && $ticket_is_external) ? ' target="_blank" rel="noopener noreferrer external"' : '';
+				echo '<div class="vms-public-cal-rich-actions"><a class="vms-public-cal-rich-ticket" href="' . esc_url($action_url) . '"' . $external_attrs . '>' . esc_html($action_label) . '</a></div>';
 			}
 			echo '</div>';
 			echo '</article>';
@@ -934,6 +938,8 @@ if (!function_exists('bvmgr_public_calendar_build_month_days')) {
 				'sort_time' => $sort_time,
 				'excerpt' => trim((string) ($event['excerpt'] ?? '')),
 				'view_url' => (string) ($event['public_url'] ?? ''),
+				'ticket_url' => (string) ($event['ticket_url'] ?? ''),
+				'ticket_is_external' => !empty($event['ticket_is_external']),
 			);
 		}
 
@@ -1083,6 +1089,8 @@ if (!function_exists('bvmgr_public_calendar_render_day_entries')) {
 			$primary_vendor = isset($vendors[0]) && is_array($vendors[0]) ? $vendors[0] : array('name' => $title, 'icon' => '', 'url' => '');
 			$secondary_vendor = isset($vendors[1]) && is_array($vendors[1]) ? $vendors[1] : null;
 			$view_url = trim((string) ($ev['view_url'] ?? ''));
+			$ticket_url = trim((string) ($ev['ticket_url'] ?? ''));
+			$ticket_is_external = !empty($ev['ticket_is_external']);
 			$date_label = trim((string) ($ev['date_label'] ?? ''));
 			$time_label = trim((string) ($ev['time_label'] ?? ''));
 			$excerpt = trim((string) ($ev['excerpt'] ?? ''));
@@ -1162,9 +1170,11 @@ if (!function_exists('bvmgr_public_calendar_render_day_entries')) {
 			if ($excerpt !== '') {
 				echo '<div class="vms-cal-pop-excerpt">' . esc_html($excerpt) . '</div>';
 			}
-			if ($view_url !== '' && !$is_past_event) {
-				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager');
-				echo '<div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="' . esc_url($view_url) . '">' . esc_html($action_label) . '</a></div>';
+			$action_url = $is_cancelled ? $view_url : $ticket_url;
+			if ($action_url !== '' && !$is_past_event) {
+				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : ($ticket_is_external ? __('Buy Tickets', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager'));
+				$external_attrs = (!$is_cancelled && $ticket_is_external) ? ' target="_blank" rel="noopener noreferrer external"' : '';
+				echo '<div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="' . esc_url($action_url) . '"' . $external_attrs . '>' . esc_html($action_label) . '</a></div>';
 			}
 			echo '</div></div>';
 			echo '</div>';

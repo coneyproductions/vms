@@ -4432,6 +4432,20 @@ function bvmgr_ticketing_v2_sale_context_message(string $code, int $plan_id = 0,
     $product_label = trim((string) ($context['product_label'] ?? ''));
 
     switch ($code) {
+		case 'external_ticketing':
+			$external_url = trim((string) ($context['external_url'] ?? ''));
+			if ($external_url === '' && $plan_id > 0 && function_exists('bvmgr_event_plan_get_external_ticket_url')) {
+				$external_url = bvmgr_event_plan_get_external_ticket_url($plan_id);
+			}
+			if ($title !== '' && $external_url !== '') {
+				/* translators: 1: event title, 2: external ticket purchase URL. */
+				return sprintf(__('Tickets for “%1$s” are sold by an external ticket provider. Native checkout is unavailable; buy tickets at %2$s', 'backstage-venue-manager'), $title, $external_url);
+			}
+			if ($external_url !== '') {
+				/* translators: %s: external ticket purchase URL. */
+				return sprintf(__('Tickets for this event are sold by an external ticket provider. Native checkout is unavailable; buy tickets at %s', 'backstage-venue-manager'), $external_url);
+			}
+			return __('Tickets for this event are handled by an external ticket provider. Native checkout is unavailable; return to the event page for the current purchase link.', 'backstage-venue-manager');
         case 'event_cancelled':
             return bvmgr_ticketing_v2_cancelled_event_sales_notice($event_id);
         case 'event_past':
@@ -4506,6 +4520,22 @@ function bvmgr_ticketing_v2_validate_product_sale_context(int $product_id, int $
             'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
+
+	if (function_exists('bvmgr_event_plan_is_externally_ticketed') && bvmgr_event_plan_is_externally_ticketed($plan_id)) {
+		$code = 'external_ticketing';
+		$external_url = function_exists('bvmgr_event_plan_get_external_ticket_url')
+			? bvmgr_event_plan_get_external_ticket_url($plan_id)
+			: '';
+		return array(
+			'ok' => false,
+			'code' => $code,
+			'http' => 409,
+			'plan_id' => $plan_id,
+			'event_id' => $tec_event_id,
+			'external_url' => $external_url,
+			'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('external_url' => $external_url)),
+		);
+	}
 
     if ((string) get_post_status($plan_id) !== 'publish') {
         $code = 'event_plan_unpublished';
@@ -6136,6 +6166,8 @@ add_filter('post_thumbnail_html', 'bvmgr_tec_cancelled_thumbnail_overlay', 20, 5
 add_filter('tribe_tickets_get_tickets_query_args', 'bvmgr_tec_suppress_tickets_for_cancelled_events', 20);
 add_filter('tribe_tickets_rsvp_tickets_form_hook', 'bvmgr_tec_suppress_ticket_forms_for_cancelled_event', 20, 2);
 add_filter('tribe_tickets_commerce_tickets_form_hook', 'bvmgr_tec_suppress_ticket_forms_for_cancelled_event', 20, 2);
+add_filter('tribe_events_event_costs', 'bvmgr_tec_suppress_event_costs_for_external_event', 999, 2);
+add_filter('tribe_get_cost', 'bvmgr_tec_suppress_public_cost_for_external_event', 999, 3);
 add_filter('body_class', 'bvmgr_tec_cancelled_event_body_class', 20);
 
 add_filter('tribe_template_before_include_html:tickets/v2/tickets/footer', 'bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount', 20, 4);
@@ -7217,7 +7249,61 @@ function bvmgr_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $
 
 
 /**
- * Suppress the printing of TEC ticket/RSVP forms on cancelled events.
+ * Determine whether a TEC event is linked to an externally ticketed Event Plan.
+ */
+function bvmgr_tec_event_is_externally_ticketed(int $event_id): bool
+{
+	$event_id = absint($event_id);
+	if ($event_id <= 0) {
+		return false;
+	}
+
+	$plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
+		? absint(bvmgr_get_event_plan_for_tec_event($event_id))
+		: (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') ? absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($event_id)) : 0);
+
+	return $plan_id > 0
+		&& function_exists('bvmgr_event_plan_is_externally_ticketed')
+		&& bvmgr_event_plan_is_externally_ticketed($plan_id);
+}
+
+/**
+ * Prevent Event Tickets from rebuilding TEC cost metadata from preserved native products.
+ *
+ * @param mixed $costs
+ * @return mixed
+ */
+function bvmgr_tec_suppress_event_costs_for_external_event($costs, int $event_id)
+{
+	return bvmgr_tec_event_is_externally_ticketed($event_id) ? array() : $costs;
+}
+
+/**
+ * Suppress any stale cost that predates the latest TEC resync.
+ */
+function bvmgr_tec_suppress_public_cost_for_external_event(string $cost, int $event_id, bool $with_currency_symbol): string
+{
+	return bvmgr_tec_event_is_externally_ticketed($event_id) ? '' : $cost;
+}
+
+/**
+ * Determine whether a public TEC event must suppress native ticket purchasing.
+ */
+function bvmgr_tec_event_suppresses_native_ticketing(int $event_id): bool
+{
+	$event_id = absint($event_id);
+	if ($event_id <= 0) {
+		return false;
+	}
+	if (bvmgr_tec_is_cancelled_event($event_id)) {
+		return true;
+	}
+
+	return bvmgr_tec_event_is_externally_ticketed($event_id);
+}
+
+/**
+ * Suppress the printing of TEC ticket/RSVP forms on cancelled or external events.
  * Returning an empty hook prevents the form from rendering at all.
  */
 function bvmgr_tec_suppress_ticket_forms_for_cancelled_event(string $hook, $provider): string
@@ -7232,15 +7318,14 @@ function bvmgr_tec_suppress_ticket_forms_for_cancelled_event(string $hook, $prov
     if ($event_id <= 0) {
         return $hook;
     }
-    if (!bvmgr_tec_is_cancelled_event($event_id)) {
+    if (!bvmgr_tec_event_suppresses_native_ticketing($event_id)) {
         return $hook;
     }
     return '';
 }
 
 /**
- * Suppress ticket/RSVP queries for cancelled events for public users.
- * This helps ensure TEC RSVP blocks are not available after cancellation.
+ * Suppress ticket/RSVP queries for cancelled or externally ticketed events.
  */
 function bvmgr_tec_suppress_tickets_for_cancelled_events(array $args): array
 {
@@ -7248,10 +7333,10 @@ function bvmgr_tec_suppress_tickets_for_cancelled_events(array $args): array
         return $args;
     }
 
-    // If we're on a cancelled TEC single-event page, suppress any ticket query regardless of provider/query-shape.
+    // On a suppressed TEC single-event page, block any ticket query regardless of provider/query shape.
     if (is_singular('tribe_events')) {
         $current_event_id = (int) get_queried_object_id();
-        if ($current_event_id > 0 && bvmgr_tec_is_cancelled_event($current_event_id)) {
+        if ($current_event_id > 0 && bvmgr_tec_event_suppresses_native_ticketing($current_event_id)) {
             $args['post__in'] = array(0);
             return $args;
         }
@@ -7285,7 +7370,7 @@ function bvmgr_tec_suppress_tickets_for_cancelled_events(array $args): array
             }
 
             $candidate = absint($val);
-            if ($candidate > 0 && bvmgr_tec_is_cancelled_event($candidate)) {
+            if ($candidate > 0 && bvmgr_tec_event_suppresses_native_ticketing($candidate)) {
                 $event_id = $candidate;
                 break;
             }
@@ -7296,7 +7381,7 @@ function bvmgr_tec_suppress_tickets_for_cancelled_events(array $args): array
         return $args;
     }
 
-    if (!bvmgr_tec_is_cancelled_event($event_id)) {
+    if (!bvmgr_tec_event_suppresses_native_ticketing($event_id)) {
         return $args;
     }
 
