@@ -138,13 +138,18 @@ if (!function_exists('vms_events_photo_cta_context')) {
     /**
      * @param array<string,mixed> $event
      * @param array<string,mixed> $overlay
-     * @return array<string,string>
+     * @return array<string,mixed>
      */
     function vms_events_photo_cta_context(array $event, array $overlay): array
     {
         $event_url = trim((string) ($event['public_url'] ?? ''));
+		$ticket_url = trim((string) ($event['ticket_url'] ?? ''));
+		$is_external = !empty($event['ticket_is_external']);
         $label = __('Get Tickets', 'backstage-venue-manager');
-        $url = $event_url;
+		$url = $ticket_url !== '' ? $ticket_url : $event_url;
+		if ($is_external) {
+			$label = __('Buy Tickets', 'backstage-venue-manager');
+		}
 
         $replacement = isset($overlay['replacement']) && is_array($overlay['replacement']) ? $overlay['replacement'] : array();
         $replacement_url = trim((string) ($replacement['url'] ?? ''));
@@ -152,13 +157,17 @@ if (!function_exists('vms_events_photo_cta_context')) {
         if (!empty($overlay['is_rescheduled']) && $replacement_url !== '') {
             $label = __('View New Date', 'backstage-venue-manager');
             $url = $replacement_url;
+			$is_external = false;
         } elseif (!empty($overlay['is_cancelled'])) {
             $label = __('View Details', 'backstage-venue-manager');
+			$url = $event_url;
+			$is_external = false;
         }
 
         return array(
             'label' => $label,
             'url' => $url,
+			'is_external' => $is_external,
         );
     }
 }
@@ -388,7 +397,8 @@ if (!function_exists('vms_events_photo_shortcode')) {
                 echo '</div>';
             }
             if (!empty($cta['url'])) {
-                echo '<a class="vms-events-photo-card__cta" href="' . esc_url((string) $cta['url']) . '">' . esc_html((string) ($cta['label'] ?? __('Get Tickets', 'backstage-venue-manager'))) . '</a>';
+				$external_attrs = !empty($cta['is_external']) ? ' target="_blank" rel="noopener noreferrer external"' : '';
+                echo '<a class="vms-events-photo-card__cta" href="' . esc_url((string) $cta['url']) . '"' . $external_attrs . '>' . esc_html((string) ($cta['label'] ?? __('Get Tickets', 'backstage-venue-manager'))) . '</a>';
             }
 
             if (!empty($overlay['is_rescheduled']) && $replacement_date !== '') {

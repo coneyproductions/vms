@@ -4478,20 +4478,213 @@ function vms_maybe_apply_band_comp_defaults_to_plan(int $event_plan_id): bool
 }
 
 /**
- * Compute effective ticketing enabled state for an Event Plan.
+ * Resolve an Event Plan meta key while keeping standalone/test loads safe.
+ */
+function vms_event_plan_ticketing_meta_key(string $name, string $fallback): string
+{
+	if (function_exists('vms_meta_key')) {
+		$key = (string) vms_meta_key('event_plan', $name);
+		if ($key !== '') {
+			return $key;
+		}
+	}
+
+	return $fallback;
+}
+
+/**
+ * Normalize the public ticket-sales mode. Missing and unknown legacy values are native.
+ */
+function vms_event_plan_normalize_ticketing_sales_mode($value): string
+{
+	if (!is_scalar($value)) {
+		return 'serenade_range';
+	}
+	$value = function_exists('sanitize_key') ? sanitize_key((string) $value) : strtolower(trim((string) $value));
+	return $value === 'external' ? 'external' : 'serenade_range';
+}
+
+function vms_event_plan_get_ticketing_sales_mode(int $event_plan_id): string
+{
+	$key = vms_event_plan_ticketing_meta_key('ticketing_sales_mode', '_vms_ticketing_sales_mode');
+	return vms_event_plan_normalize_ticketing_sales_mode(get_post_meta($event_plan_id, $key, true));
+}
+
+function vms_event_plan_is_externally_ticketed(int $event_plan_id): bool
+{
+	return $event_plan_id > 0 && vms_event_plan_get_ticketing_sales_mode($event_plan_id) === 'external';
+}
+
+/**
+ * Sanitize an absolute public HTTP(S) URL used by an Event Plan.
+ */
+function vms_event_plan_sanitize_http_url($value): string
+{
+	if (!is_scalar($value)) {
+		return '';
+	}
+	$value = trim((string) $value);
+	if ($value === '') {
+		return '';
+	}
+
+	$url = function_exists('esc_url_raw') ? (string) esc_url_raw($value, array('http', 'https')) : (string) filter_var($value, FILTER_SANITIZE_URL);
+	$parts = function_exists('wp_parse_url') ? wp_parse_url($url) : parse_url($url);
+	if (!is_array($parts)) {
+		return '';
+	}
+
+	$scheme = strtolower((string) ($parts['scheme'] ?? ''));
+	$host = trim((string) ($parts['host'] ?? ''));
+	if (!in_array($scheme, array('http', 'https'), true) || $host === '') {
+		return '';
+	}
+
+	return $url;
+}
+
+/**
+ * Sanitize an external ticket destination. Only absolute HTTP(S) URLs are accepted.
+ */
+function vms_event_plan_sanitize_external_ticket_url($value): string
+{
+	return vms_event_plan_sanitize_http_url($value);
+}
+
+function vms_event_plan_get_external_ticket_url(int $event_plan_id): string
+{
+	$key = vms_event_plan_ticketing_meta_key('external_ticket_url', '_vms_external_ticket_url');
+	return vms_event_plan_sanitize_external_ticket_url(get_post_meta($event_plan_id, $key, true));
+}
+
+function vms_event_plan_get_external_ticket_provider(int $event_plan_id, bool $with_fallback = false): string
+{
+	$key = vms_event_plan_ticketing_meta_key('external_ticket_provider', '_vms_external_ticket_provider');
+	$raw_label = get_post_meta($event_plan_id, $key, true);
+	$label = is_scalar($raw_label) ? trim((string) $raw_label) : '';
+	if ($label !== '') {
+		return function_exists('sanitize_text_field') ? sanitize_text_field($label) : strip_tags($label);
+	}
+
+	return $with_fallback ? (string) __('external ticket provider', 'backstage-venue-manager') : '';
+}
+
+function vms_event_plan_normalize_relationship($value): string
+{
+	if (!is_scalar($value)) {
+		return 'serenade_range_produced';
+	}
+	$value = function_exists('sanitize_key') ? sanitize_key((string) $value) : strtolower(trim((string) $value));
+	return $value === 'hosted_third_party' ? 'hosted_third_party' : 'serenade_range_produced';
+}
+
+function vms_event_plan_get_relationship(int $event_plan_id): string
+{
+	$key = vms_event_plan_ticketing_meta_key('event_relationship', '_vms_event_relationship');
+	return vms_event_plan_normalize_relationship(get_post_meta($event_plan_id, $key, true));
+}
+
+function vms_event_plan_is_hosted_third_party(int $event_plan_id): bool
+{
+	return $event_plan_id > 0 && vms_event_plan_get_relationship($event_plan_id) === 'hosted_third_party';
+}
+
+function vms_event_plan_get_external_event_producer(int $event_plan_id): string
+{
+	$key = vms_event_plan_ticketing_meta_key('external_event_producer', '_vms_external_event_producer');
+	$raw_label = get_post_meta($event_plan_id, $key, true);
+	$label = is_scalar($raw_label) ? trim((string) $raw_label) : '';
+	return function_exists('sanitize_text_field') ? sanitize_text_field($label) : strip_tags($label);
+}
+
+function vms_event_plan_sanitize_external_event_producer_website($value): string
+{
+	return vms_event_plan_sanitize_http_url($value);
+}
+
+function vms_event_plan_get_external_event_producer_website(int $event_plan_id): string
+{
+	$key = vms_event_plan_ticketing_meta_key('external_event_producer_website', '_vms_external_event_producer_website');
+	return vms_event_plan_sanitize_external_event_producer_website(get_post_meta($event_plan_id, $key, true));
+}
+
+/**
+ * Return the canonical public purchase destination for the current context.
+ * The caller supplies its unchanged native destination; external mode overrides it.
  *
- * Priority:
+ * @return array{mode:string,is_external:bool,url:string,provider:string,relationship:string,producer:string,producer_website:string}
+ */
+function vms_event_plan_get_ticket_destination(int $event_plan_id, string $native_url = ''): array
+{
+	$is_external = vms_event_plan_is_externally_ticketed($event_plan_id);
+	$url = $is_external ? vms_event_plan_get_external_ticket_url($event_plan_id) : trim($native_url);
+	if ($url !== '' && function_exists('esc_url_raw')) {
+		$url = (string) esc_url_raw($url, array('http', 'https'));
+	}
+
+	return array(
+		'mode' => $is_external ? 'external' : 'serenade_range',
+		'is_external' => $is_external,
+		'url' => $url,
+		'provider' => $is_external ? vms_event_plan_get_external_ticket_provider($event_plan_id, true) : '',
+		'relationship' => vms_event_plan_get_relationship($event_plan_id),
+		'producer' => vms_event_plan_get_external_event_producer($event_plan_id),
+		'producer_website' => vms_event_plan_get_external_event_producer_website($event_plan_id),
+	);
+}
+
+/**
+ * Detect preserved native definitions/product mappings for the admin mode warning.
+ */
+function vms_event_plan_has_native_ticket_records(int $event_plan_id): bool
+{
+	$keys = array(
+		'_vms_wc_product_map',
+		'_vms_ticket_product_ids_v1',
+		'_vms_ticket_manual_product_ids_v1',
+		'_vms_ticket_tier_map_v1',
+		'_vms_ticketing_config_v2',
+		'_vms_ticketing_sync_v2',
+	);
+
+	foreach ($keys as $key) {
+		$value = get_post_meta($event_plan_id, $key, true);
+		if (is_array($value) && !empty($value)) {
+			return true;
+		}
+		if (!is_array($value) && $value !== '' && $value !== null && $value !== false) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Compute effective native Serenade Range ticketing state for an Event Plan.
+ * External mode always disables new native purchasing without deleting its records.
+ *
+ * Priority for native mode:
  * 1) Per-event override (_vms_ticketing_enabled_override): on|off
  * 2) Global operator default (vms_settings[ticketing_enabled_default])
  */
 function vms_event_plan_is_ticketing_enabled(int $event_plan_id): bool
 {
+	if (vms_event_plan_is_externally_ticketed($event_plan_id)) {
+		return false;
+	}
+
 	$override = (string) get_post_meta($event_plan_id, '_vms_ticketing_enabled_override', true);
 	if ($override === 'on') return true;
 	if ($override === 'off') return false;
 
 	$settings = (array) get_option('vms_settings', array());
 	return !empty($settings['ticketing_enabled_default']);
+}
+
+function vms_event_plan_native_ticket_purchasing_allowed(int $event_plan_id): bool
+{
+	return $event_plan_id > 0 && vms_event_plan_is_ticketing_enabled($event_plan_id);
 }
 
 

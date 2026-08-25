@@ -119,6 +119,77 @@
   background: rgba(254, 242, 242, 0.92);
 }
 
+.single-tribe_events .vms-external-ticketing-panel,
+.tribe-events-single .vms-external-ticketing-panel {
+  margin: 24px 0 8px;
+  padding: 20px;
+  border: 1px solid rgba(29, 78, 216, 0.2);
+  border-radius: 12px;
+  background: rgba(239, 246, 255, 0.88);
+  color: var(--vms-ui-copy, #334155);
+}
+
+.single-tribe_events .vms-external-ticketing-panel__eyebrow,
+.tribe-events-single .vms-external-ticketing-panel__eyebrow {
+  margin: 0 0 5px;
+  color: var(--vms-ui-link, #1d4ed8);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.single-tribe_events .vms-external-ticketing-panel__presenter,
+.tribe-events-single .vms-external-ticketing-panel__presenter {
+  margin: 0 0 10px;
+  font-weight: 650;
+}
+
+.single-tribe_events .vms-external-ticketing-panel__presenter a,
+.tribe-events-single .vms-external-ticketing-panel__presenter a {
+  color: inherit;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.single-tribe_events .vms-external-ticketing-panel__title,
+.tribe-events-single .vms-external-ticketing-panel__title {
+  margin: 0 0 8px;
+  color: var(--vms-ui-ink, #0f172a);
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.single-tribe_events .vms-external-ticketing-panel__copy,
+.tribe-events-single .vms-external-ticketing-panel__copy {
+  margin: 0 0 14px;
+}
+
+.single-tribe_events .vms-external-ticketing-panel__cta,
+.tribe-events-single .vms-external-ticketing-panel__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: var(--vms-ui-link, #1d4ed8);
+  color: #fff;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.single-tribe_events .vms-external-ticketing-panel__cta:hover,
+.single-tribe_events .vms-external-ticketing-panel__cta:focus-visible,
+.tribe-events-single .vms-external-ticketing-panel__cta:hover,
+.tribe-events-single .vms-external-ticketing-panel__cta:focus-visible {
+  background: #1e40af;
+  color: #fff;
+  text-decoration: none;
+}
+
 @media (max-width: 760px) {
   .single-tribe_events .vms-event-details-card,
   .tribe-events-single .vms-event-details-card {

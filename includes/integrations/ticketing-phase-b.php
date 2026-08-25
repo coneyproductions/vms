@@ -2809,6 +2809,13 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
     if ($plan_id <= 0) {
         return array('ok' => false, 'message' => __('Invalid event plan.', 'backstage-venue-manager'));
     }
+	if (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($plan_id)) {
+		return array(
+			'ok' => false,
+			'message' => __('External Ticketing is active. Native ticket synchronization is disabled; publish or re-sync the Event Plan to update its normal public calendar event.', 'backstage-venue-manager'),
+			'code' => 'external_ticketing',
+		);
+	}
 
     $k_id  = vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
     $k_url = vms_ticketing_b_meta_key('tec_event_url', '_vms_tec_event_url');
@@ -7602,6 +7609,13 @@ function vms_ticketing_v2_preview_sync(int $plan_id): array {
     if (!current_user_can('edit_post', $plan_id)) {
         return array('ok' => false, 'message' => 'forbidden', 'http' => 403);
     }
+	if (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($plan_id)) {
+		return array(
+			'ok' => false,
+			'message' => 'external_ticketing',
+			'detail' => __('External Ticketing is active. Native ticket preview and product synchronization are not needed for this Event Plan.', 'backstage-venue-manager'),
+		);
+	}
 
     $cfg = vms_ticketing_v2_get_config($plan_id);
     $cfg_hash = vms_ticketing_v2_hash_config_for_sync($cfg);
@@ -8622,6 +8636,13 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
             'sanitized_preview_id' => $preview_id,
         ));
     }
+	if (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($plan_id)) {
+		return vms_ticketing_v2_commit_error_response($plan_id, 'external_ticketing', array(
+			'stage' => 'request_validation',
+			'http' => 409,
+			'message' => __('External Ticketing is active. Native ticket products were not created or changed.', 'backstage-venue-manager'),
+		));
+	}
 
     $preview_ids = array_values(array_unique(array_filter(array(
         $preview_id_raw,

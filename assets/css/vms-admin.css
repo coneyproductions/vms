@@ -3019,6 +3019,49 @@ body[class*="vms_page_vms-"] table.vms-sch-grid thead {
   background: var(--vms-notice-warning-bg);
 }
 
+.vms-ticketing-destination {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid #c3c4c7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vms-ticketing-destination > h4 {
+  margin: 0 0 6px;
+}
+
+.vms-ticketing-destination__mode {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.vms-ticketing-destination__external {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #dcdcde;
+}
+
+.vms-ticketing-destination__external[hidden],
+.vms-ticketing-destination__field[hidden] {
+  display: none !important;
+}
+
+.vms-ticketing-destination__field {
+  display: grid;
+  gap: 5px;
+  max-width: 720px;
+}
+
+.vms-ticketing-destination__field .description {
+  margin: 0;
+}
+
 
 /* Ticketing: draw attention to required Mode selection when a commit is possible but blocked by mode */
 .vms-field-attn {

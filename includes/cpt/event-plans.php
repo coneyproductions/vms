@@ -9123,7 +9123,89 @@ class VMS_Admin_Event_Plans
             ? absint($request['vms_venue_id'])
             : (int) get_post_meta($post_id, '_vms_venue_id', true);
 
-        
+		// Public ticket sales destination. This is intentionally separate from the
+		// existing Phase B none/read_only/vms_managed synchronization mode.
+		if (array_key_exists('vms_ticketing_sales_mode', $request)) {
+			$sales_mode = function_exists('vms_event_plan_normalize_ticketing_sales_mode')
+				? vms_event_plan_normalize_ticketing_sales_mode($request['vms_ticketing_sales_mode'])
+				: (sanitize_key((string) $request['vms_ticketing_sales_mode']) === 'external' ? 'external' : 'serenade_range');
+			$key = function_exists('vms_event_plan_ticketing_meta_key')
+				? vms_event_plan_ticketing_meta_key('ticketing_sales_mode', '_vms_ticketing_sales_mode')
+				: '_vms_ticketing_sales_mode';
+			update_post_meta($post_id, $key, $sales_mode);
+		}
+
+		if (array_key_exists('vms_external_ticket_url', $request)) {
+			$raw_external_url = is_array($request['vms_external_ticket_url']) ? '' : trim((string) $request['vms_external_ticket_url']);
+			$previous_external_url = function_exists('vms_event_plan_get_external_ticket_url')
+				? vms_event_plan_get_external_ticket_url($post_id)
+				: trim((string) get_post_meta($post_id, '_vms_external_ticket_url', true));
+			if ($previous_external_url !== '' && function_exists('vms_tec_capture_legacy_event_url_ownership')) {
+				vms_tec_capture_legacy_event_url_ownership($post_id, $previous_external_url);
+			}
+			$external_url = function_exists('vms_event_plan_sanitize_external_ticket_url')
+				? vms_event_plan_sanitize_external_ticket_url($raw_external_url)
+				: esc_url_raw($raw_external_url, array('http', 'https'));
+			$key = function_exists('vms_event_plan_ticketing_meta_key')
+				? vms_event_plan_ticketing_meta_key('external_ticket_url', '_vms_external_ticket_url')
+				: '_vms_external_ticket_url';
+			if ($external_url !== '') {
+				update_post_meta($post_id, $key, $external_url);
+			} else {
+				delete_post_meta($post_id, $key);
+				if ($raw_external_url !== '' && function_exists('vms_add_admin_notice')) {
+					vms_add_admin_notice(__('The external ticket URL was not saved. Enter a complete http:// or https:// URL.', 'backstage-venue-manager'), 'error');
+				}
+			}
+		}
+
+		$text_fields = array(
+			'vms_external_ticket_provider' => array('external_ticket_provider', '_vms_external_ticket_provider'),
+			'vms_external_event_producer' => array('external_event_producer', '_vms_external_event_producer'),
+		);
+		foreach ($text_fields as $request_key => $meta_definition) {
+			if (!array_key_exists($request_key, $request)) {
+				continue;
+			}
+			$value = is_array($request[$request_key]) ? '' : sanitize_text_field((string) $request[$request_key]);
+			$key = function_exists('vms_event_plan_ticketing_meta_key')
+				? vms_event_plan_ticketing_meta_key((string) $meta_definition[0], (string) $meta_definition[1])
+				: (string) $meta_definition[1];
+			if ($value !== '') {
+				update_post_meta($post_id, $key, $value);
+			} else {
+				delete_post_meta($post_id, $key);
+			}
+		}
+
+		if (array_key_exists('vms_external_event_producer_website', $request)) {
+			$raw_producer_website = is_array($request['vms_external_event_producer_website']) ? '' : trim((string) $request['vms_external_event_producer_website']);
+			$producer_website = function_exists('vms_event_plan_sanitize_external_event_producer_website')
+				? vms_event_plan_sanitize_external_event_producer_website($raw_producer_website)
+				: esc_url_raw($raw_producer_website, array('http', 'https'));
+			$key = function_exists('vms_event_plan_ticketing_meta_key')
+				? vms_event_plan_ticketing_meta_key('external_event_producer_website', '_vms_external_event_producer_website')
+				: '_vms_external_event_producer_website';
+			if ($producer_website !== '') {
+				update_post_meta($post_id, $key, $producer_website);
+			} else {
+				delete_post_meta($post_id, $key);
+				if ($raw_producer_website !== '' && function_exists('vms_add_admin_notice')) {
+					vms_add_admin_notice(__('The presenter/producer website was not saved. Enter a complete http:// or https:// URL.', 'backstage-venue-manager'), 'error');
+				}
+			}
+		}
+
+		if (array_key_exists('vms_event_relationship', $request)) {
+			$relationship = function_exists('vms_event_plan_normalize_relationship')
+				? vms_event_plan_normalize_relationship($request['vms_event_relationship'])
+				: (sanitize_key((string) $request['vms_event_relationship']) === 'hosted_third_party' ? 'hosted_third_party' : 'serenade_range_produced');
+			$key = function_exists('vms_event_plan_ticketing_meta_key')
+				? vms_event_plan_ticketing_meta_key('event_relationship', '_vms_event_relationship')
+				: '_vms_event_relationship';
+			update_post_meta($post_id, $key, $relationship);
+		}
+
 	        // Ticketing enabled override (on|off|inherit)
 	        if (array_key_exists('vms_ticketing_enabled_override', $request)) {
 	            $ov = sanitize_text_field((string) $request['vms_ticketing_enabled_override']);
@@ -10654,7 +10736,9 @@ if (function_exists('vms_add_admin_notice')) {
                                 ? vms_event_plan_ticketing_auto_money_allowed($post_id, $action, $current_status)
                                 : ($action === 'publish_now');
 
-                            if (!$auto_money_allowed) {
+                            if (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($post_id)) {
+                                vms_add_admin_notice(__('External Ticketing is active. The public event was synced without creating or updating native ticket products.', 'backstage-venue-manager'), 'info');
+                            } elseif (!$auto_money_allowed) {
                                 vms_add_admin_notice(__('Woo product auto-publish skipped. Money-impacting product actions are disabled on Draft/Ready save paths.', 'backstage-venue-manager'), 'warning');
                             } elseif (!($tec_id_for_ticketing > 0 && $mode_v2 !== '' && $mode_v2 !== 'none')) {
                                 vms_add_admin_notice(__('Legacy Woo product auto-publish is retired. Use Ticketing Preview → Commit for all ticket/product creation and updates.', 'backstage-venue-manager'), 'warning');
@@ -11607,9 +11691,19 @@ if (function_exists('vms_add_admin_notice')) {
         	        $end_ts = $end_ts + $bump;
         	        if ($end_ts <= $start_ts) {
 			    $errors[] = __('End time must be after start time.', 'backstage-venue-manager');
-        	        }
+                    }
+
         	    }
         	}
+
+			if (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($post_id)) {
+				$external_url = function_exists('vms_event_plan_get_external_ticket_url')
+					? vms_event_plan_get_external_ticket_url($post_id)
+					: '';
+				if ($external_url === '') {
+					$errors[] = __('External Ticketing requires a complete http:// or https:// ticket purchase URL before this Event Plan can be marked Ready or published.', 'backstage-venue-manager');
+				}
+			}
 
             $comp_structure     = (string) get_post_meta($post_id, '_vms_comp_structure', true);
             if ($comp_structure === '') $comp_structure = 'flat_fee';
@@ -14847,6 +14941,10 @@ if (function_exists('vms_add_admin_notice')) {
                     vms_event_plan_backfill_tec_event_author($post_id, $tec_event_id, 'vms_publish_event_to_calendar');
                 }
 
+				if (function_exists('vms_tec_finalize_event_url_sync')) {
+					vms_tec_finalize_event_url_sync($tec_event_id, $args);
+				}
+
                 if ($sync_signature !== '') {
                     update_post_meta($post_id, $signature_key, $sync_signature);
                     update_post_meta($post_id, '_vms_tec_last_sync_at', time());
@@ -14945,6 +15043,10 @@ if (function_exists('vms_add_admin_notice')) {
                 if (function_exists('vms_event_plan_backfill_tec_event_author')) {
                     vms_event_plan_backfill_tec_event_author($post_id, $tec_event_id, 'vms_resync_event_to_calendar');
                 }
+
+				if (function_exists('vms_tec_finalize_event_url_sync')) {
+					vms_tec_finalize_event_url_sync($tec_event_id, $args);
+				}
 
                 delete_post_meta($tec_event_id, '_EventOrganizerID');
 
@@ -15092,16 +15194,20 @@ if (function_exists('vms_add_admin_notice')) {
             // (We can add a proper "Default Organizer" setting later.)
             // $organizer_id = vms_tec_get_tec_organizer_id_for_plan($post_id);
 
-            // Ticket URL (optional).
-            $ticket_url = vms_tec_get_ticket_url_for_plan($post_id);
-            if ($ticket_url) {
-                $args['EventURL'] = esc_url_raw($ticket_url);
+            // TEC Event Website is distinct from the ticket-purchase destination.
+            // Preserve independent website data and only set/clear values VMS owns.
+            foreach (vms_tec_build_event_url_args($post_id, $existing_tec_id) as $event_url_key => $event_url_value) {
+                $args[$event_url_key] = $event_url_value;
             }
 
             // Cost (optional).
             $cost = vms_tec_build_event_cost_string($post_id);
             if ($cost !== '') {
                 $args['EventCost'] = $cost;
+			} elseif (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($post_id)) {
+				// An explicit empty collection makes the ownership intent clear to TEC;
+				// the late event-cost filter also prevents Event Tickets from reinjecting preserved native prices.
+				$args['EventCost'] = array();
             }
 
             return $args;
@@ -15390,6 +15496,11 @@ if (function_exists('vms_add_admin_notice')) {
                         'event_id' => $tec_event_id,
                     ), is_wp_error($updated) ? $updated : 'tribe_update_event_failed');
                 }
+				return;
+			}
+
+			if (function_exists('vms_tec_finalize_event_url_sync')) {
+				vms_tec_finalize_event_url_sync($tec_event_id, $args);
             }
         }
 
@@ -15505,7 +15616,7 @@ if (function_exists('vms_add_admin_notice')) {
             return 0;
         }
 
-        function vms_tec_get_ticket_url_for_plan(int $plan_id): string
+        function vms_tec_get_native_ticket_url_for_plan(int $plan_id): string
         {
             $map = get_post_meta($plan_id, '_vms_wc_product_map', true);
             if (!is_array($map)) return '';
@@ -15517,8 +15628,102 @@ if (function_exists('vms_add_admin_notice')) {
             return $url ? esc_url_raw($url) : '';
         }
 
+        function vms_tec_get_ticket_url_for_plan(int $plan_id): string
+        {
+			if (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($plan_id)) {
+				return function_exists('vms_event_plan_get_external_ticket_url')
+					? vms_event_plan_get_external_ticket_url($plan_id)
+					: '';
+			}
+
+			return vms_tec_get_native_ticket_url_for_plan($plan_id);
+		}
+
+		function vms_tec_managed_event_url_meta_key(): string
+		{
+			return '_vms_tec_managed_event_url';
+		}
+
+		/**
+		 * Mark a checkout URL written by the earlier External Ticketing implementation
+		 * before the Event Plan URL changes, so the next resync can clear it safely.
+		 */
+		function vms_tec_capture_legacy_event_url_ownership(int $plan_id, string $previous_external_url): void
+		{
+			$plan_id = absint($plan_id);
+			$previous_external_url = trim($previous_external_url);
+			if ($plan_id <= 0 || $previous_external_url === '') {
+				return;
+			}
+
+			$tec_key = function_exists('vms_meta_key') ? (string) (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
+			$event_id = absint(get_post_meta($plan_id, $tec_key, true));
+			if ($event_id <= 0) {
+				return;
+			}
+
+			$current_event_url = trim((string) get_post_meta($event_id, '_EventURL', true));
+			if ($current_event_url !== '' && hash_equals($current_event_url, $previous_external_url)) {
+				update_post_meta($event_id, vms_tec_managed_event_url_meta_key(), $current_event_url);
+			}
+		}
+
+		/**
+		 * Build only the TEC Event Website mutation VMS is allowed to make.
+		 *
+		 * @return array<string,string>
+		 */
+		function vms_tec_build_event_url_args(int $plan_id, int $existing_tec_id = 0): array
+		{
+			$plan_id = absint($plan_id);
+			$existing_tec_id = absint($existing_tec_id);
+			$is_external = function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($plan_id);
+			$external_url = function_exists('vms_event_plan_get_external_ticket_url') ? vms_event_plan_get_external_ticket_url($plan_id) : '';
+			$native_url = vms_tec_get_native_ticket_url_for_plan($plan_id);
+			$current_url = $existing_tec_id > 0 ? trim((string) get_post_meta($existing_tec_id, '_EventURL', true)) : '';
+			$managed_url = $existing_tec_id > 0 ? trim((string) get_post_meta($existing_tec_id, vms_tec_managed_event_url_meta_key(), true)) : '';
+
+			$owned_values = array_values(array_unique(array_filter(array($managed_url, $external_url, $native_url), 'strlen')));
+			$current_is_owned = $current_url !== '' && in_array($current_url, $owned_values, true);
+
+			if ($is_external) {
+				return $current_is_owned ? array('EventURL' => '') : array();
+			}
+
+			// A TEC website not recognized as VMS-managed belongs to the event editor.
+			if ($current_url !== '' && !$current_is_owned) {
+				return array();
+			}
+			if ($native_url !== '') {
+				return array('EventURL' => $native_url);
+			}
+
+			return $current_is_owned ? array('EventURL' => '') : array();
+		}
+
+		function vms_tec_finalize_event_url_sync(int $event_id, array $args): void
+		{
+			$event_id = absint($event_id);
+			if ($event_id <= 0 || !array_key_exists('EventURL', $args)) {
+				return;
+			}
+
+			$event_url = trim((string) $args['EventURL']);
+			if ($event_url === '') {
+				delete_post_meta($event_id, '_EventURL');
+				delete_post_meta($event_id, vms_tec_managed_event_url_meta_key());
+				return;
+			}
+
+			update_post_meta($event_id, vms_tec_managed_event_url_meta_key(), $event_url);
+		}
+
         function vms_tec_build_event_cost_string(int $plan_id): string
         {
+			if (function_exists('vms_event_plan_is_externally_ticketed') && vms_event_plan_is_externally_ticketed($plan_id)) {
+				return '';
+			}
+
             $from_price = function_exists('vms_ticketing_v2_get_from_price_for_display')
                 ? vms_ticketing_v2_get_from_price_for_display($plan_id)
                 : null;

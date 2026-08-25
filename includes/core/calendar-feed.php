@@ -1101,6 +1101,10 @@ if (!function_exists('vms_get_calendar_events')) {
 			if (!is_string($public_url) || trim($public_url) === '') {
 				$public_url = null;
 			}
+			$ticket_destination = function_exists('vms_event_plan_get_ticket_destination')
+				? vms_event_plan_get_ticket_destination($plan_id, is_string($public_url) ? $public_url : '')
+				: array('url' => $public_url, 'is_external' => false);
+			$ticket_url = trim((string) ($ticket_destination['url'] ?? ''));
 
 			$title = (string) get_the_title($plan_id);
 			if ($title === '') {
@@ -1173,7 +1177,8 @@ if (!function_exists('vms_get_calendar_events')) {
 				'venue_id' => (int) $venue_id,
 				'venue_name' => $venue_name,
 				'public_url' => $public_url,
-				'ticket_url' => null,
+				'ticket_url' => $ticket_url !== '' ? $ticket_url : null,
+				'ticket_is_external' => !empty($ticket_destination['is_external']),
 				'image_url' => $image_url,
 				'excerpt' => $excerpt,
 				'vendor_groups' => $vendor_groups,

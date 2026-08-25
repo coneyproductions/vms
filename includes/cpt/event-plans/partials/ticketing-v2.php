@@ -24,6 +24,92 @@ $ticket_mode_label = isset($ticket_mode_label_map[$ticket_mode]) ? (string) $tic
 $linked_tec_status_label = $linked_tec_status !== '' ? ucfirst(str_replace('_', ' ', $linked_tec_status)) : __('Not linked', 'backstage-venue-manager');
 $load_url = isset($vms_ticketing_v2_load_url) ? (string) $vms_ticketing_v2_load_url : '';
 $summary_url = isset($vms_ticketing_v2_summary_url) ? (string) $vms_ticketing_v2_summary_url : '';
+$ticketing_sales_mode = function_exists('vms_event_plan_get_ticketing_sales_mode')
+    ? vms_event_plan_get_ticketing_sales_mode($plan_id)
+    : 'serenade_range';
+$is_external_ticketing = $ticketing_sales_mode === 'external';
+$external_ticket_url = function_exists('vms_event_plan_get_external_ticket_url')
+    ? vms_event_plan_get_external_ticket_url($plan_id)
+    : (string) get_post_meta($plan_id, '_vms_external_ticket_url', true);
+$external_ticket_provider = function_exists('vms_event_plan_get_external_ticket_provider')
+    ? vms_event_plan_get_external_ticket_provider($plan_id, false)
+    : (string) get_post_meta($plan_id, '_vms_external_ticket_provider', true);
+$event_relationship = function_exists('vms_event_plan_get_relationship')
+    ? vms_event_plan_get_relationship($plan_id)
+    : 'serenade_range_produced';
+$external_event_producer = function_exists('vms_event_plan_get_external_event_producer')
+    ? vms_event_plan_get_external_event_producer($plan_id)
+    : (string) get_post_meta($plan_id, '_vms_external_event_producer', true);
+$external_event_producer_website = function_exists('vms_event_plan_get_external_event_producer_website')
+    ? vms_event_plan_get_external_event_producer_website($plan_id)
+    : (string) get_post_meta($plan_id, '_vms_external_event_producer_website', true);
+$has_native_ticket_records = function_exists('vms_event_plan_has_native_ticket_records')
+    ? vms_event_plan_has_native_ticket_records($plan_id)
+    : false;
+?>
+<div class="vms-ticketing-destination" data-vms-ticketing-destination>
+    <h4><?php esc_html_e('Ticketing Mode', 'backstage-venue-manager'); ?></h4>
+    <p class="description"><?php esc_html_e('Choose where guests complete their ticket purchase. The event remains published and promoted through SerenadeRange.com in either mode.', 'backstage-venue-manager'); ?></p>
+
+    <p class="vms-ticketing-destination__mode">
+        <label for="vms-ticketing-sales-mode"><strong><?php esc_html_e('Sales destination', 'backstage-venue-manager'); ?></strong></label>
+        <select name="vms_ticketing_sales_mode" id="vms-ticketing-sales-mode" data-vms-ticketing-sales-mode>
+            <option value="serenade_range" <?php selected($ticketing_sales_mode, 'serenade_range'); ?>><?php esc_html_e('Serenade Range Ticketing', 'backstage-venue-manager'); ?></option>
+            <option value="external" <?php selected($ticketing_sales_mode, 'external'); ?>><?php esc_html_e('External Ticketing', 'backstage-venue-manager'); ?></option>
+        </select>
+    </p>
+
+    <div class="vms-ticketing-destination__external" data-vms-external-ticketing-fields <?php echo $is_external_ticketing ? '' : 'hidden'; ?>>
+        <div class="vms-ticketing-destination__field">
+            <label for="vms-external-ticket-url"><strong><?php esc_html_e('External ticket purchase URL', 'backstage-venue-manager'); ?></strong> <span aria-hidden="true">*</span></label>
+            <input type="url" class="widefat" id="vms-external-ticket-url" name="vms_external_ticket_url" value="<?php echo esc_attr($external_ticket_url); ?>" placeholder="https://tickets.example.com/event" inputmode="url" aria-describedby="vms-external-ticket-url-help">
+            <p id="vms-external-ticket-url-help" class="description"><?php esc_html_e('Required before Ready or Publish. Only complete http:// or https:// purchase links are accepted.', 'backstage-venue-manager'); ?></p>
+        </div>
+
+        <div class="vms-ticketing-destination__field">
+            <label for="vms-external-ticket-provider"><strong><?php esc_html_e('Ticket seller/provider', 'backstage-venue-manager'); ?></strong></label>
+            <input type="text" class="regular-text" id="vms-external-ticket-provider" name="vms_external_ticket_provider" value="<?php echo esc_attr($external_ticket_provider); ?>" placeholder="Eventbrite">
+            <p class="description"><?php esc_html_e('Optional. If blank, public copy will say “external ticket provider.”', 'backstage-venue-manager'); ?></p>
+        </div>
+
+        <div class="vms-ticketing-destination__field">
+            <label for="vms-event-relationship"><strong><?php esc_html_e('Event presentation', 'backstage-venue-manager'); ?></strong></label>
+            <select name="vms_event_relationship" id="vms-event-relationship" data-vms-event-relationship>
+                <option value="serenade_range_produced" <?php selected($event_relationship, 'serenade_range_produced'); ?>><?php esc_html_e('Serenade Range-produced event', 'backstage-venue-manager'); ?></option>
+                <option value="hosted_third_party" <?php selected($event_relationship, 'hosted_third_party'); ?>><?php esc_html_e('Hosted at Serenade Range / third-party produced', 'backstage-venue-manager'); ?></option>
+            </select>
+        </div>
+
+        <div data-vms-external-producer-fields <?php echo $event_relationship === 'hosted_third_party' ? '' : 'hidden'; ?>>
+            <div class="vms-ticketing-destination__field">
+                <label for="vms-external-event-producer"><strong><?php esc_html_e('Presenter/producer', 'backstage-venue-manager'); ?></strong></label>
+                <input type="text" class="regular-text" id="vms-external-event-producer" name="vms_external_event_producer" value="<?php echo esc_attr($external_event_producer); ?>" placeholder="ABC Promotions">
+                <p class="description"><?php esc_html_e('Optional. Public pages will use “Presented by …” when supplied.', 'backstage-venue-manager'); ?></p>
+            </div>
+
+            <div class="vms-ticketing-destination__field">
+                <label for="vms-external-event-producer-website"><strong><?php esc_html_e('Presenter/producer website', 'backstage-venue-manager'); ?></strong></label>
+                <input type="url" class="regular-text" id="vms-external-event-producer-website" name="vms_external_event_producer_website" value="<?php echo esc_attr($external_event_producer_website); ?>" placeholder="https://presenter.example.com" inputmode="url" aria-describedby="vms-external-event-producer-website-help">
+                <p id="vms-external-event-producer-website-help" class="description"><?php esc_html_e('Optional. Only complete http:// or https:// links are accepted; the presenter name will link to this site.', 'backstage-venue-manager'); ?></p>
+            </div>
+        </div>
+
+        <div class="notice notice-info inline vms-notice vms-notice--info">
+            <p><?php esc_html_e('This event will stay on SerenadeRange.com, but ticket purchases will be completed on the external seller’s site.', 'backstage-venue-manager'); ?></p>
+        </div>
+
+        <?php if ($has_native_ticket_records) : ?>
+            <div class="notice notice-warning inline vms-notice vms-notice--warning" data-vms-native-ticket-record-warning>
+                <p><strong><?php esc_html_e('Existing native ticket records are preserved.', 'backstage-venue-manager'); ?></strong> <?php esc_html_e('They will not be offered publicly or accept new purchases while External Ticketing is active. Switching back restores the normal native workflow; no products, inventory, or order history will be deleted.', 'backstage-venue-manager'); ?></p>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+<?php
+
+if ($is_external_ticketing) {
+    return;
+}
 
 if ($render_mode !== 'full') {
     if (function_exists('vms_event_plan_perf_log')) {

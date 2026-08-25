@@ -286,6 +286,14 @@ function vms_meta_keys(): array
 'ticketing_config_v2' => '_vms_ticketing_config_v2',
 'ticketing_sync_v2'   => '_vms_ticketing_sync_v2',
 'ticketing_stats_v2'  => '_vms_ticketing_stats_v2',
+			// Public sales destination: serenade_range | external (missing = serenade_range)
+			'ticketing_sales_mode' => '_vms_ticketing_sales_mode',
+			'external_ticket_url' => '_vms_external_ticket_url',
+			'external_ticket_provider' => '_vms_external_ticket_provider',
+			// Public presentation: serenade_range_produced | hosted_third_party
+			'event_relationship' => '_vms_event_relationship',
+			'external_event_producer' => '_vms_external_event_producer',
+			'external_event_producer_website' => '_vms_external_event_producer_website',
 			// Ticketing enabled override: on | off | inherit (missing)
 			'ticketing_enabled_override' => '_vms_ticketing_enabled_override',
 // One-time snapshot used only when migrating legacy tier-based payloads to v2
