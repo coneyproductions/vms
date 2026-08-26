@@ -1,5 +1,41 @@
 # WordPress.org Metadata Audit
 
+## Reviewer Identity Alignment Phase A Update
+
+Date: 2026-08-25
+
+This supplement supersedes the older current-state filename and tested-version language below without rewriting the historical audit record.
+
+### Current public identity
+
+- Public plugin name: `Backstage Venue Manager`
+- WordPress.org slug and text domain: `backstage-venue-manager`
+- Canonical public main file: `backstage-venue-manager/backstage-venue-manager.php`
+- Legacy same-directory filename bridge: `backstage-venue-manager/vendor-management-system.php`, intentionally headerless
+- Plugin-header count in the public package: exactly one, in `backstage-venue-manager.php`
+- Public version: `1.2.0`
+- Tested up to: WordPress `7.1`, backed by the Phase A disposable lifecycle harness
+
+The public/admin product-name pass aligns the top-level menu, dashboard welcome, settings and navigation headings, documentation/reference pages, guided tours, notices, email/CLI headings, and product-agent copy with `Backstage Venue Manager`. Operational compatibility terms such as `VMS-managed`, `VMS-native`, VMS ticket intent/map labels, and internal `vms_*` identifiers remain intentionally unchanged pending reviewer prefix clarification.
+
+### Filename compatibility boundary
+
+- Fresh public installs activate through the canonical main file.
+- An active same-directory legacy filename loads the headerless bridge, registers the legacy activation/deactivation hooks, and migrates single-site or multisite active-plugin basename state to the canonical filename without adding a second Plugins-screen entry.
+- The exact `vms/vendor-management-system.php` to `backstage-venue-manager/backstage-venue-manager.php` directory-and-filename transition is handled as a controlled replacement by the release compatibility harness; the in-package bridge cannot safely rewrite a basename after an updater has removed the old directory.
+- The legacy `/vms/` Plugin URI remains because it is a live public documentation route; the corresponding `/backstage-venue-manager/` route was not available during Phase A verification. The URL is not being used as the product display name.
+
+### Current verification artifact
+
+- Source commit: `3c783f8474d471970e90211024858cb22767596e`
+- Candidate ZIP: `/private/tmp/bvm-wporg-identity-phase-a/artifacts/backstage-venue-manager-1.2.0-public-release.zip`
+- SHA-256: `e2b7546b7dde917208db7cf12a6100feaaa8ac1d3b965daca83b7d552e70cf81`
+- Package build: `PASS`; `374` files staged, `271` PHP files linted, and `55` JavaScript files syntax-checked
+- Strict Plugin Check: exit `0`, empty stderr, and the unchanged verified nonblocking set of `125` findings across the same three rule codes; no finding is associated with the canonical bootstrap, legacy bridge, or basename-compatibility layer
+- Exact-hash disposable compatibility result: `WARN` only for dependency-stack PHP 8.5 deprecations plus one non-fatal interruption-path warning; no fatal occurred, all admin/public boots passed, lifecycle and upgrade fixtures were preserved, and uninstall preservation passed
+
+No upload, reviewer reply, push, deployment, production/staging change, tag, live-tree synchronization, or broad prefix migration is authorized or claimed by this supplement.
+
 ## Current Submission Boundary Update
 
 Date: 2026-07-25
