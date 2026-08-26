@@ -462,6 +462,12 @@ final class VMS_Public_Release_Tooling
 	{
 		return array(
 			array(
+				'id' => 'wporg-prefix-manifest-guardrails',
+				'label' => 'WordPress.org prefix manifest and migration guardrails',
+				'path' => 'tests/wporg-prefix-manifest-guardrails.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'plugin-identity-alignment',
 				'label' => 'Canonical plugin identity and basename migration regression',
 				'path' => 'tests/plugin-identity-alignment.php',
