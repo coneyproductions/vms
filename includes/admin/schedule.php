@@ -378,8 +378,8 @@ function vms_render_schedule_page_content(): void
     $user_id = (int) get_current_user_id();
 
     // Canonical schedule "current venue" key (helpers.php defines this constant).
-    $sch_venue_meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $sch_venue_meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     // View + scope come from URL (view mode only; do NOT store as current venue).
@@ -392,8 +392,8 @@ function vms_render_schedule_page_content(): void
         $view = 'calendar';
     }
 
-    $scope_meta_key = defined('VMS_SCH_CURRENT_SCOPE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_SCOPE_META_KEY
+    $scope_meta_key = defined('BVMGR_SCH_CURRENT_SCOPE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_SCOPE_META_KEY
         : '_vms_schedule_scope';
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule scope selection only affects this admin view and stored user preference state.

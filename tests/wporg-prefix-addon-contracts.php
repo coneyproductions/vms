@@ -26,7 +26,8 @@ foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
 	foreach ((array) $entries as $entry) {
 		if (is_string($entry['canonical_target'] ?? null) && $entry['canonical_target'] !== '') {
 			$coreCanonicalByKind[$kind][$entry['canonical_target']] = true;
-			$coreCanonicalByCurrent[$kind][$entry['current_identifier']] = $entry['canonical_target'];
+			$legacy = $entry['legacy_identifier'] ?? $entry['current_identifier'];
+			$coreCanonicalByCurrent[$kind][$legacy] = $entry['canonical_target'];
 		}
 	}
 }

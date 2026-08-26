@@ -235,11 +235,11 @@ add_filter('redirect_post_location', 'vms_event_plan_force_redirect_post_locatio
 if (!function_exists('vms_event_plan_runtime_redirect_targets')) {
     function &vms_event_plan_runtime_redirect_targets(): array
     {
-        if (!isset($GLOBALS['vms_event_plan_runtime_redirect_targets']) || !is_array($GLOBALS['vms_event_plan_runtime_redirect_targets'])) {
-            $GLOBALS['vms_event_plan_runtime_redirect_targets'] = array();
+        if (!isset($GLOBALS['bvmgr_event_plan_runtime_redirect_targets']) || !is_array($GLOBALS['bvmgr_event_plan_runtime_redirect_targets'])) {
+            $GLOBALS['bvmgr_event_plan_runtime_redirect_targets'] = array();
         }
 
-        return $GLOBALS['vms_event_plan_runtime_redirect_targets'];
+        return $GLOBALS['bvmgr_event_plan_runtime_redirect_targets'];
     }
 }
 
@@ -614,7 +614,7 @@ if (!function_exists('vms_event_plan_create_rescheduled_draft')) {
 /**
  * Admin functionality for VMS Event Plans.
  */
-class VMS_Admin_Event_Plans
+class BVMGR_Admin_Event_Plans
 {
     private $event_plan_admin_boot_cache = array();
 
@@ -11330,7 +11330,7 @@ if (function_exists('vms_add_admin_notice')) {
          * Bootstrap admin hooks for Event Plans.
          */
         if (is_admin()) {
-            new VMS_Admin_Event_Plans();
+            new BVMGR_Admin_Event_Plans();
         }
 
 
@@ -11873,12 +11873,12 @@ if (function_exists('vms_add_admin_notice')) {
              */
             function vms_event_plan_editor_register_detached_form(string $form_id, string $method, string $action, array $hidden_fields = array()): void
             {
-                global $vms_event_plan_editor_detached_forms;
-                if (!is_array($vms_event_plan_editor_detached_forms)) {
-                    $vms_event_plan_editor_detached_forms = array();
+                global $bvmgr_event_plan_editor_detached_forms;
+                if (!is_array($bvmgr_event_plan_editor_detached_forms)) {
+                    $bvmgr_event_plan_editor_detached_forms = array();
                 }
 
-                $vms_event_plan_editor_detached_forms[$form_id] = array(
+                $bvmgr_event_plan_editor_detached_forms[$form_id] = array(
                     'method' => (strtolower($method) === 'get') ? 'get' : 'post',
                     'action' => esc_url_raw($action),
                     'hidden_fields' => $hidden_fields,
@@ -11889,12 +11889,12 @@ if (function_exists('vms_add_admin_notice')) {
         if (!function_exists('vms_event_plan_editor_render_detached_forms')) {
             function vms_event_plan_editor_render_detached_forms(): void
             {
-                global $vms_event_plan_editor_detached_forms;
-                if (!is_array($vms_event_plan_editor_detached_forms) || empty($vms_event_plan_editor_detached_forms)) {
+                global $bvmgr_event_plan_editor_detached_forms;
+                if (!is_array($bvmgr_event_plan_editor_detached_forms) || empty($bvmgr_event_plan_editor_detached_forms)) {
                     return;
                 }
 
-                foreach ($vms_event_plan_editor_detached_forms as $form_id => $form) {
+                foreach ($bvmgr_event_plan_editor_detached_forms as $form_id => $form) {
                     $form_id = sanitize_html_class((string) $form_id);
                     $method = (($form['method'] ?? 'post') === 'get') ? 'get' : 'post';
                     $action = esc_url((string) ($form['action'] ?? ''));
@@ -14133,7 +14133,7 @@ if (function_exists('vms_add_admin_notice')) {
 					}
 				}
 
-				$target_version = defined('VMS_VERSION') ? (string) VMS_VERSION : 'dev';
+				$target_version = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : 'dev';
 				$marker_option = 'vms_event_plan_legacy_ticket_cleanup_version';
 				$last_version = (string) get_option($marker_option, '');
 				if ($last_version === $target_version) {
@@ -14232,7 +14232,7 @@ if (function_exists('vms_add_admin_notice')) {
 					return;
 				}
 
-				$target_version = defined('VMS_VERSION') ? (string) VMS_VERSION : 'dev';
+				$target_version = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : 'dev';
 				if ((string) get_option('vms_event_plan_legacy_ticket_cleanup_version', '') === $target_version) {
 					return;
 				}

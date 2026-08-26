@@ -157,11 +157,11 @@ if (!function_exists('vms_staff_cpt_admin_enqueue_assets')) {
 
         $version = function_exists('vms_asset_version')
             ? vms_asset_version()
-            : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+            : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
             'vms-staff-cpt-admin',
-            VMS_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js',
+            BVMGR_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js',
             array(),
             $version,
             true

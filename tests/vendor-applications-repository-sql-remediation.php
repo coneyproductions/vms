@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/');
-define('VMS_VENDOR_APP_CPT', 'vms_vendor_app');
-define('VMS_VENDOR_APP_CPT_LEGACY', 'vms_vendor_application');
-define('VMS_VENDOR_CPT', 'vms_vendor');
+define('BVMGR_VENDOR_APP_CPT', 'vms_vendor_app');
+define('BVMGR_VENDOR_APP_CPT_LEGACY', 'vms_vendor_application');
+define('BVMGR_VENDOR_CPT', 'vms_vendor');
 
 final class WP_Error
 {
@@ -136,7 +136,7 @@ function add_option(string $key, $value, string $deprecated = '', $autoload = nu
 /** @return string[] */
 function vms_vendor_app_cpt_slugs(): array
 {
-	return array(VMS_VENDOR_APP_CPT, VMS_VENDOR_APP_CPT_LEGACY);
+	return array(BVMGR_VENDOR_APP_CPT, BVMGR_VENDOR_APP_CPT_LEGACY);
 }
 
 function vms_vendor_app_meta_key(string $field): string
@@ -626,13 +626,13 @@ $invalid_migration_source = str_replace(
 );
 g11_vendor_same(1, $rename_count, 'Invalid migration test must rename the owned function once.');
 $invalid_migration_source = str_replace(
-	'$canonical = sanitize_key((string) VMS_VENDOR_APP_CPT);',
+	'$canonical = sanitize_key((string) BVMGR_VENDOR_APP_CPT);',
 	'$canonical = sanitize_key((string) $GLOBALS[\'g11_vendor_invalid_canonical\']);',
 	$invalid_migration_source,
 	$canonical_replacement_count
 );
 $invalid_migration_source = str_replace(
-	'$legacy = sanitize_key((string) VMS_VENDOR_APP_CPT_LEGACY);',
+	'$legacy = sanitize_key((string) BVMGR_VENDOR_APP_CPT_LEGACY);',
 	'$legacy = sanitize_key((string) $GLOBALS[\'g11_vendor_invalid_legacy\']);',
 	$invalid_migration_source,
 	$legacy_replacement_count

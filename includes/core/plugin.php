@@ -22,7 +22,7 @@ if (!function_exists('vms_core')) {
 	{
 		return [
 			'slug'    => 'vms',
-			'version' => defined('VMS_VERSION') ? VMS_VERSION : '0.2.24.456',
+			'version' => defined('BVMGR_VERSION') ? BVMGR_VERSION : '0.2.24.456',
 		];
 	}
 }
@@ -109,19 +109,19 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 		return;
 	}
 
-	$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+	$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
  
 	// Shared foundation
 	wp_enqueue_style(
 		'vms-shared',
-		VMS_PLUGIN_URL . 'assets/css/vms-shared.css',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-shared.css',
 		[],
 		$ver
 	);
 
 	wp_enqueue_style(
 		'vms-ui',
-		VMS_PLUGIN_URL . 'assets/css/vms-ui.css',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-ui.css',
 		['vms-shared'],
 		$ver
 	);
@@ -129,7 +129,7 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 	// Admin-specific
 	wp_enqueue_style(
 		'vms-admin',
-		VMS_PLUGIN_URL . 'assets/css/vms-admin.css',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-admin.css',
 		['vms-ui'],
 		$ver
 	);
@@ -137,7 +137,7 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 	// Prevent accidental mouse-wheel changes on number fields across VMS screens.
 	wp_enqueue_script(
 		'vms-number-input-guard',
-		VMS_PLUGIN_URL . 'assets/vms-number-input-guard.js',
+		BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
 		[],
 		$ver,
 		true
@@ -152,7 +152,7 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 	if ($help_mode !== 'off') {
 		wp_enqueue_script(
 			'vms-help-tooltips',
-			VMS_PLUGIN_URL . 'assets/admin-help-tooltips.js',
+			BVMGR_PLUGIN_URL . 'assets/admin-help-tooltips.js',
 			[],
 			$ver,
 			true
@@ -169,19 +169,19 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
  */
 add_action('wp_enqueue_scripts', function (): void {
 
-	$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+	$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 
 	// Shared foundation
 	wp_enqueue_style(
 		'vms-shared',
-		VMS_PLUGIN_URL . 'assets/css/vms-shared.css',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-shared.css',
 		[],
 		$ver
 	);
 
 	wp_enqueue_style(
 		'vms-ui',
-		VMS_PLUGIN_URL . 'assets/css/vms-ui.css',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-ui.css',
 		['vms-shared'],
 		$ver
 	);
@@ -189,7 +189,7 @@ add_action('wp_enqueue_scripts', function (): void {
 	// Prevent accidental mouse-wheel changes on number fields across VMS public forms.
 	wp_enqueue_script(
 		'vms-number-input-guard',
-		VMS_PLUGIN_URL . 'assets/vms-number-input-guard.js',
+		BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
 		[],
 		$ver,
 		true
@@ -198,8 +198,8 @@ add_action('wp_enqueue_scripts', function (): void {
 	// Register portal stylesheet so the shortcode can enqueue it even when the page builder
 	// does not store the shortcode in post_content (the has_shortcode() guard would miss).
 	$portal_ver = $ver;
-	if (defined('VMS_PLUGIN_PATH')) {
-		$portal_file = VMS_PLUGIN_PATH . 'assets/css/vms-portal.css';
+	if (defined('BVMGR_PLUGIN_PATH')) {
+		$portal_file = BVMGR_PLUGIN_PATH . 'assets/css/vms-portal.css';
 		if (file_exists($portal_file)) {
 			$portal_ver = (string) @filemtime($portal_file);
 		}
@@ -207,7 +207,7 @@ add_action('wp_enqueue_scripts', function (): void {
 
 	wp_register_style(
 		'vms-portal',
-		VMS_PLUGIN_URL . 'assets/css/vms-portal.css',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-portal.css',
 		['vms-ui'],
 		$portal_ver
 	);
@@ -232,7 +232,7 @@ add_action('wp_enqueue_scripts', function (): void {
  */
 add_action('plugins_loaded', function (): void {
 	if (defined('WP_INSTALLING') && WP_INSTALLING) return;
-	if (!defined('VMS_PLUGIN_PATH')) return;
+	if (!defined('BVMGR_PLUGIN_PATH')) return;
 	if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) return;
 
 	if (function_exists('vms_require_internal_file') && !vms_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_runtime', 'Database migration checks')) {

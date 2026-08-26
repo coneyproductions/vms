@@ -7,14 +7,14 @@
 
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_CPT_FEEDBACK_RESPONSE')) {
-	define('VMS_CPT_FEEDBACK_RESPONSE', 'vms_feedback');
+if (!defined('BVMGR_CPT_FEEDBACK_RESPONSE')) {
+	define('BVMGR_CPT_FEEDBACK_RESPONSE', 'vms_feedback');
 }
 
 if (!function_exists('vms_register_feedback_response_cpt')) {
 	function vms_register_feedback_response_cpt(): void
 	{
-		register_post_type(VMS_CPT_FEEDBACK_RESPONSE, array(
+		register_post_type(BVMGR_CPT_FEEDBACK_RESPONSE, array(
 			'labels' => array(
 				'name' => __('Event Feedback', 'backstage-venue-manager'),
 				'singular_name' => __('Event Feedback Response', 'backstage-venue-manager'),
@@ -666,7 +666,7 @@ if (!function_exists('vms_feedback_get_responses')) {
 	function vms_feedback_get_responses(int $event_plan_id = 0, int $limit = 200): array
 	{
 		$args = array(
-			'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+			'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 			'post_status' => array('private', 'publish'),
 			'posts_per_page' => $limit,
 			'orderby' => 'date',
@@ -893,7 +893,7 @@ if (!function_exists('vms_feedback_existing_response_by_meta')) {
 			return 0;
 		}
 		$matches = get_posts(array(
-			'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+			'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 			'post_status' => array('private', 'publish'),
 			'posts_per_page' => 1,
 			'fields' => 'ids',
@@ -927,7 +927,7 @@ if (!function_exists('vms_feedback_existing_recent_duplicate')) {
 		}
 
 		$matches = get_posts(array(
-			'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+			'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 			'post_status' => array('private', 'publish'),
 			'posts_per_page' => 1,
 			'fields' => 'ids',

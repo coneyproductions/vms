@@ -260,13 +260,13 @@ add_action('admin_menu', function () {
   );
 
 
-  if ((defined('VMS_VENDOR_APP_CPT') && post_type_exists(VMS_VENDOR_APP_CPT)) || post_type_exists('vms_vendor_application')) {
+  if ((defined('BVMGR_VENDOR_APP_CPT') && post_type_exists(BVMGR_VENDOR_APP_CPT)) || post_type_exists('vms_vendor_application')) {
     add_submenu_page(
       $parent_slug,
       __('Vendor Applications', 'backstage-venue-manager'),
       __('Vendor Applications', 'backstage-venue-manager'),
       $capability,
-      defined('VMS_VENDOR_APP_CPT') ? ('edit.php?post_type=' . VMS_VENDOR_APP_CPT) : 'edit.php?post_type=vms_vendor_app'
+      defined('BVMGR_VENDOR_APP_CPT') ? ('edit.php?post_type=' . BVMGR_VENDOR_APP_CPT) : 'edit.php?post_type=vms_vendor_app'
     );
   }
 

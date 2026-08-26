@@ -22,8 +22,8 @@ if (!function_exists('vms_event_details_sidebar_rendered')) {
             return false;
         }
 
-        $rendered = isset($GLOBALS['vms_event_details_sidebar_rendered']) && is_array($GLOBALS['vms_event_details_sidebar_rendered'])
-            ? $GLOBALS['vms_event_details_sidebar_rendered']
+        $rendered = isset($GLOBALS['bvmgr_event_details_sidebar_rendered']) && is_array($GLOBALS['bvmgr_event_details_sidebar_rendered'])
+            ? $GLOBALS['bvmgr_event_details_sidebar_rendered']
             : array();
 
         return !empty($rendered[$event_id]);
@@ -38,11 +38,11 @@ if (!function_exists('vms_event_details_mark_sidebar_rendered')) {
             return;
         }
 
-        if (!isset($GLOBALS['vms_event_details_sidebar_rendered']) || !is_array($GLOBALS['vms_event_details_sidebar_rendered'])) {
-            $GLOBALS['vms_event_details_sidebar_rendered'] = array();
+        if (!isset($GLOBALS['bvmgr_event_details_sidebar_rendered']) || !is_array($GLOBALS['bvmgr_event_details_sidebar_rendered'])) {
+            $GLOBALS['bvmgr_event_details_sidebar_rendered'] = array();
         }
 
-        $GLOBALS['vms_event_details_sidebar_rendered'][$event_id] = true;
+        $GLOBALS['bvmgr_event_details_sidebar_rendered'][$event_id] = true;
     }
 }
 
@@ -54,8 +54,8 @@ if (!function_exists('vms_event_details_sidebar_manual_rendered')) {
             return false;
         }
 
-        $rendered = isset($GLOBALS['vms_event_details_sidebar_manual_rendered']) && is_array($GLOBALS['vms_event_details_sidebar_manual_rendered'])
-            ? $GLOBALS['vms_event_details_sidebar_manual_rendered']
+        $rendered = isset($GLOBALS['bvmgr_event_details_sidebar_manual_rendered']) && is_array($GLOBALS['bvmgr_event_details_sidebar_manual_rendered'])
+            ? $GLOBALS['bvmgr_event_details_sidebar_manual_rendered']
             : array();
 
         return !empty($rendered[$event_id]);
@@ -70,11 +70,11 @@ if (!function_exists('vms_event_details_mark_sidebar_manual_rendered')) {
             return;
         }
 
-        if (!isset($GLOBALS['vms_event_details_sidebar_manual_rendered']) || !is_array($GLOBALS['vms_event_details_sidebar_manual_rendered'])) {
-            $GLOBALS['vms_event_details_sidebar_manual_rendered'] = array();
+        if (!isset($GLOBALS['bvmgr_event_details_sidebar_manual_rendered']) || !is_array($GLOBALS['bvmgr_event_details_sidebar_manual_rendered'])) {
+            $GLOBALS['bvmgr_event_details_sidebar_manual_rendered'] = array();
         }
 
-        $GLOBALS['vms_event_details_sidebar_manual_rendered'][$event_id] = true;
+        $GLOBALS['bvmgr_event_details_sidebar_manual_rendered'][$event_id] = true;
     }
 }
 
@@ -85,13 +85,13 @@ if (!function_exists('vms_event_details_enqueue_assets')) {
             return;
         }
 
-        $asset_path = defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . 'assets/css/vms-event-details.css' : '';
-        $asset_url = defined('VMS_PLUGIN_URL') ? VMS_PLUGIN_URL . 'assets/css/vms-event-details.css' : '';
+        $asset_path = defined('BVMGR_PLUGIN_PATH') ? BVMGR_PLUGIN_PATH . 'assets/css/vms-event-details.css' : '';
+        $asset_url = defined('BVMGR_PLUGIN_URL') ? BVMGR_PLUGIN_URL . 'assets/css/vms-event-details.css' : '';
         if ($asset_path === '' || $asset_url === '' || !is_readable($asset_path)) {
             return;
         }
 
-        $ver = (string) (defined('VMS_VERSION') ? VMS_VERSION : '');
+        $ver = (string) (defined('BVMGR_VERSION') ? BVMGR_VERSION : '');
         $file_ver = @filemtime($asset_path);
         if ($file_ver) {
             $ver = (string) $file_ver;

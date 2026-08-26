@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 function vms_ticket_inventory_forensics_schema_option_key(): string
 {
-	return defined('VMS_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION')
-		? (string) VMS_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION
+	return defined('BVMGR_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION')
+		? (string) BVMGR_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION
 		: 'vms_ticket_inventory_audit_db_schema_version';
 }
 
@@ -16,8 +16,8 @@ function vms_ticket_inventory_forensics_schema_target(): string
 function vms_ticket_inventory_forensics_table_name(): string
 {
 	global $wpdb;
-	$suffix = defined('VMS_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX')
-		? (string) VMS_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX
+	$suffix = defined('BVMGR_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX')
+		? (string) BVMGR_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX
 		: 'vms_ticket_inventory_audit';
 	return $wpdb->prefix . $suffix;
 }
@@ -1022,7 +1022,7 @@ function vms_ticket_inventory_forensics_decode_json_field($value): array
 
 function vms_ticket_inventory_forensics_pending_store(): array
 {
-	$store = $GLOBALS['vms_ticket_inventory_forensics_pending_meta'] ?? array();
+	$store = $GLOBALS['bvmgr_ticket_inventory_forensics_pending_meta'] ?? array();
 	return is_array($store) ? $store : array();
 }
 
@@ -1035,7 +1035,7 @@ function vms_ticket_inventory_forensics_enqueue_pending(string $operation, int $
 	}
 
 	$store[$key][] = $row;
-	$GLOBALS['vms_ticket_inventory_forensics_pending_meta'] = $store;
+	$GLOBALS['bvmgr_ticket_inventory_forensics_pending_meta'] = $store;
 }
 
 function vms_ticket_inventory_forensics_dequeue_pending(string $operation, int $object_id, string $meta_key): array
@@ -1051,7 +1051,7 @@ function vms_ticket_inventory_forensics_dequeue_pending(string $operation, int $
 		}
 	}
 
-	$GLOBALS['vms_ticket_inventory_forensics_pending_meta'] = $store;
+	$GLOBALS['bvmgr_ticket_inventory_forensics_pending_meta'] = $store;
 	return is_array($row) ? $row : array();
 }
 
@@ -1775,12 +1775,12 @@ function vms_ticket_inventory_forensics_sellability_is_open(string $state)
 
 function vms_ticket_inventory_forensics_reset_runtime_caches(): void
 {
-	$GLOBALS['vms_ticket_inventory_forensics_sold_context_cache'] = array();
+	$GLOBALS['bvmgr_ticket_inventory_forensics_sold_context_cache'] = array();
 }
 
 function vms_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array $product_snapshot, array $ticket_snapshot, array $entitlement_snapshot, string $role): array
 {
-	$cache = $GLOBALS['vms_ticket_inventory_forensics_sold_context_cache'] ?? array();
+	$cache = $GLOBALS['bvmgr_ticket_inventory_forensics_sold_context_cache'] ?? array();
 	if (!is_array($cache)) {
 		$cache = array();
 	}
@@ -1839,7 +1839,7 @@ function vms_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array
 		'helper_message' => $helper_message,
 		'ignored_total_sales' => $ignored_total_sales ? 1 : 0,
 	);
-	$GLOBALS['vms_ticket_inventory_forensics_sold_context_cache'] = $cache;
+	$GLOBALS['bvmgr_ticket_inventory_forensics_sold_context_cache'] = $cache;
 
 	return $cache[$cache_key];
 }

@@ -1791,8 +1791,8 @@ function vms_render_settings_page()
 
 function vms_render_settings_page_content(bool $include_ticketing_stock_notice_placeholder = false)
 {
-  if (defined('VMS_VERSION')) {
-    echo '<p class="description">' . esc_html__('Plugin version:', 'backstage-venue-manager') . ' ' . esc_html((string) VMS_VERSION) . '</p>';
+  if (defined('BVMGR_VERSION')) {
+    echo '<p class="description">' . esc_html__('Plugin version:', 'backstage-venue-manager') . ' ' . esc_html((string) BVMGR_VERSION) . '</p>';
   }
   echo '<form method="post" action="options.php">';
   settings_fields('vms_settings_group');

@@ -15,7 +15,7 @@ require_once __DIR__ . '/../../core/registry/constants.php';
 function vms_vendor_tax_export_button()
 {
 	global $typenow;
-	if ($typenow !== VMS_CPT_VENDOR) return;
+	if ($typenow !== BVMGR_CPT_VENDOR) return;
 	if (!current_user_can('manage_options')) return;
 
 	$url = wp_nonce_url(
@@ -35,7 +35,7 @@ function vms_vendor_tax_export_csv_adminpost()
 	$k_done = vms_meta_key('vendor', 'tax_profile_completed_at');
 
 	$vendor_ids = get_posts(array(
-		'post_type'      => VMS_CPT_VENDOR,
+		'post_type'      => BVMGR_CPT_VENDOR,
 		'post_status'    => 'any',
 		'posts_per_page' => -1,
 		'orderby'        => 'title',

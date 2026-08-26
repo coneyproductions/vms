@@ -468,6 +468,12 @@ final class VMS_Public_Release_Tooling
 				'required' => true,
 			),
 			array(
+				'id' => 'wporg-prefix-b2-foundation',
+				'label' => 'WordPress.org B2 global-symbol and bootstrap foundation',
+				'path' => 'tests/wporg-prefix-b2-foundation.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'plugin-identity-alignment',
 				'label' => 'Canonical plugin identity and basename migration regression',
 				'path' => 'tests/plugin-identity-alignment.php',
@@ -546,9 +552,9 @@ final class VMS_Public_Release_Tooling
 		$migrationsFile = $pluginRoot . DIRECTORY_SEPARATOR . 'includes/db/migrations.php';
 		$excludeManifest = $pluginRoot . DIRECTORY_SEPARATOR . 'release-public-excludes.txt';
 		$header = self::readPluginHeader($entryFile);
-		$internalSlug = self::extractDefineValue($constantsFile, 'VMS_PLUGIN_SLUG') ?? basename($pluginRoot);
+		$internalSlug = self::extractDefineValue($constantsFile, 'BVMGR_PLUGIN_SLUG') ?? basename($pluginRoot);
 		$publicSlug = self::publicPluginSlug();
-		$version = self::extractDefineValue($constantsFile, 'VMS_VERSION') ?? '';
+		$version = self::extractDefineValue($constantsFile, 'BVMGR_VERSION') ?? '';
 		$buildVersion = is_readable($buildFile) ? trim((string) file_get_contents($buildFile)) : '';
 		$migrationInfo = self::inspectVendorCoreMigrations($migrationsFile);
 		$buildNotesFile = $pluginRoot . DIRECTORY_SEPARATOR . 'BUILD-NOTES-' . $version . '.md';
@@ -695,7 +701,7 @@ final class VMS_Public_Release_Tooling
 		$internalPluginSlug = (string) ($metadata['internal_plugin_slug'] ?? '');
 		$versions = array_filter(array(
 			'plugin header' => $metadata['header_version'],
-			'VMS_VERSION' => $metadata['version'],
+			'BVMGR_VERSION' => $metadata['version'],
 			'vms-build.txt' => $metadata['build_version'],
 		), static function ($value): bool {
 			return trim((string) $value) !== '';
@@ -706,7 +712,7 @@ final class VMS_Public_Release_Tooling
 			(count($versions) === 3 && count($uniqueVersions) === 1) ? 'PASS' : 'FAIL',
 			'Version marker consistency',
 			(count($versions) === 3 && count($uniqueVersions) === 1)
-				? 'Plugin header version, VMS_VERSION, and vms-build.txt are synchronized.'
+				? 'Plugin header version, BVMGR_VERSION, and vms-build.txt are synchronized.'
 				: 'Version markers are missing or inconsistent.',
 			array(
 				'required' => true,

@@ -95,7 +95,7 @@ $assert(strpos($brokerFunction, "'mimes' => \$allowed_mimes") !== false, 'The br
 $assert(strpos($brokerFunction, "'unique_filename_callback' => static function") !== false, 'The broker should preserve the generated basename through unique_filename_callback.');
 $assert(strpos($privateFilesSource, "add_filter('upload_dir', 'vms_private_files_filter_upload_dir');") !== false, 'The broker should scope upload_dir through a dedicated filter.');
 $assert(strpos($privateFilesSource, "remove_filter('upload_dir', 'vms_private_files_filter_upload_dir');") !== false, 'The broker should remove the upload_dir filter after each upload call.');
-$assert(strpos($privateFilesSource, "unset(\$GLOBALS['vms_private_files_upload_dir_context']);") !== false, 'The broker should clear the upload_dir context after each upload call.');
+$assert(strpos($privateFilesSource, "unset(\$GLOBALS['bvmgr_private_files_upload_dir_context']);") !== false, 'The broker should clear the upload_dir context after each upload call.');
 $assert(strpos($brokerFunction, 'wp_normalize_path($handled_real) === wp_normalize_path($destination_real)') !== false, 'The broker should verify the handled path exactly matches the intended destination.');
 $assert(strpos($brokerFunction, 'vms_private_files_path_is_safe($handled_file)') !== false, 'The broker should only unlink unexpected handled files when safe.');
 $assert(strpos($brokerFunction, "\$handled['url']") === false && strpos($brokerFunction, '$handled["url"]') === false, 'The broker should not use the returned public URL.');

@@ -14,9 +14,10 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		$publicApis = self::publicApis();
 		self::markPublicApis($inventory['symbols'], $publicApis);
 		$currentProhibited = self::prohibitedBaseline($inventory['symbols']);
+		$prohibitedBaseline = self::loadProhibitedBaseline($root);
 
 		return array(
-			'schema_version' => 1,
+			'schema_version' => 2,
 			'authority' => array(
 				'document' => 'docs/WPORG_PREFIX_MIGRATION_B0.md',
 				'supplied_b0_sha256' => '7893dc878cff48e86a981771c0e52f3119a4a3202307c73ab24817bb863f3dc9',
@@ -54,8 +55,11 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			'php_inventory_counts' => $inventory['counts'],
 			'symbols' => $inventory['symbols'],
 			'dynamic_symbols' => $inventory['dynamic_symbols'],
-			'prohibited_global_baseline' => self::loadProhibitedBaseline($root),
+			'prohibited_global_baseline' => $prohibitedBaseline,
 			'current_prohibited_globals' => $currentProhibited,
+			'completed_batches' => array(
+				'B2' => self::completedB2($inventory['symbols'], $prohibitedBaseline, $currentProhibited),
+			),
 			'public_extension_apis' => $publicApis,
 			'known_addons' => self::knownAddons(),
 			'migration_state' => self::migrationState(),
@@ -179,10 +183,11 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			array('Notifications', 'function', 'vms_notify_user', 'bvmgr_notify_user', array()),
 		);
 		return array_map(static function (array $definition): array {
-			return array(
+			$completedB2 = $definition[1] === 'interface';
+			$entry = array(
 				'family' => $definition[0],
 				'type' => $definition[1],
-				'current_identifier' => $definition[2],
+				'current_identifier' => $completedB2 ? $definition[3] : $definition[2],
 				'canonical_target' => $definition[3],
 				'b0_strategy' => array(1, 8),
 				'compatibility_classification' => 'coordinated-cutover-no-public-package-legacy-wrapper',
@@ -192,6 +197,11 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 				'known_addon_consumers' => $definition[4],
 				'requires_coordinated_cutover' => true,
 			);
+			if ($completedB2) {
+				$entry['legacy_identifier'] = $definition[2];
+				$entry['migration_status'] = 'complete';
+			}
+			return $entry;
 		}, $definitions);
 	}
 
@@ -199,11 +209,12 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 	{
 		$lookup = array();
 		foreach ($publicApis as $api) {
-			$lookup[$api['current_identifier']] = $api;
+			$lookup[$api['legacy_identifier'] ?? $api['current_identifier']] = $api;
 		}
 		foreach ($symbols as &$entries) {
 			foreach ($entries as &$entry) {
-				if (isset($lookup[$entry['current_identifier']])) {
+				$lookupName = $entry['legacy_identifier'] ?? $entry['current_identifier'];
+				if (isset($lookup[$lookupName])) {
 					$entry['b0_strategy'] = array(1, 8);
 					$entry['compatibility_classification'] = 'coordinated-cutover-no-public-package-legacy-wrapper';
 					$entry['persistence_external_contract_status'] = 'plausible-external-php-api';
@@ -212,6 +223,42 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			unset($entry);
 		}
 		unset($entries);
+	}
+
+	private static function completedB2(array $symbols, array $baseline, array $currentProhibited): array
+	{
+		$symbolMap = array();
+		$unique = array('classes' => 0, 'interfaces' => 0, 'constants' => 0, 'global_slots' => 0);
+		$sites = array_fill_keys(array_keys($unique), 0);
+		foreach (array_keys($unique) as $kind) {
+			foreach ((array) ($symbols[$kind] ?? array()) as $entry) {
+				if (($entry['migration_status'] ?? '') !== 'complete' || ($entry['planned_implementation_batch'] ?? '') !== 'B2') {
+					continue;
+				}
+				$unique[$kind]++;
+				$sites[$kind] += count((array) ($entry['declaration_sites'] ?? array()));
+				$symbolMap[] = array(
+					'kind' => $kind,
+					'legacy_identifier' => $entry['legacy_identifier'],
+					'canonical_identifier' => $entry['current_identifier'],
+					'declaration_sites' => $entry['declaration_sites'],
+				);
+			}
+		}
+		usort($symbolMap, static fn(array $a, array $b): int => array($a['kind'], $a['legacy_identifier']) <=> array($b['kind'], $b['legacy_identifier']));
+		return array(
+			'status' => 'complete',
+			'scope' => 'bootstrap, global classes/interface, constants, request-global slots, and central registries',
+			'unique_symbols' => $unique,
+			'declaration_sites' => $sites,
+			'symbol_map' => $symbolMap,
+			'forbidden_global_ratchet' => array(
+				'before' => count($baseline),
+				'after' => count($currentProhibited),
+				'reduction' => count($baseline) - count($currentProhibited),
+			),
+			'b3_procedural_functions_renamed' => 0,
+		);
 	}
 
 	private static function prohibitedBaseline(array $symbols): array

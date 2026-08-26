@@ -180,7 +180,7 @@ if (!function_exists('vms_admission_event_comp_headcount')) {
 if (!function_exists('vms_admission_email_last_result')) {
 	function vms_admission_email_last_result(): array
 	{
-		$result = $GLOBALS['vms_admission_last_email_result'] ?? array();
+		$result = $GLOBALS['bvmgr_admission_last_email_result'] ?? array();
 		return is_array($result) ? $result : array();
 	}
 }
@@ -188,7 +188,7 @@ if (!function_exists('vms_admission_email_last_result')) {
 if (!function_exists('vms_admission_email_set_result')) {
 	function vms_admission_email_set_result(array $result): void
 	{
-		$GLOBALS['vms_admission_last_email_result'] = $result;
+		$GLOBALS['bvmgr_admission_last_email_result'] = $result;
 	}
 }
 
@@ -390,8 +390,8 @@ if (!function_exists('vms_admission_scan_template_router')) {
 			$parts['title'] = __('Admission Pass', 'backstage-venue-manager');
 			return $parts;
 		}, 20);
-		if (function_exists('wp_enqueue_style') && defined('VMS_PLUGIN_URL')) {
-			wp_enqueue_style('vms-pass-claims-public', VMS_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('VMS_VERSION') ? VMS_VERSION : null);
+		if (function_exists('wp_enqueue_style') && defined('BVMGR_PLUGIN_URL')) {
+			wp_enqueue_style('vms-pass-claims-public', BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null);
 		}
 		if (function_exists('get_header')) {
 			get_header();

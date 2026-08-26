@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_scripts'] = array();
@@ -84,8 +84,8 @@ function vms_request_read_scalar(array $source, string $key): string { return is
 function vms_request_read_text_field(array $source, string $key): string { return sanitize_text_field(vms_request_read_scalar($source, $key)); }
 function vms_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
 function vms_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
-function vms_asset_url(string $asset_rel): string { return VMS_PLUGIN_URL . ltrim($asset_rel, '/'); }
-function vms_asset_version_for(string $asset_rel): string { unset($asset_rel); return VMS_VERSION; }
+function vms_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
+function vms_asset_version_for(string $asset_rel): string { unset($asset_rel); return BVMGR_VERSION; }
 function wp_enqueue_script(string $handle, string $src = '', array $deps = array(), $ver = false, bool $in_footer = false): void
 {
 	$record = compact('handle', 'src', 'deps', 'ver', 'in_footer');
@@ -300,7 +300,7 @@ $assert(hash('sha256', $assetSource) === '1856166b2a3785803148bc9019867e7b9e387e
 
 $shortcodeSource = $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_shortcode');
 $assert(strpos($shortcodeSource, "'https://challenges.cloudflare.com/turnstile/v0/api.js'") !== false, 'Shortcode should keep the explicit Cloudflare Turnstile client URL.');
-$assert(strpos($shortcodeSource, 'VMS_VERSION') !== false, 'Shortcode should enqueue Turnstile with VMS_VERSION.');
+$assert(strpos($shortcodeSource, 'BVMGR_VERSION') !== false, 'Shortcode should enqueue Turnstile with BVMGR_VERSION.');
 $assert(strpos($shortcodeSource, __('Vendor applications are temporarily unavailable.', 'backstage-venue-manager')) !== false, 'Shortcode should contain the public unavailable notice.');
 $assert(strpos($shortcodeSource, 'Turnstile requires both a site key and a secret key before the Vendor Application form can be used.') !== false, 'Shortcode should contain the bounded administrator diagnostic.');
 
@@ -372,7 +372,7 @@ $assert(isset($configured['scripts']['cf-turnstile']), 'Configured form should e
 $assert(count($scriptCallsForHandle('cf-turnstile')) === 1, 'Configured form should enqueue the Cloudflare Turnstile client exactly once.');
 $assert(($configured['scripts']['cf-turnstile']['src'] ?? '') === 'https://challenges.cloudflare.com/turnstile/v0/api.js', 'Configured form should keep the explicit Cloudflare Turnstile client URL.');
 $assert(($configured['scripts']['cf-turnstile']['deps'] ?? null) === array(), 'Configured form should keep an empty dependency list for the Cloudflare Turnstile client.');
-$assert(($configured['scripts']['cf-turnstile']['ver'] ?? null) === VMS_VERSION, 'Configured form should use VMS_VERSION for the Cloudflare Turnstile client.');
+$assert(($configured['scripts']['cf-turnstile']['ver'] ?? null) === BVMGR_VERSION, 'Configured form should use BVMGR_VERSION for the Cloudflare Turnstile client.');
 $assert(($configured['scripts']['cf-turnstile']['in_footer'] ?? null) === true, 'Configured form should keep the Cloudflare Turnstile client in the footer.');
 $assert(strpos($configured['html'], 'class="vms-vendor-apply-form"') !== false, 'Configured form should render the active Vendor Application form.');
 $assert(strpos($configured['html'], 'name="vms_vendor_apply_nonce"') !== false, 'Configured form should preserve the form nonce field.');

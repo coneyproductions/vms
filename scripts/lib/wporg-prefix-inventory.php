@@ -17,6 +17,11 @@ final class BVMGR_WPORG_Prefix_Inventory
 	);
 
 	private const LOADER_GLOBALS = array(
+		'bvmgr_canonical_plugin_file',
+		'bvmgr_optional_bootstrap_files',
+		'bvmgr_optional_bootstrap_file',
+		'bvmgr_ref_keys_map',
+		'bvmgr_square_firewall_filter_name',
 		'vms_canonical_plugin_file',
 		'vms_optional_bootstrap_files',
 		'vms_optional_bootstrap_file',
@@ -151,8 +156,22 @@ final class BVMGR_WPORG_Prefix_Inventory
 		if (in_array($kind, array('classes', 'interfaces', 'traits', 'enums', 'constants'), true) && str_starts_with($name, 'VMS_')) {
 			return 'BVMGR_' . substr($name, 4);
 		}
-		if ($kind === 'global_slots') {
+		if ($kind === 'global_slots' && str_contains($name, 'vms_')) {
 			return preg_replace('/vms_/', 'bvmgr_', $name, 1);
+		}
+		return null;
+	}
+
+	public static function legacyIdentifier(string $kind, string $name): ?string
+	{
+		if ($kind === 'functions' && str_starts_with($name, 'bvmgr_')) {
+			return 'vms_' . substr($name, 6);
+		}
+		if (in_array($kind, array('classes', 'interfaces', 'traits', 'enums', 'constants'), true) && str_starts_with($name, 'BVMGR_')) {
+			return 'VMS_' . substr($name, 6);
+		}
+		if ($kind === 'global_slots' && str_contains($name, 'bvmgr_')) {
+			return preg_replace('/bvmgr_/', 'vms_', $name, 1);
 		}
 		return null;
 	}
@@ -523,9 +542,11 @@ final class BVMGR_WPORG_Prefix_Inventory
 		foreach (array('functions', 'classes', 'interfaces', 'traits', 'enums', 'constants', 'global_slots') as $kind) {
 			$result[$kind] = array();
 			foreach ($declarations[$kind] as $name => $sites) {
-				$result[$kind][] = array(
+				$legacy = self::legacyIdentifier($kind, $name);
+				$completedB2 = $kind !== 'functions' && $legacy !== null;
+				$entry = array(
 					'current_identifier' => $name,
-					'canonical_target' => self::canonicalTarget($kind, $name),
+					'canonical_target' => $completedB2 ? $name : self::canonicalTarget($kind, $name),
 					'b0_strategy' => array(1),
 					'compatibility_classification' => $kind === 'functions'
 						? 'direct-rename-no-public-package-wrapper'
@@ -535,6 +556,11 @@ final class BVMGR_WPORG_Prefix_Inventory
 					'do_not_rename' => false,
 					'declaration_sites' => $sites,
 				);
+				if ($completedB2) {
+					$entry['legacy_identifier'] = $legacy;
+					$entry['migration_status'] = 'complete';
+				}
+				$result[$kind][] = $entry;
 			}
 		}
 		return $result;

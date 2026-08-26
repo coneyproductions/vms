@@ -234,8 +234,8 @@ function get_option(string $key, $default = false)
 	return array_key_exists($key, $GLOBALS['vms_test_options']) ? $GLOBALS['vms_test_options'][$key] : $default;
 }
 
-if (!class_exists('VMS_Tours')) {
-	class VMS_Tours
+if (!class_exists('BVMGR_Tours')) {
+	class BVMGR_Tours
 	{
 		public const OPT_ENABLED = 'vms_tours_enabled';
 
@@ -1048,9 +1048,9 @@ $assert(
 
 $GLOBALS['vms_test_current_user_caps'] = array('manage_options' => true);
 $GLOBALS['vms_test_options'] = array(
-	VMS_Tours::OPT_ENABLED => 1,
+	BVMGR_Tours::OPT_ENABLED => 1,
 );
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 
 $assertToursError = static function ($result, string $expectedCode, int $expectedStatus, string $message) use ($assert): void {
 	$assert(is_wp_error($result), $message . ' Expected a WP_Error response.');
@@ -1108,46 +1108,46 @@ $invalidToursBodies = array(
 );
 
 foreach ($invalidToursBodies as $case) {
-	VMS_Tours::reset();
-	$runtimeResult = VMS_REST_Tours::post_runtime_drift(new WP_REST_Request($case['body']));
+	BVMGR_Tours::reset();
+	$runtimeResult = BVMGR_REST_Tours::post_runtime_drift(new WP_REST_Request($case['body']));
 	$assertToursError($runtimeResult, $case['code'], 400, $case['label'] . ' Runtime drift.');
-	$assert(VMS_Tours::$merge_calls === 0, $case['label'] . ' Runtime drift must not run merge work.');
-	$assert(VMS_Tours::$replace_calls === 0, $case['label'] . ' Runtime drift must not replace scan reports.');
+	$assert(BVMGR_Tours::$merge_calls === 0, $case['label'] . ' Runtime drift must not run merge work.');
+	$assert(BVMGR_Tours::$replace_calls === 0, $case['label'] . ' Runtime drift must not replace scan reports.');
 
-	VMS_Tours::reset();
-	$scanResult = VMS_REST_Tours::post_drift_scan(new WP_REST_Request($case['body']));
+	BVMGR_Tours::reset();
+	$scanResult = BVMGR_REST_Tours::post_drift_scan(new WP_REST_Request($case['body']));
 	$assertToursError($scanResult, $case['code'], 400, $case['label'] . ' Drift scan.');
-	$assert(VMS_Tours::$merge_calls === 0, $case['label'] . ' Drift scan must not run merge work.');
-	$assert(VMS_Tours::$replace_calls === 0, $case['label'] . ' Drift scan must not replace scan reports.');
+	$assert(BVMGR_Tours::$merge_calls === 0, $case['label'] . ' Drift scan must not run merge work.');
+	$assert(BVMGR_Tours::$replace_calls === 0, $case['label'] . ' Drift scan must not replace scan reports.');
 }
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $runtimeEmptyObject = $assertToursResponse(
-	VMS_REST_Tours::post_runtime_drift(new WP_REST_Request('{}')),
+	BVMGR_REST_Tours::post_runtime_drift(new WP_REST_Request('{}')),
 	200,
 	'Empty object runtime-drift payload should remain accepted.'
 );
-$assert(VMS_Tours::$merge_calls === 1, 'Empty object runtime-drift payload should still reach the runtime handler.');
+$assert(BVMGR_Tours::$merge_calls === 1, 'Empty object runtime-drift payload should still reach the runtime handler.');
 $assert(($runtimeEmptyObject['report']['source'] ?? '') === 'runtime', 'Empty object runtime-drift payload should preserve the existing report contract.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $scanEmptyObject = $assertToursResponse(
-	VMS_REST_Tours::post_drift_scan(new WP_REST_Request('{}')),
+	BVMGR_REST_Tours::post_drift_scan(new WP_REST_Request('{}')),
 	200,
 	'Empty object drift-scan payload should remain accepted.'
 );
-$assert(VMS_Tours::$replace_calls === 1, 'Empty object drift-scan payload should still reach the scan replacement handler.');
+$assert(BVMGR_Tours::$replace_calls === 1, 'Empty object drift-scan payload should still reach the scan replacement handler.');
 $assert(($scanEmptyObject['report']['source'] ?? '') === 'scan', 'Empty object drift-scan payload should preserve the default scan source.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $validRuntimePayload = $assertToursResponse(
-	VMS_REST_Tours::post_runtime_drift(new WP_REST_Request('{"context_key":"dashboard","anchor":"tour-anchor","tour_id":"intro","severity":"optional"}')),
+	BVMGR_REST_Tours::post_runtime_drift(new WP_REST_Request('{"context_key":"dashboard","anchor":"tour-anchor","tour_id":"intro","severity":"optional"}')),
 	200,
 	'Valid runtime-drift object payload should remain accepted.'
 );
-$assert(VMS_Tours::$merge_calls === 1, 'Valid runtime-drift payload should invoke runtime merge work once.');
+$assert(BVMGR_Tours::$merge_calls === 1, 'Valid runtime-drift payload should invoke runtime merge work once.');
 $assert(
-	VMS_Tours::$last_merge_payload === array(
+	BVMGR_Tours::$last_merge_payload === array(
 		'context_key' => 'dashboard',
 		'anchor' => 'tour-anchor',
 		'tour_id' => 'intro',
@@ -1157,36 +1157,36 @@ $assert(
 );
 $assert(($validRuntimePayload['report']['source'] ?? '') === 'runtime', 'Valid runtime-drift payload should return a runtime report.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $validScanPayload = $assertToursResponse(
-	VMS_REST_Tours::post_drift_scan(new WP_REST_Request('{"source":"auto-update","contexts":{"dashboard":{"scan_error":"","missing_anchors":{}}}}')),
+	BVMGR_REST_Tours::post_drift_scan(new WP_REST_Request('{"source":"auto-update","contexts":{"dashboard":{"scan_error":"","missing_anchors":{}}}}')),
 	200,
 	'Valid drift-scan object payload should remain accepted.'
 );
-$assert(VMS_Tours::$replace_calls === 1, 'Valid drift-scan payload should invoke scan replacement once.');
-$assert(VMS_Tours::$last_replace_source === 'auto-update', 'Valid drift-scan payload should preserve the auto-update source contract.');
+$assert(BVMGR_Tours::$replace_calls === 1, 'Valid drift-scan payload should invoke scan replacement once.');
+$assert(BVMGR_Tours::$last_replace_source === 'auto-update', 'Valid drift-scan payload should preserve the auto-update source contract.');
 $assert(isset($validScanPayload['report']['contexts']['dashboard']), 'Valid drift-scan payload should preserve object-shaped contexts.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $GLOBALS['vms_test_current_user_caps'] = array();
-$capabilityFailure = VMS_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
+$capabilityFailure = BVMGR_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
 $assertToursError($capabilityFailure, 'forbidden', 403, 'Tours management capability protection should remain intact.');
 
 $GLOBALS['vms_test_current_user_caps'] = array('manage_options' => true);
-VMS_Tours::reset();
-VMS_Tours::$nonce_valid = false;
-$nonceFailure = VMS_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
+BVMGR_Tours::reset();
+BVMGR_Tours::$nonce_valid = false;
+$nonceFailure = BVMGR_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
 $assertToursError($nonceFailure, 'forbidden', 403, 'Tours management nonce protection should remain intact.');
 
-VMS_Tours::reset();
-VMS_Tours::$nonce_valid = true;
-VMS_Tours::$can_run = false;
-$runtimeCapabilityFailure = VMS_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
+BVMGR_Tours::reset();
+BVMGR_Tours::$nonce_valid = true;
+BVMGR_Tours::$can_run = false;
+$runtimeCapabilityFailure = BVMGR_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
 $assertToursError($runtimeCapabilityFailure, 'forbidden', 403, 'Runtime-drift capability protection should remain intact.');
 
-VMS_Tours::reset();
-VMS_Tours::$nonce_valid = false;
-$runtimeNonceFailure = VMS_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
+BVMGR_Tours::reset();
+BVMGR_Tours::$nonce_valid = false;
+$runtimeNonceFailure = BVMGR_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
 $assertToursError($runtimeNonceFailure, 'forbidden', 403, 'Runtime-drift nonce protection should remain intact.');
 
 fwrite(STDOUT, "decoded JSON validation helpers OK.\n");

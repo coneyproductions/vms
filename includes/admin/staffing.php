@@ -369,12 +369,12 @@ if (!function_exists('vms_staffing_admin_enqueue_assets')) {
 
 		$version = function_exists('vms_asset_version')
 			? vms_asset_version()
-			: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+			: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 		if ($is_templates_page) {
 			wp_enqueue_style(
 				'vms-staffing-admin',
-				VMS_PLUGIN_URL . 'assets/css/vms-staffing-admin.css',
+				BVMGR_PLUGIN_URL . 'assets/css/vms-staffing-admin.css',
 				array(),
 				$version
 			);
@@ -382,7 +382,7 @@ if (!function_exists('vms_staffing_admin_enqueue_assets')) {
 
 		wp_enqueue_script(
 			'vms-staffing-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js',
 			array(),
 			$version,
 			true

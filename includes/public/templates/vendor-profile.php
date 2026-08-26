@@ -3,7 +3,7 @@ defined('ABSPATH') || exit;
 
 get_header();
 
-$vendor = isset($GLOBALS['vms_vendor_profile_post']) ? $GLOBALS['vms_vendor_profile_post'] : null;
+$vendor = isset($GLOBALS['bvmgr_vendor_profile_post']) ? $GLOBALS['bvmgr_vendor_profile_post'] : null;
 if (!($vendor instanceof WP_Post)) {
     echo '<main class="vms-vendor-profile"><div class="vms-vp-card"><p>' . esc_html__('Vendor not found.', 'backstage-venue-manager') . '</p></div></main>';
     wp_reset_postdata();

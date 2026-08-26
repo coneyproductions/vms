@@ -128,7 +128,7 @@ $tests['paths with spaces validate and CLI checksum mismatches fail cleanly'] = 
 			'backstage-venue-manager/backstage-venue-manager.php' => "<?php\n/**\n * Plugin Name: Backstage Venue Manager\n * Version: 9.9.9\n */\n",
 			'backstage-venue-manager/includes/bootstrap.php' => "<?php\n",
 			'backstage-venue-manager/includes/core/plugin.php' => "<?php\n",
-			'backstage-venue-manager/includes/core/registry/constants.php' => "<?php\ndefine('VMS_VERSION', '9.9.9');\n",
+			'backstage-venue-manager/includes/core/registry/constants.php' => "<?php\ndefine('BVMGR_VERSION', '9.9.9');\n",
 			'backstage-venue-manager/includes/db/migrations.php' => "<?php\n",
 			'backstage-venue-manager/assets/app.js' => "console.log('ok');\n",
 			'backstage-venue-manager/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
@@ -236,8 +236,8 @@ $tests['repository public boundary keeps current metadata separate from internal
 
 	vms_release_compat_test_assert(strpos($header, 'Version: 1.2.0') !== false, 'Expected the current repository plugin header to advertise 1.2.0.');
 	vms_release_compat_test_assert(
-		strpos($constants, "define('VMS_VERSION', '1.2.0');") !== false,
-		'Expected the current repository VMS_VERSION constant to advertise 1.2.0.'
+		strpos($constants, "define('BVMGR_VERSION', '1.2.0');") !== false,
+		'Expected the current repository BVMGR_VERSION constant to advertise 1.2.0.'
 	);
 	vms_release_compat_test_assert(strpos($readme, 'Stable tag: 1.2.0') !== false, 'Expected the current repository readme stable tag to advertise 1.2.0.');
 	vms_release_compat_test_assert(trim($build) === '1.2.0', 'Expected the current repository build marker to advertise 1.2.0.');
@@ -261,11 +261,11 @@ $tests['repository public boundary keeps current metadata separate from internal
 		'Expected the legacy internal-folder basename to remain recognized for upgrades.'
 	);
 	vms_release_compat_test_assert(
-		strpos($constants, "define('VMS_REST_NAMESPACE', 'vms/v1');") !== false,
+		strpos($constants, "define('BVMGR_REST_NAMESPACE', 'vms/v1');") !== false,
 		'Expected the internal REST namespace compatibility constant to remain unchanged.'
 	);
 	vms_release_compat_test_assert(
-		strpos($constants, "define('VMS_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION', 'vms_ticket_mutation_audit_db_schema_version');") !== false,
+		strpos($constants, "define('BVMGR_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION', 'vms_ticket_mutation_audit_db_schema_version');") !== false,
 		'Expected unrelated schema option constants to remain unchanged.'
 	);
 };

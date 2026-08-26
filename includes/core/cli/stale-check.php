@@ -5,7 +5,7 @@ if (!defined('WP_CLI') || !WP_CLI) {
 	return;
 }
 
-if (!class_exists('VMS_CLI_Stale_Check_Command')) {
+if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 	/**
 	 * Built-in stale-check helper for historical bug + cancellation-health probes.
 	 * 
@@ -13,7 +13,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 	 *   wp vms stale-check
 	 *   wp vms stale-check --bugs=BUG-01,BUG-03
 	 */
-		class VMS_CLI_Stale_Check_Command
+		class BVMGR_CLI_Stale_Check_Command
 		{
 			/** @var array<int,string> */
 			private $supported = array('BUG-01', 'BUG-02', 'BUG-03', 'BUG-05', 'BUG-06', 'BUG-07', 'BUG-08', 'BUG-09', 'BUG-10', 'BUG-11', 'CAN-01', 'TICK-01');
@@ -1461,4 +1461,4 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 	}
 }
 
-WP_CLI::add_command('vms', 'VMS_CLI_Stale_Check_Command');
+WP_CLI::add_command('vms', 'BVMGR_CLI_Stale_Check_Command');

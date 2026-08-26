@@ -160,19 +160,19 @@ $assert($forbiddenResult instanceof WP_Error, 'Admissions REST should preserve c
 $assert($forbiddenResult->get_error_code() === 'vms_admission_forbidden', 'Admissions REST forbidden code should remain stable.');
 
 $tourHeaderRequest = new WP_REST_Request(array('X-WP-Nonce' => ' good nonce '));
-$assert(VMS_Tours::verify_rest_nonce($tourHeaderRequest) === true, 'Tours REST verification should accept sanitized header nonces.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourHeaderRequest) === true, 'Tours REST verification should accept sanitized header nonces.');
 
 $tourParamRequest = new WP_REST_Request(array(), array('_wpnonce' => 'good nonce'));
-$assert(VMS_Tours::verify_rest_nonce($tourParamRequest) === true, 'Tours REST verification should accept valid _wpnonce params.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourParamRequest) === true, 'Tours REST verification should accept valid _wpnonce params.');
 
 $tourMissingRequest = new WP_REST_Request();
-$assert(VMS_Tours::verify_rest_nonce($tourMissingRequest) === false, 'Tours REST verification should continue failing closed for missing nonces.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourMissingRequest) === false, 'Tours REST verification should continue failing closed for missing nonces.');
 
 $tourArrayRequest = new WP_REST_Request(array(), array('_wpnonce' => array('bad')));
-$assert(VMS_Tours::verify_rest_nonce($tourArrayRequest) === false, 'Tours REST verification should reject array-shaped _wpnonce params.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourArrayRequest) === false, 'Tours REST verification should reject array-shaped _wpnonce params.');
 
 $tourObjectRequest = new WP_REST_Request(array(), array('_wpnonce' => (object) array('bad' => 'nonce')));
-$assert(VMS_Tours::verify_rest_nonce($tourObjectRequest) === false, 'Tours REST verification should reject non-scalar _wpnonce params.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourObjectRequest) === false, 'Tours REST verification should reject non-scalar _wpnonce params.');
 
 $extract_request_nonce = static function (array $request, string $key): string {
 	return (isset($request[$key]) && !is_array($request[$key]))

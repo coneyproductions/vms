@@ -11,7 +11,7 @@ if (!defined('WP_ADMIN')) {
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
     require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
@@ -140,7 +140,7 @@ try {
         $prevGet = $_GET ?? array();
         $prevRequest = $_REQUEST ?? array();
         $hadAjaxCaptureState = array_key_exists('vms_ajax_ob_started', $GLOBALS);
-        $prevAjaxCaptureState = $hadAjaxCaptureState ? $GLOBALS['vms_ajax_ob_started'] : null;
+        $prevAjaxCaptureState = $hadAjaxCaptureState ? $GLOBALS['bvmgr_ajax_ob_started'] : null;
         $payload['action'] = $action;
         $payload['nonce'] = wp_create_nonce('vms_ticketing_nonce');
         $_POST = $payload;
@@ -184,9 +184,9 @@ try {
             }
 
             if ($hadAjaxCaptureState) {
-                $GLOBALS['vms_ajax_ob_started'] = $prevAjaxCaptureState;
+                $GLOBALS['bvmgr_ajax_ob_started'] = $prevAjaxCaptureState;
             } else {
-                unset($GLOBALS['vms_ajax_ob_started']);
+                unset($GLOBALS['bvmgr_ajax_ob_started']);
             }
             $_POST = $prevPost;
             $_GET = $prevGet;
@@ -346,7 +346,7 @@ try {
     $refreshStats = isset($refreshResponse['data']['stats']) && is_array($refreshResponse['data']['stats']) ? $refreshResponse['data']['stats'] : array();
     $assert(isset($refreshStats['provider']) && $refreshStats['provider'] !== '', 'Refresh stats response should include a provider.');
 
-    $admin = (new ReflectionClass('VMS_Admin_Event_Plans'))->newInstanceWithoutConstructor();
+    $admin = (new ReflectionClass('BVMGR_Admin_Event_Plans'))->newInstanceWithoutConstructor();
     ob_start();
     $admin->render_event_plan_advanced_controls_host_meta_box(get_post($planId));
     $advancedHtml = (string) ob_get_clean();
@@ -363,7 +363,7 @@ try {
             return $this->capture_event_plan_partial($partial, $vars);
         },
         $admin,
-        'VMS_Admin_Event_Plans'
+        'BVMGR_Admin_Event_Plans'
     );
 
     $ticketMetaKey = function_exists('vms_ticketing_meta_key') ? vms_ticketing_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1') : '_vms_ticket_product_ids_v1';

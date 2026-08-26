@@ -12,15 +12,15 @@ function vms_continuity_binder_enqueue_assets($hook) {
         'vms-continuity-binder',
         plugins_url('../../assets/js/vms-continuity-binder.js', __FILE__),
         array(),
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''),
+        function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
         true
     );
 }
 add_action('admin_enqueue_scripts', 'vms_continuity_binder_enqueue_assets');
 
 function vms_continuity_binder_option_key() {
-    if (defined('VMS_CONTINUITY_BINDER_OPTION')) {
-        return VMS_CONTINUITY_BINDER_OPTION;
+    if (defined('BVMGR_CONTINUITY_BINDER_OPTION')) {
+        return BVMGR_CONTINUITY_BINDER_OPTION;
     }
 
     // Fallback only; the canonical key should live in constants.php.

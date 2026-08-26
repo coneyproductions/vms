@@ -2,12 +2,12 @@
 
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_TOURS_VERSION')) {
-	define('VMS_TOURS_VERSION', '1.0.0');
+if (!defined('BVMGR_TOURS_VERSION')) {
+	define('BVMGR_TOURS_VERSION', '1.0.0');
 }
 
-if (!defined('VMS_TOURS_DEBUG')) {
-	define('VMS_TOURS_DEBUG', false);
+if (!defined('BVMGR_TOURS_DEBUG')) {
+	define('BVMGR_TOURS_DEBUG', false);
 }
 
 require_once __DIR__ . '/class-vms-tours-screen.php';
@@ -23,14 +23,14 @@ if (!function_exists('vms_tours_register')) {
 	 */
 	function vms_tours_register(array $tour_def): void
 	{
-		VMS_Tours_Service::instance()->register_tour($tour_def);
+		BVMGR_Tours_Service::instance()->register_tour($tour_def);
 	}
 }
 
 if (!function_exists('vms_enqueue_tour_assets')) {
 	function vms_enqueue_tour_assets(): void
 	{
-		VMS_Tours_Service::instance()->enqueue_admin_assets();
+		BVMGR_Tours_Service::instance()->enqueue_admin_assets();
 	}
 }
 
@@ -80,5 +80,5 @@ if (!function_exists('vms_render_help_button')) {
 }
 
 add_action('plugins_loaded', static function (): void {
-	VMS_Tours_Service::instance();
+	BVMGR_Tours_Service::instance();
 }, 20);

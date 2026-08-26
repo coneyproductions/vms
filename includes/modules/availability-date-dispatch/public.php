@@ -48,14 +48,14 @@ if (!function_exists('vms_add_dispatch_public_response_allowed_html')) {
 if (!function_exists('vms_add_dispatch_public_shell_stylesheet_url')) {
 	function vms_add_dispatch_public_shell_stylesheet_url(): string
 	{
-		if (!defined('VMS_PLUGIN_URL') || !is_string(VMS_PLUGIN_URL) || VMS_PLUGIN_URL === '') {
+		if (!defined('BVMGR_PLUGIN_URL') || !is_string(BVMGR_PLUGIN_URL) || BVMGR_PLUGIN_URL === '') {
 			return '';
 		}
 
-		$stylesheet_url = VMS_PLUGIN_URL . 'assets/css/vms-add-dispatch-public-shell.css';
+		$stylesheet_url = BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-public-shell.css';
 		$version = function_exists('vms_asset_version') ? trim((string) vms_asset_version()) : '';
-		if ($version === '' && defined('VMS_VERSION')) {
-			$version = (string) VMS_VERSION;
+		if ($version === '' && defined('BVMGR_VERSION')) {
+			$version = (string) BVMGR_VERSION;
 		}
 		if ($version !== '') {
 			$stylesheet_url = add_query_arg('ver', $version, $stylesheet_url);

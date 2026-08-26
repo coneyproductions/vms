@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_VERSION', 'test-version');
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
 
 set_error_handler(static function (int $severity, string $message, string $file = '', int $line = 0): bool {
 	throw new RuntimeException($message . ' @ ' . $file . ':' . $line, $severity);

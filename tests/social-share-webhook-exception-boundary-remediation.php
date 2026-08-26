@@ -162,7 +162,7 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', __DIR__ . '/../');
 }
 
-interface VMS_Social_Provider_Interface
+interface BVMGR_Social_Provider_Interface
 {
 	public function get_platform_key(): string;
 
@@ -363,7 +363,7 @@ function vms_social_venue_map_for_platform(int $venue_id, string $platform): ?ar
 function vms_social_get_provider(string $platform)
 {
 	$GLOBALS['vms_test_provider_lookups'][] = $platform;
-	return new VMS_Social_Provider_Webhook();
+	return new BVMGR_Social_Provider_Webhook();
 }
 
 /**
@@ -497,7 +497,7 @@ try {
 		'webhook_url' => 'https://hooks.example.test/publish?token=secret-query-token',
 		'signing_secret' => 'secret-signing-value',
 	);
-	$provider = new VMS_Social_Provider_Webhook();
+	$provider = new BVMGR_Social_Provider_Webhook();
 	$successPayload = array(
 		'caption' => 'Launch now',
 		'count' => 1,

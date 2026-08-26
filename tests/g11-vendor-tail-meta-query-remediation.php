@@ -5,7 +5,7 @@ error_reporting(E_ALL & ~E_DEPRECATED);
 
 define('ABSPATH', __DIR__ . '/');
 define('DAY_IN_SECONDS', 86400);
-define('VMS_CPT_VENDOR', 'vms_vendor');
+define('BVMGR_CPT_VENDOR', 'vms_vendor');
 
 function g11_assert(bool $condition, string $message): void
 {

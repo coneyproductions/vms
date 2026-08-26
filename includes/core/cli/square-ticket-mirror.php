@@ -5,8 +5,8 @@ if (!defined('WP_CLI') || !WP_CLI) {
     return;
 }
 
-if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
-    class VMS_CLI_Square_Ticket_Mirror_Command
+if (!class_exists('BVMGR_CLI_Square_Ticket_Mirror_Command')) {
+    class BVMGR_CLI_Square_Ticket_Mirror_Command
     {
         /**
          * Show Square ticket mirror status and source model for one product.
@@ -257,5 +257,5 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
         }
     }
 
-    WP_CLI::add_command('vms square-ticket-mirror', 'VMS_CLI_Square_Ticket_Mirror_Command');
+    WP_CLI::add_command('vms square-ticket-mirror', 'BVMGR_CLI_Square_Ticket_Mirror_Command');
 }

@@ -17,7 +17,7 @@ if (!function_exists('vms_add_dispatch_module_boot')) {
 			vms_register_module(array(
 				'slug' => 'availability_date_dispatch',
 				'name' => 'ADD - Availability & Date Dispatch',
-				'version' => defined('VMS_VERSION') ? (string) VMS_VERSION : '0.2.24.454',
+				'version' => defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '0.2.24.454',
 				'premium' => false,
 				'description' => 'Single-event availability dispatch for missing vendor assignments, secure vendor responses, and Event Plan assignment follow-up.',
 				'source' => 'core',

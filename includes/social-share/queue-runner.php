@@ -25,7 +25,7 @@ if (!function_exists('vms_social_next_attempt_utc')) {
 if (!function_exists('vms_social_runner_acquire_lock')) {
 	function vms_social_runner_acquire_lock(): bool
 	{
-		$key = defined('VMS_SOCIAL_LOCK_TRANSIENT') ? (string) VMS_SOCIAL_LOCK_TRANSIENT : 'vms_social_runner_lock';
+		$key = defined('BVMGR_SOCIAL_LOCK_TRANSIENT') ? (string) BVMGR_SOCIAL_LOCK_TRANSIENT : 'vms_social_runner_lock';
 		if (get_transient($key)) {
 			return false;
 		}
@@ -37,7 +37,7 @@ if (!function_exists('vms_social_runner_acquire_lock')) {
 if (!function_exists('vms_social_runner_release_lock')) {
 	function vms_social_runner_release_lock(): void
 	{
-		$key = defined('VMS_SOCIAL_LOCK_TRANSIENT') ? (string) VMS_SOCIAL_LOCK_TRANSIENT : 'vms_social_runner_lock';
+		$key = defined('BVMGR_SOCIAL_LOCK_TRANSIENT') ? (string) BVMGR_SOCIAL_LOCK_TRANSIENT : 'vms_social_runner_lock';
 		delete_transient($key);
 	}
 }
@@ -48,7 +48,7 @@ if (!function_exists('vms_social_schedule_cron')) {
 		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
 			return;
 		}
-		$hook = defined('VMS_SOCIAL_CRON_HOOK') ? (string) VMS_SOCIAL_CRON_HOOK : 'vms_social_process_queue';
+		$hook = defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue';
 		if (!function_exists('vms_schedule_exists') || !vms_schedule_exists('vms_social_5m')) {
 			return;
 		}
@@ -318,7 +318,7 @@ if (!function_exists('vms_social_queue_process_item')) {
 		}
 
 		$provider = vms_social_get_provider((string) ($row['platform'] ?? ''));
-		if (!($provider instanceof VMS_Social_Provider_Interface)) {
+		if (!($provider instanceof BVMGR_Social_Provider_Interface)) {
 			vms_social_queue_update($queue_id, array(
 				'status' => 'needs_review',
 				'last_error_code' => 'provider_missing',
@@ -449,7 +449,7 @@ if (!function_exists('vms_social_process_queue')) {
 	}
 }
 
-$hook = defined('VMS_SOCIAL_CRON_HOOK') ? (string) VMS_SOCIAL_CRON_HOOK : 'vms_social_process_queue';
+$hook = defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue';
 add_action($hook, function (): void {
 	$summary = vms_social_process_queue(20);
 	vms_social_audit_log('runner_tick', $summary, 0, '', 0);

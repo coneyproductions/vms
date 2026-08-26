@@ -18,7 +18,7 @@ function vms_vendor_register_tax_bulk_actions($bulk_actions)
 	$bulk_actions['vms_tax_mark_incomplete'] = 'Mark Tax Profile Incomplete';
 	return $bulk_actions;
 }
-add_filter('bulk_actions-edit-' . VMS_CPT_VENDOR, 'vms_vendor_register_tax_bulk_actions');
+add_filter('bulk_actions-edit-' . BVMGR_CPT_VENDOR, 'vms_vendor_register_tax_bulk_actions');
 
 function vms_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
 {
@@ -55,7 +55,7 @@ function vms_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
 		'vms_tax_bulk_action' => $action,
 	), $redirect_url);
 }
-add_filter('handle_bulk_actions-edit-' . VMS_CPT_VENDOR, 'vms_vendor_handle_tax_bulk_actions', 10, 3);
+add_filter('handle_bulk_actions-edit-' . BVMGR_CPT_VENDOR, 'vms_vendor_handle_tax_bulk_actions', 10, 3);
 
 function vms_vendor_tax_bulk_admin_notice()
 {

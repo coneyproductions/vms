@@ -10,15 +10,15 @@ defined('ABSPATH') || exit;
  * active basename to backstage-venue-manager.php.
  */
 
-if (!defined('VMS_LEGACY_PLUGIN_FILE')) {
-	define('VMS_LEGACY_PLUGIN_FILE', __FILE__);
+if (!defined('BVMGR_LEGACY_PLUGIN_FILE')) {
+	define('BVMGR_LEGACY_PLUGIN_FILE', __FILE__);
 }
 
-$vms_canonical_plugin_file = __DIR__ . '/backstage-venue-manager.php';
-require_once $vms_canonical_plugin_file;
+$bvmgr_canonical_plugin_file = __DIR__ . '/backstage-venue-manager.php';
+require_once $bvmgr_canonical_plugin_file;
 
-vms_register_legacy_plugin_basename_compatibility(__FILE__, $vms_canonical_plugin_file);
+vms_register_legacy_plugin_basename_compatibility(__FILE__, $bvmgr_canonical_plugin_file);
 register_activation_hook(__FILE__, 'vms_activate_plugin');
 register_deactivation_hook(__FILE__, 'vms_deactivate_plugin');
 
-unset($vms_canonical_plugin_file);
+unset($bvmgr_canonical_plugin_file);

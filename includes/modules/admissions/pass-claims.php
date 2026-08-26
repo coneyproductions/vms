@@ -2394,16 +2394,16 @@ if (!function_exists('vms_pass_claims_admin_enqueue_assets')) {
 		if (!vms_pass_claims_is_admin_page()) {
 			return;
 		}
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
 			'vms-pass-claims-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-pass-claims-admin.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-admin.css',
 			array('vms-admin', 'vms-admin-ui'),
 			$ver
 		);
 		wp_enqueue_script(
 			'vms-pass-claims-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-pass-claims-admin.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-pass-claims-admin.js',
 			array(),
 			$ver,
 			true
@@ -3105,11 +3105,11 @@ if (!function_exists('vms_pass_claims_render_public_shell')) {
 			return $parts;
 		}, 20);
 
-		if (function_exists('wp_enqueue_style') && defined('VMS_PLUGIN_URL')) {
-			wp_enqueue_style('vms-pass-claims-public', VMS_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('VMS_VERSION') ? VMS_VERSION : null);
+		if (function_exists('wp_enqueue_style') && defined('BVMGR_PLUGIN_URL')) {
+			wp_enqueue_style('vms-pass-claims-public', BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null);
 		}
-		if (function_exists('wp_enqueue_script') && defined('VMS_PLUGIN_URL')) {
-			wp_enqueue_script('vms-pass-claims-public', VMS_PLUGIN_URL . 'assets/js/vms-pass-claims-public.js', array(), defined('VMS_VERSION') ? VMS_VERSION : null, true);
+		if (function_exists('wp_enqueue_script') && defined('BVMGR_PLUGIN_URL')) {
+			wp_enqueue_script('vms-pass-claims-public', BVMGR_PLUGIN_URL . 'assets/js/vms-pass-claims-public.js', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null, true);
 		}
 
 		if (function_exists('get_header')) {

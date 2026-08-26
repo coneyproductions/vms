@@ -748,7 +748,7 @@ add_action('admin_notices', 'vms_render_admin_diagnostics');
 if (!function_exists('vms_require_internal_file')) {
 	function vms_require_internal_file(string $relative_path, string $diagnostic_code = '', string $feature_label = ''): bool
 	{
-		if (!defined('VMS_PLUGIN_PATH')) {
+		if (!defined('BVMGR_PLUGIN_PATH')) {
 			return false;
 		}
 
@@ -757,7 +757,7 @@ if (!function_exists('vms_require_internal_file')) {
 			return false;
 		}
 
-		$absolute_path = VMS_PLUGIN_PATH . $relative_path;
+		$absolute_path = BVMGR_PLUGIN_PATH . $relative_path;
 		if (is_readable($absolute_path)) {
 			require_once $absolute_path;
 			return true;
@@ -897,7 +897,7 @@ if (!function_exists('vms_operational_issue_value_is_tainted')) {
 		}
 
 		$normalized = str_replace('\\', '/', $value);
-		foreach (array(defined('ABSPATH') ? ABSPATH : '', defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH : '') as $root) {
+		foreach (array(defined('ABSPATH') ? ABSPATH : '', defined('BVMGR_PLUGIN_PATH') ? BVMGR_PLUGIN_PATH : '') as $root) {
 			$root = rtrim(str_replace('\\', '/', (string) $root), '/');
 			if ($root !== '' && $root !== '/' && strpos($normalized, $root . '/') === 0) {
 				return true;
@@ -1523,7 +1523,7 @@ if (!function_exists('vms_admin_guard_hook_probe_watch_hooks')) {
 if (!function_exists('vms_admin_guard_hook_probe_track')) {
 	function vms_admin_guard_hook_probe_track(): void
 	{
-		$state = $GLOBALS['vms_admin_guard_hook_probe'] ?? array();
+		$state = $GLOBALS['bvmgr_admin_guard_hook_probe'] ?? array();
 		if (empty($state['enabled']) || !is_array($state)) {
 			return;
 		}
@@ -1559,20 +1559,20 @@ if (!function_exists('vms_admin_guard_hook_probe_track')) {
 			$state['high_water_hook'] = $hook_name;
 		}
 
-		$GLOBALS['vms_admin_guard_hook_probe'] = $state;
+		$GLOBALS['bvmgr_admin_guard_hook_probe'] = $state;
 	}
 }
 
 if (!function_exists('vms_admin_guard_hook_probe_shutdown')) {
 	function vms_admin_guard_hook_probe_shutdown(): void
 	{
-		$state = $GLOBALS['vms_admin_guard_hook_probe'] ?? array();
+		$state = $GLOBALS['bvmgr_admin_guard_hook_probe'] ?? array();
 		if (empty($state['enabled']) || !is_array($state) || !empty($state['finalized'])) {
 			return;
 		}
 
 		$state['finalized'] = true;
-		$GLOBALS['vms_admin_guard_hook_probe'] = $state;
+		$GLOBALS['bvmgr_admin_guard_hook_probe'] = $state;
 
 		$error = error_get_last();
 		$fatal = is_array($error) && in_array((int) ($error['type'] ?? 0), array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR), true);
@@ -1613,11 +1613,11 @@ if (!function_exists('vms_admin_guard_hook_probe_bootstrap')) {
 		if (!vms_admin_guard_should_probe_passive_tec_request()) {
 			return;
 		}
-		if (!empty($GLOBALS['vms_admin_guard_hook_probe']) && is_array($GLOBALS['vms_admin_guard_hook_probe'])) {
+		if (!empty($GLOBALS['bvmgr_admin_guard_hook_probe']) && is_array($GLOBALS['bvmgr_admin_guard_hook_probe'])) {
 			return;
 		}
 
-		$GLOBALS['vms_admin_guard_hook_probe'] = array(
+		$GLOBALS['bvmgr_admin_guard_hook_probe'] = array(
 			'enabled' => true,
 			'started_at' => microtime(true),
 			'total_hooks' => 0,
@@ -1791,12 +1791,12 @@ if (!function_exists('vms_resource_fingerprint_is_sensitive_admin_request')) {
 if (!function_exists('vms_resource_fingerprint_bootstrap')) {
 	function vms_resource_fingerprint_bootstrap(): void
 	{
-		if (!empty($GLOBALS['vms_resource_fingerprint']) && is_array($GLOBALS['vms_resource_fingerprint'])) {
+		if (!empty($GLOBALS['bvmgr_resource_fingerprint']) && is_array($GLOBALS['bvmgr_resource_fingerprint'])) {
 			return;
 		}
 
 		$started_at = isset($_SERVER['REQUEST_TIME_FLOAT']) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
-		$GLOBALS['vms_resource_fingerprint'] = array(
+		$GLOBALS['bvmgr_resource_fingerprint'] = array(
 			'started_at' => $started_at,
 			'flags' => array(),
 			'markers' => array(),
@@ -1818,7 +1818,7 @@ if (!function_exists('vms_resource_fingerprint_flag')) {
 		}
 
 		vms_resource_fingerprint_bootstrap();
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		$clean_value = vms_resource_fingerprint_compact_value($value);
 		if (!isset($state['flags'][$flag])) {
 			$state['flags'][$flag] = array();
@@ -1828,7 +1828,7 @@ if (!function_exists('vms_resource_fingerprint_flag')) {
 		}
 		$state['flags'][$flag][] = $clean_value;
 		$state['flags'][$flag] = array_slice($state['flags'][$flag], -8);
-		$GLOBALS['vms_resource_fingerprint'] = $state;
+		$GLOBALS['bvmgr_resource_fingerprint'] = $state;
 	}
 }
 
@@ -1841,10 +1841,10 @@ if (!function_exists('vms_resource_fingerprint_note')) {
 		}
 
 		vms_resource_fingerprint_bootstrap();
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		$state['notes'][] = vms_resource_fingerprint_compact_value($message);
 		$state['notes'] = array_slice((array) $state['notes'], -8);
-		$GLOBALS['vms_resource_fingerprint'] = $state;
+		$GLOBALS['bvmgr_resource_fingerprint'] = $state;
 	}
 }
 
@@ -1857,14 +1857,14 @@ if (!function_exists('vms_resource_fingerprint_add_marker')) {
 		}
 
 		vms_resource_fingerprint_bootstrap();
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		$state['markers'][] = array(
 			'label' => $label,
 			'elapsed_ms' => max(0.0, round($elapsed_ms, 1)),
 			'context' => vms_resource_fingerprint_compact_value($context),
 		);
 		$state['markers'] = array_slice((array) $state['markers'], -1 * vms_resource_fingerprint_max_markers());
-		$GLOBALS['vms_resource_fingerprint'] = $state;
+		$GLOBALS['bvmgr_resource_fingerprint'] = $state;
 	}
 }
 
@@ -1877,12 +1877,12 @@ if (!function_exists('vms_resource_fingerprint_span_start')) {
 		}
 
 		vms_resource_fingerprint_bootstrap();
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		$state['open_spans'][$label] = array(
 			'started_at' => microtime(true),
 			'context' => vms_resource_fingerprint_compact_value($context),
 		);
-		$GLOBALS['vms_resource_fingerprint'] = $state;
+		$GLOBALS['bvmgr_resource_fingerprint'] = $state;
 	}
 }
 
@@ -1895,7 +1895,7 @@ if (!function_exists('vms_resource_fingerprint_span_finish')) {
 		}
 
 		vms_resource_fingerprint_bootstrap();
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		$open = isset($state['open_spans'][$label]) && is_array($state['open_spans'][$label]) ? $state['open_spans'][$label] : null;
 		if (!is_array($open) || empty($open['started_at'])) {
 			return;
@@ -1910,7 +1910,7 @@ if (!function_exists('vms_resource_fingerprint_span_finish')) {
 		}
 
 		unset($state['open_spans'][$label]);
-		$GLOBALS['vms_resource_fingerprint'] = $state;
+		$GLOBALS['bvmgr_resource_fingerprint'] = $state;
 		vms_resource_fingerprint_add_marker($label, (microtime(true) - (float) $open['started_at']) * 1000, $merged);
 	}
 }
@@ -2117,7 +2117,7 @@ if (!function_exists('vms_resource_fingerprint_should_log')) {
 if (!function_exists('vms_resource_fingerprint_shutdown')) {
 	function vms_resource_fingerprint_shutdown(): void
 	{
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		if (empty($state) || !empty($state['finalized'])) {
 			return;
 		}
@@ -2129,9 +2129,9 @@ if (!function_exists('vms_resource_fingerprint_shutdown')) {
 			vms_resource_fingerprint_span_finish((string) $label, array('auto_closed' => true));
 		}
 
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		$state['finalized'] = true;
-		$GLOBALS['vms_resource_fingerprint'] = $state;
+		$GLOBALS['bvmgr_resource_fingerprint'] = $state;
 
 		$runtime_seconds = max(0.0, microtime(true) - (float) ($state['started_at'] ?? microtime(true)));
 		$peak_memory_bytes = function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0;

@@ -17,12 +17,12 @@ if (!function_exists('vms_staffing_table_name')) {
 		global $wpdb;
 
 		$map = array(
-			'templates'      => defined('VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates',
-			'template_slots' => defined('VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots',
-			'event_slots'    => defined('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots',
-			'assignments'    => defined('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments',
-			'rollups'        => defined('VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX') ? VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX : 'vms_staffing_event_rollups',
-			'audit'          => defined('VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX') ? VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX : 'vms_staffing_audit_log',
+			'templates'      => defined('BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates',
+			'template_slots' => defined('BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots',
+			'event_slots'    => defined('BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots',
+			'assignments'    => defined('BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments',
+			'rollups'        => defined('BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX : 'vms_staffing_event_rollups',
+			'audit'          => defined('BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX : 'vms_staffing_audit_log',
 		);
 
 		$suffix = isset($map[$kind]) ? (string) $map[$kind] : '';
@@ -60,8 +60,8 @@ if (!function_exists('vms_staffing_ensure_template_attendance_band_schema')) {
 			return true;
 		}
 
-		if (defined('VMS_PLUGIN_PATH')) {
-			$path = VMS_PLUGIN_PATH . 'includes/db/migrations.php';
+		if (defined('BVMGR_PLUGIN_PATH')) {
+			$path = BVMGR_PLUGIN_PATH . 'includes/db/migrations.php';
 			if (file_exists($path)) {
 				require_once $path;
 			}
@@ -104,8 +104,8 @@ if (!function_exists('vms_staffing_ensure_template_slot_activation_schema')) {
 			return true;
 		}
 
-		if (defined('VMS_PLUGIN_PATH')) {
-			$path = VMS_PLUGIN_PATH . 'includes/db/migrations.php';
+		if (defined('BVMGR_PLUGIN_PATH')) {
+			$path = BVMGR_PLUGIN_PATH . 'includes/db/migrations.php';
 			if (file_exists($path)) {
 				require_once $path;
 			}
@@ -2778,7 +2778,7 @@ if (!function_exists('vms_staffing_plan_save_request_state_get')) {
 			return array();
 		}
 
-		$state = $GLOBALS['vms_staffing_plan_save_request_state'] ?? array();
+		$state = $GLOBALS['bvmgr_staffing_plan_save_request_state'] ?? array();
 		return is_array($state[$event_plan_id] ?? null) ? $state[$event_plan_id] : array();
 	}
 }
@@ -2791,11 +2791,11 @@ if (!function_exists('vms_staffing_plan_save_request_state_set')) {
 			return;
 		}
 
-		if (!isset($GLOBALS['vms_staffing_plan_save_request_state']) || !is_array($GLOBALS['vms_staffing_plan_save_request_state'])) {
-			$GLOBALS['vms_staffing_plan_save_request_state'] = array();
+		if (!isset($GLOBALS['bvmgr_staffing_plan_save_request_state']) || !is_array($GLOBALS['bvmgr_staffing_plan_save_request_state'])) {
+			$GLOBALS['bvmgr_staffing_plan_save_request_state'] = array();
 		}
 
-		$GLOBALS['vms_staffing_plan_save_request_state'][$event_plan_id] = $state;
+		$GLOBALS['bvmgr_staffing_plan_save_request_state'][$event_plan_id] = $state;
 	}
 }
 

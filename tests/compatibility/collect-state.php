@@ -367,7 +367,7 @@ if (!empty($fixture)) {
 	$fixtureState['preserved'] = !in_array(false, array_values($fixturePreservationChecks), true);
 }
 
-$pluginVersion = defined('VMS_VERSION') ? (string) VMS_VERSION : '';
+$pluginVersion = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 $buildVersion = '';
 $pluginBuildFile = VMS_Release_Compatibility_Tooling::buildVersionPathForPluginBasename(WP_PLUGIN_DIR, $vmsPluginBase);
 if ($pluginBuildFile !== '' && is_file($pluginBuildFile)) {

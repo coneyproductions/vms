@@ -1768,8 +1768,8 @@ if (!function_exists('vms_tasks_resolve_scheduled_role_user_id')) {
 			$t_slots = function_exists('vms_staffing_table_name') ? (string) vms_staffing_table_name('event_slots') : '';
 			$t_assign = function_exists('vms_staffing_table_name') ? (string) vms_staffing_table_name('assignments') : '';
 			if ($t_slots === '' || $t_assign === '') {
-				$t_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
-				$t_assign = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
+				$t_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
+				$t_assign = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
 			}
 			$t_usermeta = (property_exists($wpdb, 'usermeta') && is_string($wpdb->usermeta) && $wpdb->usermeta !== '')
 				? $wpdb->usermeta

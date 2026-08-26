@@ -60,9 +60,9 @@ function vms_event_profitability_enqueue_assets(string $hook): void
 
 	wp_enqueue_style(
 		'vms-event-profitability-admin',
-		VMS_PLUGIN_URL . 'assets/css/vms-event-profitability-admin.css',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-event-profitability-admin.css',
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+		function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 	);
 }
 

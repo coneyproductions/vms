@@ -11,7 +11,7 @@ if (!defined('WP_ADMIN')) {
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
     require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
@@ -216,8 +216,8 @@ try {
         $_GET = array();
         $_REQUEST = $_POST;
 
-        $reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-        /** @var VMS_Admin_Event_Plans $admin */
+        $reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+        /** @var BVMGR_Admin_Event_Plans $admin */
         $admin = $reflection->newInstanceWithoutConstructor();
         $admin->save_event_plan_meta($planId, get_post($planId));
         clean_post_cache($planId);
@@ -429,8 +429,8 @@ try {
     $assert(wp_json_encode($beforeBroadIntentState['unpublished_suppressor']) === wp_json_encode($afterBroadIntentState['unpublished_suppressor']), 'The compatibility fallback should still leave the unpublished-calendar suppressor unchanged.');
     $assert(wp_json_encode($beforeBroadIntentState['legacy_import_ticketing']) === wp_json_encode($afterBroadIntentState['legacy_import_ticketing']), 'The compatibility fallback should still leave legacy/import ticketing meta unchanged.');
 
-    $reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-    /** @var VMS_Admin_Event_Plans $admin */
+    $reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+    /** @var BVMGR_Admin_Event_Plans $admin */
     $admin = $reflection->newInstanceWithoutConstructor();
     $prevGet = $_GET ?? array();
     $_GET['vms_ep_load_section'] = 'ticketing_v2';

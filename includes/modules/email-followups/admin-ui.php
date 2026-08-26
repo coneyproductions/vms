@@ -62,15 +62,15 @@ if (!function_exists('vms_email_followups_enqueue_admin_assets')) {
 		}
 		wp_enqueue_style(
 			'vms-email-followups-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-email-followups-admin.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-email-followups-admin.css',
 			array('vms-admin-ui'),
-			defined('VMS_VERSION') ? (string) VMS_VERSION : null
+			defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null
 		);
 		wp_enqueue_script(
 			'vms-email-followups-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-email-followups-admin.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-email-followups-admin.js',
 			array(),
-			defined('VMS_VERSION') ? (string) VMS_VERSION : null,
+			defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null,
 			true
 		);
 	}

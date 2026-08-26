@@ -9,16 +9,16 @@ if (!function_exists('vms_door_checkin_shortcode')) {
 		}
 
 		$settings = vms_admission_settings();
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
 			'vms-door-checkin',
-			VMS_PLUGIN_URL . 'assets/css/vms-door-checkin.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-door-checkin.css',
 			array('vms-ui'),
 			$ver
 		);
 		wp_enqueue_script(
 			'vms-door-checkin',
-			VMS_PLUGIN_URL . 'assets/js/vms-door-checkin.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-door-checkin.js',
 			array(),
 			$ver,
 			true

@@ -8,7 +8,7 @@ if (!function_exists('vms_admin_ui_enqueue_global_menu_assets')) {
 	{
 		wp_enqueue_style(
 			'vms-admin-menu',
-			VMS_PLUGIN_URL . 'assets/css/vms-admin-menu.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-admin-menu.css',
 			array(),
 			vms_admin_ui_asset_version()
 		);
@@ -30,14 +30,14 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 		wp_enqueue_style(
 			'vms-admin-ui',
-			VMS_PLUGIN_URL . 'assets/css/vms-admin-ui.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-admin-ui.css',
 			$deps,
 			vms_admin_ui_asset_version()
 		);
 
 		wp_enqueue_script(
 			'vms-admin-ui',
-			VMS_PLUGIN_URL . 'assets/js/vms-admin-ui.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-admin-ui.js',
 			array(),
 			vms_admin_ui_asset_version(),
 			true
@@ -51,7 +51,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 		if ($is_event_plan_screen) {
 			wp_enqueue_script(
 				'vms-event-plan-shell',
-				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js',
 				array(),
 				vms_admin_ui_asset_version(),
 				true
@@ -59,7 +59,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 			wp_enqueue_script(
 				'vms-event-plan-staff',
-				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-staff.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-staff.js',
 				array(),
 				vms_admin_ui_asset_version(),
 				true
@@ -67,7 +67,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 			wp_enqueue_script(
 				'vms-event-plan-title',
-				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-title.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-title.js',
 				array(),
 				vms_admin_ui_asset_version(),
 				true
@@ -75,7 +75,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 			wp_enqueue_script(
 				'vms-event-plan-primary-vendor',
-				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-primary-vendor.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-primary-vendor.js',
 				array(),
 				vms_admin_ui_asset_version(),
 				true
@@ -83,7 +83,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 			wp_enqueue_script(
 				'vms-event-plan-workflow',
-				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-workflow.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-workflow.js',
 				array(),
 				vms_admin_ui_asset_version(),
 				true
@@ -91,7 +91,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 			wp_enqueue_script(
 				'vms-event-plan-compensation',
-				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-compensation.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-compensation.js',
 				array(),
 				vms_admin_ui_asset_version(),
 				true
@@ -99,7 +99,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 			wp_enqueue_script(
 				'vms-event-plan-secondary-vendors',
-				VMS_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js',
 				array(),
 				vms_admin_ui_asset_version(),
 				true
@@ -107,7 +107,7 @@ if (!function_exists('vms_admin_ui_enqueue_assets')) {
 
 			wp_enqueue_script(
 				'vms-lineup-schedule-admin',
-				VMS_PLUGIN_URL . 'assets/js/vms-lineup-schedule-admin.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-lineup-schedule-admin.js',
 				array('vms-admin-ui'),
 				vms_admin_ui_asset_version(),
 				true

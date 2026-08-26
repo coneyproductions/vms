@@ -1759,7 +1759,7 @@ function vms_ticketing_v2_enforce_ticket_ratio_rules_in_cart(): void
 
 function vms_ticketing_v2_validate_ticket_ratio_for_add(int $product_id, int $plan_id, int $request_qty): bool
 {
-    if (!empty($GLOBALS['vms_ticketing_v2_atomic_add_in_progress'])) {
+    if (!empty($GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'])) {
         return true;
     }
     if (!function_exists('wc_add_notice')) {
@@ -6381,14 +6381,14 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     if (!$is_event && !$is_cart && !$is_checkout) return;
 
-    $front_script_path = trailingslashit(VMS_PLUGIN_PATH) . 'assets/vms-ticketing-front.js';
-    $front_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+    $front_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front.js';
+    $front_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     if (is_readable($front_script_path)) {
         $front_script_version = (string) filemtime($front_script_path);
     }
 
-    $fallback_script_path = trailingslashit(VMS_PLUGIN_PATH) . 'assets/vms-ticketing-front-fallback.js';
-    $fallback_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+    $fallback_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front-fallback.js';
+    $fallback_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     if (is_readable($fallback_script_path)) {
         $fallback_script_version = (string) filemtime($fallback_script_path);
     }
@@ -6398,7 +6398,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     // Bundle loads on event/cart/checkout pages for ticketing UI state + cart consistency guards.
     wp_enqueue_script(
         'vms-ticketing-front',
-        plugins_url('assets/vms-ticketing-front.js', VMS_PLUGIN_FILE),
+        plugins_url('assets/vms-ticketing-front.js', BVMGR_PLUGIN_FILE),
         array(),
         $front_script_version,
         true
@@ -6406,7 +6406,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     wp_enqueue_script(
         'vms-ticketing-front-fallback',
-        plugins_url('assets/vms-ticketing-front-fallback.js', VMS_PLUGIN_FILE),
+        plugins_url('assets/vms-ticketing-front-fallback.js', BVMGR_PLUGIN_FILE),
         array(),
         $fallback_script_version,
         true
@@ -6424,9 +6424,9 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     wp_enqueue_style(
         'vms-ticketing-front',
-        plugins_url('assets/css/vms-ticketing-front.css', VMS_PLUGIN_FILE),
+        plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
         $front_style_deps,
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+        function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
     );
 
     $tec_event_id = 0;
@@ -6979,13 +6979,13 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     ));
 
     if ($is_event && !empty($ticket_ui['is_progressive'])) {
-        $progressive_script_path = trailingslashit(VMS_PLUGIN_PATH) . 'assets/vms-ticketing-progressive-ui.js';
-        $progressive_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+        $progressive_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-progressive-ui.js';
+        $progressive_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
         if (is_readable($progressive_script_path)) {
             $progressive_script_version = (string) filemtime($progressive_script_path);
             wp_enqueue_script(
                 'vms-ticketing-progressive-ui',
-                plugins_url('assets/vms-ticketing-progressive-ui.js', VMS_PLUGIN_FILE),
+                plugins_url('assets/vms-ticketing-progressive-ui.js', BVMGR_PLUGIN_FILE),
                 array('vms-ticketing-front'),
                 $progressive_script_version,
                 true
@@ -7022,9 +7022,9 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     $entitlements_style_deps = array_values(array_unique(array_merge(array('vms-ticketing-front'), $front_style_deps)));
     wp_enqueue_style(
         'vms-ticketing-entitlements',
-        plugins_url('assets/css/vms-entitlements-public.css', VMS_PLUGIN_FILE),
+        plugins_url('assets/css/vms-entitlements-public.css', BVMGR_PLUGIN_FILE),
         $entitlements_style_deps,
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+        function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
     );
 }
 
@@ -8808,7 +8808,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
     $request_assignee_counts = array();
     $buyer_user_id = is_user_logged_in() ? (int) get_current_user_id() : 0;
 
-    $GLOBALS['vms_ticketing_v2_atomic_add_in_progress'] = true;
+    $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] = true;
 
     foreach ($ticket_lines as $idx => $line) {
         $pid = absint($line['product_id'] ?? 0);
@@ -8998,7 +8998,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         $added_tickets += $qty;
     }
 
-    $GLOBALS['vms_ticketing_v2_atomic_add_in_progress'] = false;
+    $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] = false;
 
     if (empty($errors) && $event_plan_id > 0) {
         $ratio_violations = vms_ticketing_v2_collect_ticket_ratio_violations((int) $event_plan_id);

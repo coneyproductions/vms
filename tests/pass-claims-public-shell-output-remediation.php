@@ -5,12 +5,12 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('VMS_PLUGIN_URL')) {
-	define('VMS_PLUGIN_URL', 'https://plugin.example.test/wp-content/plugins/backstage-venue-manager/');
+if (!defined('BVMGR_PLUGIN_URL')) {
+	define('BVMGR_PLUGIN_URL', 'https://plugin.example.test/wp-content/plugins/backstage-venue-manager/');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 final class VmsPassClaimsPublicShellFooterReached extends RuntimeException
@@ -189,18 +189,18 @@ $assert($GLOBALS['vms_test_header_calls'] === 1 && $GLOBALS['vms_test_footer_cal
 $assert($GLOBALS['vms_test_enqueued_styles'] === array(
 	array(
 		'handle' => 'vms-pass-claims-public',
-		'src' => VMS_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css',
+		'src' => BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css',
 		'deps' => array(),
-		'ver' => VMS_VERSION,
+		'ver' => BVMGR_VERSION,
 		'media' => 'all',
 	),
 ), 'Pass Claims public shell should preserve the public stylesheet enqueue.');
 $assert($GLOBALS['vms_test_enqueued_scripts'] === array(
 	array(
 		'handle' => 'vms-pass-claims-public',
-		'src' => VMS_PLUGIN_URL . 'assets/js/vms-pass-claims-public.js',
+		'src' => BVMGR_PLUGIN_URL . 'assets/js/vms-pass-claims-public.js',
 		'deps' => array(),
-		'ver' => VMS_VERSION,
+		'ver' => BVMGR_VERSION,
 		'in_footer' => true,
 	),
 ), 'Pass Claims public shell should preserve the public script enqueue.');

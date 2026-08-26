@@ -500,10 +500,10 @@ foreach (array(
     'woocommerce_square_should_sync_product',
     'woocommerce_square_product_should_sync',
     'woocommerce_square_product_is_syncable',
-) as $vms_square_firewall_filter_name) {
-    add_filter($vms_square_firewall_filter_name, 'vms_square_firewall_filter_should_sync', 99, 10);
+) as $bvmgr_square_firewall_filter_name) {
+    add_filter($bvmgr_square_firewall_filter_name, 'vms_square_firewall_filter_should_sync', 99, 10);
 }
-unset($vms_square_firewall_filter_name);
+unset($bvmgr_square_firewall_filter_name);
 
 if (!function_exists('vms_square_firewall_query_product_ids')) {
     /**

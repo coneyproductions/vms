@@ -202,7 +202,7 @@ if (!function_exists('vms_vendor_availability_snapshot_month')) {
  */
 
 
-class VMS_Admin_Vendors
+class BVMGR_Admin_Vendors
 {
 
     public function __construct()
@@ -546,8 +546,8 @@ class VMS_Admin_Vendors
 
 if (is_admin()) {
     add_action('init', function () {
-        if (class_exists('VMS_Admin_Vendors')) {
-            new VMS_Admin_Vendors();
+        if (class_exists('BVMGR_Admin_Vendors')) {
+            new BVMGR_Admin_Vendors();
         }
     }, 20);
 }

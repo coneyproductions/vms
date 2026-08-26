@@ -179,12 +179,12 @@ PHP,
 <?php
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_PLUGIN_SLUG')) {
-	define('VMS_PLUGIN_SLUG', '{$internalPluginSlug}');
+if (!defined('BVMGR_PLUGIN_SLUG')) {
+	define('BVMGR_PLUGIN_SLUG', '{$internalPluginSlug}');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', '{$constantsVersion}');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', '{$constantsVersion}');
 }
 PHP,
 		'includes/db/migrations.php' => <<<PHP
@@ -383,7 +383,7 @@ function vms_public_release_test_fixture_package_entries(array $overrides = arra
 PHP,
 		$publicSlug . '/includes/bootstrap.php' => "<?php\n",
 		$publicSlug . '/includes/core/plugin.php' => "<?php\n",
-		$publicSlug . '/includes/core/registry/constants.php' => "<?php\ndefine('VMS_PLUGIN_SLUG', '" . addslashes($internalPluginSlug) . "');\ndefine('VMS_VERSION', '{$constantsVersion}');\n",
+		$publicSlug . '/includes/core/registry/constants.php' => "<?php\ndefine('BVMGR_PLUGIN_SLUG', '" . addslashes($internalPluginSlug) . "');\ndefine('BVMGR_VERSION', '{$constantsVersion}');\n",
 		$publicSlug . '/includes/db/migrations.php' => "<?php\nfunction vms_db_migrate_vendor_core_v1(): void {}\n",
 		$publicSlug . '/assets/js/app.js' => "console.log('ok');\n",
 		$publicSlug . '/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
@@ -606,7 +606,10 @@ $tests['agent instructions are excluded from staged and packaged public builds']
 			'force' => true,
 			'release_tests' => array(),
 		));
-		vms_public_release_test_assert(($report['status'] ?? '') === 'PASS', 'Expected valid public build with AGENTS exclusion to pass.');
+		vms_public_release_test_assert(
+			($report['status'] ?? '') === 'PASS',
+			'Expected valid public build with AGENTS exclusion to pass: ' . json_encode(array_values(array_filter((array) ($report['checks'] ?? array()), static fn(array $check): bool => ($check['status'] ?? '') === 'FAIL')))
+		);
 		vms_public_release_test_assert(!empty($report['artifact']['created']), 'Expected AGENTS exclusion build to create a ZIP.');
 
 		$zipEntries = vms_public_release_test_read_zip_entries((string) $report['artifact']['zip_path']);
@@ -811,7 +814,7 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		);
 		vms_public_release_test_assert(
 			($report['metadata']['version'] ?? '') === '1.2.0',
-			'Expected the current repository VMS_VERSION to resolve to 1.2.0.'
+			'Expected the current repository BVMGR_VERSION to resolve to 1.2.0.'
 		);
 		vms_public_release_test_assert(
 			($report['metadata']['build_version'] ?? '') === '1.2.0',
@@ -850,8 +853,8 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		vms_public_release_test_assert($packagedLegacyBridge !== '', 'Expected the headerless legacy filename bridge to remain in the public package.');
 		vms_public_release_test_assert(preg_match('/^\s*\*\s*Plugin Name:/m', $packagedLegacyBridge) !== 1, 'Expected the legacy filename bridge to avoid a duplicate plugin header.');
 		vms_public_release_test_assert(
-			strpos($packagedConstants, "define('VMS_VERSION', '1.2.0');") !== false,
-			'Expected the packaged VMS_VERSION constant to resolve to 1.2.0.'
+			strpos($packagedConstants, "define('BVMGR_VERSION', '1.2.0');") !== false,
+			'Expected the packaged BVMGR_VERSION constant to resolve to 1.2.0.'
 		);
 		vms_public_release_test_assert(strpos($packagedReadme, 'Stable tag: 1.2.0') !== false, 'Expected the packaged readme stable tag to resolve to 1.2.0.');
 		vms_public_release_test_assert(substr_count($packagedReadme, '= 1.2.0 =') >= 2, 'Expected the packaged readme to contain the 1.2.0 changelog and upgrade-notice sections.');

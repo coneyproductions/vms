@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_current_screen'] = null;
 $GLOBALS['vms_test_actions'] = array();
@@ -175,8 +175,8 @@ try {
 
     $assert(has_action('admin_enqueue_scripts', 'vms_comp_package_admin_enqueue_assets') === 50, 'Comp Package admin should register its screen-scoped enqueue callback at priority 50.');
     $assert(has_action('admin_enqueue_scripts', 'vms_vendor_defaults_admin_enqueue_assets') === 50, 'Vendor Defaults admin should register its screen-scoped enqueue callback at priority 50.');
-    $assert(strpos($compEnqueueSource, "VMS_PLUGIN_URL . 'assets/js/vms-compensation-admin.js'") !== false, 'Comp Package admin should point to the shared compensation asset.');
-    $assert(strpos($vendorEnqueueSource, "VMS_PLUGIN_URL . 'assets/js/vms-compensation-admin.js'") !== false, 'Vendor Defaults admin should point to the shared compensation asset.');
+    $assert(strpos($compEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js'") !== false, 'Comp Package admin should point to the shared compensation asset.');
+    $assert(strpos($vendorEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js'") !== false, 'Vendor Defaults admin should point to the shared compensation asset.');
     $assert(strpos($compEnqueueSource, "'vmsCompPackageAdmin'") !== false, 'Comp Package admin should localize only the inert comp-package labels.');
     $assert(strpos($vendorEnqueueSource, "'vmsVendorDefaultsAdmin'") !== false, 'Vendor Defaults admin should localize only the inert vendor-defaults strings.');
     $assert(strpos($corePluginSource, 'vms-compensation-admin') === false, 'Compensation admin asset should not be loaded by the global core admin asset loader.');
@@ -240,7 +240,7 @@ try {
 
     $assert(strpos($staffingSource, '<script') === false, 'Staffing admin source should remain externalized with no inline executable <script> blocks.');
     $assert(strpos($staffingSource, '<style') === false, 'Staffing admin source should remain externalized with no inline <style> blocks.');
-    $assert(strpos($staffingSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its dedicated external asset boundary.');
+    $assert(strpos($staffingSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its dedicated external asset boundary.');
     $assert(strpos($staffPortalSource, 'window.VMS_STAFF_AV') === false, 'Staff Portal source should not reintroduce the old global availability bootstrap.');
     $assert(strpos($staffPortalSource, 'data-vms-staff-availability="1"') !== false, 'Staff Portal source should preserve the inert availability form marker.');
     $assert(strpos($staffPortalSource, 'assets/js/vms-staff-portal.js') !== false, 'Staff Portal source should preserve the dedicated availability asset boundary.');
@@ -263,7 +263,7 @@ try {
     vms_comp_package_admin_enqueue_assets();
     vms_vendor_defaults_admin_enqueue_assets();
     $assert(isset($GLOBALS['vms_test_scripts']['vms-compensation-admin']), 'Comp Package screen should enqueue the shared compensation asset.');
-    $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['src'] ?? '') === VMS_PLUGIN_URL . 'assets/js/vms-compensation-admin.js', 'Comp Package screen should use the expected compensation asset path.');
+    $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js', 'Comp Package screen should use the expected compensation asset path.');
     $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['ver'] ?? '') === 'test-asset-version', 'Comp Package screen should use the asset-version helper fallback pattern.');
     $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['in_footer'] ?? false) === true, 'Comp Package screen should keep the shared compensation asset footer-loaded.');
     $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['name'] ?? '') === 'vmsCompPackageAdmin', 'Comp Package screen should localize only the comp-package labels.');

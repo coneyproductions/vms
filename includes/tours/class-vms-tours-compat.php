@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Compat')) {
-	class VMS_Tours_Compat
+if (!class_exists('BVMGR_Tours_Compat')) {
+	class BVMGR_Tours_Compat
 	{
 		const ALLOWED_SCRIPT_HANDLES = array(
 			'vms-driverjs',
@@ -31,11 +31,11 @@ if (!class_exists('VMS_Tours_Compat')) {
 		private $detected_legacy_handles = array();
 
 		/**
-		 * @var VMS_Tours_Screen
+		 * @var BVMGR_Tours_Screen
 		 */
 		private $screen;
 
-		public function __construct(VMS_Tours_Screen $screen)
+		public function __construct(BVMGR_Tours_Screen $screen)
 		{
 			$this->screen = $screen;
 		}

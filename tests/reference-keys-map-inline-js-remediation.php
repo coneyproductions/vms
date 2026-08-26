@@ -37,7 +37,7 @@ try {
 	$assert(strpos($keysMapSource, "add_action('admin_enqueue_scripts', 'vms_admin_reference_keys_map_enqueue_assets', 50);") !== false, 'Reference Keys Map should register its page-specific enqueue callback.');
 	$assert(strpos($keysMapSource, "return 'vms-reference-keys-map';") !== false, 'Reference Keys Map should retain the exact page slug for its dedicated asset gate.');
 	$assert(preg_match('~\$page\s*!==\s*vms_admin_reference_keys_map_page_slug\(\)~', $keysMapSource) === 1, 'Reference Keys Map enqueue should bail unless the current admin page matches the exact page slug.');
-	$assert(strpos($keysMapSource, "VMS_PLUGIN_URL . 'assets/js/vms-reference-keys-map.js'") !== false, 'Reference Keys Map should enqueue the external asset from assets/js/vms-reference-keys-map.js.');
+	$assert(strpos($keysMapSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-reference-keys-map.js'") !== false, 'Reference Keys Map should enqueue the external asset from assets/js/vms-reference-keys-map.js.');
 	$assert(substr_count($keysMapSource, "current_user_can('manage_options')") >= 2, 'Reference Keys Map should keep both the page capability guard and the enqueue capability guard.');
 
 	$assert(

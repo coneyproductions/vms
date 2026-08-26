@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_actions'] = array();
 $GLOBALS['vms_test_current_screen'] = null;
@@ -188,7 +188,7 @@ try {
 	$GLOBALS['vms_test_current_screen'] = (object) array('base' => 'edit-tags', 'taxonomy' => 'vms_staff_role', 'post_type' => 'vms_staff');
 	vms_staffing_admin_enqueue_assets();
 	$assert(isset($GLOBALS['vms_test_scripts']['vms-staffing-admin']), 'Staff Roles add/list screen should enqueue the dedicated Staffing admin script.');
-	$assert(($GLOBALS['vms_test_scripts']['vms-staffing-admin']['src'] ?? '') === VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js', 'Staffing admin script should use assets/js/vms-staffing-admin.js.');
+	$assert(($GLOBALS['vms_test_scripts']['vms-staffing-admin']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js', 'Staffing admin script should use assets/js/vms-staffing-admin.js.');
 	$assert(($GLOBALS['vms_test_scripts']['vms-staffing-admin']['deps'] ?? null) === array(), 'Staffing admin script should not add unnecessary dependencies.');
 	$assert(($GLOBALS['vms_test_scripts']['vms-staffing-admin']['ver'] ?? null) === 'test-asset-version', 'Staffing admin script should use vms_asset_version() when available.');
 	$assert(($GLOBALS['vms_test_scripts']['vms-staffing-admin']['in_footer'] ?? null) === true, 'Staffing admin script should load in the footer.');
@@ -207,7 +207,7 @@ try {
 	vms_staffing_admin_enqueue_assets();
 	$assert(isset($GLOBALS['vms_test_scripts']['vms-staffing-admin']), 'Staffing Templates page should enqueue the dedicated Staffing admin script.');
 	$assert(isset($GLOBALS['vms_test_styles']['vms-staffing-admin']), 'Staffing Templates page should enqueue the dedicated stylesheet.');
-	$assert(($GLOBALS['vms_test_styles']['vms-staffing-admin']['src'] ?? '') === VMS_PLUGIN_URL . 'assets/css/vms-staffing-admin.css', 'Staffing admin stylesheet should use assets/css/vms-staffing-admin.css.');
+	$assert(($GLOBALS['vms_test_styles']['vms-staffing-admin']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/css/vms-staffing-admin.css', 'Staffing admin stylesheet should use assets/css/vms-staffing-admin.css.');
 	$assert(($GLOBALS['vms_test_styles']['vms-staffing-admin']['deps'] ?? null) === array(), 'Staffing admin stylesheet should not add unnecessary dependencies.');
 	$assert(($GLOBALS['vms_test_styles']['vms-staffing-admin']['ver'] ?? null) === 'test-asset-version', 'Staffing admin stylesheet should use vms_asset_version() when available.');
 
@@ -220,8 +220,8 @@ try {
 	$assert($GLOBALS['vms_test_styles'] === array(), 'Unrelated admin pages should not enqueue the Staffing admin stylesheet.');
 
 	$assert(strpos($staffingSource, 'function vms_staffing_admin_enqueue_assets(): void') !== false, 'Staffing admin source should declare the dedicated enqueue callback.');
-	$assert(strpos($staffingSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should point to assets/js/vms-staffing-admin.js.');
-	$assert(strpos($staffingSource, "VMS_PLUGIN_URL . 'assets/css/vms-staffing-admin.css'") !== false, 'Staffing admin source should point to assets/css/vms-staffing-admin.css.');
+	$assert(strpos($staffingSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should point to assets/js/vms-staffing-admin.js.');
+	$assert(strpos($staffingSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-staffing-admin.css'") !== false, 'Staffing admin source should point to assets/css/vms-staffing-admin.css.');
 	$assert(strpos($staffingSource, "add_action('admin_enqueue_scripts', 'vms_staffing_admin_enqueue_assets', 50);") !== false, 'Staffing admin source should register the enqueue callback.');
 	$assert(strpos($staffingSource, "return \$page === 'vms-staffing-templates';") !== false, 'Staffing admin source should preserve the exact templates page slug.');
 	$assert(strpos($staffingSource, "in_array((string) (\$screen->base ?? ''), array('edit-tags', 'term'), true)") !== false, 'Staffing admin source should preserve the exact Staff Roles taxonomy screen bases.');

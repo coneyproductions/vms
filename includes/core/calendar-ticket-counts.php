@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_CALENDAR_TICKET_COUNTS_CRON_HOOK')) {
-	define('VMS_CALENDAR_TICKET_COUNTS_CRON_HOOK', 'vms_calendar_ticket_counts_nightly');
+if (!defined('BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK')) {
+	define('BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK', 'vms_calendar_ticket_counts_nightly');
 }
 
 if (!function_exists('vms_calendar_ticket_counts_meta_key')) {
@@ -296,7 +296,7 @@ if (!function_exists('vms_calendar_ticket_counts_nightly_scan')) {
 		vms_calendar_ticket_counts_refresh_plans((array) $plan_ids);
 	}
 }
-add_action(VMS_CALENDAR_TICKET_COUNTS_CRON_HOOK, 'vms_calendar_ticket_counts_nightly_scan');
+add_action(BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK, 'vms_calendar_ticket_counts_nightly_scan');
 
 if (!function_exists('vms_calendar_ticket_counts_schedule_cron')) {
 	function vms_calendar_ticket_counts_schedule_cron(): void
@@ -304,8 +304,8 @@ if (!function_exists('vms_calendar_ticket_counts_schedule_cron')) {
 		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
 			return;
 		}
-		if (!wp_next_scheduled(VMS_CALENDAR_TICKET_COUNTS_CRON_HOOK)) {
-			wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', VMS_CALENDAR_TICKET_COUNTS_CRON_HOOK);
+		if (!wp_next_scheduled(BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK)) {
+			wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK);
 		}
 	}
 }

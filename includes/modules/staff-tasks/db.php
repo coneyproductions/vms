@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_tasks_db_option_key')) {
 	function vms_tasks_db_option_key(): string
 	{
-		return defined('VMS_OPT_TASKS_DB_SCHEMA_VERSION') ? (string) VMS_OPT_TASKS_DB_SCHEMA_VERSION : 'vms_tasks_db_schema_version';
+		return defined('BVMGR_OPT_TASKS_DB_SCHEMA_VERSION') ? (string) BVMGR_OPT_TASKS_DB_SCHEMA_VERSION : 'vms_tasks_db_schema_version';
 	}
 }
 
@@ -21,11 +21,11 @@ if (!function_exists('vms_tasks_table_name')) {
 	{
 		global $wpdb;
 		$map = array(
-			'task_templates' => defined('VMS_DB_TABLE_TASK_TEMPLATES_SUFFIX') ? VMS_DB_TABLE_TASK_TEMPLATES_SUFFIX : 'vms_task_templates',
-			'checklist_templates' => defined('VMS_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX') ? VMS_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX : 'vms_checklist_templates',
-			'checklist_items' => defined('VMS_DB_TABLE_CHECKLIST_ITEMS_SUFFIX') ? VMS_DB_TABLE_CHECKLIST_ITEMS_SUFFIX : 'vms_checklist_items',
-			'task_instances' => defined('VMS_DB_TABLE_TASK_INSTANCES_SUFFIX') ? VMS_DB_TABLE_TASK_INSTANCES_SUFFIX : 'vms_task_instances',
-			'task_logs' => defined('VMS_DB_TABLE_TASK_LOGS_SUFFIX') ? VMS_DB_TABLE_TASK_LOGS_SUFFIX : 'vms_task_logs',
+			'task_templates' => defined('BVMGR_DB_TABLE_TASK_TEMPLATES_SUFFIX') ? BVMGR_DB_TABLE_TASK_TEMPLATES_SUFFIX : 'vms_task_templates',
+			'checklist_templates' => defined('BVMGR_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX') ? BVMGR_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX : 'vms_checklist_templates',
+			'checklist_items' => defined('BVMGR_DB_TABLE_CHECKLIST_ITEMS_SUFFIX') ? BVMGR_DB_TABLE_CHECKLIST_ITEMS_SUFFIX : 'vms_checklist_items',
+			'task_instances' => defined('BVMGR_DB_TABLE_TASK_INSTANCES_SUFFIX') ? BVMGR_DB_TABLE_TASK_INSTANCES_SUFFIX : 'vms_task_instances',
+			'task_logs' => defined('BVMGR_DB_TABLE_TASK_LOGS_SUFFIX') ? BVMGR_DB_TABLE_TASK_LOGS_SUFFIX : 'vms_task_logs',
 		);
 		$suffix = isset($map[$kind]) ? (string) $map[$kind] : '';
 		if ($suffix === '') {

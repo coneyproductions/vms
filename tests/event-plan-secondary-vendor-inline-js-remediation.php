@@ -109,7 +109,7 @@ try {
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendor-row-template"') !== false, 'Secondary Vendors partial should retain the row template.');
 	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Shell asset should still call the Secondary Vendors compatibility initializer after lazy loading.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-secondary-vendors'") !== false, 'Admin UI assets should register the Secondary Vendors handle.');
-	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js'") !== false, 'Admin UI assets should point the Secondary Vendors handle at the new asset.');
+	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js'") !== false, 'Admin UI assets should point the Secondary Vendors handle at the new asset.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Secondary Vendors asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Secondary Vendors asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') === false, 'Bulk-cancellation retry confirmation should no longer remain inline.');

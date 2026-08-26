@@ -353,9 +353,9 @@ if (!function_exists('vms_ticketing_claims_enqueue_account_styles')) {
 
 		wp_enqueue_style(
 			'vms-ticketing-front',
-			plugins_url('assets/css/vms-ticketing-front.css', VMS_PLUGIN_FILE),
+			plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
 			$deps,
-			function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+			function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 		);
 	}
 }

@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
 }
 
 // === Holidays admin venue persistence (per-user) ==============================
-define('VMS_HOLIDAYS_LAST_VENUE_USERMETA_KEY', '_vms_holidays_last_venue_id');
+define('BVMGR_HOLIDAYS_LAST_VENUE_USERMETA_KEY', '_vms_holidays_last_venue_id');
 
 function vms_holidays_read_query_arg(string $key): string
 {
@@ -96,13 +96,13 @@ function vms_holidays_get_effective_venue_id()
 	if ($venue_id_req > 0 && post_type_exists('vms_venue')) {
 		$post = get_post($venue_id_req);
 		if ($post && $post->post_type === 'vms_venue') {
-			update_user_meta($user_id, VMS_HOLIDAYS_LAST_VENUE_USERMETA_KEY, $venue_id_req);
+			update_user_meta($user_id, BVMGR_HOLIDAYS_LAST_VENUE_USERMETA_KEY, $venue_id_req);
 			return $venue_id_req;
 		}
 	}
 
 	// 2) Fall back to stored user selection.
-	$stored = absint(get_user_meta($user_id, VMS_HOLIDAYS_LAST_VENUE_USERMETA_KEY, true));
+	$stored = absint(get_user_meta($user_id, BVMGR_HOLIDAYS_LAST_VENUE_USERMETA_KEY, true));
 	if ($stored > 0) {
 		$post = get_post($stored);
 		if ($post && $post->post_type === 'vms_venue') {
@@ -167,11 +167,11 @@ function vms_admin_holidays_enqueue_assets(): void
 
 	$version = function_exists('vms_asset_version')
 		? vms_asset_version()
-		: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+		: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 	wp_enqueue_script(
 		'vms-holidays-admin',
-		VMS_PLUGIN_URL . 'assets/js/vms-holidays-admin.js',
+		BVMGR_PLUGIN_URL . 'assets/js/vms-holidays-admin.js',
 		array(),
 		$version,
 		true

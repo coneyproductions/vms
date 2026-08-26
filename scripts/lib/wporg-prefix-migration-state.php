@@ -250,7 +250,7 @@ final class BVMGR_Prefix_Compatibility_Map
 
 	private function add(array $entry): void
 	{
-		$legacy = (string) ($entry['current_identifier'] ?? '');
+		$legacy = (string) ($entry['legacy_identifier'] ?? $entry['current_identifier'] ?? '');
 		$canonical = $entry['canonical_target'] ?? null;
 		if ($legacy === '' || !is_string($canonical) || $canonical === '') {
 			return;

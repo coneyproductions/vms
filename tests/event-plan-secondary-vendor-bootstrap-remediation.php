@@ -62,7 +62,7 @@ try {
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitSecondaryVendors(body);') === false, 'Event Plan PHP should no longer reinitialize Secondary Vendors after save-response markup replacement.');
 	$assert(strpos($secondaryVendorAssetSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Dedicated Secondary Vendors asset should still reinitialize itself after save-response markup replacement.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-secondary-vendors'") !== false, 'Admin UI assets should register the dedicated Secondary Vendors handle.');
-	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js'") !== false, 'Admin UI assets should point the Secondary Vendors handle at the dedicated asset.');
+	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js'") !== false, 'Admin UI assets should point the Secondary Vendors handle at the dedicated asset.');
 
 	$bridgeHits = array();
 	$runtimeIterator = new RecursiveIteratorIterator(

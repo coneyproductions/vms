@@ -5,8 +5,8 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 $GLOBALS['vms_test_actions'] = array();

@@ -299,8 +299,8 @@ g16a_contains('json_decode($body, true)', $g16a_shadow_turnstile, 'Shadow must r
 g16a_assert($g16a_mirror_turnstile !== $g16a_shadow_turnstile, 'Intentional Turnstile mirror/shadow divergence must remain explicit.');
 
 defined('ABSPATH') || define('ABSPATH', '/srv/wordpress/');
-defined('VMS_PLUGIN_PATH') || define('VMS_PLUGIN_PATH', '/srv/wordpress/wp-content/plugins/vms/');
-defined('VMS_VENDOR_CPT') || define('VMS_VENDOR_CPT', 'vms_vendor');
+defined('BVMGR_PLUGIN_PATH') || define('BVMGR_PLUGIN_PATH', '/srv/wordpress/wp-content/plugins/vms/');
+defined('BVMGR_VENDOR_CPT') || define('BVMGR_VENDOR_CPT', 'vms_vendor');
 
 final class G16A_WP_Error
 {

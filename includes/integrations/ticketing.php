@@ -49,12 +49,12 @@ function vms_ticketing_admin_query_absint(string $key): int
 function vms_ticketing_ajax_attach_noise(array $data): array
 {
     $noise = '';
-    if (!empty($GLOBALS['vms_ajax_ob_started'])) {
+    if (!empty($GLOBALS['bvmgr_ajax_ob_started'])) {
         $noise = (string) ob_get_contents();
         // We started this buffer explicitly in integrations/load.php for AJAX requests.
         // Close it now so our JSON response is not buffered behind any later output.
         @ob_end_clean();
-        $GLOBALS['vms_ajax_ob_started'] = false;
+        $GLOBALS['bvmgr_ajax_ob_started'] = false;
     }
 
     $noise = wp_strip_all_tags((string) $noise, false);
@@ -79,7 +79,7 @@ function vms_ticketing_ajax_send_error(array $data = array(), int $http_status =
 
 function vms_ticketing_ajax_discard_owned_buffer(): void
 {
-    if (empty($GLOBALS['vms_ajax_ob_started'])) {
+    if (empty($GLOBALS['bvmgr_ajax_ob_started'])) {
         return;
     }
 
@@ -87,7 +87,7 @@ function vms_ticketing_ajax_discard_owned_buffer(): void
         @ob_end_clean();
     }
 
-    $GLOBALS['vms_ajax_ob_started'] = false;
+    $GLOBALS['bvmgr_ajax_ob_started'] = false;
 }
 
 function vms_ticketing_v2_ajax_send_success($data = null, ?int $status_code = null, int $flags = 0): void
@@ -388,9 +388,9 @@ function vms_ticketing_admin_enqueue_assets($hook): void
         return;
     }
 
-    $ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+    $ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     $handle = 'vms-admin-ticketing';
-    $src = defined('VMS_PLUGIN_URL') ? (VMS_PLUGIN_URL . 'assets/admin-ticketing.js') : '';
+    $src = defined('BVMGR_PLUGIN_URL') ? (BVMGR_PLUGIN_URL . 'assets/admin-ticketing.js') : '';
     if ($src === '') {
         return;
     }

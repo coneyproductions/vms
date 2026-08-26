@@ -42,22 +42,22 @@ if (!function_exists('vms_status_notice_admin_enqueue_assets')) {
 			return;
 		}
 
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
 			'vms-notices-front',
-			VMS_PLUGIN_URL . 'assets/css/vms-notices-front.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-notices-front.css',
 			array('vms-ui'),
 			$ver
 		);
 		wp_enqueue_style(
 			'vms-status-notices-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-status-notices-admin.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-status-notices-admin.css',
 			array('vms-admin', 'vms-admin-ui', 'vms-notices-front'),
 			$ver
 		);
 		wp_enqueue_script(
 			'vms-status-notices-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-status-notices-admin.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-status-notices-admin.js',
 			array(),
 			$ver,
 			true

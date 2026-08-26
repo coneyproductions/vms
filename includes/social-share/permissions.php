@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_social_manage_capability')) {
 	function vms_social_manage_capability(): string
 	{
-		return defined('VMS_CAP_SOCIAL_MANAGE') ? (string) VMS_CAP_SOCIAL_MANAGE : 'vms_social_manage';
+		return defined('BVMGR_CAP_SOCIAL_MANAGE') ? (string) BVMGR_CAP_SOCIAL_MANAGE : 'vms_social_manage';
 	}
 }
 

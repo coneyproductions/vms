@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_options'] = array(
 	'vms_turnstile_site_key' => 'site-key',
@@ -46,7 +46,7 @@ function wp_get_current_user(): WP_User { return new WP_User(); }
 function vms_request_method(): string { return 'get'; }
 function vms_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
 function vms_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
-function vms_asset_url(string $asset_rel): string { return VMS_PLUGIN_URL . ltrim($asset_rel, '/'); }
+function vms_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
 function vms_asset_version_for(string $asset_rel): string { unset($asset_rel); return 'test-version'; }
 function wp_enqueue_script(string $handle, string $src = '', array $deps = array(), $ver = false, bool $in_footer = false): void { $GLOBALS['vms_test_scripts'][$handle] = compact('src', 'deps', 'ver', 'in_footer'); }
 function wp_nonce_field(string $action, string $name): void { echo '<input type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($action) . '" />'; }

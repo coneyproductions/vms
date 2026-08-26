@@ -185,7 +185,7 @@ HISTORICAL;
 
 		private function debug(string $message): void
 		{
-			if (defined('VMS_TOURS_DEBUG') && VMS_TOURS_DEBUG) {
+			if (defined('BVMGR_TOURS_DEBUG') && BVMGR_TOURS_DEBUG) {
 				error_log('[VMS Tours] ' . $message);
 			}
 		}
@@ -921,7 +921,7 @@ $g17b_valid_tour = array(
 		),
 	),
 );
-$g17b_registry = new VMS_Tours_Registry();
+$g17b_registry = new BVMGR_Tours_Registry();
 g17b_assert($g17b_registry->register($g17b_valid_tour), 'Valid Tours registration changed');
 $g17b_tour = $g17b_registry->get('tourone');
 g17b_same('auto', $g17b_tour['steps'][0]['placement'] ?? null, 'Invalid Tours placement must still normalize to auto');
@@ -932,7 +932,7 @@ foreach (array(
 	'empty_version' => array_replace($g17b_valid_tour, array('version' => ' ')),
 	'no_valid_steps' => array_replace($g17b_valid_tour, array('steps' => array(array()))),
 ) as $case => $tour_definition) {
-	$registry = new VMS_Tours_Registry();
+	$registry = new BVMGR_Tours_Registry();
 	g17b_assert(!$registry->register($tour_definition), 'Tours rejection decision changed: ' . $case);
 }
 

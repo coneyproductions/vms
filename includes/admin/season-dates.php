@@ -21,7 +21,7 @@ function vms_sd_require_engine(): void
 function vms_sd_redirect(string $url): void
 {
 	if (headers_sent($file, $line)) {
-		$GLOBALS['vms_sd_headers_sent'] = [$file, (int)$line];
+		$GLOBALS['bvmgr_sd_headers_sent'] = [$file, (int)$line];
 		$_GET['vms_error'] = 'headers_sent';
 		return;
 	}
@@ -623,8 +623,8 @@ function vms_render_season_dates_page(): void
 	echo '<div class="wrap vms-season-dates-admin">';
 	echo '<h1>' . esc_html__('Season Dates', 'backstage-venue-manager') . '</h1>';
 
-	if ($error === 'headers_sent' && !empty($GLOBALS['vms_sd_headers_sent'])) {
-		[$f, $ln] = $GLOBALS['vms_sd_headers_sent'];
+	if ($error === 'headers_sent' && !empty($GLOBALS['bvmgr_sd_headers_sent'])) {
+		[$f, $ln] = $GLOBALS['bvmgr_sd_headers_sent'];
 		echo '<div class="notice notice-error is-dismissible"><p>';
 		echo esc_html(vms_sd_error_text('headers_sent')) . ' <code>' . esc_html($f . ':' . (string)$ln) . '</code>';
 		echo '</p></div>';

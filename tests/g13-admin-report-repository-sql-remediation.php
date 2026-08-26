@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_VENUE_TEMPLATE_META_KEY', '_vms_is_venue_template');
+define('BVMGR_VENUE_TEMPLATE_META_KEY', '_vms_is_venue_template');
 
 final class G13_WPDB_Spy
 {
@@ -614,7 +614,7 @@ $GLOBALS['g13_get_posts_queue'] = array(array());
 vms_render_create_from_template_panel(new WP_Post(0, 'auto-draft'));
 $venue_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(-1, $venue_args['posts_per_page'], 'Venue template enumeration changed.');
-g13_same(VMS_VENUE_TEMPLATE_META_KEY, $venue_args['meta_key'], 'Venue template marker key changed.');
+g13_same(BVMGR_VENUE_TEMPLATE_META_KEY, $venue_args['meta_key'], 'Venue template marker key changed.');
 g13_same('1', $venue_args['meta_value'], 'Venue template marker value changed.');
 
 // The actual settings-tour operation is an immediate prepared DELETE, not a table probe.

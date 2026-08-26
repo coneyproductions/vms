@@ -60,8 +60,8 @@ if (!function_exists('vms_feedback_enqueue_public_assets')) {
 		if (!vms_feedback_is_public_survey_request()) {
 			return;
 		}
-		wp_enqueue_style('vms-event-feedback', VMS_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), vms_asset_version());
-		wp_enqueue_script('vms-event-feedback', VMS_PLUGIN_URL . 'assets/js/vms-event-feedback.js', array(), vms_asset_version(), true);
+		wp_enqueue_style('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), vms_asset_version());
+		wp_enqueue_script('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/js/vms-event-feedback.js', array(), vms_asset_version(), true);
 	}
 }
 add_action('wp_enqueue_scripts', 'vms_feedback_enqueue_public_assets');
@@ -490,7 +490,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 			wp_date('M j, Y g:i a')
 		);
 		$response_id = wp_insert_post(array(
-			'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+			'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 			'post_status' => 'private',
 			'post_title' => $title,
 			'post_content' => (string) $payload['final_comment'],

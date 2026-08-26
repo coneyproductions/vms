@@ -407,7 +407,7 @@ try {
     assertSame('image/jpeg', (string) ($jpgResult['mime'] ?? ''), 'Large JPG output mime');
     $jpgSize = getimagesize($jpgPath);
     assertTrue(is_array($jpgSize), 'Large JPG output dimensions were unreadable.');
-    assertTrue(max((int) $jpgSize[0], (int) $jpgSize[1]) <= (int) VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION, 'Large JPG output was not resized to the configured long edge.');
+    assertTrue(max((int) $jpgSize[0], (int) $jpgSize[1]) <= (int) BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION, 'Large JPG output was not resized to the configured long edge.');
 
     $pngSource = trailingslashit($root) . 'source-proof.png';
     createFixtureImage($pngSource, 'png', 2400, 1800);
@@ -434,7 +434,7 @@ try {
     }
 
     $tooLarge = vms_normalize_uploaded_image_to_jpeg($jpgSource, $root, 'too-large', array(
-        'max_dimension' => (int) VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
+        'max_dimension' => (int) BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
         'quality' => 92,
         'max_output_bytes' => 1024,
     ));

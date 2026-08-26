@@ -14,8 +14,8 @@ if (!function_exists('vms_vendor_command_center_page_slug')) {
 if (!function_exists('vms_vendor_command_center_template_option_key')) {
     function vms_vendor_command_center_template_option_key(): string
     {
-        return defined('VMS_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE')
-            ? (string) VMS_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE
+        return defined('BVMGR_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE')
+            ? (string) BVMGR_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE
             : 'vms_vendor_onboarding_email_template';
     }
 }
@@ -544,7 +544,7 @@ if (!function_exists('vms_vendor_command_center_get_linked_user_id')) {
             }
         }
 
-        return (int) get_post_meta($vendor_id, (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
+        return (int) get_post_meta($vendor_id, (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
     }
 }
 
@@ -710,7 +710,7 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
         $terms_days = vms_vendor_command_center_terms_days();
 
         $plan_ids = get_posts(array(
-            'post_type' => defined('VMS_CPT_EVENT_PLAN') ? VMS_CPT_EVENT_PLAN : 'vms_event_plan',
+            'post_type' => defined('BVMGR_CPT_EVENT_PLAN') ? BVMGR_CPT_EVENT_PLAN : 'vms_event_plan',
             'post_status' => array('publish', 'draft', 'private', 'pending'),
             'posts_per_page' => -1,
             'fields' => 'ids',
@@ -1104,7 +1104,7 @@ if (!function_exists('vms_vendor_command_center_build_rows')) {
         $payables_map = isset($maps['payables_map']) && is_array($maps['payables_map']) ? $maps['payables_map'] : array();
 
         $vendor_ids = get_posts(array(
-            'post_type' => defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor',
+            'post_type' => defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor',
             'post_status' => array('publish', 'draft', 'private', 'pending'),
             'posts_per_page' => -1,
             'fields' => 'ids',
@@ -1949,7 +1949,7 @@ if (!function_exists('vms_vendor_command_center_handle_send_onboarding')) {
 	        $message = sanitize_textarea_field(vms_vendor_command_center_decode_human_text(vms_request_read_scalar($_POST, 'message')));
 	        $message_text = vms_vendor_command_center_prepare_plain_email_text($message);
 
-        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor')) {
+        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor')) {
             if (function_exists('vms_add_admin_notice')) {
                 vms_add_admin_notice(__('Select a valid vendor before sending onboarding email.', 'backstage-venue-manager'), 'error');
             }
@@ -2053,7 +2053,7 @@ if (!function_exists('vms_vendor_command_center_handle_link_matching_user')) {
         $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
         check_admin_referer('vms_vendor_command_center_link_matching_user_' . $vendor_id, 'vms_vendor_command_center_link_nonce');
 
-        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor')) {
+        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor')) {
             if (function_exists('vms_add_admin_notice')) {
                 vms_add_admin_notice(__('Vendor account linking failed because the vendor record could not be found.', 'backstage-venue-manager'), 'error');
             }
@@ -2088,8 +2088,8 @@ if (!function_exists('vms_vendor_command_center_handle_link_matching_user')) {
                 'source' => 'vendor_command_center',
             ), (int) get_current_user_id());
         } else {
-            update_post_meta($vendor_id, (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), $user_id);
-            update_user_meta($user_id, (defined('VMS_USER_PRIMARY_VENDOR_META_KEY') ? VMS_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id'), $vendor_id);
+            update_post_meta($vendor_id, (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), $user_id);
+            update_user_meta($user_id, (defined('BVMGR_USER_PRIMARY_VENDOR_META_KEY') ? BVMGR_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id'), $vendor_id);
             $ok = true;
         }
 

@@ -147,11 +147,11 @@ function vms_admin_disable_required_for_tax_fields(): void
 
     $version = function_exists('vms_asset_version')
         ? vms_asset_version()
-        : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+        : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
     wp_enqueue_script(
         'vms-tax-bypass-admin',
-        VMS_PLUGIN_URL . 'assets/js/vms-tax-bypass-admin.js',
+        BVMGR_PLUGIN_URL . 'assets/js/vms-tax-bypass-admin.js',
         array(),
         $version,
         true

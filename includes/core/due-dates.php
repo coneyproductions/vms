@@ -4,9 +4,9 @@
  *
  * Storage:
  * - wp_options
- *   - VMS_OPT_DUE_PAYEES      (vms_due_payees_v1)
- *   - VMS_OPT_DUE_OBLIGATIONS (vms_due_obligations_v1)
- *   - VMS_OPT_DUE_LOG         (vms_due_log_v1)
+ *   - BVMGR_OPT_DUE_PAYEES      (vms_due_payees_v1)
+ *   - BVMGR_OPT_DUE_OBLIGATIONS (vms_due_obligations_v1)
+ *   - BVMGR_OPT_DUE_LOG         (vms_due_log_v1)
  *
  * Design goals:
  * - Operator-friendly reminders (dashboard)
@@ -46,13 +46,13 @@ if (!function_exists('vms_due_new_id')) {
 
 if (!function_exists('vms_due_get_payees')) {
   function vms_due_get_payees(): array {
-    $key = vms_due_opt('VMS_OPT_DUE_PAYEES');
+    $key = vms_due_opt('BVMGR_OPT_DUE_PAYEES');
     $raw = get_option($key, null);
     if (is_array($raw)) return $raw;
 
     // Back-compat: older builds accidentally stored under the literal
     // constant name instead of the resolved option key.
-    $legacy_key = 'VMS_OPT_DUE_PAYEES';
+    $legacy_key = 'BVMGR_OPT_DUE_PAYEES';
     if ($legacy_key !== $key) {
       $legacy = get_option($legacy_key, null);
       if (is_array($legacy) && !empty($legacy)) {
@@ -67,17 +67,17 @@ if (!function_exists('vms_due_get_payees')) {
 
 if (!function_exists('vms_due_save_payees')) {
   function vms_due_save_payees(array $payees): bool {
-    return update_option(vms_due_opt('VMS_OPT_DUE_PAYEES'), $payees, false);
+    return update_option(vms_due_opt('BVMGR_OPT_DUE_PAYEES'), $payees, false);
   }
 }
 
 if (!function_exists('vms_due_get_obligations')) {
   function vms_due_get_obligations(): array {
-    $key = vms_due_opt('VMS_OPT_DUE_OBLIGATIONS');
+    $key = vms_due_opt('BVMGR_OPT_DUE_OBLIGATIONS');
     $raw = get_option($key, null);
     if (is_array($raw)) return $raw;
 
-    $legacy_key = 'VMS_OPT_DUE_OBLIGATIONS';
+    $legacy_key = 'BVMGR_OPT_DUE_OBLIGATIONS';
     if ($legacy_key !== $key) {
       $legacy = get_option($legacy_key, null);
       if (is_array($legacy) && !empty($legacy)) {
@@ -92,17 +92,17 @@ if (!function_exists('vms_due_get_obligations')) {
 
 if (!function_exists('vms_due_save_obligations')) {
   function vms_due_save_obligations(array $obligations): bool {
-    return update_option(vms_due_opt('VMS_OPT_DUE_OBLIGATIONS'), $obligations, false);
+    return update_option(vms_due_opt('BVMGR_OPT_DUE_OBLIGATIONS'), $obligations, false);
   }
 }
 
 if (!function_exists('vms_due_get_log')) {
   function vms_due_get_log(): array {
-    $key = vms_due_opt('VMS_OPT_DUE_LOG');
+    $key = vms_due_opt('BVMGR_OPT_DUE_LOG');
     $raw = get_option($key, null);
     if (is_array($raw)) return $raw;
 
-    $legacy_key = 'VMS_OPT_DUE_LOG';
+    $legacy_key = 'BVMGR_OPT_DUE_LOG';
     if ($legacy_key !== $key) {
       $legacy = get_option($legacy_key, null);
       if (is_array($legacy) && !empty($legacy)) {
@@ -119,7 +119,7 @@ if (!function_exists('vms_due_append_log')) {
   function vms_due_append_log(array $entry): bool {
     $log = vms_due_get_log();
     $log[] = $entry;
-    return update_option(vms_due_opt('VMS_OPT_DUE_LOG'), $log, false);
+    return update_option(vms_due_opt('BVMGR_OPT_DUE_LOG'), $log, false);
   }
 }
 

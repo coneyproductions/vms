@@ -281,7 +281,7 @@ vms_t5_assert_same('publish_now', vms_ticket_integrity_plan_save_request_action(
 vms_t5_assert_same('', vms_ticket_integrity_plan_save_request_action(array('vms_event_plan_action' => array('publish_now'))), 'Ticket Integrity action should reject arrays.');
 
 require $paths['tours_service'];
-$tour_reflection = new ReflectionClass('VMS_Tours_Service');
+$tour_reflection = new ReflectionClass('BVMGR_Tours_Service');
 $tour_service = $tour_reflection->newInstanceWithoutConstructor();
 $prefs_method = $tour_reflection->getMethod('read_ajax_prefs_from_request');
 vms_t5_assert_same(array(), $prefs_method->invoke($tour_service, array('prefs' => 'bad')), 'Tours prefs reader should reject scalar top-level prefs.');

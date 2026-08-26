@@ -317,8 +317,8 @@ if (!class_exists('WP_REST_Request')) {
 	}
 }
 
-if (!class_exists('VMS_Tours_Service')) {
-	class VMS_Tours_Service
+if (!class_exists('BVMGR_Tours_Service')) {
+	class BVMGR_Tours_Service
 	{
 		/**
 		 * @var array<int,array<string,mixed>>
@@ -455,9 +455,9 @@ function vms_test_capture(callable $callable): array
 function vms_test_set_user_state_raw(int $userId, $value, bool $present = true): void
 {
 	if ($present) {
-		$GLOBALS['vms_test_user_meta'][$userId][VMS_Tours_Storage::USER_META_STATE] = $value;
+		$GLOBALS['vms_test_user_meta'][$userId][BVMGR_Tours_Storage::USER_META_STATE] = $value;
 	} else {
-		unset($GLOBALS['vms_test_user_meta'][$userId][VMS_Tours_Storage::USER_META_STATE]);
+		unset($GLOBALS['vms_test_user_meta'][$userId][BVMGR_Tours_Storage::USER_META_STATE]);
 	}
 }
 
@@ -515,9 +515,9 @@ function vms_test_legacy_progress_summary(array $coreState, string $tourId = 'to
 	return 'status=' . $status . ';step=' . $step;
 }
 
-function vms_test_render_admin_status_label(VMS_Tours_Storage $storage): array
+function vms_test_render_admin_status_label(BVMGR_Tours_Storage $storage): array
 {
-	$service = new VMS_Tours_Service(
+	$service = new BVMGR_Tours_Service(
 		array(
 			array(
 				'id' => 'tour-alpha',
@@ -529,7 +529,7 @@ function vms_test_render_admin_status_label(VMS_Tours_Storage $storage): array
 			),
 		)
 	);
-	$admin = new VMS_Tours_Admin($service, $storage);
+	$admin = new BVMGR_Tours_Admin($service, $storage);
 
 	$htmlCapture = vms_test_capture(
 		static function () use ($admin): string {
@@ -538,7 +538,7 @@ function vms_test_render_admin_status_label(VMS_Tours_Storage $storage): array
 					$this->render_registry_table();
 				},
 				$admin,
-				VMS_Tours_Admin::class
+				BVMGR_Tours_Admin::class
 			);
 			vms_test_assert_true($renderer instanceof Closure, 'Expected a bound Closure for the private registry-table renderer.');
 
@@ -640,7 +640,7 @@ function vms_test_make_large_state(int $count): array
 	return $state;
 }
 
-function vms_test_run_case(array $case, VMS_Tours_Storage $storage): array
+function vms_test_run_case(array $case, BVMGR_Tours_Storage $storage): array
 {
 	vms_test_reset_environment();
 
@@ -677,7 +677,7 @@ function vms_test_run_case(array $case, VMS_Tours_Storage $storage): array
 
 	$coreCapture = vms_test_capture(
 		static function (): array {
-			return VMS_Tours::get_current_user_state();
+			return BVMGR_Tours::get_current_user_state();
 		}
 	);
 	$coreReads = $GLOBALS['vms_test_user_meta_reads'];
@@ -723,7 +723,7 @@ function vms_test_run_case(array $case, VMS_Tours_Storage $storage): array
 	);
 }
 
-$storage = new VMS_Tours_Storage();
+$storage = new BVMGR_Tours_Storage();
 
 $currentCases = array(
 	array('id' => 1, 'label' => 'no_meta', 'present' => false),
@@ -1125,7 +1125,7 @@ $report = array(
 	'source_assertions' => array(
 		'storage_json_decode_count' => substr_count($storageSource, 'json_decode('),
 		'core_json_decode_count' => substr_count($coreSource, 'json_decode('),
-		'storage_key' => VMS_Tours_Storage::USER_META_STATE,
+		'storage_key' => BVMGR_Tours_Storage::USER_META_STATE,
 		'legacy_bridge_present' => true,
 		'admin_uses_storage_helper' => true,
 		'current_runtime_uses_storage_payload' => true,

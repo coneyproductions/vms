@@ -710,8 +710,8 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
     }
 }
 
-if (!class_exists('VMS_Ticket_Revenue_Service')) {
-    final class VMS_Ticket_Revenue_Service
+if (!class_exists('BVMGR_Ticket_Revenue_Service')) {
+    final class BVMGR_Ticket_Revenue_Service
     {
         public static function get_sales_result(array $args = array()): array
         {
@@ -733,6 +733,6 @@ if (!function_exists('vms_get_ticket_sales_rows')) {
      */
     function vms_get_ticket_sales_rows(array $args = array()): array
     {
-        return VMS_Ticket_Revenue_Service::get_sales_rows($args);
+        return BVMGR_Ticket_Revenue_Service::get_sales_rows($args);
     }
 }

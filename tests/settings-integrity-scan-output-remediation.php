@@ -13,8 +13,8 @@ if (!defined('OBJECT')) {
 	define('OBJECT', 'OBJECT');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 $GLOBALS['vms_test_actions'] = array();

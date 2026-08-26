@@ -41,7 +41,7 @@ if (!function_exists('vms_feedback_admin_enqueue_assets')) {
 		if ($page !== 'vms-event-feedback') {
 			return;
 		}
-		wp_enqueue_style('vms-event-feedback', VMS_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), vms_asset_version());
+		wp_enqueue_style('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), vms_asset_version());
 	}
 }
 add_action('admin_enqueue_scripts', 'vms_feedback_admin_enqueue_assets');
@@ -112,7 +112,7 @@ if (!function_exists('vms_feedback_admin_handle_delete_response')) {
 		}
 		$response_id = isset($_POST['response_id']) ? absint($_POST['response_id']) : 0;
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
-		if ($response_id <= 0 || get_post_type($response_id) !== VMS_CPT_FEEDBACK_RESPONSE) {
+		if ($response_id <= 0 || get_post_type($response_id) !== BVMGR_CPT_FEEDBACK_RESPONSE) {
 			wp_safe_redirect(add_query_arg('vms_feedback_deleted', 'missing', vms_feedback_admin_redirect_url($event_plan_id)));
 			exit;
 		}

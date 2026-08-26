@@ -1,28 +1,28 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_VERIFICATION_PROOF_TTL_DAYS')) {
-    define('VMS_VERIFICATION_PROOF_TTL_DAYS', 7);
+if (!defined('BVMGR_VERIFICATION_PROOF_TTL_DAYS')) {
+    define('BVMGR_VERIFICATION_PROOF_TTL_DAYS', 7);
 }
 
-if (!defined('VMS_TICKETING_VERIFICATION_RETENTION_DAYS')) {
-    define('VMS_TICKETING_VERIFICATION_RETENTION_DAYS', (int) VMS_VERIFICATION_PROOF_TTL_DAYS);
+if (!defined('BVMGR_TICKETING_VERIFICATION_RETENTION_DAYS')) {
+    define('BVMGR_TICKETING_VERIFICATION_RETENTION_DAYS', (int) BVMGR_VERIFICATION_PROOF_TTL_DAYS);
 }
 
-if (!defined('VMS_TICKETING_VERIFICATION_MAX_UPLOAD_BYTES')) {
-    define('VMS_TICKETING_VERIFICATION_MAX_UPLOAD_BYTES', 20 * 1024 * 1024);
+if (!defined('BVMGR_TICKETING_VERIFICATION_MAX_UPLOAD_BYTES')) {
+    define('BVMGR_TICKETING_VERIFICATION_MAX_UPLOAD_BYTES', 20 * 1024 * 1024);
 }
 
-if (!defined('VMS_TICKETING_VERIFICATION_WARN_UPLOAD_BYTES')) {
-    define('VMS_TICKETING_VERIFICATION_WARN_UPLOAD_BYTES', 10 * 1024 * 1024);
+if (!defined('BVMGR_TICKETING_VERIFICATION_WARN_UPLOAD_BYTES')) {
+    define('BVMGR_TICKETING_VERIFICATION_WARN_UPLOAD_BYTES', 10 * 1024 * 1024);
 }
 
-if (!defined('VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION')) {
-    define('VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION', 2200);
+if (!defined('BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION')) {
+    define('BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION', 2200);
 }
 
-if (!defined('VMS_TICKETING_VERIFICATION_IMAGE_QUALITY')) {
-    define('VMS_TICKETING_VERIFICATION_IMAGE_QUALITY', 86);
+if (!defined('BVMGR_TICKETING_VERIFICATION_IMAGE_QUALITY')) {
+    define('BVMGR_TICKETING_VERIFICATION_IMAGE_QUALITY', 86);
 }
 
 if (!function_exists('vms_ticketing_verification_manage_capability')) {
@@ -167,7 +167,7 @@ if (!function_exists('vms_ticketing_verification_default_upload_settings')) {
     function vms_ticketing_verification_default_upload_settings(): array
     {
         return array(
-            'max_upload_mb' => max(1, (int) round(((int) VMS_TICKETING_VERIFICATION_MAX_UPLOAD_BYTES) / (1024 * 1024))),
+            'max_upload_mb' => max(1, (int) round(((int) BVMGR_TICKETING_VERIFICATION_MAX_UPLOAD_BYTES) / (1024 * 1024))),
         );
     }
 }
@@ -236,7 +236,7 @@ if (!function_exists('vms_ticketing_verification_get_warn_upload_bytes')) {
     function vms_ticketing_verification_get_warn_upload_bytes(): int
     {
         $effective = vms_ticketing_verification_get_effective_max_upload_bytes();
-        $default_warn = max(1, (int) VMS_TICKETING_VERIFICATION_WARN_UPLOAD_BYTES);
+        $default_warn = max(1, (int) BVMGR_TICKETING_VERIFICATION_WARN_UPLOAD_BYTES);
         if ($effective <= 0) {
             return $default_warn;
         }
@@ -796,8 +796,8 @@ if (!function_exists('vms_ticketing_verification_optimize_image_upload')) {
     function vms_ticketing_verification_optimize_image_upload(string $tmp_name, string $root, string $filename_base)
     {
         $normalized = vms_normalize_uploaded_image_to_jpeg($tmp_name, $root, $filename_base, array(
-            'max_dimension' => (int) VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
-            'quality' => (int) VMS_TICKETING_VERIFICATION_IMAGE_QUALITY,
+            'max_dimension' => (int) BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
+            'quality' => (int) BVMGR_TICKETING_VERIFICATION_IMAGE_QUALITY,
             'max_output_bytes' => vms_ticketing_verification_get_effective_max_upload_bytes(),
         ));
         if (is_wp_error($normalized)) {
@@ -1957,24 +1957,24 @@ if (!function_exists('vms_ticketing_verification_enqueue_account_styles')) {
 
         wp_enqueue_style(
             'vms-ticketing-front',
-            plugins_url('assets/css/vms-ticketing-front.css', VMS_PLUGIN_FILE),
+            plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
             $deps,
-            function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+            function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
         );
 
         wp_enqueue_script(
             'vms-image-normalize',
-            plugins_url('assets/js/vms-image-normalize.js', VMS_PLUGIN_FILE),
+            plugins_url('assets/js/vms-image-normalize.js', BVMGR_PLUGIN_FILE),
             array(),
-            function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''),
+            function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
             true
         );
 
         wp_enqueue_script(
             'vms-verification-upload',
-            plugins_url('assets/js/vms-verification-upload.js', VMS_PLUGIN_FILE),
+            plugins_url('assets/js/vms-verification-upload.js', BVMGR_PLUGIN_FILE),
             array('vms-image-normalize'),
-            function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''),
+            function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
             true
         );
 
@@ -1985,8 +1985,8 @@ if (!function_exists('vms_ticketing_verification_enqueue_account_styles')) {
                 'debug' => $debug_mode ? 1 : 0,
                 'maxUploadBytes' => vms_ticketing_verification_get_effective_max_upload_bytes(),
                 'warnUploadBytes' => vms_ticketing_verification_get_warn_upload_bytes(),
-                'maxDimension' => (int) VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
-                'quality' => max(0.6, min(0.92, ((int) VMS_TICKETING_VERIFICATION_IMAGE_QUALITY) / 100)),
+                'maxDimension' => (int) BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
+                'quality' => max(0.6, min(0.92, ((int) BVMGR_TICKETING_VERIFICATION_IMAGE_QUALITY) / 100)),
                 'maxUploadLabel' => vms_ticketing_verification_upload_limit_label(),
                 'allowedFormatsLabel' => vms_ticketing_verification_allowed_formats_label(),
                 'messages' => array(
@@ -3197,7 +3197,7 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                                     <p class="description"><?php echo esc_html(sprintf(__('The server is currently capping uploads at %s, so larger values here will not take effect until PHP/WordPress upload limits are raised.', 'backstage-venue-manager'), vms_ticketing_verification_format_bytes($server_upload_bytes))); ?></p>
                                 <?php endif; ?>
                                 <?php /* translators: 1: maximum image long-edge size in pixels, 2: JPEG quality setting. */ ?>
-                                <p class="description"><?php echo esc_html(sprintf(__('Image normalization target: long edge %1$d px, JPEG quality %2$d. PDFs stay separate.', 'backstage-venue-manager'), (int) VMS_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION, (int) VMS_TICKETING_VERIFICATION_IMAGE_QUALITY)); ?></p>
+                                <p class="description"><?php echo esc_html(sprintf(__('Image normalization target: long edge %1$d px, JPEG quality %2$d. PDFs stay separate.', 'backstage-venue-manager'), (int) BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION, (int) BVMGR_TICKETING_VERIFICATION_IMAGE_QUALITY)); ?></p>
                             </td>
                         </tr>
                     </tbody>
@@ -3474,7 +3474,7 @@ add_action('admin_post_vms_view_verification_proof', 'vms_ticketing_verification
 if (!function_exists('vms_ticketing_verification_cleanup_old_proofs')) {
     function vms_ticketing_verification_cleanup_old_proofs(): void
     {
-        $retention_days = (int) apply_filters('vms_ticketing_verification_retention_days', (int) VMS_VERIFICATION_PROOF_TTL_DAYS);
+        $retention_days = (int) apply_filters('vms_ticketing_verification_retention_days', (int) BVMGR_VERIFICATION_PROOF_TTL_DAYS);
         if ($retention_days < 1) {
             $retention_days = 1;
         }

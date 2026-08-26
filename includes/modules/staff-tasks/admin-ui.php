@@ -88,11 +88,11 @@ if (!function_exists('vms_tasks_event_plan_metabox_register_form')) {
 	 */
 	function vms_tasks_event_plan_metabox_register_form(string $form_id, string $method, string $action, array $hidden_fields = array()): void
 	{
-		global $vms_tasks_event_plan_metabox_forms;
-		if (!is_array($vms_tasks_event_plan_metabox_forms)) {
-			$vms_tasks_event_plan_metabox_forms = array();
+		global $bvmgr_tasks_event_plan_metabox_forms;
+		if (!is_array($bvmgr_tasks_event_plan_metabox_forms)) {
+			$bvmgr_tasks_event_plan_metabox_forms = array();
 		}
-		$vms_tasks_event_plan_metabox_forms[$form_id] = array(
+		$bvmgr_tasks_event_plan_metabox_forms[$form_id] = array(
 			'method' => (strtolower($method) === 'get') ? 'get' : 'post',
 			'action' => esc_url_raw($action),
 			'hidden_fields' => $hidden_fields,
@@ -107,12 +107,12 @@ if (!function_exists('vms_tasks_render_event_plan_metabox_footer_forms')) {
 			return;
 		}
 
-		global $vms_tasks_event_plan_metabox_forms;
-		if (!is_array($vms_tasks_event_plan_metabox_forms) || empty($vms_tasks_event_plan_metabox_forms)) {
+		global $bvmgr_tasks_event_plan_metabox_forms;
+		if (!is_array($bvmgr_tasks_event_plan_metabox_forms) || empty($bvmgr_tasks_event_plan_metabox_forms)) {
 			return;
 		}
 
-		foreach ($vms_tasks_event_plan_metabox_forms as $form_id => $form) {
+		foreach ($bvmgr_tasks_event_plan_metabox_forms as $form_id => $form) {
 			$form_id = sanitize_html_class((string) $form_id);
 			$method = (($form['method'] ?? 'post') === 'get') ? 'get' : 'post';
 			$action = (string) ($form['action'] ?? '');
@@ -1099,9 +1099,9 @@ add_action('admin_post_vms_tasks_create_one_off', 'vms_tasks_admin_handle_create
 
 			wp_enqueue_script(
 				'vms-tasks-admin-pages',
-				VMS_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js',
 				array(),
-				defined('VMS_VERSION') ? VMS_VERSION : null,
+				defined('BVMGR_VERSION') ? BVMGR_VERSION : null,
 				true
 			);
 		}
@@ -1123,9 +1123,9 @@ add_action('admin_post_vms_tasks_create_one_off', 'vms_tasks_admin_handle_create
 
 		wp_enqueue_script(
 			'vms-tasks-event-plan-metabox',
-			VMS_PLUGIN_URL . 'assets/js/vms-tasks-event-plan-metabox.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-event-plan-metabox.js',
 			array(),
-			defined('VMS_VERSION') ? VMS_VERSION : null,
+			defined('BVMGR_VERSION') ? BVMGR_VERSION : null,
 			true
 		);
 	}

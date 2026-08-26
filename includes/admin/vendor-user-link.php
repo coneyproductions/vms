@@ -76,7 +76,7 @@ function vms_vendor_user_links_metabox_render($post): void
 	}
 
 	// Vendor's primary contact user (back-compat convenience)
-	$primary_user_id = (int) get_post_meta($vendor_id, (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
+	$primary_user_id = (int) get_post_meta($vendor_id, (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
 
 	echo '<p class="description">';
 	echo 'Link one or more WordPress users who can manage this vendor in the Vendor Portal.';
@@ -339,7 +339,7 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 
 	// Update vendor's primary contact user pointer (optional convenience)
 	$primary_user_id = isset($data['primary_user_id']) ? absint((string) $data['primary_user_id']) : 0;
-	$key = (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id');
+	$key = (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id');
 
 	if ($primary_user_id > 0) {
 		// Only allow setting primary contact to a currently linked user.

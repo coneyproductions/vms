@@ -4,8 +4,8 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_ticketing_claims_db_schema_option_key')) {
 	function vms_ticketing_claims_db_schema_option_key(): string
 	{
-		return defined('VMS_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
-			? (string) VMS_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION
+		return defined('BVMGR_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
+			? (string) BVMGR_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION
 			: 'vms_ticketing_claims_db_schema_version';
 	}
 }
@@ -13,8 +13,8 @@ if (!function_exists('vms_ticketing_claims_db_schema_option_key')) {
 if (!function_exists('vms_ticketing_claims_db_schema_target')) {
 	function vms_ticketing_claims_db_schema_target(): string
 	{
-		return defined('VMS_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
-			? (string) VMS_TICKETING_CLAIMS_DB_SCHEMA_VERSION
+		return defined('BVMGR_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
+			? (string) BVMGR_TICKETING_CLAIMS_DB_SCHEMA_VERSION
 			: 'ticketing_claims_v1';
 	}
 }
@@ -23,8 +23,8 @@ if (!function_exists('vms_ticketing_claims_table_direct_grants')) {
 	function vms_ticketing_claims_table_direct_grants(): string
 	{
 		global $wpdb;
-		$suffix = defined('VMS_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX')
-			? (string) VMS_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX
+		$suffix = defined('BVMGR_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX')
+			? (string) BVMGR_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX
 			: 'vms_ticketing_direct_grants';
 		return $wpdb->prefix . $suffix;
 	}
@@ -34,8 +34,8 @@ if (!function_exists('vms_ticketing_claims_table_reservations')) {
 	function vms_ticketing_claims_table_reservations(): string
 	{
 		global $wpdb;
-		$suffix = defined('VMS_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX')
-			? (string) VMS_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX
+		$suffix = defined('BVMGR_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX')
+			? (string) BVMGR_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX
 			: 'vms_ticketing_claim_reservations';
 		return $wpdb->prefix . $suffix;
 	}
@@ -45,8 +45,8 @@ if (!function_exists('vms_ticketing_claims_table_log')) {
 	function vms_ticketing_claims_table_log(): string
 	{
 		global $wpdb;
-		$suffix = defined('VMS_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX')
-			? (string) VMS_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX
+		$suffix = defined('BVMGR_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX')
+			? (string) BVMGR_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX
 			: 'vms_ticketing_claim_log';
 		return $wpdb->prefix . $suffix;
 	}

@@ -5,8 +5,8 @@ if (!defined('WP_CLI') || !WP_CLI) {
 	return;
 }
 
-if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
-	class VMS_CLI_State_Of_Range_Command
+if (!class_exists('BVMGR_CLI_State_Of_Range_Command')) {
+	class BVMGR_CLI_State_Of_Range_Command
 	{
 		/**
 		 * Show State of the Range scheduling and delivery status.
@@ -257,5 +257,5 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 		}
 	}
 
-	WP_CLI::add_command('vms state-of-range', 'VMS_CLI_State_Of_Range_Command');
+	WP_CLI::add_command('vms state-of-range', 'BVMGR_CLI_State_Of_Range_Command');
 }

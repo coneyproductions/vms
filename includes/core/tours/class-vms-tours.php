@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours')) {
-	class VMS_Tours
+if (!class_exists('BVMGR_Tours')) {
+	class BVMGR_Tours
 	{
 		const OPT_ENABLED                = 'vms_tours_enabled';
 		const OPT_AUTOSTART              = 'vms_tours_autostart';
@@ -61,7 +61,7 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function maybe_mark_pending_scan_on_version_change(): void
 		{
-			$current = defined('VMS_VERSION') ? (string) VMS_VERSION : '';
+			$current = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 			if ($current === '') {
 				return;
 			}
@@ -449,22 +449,22 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function enqueue_shared_assets(): void
 		{
-			$version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+			$version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 			$driver_js_rel  = 'assets/vendor/driverjs/driver.min.js';
 			$driver_css_rel = 'assets/vendor/driverjs/driver.min.css';
-			$driver_js_abs  = defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . $driver_js_rel : '';
-			$driver_css_abs = defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . $driver_css_rel : '';
+			$driver_js_abs  = defined('BVMGR_PLUGIN_PATH') ? BVMGR_PLUGIN_PATH . $driver_js_rel : '';
+			$driver_css_abs = defined('BVMGR_PLUGIN_PATH') ? BVMGR_PLUGIN_PATH . $driver_css_rel : '';
 
 			if ($driver_js_abs !== '' && file_exists($driver_js_abs)) {
-				wp_enqueue_script('vms-driverjs', VMS_PLUGIN_URL . $driver_js_rel, array(), $version, true);
+				wp_enqueue_script('vms-driverjs', BVMGR_PLUGIN_URL . $driver_js_rel, array(), $version, true);
 			}
 			if ($driver_css_abs !== '' && file_exists($driver_css_abs)) {
-				wp_enqueue_style('vms-driverjs', VMS_PLUGIN_URL . $driver_css_rel, array(), $version);
+				wp_enqueue_style('vms-driverjs', BVMGR_PLUGIN_URL . $driver_css_rel, array(), $version);
 			}
 
-			wp_enqueue_style('vms-tours', VMS_PLUGIN_URL . 'assets/css/vms-tours.css', array('vms-admin'), $version);
-			wp_enqueue_script('vms-tours', VMS_PLUGIN_URL . 'assets/js/vms-tours.js', array(), $version, true);
+			wp_enqueue_style('vms-tours', BVMGR_PLUGIN_URL . 'assets/css/vms-tours.css', array('vms-admin'), $version);
+			wp_enqueue_script('vms-tours', BVMGR_PLUGIN_URL . 'assets/js/vms-tours.js', array(), $version, true);
 		}
 
 		public static function get_current_context_key(): string
@@ -980,15 +980,15 @@ if (!class_exists('VMS_Tours')) {
 	}
 }
 
-VMS_Tours::init();
+BVMGR_Tours::init();
 
 if (!function_exists('vms_enqueue_tour_assets')) {
 	function vms_enqueue_tour_assets(): void
 	{
-		if (!class_exists('VMS_Tours') || !method_exists('VMS_Tours', 'enqueue_shared_assets')) {
+		if (!class_exists('BVMGR_Tours') || !method_exists('BVMGR_Tours', 'enqueue_shared_assets')) {
 			return;
 		}
-		VMS_Tours::enqueue_shared_assets();
+		BVMGR_Tours::enqueue_shared_assets();
 	}
 }
 

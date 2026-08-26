@@ -4633,26 +4633,26 @@ function vms_vendor_portal_shortcode($atts = []): string
         wp_enqueue_style('vms-portal');
     }
     if (function_exists('wp_enqueue_script')) {
-        $calendar_script_ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : null);
-        if (defined('VMS_PLUGIN_PATH')) {
-            $calendar_script_file = VMS_PLUGIN_PATH . 'assets/js/vms-public-calendar.js';
+        $calendar_script_ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
+        if (defined('BVMGR_PLUGIN_PATH')) {
+            $calendar_script_file = BVMGR_PLUGIN_PATH . 'assets/js/vms-public-calendar.js';
             if (file_exists($calendar_script_file)) {
                 $calendar_script_ver = (string) @filemtime($calendar_script_file);
             }
         }
         wp_enqueue_script(
             'vms-public-calendar',
-            VMS_PLUGIN_URL . 'assets/js/vms-public-calendar.js',
+            BVMGR_PLUGIN_URL . 'assets/js/vms-public-calendar.js',
             array(),
             $calendar_script_ver,
             true
         );
         $portal_script_src = function_exists('vms_asset_url')
             ? vms_asset_url('assets/js/vms-vendor-portal.js')
-            : VMS_PLUGIN_URL . 'assets/js/vms-vendor-portal.js';
+            : BVMGR_PLUGIN_URL . 'assets/js/vms-vendor-portal.js';
         $portal_script_ver = function_exists('vms_asset_version_for')
             ? vms_asset_version_for('assets/js/vms-vendor-portal.js')
-            : (function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''));
+            : (function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''));
         wp_enqueue_script('vms-vendor-portal', $portal_script_src, array(), $portal_script_ver, true);
     }
 

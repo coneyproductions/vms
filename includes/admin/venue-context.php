@@ -18,8 +18,8 @@ function vms_get_current_venue_id()
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     $raw = get_user_meta($user_id, $meta_key, true);
@@ -61,8 +61,8 @@ function vms_set_current_venue_id(int $venue_id): void
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     if ($venue_id > 0 && get_post_type($venue_id) === 'vms_venue') {
@@ -83,8 +83,8 @@ function vms_render_current_venue_selector(): void
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     // Prefer explicit venue_id in URL, else user meta.
@@ -188,8 +188,8 @@ add_action('admin_post_vms_set_current_venue', function () {
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     // Numeric only.

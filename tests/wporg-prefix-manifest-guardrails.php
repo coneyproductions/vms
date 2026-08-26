@@ -22,12 +22,14 @@ $assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructu
 $assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
 $releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
 $assert(in_array('wporg-prefix-manifest-guardrails', $releaseTestIds, true), 'Prefix guardrails must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b2-foundation', $releaseTestIds, true), 'B2 foundation coverage must remain a required default release precondition.');
 $manifest = json_decode((string) file_get_contents($manifestPath), true);
 $assert(is_array($manifest), 'Machine-readable prefix manifest must decode.');
 if (!is_array($manifest)) {
 	fwrite(STDERR, "Prefix manifest guardrail failures:\n- Manifest did not decode.\n");
 	exit(1);
 }
+$assert(($manifest['schema_version'] ?? null) === 2, 'B2 manifest schema must be version 2.');
 
 $requiredCategories = array(
 	'php_functions',
@@ -91,8 +93,8 @@ foreach ($expectedCounts as $key => $expected) {
 }
 
 $dynamicExpected = array(
-	'exact_function_literals_unique' => 3646,
-	'exact_function_literals_occurrences' => 7416,
+	'exact_function_literals_unique' => 3645,
+	'exact_function_literals_occurrences' => 7363,
 	'function_exists_unique' => 3310,
 	'function_exists_occurrences' => 6338,
 	'direct_literal_callbacks_unique' => 711,
@@ -103,7 +105,7 @@ $dynamicExpected = array(
 	'duplicate_constant_families' => 9,
 );
 foreach ($dynamicExpected as $key => $expected) {
-	$assert(($manifest['php_inventory_counts']['dynamic_symbols'][$key] ?? null) === $expected, "Dynamic-symbol count {$key} must match the B1 baseline.");
+	$assert(($manifest['php_inventory_counts']['dynamic_symbols'][$key] ?? null) === $expected, "Dynamic-symbol count {$key} must match the B2 intermediate state.");
 }
 $assert(
 	array_keys((array) ($manifest['dynamic_symbols']['reflection_references'] ?? array())) === array('vms_get_active_season_dates'),
@@ -148,14 +150,38 @@ $assert(
 );
 $prohibitedBaseline = (array) ($manifest['prohibited_global_baseline'] ?? array());
 $assert(count($prohibitedBaseline) === 4696, 'Immutable B1 prohibited-global allowance set must contain exactly 4,696 declarations/slots.');
+$assert(count($currentProhibited) === 4521, 'B2 must reduce the current prohibited-global set to exactly 4,521 B3 functions.');
 $assert(array_diff($currentProhibited, $prohibitedBaseline) === array(), 'No new prohibited global declaration may appear outside the immutable B1 allowance set.');
 $committedBaseline = json_decode((string) file_get_contents($root . '/docs/wporg-prefix-prohibited-global-baseline.json'), true);
 $assert($prohibitedBaseline === $committedBaseline, 'Manifest ratchet allowance set must equal the separate immutable B1 baseline file.');
 
+$completedB2 = (array) ($manifest['completed_batches']['B2'] ?? array());
+$assert(($completedB2['status'] ?? null) === 'complete', 'Manifest must mark B2 complete.');
+$assert(($completedB2['unique_symbols'] ?? null) === array('classes' => 23, 'interfaces' => 1, 'constants' => 107, 'global_slots' => 44), 'B2 unique-symbol map must remain exactly 23/1/107/44.');
+$assert(($completedB2['declaration_sites'] ?? null) === array('classes' => 23, 'interfaces' => 1, 'constants' => 116, 'global_slots' => 232), 'B2 declaration-site map must remain exactly 23/1/116/232.');
+$assert(($completedB2['forbidden_global_ratchet'] ?? null) === array('before' => 4696, 'after' => 4521, 'reduction' => 175), 'B2 ratchet must record the exact 4,696 to 4,521 reduction.');
+$b2SymbolMap = (array) ($completedB2['symbol_map'] ?? array());
+$assert(count($b2SymbolMap) === 175, 'B2 completed symbol map must contain exactly 175 unique legacy-to-canonical mappings.');
+$expectedRemoved = array();
+foreach ($b2SymbolMap as $entry) {
+	$kind = (string) ($entry['kind'] ?? '');
+	$legacy = (string) ($entry['legacy_identifier'] ?? '');
+	$canonical = (string) ($entry['canonical_identifier'] ?? '');
+	$expectedRemoved[] = $kind . ':' . $legacy;
+	$assert($legacy !== '' && $canonical !== '' && $legacy !== $canonical, "B2 map entry {$kind} must provide distinct legacy and canonical identifiers.");
+	$assert(isset($declaredByKind[$kind][$canonical]), "B2 canonical declaration must exist: {$kind}:{$canonical}.");
+	$assert(!isset($declaredByKind[$kind][$legacy]), "B2 legacy declaration must be absent: {$kind}:{$legacy}.");
+}
+sort($expectedRemoved, SORT_STRING);
+$actualRemoved = array_values(array_diff($prohibitedBaseline, $currentProhibited));
+sort($actualRemoved, SORT_STRING);
+$assert($actualRemoved === $expectedRemoved, 'The exact 175 ratchet removals must equal the completed B2 symbol map and no other declaration.');
+
 foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
 	foreach ((array) $entries as $entry) {
 		$target = $entry['canonical_target'] ?? null;
-		if (is_string($target) && $target !== '') {
+		$current = (string) ($entry['current_identifier'] ?? '');
+		if (is_string($target) && $target !== '' && $target !== $current) {
 			$assert(!isset($declaredByKind[$kind][$target]), "Canonical target {$target} must not collide with an existing core declaration.");
 		}
 	}
@@ -226,6 +252,8 @@ foreach ($publicApis as $api) {
 	$assert(!empty($api['requires_coordinated_cutover']), 'Each public extension API must declare coordinated cutover.');
 	$assert(($api['compatibility_classification'] ?? '') === 'coordinated-cutover-no-public-package-legacy-wrapper', 'Public API policy must forbid public-package legacy wrappers.');
 }
+$providerApi = array_values(array_filter($publicApis, static fn(array $api): bool => ($api['type'] ?? '') === 'interface'));
+$assert(count($providerApi) === 1 && ($providerApi[0]['legacy_identifier'] ?? null) === 'VMS_Social_Provider_Interface' && ($providerApi[0]['current_identifier'] ?? null) === 'BVMGR_Social_Provider_Interface', 'Public provider interface must record its completed B2 cutover exactly.');
 
 $addons = (array) ($manifest['known_addons'] ?? array());
 $assert(array_column($addons, 'slug') === array('vms-events-slider', 'vms-fill-dates', 'vms-data-tools', 'vms-express-bar', 'vms-refer-a-friend'), 'Known add-on list and order must remain authoritative.');

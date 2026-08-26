@@ -14,11 +14,11 @@ defined('ABSPATH') || exit;
  * - Conservative defaults (no rules => closed)
  */
 
-if (!defined('VMS_SEASON_RULES_OPT_V1')) {
-    define('VMS_SEASON_RULES_OPT_V1', 'vms_season_rules_v1');
+if (!defined('BVMGR_SEASON_RULES_OPT_V1')) {
+    define('BVMGR_SEASON_RULES_OPT_V1', 'vms_season_rules_v1');
 }
-if (!defined('VMS_SEASON_ACTIVE_OPT_V1')) {
-    define('VMS_SEASON_ACTIVE_OPT_V1', 'vms_season_active_dates_v1');
+if (!defined('BVMGR_SEASON_ACTIVE_OPT_V1')) {
+    define('BVMGR_SEASON_ACTIVE_OPT_V1', 'vms_season_active_dates_v1');
 }
 
 /** -------------------------
@@ -212,7 +212,7 @@ function vms_sch_season_dow_w(string $ymd): int
 
 function vms_sch_season_get_rules_all(): array
 {
-    $all = get_option(VMS_SEASON_RULES_OPT_V1, []);
+    $all = get_option(BVMGR_SEASON_RULES_OPT_V1, []);
     return is_array($all) ? $all : [];
 }
 
@@ -249,14 +249,14 @@ function vms_sch_season_save_rules(int $venue_id, array $rules): array
     $all = vms_sch_season_get_rules_all();
     $all[$venue_id] = array_values($sanitized);
 
-    update_option(VMS_SEASON_RULES_OPT_V1, $all, false);
+    update_option(BVMGR_SEASON_RULES_OPT_V1, $all, false);
 
     return $all[$venue_id];
 }
 
 function vms_sch_season_get_active_all(): array
 {
-    $all = get_option(VMS_SEASON_ACTIVE_OPT_V1, []);
+    $all = get_option(BVMGR_SEASON_ACTIVE_OPT_V1, []);
     return is_array($all) ? $all : [];
 }
 
@@ -294,7 +294,7 @@ function vms_sch_season_set_active_payload(int $venue_id, array $payload): void
     }
     $all = vms_sch_season_get_active_all();
     $all[$venue_id] = $payload;
-    update_option(VMS_SEASON_ACTIVE_OPT_V1, $all, false);
+    update_option(BVMGR_SEASON_ACTIVE_OPT_V1, $all, false);
 }
 
 function vms_sch_season_clear_active_dates(int $venue_id): void
@@ -305,7 +305,7 @@ function vms_sch_season_clear_active_dates(int $venue_id): void
     }
     $all = vms_sch_season_get_active_all();
     unset($all[$venue_id]);
-    update_option(VMS_SEASON_ACTIVE_OPT_V1, $all, false);
+    update_option(BVMGR_SEASON_ACTIVE_OPT_V1, $all, false);
 }
 
 

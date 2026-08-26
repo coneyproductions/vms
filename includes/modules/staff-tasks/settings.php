@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_tasks_settings_option_key')) {
 	function vms_tasks_settings_option_key(): string
 	{
-		return defined('VMS_OPT_TASKS_SETTINGS') ? (string) VMS_OPT_TASKS_SETTINGS : 'vms_tasks_settings_v1';
+		return defined('BVMGR_OPT_TASKS_SETTINGS') ? (string) BVMGR_OPT_TASKS_SETTINGS : 'vms_tasks_settings_v1';
 	}
 }
 

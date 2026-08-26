@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Registry')) {
-	class VMS_Tours_Registry
+if (!class_exists('BVMGR_Tours_Registry')) {
+	class BVMGR_Tours_Registry
 	{
 		/**
 		 * @var array<string,array<string,mixed>>

@@ -480,8 +480,8 @@ foreach ($g16c_mutations as $key => $mutation) {
 	g16c_assert($rejected, 'Owned-function mutation must invalidate exact pre-edit reconstruction: ' . $key);
 }
 
-if (!defined('VMS_PLUGIN_PATH')) {
-	define('VMS_PLUGIN_PATH', $g16c_root);
+if (!defined('BVMGR_PLUGIN_PATH')) {
+	define('BVMGR_PLUGIN_PATH', $g16c_root);
 }
 if (!function_exists('sanitize_key')) {
 	function sanitize_key($value): string
@@ -571,8 +571,8 @@ $g16c_shutdown_eval = g16c_replace_once($g16c_shutdown_eval, 'error_log(', 'g16c
 eval($g16c_shutdown_eval);
 
 $GLOBALS['g16c_fatal_error'] = $g16c_fatal_error;
-$GLOBALS['vms_ticket_integrity_fatal_guard_reserve'] = 'reserve';
-$GLOBALS['vms_ticket_integrity_fatal_guards'] = array(
+$GLOBALS['bvmgr_ticket_integrity_fatal_guard_reserve'] = 'reserve';
+$GLOBALS['bvmgr_ticket_integrity_fatal_guards'] = array(
 	'guard-secret' => array(
 		'operation' => 'daily_report',
 		'context' => array(
@@ -586,7 +586,7 @@ $GLOBALS['vms_ticket_integrity_fatal_guards'] = array(
 );
 g16c_ticket_integrity_fatal_guard_shutdown();
 g16c_same(array('direct', 'state', 'option'), $GLOBALS['g16c_order'], 'Ticket fatal runtime order changed.');
-g16c_same(true, $GLOBALS['vms_ticket_integrity_fatal_guards']['guard-secret']['finalized'], 'Ticket fatal guard must finalize after sinks.');
+g16c_same(true, $GLOBALS['bvmgr_ticket_integrity_fatal_guards']['guard-secret']['finalized'], 'Ticket fatal guard must finalize after sinks.');
 g16c_same('recipient@example.test', $GLOBALS['g16c_state_patches'][0]['last_recipient'], 'Ticket business-state recipient must be preserved.');
 g16c_same('crondaily', $GLOBALS['g16c_state_patches'][0]['last_trigger'], 'Ticket business-state trigger changed.');
 g16c_same('emailnow', $GLOBALS['g16c_state_patches'][0]['last_mode'], 'Ticket business-state mode changed.');
@@ -600,7 +600,7 @@ $g16c_shutdown_no_direct = g16c_replace_once($g16c_shutdown_no_direct, 'error_ge
 $g16c_shutdown_no_direct = g16c_replace_once($g16c_shutdown_no_direct, "function_exists('error_log')", 'false', 'Ticket disabled logger injection failed.');
 eval($g16c_shutdown_no_direct);
 $GLOBALS['g16c_order'] = array();
-$GLOBALS['vms_ticket_integrity_fatal_guards']['guard-secret']['finalized'] = false;
+$GLOBALS['bvmgr_ticket_integrity_fatal_guards']['guard-secret']['finalized'] = false;
 g16c_ticket_integrity_shutdown_no_direct();
 g16c_same(array('state', 'option'), $GLOBALS['g16c_order'], 'Disabled error_log must not interrupt state/option processing.');
 

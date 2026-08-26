@@ -18,7 +18,7 @@ function vms_vendor_tax_metabox_register()
 		'vms_vendor_tax_status',
 		'Tax Status',
 		'vms_vendor_tax_metabox_render',
-		VMS_CPT_VENDOR,
+		BVMGR_CPT_VENDOR,
 		'side',
 		'high'
 	);
@@ -34,7 +34,7 @@ function vms_vendor_tax_provider_label($provider)
 
 function vms_vendor_tax_metabox_render($post)
 {
-	if (!$post || $post->post_type !== VMS_CPT_VENDOR) return;
+	if (!$post || $post->post_type !== BVMGR_CPT_VENDOR) return;
 
 	$vendor_id = (int) $post->ID;
 

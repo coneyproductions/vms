@@ -32,8 +32,8 @@ if (!function_exists('vms_asset_relative_path')) {
 if (!function_exists('vms_plugin_root_path')) {
     function vms_plugin_root_path(): string
     {
-        if (defined('VMS_PLUGIN_PATH') && is_string(VMS_PLUGIN_PATH) && VMS_PLUGIN_PATH !== '') {
-            return trailingslashit(VMS_PLUGIN_PATH);
+        if (defined('BVMGR_PLUGIN_PATH') && is_string(BVMGR_PLUGIN_PATH) && BVMGR_PLUGIN_PATH !== '') {
+            return trailingslashit(BVMGR_PLUGIN_PATH);
         }
 
         return trailingslashit(dirname(__DIR__));
@@ -43,8 +43,8 @@ if (!function_exists('vms_plugin_root_path')) {
 if (!function_exists('vms_plugin_main_file')) {
     function vms_plugin_main_file(): string
     {
-        if (defined('VMS_PLUGIN_FILE') && is_string(VMS_PLUGIN_FILE) && VMS_PLUGIN_FILE !== '') {
-            return VMS_PLUGIN_FILE;
+        if (defined('BVMGR_PLUGIN_FILE') && is_string(BVMGR_PLUGIN_FILE) && BVMGR_PLUGIN_FILE !== '') {
+            return BVMGR_PLUGIN_FILE;
         }
 
         return vms_plugin_root_path() . 'backstage-venue-manager.php';
@@ -63,8 +63,8 @@ if (!function_exists('vms_asset_url')) {
     {
         $asset_rel = vms_asset_relative_path($asset_rel);
 
-        if (defined('VMS_PLUGIN_URL') && is_string(VMS_PLUGIN_URL) && VMS_PLUGIN_URL !== '') {
-            return trailingslashit(VMS_PLUGIN_URL) . $asset_rel;
+        if (defined('BVMGR_PLUGIN_URL') && is_string(BVMGR_PLUGIN_URL) && BVMGR_PLUGIN_URL !== '') {
+            return trailingslashit(BVMGR_PLUGIN_URL) . $asset_rel;
         }
 
         return plugins_url($asset_rel, vms_plugin_main_file());
@@ -4272,8 +4272,8 @@ if (!function_exists('vms_get_default_venue_id')) {
 
 // Schedule "Current Venue" (user context)
 // Keep legacy key, but treat as schedule-owned.
-if (!defined('VMS_SCH_CURRENT_VENUE_META_KEY')) {
-    define('VMS_SCH_CURRENT_VENUE_META_KEY', '_vms_current_venue_id');
+if (!defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')) {
+    define('BVMGR_SCH_CURRENT_VENUE_META_KEY', '_vms_current_venue_id');
 }
 
 if (!function_exists('vms_sch_get_current_venue_id')) {
@@ -4283,7 +4283,7 @@ if (!function_exists('vms_sch_get_current_venue_id')) {
         if ($uid <= 0) {
             return 0;
         }
-        return (int) get_user_meta($uid, VMS_SCH_CURRENT_VENUE_META_KEY, true);
+        return (int) get_user_meta($uid, BVMGR_SCH_CURRENT_VENUE_META_KEY, true);
     }
 }
 
@@ -4294,7 +4294,7 @@ if (!function_exists('vms_sch_set_current_venue_id')) {
         if ($uid <= 0) {
             return;
         }
-        update_user_meta($uid, VMS_SCH_CURRENT_VENUE_META_KEY, (int) $venue_id);
+        update_user_meta($uid, BVMGR_SCH_CURRENT_VENUE_META_KEY, (int) $venue_id);
     }
 }
 
@@ -4303,8 +4303,8 @@ if (!function_exists('vms_sch_set_current_venue_id')) {
 
 // Schedule "Current Scope" (user context)
 // Values: venue|all
-if (!defined('VMS_SCH_CURRENT_SCOPE_META_KEY')) {
-    define('VMS_SCH_CURRENT_SCOPE_META_KEY', '_vms_schedule_scope');
+if (!defined('BVMGR_SCH_CURRENT_SCOPE_META_KEY')) {
+    define('BVMGR_SCH_CURRENT_SCOPE_META_KEY', '_vms_schedule_scope');
 }
 
 if (!function_exists('vms_sch_get_current_scope')) {
@@ -4315,7 +4315,7 @@ if (!function_exists('vms_sch_get_current_scope')) {
             return 'venue';
         }
 
-        $raw = sanitize_key((string) get_user_meta($uid, VMS_SCH_CURRENT_SCOPE_META_KEY, true));
+        $raw = sanitize_key((string) get_user_meta($uid, BVMGR_SCH_CURRENT_SCOPE_META_KEY, true));
         return ($raw === 'all') ? 'all' : 'venue';
     }
 }
@@ -4330,7 +4330,7 @@ if (!function_exists('vms_sch_set_current_scope')) {
 
         $s = sanitize_key($scope);
         $s = ($s === 'all') ? 'all' : 'venue';
-        update_user_meta($uid, VMS_SCH_CURRENT_SCOPE_META_KEY, $s);
+        update_user_meta($uid, BVMGR_SCH_CURRENT_SCOPE_META_KEY, $s);
     }
 }
 // ======================================================
@@ -4340,7 +4340,7 @@ if (!function_exists('vms_sch_set_current_scope')) {
 if (!function_exists('vms_vendor_profile_base_slug')) {
     function vms_vendor_profile_base_slug(): string
     {
-        $base = defined('VMS_VENDOR_PROFILE_BASE_SLUG') ? (string) VMS_VENDOR_PROFILE_BASE_SLUG : 'vendor';
+        $base = defined('BVMGR_VENDOR_PROFILE_BASE_SLUG') ? (string) BVMGR_VENDOR_PROFILE_BASE_SLUG : 'vendor';
         $base = sanitize_title($base);
         $base = $base !== '' ? $base : 'vendor';
 

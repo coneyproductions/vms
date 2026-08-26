@@ -374,7 +374,7 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
                 }
 
                 if ($linked_user_id <= 0) {
-                    $link_key = defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
+                    $link_key = defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
                     $linked_user_id = (int) get_post_meta($post_id, $link_key, true);
                 }
 

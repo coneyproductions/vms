@@ -4,35 +4,35 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_tasks_cap_manage_templates')) {
 	function vms_tasks_cap_manage_templates(): string
 	{
-		return defined('VMS_CAP_TASKS_MANAGE_TEMPLATES') ? (string) VMS_CAP_TASKS_MANAGE_TEMPLATES : 'vms_manage_task_templates';
+		return defined('BVMGR_CAP_TASKS_MANAGE_TEMPLATES') ? (string) BVMGR_CAP_TASKS_MANAGE_TEMPLATES : 'vms_manage_task_templates';
 	}
 }
 
 if (!function_exists('vms_tasks_cap_manage_checklists')) {
 	function vms_tasks_cap_manage_checklists(): string
 	{
-		return defined('VMS_CAP_TASKS_MANAGE_CHECKLISTS') ? (string) VMS_CAP_TASKS_MANAGE_CHECKLISTS : 'vms_manage_checklist_templates';
+		return defined('BVMGR_CAP_TASKS_MANAGE_CHECKLISTS') ? (string) BVMGR_CAP_TASKS_MANAGE_CHECKLISTS : 'vms_manage_checklist_templates';
 	}
 }
 
 if (!function_exists('vms_tasks_cap_manage_all')) {
 	function vms_tasks_cap_manage_all(): string
 	{
-		return defined('VMS_CAP_TASKS_MANAGE_ALL') ? (string) VMS_CAP_TASKS_MANAGE_ALL : 'vms_manage_tasks_all';
+		return defined('BVMGR_CAP_TASKS_MANAGE_ALL') ? (string) BVMGR_CAP_TASKS_MANAGE_ALL : 'vms_manage_tasks_all';
 	}
 }
 
 if (!function_exists('vms_tasks_cap_complete_self')) {
 	function vms_tasks_cap_complete_self(): string
 	{
-		return defined('VMS_CAP_TASKS_COMPLETE_SELF') ? (string) VMS_CAP_TASKS_COMPLETE_SELF : 'vms_complete_tasks_self';
+		return defined('BVMGR_CAP_TASKS_COMPLETE_SELF') ? (string) BVMGR_CAP_TASKS_COMPLETE_SELF : 'vms_complete_tasks_self';
 	}
 }
 
 if (!function_exists('vms_tasks_cap_view_self')) {
 	function vms_tasks_cap_view_self(): string
 	{
-		return defined('VMS_CAP_TASKS_VIEW_SELF') ? (string) VMS_CAP_TASKS_VIEW_SELF : 'vms_view_tasks_self';
+		return defined('BVMGR_CAP_TASKS_VIEW_SELF') ? (string) BVMGR_CAP_TASKS_VIEW_SELF : 'vms_view_tasks_self';
 	}
 }
 

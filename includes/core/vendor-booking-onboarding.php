@@ -899,7 +899,7 @@ if (!function_exists('vms_vendor_booking_onboarding_daily_runner')) {
         $window_end = $today->modify('+365 days')->format('Y-m-d');
 
         $plan_ids = get_posts(array(
-            'post_type' => defined('VMS_CPT_EVENT_PLAN') ? VMS_CPT_EVENT_PLAN : 'vms_event_plan',
+            'post_type' => defined('BVMGR_CPT_EVENT_PLAN') ? BVMGR_CPT_EVENT_PLAN : 'vms_event_plan',
             'post_status' => array('publish', 'draft', 'private', 'pending'),
             'posts_per_page' => -1,
             'fields' => 'ids',

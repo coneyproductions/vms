@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_VERSION', 'test-version');
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
 
 set_error_handler(static function (int $severity, string $message, string $file = '', int $line = 0): bool {
 	throw new RuntimeException($message . ' @ ' . $file . ':' . $line, $severity);
@@ -220,7 +220,7 @@ vms_test_assert_contains(
 	'Core tours page routing should continue to read page through the shared key helper.'
 );
 
-$screen = new VMS_Tours_Screen();
+$screen = new BVMGR_Tours_Screen();
 
 $_GET = array('page' => 'vms');
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => 'ignored', 'post_type' => '');
@@ -240,15 +240,15 @@ vms_test_assert($screen->is_vms_admin_screen() === true, 'Tours screen detection
 
 $_GET = array('page' => 'vms-dashboard');
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => '', 'post_type' => '');
-vms_test_assert(VMS_Tours::is_admin_on_vms_page() === true, 'Core tours page routing should preserve valid scalar VMS admin pages.');
+vms_test_assert(BVMGR_Tours::is_admin_on_vms_page() === true, 'Core tours page routing should preserve valid scalar VMS admin pages.');
 
 $_GET = array('page' => array('vms-dashboard'));
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => '', 'post_type' => '');
-vms_test_assert(VMS_Tours::is_admin_on_vms_page() === false, 'Core tours page routing should reject array-shaped page values without a CPT fallback.');
+vms_test_assert(BVMGR_Tours::is_admin_on_vms_page() === false, 'Core tours page routing should reject array-shaped page values without a CPT fallback.');
 
 $_GET = array('page' => array('vms-dashboard'));
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => '', 'post_type' => 'vms_vendor');
-vms_test_assert(VMS_Tours::is_admin_on_vms_page() === true, 'Core tours page routing should preserve the CPT fallback when page state is malformed.');
+vms_test_assert(BVMGR_Tours::is_admin_on_vms_page() === true, 'Core tours page routing should preserve the CPT fallback when page state is malformed.');
 
 $GLOBALS['vms_test_query_registry'] = array(
 	array(
@@ -273,19 +273,19 @@ $GLOBALS['vms_test_query_registry'] = array(
 $_SERVER['REQUEST_URI'] = '/wp-admin/admin.php?page=vms-guided-tours';
 $_GET = array('page' => 'vms-guided-tours');
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => 'ignored', 'post_type' => '');
-vms_test_assert(VMS_Tours::get_current_context_key() === 'adminvms-guided-tours', 'Core tours context lookup should preserve valid scalar page matches through the current normalized context-key contract.');
+vms_test_assert(BVMGR_Tours::get_current_context_key() === 'adminvms-guided-tours', 'Core tours context lookup should preserve valid scalar page matches through the current normalized context-key contract.');
 
 $_SERVER['REQUEST_URI'] = '/wp-admin/admin.php?page=other';
 $_GET = array('page' => array('vms-guided-tours'));
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => '', 'post_type' => '');
-vms_test_assert(VMS_Tours::get_current_context_key() === '', 'Core tours context lookup should reject array-shaped page values when neither URL nor screen matches a registered context.');
+vms_test_assert(BVMGR_Tours::get_current_context_key() === '', 'Core tours context lookup should reject array-shaped page values when neither URL nor screen matches a registered context.');
 
 $GLOBALS['vms_test_enqueued_styles'] = array();
 $GLOBALS['vms_test_enqueued_scripts'] = array();
 $_SERVER['REQUEST_URI'] = '/wp-admin/admin.php?page=other';
 $_GET = array('page' => array('vms-guided-tours'));
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => '', 'post_type' => '');
-VMS_Tours::enqueue_assets();
+BVMGR_Tours::enqueue_assets();
 vms_test_assert($GLOBALS['vms_test_enqueued_styles'] === array(), 'Core tours asset enqueue should reject array-shaped page values when there is no other runtime context.');
 vms_test_assert($GLOBALS['vms_test_enqueued_scripts'] === array(), 'Core tours asset enqueue should not boot tours assets for malformed page state alone.');
 

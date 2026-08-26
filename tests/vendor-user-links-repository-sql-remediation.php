@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
 define('ARRAY_A', 'ARRAY_A');
-define('VMS_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
-define('VMS_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
-define('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
+define('BVMGR_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
+define('BVMGR_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
+define('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
 
 final class WP_Query
 {
@@ -356,7 +356,7 @@ vms_assert(strpos($prepare['query'], 'link_status =') === false, 'Inactive-inclu
 
 vms_reset($wpdb);
 $wpdb->get_var_queue[] = null;
-$GLOBALS['vms_user_meta'][22][VMS_USER_PRIMARY_VENDOR_META_KEY] = 91;
+$GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 91;
 WP_Query::$queue[] = array(91, 92, 91);
 $rows = vms_vendor_user_links_get_by_user(22, false);
 vms_same(array(91, 92), array_column($rows, 'vendor_id'), 'Missing-table user reads should preserve and deduplicate legacy pointers.');
@@ -394,7 +394,7 @@ vms_assert(strpos($prepare['query'], 'link_status =') === false, 'Inactive-inclu
 
 vms_reset($wpdb);
 $wpdb->get_var_queue[] = null;
-$GLOBALS['vms_post_meta'][41][VMS_VENDOR_PRIMARY_USER_META_KEY] = 22;
+$GLOBALS['vms_post_meta'][41][BVMGR_VENDOR_PRIMARY_USER_META_KEY] = 22;
 vms_same(
 	array(array('user_id' => 22, 'user_role' => 'primary_contact', 'link_status' => 'active')),
 	vms_vendor_user_links_get_by_vendor(41),
@@ -448,7 +448,7 @@ vms_same(false, vms_vendor_user_links_set_primary_for_user(22, 41, 7), 'Primary 
 vms_same(array(), vms_event_kinds(), 'Unauthorized primary reassignment should not mutate pointers or rows.');
 
 vms_reset($wpdb);
-$GLOBALS['vms_user_meta'][22][VMS_USER_PRIMARY_VENDOR_META_KEY] = 99;
+$GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 99;
 $wpdb->get_var_queue = array($table, $table);
 $wpdb->get_results_queue[] = array();
 $wpdb->query_queue[] = 1;
@@ -472,7 +472,7 @@ vms_same(
 );
 
 vms_reset($wpdb);
-$GLOBALS['vms_user_meta'][22][VMS_USER_PRIMARY_VENDOR_META_KEY] = 99;
+$GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 99;
 $wpdb->get_var_queue = array($table, $table);
 $wpdb->get_results_queue[] = array();
 $wpdb->query_queue[] = false;
@@ -480,10 +480,10 @@ vms_same(false, vms_vendor_user_link_upsert(77, 22, array(), 9), 'Failed reposit
 vms_same(array('query'), vms_event_kinds(), 'Failed repository upsert should not update legacy vendor metadata or dispatch creation.');
 
 vms_reset($wpdb);
-$GLOBALS['vms_user_meta'][22][VMS_USER_PRIMARY_VENDOR_META_KEY] = 99;
+$GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 99;
 $wpdb->get_var_queue = array(null, null);
 vms_same(true, vms_vendor_user_link_upsert(77, 22, array(), 9), 'Missing-table upsert should retain the legacy fallback.');
-vms_same(22, $GLOBALS['vms_post_meta'][77][VMS_VENDOR_PRIMARY_USER_META_KEY] ?? 0, 'Legacy fallback should seed the empty vendor primary-user pointer.');
+vms_same(22, $GLOBALS['vms_post_meta'][77][BVMGR_VENDOR_PRIMARY_USER_META_KEY] ?? 0, 'Legacy fallback should seed the empty vendor primary-user pointer.');
 vms_same(array('update_post_meta', 'action'), vms_event_kinds(), 'Legacy fallback should update the vendor pointer before creation notification.');
 
 vms_reset($wpdb);
@@ -505,8 +505,8 @@ vms_same(array('vendor_id' => 77, 'user_id' => 22), $update['where'], 'Repositor
 vms_same(array('%s', '%s', '%s', '%d'), $update['format'], 'Repository update should retain value formats.');
 
 vms_reset($wpdb);
-$GLOBALS['vms_post_meta'][77][VMS_VENDOR_PRIMARY_USER_META_KEY] = 22;
-$GLOBALS['vms_user_meta'][22][VMS_USER_PRIMARY_VENDOR_META_KEY] = 77;
+$GLOBALS['vms_post_meta'][77][BVMGR_VENDOR_PRIMARY_USER_META_KEY] = 22;
+$GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 77;
 $GLOBALS['vms_posts'][88] = (object) array('post_type' => 'vms_vendor');
 $wpdb->get_var_queue = array($table, $table, $table, $table);
 $wpdb->get_results_queue = array(
@@ -524,7 +524,7 @@ vms_same(
 $delete = vms_last_call($wpdb, 'delete');
 vms_same(array('vendor_id' => 77, 'user_id' => 22), $delete['where'], 'Repository delete should scope the exact vendor/user row.');
 vms_same(array('%d', '%d'), $delete['where_format'], 'Repository delete should retain integer where formats.');
-vms_same(88, $GLOBALS['vms_user_meta'][22][VMS_USER_PRIMARY_VENDOR_META_KEY] ?? 0, 'Delete should assign the remaining active vendor as replacement primary.');
+vms_same(88, $GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] ?? 0, 'Delete should assign the remaining active vendor as replacement primary.');
 
 $scanner_inventory = array(
 	'WordPress.DB.DirectDatabaseQuery.DirectQuery' => 8,

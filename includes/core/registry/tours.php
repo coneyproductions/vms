@@ -15,11 +15,11 @@ if (!function_exists('vms_register_tour')) {
 		if ($tour_id === '') {
 			return;
 		}
-		if (!isset($GLOBALS['vms_registered_tours']) || !is_array($GLOBALS['vms_registered_tours'])) {
-			$GLOBALS['vms_registered_tours'] = array();
+		if (!isset($GLOBALS['bvmgr_registered_tours']) || !is_array($GLOBALS['bvmgr_registered_tours'])) {
+			$GLOBALS['bvmgr_registered_tours'] = array();
 		}
 		$args['id'] = $tour_id;
-		$GLOBALS['vms_registered_tours'][$tour_id] = $args;
+		$GLOBALS['bvmgr_registered_tours'][$tour_id] = $args;
 	}
 }
 
@@ -29,8 +29,8 @@ if (!function_exists('vms_get_registered_tours')) {
 	 */
 	function vms_get_registered_tours(): array
 	{
-		$rows = isset($GLOBALS['vms_registered_tours']) && is_array($GLOBALS['vms_registered_tours'])
-			? $GLOBALS['vms_registered_tours']
+		$rows = isset($GLOBALS['bvmgr_registered_tours']) && is_array($GLOBALS['bvmgr_registered_tours'])
+			? $GLOBALS['bvmgr_registered_tours']
 			: array();
 		return array_values($rows);
 	}

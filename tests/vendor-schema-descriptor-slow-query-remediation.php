@@ -193,7 +193,7 @@ vms_schema_same(true, $schema['tax_tin']['sensitive'] ?? null, 'tax_tin should r
 vms_schema_same(true, $schema['tax_tin']['importable'] ?? null, 'tax_tin should remain ingestable.');
 vms_schema_assert(!array_key_exists('meta_key', $schema['tax_tin']), 'tax_tin must not acquire a persistence meta key.');
 
-$registry = VMS_Vendor_Meta_Registry::get();
+$registry = BVMGR_Vendor_Meta_Registry::get();
 vms_schema_same(28, count($registry), 'Derived vendor meta registry should retain exactly 28 registrations.');
 vms_schema_same(
 	array_values(array_column($meta_fields, 'meta_key')),

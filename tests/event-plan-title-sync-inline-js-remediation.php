@@ -93,7 +93,7 @@ try {
 
 	$assert(strpos($titleAssetSource, 'window.VMS_EVENT_PLAN_TITLE') === false, 'Title asset should not introduce a global configuration object.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-title'") !== false, 'Admin UI assets should register the new Event Plan title handle.');
-	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-title.js'") !== false, 'Admin UI assets should point the title handle at assets/js/vms-event-plan-title.js.');
+	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-title.js'") !== false, 'Admin UI assets should point the title handle at assets/js/vms-event-plan-title.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Title asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Title asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'const hiddenConfirm = document.getElementById(\'vms_cancel_bulk_retry_confirm\');') === false, 'The workflow confirmation controller should no longer remain inline.');

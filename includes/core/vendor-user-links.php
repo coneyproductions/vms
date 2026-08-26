@@ -19,24 +19,24 @@ defined('ABSPATH') || exit;
  * - DB table: {$wpdb->prefix}vms_vendor_user_links
  */
 
-if (!defined('VMS_USER_PRIMARY_VENDOR_META_KEY')) {
-    define('VMS_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
+if (!defined('BVMGR_USER_PRIMARY_VENDOR_META_KEY')) {
+    define('BVMGR_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
 }
 
-if (!defined('VMS_VENDOR_PRIMARY_USER_META_KEY')) {
-    define('VMS_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
+if (!defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY')) {
+    define('BVMGR_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
 }
 
 /**
  * Legacy alias kept for existing code references.
  * This refers to the vendor post_meta key that stores the vendor's PRIMARY contact user ID.
  */
-if (!defined('VMS_VENDOR_USER_META_KEY')) {
-    define('VMS_VENDOR_USER_META_KEY', VMS_VENDOR_PRIMARY_USER_META_KEY);
+if (!defined('BVMGR_VENDOR_USER_META_KEY')) {
+    define('BVMGR_VENDOR_USER_META_KEY', BVMGR_VENDOR_PRIMARY_USER_META_KEY);
 }
 
-if (!defined('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX')) {
-    define('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
+if (!defined('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX')) {
+    define('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
 }
 
 /**
@@ -45,7 +45,7 @@ if (!defined('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX')) {
 function vms_vendor_user_links_table(): string
 {
     global $wpdb;
-    return $wpdb->prefix . VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX;
+    return $wpdb->prefix . BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX;
 }
 
 function vms_vendor_user_links_table_exists(): bool
@@ -173,7 +173,7 @@ function vms_vendor_user_links_get_by_user_legacy(int $user_id): array
     $rows = array();
 
     // 1) User meta pointer (primary vendor)
-    $primary_vendor = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $primary_vendor = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($primary_vendor > 0) {
         $rows[] = array(
             'vendor_id'   => $primary_vendor,
@@ -191,7 +191,7 @@ function vms_vendor_user_links_get_by_user_legacy(int $user_id): array
         'posts_per_page' => -1,
         'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Compatibility fallback runs only when the authoritative link table is unavailable and must honor the legacy vendor-primary-user pointer.
             array(
-                'key'   => VMS_VENDOR_PRIMARY_USER_META_KEY,
+                'key'   => BVMGR_VENDOR_PRIMARY_USER_META_KEY,
                 'value' => (string) $user_id,
             ),
         ),
@@ -280,7 +280,7 @@ function vms_get_primary_vendor_id_for_user(int $user_id): int
     $vendor_ids = vms_get_active_vendor_ids_for_user($user_id);
     if (!$vendor_ids) return 0;
 
-    $meta_vid = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $meta_vid = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($meta_vid > 0 && in_array($meta_vid, $vendor_ids, true)) {
         return (int) $meta_vid;
     }
@@ -293,7 +293,7 @@ function vms_get_primary_vendor_id_for_user(int $user_id): int
                 $vid = (int) $r['vendor_id'];
                 if (in_array($vid, $vendor_ids, true)) {
                     // Sync legacy pointer
-                    update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vid);
+                    update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vid);
                     return $vid;
                 }
             }
@@ -303,7 +303,7 @@ function vms_get_primary_vendor_id_for_user(int $user_id): int
     // Fall back to first
     $vid = (int) $vendor_ids[0];
     if ($vid > 0) {
-        update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vid);
+        update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vid);
         if (vms_vendor_user_links_table_exists()) {
             vms_vendor_user_links_set_primary_for_user($user_id, $vid, 0);
         }
@@ -323,7 +323,7 @@ function vms_vendor_user_links_set_primary_for_user(int $user_id, int $vendor_id
     if (!vms_user_can_access_vendor($user_id, $vendor_id)) return false;
 
     // Always sync legacy pointer
-    update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
+    update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
 
     if (!vms_vendor_user_links_table_exists()) return true;
 
@@ -368,7 +368,7 @@ function vms_vendor_user_links_get_by_vendor(int $vendor_id, bool $include_inact
     if ($vendor_id <= 0) return array();
 
     if (!vms_vendor_user_links_table_exists()) {
-        $uid = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+        $uid = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
         if ($uid > 0) {
             return array(
                 array(
@@ -437,7 +437,7 @@ if (!function_exists('vms_vendor_user_link_exists')) {
             }
         }
 
-        return ((int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true) === $vendor_id);
+        return ((int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true) === $vendor_id);
     }
 }
 
@@ -1002,21 +1002,21 @@ function vms_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args =
     $link_existed_before = vms_vendor_user_link_exists($vendor_id, $user_id);
 
     // Back-compat: ensure user meta has a primary vendor if none exists.
-    $existing_primary = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $existing_primary = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($existing_primary <= 0) {
-        update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
+        update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
         $set_primary_for_user = true;
     }
 
     if (!vms_vendor_user_links_table_exists()) {
         // Fall back to the legacy convenience pointers without clobbering an
         // existing primary vendor selection unless this call explicitly asked for it.
-        $vendor_primary_user = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+        $vendor_primary_user = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
         if ($vendor_primary_user <= 0 || $set_primary_for_user) {
-            update_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, $user_id);
+            update_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, $user_id);
         }
         if ($set_primary_for_user || $existing_primary <= 0) {
-            update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
+            update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
         }
 
         if (!$link_existed_before) {
@@ -1074,9 +1074,9 @@ function vms_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args =
     }
 
     // Back-compat: if vendor has no primary contact user, set it.
-    $vendor_primary_user = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+    $vendor_primary_user = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
     if ($vendor_primary_user <= 0 && $status === 'active') {
-        update_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, $user_id);
+        update_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, $user_id);
     }
 
     if (!$link_existed_before) {
@@ -1158,14 +1158,14 @@ function vms_vendor_user_link_delete(int $vendor_id, int $user_id, int $actor_us
     if ($vendor_id <= 0 || $user_id <= 0) return false;
 
     // Legacy cleanup
-    $vendor_primary_user = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+    $vendor_primary_user = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
     if ($vendor_primary_user === $user_id) {
-        delete_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY);
+        delete_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY);
     }
 
-    $user_primary_vendor = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $user_primary_vendor = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($user_primary_vendor === $vendor_id) {
-        delete_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY);
+        delete_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY);
     }
 
     if (!vms_vendor_user_links_table_exists()) {

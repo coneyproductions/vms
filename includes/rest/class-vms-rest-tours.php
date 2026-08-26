@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_REST_Tours')) {
-	class VMS_REST_Tours
+if (!class_exists('BVMGR_REST_Tours')) {
+	class BVMGR_REST_Tours
 	{
 		public static function init(): void
 		{
@@ -45,13 +45,13 @@ if (!class_exists('VMS_REST_Tours')) {
 
 	public static function can_post_runtime_drift(WP_REST_Request $request)
 	{
-		if (!VMS_Tours::can_run_tours()) {
+		if (!BVMGR_Tours::can_run_tours()) {
 			return new WP_Error('forbidden', 'Tours are disabled or capability denied.', array('status' => 403));
 			}
-			if (!VMS_Tours::verify_rest_nonce($request)) {
+			if (!BVMGR_Tours::verify_rest_nonce($request)) {
 				return new WP_Error('forbidden', 'Invalid nonce.', array('status' => 403));
 			}
-			if (!(bool) get_option(VMS_Tours::OPT_ENABLED, 1)) {
+			if (!(bool) get_option(BVMGR_Tours::OPT_ENABLED, 1)) {
 				return new WP_Error('forbidden', 'Tours are disabled.', array('status' => 403));
 		}
 		return true;
@@ -62,7 +62,7 @@ if (!class_exists('VMS_REST_Tours')) {
 		if (!current_user_can('manage_options')) {
 			return new WP_Error('forbidden', 'Insufficient capability.', array('status' => 403));
 		}
-		if (!VMS_Tours::verify_rest_nonce($request)) {
+		if (!BVMGR_Tours::verify_rest_nonce($request)) {
 			return new WP_Error('forbidden', 'Invalid nonce.', array('status' => 403));
 		}
 		return true;
@@ -150,7 +150,7 @@ if (!class_exists('VMS_REST_Tours')) {
 				'message' => 'invalid_payload',
 			), 400);
 		}
-		$report = VMS_Tours::merge_runtime_report($params);
+		$report = BVMGR_Tours::merge_runtime_report($params);
 		return rest_ensure_response(array(
 			'ok' => true,
 			'report' => $report,
@@ -170,7 +170,7 @@ if (!class_exists('VMS_REST_Tours')) {
 			), 400);
 		}
 		$source = sanitize_key((string) ($params['source'] ?? 'scan'));
-		$report = VMS_Tours::replace_scan_report($params, $source === 'auto-update' ? 'auto-update' : 'scan');
+		$report = BVMGR_Tours::replace_scan_report($params, $source === 'auto-update' ? 'auto-update' : 'scan');
 		return rest_ensure_response(array(
 			'ok' => true,
 			'report' => $report,
@@ -179,21 +179,21 @@ if (!class_exists('VMS_REST_Tours')) {
 
 		public static function get_drift_report(): WP_REST_Response
 		{
-			return rest_ensure_response(VMS_Tours::get_report());
+			return rest_ensure_response(BVMGR_Tours::get_report());
 		}
 
 		public static function get_tile_data(): WP_REST_Response
 		{
-			return rest_ensure_response(VMS_Tours::get_tile_data());
+			return rest_ensure_response(BVMGR_Tours::get_tile_data());
 		}
 
 		public static function get_anchor_contract(): WP_REST_Response
 		{
 			return rest_ensure_response(array(
-				'contract' => VMS_Tours::get_anchor_contract(),
+				'contract' => BVMGR_Tours::get_anchor_contract(),
 			));
 		}
 	}
 }
 
-VMS_REST_Tours::init();
+BVMGR_REST_Tours::init();

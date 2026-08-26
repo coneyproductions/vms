@@ -5,8 +5,8 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_admin_ui_vendor_application_post_type')) {
 	function vms_admin_ui_vendor_application_post_type(): string
 	{
-		if (defined('VMS_VENDOR_APP_CPT') && VMS_VENDOR_APP_CPT !== '') {
-			return sanitize_key((string) VMS_VENDOR_APP_CPT);
+		if (defined('BVMGR_VENDOR_APP_CPT') && BVMGR_VENDOR_APP_CPT !== '') {
+			return sanitize_key((string) BVMGR_VENDOR_APP_CPT);
 		}
 
 		if (post_type_exists('vms_vendor_application')) {
@@ -504,7 +504,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 				}
 			}
 
-			$version = defined('VMS_VERSION') ? trim((string) VMS_VERSION) : '';
+			$version = defined('BVMGR_VERSION') ? trim((string) BVMGR_VERSION) : '';
 			if ($version !== '') {
 				echo '<div class="vms-admin-topnav__build">Backstage Venue Manager v' . esc_html($version) . '</div>';
 			}
@@ -815,11 +815,11 @@ if (!function_exists('vms_admin_ui_compact_left_menu')) {
 		}
 
 		if (
-			!isset($GLOBALS['vms_admin_menu_all_submenu_items'])
-			|| !is_array($GLOBALS['vms_admin_menu_all_submenu_items'])
-			|| count($existing_items) > count($GLOBALS['vms_admin_menu_all_submenu_items'])
+			!isset($GLOBALS['bvmgr_admin_menu_all_submenu_items'])
+			|| !is_array($GLOBALS['bvmgr_admin_menu_all_submenu_items'])
+			|| count($existing_items) > count($GLOBALS['bvmgr_admin_menu_all_submenu_items'])
 		) {
-			$GLOBALS['vms_admin_menu_all_submenu_items'] = $existing_items;
+			$GLOBALS['bvmgr_admin_menu_all_submenu_items'] = $existing_items;
 		}
 
 		$items_by_slug = array();

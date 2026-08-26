@@ -35,11 +35,11 @@ if (!function_exists('vms_public_event_sidebar_track_context_before')) {
             return;
         }
 
-        $stack = isset($GLOBALS['vms_public_event_sidebar_active_indexes']) && is_array($GLOBALS['vms_public_event_sidebar_active_indexes'])
-            ? $GLOBALS['vms_public_event_sidebar_active_indexes']
+        $stack = isset($GLOBALS['bvmgr_public_event_sidebar_active_indexes']) && is_array($GLOBALS['bvmgr_public_event_sidebar_active_indexes'])
+            ? $GLOBALS['bvmgr_public_event_sidebar_active_indexes']
             : array();
         $stack[] = $index;
-        $GLOBALS['vms_public_event_sidebar_active_indexes'] = $stack;
+        $GLOBALS['bvmgr_public_event_sidebar_active_indexes'] = $stack;
     }
 }
 
@@ -53,8 +53,8 @@ if (!function_exists('vms_public_event_sidebar_track_context_after')) {
             return;
         }
 
-        $stack = isset($GLOBALS['vms_public_event_sidebar_active_indexes']) && is_array($GLOBALS['vms_public_event_sidebar_active_indexes'])
-            ? $GLOBALS['vms_public_event_sidebar_active_indexes']
+        $stack = isset($GLOBALS['bvmgr_public_event_sidebar_active_indexes']) && is_array($GLOBALS['bvmgr_public_event_sidebar_active_indexes'])
+            ? $GLOBALS['bvmgr_public_event_sidebar_active_indexes']
             : array();
         for ($offset = count($stack) - 1; $offset >= 0; $offset--) {
             if (($stack[$offset] ?? '') !== $index) {
@@ -65,15 +65,15 @@ if (!function_exists('vms_public_event_sidebar_track_context_after')) {
             break;
         }
 
-        $GLOBALS['vms_public_event_sidebar_active_indexes'] = $stack;
+        $GLOBALS['bvmgr_public_event_sidebar_active_indexes'] = $stack;
     }
 }
 
 if (!function_exists('vms_public_event_sidebar_current_index')) {
     function vms_public_event_sidebar_current_index(): string
     {
-        $stack = isset($GLOBALS['vms_public_event_sidebar_active_indexes']) && is_array($GLOBALS['vms_public_event_sidebar_active_indexes'])
-            ? $GLOBALS['vms_public_event_sidebar_active_indexes']
+        $stack = isset($GLOBALS['bvmgr_public_event_sidebar_active_indexes']) && is_array($GLOBALS['bvmgr_public_event_sidebar_active_indexes'])
+            ? $GLOBALS['bvmgr_public_event_sidebar_active_indexes']
             : array();
         if (empty($stack)) {
             return '';

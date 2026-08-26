@@ -353,7 +353,7 @@ if (!function_exists('vms_vendor_availability_collect_vendors')) {
     function vms_vendor_availability_collect_vendors(): array
     {
         $vendor_ids = get_posts(array(
-            'post_type' => defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor',
+            'post_type' => defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor',
             'post_status' => array('publish', 'draft', 'private', 'pending'),
             'posts_per_page' => -1,
             'fields' => 'ids',

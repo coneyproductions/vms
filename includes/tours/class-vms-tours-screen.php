@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Screen')) {
-	class VMS_Tours_Screen
+if (!class_exists('BVMGR_Tours_Screen')) {
+	class BVMGR_Tours_Screen
 	{
 		/**
 		 * @return string

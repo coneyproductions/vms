@@ -9,8 +9,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_CPT_EVENT_CREDIT')) {
-	define('VMS_CPT_EVENT_CREDIT', 'vms_event_credit');
+if (!defined('BVMGR_CPT_EVENT_CREDIT')) {
+	define('BVMGR_CPT_EVENT_CREDIT', 'vms_event_credit');
 }
 
 if (!function_exists('vms_event_credit_meta_keys')) {
@@ -57,7 +57,7 @@ add_action('init', 'vms_register_event_credit_cpt');
 if (!function_exists('vms_register_event_credit_cpt')) {
 	function vms_register_event_credit_cpt(): void
 	{
-		register_post_type(VMS_CPT_EVENT_CREDIT, array(
+		register_post_type(BVMGR_CPT_EVENT_CREDIT, array(
 			'labels' => array(
 				'name' => __('Event Credits', 'backstage-venue-manager'),
 				'singular_name' => __('Event Credit', 'backstage-venue-manager'),
@@ -118,7 +118,7 @@ if (!function_exists('vms_event_credit_generate_code')) {
 			$code = $prefix . '-' . $token;
 			$exists = function_exists('wc_get_coupon_id_by_code') ? absint(wc_get_coupon_id_by_code($code)) : 0;
 			$existing_credit = get_posts(array(
-				'post_type' => VMS_CPT_EVENT_CREDIT,
+				'post_type' => BVMGR_CPT_EVENT_CREDIT,
 				'post_status' => array('publish', 'private', 'draft'),
 				'fields' => 'ids',
 				'posts_per_page' => 1,
@@ -156,7 +156,7 @@ if (!function_exists('vms_event_credit_find_existing')) {
 		}
 
 		$ids = get_posts(array(
-			'post_type' => VMS_CPT_EVENT_CREDIT,
+			'post_type' => BVMGR_CPT_EVENT_CREDIT,
 			'post_status' => array('publish', 'private', 'draft'),
 			'fields' => 'ids',
 			'posts_per_page' => 1,
@@ -346,7 +346,7 @@ if (!function_exists('vms_event_credit_send_email')) {
 	function vms_event_credit_send_email(int $credit_id): bool
 	{
 		$credit_id = absint($credit_id);
-		if ($credit_id <= 0 || get_post_type($credit_id) !== VMS_CPT_EVENT_CREDIT) {
+		if ($credit_id <= 0 || get_post_type($credit_id) !== BVMGR_CPT_EVENT_CREDIT) {
 			return false;
 		}
 
@@ -449,7 +449,7 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 		/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 		$title = sprintf(__('Event Credit %1$s — Order %2$s', 'backstage-venue-manager'), $code, $order_number);
 		$credit_id = wp_insert_post(array(
-			'post_type' => VMS_CPT_EVENT_CREDIT,
+			'post_type' => BVMGR_CPT_EVENT_CREDIT,
 			'post_status' => 'publish',
 			'post_title' => $title,
 			'post_author' => get_current_user_id(),
@@ -866,7 +866,7 @@ if (!function_exists('vms_event_credits_sync_redeemed_from_order')) {
 		foreach ($codes as $code) {
 			$coupon_id = function_exists('wc_get_coupon_id_by_code') ? absint(wc_get_coupon_id_by_code((string) $code)) : 0;
 			$credit_id = $coupon_id > 0 ? absint(get_post_meta($coupon_id, '_vms_event_credit_id', true)) : 0;
-			if ($credit_id <= 0 || get_post_type($credit_id) !== VMS_CPT_EVENT_CREDIT) {
+			if ($credit_id <= 0 || get_post_type($credit_id) !== BVMGR_CPT_EVENT_CREDIT) {
 				continue;
 			}
 			$keys = vms_event_credit_meta_keys();
@@ -881,11 +881,11 @@ if (!function_exists('vms_event_credits_sync_redeemed_from_order')) {
 	}
 }
 
-add_action('add_meta_boxes_' . VMS_CPT_EVENT_CREDIT, 'vms_event_credit_add_meta_boxes');
+add_action('add_meta_boxes_' . BVMGR_CPT_EVENT_CREDIT, 'vms_event_credit_add_meta_boxes');
 if (!function_exists('vms_event_credit_add_meta_boxes')) {
 	function vms_event_credit_add_meta_boxes(): void
 	{
-		add_meta_box('vms_event_credit_details', __('Event Credit Details', 'backstage-venue-manager'), 'vms_event_credit_render_details_metabox', VMS_CPT_EVENT_CREDIT, 'normal', 'high');
+		add_meta_box('vms_event_credit_details', __('Event Credit Details', 'backstage-venue-manager'), 'vms_event_credit_render_details_metabox', BVMGR_CPT_EVENT_CREDIT, 'normal', 'high');
 	}
 }
 
@@ -963,7 +963,7 @@ if (!function_exists('vms_event_credit_render_details_metabox')) {
 	}
 }
 
-add_action('save_post_' . VMS_CPT_EVENT_CREDIT, 'vms_event_credit_save_metabox', 10, 2);
+add_action('save_post_' . BVMGR_CPT_EVENT_CREDIT, 'vms_event_credit_save_metabox', 10, 2);
 if (!function_exists('vms_event_credit_save_metabox')) {
 	function vms_event_credit_save_metabox(int $post_id, WP_Post $post): void
 	{
@@ -1019,7 +1019,7 @@ if (!function_exists('vms_event_credit_save_metabox')) {
 	}
 }
 
-add_filter('manage_' . VMS_CPT_EVENT_CREDIT . '_posts_columns', 'vms_event_credit_admin_columns');
+add_filter('manage_' . BVMGR_CPT_EVENT_CREDIT . '_posts_columns', 'vms_event_credit_admin_columns');
 if (!function_exists('vms_event_credit_admin_columns')) {
 	function vms_event_credit_admin_columns(array $columns): array
 	{
@@ -1035,7 +1035,7 @@ if (!function_exists('vms_event_credit_admin_columns')) {
 	}
 }
 
-add_action('manage_' . VMS_CPT_EVENT_CREDIT . '_posts_custom_column', 'vms_event_credit_admin_column_content', 10, 2);
+add_action('manage_' . BVMGR_CPT_EVENT_CREDIT . '_posts_custom_column', 'vms_event_credit_admin_column_content', 10, 2);
 if (!function_exists('vms_event_credit_admin_column_content')) {
 	function vms_event_credit_admin_column_content(string $column, int $post_id): void
 	{

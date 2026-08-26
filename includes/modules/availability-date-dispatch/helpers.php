@@ -832,7 +832,7 @@ if (!function_exists('vms_add_dispatch_vendor_email')) {
 			}
 		}
 
-		$legacy_user_id = absint(get_post_meta($vendor_id, defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id', true));
+		$legacy_user_id = absint(get_post_meta($vendor_id, defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id', true));
 		if ($legacy_user_id > 0) {
 			$user_ids[] = $legacy_user_id;
 		}

@@ -257,15 +257,15 @@ if (!function_exists('vms_admin_menu_registry')) {
 	 */
 	function vms_admin_menu_registry(): array
 	{
-		if (!isset($GLOBALS['vms_admin_menu_registry']) || !is_array($GLOBALS['vms_admin_menu_registry'])) {
-			$GLOBALS['vms_admin_menu_registry'] = array();
+		if (!isset($GLOBALS['bvmgr_admin_menu_registry']) || !is_array($GLOBALS['bvmgr_admin_menu_registry'])) {
+			$GLOBALS['bvmgr_admin_menu_registry'] = array();
 		}
 
-		if (function_exists('vms_admin_menu_boot_registry') && empty($GLOBALS['vms_admin_menu_registry_booted'])) {
+		if (function_exists('vms_admin_menu_boot_registry') && empty($GLOBALS['bvmgr_admin_menu_registry_booted'])) {
 			vms_admin_menu_boot_registry();
 		}
 
-		return $GLOBALS['vms_admin_menu_registry'];
+		return $GLOBALS['bvmgr_admin_menu_registry'];
 	}
 }
 
@@ -346,7 +346,7 @@ if (!function_exists('vms_register_admin_page')) {
 			'badge_callback' => $args['badge_callback'] ?? null,
 		);
 
-		$GLOBALS['vms_admin_menu_registry'][$slug] = $entry;
+		$GLOBALS['bvmgr_admin_menu_registry'][$slug] = $entry;
 		return true;
 	}
 }
@@ -371,13 +371,13 @@ if (!function_exists('vms_admin_menu_page_exists')) {
 if (!function_exists('vms_admin_menu_boot_registry')) {
 	function vms_admin_menu_boot_registry(): void
 	{
-		if (!empty($GLOBALS['vms_admin_menu_registry_booted'])) {
+		if (!empty($GLOBALS['bvmgr_admin_menu_registry_booted'])) {
 			return;
 		}
-		$GLOBALS['vms_admin_menu_registry_booted'] = true;
+		$GLOBALS['bvmgr_admin_menu_registry_booted'] = true;
 
-		if (!isset($GLOBALS['vms_admin_menu_registry']) || !is_array($GLOBALS['vms_admin_menu_registry'])) {
-			$GLOBALS['vms_admin_menu_registry'] = array();
+		if (!isset($GLOBALS['bvmgr_admin_menu_registry']) || !is_array($GLOBALS['bvmgr_admin_menu_registry'])) {
+			$GLOBALS['bvmgr_admin_menu_registry'] = array();
 		}
 
 		vms_register_admin_page(array(
@@ -659,8 +659,8 @@ if (!function_exists('vms_admin_menu_collect_directory_pages')) {
 		}
 
 		$all_menu_items = $visible_menu_items;
-		if (isset($GLOBALS['vms_admin_menu_all_submenu_items']) && is_array($GLOBALS['vms_admin_menu_all_submenu_items'])) {
-			$all_menu_items = (array) $GLOBALS['vms_admin_menu_all_submenu_items'];
+		if (isset($GLOBALS['bvmgr_admin_menu_all_submenu_items']) && is_array($GLOBALS['bvmgr_admin_menu_all_submenu_items'])) {
+			$all_menu_items = (array) $GLOBALS['bvmgr_admin_menu_all_submenu_items'];
 		}
 
 		foreach ($all_menu_items as $item) {

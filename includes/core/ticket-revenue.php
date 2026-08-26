@@ -930,8 +930,8 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
             'include_unresolved' => true,
         );
 
-        $resolver_result = class_exists('VMS_Ticket_Revenue_Service')
-            ? VMS_Ticket_Revenue_Service::get_sales_result($resolver_args)
+        $resolver_result = class_exists('BVMGR_Ticket_Revenue_Service')
+            ? BVMGR_Ticket_Revenue_Service::get_sales_result($resolver_args)
             : array(
                 'rows' => array(),
                 'warnings' => array(__('Ticket sales resolver is unavailable.', 'backstage-venue-manager')),
@@ -971,7 +971,7 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
             ),
         );
 
-        if (!class_exists('VMS_Ticket_Revenue_Service')) {
+        if (!class_exists('BVMGR_Ticket_Revenue_Service')) {
             return $result;
         }
 

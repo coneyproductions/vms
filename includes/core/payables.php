@@ -189,8 +189,8 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
         ];
     }
 
-    if (!defined('VMS_CPT_EVENT_PLAN')) {
-        define('VMS_CPT_EVENT_PLAN', 'vms_event_plan');
+    if (!defined('BVMGR_CPT_EVENT_PLAN')) {
+        define('BVMGR_CPT_EVENT_PLAN', 'vms_event_plan');
     }
 
     $k_date   = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
@@ -201,7 +201,7 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
     $k_flat   = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'flat_fee_amount') : '_vms_flat_fee_amount';
 
     $q = [
-        'post_type'      => VMS_CPT_EVENT_PLAN,
+        'post_type'      => BVMGR_CPT_EVENT_PLAN,
         'post_status'    => ['publish', 'draft', 'pending', 'private'],
         'posts_per_page' => -1,
         'fields'         => 'ids',

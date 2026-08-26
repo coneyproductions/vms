@@ -68,7 +68,7 @@ function vms_vendor_profiles_template_include(string $template): string
     }
 
     $q = new WP_Query([
-        'post_type'           => defined('VMS_CPT_VENDOR') ? VMS_CPT_VENDOR : 'vms_vendor',
+        'post_type'           => defined('BVMGR_CPT_VENDOR') ? BVMGR_CPT_VENDOR : 'vms_vendor',
         'name'                => $slug,
         'posts_per_page'      => 1,
         'post_status'         => 'publish',
@@ -86,13 +86,13 @@ function vms_vendor_profiles_template_include(string $template): string
         return vms_vendor_profiles_404($template);
     }
 
-    $GLOBALS['vms_vendor_profile_post'] = $vendor;
+    $GLOBALS['bvmgr_vendor_profile_post'] = $vendor;
 
     global $post;
     $post = $vendor;
     setup_postdata($post);
 
-    $tpl = (defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH : plugin_dir_path(__FILE__) . '../../') . 'includes/public/templates/vendor-profile.php';
+    $tpl = (defined('BVMGR_PLUGIN_PATH') ? BVMGR_PLUGIN_PATH : plugin_dir_path(__FILE__) . '../../') . 'includes/public/templates/vendor-profile.php';
     if (file_exists($tpl)) {
         return $tpl;
     }
@@ -120,13 +120,13 @@ function vms_vendor_profiles_maybe_flush_rewrites(): void
         return;
     }
 
-    $flag = get_option(defined('VMS_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1') ? VMS_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1 : 'vms_rewrite_flushed_vendor_profiles_v1', '');
+    $flag = get_option(defined('BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1') ? BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1 : 'vms_rewrite_flushed_vendor_profiles_v1', '');
     if ($flag === '1') {
         return;
     }
 
     flush_rewrite_rules(false);
-    update_option(defined('VMS_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1') ? VMS_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1 : 'vms_rewrite_flushed_vendor_profiles_v1', '1', false);
+    update_option(defined('BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1') ? BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1 : 'vms_rewrite_flushed_vendor_profiles_v1', '1', false);
 }
 
 if (!function_exists('vms_vendor_profiles_today_ymd')) {
@@ -241,8 +241,8 @@ if (!function_exists('vms_vendor_profiles_event_sidebar_rendered')) {
             return false;
         }
 
-        $rendered = isset($GLOBALS['vms_vendor_profiles_event_sidebar_rendered']) && is_array($GLOBALS['vms_vendor_profiles_event_sidebar_rendered'])
-            ? $GLOBALS['vms_vendor_profiles_event_sidebar_rendered']
+        $rendered = isset($GLOBALS['bvmgr_vendor_profiles_event_sidebar_rendered']) && is_array($GLOBALS['bvmgr_vendor_profiles_event_sidebar_rendered'])
+            ? $GLOBALS['bvmgr_vendor_profiles_event_sidebar_rendered']
             : array();
 
         return !empty($rendered[$tec_event_id]);
@@ -254,11 +254,11 @@ if (!function_exists('vms_vendor_profiles_mark_event_sidebar_rendered')) {
     {
         $tec_event_id = absint($tec_event_id);
         if ($tec_event_id > 0) {
-            if (!isset($GLOBALS['vms_vendor_profiles_event_sidebar_rendered']) || !is_array($GLOBALS['vms_vendor_profiles_event_sidebar_rendered'])) {
-                $GLOBALS['vms_vendor_profiles_event_sidebar_rendered'] = array();
+            if (!isset($GLOBALS['bvmgr_vendor_profiles_event_sidebar_rendered']) || !is_array($GLOBALS['bvmgr_vendor_profiles_event_sidebar_rendered'])) {
+                $GLOBALS['bvmgr_vendor_profiles_event_sidebar_rendered'] = array();
             }
 
-            $GLOBALS['vms_vendor_profiles_event_sidebar_rendered'][$tec_event_id] = true;
+            $GLOBALS['bvmgr_vendor_profiles_event_sidebar_rendered'][$tec_event_id] = true;
         }
     }
 }
@@ -272,7 +272,7 @@ if (!function_exists('vms_vendor_profiles_vendor_exists')) {
         }
 
         $vendor = get_post($vendor_id);
-        return ($vendor instanceof WP_Post) && $vendor->post_type === (defined('VMS_CPT_VENDOR') ? VMS_CPT_VENDOR : 'vms_vendor') && $vendor->post_status !== 'trash';
+        return ($vendor instanceof WP_Post) && $vendor->post_type === (defined('BVMGR_CPT_VENDOR') ? BVMGR_CPT_VENDOR : 'vms_vendor') && $vendor->post_status !== 'trash';
     }
 }
 
@@ -809,7 +809,7 @@ if (!function_exists('vms_vendor_profiles_resolve_vendor_id')) {
 
         $vendor = sanitize_text_field((string) $vendor);
         if ($vendor === '' || $vendor === 'current') {
-            $global_vendor = isset($GLOBALS['vms_vendor_profile_post']) && $GLOBALS['vms_vendor_profile_post'] instanceof WP_Post ? (int) $GLOBALS['vms_vendor_profile_post']->ID : 0;
+            $global_vendor = isset($GLOBALS['bvmgr_vendor_profile_post']) && $GLOBALS['bvmgr_vendor_profile_post'] instanceof WP_Post ? (int) $GLOBALS['bvmgr_vendor_profile_post']->ID : 0;
             if ($global_vendor > 0) {
                 return $global_vendor;
             }
@@ -817,7 +817,7 @@ if (!function_exists('vms_vendor_profiles_resolve_vendor_id')) {
             if (get_query_var('vms_vendor_profile')) {
                 $slug = sanitize_title((string) get_query_var('vms_vendor_profile'));
                 if ($slug !== '') {
-                    $post = get_page_by_path($slug, OBJECT, defined('VMS_CPT_VENDOR') ? VMS_CPT_VENDOR : 'vms_vendor');
+                    $post = get_page_by_path($slug, OBJECT, defined('BVMGR_CPT_VENDOR') ? BVMGR_CPT_VENDOR : 'vms_vendor');
                     if ($post instanceof WP_Post) {
                         return (int) $post->ID;
                     }
@@ -840,7 +840,7 @@ if (!function_exists('vms_vendor_profiles_resolve_vendor_id')) {
             return 0;
         }
 
-        $post = get_page_by_path($slug, OBJECT, defined('VMS_CPT_VENDOR') ? VMS_CPT_VENDOR : 'vms_vendor');
+        $post = get_page_by_path($slug, OBJECT, defined('BVMGR_CPT_VENDOR') ? BVMGR_CPT_VENDOR : 'vms_vendor');
         return ($post instanceof WP_Post) ? (int) $post->ID : 0;
     }
 }

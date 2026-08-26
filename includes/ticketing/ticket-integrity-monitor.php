@@ -336,11 +336,11 @@ function vms_ticket_integrity_fatal_operation(string $operation): string
 
 function vms_ticket_integrity_fatal_source_scope(string $fatal_file): string
 {
-	if (!defined('VMS_PLUGIN_PATH')) {
+	if (!defined('BVMGR_PLUGIN_PATH')) {
 		return 'external';
 	}
 
-	$plugin_root = rtrim(str_replace('\\', '/', (string) VMS_PLUGIN_PATH), '/');
+	$plugin_root = rtrim(str_replace('\\', '/', (string) BVMGR_PLUGIN_PATH), '/');
 	$fatal_file = str_replace('\\', '/', trim($fatal_file));
 	if (
 		$plugin_root === ''
@@ -451,16 +451,16 @@ function vms_ticket_integrity_begin_fatal_guard(string $operation, array $contex
 		$operation = 'unknown';
 	}
 
-	if (empty($GLOBALS['vms_ticket_integrity_fatal_guard_registered'])) {
-		$GLOBALS['vms_ticket_integrity_fatal_guard_registered'] = true;
+	if (empty($GLOBALS['bvmgr_ticket_integrity_fatal_guard_registered'])) {
+		$GLOBALS['bvmgr_ticket_integrity_fatal_guard_registered'] = true;
 		register_shutdown_function('vms_ticket_integrity_fatal_guard_shutdown');
 	}
 
-	if (empty($GLOBALS['vms_ticket_integrity_fatal_guard_reserve'])) {
-		$GLOBALS['vms_ticket_integrity_fatal_guard_reserve'] = str_repeat('x', 262144);
+	if (empty($GLOBALS['bvmgr_ticket_integrity_fatal_guard_reserve'])) {
+		$GLOBALS['bvmgr_ticket_integrity_fatal_guard_reserve'] = str_repeat('x', 262144);
 	}
 
-	$guards = $GLOBALS['vms_ticket_integrity_fatal_guards'] ?? array();
+	$guards = $GLOBALS['bvmgr_ticket_integrity_fatal_guards'] ?? array();
 	if (!is_array($guards)) {
 		$guards = array();
 	}
@@ -472,25 +472,25 @@ function vms_ticket_integrity_begin_fatal_guard(string $operation, array $contex
 		'finalized' => false,
 		'started_at_gmt' => time(),
 	);
-	$GLOBALS['vms_ticket_integrity_fatal_guards'] = $guards;
+	$GLOBALS['bvmgr_ticket_integrity_fatal_guards'] = $guards;
 
 	return $guard_id;
 }
 
 function vms_ticket_integrity_end_fatal_guard(string $guard_id): void
 {
-	$guards = $GLOBALS['vms_ticket_integrity_fatal_guards'] ?? array();
+	$guards = $GLOBALS['bvmgr_ticket_integrity_fatal_guards'] ?? array();
 	if (!is_array($guards) || empty($guards[$guard_id]) || !is_array($guards[$guard_id])) {
 		return;
 	}
 
 	$guards[$guard_id]['finalized'] = true;
-	$GLOBALS['vms_ticket_integrity_fatal_guards'] = $guards;
+	$GLOBALS['bvmgr_ticket_integrity_fatal_guards'] = $guards;
 }
 
 function vms_ticket_integrity_fatal_guard_shutdown(): void
 {
-	$guards = $GLOBALS['vms_ticket_integrity_fatal_guards'] ?? array();
+	$guards = $GLOBALS['bvmgr_ticket_integrity_fatal_guards'] ?? array();
 	if (!is_array($guards) || empty($guards)) {
 		return;
 	}
@@ -500,7 +500,7 @@ function vms_ticket_integrity_fatal_guard_shutdown(): void
 		return;
 	}
 
-	unset($GLOBALS['vms_ticket_integrity_fatal_guard_reserve']);
+	unset($GLOBALS['bvmgr_ticket_integrity_fatal_guard_reserve']);
 
 	$is_memory_fatal = vms_ticket_integrity_is_memory_fatal($error);
 	$peak_memory_mb = function_exists('memory_get_peak_usage')
@@ -566,7 +566,7 @@ function vms_ticket_integrity_fatal_guard_shutdown(): void
 		$guards[$guard_id]['finalized'] = true;
 	}
 
-	$GLOBALS['vms_ticket_integrity_fatal_guards'] = $guards;
+	$GLOBALS['bvmgr_ticket_integrity_fatal_guards'] = $guards;
 }
 
 function vms_ticket_integrity_get_results_store(): array
@@ -1193,7 +1193,7 @@ function vms_ticket_integrity_finalize_scan_store(array $store, array $events, a
 
 	$store = array(
 		'version' => 1,
-		'monitor_version' => defined('VMS_VERSION') ? (string) VMS_VERSION : '',
+		'monitor_version' => defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '',
 		'updated_at_gmt' => $now,
 		'last_scan' => $scan_record,
 		'summary' => $summary,

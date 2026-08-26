@@ -352,7 +352,7 @@ if (!function_exists('sanitize_html_class')) {
 	}
 }
 
-class VMS_Tours_Service
+class BVMGR_Tours_Service
 {
 	/** @return array<int,array<string,mixed>> */
 	public function get_registry(): array
@@ -362,7 +362,7 @@ class VMS_Tours_Service
 	}
 }
 
-class VMS_Tours_Storage
+class BVMGR_Tours_Storage
 {
 	public const OPTION_SETTINGS = 'vms_tours_settings';
 
@@ -443,15 +443,15 @@ $reset_state = static function (): void {
 	$_POST = array();
 };
 
-$admin = new VMS_Tours_Admin(new VMS_Tours_Service(), new VMS_Tours_Storage());
+$admin = new BVMGR_Tours_Admin(new BVMGR_Tours_Service(), new BVMGR_Tours_Storage());
 $get_reset_notice_context = Closure::bind(function () {
 	return $this->get_reset_notice_context();
-}, $admin, VMS_Tours_Admin::class);
+}, $admin, BVMGR_Tours_Admin::class);
 $render_reset_notice = Closure::bind(function (array $context): string {
 	ob_start();
 	$this->render_reset_notice($context);
 	return (string) ob_get_clean();
-}, $admin, VMS_Tours_Admin::class);
+}, $admin, BVMGR_Tours_Admin::class);
 $run_reset_success_subprocess = static function () use ($pluginRoot): array {
 	$tempFile = tempnam(sys_get_temp_dir(), 'vms-guided-tours-reset-');
 	if (!is_string($tempFile) || $tempFile === '') {
@@ -552,11 +552,11 @@ function wp_die($message = ''): void
 	throw new RuntimeException((string) $message);
 }
 
-class VMS_Tours_Service
+class BVMGR_Tours_Service
 {
 }
 
-class VMS_Tours_Storage
+class BVMGR_Tours_Storage
 {
 	public function reset_user_state(int $user_id): void
 	{
@@ -576,7 +576,7 @@ register_shutdown_function(static function (): void {
 
 require __CLASS_FILE__;
 
-$admin = new VMS_Tours_Admin(new VMS_Tours_Service(), new VMS_Tours_Storage());
+$admin = new BVMGR_Tours_Admin(new BVMGR_Tours_Service(), new BVMGR_Tours_Storage());
 $admin->handle_reset_my_state();
 PHP;
 
@@ -671,7 +671,7 @@ $assertSame(
 $admin->register_settings();
 $settingsRegistrationFound = false;
 foreach ($GLOBALS['vms_test_registered_settings'] as $registration) {
-	if (($registration['option_group'] ?? '') === 'vms_tours_settings_group' && ($registration['option_name'] ?? '') === VMS_Tours_Storage::OPTION_SETTINGS) {
+	if (($registration['option_group'] ?? '') === 'vms_tours_settings_group' && ($registration['option_name'] ?? '') === BVMGR_Tours_Storage::OPTION_SETTINGS) {
 		$settingsRegistrationFound = true;
 		$assertSame(array($admin, 'sanitize_settings_option'), $registration['args'], 'Guided Tours settings registration should preserve the sanitize callback.');
 	}

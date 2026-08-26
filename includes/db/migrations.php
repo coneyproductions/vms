@@ -120,7 +120,7 @@ function vms_db_migrate_vendor_core_v2(): void
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_links = $wpdb->prefix . (defined('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX') ? VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX : 'vms_vendor_user_links');
+	$t_links = $wpdb->prefix . (defined('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX') ? BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX : 'vms_vendor_user_links');
 
 	$sql_links = "CREATE TABLE {$t_links} (
 		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -166,12 +166,12 @@ function vms_db_migrate_vendor_core_v3(): void
 
 	$charset_collate = $wpdb->get_charset_collate();
 
-	$t_templates = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
-	$t_template_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
-	$t_event_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
-	$t_assignments = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
-	$t_rollups = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX') ? VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX : 'vms_staffing_event_rollups');
-	$t_audit = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX') ? VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX : 'vms_staffing_audit_log');
+	$t_templates = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
+	$t_template_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
+	$t_event_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
+	$t_assignments = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
+	$t_rollups = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX : 'vms_staffing_event_rollups');
+	$t_audit = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX : 'vms_staffing_audit_log');
 
 	$sql_templates = "CREATE TABLE {$t_templates} (
 		template_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -389,7 +389,7 @@ function vms_db_migrate_vendor_core_v5(): void
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_templates = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
+	$t_templates = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
 
 	$sql_templates = "CREATE TABLE {$t_templates} (
 		template_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -436,7 +436,7 @@ function vms_db_migrate_vendor_core_v6(): void
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_template_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
+	$t_template_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
 
 	$sql_template_slots = "CREATE TABLE {$t_template_slots} (
 		template_slot_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -487,7 +487,7 @@ function vms_db_migrate_vendor_core_v7(): void
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_confirm_tokens = $wpdb->prefix . (defined('VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX') ? VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX : 'vms_vendor_app_confirm_tokens');
+	$t_confirm_tokens = $wpdb->prefix . (defined('BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX') ? BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX : 'vms_vendor_app_confirm_tokens');
 
 	$sql_confirm_tokens = "CREATE TABLE {$t_confirm_tokens} (
 		id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -531,8 +531,8 @@ function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 {
 	global $wpdb;
 
-	$vendor_user_meta_key = defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
-	$user_primary_vendor_meta_key = defined('VMS_USER_PRIMARY_VENDOR_META_KEY') ? VMS_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id';
+	$vendor_user_meta_key = defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
+	$user_primary_vendor_meta_key = defined('BVMGR_USER_PRIMARY_VENDOR_META_KEY') ? BVMGR_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id';
 
 	$now = current_time('mysql', true);
 

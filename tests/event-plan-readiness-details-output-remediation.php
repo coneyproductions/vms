@@ -200,7 +200,7 @@ try {
 
 	require_once $eventPlansPath;
 
-	$controller = new VMS_Admin_Event_Plans();
+	$controller = new BVMGR_Admin_Event_Plans();
 	$invokePrivate = static function (object $object, string $method, array $args = array()) {
 		$reflection = new ReflectionMethod($object, $method);
 		return $reflection->invokeArgs($object, $args);

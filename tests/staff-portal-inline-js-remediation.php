@@ -60,9 +60,9 @@ try {
 	$assert(strpos($staffPortalAsset, 'if (!form || root.dataset.staffAvailabilityBound === \'1\') return;') !== false, 'Staff Portal asset should no-op safely when the availability form is absent and prevent duplicate initialization.');
 	$assert(strpos($staffPortalAsset, 'if (!root) return;') !== false, 'Staff Portal asset should no-op safely when the portal root is absent.');
 
-	$assert(strpos($staffingAdminSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should remain unchanged by the Staff Portal slice.');
+	$assert(strpos($staffingAdminSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should remain unchanged by the Staff Portal slice.');
 	$assert(strpos($staffingAdminSource, 'data-vms-qualification-builder="1"') !== false, 'Staffing admin qualification-builder markup should remain unchanged by the Staff Portal slice.');
-	$assert(strpos($staffCptSource, "VMS_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js'") !== false, 'Staff CPT source should remain unchanged by the Staff Portal slice.');
+	$assert(strpos($staffCptSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js'") !== false, 'Staff CPT source should remain unchanged by the Staff Portal slice.');
 
 	fwrite(STDOUT, "Staff Portal inline JS remediation OK.\n");
 } catch (Throwable $e) {

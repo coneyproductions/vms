@@ -1,21 +1,21 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_PRIVATE_FILES_TABLE_SUFFIX')) {
-	define('VMS_PRIVATE_FILES_TABLE_SUFFIX', 'vms_private_files');
+if (!defined('BVMGR_PRIVATE_FILES_TABLE_SUFFIX')) {
+	define('BVMGR_PRIVATE_FILES_TABLE_SUFFIX', 'vms_private_files');
 }
-if (!defined('VMS_PRIVATE_FILES_SCHEMA_VERSION')) {
-	define('VMS_PRIVATE_FILES_SCHEMA_VERSION', '1');
+if (!defined('BVMGR_PRIVATE_FILES_SCHEMA_VERSION')) {
+	define('BVMGR_PRIVATE_FILES_SCHEMA_VERSION', '1');
 }
-if (!defined('VMS_PRIVATE_FILES_SCHEMA_OPTION')) {
-	define('VMS_PRIVATE_FILES_SCHEMA_OPTION', 'vms_private_files_schema_version');
+if (!defined('BVMGR_PRIVATE_FILES_SCHEMA_OPTION')) {
+	define('BVMGR_PRIVATE_FILES_SCHEMA_OPTION', 'vms_private_files_schema_version');
 }
 
 if (!function_exists('vms_private_files_table')) {
 	function vms_private_files_table(): string
 	{
 		global $wpdb;
-		return $wpdb->prefix . VMS_PRIVATE_FILES_TABLE_SUFFIX;
+		return $wpdb->prefix . BVMGR_PRIVATE_FILES_TABLE_SUFFIX;
 	}
 }
 
@@ -262,8 +262,8 @@ if (!function_exists('vms_private_files_filter_upload_dir')) {
 	 */
 	function vms_private_files_filter_upload_dir(array $uploads): array
 	{
-		$context = isset($GLOBALS['vms_private_files_upload_dir_context']) && is_array($GLOBALS['vms_private_files_upload_dir_context'])
-			? $GLOBALS['vms_private_files_upload_dir_context']
+		$context = isset($GLOBALS['bvmgr_private_files_upload_dir_context']) && is_array($GLOBALS['bvmgr_private_files_upload_dir_context'])
+			? $GLOBALS['bvmgr_private_files_upload_dir_context']
 			: array();
 		$path = isset($context['path']) ? trim((string) $context['path']) : '';
 		if ($path === '') {
@@ -288,14 +288,14 @@ if (!function_exists('vms_private_files_with_scoped_upload_dir')) {
 	 */
 	function vms_private_files_with_scoped_upload_dir(array $context, callable $callback)
 	{
-		$GLOBALS['vms_private_files_upload_dir_context'] = $context;
+		$GLOBALS['bvmgr_private_files_upload_dir_context'] = $context;
 		add_filter('upload_dir', 'vms_private_files_filter_upload_dir');
 
 		try {
 			return $callback();
 		} finally {
 			remove_filter('upload_dir', 'vms_private_files_filter_upload_dir');
-			unset($GLOBALS['vms_private_files_upload_dir_context']);
+			unset($GLOBALS['bvmgr_private_files_upload_dir_context']);
 		}
 	}
 }
@@ -303,8 +303,8 @@ if (!function_exists('vms_private_files_with_scoped_upload_dir')) {
 if (!function_exists('vms_private_files_install_schema')) {
 	function vms_private_files_install_schema(): void
 	{
-		$installed = (string) get_option(VMS_PRIVATE_FILES_SCHEMA_OPTION, '');
-		if ($installed === VMS_PRIVATE_FILES_SCHEMA_VERSION) {
+		$installed = (string) get_option(BVMGR_PRIVATE_FILES_SCHEMA_OPTION, '');
+		if ($installed === BVMGR_PRIVATE_FILES_SCHEMA_VERSION) {
 			vms_private_files_ensure_dir();
 			return;
 		}
@@ -332,7 +332,7 @@ if (!function_exists('vms_private_files_install_schema')) {
 
 		dbDelta($sql);
 		vms_private_files_ensure_dir();
-		update_option(VMS_PRIVATE_FILES_SCHEMA_OPTION, VMS_PRIVATE_FILES_SCHEMA_VERSION, false);
+		update_option(BVMGR_PRIVATE_FILES_SCHEMA_OPTION, BVMGR_PRIVATE_FILES_SCHEMA_VERSION, false);
 	}
 }
 add_action('init', 'vms_private_files_install_schema', 34);

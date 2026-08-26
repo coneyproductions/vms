@@ -27,14 +27,14 @@ final class WP_Post
 	public string $post_name = '';
 }
 
-if (!defined('VMS_VENDOR_APP_CPT')) {
-	define('VMS_VENDOR_APP_CPT', 'vms_vendor_app');
+if (!defined('BVMGR_VENDOR_APP_CPT')) {
+	define('BVMGR_VENDOR_APP_CPT', 'vms_vendor_app');
 }
-if (!defined('VMS_VENDOR_CPT')) {
-	define('VMS_VENDOR_CPT', 'vms_vendor');
+if (!defined('BVMGR_VENDOR_CPT')) {
+	define('BVMGR_VENDOR_CPT', 'vms_vendor');
 }
-if (!defined('VMS_VENUE_TEMPLATE_META_KEY')) {
-	define('VMS_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
+if (!defined('BVMGR_VENUE_TEMPLATE_META_KEY')) {
+	define('BVMGR_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
 }
 
 $GLOBALS['vms_test_posts'] = array();
@@ -364,7 +364,7 @@ function add_post_meta(int $post_id, string $meta_key, $value, bool $unique = fa
 
 function vms_vendor_app_cpt_slugs(): array
 {
-	return array(VMS_VENDOR_APP_CPT, 'vms_vendor_application');
+	return array(BVMGR_VENDOR_APP_CPT, 'vms_vendor_application');
 }
 
 function vms_vendor_app_statuses(): array
@@ -481,7 +481,7 @@ function vms_meta_key(string $object, string $field): string
 function vms_event_plan_vendor_exists(int $vendor_id): bool
 {
 	$post = get_post($vendor_id);
-	return $post instanceof WP_Post && $post->post_type === VMS_VENDOR_CPT && $post->post_status !== 'trash';
+	return $post instanceof WP_Post && $post->post_type === BVMGR_VENDOR_CPT && $post->post_status !== 'trash';
 }
 
 function vms_event_plan_flag_missing_vendor(int $post_id, int $vendor_id, string $title): void
@@ -725,7 +725,7 @@ $expectRedirect = static function (callable $callback, string $expectedLocation)
 try {
 	vms_test_reset_runtime_state();
 
-	$appId = vms_test_register_post(VMS_VENDOR_APP_CPT, 'Vendor Application Fixture');
+	$appId = vms_test_register_post(BVMGR_VENDOR_APP_CPT, 'Vendor Application Fixture');
 	update_post_meta($appId, '_vms_app_status', 'pending');
 	update_post_meta($appId, '_vms_app_confirmation_state', 'confirmed');
 	update_post_meta($appId, '_vms_app_operator_internal_note', 'Baseline note');
@@ -772,7 +772,7 @@ try {
 		vms_vendor_applications_handle_resync_vendor();
 	}, 'Forbidden');
 
-	$vendorId = vms_test_register_post(VMS_VENDOR_CPT, 'Vendor Fixture');
+	$vendorId = vms_test_register_post(BVMGR_VENDOR_CPT, 'Vendor Fixture');
 	$_GET = array('vendor_id' => $vendorId);
 	$_REQUEST = $_GET;
 	$expectDie(static function () {
@@ -781,7 +781,7 @@ try {
 	$assert((string) get_post_meta($vendorId, '_vms_test_reviewed_by', true) === '', 'Mark reviewed should not mutate vendor review state before object authorization passes.');
 
 	$templateId = vms_test_register_post('vms_venue', 'Template Venue Fixture');
-	update_post_meta($templateId, VMS_VENUE_TEMPLATE_META_KEY, '1');
+	update_post_meta($templateId, BVMGR_VENUE_TEMPLATE_META_KEY, '1');
 	$_POST = array(
 		'vms_create_venue_from_template_nonce' => vms_test_nonce('vms_create_venue_from_template'),
 		'vms_template_id' => $templateId,
@@ -877,7 +877,7 @@ try {
 	$GLOBALS['vms_test_transition_log'] = array();
 	$expectRedirect(static function () {
 		vms_vendor_applications_handle_reject();
-	}, admin_url('edit.php?post_type=' . VMS_VENDOR_APP_CPT));
+	}, admin_url('edit.php?post_type=' . BVMGR_VENDOR_APP_CPT));
 	$assert(vms_vendor_app_get_status($appId) === 'rejected', 'Reject admin-post should still update the application status for authorized users.');
 	$assert(count((array) $GLOBALS['vms_test_transition_log']) === 1, 'Reject admin-post should still record the status transition.');
 
@@ -903,7 +903,7 @@ try {
 	$assert($newVenue instanceof WP_Post, 'Create-from-template should still create a new venue for authorized users.');
 	$assert($newVenue->post_title === 'New Venue — Template Venue Fixture', 'Create-from-template should preserve the success title update.');
 	$assert($newVenue->post_name === sanitize_title('New Venue — Template Venue Fixture'), 'Create-from-template should preserve the generated slug update.');
-	$assert((string) get_post_meta(1003, VMS_VENUE_TEMPLATE_META_KEY, true) === '', 'Create-from-template should still clear the template marker on the new venue.');
+	$assert((string) get_post_meta(1003, BVMGR_VENUE_TEMPLATE_META_KEY, true) === '', 'Create-from-template should still clear the template marker on the new venue.');
 
 	vms_test_reset_runtime_state();
 	$eventPlanId = vms_test_register_post('vms_event_plan', 'Event Plan Fixture', 'publish');

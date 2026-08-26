@@ -656,7 +656,7 @@ if (!function_exists('vms_tasks_schedule_nightly_generator')) {
 		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
 			return;
 		}
-		$hook = defined('VMS_CRON_TASKS_NIGHTLY') ? (string) VMS_CRON_TASKS_NIGHTLY : 'vms_tasks_nightly_generator';
+		$hook = defined('BVMGR_CRON_TASKS_NIGHTLY') ? (string) BVMGR_CRON_TASKS_NIGHTLY : 'vms_tasks_nightly_generator';
 		if (wp_next_scheduled($hook)) {
 			return;
 		}
@@ -1044,6 +1044,6 @@ if (!function_exists('vms_tasks_maybe_generate_on_event_save')) {
 
 add_action('save_post_vms_event_plan', 'vms_tasks_maybe_generate_on_event_save', 30, 3);
 add_action('vms_tasks_generate_for_event_queued', 'vms_tasks_run_queued_event_generation', 10, 1);
-add_action(defined('VMS_CRON_TASKS_NIGHTLY') ? (string) VMS_CRON_TASKS_NIGHTLY : 'vms_tasks_nightly_generator', 'vms_tasks_run_nightly_generator');
+add_action(defined('BVMGR_CRON_TASKS_NIGHTLY') ? (string) BVMGR_CRON_TASKS_NIGHTLY : 'vms_tasks_nightly_generator', 'vms_tasks_run_nightly_generator');
 add_action('init', 'vms_tasks_schedule_nightly_generator', 20);
 add_action('vms_staffing_event_saved', 'vms_tasks_resolve_assignments_for_event', 20, 1);

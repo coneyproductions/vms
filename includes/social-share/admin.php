@@ -97,10 +97,10 @@ if (!function_exists('vms_social_enqueue_admin_assets')) {
 			return;
 		}
 
-		$ver = defined('VMS_VERSION') ? (string) VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null;
 		wp_enqueue_script(
 			'vms-social-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-social-admin.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js',
 			array(),
 			$ver,
 			true
@@ -241,7 +241,7 @@ if (!function_exists('vms_social_render_overview_tab')) {
 	{
 		$settings = vms_social_get_settings();
 		$providers = vms_social_get_providers();
-		$next = wp_next_scheduled(defined('VMS_SOCIAL_CRON_HOOK') ? (string) VMS_SOCIAL_CRON_HOOK : 'vms_social_process_queue');
+		$next = wp_next_scheduled(defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue');
 
 		echo '<h2>' . esc_html__('Module Status', 'backstage-venue-manager') . '</h2>';
 		echo '<p><strong>' . esc_html__('Enabled:', 'backstage-venue-manager') . '</strong> ' . ($settings['enabled'] ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</p>';

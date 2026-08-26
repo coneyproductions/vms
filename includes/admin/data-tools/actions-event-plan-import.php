@@ -8,8 +8,8 @@ if (!function_exists('vms_event_plan_import_filter_upload_dir')) {
 	 */
 	function vms_event_plan_import_filter_upload_dir(array $uploads): array
 	{
-		$context = isset($GLOBALS['vms_event_plan_import_upload_dir_context']) && is_array($GLOBALS['vms_event_plan_import_upload_dir_context'])
-			? $GLOBALS['vms_event_plan_import_upload_dir_context']
+		$context = isset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']) && is_array($GLOBALS['bvmgr_event_plan_import_upload_dir_context'])
+			? $GLOBALS['bvmgr_event_plan_import_upload_dir_context']
 			: array();
 		$path = isset($context['path']) ? trim((string) $context['path']) : '';
 		if ($path === '') {
@@ -34,14 +34,14 @@ if (!function_exists('vms_event_plan_import_with_scoped_upload_dir')) {
 	 */
 	function vms_event_plan_import_with_scoped_upload_dir(array $context, callable $callback)
 	{
-		$GLOBALS['vms_event_plan_import_upload_dir_context'] = $context;
+		$GLOBALS['bvmgr_event_plan_import_upload_dir_context'] = $context;
 		add_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');
 
 		try {
 			return $callback();
 		} finally {
 			remove_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');
-			unset($GLOBALS['vms_event_plan_import_upload_dir_context']);
+			unset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']);
 		}
 	}
 }

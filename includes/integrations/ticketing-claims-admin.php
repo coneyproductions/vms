@@ -117,11 +117,11 @@ if (!function_exists('vms_ticketing_claims_event_metabox_register_form')) {
 	 */
 	function vms_ticketing_claims_event_metabox_register_form(string $form_id, string $method, string $action, array $hidden_fields = array()): void
 	{
-		global $vms_ticketing_claims_event_metabox_forms;
-		if (!is_array($vms_ticketing_claims_event_metabox_forms)) {
-			$vms_ticketing_claims_event_metabox_forms = array();
+		global $bvmgr_ticketing_claims_event_metabox_forms;
+		if (!is_array($bvmgr_ticketing_claims_event_metabox_forms)) {
+			$bvmgr_ticketing_claims_event_metabox_forms = array();
 		}
-		$vms_ticketing_claims_event_metabox_forms[$form_id] = array(
+		$bvmgr_ticketing_claims_event_metabox_forms[$form_id] = array(
 			'method' => (strtolower($method) === 'get') ? 'get' : 'post',
 			'action' => esc_url_raw($action),
 			'hidden_fields' => $hidden_fields,
@@ -136,12 +136,12 @@ if (!function_exists('vms_ticketing_claims_render_event_metabox_footer_forms')) 
 			return;
 		}
 
-		global $vms_ticketing_claims_event_metabox_forms;
-		if (!is_array($vms_ticketing_claims_event_metabox_forms) || empty($vms_ticketing_claims_event_metabox_forms)) {
+		global $bvmgr_ticketing_claims_event_metabox_forms;
+		if (!is_array($bvmgr_ticketing_claims_event_metabox_forms) || empty($bvmgr_ticketing_claims_event_metabox_forms)) {
 			return;
 		}
 
-		foreach ($vms_ticketing_claims_event_metabox_forms as $form_id => $form) {
+		foreach ($bvmgr_ticketing_claims_event_metabox_forms as $form_id => $form) {
 			$form_id = sanitize_html_class((string) $form_id);
 			$method = (($form['method'] ?? 'post') === 'get') ? 'get' : 'post';
 			$action = esc_url((string) ($form['action'] ?? ''));
@@ -1215,9 +1215,9 @@ if (!function_exists('vms_ticketing_claims_enqueue_admin_assets')) {
 		}
 		wp_enqueue_style(
 			'vms-ticketing-claims-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-ticketing-claims-admin.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-ticketing-claims-admin.css',
 			array('vms-admin'),
-			function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+			function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 		);
 	}
 }

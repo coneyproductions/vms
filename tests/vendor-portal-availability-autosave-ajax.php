@@ -11,7 +11,7 @@ if (!defined('WP_ADMIN')) {
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 

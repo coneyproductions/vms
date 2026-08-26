@@ -13,16 +13,16 @@ if (!function_exists('vms_add_dispatch_enqueue_admin_assets')) {
 
 		wp_enqueue_style(
 			'vms-add-dispatch-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css',
 			array('vms-admin'),
-			defined('VMS_VERSION') ? VMS_VERSION : null
+			defined('BVMGR_VERSION') ? BVMGR_VERSION : null
 		);
 		if ($page === vms_add_dispatch_page_slug() && current_user_can('manage_options')) {
 			wp_enqueue_script(
 				'vms-add-dispatch-admin',
-				VMS_PLUGIN_URL . 'assets/js/vms-add-dispatch-admin.js',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-add-dispatch-admin.js',
 				array(),
-				defined('VMS_VERSION') ? VMS_VERSION : null,
+				defined('BVMGR_VERSION') ? BVMGR_VERSION : null,
 				true
 			);
 		}
@@ -152,11 +152,11 @@ if (!function_exists('vms_add_dispatch_render_menu_badge_js')) {
 		}
 		$version = function_exists('vms_asset_version')
 			? vms_asset_version()
-			: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+			: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 		wp_enqueue_style('vms-admin-menu');
 		wp_enqueue_script(
 			'vms-admin-menu',
-			VMS_PLUGIN_URL . 'assets/js/vms-admin-menu.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-admin-menu.js',
 			array(),
 			$version,
 			true

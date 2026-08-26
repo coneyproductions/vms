@@ -45,10 +45,10 @@ function vms_csv_vendor_recommended_columns(): array {
  */
 function vms_csv_vendor_column_map(): array {
 	$map = [
-		'display_name' => VMS_META_VENDOR_DISPLAY_NAME,
-		'contact_name' => VMS_META_VENDOR_CONTACT_NAME,
-		'email'        => VMS_META_VENDOR_EMAIL,
-		'phone'        => VMS_META_VENDOR_PHONE,
+		'display_name' => BVMGR_META_VENDOR_DISPLAY_NAME,
+		'contact_name' => BVMGR_META_VENDOR_CONTACT_NAME,
+		'email'        => BVMGR_META_VENDOR_EMAIL,
+		'phone'        => BVMGR_META_VENDOR_PHONE,
 		// 'notes' could map to a meta key you define later, or a post_content handler.
 	];
 

@@ -5,26 +5,26 @@ if (!defined('ABSPATH')) exit;
  * Parent menu slug used by VMS (your existing top-level menu).
  * If this ever changes, update this constant in ONE place.
  */
-if (!defined('VMS_ADMIN_PARENT_SLUG')) {
-    define('VMS_ADMIN_PARENT_SLUG', 'vms-season-board');
+if (!defined('BVMGR_ADMIN_PARENT_SLUG')) {
+    define('BVMGR_ADMIN_PARENT_SLUG', 'vms-season-board');
 }
 
 /**
  * Post type slug for vendor applications.
  */
-if (!defined('VMS_VENDOR_APP_CPT')) {
-    define('VMS_VENDOR_APP_CPT', 'vms_vendor_app');
+if (!defined('BVMGR_VENDOR_APP_CPT')) {
+    define('BVMGR_VENDOR_APP_CPT', 'vms_vendor_app');
 }
 
 /**
  * Vendor CPT slug (must match your vendors system).
  */
-if (!defined('VMS_VENDOR_CPT')) {
-    define('VMS_VENDOR_CPT', 'vms_vendor');
+if (!defined('BVMGR_VENDOR_CPT')) {
+    define('BVMGR_VENDOR_CPT', 'vms_vendor');
 }
 
-if (!defined('VMS_VENUE_CPT')) {
-    define('VMS_VENUE_CPT', 'vms_venue');
+if (!defined('BVMGR_VENUE_CPT')) {
+    define('BVMGR_VENUE_CPT', 'vms_venue');
 }
 
 add_action('init', 'vms_register_venue_cpt');

@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Settings_Notifications')) {
-	class VMS_Settings_Notifications
+if (!class_exists('BVMGR_Settings_Notifications')) {
+	class BVMGR_Settings_Notifications
 	{
 		public static function init(): void
 		{
@@ -174,4 +174,4 @@ if (!class_exists('VMS_Settings_Notifications')) {
 	}
 }
 
-VMS_Settings_Notifications::init();
+BVMGR_Settings_Notifications::init();

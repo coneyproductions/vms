@@ -5,12 +5,12 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('VMS_PLUGIN_URL')) {
-	define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+if (!defined('BVMGR_PLUGIN_URL')) {
+	define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 if (!class_exists('WP_Post')) {
@@ -771,12 +771,12 @@ try {
 	$assert(vms_social_event_panel_footer_forms_html(42, 314) === $queuedDirectFooterHtml, 'Public footer producer should return the exact finite renderer output.');
 
 	$GLOBALS['vms_test_user_options'] = array();
-	$GLOBALS['vms_social_event_panel_footer_forms'] = array();
+	$GLOBALS['bvmgr_social_event_panel_footer_forms'] = array();
 	ob_start();
 	vms_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
 	$openPanelHtml = (string) ob_get_clean();
 	$assert($openPanelHtml === (string) $publicQueuedPayload['html'], 'Synchronous open-panel rendering should still echo the public main producer output.');
-	$assert(isset($GLOBALS['vms_social_event_panel_footer_forms'][42]), 'Synchronous open-panel rendering should still populate the footer registry.');
+	$assert(isset($GLOBALS['bvmgr_social_event_panel_footer_forms'][42]), 'Synchronous open-panel rendering should still populate the footer registry.');
 
 	list($queuedDoc, $queuedXPath, $queuedRoot) = $parseFragment($queuedDirectHtml, 'queued main renderer');
 	unset($queuedDoc);

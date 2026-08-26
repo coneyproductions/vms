@@ -228,7 +228,7 @@ function vms_test_slow_logger_reset_runtime(): void
 {
 	$_SERVER = array();
 	$_REQUEST = array();
-	unset($GLOBALS['vms_slow_request_logger']);
+	unset($GLOBALS['bvmgr_slow_request_logger']);
 	if (file_exists(VMS_SLOW_REQUEST_LOGGER_PATH)) {
 		unlink(VMS_SLOW_REQUEST_LOGGER_PATH);
 	}
@@ -295,8 +295,8 @@ function vms_test_slow_logger_write_payload(array $server, array $request = arra
 	$match = $matchResult['value'];
 	vms_test_slow_logger_assert(!empty($match['matched']), 'Payload exercise should match the logger scope.');
 
-	$GLOBALS['vms_slow_request_logger'] = vms_test_slow_logger_bootstrap_state($match);
-	$GLOBALS['vms_slow_request_logger']['response_status'] = $responseStatus;
+	$GLOBALS['bvmgr_slow_request_logger'] = vms_test_slow_logger_bootstrap_state($match);
+	$GLOBALS['bvmgr_slow_request_logger']['response_status'] = $responseStatus;
 
 	$shutdownResult = vms_test_slow_logger_capture(
 		static function (): void {

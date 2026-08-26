@@ -57,7 +57,7 @@ try {
 	$assert(strpos($pageSource, 'function vms_event_plan_import_enqueue_assets(): void') !== false, 'Event Plan Import should declare a dedicated admin_enqueue_scripts callback.');
 	$assert(strpos($pageSource, "add_action('admin_enqueue_scripts', 'vms_event_plan_import_enqueue_assets', 50);") !== false, 'Event Plan Import should register the page-scoped enqueue callback.');
 	$assert(preg_match('~\$page\s*!==\s*vms_event_plan_import_page_slug\(\)~', $pageSource) === 1, 'Event Plan Import enqueue should bail unless the current admin page matches the exact hidden page slug.');
-	$assert(strpos($pageSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-import.js'") !== false, 'Event Plan Import should enqueue the external asset from assets/js/vms-event-plan-import.js.');
+	$assert(strpos($pageSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-import.js'") !== false, 'Event Plan Import should enqueue the external asset from assets/js/vms-event-plan-import.js.');
 	$assert(substr_count($pageSource, "current_user_can('manage_options')") >= 2, 'Event Plan Import should keep both the page capability gate and the enqueue capability gate.');
 	$assert(
 		preg_match(

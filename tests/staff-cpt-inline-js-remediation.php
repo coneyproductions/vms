@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_current_screen'] = null;
 $GLOBALS['vms_test_actions'] = array();
@@ -133,7 +133,7 @@ try {
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post', 'post_type' => 'vms_staff');
     vms_staff_cpt_admin_enqueue_assets();
     $assert(isset($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']), 'Staff CPT should enqueue the dedicated asset on the Staff post edit screen.');
-    $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['src'] === VMS_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js', 'Staff CPT should enqueue the dedicated asset from assets/js/vms-staff-cpt-admin.js.');
+    $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['src'] === BVMGR_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js', 'Staff CPT should enqueue the dedicated asset from assets/js/vms-staff-cpt-admin.js.');
     $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['deps'] === array(), 'Staff CPT should not add unnecessary JavaScript dependencies.');
     $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['ver'] === 'test-asset-version', 'Staff CPT should use vms_asset_version() for the asset version when available.');
     $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['in_footer'] === true, 'Staff CPT should load the dedicated asset in the footer.');
@@ -193,7 +193,7 @@ try {
     $assert(strpos($assetSource, "createInputLabel(idx, 'notes', '', 'text', 'regular-text')") !== false, 'Staff CPT asset should preserve the notes field name for new rows.');
     $assert(strpos($assetSource, "document.addEventListener('DOMContentLoaded', init, { once: true });") !== false, 'Staff CPT asset should preserve safe initial-load behavior when the document is still loading.');
 
-    $assert(strpos($staffingSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its separate external asset boundary.');
+    $assert(strpos($staffingSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its separate external asset boundary.');
     $assert(strpos($staffingSource, '<script') === false, 'Staffing admin source should remain free of inline executable <script> blocks.');
     $assert(strpos($staffPortalSource, 'data-vms-staff-availability="1"') !== false, 'Staff Portal source should preserve the inert availability form marker.');
     $assert(strpos($staffPortalSource, 'assets/js/vms-staff-portal.js') !== false, 'Staff Portal source should preserve its separate external availability asset boundary.');

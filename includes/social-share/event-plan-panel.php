@@ -564,11 +564,11 @@ if (!function_exists('vms_social_render_event_panel_footer_forms_markup')) {
 if (!function_exists('vms_social_event_panel_register_footer_forms')) {
 	function vms_social_event_panel_register_footer_forms(int $event_plan_id, int $queue_id = 0): void
 	{
-		global $vms_social_event_panel_footer_forms;
-		if (!is_array($vms_social_event_panel_footer_forms)) {
-			$vms_social_event_panel_footer_forms = array();
+		global $bvmgr_social_event_panel_footer_forms;
+		if (!is_array($bvmgr_social_event_panel_footer_forms)) {
+			$bvmgr_social_event_panel_footer_forms = array();
 		}
-		$vms_social_event_panel_footer_forms[$event_plan_id] = array(
+		$bvmgr_social_event_panel_footer_forms[$event_plan_id] = array(
 			'event_plan_id' => $event_plan_id,
 			'queue_id' => $queue_id > 0 ? $queue_id : 0,
 		);
@@ -600,12 +600,12 @@ if (!function_exists('vms_social_event_panel_render_footer_forms')) {
 			return;
 		}
 
-		global $vms_social_event_panel_footer_forms;
-		if (!is_array($vms_social_event_panel_footer_forms) || empty($vms_social_event_panel_footer_forms)) {
+		global $bvmgr_social_event_panel_footer_forms;
+		if (!is_array($bvmgr_social_event_panel_footer_forms) || empty($bvmgr_social_event_panel_footer_forms)) {
 			return;
 		}
 
-		foreach ($vms_social_event_panel_footer_forms as $entry) {
+		foreach ($bvmgr_social_event_panel_footer_forms as $entry) {
 			$event_plan_id = absint($entry['event_plan_id'] ?? 0);
 			if ($event_plan_id <= 0) {
 				continue;

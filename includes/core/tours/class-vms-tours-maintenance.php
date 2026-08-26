@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Maintenance')) {
-	class VMS_Tours_Maintenance
+if (!class_exists('BVMGR_Tours_Maintenance')) {
+	class BVMGR_Tours_Maintenance
 	{
 		public static function init(): void
 		{
@@ -62,4 +62,4 @@ if (!class_exists('VMS_Tours_Maintenance')) {
 	}
 }
 
-VMS_Tours_Maintenance::init();
+BVMGR_Tours_Maintenance::init();

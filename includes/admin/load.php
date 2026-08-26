@@ -78,9 +78,9 @@ require_once __DIR__ . '/vendors/tax-export-csv.php';
 require_once __DIR__ . '/vendor-list-ui.php';
 
 
-$vms_ref_keys_map = __DIR__ . '/reference/keys-map.php';
-if (file_exists($vms_ref_keys_map)) {
-    require_once $vms_ref_keys_map;
+$bvmgr_ref_keys_map = __DIR__ . '/reference/keys-map.php';
+if (file_exists($bvmgr_ref_keys_map)) {
+    require_once $bvmgr_ref_keys_map;
 }
  
 add_action('admin_post_vms_save_continuity_binder', 'vms_admin_post_save_continuity_binder');

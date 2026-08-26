@@ -19,7 +19,7 @@ if (!function_exists('vms_social_table')) {
 if (!function_exists('vms_social_table_accounts')) {
 	function vms_social_table_accounts(): string
 	{
-		$suffix = defined('VMS_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX') ? (string) VMS_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX : 'vms_social_accounts';
+		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX : 'vms_social_accounts';
 		return vms_social_table($suffix);
 	}
 }
@@ -27,7 +27,7 @@ if (!function_exists('vms_social_table_accounts')) {
 if (!function_exists('vms_social_table_venue_map')) {
 	function vms_social_table_venue_map(): string
 	{
-		$suffix = defined('VMS_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX') ? (string) VMS_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX : 'vms_social_venue_map';
+		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX : 'vms_social_venue_map';
 		return vms_social_table($suffix);
 	}
 }
@@ -35,7 +35,7 @@ if (!function_exists('vms_social_table_venue_map')) {
 if (!function_exists('vms_social_table_templates')) {
 	function vms_social_table_templates(): string
 	{
-		$suffix = defined('VMS_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX') ? (string) VMS_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX : 'vms_social_templates';
+		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX : 'vms_social_templates';
 		return vms_social_table($suffix);
 	}
 }
@@ -43,7 +43,7 @@ if (!function_exists('vms_social_table_templates')) {
 if (!function_exists('vms_social_table_queue')) {
 	function vms_social_table_queue(): string
 	{
-		$suffix = defined('VMS_DB_TABLE_SOCIAL_QUEUE_SUFFIX') ? (string) VMS_DB_TABLE_SOCIAL_QUEUE_SUFFIX : 'vms_social_queue';
+		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_QUEUE_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_QUEUE_SUFFIX : 'vms_social_queue';
 		return vms_social_table($suffix);
 	}
 }
@@ -51,7 +51,7 @@ if (!function_exists('vms_social_table_queue')) {
 if (!function_exists('vms_social_table_audit')) {
 	function vms_social_table_audit(): string
 	{
-		$suffix = defined('VMS_DB_TABLE_SOCIAL_AUDIT_SUFFIX') ? (string) VMS_DB_TABLE_SOCIAL_AUDIT_SUFFIX : 'vms_social_audit';
+		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_AUDIT_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_AUDIT_SUFFIX : 'vms_social_audit';
 		return vms_social_table($suffix);
 	}
 }
@@ -63,7 +63,7 @@ if (!function_exists('vms_social_default_settings')) {
 			'enabled' => 0,
 			'kill_switch' => 1,
 			'utm_enabled' => 1,
-			'max_attempts' => defined('VMS_SOCIAL_MAX_ATTEMPTS_DEFAULT') ? (int) VMS_SOCIAL_MAX_ATTEMPTS_DEFAULT : 5,
+			'max_attempts' => defined('BVMGR_SOCIAL_MAX_ATTEMPTS_DEFAULT') ? (int) BVMGR_SOCIAL_MAX_ATTEMPTS_DEFAULT : 5,
 		);
 	}
 }
@@ -71,7 +71,7 @@ if (!function_exists('vms_social_default_settings')) {
 if (!function_exists('vms_social_get_settings')) {
 	function vms_social_get_settings(): array
 	{
-		$key = defined('VMS_OPT_SOCIAL_SETTINGS_V1') ? (string) VMS_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
+		$key = defined('BVMGR_OPT_SOCIAL_SETTINGS_V1') ? (string) BVMGR_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
 		$raw = get_option($key, array());
 		$raw = is_array($raw) ? $raw : array();
 
@@ -95,7 +95,7 @@ if (!function_exists('vms_social_update_settings')) {
 			'utm_enabled' => empty($incoming['utm_enabled']) ? 0 : 1,
 			'max_attempts' => max(1, min(10, (int) ($incoming['max_attempts'] ?? $settings['max_attempts']))),
 		);
-		$key = defined('VMS_OPT_SOCIAL_SETTINGS_V1') ? (string) VMS_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
+		$key = defined('BVMGR_OPT_SOCIAL_SETTINGS_V1') ? (string) BVMGR_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
 		update_option($key, $next, false);
 		return $next;
 	}
@@ -120,8 +120,8 @@ if (!function_exists('vms_social_kill_switch_active')) {
 if (!function_exists('vms_social_db_maybe_install')) {
 	function vms_social_db_maybe_install(): void
 	{
-		$schema_key = defined('VMS_OPT_SOCIAL_DB_SCHEMA_VERSION') ? (string) VMS_OPT_SOCIAL_DB_SCHEMA_VERSION : 'vms_social_db_schema_version';
-		$target_version = defined('VMS_SOCIAL_DB_SCHEMA_VERSION') ? (string) VMS_SOCIAL_DB_SCHEMA_VERSION : 'social_v1';
+		$schema_key = defined('BVMGR_OPT_SOCIAL_DB_SCHEMA_VERSION') ? (string) BVMGR_OPT_SOCIAL_DB_SCHEMA_VERSION : 'vms_social_db_schema_version';
+		$target_version = defined('BVMGR_SOCIAL_DB_SCHEMA_VERSION') ? (string) BVMGR_SOCIAL_DB_SCHEMA_VERSION : 'social_v1';
 		$current_version = (string) get_option($schema_key, '');
 		if ($current_version === $target_version) {
 			return;
@@ -231,7 +231,7 @@ if (!function_exists('vms_social_db_maybe_install')) {
 		vms_social_seed_default_templates();
 		update_option($schema_key, $target_version, false);
 
-		$settings_key = defined('VMS_OPT_SOCIAL_SETTINGS_V1') ? (string) VMS_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
+		$settings_key = defined('BVMGR_OPT_SOCIAL_SETTINGS_V1') ? (string) BVMGR_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
 		if (get_option($settings_key, null) === null) {
 			update_option($settings_key, vms_social_default_settings(), false);
 		}

@@ -551,8 +551,8 @@ function vms_record_operational_issue(string $event_code, array $context = array
 	return true;
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', '1.2.0');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', '1.2.0');
 }
 
 $g17a_cleanup_mirror_eval = g17a_rename_function($g17a_mirror_cleanup, 'vms_event_plan_cleanup_legacy_ticket_meta_once', 'g17a_cleanup_mirror');
@@ -565,7 +565,7 @@ $g17a_run_cleanup = static function (string $function): array {
 	$GLOBALS['g17a_options'] = array(
 		'vms_event_plan_legacy_ticket_cleanup_cursor' => 42,
 		'vms_event_plan_legacy_ticket_cleanup_progress' => array(
-			'version' => VMS_VERSION,
+			'version' => BVMGR_VERSION,
 			'run_at_gmt' => '2026-08-08T00:00:00+00:00',
 			'scanned' => 7,
 			'cleaned_plans' => 3,
@@ -592,7 +592,7 @@ $g17a_run_cleanup = static function (string $function): array {
 $g17a_cleanup_mirror_result = $g17a_run_cleanup('g17a_cleanup_mirror');
 $g17a_cleanup_shadow_result = $g17a_run_cleanup('g17a_cleanup_shadow');
 g17a_same($g17a_cleanup_mirror_result, $g17a_cleanup_shadow_result, 'Cleanup mirror/shadow durable behavior changed.');
-g17a_same(VMS_VERSION, $g17a_cleanup_mirror_result['options']['vms_event_plan_legacy_ticket_cleanup_version'] ?? '', 'Cleanup completion marker changed.');
+g17a_same(BVMGR_VERSION, $g17a_cleanup_mirror_result['options']['vms_event_plan_legacy_ticket_cleanup_version'] ?? '', 'Cleanup completion marker changed.');
 $g17a_cleanup_last_run = $g17a_cleanup_mirror_result['options']['vms_event_plan_legacy_ticket_cleanup_last_run'] ?? array();
 g17a_same(7, $g17a_cleanup_last_run['scanned'] ?? null, 'Cleanup scanned persistence changed.');
 g17a_same(3, $g17a_cleanup_last_run['cleaned_plans'] ?? null, 'Cleanup cleaned-plan persistence changed.');

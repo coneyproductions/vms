@@ -2417,8 +2417,8 @@ function vms_ticketing_v2_square_prepare_product(int $product_id): bool {
 }
 
 function vms_ticketing_v2_square_flush_manual_sync_queue(): void {
-    $product_ids = $GLOBALS['vms_ticketing_v2_square_sync_queue'] ?? array();
-    unset($GLOBALS['vms_ticketing_v2_square_sync_queue'], $GLOBALS['vms_ticketing_v2_square_sync_queue_attached']);
+    $product_ids = $GLOBALS['bvmgr_ticketing_v2_square_sync_queue'] ?? array();
+    unset($GLOBALS['bvmgr_ticketing_v2_square_sync_queue'], $GLOBALS['bvmgr_ticketing_v2_square_sync_queue_attached']);
 
     if (!is_array($product_ids) || empty($product_ids) || !vms_ticketing_v2_square_sync_bridge_ready()) {
         return;
@@ -2467,14 +2467,14 @@ function vms_ticketing_v2_square_queue_manual_sync(int $product_id): void {
         return;
     }
 
-    if (!isset($GLOBALS['vms_ticketing_v2_square_sync_queue']) || !is_array($GLOBALS['vms_ticketing_v2_square_sync_queue'])) {
-        $GLOBALS['vms_ticketing_v2_square_sync_queue'] = array();
+    if (!isset($GLOBALS['bvmgr_ticketing_v2_square_sync_queue']) || !is_array($GLOBALS['bvmgr_ticketing_v2_square_sync_queue'])) {
+        $GLOBALS['bvmgr_ticketing_v2_square_sync_queue'] = array();
     }
 
-    $GLOBALS['vms_ticketing_v2_square_sync_queue'][] = $product_id;
+    $GLOBALS['bvmgr_ticketing_v2_square_sync_queue'][] = $product_id;
 
-    if (empty($GLOBALS['vms_ticketing_v2_square_sync_queue_attached'])) {
-        $GLOBALS['vms_ticketing_v2_square_sync_queue_attached'] = true;
+    if (empty($GLOBALS['bvmgr_ticketing_v2_square_sync_queue_attached'])) {
+        $GLOBALS['bvmgr_ticketing_v2_square_sync_queue_attached'] = true;
         add_action('shutdown', 'vms_ticketing_v2_square_flush_manual_sync_queue', 99);
     }
 }
@@ -3292,7 +3292,7 @@ function vms_ticketing_v2_set_config(int $plan_id, array $config): void {
             $current_hash = vms_ticketing_v2_hash_config_for_sync($current_norm);
             $new_hash = vms_ticketing_v2_hash_config_for_sync($config);
             if ($current_hash !== '' && hash_equals($current_hash, $new_hash)) {
-                $GLOBALS['vms_ticketing_v2_last_set_config_noop'] = array(
+                $GLOBALS['bvmgr_ticketing_v2_last_set_config_noop'] = array(
                     'plan_id' => $plan_id,
                     'config_hash' => $new_hash,
                     'reason' => 'unchanged_config_hash',
@@ -3300,7 +3300,7 @@ function vms_ticketing_v2_set_config(int $plan_id, array $config): void {
                 return;
             }
         } elseif (maybe_serialize($current_norm) === maybe_serialize($config)) {
-            $GLOBALS['vms_ticketing_v2_last_set_config_noop'] = array(
+            $GLOBALS['bvmgr_ticketing_v2_last_set_config_noop'] = array(
                 'plan_id' => $plan_id,
                 'config_hash' => '',
                 'reason' => 'unchanged_serialized_config',
@@ -3309,7 +3309,7 @@ function vms_ticketing_v2_set_config(int $plan_id, array $config): void {
         }
     }
 
-    $GLOBALS['vms_ticketing_v2_last_set_config_noop'] = array(
+    $GLOBALS['bvmgr_ticketing_v2_last_set_config_noop'] = array(
         'plan_id' => $plan_id,
         'config_hash' => function_exists('vms_ticketing_v2_hash_config_for_sync') ? vms_ticketing_v2_hash_config_for_sync($config) : '',
         'reason' => 'updated',
@@ -4550,11 +4550,11 @@ function vms_ticketing_v2_reset_stale_sales_end_to_show(array $cfg, string $show
  * Nothing is created/changed in TEC/Woo until the operator uses Preview → Commit.
  */
 function vms_ticketing_v2_templates_option_key(): string {
-    return defined('VMS_OPT_TICKETING_TEMPLATES_V1') ? (string) VMS_OPT_TICKETING_TEMPLATES_V1 : 'vms_ticketing_templates_v1';
+    return defined('BVMGR_OPT_TICKETING_TEMPLATES_V1') ? (string) BVMGR_OPT_TICKETING_TEMPLATES_V1 : 'vms_ticketing_templates_v1';
 }
 
 function vms_ticketing_v2_default_template_option_key(): string {
-    return defined('VMS_OPT_TICKETING_DEFAULT_TEMPLATE_V1') ? (string) VMS_OPT_TICKETING_DEFAULT_TEMPLATE_V1 : 'vms_ticketing_default_template_v1';
+    return defined('BVMGR_OPT_TICKETING_DEFAULT_TEMPLATE_V1') ? (string) BVMGR_OPT_TICKETING_DEFAULT_TEMPLATE_V1 : 'vms_ticketing_default_template_v1';
 }
 
 function vms_ticketing_v2_get_default_template_id(): string {
@@ -9883,7 +9883,7 @@ function vms_ticketing_v2_ajax_save_config(): void {
         }
         $image_sync_results = vms_entitlements_sync_plan_image_changes($plan_id, $cfg_before, $cfg);
     } else {
-        $GLOBALS['vms_ticketing_v2_last_set_config_noop'] = array(
+        $GLOBALS['bvmgr_ticketing_v2_last_set_config_noop'] = array(
             'plan_id' => $plan_id,
             'config_hash' => $after_hash,
             'reason' => 'ajax_unchanged_config_hash',

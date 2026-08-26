@@ -12,7 +12,7 @@ if (!function_exists('vms_admin_ui_asset_version')) {
 			}
 		}
 
-		return defined('VMS_VERSION') ? (string) VMS_VERSION : '';
+		return defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 	}
 }
 

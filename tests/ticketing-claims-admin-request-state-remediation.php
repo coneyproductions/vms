@@ -282,8 +282,8 @@ vms_ticketing_claims_render_admin_notices();
 $arrayNoticeMarkup = (string) ob_get_clean();
 vms_test_assert($arrayNoticeMarkup === '', 'Claims admin notices should reject array-shaped notice state.');
 
-global $vms_ticketing_claims_event_metabox_forms;
-$vms_ticketing_claims_event_metabox_forms = array();
+global $bvmgr_ticketing_claims_event_metabox_forms;
+$bvmgr_ticketing_claims_event_metabox_forms = array();
 vms_ticketing_claims_event_metabox_register_form(
 	'claims-structured',
 	'get',
@@ -293,8 +293,8 @@ vms_ticketing_claims_event_metabox_register_form(
 		'filters' => array('status' => 'reserved'),
 	)
 );
-vms_test_assert(is_array($vms_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['ids'] ?? null), 'Claims admin should continue to preserve legitimate structured hidden-field arrays.');
-vms_test_assert(($vms_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['filters']['status'] ?? '') === 'reserved', 'Claims admin should preserve nested structured hidden-field values.');
+vms_test_assert(is_array($bvmgr_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['ids'] ?? null), 'Claims admin should continue to preserve legitimate structured hidden-field arrays.');
+vms_test_assert(($bvmgr_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['filters']['status'] ?? '') === 'reserved', 'Claims admin should preserve nested structured hidden-field values.');
 
 $GLOBALS['vms_test_capabilities'] = array(
 	'vms_manage_verifications' => false,

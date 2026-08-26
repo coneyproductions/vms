@@ -41,7 +41,7 @@ function vms_dashboard_enqueue_assets($hook)
     ? vms_plugin_main_file()
     : dirname(__DIR__, 2) . '/backstage-venue-manager.php';
   $src         = plugin_dir_url($plugin_file) . 'assets/admin-dashboard.js';
-  $ver         = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+  $ver         = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
   wp_enqueue_script(
     'vms-admin-dashboard',
     $src,
@@ -87,8 +87,8 @@ function vms_dashboard_render_today_week_block(): void
     <?php if (function_exists('vms_goals_render_dashboard_panel')) : ?>
       <?php vms_goals_render_dashboard_panel(); ?>
     <?php endif; ?>
-    <?php if (class_exists('VMS_Tours') && is_callable(array('VMS_Tours', 'render_dashboard_tile'))) : ?>
-      <?php VMS_Tours::render_dashboard_tile(); ?>
+    <?php if (class_exists('BVMGR_Tours') && is_callable(array('BVMGR_Tours', 'render_dashboard_tile'))) : ?>
+      <?php BVMGR_Tours::render_dashboard_tile(); ?>
     <?php endif; ?>
 
     <section id="vms-dashboard-today">

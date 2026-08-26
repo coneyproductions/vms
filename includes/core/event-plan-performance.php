@@ -22,7 +22,7 @@ if (!function_exists('vms_event_plan_perf_log_path')) {
 if (!function_exists('vms_event_plan_perf_request_state')) {
 	function vms_event_plan_perf_request_state(): array
 	{
-		$state = $GLOBALS['vms_event_plan_perf_request_state'] ?? array();
+		$state = $GLOBALS['bvmgr_event_plan_perf_request_state'] ?? array();
 		return is_array($state) ? $state : array();
 	}
 }
@@ -30,7 +30,7 @@ if (!function_exists('vms_event_plan_perf_request_state')) {
 if (!function_exists('vms_event_plan_perf_save_request_state')) {
 	function vms_event_plan_perf_save_request_state(array $state): void
 	{
-		$GLOBALS['vms_event_plan_perf_request_state'] = $state;
+		$GLOBALS['bvmgr_event_plan_perf_request_state'] = $state;
 	}
 }
 
@@ -1103,11 +1103,11 @@ if (!function_exists('vms_event_plan_perf_span_start')) {
 		}
 
 		$token = sanitize_key(str_replace(array('.', ':'), '_', $hook_name)) . '_' . wp_generate_password(12, false, false);
-		if (!isset($GLOBALS['vms_event_plan_perf_spans']) || !is_array($GLOBALS['vms_event_plan_perf_spans'])) {
-			$GLOBALS['vms_event_plan_perf_spans'] = array();
+		if (!isset($GLOBALS['bvmgr_event_plan_perf_spans']) || !is_array($GLOBALS['bvmgr_event_plan_perf_spans'])) {
+			$GLOBALS['bvmgr_event_plan_perf_spans'] = array();
 		}
 
-		$GLOBALS['vms_event_plan_perf_spans'][$token] = array(
+		$GLOBALS['bvmgr_event_plan_perf_spans'][$token] = array(
 			'started_at' => microtime(true),
 			'query_count_start' => vms_event_plan_perf_query_count(),
 			'memory_usage_start_bytes' => function_exists('memory_get_usage') ? (int) memory_get_usage(true) : 0,
@@ -1130,8 +1130,8 @@ if (!function_exists('vms_event_plan_perf_span_finish')) {
 		$query_count_start = vms_event_plan_perf_query_count();
 		$memory_usage_start_bytes = function_exists('memory_get_usage') ? (int) memory_get_usage(true) : 0;
 		$peak_memory_start_bytes = function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0;
-		if (isset($GLOBALS['vms_event_plan_perf_spans'][$token])) {
-			$span_state = $GLOBALS['vms_event_plan_perf_spans'][$token];
+		if (isset($GLOBALS['bvmgr_event_plan_perf_spans'][$token])) {
+			$span_state = $GLOBALS['bvmgr_event_plan_perf_spans'][$token];
 			if (is_array($span_state)) {
 				$started_at = (float) ($span_state['started_at'] ?? $started_at);
 				$query_count_start = absint($span_state['query_count_start'] ?? $query_count_start);
@@ -1140,7 +1140,7 @@ if (!function_exists('vms_event_plan_perf_span_finish')) {
 			} else {
 				$started_at = (float) $span_state;
 			}
-			unset($GLOBALS['vms_event_plan_perf_spans'][$token]);
+			unset($GLOBALS['bvmgr_event_plan_perf_spans'][$token]);
 		}
 
 		$query_count_end = vms_event_plan_perf_query_count();

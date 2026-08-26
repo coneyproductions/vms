@@ -1547,16 +1547,16 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			? vms_public_calendar_render_compact_nav($compact_context, $base)
 			: vms_public_calendar_render_nav($nav, $base, $month);
 
-		$calendar_script_ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : null);
-		if (defined('VMS_PLUGIN_PATH')) {
-			$calendar_script_file = VMS_PLUGIN_PATH . 'assets/js/vms-public-calendar.js';
+		$calendar_script_ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
+		if (defined('BVMGR_PLUGIN_PATH')) {
+			$calendar_script_file = BVMGR_PLUGIN_PATH . 'assets/js/vms-public-calendar.js';
 			if (file_exists($calendar_script_file)) {
 				$calendar_script_ver = (string) @filemtime($calendar_script_file);
 			}
 		}
 		wp_enqueue_script(
 			'vms-public-calendar',
-			VMS_PLUGIN_URL . 'assets/js/vms-public-calendar.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-public-calendar.js',
 			array(),
 			$calendar_script_ver,
 			true

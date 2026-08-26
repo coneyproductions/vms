@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 function vms_ticket_mutation_audit_schema_option_key(): string
 {
-	return defined('VMS_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION')
-		? (string) VMS_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION
+	return defined('BVMGR_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION')
+		? (string) BVMGR_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION
 		: 'vms_ticket_mutation_audit_db_schema_version';
 }
 
@@ -16,8 +16,8 @@ function vms_ticket_mutation_audit_schema_target(): string
 function vms_ticket_mutation_audit_table_name(): string
 {
 	global $wpdb;
-	$suffix = defined('VMS_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX')
-		? (string) VMS_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX
+	$suffix = defined('BVMGR_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX')
+		? (string) BVMGR_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX
 		: 'vms_ticket_mutation_audit';
 	return $wpdb->prefix . $suffix;
 }
@@ -66,7 +66,7 @@ add_action('plugins_loaded', 'vms_ticket_mutation_audit_maybe_upgrade_schema', 1
 
 function vms_ticket_mutation_audit_context_stack(): array
 {
-	$stack = $GLOBALS['vms_ticket_mutation_audit_context_stack'] ?? array();
+	$stack = $GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] ?? array();
 	return is_array($stack) ? $stack : array();
 }
 
@@ -132,7 +132,7 @@ function vms_ticket_mutation_audit_push_context(array $context): void
 	}
 
 	$stack[] = array_merge($current, vms_ticket_mutation_audit_sanitize_context($context));
-	$GLOBALS['vms_ticket_mutation_audit_context_stack'] = $stack;
+	$GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] = $stack;
 }
 
 function vms_ticket_mutation_audit_pop_context(): void
@@ -141,7 +141,7 @@ function vms_ticket_mutation_audit_pop_context(): void
 	if (!empty($stack)) {
 		array_pop($stack);
 	}
-	$GLOBALS['vms_ticket_mutation_audit_context_stack'] = $stack;
+	$GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] = $stack;
 }
 
 function vms_ticket_mutation_audit_current_context(): array
@@ -428,7 +428,7 @@ function vms_ticket_mutation_audit_is_relevant_meta_write(int $object_id, string
 
 function vms_ticket_mutation_audit_pending_store(): array
 {
-	$store = $GLOBALS['vms_ticket_mutation_audit_pending_meta'] ?? array();
+	$store = $GLOBALS['bvmgr_ticket_mutation_audit_pending_meta'] ?? array();
 	return is_array($store) ? $store : array();
 }
 
@@ -440,7 +440,7 @@ function vms_ticket_mutation_audit_enqueue_pending(string $operation, int $objec
 		$store[$key] = array();
 	}
 	$store[$key][] = $row;
-	$GLOBALS['vms_ticket_mutation_audit_pending_meta'] = $store;
+	$GLOBALS['bvmgr_ticket_mutation_audit_pending_meta'] = $store;
 }
 
 function vms_ticket_mutation_audit_dequeue_pending(string $operation, int $object_id, string $meta_key): array
@@ -456,7 +456,7 @@ function vms_ticket_mutation_audit_dequeue_pending(string $operation, int $objec
 		}
 	}
 
-	$GLOBALS['vms_ticket_mutation_audit_pending_meta'] = $store;
+	$GLOBALS['bvmgr_ticket_mutation_audit_pending_meta'] = $store;
 	return is_array($row) ? $row : array();
 }
 

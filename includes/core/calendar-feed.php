@@ -4,8 +4,8 @@ defined('ABSPATH') || exit;
 /**
  * Calendar feed cache-bust option.
  */
-if (!defined('VMS_CALENDAR_FEED_CACHE_BUST_OPTION')) {
-	define('VMS_CALENDAR_FEED_CACHE_BUST_OPTION', 'vms_calendar_feed_cache_bust');
+if (!defined('BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION')) {
+	define('BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION', 'vms_calendar_feed_cache_bust');
 }
 
 if (!function_exists('vms_calendar_boolish')) {
@@ -868,7 +868,7 @@ if (!function_exists('vms_calendar_prepare_vendor_groups')) {
 if (!function_exists('vms_calendar_feed_cache_bust')) {
 	function vms_calendar_feed_cache_bust(): void
 	{
-		update_option(VMS_CALENDAR_FEED_CACHE_BUST_OPTION, (string) time(), false);
+		update_option(BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION, (string) time(), false);
 	}
 }
 
@@ -949,7 +949,7 @@ if (!function_exists('vms_get_calendar_events')) {
 			}
 		}
 
-		$cache_version = (string) get_option(VMS_CALENDAR_FEED_CACHE_BUST_OPTION, '1');
+		$cache_version = (string) get_option(BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION, '1');
 		$cache_ttl = (int) apply_filters('vms_calendar_feed_cache_ttl', 10 * MINUTE_IN_SECONDS, $context);
 		$cache_key = 'vms_cal_feed_' . md5(wp_json_encode(array(
 			'v' => $cache_version,

@@ -151,17 +151,17 @@ if (!function_exists('vms_status_notice_enqueue_runtime_assets')) {
 			return;
 		}
 
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
 			'vms-notices-front',
-			VMS_PLUGIN_URL . 'assets/css/vms-notices-front.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-notices-front.css',
 			array('vms-ui'),
 			$ver
 		);
 
 		wp_enqueue_script(
 			$script_handle,
-			VMS_PLUGIN_URL . 'assets/js/vms-notices-front.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-notices-front.js',
 			array(),
 			$ver,
 			true

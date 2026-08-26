@@ -187,7 +187,7 @@ function vms_test_native_strip_tags_noise(string $value): string
 function vms_test_run_attach_noise(string $noise, bool $owns_buffer, bool $is_admin): array
 {
 	$GLOBALS['vms_test_manage_options'] = $is_admin;
-	$GLOBALS['vms_ajax_ob_started'] = $owns_buffer;
+	$GLOBALS['bvmgr_ajax_ob_started'] = $owns_buffer;
 
 	$start_level = ob_get_level();
 	if ($owns_buffer) {
@@ -206,7 +206,7 @@ function vms_test_run_attach_noise(string $noise, bool $owns_buffer, bool $is_ad
 
 	return array(
 		'data' => $data,
-		'flag' => $GLOBALS['vms_ajax_ob_started'] ?? null,
+		'flag' => $GLOBALS['bvmgr_ajax_ob_started'] ?? null,
 		'ob_level_before' => $start_level,
 		'ob_level_after' => $end_level,
 	);

@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) exit;
  * - Uses nonces + capability checks.
  */
 
-define('VMS_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
+define('BVMGR_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
 
 /**
  * Boot hooks
@@ -264,7 +264,7 @@ function vms_render_template_metabox(WP_Post $post): void
 {
     wp_nonce_field('vms_save_venue_template', 'vms_venue_template_nonce');
 
-    $is_template = get_post_meta($post->ID, VMS_VENUE_TEMPLATE_META_KEY, true) === '1';
+    $is_template = get_post_meta($post->ID, BVMGR_VENUE_TEMPLATE_META_KEY, true) === '1';
 
     echo '<p class="description vms-venue-template-help">';
     echo 'Templates are used as starting points when creating new venues.';
@@ -292,9 +292,9 @@ function vms_save_template_metabox(int $post_id, WP_Post $post): void
     $is_template = isset($_POST['vms_is_template']) ? '1' : '0';
 
     if ($is_template === '1') {
-        update_post_meta($post_id, VMS_VENUE_TEMPLATE_META_KEY, '1');
+        update_post_meta($post_id, BVMGR_VENUE_TEMPLATE_META_KEY, '1');
     } else {
-        delete_post_meta($post_id, VMS_VENUE_TEMPLATE_META_KEY);
+        delete_post_meta($post_id, BVMGR_VENUE_TEMPLATE_META_KEY);
     }
 }
 
@@ -322,7 +322,7 @@ function vms_render_create_from_template_panel(WP_Post $post): void
         'orderby'        => 'title',
         'order'          => 'ASC',
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The add-venue admin selector intentionally enumerates all venues carrying the plugin-owned template marker.
-        'meta_key'       => VMS_VENUE_TEMPLATE_META_KEY,
+        'meta_key'       => BVMGR_VENUE_TEMPLATE_META_KEY,
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- The exact marker value limits the selector to venue templates.
         'meta_value'     => '1',
     ]);
@@ -376,7 +376,7 @@ function vms_handle_create_venue_from_template(): void
     $template = get_post($template_id);
     if (!$template || $template->post_type !== 'vms_venue') wp_die('Invalid template.');
 
-    $is_template = get_post_meta($template_id, VMS_VENUE_TEMPLATE_META_KEY, true) === '1';
+    $is_template = get_post_meta($template_id, BVMGR_VENUE_TEMPLATE_META_KEY, true) === '1';
     if (!$is_template) wp_die('Selected venue is not marked as a template.');
 
     $new_id = vms_duplicate_venue_as_draft($template_id);
@@ -387,7 +387,7 @@ function vms_handle_create_venue_from_template(): void
     }
 
     // IMPORTANT: venues created FROM templates should NOT themselves be templates
-    delete_post_meta($new_id, VMS_VENUE_TEMPLATE_META_KEY);
+    delete_post_meta($new_id, BVMGR_VENUE_TEMPLATE_META_KEY);
 
     // Nicer default title
     wp_update_post([
@@ -431,11 +431,11 @@ function vms_exclude_templates_from_venue_queries(WP_Query $query): void
     $meta_query[] = [
         'relation' => 'OR',
         [
-            'key'     => VMS_VENUE_TEMPLATE_META_KEY,
+            'key'     => BVMGR_VENUE_TEMPLATE_META_KEY,
             'compare' => 'NOT EXISTS',
         ],
         [
-            'key'     => VMS_VENUE_TEMPLATE_META_KEY,
+            'key'     => BVMGR_VENUE_TEMPLATE_META_KEY,
             'value'   => '1',
             'compare' => '!=',
         ],

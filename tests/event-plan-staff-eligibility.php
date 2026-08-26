@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
@@ -131,7 +131,7 @@ try {
 	};
 
 	$invokeStaffContext = static function (int $planId): array {
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$method = $reflection->getMethod('get_event_plan_staff_render_context');
 		$method->setAccessible(true);
@@ -154,7 +154,7 @@ try {
 		);
 		$_POST = array_merge($defaults, $overrides);
 
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$admin->save_event_plan_meta($planId, get_post($planId));
 		clean_post_cache($planId);

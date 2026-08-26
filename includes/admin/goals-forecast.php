@@ -108,12 +108,12 @@ function vms_goals_admin_enqueue_assets(string $hook): void
 		return;
 	}
 
-	$css = VMS_PLUGIN_URL . 'assets/css/vms-goals-forecast-admin.css';
+	$css = BVMGR_PLUGIN_URL . 'assets/css/vms-goals-forecast-admin.css';
 	wp_enqueue_style(
 		'vms-goals-forecast-admin',
 		$css,
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+		function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 	);
 
 	$js = <<<'JS'

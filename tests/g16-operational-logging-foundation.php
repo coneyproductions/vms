@@ -251,7 +251,7 @@ function g16_projection_contract(array $sources): void
 }
 
 defined('ABSPATH') || define('ABSPATH', '/srv/wordpress/');
-defined('VMS_PLUGIN_PATH') || define('VMS_PLUGIN_PATH', '/srv/wordpress/wp-content/plugins/vms/');
+defined('BVMGR_PLUGIN_PATH') || define('BVMGR_PLUGIN_PATH', '/srv/wordpress/wp-content/plugins/vms/');
 defined('WEEK_IN_SECONDS') || define('WEEK_IN_SECONDS', 604800);
 defined('MINUTE_IN_SECONDS') || define('MINUTE_IN_SECONDS', 60);
 
@@ -417,7 +417,7 @@ function update_option(string $name, $value, bool $autoload = true): bool
 		'autoload' => $autoload,
 	);
 	if ($name === 'vms_resource_fingerprint_log') {
-		$state = is_array($GLOBALS['vms_resource_fingerprint'] ?? null) ? $GLOBALS['vms_resource_fingerprint'] : array();
+		$state = is_array($GLOBALS['bvmgr_resource_fingerprint'] ?? null) ? $GLOBALS['bvmgr_resource_fingerprint'] : array();
 		$event['flag_ready'] = !empty($state['flags']['heavy_admin_guard']);
 		$event['marker_ready'] = !empty($state['markers']);
 	}
@@ -483,7 +483,7 @@ function g16_reset_runtime_state(): void
 		$GLOBALS['g16_reenter_adapter'],
 		$GLOBALS['g16_reentry_result']
 	);
-	$GLOBALS['vms_resource_fingerprint'] = array(
+	$GLOBALS['bvmgr_resource_fingerprint'] = array(
 		'started_at' => microtime(true),
 		'flags' => array(),
 		'markers' => array(),
@@ -744,7 +744,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	g16_reset_runtime_state();
 	$GLOBALS['g16_throw_update_option'] = 'vms_resource_fingerprint_log';
 	vms_admin_guard_trace('staff_guard', 'blocked', array('task' => 'staff_sync', 'reason' => 'passive_request'));
-	$failed_trace_state = $GLOBALS['vms_resource_fingerprint'];
+	$failed_trace_state = $GLOBALS['bvmgr_resource_fingerprint'];
 	g16_assert(!empty($failed_trace_state['flags']['heavy_admin_guard']), $tree . ' guard trace must retain its flag when operational storage throws.');
 	g16_assert(!empty($failed_trace_state['markers']), $tree . ' guard trace must retain its marker when operational storage throws.');
 	g16_assert(!isset($GLOBALS['g16_options']['vms_resource_fingerprint_log']), $tree . ' failed guard operational storage must not escape or create an entry.');
@@ -764,7 +764,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 		'nonce' => 'NONCE-SENTINEL',
 	));
 
-	$state = $GLOBALS['vms_resource_fingerprint'];
+	$state = $GLOBALS['bvmgr_resource_fingerprint'];
 	$flag_payload = $state['flags']['heavy_admin_guard'][0] ?? array();
 	$marker = $state['markers'][0] ?? array();
 	g16_same(
@@ -803,7 +803,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	$trace_entries = $GLOBALS['g16_options']['vms_resource_fingerprint_log'] ?? array();
 	g16_same(2, count($trace_entries), $tree . ' trace shutdown must append the compatible aggregate entry.');
 	g16_same('/wp-admin/admin.php', $trace_entries[1]['request_uri'] ?? '', $tree . ' aggregate trace URI must also be path-only.');
-	g16_same(true, $GLOBALS['vms_resource_fingerprint']['finalized'] ?? false, $tree . ' aggregate trace state must finalize once.');
+	g16_same(true, $GLOBALS['bvmgr_resource_fingerprint']['finalized'] ?? false, $tree . ' aggregate trace state must finalize once.');
 	g16_assert_sentinels_absent($trace_entries, $sentinels, $tree . ' all recursively serialized trace entries must exclude sensitive values.');
 
 	g16_reset_runtime_state();
@@ -872,7 +872,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	g16_same('', (string) ob_get_clean(), $tree . ' unauthorized users must not see diagnostics.');
 	g16_same(array(), $GLOBALS['g16_events'], $tree . ' unauthorized render must not mutate queue, issue, or seen state.');
 	g16_assert(isset($GLOBALS['g16_transients']['vms_admin_diagnostic_queue']['unauthorized_diagnostic']), $tree . ' unauthorized render must preserve the queue.');
-	$GLOBALS['vms_resource_fingerprint']['finalized'] = true;
+	$GLOBALS['bvmgr_resource_fingerprint']['finalized'] = true;
 }
 
 function g16_run_runtime_child(string $runtime_path, string $tree): void

@@ -169,11 +169,11 @@ if (!function_exists('vms_register_legacy_plugin_basename_compatibility')) {
 if (!function_exists('vms_plugin_lifecycle_basename')) {
 	function vms_plugin_lifecycle_basename(): string
 	{
-		if (defined('VMS_LEGACY_PLUGIN_FILE') && is_string(VMS_LEGACY_PLUGIN_FILE) && VMS_LEGACY_PLUGIN_FILE !== '') {
-			return vms_plugin_basename_from_file(VMS_LEGACY_PLUGIN_FILE);
+		if (defined('BVMGR_LEGACY_PLUGIN_FILE') && is_string(BVMGR_LEGACY_PLUGIN_FILE) && BVMGR_LEGACY_PLUGIN_FILE !== '') {
+			return vms_plugin_basename_from_file(BVMGR_LEGACY_PLUGIN_FILE);
 		}
-		if (defined('VMS_PLUGIN_FILE') && is_string(VMS_PLUGIN_FILE) && VMS_PLUGIN_FILE !== '') {
-			return vms_plugin_basename_from_file(VMS_PLUGIN_FILE);
+		if (defined('BVMGR_PLUGIN_FILE') && is_string(BVMGR_PLUGIN_FILE) && BVMGR_PLUGIN_FILE !== '') {
+			return vms_plugin_basename_from_file(BVMGR_PLUGIN_FILE);
 		}
 
 		return basename(dirname(__DIR__)) . '/backstage-venue-manager.php';

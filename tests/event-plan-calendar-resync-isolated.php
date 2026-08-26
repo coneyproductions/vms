@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
     require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
@@ -271,8 +271,8 @@ try {
     };
 
     $runBroadSaveWithLegacyResyncAction = static function (int $planId, array $overrides = array()) use ($assert): void {
-        $reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-        /** @var VMS_Admin_Event_Plans $admin */
+        $reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+        /** @var BVMGR_Admin_Event_Plans $admin */
         $admin = $reflection->newInstanceWithoutConstructor();
         $defaults = array(
             'vms_event_plan_details_nonce' => wp_create_nonce('vms_save_event_plan_details'),

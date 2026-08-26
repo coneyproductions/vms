@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_asset_version'] = 'test-asset-version';
 $GLOBALS['vms_test_actions'] = array();
@@ -267,9 +267,9 @@ try {
 	$assert(strpos($shellSource, 'wp_enqueue_style(') === false, 'ADD public shell should not globally enqueue the standalone stylesheet.');
 	$assert(strpos($shellSource, 'exit;') !== false, 'ADD public shell should preserve explicit response termination.');
 
-	$assert(strpos($stylesheetUrlSource, "VMS_PLUGIN_URL . 'assets/css/vms-add-dispatch-public-shell.css'") !== false, 'ADD public shell stylesheet helper should point to assets/css/vms-add-dispatch-public-shell.css.');
+	$assert(strpos($stylesheetUrlSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-public-shell.css'") !== false, 'ADD public shell stylesheet helper should point to assets/css/vms-add-dispatch-public-shell.css.');
 	$assert(strpos($stylesheetUrlSource, "function_exists('vms_asset_version') ? trim((string) vms_asset_version()) : ''") !== false, 'ADD public shell stylesheet helper should prefer vms_asset_version().');
-	$assert(strpos($stylesheetUrlSource, "if (\$version === '' && defined('VMS_VERSION')) {") !== false, 'ADD public shell stylesheet helper should fall back to VMS_VERSION when the helper is unavailable or empty.');
+	$assert(strpos($stylesheetUrlSource, "if (\$version === '' && defined('BVMGR_VERSION')) {") !== false, 'ADD public shell stylesheet helper should fall back to BVMGR_VERSION when the helper is unavailable or empty.');
 	$assert(strpos($stylesheetUrlSource, "\$stylesheet_url = add_query_arg('ver', \$version, \$stylesheet_url);") !== false, 'ADD public shell stylesheet helper should add the version query through add_query_arg().');
 
 	$GLOBALS['vms_test_asset_version'] = 'test-asset-version';
@@ -280,7 +280,7 @@ try {
 	$GLOBALS['vms_test_asset_version'] = '';
 	$assert(
 		vms_add_dispatch_public_shell_stylesheet_url() === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/css/vms-add-dispatch-public-shell.css?ver=test-version',
-		'ADD public shell stylesheet helper should fall back to VMS_VERSION when the helper result is empty.'
+		'ADD public shell stylesheet helper should fall back to BVMGR_VERSION when the helper result is empty.'
 	);
 
 	$expectedAssetSource = implode("\n", array(
@@ -334,7 +334,7 @@ try {
 	$assert(vms_add_dispatch_public_response_allowed_html() === $expectedAllowedHtml, 'ADD public shell allowlist should remain unchanged.');
 
 	$assert(strpos($outputTestSource, 'ADD public shell output remediation OK.') !== false, 'Existing ADD public shell output remediation test should remain present.');
-	$assert(strpos($adminUiSource, "VMS_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css'") !== false, 'ADD admin asset ownership should remain unchanged in this slice.');
+	$assert(strpos($adminUiSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css'") !== false, 'ADD admin asset ownership should remain unchanged in this slice.');
 	$assert(strpos($helpersSource, 'function vms_add_dispatch_get_event_plan_need_scan(int $limit = 12, int $excluded_limit = 8, array $options = array()): array') !== false, 'ADD helper/open-needs query logic should remain unchanged in this slice.');
 	$assert(strpos($openNeedsTestSource, 'Future Event Plan with missing Primary Vendor should appear in ADD open needs.') !== false, 'The adjudicated ADD open-needs baseline diagnostic should remain unchanged.');
 

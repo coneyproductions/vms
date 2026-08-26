@@ -30,16 +30,16 @@ if (!function_exists('vms_admission_admin_enqueue_assets')) {
 			$post_id = (int) $GLOBALS['post']->ID;
 		}
 
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
 			'vms-admissions-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-admissions-admin.css',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-admissions-admin.css',
 			array('vms-admin'),
 			$ver
 		);
 		wp_enqueue_script(
 			'vms-admissions-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-admissions-admin.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-admissions-admin.js',
 			array(),
 			$ver,
 			true

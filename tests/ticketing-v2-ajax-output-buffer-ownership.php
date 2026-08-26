@@ -211,7 +211,7 @@ function vms_test_record_json_call(bool $success, $data, $statusCode, int $flags
 		'status_code' => $statusCode,
 		'flags' => $flags,
 		'num_args' => $numArgs,
-		'flag_state_at_send' => $GLOBALS['vms_ajax_ob_started'] ?? null,
+		'flag_state_at_send' => $GLOBALS['bvmgr_ajax_ob_started'] ?? null,
 		'ob_level_at_send' => ob_get_level(),
 		'json' => $json,
 	);
@@ -246,11 +246,11 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		$collectorLevel = ob_get_level();
 
 		if ($noise !== '') {
-			$GLOBALS['vms_ajax_ob_started'] = true;
+			$GLOBALS['bvmgr_ajax_ob_started'] = true;
 			ob_start();
 			echo $noise;
 		} else {
-			$GLOBALS['vms_ajax_ob_started'] = false;
+			$GLOBALS['bvmgr_ajax_ob_started'] = false;
 		}
 
 		try {
@@ -261,7 +261,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		}
 
 		$output = (string) ob_get_contents();
-		$flagAfter = $GLOBALS['vms_ajax_ob_started'] ?? null;
+		$flagAfter = $GLOBALS['bvmgr_ajax_ob_started'] ?? null;
 		$call = $GLOBALS['vms_test_wp_json_calls'][0] ?? null;
 		vms_test_assert_true(is_array($call), 'Expected the stub JSON sender to capture exactly one call for ' . $callable . '.');
 
@@ -274,7 +274,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		);
 	} finally {
 		vms_test_cleanup_output_buffers($startLevel);
-		unset($GLOBALS['vms_ajax_ob_started'], $GLOBALS['vms_test_wp_json_calls']);
+		unset($GLOBALS['bvmgr_ajax_ob_started'], $GLOBALS['vms_test_wp_json_calls']);
 	}
 }
 
@@ -292,9 +292,9 @@ try {
 
 	eval($discardBody . "\n" . $v2SuccessWrapperBody . "\n" . $v2ErrorWrapperBody);
 
-	vms_test_assert_code_contains('if (empty($GLOBALS[\'vms_ajax_ob_started\'])) { return; }', $discardBody, 'The cleanup-only helper should return early when the ownership flag is false.');
+	vms_test_assert_code_contains('if (empty($GLOBALS[\'bvmgr_ajax_ob_started\'])) { return; }', $discardBody, 'The cleanup-only helper should return early when the ownership flag is false.');
 	vms_test_assert_code_contains('if (ob_get_level() > 0) { @ob_end_clean(); }', $discardBody, 'The cleanup-only helper should only close one current buffer when a buffer exists.');
-	vms_test_assert_code_contains('$GLOBALS[\'vms_ajax_ob_started\'] = false;', $discardBody, 'The cleanup-only helper should always clear the ownership flag after a marked cleanup attempt.');
+	vms_test_assert_code_contains('$GLOBALS[\'bvmgr_ajax_ob_started\'] = false;', $discardBody, 'The cleanup-only helper should always clear the ownership flag after a marked cleanup attempt.');
 	vms_test_assert_code_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still call the cleanup-only helper.');
 	vms_test_assert_code_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still call the cleanup-only helper.');
 	vms_test_assert_code_contains('wp_send_json_success($data);', $v2SuccessWrapperBody, 'The V2 success wrapper should preserve the default WordPress success path when status and flags are omitted.');
@@ -314,39 +314,39 @@ try {
 		ob_start();
 		$outerLevel = ob_get_level();
 		echo 'outer-buffer';
-		$GLOBALS['vms_ajax_ob_started'] = false;
+		$GLOBALS['bvmgr_ajax_ob_started'] = false;
 		vms_ticketing_ajax_discard_owned_buffer();
 		vms_test_assert_same($outerLevel, ob_get_level(), 'The cleanup-only helper should not close unrelated buffers when the ownership flag is false.');
 		vms_test_assert_same('outer-buffer', (string) ob_get_contents(), 'The cleanup-only helper should not discard unrelated buffered output when the ownership flag is false.');
-		vms_test_assert_same(false, $GLOBALS['vms_ajax_ob_started'], 'The cleanup-only helper should leave the ownership flag false when no owned buffer is marked.');
+		vms_test_assert_same(false, $GLOBALS['bvmgr_ajax_ob_started'], 'The cleanup-only helper should leave the ownership flag false when no owned buffer is marked.');
 		vms_test_assert_same($payloadBefore, $payloadReference, 'The cleanup-only helper should not mutate arbitrary response payload data.');
 	} finally {
 		vms_test_cleanup_output_buffers($startLevel);
-		unset($GLOBALS['vms_ajax_ob_started']);
+		unset($GLOBALS['bvmgr_ajax_ob_started']);
 	}
 
 	$startLevel = ob_get_level();
 	try {
 		ob_start();
 		$collectorLevel = ob_get_level();
-		$GLOBALS['vms_ajax_ob_started'] = true;
+		$GLOBALS['bvmgr_ajax_ob_started'] = true;
 		ob_start();
 		echo 'owned-noise';
 		vms_ticketing_ajax_discard_owned_buffer();
 		vms_test_assert_same($collectorLevel, ob_get_level(), 'The cleanup-only helper should restore the expected buffer level after closing an owned buffer.');
 		vms_test_assert_same('', (string) ob_get_contents(), 'The cleanup-only helper should discard owned buffered noise instead of emitting it.');
-		vms_test_assert_same(false, $GLOBALS['vms_ajax_ob_started'], 'The cleanup-only helper should clear the ownership flag after closing an owned buffer.');
+		vms_test_assert_same(false, $GLOBALS['bvmgr_ajax_ob_started'], 'The cleanup-only helper should clear the ownership flag after closing an owned buffer.');
 	} finally {
 		vms_test_cleanup_output_buffers($startLevel);
-		unset($GLOBALS['vms_ajax_ob_started']);
+		unset($GLOBALS['bvmgr_ajax_ob_started']);
 	}
 
-	$GLOBALS['vms_ajax_ob_started'] = true;
+	$GLOBALS['bvmgr_ajax_ob_started'] = true;
 	$startLevel = ob_get_level();
 	vms_ticketing_ajax_discard_owned_buffer();
 	vms_test_assert_same($startLevel, ob_get_level(), 'The cleanup-only helper should stay safe when the ownership flag is true but no current buffer exists.');
-	vms_test_assert_same(false, $GLOBALS['vms_ajax_ob_started'], 'The cleanup-only helper should clear the ownership flag even when no current buffer exists.');
-	unset($GLOBALS['vms_ajax_ob_started']);
+	vms_test_assert_same(false, $GLOBALS['bvmgr_ajax_ob_started'], 'The cleanup-only helper should clear the ownership flag even when no current buffer exists.');
+	unset($GLOBALS['bvmgr_ajax_ob_started']);
 
 	$successPayload = array(
 		'ok' => true,

@@ -240,8 +240,8 @@ if (!function_exists('delete_transient')) {
 	}
 }
 
-if (!interface_exists('VMS_Social_Provider_Interface')) {
-	interface VMS_Social_Provider_Interface
+if (!interface_exists('BVMGR_Social_Provider_Interface')) {
+	interface BVMGR_Social_Provider_Interface
 	{
 		/**
 		 * @param array<string,mixed> $payload
@@ -264,7 +264,7 @@ if (!interface_exists('VMS_Social_Provider_Interface')) {
 }
 
 if (!class_exists('VMS_Test_Social_Queue_Provider')) {
-	final class VMS_Test_Social_Queue_Provider implements VMS_Social_Provider_Interface
+	final class VMS_Test_Social_Queue_Provider implements BVMGR_Social_Provider_Interface
 	{
 		public function build_payload(array $payload, array $context): array
 		{

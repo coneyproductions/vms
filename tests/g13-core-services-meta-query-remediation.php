@@ -637,7 +637,7 @@ foreach ($relative_paths as $relative_path) {
 	require_once $root . '/' . $relative_path;
 }
 
-g13_same('VMS_CLI_Stale_Check_Command', WP_CLI::$commands['vms'] ?? '', 'CLI stale-check command registration must remain intact.');
+g13_same('BVMGR_CLI_Stale_Check_Command', WP_CLI::$commands['vms'] ?? '', 'CLI stale-check command registration must remain intact.');
 
 // Calendar Feed retains complete date/venue query arguments, empty/failure handling, and request-key caching.
 g13_reset_runtime();
@@ -698,7 +698,7 @@ g13_same('EVENT-CREDIT-FREE0001', vms_event_credit_generate_code(), 'Credit-code
 g13_same(2, count($GLOBALS['g13_query_calls']), 'Credit generation should issue one query per attempted code.');
 g13_same(
 	array(
-		'post_type' => VMS_CPT_EVENT_CREDIT,
+		'post_type' => BVMGR_CPT_EVENT_CREDIT,
 		'post_status' => array('publish', 'private', 'draft'),
 		'fields' => 'ids',
 		'posts_per_page' => 1,
@@ -727,7 +727,7 @@ $GLOBALS['g13_query_queue'][] = array(333);
 g13_same(333, vms_event_credit_find_existing(12, 34), 'Existing credit lookup should return the first exact match.');
 g13_same(
 	array(
-		'post_type' => VMS_CPT_EVENT_CREDIT,
+		'post_type' => BVMGR_CPT_EVENT_CREDIT,
 		'post_status' => array('publish', 'private', 'draft'),
 		'fields' => 'ids',
 		'posts_per_page' => 1,
@@ -858,7 +858,7 @@ g13_same(array(51, 52), $GLOBALS['g13_query_calls'][1]['result'], 'Nightly ticke
 
 // CLI diagnostics retain exact bounded WP_Query shapes and empty/non-empty reporting branches.
 g13_reset_runtime();
-$command = new VMS_CLI_Stale_Check_Command();
+$command = new BVMGR_CLI_Stale_Check_Command();
 $invoke_private = static function (object $object, string $method_name): array {
 	$method = new ReflectionMethod($object, $method_name);
 	$result = $method->invoke($object);
@@ -920,12 +920,12 @@ g13_same(array(), $GLOBALS['g13_query_calls'][2]['result'], 'CAN-01 empty query 
 
 // Feedback lists and duplicate guards retain caller limits, exact identity keys, and fail-closed branches.
 g13_reset_runtime();
-$response_posts = array(new WP_Post(71, VMS_CPT_FEEDBACK_RESPONSE, 'private'), new WP_Post(72, VMS_CPT_FEEDBACK_RESPONSE, 'publish'));
+$response_posts = array(new WP_Post(71, BVMGR_CPT_FEEDBACK_RESPONSE, 'private'), new WP_Post(72, BVMGR_CPT_FEEDBACK_RESPONSE, 'publish'));
 $GLOBALS['g13_query_queue'][] = $response_posts;
 g13_same($response_posts, vms_feedback_get_responses(44, 25), 'Filtered feedback list should return get_posts() results unchanged.');
 g13_same(
 	array(
-		'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+		'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 		'post_status' => array('private', 'publish'),
 		'posts_per_page' => 25,
 		'orderby' => 'date',
@@ -945,7 +945,7 @@ $GLOBALS['g13_query_queue'][] = array(88);
 g13_same(88, vms_feedback_existing_response_by_meta(44, 'submission_uid_hash', 'token'), 'Exact feedback token lookup should return its first result.');
 g13_same(
 	array(
-		'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+		'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 		'post_status' => array('private', 'publish'),
 		'posts_per_page' => 1,
 		'fields' => 'ids',
@@ -972,7 +972,7 @@ g13_assert(
 );
 g13_same(
 	array(
-		'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+		'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 		'post_status' => array('private', 'publish'),
 		'posts_per_page' => 1,
 		'fields' => 'ids',

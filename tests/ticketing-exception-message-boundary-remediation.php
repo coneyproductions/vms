@@ -332,7 +332,7 @@ try {
 	vms_test_assert_same(
 		2,
 		substr_count($webhookPublishSource, $ignoreToken),
-		'Accepted webhook exception findings should remain inside VMS_Social_Provider_Webhook::publish().'
+		'Accepted webhook exception findings should remain inside BVMGR_Social_Provider_Webhook::publish().'
 	);
 	vms_test_assert_contains(
 		"throw new RuntimeException((string) \$response->get_error_message()); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook transport diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.",

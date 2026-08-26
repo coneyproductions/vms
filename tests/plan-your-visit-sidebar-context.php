@@ -151,9 +151,9 @@ $resetContext = static function (string $singularPostType, int $queriedObjectId,
 	$GLOBALS['vms_test_render_calls'] = array();
 	$GLOBALS['post'] = $globalPost;
 	unset(
-		$GLOBALS['vms_event_details_sidebar_rendered'],
-		$GLOBALS['vms_event_details_sidebar_manual_rendered'],
-		$GLOBALS['vms_public_event_sidebar_active_indexes']
+		$GLOBALS['bvmgr_event_details_sidebar_rendered'],
+		$GLOBALS['bvmgr_event_details_sidebar_manual_rendered'],
+		$GLOBALS['bvmgr_public_event_sidebar_active_indexes']
 	);
 };
 

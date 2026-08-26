@@ -2,20 +2,20 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Admin')) {
-	class VMS_Tours_Admin
+if (!class_exists('BVMGR_Tours_Admin')) {
+	class BVMGR_Tours_Admin
 	{
 		/**
-		 * @var VMS_Tours_Service
+		 * @var BVMGR_Tours_Service
 		 */
 		private $service;
 
 			/**
-			 * @var VMS_Tours_Storage
+			 * @var BVMGR_Tours_Storage
 			 */
 			private $storage;
 
-			public function __construct(VMS_Tours_Service $service, VMS_Tours_Storage $storage)
+			public function __construct(BVMGR_Tours_Service $service, BVMGR_Tours_Storage $storage)
 			{
 				$this->service = $service;
 				$this->storage = $storage;
@@ -55,7 +55,7 @@ if (!class_exists('VMS_Tours_Admin')) {
 		{
 			register_setting(
 				'vms_tours_settings_group',
-				VMS_Tours_Storage::OPTION_SETTINGS,
+				BVMGR_Tours_Storage::OPTION_SETTINGS,
 				array($this, 'sanitize_settings_option')
 			);
 
@@ -278,7 +278,7 @@ if (!class_exists('VMS_Tours_Admin')) {
 				$level = 'beginner';
 			}
 
-			echo '<select name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[default_level]">';
+			echo '<select name="' . esc_attr(BVMGR_Tours_Storage::OPTION_SETTINGS) . '[default_level]">';
 			echo '<option value="beginner"' . selected($level, 'beginner', false) . '>' . esc_html__('Beginner', 'backstage-venue-manager') . '</option>';
 			echo '<option value="standard"' . selected($level, 'standard', false) . '>' . esc_html__('Standard', 'backstage-venue-manager') . '</option>';
 			echo '<option value="advanced"' . selected($level, 'advanced', false) . '>' . esc_html__('Advanced', 'backstage-venue-manager') . '</option>';
@@ -293,13 +293,13 @@ if (!class_exists('VMS_Tours_Admin')) {
 		public function render_number_auto_run_delay(): void
 		{
 			$value = (int) $this->get_settings_value('auto_run_delay_ms');
-			echo '<input type="number" min="0" step="10" name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[auto_run_delay_ms]" value="' . esc_attr((string) $value) . '" />';
+			echo '<input type="number" min="0" step="10" name="' . esc_attr(BVMGR_Tours_Storage::OPTION_SETTINGS) . '[auto_run_delay_ms]" value="' . esc_attr((string) $value) . '" />';
 		}
 
 		public function render_number_max_auto_run(): void
 		{
 			$value = (int) $this->get_settings_value('max_auto_run_per_page_load');
-			echo '<input type="number" min="1" max="5" step="1" name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[max_auto_run_per_page_load]" value="' . esc_attr((string) $value) . '" />';
+			echo '<input type="number" min="1" max="5" step="1" name="' . esc_attr(BVMGR_Tours_Storage::OPTION_SETTINGS) . '[max_auto_run_per_page_load]" value="' . esc_attr((string) $value) . '" />';
 		}
 
 		public function render_checkbox_help_button(): void
@@ -314,7 +314,7 @@ if (!class_exists('VMS_Tours_Admin')) {
 
 		private function render_checkbox_field(string $key, bool $checked): void
 		{
-			echo '<label><input type="checkbox" name="' . esc_attr(VMS_Tours_Storage::OPTION_SETTINGS) . '[' . esc_attr($key) . ']" value="1"' . checked($checked, true, false) . '> ' . esc_html__('Enabled', 'backstage-venue-manager') . '</label>';
+			echo '<label><input type="checkbox" name="' . esc_attr(BVMGR_Tours_Storage::OPTION_SETTINGS) . '[' . esc_attr($key) . ']" value="1"' . checked($checked, true, false) . '> ' . esc_html__('Enabled', 'backstage-venue-manager') . '</label>';
 		}
 	}
 }

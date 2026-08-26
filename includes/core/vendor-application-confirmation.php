@@ -5,7 +5,7 @@ if (!function_exists('vms_vendor_app_confirm_tokens_table')) {
     function vms_vendor_app_confirm_tokens_table(): string
     {
         global $wpdb;
-        return (string) $wpdb->prefix . (defined('VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX') ? VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX : 'vms_vendor_app_confirm_tokens');
+        return (string) $wpdb->prefix . (defined('BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX') ? BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX : 'vms_vendor_app_confirm_tokens');
     }
 }
 
@@ -167,7 +167,7 @@ if (!function_exists('vms_vendor_app_maybe_flush_confirmation_rewrite')) {
     function vms_vendor_app_maybe_flush_confirmation_rewrite(): void
     {
         $marker_key = 'vms_vendor_app_confirm_rewrite_flushed';
-        $target = defined('VMS_VERSION') ? (string) VMS_VERSION : 'vendor-app-confirm-v1';
+        $target = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : 'vendor-app-confirm-v1';
         $current = (string) get_option($marker_key, '');
         if ($current === $target) {
             return;
@@ -1927,7 +1927,7 @@ if (!function_exists('vms_vendor_app_backfill_confirmation_state_once')) {
                     }
                 }
                 if ($vendor_id > 0) {
-                    $legacy_user_id = (int) get_post_meta($vendor_id, defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id', true);
+                    $legacy_user_id = (int) get_post_meta($vendor_id, defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id', true);
                     if ($legacy_user_id > 0 && !in_array($legacy_user_id, $candidate_user_ids, true)) {
                         $candidate_user_ids[] = $legacy_user_id;
                     }

@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
+class BVMGR_Social_Provider_Webhook implements BVMGR_Social_Provider_Interface
 {
 	public function get_platform_key(): string
 	{

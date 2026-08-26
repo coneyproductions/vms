@@ -339,11 +339,11 @@ if (!function_exists('vms_slow_request_logger_capture_status_header')) {
 	function vms_slow_request_logger_capture_status_header(string $status_header, int $code, string $description = '', string $protocol = ''): string
 	{
 		unset($description, $protocol);
-		if (!isset($GLOBALS['vms_slow_request_logger']) || !is_array($GLOBALS['vms_slow_request_logger'])) {
+		if (!isset($GLOBALS['bvmgr_slow_request_logger']) || !is_array($GLOBALS['bvmgr_slow_request_logger'])) {
 			return $status_header;
 		}
 
-		$GLOBALS['vms_slow_request_logger']['response_status'] = $code;
+		$GLOBALS['bvmgr_slow_request_logger']['response_status'] = $code;
 		return $status_header;
 	}
 }
@@ -430,7 +430,7 @@ if (!function_exists('vms_slow_request_logger_write_entry')) {
 if (!function_exists('vms_slow_request_logger_shutdown')) {
 	function vms_slow_request_logger_shutdown(): void
 	{
-		$state = $GLOBALS['vms_slow_request_logger'] ?? null;
+		$state = $GLOBALS['bvmgr_slow_request_logger'] ?? null;
 		if (!is_array($state) || empty($state['matched'])) {
 			return;
 		}
@@ -486,7 +486,7 @@ if (!function_exists('vms_slow_request_logger_bootstrap')) {
 		}
 
 		$booted = true;
-		$GLOBALS['vms_slow_request_logger'] = array(
+		$GLOBALS['bvmgr_slow_request_logger'] = array(
 			'matched' => true,
 			'started_at' => isset($_SERVER['REQUEST_TIME_FLOAT']) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true),
 			'method' => strtoupper(vms_request_method()),

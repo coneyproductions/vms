@@ -197,7 +197,7 @@ function diag_reset(VMS_Ticket_Diagnostics_WPDB_Spy $db): void
 	$GLOBALS['vms_diag_guard_result'] = array('allowed' => true, 'reason' => 'allowed_action');
 	$GLOBALS['vms_diag_guard_calls'] = array();
 	$GLOBALS['vms_diag_trace_calls'] = array();
-	$GLOBALS['vms_ticket_mutation_audit_context_stack'] = array();
+	$GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] = array();
 }
 
 function diag_calls(VMS_Ticket_Diagnostics_WPDB_Spy $db, string $kind): array

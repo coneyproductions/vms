@@ -15,7 +15,7 @@ require_once __DIR__ . '/../../core/registry/constants.php';
 function vms_vendor_tax_filter_ui()
 {
 	global $typenow;
-	if ($typenow !== VMS_CPT_VENDOR) return;
+	if ($typenow !== BVMGR_CPT_VENDOR) return;
 
 	$current = isset($_GET['vms_tax_status']) ? sanitize_text_field(wp_unslash($_GET['vms_tax_status'])) : '';
 
@@ -32,7 +32,7 @@ function vms_vendor_tax_filter_query($query)
 	if (!is_admin() || !$query->is_main_query()) return;
 
 	$post_type = $query->get('post_type');
-	if ($post_type !== VMS_CPT_VENDOR) return;
+	if ($post_type !== BVMGR_CPT_VENDOR) return;
 
 	$status = isset($_GET['vms_tax_status']) ? sanitize_text_field(wp_unslash($_GET['vms_tax_status'])) : '';
 	if ($status === '') return;

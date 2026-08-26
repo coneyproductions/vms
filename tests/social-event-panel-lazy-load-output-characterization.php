@@ -5,12 +5,12 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('VMS_PLUGIN_URL')) {
-	define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+if (!defined('BVMGR_PLUGIN_URL')) {
+	define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 final class VMS_Social_Event_Panel_Ajax_Exit extends RuntimeException
@@ -683,7 +683,7 @@ try {
 	$assert(strpos($socialAdminSource, 'wp_localize_script(') === false, 'Social Sharing admin enqueue should remain localization-free.');
 	$assert(strpos($socialAdminSource, '$should_load = ($page === \'vms-social-sharing\') || ($post_type === \'vms_event_plan\');') !== false, 'Social Sharing admin enqueue should preserve the page/post-type load gate.');
 	$assert(strpos($socialAdminSource, "'vms-social-admin'") !== false, 'Social Sharing admin enqueue should preserve the vms-social-admin handle.');
-	$assert(strpos($socialAdminSource, "VMS_PLUGIN_URL . 'assets/js/vms-social-admin.js'") !== false, 'Social Sharing admin enqueue should preserve the current script path.');
+	$assert(strpos($socialAdminSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js'") !== false, 'Social Sharing admin enqueue should preserve the current script path.');
 
 	$renderSource = $extractSource(
 		$eventPanelSource,
@@ -778,9 +778,9 @@ try {
 	$assert(count($GLOBALS['vms_test_scripts']) === 1, 'Social Sharing admin page should enqueue the shared social admin script exactly once.');
 	$assert($GLOBALS['vms_test_scripts'][0] === array(
 		'handle' => 'vms-social-admin',
-		'src' => VMS_PLUGIN_URL . 'assets/js/vms-social-admin.js',
+		'src' => BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js',
 		'deps' => array(),
-		'ver' => VMS_VERSION,
+		'ver' => BVMGR_VERSION,
 		'in_footer' => true,
 	), 'Social Sharing admin page should preserve the exact script enqueue contract.');
 
@@ -797,7 +797,7 @@ try {
 	$assert($GLOBALS['vms_test_scripts'] === array(), 'Unrelated admin screens should not enqueue the Social Sharing admin script.');
 	$assert($GLOBALS['vms_test_localized_scripts'] === array(), 'Social Sharing enqueue path should not localize the admin script.');
 
-	$GLOBALS['vms_social_event_panel_footer_forms'] = array();
+	$GLOBALS['bvmgr_social_event_panel_footer_forms'] = array();
 	$GLOBALS['vms_test_current_screen'] = (object) array('id' => 'post', 'post_type' => 'vms_event_plan');
 	$GLOBALS['vms_test_user_options'] = array(
 		'closedpostboxes_post' => array('vms_social_promotion'),
@@ -805,7 +805,7 @@ try {
 	ob_start();
 	vms_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
 	$collapsedShellHtml = (string) ob_get_clean();
-	$assert($GLOBALS['vms_social_event_panel_footer_forms'] === array(), 'Collapsed lazy shell render should not register detached footer forms before the panel loads.');
+	$assert($GLOBALS['bvmgr_social_event_panel_footer_forms'] === array(), 'Collapsed lazy shell render should not register detached footer forms before the panel loads.');
 
 	list($collapsedDoc, $collapsedXPath, $collapsedRoot) = $parseFragment($collapsedShellHtml, 'collapsed social shell');
 	unset($collapsedDoc);
@@ -828,7 +828,7 @@ try {
 	$assert($collapsedXPath->query('//*[@id="vms-root"]/div//@*[name()!="class" and name()!="data-vms-social-lazy" and name()!="data-vms-social-post-id" and name()!="data-vms-social-url" and name()!="data-vms-social-nonce"]')->length === 0, 'Collapsed Social Sharing shell should not introduce uncharacterized attributes.');
 
 	$GLOBALS['vms_test_user_options'] = array();
-	$GLOBALS['vms_social_event_panel_footer_forms'] = array();
+	$GLOBALS['bvmgr_social_event_panel_footer_forms'] = array();
 	foreach (array_keys($GLOBALS['vms_test_mutation_calls']) as $mutationKey) {
 		$GLOBALS['vms_test_mutation_calls'][$mutationKey] = 0;
 	}
@@ -840,8 +840,8 @@ try {
 	vms_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
 	$synchronousHtml = (string) ob_get_clean();
 	$assert($synchronousHtml === (string) $payload['html'], 'Synchronous panel render should echo the exact shared event-panel markup producer output.');
-	$assert(isset($GLOBALS['vms_social_event_panel_footer_forms'][42]), 'Synchronous panel render should register detached footer forms for the current Event Plan.');
-	$assert($GLOBALS['vms_social_event_panel_footer_forms'][42] === array(
+	$assert(isset($GLOBALS['bvmgr_social_event_panel_footer_forms'][42]), 'Synchronous panel render should register detached footer forms for the current Event Plan.');
+	$assert($GLOBALS['bvmgr_social_event_panel_footer_forms'][42] === array(
 		'event_plan_id' => 42,
 		'queue_id' => 314,
 	), 'Synchronous panel render should preserve the request-local footer-form registry payload.');

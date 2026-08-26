@@ -233,7 +233,7 @@ function vms_test_record_json_call(bool $success, $data, $statusCode, int $flags
 		'status_code' => $statusCode,
 		'flags' => $flags,
 		'num_args' => $numArgs,
-		'flag_state_at_send' => $GLOBALS['vms_ajax_ob_started'] ?? null,
+		'flag_state_at_send' => $GLOBALS['bvmgr_ajax_ob_started'] ?? null,
 		'ob_level_at_send' => ob_get_level(),
 		'json' => $json,
 	);
@@ -268,11 +268,11 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		$collectorLevel = ob_get_level();
 
 		if ($noise !== '') {
-			$GLOBALS['vms_ajax_ob_started'] = true;
+			$GLOBALS['bvmgr_ajax_ob_started'] = true;
 			ob_start();
 			echo $noise;
 		} else {
-			$GLOBALS['vms_ajax_ob_started'] = false;
+			$GLOBALS['bvmgr_ajax_ob_started'] = false;
 		}
 
 		try {
@@ -283,7 +283,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		}
 
 		$output = (string) ob_get_contents();
-		$flagAfter = $GLOBALS['vms_ajax_ob_started'] ?? null;
+		$flagAfter = $GLOBALS['bvmgr_ajax_ob_started'] ?? null;
 		$call = $GLOBALS['vms_test_wp_json_calls'][0] ?? null;
 		vms_test_assert_true(is_array($call), 'Expected the stub JSON sender to capture exactly one call for ' . $callable . '.');
 
@@ -296,7 +296,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		);
 	} finally {
 		vms_test_cleanup_output_buffers($startLevel);
-		unset($GLOBALS['vms_ajax_ob_started'], $GLOBALS['vms_test_wp_json_calls']);
+		unset($GLOBALS['bvmgr_ajax_ob_started'], $GLOBALS['vms_test_wp_json_calls']);
 	}
 }
 

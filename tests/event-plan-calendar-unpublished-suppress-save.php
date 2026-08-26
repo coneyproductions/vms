@@ -11,7 +11,7 @@ if (!defined('WP_ADMIN')) {
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
     require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
@@ -221,7 +221,7 @@ try {
     $assert(wp_json_encode($before['ticketing']) === wp_json_encode($afterDisable['ticketing']), 'Clearing the suppressor should not alter ticketing overrides.');
     $assert(wp_json_encode($before['integrity']) === wp_json_encode($afterDisable['integrity']), 'Clearing the suppressor should not alter integrity flags or timestamps.');
 
-    $admin = (new ReflectionClass('VMS_Admin_Event_Plans'))->newInstanceWithoutConstructor();
+    $admin = (new ReflectionClass('BVMGR_Admin_Event_Plans'))->newInstanceWithoutConstructor();
     ob_start();
     $admin->render_event_plan_advanced_controls_host_meta_box(get_post($planId));
     $advancedHtml = (string) ob_get_clean();
