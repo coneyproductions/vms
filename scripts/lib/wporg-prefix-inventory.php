@@ -92,6 +92,57 @@ final class BVMGR_WPORG_Prefix_Inventory
 		return $result;
 	}
 
+	/**
+	 * Find executable add-on references to symbols owned by the B2 batch.
+	 *
+	 * Comments and partial string matches are intentionally ignored. Exact string
+	 * literals are included because PHP APIs such as defined() and class_exists()
+	 * resolve global symbols dynamically.
+	 */
+	public static function scanAddonB2Dependencies(string $addonRoot, array $manifest): array
+	{
+		$root = self::root($addonRoot);
+		$lookups = array(
+			'classes' => array(),
+			'interfaces' => array(),
+			'constants' => array(),
+			'global_slots' => array(),
+		);
+		foreach (array_keys($lookups) as $kind) {
+			foreach ((array) ($manifest['symbols'][$kind] ?? array()) as $entry) {
+				if (($entry['planned_implementation_batch'] ?? '') !== 'B2') {
+					continue;
+				}
+				$current = (string) ($entry['current_identifier'] ?? '');
+				if ($current !== '') {
+					$lookups[$kind][$current] = true;
+				}
+			}
+		}
+		foreach ((array) ($manifest['known_addons'] ?? array()) as $addon) {
+			foreach ((array) ($addon['consumed_contracts']['b2_php_symbols'] ?? array()) as $entry) {
+				$kind = (string) ($entry['kind'] ?? '');
+				$current = (string) ($entry['current_identifier'] ?? '');
+				if ($current !== '' && isset($lookups[$kind])) {
+					$lookups[$kind][$current] = true;
+				}
+			}
+		}
+
+		$out = array_fill_keys(array_keys($lookups), array());
+		$files = self::recursivePhpFiles($root);
+		foreach ($files as $file) {
+			self::scanAddonDependencySource(
+				$file,
+				(string) file_get_contents($root . '/' . $file),
+				$lookups,
+				$out
+			);
+		}
+		self::sortMaps($out);
+		return $out;
+	}
+
 	public static function canonicalTarget(string $kind, string $name): ?string
 	{
 		if ($kind === 'functions' && str_starts_with($name, 'vms_')) {
@@ -144,6 +195,83 @@ final class BVMGR_WPORG_Prefix_Inventory
 		$files = array_values(array_unique($files));
 		sort($files, SORT_STRING);
 		return $files;
+	}
+
+	private static function recursivePhpFiles(string $root): array
+	{
+		$files = array();
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+		);
+		foreach ($iterator as $file) {
+			if (!$file->isFile() || strtolower((string) $file->getExtension()) !== 'php') {
+				continue;
+			}
+			$files[] = ltrim(str_replace('\\', '/', substr((string) $file->getPathname(), strlen($root))), '/');
+		}
+		sort($files, SORT_STRING);
+		return $files;
+	}
+
+	private static function scanAddonDependencySource(string $file, string $source, array $lookups, array &$out): void
+	{
+		$tokens = token_get_all($source);
+		$nameTokenIds = array(T_STRING);
+		foreach (array('T_NAME_FULLY_QUALIFIED', 'T_NAME_QUALIFIED', 'T_NAME_RELATIVE') as $tokenName) {
+			if (defined($tokenName)) {
+				$nameTokenIds[] = constant($tokenName);
+			}
+		}
+		foreach ($tokens as $index => $token) {
+			if (!is_array($token)) {
+				continue;
+			}
+			$id = $token[0];
+			$text = $token[1];
+			$line = (int) $token[2];
+			if (in_array($id, $nameTokenIds, true)) {
+				$identifier = ltrim($text, '\\');
+				foreach (array('classes', 'interfaces', 'constants') as $kind) {
+					if (isset($lookups[$kind][$identifier])) {
+						self::site($out[$kind], $identifier, $file, $line, array('reference' => 'identifier'));
+					}
+				}
+				continue;
+			}
+			if ($id === T_CONSTANT_ENCAPSED_STRING) {
+				$value = self::literal($text);
+				foreach (array('classes', 'interfaces', 'constants') as $kind) {
+					if (isset($lookups[$kind][$value])) {
+						self::site($out[$kind], $value, $file, $line, array('reference' => 'exact-string-literal'));
+					}
+				}
+				continue;
+			}
+			if ($id === T_GLOBAL) {
+				for ($cursor = $index + 1, $count = count($tokens); $cursor < $count; $cursor++) {
+					$current = $tokens[$cursor];
+					if ($current === ';') {
+						break;
+					}
+					if (!is_array($current) || $current[0] !== T_VARIABLE) {
+						continue;
+					}
+					$name = ltrim($current[1], '$');
+					$key = 'global:' . $name;
+					if (isset($lookups['global_slots'][$key])) {
+						self::site($out['global_slots'], $key, $file, (int) $current[2], array('reference' => 'global-variable'));
+					}
+				}
+				continue;
+			}
+			if ($id === T_VARIABLE && $text === '$GLOBALS') {
+				$name = self::arrayStringKey($tokens, $index);
+				$key = 'GLOBALS:' . (string) $name;
+				if ($name !== null && isset($lookups['global_slots'][$key])) {
+					self::site($out['global_slots'], $key, $file, $line, array('reference' => 'GLOBALS-slot'));
+				}
+			}
+		}
 	}
 
 	private static function emptyDeclarations(): array

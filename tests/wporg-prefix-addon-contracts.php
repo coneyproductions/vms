@@ -21,10 +21,12 @@ $liveTree = realpath($root . '/../../vms');
 $pluginsRoot = is_string($liveTree) ? dirname($liveTree) : '';
 $checked = 0;
 $coreCanonicalByKind = array();
+$coreCanonicalByCurrent = array();
 foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
 	foreach ((array) $entries as $entry) {
 		if (is_string($entry['canonical_target'] ?? null) && $entry['canonical_target'] !== '') {
 			$coreCanonicalByKind[$kind][$entry['canonical_target']] = true;
+			$coreCanonicalByCurrent[$kind][$entry['current_identifier']] = $entry['canonical_target'];
 		}
 	}
 }
@@ -58,6 +60,36 @@ foreach ($addons as $addon) {
 			$assert(strpos($sources, (string) $identifier) !== false, "{$slug} must still contain mapped {$contractType} contract {$identifier}.");
 		}
 	}
+	$expectedB2 = array_values((array) ($addon['consumed_contracts']['b2_php_symbols'] ?? array()));
+	foreach ($expectedB2 as &$dependency) {
+		$kind = (string) ($dependency['kind'] ?? '');
+		$current = (string) ($dependency['current_identifier'] ?? '');
+		$assert(
+			($coreCanonicalByCurrent[$kind][$current] ?? null) === ($dependency['canonical_target'] ?? null),
+			"{$slug} B2 dependency {$kind}:{$current} must map to the exact core canonical target."
+		);
+		$dependency['evidence_files'] = array_values(array_unique((array) ($dependency['evidence_files'] ?? array())));
+		sort($dependency['evidence_files'], SORT_STRING);
+	}
+	unset($dependency);
+	usort($expectedB2, static fn(array $a, array $b): int => array($a['kind'], $a['current_identifier']) <=> array($b['kind'], $b['current_identifier']));
+
+	$actualB2 = array();
+	foreach (BVMGR_WPORG_Prefix_Inventory::scanAddonB2Dependencies($addonRoot, $manifest) as $kind => $dependencies) {
+		foreach ($dependencies as $current => $sites) {
+			$evidenceFiles = array_values(array_unique(array_column($sites, 'file')));
+			sort($evidenceFiles, SORT_STRING);
+			$actualB2[] = array(
+				'kind' => $kind,
+				'current_identifier' => $current,
+				'canonical_target' => $coreCanonicalByCurrent[$kind][$current] ?? null,
+				'evidence_files' => $evidenceFiles,
+			);
+		}
+	}
+	usort($actualB2, static fn(array $a, array $b): int => array($a['kind'], $a['current_identifier']) <=> array($b['kind'], $b['current_identifier']));
+	$assert($actualB2 === $expectedB2, "{$slug} semantic B2 dependency scan must exactly equal its frozen manifest map.");
+
 	$addonDeclarations = BVMGR_WPORG_Prefix_Inventory::scanSource($sources, $slug . '/combined.php');
 	foreach ($coreCanonicalByKind as $kind => $canonicalTargets) {
 		$collisions = array_intersect_key($canonicalTargets, (array) ($addonDeclarations[$kind] ?? array()));

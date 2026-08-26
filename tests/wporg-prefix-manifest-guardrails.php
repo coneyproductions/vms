@@ -230,16 +230,55 @@ foreach ($publicApis as $api) {
 $addons = (array) ($manifest['known_addons'] ?? array());
 $assert(array_column($addons, 'slug') === array('vms-events-slider', 'vms-fill-dates', 'vms-data-tools', 'vms-express-bar', 'vms-refer-a-friend'), 'Known add-on list and order must remain authoritative.');
 $assert(array_column($addons, 'remaining_batch_dependencies') === array(
+	array('B2', 'B3', 'B7'),
 	array('B3', 'B7'),
-	array('B3', 'B7'),
-	array('B3', 'B7'),
-	array('B3', 'B7'),
+	array('B2', 'B3', 'B7'),
+	array('B2', 'B3', 'B7'),
 	array('B3', 'B4', 'B7'),
 ), 'Known add-on later-batch dependencies must match their exact consumed contract classes.');
+$b2AddonMap = array();
 foreach ($addons as $addon) {
 	$assert(($addon['external_tree_modified'] ?? null) === false, 'B1 must not claim external add-on edits.');
 	$assert(!empty($addon['consumed_contracts']), 'Each add-on must freeze consumed contracts.');
+	foreach ((array) ($addon['consumed_contracts']['b2_php_symbols'] ?? array()) as $dependency) {
+		$key = implode(':', array($addon['slug'], $dependency['kind'], $dependency['current_identifier']));
+		$b2AddonMap[$key] = array(
+			'canonical_target' => $dependency['canonical_target'],
+			'evidence_files' => $dependency['evidence_files'],
+		);
+	}
 }
+ksort($b2AddonMap, SORT_STRING);
+$assert($b2AddonMap === array(
+	'vms-data-tools:classes:VMS_Vendor_Schema_Registry' => array(
+		'canonical_target' => 'BVMGR_Vendor_Schema_Registry',
+		'evidence_files' => array('includes/admin/page-vendor-import.php', 'includes/services/vendor-import/vendor-import-engine.php'),
+	),
+	'vms-data-tools:constants:VMS_USER_PRIMARY_VENDOR_META_KEY' => array(
+		'canonical_target' => 'BVMGR_USER_PRIMARY_VENDOR_META_KEY',
+		'evidence_files' => array('includes/vendor-invites/orchestrator.php'),
+	),
+	'vms-data-tools:constants:VMS_VENDOR_PRIMARY_USER_META_KEY' => array(
+		'canonical_target' => 'BVMGR_VENDOR_PRIMARY_USER_META_KEY',
+		'evidence_files' => array('includes/vendor-invites/helpers.php', 'includes/vendor-invites/orchestrator.php'),
+	),
+	'vms-data-tools:constants:VMS_VENUE_CPT' => array(
+		'canonical_target' => 'BVMGR_VENUE_CPT',
+		'evidence_files' => array('includes/admin/page-payables-export.php', 'includes/admin/page-revenue-intelligence.php'),
+	),
+	'vms-events-slider:constants:VMS_CALENDAR_FEED_CACHE_BUST_OPTION' => array(
+		'canonical_target' => 'BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION',
+		'evidence_files' => array('vms-events-slider.php'),
+	),
+	'vms-express-bar:constants:VMS_PLUGIN_FILE' => array(
+		'canonical_target' => 'BVMGR_PLUGIN_FILE',
+		'evidence_files' => array('includes/helpers.php'),
+	),
+	'vms-express-bar:constants:VMS_VERSION' => array(
+		'canonical_target' => 'BVMGR_VERSION',
+		'evidence_files' => array('includes/helpers.php'),
+	),
+), 'B1 must freeze the exact complete seven-entry semantic B2 add-on dependency map.');
 
 $map = BVMGR_Prefix_Compatibility_Map::fromFile($manifestPath);
 $assert($map->canonicalFor('vms_register_admin_page') === 'bvmgr_register_admin_page', 'Compatibility map must resolve the known public Admin Page API.');

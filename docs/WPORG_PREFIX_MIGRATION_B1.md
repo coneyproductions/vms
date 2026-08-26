@@ -34,6 +34,22 @@ The function baseline is therefore `4,521` unique / `4,541` declarations rather 
 
 B1 also widened the dynamic scanner beyond locally declared function names so guarded optional or removed contracts cannot disappear from later inventories. The authoritative baseline now contains `3,310` function-existence identifiers at `6,338` sites, `711` direct literal callback identifiers at `767` sites, one reflection identifier, and `3,613` combined function-resolution requirements. Exactly `20` of those requirements are optional/external or dynamic map-only contracts with no current core declaration. This is a safety-map refinement inside the already approved dynamic-reference strategy, not a new compatibility class.
 
+### B1 add-on dependency-map correction
+
+Before B2 implementation, a compatibility stop found that the original B1 add-on map had not compared the five add-on trees against every B2-owned class, interface, constant, and request-global symbol. The add-ons were therefore rescanned read-only with PHP tokens. The corrected scanner ignores comments and partial prose, records direct identifiers, and records exact string literals used by dynamic APIs such as `defined()` and `class_exists()`.
+
+The complete result is exactly seven dependencies across three add-ons:
+
+- `vms-events-slider`: `VMS_CALENDAR_FEED_CACHE_BUST_OPTION` → `BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION`
+- `vms-data-tools`: `VMS_Vendor_Schema_Registry` → `BVMGR_Vendor_Schema_Registry`
+- `vms-data-tools`: `VMS_VENDOR_PRIMARY_USER_META_KEY` → `BVMGR_VENDOR_PRIMARY_USER_META_KEY`
+- `vms-data-tools`: `VMS_USER_PRIMARY_VENDOR_META_KEY` → `BVMGR_USER_PRIMARY_VENDOR_META_KEY`
+- `vms-data-tools`: `VMS_VENUE_CPT` → `BVMGR_VENUE_CPT`
+- `vms-express-bar`: `VMS_PLUGIN_FILE` → `BVMGR_PLUGIN_FILE`
+- `vms-express-bar`: `VMS_VERSION` → `BVMGR_VERSION`
+
+No B2-owned dependency was found in `vms-fill-dates` or `vms-refer-a-friend`, and no B2 interface or request-global dependency was found in any of the five add-ons. This correction changes the B2 coordination gate, not the B0 architecture: the three affected add-ons require isolated symbol-only cutovers before the core rename, and the public core package still receives no blanket legacy PHP aliases.
+
 ## Guardrails
 
 `tests/wporg-prefix-manifest-guardrails.php` enforces:
@@ -48,6 +64,7 @@ B1 also widened the dynamic scanner beyond locally declared function names so gu
 - duplicate guarded function and constant family baselines;
 - canonical-target uniqueness and absence of existing core collisions;
 - the 13-entry public API list, the five-add-on list, and compatibility-map policies;
+- the exact seven-entry B2 add-on dependency map and a semantic rescan of all five available installed add-ons;
 - the release exclusion of all B1 documentation, scripts, and tests.
 
 The guard is a required default public-release precondition. The separate B1 allowance file is sorted, unique, and its creation mode refuses to overwrite it. A future intentional migration batch updates the current deterministic manifest and reviews its semantic diff while the original allowance set remains fixed; removals pass, but a newly introduced prohibited name fails even after ordinary manifest regeneration.
@@ -71,13 +88,13 @@ No WordPress option, meta, table, role, capability, cron, or other persistent va
 
 The exact identifiers and evidence files are frozen under `known_addons` in the manifest. All five installed sibling trees were inspected read-only and have no planned canonical PHP symbol collision.
 
-| Add-on | Core functions | Hooks | Retained physical identifiers | Handles | B1 preparation | Later dependency |
-| --- | ---: | ---: | ---: | ---: | --- | --- |
-| `vms-events-slider` | 9 | 1 | 1 | 0 | exact consumers frozen; source unchanged | coordinated B3 functions; B7 hooks |
-| `vms-fill-dates` | 18 | 4 | 4 | 0 | exact consumers frozen; source unchanged | coordinated B3 functions; B7 hooks; physical values remain under Strategy 6 |
-| `vms-data-tools` | 33 | 5 | 4 | 0 | exact consumers frozen; source unchanged | coordinated B3 functions; B7 hooks; physical values remain under Strategy 6 |
-| `vms-express-bar` | 2 | 3 | 1 | 0 | exact consumers frozen; source unchanged | coordinated B3 functions; B7 hooks; generated CPT hooks remain legacy because the CPT is retained |
-| `vms-refer-a-friend` | 3 | 1 | 0 | 1 | exact consumers frozen; source unchanged | coordinated `vms_register_admin_page` cutover in B3; dependency-only handle alias in B4; hook transition in B7 |
+| Add-on | B2 PHP symbols | Core functions | Hooks | Retained physical identifiers | Handles | B1 preparation | Later dependency |
+| --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `vms-events-slider` | 1 | 9 | 1 | 1 | 0 | token-scanned exact consumers frozen; source unchanged | coordinated B2 constant; B3 functions; B7 hooks |
+| `vms-fill-dates` | 0 | 18 | 4 | 4 | 0 | token-scanned exact consumers frozen; source unchanged | coordinated B3 functions; B7 hooks; physical values remain under Strategy 6 |
+| `vms-data-tools` | 4 | 33 | 5 | 4 | 0 | token-scanned exact consumers frozen; source unchanged | coordinated B2 class/constants; B3 functions; B7 hooks; physical values remain under Strategy 6 |
+| `vms-express-bar` | 2 | 2 | 3 | 1 | 0 | token-scanned exact consumers frozen; source unchanged | coordinated B2 bootstrap constants; B3 functions; B7 hooks; generated CPT hooks remain legacy because the CPT is retained |
+| `vms-refer-a-friend` | 0 | 3 | 1 | 0 | 1 | token-scanned exact consumers frozen; source unchanged | coordinated `vms_register_admin_page` cutover in B3; dependency-only handle alias in B4; hook transition in B7 |
 
 No add-on tree was edited. The read-only live-tree boundary remains intact.
 
@@ -107,6 +124,6 @@ Every B1 implementation file is under `docs/`, `scripts/`, or `tests/`, all of w
 
 ## B2 handoff
 
-B2 may implement only its authorized class/interface, constant, and request-global batch using this manifest and the controlling B0 strategies. It must preserve the physical-storage and external-contract retention decisions, update the manifest through the generator, and keep the dynamic-resolution and collision tests green. B3 procedural migration, all persistence batches, public hook/HTTP transitions, tooling residual cleanup, and any private bridge remain outside B2 unless separately authorized.
+B2 may implement only its authorized class/interface, constant, and request-global batch using this manifest and the controlling B0 strategies. Before core cutover it must prepare isolated copies or worktrees for the three affected add-ons and update exactly the seven mapped consumers to their canonical symbols. It must preserve the physical-storage and external-contract retention decisions, including the retained `vms_calendar_feed_cache_bust`, `_vms_vendor_user_id`, `_vms_vendor_id`, and `vms_venue` values, update the manifest through the generator, and keep the dynamic-resolution and collision tests green. B3 procedural migration, all persistence batches, public hook/HTTP transitions, tooling residual cleanup, and any private bridge remain outside B2 unless separately authorized.
 
 Phase B1 changes no B0 risk classification.

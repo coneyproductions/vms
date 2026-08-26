@@ -25,6 +25,14 @@
             "architecture_impact": "none; both use Strategy 1 in B3 and add no new compatibility class."
         }
     ],
+    "b1_corrections": [
+        {
+            "id": "complete-b2-addon-dependency-map",
+            "cause": "The original B1 add-on map inventoried functions, hooks, retained physical identifiers, and handles but did not semantically compare add-on PHP against every B2-owned class, interface, constant, and request-global symbol.",
+            "correction": "A token-based five-add-on rescan freezes seven exact B2 dependencies across vms-events-slider, vms-data-tools, and vms-express-bar.",
+            "architecture_impact": "B2 requires isolated coordinated add-on cutovers before the core symbol rename; no public-package legacy aliases are introduced."
+        }
+    ],
     "canonical_prefix_family": {
         "procedural_php_hooks_options": "bvmgr_",
         "constants_low_churn_classes": "BVMGR_",
@@ -190846,6 +190854,16 @@
         {
             "slug": "vms-events-slider",
             "consumed_contracts": {
+                "b2_php_symbols": [
+                    {
+                        "kind": "constants",
+                        "current_identifier": "VMS_CALENDAR_FEED_CACHE_BUST_OPTION",
+                        "canonical_target": "BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION",
+                        "evidence_files": [
+                            "vms-events-slider.php"
+                        ]
+                    }
+                ],
                 "core_php_functions": [
                     "vms_calendar_feed_cache_bust",
                     "vms_event_plan_get_public_reschedule_destination",
@@ -190865,14 +190883,16 @@
                 ],
                 "asset_handles": []
             },
-            "preparation_performed": "Frozen exact consumers and canonical compatibility policy; external add-on source remains unchanged.",
+            "preparation_performed": "Frozen exact consumers through a token-based semantic scan and canonical compatibility policy; external add-on source remains unchanged.",
             "future_tolerance": {
+                "b2_php_symbols": "Affected add-ons require an isolated coordinated identifier cutover before B2 core lands; no public-package aliases.",
                 "php_functions": "Coordinated add-on update required before the corresponding B3 core slice; no public-package wrappers.",
                 "hooks": "Core dual-fire policy in B7; CPT-generated hooks remain because physical CPT values are retained.",
                 "physical_identifiers": "Already tolerant because B0 Strategy 6 retains these values.",
                 "handles": "Core dependency-only legacy alias in B4 where consumed."
             },
             "remaining_batch_dependencies": [
+                "B2",
                 "B3",
                 "B7"
             ],
@@ -190884,6 +190904,7 @@
         {
             "slug": "vms-fill-dates",
             "consumed_contracts": {
+                "b2_php_symbols": [],
                 "core_php_functions": [
                     "vms_admin_ui_active_cluster",
                     "vms_admin_ui_nav_clusters",
@@ -190918,8 +190939,9 @@
                 ],
                 "asset_handles": []
             },
-            "preparation_performed": "Frozen exact consumers and canonical compatibility policy; external add-on source remains unchanged.",
+            "preparation_performed": "Frozen exact consumers through a token-based semantic scan and canonical compatibility policy; external add-on source remains unchanged.",
             "future_tolerance": {
+                "b2_php_symbols": "Affected add-ons require an isolated coordinated identifier cutover before B2 core lands; no public-package aliases.",
                 "php_functions": "Coordinated add-on update required before the corresponding B3 core slice; no public-package wrappers.",
                 "hooks": "Core dual-fire policy in B7; CPT-generated hooks remain because physical CPT values are retained.",
                 "physical_identifiers": "Already tolerant because B0 Strategy 6 retains these values.",
@@ -190939,6 +190961,43 @@
         {
             "slug": "vms-data-tools",
             "consumed_contracts": {
+                "b2_php_symbols": [
+                    {
+                        "kind": "classes",
+                        "current_identifier": "VMS_Vendor_Schema_Registry",
+                        "canonical_target": "BVMGR_Vendor_Schema_Registry",
+                        "evidence_files": [
+                            "includes/admin/page-vendor-import.php",
+                            "includes/services/vendor-import/vendor-import-engine.php"
+                        ]
+                    },
+                    {
+                        "kind": "constants",
+                        "current_identifier": "VMS_USER_PRIMARY_VENDOR_META_KEY",
+                        "canonical_target": "BVMGR_USER_PRIMARY_VENDOR_META_KEY",
+                        "evidence_files": [
+                            "includes/vendor-invites/orchestrator.php"
+                        ]
+                    },
+                    {
+                        "kind": "constants",
+                        "current_identifier": "VMS_VENDOR_PRIMARY_USER_META_KEY",
+                        "canonical_target": "BVMGR_VENDOR_PRIMARY_USER_META_KEY",
+                        "evidence_files": [
+                            "includes/vendor-invites/helpers.php",
+                            "includes/vendor-invites/orchestrator.php"
+                        ]
+                    },
+                    {
+                        "kind": "constants",
+                        "current_identifier": "VMS_VENUE_CPT",
+                        "canonical_target": "BVMGR_VENUE_CPT",
+                        "evidence_files": [
+                            "includes/admin/page-payables-export.php",
+                            "includes/admin/page-revenue-intelligence.php"
+                        ]
+                    }
+                ],
                 "core_php_functions": [
                     "vms_admin_guard_current_screen_id",
                     "vms_admin_guard_request_uri",
@@ -190989,14 +191048,16 @@
                 ],
                 "asset_handles": []
             },
-            "preparation_performed": "Frozen exact consumers and canonical compatibility policy; external add-on source remains unchanged.",
+            "preparation_performed": "Frozen exact consumers through a token-based semantic scan and canonical compatibility policy; external add-on source remains unchanged.",
             "future_tolerance": {
+                "b2_php_symbols": "Affected add-ons require an isolated coordinated identifier cutover before B2 core lands; no public-package aliases.",
                 "php_functions": "Coordinated add-on update required before the corresponding B3 core slice; no public-package wrappers.",
                 "hooks": "Core dual-fire policy in B7; CPT-generated hooks remain because physical CPT values are retained.",
                 "physical_identifiers": "Already tolerant because B0 Strategy 6 retains these values.",
                 "handles": "Core dependency-only legacy alias in B4 where consumed."
             },
             "remaining_batch_dependencies": [
+                "B2",
                 "B3",
                 "B7"
             ],
@@ -191006,12 +191067,36 @@
                 "includes/bootstrap.php",
                 "includes/vendor-invites/open-dates.php",
                 "includes/vendor-invites/portal.php",
-                "includes/docs-register.php"
+                "includes/docs-register.php",
+                "includes/admin/page-vendor-import.php",
+                "includes/services/vendor-import/vendor-import-engine.php",
+                "includes/vendor-invites/helpers.php",
+                "includes/vendor-invites/orchestrator.php",
+                "includes/admin/page-payables-export.php",
+                "includes/admin/page-revenue-intelligence.php"
             ]
         },
         {
             "slug": "vms-express-bar",
             "consumed_contracts": {
+                "b2_php_symbols": [
+                    {
+                        "kind": "constants",
+                        "current_identifier": "VMS_PLUGIN_FILE",
+                        "canonical_target": "BVMGR_PLUGIN_FILE",
+                        "evidence_files": [
+                            "includes/helpers.php"
+                        ]
+                    },
+                    {
+                        "kind": "constants",
+                        "current_identifier": "VMS_VERSION",
+                        "canonical_target": "BVMGR_VERSION",
+                        "evidence_files": [
+                            "includes/helpers.php"
+                        ]
+                    }
+                ],
                 "core_php_functions": [
                     "vms_get_event_plan_for_tec_event",
                     "vms_resolve_event_plan_for_tec_event"
@@ -191026,25 +191111,29 @@
                 ],
                 "asset_handles": []
             },
-            "preparation_performed": "Frozen exact consumers and canonical compatibility policy; external add-on source remains unchanged.",
+            "preparation_performed": "Frozen exact consumers through a token-based semantic scan and canonical compatibility policy; external add-on source remains unchanged.",
             "future_tolerance": {
+                "b2_php_symbols": "Affected add-ons require an isolated coordinated identifier cutover before B2 core lands; no public-package aliases.",
                 "php_functions": "Coordinated add-on update required before the corresponding B3 core slice; no public-package wrappers.",
                 "hooks": "Core dual-fire policy in B7; CPT-generated hooks remain because physical CPT values are retained.",
                 "physical_identifiers": "Already tolerant because B0 Strategy 6 retains these values.",
                 "handles": "Core dependency-only legacy alias in B4 where consumed."
             },
             "remaining_batch_dependencies": [
+                "B2",
                 "B3",
                 "B7"
             ],
             "external_tree_modified": false,
             "evidence_files": [
-                "includes/admin.php"
+                "includes/admin.php",
+                "includes/helpers.php"
             ]
         },
         {
             "slug": "vms-refer-a-friend",
             "consumed_contracts": {
+                "b2_php_symbols": [],
                 "core_php_functions": [
                     "vms_admin_ui_render_shell",
                     "vms_get_public_event_calendar_url",
@@ -191058,8 +191147,9 @@
                     "vms-admin"
                 ]
             },
-            "preparation_performed": "Frozen exact consumers and canonical compatibility policy; external add-on source remains unchanged.",
+            "preparation_performed": "Frozen exact consumers through a token-based semantic scan and canonical compatibility policy; external add-on source remains unchanged.",
             "future_tolerance": {
+                "b2_php_symbols": "Affected add-ons require an isolated coordinated identifier cutover before B2 core lands; no public-package aliases.",
                 "php_functions": "Coordinated add-on update required before the corresponding B3 core slice; no public-package wrappers.",
                 "hooks": "Core dual-fire policy in B7; CPT-generated hooks remain because physical CPT values are retained.",
                 "physical_identifiers": "Already tolerant because B0 Strategy 6 retains these values.",

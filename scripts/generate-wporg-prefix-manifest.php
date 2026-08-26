@@ -33,6 +33,14 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 					'architecture_impact' => 'none; both use Strategy 1 in B3 and add no new compatibility class.',
 				),
 			),
+			'b1_corrections' => array(
+				array(
+					'id' => 'complete-b2-addon-dependency-map',
+					'cause' => 'The original B1 add-on map inventoried functions, hooks, retained physical identifiers, and handles but did not semantically compare add-on PHP against every B2-owned class, interface, constant, and request-global symbol.',
+					'correction' => 'A token-based five-add-on rescan freezes seven exact B2 dependencies across vms-events-slider, vms-data-tools, and vms-express-bar.',
+					'architecture_impact' => 'B2 requires isolated coordinated add-on cutovers before the core symbol rename; no public-package legacy aliases are introduced.',
+				),
+			),
 			'canonical_prefix_family' => array(
 				'procedural_php_hooks_options' => 'bvmgr_',
 				'constants_low_churn_classes' => 'BVMGR_',
@@ -242,15 +250,19 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		return array(
 			self::addon(
 				'vms-events-slider',
+				array(
+					self::b2Symbol('constants', 'VMS_CALENDAR_FEED_CACHE_BUST_OPTION', 'BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION', array('vms-events-slider.php')),
+				),
 				array('vms_calendar_feed_cache_bust', 'vms_event_plan_get_public_reschedule_destination', 'vms_event_plan_get_status', 'vms_get_event_plan_for_tec_event', 'vms_meta_key', 'vms_resolve_event_plan_for_tec_event', 'vms_tec_is_cancelled_event', 'vms_ticketing_b_meta_key', 'vms_ticketing_v2_find_plan_id_by_tec_event_id'),
 				array('save_post_vms_event_plan'),
 				array('vms_event_plan'),
 				array(),
 				array('vms-events-slider.php'),
-				array('B3', 'B7')
+				array('B2', 'B3', 'B7')
 			),
 			self::addon(
 				'vms-fill-dates',
+				array(),
 				array('vms_admin_ui_active_cluster', 'vms_admin_ui_nav_clusters', 'vms_admin_ui_render_shell', 'vms_calendar_assignment_status_for_plan', 'vms_calendar_feed_cache_bust', 'vms_calendar_get_event_slot_limits', 'vms_calendar_plan_vendor_ids', 'vms_calendar_vendor_primary_type', 'vms_event_plan_get_status', 'vms_event_plan_review_clean_text', 'vms_event_plan_review_get_changes', 'vms_event_plan_review_source_label', 'vms_event_plan_review_touch', 'vms_event_plan_set_secondary_vendors', 'vms_get_calendar_events', 'vms_meta_key', 'vms_register_module', 'vms_render_help_button'),
 				array('vms_admin_ui_nav_clusters', 'vms_admin_ui_shell_pages', 'vms_admin_ui_active_cluster', 'vms_register_tours'),
 				array('vms_event_plan', 'vms_vendor', 'vms_venue', 'vms_vendor_type'),
@@ -260,24 +272,35 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			),
 			self::addon(
 				'vms-data-tools',
+				array(
+					self::b2Symbol('classes', 'VMS_Vendor_Schema_Registry', 'BVMGR_Vendor_Schema_Registry', array('includes/admin/page-vendor-import.php', 'includes/services/vendor-import/vendor-import-engine.php')),
+					self::b2Symbol('constants', 'VMS_USER_PRIMARY_VENDOR_META_KEY', 'BVMGR_USER_PRIMARY_VENDOR_META_KEY', array('includes/vendor-invites/orchestrator.php')),
+					self::b2Symbol('constants', 'VMS_VENDOR_PRIMARY_USER_META_KEY', 'BVMGR_VENDOR_PRIMARY_USER_META_KEY', array('includes/vendor-invites/helpers.php', 'includes/vendor-invites/orchestrator.php')),
+					self::b2Symbol('constants', 'VMS_VENUE_CPT', 'BVMGR_VENUE_CPT', array('includes/admin/page-payables-export.php', 'includes/admin/page-revenue-intelligence.php')),
+				),
 				array('vms_admin_guard_current_screen_id', 'vms_admin_guard_request_uri', 'vms_calculate_attendance_bonus_payout', 'vms_calendar_get_event_slot_limits', 'vms_core', 'vms_event_plan_get_status', 'vms_event_plan_set_secondary_vendors', 'vms_event_plan_status_label', 'vms_event_plan_status_normalize', 'vms_get_event_plan_comp_terms', 'vms_get_timezone', 'vms_meta_key', 'vms_normalize_email_cell', 'vms_payables_build_bills_for_export', 'vms_portal_notice', 'vms_pretty_structure_label', 'vms_resource_fingerprint_add_marker', 'vms_resource_fingerprint_flag', 'vms_resource_fingerprint_span_finish', 'vms_resource_fingerprint_span_start', 'vms_staffing_get_event_slots', 'vms_staffing_resolve_slot_window', 'vms_ticket_revenue_available_statuses', 'vms_ticket_revenue_build_report', 'vms_ticket_revenue_cents_to_decimal', 'vms_ticket_revenue_event_key', 'vms_ticket_revenue_is_valid_ymd', 'vms_ticket_revenue_normalize_args', 'vms_ticket_revenue_normalize_ymd', 'vms_ticket_revenue_wp_now_ymd', 'vms_vendor_portal_get_count_breakdown', 'vms_vendor_portal_get_progress_headcount_context', 'vms_vendor_schema'),
 				array('vms_register_tours', 'vms_vendor_portal_nav_links', 'vms_vendor_portal_render_custom_tab', 'vms_register_docs_sources', 'vms_square_nightly_sync'),
 				array('vms_event_plan', 'vms_vendor', 'vms_venue', 'vms_vendor_type'),
 				array(),
-				array('includes/services/upsert.php', 'includes/bootstrap.php', 'includes/vendor-invites/open-dates.php', 'includes/vendor-invites/portal.php', 'includes/docs-register.php'),
-				array('B3', 'B7')
+				array('includes/services/upsert.php', 'includes/bootstrap.php', 'includes/vendor-invites/open-dates.php', 'includes/vendor-invites/portal.php', 'includes/docs-register.php', 'includes/admin/page-vendor-import.php', 'includes/services/vendor-import/vendor-import-engine.php', 'includes/vendor-invites/helpers.php', 'includes/vendor-invites/orchestrator.php', 'includes/admin/page-payables-export.php', 'includes/admin/page-revenue-intelligence.php'),
+				array('B2', 'B3', 'B7')
 			),
 			self::addon(
 				'vms-express-bar',
+				array(
+					self::b2Symbol('constants', 'VMS_PLUGIN_FILE', 'BVMGR_PLUGIN_FILE', array('includes/helpers.php')),
+					self::b2Symbol('constants', 'VMS_VERSION', 'BVMGR_VERSION', array('includes/helpers.php')),
+				),
 				array('vms_get_event_plan_for_tec_event', 'vms_resolve_event_plan_for_tec_event'),
 				array('add_meta_boxes_vms_event_plan', 'save_post_vms_event_plan', 'vms_admin_ui_nav_cluster_items'),
 				array('vms_event_plan'),
 				array(),
-				array('includes/admin.php'),
-				array('B3', 'B7')
+				array('includes/admin.php', 'includes/helpers.php'),
+				array('B2', 'B3', 'B7')
 			),
 			self::addon(
 				'vms-refer-a-friend',
+				array(),
 				array('vms_admin_ui_render_shell', 'vms_get_public_event_calendar_url', 'vms_register_admin_page'),
 				array('vms_admin_register_pages'),
 				array(),
@@ -288,18 +311,20 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		);
 	}
 
-	private static function addon(string $slug, array $functions, array $hooks, array $storage, array $handles, array $evidenceFiles, array $batches): array
+	private static function addon(string $slug, array $b2Symbols, array $functions, array $hooks, array $storage, array $handles, array $evidenceFiles, array $batches): array
 	{
 		return array(
 			'slug' => $slug,
 			'consumed_contracts' => array(
+				'b2_php_symbols' => $b2Symbols,
 				'core_php_functions' => $functions,
 				'hooks' => $hooks,
 				'physical_cpt_taxonomy_identifiers' => $storage,
 				'asset_handles' => $handles,
 			),
-			'preparation_performed' => 'Frozen exact consumers and canonical compatibility policy; external add-on source remains unchanged.',
+			'preparation_performed' => 'Frozen exact consumers through a token-based semantic scan and canonical compatibility policy; external add-on source remains unchanged.',
 			'future_tolerance' => array(
+				'b2_php_symbols' => 'Affected add-ons require an isolated coordinated identifier cutover before B2 core lands; no public-package aliases.',
 				'php_functions' => 'Coordinated add-on update required before the corresponding B3 core slice; no public-package wrappers.',
 				'hooks' => 'Core dual-fire policy in B7; CPT-generated hooks remain because physical CPT values are retained.',
 				'physical_identifiers' => 'Already tolerant because B0 Strategy 6 retains these values.',
@@ -307,6 +332,16 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			),
 			'remaining_batch_dependencies' => $batches,
 			'external_tree_modified' => false,
+			'evidence_files' => $evidenceFiles,
+		);
+	}
+
+	private static function b2Symbol(string $kind, string $current, string $canonical, array $evidenceFiles): array
+	{
+		return array(
+			'kind' => $kind,
+			'current_identifier' => $current,
+			'canonical_target' => $canonical,
 			'evidence_files' => $evidenceFiles,
 		);
 	}
