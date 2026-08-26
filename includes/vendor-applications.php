@@ -1263,8 +1263,8 @@ function vms_vendor_applications_add_pending_bubble(): void
 /**
  * Admin columns for applications list.
  */
-foreach (vms_vendor_app_cpt_slugs() as $pt) {
-    add_filter('manage_' . $pt . '_posts_columns', 'vms_vendor_applications_columns');
+foreach (vms_vendor_app_cpt_slugs() as $bvmgr_vendor_application_post_type) {
+    add_filter('manage_' . $bvmgr_vendor_application_post_type . '_posts_columns', 'vms_vendor_applications_columns');
 }
 function vms_vendor_applications_columns($cols)
 {
@@ -1283,8 +1283,8 @@ function vms_vendor_applications_columns($cols)
     return $new;
 }
 
-foreach (vms_vendor_app_cpt_slugs() as $pt) {
-    add_action('manage_' . $pt . '_posts_custom_column', 'vms_vendor_applications_render_columns', 10, 2);
+foreach (vms_vendor_app_cpt_slugs() as $bvmgr_vendor_application_post_type) {
+    add_action('manage_' . $bvmgr_vendor_application_post_type . '_posts_custom_column', 'vms_vendor_applications_render_columns', 10, 2);
 }
 function vms_vendor_applications_render_columns($col, $post_id)
 {
@@ -1325,8 +1325,8 @@ if (!function_exists('vms_vendor_applications_current_review_filter')) {
     }
 }
 
-foreach (vms_vendor_app_cpt_slugs() as $pt) {
-    add_filter('views_edit-' . $pt, 'vms_vendor_applications_review_filter_views');
+foreach (vms_vendor_app_cpt_slugs() as $bvmgr_vendor_application_post_type) {
+    add_filter('views_edit-' . $bvmgr_vendor_application_post_type, 'vms_vendor_applications_review_filter_views');
 }
 if (!function_exists('vms_vendor_applications_review_filter_views')) {
     function vms_vendor_applications_review_filter_views(array $views): array

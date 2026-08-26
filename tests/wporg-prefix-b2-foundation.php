@@ -55,7 +55,7 @@ foreach (array('classes', 'interfaces', 'constants') as $kind) {
 	}
 }
 foreach (array_keys((array) ($declared['global_slots'] ?? array())) as $slot) {
-	$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:)/', '', $slot);
+	$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:|template:)/', '', $slot);
 	$assert(str_starts_with($plain, 'bvmgr_'), "Current plugin-owned global slot must use bvmgr_: {$slot}.");
 }
 

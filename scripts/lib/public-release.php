@@ -462,6 +462,12 @@ final class VMS_Public_Release_Tooling
 	{
 		return array(
 			array(
+				'id' => 'wporg-prefix-b2-5-runtime',
+				'label' => 'WordPress.org B2.5 global-scope correction behavior',
+				'path' => 'tests/wporg-prefix-b2-5-runtime.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'wporg-prefix-manifest-guardrails',
 				'label' => 'WordPress.org prefix manifest and migration guardrails',
 				'path' => 'tests/wporg-prefix-manifest-guardrails.php',

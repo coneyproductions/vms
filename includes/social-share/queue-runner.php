@@ -449,8 +449,8 @@ if (!function_exists('vms_social_process_queue')) {
 	}
 }
 
-$hook = defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue';
-add_action($hook, function (): void {
+$bvmgr_social_cron_hook = defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue';
+add_action($bvmgr_social_cron_hook, function (): void {
 	$summary = vms_social_process_queue(20);
 	vms_social_audit_log('runner_tick', $summary, 0, '', 0);
 });

@@ -29,6 +29,56 @@ final class BVMGR_WPORG_Prefix_Inventory
 		'vms_square_firewall_filter_name',
 	);
 
+	/**
+	 * Global slots omitted from the original B1 inventory and corrected in B2.5.
+	 *
+	 * These names were originally unprefixed, so their legacy identities must be
+	 * explicit rather than mechanically derived from the canonical bvmgr_ names.
+	 */
+	private const B2_5_GLOBAL_MIGRATIONS = array(
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'attrs', 'canonical' => 'bvmgr_vendor_profile_social_icon_attributes'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'city', 'canonical' => 'bvmgr_vendor_profile_city'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'email', 'canonical' => 'bvmgr_vendor_profile_email'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'gallery_images', 'canonical' => 'bvmgr_vendor_profile_gallery_images'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'i', 'canonical' => 'bvmgr_vendor_profile_gallery_image_index'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'image_url', 'canonical' => 'bvmgr_vendor_profile_gallery_image_url'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'k_primary_email', 'canonical' => 'bvmgr_vendor_profile_primary_email_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'k_primary_phone', 'canonical' => 'bvmgr_vendor_profile_primary_phone_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'k_show_e', 'canonical' => 'bvmgr_vendor_profile_show_email_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'k_show_loc', 'canonical' => 'bvmgr_vendor_profile_show_location_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'k_show_p', 'canonical' => 'bvmgr_vendor_profile_show_phone_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'k_show_w', 'canonical' => 'bvmgr_vendor_profile_show_website_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'k_vendor_web', 'canonical' => 'bvmgr_vendor_profile_website_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'legacy_email_key', 'canonical' => 'bvmgr_vendor_profile_legacy_email_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'legacy_loc', 'canonical' => 'bvmgr_vendor_profile_legacy_location'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'legacy_phone_key', 'canonical' => 'bvmgr_vendor_profile_legacy_phone_meta_key'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'next_show_markup', 'canonical' => 'bvmgr_vendor_profile_next_show_markup'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'parts', 'canonical' => 'bvmgr_vendor_profile_legacy_location_parts'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'phone', 'canonical' => 'bvmgr_vendor_profile_phone'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'profile_markup_allowed_html', 'canonical' => 'bvmgr_vendor_profile_allowed_html'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'raw_show_e', 'canonical' => 'bvmgr_vendor_profile_raw_show_email'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'raw_show_loc', 'canonical' => 'bvmgr_vendor_profile_raw_show_location'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'raw_show_p', 'canonical' => 'bvmgr_vendor_profile_raw_show_phone'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'raw_show_w', 'canonical' => 'bvmgr_vendor_profile_raw_show_website'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'show_email', 'canonical' => 'bvmgr_vendor_profile_show_email'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'show_loc', 'canonical' => 'bvmgr_vendor_profile_show_location'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'show_phone', 'canonical' => 'bvmgr_vendor_profile_show_phone'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'show_website', 'canonical' => 'bvmgr_vendor_profile_show_website'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'social_icon_allowed_html', 'canonical' => 'bvmgr_vendor_profile_social_icon_allowed_html'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'social_markup', 'canonical' => 'bvmgr_vendor_profile_social_markup'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'state', 'canonical' => 'bvmgr_vendor_profile_state'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'tag', 'canonical' => 'bvmgr_vendor_profile_social_icon_tag'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'url', 'canonical' => 'bvmgr_vendor_profile_gallery_image_candidate_url'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'vendor', 'canonical' => 'bvmgr_vendor_profile_post'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'vendor_id', 'canonical' => 'bvmgr_vendor_profile_post_id'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'video_embed', 'canonical' => 'bvmgr_vendor_profile_video_embed'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'video_url', 'canonical' => 'bvmgr_vendor_profile_video_url'),
+		array('scope' => 'template', 'file' => 'includes/public/templates/vendor-profile.php', 'legacy' => 'website', 'canonical' => 'bvmgr_vendor_profile_website'),
+		array('scope' => 'loader', 'file' => 'includes/portal/vendor-portal.php', 'legacy' => 'tax_file', 'canonical' => 'bvmgr_vendor_tax_profile_file'),
+		array('scope' => 'loader', 'file' => 'includes/vendor-applications.php', 'legacy' => 'pt', 'canonical' => 'bvmgr_vendor_application_post_type'),
+		array('scope' => 'loader', 'file' => 'includes/social-share/queue-runner.php', 'legacy' => 'hook', 'canonical' => 'bvmgr_social_cron_hook'),
+	);
+
 	private const CALLBACK_ARGUMENTS = array(
 		'add_action' => 1,
 		'add_filter' => 1,
@@ -97,6 +147,31 @@ final class BVMGR_WPORG_Prefix_Inventory
 		return $result;
 	}
 
+	public static function b2_5GlobalMigrations(): array
+	{
+		return self::B2_5_GLOBAL_MIGRATIONS;
+	}
+
+	/**
+	 * Independently enumerate variables assigned or bound at PHP file scope.
+	 *
+	 * This deliberately does not consult Plugin Check or the curated global-slot
+	 * map, so a scanner-missed binder such as the former vendor-template $tag is
+	 * still visible to semantic guardrails.
+	 */
+	public static function topLevelVariableAssignments(string $root): array
+	{
+		$root = self::root($root);
+		$rows = array();
+		foreach (self::files($root) as $file) {
+			foreach (self::topLevelVariableAssignmentsInSource((string) file_get_contents($root . '/' . $file)) as $row) {
+				$rows[] = array('file' => $file, 'line' => $row['line'], 'variable' => $row['variable']);
+			}
+		}
+		usort($rows, static fn(array $a, array $b): int => array($a['file'], $a['line'], $a['variable']) <=> array($b['file'], $b['line'], $b['variable']));
+		return $rows;
+	}
+
 	/**
 	 * Find executable add-on references to symbols owned by the B2 batch.
 	 *
@@ -150,6 +225,14 @@ final class BVMGR_WPORG_Prefix_Inventory
 
 	public static function canonicalTarget(string $kind, string $name): ?string
 	{
+		if ($kind === 'global_slots') {
+			foreach (self::B2_5_GLOBAL_MIGRATIONS as $migration) {
+				$legacy = $migration['scope'] . ':' . $migration['legacy'];
+				if ($name === $legacy) {
+					return $migration['scope'] . ':' . $migration['canonical'];
+				}
+			}
+		}
 		if ($kind === 'functions' && str_starts_with($name, 'vms_')) {
 			return 'bvmgr_' . substr($name, 4);
 		}
@@ -164,6 +247,14 @@ final class BVMGR_WPORG_Prefix_Inventory
 
 	public static function legacyIdentifier(string $kind, string $name): ?string
 	{
+		if ($kind === 'global_slots') {
+			foreach (self::B2_5_GLOBAL_MIGRATIONS as $migration) {
+				$canonical = $migration['scope'] . ':' . $migration['canonical'];
+				if ($name === $canonical) {
+					return $migration['scope'] . ':' . $migration['legacy'];
+				}
+			}
+		}
 		if ($kind === 'functions' && str_starts_with($name, 'bvmgr_')) {
 			return 'vms_' . substr($name, 6);
 		}
@@ -388,7 +479,10 @@ final class BVMGR_WPORG_Prefix_Inventory
 				}
 				if ($id === T_VARIABLE && $classDepths === array() && $functionDepths === array()) {
 					$name = ltrim($text, '$');
-					if (in_array($name, self::LOADER_GLOBALS, true)) {
+					$b2_5Slot = self::b2_5GlobalSlot($file, $name);
+					if ($b2_5Slot !== null) {
+						self::site($out['global_slots'], $b2_5Slot, $file, $line);
+					} elseif (in_array($name, self::LOADER_GLOBALS, true)) {
 						self::site($out['global_slots'], 'loader:' . $name, $file, $line);
 					}
 				}
@@ -417,6 +511,79 @@ final class BVMGR_WPORG_Prefix_Inventory
 				$pendingFunction = false;
 			}
 		}
+	}
+
+	private static function topLevelVariableAssignmentsInSource(string $source): array
+	{
+		$tokens = token_get_all($source);
+		$rows = array();
+		$brace = 0;
+		$classDepths = array();
+		$functionDepths = array();
+		$pendingClass = false;
+		$pendingFunction = false;
+		$assignmentTokens = array(T_AND_EQUAL, T_CONCAT_EQUAL, T_DIV_EQUAL, T_MINUS_EQUAL, T_MOD_EQUAL, T_MUL_EQUAL, T_OR_EQUAL, T_PLUS_EQUAL, T_POW_EQUAL, T_SL_EQUAL, T_SR_EQUAL, T_XOR_EQUAL);
+
+		foreach ($tokens as $index => $token) {
+			if (is_array($token)) {
+				$id = $token[0];
+				if ($id === T_CURLY_OPEN || $id === T_DOLLAR_OPEN_CURLY_BRACES) {
+					$brace++;
+					continue;
+				}
+				if (self::isTypeToken($id)) {
+					$previous = self::previous($tokens, $index);
+					if (!((is_array($previous) && $previous[0] === T_DOUBLE_COLON) || $previous === '::')) {
+						$pendingClass = true;
+					}
+					continue;
+				}
+				if ($id === T_FUNCTION || (defined('T_FN') && $id === T_FN)) {
+					$pendingFunction = true;
+					continue;
+				}
+				if ($id !== T_VARIABLE || $token[1] === '$GLOBALS' || $classDepths !== array() || $functionDepths !== array() || $pendingFunction) {
+					continue;
+				}
+
+				$next = self::nextSignificant($tokens, $index);
+				$previous = self::previous($tokens, $index);
+				$isAssigned = $next === '='
+					|| (is_array($next) && in_array($next[0], $assignmentTokens, true))
+					|| (is_array($next) && $next[0] === T_DOUBLE_ARROW)
+					|| (is_array($previous) && in_array($previous[0], array(T_AS, T_DOUBLE_ARROW), true));
+				if ($isAssigned) {
+					$rows[] = array('line' => (int) $token[2], 'variable' => ltrim($token[1], '$'));
+				}
+				continue;
+			}
+
+			if ($token === '{') {
+				$brace++;
+				if ($pendingClass) {
+					$classDepths[] = $brace;
+					$pendingClass = false;
+				}
+				if ($pendingFunction) {
+					$functionDepths[] = $brace;
+					$pendingFunction = false;
+				}
+			} elseif ($token === '}') {
+				if ($functionDepths !== array() && end($functionDepths) === $brace) {
+					array_pop($functionDepths);
+				}
+				if ($classDepths !== array() && end($classDepths) === $brace) {
+					array_pop($classDepths);
+				}
+				$brace--;
+			} elseif ($token === ';') {
+				$pendingFunction = false;
+			} elseif ($token === '=>') {
+				$pendingFunction = false;
+			}
+		}
+
+		return $rows;
 	}
 
 	private static function scanDynamic(string $root, array $files, array $declarations): array
@@ -543,20 +710,22 @@ final class BVMGR_WPORG_Prefix_Inventory
 			$result[$kind] = array();
 			foreach ($declarations[$kind] as $name => $sites) {
 				$legacy = self::legacyIdentifier($kind, $name);
-				$completedB2 = $kind !== 'functions' && $legacy !== null;
+				$completedB2_5 = $kind === 'global_slots' && self::isB2_5GlobalSlot($name);
+				$completedB2 = $kind !== 'functions' && !$completedB2_5 && $legacy !== null;
+				$completed = $completedB2 || $completedB2_5;
 				$entry = array(
 					'current_identifier' => $name,
-					'canonical_target' => $completedB2 ? $name : self::canonicalTarget($kind, $name),
+					'canonical_target' => $completed ? $name : self::canonicalTarget($kind, $name),
 					'b0_strategy' => array(1),
 					'compatibility_classification' => $kind === 'functions'
 						? 'direct-rename-no-public-package-wrapper'
 						: 'atomic-global-symbol-rename',
 					'persistence_external_contract_status' => 'nonpersistent-global-php',
-					'planned_implementation_batch' => $kind === 'functions' ? 'B3' : 'B2',
+					'planned_implementation_batch' => $kind === 'functions' ? 'B3' : ($completedB2_5 ? 'B2.5' : 'B2'),
 					'do_not_rename' => false,
 					'declaration_sites' => $sites,
 				);
-				if ($completedB2) {
+				if ($completed) {
 					$entry['legacy_identifier'] = $legacy;
 					$entry['migration_status'] = 'complete';
 				}
@@ -564,6 +733,29 @@ final class BVMGR_WPORG_Prefix_Inventory
 			}
 		}
 		return $result;
+	}
+
+	private static function b2_5GlobalSlot(string $file, string $name): ?string
+	{
+		foreach (self::B2_5_GLOBAL_MIGRATIONS as $migration) {
+			if ($migration['file'] !== $file) {
+				continue;
+			}
+			if ($name === $migration['canonical'] || $name === $migration['legacy']) {
+				return $migration['scope'] . ':' . $name;
+			}
+		}
+		return null;
+	}
+
+	private static function isB2_5GlobalSlot(string $slot): bool
+	{
+		foreach (self::B2_5_GLOBAL_MIGRATIONS as $migration) {
+			if ($slot === $migration['scope'] . ':' . $migration['canonical']) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static function counts(array $files, array $declarations, array $dynamic): array

@@ -21,6 +21,7 @@ $assert(in_array('docs/', $releaseExcludes, true), 'B1 manifest and documentatio
 $assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructure must remain outside the public package.');
 $assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
 $releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
+$assert(in_array('wporg-prefix-b2-5-runtime', $releaseTestIds, true), 'B2.5 runtime correction coverage must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-manifest-guardrails', $releaseTestIds, true), 'Prefix guardrails must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b2-foundation', $releaseTestIds, true), 'B2 foundation coverage must remain a required default release precondition.');
 $manifest = json_decode((string) file_get_contents($manifestPath), true);
@@ -29,7 +30,7 @@ if (!is_array($manifest)) {
 	fwrite(STDERR, "Prefix manifest guardrail failures:\n- Manifest did not decode.\n");
 	exit(1);
 }
-$assert(($manifest['schema_version'] ?? null) === 2, 'B2 manifest schema must be version 2.');
+$assert(($manifest['schema_version'] ?? null) === 3, 'B2.5 manifest schema must be version 3.');
 
 $requiredCategories = array(
 	'php_functions',
@@ -86,7 +87,7 @@ $expectedCounts = array(
 	'interfaces' => array('unique' => 1, 'occurrences' => 1),
 	'constants' => array('unique' => 107, 'occurrences' => 116),
 	'namespaces' => array('unique' => 0, 'occurrences' => 0),
-	'global_slots' => array('unique' => 44, 'occurrences' => 232),
+	'global_slots' => array('unique' => 85, 'occurrences' => 426),
 );
 foreach ($expectedCounts as $key => $expected) {
 	$assert(($manifest['php_inventory_counts'][$key] ?? null) === $expected, "Semantic count {$key} must match the B1 baseline.");
@@ -176,6 +177,116 @@ sort($expectedRemoved, SORT_STRING);
 $actualRemoved = array_values(array_diff($prohibitedBaseline, $currentProhibited));
 sort($actualRemoved, SORT_STRING);
 $assert($actualRemoved === $expectedRemoved, 'The exact 175 ratchet removals must equal the completed B2 symbol map and no other declaration.');
+
+$completeLedger = (array) ($manifest['complete_semantic_ledger'] ?? array());
+$assert(($completeLedger['historical_original_ratchet'] ?? null) === array(
+	'pre_B2' => 4696,
+	'post_B2' => 4521,
+	'reduction' => 175,
+	'immutable' => true,
+), 'Complete semantic ledger must preserve the immutable original B1/B2 ratchet.');
+$assert(($completeLedger['corrected_complete_counts'] ?? null) === array(
+	'pre_B2' => 4737,
+	'post_B2' => 4562,
+	'post_B2_5' => 4521,
+), 'Complete semantic ledger must record the exact 4,737 to 4,562 to 4,521 counts.');
+$assert(($completeLedger['originally_omitted'] ?? null) === array(
+	'global_slots' => 41,
+	'token_sites' => 194,
+	'plugin_check_rows' => 57,
+), 'Complete semantic ledger must distinguish 41 slots, 194 token sites, and 57 scanner rows.');
+
+$completedB2_5 = (array) ($manifest['completed_batches']['B2_5'] ?? array());
+$assert(($completedB2_5['status'] ?? null) === 'complete', 'Manifest must mark the B2.5 corrective batch complete.');
+$assert(($completedB2_5['unique_symbols'] ?? null) === array('global_slots' => 41), 'B2.5 must contain exactly 41 corrected global slots.');
+$assert(($completedB2_5['declaration_sites'] ?? null) === array('global_slots' => 194), 'B2.5 must contain exactly 194 corrected global token sites.');
+$assert(($completedB2_5['scanner_rows_eliminated'] ?? null) === 57, 'B2.5 must eliminate exactly 57 Plugin Check rows.');
+$assert(($completedB2_5['scanner_missed_semantic_slots'] ?? null) === 1, 'B2.5 must preserve the scanner-missed $tag correction as semantic evidence.');
+$b2_5SymbolMap = (array) ($completedB2_5['symbol_map'] ?? array());
+$assert(count($b2_5SymbolMap) === 41, 'B2.5 completed symbol map must contain exactly 41 explicit mappings.');
+$b2_5Sites = 0;
+$b2_5Legacy = array();
+$b2_5Canonical = array();
+foreach ($b2_5SymbolMap as $entry) {
+	$legacy = (string) ($entry['legacy_identifier'] ?? '');
+	$canonical = (string) ($entry['canonical_identifier'] ?? '');
+	$b2_5Legacy[] = $legacy;
+	$b2_5Canonical[] = $canonical;
+	$b2_5Sites += count((array) ($entry['declaration_sites'] ?? array()));
+	$assert(str_starts_with((string) preg_replace('/^(?:loader:|template:)/', '', $canonical), 'bvmgr_'), "B2.5 canonical slot must use bvmgr_: {$canonical}.");
+	$assert(!isset($declaredByKind['global_slots'][$legacy]), "B2.5 legacy slot must be absent: {$legacy}.");
+	$assert(isset($declaredByKind['global_slots'][$canonical]), "B2.5 canonical slot must exist: {$canonical}.");
+}
+$assert($b2_5Sites === 194, 'B2.5 symbol-map sites must sum to exactly 194.');
+$assert(count(array_unique($b2_5Legacy)) === 41 && count(array_unique($b2_5Canonical)) === 41, 'B2.5 old and new slot identifiers must each be unique.');
+$assert(in_array('template:tag', $b2_5Legacy, true), 'B2.5 map must include the scanner-missed template:tag slot.');
+
+// Independent semantic audit: assigned/bound variables at PHP file scope must
+// be modeled, proven method-local through the include boundary, or carry one
+// exact reason-coded unreachable exclusion. This does not consume Plugin Check.
+$methodScopePartials = array(
+	'includes/cpt/event-plans/partials/advanced-controls.php',
+	'includes/cpt/event-plans/partials/comp-ack.php',
+	'includes/cpt/event-plans/partials/compensation.php',
+	'includes/cpt/event-plans/partials/legacy-imported-ticketing-integration.php',
+	'includes/cpt/event-plans/partials/readiness-details.php',
+	'includes/cpt/event-plans/partials/secondary-vendors.php',
+	'includes/cpt/event-plans/partials/staff.php',
+	'includes/cpt/event-plans/partials/ticketing-v2.php',
+	'includes/cpt/event-plans/partials/time-lineup.php',
+	'includes/cpt/event-plans/partials/workflow-status.php',
+);
+$semanticGlobalAssignmentSites = array();
+foreach ((array) ($manifest['symbols']['global_slots'] ?? array()) as $entry) {
+	$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:|template:)/', '', (string) ($entry['current_identifier'] ?? ''));
+	foreach ((array) ($entry['declaration_sites'] ?? array()) as $site) {
+		$semanticGlobalAssignmentSites[(string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0) . '|' . $plain] = true;
+	}
+}
+$topLevelAssignments = BVMGR_WPORG_Prefix_Inventory::topLevelVariableAssignments($root);
+$templateAssignmentNames = array();
+$partialFilesSeen = array();
+$unmodeledAssignments = array();
+$deadCodeAssignments = array();
+foreach ($topLevelAssignments as $row) {
+	$file = (string) $row['file'];
+	$line = (int) $row['line'];
+	$variable = (string) $row['variable'];
+	if (in_array($file, $methodScopePartials, true)) {
+		$partialFilesSeen[$file] = true;
+		continue;
+	}
+	if ($file === 'includes/rest-dashboard.php' && $line === 11 && $variable === 'path') {
+		$deadCodeAssignments[] = $row;
+		continue;
+	}
+	if ($file === 'includes/public/templates/vendor-profile.php') {
+		$templateAssignmentNames[$variable] = true;
+	}
+	$key = $file . '|' . $line . '|' . $variable;
+	if (!isset($semanticGlobalAssignmentSites[$key])) {
+		$unmodeledAssignments[] = $row;
+	}
+}
+ksort($partialFilesSeen, SORT_STRING);
+$expectedPartialFiles = array_fill_keys($methodScopePartials, true);
+ksort($expectedPartialFiles, SORT_STRING);
+$assert($partialFilesSeen === $expectedPartialFiles, 'Top-level semantic audit must recognize exactly the ten Event Plan partial families as method-included scope.');
+$assert($unmodeledAssignments === array(), 'Every live top-level assignment must map to the semantic global inventory.');
+$assert($deadCodeAssignments === array(array('file' => 'includes/rest-dashboard.php', 'line' => 11, 'variable' => 'path')), 'Only the exact unreachable rest-dashboard $path assignment may be reason-coded out.');
+$restDashboard = (string) file_get_contents($root . '/includes/rest-dashboard.php');
+$scheduleHelpers = (string) file_get_contents($root . '/includes/schedule/helpers.php');
+$assert(
+	str_contains($restDashboard, "require_once __DIR__ . '/schedule/helpers.php';")
+	&& str_contains($restDashboard, "if (!function_exists('vms_sch_get_all_venue_ids'))")
+	&& str_contains($scheduleHelpers, "function vms_sch_get_all_venue_ids(): array"),
+	'Unreachable rest-dashboard $path exclusion must retain its require-before-guard proof.'
+);
+$assert(count($templateAssignmentNames) === 38, 'Vendor-profile template must expose exactly 38 assigned/bound semantic slots.');
+$assert(isset($templateAssignmentNames['bvmgr_vendor_profile_social_icon_tag']), 'Semantic audit must detect the formerly scanner-missed $tag binder under its canonical name.');
+foreach (array_keys($templateAssignmentNames) as $templateAssignmentName) {
+	$assert(str_starts_with($templateAssignmentName, 'bvmgr_'), "Vendor-profile global must use bvmgr_: {$templateAssignmentName}.");
+}
 
 foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
 	foreach ((array) $entries as $entry) {

@@ -29,9 +29,9 @@ if (!defined('ABSPATH')) {
 }
    
 // Optional module includes
-$tax_file = plugin_dir_path(__FILE__) . 'vendor-tax-profile.php';
-if (file_exists($tax_file)) {
-    require_once $tax_file;
+$bvmgr_vendor_tax_profile_file = plugin_dir_path(__FILE__) . 'vendor-tax-profile.php';
+if (file_exists($bvmgr_vendor_tax_profile_file)) {
+    require_once $bvmgr_vendor_tax_profile_file;
 }
 
 /**

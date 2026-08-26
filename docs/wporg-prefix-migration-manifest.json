@@ -1,5 +1,5 @@
 {
-    "schema_version": 2,
+    "schema_version": 3,
     "authority": {
         "document": "docs/WPORG_PREFIX_MIGRATION_B0.md",
         "supplied_b0_sha256": "7893dc878cff48e86a981771c0e52f3119a4a3202307c73ab24817bb863f3dc9",
@@ -31,6 +31,12 @@
             "cause": "The original B1 add-on map inventoried functions, hooks, retained physical identifiers, and handles but did not semantically compare add-on PHP against every B2-owned class, interface, constant, and request-global symbol.",
             "correction": "A token-based five-add-on rescan freezes seven exact B2 dependencies across vms-events-slider, vms-data-tools, and vms-express-bar.",
             "architecture_impact": "B2 requires isolated coordinated add-on cutovers before the core symbol rename; no public-package legacy aliases are introduced."
+        },
+        {
+            "id": "complete-b2-global-slot-inventory",
+            "cause": "The original B1 inventory used a bounded loader-name list and did not model the global WordPress template-loader scope of the vendor-profile template.",
+            "correction": "B2.5 records and prefixes 38 vendor-template globals plus three loader globals through an explicit old-to-new map.",
+            "architecture_impact": "The historical B2 map and ratchet remain immutable; a separate complete semantic ledger and scanner-row inventory govern B2.5 and later batches."
         }
     ],
     "canonical_prefix_family": {
@@ -132,16 +138,18 @@
             "semantic_inventory": {
                 "GLOBALS_slots": 35,
                 "direct_globals": 4,
-                "loader_temporaries": 5
+                "loader_temporaries": 8,
+                "template_globals": 38,
+                "total": 85
             },
-            "current_identifier": "vms_* shared request globals",
+            "current_identifier": "plugin-owned shared request globals",
             "canonical_target": "bvmgr_*",
             "b0_strategy": [
                 1
             ],
             "compatibility_classification": "atomic reader/writer rename",
             "persistence_external_contract_status": "request-local nonpersistent state",
-            "planned_implementation_batch": "B2",
+            "planned_implementation_batch": "B2/B2.5",
             "do_not_rename_current": false,
             "risk": "Medium"
         },
@@ -577,8 +585,8 @@
             "occurrences": 0
         },
         "global_slots": {
-            "unique": 44,
-            "occurrences": 232
+            "unique": 85,
+            "occurrences": 426
         },
         "dynamic_symbols": {
             "exact_function_literals_unique": 3645,
@@ -81642,6 +81650,29 @@
                 "migration_status": "complete"
             },
             {
+                "current_identifier": "loader:bvmgr_social_cron_hook",
+                "canonical_target": "loader:bvmgr_social_cron_hook",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/social-share/queue-runner.php",
+                        "line": 452
+                    },
+                    {
+                        "file": "includes/social-share/queue-runner.php",
+                        "line": 453
+                    }
+                ],
+                "legacy_identifier": "loader:hook",
+                "migration_status": "complete"
+            },
+            {
                 "current_identifier": "loader:bvmgr_square_firewall_filter_name",
                 "canonical_target": "loader:bvmgr_square_firewall_filter_name",
                 "b0_strategy": [
@@ -81666,6 +81697,1374 @@
                     }
                 ],
                 "legacy_identifier": "loader:vms_square_firewall_filter_name",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "loader:bvmgr_vendor_application_post_type",
+                "canonical_target": "loader:bvmgr_vendor_application_post_type",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/vendor-applications.php",
+                        "line": 1266
+                    },
+                    {
+                        "file": "includes/vendor-applications.php",
+                        "line": 1267
+                    },
+                    {
+                        "file": "includes/vendor-applications.php",
+                        "line": 1286
+                    },
+                    {
+                        "file": "includes/vendor-applications.php",
+                        "line": 1287
+                    },
+                    {
+                        "file": "includes/vendor-applications.php",
+                        "line": 1328
+                    },
+                    {
+                        "file": "includes/vendor-applications.php",
+                        "line": 1329
+                    }
+                ],
+                "legacy_identifier": "loader:pt",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "loader:bvmgr_vendor_tax_profile_file",
+                "canonical_target": "loader:bvmgr_vendor_tax_profile_file",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/portal/vendor-portal.php",
+                        "line": 32
+                    },
+                    {
+                        "file": "includes/portal/vendor-portal.php",
+                        "line": 33
+                    },
+                    {
+                        "file": "includes/portal/vendor-portal.php",
+                        "line": 34
+                    }
+                ],
+                "legacy_identifier": "loader:tax_file",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_allowed_html",
+                "canonical_target": "template:bvmgr_vendor_profile_allowed_html",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 91
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 94
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 98
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 102
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 105
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 108
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 109
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 109
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 110
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 120
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 121
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 121
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 122
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 145
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 146
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 146
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 147
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 173
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 193
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 200
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 208
+                    }
+                ],
+                "legacy_identifier": "template:profile_markup_allowed_html",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_city",
+                "canonical_target": "template:bvmgr_vendor_profile_city",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 51
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 53
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 57
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 58
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 168
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 169
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 169
+                    }
+                ],
+                "legacy_identifier": "template:city",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_email",
+                "canonical_target": "template:bvmgr_vendor_profile_email",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 35
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 39
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 41
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 181
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 182
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 225
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 236
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 239
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 239
+                    }
+                ],
+                "legacy_identifier": "template:email",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_gallery_image_candidate_url",
+                "canonical_target": "template:bvmgr_vendor_profile_gallery_image_candidate_url",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 85
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 86
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 87
+                    }
+                ],
+                "legacy_identifier": "template:url",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_gallery_image_index",
+                "canonical_target": "template:bvmgr_vendor_profile_gallery_image_index",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 84
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 84
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 84
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 85
+                    }
+                ],
+                "legacy_identifier": "template:i",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_gallery_image_url",
+                "canonical_target": "template:bvmgr_vendor_profile_gallery_image_url",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 216
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 217
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 218
+                    }
+                ],
+                "legacy_identifier": "template:image_url",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_gallery_images",
+                "canonical_target": "template:bvmgr_vendor_profile_gallery_images",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 83
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 87
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 212
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 216
+                    }
+                ],
+                "legacy_identifier": "template:gallery_images",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_legacy_email_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_legacy_email_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 40
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 41
+                    }
+                ],
+                "legacy_identifier": "template:legacy_email_key",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_legacy_location",
+                "canonical_target": "template:bvmgr_vendor_profile_legacy_location",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 54
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 55
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 56
+                    }
+                ],
+                "legacy_identifier": "template:legacy_loc",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_legacy_location_parts",
+                "canonical_target": "template:bvmgr_vendor_profile_legacy_location_parts",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 56
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 57
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 57
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 58
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 60
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 60
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 61
+                    }
+                ],
+                "legacy_identifier": "template:parts",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_legacy_phone_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_legacy_phone_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 44
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 45
+                    }
+                ],
+                "legacy_identifier": "template:legacy_phone_key",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_next_show_markup",
+                "canonical_target": "template:bvmgr_vendor_profile_next_show_markup",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 66
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 192
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 193
+                    }
+                ],
+                "legacy_identifier": "template:next_show_markup",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_phone",
+                "canonical_target": "template:bvmgr_vendor_profile_phone",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 36
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 43
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 45
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 177
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 178
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 225
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 229
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 232
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 232
+                    }
+                ],
+                "legacy_identifier": "template:phone",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_post",
+                "canonical_target": "template:bvmgr_vendor_profile_post",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 6
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 7
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 14
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 196
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 200
+                    }
+                ],
+                "legacy_identifier": "template:vendor",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_post_id",
+                "canonical_target": "template:bvmgr_vendor_profile_post_id",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 14
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 21
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 22
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 23
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 24
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 35
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 36
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 37
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 41
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 45
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 48
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 51
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 52
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 54
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 67
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 71
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 74
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 85
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 156
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 158
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 166
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 218
+                    }
+                ],
+                "legacy_identifier": "template:vendor_id",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_primary_email_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_primary_email_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 31
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 35
+                    }
+                ],
+                "legacy_identifier": "template:k_primary_email",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_primary_phone_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_primary_phone_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 32
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 36
+                    }
+                ],
+                "legacy_identifier": "template:k_primary_phone",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_raw_show_email",
+                "canonical_target": "template:bvmgr_vendor_profile_raw_show_email",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 21
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 26
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 26
+                    }
+                ],
+                "legacy_identifier": "template:raw_show_e",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_raw_show_location",
+                "canonical_target": "template:bvmgr_vendor_profile_raw_show_location",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 24
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 29
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 29
+                    }
+                ],
+                "legacy_identifier": "template:raw_show_loc",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_raw_show_phone",
+                "canonical_target": "template:bvmgr_vendor_profile_raw_show_phone",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 22
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 27
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 27
+                    }
+                ],
+                "legacy_identifier": "template:raw_show_p",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_raw_show_website",
+                "canonical_target": "template:bvmgr_vendor_profile_raw_show_website",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 23
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 28
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 28
+                    }
+                ],
+                "legacy_identifier": "template:raw_show_w",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_email",
+                "canonical_target": "template:bvmgr_vendor_profile_show_email",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 26
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 181
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 225
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 236
+                    }
+                ],
+                "legacy_identifier": "template:show_email",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_email_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_show_email_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 16
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 21
+                    }
+                ],
+                "legacy_identifier": "template:k_show_e",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_location",
+                "canonical_target": "template:bvmgr_vendor_profile_show_location",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 29
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 168
+                    }
+                ],
+                "legacy_identifier": "template:show_loc",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_location_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_show_location_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 19
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 24
+                    }
+                ],
+                "legacy_identifier": "template:k_show_loc",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_phone",
+                "canonical_target": "template:bvmgr_vendor_profile_show_phone",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 27
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 177
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 225
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 229
+                    }
+                ],
+                "legacy_identifier": "template:show_phone",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_phone_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_show_phone_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 17
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 22
+                    }
+                ],
+                "legacy_identifier": "template:k_show_p",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_website",
+                "canonical_target": "template:bvmgr_vendor_profile_show_website",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 28
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 185
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 225
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 243
+                    }
+                ],
+                "legacy_identifier": "template:show_website",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_show_website_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_show_website_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 18
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 23
+                    }
+                ],
+                "legacy_identifier": "template:k_show_w",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_social_icon_allowed_html",
+                "canonical_target": "template:bvmgr_vendor_profile_social_icon_allowed_html",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 130
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 144
+                    }
+                ],
+                "legacy_identifier": "template:social_icon_allowed_html",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_social_icon_attributes",
+                "canonical_target": "template:bvmgr_vendor_profile_social_icon_attributes",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 144
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 149
+                    }
+                ],
+                "legacy_identifier": "template:attrs",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_social_icon_tag",
+                "canonical_target": "template:bvmgr_vendor_profile_social_icon_tag",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 144
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 145
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 146
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 146
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 147
+                    }
+                ],
+                "legacy_identifier": "template:tag",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_social_markup",
+                "canonical_target": "template:bvmgr_vendor_profile_social_markup",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 70
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 172
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 173
+                    }
+                ],
+                "legacy_identifier": "template:social_markup",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_state",
+                "canonical_target": "template:bvmgr_vendor_profile_state",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 52
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 53
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 60
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 61
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 168
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 169
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 169
+                    }
+                ],
+                "legacy_identifier": "template:state",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_video_embed",
+                "canonical_target": "template:bvmgr_vendor_profile_video_embed",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 75
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 77
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 78
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 78
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 79
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 205
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 208
+                    }
+                ],
+                "legacy_identifier": "template:video_embed",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_video_url",
+                "canonical_target": "template:bvmgr_vendor_profile_video_url",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 74
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 76
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 77
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 79
+                    }
+                ],
+                "legacy_identifier": "template:video_url",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_website",
+                "canonical_target": "template:bvmgr_vendor_profile_website",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 37
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 47
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 48
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 185
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 186
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 225
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 243
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 246
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 246
+                    }
+                ],
+                "legacy_identifier": "template:website",
+                "migration_status": "complete"
+            },
+            {
+                "current_identifier": "template:bvmgr_vendor_profile_website_meta_key",
+                "canonical_target": "template:bvmgr_vendor_profile_website_meta_key",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "atomic-global-symbol-rename",
+                "persistence_external_contract_status": "nonpersistent-global-php",
+                "planned_implementation_batch": "B2.5",
+                "do_not_rename": false,
+                "declaration_sites": [
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 33
+                    },
+                    {
+                        "file": "includes/public/templates/vendor-profile.php",
+                        "line": 37
+                    }
+                ],
+                "legacy_identifier": "template:k_vendor_web",
                 "migration_status": "complete"
             }
         ]
@@ -190599,6 +191998,25 @@
         "functions:vms_wc_units_sold_for_product",
         "functions:vms_wc_units_sold_for_product_details"
     ],
+    "complete_semantic_ledger": {
+        "measurement": "unique prohibited global PHP semantic identifiers/slots; scanner rows are tracked separately",
+        "historical_original_ratchet": {
+            "pre_B2": 4696,
+            "post_B2": 4521,
+            "reduction": 175,
+            "immutable": true
+        },
+        "corrected_complete_counts": {
+            "pre_B2": 4737,
+            "post_B2": 4562,
+            "post_B2_5": 4521
+        },
+        "originally_omitted": {
+            "global_slots": 41,
+            "token_sites": 194,
+            "plugin_check_rows": 57
+        }
+    },
     "completed_batches": {
         "B2": {
             "status": "complete",
@@ -193335,6 +194753,1084 @@
                 "after": 4521,
                 "reduction": 175
             },
+            "b3_procedural_functions_renamed": 0
+        },
+        "B2_5": {
+            "status": "complete",
+            "scope": "correct the 38 vendor-template globals and three loader globals omitted from the original B1/B2 semantic inventory",
+            "unique_symbols": {
+                "global_slots": 41
+            },
+            "declaration_sites": {
+                "global_slots": 194
+            },
+            "scanner_rows_eliminated": 57,
+            "scanner_missed_semantic_slots": 1,
+            "symbol_map": [
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "loader:hook",
+                    "canonical_identifier": "loader:bvmgr_social_cron_hook",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/social-share/queue-runner.php",
+                            "line": 452
+                        },
+                        {
+                            "file": "includes/social-share/queue-runner.php",
+                            "line": 453
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "loader:pt",
+                    "canonical_identifier": "loader:bvmgr_vendor_application_post_type",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/vendor-applications.php",
+                            "line": 1266
+                        },
+                        {
+                            "file": "includes/vendor-applications.php",
+                            "line": 1267
+                        },
+                        {
+                            "file": "includes/vendor-applications.php",
+                            "line": 1286
+                        },
+                        {
+                            "file": "includes/vendor-applications.php",
+                            "line": 1287
+                        },
+                        {
+                            "file": "includes/vendor-applications.php",
+                            "line": 1328
+                        },
+                        {
+                            "file": "includes/vendor-applications.php",
+                            "line": 1329
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "loader:tax_file",
+                    "canonical_identifier": "loader:bvmgr_vendor_tax_profile_file",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/portal/vendor-portal.php",
+                            "line": 32
+                        },
+                        {
+                            "file": "includes/portal/vendor-portal.php",
+                            "line": 33
+                        },
+                        {
+                            "file": "includes/portal/vendor-portal.php",
+                            "line": 34
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:attrs",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_social_icon_attributes",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 144
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 149
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:city",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_city",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 51
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 53
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 57
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 58
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 168
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 169
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 169
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:email",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_email",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 35
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 39
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 41
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 181
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 182
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 225
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 236
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 239
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 239
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:gallery_images",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_gallery_images",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 83
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 87
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 212
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 216
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:i",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_gallery_image_index",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 84
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 84
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 84
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 85
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:image_url",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_gallery_image_url",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 216
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 217
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 218
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:k_primary_email",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_primary_email_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 31
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 35
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:k_primary_phone",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_primary_phone_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 32
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 36
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:k_show_e",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_email_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 16
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 21
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:k_show_loc",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_location_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 19
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 24
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:k_show_p",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_phone_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 17
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 22
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:k_show_w",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_website_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 18
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 23
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:k_vendor_web",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_website_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 33
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 37
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:legacy_email_key",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_legacy_email_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 40
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 41
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:legacy_loc",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_legacy_location",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 54
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 55
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 56
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:legacy_phone_key",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_legacy_phone_meta_key",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 44
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 45
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:next_show_markup",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_next_show_markup",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 66
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 192
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 193
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:parts",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_legacy_location_parts",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 56
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 57
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 57
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 58
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 60
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 60
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 61
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:phone",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_phone",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 36
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 43
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 45
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 177
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 178
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 225
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 229
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 232
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 232
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:profile_markup_allowed_html",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_allowed_html",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 91
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 94
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 98
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 102
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 105
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 108
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 109
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 109
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 110
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 120
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 121
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 121
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 122
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 145
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 146
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 146
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 147
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 173
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 193
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 200
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 208
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:raw_show_e",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_raw_show_email",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 21
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 26
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 26
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:raw_show_loc",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_raw_show_location",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 24
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 29
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 29
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:raw_show_p",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_raw_show_phone",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 22
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 27
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 27
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:raw_show_w",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_raw_show_website",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 23
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 28
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 28
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:show_email",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_email",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 26
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 181
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 225
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 236
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:show_loc",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_location",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 29
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 168
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:show_phone",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_phone",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 27
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 177
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 225
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 229
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:show_website",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_show_website",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 28
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 185
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 225
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 243
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:social_icon_allowed_html",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_social_icon_allowed_html",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 130
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 144
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:social_markup",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_social_markup",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 70
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 172
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 173
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:state",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_state",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 52
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 53
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 60
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 61
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 168
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 169
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 169
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:tag",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_social_icon_tag",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 144
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 145
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 146
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 146
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 147
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:url",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_gallery_image_candidate_url",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 85
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 86
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 87
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:vendor",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_post",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 6
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 7
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 14
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 196
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 200
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:vendor_id",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_post_id",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 14
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 21
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 22
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 23
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 24
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 35
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 36
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 37
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 41
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 45
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 48
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 51
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 52
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 54
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 67
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 71
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 74
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 85
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 156
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 158
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 166
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 218
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:video_embed",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_video_embed",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 75
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 77
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 78
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 78
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 79
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 205
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 208
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:video_url",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_video_url",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 74
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 76
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 77
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 79
+                        }
+                    ]
+                },
+                {
+                    "kind": "global_slots",
+                    "legacy_identifier": "template:website",
+                    "canonical_identifier": "template:bvmgr_vendor_profile_website",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 37
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 47
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 48
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 185
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 186
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 225
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 243
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 246
+                        },
+                        {
+                            "file": "includes/public/templates/vendor-profile.php",
+                            "line": 246
+                        }
+                    ]
+                }
+            ],
             "b3_procedural_functions_renamed": 0
         }
     },

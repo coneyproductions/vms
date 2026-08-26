@@ -17,7 +17,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		$prohibitedBaseline = self::loadProhibitedBaseline($root);
 
 		return array(
-			'schema_version' => 2,
+			'schema_version' => 3,
 			'authority' => array(
 				'document' => 'docs/WPORG_PREFIX_MIGRATION_B0.md',
 				'supplied_b0_sha256' => '7893dc878cff48e86a981771c0e52f3119a4a3202307c73ab24817bb863f3dc9',
@@ -41,6 +41,12 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 					'correction' => 'A token-based five-add-on rescan freezes seven exact B2 dependencies across vms-events-slider, vms-data-tools, and vms-express-bar.',
 					'architecture_impact' => 'B2 requires isolated coordinated add-on cutovers before the core symbol rename; no public-package legacy aliases are introduced.',
 				),
+				array(
+					'id' => 'complete-b2-global-slot-inventory',
+					'cause' => 'The original B1 inventory used a bounded loader-name list and did not model the global WordPress template-loader scope of the vendor-profile template.',
+					'correction' => 'B2.5 records and prefixes 38 vendor-template globals plus three loader globals through an explicit old-to-new map.',
+					'architecture_impact' => 'The historical B2 map and ratchet remain immutable; a separate complete semantic ledger and scanner-row inventory govern B2.5 and later batches.',
+				),
 			),
 			'canonical_prefix_family' => array(
 				'procedural_php_hooks_options' => 'bvmgr_',
@@ -57,8 +63,10 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			'dynamic_symbols' => $inventory['dynamic_symbols'],
 			'prohibited_global_baseline' => $prohibitedBaseline,
 			'current_prohibited_globals' => $currentProhibited,
+			'complete_semantic_ledger' => self::completeSemanticLedger(),
 			'completed_batches' => array(
 				'B2' => self::completedB2($inventory['symbols'], $prohibitedBaseline, $currentProhibited),
+				'B2_5' => self::completedB2_5($inventory['symbols']),
 			),
 			'public_extension_apis' => $publicApis,
 			'known_addons' => self::knownAddons(),
@@ -113,7 +121,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			self::category('classes_interfaces', 'B', array('classes' => 23, 'interfaces' => 1, 'traits' => 0, 'enums' => 0), 'VMS_* global types', 'BVMGR_*; future OO uses BackstageVenueManager\\', array(1, 8), 'coordinated cutover for the public provider interface', 'global PHP type; one plausible public interface', 'B2', false, 'High'),
 			self::category('constants', 'C', array('unique' => 107, 'definitions' => 116), 'VMS_* PHP constants', 'BVMGR_* PHP names; values follow their owning category', array(1), 'no blanket legacy constant aliases', 'global PHP names; values may be persistent/external', 'B2', false, 'High'),
 			self::category('namespaces', 'D', array('unique' => 0), 'none', 'BackstageVenueManager\\ for future OO', array(1), 'no existing namespace conversion in B2/B3', 'nonpersistent PHP', 'future', false, 'Medium'),
-			self::category('globals', 'E', array('GLOBALS_slots' => 35, 'direct_globals' => 4, 'loader_temporaries' => 5), 'vms_* shared request globals', 'bvmgr_*', array(1), 'atomic reader/writer rename', 'request-local nonpersistent state', 'B2', false, 'Medium'),
+			self::category('globals', 'E', array('GLOBALS_slots' => 35, 'direct_globals' => 4, 'loader_temporaries' => 8, 'template_globals' => 38, 'total' => 85), 'plugin-owned shared request globals', 'bvmgr_*', array(1), 'atomic reader/writer rename', 'request-local nonpersistent state', 'B2/B2.5', false, 'Medium'),
 			self::category('hooks', 'F', array('filters' => 152, 'literal_actions' => 23, 'task_actions' => 4, 'dynamic_families' => 1, 'dormant_filters' => 2, 'total' => 182), 'vms_* plugin-owned custom hooks', 'bvmgr_*', array(5, 7), 'canonical-first dual-fire; internal listeners canonical only', 'external WordPress contract', 'B7', true, 'High'),
 			self::category('options', 'G', array('static' => 115, 'dynamic_families' => 2, 'site_options' => 0), 'vms_* option families', 'bvmgr_*', array(3, 4, 6), 'canonical-first reads and canonical writes after copy', 'persistent per-site state', 'B5', true, 'Critical'),
 			self::category('post_meta', 'H', array('static' => 610, 'dynamic_families' => 3), '_vms_* and related plugin-owned keys', '_bvmgr_* where migration is justified', array(3, 4, 6), 'retain query/join/relationship keys when physical migration is disproportionate', 'persistent content state', 'B5', true, 'Critical'),
@@ -258,6 +266,57 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 				'reduction' => count($baseline) - count($currentProhibited),
 			),
 			'b3_procedural_functions_renamed' => 0,
+		);
+	}
+
+	private static function completedB2_5(array $symbols): array
+	{
+		$symbolMap = array();
+		foreach ((array) ($symbols['global_slots'] ?? array()) as $entry) {
+			if (($entry['migration_status'] ?? '') !== 'complete' || ($entry['planned_implementation_batch'] ?? '') !== 'B2.5') {
+				continue;
+			}
+			$symbolMap[] = array(
+				'kind' => 'global_slots',
+				'legacy_identifier' => $entry['legacy_identifier'],
+				'canonical_identifier' => $entry['current_identifier'],
+				'declaration_sites' => $entry['declaration_sites'],
+			);
+		}
+		usort($symbolMap, static fn(array $a, array $b): int => $a['legacy_identifier'] <=> $b['legacy_identifier']);
+		$siteCount = array_sum(array_map(static fn(array $entry): int => count((array) $entry['declaration_sites']), $symbolMap));
+		return array(
+			'status' => 'complete',
+			'scope' => 'correct the 38 vendor-template globals and three loader globals omitted from the original B1/B2 semantic inventory',
+			'unique_symbols' => array('global_slots' => count($symbolMap)),
+			'declaration_sites' => array('global_slots' => $siteCount),
+			'scanner_rows_eliminated' => 57,
+			'scanner_missed_semantic_slots' => 1,
+			'symbol_map' => $symbolMap,
+			'b3_procedural_functions_renamed' => 0,
+		);
+	}
+
+	private static function completeSemanticLedger(): array
+	{
+		return array(
+			'measurement' => 'unique prohibited global PHP semantic identifiers/slots; scanner rows are tracked separately',
+			'historical_original_ratchet' => array(
+				'pre_B2' => 4696,
+				'post_B2' => 4521,
+				'reduction' => 175,
+				'immutable' => true,
+			),
+			'corrected_complete_counts' => array(
+				'pre_B2' => 4737,
+				'post_B2' => 4562,
+				'post_B2_5' => 4521,
+			),
+			'originally_omitted' => array(
+				'global_slots' => 41,
+				'token_sites' => 194,
+				'plugin_check_rows' => 57,
+			),
 		);
 	}
 
