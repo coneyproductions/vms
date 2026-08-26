@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-26T21:18:01Z",
+  "status": "architecture_review_required",
+  "source_commit": "d781aa4ef8f0941384502d4a8740e5c9176ef957",
+  "artifact": {
+    "path": "/private/tmp/bvm-wporg-b2-final/build/backstage-venue-manager-1.2.0-public-release.zip",
+    "sha256": "81e67194396108e312d4c989fc014bb66003e9d15743327110383a5bc1a9b848",
+    "build_finished_at_utc": "2026-08-26T20:56:32+00:00",
+    "packaged_files": 374,
+    "packaged_php_files_linted": 271,
+    "packaged_javascript_files_syntax_checked": 55,
+    "strict_json_path": "/private/tmp/bvm-wporg-b2-final/plugin-check/plugin-check.strict.json",
+    "strict_json_sha256": "315c84098035526ded25fb58f56850f4e0845dfccd6bf90fe0dc941d9d9cd92d",
+    "plugin_check_exit": 0,
+    "plugin_check_stderr_bytes": 204,
+    "plugin_check_stderr_note": "Known WP-CLI react/promise PHP 8.5 deprecation; normalized strict JSON is valid.",
+    "compatibility_report_path": "/private/tmp/bvm-wporg-b2-final/compatibility/backstage-venue-manager-1.2.0-release-compatibility.report.json",
+    "compatibility_report_sha256": "c7ece8c793d536d8ef8d8763c9997db477380b2cdf906ada4f2ad864c7ef4930",
+    "compatibility_status": "WARN",
+    "compatibility_note": "All required lifecycle behavior passed; WARN contains third-party TEC PHP 8.5 deprecations only."
+  },
+  "scan": {
+    "errors": 125,
+    "warnings": 5206,
+    "total": 5331,
+    "unique_codes": 7,
+    "code_counts": {
+      "PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent": 1,
+      "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound": 1,
+      "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound": 4541,
+      "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound": 187,
+      "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound": 477,
+      "WordPress.Security.EscapeOutput.OutputNotEscaped": 123,
+      "WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet": 1
+    },
+    "historical_residual": {
+      "count": 125,
+      "exact_sorted_rows_identical": true,
+      "baseline_minus_current": 0,
+      "current_minus_baseline": 0
+    },
+    "prefix_warning_reconciliation": {
+      "planned_B3_function_declaration_sites": 4541,
+      "planned_later_vms_hook_sites": 181,
+      "planned_B7_dynamic_hook_sites": 1,
+      "retained_external_hook_sites": 6,
+      "include_template_local_false_positive_sites": 472,
+      "unmodeled_loader_scope_sites": 5,
+      "unmodeled_loader_scope_identifiers": [
+        "$tax_file",
+        "$pt",
+        "$hook"
+      ]
+    },
+    "required_delta_gate": {
+      "status": "FAIL",
+      "new_plugin_check_codes": 4,
+      "newly_surfaced_prefix_rows": 5206,
+      "unmodeled_loader_scope_rows": 5,
+      "reason": "BVMGR activates PrefixAllGlobals while approved later batches remain vms-prefixed; five real loader sites are absent from the frozen B1 global map."
+    }
+  },
+  "next_action": "Stop before B3 and obtain an architecture decision on phase-aware scanner classification plus correction of the B1 global inventory."
+}
