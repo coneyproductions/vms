@@ -1,6 +1,6 @@
 # WordPress.org Prefix Migration — Phase B3
 
-Status: authorized and in progress  
+Status: complete in the isolated branch; B4 has not begun
 Authorized baseline: `634211d1d5bbd250fc13b19d02f39acd4a4bc96b`  
 Branch: `codex/wporg-reviewer-identity-alignment`  
 Scope: plugin-owned procedural PHP functions only
@@ -182,7 +182,7 @@ Status: committed at `71c747f75dcb06940ac8c606c9de3894b909d3bf`.
 
 ### W10 — admissions, pass claims, email, status notices, and public event details
 
-Status: verified for the isolated W10 commit.
+Status: committed at `dd1dcf9ef85ea921586ac587d2b136137d61ff62`.
 
 - Exact cutover: `428` unique functions / `428` declaration sites moved atomically; W10 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
 - Ratchet: cumulative B3 progress is `4,159 / 4,521` functions and `4,175 / 4,541` declaration sites; `362` legacy functions / `366` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
@@ -190,3 +190,17 @@ Status: verified for the isolated W10 commit.
 - Focused verification: export-stream, Administrator shell, admission request state and REST permissions/restore, JSON validation, Event Details schema/JSON-LD, nonce normalization, Pass Claims claimed-card/shell/status/success output, Plan Your Visit, public Event Sidebar, mutation boundaries, changed-PHP lint, diff checks, and all primary B3/B2/B2.5/add-on/identity/runtime/release gates pass. Tests that bind to the intentionally untouched live/shadow tree or unavailable historical artifacts remain excluded rather than weakened.
 - Checkpoint sequencing: W10 is committed on its independent green focused gate; W11 carries the final exact-ZIP package, strict scan, full lifecycle, and closeout proof.
 - Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### W11 — settings, reporting, social, tax bypass, and remaining admin
+
+Status: committed at `11a88a88ed3b7879cf5b9e74fe6528b54df2afe5`.
+
+- Exact cutover: `362` unique functions / `366` declaration sites moved atomically, including all four W11 two-site duplicate families; no wrapper, alias, trampoline, or dual declaration ships.
+- Terminal ratchet: cumulative B3 progress is exactly `4,521 / 4,521` functions and `4,541 / 4,541` declaration sites. Remaining prohibited `vms_*` procedural declarations, stale/forward references, split duplicates, canonical collisions, unexpected scanner rows, unmapped scanner rows, and completed-batch residuals are all zero.
+- Literal authority: nine executable callback, activation-bootstrap, provider-registry, and admin-shell identities moved; `17` cron-hook, filter-hook, nonce/action, audit-source, and other later-batch contracts remain legacy. The compatibility fixture seeder uses a phase-aware canonical/legacy callable fallback solely so the historical `0.2.24.725` baseline and the B3 package can create the same pre-upgrade fixture; it is excluded from the public ZIP and is not a package wrapper.
+- Focused verification: admin export and request-method boundaries, Administrator-shell output, authorization, goals-forecast repositories, social finite/lazy rendering, social queue repositories and snapshots, webhook exception boundaries, mutation boundaries, changed-PHP lint, diff checks, and every primary B3/B2/B2.5/add-on/identity/runtime/release gate pass. Isolation-incompatible live/shadow parity, unavailable historical-artifact, and unrelated pre-existing branding-expectation tests remain excluded rather than weakened.
+- Exact final package: `/private/tmp/bvm-wporg-b3-final2-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `57b932e5cc6507151a13df58758d2efa21ebb533e15b5d1a6a3a0e67b04537a0`. The build passed after staging `374` files, linting `271` PHP files, syntax-checking `55` JavaScript files, and validating package integrity. Development-build warnings are limited to the expected dirty-wave flag, absent version-matched build notes, and the explicit disposable-activation review.
+- Strict packaged scan: `733` total = historical `125` errors + `608` warnings, categorized exactly as B3 `0`, B7 `182`, method scope `420`, and external/core `6`. The migration-aware gate records all `4,541` authoritative B3 findings removed with zero unexpected, unmapped, category increase, or completed-batch residual. Strict JSON: `/private/tmp/bvm-wporg-b3-final2-checkpoint/plugin-check/plugin-check.strict.json`, SHA-256 `850ca9ed6b662e1d9ac0c98b296aef41ef87d1049da671c73aba1aab42de84a7`.
+- Full lifecycle: the exact final ZIP completed all seven dependency scenarios without a plugin fatal, clean activation/deactivation/reactivation and repeated activation, historical-basename upgrade, interruption recovery, fixture preservation, and uninstall preservation. The authoritative report is `/private/tmp/bvm-wporg-b3-final2-checkpoint/compatibility-full/backstage-venue-manager-1.2.0-release-compatibility.report.json`, SHA-256 `3ecd1471f9d8fb86c036648586f7c89f2ab4959cdf43ec4da641e6db5e3c44a6`; overall `WARN` is limited to captured dependency/PHP deprecations. The upgrade fixture is present before and after, preservation reports no regressions, and uninstall leaves representative data intact.
+- Harness recovery evidence: the first pre-final lifecycle report at `/private/tmp/bvm-wporg-b3-final-checkpoint/compatibility-full/backstage-venue-manager-1.2.0-release-compatibility.report.json`, SHA-256 `b44e9ed43bdabc68f8cf8dc1684460ccda53340af054922fbb99da5e8a340d3c`, exposed only that the B3-transformed fixture seeder could no longer call the historical baseline function. The phase-aware test-only fallback corrected that false negative; a same-package rerun passed at SHA-256 `13ade858664db547b3455311901286dac0de6535021971630546d557ed174f11`, and the final exact-package report above supersedes both.
+- Untouched boundaries: installed/live core remains `408` files / SHA-256 `63f319f6421dcfc1079d35af1bd0582966de43a3676e55457b9a0ca1a3583b97`; the five installed add-ons retain their frozen file counts and hashes. The primary development tree remains clean at `bf13cc94d5fd08b789cd1189cb50c1297227632b`, and the protected stash remains intact. No B4-B8 work, push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
