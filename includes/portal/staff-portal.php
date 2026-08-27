@@ -12,13 +12,13 @@ if (!defined('ABSPATH')) exit;
  *  - availability
  */
 
-add_shortcode('vms_staff_portal', 'vms_staff_portal_shortcode');
+add_shortcode('vms_staff_portal', 'bvmgr_staff_portal_shortcode');
 
-if (!function_exists('vms_staff_portal_provider_label')) {
-    function vms_staff_portal_provider_label(string $provider): string
+if (!function_exists('bvmgr_staff_portal_provider_label')) {
+    function bvmgr_staff_portal_provider_label(string $provider): string
     {
-        if (function_exists('vms_tax_provider_label')) {
-            return (string) vms_tax_provider_label($provider);
+        if (function_exists('bvmgr_tax_provider_label')) {
+            return (string) bvmgr_tax_provider_label($provider);
         }
 
         if ($provider === 'quickbooks_email') return 'QuickBooks Online';
@@ -27,11 +27,11 @@ if (!function_exists('vms_staff_portal_provider_label')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_tax_provider')) {
-    function vms_staff_portal_tax_provider(): string
+if (!function_exists('bvmgr_staff_portal_tax_provider')) {
+    function bvmgr_staff_portal_tax_provider(): string
     {
-        if (function_exists('vms_tax_settings_get_provider')) {
-            return (string) vms_tax_settings_get_provider();
+        if (function_exists('bvmgr_tax_settings_get_provider')) {
+            return (string) bvmgr_tax_settings_get_provider();
         }
 
         $settings = get_option('vms_settings', array());
@@ -45,11 +45,11 @@ if (!function_exists('vms_staff_portal_tax_provider')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_tax_status')) {
-    function vms_staff_portal_tax_status(int $staff_id): array
+if (!function_exists('bvmgr_staff_portal_tax_status')) {
+    function bvmgr_staff_portal_tax_status(int $staff_id): array
     {
         $staff_id = absint($staff_id);
-        $provider = vms_staff_portal_tax_provider();
+        $provider = bvmgr_staff_portal_tax_provider();
 
         $k_done = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'tax_profile_completed_at') : '_vms_tax_profile_completed_at';
         $k_attest = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_attested_at') : '_vms_w9_external_vendor_attested_at';
@@ -90,7 +90,7 @@ if (!function_exists('vms_staff_portal_tax_status')) {
 
         return array(
             'provider' => $effective_provider,
-            'provider_label' => vms_staff_portal_provider_label($effective_provider),
+            'provider_label' => bvmgr_staff_portal_provider_label($effective_provider),
             'global_provider' => $provider,
             'done_at' => $done_at,
             'attested_at' => $attested_at,
@@ -105,8 +105,8 @@ if (!function_exists('vms_staff_portal_tax_status')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_badge_html')) {
-    function vms_staff_portal_badge_html(string $stage): string
+if (!function_exists('bvmgr_staff_portal_badge_html')) {
+    function bvmgr_staff_portal_badge_html(string $stage): string
     {
         $stage = sanitize_key($stage);
         if ($stage === 'complete') {
@@ -119,8 +119,8 @@ if (!function_exists('vms_staff_portal_badge_html')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_format_ts')) {
-    function vms_staff_portal_format_ts(int $ts, string $format = 'M j, Y g:ia'): string
+if (!function_exists('bvmgr_staff_portal_format_ts')) {
+    function bvmgr_staff_portal_format_ts(int $ts, string $format = 'M j, Y g:ia'): string
     {
         if ($ts <= 0) {
             return '';
@@ -129,8 +129,8 @@ if (!function_exists('vms_staff_portal_format_ts')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_safe_html_allowed_html')) {
-    function vms_staff_portal_safe_html_allowed_html(): array
+if (!function_exists('bvmgr_staff_portal_safe_html_allowed_html')) {
+    function bvmgr_staff_portal_safe_html_allowed_html(): array
     {
         return array(
             'a' => array(
@@ -161,26 +161,26 @@ if (!function_exists('vms_staff_portal_safe_html_allowed_html')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_safe_html')) {
-    function vms_staff_portal_safe_html(string $html): string
+if (!function_exists('bvmgr_staff_portal_safe_html')) {
+    function bvmgr_staff_portal_safe_html(string $html): string
     {
-        return wp_kses($html, vms_staff_portal_safe_html_allowed_html());
+        return wp_kses($html, bvmgr_staff_portal_safe_html_allowed_html());
     }
 }
 
-if (!function_exists('vms_staff_portal_notice_html')) {
-    function vms_staff_portal_notice_html(string $type, string $message): string
+if (!function_exists('bvmgr_staff_portal_notice_html')) {
+    function bvmgr_staff_portal_notice_html(string $type, string $message): string
     {
         if (function_exists('bvmgr_portal_notice')) {
-            return vms_staff_portal_safe_html(bvmgr_portal_notice($type, $message));
+            return bvmgr_staff_portal_safe_html(bvmgr_portal_notice($type, $message));
         }
 
         return '<p>' . esc_html($message) . '</p>';
     }
 }
 
-if (!function_exists('vms_staff_portal_certification_status_badge')) {
-    function vms_staff_portal_certification_status_badge(string $status): string
+if (!function_exists('bvmgr_staff_portal_certification_status_badge')) {
+    function bvmgr_staff_portal_certification_status_badge(string $status): string
     {
         $status = sanitize_key($status);
         $label = function_exists('vms_staffing_staff_qualification_status_label')
@@ -198,8 +198,8 @@ if (!function_exists('vms_staff_portal_certification_status_badge')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_handle_certification_submission')) {
-    function vms_staff_portal_handle_certification_submission(int $staff_id): string
+if (!function_exists('bvmgr_staff_portal_handle_certification_submission')) {
+    function bvmgr_staff_portal_handle_certification_submission(int $staff_id): string
     {
         $staff_id = absint($staff_id);
         if ($staff_id <= 0 || !isset($_POST['vms_staff_certification_submit'])) {
@@ -209,16 +209,16 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_certification_nonce']))
             : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_certification_submit')) {
-            return vms_staff_portal_notice_html('error', __('Could not verify the certification upload. Please refresh and try again.', 'backstage-venue-manager'));
+            return bvmgr_staff_portal_notice_html('error', __('Could not verify the certification upload. Please refresh and try again.', 'backstage-venue-manager'));
         }
 
-        $name = vms_staffing_normalize_qualification_name(vms_staff_portal_post_text_field('vms_certification_name'));
+        $name = vms_staffing_normalize_qualification_name(bvmgr_staff_portal_post_text_field('vms_certification_name'));
         if ($name === '') {
-            return vms_staff_portal_notice_html('error', __('Please choose or enter the certification type before uploading.', 'backstage-venue-manager'));
+            return bvmgr_staff_portal_notice_html('error', __('Please choose or enter the certification type before uploading.', 'backstage-venue-manager'));
         }
 
         if (!bvmgr_upload_request_has_file($_FILES, 'vms_staff_certification_file')) {
-            return vms_staff_portal_notice_html('error', __('Please choose a certificate file to upload.', 'backstage-venue-manager'));
+            return bvmgr_staff_portal_notice_html('error', __('Please choose a certificate file to upload.', 'backstage-venue-manager'));
         }
 
         $file_id = function_exists('bvmgr_private_staff_cert_store_upload')
@@ -226,7 +226,7 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             : new WP_Error('staff_cert_upload_unavailable', __('The certificate upload handler is unavailable.', 'backstage-venue-manager'));
         if (is_wp_error($file_id)) {
             /* translators: %s: upload error message from WordPress media handling. */
-            return vms_staff_portal_notice_html('error', sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message()));
+            return bvmgr_staff_portal_notice_html('error', sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message()));
         }
 
         $authority = isset($_POST['vms_certification_authority']) ? sanitize_text_field((string) wp_unslash($_POST['vms_certification_authority'])) : '';
@@ -250,16 +250,16 @@ if (!function_exists('vms_staff_portal_handle_certification_submission')) {
             : array('ok' => false, 'message' => __('Certification upload saved, but the qualification workflow is unavailable.', 'backstage-venue-manager'));
 
         if (empty($result['ok'])) {
-            return vms_staff_portal_notice_html('error', (string) ($result['message'] ?? __('Could not save the certification submission.', 'backstage-venue-manager')));
+            return bvmgr_staff_portal_notice_html('error', (string) ($result['message'] ?? __('Could not save the certification submission.', 'backstage-venue-manager')));
         }
 
-        return vms_staff_portal_notice_html('success', __('Certificate uploaded. It is pending review, and you will receive an email when it is approved or if it needs correction.', 'backstage-venue-manager'));
+        return bvmgr_staff_portal_notice_html('success', __('Certificate uploaded. It is pending review, and you will receive an email when it is approved or if it needs correction.', 'backstage-venue-manager'));
     }
 }
 
 
-if (!function_exists('vms_staff_portal_render_certifications')) {
-    function vms_staff_portal_render_certifications(int $staff_id): void
+if (!function_exists('bvmgr_staff_portal_render_certifications')) {
+    function bvmgr_staff_portal_render_certifications(int $staff_id): void
     {
         $staff_id = absint($staff_id);
         if ($staff_id <= 0) {
@@ -267,7 +267,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             return;
         }
 
-        echo wp_kses(vms_staff_portal_safe_html(vms_staff_portal_handle_certification_submission($staff_id)), vms_staff_portal_safe_html_allowed_html());
+        echo wp_kses(bvmgr_staff_portal_safe_html(bvmgr_staff_portal_handle_certification_submission($staff_id)), bvmgr_staff_portal_safe_html_allowed_html());
 
         $rows = function_exists('vms_staffing_get_staff_qualifications')
             ? (array) vms_staffing_get_staff_qualifications($staff_id)
@@ -330,7 +330,7 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
 
             echo '<div class="vms-staff-certification-row">';
             echo '<div class="vms-staff-certification-main">';
-            echo '<strong>' . esc_html($name) . '</strong> ' . wp_kses(vms_staff_portal_safe_html(vms_staff_portal_certification_status_badge($status)), vms_staff_portal_safe_html_allowed_html());
+            echo '<strong>' . esc_html($name) . '</strong> ' . wp_kses(bvmgr_staff_portal_safe_html(bvmgr_staff_portal_certification_status_badge($status)), bvmgr_staff_portal_safe_html_allowed_html());
             echo '<p class="vms-muted">';
             $details = array();
             if ($authority !== '') {
@@ -351,11 +351,11 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
             }
             if ($submitted_at > 0) {
                 /* translators: %s: localized certification submission timestamp. */
-                $details[] = sprintf(__('Submitted %s', 'backstage-venue-manager'), vms_staff_portal_format_ts($submitted_at));
+                $details[] = sprintf(__('Submitted %s', 'backstage-venue-manager'), bvmgr_staff_portal_format_ts($submitted_at));
             }
             if ($reviewed_at > 0) {
                 /* translators: %s: localized certification review timestamp. */
-                $details[] = sprintf(__('Reviewed %s', 'backstage-venue-manager'), vms_staff_portal_format_ts($reviewed_at));
+                $details[] = sprintf(__('Reviewed %s', 'backstage-venue-manager'), bvmgr_staff_portal_format_ts($reviewed_at));
             }
             echo esc_html(!empty($details) ? implode(' · ', $details) : __('Details pending review.', 'backstage-venue-manager'));
             echo '</p>';
@@ -373,8 +373,8 @@ if (!function_exists('vms_staff_portal_render_certifications')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_assignment_status_label')) {
-    function vms_staff_portal_assignment_status_label(string $status): string
+if (!function_exists('bvmgr_staff_portal_assignment_status_label')) {
+    function bvmgr_staff_portal_assignment_status_label(string $status): string
     {
         $status = sanitize_key($status);
         if ($status === 'confirmed') return __('Confirmed', 'backstage-venue-manager');
@@ -383,8 +383,8 @@ if (!function_exists('vms_staff_portal_assignment_status_label')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_plan_event_icon')) {
-    function vms_staff_portal_plan_event_icon(int $plan_id): string
+if (!function_exists('bvmgr_staff_portal_plan_event_icon')) {
+    function bvmgr_staff_portal_plan_event_icon(int $plan_id): string
     {
         static $cache = array();
 
@@ -393,7 +393,7 @@ if (!function_exists('vms_staff_portal_plan_event_icon')) {
             return (string) $cache[$plan_id];
         }
 
-        $icon_map = function_exists('vms_calendar_vendor_type_icons') ? (array) vms_calendar_vendor_type_icons() : array();
+        $icon_map = function_exists('bvmgr_calendar_vendor_type_icons') ? (array) bvmgr_calendar_vendor_type_icons() : array();
         $fallback = trim((string) ($icon_map['talent'] ?? ''));
         $icon = $fallback;
 
@@ -406,8 +406,8 @@ if (!function_exists('vms_staff_portal_plan_event_icon')) {
                 if ($primary_slug !== '' && !empty($icon_map[$primary_slug])) {
                     $icon = trim((string) $icon_map[$primary_slug]);
                 }
-            } elseif (function_exists('vms_add_dispatch_get_event_plan_context')) {
-                $context = (array) vms_add_dispatch_get_event_plan_context($plan_id);
+            } elseif (function_exists('bvmgr_add_dispatch_get_event_plan_context')) {
+                $context = (array) bvmgr_add_dispatch_get_event_plan_context($plan_id);
                 $secondary_slug = sanitize_key((string) ($context['secondary_vendor_type'] ?? ''));
                 if ($secondary_slug !== '' && !empty($icon_map[$secondary_slug])) {
                     $icon = trim((string) $icon_map[$secondary_slug]);
@@ -420,8 +420,8 @@ if (!function_exists('vms_staff_portal_plan_event_icon')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_calendar_event_map')) {
-    function vms_staff_portal_calendar_event_map(array $assignment_rows): array
+if (!function_exists('bvmgr_staff_portal_calendar_event_map')) {
+    function bvmgr_staff_portal_calendar_event_map(array $assignment_rows): array
     {
         if (empty($assignment_rows) || !function_exists('bvmgr_get_calendar_events')) {
             return array();
@@ -460,8 +460,8 @@ if (!function_exists('vms_staff_portal_calendar_event_map')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_assignment_event_payload')) {
-    function vms_staff_portal_assignment_event_payload(array $assignment, array $event_map = array()): array
+if (!function_exists('bvmgr_staff_portal_assignment_event_payload')) {
+    function bvmgr_staff_portal_assignment_event_payload(array $assignment, array $event_map = array()): array
     {
         $plan_id = absint($assignment['event_plan_id'] ?? 0);
         $event = ($plan_id > 0 && isset($event_map[$plan_id]) && is_array($event_map[$plan_id])) ? $event_map[$plan_id] : array();
@@ -472,13 +472,13 @@ if (!function_exists('vms_staff_portal_assignment_event_payload')) {
         }
 
         $date_label = trim((string) ($assignment['date_label'] ?? ''));
-        if (!empty($event['date_key']) && function_exists('vms_vendor_portal_modal_date_label')) {
-            $date_label = vms_vendor_portal_modal_date_label((string) $event['date_key']);
+        if (!empty($event['date_key']) && function_exists('bvmgr_vendor_portal_modal_date_label')) {
+            $date_label = bvmgr_vendor_portal_modal_date_label((string) $event['date_key']);
         }
 
         $time_label = '';
-        if (function_exists('vms_vendor_portal_format_modal_time_label')) {
-            $time_label = vms_vendor_portal_format_modal_time_label((string) ($event['start_local'] ?? ''), (string) ($event['end_local'] ?? ''));
+        if (function_exists('bvmgr_vendor_portal_format_modal_time_label')) {
+            $time_label = bvmgr_vendor_portal_format_modal_time_label((string) ($event['start_local'] ?? ''), (string) ($event['end_local'] ?? ''));
         }
 
         $view_url = trim((string) ($event['public_url'] ?? ''));
@@ -534,7 +534,7 @@ if (!function_exists('vms_staff_portal_assignment_event_payload')) {
         }
 
         return array(
-            'icon' => vms_staff_portal_plan_event_icon($plan_id),
+            'icon' => bvmgr_staff_portal_plan_event_icon($plan_id),
             'title' => $title,
             'date_label' => $date_label,
             'time_label' => $time_label,
@@ -547,15 +547,15 @@ if (!function_exists('vms_staff_portal_assignment_event_payload')) {
 }
 
 
-if (!function_exists('vms_staff_portal_visible_event_statuses')) {
-    function vms_staff_portal_visible_event_statuses(): array
+if (!function_exists('bvmgr_staff_portal_visible_event_statuses')) {
+    function bvmgr_staff_portal_visible_event_statuses(): array
     {
         return array('ready', 'published', 'tentative', 'confirmed');
     }
 }
 
-if (!function_exists('vms_staff_portal_doc_visibility_role_ids')) {
-    function vms_staff_portal_doc_visibility_role_ids(): array
+if (!function_exists('bvmgr_staff_portal_doc_visibility_role_ids')) {
+    function bvmgr_staff_portal_doc_visibility_role_ids(): array
     {
         $settings = get_option('vms_settings', array());
         $settings = is_array($settings) ? $settings : array();
@@ -574,10 +574,10 @@ if (!function_exists('vms_staff_portal_doc_visibility_role_ids')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_assignment_can_view_docs')) {
-    function vms_staff_portal_assignment_can_view_docs(array $assignment): bool
+if (!function_exists('bvmgr_staff_portal_assignment_can_view_docs')) {
+    function bvmgr_staff_portal_assignment_can_view_docs(array $assignment): bool
     {
-        $allowed_role_ids = vms_staff_portal_doc_visibility_role_ids();
+        $allowed_role_ids = bvmgr_staff_portal_doc_visibility_role_ids();
         if (empty($allowed_role_ids)) {
             return true;
         }
@@ -587,8 +587,8 @@ if (!function_exists('vms_staff_portal_assignment_can_view_docs')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_get_event_ticket_qty')) {
-    function vms_staff_portal_get_event_ticket_qty(int $plan_id): ?int
+if (!function_exists('bvmgr_staff_portal_get_event_ticket_qty')) {
+    function bvmgr_staff_portal_get_event_ticket_qty(int $plan_id): ?int
     {
         static $cache = array();
 
@@ -602,8 +602,8 @@ if (!function_exists('vms_staff_portal_get_event_ticket_qty')) {
 
         $qty = null;
 
-        if (function_exists('vms_vendor_portal_get_ticket_sales_snapshot')) {
-            $snapshot = (array) vms_vendor_portal_get_ticket_sales_snapshot($plan_id);
+        if (function_exists('bvmgr_vendor_portal_get_ticket_sales_snapshot')) {
+            $snapshot = (array) bvmgr_vendor_portal_get_ticket_sales_snapshot($plan_id);
             if (array_key_exists('qty_sold', $snapshot) && is_numeric($snapshot['qty_sold'])) {
                 $qty = max(0, (int) $snapshot['qty_sold']);
             } elseif (array_key_exists('qty', $snapshot) && is_numeric($snapshot['qty'])) {
@@ -611,8 +611,8 @@ if (!function_exists('vms_staff_portal_get_event_ticket_qty')) {
             }
         }
 
-        if ($qty === null && function_exists('vms_calendar_get_ticket_sold_count')) {
-            $resolved = vms_calendar_get_ticket_sold_count($plan_id);
+        if ($qty === null && function_exists('bvmgr_calendar_get_ticket_sold_count')) {
+            $resolved = bvmgr_calendar_get_ticket_sold_count($plan_id);
             if ($resolved !== null && $resolved !== '') {
                 $qty = max(0, (int) $resolved);
             }
@@ -643,8 +643,8 @@ if (!function_exists('vms_staff_portal_get_event_ticket_qty')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
-    function vms_staff_portal_get_event_tech_docs(int $plan_id): array
+if (!function_exists('bvmgr_staff_portal_get_event_tech_docs')) {
+    function bvmgr_staff_portal_get_event_tech_docs(int $plan_id): array
     {
         static $cache = array();
 
@@ -689,11 +689,11 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
             );
 
             foreach ($pairs as $doc_key => $doc) {
-                if (!function_exists('vms_vendor_portal_tech_doc_payload') || !function_exists('vms_vendor_portal_tech_doc_download_url')) {
+                if (!function_exists('bvmgr_vendor_portal_tech_doc_payload') || !function_exists('bvmgr_vendor_portal_tech_doc_download_url')) {
                     continue;
                 }
 
-                $payload = vms_vendor_portal_tech_doc_payload($vendor_id, $doc_key);
+                $payload = bvmgr_vendor_portal_tech_doc_payload($vendor_id, $doc_key);
                 if (is_wp_error($payload)) {
                     continue;
                 }
@@ -703,7 +703,7 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
                     'vendor_name' => $vendor_name,
                     'doc_key' => $doc_key,
                     'label' => (string) ($doc['label'] ?? __('Document', 'backstage-venue-manager')),
-                    'url' => vms_vendor_portal_tech_doc_download_url($vendor_id, $doc_key, $plan_id),
+                    'url' => bvmgr_vendor_portal_tech_doc_download_url($vendor_id, $doc_key, $plan_id),
                 );
             }
         }
@@ -713,8 +713,8 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
-    function vms_staff_portal_get_event_crew_rows(int $plan_id): array
+if (!function_exists('bvmgr_staff_portal_get_event_crew_rows')) {
+    function bvmgr_staff_portal_get_event_crew_rows(int $plan_id): array
     {
         static $cache = array();
 
@@ -815,7 +815,7 @@ if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
                 'role_label' => $role_label,
                 'shift_label' => $shift_label,
                 'assignment_status' => $status_key,
-                'assignment_status_label' => vms_staff_portal_assignment_status_label($status_key),
+                'assignment_status_label' => bvmgr_staff_portal_assignment_status_label($status_key),
             );
         }
 
@@ -824,26 +824,26 @@ if (!function_exists('vms_staff_portal_get_event_crew_rows')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_build_shift_glance')) {
-    function vms_staff_portal_build_shift_glance(array $assignment, array $event_map = array()): array
+if (!function_exists('bvmgr_staff_portal_build_shift_glance')) {
+    function bvmgr_staff_portal_build_shift_glance(array $assignment, array $event_map = array()): array
     {
         $plan_id = absint($assignment['event_plan_id'] ?? 0);
-        $docs = vms_staff_portal_assignment_can_view_docs($assignment)
-            ? vms_staff_portal_get_event_tech_docs($plan_id)
+        $docs = bvmgr_staff_portal_assignment_can_view_docs($assignment)
+            ? bvmgr_staff_portal_get_event_tech_docs($plan_id)
             : array();
 
         return array(
-            'event' => vms_staff_portal_assignment_event_payload($assignment, $event_map),
-            'ticket_qty' => vms_staff_portal_get_event_ticket_qty($plan_id),
+            'event' => bvmgr_staff_portal_assignment_event_payload($assignment, $event_map),
+            'ticket_qty' => bvmgr_staff_portal_get_event_ticket_qty($plan_id),
             'docs' => $docs,
-            'crew' => vms_staff_portal_get_event_crew_rows($plan_id),
-            'can_view_docs' => vms_staff_portal_assignment_can_view_docs($assignment),
+            'crew' => bvmgr_staff_portal_get_event_crew_rows($plan_id),
+            'can_view_docs' => bvmgr_staff_portal_assignment_can_view_docs($assignment),
         );
     }
 }
 
-if (!function_exists('vms_staff_portal_consolidate_crew_rows')) {
-    function vms_staff_portal_consolidate_crew_rows(array $rows): array
+if (!function_exists('bvmgr_staff_portal_consolidate_crew_rows')) {
+    function bvmgr_staff_portal_consolidate_crew_rows(array $rows): array
     {
         if (empty($rows)) {
             return array();
@@ -912,8 +912,8 @@ if (!function_exists('vms_staff_portal_consolidate_crew_rows')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_group_assignments_by_event')) {
-    function vms_staff_portal_group_assignments_by_event(array $assignments): array
+if (!function_exists('bvmgr_staff_portal_group_assignments_by_event')) {
+    function bvmgr_staff_portal_group_assignments_by_event(array $assignments): array
     {
         if (empty($assignments)) {
             return array();
@@ -973,7 +973,7 @@ if (!function_exists('vms_staff_portal_group_assignments_by_event')) {
             $group['summary_lines'] = $lines;
             $group['can_view_docs'] = false;
             foreach ((array) ($group['assignments'] ?? array()) as $assignment) {
-                if (vms_staff_portal_assignment_can_view_docs((array) $assignment)) {
+                if (bvmgr_staff_portal_assignment_can_view_docs((array) $assignment)) {
                     $group['can_view_docs'] = true;
                     break;
                 }
@@ -999,14 +999,14 @@ if (!function_exists('vms_staff_portal_group_assignments_by_event')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
-    function vms_staff_portal_render_assigned_event_cards(int $staff_id, array $assignments, array $event_map = array()): void
+if (!function_exists('bvmgr_staff_portal_render_assigned_event_cards')) {
+    function bvmgr_staff_portal_render_assigned_event_cards(int $staff_id, array $assignments, array $event_map = array()): void
     {
         if (empty($assignments)) {
             return;
         }
 
-        $event_groups = vms_staff_portal_group_assignments_by_event($assignments);
+        $event_groups = bvmgr_staff_portal_group_assignments_by_event($assignments);
         if (empty($event_groups)) {
             return;
         }
@@ -1027,10 +1027,10 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
 
             $primary_assignment = (array) reset($assignments_for_event);
             $plan_id = absint($group['event_plan_id'] ?? ($primary_assignment['event_plan_id'] ?? 0));
-            $event = vms_staff_portal_assignment_event_payload($primary_assignment, $event_map);
-            $ticket_qty = vms_staff_portal_get_event_ticket_qty($plan_id);
-            $docs = !empty($group['can_view_docs']) ? vms_staff_portal_get_event_tech_docs($plan_id) : array();
-            $staff_rows = vms_staff_portal_consolidate_crew_rows(vms_staff_portal_get_event_crew_rows($plan_id));
+            $event = bvmgr_staff_portal_assignment_event_payload($primary_assignment, $event_map);
+            $ticket_qty = bvmgr_staff_portal_get_event_ticket_qty($plan_id);
+            $docs = !empty($group['can_view_docs']) ? bvmgr_staff_portal_get_event_tech_docs($plan_id) : array();
+            $staff_rows = bvmgr_staff_portal_consolidate_crew_rows(bvmgr_staff_portal_get_event_crew_rows($plan_id));
             $can_view_docs = !empty($group['can_view_docs']);
 
             $title = trim((string) ($group['event_title'] ?? ($event['title'] ?? '')));
@@ -1188,8 +1188,8 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_get_assignment_rows')) {
-    function vms_staff_portal_get_assignment_rows(int $staff_id, int $limit = 100): array
+if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
+    function bvmgr_staff_portal_get_assignment_rows(int $staff_id, int $limit = 100): array
     {
         global $wpdb;
 
@@ -1266,7 +1266,7 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
                 continue;
             }
             $plan_status = sanitize_key((string) ($plan['status'] ?? ''));
-            if (!in_array($plan_status, vms_staff_portal_visible_event_statuses(), true)) {
+            if (!in_array($plan_status, bvmgr_staff_portal_visible_event_statuses(), true)) {
                 continue;
             }
 
@@ -1309,7 +1309,7 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
             }
 
             $status_key = sanitize_key((string) ($row['assignment_status'] ?? ''));
-            $status_label = vms_staff_portal_assignment_status_label($status_key);
+            $status_label = bvmgr_staff_portal_assignment_status_label($status_key);
 
             $rows[] = array(
                 'assignment_id' => isset($row['assignment_id']) ? absint($row['assignment_id']) : 0,
@@ -1351,11 +1351,11 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_get_active_dates')) {
-    function vms_staff_portal_get_active_dates(): array
+if (!function_exists('bvmgr_staff_portal_get_active_dates')) {
+    function bvmgr_staff_portal_get_active_dates(): array
     {
-        if (function_exists('vms_vendor_get_active_dates_or_rolling_window')) {
-            return (array) vms_vendor_get_active_dates_or_rolling_window(12);
+        if (function_exists('bvmgr_vendor_get_active_dates_or_rolling_window')) {
+            return (array) bvmgr_vendor_get_active_dates_or_rolling_window(12);
         }
 
         $active_dates = get_option('vms_active_dates', array());
@@ -1370,8 +1370,8 @@ if (!function_exists('vms_staff_portal_get_active_dates')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_group_dates_by_month')) {
-    function vms_staff_portal_group_dates_by_month(array $dates): array
+if (!function_exists('bvmgr_staff_portal_group_dates_by_month')) {
+    function bvmgr_staff_portal_group_dates_by_month(array $dates): array
     {
         $grouped = array();
         foreach ($dates as $date) {
@@ -1391,11 +1391,11 @@ if (!function_exists('vms_staff_portal_group_dates_by_month')) {
 }
 
 
-if (!function_exists('vms_staff_portal_normalize_manual_availability')) {
-    function vms_staff_portal_normalize_manual_availability(int $staff_id): array
+if (!function_exists('bvmgr_staff_portal_normalize_manual_availability')) {
+    function bvmgr_staff_portal_normalize_manual_availability(int $staff_id): array
     {
-        if (function_exists('vms_vendor_normalize_manual_availability')) {
-            return (array) vms_vendor_normalize_manual_availability($staff_id);
+        if (function_exists('bvmgr_vendor_normalize_manual_availability')) {
+            return (array) bvmgr_vendor_normalize_manual_availability($staff_id);
         }
 
         $manual = get_post_meta($staff_id, '_vms_availability_manual', true);
@@ -1420,11 +1420,11 @@ if (!function_exists('vms_staff_portal_normalize_manual_availability')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_normalize_pattern_days')) {
-    function vms_staff_portal_normalize_pattern_days(int $staff_id): array
+if (!function_exists('bvmgr_staff_portal_normalize_pattern_days')) {
+    function bvmgr_staff_portal_normalize_pattern_days(int $staff_id): array
     {
-        if (function_exists('vms_vendor_normalize_pattern_days')) {
-            return (array) vms_vendor_normalize_pattern_days($staff_id);
+        if (function_exists('bvmgr_vendor_normalize_pattern_days')) {
+            return (array) bvmgr_vendor_normalize_pattern_days($staff_id);
         }
 
         $pattern_days = get_post_meta($staff_id, '_vms_pattern_days', true);
@@ -1441,11 +1441,11 @@ if (!function_exists('vms_staff_portal_normalize_pattern_days')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_normalize_ics_unavailable')) {
-    function vms_staff_portal_normalize_ics_unavailable(int $staff_id): array
+if (!function_exists('bvmgr_staff_portal_normalize_ics_unavailable')) {
+    function bvmgr_staff_portal_normalize_ics_unavailable(int $staff_id): array
     {
-        if (function_exists('vms_vendor_normalize_ics_unavailable')) {
-            return (array) vms_vendor_normalize_ics_unavailable($staff_id);
+        if (function_exists('bvmgr_vendor_normalize_ics_unavailable')) {
+            return (array) bvmgr_vendor_normalize_ics_unavailable($staff_id);
         }
 
         $ics_unavailable = get_post_meta($staff_id, '_vms_ics_unavailable', true);
@@ -1472,14 +1472,14 @@ if (!function_exists('vms_staff_portal_normalize_ics_unavailable')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_has_availability_setup')) {
-    function vms_staff_portal_has_availability_setup(int $staff_id): bool
+if (!function_exists('bvmgr_staff_portal_has_availability_setup')) {
+    function bvmgr_staff_portal_has_availability_setup(int $staff_id): bool
     {
-        $manual = vms_staff_portal_normalize_manual_availability($staff_id);
+        $manual = bvmgr_staff_portal_normalize_manual_availability($staff_id);
         $pattern_enabled = (int) get_post_meta($staff_id, '_vms_pattern_enabled', true);
-        $pattern_days = vms_staff_portal_normalize_pattern_days($staff_id);
+        $pattern_days = bvmgr_staff_portal_normalize_pattern_days($staff_id);
         $ics_url = trim((string) get_post_meta($staff_id, '_vms_ics_url', true));
-        $ics_unavailable = vms_staff_portal_normalize_ics_unavailable($staff_id);
+        $ics_unavailable = bvmgr_staff_portal_normalize_ics_unavailable($staff_id);
 
         return !empty($manual)
             || ($pattern_enabled && !empty($pattern_days))
@@ -1488,11 +1488,11 @@ if (!function_exists('vms_staff_portal_has_availability_setup')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_availability_source_label')) {
-    function vms_staff_portal_availability_source_label(string $reason): string
+if (!function_exists('bvmgr_staff_portal_availability_source_label')) {
+    function bvmgr_staff_portal_availability_source_label(string $reason): string
     {
-        if (function_exists('vms_vendor_availability_source_label')) {
-            return (string) vms_vendor_availability_source_label($reason);
+        if (function_exists('bvmgr_vendor_availability_source_label')) {
+            return (string) bvmgr_vendor_availability_source_label($reason);
         }
 
         $reason = sanitize_key($reason);
@@ -1507,8 +1507,8 @@ if (!function_exists('vms_staff_portal_availability_source_label')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_source_icon')) {
-    function vms_staff_portal_source_icon(string $reason): string
+if (!function_exists('bvmgr_staff_portal_source_icon')) {
+    function bvmgr_staff_portal_source_icon(string $reason): string
     {
         $reason = sanitize_key($reason);
         if ($reason === 'ics') {
@@ -1521,8 +1521,8 @@ if (!function_exists('vms_staff_portal_source_icon')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
-    function vms_staff_portal_effective_availability_for_date(int $staff_id, string $date): array
+if (!function_exists('bvmgr_staff_portal_effective_availability_for_date')) {
+    function bvmgr_staff_portal_effective_availability_for_date(int $staff_id, string $date): array
     {
         $staff_id = absint($staff_id);
         $date = sanitize_text_field((string) $date);
@@ -1532,12 +1532,12 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
                 'label' => __('Unset', 'backstage-venue-manager'),
                 'visual_state' => '',
                 'reason' => 'invalid',
-                'source' => vms_staff_portal_availability_source_label('no_response'),
+                'source' => bvmgr_staff_portal_availability_source_label('no_response'),
                 'manual_state' => '',
             );
         }
 
-        $manual = vms_staff_portal_normalize_manual_availability($staff_id);
+        $manual = bvmgr_staff_portal_normalize_manual_availability($staff_id);
         $manual_state = isset($manual[$date]) ? sanitize_key((string) $manual[$date]) : '';
         if ($manual_state === 'available') {
             return array(
@@ -1545,7 +1545,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
                 'label' => __('Available', 'backstage-venue-manager'),
                 'visual_state' => 'available',
                 'reason' => 'manual',
-                'source' => vms_staff_portal_availability_source_label('manual'),
+                'source' => bvmgr_staff_portal_availability_source_label('manual'),
                 'manual_state' => $manual_state,
             );
         }
@@ -1555,13 +1555,13 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
                 'label' => __('Unavailable', 'backstage-venue-manager'),
                 'visual_state' => 'unavailable',
                 'reason' => 'manual',
-                'source' => vms_staff_portal_availability_source_label('manual'),
+                'source' => bvmgr_staff_portal_availability_source_label('manual'),
                 'manual_state' => $manual_state,
             );
         }
 
         $pattern_enabled = (int) get_post_meta($staff_id, '_vms_pattern_enabled', true);
-        $pattern_days = vms_staff_portal_normalize_pattern_days($staff_id);
+        $pattern_days = bvmgr_staff_portal_normalize_pattern_days($staff_id);
         $pattern_matches = false;
         if ($pattern_enabled && !empty($pattern_days)) {
             $dow = function_exists('bvmgr_local_ymd_dow') ? (int) (bvmgr_local_ymd_dow($date) ?? -1) : (int) wp_date('w', strtotime($date), wp_timezone());
@@ -1571,21 +1571,21 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
                     'label' => __('Unavailable', 'backstage-venue-manager'),
                     'visual_state' => 'unavailable',
                     'reason' => 'pattern',
-                    'source' => vms_staff_portal_availability_source_label('pattern'),
+                    'source' => bvmgr_staff_portal_availability_source_label('pattern'),
                     'manual_state' => '',
                 );
             }
             $pattern_matches = true;
         }
 
-        $ics_lookup = array_fill_keys(vms_staff_portal_normalize_ics_unavailable($staff_id), true);
+        $ics_lookup = array_fill_keys(bvmgr_staff_portal_normalize_ics_unavailable($staff_id), true);
         if (isset($ics_lookup[$date])) {
             return array(
                 'state' => 'unavailable',
                 'label' => __('Unavailable', 'backstage-venue-manager'),
                 'visual_state' => 'unavailable',
                 'reason' => 'ics',
-                'source' => vms_staff_portal_availability_source_label('ics'),
+                'source' => bvmgr_staff_portal_availability_source_label('ics'),
                 'manual_state' => '',
             );
         }
@@ -1596,7 +1596,7 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
                 'label' => __('Available', 'backstage-venue-manager'),
                 'visual_state' => 'available',
                 'reason' => 'pattern',
-                'source' => vms_staff_portal_availability_source_label('pattern'),
+                'source' => bvmgr_staff_portal_availability_source_label('pattern'),
                 'manual_state' => '',
             );
         }
@@ -1606,14 +1606,14 @@ if (!function_exists('vms_staff_portal_effective_availability_for_date')) {
             'label' => __('Unset', 'backstage-venue-manager'),
             'visual_state' => '',
             'reason' => 'no_response',
-            'source' => vms_staff_portal_availability_source_label('no_response'),
+            'source' => bvmgr_staff_portal_availability_source_label('no_response'),
             'manual_state' => '',
         );
     }
 }
 
-if (!function_exists('vms_staff_portal_month_matrix')) {
-    function vms_staff_portal_month_matrix(string $ym): array
+if (!function_exists('bvmgr_staff_portal_month_matrix')) {
+    function bvmgr_staff_portal_month_matrix(string $ym): array
     {
         if (!preg_match('/^\d{4}-\d{2}$/', $ym)) {
             return array();
@@ -1648,17 +1648,17 @@ if (!function_exists('vms_staff_portal_month_matrix')) {
     }
 }
 
-if (!function_exists('vms_staff_portal_day_visual_state')) {
-    function vms_staff_portal_day_visual_state(string $date, array $manual, array $assignments_by_date, int $staff_id = 0): array
+if (!function_exists('bvmgr_staff_portal_day_visual_state')) {
+    function bvmgr_staff_portal_day_visual_state(string $date, array $manual, array $assignments_by_date, int $staff_id = 0): array
     {
         $base = ($staff_id > 0)
-            ? vms_staff_portal_effective_availability_for_date($staff_id, $date)
+            ? bvmgr_staff_portal_effective_availability_for_date($staff_id, $date)
             : array(
                 'state' => (isset($manual[$date]) ? sanitize_key((string) $manual[$date]) : 'no-response'),
                 'label' => __('Unset', 'backstage-venue-manager'),
                 'visual_state' => '',
                 'reason' => 'no_response',
-                'source' => vms_staff_portal_availability_source_label('no_response'),
+                'source' => bvmgr_staff_portal_availability_source_label('no_response'),
                 'manual_state' => isset($manual[$date]) ? sanitize_key((string) $manual[$date]) : '',
             );
 
@@ -1701,7 +1701,7 @@ if (!function_exists('vms_staff_portal_day_visual_state')) {
     }
 }
 
-function vms_staff_portal_shortcode()
+function bvmgr_staff_portal_shortcode()
 {
     if (function_exists('wp_enqueue_style')) {
         wp_enqueue_style('vms-portal');
@@ -1759,7 +1759,7 @@ function vms_staff_portal_shortcode()
     $tax_tab_label = ($worker_type === 'employee') ? __('Employee Packet', 'backstage-venue-manager') : __('Tax Profile', 'backstage-venue-manager');
     $url_tax_tab   = add_query_arg('tab', $tax_tab_slug, $base_url);
 
-    $tab = vms_staff_portal_query_key('tab');
+    $tab = bvmgr_staff_portal_query_key('tab');
     if ($tab === '') {
         $tab = 'dashboard';
     }
@@ -1789,15 +1789,15 @@ function vms_staff_portal_shortcode()
     echo '</nav>';
 
     if ($tab === 'dashboard') {
-        vms_staff_portal_render_dashboard($staff_id, $worker_type, $tax_tab_label, $url_tax_tab, $url_availability, $url_certifications);
+        bvmgr_staff_portal_render_dashboard($staff_id, $worker_type, $tax_tab_label, $url_tax_tab, $url_availability, $url_certifications);
     } elseif ($tab === 'tax-profile' && $worker_type !== 'employee') {
-        vms_staff_portal_render_tax_profile($staff_id);
+        bvmgr_staff_portal_render_tax_profile($staff_id);
     } elseif ($tab === 'employee-packet' && $worker_type === 'employee') {
-        vms_staff_portal_render_employee_packet($staff_id);
+        bvmgr_staff_portal_render_employee_packet($staff_id);
     } elseif ($tab === 'certifications') {
-        vms_staff_portal_render_certifications($staff_id);
+        bvmgr_staff_portal_render_certifications($staff_id);
     } elseif ($tab === 'availability') {
-        vms_staff_portal_render_availability_manual($staff_id);
+        bvmgr_staff_portal_render_availability_manual($staff_id);
     } else {
         echo '<p>' . esc_html__('Unknown tab.', 'backstage-venue-manager') . '</p>';
     }
@@ -1806,21 +1806,21 @@ function vms_staff_portal_shortcode()
     return ob_get_clean();
 }
 
-if (!function_exists('vms_staff_portal_render_dashboard')) {
-    function vms_staff_portal_render_dashboard(int $staff_id, string $worker_type, string $tax_tab_label, string $url_tax_tab, string $url_availability, string $url_certifications = ''): void
+if (!function_exists('bvmgr_staff_portal_render_dashboard')) {
+    function bvmgr_staff_portal_render_dashboard(int $staff_id, string $worker_type, string $tax_tab_label, string $url_tax_tab, string $url_availability, string $url_certifications = ''): void
     {
         $tz = wp_timezone();
-        $assignments = vms_staff_portal_get_assignment_rows($staff_id, 12);
-        $event_map = vms_staff_portal_calendar_event_map($assignments);
+        $assignments = bvmgr_staff_portal_get_assignment_rows($staff_id, 12);
+        $event_map = bvmgr_staff_portal_calendar_event_map($assignments);
         $next_shift = !empty($assignments) ? $assignments[0] : null;
-        $next_shift_glance = !empty($next_shift) ? vms_staff_portal_build_shift_glance($next_shift, $event_map) : array();
+        $next_shift_glance = !empty($next_shift) ? bvmgr_staff_portal_build_shift_glance($next_shift, $event_map) : array();
 
         if ($worker_type === 'employee') {
-            $missing = vms_staff_portal_employee_packet_missing_items($staff_id);
+            $missing = bvmgr_staff_portal_employee_packet_missing_items($staff_id);
             $tax_stage = empty($missing) ? 'complete' : 'incomplete';
             $tax_provider_label = __('Employee packet workflow', 'backstage-venue-manager');
         } else {
-            $tax_status = vms_staff_portal_tax_status($staff_id);
+            $tax_status = bvmgr_staff_portal_tax_status($staff_id);
             $missing = isset($tax_status['missing']) ? (array) $tax_status['missing'] : array();
             $tax_stage = isset($tax_status['stage']) ? (string) $tax_status['stage'] : 'incomplete';
             $tax_provider_label = isset($tax_status['provider_label']) ? (string) $tax_status['provider_label'] : __('Upload', 'backstage-venue-manager');
@@ -1867,7 +1867,7 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
 
             echo '<div class="vms-dash-kpis vms-mt-10">';
             echo '<div class="vms-dash-kpi"><b>' . esc_html__('Tickets sold', 'backstage-venue-manager') . '</b><span>' . esc_html($next_ticket_qty === null ? '—' : (string) (int) $next_ticket_qty) . '</span></div>';
-            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Staff assigned', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count(vms_staff_portal_consolidate_crew_rows($next_crew))) . '</span></div>';
+            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Staff assigned', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count(bvmgr_staff_portal_consolidate_crew_rows($next_crew))) . '</span></div>';
             if (!empty($next_shift_glance['can_view_docs'])) {
                 echo '<div class="vms-dash-kpi"><b>' . esc_html__('Tech docs', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count($next_docs)) . '</span></div>';
             }
@@ -1905,14 +1905,14 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
         echo '<div>';
         echo '<div class="vms-portal-card">';
         echo '<h3>' . esc_html($tax_tab_label) . '</h3>';
-        echo '<p class="vms-tax-profile-status">' . wp_kses(vms_staff_portal_safe_html(vms_staff_portal_badge_html($tax_stage)), vms_staff_portal_safe_html_allowed_html()) . '</p>';
+        echo '<p class="vms-tax-profile-status">' . wp_kses(bvmgr_staff_portal_safe_html(bvmgr_staff_portal_badge_html($tax_stage)), bvmgr_staff_portal_safe_html_allowed_html()) . '</p>';
         echo '<div class="vms-dash-kpis">';
         echo '<div class="vms-dash-kpi"><b>' . esc_html__('Workflow', 'backstage-venue-manager') . '</b><span>' . esc_html($tax_provider_label) . '</span></div>';
         if ($worker_type !== 'employee' && !empty($tax_status['attested_at']) && empty($tax_status['is_complete'])) {
-            echo '<div class="vms-dash-kpi"><b>' . esc_html__('You submitted', 'backstage-venue-manager') . '</b><span>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['attested_at'], 'M j, Y')) . '</span></div>';
+            echo '<div class="vms-dash-kpi"><b>' . esc_html__('You submitted', 'backstage-venue-manager') . '</b><span>' . esc_html(bvmgr_staff_portal_format_ts((int) $tax_status['attested_at'], 'M j, Y')) . '</span></div>';
         }
         if ($worker_type !== 'employee' && !empty($tax_status['done_at'])) {
-            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Confirmed', 'backstage-venue-manager') . '</b><span>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['done_at'], 'M j, Y')) . '</span></div>';
+            echo '<div class="vms-dash-kpi"><b>' . esc_html__('Confirmed', 'backstage-venue-manager') . '</b><span>' . esc_html(bvmgr_staff_portal_format_ts((int) $tax_status['done_at'], 'M j, Y')) . '</span></div>';
         }
         echo '</div>';
         if (!empty($missing)) {
@@ -1933,7 +1933,7 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
         echo '</div>';
         echo '</div>';
 
-        vms_staff_portal_render_assigned_event_cards($staff_id, array_slice($assignments, 0, 6), $event_map);
+        bvmgr_staff_portal_render_assigned_event_cards($staff_id, array_slice($assignments, 0, 6), $event_map);
 
         echo '</div>';
     }
@@ -1942,7 +1942,7 @@ if (!function_exists('vms_staff_portal_render_dashboard')) {
 /**
  * Employee packet helpers (front-end safe)
  */
-function vms_staff_portal_is_exact_post_request(): bool
+function bvmgr_staff_portal_is_exact_post_request(): bool
 {
     $request_method = $_SERVER['REQUEST_METHOD'] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- The local exact-post helper intentionally preserves raw method casing while unslashing before comparison.
     if (!is_scalar($request_method)) {
@@ -1957,27 +1957,27 @@ function vms_staff_portal_is_exact_post_request(): bool
     return 'POST' === $request_method;
 }
 
-function vms_staff_portal_query_key(string $key): string
+function bvmgr_staff_portal_query_key(string $key): string
 {
     return bvmgr_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Staff portal tab state is read-only navigation context.
 }
 
-function vms_staff_portal_post_text_field(string $key): string
+function bvmgr_staff_portal_post_text_field(string $key): string
 {
     return bvmgr_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Staff portal form fields are only read after the matching nonce has been verified.
 }
 
-function vms_staff_portal_post_scalar(string $key): string
+function bvmgr_staff_portal_post_scalar(string $key): string
 {
     return bvmgr_request_read_scalar($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Staff portal form fields are only read after the matching nonce has been verified.
 }
 
-function vms_staff_portal_post_bool_flag(string $key): bool
+function bvmgr_staff_portal_post_bool_flag(string $key): bool
 {
     return bvmgr_request_read_bool_flag($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Staff portal checkbox fields are only read after the matching nonce has been verified.
 }
 
-function vms_staff_portal_post_array(string $key): array
+function bvmgr_staff_portal_post_array(string $key): array
 {
     // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
     $value = isset($_POST[$key]) && is_array($_POST[$key]) ? wp_unslash($_POST[$key]) : array();
@@ -1985,7 +1985,7 @@ function vms_staff_portal_post_array(string $key): array
     return is_array($value) ? $value : array();
 }
 
-function vms_staff_portal_employee_packet_missing_items(int $staff_id): array
+function bvmgr_staff_portal_employee_packet_missing_items(int $staff_id): array
 {
     $staff_id = (int) $staff_id;
     $missing = array();
@@ -2004,19 +2004,19 @@ function vms_staff_portal_employee_packet_missing_items(int $staff_id): array
  * This does NOT collect SSN or identity documents.
  * It lets staff acknowledge they have submitted paperwork to the venue.
  */
-function vms_staff_portal_render_employee_packet(int $staff_id): void
+function bvmgr_staff_portal_render_employee_packet(int $staff_id): void
 {
     $staff_id = (int) $staff_id;
 
-    $missing = vms_staff_portal_employee_packet_missing_items($staff_id);
+    $missing = bvmgr_staff_portal_employee_packet_missing_items($staff_id);
     $is_complete = empty($missing);
 
-    if (vms_staff_portal_is_exact_post_request() && isset($_POST['vms_employee_packet_ack'])) {
+    if (bvmgr_staff_portal_is_exact_post_request() && isset($_POST['vms_employee_packet_ack'])) {
         $nonce = (isset($_POST['vms_employee_packet_nonce']) && !is_array($_POST['vms_employee_packet_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['vms_employee_packet_nonce']))
             : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_employee_packet_ack')) {
-            echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+            echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
         } else {
             $now = time();
             $ack_w4 = isset($_POST['vms_ack_w4']) ? 1 : 0;
@@ -2029,7 +2029,7 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
 
             update_post_meta($staff_id, '_vms_employee_packet_attested_at', $now);
 
-            echo wp_kses(vms_staff_portal_notice_html('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+            echo wp_kses(bvmgr_staff_portal_notice_html('success', __('Thanks! Your submission was recorded. The admin will verify your packet.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
         }
     }
 
@@ -2075,26 +2075,26 @@ function vms_staff_portal_render_employee_packet(int $staff_id): void
  * - Collect payee, address, entity
  * - W-9 step depends on the configured source of truth
  */
-function vms_staff_portal_render_tax_profile($staff_id)
+function bvmgr_staff_portal_render_tax_profile($staff_id)
 {
     $staff_id = (int) $staff_id;
-    $provider = vms_staff_portal_tax_provider();
-    $provider_label = vms_staff_portal_provider_label($provider);
+    $provider = bvmgr_staff_portal_tax_provider();
+    $provider_label = bvmgr_staff_portal_provider_label($provider);
 
     $k_done = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'tax_profile_completed_at') : '_vms_tax_profile_completed_at';
     $k_attest = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_attested_at') : '_vms_w9_external_vendor_attested_at';
     $k_prov = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_provider') : '_vms_w9_offsite_provider';
     $k_upload_kind = function_exists('bvmgr_private_w9_storage_kind_meta_key') ? bvmgr_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
 
-    if (vms_staff_portal_is_exact_post_request() && isset($_POST['vms_staff_tax_save'])) {
+    if (bvmgr_staff_portal_is_exact_post_request() && isset($_POST['vms_staff_tax_save'])) {
         $nonce = (isset($_POST['vms_staff_tax_nonce']) && !is_array($_POST['vms_staff_tax_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_tax_nonce']))
             : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_tax_save')) {
-            echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+            echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
         } else {
             $t = static function ($key) {
-                return vms_staff_portal_post_text_field((string) $key);
+                return bvmgr_staff_portal_post_text_field((string) $key);
             };
 
             $payee_legal = $t('vms_payee_legal_name');
@@ -2127,7 +2127,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
                         ? bvmgr_private_w9_store_upload($staff_id, $_FILES)
                         : new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
                     if (is_wp_error($file_id)) {
-                        echo wp_kses(vms_staff_portal_notice_html('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message()), vms_staff_portal_safe_html_allowed_html());
+                        echo wp_kses(bvmgr_staff_portal_notice_html('error', __('W-9 upload failed: ', 'backstage-venue-manager') . $file_id->get_error_message()), bvmgr_staff_portal_safe_html_allowed_html());
                     } else {
                         update_post_meta($staff_id, '_vms_w9_upload_id', (int) $file_id);
                         update_post_meta($staff_id, $k_upload_kind, 'private_file');
@@ -2138,7 +2138,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
                     }
                 }
             } else {
-                $attest = vms_staff_portal_post_bool_flag('vms_w9_offsite_attest') ? '1' : '';
+                $attest = bvmgr_staff_portal_post_bool_flag('vms_w9_offsite_attest') ? '1' : '';
                 if ($attest === '1') {
                     if (!(int) get_post_meta($staff_id, $k_attest, true)) {
                         update_post_meta($staff_id, $k_attest, time());
@@ -2161,7 +2161,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
                 }
             }
 
-            echo wp_kses(vms_staff_portal_notice_html('success', __('Tax Profile saved.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+            echo wp_kses(bvmgr_staff_portal_notice_html('success', __('Tax Profile saved.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
         }
     }
 
@@ -2183,7 +2183,7 @@ function vms_staff_portal_render_tax_profile($staff_id)
     $w9_url = $w9_upload_id && function_exists('bvmgr_private_w9_download_url') ? bvmgr_private_w9_download_url($staff_id) : '';
     $w9_label = $w9_upload_id && function_exists('bvmgr_private_w9_file_label') ? bvmgr_private_w9_file_label($staff_id) : '';
 
-    $tax_status = vms_staff_portal_tax_status($staff_id);
+    $tax_status = bvmgr_staff_portal_tax_status($staff_id);
     $missing = isset($tax_status['missing']) ? (array) $tax_status['missing'] : array();
     $is_complete = !empty($tax_status['is_complete']);
     $attested_checked = !empty($tax_status['attested_at']);
@@ -2202,15 +2202,15 @@ function vms_staff_portal_render_tax_profile($staff_id)
 
     echo '<div class="vms-portal-card">';
     echo '<h3 class="vms-mt-0">' . esc_html__('Tax Profile', 'backstage-venue-manager') . '</h3>';
-    echo '<p class="vms-tax-profile-status">' . wp_kses(vms_staff_portal_safe_html(vms_staff_portal_badge_html((string) ($tax_status['stage'] ?? 'incomplete'))), vms_staff_portal_safe_html_allowed_html()) . '</p>';
+    echo '<p class="vms-tax-profile-status">' . wp_kses(bvmgr_staff_portal_safe_html(bvmgr_staff_portal_badge_html((string) ($tax_status['stage'] ?? 'incomplete'))), bvmgr_staff_portal_safe_html_allowed_html()) . '</p>';
     echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'backstage-venue-manager') . '</strong> ' . esc_html($provider_label) . '</div>';
     if ($provider !== 'upload') {
         echo '<p class="vms-muted vms-mt-10">' . esc_html__('Complete your W-9/tax step through the secure off-site workflow, then return here to confirm you completed it. The venue will review and mark it complete after verification.', 'backstage-venue-manager') . '</p>';
         if (!empty($tax_status['attested_at']) && empty($tax_status['is_complete'])) {
-            echo '<p class="vms-muted">' . esc_html__('You confirmed completion on', 'backstage-venue-manager') . ' <strong>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['attested_at'])) . '</strong>.</p>';
+            echo '<p class="vms-muted">' . esc_html__('You confirmed completion on', 'backstage-venue-manager') . ' <strong>' . esc_html(bvmgr_staff_portal_format_ts((int) $tax_status['attested_at'])) . '</strong>.</p>';
         }
         if (!empty($tax_status['done_at'])) {
-            echo '<p class="vms-muted">' . esc_html__('Admin confirmed on', 'backstage-venue-manager') . ' <strong>' . esc_html(vms_staff_portal_format_ts((int) $tax_status['done_at'])) . '</strong>.</p>';
+            echo '<p class="vms-muted">' . esc_html__('Admin confirmed on', 'backstage-venue-manager') . ' <strong>' . esc_html(bvmgr_staff_portal_format_ts((int) $tax_status['done_at'])) . '</strong>.</p>';
         }
     }
     echo '</div>';
@@ -2287,8 +2287,8 @@ function vms_staff_portal_render_tax_profile($staff_id)
     echo '</div>';
 
     echo '<h3 class="vms-staff-tax-subhead">' . esc_html__('W-9', 'backstage-venue-manager') . ' (' . esc_html($provider_label) . ')</h3>';
-    if (function_exists('vms_tax_provider_instructions')) {
-        echo '<div class="vms-note vms-vtp-provider-note">' . esc_html(vms_tax_provider_instructions($provider)) . '</div>';
+    if (function_exists('bvmgr_tax_provider_instructions')) {
+        echo '<div class="vms-note vms-vtp-provider-note">' . esc_html(bvmgr_tax_provider_instructions($provider)) . '</div>';
     }
 
     if ($provider === 'upload') {
@@ -2325,11 +2325,11 @@ function vms_staff_portal_render_tax_profile($staff_id)
  * Availability (vendor-style calendar UI).
  * Saves into: _vms_availability_manual (array date => available|unavailable)
  */
-function vms_staff_portal_render_availability_manual($staff_id)
+function bvmgr_staff_portal_render_availability_manual($staff_id)
 {
     $staff_id = (int) $staff_id;
-    $active_dates = vms_staff_portal_get_active_dates();
-    $manual = vms_staff_portal_normalize_manual_availability($staff_id);
+    $active_dates = bvmgr_staff_portal_get_active_dates();
+    $manual = bvmgr_staff_portal_normalize_manual_availability($staff_id);
     $active_lookup = array_fill_keys($active_dates, true);
 
     $ics_url = trim((string) get_post_meta($staff_id, '_vms_ics_url', true));
@@ -2341,12 +2341,12 @@ function vms_staff_portal_render_availability_manual($staff_id)
     }
 
     $pattern_enabled = (int) get_post_meta($staff_id, '_vms_pattern_enabled', true);
-    $pattern_days = vms_staff_portal_normalize_pattern_days($staff_id);
+    $pattern_days = bvmgr_staff_portal_normalize_pattern_days($staff_id);
     if (empty($pattern_days)) {
         $pattern_enabled = 0;
     }
 
-    $ics_unavailable = vms_staff_portal_normalize_ics_unavailable($staff_id);
+    $ics_unavailable = bvmgr_staff_portal_normalize_ics_unavailable($staff_id);
     $ics_meta = __('Not connected', 'backstage-venue-manager');
     if ($ics_url !== '') {
         $ics_meta = __('Connected', 'backstage-venue-manager');
@@ -2370,15 +2370,15 @@ function vms_staff_portal_render_availability_manual($staff_id)
         $pattern_meta = __('Enabled', 'backstage-venue-manager') . ' | ' . implode(', ', $picked);
     }
 
-    if (vms_staff_portal_is_exact_post_request()) {
+    if (bvmgr_staff_portal_is_exact_post_request()) {
         if (isset($_POST['vms_save_staff_ics_settings'])) {
             $nonce = (isset($_POST['vms_staff_ics_nonce']) && !is_array($_POST['vms_staff_ics_nonce']))
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_ics_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_ics_settings')) {
-                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
-                $new_url = esc_url_raw(vms_staff_portal_post_scalar('vms_staff_ics_url'));
+                $new_url = esc_url_raw(bvmgr_staff_portal_post_scalar('vms_staff_ics_url'));
                 $new_autosync = !empty($_POST['vms_staff_ics_autosync']) ? 1 : 0;
                 update_post_meta($staff_id, '_vms_ics_url', $new_url);
                 update_post_meta($staff_id, '_vms_ics_autosync', (int) $new_autosync);
@@ -2390,7 +2390,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 if ($ics_url !== '' && $ics_autosync) {
                     $ics_meta .= ' | ' . __('Auto-sync on', 'backstage-venue-manager');
                 }
-                echo wp_kses(vms_staff_portal_notice_html('success', __('Calendar settings saved.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                echo wp_kses(bvmgr_staff_portal_notice_html('success', __('Calendar settings saved.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             }
         }
 
@@ -2399,20 +2399,20 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_ics_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_ics_settings')) {
-                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
                 update_post_meta($staff_id, '_vms_availability_preferred_method', 'ics');
                 $preferred = 'ics';
                 if ($ics_url === '') {
-                    echo wp_kses(vms_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                    echo wp_kses(bvmgr_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
                 } elseif (!function_exists('bvmgr_vendor_ics_sync_now')) {
-                    echo wp_kses(vms_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                    echo wp_kses(bvmgr_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
                 } else {
                     $result = (array) bvmgr_vendor_ics_sync_now($staff_id, $active_dates);
                     if (!empty($result['ok'])) {
                         $ics_last = time();
                         update_post_meta($staff_id, '_vms_ics_last_sync', $ics_last);
-                        $ics_unavailable = vms_staff_portal_normalize_ics_unavailable($staff_id);
+                        $ics_unavailable = bvmgr_staff_portal_normalize_ics_unavailable($staff_id);
                         $ics_meta = __('Connected', 'backstage-venue-manager');
                         if ($ics_autosync) {
                             $ics_meta .= ' | ' . __('Auto-sync on', 'backstage-venue-manager');
@@ -2420,10 +2420,10 @@ function vms_staff_portal_render_availability_manual($staff_id)
                         $ics_meta .= ' | ' . wp_date('M j', $ics_last, wp_timezone());
                         $count = count($ics_unavailable);
                         /* translators: %d: number of unavailable dates imported from the ICS feed. */
-                        echo wp_kses(vms_staff_portal_notice_html('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count)), vms_staff_portal_safe_html_allowed_html());
+                        echo wp_kses(bvmgr_staff_portal_notice_html('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count)), bvmgr_staff_portal_safe_html_allowed_html());
                     } else {
                         $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'backstage-venue-manager');
-                        echo wp_kses(vms_staff_portal_notice_html('error', $msg), vms_staff_portal_safe_html_allowed_html());
+                        echo wp_kses(bvmgr_staff_portal_notice_html('error', $msg), bvmgr_staff_portal_safe_html_allowed_html());
                     }
                 }
             }
@@ -2434,17 +2434,17 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_pattern_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_pattern_settings')) {
-                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
                 $days = array();
-                foreach (vms_staff_portal_post_array('vms_staff_pattern_days') as $d) {
+                foreach (bvmgr_staff_portal_post_array('vms_staff_pattern_days') as $d) {
                     $d = (int) $d;
                     if ($d >= 0 && $d <= 6) {
                         $days[] = $d;
                     }
                 }
                 $days = array_values(array_unique($days));
-                $enabled = vms_staff_portal_post_bool_flag('vms_staff_pattern_enabled') ? 1 : 0;
+                $enabled = bvmgr_staff_portal_post_bool_flag('vms_staff_pattern_enabled') ? 1 : 0;
                 if (!empty($days)) {
                     $enabled = 1;
                 }
@@ -2455,7 +2455,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 update_post_meta($staff_id, '_vms_pattern_days', $days);
                 update_post_meta($staff_id, '_vms_availability_preferred_method', 'pattern');
                 $pattern_enabled = $enabled;
-                $pattern_days = vms_staff_portal_normalize_pattern_days($staff_id);
+                $pattern_days = bvmgr_staff_portal_normalize_pattern_days($staff_id);
                 $preferred = 'pattern';
                 $pattern_meta = __('Off', 'backstage-venue-manager');
                 if ($pattern_enabled && !empty($pattern_days)) {
@@ -2468,7 +2468,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                     }
                     $pattern_meta = __('Enabled', 'backstage-venue-manager') . ' | ' . implode(', ', $picked);
                 }
-                echo wp_kses(vms_staff_portal_notice_html('success', __('Pattern availability saved.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                echo wp_kses(bvmgr_staff_portal_notice_html('success', __('Pattern availability saved.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             }
         }
 
@@ -2481,9 +2481,9 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_avail_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_save_availability')) {
-                echo wp_kses(vms_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+                echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
-                $incoming = vms_staff_portal_post_array('vms_availability');
+                $incoming = bvmgr_staff_portal_post_array('vms_availability');
                 $clean = array();
                 foreach ($incoming as $date => $state) {
                     $date  = sanitize_text_field((string) $date);
@@ -2498,11 +2498,11 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 update_post_meta($staff_id, '_vms_availability_manual', $clean);
                 update_post_meta($staff_id, '_vms_availability_preferred_method', 'manual');
                 clean_post_cache($staff_id);
-                $manual = vms_staff_portal_normalize_manual_availability($staff_id);
+                $manual = bvmgr_staff_portal_normalize_manual_availability($staff_id);
                 $preferred = 'manual';
 
                 /* translators: %d: number of manual availability dates saved. */
-                echo wp_kses(vms_staff_portal_notice_html('success', sprintf(__('Availability saved. %d manual date(s) active.', 'backstage-venue-manager'), count($manual))), vms_staff_portal_safe_html_allowed_html());
+                echo wp_kses(bvmgr_staff_portal_notice_html('success', sprintf(__('Availability saved. %d manual date(s) active.', 'backstage-venue-manager'), count($manual))), bvmgr_staff_portal_safe_html_allowed_html());
             }
         }
     }
@@ -2512,7 +2512,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
         return;
     }
 
-    $assignments = vms_staff_portal_get_assignment_rows($staff_id, 250);
+    $assignments = bvmgr_staff_portal_get_assignment_rows($staff_id, 250);
     $assignments_by_date = array();
     foreach ($assignments as $assignment) {
         $date = (string) ($assignment['event_date'] ?? '');
@@ -2524,9 +2524,9 @@ function vms_staff_portal_render_availability_manual($staff_id)
         }
         $assignments_by_date[$date][] = $assignment;
     }
-    $assignment_event_map = vms_staff_portal_calendar_event_map($assignments);
+    $assignment_event_map = bvmgr_staff_portal_calendar_event_map($assignments);
 
-    $grouped = vms_staff_portal_group_dates_by_month($active_dates);
+    $grouped = bvmgr_staff_portal_group_dates_by_month($active_dates);
     $today = wp_date('Y-m-d', time(), wp_timezone());
     $default_open_ym = '';
     foreach (array_keys($grouped) as $ym) {
@@ -2626,8 +2626,8 @@ function vms_staff_portal_render_availability_manual($staff_id)
     echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-working"></span>' . esc_html__('Working', 'backstage-venue-manager') . '</span>';
     echo '<span class="vms-av-leg-item"><span class="vms-av-leg-dot is-conflict"></span>' . esc_html__('Conflict', 'backstage-venue-manager') . '</span>';
     echo '</div>';
-    if (!vms_staff_portal_has_availability_setup($staff_id)) {
-        echo wp_kses(vms_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
+    if (!bvmgr_staff_portal_has_availability_setup($staff_id)) {
+        echo wp_kses(bvmgr_staff_portal_notice_html('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
     }
     $staff_avail_ajax_nonce = wp_create_nonce('vms_staff_avail_ajax');
     echo '<form method="post" class="vms-staff-av-form" data-vms-staff-availability="1" data-vms-staff-availability-ajax-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-vms-staff-availability-nonce="' . esc_attr($staff_avail_ajax_nonce) . '">';
@@ -2638,13 +2638,13 @@ function vms_staff_portal_render_availability_manual($staff_id)
         $month_tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
         $month_dt = DateTimeImmutable::createFromFormat('!Y-m', $ym, $month_tz);
         $month_label = ($month_dt instanceof DateTimeImmutable) ? wp_date('F Y', $month_dt->getTimestamp(), $month_tz) : $ym;
-        $matrix = vms_staff_portal_month_matrix($ym);
+        $matrix = bvmgr_staff_portal_month_matrix($ym);
         $cnt_working = 0;
         $cnt_available = 0;
         $cnt_unavailable = 0;
         $cnt_active = count($dates_in_month);
         foreach ($dates_in_month as $date) {
-            $state = vms_staff_portal_day_visual_state($date, $manual, $assignments_by_date, $staff_id);
+            $state = bvmgr_staff_portal_day_visual_state($date, $manual, $assignments_by_date, $staff_id);
             if (($state['status_key'] ?? '') === 'working') {
                 $cnt_working++;
             }
@@ -2684,15 +2684,15 @@ function vms_staff_portal_render_availability_manual($staff_id)
 
                 $is_active = isset($active_lookup[$date]);
                 $is_past = ($date < $today);
-                $state = vms_staff_portal_day_visual_state($date, $manual, $assignments_by_date, $staff_id);
+                $state = bvmgr_staff_portal_day_visual_state($date, $manual, $assignments_by_date, $staff_id);
                 $status_key = sanitize_key((string) ($state['status_key'] ?? 'unset'));
                 $status_label = (string) ($state['status_label'] ?? __('Unset', 'backstage-venue-manager'));
                 $visual_state = sanitize_key((string) ($state['visual_state'] ?? ''));
                 $manual_state = sanitize_key((string) ($state['manual_state'] ?? ''));
                 $base_src = sanitize_key((string) ($state['base_src'] ?? ''));
                 $assignments_for_day = isset($state['assignments']) && is_array($state['assignments']) ? $state['assignments'] : array();
-                $status_title = trim($status_label . (($base_src === 'pattern' || $base_src === 'ics') ? ' · ' . vms_staff_portal_availability_source_label($base_src) : ''));
-                $source_icon = ($manual_state === '' && empty($assignments_for_day)) ? vms_staff_portal_source_icon($base_src) : '';
+                $status_title = trim($status_label . (($base_src === 'pattern' || $base_src === 'ics') ? ' · ' . bvmgr_staff_portal_availability_source_label($base_src) : ''));
+                $source_icon = ($manual_state === '' && empty($assignments_for_day)) ? bvmgr_staff_portal_source_icon($base_src) : '';
 
                 $td_classes = array();
                 if (!$is_active) {
@@ -2712,8 +2712,8 @@ function vms_staff_portal_render_availability_manual($staff_id)
                     $assignment_markup .= '<div class="vms-av-event-title vms-av-event-title--staff vms-public-cal">';
                     foreach (array_slice($assignments_for_day, 0, 1) as $assignment) {
                         $assignment_status = sanitize_key((string) ($assignment['assignment_status'] ?? 'confirmed'));
-                        $status_copy = (string) ($assignment['assignment_status_label'] ?? vms_staff_portal_assignment_status_label($assignment_status));
-                        $event_payload = vms_staff_portal_assignment_event_payload($assignment, $assignment_event_map);
+                        $status_copy = (string) ($assignment['assignment_status_label'] ?? bvmgr_staff_portal_assignment_status_label($assignment_status));
+                        $event_payload = bvmgr_staff_portal_assignment_event_payload($assignment, $assignment_event_map);
                         $event_title = (string) ($event_payload['title'] ?? ($assignment['event_title'] ?? __('Event Plan', 'backstage-venue-manager')));
                         $event_icon = trim((string) ($event_payload['icon'] ?? ''));
                         $event_view_url = trim((string) ($event_payload['view_url'] ?? ''));
@@ -2824,7 +2824,7 @@ function vms_staff_portal_render_availability_manual($staff_id)
                         echo '<span class="vms-av-chip">' . esc_html($status_label) . '</span>';
                     }
                     if ($assignment_markup !== '') {
-                        echo wp_kses(vms_staff_portal_safe_html($assignment_markup), vms_staff_portal_safe_html_allowed_html());
+                        echo wp_kses(bvmgr_staff_portal_safe_html($assignment_markup), bvmgr_staff_portal_safe_html_allowed_html());
                     }
                     echo '</div>';
                 }
@@ -2849,9 +2849,9 @@ function vms_staff_portal_render_availability_manual($staff_id)
 }
 
 
-add_action('wp_ajax_vms_staff_save_manual_availability_day', 'vms_staff_save_manual_availability_day_ajax');
+add_action('wp_ajax_vms_staff_save_manual_availability_day', 'bvmgr_staff_save_manual_availability_day_ajax');
 
-function vms_staff_save_manual_availability_day_ajax(): void
+function bvmgr_staff_save_manual_availability_day_ajax(): void
 {
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Not logged in.'), 403);
@@ -2877,13 +2877,13 @@ function vms_staff_save_manual_availability_day_ajax(): void
         wp_send_json_error(array('message' => 'Invalid state.'), 400);
     }
 
-    $active_dates = vms_staff_portal_get_active_dates();
+    $active_dates = bvmgr_staff_portal_get_active_dates();
     $active_lookup = array_flip($active_dates);
     if (!isset($active_lookup[$date])) {
         wp_send_json_error(array('message' => 'Date not in active range.'), 400);
     }
 
-    $assignments = vms_staff_portal_get_assignment_rows($staff_id, 250);
+    $assignments = bvmgr_staff_portal_get_assignment_rows($staff_id, 250);
     foreach ($assignments as $assignment) {
         if ((string) ($assignment['event_date'] ?? '') === $date) {
             wp_send_json_error(array('message' => 'Assigned dates are locked.'), 400);

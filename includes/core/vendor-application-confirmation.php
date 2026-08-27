@@ -124,8 +124,8 @@ if (!function_exists('bvmgr_vendor_app_confirmation_endpoint_url')) {
 if (!function_exists('bvmgr_vendor_app_confirmation_reset_url')) {
     function bvmgr_vendor_app_confirmation_reset_url(): string
     {
-        $login_redirect_url = function_exists('vms_vendor_portal_login_redirect_url')
-            ? vms_vendor_portal_login_redirect_url(true)
+        $login_redirect_url = function_exists('bvmgr_vendor_portal_login_redirect_url')
+            ? bvmgr_vendor_portal_login_redirect_url(true)
             : home_url('/vendor-portal/?vms_vendor_portal_login=1');
         return (string) wp_lostpassword_url($login_redirect_url);
     }
@@ -1172,8 +1172,8 @@ if (!function_exists('bvmgr_vendor_app_process_confirmation')) {
             'user_id' => (int) $user->ID,
             'email' => $email,
             'reset_url' => bvmgr_vendor_app_confirmation_reset_url(),
-            'portal_url' => function_exists('vms_vendor_portal_page_url')
-                ? vms_vendor_portal_page_url()
+            'portal_url' => function_exists('bvmgr_vendor_portal_page_url')
+                ? bvmgr_vendor_portal_page_url()
                 : home_url('/vendor-portal/'),
             'had_existing_user' => $had_existing_user,
         );
@@ -1448,8 +1448,8 @@ if (!function_exists('bvmgr_vendor_apply_render_confirmation_pending_screen')) {
 
         $notice_key = sanitize_key((string) ($args['notice'] ?? 'sent'));
         $state = bvmgr_vendor_app_get_confirmation_state($app_id);
-        $portal_url = function_exists('vms_vendor_portal_page_url')
-            ? vms_vendor_portal_page_url()
+        $portal_url = function_exists('bvmgr_vendor_portal_page_url')
+            ? bvmgr_vendor_portal_page_url()
             : home_url('/vendor-portal/');
         $apply_url = function_exists('bvmgr_vendor_app_get_application_page_url')
             ? bvmgr_vendor_app_get_application_page_url()
@@ -1510,8 +1510,8 @@ if (!function_exists('bvmgr_vendor_apply_render_existing_status_screen')) {
     {
         $app_id = (int) $app_id;
         $kind = sanitize_key($kind);
-        $portal_url = function_exists('vms_vendor_portal_page_url')
-            ? vms_vendor_portal_page_url()
+        $portal_url = function_exists('bvmgr_vendor_portal_page_url')
+            ? bvmgr_vendor_portal_page_url()
             : home_url('/vendor-portal/');
         $apply_url = function_exists('bvmgr_vendor_app_get_application_page_url')
             ? bvmgr_vendor_app_get_application_page_url()
@@ -1560,8 +1560,8 @@ if (!function_exists('bvmgr_vendor_app_render_portal_applicant_panel')) {
 
         $app_id = (int) ($state['app_id'] ?? 0);
         $return_url = $base_url !== '' ? $base_url : home_url('/vendor-portal/');
-        $portal_url = function_exists('vms_vendor_portal_page_url')
-            ? vms_vendor_portal_page_url()
+        $portal_url = function_exists('bvmgr_vendor_portal_page_url')
+            ? bvmgr_vendor_portal_page_url()
             : home_url('/vendor-portal/');
 
         ob_start();
@@ -1600,7 +1600,7 @@ if (!function_exists('bvmgr_vendor_app_redirect_after_resend')) {
             $return_url
         );
 
-        if (is_user_logged_in() && function_exists('vms_vendor_portal_set_flash')) {
+        if (is_user_logged_in() && function_exists('bvmgr_vendor_portal_set_flash')) {
             $user_id = get_current_user_id();
             if ($user_id > 0) {
                 $default_messages = array(
@@ -1614,7 +1614,7 @@ if (!function_exists('bvmgr_vendor_app_redirect_after_resend')) {
                 if ($message === '') {
                     $message = (string) ($default_messages[$notice_key] ?? __('Confirmation email status updated.', 'backstage-venue-manager'));
                 }
-                vms_vendor_portal_set_flash($user_id, array('type' => $type, 'message' => $message));
+                bvmgr_vendor_portal_set_flash($user_id, array('type' => $type, 'message' => $message));
                 wp_safe_redirect($return_url);
                 exit;
             }
@@ -1754,7 +1754,7 @@ if (!function_exists('bvmgr_vendor_app_maybe_render_confirmation_page')) {
             if ($code === 'vms_vendor_app_confirm_token_expired') {
                 $content = bvmgr_vendor_apply_render_confirmation_pending_screen($app_id, array('notice' => 'expired'));
             } elseif ($code === 'vms_vendor_app_confirm_token_used' || ($code === 'vms_vendor_app_confirm_token_invalidated' && is_array($data) && sanitize_key((string) ($data['reason'] ?? '')) === 'confirmed')) {
-                $portal_url = function_exists('vms_vendor_portal_page_url') ? vms_vendor_portal_page_url() : home_url('/vendor-portal/');
+                $portal_url = function_exists('bvmgr_vendor_portal_page_url') ? bvmgr_vendor_portal_page_url() : home_url('/vendor-portal/');
                 $reset_url = bvmgr_vendor_app_confirmation_reset_url();
                 ob_start();
                 ?>
@@ -1784,8 +1784,8 @@ if (!function_exists('bvmgr_vendor_app_maybe_render_confirmation_page')) {
             bvmgr_vendor_app_render_confirmation_shell($title, $content);
         }
 
-        $portal_url = function_exists('vms_vendor_portal_page_url')
-            ? vms_vendor_portal_page_url()
+        $portal_url = function_exists('bvmgr_vendor_portal_page_url')
+            ? bvmgr_vendor_portal_page_url()
             : home_url('/vendor-portal/');
         $reset_url = (string) ($result['reset_url'] ?? bvmgr_vendor_app_confirmation_reset_url());
         $had_existing_user = !empty($result['had_existing_user']);

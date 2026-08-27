@@ -1020,7 +1020,7 @@ if (!function_exists('bvmgr_event_plan_perf_dependency_snapshot')) {
 			'woo_order_loaded' => class_exists('WC_Order', false) ? 1 : 0,
 			'tec_loaded' => (class_exists('Tribe__Events__Main', false) || function_exists('tribe_get_events')) ? 1 : 0,
 			'ticketing_helper_loaded' => function_exists('bvmgr_ticketing_v2_get_saved_config') ? 1 : 0,
-			'vendor_availability_helper_loaded' => function_exists('vms_get_vendor_availability_for_date') ? 1 : 0,
+			'vendor_availability_helper_loaded' => function_exists('bvmgr_get_vendor_availability_for_date') ? 1 : 0,
 			'integrity_helper_loaded' => function_exists('bvmgr_event_plan_clear_integrity_flags') ? 1 : 0,
 			'comp_default_helper_loaded' => function_exists('bvmgr_get_event_plan_effective_comp_default') ? 1 : 0,
 		);

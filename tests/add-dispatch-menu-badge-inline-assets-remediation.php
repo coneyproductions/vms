@@ -25,7 +25,7 @@ function wp_enqueue_script(string $handle, string $src = '', array $deps = array
 function wp_localize_script(string $handle, string $name, array $data): bool { $GLOBALS['vms_test_localized_scripts'][$handle] = array('name' => $name, 'data' => $data); return true; }
 function wp_add_inline_style(string $handle, string $data): bool { $GLOBALS['vms_test_inline_styles'][$handle] = $data; return true; }
 function wp_add_inline_script(string $handle, string $script, string $position = 'after'): bool { $GLOBALS['vms_test_inline_scripts'][$handle] = array('script' => $script, 'position' => $position); return true; }
-function vms_add_dispatch_pending_portal_interest_count(): int { return (int) $GLOBALS['vms_test_pending_count']; }
+function bvmgr_add_dispatch_pending_portal_interest_count(): int { return (int) $GLOBALS['vms_test_pending_count']; }
 function bvmgr_asset_version(): string { return 'test-asset-version'; }
 
 require_once dirname(__DIR__) . '/includes/modules/availability-date-dispatch/admin-ui.php';
@@ -204,8 +204,8 @@ try {
 	$resetRuntime();
 	$GLOBALS['vms_test_manage_options'] = false;
 	$GLOBALS['vms_test_pending_count'] = 4;
-	vms_add_dispatch_render_menu_badge_css();
-	vms_add_dispatch_render_menu_badge_js();
+	bvmgr_add_dispatch_render_menu_badge_css();
+	bvmgr_add_dispatch_render_menu_badge_js();
 	$assert($GLOBALS['vms_test_styles'] === array(), 'Unauthorized users should not enqueue the ADD menu-badge stylesheet.');
 	$assert($GLOBALS['vms_test_scripts'] === array(), 'Unauthorized users should not enqueue the ADD menu-badge script.');
 	$assert($GLOBALS['vms_test_localized_scripts'] === array(), 'Unauthorized users should not receive ADD menu-badge config.');
@@ -213,8 +213,8 @@ try {
 	$resetRuntime();
 	$GLOBALS['vms_test_manage_options'] = true;
 	$GLOBALS['vms_test_pending_count'] = 0;
-	vms_add_dispatch_render_menu_badge_css();
-	vms_add_dispatch_render_menu_badge_js();
+	bvmgr_add_dispatch_render_menu_badge_css();
+	bvmgr_add_dispatch_render_menu_badge_js();
 	$assert($GLOBALS['vms_test_styles'] === array(), 'Zero-count runs should not enqueue the ADD menu-badge stylesheet.');
 	$assert($GLOBALS['vms_test_scripts'] === array(), 'Zero-count runs should not enqueue the ADD menu-badge script.');
 	$assert($GLOBALS['vms_test_localized_scripts'] === array(), 'Zero-count runs should not receive ADD menu-badge config.');
@@ -222,8 +222,8 @@ try {
 	$resetRuntime();
 	$GLOBALS['vms_test_manage_options'] = true;
 	$GLOBALS['vms_test_pending_count'] = 7;
-	vms_add_dispatch_render_menu_badge_css();
-	vms_add_dispatch_render_menu_badge_js();
+	bvmgr_add_dispatch_render_menu_badge_css();
+	bvmgr_add_dispatch_render_menu_badge_js();
 	$assert(isset($GLOBALS['vms_test_styles']['vms-admin-menu']), 'Positive-count authorized runs should enqueue the shared admin-menu stylesheet.');
 	$assert(isset($GLOBALS['vms_test_scripts']['vms-admin-menu']), 'Positive-count authorized runs should enqueue the ADD menu-badge script.');
 	$assert(($GLOBALS['vms_test_scripts']['vms-admin-menu']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-admin-menu.js', 'ADD menu-badge script should use the expected asset path.');

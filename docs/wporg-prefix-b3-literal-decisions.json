@@ -23,7 +23,8 @@
         {"legacy_identifier":"vms_event_plan_save_profiler_state","file":"tests/wporg-prefix-b2-foundation.php","line":88,"reason":"B2 global-slot/function-suffix collision inventory"},
         {"legacy_identifier":"vms_square_ticket_mirror_log","file":"tests/g10-support-repositories-sql-remediation.php","line":217,"reason":"retained database table suffix fixture"},
         {"legacy_identifier":"vms_ticket_integrity_watch_ticketing_meta","file":"tests/g10-integrity-repositories-db-remediation.php","line":959,"reason":"retained performance telemetry name expectation"},
-        {"legacy_identifier":"vms_ticket_mutation_audit_context_stack","file":"tests/wporg-prefix-b2-foundation.php","line":89,"reason":"B2 global-slot/function-suffix collision inventory"}
+        {"legacy_identifier":"vms_ticket_mutation_audit_context_stack","file":"tests/wporg-prefix-b2-foundation.php","line":89,"reason":"B2 global-slot/function-suffix collision inventory"},
+        {"legacy_identifier":"vms_vendor_profiles_event_sidebar_rendered","file":"tests/wporg-prefix-b2-foundation.php","line":90,"reason":"B2 global-slot/function-suffix collision inventory"}
     ],
     "decisions": [
         {"legacy_identifier":"vms_admin_guard_hook_probe_shutdown","file":"includes/runtime-guards.php","line":1638,"decision":"rename","reason":"register_shutdown_function callable"},
@@ -202,6 +203,14 @@
         {"legacy_identifier":"vms_vendor_type_registry","file":"includes/taxonomies/vendor-type.php","line":34,"decision":"retain","reason":"WordPress filter hook"},
         {"legacy_identifier":"vms_vendor_user_link_notification_enabled","file":"includes/core/vendor-user-links.php","line":447,"decision":"retain","reason":"WordPress filter hook"},
         {"legacy_identifier":"vms_vendor_user_link_notification_recipients","file":"includes/core/vendor-user-links.php","line":644,"decision":"retain","reason":"WordPress filter hook"},
-        {"legacy_identifier":"vms_vendor_user_link_request_notification_enabled","file":"includes/core/vendor-user-links.php","line":461,"decision":"retain","reason":"WordPress filter hook"}
+        {"legacy_identifier":"vms_vendor_user_link_request_notification_enabled","file":"includes/core/vendor-user-links.php","line":461,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_add_dispatch_close_request","file":"includes/modules/availability-date-dispatch/admin-ui.php","line":553,"decision":"retain","reason":"admin-post action contract"},
+        {"legacy_identifier":"vms_add_dispatch_operator_interest_recipients","file":"includes/modules/availability-date-dispatch/email.php","line":119,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_add_dispatch_render_admin_page_content","file":"includes/modules/availability-date-dispatch/admin-ui.php","line":1048,"decision":"rename","reason":"shell content callable argument"},
+        {"legacy_identifier":"vms_calendar_open_slot_link","file":"includes/core/calendar-feed.php","line":589,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_calendar_vendor_type_icons","file":"includes/core/calendar-feed.php","line":156,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_public_event_sidebar_targets","file":"includes/public/event-sidebar.php","line":11,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_render_vendor_availability_page_content","file":"includes/admin/vendor-availability.php","line":1296,"decision":"rename","reason":"shell content callable argument"},
+        {"legacy_identifier":"vms_vendor_portal_allowed_tabs","file":"includes/portal/vendor-portal.php","line":327,"decision":"retain","reason":"WordPress filter hook"}
     ]
 }

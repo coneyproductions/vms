@@ -2593,11 +2593,11 @@ class BVMGR_Admin_Event_Plans
             $plan_id,
             $cache_key,
             static function () use ($vendor_id, $event_date): string {
-                if (!function_exists('vms_get_vendor_availability_for_date')) {
+                if (!function_exists('bvmgr_get_vendor_availability_for_date')) {
                     return '';
                 }
 
-                return sanitize_key((string) vms_get_vendor_availability_for_date($vendor_id, $event_date));
+                return sanitize_key((string) bvmgr_get_vendor_availability_for_date($vendor_id, $event_date));
             },
             $cache_hit
         );
@@ -2623,14 +2623,14 @@ class BVMGR_Admin_Event_Plans
             $plan_id,
             $cache_key,
             static function () use ($vendor_id, $venue_id_effective, $event_date): array {
-                if (!function_exists('vms_get_lineup_supporting_compensation_default')) {
+                if (!function_exists('bvmgr_get_lineup_supporting_compensation_default')) {
                     return array(
                         'guaranteed_fee' => '',
                         'structure' => '',
                     );
                 }
 
-                $support_defaults = (array) vms_get_lineup_supporting_compensation_default($vendor_id, $venue_id_effective, $event_date);
+                $support_defaults = (array) bvmgr_get_lineup_supporting_compensation_default($vendor_id, $venue_id_effective, $event_date);
                 return array(
                     'guaranteed_fee' => $support_defaults['guaranteed_fee'] ?? '',
                     'structure' => sanitize_key((string) ($support_defaults['structure'] ?? '')),
@@ -8055,14 +8055,14 @@ class BVMGR_Admin_Event_Plans
             ? bvmgr_event_plan_perf_span_start('event_plan_supporting_act_lookup', (int) $post->ID, array('section' => 'supporting_act_lookup'))
             : '';
         try {
-            $lineup_entries = function_exists('vms_get_event_plan_lineup_entries')
-                ? (array) vms_get_event_plan_lineup_entries((int) $post->ID, $lineup_context)
+            $lineup_entries = function_exists('bvmgr_get_event_plan_lineup_entries')
+                ? (array) bvmgr_get_event_plan_lineup_entries((int) $post->ID, $lineup_context)
                 : array();
-            $lineup_summary = function_exists('vms_get_event_plan_lineup_summary')
-                ? (array) vms_get_event_plan_lineup_summary((int) $post->ID, $lineup_context)
+            $lineup_summary = function_exists('bvmgr_get_event_plan_lineup_summary')
+                ? (array) bvmgr_get_event_plan_lineup_summary((int) $post->ID, $lineup_context)
                 : array();
-            $lineup_warnings = function_exists('vms_get_event_plan_lineup_warnings')
-                ? (array) vms_get_event_plan_lineup_warnings((int) $post->ID, $lineup_context)
+            $lineup_warnings = function_exists('bvmgr_get_event_plan_lineup_warnings')
+                ? (array) bvmgr_get_event_plan_lineup_warnings((int) $post->ID, $lineup_context)
                 : array();
         } finally {
             if (function_exists('bvmgr_event_plan_perf_span_finish')) {
@@ -8085,13 +8085,13 @@ class BVMGR_Admin_Event_Plans
         })));
         if (empty($lineup_primary_entry)) {
             $lineup_primary_entry = array(
-                'row_id' => function_exists('vms_lineup_schedule_make_row_id') ? vms_lineup_schedule_make_row_id() : 'lineup_primary',
+                'row_id' => function_exists('bvmgr_lineup_schedule_make_row_id') ? bvmgr_lineup_schedule_make_row_id() : 'lineup_primary',
                 'vendor_id' => $selected_band_id,
                 'role' => 'primary',
                 'set_start' => $start_time_current,
                 'set_end' => $end_time_current,
-                'set_start_label' => function_exists('vms_lineup_schedule_format_time_label') ? vms_lineup_schedule_format_time_label($start_time_current) : $start_time_current,
-                'set_end_label' => function_exists('vms_lineup_schedule_format_time_label') ? vms_lineup_schedule_format_time_label($end_time_current) : $end_time_current,
+                'set_start_label' => function_exists('bvmgr_lineup_schedule_format_time_label') ? bvmgr_lineup_schedule_format_time_label($start_time_current) : $start_time_current,
+                'set_end_label' => function_exists('bvmgr_lineup_schedule_format_time_label') ? bvmgr_lineup_schedule_format_time_label($end_time_current) : $end_time_current,
                 'duration_label' => '',
                 'duration_minutes' => null,
                 'warning_count' => 0,
@@ -9599,20 +9599,20 @@ if (function_exists('bvmgr_add_admin_notice')) {
 		                    }
 		                    $posted_lineup_rows['primary']['vendor_id'] = $effective_lineup_primary_vendor_id;
 
-	                    if (function_exists('vms_normalize_event_plan_lineup_entries')) {
-	                        $lineup_key = function_exists('vms_lineup_schedule_meta_key')
-	                            ? vms_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1')
+	                    if (function_exists('bvmgr_normalize_event_plan_lineup_entries')) {
+	                        $lineup_key = function_exists('bvmgr_lineup_schedule_meta_key')
+	                            ? bvmgr_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1')
 	                            : '_vms_lineup_entries_v1';
-	                        $lineup_band_key = function_exists('vms_lineup_schedule_meta_key')
-	                            ? vms_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id')
+	                        $lineup_band_key = function_exists('bvmgr_lineup_schedule_meta_key')
+	                            ? bvmgr_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id')
 	                            : '_vms_band_vendor_id';
-	                        $lineup_index_key = function_exists('vms_lineup_schedule_meta_key')
-	                            ? vms_lineup_schedule_meta_key('lineup_entry_vendor_id', '_vms_lineup_entry_vendor_id')
+	                        $lineup_index_key = function_exists('bvmgr_lineup_schedule_meta_key')
+	                            ? bvmgr_lineup_schedule_meta_key('lineup_entry_vendor_id', '_vms_lineup_entry_vendor_id')
 	                            : '_vms_lineup_entry_vendor_id';
 
 	                        $current_lineup = get_post_meta($post_id, $lineup_key, true);
 	                        $current_lineup = is_array($current_lineup) ? array_values($current_lineup) : array();
-	                        $next_lineup = array_values(vms_normalize_event_plan_lineup_entries($posted_lineup_rows, $lineup_context));
+	                        $next_lineup = array_values(bvmgr_normalize_event_plan_lineup_entries($posted_lineup_rows, $lineup_context));
 
 	                        $current_primary_vendor_id = absint(get_post_meta($post_id, $lineup_band_key, true));
 	                        $next_primary_vendor_id = 0;
@@ -9652,11 +9652,11 @@ if (function_exists('bvmgr_add_admin_notice')) {
 	                    if (function_exists('bvmgr_event_plan_save_profiler_note_heavy_action')) {
 	                        bvmgr_event_plan_save_profiler_note_heavy_action('lineup_save', 'skipped', $lineup_skip_reason);
 	                    }
-	                } elseif (function_exists('vms_save_event_plan_lineup_entries')) {
+	                } elseif (function_exists('bvmgr_save_event_plan_lineup_entries')) {
 	                    if (function_exists('bvmgr_event_plan_save_profiler_note_heavy_action')) {
 	                        bvmgr_event_plan_save_profiler_note_heavy_action('lineup_save', 'triggered', 'lineup_changed');
 	                    }
-	                    vms_save_event_plan_lineup_entries($post_id, $posted_lineup_rows, $lineup_context);
+	                    bvmgr_save_event_plan_lineup_entries($post_id, $posted_lineup_rows, $lineup_context);
 	                }
 	                if (function_exists('bvmgr_event_plan_perf_span_finish')) {
 	                    bvmgr_event_plan_perf_span_finish('event_plan_lineup_save', $post_id, $lineup_save_trace, array(
@@ -11694,8 +11694,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 return $errors;
             }
 
-            if ($event_date && function_exists('vms_get_vendor_availability_for_date')) {
-                $availability = vms_get_vendor_availability_for_date($band_id, $event_date);
+            if ($event_date && function_exists('bvmgr_get_vendor_availability_for_date')) {
+                $availability = bvmgr_get_vendor_availability_for_date($band_id, $event_date);
                 if ($availability === 'unavailable') {
                     $band_name = get_the_title($band_id) ?: __('Selected Primary Vendor', 'backstage-venue-manager');
                     $nice_date = date_i18n('M j, Y', strtotime($event_date));
@@ -12288,12 +12288,12 @@ if (function_exists('bvmgr_add_admin_notice')) {
 					return $fallback_vendor_id;
 				}
 
-				$entries = function_exists('vms_get_event_plan_lineup_entries')
-					? (array) vms_get_event_plan_lineup_entries($post_id)
+				$entries = function_exists('bvmgr_get_event_plan_lineup_entries')
+					? (array) bvmgr_get_event_plan_lineup_entries($post_id)
 					: array();
 				if (empty($entries)) {
-					$lineup_key = function_exists('vms_lineup_schedule_meta_key')
-						? vms_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1')
+					$lineup_key = function_exists('bvmgr_lineup_schedule_meta_key')
+						? bvmgr_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1')
 						: '_vms_lineup_entries_v1';
 					$entries = get_post_meta($post_id, $lineup_key, true);
 					$entries = is_array($entries) ? array_values($entries) : array();

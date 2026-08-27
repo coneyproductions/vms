@@ -164,8 +164,8 @@ if (!function_exists('bvmgr_vendor_app_get_portal_page_url')) {
             $default_args = array_merge($default_args, $query_args);
         }
 
-        if (function_exists('vms_vendor_portal_page_url')) {
-            return (string) vms_vendor_portal_page_url($default_args);
+        if (function_exists('bvmgr_vendor_portal_page_url')) {
+            return (string) bvmgr_vendor_portal_page_url($default_args);
         }
 
         return (string) add_query_arg($default_args, home_url('/vendor-portal/'));
@@ -942,8 +942,8 @@ if (!function_exists('bvmgr_vendor_app_response_guidance')) {
         $portal_url = function_exists('bvmgr_vendor_app_get_portal_page_url')
             ? bvmgr_vendor_app_get_portal_page_url($vendor_id)
             : home_url('/vendor-portal/?tab=dashboard');
-        $portal_login_url = function_exists('vms_vendor_portal_login_redirect_url')
-            ? vms_vendor_portal_login_redirect_url(true)
+        $portal_login_url = function_exists('bvmgr_vendor_portal_login_redirect_url')
+            ? bvmgr_vendor_portal_login_redirect_url(true)
             : add_query_arg('vms_vendor_portal_login', '1', $portal_url);
         $reset_url = wp_lostpassword_url($portal_login_url);
         $login_user = function_exists('bvmgr_vendor_app_get_login_user')

@@ -658,12 +658,12 @@ if (!function_exists('bvmgr_vendor_command_center_extract_known_amount')) {
 if (!function_exists('bvmgr_vendor_command_center_get_supporting_payables')) {
     function bvmgr_vendor_command_center_get_supporting_payables(int $plan_id, string $event_date_ymd, int $venue_id): array
     {
-        if (!function_exists('vms_get_event_plan_lineup_supporting_entries')) {
+        if (!function_exists('bvmgr_get_event_plan_lineup_supporting_entries')) {
             return array();
         }
 
         $rows = array();
-        foreach ((array) vms_get_event_plan_lineup_supporting_entries($plan_id, array(
+        foreach ((array) bvmgr_get_event_plan_lineup_supporting_entries($plan_id, array(
             'event_date' => $event_date_ymd,
             'venue_id' => $venue_id,
         )) as $entry) {
@@ -760,8 +760,8 @@ if (!function_exists('bvmgr_vendor_command_center_collect_plan_maps')) {
                 $secondary_vendor_ids = array();
             }
             $secondary_vendor_ids = array_values(array_unique(array_filter(array_map('absint', $secondary_vendor_ids))));
-            $lineup_vendor_ids = function_exists('vms_get_event_plan_lineup_vendor_ids')
-                ? array_values(array_unique(array_filter(array_map('absint', (array) vms_get_event_plan_lineup_vendor_ids($plan_id, array(
+            $lineup_vendor_ids = function_exists('bvmgr_get_event_plan_lineup_vendor_ids')
+                ? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_get_event_plan_lineup_vendor_ids($plan_id, array(
                     'event_date' => $event_date,
                 ))))))
                 : array();

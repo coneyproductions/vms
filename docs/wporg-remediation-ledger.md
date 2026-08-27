@@ -575,9 +575,19 @@ Date: 2026-08-26
 
 ### B3 W7 vendor/venue boundary
 
-- Status: `verified` for the isolated W7 commit; exactly `419` functions / `419` sites migrated without a duplicate family, legacy wrapper, or dual declaration.
+- Status: `verified` at `34fe7afcd06355b781896a17606e01308cb7069e`; exactly `419` functions / `419` sites migrated without a duplicate family, legacy wrapper, or dual declaration.
 - Ratchet: cumulative progress is `2,766 / 4,521` functions and `2,778 / 4,541` sites; `1,755` legacy functions / `1,763` B3 scanner rows remain with no stale/forward, unexpected, unmapped, or completed-wave residual.
 - Exact literals: seven shell/array-map/activation callback sites moved while ten vendor filter/form contracts remain legacy.
 - Focused verification: Vendor Application JS/CSS, confirmation output, ICS safe fetch, secondary-vendor continuity, Administrator output, authorization/input, schedule notice, runtime, changed-PHP lint, diff, and all primary phase gates pass. Isolation-incompatible live-parity/hash/history/root tests remain excluded.
 - Checkpoint sequencing: W7 remains an independent green commit; W8 carries the adjacent exact-ZIP package/strict/runtime checkpoint.
+- Boundaries: installed/live core and add-ons remain unchanged. No B4-B8 work, push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### B3 W8 portal/calendar boundary
+
+- Status: `verified` for the isolated W8 commit; exactly `524` functions / `524` sites migrated without a duplicate family, legacy wrapper, or dual declaration.
+- Ratchet: cumulative progress is `3,290 / 4,521` functions and `3,302 / 4,541` sites; `1,231` legacy functions / `1,239` B3 scanner rows remain with no stale/forward, unexpected, unmapped, or completed-wave residual.
+- Exact literals: two executable admin-page render callbacks moved while six admin-post/filter/AJAX/public-tab contracts remain legacy; the B2 vendor-profile sidebar collision fixture is also explicitly retained.
+- Focused verification: ADD, availability, Event Plan Review, Plan Your Visit, uploads, public Event Sidebar, Staff/Vendor Portal, Vendor Application, Vendor Availability, B2.5 runtime, changed-PHP lint, diff, and all primary phase gates pass. Isolation-incompatible live-parity/hash/history/root tests remain excluded.
+- Package/smoke: exact dev ZIP `/private/tmp/bvm-wporg-b3-w8-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `11c8904b93d22853e15bad764cb508d9a1cc35b649ea7e80444bf38202528311`, passed integrity and supported-stack smoke without a VMS fatal. Smoke report SHA-256: `7767ae6d87c3cc95d87c841d2e783fb6964900f65e63a6d19615935f13edb828`.
+- Strict scan: `1,972` total = historical `125` errors plus B3 `1,239`, B7 `182`, method-scope `420`, and external/core `6` warnings; zero unexpected row. Strict JSON SHA-256: `94157bc176f3b6824e7d2a0ee8d192bd2ab3ac5e7653b549758371b75ecb7ac0`.
 - Boundaries: installed/live core and add-ons remain unchanged. No B4-B8 work, push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

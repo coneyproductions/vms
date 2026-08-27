@@ -7,8 +7,8 @@ if (!defined('ABSPATH')) exit;
  * - Canonical: [vms_public_calendar]
  */
 
-if (!function_exists('vms_public_calendar_time_label')) {
-	function vms_public_calendar_time_label(string $start_local): string
+if (!function_exists('bvmgr_public_calendar_time_label')) {
+	function bvmgr_public_calendar_time_label(string $start_local): string
 	{
 		if ($start_local === '') {
 			return '';
@@ -22,11 +22,11 @@ if (!function_exists('vms_public_calendar_time_label')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_event_is_past')) {
+if (!function_exists('bvmgr_public_calendar_event_is_past')) {
 	/**
 	 * @param array<string,mixed> $event
 	 */
-	function vms_public_calendar_event_is_past(array $event): bool
+	function bvmgr_public_calendar_event_is_past(array $event): bool
 	{
 		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		$now = time();
@@ -63,8 +63,8 @@ if (!function_exists('vms_public_calendar_event_is_past')) {
 }
 
 
-if (!function_exists('vms_public_calendar_month_label')) {
-	function vms_public_calendar_month_label(string $ym, string $format = 'F'): string
+if (!function_exists('bvmgr_public_calendar_month_label')) {
+	function bvmgr_public_calendar_month_label(string $ym, string $format = 'F'): string
 	{
 		if (!preg_match('/^\d{4}-\d{2}$/', $ym)) {
 			return $ym;
@@ -80,18 +80,18 @@ if (!function_exists('vms_public_calendar_month_label')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_nav_label')) {
-	function vms_public_calendar_nav_label(string $ym): string
+if (!function_exists('bvmgr_public_calendar_nav_label')) {
+	function bvmgr_public_calendar_nav_label(string $ym): string
 	{
-		return vms_public_calendar_month_label($ym, 'F');
+		return bvmgr_public_calendar_month_label($ym, 'F');
 	}
 }
 
-if (!function_exists('vms_public_calendar_allowed_html')) {
+if (!function_exists('bvmgr_public_calendar_allowed_html')) {
 	/**
 	 * @return array<string,array<string,bool>>
 	 */
-	function vms_public_calendar_allowed_html(): array
+	function bvmgr_public_calendar_allowed_html(): array
 	{
 		return array(
 			'a' => array(
@@ -132,12 +132,12 @@ if (!function_exists('vms_public_calendar_allowed_html')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_render_nav')) {
-	function vms_public_calendar_render_nav(array $nav, string $base, array $month): string
+if (!function_exists('bvmgr_public_calendar_render_nav')) {
+	function bvmgr_public_calendar_render_nav(array $nav, string $base, array $month): string
 	{
-		$prev_label = vms_public_calendar_nav_label((string) ($nav['prev'] ?? ''));
-		$next_label = vms_public_calendar_nav_label((string) ($nav['next'] ?? ''));
-		$title = vms_public_calendar_month_label((string) ($month['ym'] ?? ''), 'F Y');
+		$prev_label = bvmgr_public_calendar_nav_label((string) ($nav['prev'] ?? ''));
+		$next_label = bvmgr_public_calendar_nav_label((string) ($nav['next'] ?? ''));
+		$title = bvmgr_public_calendar_month_label((string) ($month['ym'] ?? ''), 'F Y');
 		if ($title === '') {
 			$title = date_i18n('F Y', strtotime((string) ($month['start'] ?? 'now')));
 		}
@@ -154,8 +154,8 @@ if (!function_exists('vms_public_calendar_render_nav')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_get_requested_month')) {
-	function vms_public_calendar_get_requested_month(): string
+if (!function_exists('bvmgr_public_calendar_get_requested_month')) {
+	function bvmgr_public_calendar_get_requested_month(): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
 		if (!isset($_GET['ym'])) {
@@ -167,8 +167,8 @@ if (!function_exists('vms_public_calendar_get_requested_month')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_get_requested_venue')) {
-	function vms_public_calendar_get_requested_venue(): string
+if (!function_exists('bvmgr_public_calendar_get_requested_venue')) {
+	function bvmgr_public_calendar_get_requested_venue(): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
 		if (isset($_GET['venue_id'])) {
@@ -186,8 +186,8 @@ if (!function_exists('vms_public_calendar_get_requested_venue')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_get_requested_view')) {
-	function vms_public_calendar_get_requested_view(): string
+if (!function_exists('bvmgr_public_calendar_get_requested_view')) {
+	function bvmgr_public_calendar_get_requested_view(): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
 		if (!isset($_GET['view'])) {
@@ -199,8 +199,8 @@ if (!function_exists('vms_public_calendar_get_requested_view')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_get_requested_show_past')) {
-	function vms_public_calendar_get_requested_show_past(): ?int
+if (!function_exists('bvmgr_public_calendar_get_requested_show_past')) {
+	function bvmgr_public_calendar_get_requested_show_past(): ?int
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public calendar filter.
 		if (!isset($_GET['show_past'])) {
@@ -212,8 +212,8 @@ if (!function_exists('vms_public_calendar_get_requested_show_past')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_get_request_user_agent')) {
-	function vms_public_calendar_get_request_user_agent(): string
+if (!function_exists('bvmgr_public_calendar_get_request_user_agent')) {
+	function bvmgr_public_calendar_get_request_user_agent(): string
 	{
 		$user_agent = bvmgr_request_server_value('HTTP_USER_AGENT');
 		if ($user_agent === '') {
@@ -224,8 +224,8 @@ if (!function_exists('vms_public_calendar_get_request_user_agent')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_normalize_view')) {
-	function vms_public_calendar_normalize_view(string $view, bool $allow_auto = true): string
+if (!function_exists('bvmgr_public_calendar_normalize_view')) {
+	function bvmgr_public_calendar_normalize_view(string $view, bool $allow_auto = true): string
 	{
 		$allowed = array('month', 'list', 'compact');
 		if ($allow_auto) {
@@ -239,36 +239,36 @@ if (!function_exists('vms_public_calendar_normalize_view')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_shift_ym')) {
-	function vms_public_calendar_shift_ym(string $ym, int $delta): string
+if (!function_exists('bvmgr_public_calendar_shift_ym')) {
+	function bvmgr_public_calendar_shift_ym(string $ym, int $delta): string
 	{
-		$month = vms_parse_month_ym($ym);
+		$month = bvmgr_parse_month_ym($ym);
 		return gmdate('Y-m', strtotime(($delta >= 0 ? '+' : '') . $delta . ' month', (int) $month['start_ts']));
 	}
 }
 
-if (!function_exists('vms_public_calendar_month_sequence')) {
+if (!function_exists('bvmgr_public_calendar_month_sequence')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_public_calendar_month_sequence(string $start_ym, int $count): array
+	function bvmgr_public_calendar_month_sequence(string $start_ym, int $count): array
 	{
 		$count = max(1, $count);
 		$out = array();
 		$current = $start_ym;
 		for ($i = 0; $i < $count; $i++) {
-			$out[] = vms_parse_month_ym($current);
-			$current = vms_public_calendar_shift_ym($current, 1);
+			$out[] = bvmgr_parse_month_ym($current);
+			$current = bvmgr_public_calendar_shift_ym($current, 1);
 		}
 		return $out;
 	}
 }
 
-if (!function_exists('vms_public_calendar_join_label_list')) {
+if (!function_exists('bvmgr_public_calendar_join_label_list')) {
 	/**
 	 * @param array<int,string> $parts
 	 */
-	function vms_public_calendar_join_label_list(array $parts): string
+	function bvmgr_public_calendar_join_label_list(array $parts): string
 	{
 		$parts = array_values(array_filter(array_map('trim', $parts), static function (string $label): bool {
 			return $label !== '';
@@ -292,11 +292,11 @@ if (!function_exists('vms_public_calendar_join_label_list')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_compact_range_title')) {
+if (!function_exists('bvmgr_public_calendar_compact_range_title')) {
 	/**
 	 * @param array<int,array<string,mixed>> $months
 	 */
-	function vms_public_calendar_compact_range_title(array $months): string
+	function bvmgr_public_calendar_compact_range_title(array $months): string
 	{
 		if (empty($months)) {
 			return '';
@@ -314,38 +314,38 @@ if (!function_exists('vms_public_calendar_compact_range_title')) {
 		}
 
 		if (count($month_keys) === 1) {
-			return vms_public_calendar_month_label($month_keys[0], 'F Y');
+			return bvmgr_public_calendar_month_label($month_keys[0], 'F Y');
 		}
 
 		$years = array_values(array_unique(array_map(static function (string $ym): string {
 			return substr($ym, 0, 4);
 		}, $month_keys)));
 		if (count($years) === 1) {
-			$year = vms_public_calendar_month_label($month_keys[0], 'Y');
+			$year = bvmgr_public_calendar_month_label($month_keys[0], 'Y');
 			$month_names = array_map(static function (string $ym): string {
-				return vms_public_calendar_month_label($ym, 'F');
+				return bvmgr_public_calendar_month_label($ym, 'F');
 			}, $month_keys);
 			return sprintf(
 				/* translators: 1: month list, 2: year */
 				__('%1$s %2$s', 'backstage-venue-manager'),
-				vms_public_calendar_join_label_list($month_names),
+				bvmgr_public_calendar_join_label_list($month_names),
 				$year
 			);
 		}
 
 		$full_labels = array_map(static function (string $ym): string {
-			return vms_public_calendar_month_label($ym, 'F Y');
+			return bvmgr_public_calendar_month_label($ym, 'F Y');
 		}, $month_keys);
 
-		return vms_public_calendar_join_label_list($full_labels);
+		return bvmgr_public_calendar_join_label_list($full_labels);
 	}
 }
 
-if (!function_exists('vms_public_calendar_compact_events_for_months')) {
+if (!function_exists('bvmgr_public_calendar_compact_events_for_months')) {
 	/**
 	 * @param array<int,array<string,mixed>> $months
 	 */
-	function vms_public_calendar_compact_events_for_months(array $months, array $feed_args): array
+	function bvmgr_public_calendar_compact_events_for_months(array $months, array $feed_args): array
 	{
 		if (empty($months)) {
 			return array();
@@ -370,12 +370,12 @@ if (!function_exists('vms_public_calendar_compact_events_for_months')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_compact_event_month_map')) {
+if (!function_exists('bvmgr_public_calendar_compact_event_month_map')) {
 	/**
 	 * @param array<int,array<string,mixed>> $events
 	 * @return array<string,bool>
 	 */
-	function vms_public_calendar_compact_event_month_map(array $events): array
+	function bvmgr_public_calendar_compact_event_month_map(array $events): array
 	{
 		$out = array();
 		foreach ($events as $event) {
@@ -388,12 +388,12 @@ if (!function_exists('vms_public_calendar_compact_event_month_map')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_collect_event_months_forward')) {
+if (!function_exists('bvmgr_public_calendar_collect_event_months_forward')) {
 	/**
 	 * @param array<string,mixed> $feed_args
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_public_calendar_collect_event_months_forward(string $start_ym, int $limit, array $feed_args, int $chunk_months = 12, int $max_scan_months = 36): array
+	function bvmgr_public_calendar_collect_event_months_forward(string $start_ym, int $limit, array $feed_args, int $chunk_months = 12, int $max_scan_months = 36): array
 	{
 		$limit = max(1, $limit);
 		$chunk_months = max(1, $chunk_months);
@@ -405,13 +405,13 @@ if (!function_exists('vms_public_calendar_collect_event_months_forward')) {
 
 		while ($scanned < $max_scan_months && count($out) < $limit) {
 			$months_to_scan = min($chunk_months, $max_scan_months - $scanned);
-			$window_months = vms_public_calendar_month_sequence($cursor, $months_to_scan);
+			$window_months = bvmgr_public_calendar_month_sequence($cursor, $months_to_scan);
 			if (empty($window_months)) {
 				break;
 			}
 
-			$event_month_map = vms_public_calendar_compact_event_month_map(
-				vms_public_calendar_compact_events_for_months($window_months, $feed_args)
+			$event_month_map = bvmgr_public_calendar_compact_event_month_map(
+				bvmgr_public_calendar_compact_events_for_months($window_months, $feed_args)
 			);
 			foreach ($window_months as $month) {
 				$ym = trim((string) ($month['ym'] ?? ''));
@@ -425,7 +425,7 @@ if (!function_exists('vms_public_calendar_collect_event_months_forward')) {
 				}
 			}
 
-			$cursor = vms_public_calendar_shift_ym($cursor, $months_to_scan);
+			$cursor = bvmgr_public_calendar_shift_ym($cursor, $months_to_scan);
 			$scanned += $months_to_scan;
 		}
 
@@ -433,12 +433,12 @@ if (!function_exists('vms_public_calendar_collect_event_months_forward')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_collect_event_months_backward')) {
+if (!function_exists('bvmgr_public_calendar_collect_event_months_backward')) {
 	/**
 	 * @param array<string,mixed> $feed_args
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_public_calendar_collect_event_months_backward(string $before_ym, int $limit, array $feed_args, int $chunk_months = 12, int $max_scan_months = 36): array
+	function bvmgr_public_calendar_collect_event_months_backward(string $before_ym, int $limit, array $feed_args, int $chunk_months = 12, int $max_scan_months = 36): array
 	{
 		$limit = max(1, $limit);
 		$chunk_months = max(1, $chunk_months);
@@ -450,14 +450,14 @@ if (!function_exists('vms_public_calendar_collect_event_months_backward')) {
 
 		while ($scanned < $max_scan_months && count($out) < $limit) {
 			$months_to_scan = min($chunk_months, $max_scan_months - $scanned);
-			$window_start_ym = vms_public_calendar_shift_ym($exclusive_end_ym, -$months_to_scan);
-			$window_months = vms_public_calendar_month_sequence($window_start_ym, $months_to_scan);
+			$window_start_ym = bvmgr_public_calendar_shift_ym($exclusive_end_ym, -$months_to_scan);
+			$window_months = bvmgr_public_calendar_month_sequence($window_start_ym, $months_to_scan);
 			if (empty($window_months)) {
 				break;
 			}
 
-			$event_month_map = vms_public_calendar_compact_event_month_map(
-				vms_public_calendar_compact_events_for_months($window_months, $feed_args)
+			$event_month_map = bvmgr_public_calendar_compact_event_month_map(
+				bvmgr_public_calendar_compact_events_for_months($window_months, $feed_args)
 			);
 			for ($i = count($window_months) - 1; $i >= 0; $i--) {
 				$month = $window_months[$i];
@@ -480,7 +480,7 @@ if (!function_exists('vms_public_calendar_collect_event_months_backward')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_build_compact_context')) {
+if (!function_exists('bvmgr_public_calendar_build_compact_context')) {
 	/**
 	 * @param array<string,mixed> $feed_args
 	 * @return array{
@@ -492,18 +492,18 @@ if (!function_exists('vms_public_calendar_build_compact_context')) {
 	 *   next_label:string
 	 * }
 	 */
-	function vms_public_calendar_build_compact_context(string $anchor_ym, array $feed_args, int $limit = 3): array
+	function bvmgr_public_calendar_build_compact_context(string $anchor_ym, array $feed_args, int $limit = 3): array
 	{
 		$limit = max(1, $limit);
-		$display_months = vms_public_calendar_collect_event_months_forward($anchor_ym, $limit, $feed_args);
+		$display_months = bvmgr_public_calendar_collect_event_months_forward($anchor_ym, $limit, $feed_args);
 
 		if (empty($display_months)) {
-			$prev_months = vms_public_calendar_collect_event_months_backward($anchor_ym, $limit, $feed_args);
+			$prev_months = bvmgr_public_calendar_collect_event_months_backward($anchor_ym, $limit, $feed_args);
 			return array(
 				'months' => array(),
 				'title' => __('No Upcoming Events', 'backstage-venue-manager'),
 				'prev_ym' => isset($prev_months[0]['ym']) ? (string) $prev_months[0]['ym'] : '',
-				'prev_label' => vms_public_calendar_compact_range_title($prev_months),
+				'prev_label' => bvmgr_public_calendar_compact_range_title($prev_months),
 				'next_ym' => '',
 				'next_label' => '',
 			);
@@ -512,30 +512,30 @@ if (!function_exists('vms_public_calendar_build_compact_context')) {
 		$first_display_ym = isset($display_months[0]['ym']) ? (string) $display_months[0]['ym'] : '';
 		$last_display_ym = isset($display_months[count($display_months) - 1]['ym']) ? (string) $display_months[count($display_months) - 1]['ym'] : '';
 		$prev_months = ($first_display_ym !== '')
-			? vms_public_calendar_collect_event_months_backward($first_display_ym, $limit, $feed_args)
+			? bvmgr_public_calendar_collect_event_months_backward($first_display_ym, $limit, $feed_args)
 			: array();
 		$next_months = ($last_display_ym !== '')
-			? vms_public_calendar_collect_event_months_forward(vms_public_calendar_shift_ym($last_display_ym, 1), $limit, $feed_args)
+			? bvmgr_public_calendar_collect_event_months_forward(bvmgr_public_calendar_shift_ym($last_display_ym, 1), $limit, $feed_args)
 			: array();
 
 		return array(
 			'months' => $display_months,
-			'title' => vms_public_calendar_compact_range_title($display_months),
+			'title' => bvmgr_public_calendar_compact_range_title($display_months),
 			'prev_ym' => isset($prev_months[0]['ym']) ? (string) $prev_months[0]['ym'] : '',
-			'prev_label' => vms_public_calendar_compact_range_title($prev_months),
+			'prev_label' => bvmgr_public_calendar_compact_range_title($prev_months),
 			'next_ym' => !empty($next_months) && $last_display_ym !== ''
-				? vms_public_calendar_shift_ym($last_display_ym, 1)
+				? bvmgr_public_calendar_shift_ym($last_display_ym, 1)
 				: '',
-			'next_label' => vms_public_calendar_compact_range_title($next_months),
+			'next_label' => bvmgr_public_calendar_compact_range_title($next_months),
 		);
 	}
 }
 
-if (!function_exists('vms_public_calendar_render_compact_nav')) {
+if (!function_exists('bvmgr_public_calendar_render_compact_nav')) {
 	/**
 	 * @param array<string,mixed> $context
 	 */
-	function vms_public_calendar_render_compact_nav(array $context, string $base): string
+	function bvmgr_public_calendar_render_compact_nav(array $context, string $base): string
 	{
 		$title = trim((string) ($context['title'] ?? ''));
 		$prev_ym = trim((string) ($context['prev_ym'] ?? ''));
@@ -563,12 +563,12 @@ if (!function_exists('vms_public_calendar_render_compact_nav')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_vendor_lines')) {
+if (!function_exists('bvmgr_public_calendar_vendor_lines')) {
 	/**
 	 * @param array<string,mixed> $event
 	 * @return array<int,array<string,string>>
 	 */
-	function vms_public_calendar_vendor_lines(array $event): array
+	function bvmgr_public_calendar_vendor_lines(array $event): array
 	{
 		$out = array();
 		$event_url = trim((string) ($event['public_url'] ?? ''));
@@ -610,12 +610,12 @@ if (!function_exists('vms_public_calendar_vendor_lines')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_vendor_names')) {
+if (!function_exists('bvmgr_public_calendar_vendor_names')) {
 	/**
 	 * @param array<string,mixed> $event
 	 * @return array<int,string>
 	 */
-	function vms_public_calendar_vendor_names(array $event): array
+	function bvmgr_public_calendar_vendor_names(array $event): array
 	{
 		$out = array();
 		$seen = array();
@@ -641,14 +641,14 @@ if (!function_exists('vms_public_calendar_vendor_names')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_vendor_slots')) {
+if (!function_exists('bvmgr_public_calendar_vendor_slots')) {
 	/**
 	 * Ordered vendor rows for calendar rendering.
 	 *
 	 * @param array<string,mixed> $event
 	 * @return array<int,array{name:string,icon:string,url:string}>
 	 */
-	function vms_public_calendar_vendor_slots(array $event): array
+	function bvmgr_public_calendar_vendor_slots(array $event): array
 	{
 		$out = array();
 		$seen = array();
@@ -658,8 +658,8 @@ if (!function_exists('vms_public_calendar_vendor_slots')) {
 			$title_fallback = __('Event', 'backstage-venue-manager');
 		}
 
-		$icon_map = function_exists('vms_calendar_vendor_type_icons')
-			? (array) vms_calendar_vendor_type_icons()
+		$icon_map = function_exists('bvmgr_calendar_vendor_type_icons')
+			? (array) bvmgr_calendar_vendor_type_icons()
 			: array();
 
 		$plan_id = (int) ($event['event_plan_id'] ?? 0);
@@ -738,8 +738,8 @@ if (!function_exists('vms_public_calendar_vendor_slots')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_render_vendor_link')) {
-	function vms_public_calendar_render_vendor_link(string $name, string $icon, string $class, string $url): string
+if (!function_exists('bvmgr_public_calendar_render_vendor_link')) {
+	function bvmgr_public_calendar_render_vendor_link(string $name, string $icon, string $class, string $url): string
 	{
 		$name = trim($name);
 		if ($name === '') {
@@ -758,11 +758,11 @@ if (!function_exists('vms_public_calendar_render_vendor_link')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_render_list_view')) {
+if (!function_exists('bvmgr_public_calendar_render_list_view')) {
 	/**
 	 * @param array<int,array<string,mixed>> $events
 	 */
-	function vms_public_calendar_render_list_view(array $events, bool $show_vendors, bool $show_images, bool $show_open_closed): string
+	function bvmgr_public_calendar_render_list_view(array $events, bool $show_vendors, bool $show_images, bool $show_open_closed): string
 	{
 		if (empty($events)) {
 			return '<p class="vms-public-cal-empty">' . esc_html__('No events found for this range.', 'backstage-venue-manager') . '</p>';
@@ -780,8 +780,8 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 				$title = __('Event', 'backstage-venue-manager');
 			}
 
-			$start_label = vms_public_calendar_time_label((string) ($event['start_local'] ?? ''));
-			$end_label = vms_public_calendar_time_label((string) ($event['end_local'] ?? ''));
+			$start_label = bvmgr_public_calendar_time_label((string) ($event['start_local'] ?? ''));
+			$end_label = bvmgr_public_calendar_time_label((string) ($event['end_local'] ?? ''));
 			$time_label = $start_label;
 			if ($start_label !== '' && $end_label !== '') {
 				$time_label = $start_label . ' - ' . $end_label;
@@ -792,7 +792,7 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 				$date_label = date_i18n('F j, Y', strtotime($date_key . ' 00:00:00'));
 			}
 
-			$is_past_event = vms_public_calendar_event_is_past($event);
+			$is_past_event = bvmgr_public_calendar_event_is_past($event);
 			$plan_id = absint($event['event_plan_id'] ?? 0);
 			$plan_status = sanitize_key((string) ($event['plan_status'] ?? ''));
 			$is_cancelled = ($plan_status === 'cancelled');
@@ -803,7 +803,7 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 			// Calendar cards keep cancelled/rescheduled state classes for styling/CTA logic,
 			// but do not render image ribbons in this view.
 
-			$vendor_slots = $show_vendors ? vms_public_calendar_vendor_slots($event) : array();
+			$vendor_slots = $show_vendors ? bvmgr_public_calendar_vendor_slots($event) : array();
 			if (empty($vendor_slots)) {
 				$vendor_slots = array(
 					array(
@@ -833,19 +833,19 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 			}
 
 				echo '<div class="vms-public-cal-rich-body">';
-				echo wp_kses(vms_public_calendar_render_vendor_link(
+				echo wp_kses(bvmgr_public_calendar_render_vendor_link(
 					(string) ($primary['name'] ?? $title),
 					(string) ($primary['icon'] ?? ''),
 					'vms-cal-vendor-row vms-public-cal-rich-vendor is-primary',
 					$event_url
-				), vms_public_calendar_allowed_html());
+				), bvmgr_public_calendar_allowed_html());
 				if (is_array($secondary)) {
-					echo wp_kses(vms_public_calendar_render_vendor_link(
+					echo wp_kses(bvmgr_public_calendar_render_vendor_link(
 						(string) ($secondary['name'] ?? ''),
 						(string) ($secondary['icon'] ?? ''),
 						'vms-cal-vendor-row vms-public-cal-rich-vendor is-secondary',
 						$event_url
-					), vms_public_calendar_allowed_html());
+					), bvmgr_public_calendar_allowed_html());
 				}
 
 			if ($date_label !== '') {
@@ -869,12 +869,12 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_build_month_days')) {
+if (!function_exists('bvmgr_public_calendar_build_month_days')) {
 	/**
 	 * @param array<int,array<string,mixed>> $events
 	 * @return array<int,array<int,array<string,mixed>>>
 	 */
-	function vms_public_calendar_build_month_days(array $events): array
+	function bvmgr_public_calendar_build_month_days(array $events): array
 	{
 		$days = array();
 		foreach ($events as $event) {
@@ -894,8 +894,8 @@ if (!function_exists('vms_public_calendar_build_month_days')) {
 			}
 
 			$sort_time = '';
-			$start_label = vms_public_calendar_time_label((string) ($event['start_local'] ?? ''));
-			$end_label = vms_public_calendar_time_label((string) ($event['end_local'] ?? ''));
+			$start_label = bvmgr_public_calendar_time_label((string) ($event['start_local'] ?? ''));
+			$end_label = bvmgr_public_calendar_time_label((string) ($event['end_local'] ?? ''));
 			$time_label = $start_label;
 			if ($start_label !== '' && $end_label !== '') {
 				$time_label = $start_label . ' - ' . $end_label;
@@ -911,7 +911,7 @@ if (!function_exists('vms_public_calendar_build_month_days')) {
 				}
 			}
 
-			$vendor_slots = array_slice(vms_public_calendar_vendor_slots($event), 0, 2);
+			$vendor_slots = array_slice(bvmgr_public_calendar_vendor_slots($event), 0, 2);
 			$primary_vendor = isset($vendor_slots[0]['name']) ? trim((string) $vendor_slots[0]['name']) : '';
 			if ($primary_vendor === '') {
 				$primary_vendor = $title;
@@ -920,7 +920,7 @@ if (!function_exists('vms_public_calendar_build_month_days')) {
 
 			$days[$day][] = array(
 				'plan_id' => (int) ($event['event_plan_id'] ?? 0),
-				'is_past' => vms_public_calendar_event_is_past($event),
+				'is_past' => bvmgr_public_calendar_event_is_past($event),
 				'date' => $date,
 				'date_label' => date_i18n('F j, Y', strtotime($date . ' 00:00:00')),
 				'title' => $title,
@@ -948,8 +948,8 @@ if (!function_exists('vms_public_calendar_build_month_days')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_status_badge')) {
-	function vms_public_calendar_status_badge(string $status): string
+if (!function_exists('bvmgr_public_calendar_status_badge')) {
+	function bvmgr_public_calendar_status_badge(string $status): string
 	{
 		$status = $status !== '' ? $status : 'draft';
 		if (function_exists('bvmgr_cal_status_badge')) {
@@ -969,14 +969,14 @@ if (!function_exists('vms_public_calendar_status_badge')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_build_day_states')) {
+if (!function_exists('bvmgr_public_calendar_build_day_states')) {
 	/**
 	 * Build per-day cell state classes for the current month.
 	 *
 	 * @param array<string,mixed> $month
 	 * @return array<int,array{is_past:bool,is_today:bool,is_open:bool|null}>
 	 */
-	function vms_public_calendar_build_day_states(array $month, int $venue_id, bool $show_open_closed): array
+	function bvmgr_public_calendar_build_day_states(array $month, int $venue_id, bool $show_open_closed): array
 	{
 		$out = array();
 		$start_ts = isset($month['start_ts']) ? (int) $month['start_ts'] : 0;
@@ -1007,12 +1007,12 @@ if (!function_exists('vms_public_calendar_build_day_states')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_filter_events_for_month')) {
+if (!function_exists('bvmgr_public_calendar_filter_events_for_month')) {
 	/**
 	 * @param array<int,array<string,mixed>> $events
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_public_calendar_filter_events_for_month(array $events, string $ym): array
+	function bvmgr_public_calendar_filter_events_for_month(array $events, string $ym): array
 	{
 		$out = array();
 		$prefix = $ym . '-';
@@ -1026,13 +1026,13 @@ if (!function_exists('vms_public_calendar_filter_events_for_month')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_day_cell_classes')) {
+if (!function_exists('bvmgr_public_calendar_day_cell_classes')) {
 	/**
 	 * @param array{is_past?:bool,is_today?:bool,is_open?:bool|null} $state
 	 * @param array<int,string> $extra_classes
 	 * @return array<int,string>
 	 */
-	function vms_public_calendar_day_cell_classes(array $state = array(), array $extra_classes = array()): array
+	function bvmgr_public_calendar_day_cell_classes(array $state = array(), array $extra_classes = array()): array
 	{
 		$classes = array_merge(array('vms-cal-cell'), $extra_classes);
 		if (!empty($state['is_past'])) {
@@ -1048,11 +1048,11 @@ if (!function_exists('vms_public_calendar_day_cell_classes')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_render_day_entries')) {
+if (!function_exists('bvmgr_public_calendar_render_day_entries')) {
 	/**
 	 * @param array<int,array<string,mixed>> $entries
 	 */
-	function vms_public_calendar_render_day_entries(array $entries, string $popover_align_class = ''): string
+	function bvmgr_public_calendar_render_day_entries(array $entries, string $popover_align_class = ''): string
 	{
 		if (empty($entries)) {
 			return '';
@@ -1112,19 +1112,19 @@ if (!function_exists('vms_public_calendar_render_day_entries')) {
 					}
 				}
 				echo '<div class="vms-cal-entry-vendors">';
-				echo wp_kses(vms_public_calendar_render_vendor_link(
+				echo wp_kses(bvmgr_public_calendar_render_vendor_link(
 					trim((string) ($primary_vendor['name'] ?? $title)),
 					trim((string) ($primary_vendor['icon'] ?? '')),
 					'vms-cal-vendor-row vms-cal-entry-vendor is-primary',
 					$view_url
-				), vms_public_calendar_allowed_html());
+				), bvmgr_public_calendar_allowed_html());
 				if (is_array($secondary_vendor)) {
-					echo wp_kses(vms_public_calendar_render_vendor_link(
+					echo wp_kses(bvmgr_public_calendar_render_vendor_link(
 						trim((string) ($secondary_vendor['name'] ?? '')),
 						trim((string) ($secondary_vendor['icon'] ?? '')),
 						'vms-cal-vendor-row vms-cal-entry-vendor is-secondary',
 						$view_url
-					), vms_public_calendar_allowed_html());
+					), bvmgr_public_calendar_allowed_html());
 				}
 				echo '</div>';
 
@@ -1138,19 +1138,19 @@ if (!function_exists('vms_public_calendar_render_day_entries')) {
 					}
 				}
 				echo '<div class="vms-cal-pop-vendors">';
-				echo wp_kses(vms_public_calendar_render_vendor_link(
+				echo wp_kses(bvmgr_public_calendar_render_vendor_link(
 					trim((string) ($primary_vendor['name'] ?? $title)),
 					trim((string) ($primary_vendor['icon'] ?? '')),
 					'vms-cal-vendor-row vms-cal-pop-vendor is-primary',
 					$view_url
-				), vms_public_calendar_allowed_html());
+				), bvmgr_public_calendar_allowed_html());
 				if (is_array($secondary_vendor)) {
-					echo wp_kses(vms_public_calendar_render_vendor_link(
+					echo wp_kses(bvmgr_public_calendar_render_vendor_link(
 						trim((string) ($secondary_vendor['name'] ?? '')),
 						trim((string) ($secondary_vendor['icon'] ?? '')),
 						'vms-cal-vendor-row vms-cal-pop-vendor is-secondary',
 						$view_url
-					), vms_public_calendar_allowed_html());
+					), bvmgr_public_calendar_allowed_html());
 				}
 			echo '</div>';
 			if ($date_label !== '') {
@@ -1174,11 +1174,11 @@ if (!function_exists('vms_public_calendar_render_day_entries')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_compact_weekday_labels')) {
+if (!function_exists('bvmgr_public_calendar_compact_weekday_labels')) {
 	/**
 	 * @return array<int,string>
 	 */
-	function vms_public_calendar_compact_weekday_labels(): array
+	function bvmgr_public_calendar_compact_weekday_labels(): array
 	{
 		return array(
 			0 => __('Sun', 'backstage-venue-manager'),
@@ -1192,14 +1192,14 @@ if (!function_exists('vms_public_calendar_compact_weekday_labels')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_build_compact_month_layout')) {
+if (!function_exists('bvmgr_public_calendar_build_compact_month_layout')) {
 	/**
 	 * @param array<string,mixed> $month
 	 * @param array<int,array<int,array<string,mixed>>> $days
 	 * @param array<int,array{is_past:bool,is_today:bool,is_open:bool|null}> $day_states
 	 * @return array{active_weekdays:array<int,int>,rows:int,cells:array<int,array<int,array<string,mixed>>>}
 	 */
-	function vms_public_calendar_build_compact_month_layout(array $month, array $days, array $day_states = array()): array
+	function bvmgr_public_calendar_build_compact_month_layout(array $month, array $days, array $day_states = array()): array
 	{
 		$active_weekdays = array();
 		$start_ts = isset($month['start_ts']) ? (int) $month['start_ts'] : 0;
@@ -1265,18 +1265,18 @@ if (!function_exists('vms_public_calendar_build_compact_month_layout')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_render_compact_view')) {
+if (!function_exists('bvmgr_public_calendar_render_compact_view')) {
 	/**
 	 * @param array<int,array<string,mixed>> $months
 	 * @param array<int,array<string,mixed>> $events
 	 */
-	function vms_public_calendar_render_compact_view(array $months, array $events, int $state_venue_id, bool $show_open_closed): string
+	function bvmgr_public_calendar_render_compact_view(array $months, array $events, int $state_venue_id, bool $show_open_closed): string
 	{
 		if (empty($months)) {
 			return '<p class="vms-public-cal-empty">' . esc_html__('No upcoming public events are currently scheduled. Please check back soon.', 'backstage-venue-manager') . '</p>';
 		}
 
-		$weekday_labels = vms_public_calendar_compact_weekday_labels();
+		$weekday_labels = bvmgr_public_calendar_compact_weekday_labels();
 		ob_start();
 		echo '<div class="vms-public-cal-compact">';
 		$rendered_count = 0;
@@ -1285,13 +1285,13 @@ if (!function_exists('vms_public_calendar_render_compact_view')) {
 				continue;
 			}
 			$month_ym = isset($month['ym']) ? (string) $month['ym'] : '';
-			$month_events = vms_public_calendar_filter_events_for_month($events, $month_ym);
+			$month_events = bvmgr_public_calendar_filter_events_for_month($events, $month_ym);
 			if (empty($month_events)) {
 				continue;
 			}
-			$days = vms_public_calendar_build_month_days($month_events);
-			$day_states = vms_public_calendar_build_day_states($month, $state_venue_id, $show_open_closed);
-			$layout = vms_public_calendar_build_compact_month_layout($month, $days, $day_states);
+			$days = bvmgr_public_calendar_build_month_days($month_events);
+			$day_states = bvmgr_public_calendar_build_day_states($month, $state_venue_id, $show_open_closed);
+			$layout = bvmgr_public_calendar_build_compact_month_layout($month, $days, $day_states);
 			$active_weekdays = isset($layout['active_weekdays']) && is_array($layout['active_weekdays']) ? $layout['active_weekdays'] : array();
 			$row_count = isset($layout['rows']) ? (int) $layout['rows'] : 0;
 			$cells = isset($layout['cells']) && is_array($layout['cells']) ? $layout['cells'] : array();
@@ -1303,7 +1303,7 @@ if (!function_exists('vms_public_calendar_render_compact_view')) {
 			$rendered_count++;
 			echo '<section class="vms-public-cal-compact-month">';
 			echo '<header class="vms-public-cal-compact-month-head">';
-			echo '<h3 class="vms-public-cal-compact-month-title">' . esc_html(vms_public_calendar_month_label($month_ym, 'F Y')) . '</h3>';
+			echo '<h3 class="vms-public-cal-compact-month-title">' . esc_html(bvmgr_public_calendar_month_label($month_ym, 'F Y')) . '</h3>';
 			echo '</header>';
 			echo '<div class="vms-public-cal-compact-grid" style="--vms-compact-columns:' . esc_attr((string) count($active_weekdays)) . ';">';
 			foreach ($active_weekdays as $weekday) {
@@ -1318,14 +1318,14 @@ if (!function_exists('vms_public_calendar_render_compact_view')) {
 					}
 					$cell = $cells[$row][$weekday];
 					$state = isset($cell['state']) && is_array($cell['state']) ? $cell['state'] : array();
-					$cell_classes = vms_public_calendar_day_cell_classes($state, array('vms-public-cal-compact-cell'));
+					$cell_classes = bvmgr_public_calendar_day_cell_classes($state, array('vms-public-cal-compact-cell'));
 					$popover_align_class = ($column_index === count($active_weekdays) - 1) ? ' is-right' : '';
 						echo '<div class="' . esc_attr(implode(' ', $cell_classes)) . '">';
 						echo '<div class="vms-cal-daynum">' . esc_html((string) ($cell['day'] ?? '')) . '</div>';
-						echo wp_kses(vms_public_calendar_render_day_entries(
+						echo wp_kses(bvmgr_public_calendar_render_day_entries(
 							isset($cell['events']) && is_array($cell['events']) ? $cell['events'] : array(),
 							$popover_align_class
-						), vms_public_calendar_allowed_html());
+						), bvmgr_public_calendar_allowed_html());
 						echo '</div>';
 				}
 			}
@@ -1343,7 +1343,7 @@ if (!function_exists('vms_public_calendar_render_compact_view')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_render_month_grid')) {
+if (!function_exists('bvmgr_public_calendar_render_month_grid')) {
 	/**
 	 * Frontend-safe month grid renderer used when admin calendar helpers are unavailable.
 	 *
@@ -1351,7 +1351,7 @@ if (!function_exists('vms_public_calendar_render_month_grid')) {
 	 * @param array<int,array<int,array<string,mixed>>> $days
 	 * @param array<int,array{is_past:bool,is_today:bool,is_open:bool|null}> $day_states
 	 */
-	function vms_public_calendar_render_month_grid(array $month, array $days, array $day_states = array()): string
+	function bvmgr_public_calendar_render_month_grid(array $month, array $days, array $day_states = array()): string
 	{
 		$start_ts = isset($month['start_ts']) ? (int) $month['start_ts'] : 0;
 		$days_in_month = isset($month['days_in_month']) ? (int) $month['days_in_month'] : 0;
@@ -1372,12 +1372,12 @@ if (!function_exists('vms_public_calendar_render_month_grid')) {
 			$grid_col = (($first_wday + ($day - 1)) % 7) + 1;
 			$popover_align_class = ($grid_col >= 6) ? ' is-right' : '';
 			$state = (isset($day_states[$day]) && is_array($day_states[$day])) ? $day_states[$day] : array();
-			$cell_classes = vms_public_calendar_day_cell_classes($state);
+			$cell_classes = bvmgr_public_calendar_day_cell_classes($state);
 			$out .= '<div class="' . esc_attr(implode(' ', $cell_classes)) . '">';
 			$out .= '<div class="vms-cal-daynum">' . (int) $day . '</div>';
 
 			if (!empty($days[$day]) && is_array($days[$day])) {
-				$out .= vms_public_calendar_render_day_entries($days[$day], $popover_align_class);
+				$out .= bvmgr_public_calendar_render_day_entries($days[$day], $popover_align_class);
 			}
 
 			$out .= '</div>';
@@ -1388,11 +1388,11 @@ if (!function_exists('vms_public_calendar_render_month_grid')) {
 	}
 }
 
-if (!function_exists('vms_public_calendar_shortcode_handler')) {
+if (!function_exists('bvmgr_public_calendar_shortcode_handler')) {
 	/**
 	 * @param array<string,mixed> $atts
 	 */
-	function vms_public_calendar_shortcode_handler($atts = array(), $content = '', $tag = 'vms_public_calendar'): string
+	function bvmgr_public_calendar_shortcode_handler($atts = array(), $content = '', $tag = 'vms_public_calendar'): string
 	{
 		$is_legacy = ($tag === 'vms_venue_calendar');
 
@@ -1409,16 +1409,16 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			$current_ym = wp_date('Y-m', time(), function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone());
 
 			$ym = $atts['month'] !== '' ? sanitize_text_field((string) $atts['month']) : '';
-			$requested_ym = vms_public_calendar_get_requested_month();
+			$requested_ym = bvmgr_public_calendar_get_requested_month();
 			if ($requested_ym !== '') {
 				$ym = $requested_ym;
 			}
 			if ($ym === '') {
 				$ym = $current_ym;
 			}
-		$month = vms_parse_month_ym($ym);
+		$month = bvmgr_parse_month_ym($ym);
 		$month_end_inclusive = gmdate('Y-m-d', strtotime('-1 day', strtotime($month['end'])));
-		$nav = vms_calendar_prev_next($month['ym']);
+		$nav = bvmgr_calendar_prev_next($month['ym']);
 
 		$show_vendors = ((string) $atts['show_vendors'] === '1');
 		$show_images = ((string) $atts['show_images'] === '1');
@@ -1433,7 +1433,7 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			$venues = is_array($venues) ? $venues : array();
 
 			$venue_raw = sanitize_text_field((string) $atts['venue']);
-			$requested_venue = vms_public_calendar_get_requested_venue();
+			$requested_venue = bvmgr_public_calendar_get_requested_venue();
 			if ($requested_venue !== '') {
 				$venue_raw = $requested_venue;
 			}
@@ -1462,22 +1462,22 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			return '<div>' . esc_html__('No venues found.', 'backstage-venue-manager') . '</div>';
 		}
 
-		$settings = function_exists('vms_calendar_settings') ? (array) vms_calendar_settings() : (array) get_option('vms_settings', array());
+		$settings = function_exists('bvmgr_calendar_settings') ? (array) bvmgr_calendar_settings() : (array) get_option('vms_settings', array());
 		if (!$is_legacy && array_key_exists('calendar_public_shortcode_enabled', $settings) && empty($settings['calendar_public_shortcode_enabled'])) {
 			return '';
 		}
 			$default_view = $is_legacy
 				? 'month'
-				: vms_public_calendar_normalize_view((string) ($settings['calendar_public_default_view'] ?? 'auto'));
+				: bvmgr_public_calendar_normalize_view((string) ($settings['calendar_public_default_view'] ?? 'auto'));
 			$view = trim((string) $atts['view']) !== ''
-				? vms_public_calendar_normalize_view((string) $atts['view'])
+				? bvmgr_public_calendar_normalize_view((string) $atts['view'])
 				: $default_view;
-			$requested_view = vms_public_calendar_get_requested_view();
+			$requested_view = bvmgr_public_calendar_get_requested_view();
 			if ($requested_view !== '') {
-				$view = vms_public_calendar_normalize_view($requested_view);
+				$view = bvmgr_public_calendar_normalize_view($requested_view);
 			}
 
-			$user_agent = vms_public_calendar_get_request_user_agent();
+			$user_agent = bvmgr_public_calendar_get_request_user_agent();
 			$is_tablet_calendar_request = !$is_legacy && (
 				wp_is_mobile()
 				|| strpos($user_agent, 'ipad') !== false
@@ -1501,7 +1501,7 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			if ($month['ym'] <= $current_ym) {
 				$include_past = true;
 			}
-			$requested_show_past = vms_public_calendar_get_requested_show_past();
+			$requested_show_past = bvmgr_public_calendar_get_requested_show_past();
 			if ($requested_show_past !== null) {
 				$include_past = ($requested_show_past === 1);
 			}
@@ -1515,12 +1515,12 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		);
 		$compact_context = array();
 		if ($effective_view === 'compact') {
-			$compact_context = vms_public_calendar_build_compact_context($month['ym'], $calendar_feed_args, 3);
+			$compact_context = bvmgr_public_calendar_build_compact_context($month['ym'], $calendar_feed_args, 3);
 			$rendered_months = isset($compact_context['months']) && is_array($compact_context['months'])
 				? $compact_context['months']
 				: array();
 		} else {
-			$rendered_months = vms_public_calendar_month_sequence($month['ym'], 1);
+			$rendered_months = bvmgr_public_calendar_month_sequence($month['ym'], 1);
 		}
 
 		$events = array();
@@ -1544,8 +1544,8 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		$base_args['view'] = $view;
 		$base = add_query_arg($base_args, $self);
 		$nav_markup = ($effective_view === 'compact')
-			? vms_public_calendar_render_compact_nav($compact_context, $base)
-			: vms_public_calendar_render_nav($nav, $base, $month);
+			? bvmgr_public_calendar_render_compact_nav($compact_context, $base)
+			: bvmgr_public_calendar_render_nav($nav, $base, $month);
 
 		$calendar_script_ver = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
 		if (defined('BVMGR_PLUGIN_PATH')) {
@@ -1604,25 +1604,25 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 				<p class="vms-public-cal-compact-note"><?php echo esc_html__('Compact view shows up to three event-bearing months in weekend-focused chunks and skips empty months.', 'backstage-venue-manager'); ?></p>
 			<?php endif; ?>
 
-				<?php echo wp_kses($nav_markup, vms_public_calendar_allowed_html()); ?>
+				<?php echo wp_kses($nav_markup, bvmgr_public_calendar_allowed_html()); ?>
 
 				<?php
 					if ($effective_view === 'list') {
-						$list_markup = vms_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
-						echo wp_kses($list_markup, vms_public_calendar_allowed_html());
+						$list_markup = bvmgr_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
+						echo wp_kses($list_markup, bvmgr_public_calendar_allowed_html());
 					} elseif ($effective_view === 'compact') {
 						$state_venue_id = ($selected_venue !== 'all') ? absint($selected_venue) : 0;
-						echo wp_kses(vms_public_calendar_render_compact_view($rendered_months, $events, $state_venue_id, $show_open_closed), vms_public_calendar_allowed_html());
+						echo wp_kses(bvmgr_public_calendar_render_compact_view($rendered_months, $events, $state_venue_id, $show_open_closed), bvmgr_public_calendar_allowed_html());
 					} else {
-						$list_markup = vms_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
-					$primary_month_events = vms_public_calendar_filter_events_for_month($events, $month['ym']);
-					$days = vms_public_calendar_build_month_days($primary_month_events);
+						$list_markup = bvmgr_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed);
+					$primary_month_events = bvmgr_public_calendar_filter_events_for_month($events, $month['ym']);
+					$days = bvmgr_public_calendar_build_month_days($primary_month_events);
 					$state_venue_id = ($selected_venue !== 'all') ? absint($selected_venue) : 0;
-					$day_states = vms_public_calendar_build_day_states($month, $state_venue_id, $show_open_closed);
-						echo wp_kses(vms_public_calendar_render_month_grid($month, $days, $day_states), vms_public_calendar_allowed_html());
-						echo '<div class="vms-public-cal-mobile-list-fallback" aria-label="' . esc_attr__('Mobile and tablet list view', 'backstage-venue-manager') . '">' . wp_kses($list_markup, vms_public_calendar_allowed_html()) . '</div>';
+					$day_states = bvmgr_public_calendar_build_day_states($month, $state_venue_id, $show_open_closed);
+						echo wp_kses(bvmgr_public_calendar_render_month_grid($month, $days, $day_states), bvmgr_public_calendar_allowed_html());
+						echo '<div class="vms-public-cal-mobile-list-fallback" aria-label="' . esc_attr__('Mobile and tablet list view', 'backstage-venue-manager') . '">' . wp_kses($list_markup, bvmgr_public_calendar_allowed_html()) . '</div>';
 					}
-					echo wp_kses($nav_markup, vms_public_calendar_allowed_html());
+					echo wp_kses($nav_markup, bvmgr_public_calendar_allowed_html());
 				?>
 		</div>
 		<?php
@@ -1631,5 +1631,5 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 	}
 }
 
-add_shortcode('vms_venue_calendar', 'vms_public_calendar_shortcode_handler');
-add_shortcode('vms_public_calendar', 'vms_public_calendar_shortcode_handler');
+add_shortcode('vms_venue_calendar', 'bvmgr_public_calendar_shortcode_handler');
+add_shortcode('vms_public_calendar', 'bvmgr_public_calendar_shortcode_handler');

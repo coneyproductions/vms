@@ -79,7 +79,7 @@ $runCommand = static function (string $command) use ($repoRoot): string {
 };
 
 $brokerFunction = $extractFunction($privateFilesSource, 'bvmgr_private_files_store_validated_upload');
-$staffCertFunction = $extractFunction($staffPortalSource, 'vms_staff_portal_handle_certification_submission');
+$staffCertFunction = $extractFunction($staffPortalSource, 'bvmgr_staff_portal_handle_certification_submission');
 $verificationStoreFunction = $extractFunction($ticketingSource, 'bvmgr_ticketing_verification_store_proof_file');
 
 $assert(strpos($brokerFunction, 'move_uploaded_file(') === false, 'The shared private-file broker should no longer call move_uploaded_file() directly.');
@@ -103,7 +103,7 @@ $assert(strpos($brokerFunction, 'wp_insert_attachment(') === false, 'The broker 
 $assert(strpos($brokerFunction, '@chmod($destination, 0640);') !== false, 'The broker should preserve the existing 0640 permission behavior.');
 $assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_w9_allowed_mimes()") !== false, 'The W-9 wrapper should pass its exact MIME map into the broker.');
 $assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_staff_cert_allowed_mimes()") !== false, 'The staff-cert wrapper should pass its exact MIME map into the broker.');
-$assert(strpos($vendorPortalSource, '$allowed_mimes = vms_vendor_portal_tech_doc_allowed_mimes();') !== false, 'Vendor tech docs should reuse the same MIME map for validation and storage.');
+$assert(strpos($vendorPortalSource, '$allowed_mimes = bvmgr_vendor_portal_tech_doc_allowed_mimes();') !== false, 'Vendor tech docs should reuse the same MIME map for validation and storage.');
 $assert(substr_count($vendorPortalSource, "'allowed_mimes' => \$allowed_mimes") >= 2, 'Vendor tech docs should pass the exact same MIME map to validation and storage.');
 $assert(strpos($ticketingSource, '$allowed_mimes = bvmgr_ticketing_verification_allowed_mimes();') !== false, 'Ticket verification proofs should reuse the same MIME map for storage.');
 $assert(strpos($verificationStoreFunction, "'allowed_mimes' => \$allowed_mimes") !== false, 'The non-image verification proof branch should pass the exact validation MIME map into the broker.');

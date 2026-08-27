@@ -7,10 +7,10 @@ vms_tests_require_wordpress(__DIR__);
 if (!class_exists('BVMGR_Admin_Event_Plans')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
-if (!function_exists('vms_add_dispatch_render_assignment_review')) {
+if (!function_exists('bvmgr_add_dispatch_render_assignment_review')) {
 	require_once dirname(__DIR__) . '/includes/modules/availability-date-dispatch/admin-ui.php';
 }
-if (!function_exists('vms_add_dispatch_email_body_text')) {
+if (!function_exists('bvmgr_add_dispatch_email_body_text')) {
 	require_once dirname(__DIR__) . '/includes/modules/availability-date-dispatch/email.php';
 }
 
@@ -31,8 +31,8 @@ $registerPost = static function (int $postId) use (&$createdPosts): int {
 
 $cleanup = static function () use (&$createdPosts, &$createdTerms, &$createdAddRequestIds): void {
 	global $wpdb;
-	$requestsTable = function_exists('vms_add_dispatch_table_name') ? vms_add_dispatch_table_name('requests') : '';
-	$responsesTable = function_exists('vms_add_dispatch_table_name') ? vms_add_dispatch_table_name('responses') : '';
+	$requestsTable = function_exists('bvmgr_add_dispatch_table_name') ? bvmgr_add_dispatch_table_name('requests') : '';
+	$responsesTable = function_exists('bvmgr_add_dispatch_table_name') ? bvmgr_add_dispatch_table_name('responses') : '';
 	foreach (array_reverse($createdAddRequestIds) as $requestId) {
 		$requestId = (int) $requestId;
 		if ($requestId <= 0) {
@@ -81,7 +81,7 @@ try {
 		$vendorId = $registerPost((int) $vendorId);
 		wp_set_object_terms($vendorId, array_values($typeSlugs), 'vms_vendor_type', false);
 		if ($email !== '') {
-			update_post_meta($vendorId, vms_add_dispatch_vendor_email_key(), $email);
+			update_post_meta($vendorId, bvmgr_add_dispatch_vendor_email_key(), $email);
 		}
 		return $vendorId;
 	};
@@ -134,7 +134,7 @@ try {
 	));
 	$assert(!is_wp_error($seed), 'Seeded Food/Dessert groups should save.');
 
-	$created = vms_add_dispatch_create_request($planId, array(
+	$created = bvmgr_add_dispatch_create_request($planId, array(
 		'target_mode' => 'secondary',
 		'vendor_type' => 'food_truck',
 		'include_no_response' => 1,
@@ -150,13 +150,13 @@ try {
 	$createdAddRequestIds[] = (int) ($request['id'] ?? 0);
 	$responseId = (int) ($response['id'] ?? 0);
 	$assert($responseId > 0, 'ADD response should be stored.');
-	$recorded = vms_add_dispatch_record_public_response($response, 'available', 'email');
+	$recorded = bvmgr_add_dispatch_record_public_response($response, 'available', 'email');
 	$assert(!is_wp_error($recorded), 'Vendor should respond Available.');
 
 	wp_set_object_terms($vendorId, array('dessert_truck'), 'vms_vendor_type', false);
 
 	$beforeAssignments = (array) get_post_meta($planId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true);
-	$review = vms_add_dispatch_assignment_review($responseId);
+	$review = bvmgr_add_dispatch_assignment_review($responseId);
 	$assert(!is_wp_error($review), 'Assignment review should load.');
 	$review = (array) $review;
 	$assert((string) ($review['original_type'] ?? '') === 'food_truck', 'Original response type should remain Food Vendor.');
@@ -164,20 +164,20 @@ try {
 	$assert((string) ($review['selected_type'] ?? '') === 'dessert_truck', 'Review should default Assign as target to current Dessert Vendor type.');
 	$assert(!empty($review['warnings']) && strpos((string) $review['warnings'][0], 'originally responded as Food Vendor') !== false, 'Review should warn about Food Vendor to Dessert Vendor mismatch.');
 	ob_start();
-	vms_add_dispatch_render_assignment_review($responseId);
+	bvmgr_add_dispatch_render_assignment_review($responseId);
 	$reviewHtml = (string) ob_get_clean();
 	$assert(strpos($reviewHtml, 'Assign as') !== false && strpos($reviewHtml, 'Dessert Vendor') !== false && strpos($reviewHtml, 'Food Vendor') !== false, 'Review UI should show target selector and readable labels.');
 
-	$direct = vms_add_dispatch_assign_vendor_to_plan($responseId);
+	$direct = bvmgr_add_dispatch_assign_vendor_to_plan($responseId);
 	$assert(is_wp_error($direct) && $direct->get_error_code() === 'add_dispatch_assignment_target_required', 'Legacy direct assignment should not write without confirmation target.');
 	$assert(wp_json_encode($beforeAssignments) === wp_json_encode(get_post_meta($planId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true)), 'Review/direct attempt should not change assignments before confirmation.');
 
-	$assigned = vms_add_dispatch_apply_assignment_review($responseId, 'dessert_truck', false);
+	$assigned = bvmgr_add_dispatch_apply_assignment_review($responseId, 'dessert_truck', false);
 	$assert(!is_wp_error($assigned), 'Confirmed Dessert Vendor assignment should succeed.');
 	$afterAssignments = (array) get_post_meta($planId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true);
 	$assert(in_array($vendorId, (array) ($afterAssignments['dessert_truck']['vendor_ids'] ?? array()), true), 'Confirmed assignment should write vendor into Dessert Vendor group.');
 	$assert(!in_array($vendorId, (array) ($afterAssignments['food_truck']['vendor_ids'] ?? array()), true), 'Food Vendor slot should remain open.');
-	$context = vms_add_dispatch_get_event_plan_context($planId);
+	$context = bvmgr_add_dispatch_get_event_plan_context($planId);
 	$foodRow = array();
 	foreach ((array) ($context['vendor_need_rows'] ?? array()) as $row) {
 		if ((string) ($row['type_slug'] ?? '') === 'food_truck') {
@@ -188,7 +188,7 @@ try {
 	$assert(!empty($foodRow['is_open']) && (int) ($foodRow['open_needed'] ?? 0) === 1, 'Food Vendor open need should remain after assigning vendor as Dessert Vendor.');
 	$compatIds = get_post_meta($planId, function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids', true);
 	$assert(in_array($vendorId, (array) $compatIds, true), 'Compatibility secondary vendor IDs should include assigned Dessert Vendor.');
-	$freshResponse = vms_add_dispatch_get_response($responseId);
+	$freshResponse = bvmgr_add_dispatch_get_response($responseId);
 	$assert(is_array($freshResponse) && trim((string) ($freshResponse['assigned_at'] ?? '')) !== '', 'ADD response should be marked assigned after confirmation.');
 
 	$fullPlanId = $createPlan('ADD Assign Review Full Dessert', $primaryVendorId);
@@ -200,7 +200,7 @@ try {
 		),
 	));
 	$assert(!is_wp_error($fullSeed), 'Full Dessert fixture should save.');
-	$fullCreated = vms_add_dispatch_create_request($fullPlanId, array(
+	$fullCreated = bvmgr_add_dispatch_create_request($fullPlanId, array(
 		'target_mode' => 'secondary',
 		'vendor_type' => 'food_truck',
 		'include_no_response' => 1,
@@ -215,10 +215,10 @@ try {
 	$fullResponse = (array) (($fullCreated['responses'][0] ?? array()));
 	$createdAddRequestIds[] = (int) ($fullRequest['id'] ?? 0);
 	$fullResponseId = (int) ($fullResponse['id'] ?? 0);
-	$assert(!is_wp_error(vms_add_dispatch_record_public_response($fullResponse, 'available', 'email')), 'Full-group response should be Available.');
-	$blocked = vms_add_dispatch_apply_assignment_review($fullResponseId, 'dessert_truck', false);
+	$assert(!is_wp_error(bvmgr_add_dispatch_record_public_response($fullResponse, 'available', 'email')), 'Full-group response should be Available.');
+	$blocked = bvmgr_add_dispatch_apply_assignment_review($fullResponseId, 'dessert_truck', false);
 	$assert(is_wp_error($blocked) && $blocked->get_error_code() === 'vms_secondary_vendor_over_capacity', 'Full target group should require over-capacity override.');
-	$override = vms_add_dispatch_apply_assignment_review($fullResponseId, 'dessert_truck', true);
+	$override = bvmgr_add_dispatch_apply_assignment_review($fullResponseId, 'dessert_truck', true);
 	$assert(!is_wp_error($override), 'Full target group should assign when override is confirmed.');
 	$fullAssignments = (array) get_post_meta($fullPlanId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true);
 	$assert(!empty($fullAssignments['dessert_truck']['allow_over_capacity']), 'Override confirmation should persist allow_over_capacity.');

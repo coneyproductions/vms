@@ -41,11 +41,11 @@ function bvmgr_render_admin_venue_calendar_page(): void
         $ym = gmdate('Y-m');
     }
 
-    $data = vms_get_event_plans_for_venue_month($venue_id, $ym);
+    $data = bvmgr_get_event_plans_for_venue_month($venue_id, $ym);
     $month = $data['month'];
     $days  = $data['days'];
 
-    $nav = vms_calendar_prev_next($ym);
+    $nav = bvmgr_calendar_prev_next($ym);
 
     echo '<div class="wrap vms-venue-calendar">';
     echo '<h1>Venue Calendar</h1>';

@@ -8,15 +8,15 @@ defined('ABSPATH') || exit;
  *   /{base}/{vendor-slug}/
  */
 
-add_action('init', 'vms_vendor_profiles_register_rewrite', 11);
-add_action('init', 'vms_vendor_profiles_register_shortcodes', 12);
-add_filter('query_vars', 'vms_vendor_profiles_register_query_vars', 11);
-add_filter('template_include', 'vms_vendor_profiles_template_include', 99);
-add_action('wp_enqueue_scripts', 'vms_vendor_profiles_public_assets', 11);
-add_action('admin_init', 'vms_vendor_profiles_maybe_flush_rewrites', 20);
-add_filter('the_content', 'vms_vendor_profiles_append_event_vendor_teaser', 22);
+add_action('init', 'bvmgr_vendor_profiles_register_rewrite', 11);
+add_action('init', 'bvmgr_vendor_profiles_register_shortcodes', 12);
+add_filter('query_vars', 'bvmgr_vendor_profiles_register_query_vars', 11);
+add_filter('template_include', 'bvmgr_vendor_profiles_template_include', 99);
+add_action('wp_enqueue_scripts', 'bvmgr_vendor_profiles_public_assets', 11);
+add_action('admin_init', 'bvmgr_vendor_profiles_maybe_flush_rewrites', 20);
+add_filter('the_content', 'bvmgr_vendor_profiles_append_event_vendor_teaser', 22);
 
-function vms_vendor_profiles_register_rewrite(): void
+function bvmgr_vendor_profiles_register_rewrite(): void
 {
     $base = trim(function_exists('bvmgr_vendor_profile_base_slug') ? bvmgr_vendor_profile_base_slug() : 'vendor', '/');
     $base = $base !== '' ? $base : 'vendor';
@@ -28,20 +28,20 @@ function vms_vendor_profiles_register_rewrite(): void
     );
 }
 
-function vms_vendor_profiles_register_query_vars(array $vars): array
+function bvmgr_vendor_profiles_register_query_vars(array $vars): array
 {
     $vars[] = 'vms_vendor_profile';
     return $vars;
 }
 
-function vms_vendor_profiles_register_shortcodes(): void
+function bvmgr_vendor_profiles_register_shortcodes(): void
 {
-    add_shortcode('vms_vendor_teaser', 'vms_vendor_profiles_shortcode_vendor_teaser');
-    add_shortcode('vms_secondary_vendor_teaser', 'vms_vendor_profiles_shortcode_secondary_vendor_teaser');
-    add_shortcode('vms_vendor_next_show', 'vms_vendor_profiles_shortcode_next_show');
+    add_shortcode('vms_vendor_teaser', 'bvmgr_vendor_profiles_shortcode_vendor_teaser');
+    add_shortcode('vms_secondary_vendor_teaser', 'bvmgr_vendor_profiles_shortcode_secondary_vendor_teaser');
+    add_shortcode('vms_vendor_next_show', 'bvmgr_vendor_profiles_shortcode_next_show');
 }
 
-function vms_vendor_profiles_public_assets(): void
+function bvmgr_vendor_profiles_public_assets(): void
 {
     if (!get_query_var('vms_vendor_profile') && !is_singular('tribe_events') && !is_singular('page') && !is_singular('post')) {
         return;
@@ -55,7 +55,7 @@ function vms_vendor_profiles_public_assets(): void
     );
 }
 
-function vms_vendor_profiles_template_include(string $template): string
+function bvmgr_vendor_profiles_template_include(string $template): string
 {
     $raw = get_query_var('vms_vendor_profile');
     if (!$raw) {
@@ -64,7 +64,7 @@ function vms_vendor_profiles_template_include(string $template): string
 
     $slug = sanitize_title((string) $raw);
     if ($slug === '') {
-        return vms_vendor_profiles_404($template);
+        return bvmgr_vendor_profiles_404($template);
     }
 
     $q = new WP_Query([
@@ -77,13 +77,13 @@ function vms_vendor_profiles_template_include(string $template): string
     ]);
 
     if (empty($q->posts) || !($q->posts[0] instanceof WP_Post)) {
-        return vms_vendor_profiles_404($template);
+        return bvmgr_vendor_profiles_404($template);
     }
 
     $vendor = $q->posts[0];
 
     if (function_exists('bvmgr_vendor_profile_is_enabled') && !bvmgr_vendor_profile_is_enabled((int) $vendor->ID)) {
-        return vms_vendor_profiles_404($template);
+        return bvmgr_vendor_profiles_404($template);
     }
 
     $GLOBALS['bvmgr_vendor_profile_post'] = $vendor;
@@ -100,7 +100,7 @@ function vms_vendor_profiles_template_include(string $template): string
     return $template;
 }
 
-function vms_vendor_profiles_404(string $template): string
+function bvmgr_vendor_profiles_404(string $template): string
 {
     global $wp_query;
 
@@ -114,7 +114,7 @@ function vms_vendor_profiles_404(string $template): string
     return $t404 ? $t404 : $template;
 }
 
-function vms_vendor_profiles_maybe_flush_rewrites(): void
+function bvmgr_vendor_profiles_maybe_flush_rewrites(): void
 {
     if (!current_user_can('manage_options')) {
         return;
@@ -129,8 +129,8 @@ function vms_vendor_profiles_maybe_flush_rewrites(): void
     update_option(defined('BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1') ? BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1 : 'vms_rewrite_flushed_vendor_profiles_v1', '1', false);
 }
 
-if (!function_exists('vms_vendor_profiles_today_ymd')) {
-    function vms_vendor_profiles_today_ymd(): string
+if (!function_exists('bvmgr_vendor_profiles_today_ymd')) {
+    function bvmgr_vendor_profiles_today_ymd(): string
     {
         if (function_exists('wp_date') && function_exists('wp_timezone')) {
             return (string) wp_date('Y-m-d', time(), wp_timezone());
@@ -140,8 +140,8 @@ if (!function_exists('vms_vendor_profiles_today_ymd')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_get_primary_vendor_for_tec_event')) {
-    function vms_vendor_profiles_get_primary_vendor_for_tec_event(int $tec_event_id): int
+if (!function_exists('bvmgr_vendor_profiles_get_primary_vendor_for_tec_event')) {
+    function bvmgr_vendor_profiles_get_primary_vendor_for_tec_event(int $tec_event_id): int
     {
         $tec_event_id = (int) $tec_event_id;
         if ($tec_event_id <= 0) {
@@ -159,8 +159,8 @@ if (!function_exists('vms_vendor_profiles_get_primary_vendor_for_tec_event')) {
 }
 
 
-if (!function_exists('vms_vendor_profiles_get_secondary_vendors_for_tec_event')) {
-    function vms_vendor_profiles_get_secondary_vendors_for_tec_event(int $tec_event_id, string $type_filter = ''): array
+if (!function_exists('bvmgr_vendor_profiles_get_secondary_vendors_for_tec_event')) {
+    function bvmgr_vendor_profiles_get_secondary_vendors_for_tec_event(int $tec_event_id, string $type_filter = ''): array
     {
         $tec_event_id = (int) $tec_event_id;
         if ($tec_event_id <= 0) {
@@ -199,8 +199,8 @@ if (!function_exists('vms_vendor_profiles_get_secondary_vendors_for_tec_event'))
     }
 }
 
-if (!function_exists('vms_vendor_profiles_get_related_vendor_for_tec_event')) {
-    function vms_vendor_profiles_get_related_vendor_for_tec_event(int $tec_event_id, string $role = 'primary', string $type_filter = ''): int
+if (!function_exists('bvmgr_vendor_profiles_get_related_vendor_for_tec_event')) {
+    function bvmgr_vendor_profiles_get_related_vendor_for_tec_event(int $tec_event_id, string $role = 'primary', string $type_filter = ''): int
     {
         $tec_event_id = (int) $tec_event_id;
         $role = sanitize_key($role);
@@ -213,16 +213,16 @@ if (!function_exists('vms_vendor_profiles_get_related_vendor_for_tec_event')) {
         }
 
         if ($role === 'secondary') {
-            $secondary_ids = vms_vendor_profiles_get_secondary_vendors_for_tec_event($tec_event_id, $type_filter);
+            $secondary_ids = bvmgr_vendor_profiles_get_secondary_vendors_for_tec_event($tec_event_id, $type_filter);
             return !empty($secondary_ids) ? (int) reset($secondary_ids) : 0;
         }
 
-        return vms_vendor_profiles_get_primary_vendor_for_tec_event($tec_event_id);
+        return bvmgr_vendor_profiles_get_primary_vendor_for_tec_event($tec_event_id);
     }
 }
 
-if (!function_exists('vms_vendor_profiles_get_event_plan_for_tec_event')) {
-    function vms_vendor_profiles_get_event_plan_for_tec_event(int $tec_event_id): int
+if (!function_exists('bvmgr_vendor_profiles_get_event_plan_for_tec_event')) {
+    function bvmgr_vendor_profiles_get_event_plan_for_tec_event(int $tec_event_id): int
     {
         $tec_event_id = absint($tec_event_id);
         if ($tec_event_id <= 0 || !function_exists('bvmgr_get_event_plan_for_tec_event')) {
@@ -233,8 +233,8 @@ if (!function_exists('vms_vendor_profiles_get_event_plan_for_tec_event')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_event_sidebar_rendered')) {
-    function vms_vendor_profiles_event_sidebar_rendered(int $tec_event_id): bool
+if (!function_exists('bvmgr_vendor_profiles_event_sidebar_rendered')) {
+    function bvmgr_vendor_profiles_event_sidebar_rendered(int $tec_event_id): bool
     {
         $tec_event_id = absint($tec_event_id);
         if ($tec_event_id <= 0) {
@@ -249,8 +249,8 @@ if (!function_exists('vms_vendor_profiles_event_sidebar_rendered')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_mark_event_sidebar_rendered')) {
-    function vms_vendor_profiles_mark_event_sidebar_rendered(int $tec_event_id): void
+if (!function_exists('bvmgr_vendor_profiles_mark_event_sidebar_rendered')) {
+    function bvmgr_vendor_profiles_mark_event_sidebar_rendered(int $tec_event_id): void
     {
         $tec_event_id = absint($tec_event_id);
         if ($tec_event_id > 0) {
@@ -263,8 +263,8 @@ if (!function_exists('vms_vendor_profiles_mark_event_sidebar_rendered')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_vendor_exists')) {
-    function vms_vendor_profiles_vendor_exists(int $vendor_id): bool
+if (!function_exists('bvmgr_vendor_profiles_vendor_exists')) {
+    function bvmgr_vendor_profiles_vendor_exists(int $vendor_id): bool
     {
         $vendor_id = absint($vendor_id);
         if ($vendor_id <= 0) {
@@ -276,8 +276,8 @@ if (!function_exists('vms_vendor_profiles_vendor_exists')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_shortcode_targets_event_sidebar')) {
-    function vms_vendor_profiles_shortcode_targets_event_sidebar($vendor, int $tec_event_id, array $atts = array()): bool
+if (!function_exists('bvmgr_vendor_profiles_shortcode_targets_event_sidebar')) {
+    function bvmgr_vendor_profiles_shortcode_targets_event_sidebar($vendor, int $tec_event_id, array $atts = array()): bool
     {
         $tec_event_id = absint($tec_event_id);
         if ($tec_event_id <= 0) {
@@ -297,8 +297,8 @@ if (!function_exists('vms_vendor_profiles_shortcode_targets_event_sidebar')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_public_vendor_url')) {
-    function vms_vendor_profiles_public_vendor_url(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_profiles_public_vendor_url')) {
+    function bvmgr_vendor_profiles_public_vendor_url(int $vendor_id): string
     {
         $vendor_id = absint($vendor_id);
         if ($vendor_id <= 0) {
@@ -313,8 +313,8 @@ if (!function_exists('vms_vendor_profiles_public_vendor_url')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_is_food_group_type')) {
-    function vms_vendor_profiles_is_food_group_type(string $type_slug): bool
+if (!function_exists('bvmgr_vendor_profiles_is_food_group_type')) {
+    function bvmgr_vendor_profiles_is_food_group_type(string $type_slug): bool
     {
         $type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
             ? bvmgr_vendor_type_normalize_slug($type_slug)
@@ -324,14 +324,14 @@ if (!function_exists('vms_vendor_profiles_is_food_group_type')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_group_key_for_type')) {
-    function vms_vendor_profiles_group_key_for_type(string $type_slug): string
+if (!function_exists('bvmgr_vendor_profiles_group_key_for_type')) {
+    function bvmgr_vendor_profiles_group_key_for_type(string $type_slug): string
     {
         $type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
             ? bvmgr_vendor_type_normalize_slug($type_slug)
             : sanitize_key($type_slug);
 
-        if (vms_vendor_profiles_is_food_group_type($type_slug)) {
+        if (bvmgr_vendor_profiles_is_food_group_type($type_slug)) {
             return 'food_vendors';
         }
 
@@ -339,8 +339,8 @@ if (!function_exists('vms_vendor_profiles_group_key_for_type')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_group_sort_order')) {
-    function vms_vendor_profiles_group_sort_order(string $group_key): int
+if (!function_exists('bvmgr_vendor_profiles_group_sort_order')) {
+    function bvmgr_vendor_profiles_group_sort_order(string $group_key): int
     {
         $group_key = sanitize_key($group_key);
         $order = array(
@@ -355,8 +355,8 @@ if (!function_exists('vms_vendor_profiles_group_sort_order')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_group_heading')) {
-    function vms_vendor_profiles_group_heading(string $group_key, string $type_slug, int $count): string
+if (!function_exists('bvmgr_vendor_profiles_group_heading')) {
+    function bvmgr_vendor_profiles_group_heading(string $group_key, string $type_slug, int $count): string
     {
         $group_key = sanitize_key($group_key);
         $type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
@@ -391,8 +391,8 @@ if (!function_exists('vms_vendor_profiles_group_heading')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_vendor_subtitle')) {
-    function vms_vendor_profiles_vendor_subtitle(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_profiles_vendor_subtitle')) {
+    function bvmgr_vendor_profiles_vendor_subtitle(int $vendor_id): string
     {
         $vendor_id = absint($vendor_id);
         if ($vendor_id <= 0) {
@@ -427,7 +427,7 @@ if (!function_exists('vms_vendor_profiles_vendor_subtitle')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
+if (!function_exists('bvmgr_vendor_profiles_build_event_vendor_groups')) {
     /**
      * Public event vendor output must read only finalized Event Plan-owned vendor assignment data.
      * ADD and admin workflows may write/update Event Plan data, but this renderer must not read
@@ -436,20 +436,20 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
      *
      * @return array<int,array<string,mixed>>
      */
-    function vms_vendor_profiles_build_event_vendor_groups(int $tec_event_id): array
+    function bvmgr_vendor_profiles_build_event_vendor_groups(int $tec_event_id): array
     {
         $tec_event_id = absint($tec_event_id);
         if ($tec_event_id <= 0 || get_post_type($tec_event_id) !== 'tribe_events') {
             return array();
         }
 
-        $plan_id = vms_vendor_profiles_get_event_plan_for_tec_event($tec_event_id);
+        $plan_id = bvmgr_vendor_profiles_get_event_plan_for_tec_event($tec_event_id);
         if ($plan_id <= 0 || get_post_type($plan_id) !== 'vms_event_plan') {
             return array();
         }
 
-        $visibility_map = function_exists('vms_calendar_public_vendor_visibility_map')
-            ? (array) vms_calendar_public_vendor_visibility_map()
+        $visibility_map = function_exists('bvmgr_calendar_public_vendor_visibility_map')
+            ? (array) bvmgr_calendar_public_vendor_visibility_map()
             : array();
         $groups = array();
         $group_index = 0;
@@ -459,12 +459,12 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
             $type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
                 ? bvmgr_vendor_type_normalize_slug($type_slug)
                 : sanitize_key($type_slug);
-            $group_key = vms_vendor_profiles_group_key_for_type($type_slug);
+            $group_key = bvmgr_vendor_profiles_group_key_for_type($type_slug);
             if (!isset($groups[$group_key])) {
                 $groups[$group_key] = array(
                     'group_key' => $group_key,
                     'type_slug' => $type_slug,
-                    'sort_order' => vms_vendor_profiles_group_sort_order($group_key),
+                    'sort_order' => bvmgr_vendor_profiles_group_sort_order($group_key),
                     'insert_order' => $group_index++,
                     'cards' => array(),
                 );
@@ -490,7 +490,7 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
 
         $append_card = static function (string $type_slug, int $vendor_id, string $display_name = '') use (&$groups, $ensure_group, $is_type_public): void {
             $vendor_id = absint($vendor_id);
-            if ($vendor_id <= 0 || !vms_vendor_profiles_vendor_exists($vendor_id)) {
+            if ($vendor_id <= 0 || !bvmgr_vendor_profiles_vendor_exists($vendor_id)) {
                 return;
             }
 
@@ -518,13 +518,13 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
             $groups[$group_key]['cards'][$dedupe_key] = array(
                 'vendor_id' => $vendor_id,
                 'display_name' => $display_name,
-                'subtitle' => vms_vendor_profiles_vendor_subtitle($vendor_id),
-                'profile_url' => vms_vendor_profiles_public_vendor_url($vendor_id),
+                'subtitle' => bvmgr_vendor_profiles_vendor_subtitle($vendor_id),
+                'profile_url' => bvmgr_vendor_profiles_public_vendor_url($vendor_id),
             );
         };
 
-        if (function_exists('vms_get_event_plan_lineup_entries')) {
-            $lineup_entries = (array) vms_get_event_plan_lineup_entries($plan_id);
+        if (function_exists('bvmgr_get_event_plan_lineup_entries')) {
+            $lineup_entries = (array) bvmgr_get_event_plan_lineup_entries($plan_id);
             $has_lineup = !empty($lineup_entries);
             foreach ($lineup_entries as $entry) {
                 if (!is_array($entry)) {
@@ -548,7 +548,7 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
             }
         }
 
-        $primary_vendor_id = vms_vendor_profiles_get_primary_vendor_for_tec_event($tec_event_id);
+        $primary_vendor_id = bvmgr_vendor_profiles_get_primary_vendor_for_tec_event($tec_event_id);
         if (!$has_lineup && $primary_vendor_id > 0) {
             $primary_type = function_exists('bvmgr_vendor_primary_type_slug')
                 ? (string) bvmgr_vendor_primary_type_slug($primary_vendor_id)
@@ -570,7 +570,7 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
                 }
             }
         } else {
-            foreach (vms_vendor_profiles_get_secondary_vendors_for_tec_event($tec_event_id) as $vendor_id) {
+            foreach (bvmgr_vendor_profiles_get_secondary_vendors_for_tec_event($tec_event_id) as $vendor_id) {
                 $vendor_id = absint($vendor_id);
                 if ($vendor_id <= 0) {
                     continue;
@@ -589,7 +589,7 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
 
         foreach ($groups as &$group) {
             $group['cards'] = array_values((array) $group['cards']);
-            $group['heading'] = vms_vendor_profiles_group_heading(
+            $group['heading'] = bvmgr_vendor_profiles_group_heading(
                 (string) ($group['group_key'] ?? ''),
                 (string) ($group['type_slug'] ?? ''),
                 count($group['cards'])
@@ -612,15 +612,15 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_render_event_vendor_sidebar')) {
-    function vms_vendor_profiles_render_event_vendor_sidebar(int $tec_event_id): string
+if (!function_exists('bvmgr_vendor_profiles_render_event_vendor_sidebar')) {
+    function bvmgr_vendor_profiles_render_event_vendor_sidebar(int $tec_event_id): string
     {
         $tec_event_id = absint($tec_event_id);
-        if ($tec_event_id <= 0 || vms_vendor_profiles_event_sidebar_rendered($tec_event_id)) {
+        if ($tec_event_id <= 0 || bvmgr_vendor_profiles_event_sidebar_rendered($tec_event_id)) {
             return '';
         }
 
-        $groups = vms_vendor_profiles_build_event_vendor_groups($tec_event_id);
+        $groups = bvmgr_vendor_profiles_build_event_vendor_groups($tec_event_id);
         if (empty($groups)) {
             return '';
         }
@@ -703,15 +703,15 @@ if (!function_exists('vms_vendor_profiles_render_event_vendor_sidebar')) {
         <?php
         $markup = (string) ob_get_clean();
         if ($markup !== '') {
-            vms_vendor_profiles_mark_event_sidebar_rendered($tec_event_id);
+            bvmgr_vendor_profiles_mark_event_sidebar_rendered($tec_event_id);
         }
 
         return $markup;
     }
 }
 
-if (!function_exists('vms_vendor_profiles_find_next_upcoming_event')) {
-    function vms_vendor_profiles_find_next_upcoming_event(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_profiles_find_next_upcoming_event')) {
+    function bvmgr_vendor_profiles_find_next_upcoming_event(int $vendor_id): array
     {
         $vendor_id = (int) $vendor_id;
         if ($vendor_id <= 0) {
@@ -722,7 +722,7 @@ if (!function_exists('vms_vendor_profiles_find_next_upcoming_event')) {
         $date_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'date') ?: '_vms_event_date') : '_vms_event_date';
         $tec_key  = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
 
-        $today = vms_vendor_profiles_today_ymd();
+        $today = bvmgr_vendor_profiles_today_ymd();
 
         $q = new WP_Query(array(
             'post_type'      => 'vms_event_plan',
@@ -800,8 +800,8 @@ if (!function_exists('vms_vendor_profiles_find_next_upcoming_event')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_resolve_vendor_id')) {
-    function vms_vendor_profiles_resolve_vendor_id($vendor = 'current', int $event_id = 0, string $role = 'primary', string $type_filter = ''): int
+if (!function_exists('bvmgr_vendor_profiles_resolve_vendor_id')) {
+    function bvmgr_vendor_profiles_resolve_vendor_id($vendor = 'current', int $event_id = 0, string $role = 'primary', string $type_filter = ''): int
     {
         if (is_numeric($vendor)) {
             return max(0, (int) $vendor);
@@ -825,11 +825,11 @@ if (!function_exists('vms_vendor_profiles_resolve_vendor_id')) {
             }
 
             if ($event_id > 0) {
-                return vms_vendor_profiles_get_related_vendor_for_tec_event($event_id, $role, $type_filter);
+                return bvmgr_vendor_profiles_get_related_vendor_for_tec_event($event_id, $role, $type_filter);
             }
 
             if (is_singular('tribe_events')) {
-                return vms_vendor_profiles_get_related_vendor_for_tec_event((int) get_queried_object_id(), $role, $type_filter);
+                return bvmgr_vendor_profiles_get_related_vendor_for_tec_event((int) get_queried_object_id(), $role, $type_filter);
             }
 
             return 0;
@@ -845,8 +845,8 @@ if (!function_exists('vms_vendor_profiles_resolve_vendor_id')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_get_social_links')) {
-    function vms_vendor_profiles_get_social_links(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_profiles_get_social_links')) {
+    function bvmgr_vendor_profiles_get_social_links(int $vendor_id): array
     {
         $vendor_id = (int) $vendor_id;
         if ($vendor_id <= 0) {
@@ -876,8 +876,8 @@ if (!function_exists('vms_vendor_profiles_get_social_links')) {
 }
 
 
-if (!function_exists('vms_vendor_profiles_primary_type_name')) {
-    function vms_vendor_profiles_primary_type_name(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_profiles_primary_type_name')) {
+    function bvmgr_vendor_profiles_primary_type_name(int $vendor_id): string
     {
         $vendor_id = (int) $vendor_id;
         if ($vendor_id <= 0) {
@@ -898,10 +898,10 @@ if (!function_exists('vms_vendor_profiles_primary_type_name')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_teaser_label')) {
-    function vms_vendor_profiles_teaser_label(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_profiles_teaser_label')) {
+    function bvmgr_vendor_profiles_teaser_label(int $vendor_id): string
     {
-        $type_name = vms_vendor_profiles_primary_type_name($vendor_id);
+        $type_name = bvmgr_vendor_profiles_primary_type_name($vendor_id);
         if ($type_name !== '') {
             /* translators: %s: vendor type label in lowercase. */
             return sprintf(__('Meet the %s', 'backstage-venue-manager'), strtolower($type_name));
@@ -911,15 +911,15 @@ if (!function_exists('vms_vendor_profiles_teaser_label')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_teaser_heading')) {
-    function vms_vendor_profiles_teaser_heading(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_profiles_teaser_heading')) {
+    function bvmgr_vendor_profiles_teaser_heading(int $vendor_id): string
     {
         $title = trim((string) get_the_title($vendor_id));
         if ($title === '') {
             return __('Meet this vendor', 'backstage-venue-manager');
         }
 
-        $type_name = strtolower(vms_vendor_profiles_primary_type_name($vendor_id));
+        $type_name = strtolower(bvmgr_vendor_profiles_primary_type_name($vendor_id));
         if ($type_name !== '') {
             if (strpos($type_name, 'music vendor') !== false) {
                 /* translators: %s: vendor title. */
@@ -945,8 +945,8 @@ if (!function_exists('vms_vendor_profiles_teaser_heading')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_social_label')) {
-    function vms_vendor_profiles_social_label(string $key): string
+if (!function_exists('bvmgr_vendor_profiles_social_label')) {
+    function bvmgr_vendor_profiles_social_label(string $key): string
     {
         $labels = array(
             'facebook'  => __('Facebook', 'backstage-venue-manager'),
@@ -960,8 +960,8 @@ if (!function_exists('vms_vendor_profiles_social_label')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_social_icon_allowed_html')) {
-    function vms_vendor_profiles_social_icon_allowed_html(): array
+if (!function_exists('bvmgr_vendor_profiles_social_icon_allowed_html')) {
+    function bvmgr_vendor_profiles_social_icon_allowed_html(): array
     {
         return array(
             'svg' => array(
@@ -981,11 +981,11 @@ if (!function_exists('vms_vendor_profiles_social_icon_allowed_html')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_promo_allowed_html')) {
-    function vms_vendor_profiles_promo_allowed_html(): array
+if (!function_exists('bvmgr_vendor_profiles_promo_allowed_html')) {
+    function bvmgr_vendor_profiles_promo_allowed_html(): array
     {
-        if (function_exists('vms_vendor_portal_headliner_promo_video_allowed_html')) {
-            return vms_vendor_portal_headliner_promo_video_allowed_html();
+        if (function_exists('bvmgr_vendor_portal_headliner_promo_video_allowed_html')) {
+            return bvmgr_vendor_portal_headliner_promo_video_allowed_html();
         }
 
         $allowed = wp_kses_allowed_html('post');
@@ -1022,8 +1022,8 @@ if (!function_exists('vms_vendor_profiles_promo_allowed_html')) {
 }
 
 
-if (!function_exists('vms_vendor_profiles_social_svg')) {
-    function vms_vendor_profiles_social_svg(string $key): string
+if (!function_exists('bvmgr_vendor_profiles_social_svg')) {
+    function bvmgr_vendor_profiles_social_svg(string $key): string
     {
         $svg_map = array(
             'facebook' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.6-1.5H16V5.1c-.2 0-1-.1-2-.1-2 0-3.4 1.2-3.4 3.5V11H8v3h2.6v7h2.9Z"/></svg>',
@@ -1038,10 +1038,10 @@ if (!function_exists('vms_vendor_profiles_social_svg')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_render_social_links')) {
-    function vms_vendor_profiles_render_social_links(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_profiles_render_social_links')) {
+    function bvmgr_vendor_profiles_render_social_links(int $vendor_id): string
     {
-        $links = vms_vendor_profiles_get_social_links($vendor_id);
+        $links = bvmgr_vendor_profiles_get_social_links($vendor_id);
         if (empty($links)) {
             return '';
         }
@@ -1049,15 +1049,15 @@ if (!function_exists('vms_vendor_profiles_render_social_links')) {
         ob_start();
         echo '<div class="vms-vp-socials" aria-label="' . esc_attr__('Social links', 'backstage-venue-manager') . '">';
         foreach ($links as $key => $url) {
-            echo '<a class="vms-vp-social vms-vp-social--' . esc_attr($key) . '" href="' . esc_url($url) . '" target="_blank" rel="noopener" aria-label="' . esc_attr(vms_vendor_profiles_social_label((string) $key)) . '"><span class="vms-vp-social__glyph" aria-hidden="true">' . wp_kses(vms_vendor_profiles_social_svg((string) $key), vms_vendor_profiles_social_icon_allowed_html()) . '</span></a>';
+            echo '<a class="vms-vp-social vms-vp-social--' . esc_attr($key) . '" href="' . esc_url($url) . '" target="_blank" rel="noopener" aria-label="' . esc_attr(bvmgr_vendor_profiles_social_label((string) $key)) . '"><span class="vms-vp-social__glyph" aria-hidden="true">' . wp_kses(bvmgr_vendor_profiles_social_svg((string) $key), bvmgr_vendor_profiles_social_icon_allowed_html()) . '</span></a>';
         }
         echo '</div>';
         return (string) ob_get_clean();
     }
 }
 
-if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
-    function vms_vendor_profiles_render_event_teaser(int $vendor_id, int $tec_event_id = 0, array $args = array()): string
+if (!function_exists('bvmgr_vendor_profiles_render_event_teaser')) {
+    function bvmgr_vendor_profiles_render_event_teaser(int $vendor_id, int $tec_event_id = 0, array $args = array()): string
     {
         $vendor_id = (int) $vendor_id;
         $tec_event_id = (int) $tec_event_id;
@@ -1096,8 +1096,8 @@ if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
         }
 
         $title_text = get_the_title($vendor_id);
-        $teaser_label = vms_vendor_profiles_teaser_label($vendor_id);
-        $teaser_heading = vms_vendor_profiles_teaser_heading($vendor_id);
+        $teaser_label = bvmgr_vendor_profiles_teaser_label($vendor_id);
+        $teaser_heading = bvmgr_vendor_profiles_teaser_heading($vendor_id);
 
         ob_start();
         ?>
@@ -1123,8 +1123,8 @@ if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
                 $promo_plan_id = $tec_event_id > 0 && function_exists('bvmgr_get_event_plan_for_tec_event')
                     ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id)
                     : 0;
-                $promo_markup = ($promo_plan_id > 0 && function_exists('vms_vendor_portal_render_headliner_promo_video_player'))
-                    ? (string) vms_vendor_portal_render_headliner_promo_video_player($promo_plan_id, array(
+                $promo_markup = ($promo_plan_id > 0 && function_exists('bvmgr_vendor_portal_render_headliner_promo_video_player'))
+                    ? (string) bvmgr_vendor_portal_render_headliner_promo_video_player($promo_plan_id, array(
                         'context' => 'public',
                         /* translators: %s: vendor title. */
                         'heading' => sprintf(__('A quick hello from %s', 'backstage-venue-manager'), $title_text),
@@ -1133,7 +1133,7 @@ if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
                     : '';
                 ?>
                 <?php if ($promo_markup !== '') : ?>
-                    <?php echo wp_kses($promo_markup, vms_vendor_profiles_promo_allowed_html()); ?>
+                    <?php echo wp_kses($promo_markup, bvmgr_vendor_profiles_promo_allowed_html()); ?>
                 <?php endif; ?>
             </div>
         </section>
@@ -1142,15 +1142,15 @@ if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
     }
 }
 
-if (!function_exists('vms_vendor_profiles_render_next_show_card')) {
-    function vms_vendor_profiles_render_next_show_card(int $vendor_id, array $args = array()): string
+if (!function_exists('bvmgr_vendor_profiles_render_next_show_card')) {
+    function bvmgr_vendor_profiles_render_next_show_card(int $vendor_id, array $args = array()): string
     {
         $vendor_id = (int) $vendor_id;
         if ($vendor_id <= 0) {
             return '';
         }
 
-        $next_event = vms_vendor_profiles_find_next_upcoming_event($vendor_id);
+        $next_event = bvmgr_vendor_profiles_find_next_upcoming_event($vendor_id);
         if (empty($next_event)) {
             return '';
         }
@@ -1170,8 +1170,8 @@ if (!function_exists('vms_vendor_profiles_render_next_show_card')) {
                 <p class="vms-vp-next-show__date"><?php echo esc_html($next_event['date_label']); ?></p>
             <?php endif; ?>
             <?php
-            $promo_markup = (!empty($next_event['plan_id']) && function_exists('vms_vendor_portal_render_headliner_promo_video_player'))
-                ? (string) vms_vendor_portal_render_headliner_promo_video_player((int) $next_event['plan_id'], array(
+            $promo_markup = (!empty($next_event['plan_id']) && function_exists('bvmgr_vendor_portal_render_headliner_promo_video_player'))
+                ? (string) bvmgr_vendor_portal_render_headliner_promo_video_player((int) $next_event['plan_id'], array(
                     'context' => 'public',
                     'heading' => __('Promo video', 'backstage-venue-manager'),
                     'wrap_class' => 'vms-vp-next-show__promo-video',
@@ -1179,7 +1179,7 @@ if (!function_exists('vms_vendor_profiles_render_next_show_card')) {
                 : '';
             ?>
             <?php if ($promo_markup !== '') : ?>
-                <?php echo wp_kses($promo_markup, vms_vendor_profiles_promo_allowed_html()); ?>
+                <?php echo wp_kses($promo_markup, bvmgr_vendor_profiles_promo_allowed_html()); ?>
             <?php endif; ?>
             <?php if (!empty($next_event['url'])) : ?>
                 <div class="vms-vp-actions vms-vp-next-show__actions">
@@ -1192,7 +1192,7 @@ if (!function_exists('vms_vendor_profiles_render_next_show_card')) {
     }
 }
 
-function vms_vendor_profiles_shortcode_vendor_teaser(array $atts = array()): string
+function bvmgr_vendor_profiles_shortcode_vendor_teaser(array $atts = array()): string
 {
     $atts = shortcode_atts(array(
         'vendor' => 'current',
@@ -1213,26 +1213,26 @@ function vms_vendor_profiles_shortcode_vendor_teaser(array $atts = array()): str
         $event_id = (int) get_queried_object_id();
     }
 
-    if (vms_vendor_profiles_shortcode_targets_event_sidebar($atts['vendor'] ?? 'current', $event_id, $atts)) {
-        if (vms_vendor_profiles_event_sidebar_rendered($event_id)) {
+    if (bvmgr_vendor_profiles_shortcode_targets_event_sidebar($atts['vendor'] ?? 'current', $event_id, $atts)) {
+        if (bvmgr_vendor_profiles_event_sidebar_rendered($event_id)) {
             return '';
         }
 
-        $grouped_markup = vms_vendor_profiles_render_event_vendor_sidebar($event_id);
+        $grouped_markup = bvmgr_vendor_profiles_render_event_vendor_sidebar($event_id);
         if ($grouped_markup !== '') {
             return $grouped_markup;
         }
     }
 
-    $vendor_id = vms_vendor_profiles_resolve_vendor_id($atts['vendor'], $event_id, $role, $type_filter);
+    $vendor_id = bvmgr_vendor_profiles_resolve_vendor_id($atts['vendor'], $event_id, $role, $type_filter);
     if ($vendor_id <= 0 && is_singular('tribe_events')) {
-        $vendor_id = vms_vendor_profiles_get_related_vendor_for_tec_event((int) get_queried_object_id(), $role, $type_filter);
+        $vendor_id = bvmgr_vendor_profiles_get_related_vendor_for_tec_event((int) get_queried_object_id(), $role, $type_filter);
     }
 
-    return vms_vendor_profiles_render_event_teaser($vendor_id, $event_id, array('layout' => $atts['layout']));
+    return bvmgr_vendor_profiles_render_event_teaser($vendor_id, $event_id, array('layout' => $atts['layout']));
 }
 
-function vms_vendor_profiles_shortcode_secondary_vendor_teaser(array $atts = array()): string
+function bvmgr_vendor_profiles_shortcode_secondary_vendor_teaser(array $atts = array()): string
 {
     $atts = shortcode_atts(array(
         'vendor' => 'current',
@@ -1242,22 +1242,22 @@ function vms_vendor_profiles_shortcode_secondary_vendor_teaser(array $atts = arr
     ), $atts, 'vms_secondary_vendor_teaser');
 
     $atts['role'] = 'secondary';
-    return vms_vendor_profiles_shortcode_vendor_teaser($atts);
+    return bvmgr_vendor_profiles_shortcode_vendor_teaser($atts);
 }
 
-function vms_vendor_profiles_shortcode_next_show(array $atts = array()): string
+function bvmgr_vendor_profiles_shortcode_next_show(array $atts = array()): string
 {
     $atts = shortcode_atts(array(
         'vendor' => 'current',
         'layout' => 'compact',
     ), $atts, 'vms_vendor_next_show');
 
-    $vendor_id = vms_vendor_profiles_resolve_vendor_id($atts['vendor']);
-    return vms_vendor_profiles_render_next_show_card($vendor_id, array('layout' => $atts['layout']));
+    $vendor_id = bvmgr_vendor_profiles_resolve_vendor_id($atts['vendor']);
+    return bvmgr_vendor_profiles_render_next_show_card($vendor_id, array('layout' => $atts['layout']));
 }
 
-if (!function_exists('vms_vendor_profiles_render_event_promo_video_section')) {
-    function vms_vendor_profiles_render_event_promo_video_section(int $vendor_id, int $tec_event_id): string
+if (!function_exists('bvmgr_vendor_profiles_render_event_promo_video_section')) {
+    function bvmgr_vendor_profiles_render_event_promo_video_section(int $vendor_id, int $tec_event_id): string
     {
         $vendor_id = (int) $vendor_id;
         $tec_event_id = (int) $tec_event_id;
@@ -1268,7 +1268,7 @@ if (!function_exists('vms_vendor_profiles_render_event_promo_video_section')) {
         $promo_plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
             ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id)
             : 0;
-        if ($promo_plan_id <= 0 || !function_exists('vms_vendor_portal_render_headliner_promo_video_player')) {
+        if ($promo_plan_id <= 0 || !function_exists('bvmgr_vendor_portal_render_headliner_promo_video_player')) {
             return '';
         }
 
@@ -1278,7 +1278,7 @@ if (!function_exists('vms_vendor_profiles_render_event_promo_video_section')) {
             ? sprintf(__('A quick hello from %s', 'backstage-venue-manager'), $vendor_name)
             : __('A quick hello from the artist', 'backstage-venue-manager');
 
-        $promo_markup = (string) vms_vendor_portal_render_headliner_promo_video_player($promo_plan_id, array(
+        $promo_markup = (string) bvmgr_vendor_portal_render_headliner_promo_video_player($promo_plan_id, array(
             'context' => 'public',
             'heading' => $heading,
             'wrap_class' => 'vms-event-promo-video__player-wrap',
@@ -1290,14 +1290,14 @@ if (!function_exists('vms_vendor_profiles_render_event_promo_video_section')) {
         ob_start();
         ?>
         <section class="vms-event-promo-video vms-vp-card" aria-label="<?php echo esc_attr($heading); ?>">
-            <?php echo wp_kses($promo_markup, vms_vendor_profiles_promo_allowed_html()); ?>
+            <?php echo wp_kses($promo_markup, bvmgr_vendor_profiles_promo_allowed_html()); ?>
         </section>
         <?php
         return (string) ob_get_clean();
     }
 }
 
-function vms_vendor_profiles_append_event_vendor_teaser(string $content): string
+function bvmgr_vendor_profiles_append_event_vendor_teaser(string $content): string
 {
     if (is_admin()) {
         return $content;
@@ -1328,12 +1328,12 @@ function vms_vendor_profiles_append_event_vendor_teaser(string $content): string
         return $content;
     }
 
-    $vendor_id = vms_vendor_profiles_get_primary_vendor_for_tec_event($tec_event_id);
+    $vendor_id = bvmgr_vendor_profiles_get_primary_vendor_for_tec_event($tec_event_id);
     if ($vendor_id <= 0) {
         return $content;
     }
 
-    $promo_section = vms_vendor_profiles_render_event_promo_video_section($vendor_id, $tec_event_id);
+    $promo_section = bvmgr_vendor_profiles_render_event_promo_video_section($vendor_id, $tec_event_id);
     if ($promo_section === '') {
         return $content;
     }

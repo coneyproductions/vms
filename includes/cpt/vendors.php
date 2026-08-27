@@ -417,8 +417,8 @@ class BVMGR_Admin_Vendors
         $post_id = (int) $post->ID;
         $month = bvmgr_vendor_availability_snapshot_month();
 
-        if (function_exists('vms_render_vendor_availability_vendor_profile_calendar')) {
-            vms_render_vendor_availability_vendor_profile_calendar($post_id, $month);
+        if (function_exists('bvmgr_render_vendor_availability_vendor_profile_calendar')) {
+            bvmgr_render_vendor_availability_vendor_profile_calendar($post_id, $month);
             return;
         }
 

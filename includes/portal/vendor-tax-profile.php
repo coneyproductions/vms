@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
  * - This page does NOT collect/store SSN/EIN in VMS.
  */
 
-function vms_tax_settings_get_provider(): string
+function bvmgr_tax_settings_get_provider(): string
 {
 	$settings = get_option('vms_settings', array());
 	$settings = is_array($settings) ? $settings : array();
@@ -24,14 +24,14 @@ function vms_tax_settings_get_provider(): string
 	return $provider;
 }
 
-function vms_tax_provider_label(string $provider): string
+function bvmgr_tax_provider_label(string $provider): string
 {
 	if ($provider === 'quickbooks_email') return 'QuickBooks Online';
 	if ($provider === 'tax1099_email') return 'Tax1099';
 	return 'Upload';
 }
 
-function vms_tax_provider_instructions(string $provider): string
+function bvmgr_tax_provider_instructions(string $provider): string
 {
 	if ($provider === 'quickbooks_email') {
 		return "We will email you a secure request from QuickBooks Online to complete your W-9/tax information.\n\nPlease complete it using the secure link in that email.\n\nDo not email SSN or tax documents to us.\n\nAfter completion, return here and confirm below.";
@@ -49,17 +49,17 @@ function vms_tax_provider_instructions(string $provider): string
  * This portal view calls vms_vendor_tax_profile_is_complete() from that helper.
  */
 
-function vms_vendor_tax_post_text_field(string $key): string
+function bvmgr_vendor_tax_post_text_field(string $key): string
 {
 	return bvmgr_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Tax profile fields are only read after the form nonce has been verified.
 }
 
-function vms_vendor_tax_post_bool_flag(string $key): bool
+function bvmgr_vendor_tax_post_bool_flag(string $key): bool
 {
 	return bvmgr_request_read_bool_flag($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Tax profile checkbox fields are only read after the form nonce has been verified.
 }
 
-function vms_vendor_tax_is_exact_post_request(): bool
+function bvmgr_vendor_tax_is_exact_post_request(): bool
 {
 	$request_method = $_SERVER['REQUEST_METHOD'] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- The local exact-post helper intentionally preserves raw method casing while unslashing before comparison.
 	if (!is_scalar($request_method)) {
@@ -74,7 +74,7 @@ function vms_vendor_tax_is_exact_post_request(): bool
 	return 'POST' === $request_method;
 }
 
-function vms_vendor_portal_render_tax_profile($vendor_id)
+function bvmgr_vendor_portal_render_tax_profile($vendor_id)
 {
 	$vendor_id = (int) $vendor_id;
 	if ($vendor_id <= 0) {
@@ -82,7 +82,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 		return;
 	}
 
-	$provider = vms_tax_settings_get_provider();
+	$provider = bvmgr_tax_settings_get_provider();
 
 	if ($provider === 'upload') {
 		if (!function_exists('media_handle_upload')) {
@@ -113,7 +113,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 	$k_done    = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 
 	// Save handler
-	if (vms_vendor_tax_is_exact_post_request() && isset($_POST['vms_vendor_tax_save'])) {
+	if (bvmgr_vendor_tax_is_exact_post_request() && isset($_POST['vms_vendor_tax_save'])) {
 
 		$nonce = (isset($_POST['vms_vendor_tax_nonce']) && !is_array($_POST['vms_vendor_tax_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_tax_nonce']))
@@ -123,7 +123,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 		} else {
 
 			$t = function ($key) {
-				return vms_vendor_tax_post_text_field((string) $key);
+				return bvmgr_vendor_tax_post_text_field((string) $key);
 			};
 
 			update_post_meta($vendor_id, $k_legal,  $t('vms_payee_legal_name'));
@@ -165,7 +165,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 
 			} else {
 
-				$attest = vms_vendor_tax_post_bool_flag('vms_w9_offsite_attest') ? '1' : '';
+				$attest = bvmgr_vendor_tax_post_bool_flag('vms_w9_offsite_attest') ? '1' : '';
 				$was_attested = (int) get_post_meta($vendor_id, $k_attest, true);
 
 				if ($attest === '1') {
@@ -180,8 +180,8 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 				}
 			}
 
-			if ($vendor_update_context !== '' && function_exists('vms_vendor_flag_vendor_update')) {
-				vms_vendor_flag_vendor_update($vendor_id, $vendor_update_context);
+			if ($vendor_update_context !== '' && function_exists('bvmgr_vendor_flag_vendor_update')) {
+				bvmgr_vendor_flag_vendor_update($vendor_id, $vendor_update_context);
 			}
 
 			// Completion stamp truth
@@ -234,7 +234,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 		'other'       => __('Other', 'backstage-venue-manager'),
 	);
 
-	$provider_label = vms_tax_provider_label($provider);
+	$provider_label = bvmgr_tax_provider_label($provider);
 
 	echo '<details class="vms-panel" open>';
 	echo '<summary class="vms-panel-summary">';
@@ -314,7 +314,7 @@ function vms_vendor_portal_render_tax_profile($vendor_id)
 	echo '<h3 class="vms-vtp-subhead">' . esc_html__('W-9', 'backstage-venue-manager') . ' (' . esc_html($provider_label) . ')</h3>';
 
 	echo '<div class="vms-note vms-vtp-provider-note">';
-	echo esc_html(vms_tax_provider_instructions($provider));
+	echo esc_html(bvmgr_tax_provider_instructions($provider));
 	echo '</div>';
 
 	if ($provider === 'upload') {

@@ -301,7 +301,7 @@ $runtime_files = array(
             ),
         ),
         'snippets'  => array(
-            "'too_large_message'=>sprintf(__('That file is too large. Please keep it under %s.','backstage-venue-manager'),function_exists('size_format')?size_format(vms_vendor_portal_headliner_promo_video_max_bytes(),0):(string)vms_vendor_portal_headliner_promo_video_max_bytes())," => 1,
+            "'too_large_message'=>sprintf(__('That file is too large. Please keep it under %s.','backstage-venue-manager'),function_exists('size_format')?size_format(bvmgr_vendor_portal_headliner_promo_video_max_bytes(),0):(string)bvmgr_vendor_portal_headliner_promo_video_max_bytes())," => 1,
         ),
     ),
 );

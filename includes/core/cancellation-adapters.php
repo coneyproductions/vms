@@ -1732,12 +1732,12 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		);
 	}
 
-	$lineup_vendor_ids = function_exists('vms_get_event_plan_lineup_vendor_ids')
-		? (array) vms_get_event_plan_lineup_vendor_ids($event_plan_id)
+	$lineup_vendor_ids = function_exists('bvmgr_get_event_plan_lineup_vendor_ids')
+		? (array) bvmgr_get_event_plan_lineup_vendor_ids($event_plan_id)
 		: array();
 	$lineup_primary_vendor_id = 0;
-	if (function_exists('vms_get_event_plan_lineup_primary_entry')) {
-		$lineup_primary = (array) vms_get_event_plan_lineup_primary_entry($event_plan_id);
+	if (function_exists('bvmgr_get_event_plan_lineup_primary_entry')) {
+		$lineup_primary = (array) bvmgr_get_event_plan_lineup_primary_entry($event_plan_id);
 		$lineup_primary_vendor_id = absint($lineup_primary['vendor_id'] ?? 0);
 	}
 	foreach ($lineup_vendor_ids as $vendor_id) {

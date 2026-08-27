@@ -201,7 +201,7 @@ add_action('admin_menu', function () {
     __('Vendor Availability', 'backstage-venue-manager'),
     $capability,
     'vms-vendor-availability',
-    'vms_render_vendor_availability_page'
+    'bvmgr_render_vendor_availability_page'
   );
 
   // CPT Lists (core objects)
@@ -536,8 +536,8 @@ function bvmgr_render_dashboard_page_content(): void
     vms_approvals_queue_render_dashboard_card();
   }
 
-  if (function_exists('vms_add_dispatch_render_dashboard_card')) {
-    vms_add_dispatch_render_dashboard_card();
+  if (function_exists('bvmgr_add_dispatch_render_dashboard_card')) {
+    bvmgr_add_dispatch_render_dashboard_card();
   }
 
   if (function_exists('vms_tasks_render_dashboard_cards')) {

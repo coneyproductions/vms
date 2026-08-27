@@ -397,7 +397,7 @@ function wp_reset_postdata(): void
 	$GLOBALS['g10_reset_postdata_calls']++;
 }
 
-function vms_add_dispatch_event_meta_key(string $name, string $fallback): string
+function bvmgr_add_dispatch_event_meta_key(string $name, string $fallback): string
 {
 	unset($name);
 	return $fallback;
@@ -410,19 +410,19 @@ function get_posts(array $args)
 	return $result;
 }
 
-function vms_add_dispatch_get_event_plan_context(int $event_plan_id): ?array
+function bvmgr_add_dispatch_get_event_plan_context(int $event_plan_id): ?array
 {
 	$context = $GLOBALS['g10_add_contexts'][$event_plan_id] ?? null;
 	return is_array($context) ? $context : null;
 }
 
-function vms_add_dispatch_context_exclusion_reason(?array $context, array $options = array()): string
+function bvmgr_add_dispatch_context_exclusion_reason(?array $context, array $options = array()): string
 {
 	unset($options);
 	return is_array($context) ? (string) ($context['exclude_reason'] ?? '') : 'Invalid Event Plan';
 }
 
-function vms_add_dispatch_context_vendor_need_rows(array $context, bool $eligible_only = true): array
+function bvmgr_add_dispatch_context_vendor_need_rows(array $context, bool $eligible_only = true): array
 {
 	unset($eligible_only);
 	return (array) ($context['rows'] ?? array());
@@ -605,13 +605,13 @@ $annotation_specs = array(
 	),
 	'add' => array(
 		array(
-			'function' => 'vms_add_dispatch_get_event_plan_need_scan',
+			'function' => 'bvmgr_add_dispatch_get_event_plan_need_scan',
 			'codes' => array($k_code),
 			'marker' => " // phpcs:ignore {$k_code} -- ADD intentionally orders its bounded 50-to-300 Event Plan candidate sample by canonical event-date metadata before selecting open vendor needs.",
 			'fragment' => "'meta_key' => \$date_key, // phpcs:ignore {$k_code} -- ADD intentionally orders its bounded 50-to-300 Event Plan candidate sample by canonical event-date metadata before selecting open vendor needs.",
 		),
 		array(
-			'function' => 'vms_add_dispatch_get_event_plan_need_scan',
+			'function' => 'bvmgr_add_dispatch_get_event_plan_need_scan',
 			'codes' => array($q_code),
 			'marker' => " // phpcs:ignore {$q_code} -- ADD applies the canonical event-date lower bound only to the same bounded 50-to-300 candidate sample when past events are excluded.",
 			'fragment' => "\$candidate_args['meta_query'] = array( // phpcs:ignore {$q_code} -- ADD applies the canonical event-date lower bound only to the same bounded 50-to-300 candidate sample when past events are excluded.",
@@ -686,7 +686,7 @@ $projection_functions = array(
 	'daily' => array('bvmgr_ticket_integrity_report_table_exists', 'bvmgr_ticket_integrity_report_lookup_metrics'),
 	'monitor' => array('bvmgr_ticket_integrity_build_targets'),
 	'cron' => array('bvmgr_ticket_integrity_watch_ticketing_meta'),
-	'add' => array('vms_add_dispatch_get_event_plan_need_scan'),
+	'add' => array('bvmgr_add_dispatch_get_event_plan_need_scan'),
 );
 $projection_hashes = array(
 	'mirror' => array(
@@ -753,8 +753,8 @@ g10_same(
 	'Cron owned watcher must remain exact across mirror/shadow.'
 );
 g10_same(
-	g10_extract_function($mirror_sources['add'], 'vms_add_dispatch_get_event_plan_need_scan'),
-	g10_extract_function($shadow_sources['add'], 'vms_add_dispatch_get_event_plan_need_scan'),
+	g10_extract_function($mirror_sources['add'], 'bvmgr_add_dispatch_get_event_plan_need_scan'),
+	g10_extract_function($shadow_sources['add'], 'bvmgr_add_dispatch_get_event_plan_need_scan'),
 	'ADD owned scan must remain exact across mirror/shadow.'
 );
 $monitor_prior_annotation = "\t\t\t\t// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- Ticket Integrity scans require the canonical unfiltered event-plan dataset; query scope is bounded by published status, linked TEC event, the date window, and batch pagination.\n";
@@ -792,7 +792,7 @@ eval(g10_extract_function($mirror_sources['daily'], 'bvmgr_ticket_integrity_repo
 eval(g10_extract_function($mirror_sources['daily'], 'bvmgr_ticket_integrity_report_lookup_metrics'));
 eval(g10_extract_function($mirror_sources['monitor'], 'bvmgr_ticket_integrity_build_targets'));
 eval(g10_extract_function($mirror_sources['cron'], 'bvmgr_ticket_integrity_watch_ticketing_meta'));
-eval(g10_extract_function($mirror_sources['add'], 'vms_add_dispatch_get_event_plan_need_scan'));
+eval(g10_extract_function($mirror_sources['add'], 'bvmgr_add_dispatch_get_event_plan_need_scan'));
 
 $wpdb = new G10_WPDB_Spy();
 $GLOBALS['wpdb'] = $wpdb;
@@ -974,7 +974,7 @@ $GLOBALS['g10_add_contexts'] = array(
 	13 => array('event_plan_id' => 13, 'event_title' => 'Earlier', 'event_date' => '2026-09-15', 'post_status' => 'future', 'event_status' => 'draft', 'exclude_reason' => '', 'rows' => array('earlier-row')),
 );
 $GLOBALS['g10_get_posts_queue'] = array(array(11, 12), array(12, 13));
-$scan = vms_add_dispatch_get_event_plan_need_scan(2, 1);
+$scan = bvmgr_add_dispatch_get_event_plan_need_scan(2, 1);
 $expected_candidate_args = array(
 	'post_type' => 'vms_event_plan',
 	'post_status' => array('publish', 'draft', 'pending', 'future', 'private'),
@@ -1007,7 +1007,7 @@ g10_same(
 
 g10_reset_runtime($wpdb);
 $GLOBALS['g10_get_posts_queue'][] = array();
-$include_past = vms_add_dispatch_get_event_plan_need_scan(20, 0, array('include_past_events' => true));
+$include_past = bvmgr_add_dispatch_get_event_plan_need_scan(20, 0, array('include_past_events' => true));
 g10_same(array('contexts' => array(), 'excluded' => array()), $include_past, 'ADD include-past empty result changed.');
 $include_past_args = $GLOBALS['g10_get_posts_calls'][0]['args'];
 g10_assert(!isset($include_past_args['meta_query']), 'ADD include-past query must continue omitting the date lower bound.');
@@ -1018,7 +1018,7 @@ g10_reset_runtime($wpdb);
 $GLOBALS['g10_get_posts_queue'] = array(false, false);
 g10_same(
 	array('contexts' => array(), 'excluded' => array()),
-	vms_add_dispatch_get_event_plan_need_scan(1, 1),
+	bvmgr_add_dispatch_get_event_plan_need_scan(1, 1),
 	'Two non-array ADD query failures should fail closed.'
 );
 g10_same(false, $GLOBALS['g10_get_posts_calls'][0]['result'], 'ADD candidate failure must be captured unchanged.');
@@ -1026,8 +1026,8 @@ g10_same(false, $GLOBALS['g10_get_posts_calls'][1]['result'], 'ADD diagnostic fa
 
 g10_reset_runtime($wpdb);
 $GLOBALS['g10_get_posts_queue'] = array(array(), array());
-vms_add_dispatch_get_event_plan_need_scan(1, 0);
-vms_add_dispatch_get_event_plan_need_scan(1, 0);
+bvmgr_add_dispatch_get_event_plan_need_scan(1, 0);
+bvmgr_add_dispatch_get_event_plan_need_scan(1, 0);
 g10_same(2, count($GLOBALS['g10_get_posts_calls']), 'ADD candidate scan must preserve request-fresh uncached query behavior.');
 
 fwrite(STDOUT, "G10 integrity repositories DB remediation: PASS (Wave 4 rows 11 -> projected 0; U -1, D -2, N -2, P -1, K -3, Q -2)\n");

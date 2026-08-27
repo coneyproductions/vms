@@ -241,8 +241,8 @@ if (!function_exists('bvmgr_vendor_app_get_application_page_url')) {
 	}
 }
 
-if (!function_exists('vms_vendor_portal_page_url')) {
-	function vms_vendor_portal_page_url(): string
+if (!function_exists('bvmgr_vendor_portal_page_url')) {
+	function bvmgr_vendor_portal_page_url(): string
 	{
 		return 'https://example.test/vendor-portal/';
 	}

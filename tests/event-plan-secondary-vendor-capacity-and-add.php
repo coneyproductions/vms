@@ -185,7 +185,7 @@ try {
 	$assert((int) ($storedAssignments['market_vendor']['needed_slots'] ?? 0) === 3, 'Market Vendor open needs should persist an explicit needed target.');
 	$assert(!empty($storedAssignments['market_vendor']['open_for_dispatch']), 'Market Vendor open needs should persist the ADD visibility flag.');
 
-	$context = vms_add_dispatch_get_event_plan_context($planId);
+	$context = bvmgr_add_dispatch_get_event_plan_context($planId);
 	$assert(is_array($context), 'ADD context should load for the capacity test Event Plan.');
 	$rowsByType = array();
 	foreach ((array) ($context['secondary_vendor_groups'] ?? array()) as $row) {
@@ -262,10 +262,10 @@ try {
 	$marketAssignments = (array) get_post_meta($marketPlanId, $assignmentMetaKey, true);
 	$assert(array_key_exists('market_vendor', $marketAssignments) && array_key_exists('slot_limit', (array) $marketAssignments['market_vendor']) && $marketAssignments['market_vendor']['slot_limit'] === null, 'Blank Market Vendor capacity should persist as uncapped.');
 
-	$assert(vms_add_dispatch_type_label('food-truck') === 'Food Vendor', 'ADD type labels should normalize hyphenated Food Vendor slugs.');
-	$assert(vms_add_dispatch_type_label('dessert_truck') === 'Dessert Vendor', 'ADD type labels should display Dessert Vendor.');
-	$assert(vms_add_dispatch_type_label('market_vendor') === 'Market Vendor', 'ADD type labels should display Market Vendor.');
-	$assert(vms_add_dispatch_type_label('band') === 'Music Vendor', 'ADD type labels should display Music Vendor for primary music vendor type.');
+	$assert(bvmgr_add_dispatch_type_label('food-truck') === 'Food Vendor', 'ADD type labels should normalize hyphenated Food Vendor slugs.');
+	$assert(bvmgr_add_dispatch_type_label('dessert_truck') === 'Dessert Vendor', 'ADD type labels should display Dessert Vendor.');
+	$assert(bvmgr_add_dispatch_type_label('market_vendor') === 'Market Vendor', 'ADD type labels should display Market Vendor.');
+	$assert(bvmgr_add_dispatch_type_label('band') === 'Music Vendor', 'ADD type labels should display Music Vendor for primary music vendor type.');
 
 	fwrite(STDOUT, "event plan secondary vendor capacity + ADD regression: PASS\n");
 } catch (Throwable $e) {

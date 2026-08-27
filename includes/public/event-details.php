@@ -168,8 +168,8 @@ if (!function_exists('vms_event_details_shortcode')) {
         );
         $is_target_sidebar_context = (
             $is_current_event_sidebar
-            && function_exists('vms_public_event_sidebar_is_rendering_target')
-            && vms_public_event_sidebar_is_rendering_target($event_id)
+            && function_exists('bvmgr_public_event_sidebar_is_rendering_target')
+            && bvmgr_public_event_sidebar_is_rendering_target($event_id)
         );
 
         if ($is_target_sidebar_context && vms_event_details_sidebar_rendered($event_id)) {

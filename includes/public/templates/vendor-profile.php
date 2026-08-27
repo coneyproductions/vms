@@ -63,12 +63,12 @@ if (($bvmgr_vendor_profile_city === '' || $bvmgr_vendor_profile_state === '')) {
     }
 }
 
-$bvmgr_vendor_profile_next_show_markup = function_exists('vms_vendor_profiles_render_next_show_card')
-    ? (string) vms_vendor_profiles_render_next_show_card($bvmgr_vendor_profile_post_id)
+$bvmgr_vendor_profile_next_show_markup = function_exists('bvmgr_vendor_profiles_render_next_show_card')
+    ? (string) bvmgr_vendor_profiles_render_next_show_card($bvmgr_vendor_profile_post_id)
     : '';
 
-$bvmgr_vendor_profile_social_markup = function_exists('vms_vendor_profiles_render_social_links')
-    ? (string) vms_vendor_profiles_render_social_links($bvmgr_vendor_profile_post_id)
+$bvmgr_vendor_profile_social_markup = function_exists('bvmgr_vendor_profiles_render_social_links')
+    ? (string) bvmgr_vendor_profiles_render_social_links($bvmgr_vendor_profile_post_id)
     : '';
 
 $bvmgr_vendor_profile_video_url = trim((string) get_post_meta($bvmgr_vendor_profile_post_id, '_vms_vendor_featured_video_url', true));
@@ -88,8 +88,8 @@ for ($bvmgr_vendor_profile_gallery_image_index = 1; $bvmgr_vendor_profile_galler
     }
 }
 
-$bvmgr_vendor_profile_allowed_html = function_exists('vms_vendor_profiles_promo_allowed_html')
-    ? vms_vendor_profiles_promo_allowed_html()
+$bvmgr_vendor_profile_allowed_html = function_exists('bvmgr_vendor_profiles_promo_allowed_html')
+    ? bvmgr_vendor_profiles_promo_allowed_html()
     : wp_kses_allowed_html('post');
 $bvmgr_vendor_profile_allowed_html['section'] = array(
     'aria-label' => true,
@@ -127,8 +127,8 @@ $bvmgr_vendor_profile_allowed_html['span'] = array_merge(
     )
 );
 
-$bvmgr_vendor_profile_social_icon_allowed_html = function_exists('vms_vendor_profiles_social_icon_allowed_html')
-    ? vms_vendor_profiles_social_icon_allowed_html()
+$bvmgr_vendor_profile_social_icon_allowed_html = function_exists('bvmgr_vendor_profiles_social_icon_allowed_html')
+    ? bvmgr_vendor_profiles_social_icon_allowed_html()
     : array(
         'svg' => array(
             'aria-hidden' => true,

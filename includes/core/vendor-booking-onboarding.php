@@ -333,8 +333,8 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_plan_targets')) {
         $seen = array();
 
         $primary_vendor_id = 0;
-        if (function_exists('vms_get_event_plan_lineup_primary_entry')) {
-            $primary = (array) vms_get_event_plan_lineup_primary_entry($plan_id);
+        if (function_exists('bvmgr_get_event_plan_lineup_primary_entry')) {
+            $primary = (array) bvmgr_get_event_plan_lineup_primary_entry($plan_id);
             $primary_vendor_id = absint($primary['vendor_id'] ?? 0);
         }
         if ($primary_vendor_id <= 0) {
@@ -350,8 +350,8 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_plan_targets')) {
             $seen[$primary_vendor_id] = true;
         }
 
-        if (function_exists('vms_get_event_plan_lineup_supporting_entries')) {
-            foreach ((array) vms_get_event_plan_lineup_supporting_entries($plan_id) as $entry) {
+        if (function_exists('bvmgr_get_event_plan_lineup_supporting_entries')) {
+            foreach ((array) bvmgr_get_event_plan_lineup_supporting_entries($plan_id) as $entry) {
                 $vendor_id = absint($entry['vendor_id'] ?? 0);
                 if ($vendor_id <= 0 || isset($seen[$vendor_id])) {
                     continue;
@@ -393,8 +393,8 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_plan_targets')) {
 if (!function_exists('bvmgr_vendor_booking_onboarding_video_attachment_id')) {
     function bvmgr_vendor_booking_onboarding_video_attachment_id(int $plan_id): int
     {
-        if (function_exists('vms_vendor_portal_get_headliner_promo_video_data')) {
-            $data = (array) vms_vendor_portal_get_headliner_promo_video_data($plan_id);
+        if (function_exists('bvmgr_vendor_portal_get_headliner_promo_video_data')) {
+            $data = (array) bvmgr_vendor_portal_get_headliner_promo_video_data($plan_id);
             return (int) ($data['attachment_id'] ?? 0);
         }
         $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'headliner_promo_video_attachment_id') : '_vms_headliner_promo_video_attachment_id';
@@ -408,8 +408,8 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_video_attachment_id')) {
 if (!function_exists('bvmgr_vendor_booking_onboarding_video_is_live')) {
     function bvmgr_vendor_booking_onboarding_video_is_live(int $plan_id): bool
     {
-        if (function_exists('vms_vendor_portal_get_headliner_promo_video_data')) {
-            $data = (array) vms_vendor_portal_get_headliner_promo_video_data($plan_id);
+        if (function_exists('bvmgr_vendor_portal_get_headliner_promo_video_data')) {
+            $data = (array) bvmgr_vendor_portal_get_headliner_promo_video_data($plan_id);
             return !empty($data['source_type']) && (string) ($data['source_type'] ?? 'none') !== 'none' && empty($data['hidden']);
         }
         $attachment_id = bvmgr_vendor_booking_onboarding_video_attachment_id($plan_id);
@@ -427,8 +427,8 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_video_is_live')) {
 if (!function_exists('bvmgr_vendor_booking_onboarding_video_is_submitted')) {
     function bvmgr_vendor_booking_onboarding_video_is_submitted(int $plan_id): bool
     {
-        if (function_exists('vms_vendor_portal_get_headliner_promo_video_submission_data')) {
-            $data = (array) vms_vendor_portal_get_headliner_promo_video_submission_data($plan_id);
+        if (function_exists('bvmgr_vendor_portal_get_headliner_promo_video_submission_data')) {
+            $data = (array) bvmgr_vendor_portal_get_headliner_promo_video_submission_data($plan_id);
             return !empty($data['attachment_id']);
         }
         return false;

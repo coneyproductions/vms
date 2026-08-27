@@ -2330,8 +2330,8 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 			return array();
 		}
 
-		if (function_exists('vms_vendor_portal_get_ticket_product_ids')) {
-			return array_values(array_unique(array_filter(array_map('absint', (array) vms_vendor_portal_get_ticket_product_ids($event_plan_id)))));
+		if (function_exists('bvmgr_vendor_portal_get_ticket_product_ids')) {
+			return array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_vendor_portal_get_ticket_product_ids($event_plan_id)))));
 		}
 
 		$pids = array();
@@ -2391,13 +2391,13 @@ if (!function_exists('vms_staffing_get_paid_ticket_product_ids')) {
 			return array();
 		}
 
-		if (function_exists('vms_vendor_portal_get_paid_ticket_product_ids')) {
-			return array_values(array_unique(array_filter(array_map('absint', (array) vms_vendor_portal_get_paid_ticket_product_ids($product_ids)))));
+		if (function_exists('bvmgr_vendor_portal_get_paid_ticket_product_ids')) {
+			return array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_vendor_portal_get_paid_ticket_product_ids($product_ids)))));
 		}
 
 		$filtered = array();
 		foreach ($product_ids as $product_id) {
-			if (function_exists('vms_vendor_portal_product_is_paid_admission') && !vms_vendor_portal_product_is_paid_admission($product_id)) {
+			if (function_exists('bvmgr_vendor_portal_product_is_paid_admission') && !bvmgr_vendor_portal_product_is_paid_admission($product_id)) {
 				continue;
 			}
 			$filtered[] = $product_id;
@@ -2422,8 +2422,8 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
 			return $snapshot;
 		}
 
-		if (function_exists('vms_vendor_portal_get_ticket_sales_snapshot')) {
-			$raw = (array) vms_vendor_portal_get_ticket_sales_snapshot($event_plan_id);
+		if (function_exists('bvmgr_vendor_portal_get_ticket_sales_snapshot')) {
+			$raw = (array) bvmgr_vendor_portal_get_ticket_sales_snapshot($event_plan_id);
 			$qty_meta = vms_staffing_extract_ticket_qty($raw);
 			$resolved = !empty($qty_meta['resolved']) || !empty($raw['ticket_product_ids']) || !empty($raw['all_ticket_product_ids']);
 			return array(

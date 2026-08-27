@@ -331,7 +331,7 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
                     }
                 } else {
                     $primary_desc = $base_desc;
-                    if (!empty(function_exists('vms_get_event_plan_lineup_primary_entry') ? vms_get_event_plan_lineup_primary_entry($plan_id) : array())) {
+                    if (!empty(function_exists('bvmgr_get_event_plan_lineup_primary_entry') ? bvmgr_get_event_plan_lineup_primary_entry($plan_id) : array())) {
                         $primary_desc .= ' — Primary lineup entry';
                     }
                     if (!$append_line($bills, $plan_id, $venue_id, $event_date, $vendor_id, $amount, $structure, $primary_desc, $payment_blocked, $tax_missing, $bypass_active, $bypass_until, $terms_days)) {
@@ -343,11 +343,11 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
             $warnings[] = 'Plan #' . $plan_id . ' has no primary vendor linked; primary payable skipped.';
         }
 
-        if (!function_exists('vms_get_event_plan_lineup_supporting_entries')) {
+        if (!function_exists('bvmgr_get_event_plan_lineup_supporting_entries')) {
             continue;
         }
 
-        $supporting_entries = (array) vms_get_event_plan_lineup_supporting_entries($plan_id, array(
+        $supporting_entries = (array) bvmgr_get_event_plan_lineup_supporting_entries($plan_id, array(
             'event_date' => $event_date,
             'venue_id' => $venue_id,
         ));

@@ -13,8 +13,8 @@ if (!defined('ABSPATH')) exit;
 if (!function_exists('vms_staff_tax_provider')) {
     function vms_staff_tax_provider(): string
     {
-        if (function_exists('vms_tax_settings_get_provider')) {
-            return (string) vms_tax_settings_get_provider();
+        if (function_exists('bvmgr_tax_settings_get_provider')) {
+            return (string) bvmgr_tax_settings_get_provider();
         }
 
         $settings = get_option('vms_settings', array());
@@ -30,8 +30,8 @@ if (!function_exists('vms_staff_tax_provider')) {
 if (!function_exists('vms_staff_tax_provider_label')) {
     function vms_staff_tax_provider_label(string $provider): string
     {
-        if (function_exists('vms_tax_provider_label')) {
-            return (string) vms_tax_provider_label($provider);
+        if (function_exists('bvmgr_tax_provider_label')) {
+            return (string) bvmgr_tax_provider_label($provider);
         }
         if ($provider === 'quickbooks_email') return 'QuickBooks Online';
         if ($provider === 'tax1099_email') return 'Tax1099';

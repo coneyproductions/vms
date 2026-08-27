@@ -68,8 +68,8 @@ $cleanup = static function () use (&$createdPosts, &$originalPost, &$originalGet
 try {
 	wp_set_current_user(1);
 
-	$assert(false !== has_action('wp_ajax_vms_save_manual_availability_day', 'vms_save_manual_availability_day_ajax'), 'Expected the Vendor Portal manual availability AJAX action to remain registered.');
-	$assert(function_exists('vms_save_manual_availability_day_ajax'), 'Expected the Vendor Portal manual availability AJAX callback to exist.');
+	$assert(false !== has_action('wp_ajax_vms_save_manual_availability_day', 'bvmgr_save_manual_availability_day_ajax'), 'Expected the Vendor Portal manual availability AJAX action to remain registered.');
+	$assert(function_exists('bvmgr_save_manual_availability_day_ajax'), 'Expected the Vendor Portal manual availability AJAX callback to exist.');
 	$assert(current_user_can('manage_options'), 'Expected test user 1 to remain an administrator for preview coverage.');
 
 	$dieHandlerFilter = static function (): string {
@@ -90,7 +90,7 @@ try {
 		return $registerPost((int) $vendorId);
 	};
 
-	$activeDates = vms_vendor_get_active_dates_or_rolling_window(1);
+	$activeDates = bvmgr_vendor_get_active_dates_or_rolling_window(1);
 	$assert(!empty($activeDates), 'Expected active availability dates for AJAX coverage.');
 	$activeDate = (string) $activeDates[0];
 
@@ -117,7 +117,7 @@ try {
 		$exitMessage = '';
 		try {
 			ob_start();
-			vms_save_manual_availability_day_ajax();
+			bvmgr_save_manual_availability_day_ajax();
 			$body = (string) ob_get_clean();
 		} catch (VMS_Vendor_Availability_Ajax_Exit $e) {
 			$body = (string) ob_get_clean();

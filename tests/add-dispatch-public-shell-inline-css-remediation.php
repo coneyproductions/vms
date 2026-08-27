@@ -274,12 +274,12 @@ try {
 
 	$GLOBALS['vms_test_asset_version'] = 'test-asset-version';
 	$assert(
-		vms_add_dispatch_public_shell_stylesheet_url() === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/css/vms-add-dispatch-public-shell.css?ver=test-asset-version',
+		bvmgr_add_dispatch_public_shell_stylesheet_url() === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/css/vms-add-dispatch-public-shell.css?ver=test-asset-version',
 		'ADD public shell stylesheet helper should prefer the asset-version helper result.'
 	);
 	$GLOBALS['vms_test_asset_version'] = '';
 	$assert(
-		vms_add_dispatch_public_shell_stylesheet_url() === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/css/vms-add-dispatch-public-shell.css?ver=test-version',
+		bvmgr_add_dispatch_public_shell_stylesheet_url() === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/css/vms-add-dispatch-public-shell.css?ver=test-version',
 		'ADD public shell stylesheet helper should fall back to BVMGR_VERSION when the helper result is empty.'
 	);
 
@@ -331,7 +331,7 @@ try {
 		),
 		'strong' => array(),
 	);
-	$assert(vms_add_dispatch_public_response_allowed_html() === $expectedAllowedHtml, 'ADD public shell allowlist should remain unchanged.');
+	$assert(bvmgr_add_dispatch_public_response_allowed_html() === $expectedAllowedHtml, 'ADD public shell allowlist should remain unchanged.');
 
 	$assert(strpos($outputTestSource, 'ADD public shell output remediation OK.') !== false, 'Existing ADD public shell output remediation test should remain present.');
 	$assert(strpos($adminUiSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css'") !== false, 'ADD admin asset ownership should remain unchanged in this slice.');

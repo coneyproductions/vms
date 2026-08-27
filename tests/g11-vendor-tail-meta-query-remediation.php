@@ -200,7 +200,7 @@ $function_names = array(
 	'payables' => 'bvmgr_payables_build_bills_for_export',
 	'onboarding' => 'bvmgr_vendor_booking_onboarding_daily_runner',
 	'tax_export' => 'bvmgr_vendor_tax_export_csv_adminpost',
-	'profiles' => 'vms_vendor_profiles_find_next_upcoming_event',
+	'profiles' => 'bvmgr_vendor_profiles_find_next_upcoming_event',
 	'vendor_category' => 'bvmgr_vendor_categories_get_related_event_plan_ids',
 );
 $mirror_sources = array();
@@ -667,7 +667,7 @@ function get_permalink(int $post_id): string
 	return 'https://example.test/event/' . $post_id;
 }
 
-function vms_vendor_profiles_today_ymd(): string
+function bvmgr_vendor_profiles_today_ymd(): string
 {
 	return '2026-08-08';
 }
@@ -902,12 +902,12 @@ g11_same(array(0, 501), $GLOBALS['g11_get_posts_calls'][0]['result'], 'Tax expor
 g11_contains('Vendor Five', $tax_output, 'Tax export should retain valid Vendor rows.');
 
 g11_reset_runtime();
-g11_same(array(), vms_vendor_profiles_find_next_upcoming_event(0), 'Invalid Vendor profile lookup must remain empty.');
+g11_same(array(), bvmgr_vendor_profiles_find_next_upcoming_event(0), 'Invalid Vendor profile lookup must remain empty.');
 g11_same(array(), $GLOBALS['g11_wp_query_calls'], 'Invalid Vendor profile lookup must not query.');
 
 g11_reset_runtime();
 $GLOBALS['g11_wp_query_queue'][] = array('posts' => false);
-$empty_profile = vms_vendor_profiles_find_next_upcoming_event(7);
+$empty_profile = bvmgr_vendor_profiles_find_next_upcoming_event(7);
 $profile_args = array(
 	'post_type' => 'vms_event_plan',
 	'post_status' => array('publish', 'draft', 'pending', 'private'),
@@ -944,7 +944,7 @@ $GLOBALS['g11_posts'] = array(
 );
 $GLOBALS['g11_cancelled'][703] = true;
 $GLOBALS['g11_titles'][704] = 'Valid Public Event';
-$profile_result = vms_vendor_profiles_find_next_upcoming_event(7);
+$profile_result = bvmgr_vendor_profiles_find_next_upcoming_event(7);
 g11_same(array(0, 601, 602, 603, 604), $GLOBALS['g11_wp_query_calls'][0]['posts'], 'Vendor Profile query result capture changed.');
 g11_same(
 	array(

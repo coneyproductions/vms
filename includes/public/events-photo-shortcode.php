@@ -119,11 +119,11 @@ if (!function_exists('vms_events_photo_title_for_event')) {
 if (!function_exists('vms_events_photo_format_time_label')) {
     function vms_events_photo_format_time_label(array $event): string
     {
-        $start_label = function_exists('vms_public_calendar_time_label')
-            ? vms_public_calendar_time_label((string) ($event['start_local'] ?? ''))
+        $start_label = function_exists('bvmgr_public_calendar_time_label')
+            ? bvmgr_public_calendar_time_label((string) ($event['start_local'] ?? ''))
             : '';
-        $end_label = function_exists('vms_public_calendar_time_label')
-            ? vms_public_calendar_time_label((string) ($event['end_local'] ?? ''))
+        $end_label = function_exists('bvmgr_public_calendar_time_label')
+            ? bvmgr_public_calendar_time_label((string) ($event['end_local'] ?? ''))
             : '';
 
         if ($start_label !== '' && $end_label !== '') {
@@ -205,30 +205,30 @@ if (!function_exists('vms_events_photo_shortcode')) {
             $columns = 3;
         }
 
-        $include_cancelled = function_exists('vms_calendar_boolish')
-            ? vms_calendar_boolish($atts['include_cancelled'], true)
+        $include_cancelled = function_exists('bvmgr_calendar_boolish')
+            ? bvmgr_calendar_boolish($atts['include_cancelled'], true)
             : !empty($atts['include_cancelled']);
-        $include_past = function_exists('vms_calendar_boolish')
-            ? vms_calendar_boolish($atts['include_past'], false)
+        $include_past = function_exists('bvmgr_calendar_boolish')
+            ? bvmgr_calendar_boolish($atts['include_past'], false)
             : !empty($atts['include_past']);
-        $show_time = function_exists('vms_calendar_boolish')
-            ? vms_calendar_boolish($atts['show_time'], false)
+        $show_time = function_exists('bvmgr_calendar_boolish')
+            ? bvmgr_calendar_boolish($atts['show_time'], false)
             : !empty($atts['show_time']);
-        $show_venue = function_exists('vms_calendar_boolish')
-            ? vms_calendar_boolish($atts['show_venue'], false)
+        $show_venue = function_exists('bvmgr_calendar_boolish')
+            ? bvmgr_calendar_boolish($atts['show_venue'], false)
             : !empty($atts['show_venue']);
-        $show_excerpt = function_exists('vms_calendar_boolish')
-            ? vms_calendar_boolish($atts['show_excerpt'], false)
+        $show_excerpt = function_exists('bvmgr_calendar_boolish')
+            ? bvmgr_calendar_boolish($atts['show_excerpt'], false)
             : !empty($atts['show_excerpt']);
-        $show_more_link = function_exists('vms_calendar_boolish')
-            ? vms_calendar_boolish($atts['more_link'], false)
+        $show_more_link = function_exists('bvmgr_calendar_boolish')
+            ? bvmgr_calendar_boolish($atts['more_link'], false)
             : !empty($atts['more_link']);
 
         $timezone = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
         $today = (string) wp_date('Y-m-d', time(), $timezone);
 
         $start_date = trim((string) $atts['start_date']);
-        if (!function_exists('vms_calendar_is_valid_ymd') || !vms_calendar_is_valid_ymd($start_date)) {
+        if (!function_exists('bvmgr_calendar_is_valid_ymd') || !bvmgr_calendar_is_valid_ymd($start_date)) {
             if ($include_past) {
                 $start_date = (string) wp_date('Y-m-d', strtotime('-30 days', time()), $timezone);
             } else {
@@ -237,7 +237,7 @@ if (!function_exists('vms_events_photo_shortcode')) {
         }
 
         $end_date = trim((string) $atts['end_date']);
-        if (!function_exists('vms_calendar_is_valid_ymd') || !vms_calendar_is_valid_ymd($end_date)) {
+        if (!function_exists('bvmgr_calendar_is_valid_ymd') || !bvmgr_calendar_is_valid_ymd($end_date)) {
             $days_ahead = max(1, absint($atts['days_ahead']));
             $end_date = (string) wp_date('Y-m-d', strtotime('+' . $days_ahead . ' days', time()), $timezone);
         }

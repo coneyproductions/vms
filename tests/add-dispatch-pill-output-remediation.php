@@ -113,60 +113,60 @@ $expectedAllowedHtml = array(
 		'class' => true,
 	),
 );
-$assert(vms_add_dispatch_pill_allowed_html() === $expectedAllowedHtml, 'ADD pill allowlist should contain only span[class].');
+$assert(bvmgr_add_dispatch_pill_allowed_html() === $expectedAllowedHtml, 'ADD pill allowlist should contain only span[class].');
 
-$successPill = vms_add_dispatch_status_pill('available');
+$successPill = bvmgr_add_dispatch_status_pill('available');
 $assert($successPill === '<span class="vms-add-pill vms-add-pill--success">Available</span>', 'Available status should keep the success pill classes and label.');
-$assert(wp_kses($successPill, vms_add_dispatch_pill_allowed_html()) === $successPill, 'The narrow contract should preserve the expected success pill span and class.');
+$assert(wp_kses($successPill, bvmgr_add_dispatch_pill_allowed_html()) === $successPill, 'The narrow contract should preserve the expected success pill span and class.');
 
-$warningPill = vms_add_dispatch_status_pill('requested');
+$warningPill = bvmgr_add_dispatch_status_pill('requested');
 $assert($warningPill === '<span class="vms-add-pill vms-add-pill--warning">Requested</span>', 'Requested status should keep the warning pill classes and label.');
 
-$dangerPill = vms_add_dispatch_status_pill('over_capacity');
+$dangerPill = bvmgr_add_dispatch_status_pill('over_capacity');
 $assert($dangerPill === '<span class="vms-add-pill vms-add-pill--danger">Over capacity</span>', 'Over-capacity status should keep the danger pill classes and label.');
 
-$neutralPill = vms_add_dispatch_status_pill('full');
+$neutralPill = bvmgr_add_dispatch_status_pill('full');
 $assert($neutralPill === '<span class="vms-add-pill vms-add-pill--neutral">Full</span>', 'Full status should keep the neutral pill classes and label.');
 
-$sourcePill = vms_add_dispatch_source_pill('portal_interest');
+$sourcePill = bvmgr_add_dispatch_source_pill('portal_interest');
 $assert($sourcePill === '<span class="vms-add-pill vms-add-pill--neutral vms-add-pill--source">Vendor Portal</span>', 'Portal-interest source should keep the source pill classes and label.');
 
-$unknownStatusPill = vms_add_dispatch_status_pill('"><script>alert(1)</script>');
+$unknownStatusPill = bvmgr_add_dispatch_status_pill('"><script>alert(1)</script>');
 $assert($unknownStatusPill === '<span class="vms-add-pill vms-add-pill--neutral">scriptalert1script</span>', 'Malformed statuses should keep the existing sanitized fallback behavior.');
 $assert(strpos($unknownStatusPill, '<script') === false && strpos($unknownStatusPill, 'onclick') === false, 'Malformed status labels should not become executable markup.');
 
-$unknownSourcePill = vms_add_dispatch_source_pill('javascript:alert(1)');
+$unknownSourcePill = bvmgr_add_dispatch_source_pill('javascript:alert(1)');
 $assert($unknownSourcePill === '<span class="vms-add-pill vms-add-pill--neutral vms-add-pill--source">ADD</span>', 'Malformed sources should keep the existing ADD fallback label.');
 
 $unsafeHtml = '<span class="ok" onclick="evil()" onmouseover="evil()" style="color:red" id="bad" data-x="1" aria-hidden="true">Label</span><script>alert(1)</script><a href="https://example.test">Link</a><img src="x" alt="x">';
-$filtered = wp_kses($unsafeHtml, vms_add_dispatch_pill_allowed_html());
+$filtered = wp_kses($unsafeHtml, bvmgr_add_dispatch_pill_allowed_html());
 $assert(strpos($filtered, '<span class="ok">Label</span>') !== false, 'The narrow contract should preserve only span[class].');
 foreach (array('<script', '<a ', '<img', 'onclick=', 'onmouseover=', 'style=', ' id=', 'data-x=', 'aria-hidden=') as $forbidden) {
 	$assert(strpos($filtered, $forbidden) === false, 'The narrow contract should reject unsupported markup or attributes: ' . $forbidden);
 }
 
-preg_match_all('~vms_add_dispatch_status_pill\s*\(~', $adminUiSource, $statusCallMatches);
-preg_match_all('~function\s+vms_add_dispatch_status_pill\s*\(~', $adminUiSource, $statusDefinitionMatches);
-preg_match_all('~wp_kses\s*\(\s*vms_add_dispatch_status_pill\s*\(~', $adminUiSource, $wrappedStatusMatches);
+preg_match_all('~bvmgr_add_dispatch_status_pill\s*\(~', $adminUiSource, $statusCallMatches);
+preg_match_all('~function\s+bvmgr_add_dispatch_status_pill\s*\(~', $adminUiSource, $statusDefinitionMatches);
+preg_match_all('~wp_kses\s*\(\s*bvmgr_add_dispatch_status_pill\s*\(~', $adminUiSource, $wrappedStatusMatches);
 $statusOutputCallCount = count($statusCallMatches[0]) - count($statusDefinitionMatches[0]);
 $assert($statusOutputCallCount === 8, 'ADD admin UI should keep exactly eight status-pill production output calls.');
 $assert(count($wrappedStatusMatches[0]) === $statusOutputCallCount, 'Every status-pill production output call should be wrapped by wp_kses() at the pill boundary.');
 
-preg_match_all('~vms_add_dispatch_source_pill\s*\(~', $adminUiSource, $sourceCallMatches);
-preg_match_all('~function\s+vms_add_dispatch_source_pill\s*\(~', $adminUiSource, $sourceDefinitionMatches);
-preg_match_all('~wp_kses\s*\(\s*vms_add_dispatch_source_pill\s*\(~', $adminUiSource, $wrappedSourceMatches);
+preg_match_all('~bvmgr_add_dispatch_source_pill\s*\(~', $adminUiSource, $sourceCallMatches);
+preg_match_all('~function\s+bvmgr_add_dispatch_source_pill\s*\(~', $adminUiSource, $sourceDefinitionMatches);
+preg_match_all('~wp_kses\s*\(\s*bvmgr_add_dispatch_source_pill\s*\(~', $adminUiSource, $wrappedSourceMatches);
 $sourceOutputCallCount = count($sourceCallMatches[0]) - count($sourceDefinitionMatches[0]);
 $assert($sourceOutputCallCount === 5, 'ADD admin UI should keep exactly five source-pill production output calls.');
 $assert(count($wrappedSourceMatches[0]) === $sourceOutputCallCount, 'Every source-pill production output call should be wrapped by wp_kses() at the pill boundary.');
 
-$assert(strpos($adminUiSource, 'esc_html(vms_add_dispatch_status_pill(') === false, 'Completed status pill fragments should not be text-escaped.');
-$assert(strpos($adminUiSource, 'esc_html(vms_add_dispatch_source_pill(') === false, 'Completed source pill fragments should not be text-escaped.');
+$assert(strpos($adminUiSource, 'esc_html(bvmgr_add_dispatch_status_pill(') === false, 'Completed status pill fragments should not be text-escaped.');
+$assert(strpos($adminUiSource, 'esc_html(bvmgr_add_dispatch_source_pill(') === false, 'Completed source pill fragments should not be text-escaped.');
 $assert(strpos($adminUiSource, 'wp_kses_post(') === false, 'ADD pill output should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $adminUiSource), 'ADD pill output should not use the broad post allowlist.');
 
 $sourceLines = preg_split('/\R/', $adminUiSource);
 foreach ($sourceLines as $line) {
-	if (strpos($line, 'vms_add_dispatch_pill_allowed_html()') === false || strpos($line, 'function vms_add_dispatch_pill_allowed_html') !== false) {
+	if (strpos($line, 'bvmgr_add_dispatch_pill_allowed_html()') === false || strpos($line, 'function bvmgr_add_dispatch_pill_allowed_html') !== false) {
 		continue;
 	}
 	$assert(

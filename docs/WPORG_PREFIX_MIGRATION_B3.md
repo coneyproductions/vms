@@ -147,11 +147,24 @@ Status: committed at `1f244034e42ba1993c534e8f83e01d5cb1ae3d06`.
 
 ### W7 — vendor/venue applications, onboarding, registry, taxonomies, and admin
 
-Status: verified for the isolated W7 commit.
+Status: committed at `34fe7afcd06355b781896a17606e01308cb7069e`.
 
 - Exact cutover: `419` unique functions / `419` declaration sites moved atomically; W7 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
 - Ratchet: cumulative B3 progress is `2,766 / 4,521` functions and `2,778 / 4,541` declaration sites; `1,755` legacy functions / `1,763` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
 - Literal authority: seven executable shell/array-map/activation callback sites moved; ten vendor filters and the existing response-email form field remain legacy contracts.
 - Focused verification: Vendor Application inline JavaScript and admin CSS, confirmation output, Vendor ICS safe fetch, secondary-vendor lazy-load/save continuity, Administrator shell output, authorization/input, schedule notices, runtime stubs, changed-PHP lint, diff checks, and all primary B3/B2/B2.5/add-on/identity/release gates pass. Live-parity/projection, immutable-hash, historical-artifact, and explicit-WordPress-root tests remain excluded rather than weakened.
 - Checkpoint sequencing: W7 is committed on its independent green focused gate; the next exact-ZIP package/strict/runtime checkpoint follows W8's adjacent public portal/calendar wave.
+- Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### W8 — portals, availability, calendar, and public vendor profiles
+
+Status: verified for the isolated W8 commit.
+
+- Exact cutover: `524` unique functions / `524` declaration sites moved atomically; W8 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
+- Ratchet: cumulative B3 progress is `3,290 / 4,521` functions and `3,302 / 4,541` declaration sites; `1,231` legacy functions / `1,239` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
+- Literal authority: two executable admin-page render callback sites moved; six admin-post/filter/AJAX/public-tab contract sites remain legacy. The B2 collision fixture for `vms_vendor_profiles_event_sidebar_rendered` also remains explicitly legacy.
+- Focused verification: ADD public-shell output, Administrator explicit notices, availability request state, Event Plan Review JSON, Plan Your Visit sidebar context, translator comments, private uploads, public Event Sidebar guards, Staff Portal inline JavaScript, strict POST handling, Vendor Application confirmation output, Vendor Availability empty state, B2.5 runtime, changed-PHP lint, diff checks, and all primary B3/B2/B2.5/add-on/identity/runtime/release gates pass. Isolation-incompatible live-parity, historical-artifact, immutable-hash, and explicit-WordPress-root tests remain excluded rather than weakened.
+- Disposable package: `/private/tmp/bvm-wporg-b3-w8-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `11c8904b93d22853e15bad764cb508d9a1cc35b649ea7e80444bf38202528311`, passed package integrity.
+- Supported-stack smoke: the exact W8 ZIP completed activation and authenticated/public smoke requests with the supported WooCommerce/TEC/Event Tickets stack without a VMS fatal or duplicate scheduled-work owner. Report SHA-256: `7767ae6d87c3cc95d87c841d2e783fb6964900f65e63a6d19615935f13edb828`; `WARN` is limited to dependency/PHP deprecations.
+- Strict packaged scan: `1,972` total = historical `125` errors + `1,847` warnings, categorized exactly as B3 `1,239`, B7 `182`, method scope `420`, and external/core `6`. The gate records `3,302` authoritative B3 findings removed and no regression. Strict JSON SHA-256: `94157bc176f3b6824e7d2a0ee8d192bd2ab3ac5e7653b549758371b75ecb7ac0`.
 - Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

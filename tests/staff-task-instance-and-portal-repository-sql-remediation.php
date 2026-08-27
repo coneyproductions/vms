@@ -370,12 +370,12 @@ function wp_date(string $format, ?int $timestamp = null, ?DateTimeZone $timezone
 	return $dt->setTimezone($timezone)->format($format);
 }
 
-function vms_staff_portal_assignment_status_label(string $status): string
+function bvmgr_staff_portal_assignment_status_label(string $status): string
 {
 	return strtoupper($status);
 }
 
-function vms_staff_portal_visible_event_statuses(): array
+function bvmgr_staff_portal_visible_event_statuses(): array
 {
 	return array('confirmed', 'published', 'ready');
 }
@@ -599,8 +599,8 @@ $store_targets = array(
 	'vms_tasks_supersede_open_instances',
 );
 $portal_targets = array(
-	'vms_staff_portal_get_event_crew_rows',
-	'vms_staff_portal_get_assignment_rows',
+	'bvmgr_staff_portal_get_event_crew_rows',
+	'bvmgr_staff_portal_get_assignment_rows',
 );
 
 try {
@@ -618,8 +618,8 @@ try {
 	$get_instances_source = vms_test_extract_function($store_source, 'vms_tasks_get_instances');
 	$count_instances_source = vms_test_extract_function($store_source, 'vms_tasks_count_instances');
 	$resolve_role_source = vms_test_extract_function($store_source, 'vms_tasks_resolve_scheduled_role_user_id');
-	$crew_rows_source = vms_test_extract_function($portal_source, 'vms_staff_portal_get_event_crew_rows');
-	$assignment_rows_source = vms_test_extract_function($portal_source, 'vms_staff_portal_get_assignment_rows');
+	$crew_rows_source = vms_test_extract_function($portal_source, 'bvmgr_staff_portal_get_event_crew_rows');
+	$assignment_rows_source = vms_test_extract_function($portal_source, 'bvmgr_staff_portal_get_assignment_rows');
 
 	vms_test_assert_true(strpos($get_instances_source, 'SELECT * FROM {$t_instances}') === false, 'Task-instance list reads should no longer interpolate table names into SQL strings.');
 	vms_test_assert_true(strpos($count_instances_source, 'SELECT COUNT(*) FROM {$t_instances}') === false, 'Task-instance count reads should no longer interpolate table names into SQL strings.');
@@ -890,7 +890,7 @@ try {
 		'shift_start_local' => '09:00',
 		'shift_end_local' => '11:00',
 	));
-	$crew_rows = vms_staff_portal_get_event_crew_rows(22);
+	$crew_rows = bvmgr_staff_portal_get_event_crew_rows(22);
 	vms_test_assert_same('Ops', $crew_rows[0]['role_label'] ?? '', 'Crew-row reads should preserve the staffing role label resolution.');
 	vms_test_assert_same('09:00–11:00', $crew_rows[0]['shift_label'] ?? '', 'Crew-row reads should preserve the local shift label fallback.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status');
@@ -925,7 +925,7 @@ try {
 		'duration_minutes' => 120,
 		'slot_notes' => 'Soundcheck',
 	));
-	$assignment_rows = vms_staff_portal_get_assignment_rows(51, 25);
+	$assignment_rows = bvmgr_staff_portal_get_assignment_rows(51, 25);
 	vms_test_assert_same(1, count($assignment_rows), 'Assignment-row reads should return visible future event assignments.');
 	vms_test_assert_same('Load In', $assignment_rows[0]['event_title'] ?? '', 'Assignment-row reads should retain the event title payload.');
 	vms_test_assert_same('Ops', $assignment_rows[0]['role_label'] ?? '', 'Assignment-row reads should retain the normalized role label.');

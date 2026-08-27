@@ -92,8 +92,8 @@ try {
 	};
 
 	$getPrimaryLineupEntry = static function (int $planId): array {
-		$entries = function_exists('vms_get_event_plan_lineup_entries')
-			? (array) vms_get_event_plan_lineup_entries($planId)
+		$entries = function_exists('bvmgr_get_event_plan_lineup_entries')
+			? (array) bvmgr_get_event_plan_lineup_entries($planId)
 			: (array) get_post_meta($planId, '_vms_lineup_entries_v1', true);
 		foreach ($entries as $entry) {
 			if (!is_array($entry)) {
@@ -126,8 +126,8 @@ try {
 		update_post_meta($planId, '_vms_ticketing_enabled_override', 'on');
 		update_post_meta($planId, '_vms_ticket_ui_layout_override', 'progressive');
 		update_post_meta($planId, '_vms_ticket_ui_addons_heading_override', 'Fire Pits & Tables');
-		if (function_exists('vms_save_event_plan_lineup_entries')) {
-			vms_save_event_plan_lineup_entries(
+		if (function_exists('bvmgr_save_event_plan_lineup_entries')) {
+			bvmgr_save_event_plan_lineup_entries(
 				$planId,
 				array(
 					'primary' => array(

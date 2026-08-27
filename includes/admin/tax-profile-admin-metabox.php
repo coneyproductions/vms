@@ -218,12 +218,12 @@ function vms_render_tax_profile_admin_metabox($post)
 
     wp_nonce_field('vms_tax_admin_save', 'vms_tax_admin_nonce');
 
-    $provider = function_exists('vms_tax_settings_get_provider') ? (string) vms_tax_settings_get_provider() : 'upload';
+    $provider = function_exists('bvmgr_tax_settings_get_provider') ? (string) bvmgr_tax_settings_get_provider() : 'upload';
     if (!in_array($provider, array('upload', 'quickbooks_email', 'tax1099_email'), true)) {
         $provider = 'upload';
     }
-    $provider_label = function_exists('vms_tax_provider_label')
-        ? (string) vms_tax_provider_label($provider)
+    $provider_label = function_exists('bvmgr_tax_provider_label')
+        ? (string) bvmgr_tax_provider_label($provider)
         : (($provider === 'quickbooks_email') ? 'QuickBooks Online' : (($provider === 'tax1099_email') ? 'Tax1099' : 'Upload'));
 
     $k_attest = $k('w9_attested_at', '_vms_w9_external_vendor_attested_at');

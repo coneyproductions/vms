@@ -521,8 +521,8 @@ if (!function_exists('vms_admission_vendor_guest_ticket_product_ids')) {
 			$product_ids = (array) bvmgr_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
 		} elseif ($tec_event_id > 0 && function_exists('bvmgr_get_ticket_product_ids_for_event')) {
 			$product_ids = (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id);
-		} elseif (function_exists('vms_vendor_portal_get_ticket_product_ids')) {
-			$product_ids = (array) vms_vendor_portal_get_ticket_product_ids($event_plan_id);
+		} elseif (function_exists('bvmgr_vendor_portal_get_ticket_product_ids')) {
+			$product_ids = (array) bvmgr_vendor_portal_get_ticket_product_ids($event_plan_id);
 		}
 		$product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
 		sort($product_ids, SORT_NUMERIC);
@@ -996,8 +996,8 @@ if (!function_exists('vms_admission_vendor_guest_portal_url')) {
 		if ($vendor_id > 0) {
 			$args['vendor_id'] = $vendor_id;
 		}
-		if (!empty($portal_context['is_preview']) && function_exists('vms_vendor_portal_get_preview_query_args')) {
-			$args = array_merge((array) vms_vendor_portal_get_preview_query_args($vendor_id), $args);
+		if (!empty($portal_context['is_preview']) && function_exists('bvmgr_vendor_portal_get_preview_query_args')) {
+			$args = array_merge((array) bvmgr_vendor_portal_get_preview_query_args($vendor_id), $args);
 		}
 		if ($event_plan_id > 0) {
 			$args['guest_event'] = $event_plan_id;

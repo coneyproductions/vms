@@ -66,8 +66,8 @@ if (!function_exists('bvmgr_event_plan_review_current_snapshot')) {
             $status = 'draft';
         }
 
-        $lineup_rows = function_exists('vms_get_event_plan_lineup_entries')
-            ? (array) vms_get_event_plan_lineup_entries($plan_id)
+        $lineup_rows = function_exists('bvmgr_get_event_plan_lineup_entries')
+            ? (array) bvmgr_get_event_plan_lineup_entries($plan_id)
             : array();
         if (function_exists('bvmgr_event_plan_review_lineup_rows')) {
             $lineup_rows = bvmgr_event_plan_review_lineup_rows($lineup_rows);

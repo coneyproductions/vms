@@ -125,7 +125,7 @@ function get_post_type($postId = null): string
 	return $post instanceof WP_Post ? (string) $post->post_type : '';
 }
 
-function vms_public_event_sidebar_is_rendering_target(int $eventId): bool
+function bvmgr_public_event_sidebar_is_rendering_target(int $eventId): bool
 {
 	unset($eventId);
 	return false;

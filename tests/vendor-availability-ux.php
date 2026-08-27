@@ -7,7 +7,7 @@ vms_tests_require_wordpress(__DIR__);
 if (!class_exists('BVMGR_Admin_Event_Plans')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
-if (!function_exists('vms_render_vendor_availability_list_view')) {
+if (!function_exists('bvmgr_render_vendor_availability_list_view')) {
 	require_once dirname(__DIR__) . '/includes/admin/vendor-availability.php';
 }
 
@@ -110,7 +110,7 @@ try {
 	$marketVendorId = $createVendor('VA UX Market Vendor', array('market_vendor'), $venueId);
 	$uncategorizedVendorId = $createVendor('VA UX Uncategorized Vendor', array(), $venueId);
 
-	$allVendors = vms_vendor_availability_collect_vendors();
+	$allVendors = bvmgr_vendor_availability_collect_vendors();
 	$fixtureVendors = array_values(array_filter($allVendors, static function (array $row) use ($foodVendorId, $marketVendorId, $uncategorizedVendorId): bool {
 		return in_array((int) ($row['vendor_id'] ?? 0), array($foodVendorId, $marketVendorId, $uncategorizedVendorId), true);
 	}));
@@ -125,8 +125,8 @@ try {
 		'roster' => 'all',
 	);
 	$busyMap = array();
-	$openRows = vms_vendor_availability_day_rows($fixtureVendors, $openDate, $busyMap, $baseFilters);
-	$closedRows = vms_vendor_availability_day_rows($fixtureVendors, $closedDate, $busyMap, $baseFilters);
+	$openRows = bvmgr_vendor_availability_day_rows($fixtureVendors, $openDate, $busyMap, $baseFilters);
+	$closedRows = bvmgr_vendor_availability_day_rows($fixtureVendors, $closedDate, $busyMap, $baseFilters);
 	$assert(count($openRows) === 3 && count($closedRows) === 3, 'Fixture vendors should render on open and closed dates before day filtering.');
 
 	$foodOpenRow = array_values(array_filter($openRows, static function (array $row) use ($foodVendorId): bool {
@@ -136,18 +136,18 @@ try {
 		return (int) ($row['vendor_id'] ?? 0) === $foodVendorId;
 	}))[0] ?? array();
 
-	$openLinks = vms_vendor_availability_booking_links((array) $foodOpenRow, $openDate, $baseFilters);
-	$closedLinks = vms_vendor_availability_booking_links((array) $foodClosedRow, $closedDate, $baseFilters);
+	$openLinks = bvmgr_vendor_availability_booking_links((array) $foodOpenRow, $openDate, $baseFilters);
+	$closedLinks = bvmgr_vendor_availability_booking_links((array) $foodClosedRow, $closedDate, $baseFilters);
 	$assert((string) ($openLinks['url'] ?? '') !== '' && empty($openLinks['override_url']), 'Open venue dates should expose the normal booking link.');
 	$assert((string) ($closedLinks['url'] ?? '') === '' && (string) ($closedLinks['override_url'] ?? '') !== '' && ($closedLinks['venue_open'] ?? null) === false, 'Closed venue dates should suppress the normal booking link and expose an override link.');
 	$assert(strpos((string) $closedLinks['override_url'], 'vms_override_venue_schedule=1') !== false, 'Closed venue override link should carry an explicit override flag.');
 
-	$assert(vms_vendor_availability_day_matches_filter($openDate, array_merge($baseFilters, array('day_filter' => 'venue_open'))) === true, 'Venue-open filter should include configured open days.');
-	$assert(vms_vendor_availability_day_matches_filter($closedDate, array_merge($baseFilters, array('day_filter' => 'venue_open'))) === false, 'Venue-open filter should exclude configured closed days.');
-	$assert(vms_vendor_availability_day_matches_filter($closedDate, array_merge($baseFilters, array('day_filter' => 'weekends'))) === true, 'Weekend filter should include Saturday.');
-	$assert(vms_vendor_availability_day_matches_filter($closedDate, array_merge($baseFilters, array('day_filter' => 'weekdays'))) === false, 'Weekday filter should exclude Saturday.');
+	$assert(bvmgr_vendor_availability_day_matches_filter($openDate, array_merge($baseFilters, array('day_filter' => 'venue_open'))) === true, 'Venue-open filter should include configured open days.');
+	$assert(bvmgr_vendor_availability_day_matches_filter($closedDate, array_merge($baseFilters, array('day_filter' => 'venue_open'))) === false, 'Venue-open filter should exclude configured closed days.');
+	$assert(bvmgr_vendor_availability_day_matches_filter($closedDate, array_merge($baseFilters, array('day_filter' => 'weekends'))) === true, 'Weekend filter should include Saturday.');
+	$assert(bvmgr_vendor_availability_day_matches_filter($closedDate, array_merge($baseFilters, array('day_filter' => 'weekdays'))) === false, 'Weekday filter should exclude Saturday.');
 
-	$typeGroups = vms_vendor_availability_group_rows_by_type($openRows);
+	$typeGroups = bvmgr_vendor_availability_group_rows_by_type($openRows);
 	$groupLabels = array_map(static function (array $group): string {
 		return (string) ($group['label'] ?? '');
 	}, $typeGroups);
@@ -156,7 +156,7 @@ try {
 	$assert(in_array('Uncategorized', $groupLabels, true), 'Detail grouping should include Uncategorized.');
 
 	ob_start();
-	vms_render_vendor_availability_list_view($closedRows, $closedDate, 'list', $baseFilters);
+	bvmgr_render_vendor_availability_list_view($closedRows, $closedDate, 'list', $baseFilters);
 	$listHtml = (string) ob_get_clean();
 	$assert(strpos($listHtml, 'vms-va-type-group-row') !== false, 'List view should render vendor-type group rows.');
 	$assert(strpos($listHtml, 'Food Vendor') !== false && strpos($listHtml, 'Market Vendor') !== false, 'List view should expose type labels/badges.');
@@ -167,11 +167,11 @@ try {
 	$assert(strpos($listHtml, 'No availability setup yet') === false, 'Detail rows should not duplicate no-response/no-setup wording in a separate setup column.');
 	$assert(strpos($listHtml, '<th>Setup</th>') === false && strpos($listHtml, '<th>Type</th>') === false, 'Detail table should avoid repetitive setup/type columns.');
 
-	$uncategorizedOnly = vms_vendor_availability_filter_vendors($fixtureVendors, array_merge($baseFilters, array('type' => 'uncategorized')));
+	$uncategorizedOnly = bvmgr_vendor_availability_filter_vendors($fixtureVendors, array_merge($baseFilters, array('type' => 'uncategorized')));
 	$assert(count($uncategorizedOnly) === 1 && (int) ($uncategorizedOnly[0]['vendor_id'] ?? 0) === $uncategorizedVendorId, 'Uncategorized type filter should return only vendors without a type.');
 
 	ob_start();
-	vms_render_vendor_availability_month_view($fixtureVendors, array(
+	bvmgr_render_vendor_availability_month_view($fixtureVendors, array(
 		'month' => $month,
 		'date' => $closedDate,
 		'status' => 'all',
@@ -181,7 +181,7 @@ try {
 		'setup' => 'all',
 		'roster' => 'all',
 		'q' => '',
-	), vms_vendor_availability_month_matrix_rows($fixtureVendors, $month, $busyMap, array(
+	), bvmgr_vendor_availability_month_matrix_rows($fixtureVendors, $month, $busyMap, array(
 		'status' => 'all',
 		'venue_id' => $venueId,
 		'day_filter' => 'venue_open',
@@ -191,8 +191,8 @@ try {
 	$assert(strpos($monthHtml, 'Expand full day') === false, 'Month view should not render bulky inline full-day rosters.');
 	$assert(strpos($monthHtml, 'View full detail') !== false, 'Month view should route full rosters to the detail view.');
 
-	$availableOnlyMonth = vms_vendor_availability_month_matrix_rows($fixtureVendors, $month, $busyMap, array_merge($baseFilters, array('status' => 'available')));
-	$allStatusMonth = vms_vendor_availability_month_matrix_rows($fixtureVendors, $month, $busyMap, array_merge($baseFilters, array('status' => 'all')));
+	$availableOnlyMonth = bvmgr_vendor_availability_month_matrix_rows($fixtureVendors, $month, $busyMap, array_merge($baseFilters, array('status' => 'available')));
+	$allStatusMonth = bvmgr_vendor_availability_month_matrix_rows($fixtureVendors, $month, $busyMap, array_merge($baseFilters, array('status' => 'all')));
 	$assert((int) ($availableOnlyMonth[$openDate]['summary']['total'] ?? -1) === 0, 'Availability status filter should change month cell result sets.');
 	$assert((int) ($allStatusMonth[$openDate]['summary']['total'] ?? 0) === 3, 'Reset/default status should restore all matching vendors in month cells.');
 

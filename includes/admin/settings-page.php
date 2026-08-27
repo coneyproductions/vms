@@ -724,8 +724,8 @@ function vms_sanitize_settings($input)
 
   // Calendar (Core)
   $parse_map = function ($raw): array {
-	    if (function_exists('vms_calendar_parse_assoc_map')) {
-	      return (array) vms_calendar_parse_assoc_map($raw);
+	    if (function_exists('bvmgr_calendar_parse_assoc_map')) {
+	      return (array) bvmgr_calendar_parse_assoc_map($raw);
 	    }
 	    if (is_array($raw)) return $raw;
 	    if (!is_string($raw)) return array();
@@ -774,8 +774,8 @@ function vms_sanitize_settings($input)
     return $out_map;
   };
 
-  if (function_exists('vms_calendar_sanitize_icon_map')) {
-    $out['calendar_vendor_type_icons'] = (array) vms_calendar_sanitize_icon_map($input['calendar_vendor_type_icons'] ?? array());
+  if (function_exists('bvmgr_calendar_sanitize_icon_map')) {
+    $out['calendar_vendor_type_icons'] = (array) bvmgr_calendar_sanitize_icon_map($input['calendar_vendor_type_icons'] ?? array());
   } else {
     $icon_map = array();
     foreach ($parse_map($input['calendar_vendor_type_icons'] ?? array()) as $slug => $icon) {
@@ -1609,8 +1609,8 @@ if (!function_exists('vms_settings_assoc_map_to_lines')) {
    */
   function vms_settings_assoc_map_to_lines($raw): string
   {
-    $map = function_exists('vms_calendar_parse_assoc_map')
-      ? (array) vms_calendar_parse_assoc_map($raw)
+    $map = function_exists('bvmgr_calendar_parse_assoc_map')
+      ? (array) bvmgr_calendar_parse_assoc_map($raw)
       : (is_array($raw) ? $raw : array());
 
     if (empty($map)) return '';
@@ -2101,8 +2101,8 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   }
   $calendar_open_slot_custom = isset($settings['calendar_open_slot_link_custom_url']) ? esc_url((string) $settings['calendar_open_slot_link_custom_url']) : '';
   $parse_assoc_map = static function ($raw): array {
-    if (function_exists('vms_calendar_parse_assoc_map')) {
-      return (array) vms_calendar_parse_assoc_map($raw);
+    if (function_exists('bvmgr_calendar_parse_assoc_map')) {
+      return (array) bvmgr_calendar_parse_assoc_map($raw);
     }
     return is_array($raw) ? $raw : array();
   };

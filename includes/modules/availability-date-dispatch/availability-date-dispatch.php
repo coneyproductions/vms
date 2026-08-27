@@ -10,8 +10,8 @@ if (is_admin()) {
 	require_once __DIR__ . '/admin-ui.php';
 }
 
-if (!function_exists('vms_add_dispatch_module_boot')) {
-	function vms_add_dispatch_module_boot(): void
+if (!function_exists('bvmgr_add_dispatch_module_boot')) {
+	function bvmgr_add_dispatch_module_boot(): void
 	{
 		if (function_exists('bvmgr_register_module')) {
 			bvmgr_register_module(array(
@@ -24,7 +24,7 @@ if (!function_exists('vms_add_dispatch_module_boot')) {
 			));
 		}
 
-		vms_add_dispatch_maybe_upgrade_schema();
+		bvmgr_add_dispatch_maybe_upgrade_schema();
 	}
 }
-add_action('plugins_loaded', 'vms_add_dispatch_module_boot', 8);
+add_action('plugins_loaded', 'bvmgr_add_dispatch_module_boot', 8);

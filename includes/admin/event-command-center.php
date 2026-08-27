@@ -92,8 +92,8 @@ if (!function_exists('bvmgr_event_command_center_can_manage_promo_video')) {
 if (!function_exists('bvmgr_event_command_center_promo_video_upload_file')) {
     function bvmgr_event_command_center_promo_video_upload_file(int $plan_id, string $field_name)
     {
-        if (function_exists('vms_vendor_portal_handle_headliner_promo_video_media_upload')) {
-            return vms_vendor_portal_handle_headliner_promo_video_media_upload($field_name, $plan_id);
+        if (function_exists('bvmgr_vendor_portal_handle_headliner_promo_video_media_upload')) {
+            return bvmgr_vendor_portal_handle_headliner_promo_video_media_upload($field_name, $plan_id);
         }
 
         return new WP_Error('promo_video_upload_unavailable', __('The promo video upload handler is unavailable.', 'backstage-venue-manager'));
@@ -119,15 +119,15 @@ if (!function_exists('bvmgr_event_command_center_handle_promo_video_action')) {
             wp_die(esc_html__('You do not have permission to manage this event.', 'backstage-venue-manager'));
         }
 
-        $attachment_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('attachment_id') : '_vms_headliner_promo_video_attachment_id';
-        $hidden_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('hidden') : '_vms_headliner_promo_video_hidden';
-        $uploaded_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('uploaded_at_gmt') : '_vms_headliner_promo_video_uploaded_at_gmt';
-        $uploaded_by_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('uploaded_by') : '_vms_headliner_promo_video_uploaded_by';
-        $source_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('source_type') : '_vms_headliner_promo_video_source_type';
-        $external_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('external_url') : '_vms_headliner_promo_video_external_url';
-        $pending_attachment_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('pending_attachment_id') : '_vms_headliner_promo_video_pending_attachment_id';
-        $pending_uploaded_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('pending_uploaded_at_gmt') : '_vms_headliner_promo_video_pending_uploaded_at_gmt';
-        $pending_uploaded_by_key = function_exists('vms_vendor_portal_headliner_promo_video_meta_key') ? vms_vendor_portal_headliner_promo_video_meta_key('pending_uploaded_by') : '_vms_headliner_promo_video_pending_uploaded_by';
+        $attachment_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('attachment_id') : '_vms_headliner_promo_video_attachment_id';
+        $hidden_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('hidden') : '_vms_headliner_promo_video_hidden';
+        $uploaded_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('uploaded_at_gmt') : '_vms_headliner_promo_video_uploaded_at_gmt';
+        $uploaded_by_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('uploaded_by') : '_vms_headliner_promo_video_uploaded_by';
+        $source_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('source_type') : '_vms_headliner_promo_video_source_type';
+        $external_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('external_url') : '_vms_headliner_promo_video_external_url';
+        $pending_attachment_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('pending_attachment_id') : '_vms_headliner_promo_video_pending_attachment_id';
+        $pending_uploaded_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('pending_uploaded_at_gmt') : '_vms_headliner_promo_video_pending_uploaded_at_gmt';
+        $pending_uploaded_by_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('pending_uploaded_by') : '_vms_headliner_promo_video_pending_uploaded_by';
         $actor_user_id = (int) get_current_user_id();
 
         if ($promo_action === 'use_submission') {
@@ -170,7 +170,7 @@ if (!function_exists('bvmgr_event_command_center_handle_promo_video_action')) {
 
         if ($promo_action === 'use_external') {
             $raw_url = isset($_POST['external_url']) ? esc_url_raw((string) wp_unslash($_POST['external_url']), array('http', 'https')) : '';
-            $url = function_exists('vms_vendor_portal_normalize_promo_video_external_url') ? vms_vendor_portal_normalize_promo_video_external_url($raw_url) : esc_url_raw($raw_url, array('http', 'https'));
+            $url = function_exists('bvmgr_vendor_portal_normalize_promo_video_external_url') ? bvmgr_vendor_portal_normalize_promo_video_external_url($raw_url) : esc_url_raw($raw_url, array('http', 'https'));
             if ($url === '') {
                 bvmgr_event_command_center_redirect_with_notice('error', __('Please enter a valid YouTube, Vimeo, Facebook, or Instagram video URL.', 'backstage-venue-manager'), $plan_id);
             }
@@ -922,11 +922,11 @@ if (!function_exists('bvmgr_event_command_center_get_lineup_snapshot')) {
                 return maybe_unserialize($all_meta[$key][0]);
             };
 
-            $lineup_key = function_exists('vms_lineup_schedule_meta_key')
-                ? (string) vms_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1')
+            $lineup_key = function_exists('bvmgr_lineup_schedule_meta_key')
+                ? (string) bvmgr_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1')
                 : '_vms_lineup_entries_v1';
-            $band_key = function_exists('vms_lineup_schedule_meta_key')
-                ? (string) vms_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id')
+            $band_key = function_exists('bvmgr_lineup_schedule_meta_key')
+                ? (string) bvmgr_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id')
                 : '_vms_band_vendor_id';
             $secondary_key = function_exists('bvmgr_meta_key')
                 ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_ids')
@@ -980,23 +980,23 @@ if (!function_exists('bvmgr_event_command_center_get_lineup_snapshot')) {
             $warnings = array();
 
             if (
-                function_exists('vms_normalize_event_plan_lineup_entries')
-                && function_exists('vms_lineup_schedule_enrich_entries')
+                function_exists('bvmgr_normalize_event_plan_lineup_entries')
+                && function_exists('bvmgr_lineup_schedule_enrich_entries')
             ) {
-                $normalized = vms_normalize_event_plan_lineup_entries($raw_entries, $context);
-                $enriched = (array) vms_lineup_schedule_enrich_entries($normalized, $context);
+                $normalized = bvmgr_normalize_event_plan_lineup_entries($raw_entries, $context);
+                $enriched = (array) bvmgr_lineup_schedule_enrich_entries($normalized, $context);
                 $entries = is_array($enriched['entries'] ?? null) ? (array) $enriched['entries'] : array();
                 $summary = is_array($enriched['summary'] ?? null) ? (array) $enriched['summary'] : array();
                 $warnings = is_array($enriched['warnings'] ?? null) ? (array) $enriched['warnings'] : array();
             } else {
-                $entries = function_exists('vms_get_event_plan_lineup_entries')
-                    ? (array) vms_get_event_plan_lineup_entries($plan_id)
+                $entries = function_exists('bvmgr_get_event_plan_lineup_entries')
+                    ? (array) bvmgr_get_event_plan_lineup_entries($plan_id)
                     : array();
-                $summary = function_exists('vms_get_event_plan_lineup_summary')
-                    ? (array) vms_get_event_plan_lineup_summary($plan_id)
+                $summary = function_exists('bvmgr_get_event_plan_lineup_summary')
+                    ? (array) bvmgr_get_event_plan_lineup_summary($plan_id)
                     : array();
-                $warnings = function_exists('vms_get_event_plan_lineup_warnings')
-                    ? (array) vms_get_event_plan_lineup_warnings($plan_id)
+                $warnings = function_exists('bvmgr_get_event_plan_lineup_warnings')
+                    ? (array) bvmgr_get_event_plan_lineup_warnings($plan_id)
                     : array();
             }
 
@@ -1121,11 +1121,11 @@ if (!function_exists('bvmgr_event_command_center_get_marketing_snapshot')) {
     function bvmgr_event_command_center_get_marketing_snapshot(int $plan_id, array $header = array()): array
     {
         $do_not_post = !empty(get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'do_not_post') : '_vms_social_do_not_post', true));
-        $promo = function_exists('vms_vendor_portal_get_headliner_promo_video_data')
-            ? (array) vms_vendor_portal_get_headliner_promo_video_data($plan_id)
+        $promo = function_exists('bvmgr_vendor_portal_get_headliner_promo_video_data')
+            ? (array) bvmgr_vendor_portal_get_headliner_promo_video_data($plan_id)
             : array();
-        $submitted = function_exists('vms_vendor_portal_get_headliner_promo_video_submission_data')
-            ? (array) vms_vendor_portal_get_headliner_promo_video_submission_data($plan_id)
+        $submitted = function_exists('bvmgr_vendor_portal_get_headliner_promo_video_submission_data')
+            ? (array) bvmgr_vendor_portal_get_headliner_promo_video_submission_data($plan_id)
             : array();
         $promo_source = sanitize_key((string) ($promo['source_type'] ?? 'none'));
         $promo_hidden = !empty($promo['hidden']);
@@ -1180,11 +1180,11 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
             return;
         }
 
-        $current = function_exists('vms_vendor_portal_get_headliner_promo_video_data')
-            ? (array) vms_vendor_portal_get_headliner_promo_video_data($plan_id)
+        $current = function_exists('bvmgr_vendor_portal_get_headliner_promo_video_data')
+            ? (array) bvmgr_vendor_portal_get_headliner_promo_video_data($plan_id)
             : array();
-        $submitted = function_exists('vms_vendor_portal_get_headliner_promo_video_submission_data')
-            ? (array) vms_vendor_portal_get_headliner_promo_video_submission_data($plan_id)
+        $submitted = function_exists('bvmgr_vendor_portal_get_headliner_promo_video_submission_data')
+            ? (array) bvmgr_vendor_portal_get_headliner_promo_video_submission_data($plan_id)
             : array();
 
         echo '<section class="vms-cc-card vms-cc-card--promo-manager">';
@@ -1194,8 +1194,8 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
 
         echo '<div class="vms-cc-promo-column">';
         echo '<h4>' . esc_html__('Current public source', 'backstage-venue-manager') . '</h4>';
-        if (!empty($current['source_type']) && (string) $current['source_type'] !== 'none' && function_exists('vms_vendor_portal_render_headliner_promo_video_markup_from_data')) {
-            echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($current, array(
+        if (!empty($current['source_type']) && (string) $current['source_type'] !== 'none' && function_exists('bvmgr_vendor_portal_render_headliner_promo_video_markup_from_data')) {
+            echo wp_kses(bvmgr_vendor_portal_render_headliner_promo_video_markup_from_data($current, array(
                 'context' => 'portal',
                 'heading' => __('Live now', 'backstage-venue-manager'),
                 'wrap_class' => 'vms-cc-promo-preview',
@@ -1218,8 +1218,8 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
 
         echo '<div class="vms-cc-promo-column">';
         echo '<h4>' . esc_html__('Vendor submission', 'backstage-venue-manager') . '</h4>';
-        if (!empty($submitted['attachment_id']) && function_exists('vms_vendor_portal_render_headliner_promo_video_markup_from_data')) {
-            echo wp_kses(vms_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
+        if (!empty($submitted['attachment_id']) && function_exists('bvmgr_vendor_portal_render_headliner_promo_video_markup_from_data')) {
+            echo wp_kses(bvmgr_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
                 'context' => 'portal',
                 'heading' => __('Waiting for review', 'backstage-venue-manager'),
                 'wrap_class' => 'vms-cc-promo-preview',
@@ -1622,7 +1622,7 @@ if (!function_exists('bvmgr_event_command_center_get_timeline_rows')) {
 
         if ($start_hhmm !== '') {
             $rows[] = array(
-                'time' => function_exists('vms_lineup_schedule_format_time_label') ? (string) vms_lineup_schedule_format_time_label($start_hhmm) : $start_hhmm,
+                'time' => function_exists('bvmgr_lineup_schedule_format_time_label') ? (string) bvmgr_lineup_schedule_format_time_label($start_hhmm) : $start_hhmm,
                 'label' => __('Show start', 'backstage-venue-manager'),
                 'detail' => __('Main event time pulled from the Event Plan.', 'backstage-venue-manager'),
             );
@@ -1658,7 +1658,7 @@ if (!function_exists('bvmgr_event_command_center_get_timeline_rows')) {
 
         if ($end_hhmm !== '') {
             $rows[] = array(
-                'time' => function_exists('vms_lineup_schedule_format_time_label') ? (string) vms_lineup_schedule_format_time_label($end_hhmm) : $end_hhmm,
+                'time' => function_exists('bvmgr_lineup_schedule_format_time_label') ? (string) bvmgr_lineup_schedule_format_time_label($end_hhmm) : $end_hhmm,
                 'label' => __('Show end', 'backstage-venue-manager'),
                 'detail' => __('Ending anchor from the Event Plan.', 'backstage-venue-manager'),
             );

@@ -109,19 +109,19 @@ function bvmgr_meta_key(string $scope, string $field): string
 {
 	return '_vms_' . $scope . '_' . $field;
 }
-function vms_vendor_profiles_render_next_show_card(int $postId): string
+function bvmgr_vendor_profiles_render_next_show_card(int $postId): string
 {
 	return '<section class="next-show">Next show ' . $postId . '</section>';
 }
-function vms_vendor_profiles_render_social_links(int $postId): string
+function bvmgr_vendor_profiles_render_social_links(int $postId): string
 {
 	return '<a class="social" href="https://social.test/' . $postId . '"><svg><path d="M0 0"></path></svg></a>';
 }
-function vms_vendor_profiles_promo_allowed_html(): array
+function bvmgr_vendor_profiles_promo_allowed_html(): array
 {
 	return array('a' => array('href' => true), 'span' => array('class' => true));
 }
-function vms_vendor_profiles_social_icon_allowed_html(): array
+function bvmgr_vendor_profiles_social_icon_allowed_html(): array
 {
 	return array('svg' => array('viewbox' => true), 'path' => array('d' => true));
 }
@@ -184,7 +184,7 @@ function bvmgr_test_render_vendor_profile(?WP_Post $post, array $meta, bool $thu
 $vendor = new WP_Post(77, 'Vendor biography');
 $GLOBALS['bvmgr_test_query_vars'] = array('vms_vendor_profile' => 'The Example Vendor');
 $GLOBALS['bvmgr_test_query_post'] = $vendor;
-$selectedTemplate = vms_vendor_profiles_template_include('/theme/index.php');
+$selectedTemplate = bvmgr_vendor_profiles_template_include('/theme/index.php');
 $assert($selectedTemplate === $root . '/includes/public/templates/vendor-profile.php', 'Vendor-profile query must select the same plugin template path.');
 $assert(($GLOBALS['bvmgr_vendor_profile_post'] ?? null) === $vendor, 'Template selection must preserve the bvmgr_vendor_profile_post carrier.');
 $assert(($GLOBALS['post'] ?? null) === $vendor, 'Template selection must preserve the WordPress-owned global $post contract.');

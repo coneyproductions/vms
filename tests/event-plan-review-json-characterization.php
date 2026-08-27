@@ -230,7 +230,7 @@ function bvmgr_event_plan_get_status(int $plan_id, string $context = ''): string
 	return sanitize_key((string) get_post_meta($plan_id, '_vms_event_plan_status', true));
 }
 
-function vms_get_event_plan_lineup_entries(int $plan_id): array
+function bvmgr_get_event_plan_lineup_entries(int $plan_id): array
 {
 	unset($plan_id);
 	return (array) ($GLOBALS['vms_test_lineup_rows'] ?? array());

@@ -365,7 +365,7 @@ function update_post_meta(int $post_id, string $key, $value): bool
 	return true;
 }
 
-$tax_function = g15_extract_function($sources['mirror']['includes/portal/vendor-tax-profile.php'], 'vms_vendor_portal_render_tax_profile');
+$tax_function = g15_extract_function($sources['mirror']['includes/portal/vendor-tax-profile.php'], 'bvmgr_vendor_portal_render_tax_profile');
 $tax_error_start = strpos($tax_function, 'if (is_wp_error($file_id))');
 $tax_success_start = $tax_error_start === false ? false : strpos($tax_function, '} else {', $tax_error_start);
 $tax_stamp_position = strpos($tax_function, trim($current['tax_received']));

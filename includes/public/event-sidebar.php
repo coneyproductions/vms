@@ -1,12 +1,12 @@
 <?php
 defined('ABSPATH') || exit;
 
-add_action('dynamic_sidebar_before', 'vms_public_event_sidebar_track_context_before', 4, 2);
-add_action('dynamic_sidebar_before', 'vms_public_event_sidebar_render_before_widgets', 5, 2);
-add_action('dynamic_sidebar_after', 'vms_public_event_sidebar_track_context_after', 999, 2);
+add_action('dynamic_sidebar_before', 'bvmgr_public_event_sidebar_track_context_before', 4, 2);
+add_action('dynamic_sidebar_before', 'bvmgr_public_event_sidebar_render_before_widgets', 5, 2);
+add_action('dynamic_sidebar_after', 'bvmgr_public_event_sidebar_track_context_after', 999, 2);
 
-if (!function_exists('vms_public_event_sidebar_targets')) {
-    function vms_public_event_sidebar_targets(int $event_id): array
+if (!function_exists('bvmgr_public_event_sidebar_targets')) {
+    function bvmgr_public_event_sidebar_targets(int $event_id): array
     {
         $targets = apply_filters('vms_public_event_sidebar_targets', array('sidebar-primary'), $event_id);
         if (!is_array($targets)) {
@@ -25,8 +25,8 @@ if (!function_exists('vms_public_event_sidebar_targets')) {
     }
 }
 
-if (!function_exists('vms_public_event_sidebar_track_context_before')) {
-    function vms_public_event_sidebar_track_context_before($index, $has_widgets): void
+if (!function_exists('bvmgr_public_event_sidebar_track_context_before')) {
+    function bvmgr_public_event_sidebar_track_context_before($index, $has_widgets): void
     {
         unset($has_widgets);
 
@@ -43,8 +43,8 @@ if (!function_exists('vms_public_event_sidebar_track_context_before')) {
     }
 }
 
-if (!function_exists('vms_public_event_sidebar_track_context_after')) {
-    function vms_public_event_sidebar_track_context_after($index, $has_widgets): void
+if (!function_exists('bvmgr_public_event_sidebar_track_context_after')) {
+    function bvmgr_public_event_sidebar_track_context_after($index, $has_widgets): void
     {
         unset($has_widgets);
 
@@ -69,8 +69,8 @@ if (!function_exists('vms_public_event_sidebar_track_context_after')) {
     }
 }
 
-if (!function_exists('vms_public_event_sidebar_current_index')) {
-    function vms_public_event_sidebar_current_index(): string
+if (!function_exists('bvmgr_public_event_sidebar_current_index')) {
+    function bvmgr_public_event_sidebar_current_index(): string
     {
         $stack = isset($GLOBALS['bvmgr_public_event_sidebar_active_indexes']) && is_array($GLOBALS['bvmgr_public_event_sidebar_active_indexes'])
             ? $GLOBALS['bvmgr_public_event_sidebar_active_indexes']
@@ -83,21 +83,21 @@ if (!function_exists('vms_public_event_sidebar_current_index')) {
     }
 }
 
-if (!function_exists('vms_public_event_sidebar_is_rendering_target')) {
-    function vms_public_event_sidebar_is_rendering_target(int $event_id): bool
+if (!function_exists('bvmgr_public_event_sidebar_is_rendering_target')) {
+    function bvmgr_public_event_sidebar_is_rendering_target(int $event_id): bool
     {
         $event_id = absint($event_id);
         if ($event_id <= 0) {
             return false;
         }
 
-        $index = vms_public_event_sidebar_current_index();
-        return $index !== '' && in_array($index, vms_public_event_sidebar_targets($event_id), true);
+        $index = bvmgr_public_event_sidebar_current_index();
+        return $index !== '' && in_array($index, bvmgr_public_event_sidebar_targets($event_id), true);
     }
 }
 
-if (!function_exists('vms_public_event_sidebar_wrap_module')) {
-    function vms_public_event_sidebar_wrap_module(string $markup, string $slug): string
+if (!function_exists('bvmgr_public_event_sidebar_wrap_module')) {
+    function bvmgr_public_event_sidebar_wrap_module(string $markup, string $slug): string
     {
         $markup = trim($markup);
         if ($markup === '') {
@@ -113,8 +113,8 @@ if (!function_exists('vms_public_event_sidebar_wrap_module')) {
     }
 }
 
-if (!function_exists('vms_public_event_sidebar_render_stack')) {
-    function vms_public_event_sidebar_render_stack(int $event_id): string
+if (!function_exists('bvmgr_public_event_sidebar_render_stack')) {
+    function bvmgr_public_event_sidebar_render_stack(int $event_id): string
     {
         $event_id = absint($event_id);
         if ($event_id <= 0 || get_post_type($event_id) !== 'tribe_events') {
@@ -131,15 +131,15 @@ if (!function_exists('vms_public_event_sidebar_render_stack')) {
                 : '';
             if ($details_markup !== '') {
                 vms_event_details_mark_sidebar_rendered($event_id);
-                $modules[] = vms_public_event_sidebar_wrap_module($details_markup, 'event-details');
+                $modules[] = bvmgr_public_event_sidebar_wrap_module($details_markup, 'event-details');
             }
         }
 
-        $vendor_markup = function_exists('vms_vendor_profiles_render_event_vendor_sidebar')
-            ? (string) vms_vendor_profiles_render_event_vendor_sidebar($event_id)
+        $vendor_markup = function_exists('bvmgr_vendor_profiles_render_event_vendor_sidebar')
+            ? (string) bvmgr_vendor_profiles_render_event_vendor_sidebar($event_id)
             : '';
         if ($vendor_markup !== '') {
-            $modules[] = vms_public_event_sidebar_wrap_module($vendor_markup, 'vendor-groups');
+            $modules[] = bvmgr_public_event_sidebar_wrap_module($vendor_markup, 'vendor-groups');
         }
 
         if (empty($modules)) {
@@ -150,8 +150,8 @@ if (!function_exists('vms_public_event_sidebar_render_stack')) {
     }
 }
 
-if (!function_exists('vms_public_event_sidebar_render_before_widgets')) {
-    function vms_public_event_sidebar_render_before_widgets($index, $has_widgets): void
+if (!function_exists('bvmgr_public_event_sidebar_render_before_widgets')) {
+    function bvmgr_public_event_sidebar_render_before_widgets($index, $has_widgets): void
     {
         if (is_admin() || !function_exists('is_singular') || !is_singular('tribe_events')) {
             return;
@@ -163,7 +163,7 @@ if (!function_exists('vms_public_event_sidebar_render_before_widgets')) {
         }
 
         $index = sanitize_key((string) $index);
-        if ($index === '' || !in_array($index, vms_public_event_sidebar_targets($event_id), true)) {
+        if ($index === '' || !in_array($index, bvmgr_public_event_sidebar_targets($event_id), true)) {
             return;
         }
 
@@ -177,7 +177,7 @@ if (!function_exists('vms_public_event_sidebar_render_before_widgets')) {
             return;
         }
 
-        $markup = vms_public_event_sidebar_render_stack($event_id);
+        $markup = bvmgr_public_event_sidebar_render_stack($event_id);
         if ($markup === '') {
             return;
         }
