@@ -21,6 +21,7 @@ $assert(in_array('docs/', $releaseExcludes, true), 'B1 manifest and documentatio
 $assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructure must remain outside the public package.');
 $assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
 $releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
+$assert(in_array('wporg-prefix-b3-guardrails', $releaseTestIds, true), 'B3 frozen-map and exact-resolution guardrails must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-scanner-inventory', $releaseTestIds, true), 'Prefix scanner inventory and migration-aware gate coverage must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b2-5-runtime', $releaseTestIds, true), 'B2.5 runtime correction coverage must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-manifest-guardrails', $releaseTestIds, true), 'Prefix guardrails must remain a required default release precondition.');
@@ -31,7 +32,16 @@ if (!is_array($manifest)) {
 	fwrite(STDERR, "Prefix manifest guardrail failures:\n- Manifest did not decode.\n");
 	exit(1);
 }
-$assert(($manifest['schema_version'] ?? null) === 3, 'B2.5 manifest schema must be version 3.');
+$assert(($manifest['schema_version'] ?? null) === 4, 'B3 hybrid manifest schema must be version 4.');
+
+$completedB3 = (array) ($manifest['completed_batches']['B3'] ?? array());
+$b3Counts = (array) ($completedB3['counts'] ?? array());
+$b3SymbolMap = (array) ($completedB3['symbol_map'] ?? array());
+$currentB3Names = array();
+foreach ($b3SymbolMap as $entry) {
+	$currentB3Names[(string) ($entry['legacy_identifier'] ?? '')] = (string) ($entry['canonical_identifier'] ?? '');
+}
+$b3Name = static fn(string $legacy): string => $currentB3Names[$legacy] ?? $legacy;
 
 $requiredCategories = array(
 	'php_functions',
@@ -110,8 +120,8 @@ foreach ($dynamicExpected as $key => $expected) {
 	$assert(($manifest['php_inventory_counts']['dynamic_symbols'][$key] ?? null) === $expected, "Dynamic-symbol count {$key} must match the B2 intermediate state.");
 }
 $assert(
-	array_keys((array) ($manifest['dynamic_symbols']['reflection_references'] ?? array())) === array('vms_get_active_season_dates'),
-	'Reflection baseline must retain the exact vms_get_active_season_dates reference.'
+	array_keys((array) ($manifest['dynamic_symbols']['reflection_references'] ?? array())) === array($b3Name('vms_get_active_season_dates')),
+	'Reflection baseline must retain the exact current get_active_season_dates function reference.'
 );
 
 $requiredEntryFields = array(
@@ -152,7 +162,7 @@ $assert(
 );
 $prohibitedBaseline = (array) ($manifest['prohibited_global_baseline'] ?? array());
 $assert(count($prohibitedBaseline) === 4696, 'Immutable B1 prohibited-global allowance set must contain exactly 4,696 declarations/slots.');
-$assert(count($currentProhibited) === 4521, 'B2 must reduce the current prohibited-global set to exactly 4,521 B3 functions.');
+$assert(count($currentProhibited) === (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1), 'Current prohibited globals must equal the exact remaining B3 function ratchet.');
 $assert(array_diff($currentProhibited, $prohibitedBaseline) === array(), 'No new prohibited global declaration may appear outside the immutable B1 allowance set.');
 $committedBaseline = json_decode((string) file_get_contents($root . '/docs/wporg-prefix-prohibited-global-baseline.json'), true);
 $assert($prohibitedBaseline === $committedBaseline, 'Manifest ratchet allowance set must equal the separate immutable B1 baseline file.');
@@ -177,7 +187,17 @@ foreach ($b2SymbolMap as $entry) {
 sort($expectedRemoved, SORT_STRING);
 $actualRemoved = array_values(array_diff($prohibitedBaseline, $currentProhibited));
 sort($actualRemoved, SORT_STRING);
-$assert($actualRemoved === $expectedRemoved, 'The exact 175 ratchet removals must equal the completed B2 symbol map and no other declaration.');
+$expectedAllRemoved = $expectedRemoved;
+foreach ($b3SymbolMap as $entry) {
+	$expectedAllRemoved[] = 'functions:' . (string) ($entry['legacy_identifier'] ?? '');
+}
+sort($expectedAllRemoved, SORT_STRING);
+$assert($actualRemoved === $expectedAllRemoved, 'Exact ratchet removals must equal the completed B2 map plus only completed B3 functions.');
+$assert(($completedB3['status'] ?? '') === ((int) ($b3Counts['remaining_legacy_unique_functions'] ?? 0) === 0 ? 'complete' : 'in_progress'), 'B3 manifest status must follow its exact remaining count.');
+$assert((int) ($b3Counts['migrated_unique_functions'] ?? -1) + (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1) === 4521, 'B3 unique-function progress must reconcile to 4,521.');
+$assert((int) ($b3Counts['migrated_declaration_sites'] ?? -1) + (int) ($b3Counts['remaining_legacy_declaration_sites'] ?? -1) === 4541, 'B3 declaration-site progress must reconcile to 4,541.');
+$assert(count($b3SymbolMap) === (int) ($b3Counts['migrated_unique_functions'] ?? -1), 'B3 completed symbol map must match the migrated unique count.');
+$assert(($completedB3['legacy_wrappers'] ?? null) === 0, 'B3 must never record a public legacy wrapper.');
 
 $completeLedger = (array) ($manifest['complete_semantic_ledger'] ?? array());
 $assert(($completeLedger['historical_original_ratchet'] ?? null) === array(
@@ -279,8 +299,8 @@ $restDashboard = (string) file_get_contents($root . '/includes/rest-dashboard.ph
 $scheduleHelpers = (string) file_get_contents($root . '/includes/schedule/helpers.php');
 $assert(
 	str_contains($restDashboard, "require_once __DIR__ . '/schedule/helpers.php';")
-	&& str_contains($restDashboard, "if (!function_exists('vms_sch_get_all_venue_ids'))")
-	&& str_contains($scheduleHelpers, "function vms_sch_get_all_venue_ids(): array"),
+	&& str_contains($restDashboard, "if (!function_exists('" . $b3Name('vms_sch_get_all_venue_ids') . "'))")
+	&& str_contains($scheduleHelpers, "function " . $b3Name('vms_sch_get_all_venue_ids') . "(): array"),
 	'Unreachable rest-dashboard $path exclusion must retain its require-before-guard proof.'
 );
 $assert(count($templateAssignmentNames) === 38, 'Vendor-profile template must expose exactly 38 assigned/bound semantic slots.');

@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/wporg-prefix-inventory.php';
+require_once __DIR__ . '/lib/wporg-prefix-b3.php';
+require_once __DIR__ . '/lib/wporg-prefix-b3-waves.php';
 
 final class BVMGR_WPORG_Prefix_Manifest_Generator
 {
@@ -11,13 +13,15 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 	public static function build(string $root): array
 	{
 		$inventory = BVMGR_WPORG_Prefix_Inventory::scan($root);
-		$publicApis = self::publicApis();
+		$b3 = self::reconcileB3($root, $inventory);
+		$inventory = $b3['inventory'];
+		$publicApis = self::publicApis($b3['current_names']);
 		self::markPublicApis($inventory['symbols'], $publicApis);
 		$currentProhibited = self::prohibitedBaseline($inventory['symbols']);
 		$prohibitedBaseline = self::loadProhibitedBaseline($root);
 
 		return array(
-			'schema_version' => 3,
+			'schema_version' => 4,
 			'authority' => array(
 				'document' => 'docs/WPORG_PREFIX_MIGRATION_B0.md',
 				'supplied_b0_sha256' => '7893dc878cff48e86a981771c0e52f3119a4a3202307c73ab24817bb863f3dc9',
@@ -63,13 +67,14 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			'dynamic_symbols' => $inventory['dynamic_symbols'],
 			'prohibited_global_baseline' => $prohibitedBaseline,
 			'current_prohibited_globals' => $currentProhibited,
-			'complete_semantic_ledger' => self::completeSemanticLedger(),
+			'complete_semantic_ledger' => self::completeSemanticLedger($b3['counts']),
 			'completed_batches' => array(
 				'B2' => self::completedB2($inventory['symbols'], $prohibitedBaseline, $currentProhibited),
 				'B2_5' => self::completedB2_5($inventory['symbols']),
+				'B3' => self::completedB3($root, $b3),
 			),
 			'public_extension_apis' => $publicApis,
-			'known_addons' => self::knownAddons(),
+			'known_addons' => self::knownAddons($b3['current_names']),
 			'migration_state' => self::migrationState(),
 			'compatibility_policies' => self::compatibilityPolicies(),
 			'private_bridge_contract' => array(
@@ -173,7 +178,186 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		);
 	}
 
-	private static function publicApis(): array
+	private static function reconcileB3(string $root, array $inventory): array
+	{
+		$mapPath = $root . '/' . BVMGR_WPORG_Prefix_B3::MAP_PATH;
+		if (!is_file($mapPath)) {
+			return array(
+				'inventory' => $inventory,
+				'current_names' => array(),
+				'states' => array(),
+				'counts' => array(
+					'baseline_unique_functions' => 4521,
+					'baseline_declaration_sites' => 4541,
+					'migrated_unique_functions' => 0,
+					'migrated_declaration_sites' => 0,
+					'remaining_legacy_unique_functions' => 4521,
+					'remaining_legacy_declaration_sites' => 4541,
+				),
+				'map' => array(),
+			);
+		}
+
+		$map = BVMGR_WPORG_Prefix_B3::loadJson($mapPath);
+		BVMGR_WPORG_Prefix_B3::validateMap($map);
+		$currentFunctions = array();
+		foreach ((array) ($inventory['symbols']['functions'] ?? array()) as $entry) {
+			$currentFunctions[(string) $entry['current_identifier']] = $entry;
+		}
+		$functions = array();
+		$currentNames = array();
+		$states = array();
+		$migratedUnique = 0;
+		$migratedSites = 0;
+		$remainingUnique = 0;
+		$remainingSites = 0;
+		foreach ((array) ($map['mappings'] ?? array()) as $mapping) {
+			$legacy = (string) $mapping['legacy_identifier'];
+			$canonical = (string) $mapping['canonical_identifier'];
+			$legacyEntry = $currentFunctions[$legacy] ?? null;
+			$canonicalEntry = $currentFunctions[$canonical] ?? null;
+			if (is_array($legacyEntry) === is_array($canonicalEntry)) {
+				throw new RuntimeException('B3 manifest reconciliation requires exactly one declaration identity for ' . $legacy . '.');
+			}
+			$entry = is_array($canonicalEntry) ? $canonicalEntry : $legacyEntry;
+			$sites = count((array) ($entry['declaration_sites'] ?? array()));
+			$expectedSites = count((array) ($mapping['declaration_sites'] ?? array()));
+			if ($sites !== $expectedSites) {
+				throw new RuntimeException('B3 declaration-site count drift for ' . $legacy . '.');
+			}
+			$entry['canonical_target'] = $canonical;
+			$entry['b0_strategy'] = array(1);
+			$entry['compatibility_classification'] = 'direct-rename-no-public-package-wrapper';
+			$entry['persistence_external_contract_status'] = 'nonpersistent-global-php';
+			$entry['planned_implementation_batch'] = 'B3';
+			$entry['do_not_rename'] = false;
+			if (is_array($canonicalEntry)) {
+				$entry['legacy_identifier'] = $legacy;
+				$entry['migration_status'] = 'complete';
+				$states[$legacy] = 'migrated';
+				$currentNames[$legacy] = $canonical;
+				$migratedUnique++;
+				$migratedSites += $sites;
+			} else {
+				unset($entry['legacy_identifier'], $entry['migration_status']);
+				$states[$legacy] = 'pending';
+				$currentNames[$legacy] = $legacy;
+				$remainingUnique++;
+				$remainingSites += $sites;
+			}
+			$functions[] = $entry;
+		}
+		$inventory['symbols']['functions'] = $functions;
+		$inventory['dynamic_symbols'] = self::reconcileB3Dynamic((array) $inventory['dynamic_symbols'], $map, $currentNames);
+		$inventory['counts']['dynamic_symbols'] = self::dynamicCounts($inventory['dynamic_symbols']);
+
+		return array(
+			'inventory' => $inventory,
+			'current_names' => $currentNames,
+			'states' => $states,
+			'counts' => array(
+				'baseline_unique_functions' => 4521,
+				'baseline_declaration_sites' => 4541,
+				'migrated_unique_functions' => $migratedUnique,
+				'migrated_declaration_sites' => $migratedSites,
+				'remaining_legacy_unique_functions' => $remainingUnique,
+				'remaining_legacy_declaration_sites' => $remainingSites,
+			),
+			'map' => $map,
+		);
+	}
+
+	private static function reconcileB3Dynamic(array $dynamic, array $map, array $currentNames): array
+	{
+		$keys = array(
+			'exact_literal' => 'exact_function_literals',
+			'function_exists' => 'function_exists_checks',
+			'callback' => 'direct_literal_callbacks',
+			'reflection' => 'reflection_references',
+		);
+		$rebuilt = array_fill_keys(array_values($keys), array());
+		$mappedNames = array();
+		foreach ((array) ($map['mappings'] ?? array()) as $mapping) {
+			$legacy = (string) $mapping['legacy_identifier'];
+			$current = (string) ($currentNames[$legacy] ?? $legacy);
+			$mappedNames[$legacy] = true;
+			$mappedNames[(string) $mapping['canonical_identifier']] = true;
+			foreach ($keys as $mapKey => $manifestKey) {
+				$sites = array_values((array) ($mapping['baseline_dynamic_sites'][$mapKey] ?? array()));
+				if ($sites !== array()) {
+					$rebuilt[$manifestKey][$current] = $sites;
+				}
+			}
+		}
+		// Preserve reviewed external/dynamic contracts that are not core declarations.
+		foreach (array('function_exists_checks', 'direct_literal_callbacks', 'reflection_references') as $manifestKey) {
+			foreach ((array) ($dynamic[$manifestKey] ?? array()) as $name => $sites) {
+				if (!isset($mappedNames[$name])) {
+					$rebuilt[$manifestKey][$name] = $sites;
+				}
+			}
+		}
+		foreach ($rebuilt as $key => $value) {
+			ksort($value, SORT_STRING);
+			$dynamic[$key] = $value;
+		}
+		$duplicates = array();
+		foreach ((array) ($map['mappings'] ?? array()) as $mapping) {
+			if (empty($mapping['duplicate_family'])) {
+				continue;
+			}
+			$legacy = (string) $mapping['legacy_identifier'];
+			$duplicates[$currentNames[$legacy] ?? $legacy] = $mapping['declaration_sites'];
+		}
+		ksort($duplicates, SORT_STRING);
+		$dynamic['duplicate_function_families'] = $duplicates;
+
+		$requirements = array();
+		$requiredLegacy = array();
+		foreach ((array) ($map['mappings'] ?? array()) as $mapping) {
+			$legacy = (string) $mapping['legacy_identifier'];
+			$dynamicSites = (array) ($mapping['baseline_dynamic_sites'] ?? array());
+			if ((array) ($dynamicSites['function_exists'] ?? array()) === array()
+				&& (array) ($dynamicSites['callback'] ?? array()) === array()
+				&& (array) ($dynamicSites['reflection'] ?? array()) === array()) {
+				continue;
+			}
+			$current = (string) ($currentNames[$legacy] ?? $legacy);
+			$requirements[$current][] = array(
+				'current_identifier' => $current,
+				'canonical_target' => (string) $mapping['canonical_identifier'],
+				'resolution_policy' => 'core-current-or-canonical-must-resolve',
+			);
+			$requiredLegacy[$legacy] = true;
+		}
+		foreach ((array) ($dynamic['function_resolution_requirements'] ?? array()) as $name => $entries) {
+			if (!isset($mappedNames[$name])) {
+				$requirements[$name] = $entries;
+			}
+		}
+		ksort($requirements, SORT_STRING);
+		$dynamic['function_resolution_requirements'] = $requirements;
+		return $dynamic;
+	}
+
+	private static function dynamicCounts(array $dynamic): array
+	{
+		$siteCount = static fn(array $map): int => array_sum(array_map('count', $map));
+		return array(
+			'exact_function_literals_unique' => count((array) ($dynamic['exact_function_literals'] ?? array())),
+			'exact_function_literals_occurrences' => $siteCount((array) ($dynamic['exact_function_literals'] ?? array())),
+			'function_exists_unique' => count((array) ($dynamic['function_exists_checks'] ?? array())),
+			'function_exists_occurrences' => $siteCount((array) ($dynamic['function_exists_checks'] ?? array())),
+			'direct_literal_callbacks_unique' => count((array) ($dynamic['direct_literal_callbacks'] ?? array())),
+			'direct_literal_callbacks_occurrences' => $siteCount((array) ($dynamic['direct_literal_callbacks'] ?? array())),
+			'exact_type_literals_unique' => count((array) ($dynamic['exact_type_literals'] ?? array())),
+			'exact_type_literals_occurrences' => $siteCount((array) ($dynamic['exact_type_literals'] ?? array())),
+			'duplicate_function_families' => count((array) ($dynamic['duplicate_function_families'] ?? array())),
+			'duplicate_constant_families' => count((array) ($dynamic['duplicate_constant_families'] ?? array())),
+		);
+	}
+
+	private static function publicApis(array $currentNames = array()): array
 	{
 		$definitions = array(
 			array('Admin Page Registry', 'function', 'vms_register_admin_page', 'bvmgr_register_admin_page', array('vms-refer-a-friend')),
@@ -190,12 +374,14 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			array('Notifications', 'function', 'vms_notify_get_providers', 'bvmgr_notify_get_providers', array()),
 			array('Notifications', 'function', 'vms_notify_user', 'bvmgr_notify_user', array()),
 		);
-		return array_map(static function (array $definition): array {
+		return array_map(static function (array $definition) use ($currentNames): array {
 			$completedB2 = $definition[1] === 'interface';
+			$completedB3 = $definition[1] === 'function' && ($currentNames[$definition[2]] ?? $definition[2]) === $definition[3];
+			$completed = $completedB2 || $completedB3;
 			$entry = array(
 				'family' => $definition[0],
 				'type' => $definition[1],
-				'current_identifier' => $completedB2 ? $definition[3] : $definition[2],
+				'current_identifier' => $completed ? $definition[3] : $definition[2],
 				'canonical_target' => $definition[3],
 				'b0_strategy' => array(1, 8),
 				'compatibility_classification' => 'coordinated-cutover-no-public-package-legacy-wrapper',
@@ -205,7 +391,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 				'known_addon_consumers' => $definition[4],
 				'requires_coordinated_cutover' => true,
 			);
-			if ($completedB2) {
+			if ($completed) {
 				$entry['legacy_identifier'] = $definition[2];
 				$entry['migration_status'] = 'complete';
 			}
@@ -262,8 +448,8 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			'symbol_map' => $symbolMap,
 			'forbidden_global_ratchet' => array(
 				'before' => count($baseline),
-				'after' => count($currentProhibited),
-				'reduction' => count($baseline) - count($currentProhibited),
+				'after' => 4521,
+				'reduction' => count($baseline) - 4521,
 			),
 			'b3_procedural_functions_renamed' => 0,
 		);
@@ -297,7 +483,60 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		);
 	}
 
-	private static function completeSemanticLedger(): array
+	private static function completedB3(string $root, array $b3): array
+	{
+		$waveByFunction = array();
+		$waveStatus = array();
+		$planPath = $root . '/' . BVMGR_WPORG_Prefix_B3_Waves::PLAN_PATH;
+		if (is_file($planPath)) {
+			$plan = BVMGR_WPORG_Prefix_B3::loadJson($planPath);
+			foreach ((array) ($plan['waves'] ?? array()) as $wave) {
+				$id = (string) ($wave['wave'] ?? '');
+				$total = count((array) ($wave['legacy_functions'] ?? array()));
+				$migrated = 0;
+				foreach ((array) ($wave['legacy_functions'] ?? array()) as $legacy) {
+					$waveByFunction[$legacy] = $id;
+					if (($b3['states'][$legacy] ?? '') === 'migrated') {
+						$migrated++;
+					}
+				}
+				$waveStatus[$id] = array(
+					'migrated_unique_functions' => $migrated,
+					'total_unique_functions' => $total,
+					'status' => $migrated === 0 ? 'pending' : ($migrated === $total ? 'complete' : 'invalid_partial'),
+				);
+			}
+		}
+		$symbolMap = array();
+		foreach ((array) ($b3['map']['mappings'] ?? array()) as $mapping) {
+			$legacy = (string) $mapping['legacy_identifier'];
+			if (($b3['states'][$legacy] ?? '') !== 'migrated') {
+				continue;
+			}
+			$symbolMap[] = array(
+				'legacy_identifier' => $legacy,
+				'canonical_identifier' => (string) $mapping['canonical_identifier'],
+				'wave' => $waveByFunction[$legacy] ?? null,
+				'declaration_sites' => $mapping['declaration_sites'],
+			);
+		}
+		$counts = (array) $b3['counts'];
+		return array(
+			'status' => (int) ($counts['remaining_legacy_unique_functions'] ?? 0) === 0 ? 'complete' : 'in_progress',
+			'scope' => 'all frozen plugin-owned procedural PHP functions; direct rename with no public-package legacy wrappers',
+			'counts' => $counts,
+			'prohibited_global_ratchet' => array(
+				'before' => 4521,
+				'after' => (int) ($counts['remaining_legacy_unique_functions'] ?? 0),
+				'reduction' => (int) ($counts['migrated_unique_functions'] ?? 0),
+			),
+			'wave_status' => $waveStatus,
+			'symbol_map' => $symbolMap,
+			'legacy_wrappers' => 0,
+		);
+	}
+
+	private static function completeSemanticLedger(array $b3Counts): array
 	{
 		return array(
 			'measurement' => 'unique prohibited global PHP semantic identifiers/slots; scanner rows are tracked separately',
@@ -317,6 +556,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 				'token_sites' => 194,
 				'plugin_check_rows' => 57,
 			),
+			'current_B3' => $b3Counts,
 		);
 	}
 
@@ -351,9 +591,9 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		return $decoded;
 	}
 
-	private static function knownAddons(): array
+	private static function knownAddons(array $currentNames = array()): array
 	{
-		return array(
+		$addons = array(
 			self::addon(
 				'vms-events-slider',
 				array(
@@ -415,6 +655,14 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 				array('B3', 'B4', 'B7')
 			),
 		);
+		foreach ($addons as &$addon) {
+			foreach ($addon['consumed_contracts']['core_php_functions'] as &$function) {
+				$function = $currentNames[$function] ?? $function;
+			}
+			unset($function);
+		}
+		unset($addon);
+		return $addons;
 	}
 
 	private static function addon(string $slug, array $b2Symbols, array $functions, array $hooks, array $storage, array $handles, array $evidenceFiles, array $batches): array

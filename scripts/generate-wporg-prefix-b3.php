@@ -76,8 +76,33 @@ try {
 		echo BVMGR_WPORG_Prefix_B3::render($report);
 		exit(0);
 	}
+	if (str_starts_with($mode, '--transform-wave=')) {
+		$waveId = substr($mode, strlen('--transform-wave='));
+		$plan = BVMGR_WPORG_Prefix_B3::loadJson($wavesPath);
+		$wave = null;
+		foreach ((array) ($plan['waves'] ?? array()) as $candidate) {
+			if (($candidate['wave'] ?? '') === $waveId) {
+				$wave = $candidate;
+				break;
+			}
+		}
+		if (!is_array($wave)) {
+			throw new RuntimeException('Unknown B3 wave: ' . $waveId);
+		}
+		$current = BVMGR_WPORG_Prefix_B3::progress($root, $map);
+		foreach ((array) ($wave['legacy_functions'] ?? array()) as $legacy) {
+			if (($current['function_states'][$legacy] ?? '') !== 'pending') {
+				throw new RuntimeException($waveId . ' is not wholly pending at ' . $legacy . '.');
+			}
+		}
+		$report = BVMGR_WPORG_Prefix_B3::transform($root, $map, (array) $wave['legacy_functions']);
+		$report['wave'] = $waveId;
+		$report['expected_counts'] = $wave['counts'];
+		echo BVMGR_WPORG_Prefix_B3::render($report);
+		exit(0);
+	}
 	if ($mode !== '--check') {
-		throw new RuntimeException('Usage: php scripts/generate-wporg-prefix-b3.php [--freeze-map|--write-graph|--write-waves|--write-progress|--print-progress|--check|--transform --functions-json=PATH]');
+		throw new RuntimeException('Usage: php scripts/generate-wporg-prefix-b3.php [--freeze-map|--write-graph|--write-waves|--write-progress|--print-progress|--check|--transform-wave=W1|--transform --functions-json=PATH]');
 	}
 	$graph = BVMGR_WPORG_Prefix_B3::loadJson($graphPath);
 	if (($graph['function_map_sha256'] ?? '') !== hash('sha256', BVMGR_WPORG_Prefix_B3::render($map))) {

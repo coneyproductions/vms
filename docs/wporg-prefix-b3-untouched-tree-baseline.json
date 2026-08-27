@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "artifact": "wporg-prefix-b3-untouched-tree-baseline",
+  "captured_at_phase": "W1 before any disposable add-on preparation",
+  "algorithm": "from each tree root: find . -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256",
+  "trees": [
+    {
+      "logical_name": "installed-live-core-vms",
+      "file_count": 408,
+      "sha256": "63f319f6421dcfc1079d35af1bd0582966de43a3676e55457b9a0ca1a3583b97"
+    },
+    {
+      "logical_name": "installed-vms-events-slider",
+      "file_count": 3,
+      "sha256": "553da7e1fe004b390ee67ec1a673eb23255353282a65d2447be57da12af7b4dc"
+    },
+    {
+      "logical_name": "installed-vms-fill-dates",
+      "file_count": 9,
+      "sha256": "9bb93cc1638c979c7661f3aee0a50cdfd68be5db778df46edb10c391cbae52d2"
+    },
+    {
+      "logical_name": "installed-vms-data-tools",
+      "file_count": 76,
+      "sha256": "7949410ac3fcd0d00d90a48cde8236d11c871eeddded20e2c44818dbb7aced56"
+    },
+    {
+      "logical_name": "installed-vms-express-bar",
+      "file_count": 43,
+      "sha256": "e464652afbb4840cf425c004950c04ae49dfcff329f2d3b1c17718c670416243"
+    },
+    {
+      "logical_name": "installed-vms-refer-a-friend",
+      "file_count": 15,
+      "sha256": "0a758947e855e220112f6aa68ea1df67080cccd9852908f47119a4451c7ddda2"
+    }
+  ]
+}

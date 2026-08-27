@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_plugin_basename_from_file')) {
-	function vms_plugin_basename_from_file(string $plugin_file): string
+if (!function_exists('bvmgr_plugin_basename_from_file')) {
+	function bvmgr_plugin_basename_from_file(string $plugin_file): string
 	{
 		$plugin_file = str_replace('\\', '/', $plugin_file);
 		if (function_exists('plugin_basename')) {
@@ -13,11 +13,11 @@ if (!function_exists('vms_plugin_basename_from_file')) {
 	}
 }
 
-if (!function_exists('vms_plugin_basename_compatibility_pair')) {
-	function vms_plugin_basename_compatibility_pair(string $legacy_plugin_file, string $canonical_plugin_file): array
+if (!function_exists('bvmgr_plugin_basename_compatibility_pair')) {
+	function bvmgr_plugin_basename_compatibility_pair(string $legacy_plugin_file, string $canonical_plugin_file): array
 	{
-		$legacy_basename = vms_plugin_basename_from_file($legacy_plugin_file);
-		$canonical_basename = vms_plugin_basename_from_file($canonical_plugin_file);
+		$legacy_basename = bvmgr_plugin_basename_from_file($legacy_plugin_file);
+		$canonical_basename = bvmgr_plugin_basename_from_file($canonical_plugin_file);
 		if (basename($legacy_basename) !== 'vendor-management-system.php' || basename($canonical_basename) !== 'backstage-venue-manager.php') {
 			return array();
 		}
@@ -34,8 +34,8 @@ if (!function_exists('vms_plugin_basename_compatibility_pair')) {
 	}
 }
 
-if (!function_exists('vms_migrate_legacy_plugin_basename_values')) {
-	function vms_migrate_legacy_plugin_basename_values(array $active_plugins, array $network_active_plugins, string $legacy_basename, string $canonical_basename): array
+if (!function_exists('bvmgr_migrate_legacy_plugin_basename_values')) {
+	function bvmgr_migrate_legacy_plugin_basename_values(array $active_plugins, array $network_active_plugins, string $legacy_basename, string $canonical_basename): array
 	{
 		$legacy_basename = trim(str_replace('\\', '/', $legacy_basename), '/');
 		$canonical_basename = trim(str_replace('\\', '/', $canonical_basename), '/');
@@ -79,10 +79,10 @@ if (!function_exists('vms_migrate_legacy_plugin_basename_values')) {
 	}
 }
 
-if (!function_exists('vms_migrate_legacy_plugin_basename')) {
-	function vms_migrate_legacy_plugin_basename(string $legacy_plugin_file, string $canonical_plugin_file): bool
+if (!function_exists('bvmgr_migrate_legacy_plugin_basename')) {
+	function bvmgr_migrate_legacy_plugin_basename(string $legacy_plugin_file, string $canonical_plugin_file): bool
 	{
-		$pair = vms_plugin_basename_compatibility_pair($legacy_plugin_file, $canonical_plugin_file);
+		$pair = bvmgr_plugin_basename_compatibility_pair($legacy_plugin_file, $canonical_plugin_file);
 		if ($pair === array() || !function_exists('get_option') || !function_exists('update_option')) {
 			return false;
 		}
@@ -94,7 +94,7 @@ if (!function_exists('vms_migrate_legacy_plugin_basename')) {
 			$network_active_plugins = (array) get_site_option('active_sitewide_plugins', array());
 		}
 
-		$migrated = vms_migrate_legacy_plugin_basename_values(
+		$migrated = bvmgr_migrate_legacy_plugin_basename_values(
 			$active_plugins,
 			$network_active_plugins,
 			(string) $pair['legacy_basename'],
@@ -112,8 +112,8 @@ if (!function_exists('vms_migrate_legacy_plugin_basename')) {
 	}
 }
 
-if (!function_exists('vms_plugin_basename_compatibility_pairs')) {
-	function vms_plugin_basename_compatibility_pairs(?array $pair = null): array
+if (!function_exists('bvmgr_plugin_basename_compatibility_pairs')) {
+	function bvmgr_plugin_basename_compatibility_pairs(?array $pair = null): array
 	{
 		static $pairs = array();
 		if (is_array($pair) && isset($pair['legacy_basename'])) {
@@ -124,64 +124,64 @@ if (!function_exists('vms_plugin_basename_compatibility_pairs')) {
 	}
 }
 
-if (!function_exists('vms_migrate_registered_legacy_plugin_basenames')) {
-	function vms_migrate_registered_legacy_plugin_basenames(): void
+if (!function_exists('bvmgr_migrate_registered_legacy_plugin_basenames')) {
+	function bvmgr_migrate_registered_legacy_plugin_basenames(): void
 	{
-		foreach (vms_plugin_basename_compatibility_pairs() as $pair) {
-			vms_migrate_legacy_plugin_basename((string) $pair['legacy_file'], (string) $pair['canonical_file']);
+		foreach (bvmgr_plugin_basename_compatibility_pairs() as $pair) {
+			bvmgr_migrate_legacy_plugin_basename((string) $pair['legacy_file'], (string) $pair['canonical_file']);
 		}
 	}
 }
 
-if (!function_exists('vms_maybe_migrate_activated_legacy_plugin_basename')) {
-	function vms_maybe_migrate_activated_legacy_plugin_basename(string $plugin_basename, bool $network_wide = false): void
+if (!function_exists('bvmgr_maybe_migrate_activated_legacy_plugin_basename')) {
+	function bvmgr_maybe_migrate_activated_legacy_plugin_basename(string $plugin_basename, bool $network_wide = false): void
 	{
 		$plugin_basename = trim(str_replace('\\', '/', $plugin_basename), '/');
-		foreach (vms_plugin_basename_compatibility_pairs() as $pair) {
+		foreach (bvmgr_plugin_basename_compatibility_pairs() as $pair) {
 			if ($plugin_basename !== (string) $pair['legacy_basename']) {
 				continue;
 			}
-			vms_migrate_legacy_plugin_basename((string) $pair['legacy_file'], (string) $pair['canonical_file']);
+			bvmgr_migrate_legacy_plugin_basename((string) $pair['legacy_file'], (string) $pair['canonical_file']);
 		}
 	}
 }
 
-if (!function_exists('vms_register_legacy_plugin_basename_compatibility')) {
-	function vms_register_legacy_plugin_basename_compatibility(string $legacy_plugin_file, string $canonical_plugin_file): void
+if (!function_exists('bvmgr_register_legacy_plugin_basename_compatibility')) {
+	function bvmgr_register_legacy_plugin_basename_compatibility(string $legacy_plugin_file, string $canonical_plugin_file): void
 	{
-		$pair = vms_plugin_basename_compatibility_pair($legacy_plugin_file, $canonical_plugin_file);
+		$pair = bvmgr_plugin_basename_compatibility_pair($legacy_plugin_file, $canonical_plugin_file);
 		if ($pair === array()) {
 			return;
 		}
 
-		vms_plugin_basename_compatibility_pairs($pair);
+		bvmgr_plugin_basename_compatibility_pairs($pair);
 		static $hooks_registered = false;
 		if ($hooks_registered || !function_exists('add_action')) {
 			return;
 		}
 
-		add_action('plugins_loaded', 'vms_migrate_registered_legacy_plugin_basenames', 1);
-		add_action('activated_plugin', 'vms_maybe_migrate_activated_legacy_plugin_basename', 10, 2);
+		add_action('plugins_loaded', 'bvmgr_migrate_registered_legacy_plugin_basenames', 1);
+		add_action('activated_plugin', 'bvmgr_maybe_migrate_activated_legacy_plugin_basename', 10, 2);
 		$hooks_registered = true;
 	}
 }
 
-if (!function_exists('vms_plugin_lifecycle_basename')) {
-	function vms_plugin_lifecycle_basename(): string
+if (!function_exists('bvmgr_plugin_lifecycle_basename')) {
+	function bvmgr_plugin_lifecycle_basename(): string
 	{
 		if (defined('BVMGR_LEGACY_PLUGIN_FILE') && is_string(BVMGR_LEGACY_PLUGIN_FILE) && BVMGR_LEGACY_PLUGIN_FILE !== '') {
-			return vms_plugin_basename_from_file(BVMGR_LEGACY_PLUGIN_FILE);
+			return bvmgr_plugin_basename_from_file(BVMGR_LEGACY_PLUGIN_FILE);
 		}
 		if (defined('BVMGR_PLUGIN_FILE') && is_string(BVMGR_PLUGIN_FILE) && BVMGR_PLUGIN_FILE !== '') {
-			return vms_plugin_basename_from_file(BVMGR_PLUGIN_FILE);
+			return bvmgr_plugin_basename_from_file(BVMGR_PLUGIN_FILE);
 		}
 
 		return basename(dirname(__DIR__)) . '/backstage-venue-manager.php';
 	}
 }
 
-if (!function_exists('vms_recognized_plugin_lifecycle_basenames')) {
-	function vms_recognized_plugin_lifecycle_basenames(): array
+if (!function_exists('bvmgr_recognized_plugin_lifecycle_basenames')) {
+	function bvmgr_recognized_plugin_lifecycle_basenames(): array
 	{
 		$basenames = array(
 			'backstage-venue-manager/backstage-venue-manager.php',
@@ -189,7 +189,7 @@ if (!function_exists('vms_recognized_plugin_lifecycle_basenames')) {
 			'vms/backstage-venue-manager.php',
 			'vms/vendor-management-system.php',
 		);
-		$current_basename = vms_plugin_lifecycle_basename();
+		$current_basename = bvmgr_plugin_lifecycle_basename();
 		$current_directory = dirname($current_basename);
 		if ($current_directory !== '' && $current_directory !== '.') {
 			$basenames[] = $current_directory . '/backstage-venue-manager.php';

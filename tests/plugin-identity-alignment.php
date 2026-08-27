@@ -90,8 +90,8 @@ $assert(strpos($canonical_source, 'Plugin Name: Backstage Venue Manager') !== fa
 $assert(strpos($canonical_source, 'Text Domain: backstage-venue-manager') !== false, 'Canonical bootstrap must retain the canonical text domain.');
 $assert(preg_match('/^\s*\*\s*Plugin Name:/m', $legacy_source) !== 1, 'Legacy filename bridge must not expose a second plugin header.');
 $assert(strpos($legacy_source, "__DIR__ . '/backstage-venue-manager.php'") !== false, 'Legacy filename bridge must delegate to the canonical bootstrap.');
-$assert(strpos($legacy_source, "register_activation_hook(__FILE__, 'vms_activate_plugin')") !== false, 'Legacy filename bridge must preserve activation behavior during an old-basename activation.');
-$assert(strpos($legacy_source, "register_deactivation_hook(__FILE__, 'vms_deactivate_plugin')") !== false, 'Legacy filename bridge must preserve deactivation behavior during an old-basename deactivation.');
+$assert(strpos($legacy_source, "register_activation_hook(__FILE__, 'bvmgr_activate_plugin')") !== false, 'Legacy filename bridge must preserve activation behavior during an old-basename activation.');
+$assert(strpos($legacy_source, "register_deactivation_hook(__FILE__, 'bvmgr_deactivate_plugin')") !== false, 'Legacy filename bridge must preserve deactivation behavior during an old-basename deactivation.');
 $assert(strpos($vms_shim_source, "require_once __DIR__ . '/backstage-venue-manager.php';") !== false, 'Legacy vms.php bridge must delegate to the canonical bootstrap.');
 
 $root_plugin_headers = array();
@@ -159,14 +159,14 @@ foreach ($public_runtime_files as $public_runtime_file) {
 	}
 }
 
-$pair = vms_plugin_basename_compatibility_pair(
+$pair = bvmgr_plugin_basename_compatibility_pair(
 	'/srv/wp-content/plugins/backstage-venue-manager/vendor-management-system.php',
 	'/srv/wp-content/plugins/backstage-venue-manager/backstage-venue-manager.php'
 );
 $assert(($pair['legacy_basename'] ?? '') === 'backstage-venue-manager/vendor-management-system.php', 'Legacy basename pair must resolve the old public basename.');
 $assert(($pair['canonical_basename'] ?? '') === 'backstage-venue-manager/backstage-venue-manager.php', 'Legacy basename pair must resolve the canonical public basename.');
 
-$migrated = vms_migrate_legacy_plugin_basename_values(
+$migrated = bvmgr_migrate_legacy_plugin_basename_values(
 	array('example/example.php', 'example/example.php', 'backstage-venue-manager/vendor-management-system.php', 'backstage-venue-manager/backstage-venue-manager.php'),
 	array('backstage-venue-manager/vendor-management-system.php' => 123456, 'example/example.php' => 456789),
 	'backstage-venue-manager/vendor-management-system.php',
@@ -176,25 +176,25 @@ $assert($migrated['active_plugins'] === array('example/example.php', 'example/ex
 $assert(!isset($migrated['network_active_plugins']['backstage-venue-manager/vendor-management-system.php']), 'Network migration must remove the old active basename.');
 $assert(($migrated['network_active_plugins']['backstage-venue-manager/backstage-venue-manager.php'] ?? 0) === 123456, 'Network migration must preserve the activation timestamp.');
 
-$runtime_pair = vms_plugin_basename_compatibility_pair($legacy_file, $canonical_file);
+$runtime_pair = bvmgr_plugin_basename_compatibility_pair($legacy_file, $canonical_file);
 $runtime_legacy_basename = (string) ($runtime_pair['legacy_basename'] ?? '');
 $runtime_canonical_basename = (string) ($runtime_pair['canonical_basename'] ?? '');
 $GLOBALS['vms_identity_test_options']['active_plugins'] = array($runtime_legacy_basename);
 $GLOBALS['vms_identity_test_options']['active_sitewide_plugins'] = array($runtime_legacy_basename => 987654);
 $GLOBALS['vms_identity_test_multisite'] = true;
 $GLOBALS['vms_identity_test_updates'] = array();
-$assert(vms_migrate_legacy_plugin_basename($legacy_file, $canonical_file), 'Runtime migration must report a changed legacy active basename.');
+$assert(bvmgr_migrate_legacy_plugin_basename($legacy_file, $canonical_file), 'Runtime migration must report a changed legacy active basename.');
 $assert($GLOBALS['vms_identity_test_options']['active_plugins'] === array($runtime_canonical_basename), 'Runtime migration must update the single-site active plugin option.');
 $assert(($GLOBALS['vms_identity_test_options']['active_sitewide_plugins'][$runtime_canonical_basename] ?? 0) === 987654, 'Runtime migration must update the network active plugin option.');
 $assert(in_array('active_plugins', $GLOBALS['vms_identity_test_updates'], true), 'Runtime migration must persist the single-site active plugin option.');
 $assert(in_array('active_sitewide_plugins', $GLOBALS['vms_identity_test_updates'], true), 'Runtime migration must persist the network active plugin option.');
 
-vms_register_legacy_plugin_basename_compatibility($legacy_file, $canonical_file);
+bvmgr_register_legacy_plugin_basename_compatibility($legacy_file, $canonical_file);
 $registered_hooks = array_column($GLOBALS['vms_identity_test_actions'], 0);
 $assert(in_array('plugins_loaded', $registered_hooks, true), 'Legacy bridge must register normal-load basename migration.');
 $assert(in_array('activated_plugin', $registered_hooks, true), 'Legacy bridge must register activation-completion basename migration.');
 
-$recognized_basenames = vms_recognized_plugin_lifecycle_basenames();
+$recognized_basenames = bvmgr_recognized_plugin_lifecycle_basenames();
 foreach (array(
 	'backstage-venue-manager/backstage-venue-manager.php',
 	'backstage-venue-manager/vendor-management-system.php',

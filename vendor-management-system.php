@@ -17,8 +17,8 @@ if (!defined('BVMGR_LEGACY_PLUGIN_FILE')) {
 $bvmgr_canonical_plugin_file = __DIR__ . '/backstage-venue-manager.php';
 require_once $bvmgr_canonical_plugin_file;
 
-vms_register_legacy_plugin_basename_compatibility(__FILE__, $bvmgr_canonical_plugin_file);
-register_activation_hook(__FILE__, 'vms_activate_plugin');
-register_deactivation_hook(__FILE__, 'vms_deactivate_plugin');
+bvmgr_register_legacy_plugin_basename_compatibility(__FILE__, $bvmgr_canonical_plugin_file);
+register_activation_hook(__FILE__, 'bvmgr_activate_plugin');
+register_deactivation_hook(__FILE__, 'bvmgr_deactivate_plugin');
 
 unset($bvmgr_canonical_plugin_file);

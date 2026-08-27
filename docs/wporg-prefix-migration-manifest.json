@@ -1,5 +1,5 @@
 {
-    "schema_version": 3,
+    "schema_version": 4,
     "authority": {
         "document": "docs/WPORG_PREFIX_MIGRATION_B0.md",
         "supplied_b0_sha256": "7893dc878cff48e86a981771c0e52f3119a4a3202307c73ab24817bb863f3dc9",
@@ -604,7 +604,7 @@
     "symbols": {
         "functions": [
             {
-                "current_identifier": "vms_activate_plugin",
+                "current_identifier": "bvmgr_activate_plugin",
                 "canonical_target": "bvmgr_activate_plugin",
                 "b0_strategy": [
                     1
@@ -618,7 +618,9 @@
                         "file": "includes/activation.php",
                         "line": 7
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_activate_plugin",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_add_admin_notice",
@@ -10566,7 +10568,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_cleanup_legacy_square_nightly_sync_action_scheduler",
+                "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler",
                 "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler",
                 "b0_strategy": [
                     1
@@ -10580,10 +10582,12 @@
                         "file": "includes/activation.php",
                         "line": 489
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_action_scheduler",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_cleanup_legacy_square_nightly_sync_hook",
+                "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_hook",
                 "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_hook",
                 "b0_strategy": [
                     1
@@ -10597,10 +10601,12 @@
                         "file": "includes/activation.php",
                         "line": 597
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_hook",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron",
+                "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron",
                 "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron",
                 "b0_strategy": [
                     1
@@ -10614,10 +10620,12 @@
                         "file": "includes/activation.php",
                         "line": 283
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
+                "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
                 "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
                 "b0_strategy": [
                     1
@@ -10631,7 +10639,9 @@
                         "file": "includes/activation.php",
                         "line": 238
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_comp_deposit_status_options",
@@ -11671,7 +11681,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_deactivate_plugin",
+                "current_identifier": "bvmgr_deactivate_plugin",
                 "canonical_target": "bvmgr_deactivate_plugin",
                 "b0_strategy": [
                     1
@@ -11685,7 +11695,9 @@
                         "file": "includes/activation.php",
                         "line": 64
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_deactivate_plugin",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_detect_public_event_calendar_url",
@@ -14329,7 +14341,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_ensure_page_exists",
+                "current_identifier": "bvmgr_ensure_page_exists",
                 "canonical_target": "bvmgr_ensure_page_exists",
                 "b0_strategy": [
                     1
@@ -14343,7 +14355,9 @@
                         "file": "includes/activation.php",
                         "line": 674
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_ensure_page_exists",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_entitlements_extract_image_url_from_raw_entitlement",
@@ -28251,7 +28265,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_install_public_pages",
+                "current_identifier": "bvmgr_install_public_pages",
                 "canonical_target": "bvmgr_install_public_pages",
                 "b0_strategy": [
                     1
@@ -28265,7 +28279,9 @@
                         "file": "includes/activation.php",
                         "line": 736
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_install_public_pages",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_integrity_calendar_unpublished_applies_for_status",
@@ -28438,7 +28454,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_is_safe_legacy_square_cleanup_context",
+                "current_identifier": "bvmgr_is_safe_legacy_square_cleanup_context",
                 "canonical_target": "bvmgr_is_safe_legacy_square_cleanup_context",
                 "b0_strategy": [
                     1
@@ -28452,7 +28468,9 @@
                         "file": "includes/activation.php",
                         "line": 106
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_is_safe_legacy_square_cleanup_context",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_is_vendor_tax_profile_complete",
@@ -28591,7 +28609,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_phase",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_phase",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_phase",
                 "b0_strategy": [
                     1
@@ -28605,10 +28623,12 @@
                         "file": "includes/activation.php",
                         "line": 402
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_phase",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_remaining_rows",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows",
                 "b0_strategy": [
                     1
@@ -28622,10 +28642,12 @@
                         "file": "includes/activation.php",
                         "line": 466
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_remaining_rows",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_statuses",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses",
                 "b0_strategy": [
                     1
@@ -28639,10 +28661,12 @@
                         "file": "includes/activation.php",
                         "line": 341
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_statuses",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_store",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_store",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_store",
                 "b0_strategy": [
                     1
@@ -28656,10 +28680,12 @@
                         "file": "includes/activation.php",
                         "line": 322
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_store",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
                 "b0_strategy": [
                     1
@@ -28673,10 +28699,12 @@
                         "file": "includes/activation.php",
                         "line": 215
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_call_wp_unschedule_hook",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook",
                 "b0_strategy": [
                     1
@@ -28690,10 +28718,12 @@
                         "file": "includes/activation.php",
                         "line": 196
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_call_wp_unschedule_hook",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_cleanup_marker_key",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_cleanup_marker_key",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_cleanup_marker_key",
                 "b0_strategy": [
                     1
@@ -28707,10 +28737,12 @@
                         "file": "includes/activation.php",
                         "line": 88
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_cleanup_marker_key",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_collect_cron_entries",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_collect_cron_entries",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_collect_cron_entries",
                 "b0_strategy": [
                     1
@@ -28724,10 +28756,12 @@
                         "file": "includes/activation.php",
                         "line": 148
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_collect_cron_entries",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_hook_name",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_hook_name",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_hook_name",
                 "b0_strategy": [
                     1
@@ -28741,10 +28775,12 @@
                         "file": "includes/activation.php",
                         "line": 81
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_hook_name",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_is_wp_error",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_is_wp_error",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_is_wp_error",
                 "b0_strategy": [
                     1
@@ -28758,10 +28794,12 @@
                         "file": "includes/activation.php",
                         "line": 125
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_is_wp_error",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_query_action_ids",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_query_action_ids",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_query_action_ids",
                 "b0_strategy": [
                     1
@@ -28775,10 +28813,12 @@
                         "file": "includes/activation.php",
                         "line": 374
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_query_action_ids",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_legacy_square_nightly_sync_supports_wp_error_flag",
+                "current_identifier": "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag",
                 "canonical_target": "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag",
                 "b0_strategy": [
                     1
@@ -28792,7 +28832,9 @@
                         "file": "includes/activation.php",
                         "line": 132
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_legacy_square_nightly_sync_supports_wp_error_flag",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_lineup_schedule_enrich_entries",
@@ -29016,7 +29058,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_maybe_cleanup_legacy_square_nightly_sync_hook",
+                "current_identifier": "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook",
                 "canonical_target": "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook",
                 "b0_strategy": [
                     1
@@ -29030,10 +29072,12 @@
                         "file": "includes/activation.php",
                         "line": 625
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_maybe_cleanup_legacy_square_nightly_sync_hook",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_maybe_migrate_activated_legacy_plugin_basename",
+                "current_identifier": "bvmgr_maybe_migrate_activated_legacy_plugin_basename",
                 "canonical_target": "bvmgr_maybe_migrate_activated_legacy_plugin_basename",
                 "b0_strategy": [
                     1
@@ -29047,7 +29091,9 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 137
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_maybe_migrate_activated_legacy_plugin_basename",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_meta_key",
@@ -29101,7 +29147,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_migrate_legacy_plugin_basename",
+                "current_identifier": "bvmgr_migrate_legacy_plugin_basename",
                 "canonical_target": "bvmgr_migrate_legacy_plugin_basename",
                 "b0_strategy": [
                     1
@@ -29115,10 +29161,12 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 83
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_migrate_legacy_plugin_basename",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_migrate_legacy_plugin_basename_values",
+                "current_identifier": "bvmgr_migrate_legacy_plugin_basename_values",
                 "canonical_target": "bvmgr_migrate_legacy_plugin_basename_values",
                 "b0_strategy": [
                     1
@@ -29132,10 +29180,12 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 38
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_migrate_legacy_plugin_basename_values",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_migrate_registered_legacy_plugin_basenames",
+                "current_identifier": "bvmgr_migrate_registered_legacy_plugin_basenames",
                 "canonical_target": "bvmgr_migrate_registered_legacy_plugin_basenames",
                 "b0_strategy": [
                     1
@@ -29149,7 +29199,9 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 128
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_migrate_registered_legacy_plugin_basenames",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_module_is_enabled",
@@ -31857,7 +31909,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_plugin_basename_compatibility_pair",
+                "current_identifier": "bvmgr_plugin_basename_compatibility_pair",
                 "canonical_target": "bvmgr_plugin_basename_compatibility_pair",
                 "b0_strategy": [
                     1
@@ -31871,10 +31923,12 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 17
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_plugin_basename_compatibility_pair",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_plugin_basename_compatibility_pairs",
+                "current_identifier": "bvmgr_plugin_basename_compatibility_pairs",
                 "canonical_target": "bvmgr_plugin_basename_compatibility_pairs",
                 "b0_strategy": [
                     1
@@ -31888,10 +31942,12 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 116
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_plugin_basename_compatibility_pairs",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_plugin_basename_from_file",
+                "current_identifier": "bvmgr_plugin_basename_from_file",
                 "canonical_target": "bvmgr_plugin_basename_from_file",
                 "b0_strategy": [
                     1
@@ -31905,10 +31961,12 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 5
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_plugin_basename_from_file",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_plugin_lifecycle_basename",
+                "current_identifier": "bvmgr_plugin_lifecycle_basename",
                 "canonical_target": "bvmgr_plugin_lifecycle_basename",
                 "b0_strategy": [
                     1
@@ -31922,7 +31980,9 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 170
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_plugin_lifecycle_basename",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_plugin_main_file",
@@ -33438,7 +33498,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_public_page_is_managed",
+                "current_identifier": "bvmgr_public_page_is_managed",
                 "canonical_target": "bvmgr_public_page_is_managed",
                 "b0_strategy": [
                     1
@@ -33452,7 +33512,9 @@
                         "file": "includes/activation.php",
                         "line": 653
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_public_page_is_managed",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_publish_event_to_calendar",
@@ -33659,7 +33721,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_recognized_plugin_lifecycle_basenames",
+                "current_identifier": "bvmgr_recognized_plugin_lifecycle_basenames",
                 "canonical_target": "bvmgr_recognized_plugin_lifecycle_basenames",
                 "b0_strategy": [
                     1
@@ -33673,7 +33735,9 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 184
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_recognized_plugin_lifecycle_basenames",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_record_operational_issue",
@@ -33762,7 +33826,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_register_legacy_plugin_basename_compatibility",
+                "current_identifier": "bvmgr_register_legacy_plugin_basename_compatibility",
                 "canonical_target": "bvmgr_register_legacy_plugin_basename_compatibility",
                 "b0_strategy": [
                     1
@@ -33776,7 +33840,9 @@
                         "file": "includes/plugin-basename-compat.php",
                         "line": 150
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_register_legacy_plugin_basename_compatibility",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_register_module",
@@ -36215,7 +36281,7 @@
                 ]
             },
             {
-                "current_identifier": "vms_retired_square_nightly_sync_callback",
+                "current_identifier": "bvmgr_retired_square_nightly_sync_callback",
                 "canonical_target": "bvmgr_retired_square_nightly_sync_callback",
                 "b0_strategy": [
                     1
@@ -36229,10 +36295,12 @@
                         "file": "includes/activation.php",
                         "line": 95
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_retired_square_nightly_sync_callback",
+                "migration_status": "complete"
             },
             {
-                "current_identifier": "vms_run_legacy_square_nightly_sync_cleanup",
+                "current_identifier": "bvmgr_run_legacy_square_nightly_sync_cleanup",
                 "canonical_target": "bvmgr_run_legacy_square_nightly_sync_cleanup",
                 "b0_strategy": [
                     1
@@ -36246,7 +36314,9 @@
                         "file": "includes/activation.php",
                         "line": 613
                     }
-                ]
+                ],
+                "legacy_identifier": "vms_run_legacy_square_nightly_sync_cleanup",
+                "migration_status": "complete"
             },
             {
                 "current_identifier": "vms_run_live_refunds_now_request",
@@ -83071,7 +83141,7 @@
     },
     "dynamic_symbols": {
         "exact_function_literals": {
-            "vms_activate_plugin": [
+            "bvmgr_activate_plugin": [
                 {
                     "file": "backstage-venue-manager.php",
                     "line": 30
@@ -83079,6 +83149,230 @@
                 {
                     "file": "vendor-management-system.php",
                     "line": 21
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 488
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 596
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 282
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 237
+                }
+            ],
+            "bvmgr_deactivate_plugin": [
+                {
+                    "file": "backstage-venue-manager.php",
+                    "line": 31
+                },
+                {
+                    "file": "vendor-management-system.php",
+                    "line": 22
+                }
+            ],
+            "bvmgr_ensure_page_exists": [
+                {
+                    "file": "includes/admin/pages-tools.php",
+                    "line": 33
+                }
+            ],
+            "bvmgr_is_safe_legacy_square_cleanup_context": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 105
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_phase": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 401
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 465
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 340
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_store": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 321
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 214
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 195
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_cleanup_marker_key": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 87
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_collect_cron_entries": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 147
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_hook_name": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 80
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_is_wp_error": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 124
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_query_action_ids": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 373
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 131
+                }
+            ],
+            "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 624
+                },
+                {
+                    "file": "includes/activation.php",
+                    "line": 643
+                }
+            ],
+            "bvmgr_maybe_migrate_activated_legacy_plugin_basename": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 136
+                },
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 164
+                }
+            ],
+            "bvmgr_migrate_legacy_plugin_basename": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 82
+                }
+            ],
+            "bvmgr_migrate_legacy_plugin_basename_values": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 37
+                }
+            ],
+            "bvmgr_migrate_registered_legacy_plugin_basenames": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 127
+                },
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 163
+                }
+            ],
+            "bvmgr_plugin_basename_compatibility_pair": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 16
+                }
+            ],
+            "bvmgr_plugin_basename_compatibility_pairs": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 115
+                }
+            ],
+            "bvmgr_plugin_basename_from_file": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 4
+                }
+            ],
+            "bvmgr_plugin_lifecycle_basename": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 169
+                }
+            ],
+            "bvmgr_recognized_plugin_lifecycle_basenames": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 183
+                },
+                {
+                    "file": "includes/runtime-guards.php",
+                    "line": 2316
+                }
+            ],
+            "bvmgr_register_legacy_plugin_basename_compatibility": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 149
+                }
+            ],
+            "bvmgr_retired_square_nightly_sync_callback": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 94
+                },
+                {
+                    "file": "includes/activation.php",
+                    "line": 102
+                }
+            ],
+            "bvmgr_run_legacy_square_nightly_sync_cleanup": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 13
+                },
+                {
+                    "file": "includes/activation.php",
+                    "line": 70
+                },
+                {
+                    "file": "includes/activation.php",
+                    "line": 612
                 }
             ],
             "vms_add_admin_notice": [
@@ -88249,30 +88543,6 @@
                     "line": 4
                 }
             ],
-            "vms_cleanup_legacy_square_nightly_sync_action_scheduler": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 488
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 596
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_wp_cron": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 282
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 237
-                }
-            ],
             "vms_comp_deposit_status_options": [
                 {
                     "file": "includes/cpt/event-plans.php",
@@ -88681,16 +88951,6 @@
                 {
                     "file": "includes/core/plugin.php",
                     "line": 242
-                }
-            ],
-            "vms_deactivate_plugin": [
-                {
-                    "file": "backstage-venue-manager.php",
-                    "line": 31
-                },
-                {
-                    "file": "vendor-management-system.php",
-                    "line": 22
                 }
             ],
             "vms_detect_public_event_calendar_url": [
@@ -89729,12 +89989,6 @@
                 {
                     "file": "includes/tours/tours.php",
                     "line": 30
-                }
-            ],
-            "vms_ensure_page_exists": [
-                {
-                    "file": "includes/admin/pages-tools.php",
-                    "line": 33
                 }
             ],
             "vms_entitlements_get_product_entitlement_id": [
@@ -97831,12 +98085,6 @@
                     "line": 4
                 }
             ],
-            "vms_is_safe_legacy_square_cleanup_context": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 105
-                }
-            ],
             "vms_is_vendor_tax_profile_complete": [
                 {
                     "file": "includes/admin/vendor-command-center.php",
@@ -97901,78 +98149,6 @@
                 {
                     "file": "includes/admin/reference/keys-map.php",
                     "line": 54
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_phase": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 401
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_remaining_rows": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 465
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_statuses": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 340
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_store": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 321
-                }
-            ],
-            "vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 214
-                }
-            ],
-            "vms_legacy_square_nightly_sync_call_wp_unschedule_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 195
-                }
-            ],
-            "vms_legacy_square_nightly_sync_cleanup_marker_key": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 87
-                }
-            ],
-            "vms_legacy_square_nightly_sync_collect_cron_entries": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 147
-                }
-            ],
-            "vms_legacy_square_nightly_sync_hook_name": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 80
-                }
-            ],
-            "vms_legacy_square_nightly_sync_is_wp_error": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 124
-                }
-            ],
-            "vms_legacy_square_nightly_sync_query_action_ids": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 373
-                }
-            ],
-            "vms_legacy_square_nightly_sync_supports_wp_error_flag": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 131
                 }
             ],
             "vms_lineup_schedule_enrich_entries": [
@@ -98091,26 +98267,6 @@
                 {
                     "file": "includes/cpt/event-plans.php",
                     "line": 10474
-                }
-            ],
-            "vms_maybe_cleanup_legacy_square_nightly_sync_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 624
-                },
-                {
-                    "file": "includes/activation.php",
-                    "line": 643
-                }
-            ],
-            "vms_maybe_migrate_activated_legacy_plugin_basename": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 136
-                },
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 164
                 }
             ],
             "vms_meta_key": [
@@ -100159,28 +100315,6 @@
                     "line": 3188
                 }
             ],
-            "vms_migrate_legacy_plugin_basename": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 82
-                }
-            ],
-            "vms_migrate_legacy_plugin_basename_values": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 37
-                }
-            ],
-            "vms_migrate_registered_legacy_plugin_basenames": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 127
-                },
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 163
-                }
-            ],
             "vms_module_is_enabled": [
                 {
                     "file": "includes/modules/load.php",
@@ -101377,30 +101511,6 @@
                     "line": 56
                 }
             ],
-            "vms_plugin_basename_compatibility_pair": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 16
-                }
-            ],
-            "vms_plugin_basename_compatibility_pairs": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 115
-                }
-            ],
-            "vms_plugin_basename_from_file": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 4
-                }
-            ],
-            "vms_plugin_lifecycle_basename": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 169
-                }
-            ],
             "vms_plugin_main_file": [
                 {
                     "file": "includes/admin/dashboard.php",
@@ -102269,16 +102379,6 @@
                     "line": 645
                 }
             ],
-            "vms_recognized_plugin_lifecycle_basenames": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 183
-                },
-                {
-                    "file": "includes/runtime-guards.php",
-                    "line": 2316
-                }
-            ],
             "vms_record_operational_issue": [
                 {
                     "file": "includes/admin/approvals-review-queue.php",
@@ -102355,12 +102455,6 @@
                 {
                     "file": "includes/core/event-feedback.php",
                     "line": 31
-                }
-            ],
-            "vms_register_legacy_plugin_basename_compatibility": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 149
                 }
             ],
             "vms_register_module": [
@@ -103447,30 +103541,6 @@
                 {
                     "file": "includes/cpt/event-plans/partials/advanced-controls.php",
                     "line": 64
-                }
-            ],
-            "vms_retired_square_nightly_sync_callback": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 94
-                },
-                {
-                    "file": "includes/activation.php",
-                    "line": 102
-                }
-            ],
-            "vms_run_legacy_square_nightly_sync_cleanup": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 13
-                },
-                {
-                    "file": "includes/activation.php",
-                    "line": 70
-                },
-                {
-                    "file": "includes/activation.php",
-                    "line": 612
                 }
             ],
             "vms_run_live_refunds_now_request": [
@@ -119815,6 +119885,204 @@
             ]
         },
         "function_exists_checks": {
+            "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 488
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 596
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 282
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 237
+                }
+            ],
+            "bvmgr_ensure_page_exists": [
+                {
+                    "file": "includes/admin/pages-tools.php",
+                    "line": 33
+                }
+            ],
+            "bvmgr_is_safe_legacy_square_cleanup_context": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 105
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_phase": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 401
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 465
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 340
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_store": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 321
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 214
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 195
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_cleanup_marker_key": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 87
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_collect_cron_entries": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 147
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_hook_name": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 80
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_is_wp_error": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 124
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_query_action_ids": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 373
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 131
+                }
+            ],
+            "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 624
+                }
+            ],
+            "bvmgr_maybe_migrate_activated_legacy_plugin_basename": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 136
+                }
+            ],
+            "bvmgr_migrate_legacy_plugin_basename": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 82
+                }
+            ],
+            "bvmgr_migrate_legacy_plugin_basename_values": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 37
+                }
+            ],
+            "bvmgr_migrate_registered_legacy_plugin_basenames": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 127
+                }
+            ],
+            "bvmgr_plugin_basename_compatibility_pair": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 16
+                }
+            ],
+            "bvmgr_plugin_basename_compatibility_pairs": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 115
+                }
+            ],
+            "bvmgr_plugin_basename_from_file": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 4
+                }
+            ],
+            "bvmgr_plugin_lifecycle_basename": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 169
+                }
+            ],
+            "bvmgr_recognized_plugin_lifecycle_basenames": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 183
+                },
+                {
+                    "file": "includes/runtime-guards.php",
+                    "line": 2316
+                }
+            ],
+            "bvmgr_register_legacy_plugin_basename_compatibility": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 149
+                }
+            ],
+            "bvmgr_retired_square_nightly_sync_callback": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 94
+                }
+            ],
+            "bvmgr_run_legacy_square_nightly_sync_cleanup": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 13
+                },
+                {
+                    "file": "includes/activation.php",
+                    "line": 70
+                },
+                {
+                    "file": "includes/activation.php",
+                    "line": 612
+                }
+            ],
             "vms_add_admin_notice": [
                 {
                     "file": "includes/admin/square-ticket-mirror.php",
@@ -124287,30 +124555,6 @@
                     "line": 19
                 }
             ],
-            "vms_cleanup_legacy_square_nightly_sync_action_scheduler": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 488
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 596
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_wp_cron": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 282
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 237
-                }
-            ],
             "vms_comp_deposit_status_options": [
                 {
                     "file": "includes/cpt/event-plans.php",
@@ -125489,12 +125733,6 @@
                 {
                     "file": "includes/tours/tours.php",
                     "line": 30
-                }
-            ],
-            "vms_ensure_page_exists": [
-                {
-                    "file": "includes/admin/pages-tools.php",
-                    "line": 33
                 }
             ],
             "vms_entitlements_get_product_entitlement_id": [
@@ -132789,12 +133027,6 @@
                     "line": 4
                 }
             ],
-            "vms_is_safe_legacy_square_cleanup_context": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 105
-                }
-            ],
             "vms_is_vendor_tax_profile_complete": [
                 {
                     "file": "includes/admin/vendor-command-center.php",
@@ -132859,78 +133091,6 @@
                 {
                     "file": "includes/admin/reference/keys-map.php",
                     "line": 54
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_phase": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 401
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_remaining_rows": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 465
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_statuses": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 340
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_store": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 321
-                }
-            ],
-            "vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 214
-                }
-            ],
-            "vms_legacy_square_nightly_sync_call_wp_unschedule_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 195
-                }
-            ],
-            "vms_legacy_square_nightly_sync_cleanup_marker_key": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 87
-                }
-            ],
-            "vms_legacy_square_nightly_sync_collect_cron_entries": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 147
-                }
-            ],
-            "vms_legacy_square_nightly_sync_hook_name": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 80
-                }
-            ],
-            "vms_legacy_square_nightly_sync_is_wp_error": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 124
-                }
-            ],
-            "vms_legacy_square_nightly_sync_query_action_ids": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 373
-                }
-            ],
-            "vms_legacy_square_nightly_sync_supports_wp_error_flag": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 131
                 }
             ],
             "vms_lineup_schedule_enrich_entries": [
@@ -133049,18 +133209,6 @@
                 {
                     "file": "includes/cpt/event-plans.php",
                     "line": 10474
-                }
-            ],
-            "vms_maybe_cleanup_legacy_square_nightly_sync_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 624
-                }
-            ],
-            "vms_maybe_migrate_activated_legacy_plugin_basename": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 136
                 }
             ],
             "vms_meta_key": [
@@ -135109,24 +135257,6 @@
                     "line": 3188
                 }
             ],
-            "vms_migrate_legacy_plugin_basename": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 82
-                }
-            ],
-            "vms_migrate_legacy_plugin_basename_values": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 37
-                }
-            ],
-            "vms_migrate_registered_legacy_plugin_basenames": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 127
-                }
-            ],
             "vms_module_is_enabled": [
                 {
                     "file": "includes/modules/load.php",
@@ -136301,30 +136431,6 @@
                     "line": 76
                 }
             ],
-            "vms_plugin_basename_compatibility_pair": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 16
-                }
-            ],
-            "vms_plugin_basename_compatibility_pairs": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 115
-                }
-            ],
-            "vms_plugin_basename_from_file": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 4
-                }
-            ],
-            "vms_plugin_lifecycle_basename": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 169
-                }
-            ],
             "vms_plugin_main_file": [
                 {
                     "file": "includes/admin/dashboard.php",
@@ -137125,16 +137231,6 @@
                     "line": 645
                 }
             ],
-            "vms_recognized_plugin_lifecycle_basenames": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 183
-                },
-                {
-                    "file": "includes/runtime-guards.php",
-                    "line": 2316
-                }
-            ],
             "vms_record_operational_issue": [
                 {
                     "file": "includes/admin/approvals-review-queue.php",
@@ -137197,12 +137293,6 @@
                 {
                     "file": "includes/core/event-feedback.php",
                     "line": 14
-                }
-            ],
-            "vms_register_legacy_plugin_basename_compatibility": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 149
                 }
             ],
             "vms_register_module": [
@@ -137913,26 +138003,6 @@
                 {
                     "file": "includes/runtime-guards.php",
                     "line": 1918
-                }
-            ],
-            "vms_retired_square_nightly_sync_callback": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 94
-                }
-            ],
-            "vms_run_legacy_square_nightly_sync_cleanup": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 13
-                },
-                {
-                    "file": "includes/activation.php",
-                    "line": 70
-                },
-                {
-                    "file": "includes/activation.php",
-                    "line": 612
                 }
             ],
             "vms_run_live_refunds_now_request": [
@@ -151789,7 +151859,7 @@
             ]
         },
         "direct_literal_callbacks": {
-            "vms_activate_plugin": [
+            "bvmgr_activate_plugin": [
                 {
                     "file": "backstage-venue-manager.php",
                     "line": 30,
@@ -151799,6 +151869,46 @@
                     "file": "vendor-management-system.php",
                     "line": 21,
                     "registrar": "register_activation_hook"
+                }
+            ],
+            "bvmgr_deactivate_plugin": [
+                {
+                    "file": "backstage-venue-manager.php",
+                    "line": 31,
+                    "registrar": "register_deactivation_hook"
+                },
+                {
+                    "file": "vendor-management-system.php",
+                    "line": 22,
+                    "registrar": "register_deactivation_hook"
+                }
+            ],
+            "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 643,
+                    "registrar": "add_action"
+                }
+            ],
+            "bvmgr_maybe_migrate_activated_legacy_plugin_basename": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 164,
+                    "registrar": "add_action"
+                }
+            ],
+            "bvmgr_migrate_registered_legacy_plugin_basenames": [
+                {
+                    "file": "includes/plugin-basename-compat.php",
+                    "line": 163,
+                    "registrar": "add_action"
+                }
+            ],
+            "bvmgr_retired_square_nightly_sync_callback": [
+                {
+                    "file": "includes/activation.php",
+                    "line": 102,
+                    "registrar": "add_action"
                 }
             ],
             "vms_add_dispatch_add_menu_badge": [
@@ -152731,18 +152841,6 @@
                     "file": "includes/admin/settings-page.php",
                     "line": 919,
                     "registrar": "add_action"
-                }
-            ],
-            "vms_deactivate_plugin": [
-                {
-                    "file": "backstage-venue-manager.php",
-                    "line": 31,
-                    "registrar": "register_deactivation_hook"
-                },
-                {
-                    "file": "vendor-management-system.php",
-                    "line": 22,
-                    "registrar": "register_deactivation_hook"
                 }
             ],
             "vms_docs_admin_menu": [
@@ -154025,27 +154123,6 @@
                     "registrar": "add_action"
                 }
             ],
-            "vms_maybe_cleanup_legacy_square_nightly_sync_hook": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 643,
-                    "registrar": "add_action"
-                }
-            ],
-            "vms_maybe_migrate_activated_legacy_plugin_basename": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 164,
-                    "registrar": "add_action"
-                }
-            ],
-            "vms_migrate_registered_legacy_plugin_basenames": [
-                {
-                    "file": "includes/plugin-basename-compat.php",
-                    "line": 163,
-                    "registrar": "add_action"
-                }
-            ],
             "vms_notify_ensure_digest_cron": [
                 {
                     "file": "includes/core/notifications.php",
@@ -154614,13 +154691,6 @@
                 {
                     "file": "includes/runtime-guards.php",
                     "line": 2383,
-                    "registrar": "add_action"
-                }
-            ],
-            "vms_retired_square_nightly_sync_callback": [
-                {
-                    "file": "includes/activation.php",
-                    "line": 102,
                     "registrar": "add_action"
                 }
             ],
@@ -157484,10 +157554,234 @@
             ]
         },
         "function_resolution_requirements": {
-            "vms_activate_plugin": [
+            "bvmgr_activate_plugin": [
                 {
-                    "current_identifier": "vms_activate_plugin",
+                    "current_identifier": "bvmgr_activate_plugin",
                     "canonical_target": "bvmgr_activate_plugin",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler": [
+                {
+                    "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler",
+                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_hook": [
+                {
+                    "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_hook",
+                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_hook",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron": [
+                {
+                    "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron",
+                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback": [
+                {
+                    "current_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
+                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_deactivate_plugin": [
+                {
+                    "current_identifier": "bvmgr_deactivate_plugin",
+                    "canonical_target": "bvmgr_deactivate_plugin",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_ensure_page_exists": [
+                {
+                    "current_identifier": "bvmgr_ensure_page_exists",
+                    "canonical_target": "bvmgr_ensure_page_exists",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_is_safe_legacy_square_cleanup_context": [
+                {
+                    "current_identifier": "bvmgr_is_safe_legacy_square_cleanup_context",
+                    "canonical_target": "bvmgr_is_safe_legacy_square_cleanup_context",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_phase": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_phase",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_phase",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_action_scheduler_store": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_store",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_store",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_cleanup_marker_key": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_cleanup_marker_key",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_cleanup_marker_key",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_collect_cron_entries": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_collect_cron_entries",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_collect_cron_entries",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_hook_name": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_hook_name",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_hook_name",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_is_wp_error": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_is_wp_error",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_is_wp_error",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_query_action_ids": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_query_action_ids",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_query_action_ids",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag": [
+                {
+                    "current_identifier": "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag",
+                    "canonical_target": "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook": [
+                {
+                    "current_identifier": "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook",
+                    "canonical_target": "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_maybe_migrate_activated_legacy_plugin_basename": [
+                {
+                    "current_identifier": "bvmgr_maybe_migrate_activated_legacy_plugin_basename",
+                    "canonical_target": "bvmgr_maybe_migrate_activated_legacy_plugin_basename",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_migrate_legacy_plugin_basename": [
+                {
+                    "current_identifier": "bvmgr_migrate_legacy_plugin_basename",
+                    "canonical_target": "bvmgr_migrate_legacy_plugin_basename",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_migrate_legacy_plugin_basename_values": [
+                {
+                    "current_identifier": "bvmgr_migrate_legacy_plugin_basename_values",
+                    "canonical_target": "bvmgr_migrate_legacy_plugin_basename_values",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_migrate_registered_legacy_plugin_basenames": [
+                {
+                    "current_identifier": "bvmgr_migrate_registered_legacy_plugin_basenames",
+                    "canonical_target": "bvmgr_migrate_registered_legacy_plugin_basenames",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_plugin_basename_compatibility_pair": [
+                {
+                    "current_identifier": "bvmgr_plugin_basename_compatibility_pair",
+                    "canonical_target": "bvmgr_plugin_basename_compatibility_pair",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_plugin_basename_compatibility_pairs": [
+                {
+                    "current_identifier": "bvmgr_plugin_basename_compatibility_pairs",
+                    "canonical_target": "bvmgr_plugin_basename_compatibility_pairs",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_plugin_basename_from_file": [
+                {
+                    "current_identifier": "bvmgr_plugin_basename_from_file",
+                    "canonical_target": "bvmgr_plugin_basename_from_file",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_plugin_lifecycle_basename": [
+                {
+                    "current_identifier": "bvmgr_plugin_lifecycle_basename",
+                    "canonical_target": "bvmgr_plugin_lifecycle_basename",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_recognized_plugin_lifecycle_basenames": [
+                {
+                    "current_identifier": "bvmgr_recognized_plugin_lifecycle_basenames",
+                    "canonical_target": "bvmgr_recognized_plugin_lifecycle_basenames",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_register_legacy_plugin_basename_compatibility": [
+                {
+                    "current_identifier": "bvmgr_register_legacy_plugin_basename_compatibility",
+                    "canonical_target": "bvmgr_register_legacy_plugin_basename_compatibility",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_retired_square_nightly_sync_callback": [
+                {
+                    "current_identifier": "bvmgr_retired_square_nightly_sync_callback",
+                    "canonical_target": "bvmgr_retired_square_nightly_sync_callback",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_run_legacy_square_nightly_sync_cleanup": [
+                {
+                    "current_identifier": "bvmgr_run_legacy_square_nightly_sync_cleanup",
+                    "canonical_target": "bvmgr_run_legacy_square_nightly_sync_cleanup",
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -161103,34 +161397,6 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
-            "vms_cleanup_legacy_square_nightly_sync_action_scheduler": [
-                {
-                    "current_identifier": "vms_cleanup_legacy_square_nightly_sync_action_scheduler",
-                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_hook": [
-                {
-                    "current_identifier": "vms_cleanup_legacy_square_nightly_sync_hook",
-                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_hook",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_wp_cron": [
-                {
-                    "current_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron",
-                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback": [
-                {
-                    "current_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
-                    "canonical_target": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
             "vms_comp_deposit_status_options": [
                 {
                     "current_identifier": "vms_comp_deposit_status_options",
@@ -161380,13 +161646,6 @@
                 {
                     "current_identifier": "vms_db_migrate_vendor_core_v7",
                     "canonical_target": "bvmgr_db_migrate_vendor_core_v7",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_deactivate_plugin": [
-                {
-                    "current_identifier": "vms_deactivate_plugin",
-                    "canonical_target": "bvmgr_deactivate_plugin",
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -162374,13 +162633,6 @@
                 {
                     "current_identifier": "vms_enqueue_tour_assets",
                     "canonical_target": "bvmgr_enqueue_tour_assets",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_ensure_page_exists": [
-                {
-                    "current_identifier": "vms_ensure_page_exists",
-                    "canonical_target": "bvmgr_ensure_page_exists",
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -167578,13 +167830,6 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
-            "vms_is_safe_legacy_square_cleanup_context": [
-                {
-                    "current_identifier": "vms_is_safe_legacy_square_cleanup_context",
-                    "canonical_target": "bvmgr_is_safe_legacy_square_cleanup_context",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
             "vms_is_vendor_tax_profile_complete": [
                 {
                     "current_identifier": "vms_is_vendor_tax_profile_complete",
@@ -167631,90 +167876,6 @@
                 {
                     "current_identifier": "vms_keys_map_registry",
                     "canonical_target": "bvmgr_keys_map_registry",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_phase": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_phase",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_phase",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_remaining_rows": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_remaining_rows",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_statuses": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_statuses",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_action_scheduler_store": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_action_scheduler_store",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_action_scheduler_store",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_call_wp_unschedule_hook": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_call_wp_unschedule_hook",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_cleanup_marker_key": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_cleanup_marker_key",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_cleanup_marker_key",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_collect_cron_entries": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_collect_cron_entries",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_collect_cron_entries",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_hook_name": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_hook_name",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_hook_name",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_is_wp_error": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_is_wp_error",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_is_wp_error",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_query_action_ids": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_query_action_ids",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_query_action_ids",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_legacy_square_nightly_sync_supports_wp_error_flag": [
-                {
-                    "current_identifier": "vms_legacy_square_nightly_sync_supports_wp_error_flag",
-                    "canonical_target": "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag",
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -167795,45 +167956,10 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
-            "vms_maybe_cleanup_legacy_square_nightly_sync_hook": [
-                {
-                    "current_identifier": "vms_maybe_cleanup_legacy_square_nightly_sync_hook",
-                    "canonical_target": "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_maybe_migrate_activated_legacy_plugin_basename": [
-                {
-                    "current_identifier": "vms_maybe_migrate_activated_legacy_plugin_basename",
-                    "canonical_target": "bvmgr_maybe_migrate_activated_legacy_plugin_basename",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
             "vms_meta_key": [
                 {
                     "current_identifier": "vms_meta_key",
                     "canonical_target": "bvmgr_meta_key",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_migrate_legacy_plugin_basename": [
-                {
-                    "current_identifier": "vms_migrate_legacy_plugin_basename",
-                    "canonical_target": "bvmgr_migrate_legacy_plugin_basename",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_migrate_legacy_plugin_basename_values": [
-                {
-                    "current_identifier": "vms_migrate_legacy_plugin_basename_values",
-                    "canonical_target": "bvmgr_migrate_legacy_plugin_basename_values",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_migrate_registered_legacy_plugin_basenames": [
-                {
-                    "current_identifier": "vms_migrate_registered_legacy_plugin_basenames",
-                    "canonical_target": "bvmgr_migrate_registered_legacy_plugin_basenames",
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -168908,34 +169034,6 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
-            "vms_plugin_basename_compatibility_pair": [
-                {
-                    "current_identifier": "vms_plugin_basename_compatibility_pair",
-                    "canonical_target": "bvmgr_plugin_basename_compatibility_pair",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_plugin_basename_compatibility_pairs": [
-                {
-                    "current_identifier": "vms_plugin_basename_compatibility_pairs",
-                    "canonical_target": "bvmgr_plugin_basename_compatibility_pairs",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_plugin_basename_from_file": [
-                {
-                    "current_identifier": "vms_plugin_basename_from_file",
-                    "canonical_target": "bvmgr_plugin_basename_from_file",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_plugin_lifecycle_basename": [
-                {
-                    "current_identifier": "vms_plugin_lifecycle_basename",
-                    "canonical_target": "bvmgr_plugin_lifecycle_basename",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
             "vms_plugin_main_file": [
                 {
                     "current_identifier": "vms_plugin_main_file",
@@ -169629,13 +169727,6 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
-            "vms_recognized_plugin_lifecycle_basenames": [
-                {
-                    "current_identifier": "vms_recognized_plugin_lifecycle_basenames",
-                    "canonical_target": "bvmgr_recognized_plugin_lifecycle_basenames",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
             "vms_record_operational_issue": [
                 {
                     "current_identifier": "vms_record_operational_issue",
@@ -169668,13 +169759,6 @@
                 {
                     "current_identifier": "vms_register_feedback_response_cpt",
                     "canonical_target": "bvmgr_register_feedback_response_cpt",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_register_legacy_plugin_basename_compatibility": [
-                {
-                    "current_identifier": "vms_register_legacy_plugin_basename_compatibility",
-                    "canonical_target": "bvmgr_register_legacy_plugin_basename_compatibility",
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -170459,20 +170543,6 @@
                 {
                     "current_identifier": "vms_resource_fingerprint_wp_cron_counts",
                     "canonical_target": "bvmgr_resource_fingerprint_wp_cron_counts",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_retired_square_nightly_sync_callback": [
-                {
-                    "current_identifier": "vms_retired_square_nightly_sync_callback",
-                    "canonical_target": "bvmgr_retired_square_nightly_sync_callback",
-                    "resolution_policy": "core-current-or-canonical-must-resolve"
-                }
-            ],
-            "vms_run_legacy_square_nightly_sync_cleanup": [
-                {
-                    "current_identifier": "vms_run_legacy_square_nightly_sync_cleanup",
-                    "canonical_target": "bvmgr_run_legacy_square_nightly_sync_cleanup",
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -187476,7 +187546,6 @@
         "interfaces:VMS_Social_Provider_Interface"
     ],
     "current_prohibited_globals": [
-        "functions:vms_activate_plugin",
         "functions:vms_add_admin_notice",
         "functions:vms_add_dispatch_add_menu_badge",
         "functions:vms_add_dispatch_add_nav_item",
@@ -188062,10 +188131,6 @@
         "functions:vms_cancelled_cost_review_render_metabox",
         "functions:vms_cancelled_cost_review_vendor_direct_cents",
         "functions:vms_check_woo_tickets_for_attendance",
-        "functions:vms_cleanup_legacy_square_nightly_sync_action_scheduler",
-        "functions:vms_cleanup_legacy_square_nightly_sync_hook",
-        "functions:vms_cleanup_legacy_square_nightly_sync_wp_cron",
-        "functions:vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
         "functions:vms_comp_deposit_status_options",
         "functions:vms_comp_deposit_summary_part",
         "functions:vms_comp_deposit_treatment_options",
@@ -188127,7 +188192,6 @@
         "functions:vms_db_migrate_vendor_core_v5",
         "functions:vms_db_migrate_vendor_core_v6",
         "functions:vms_db_migrate_vendor_core_v7",
-        "functions:vms_deactivate_plugin",
         "functions:vms_detect_public_event_calendar_url",
         "functions:vms_disable_plan_product",
         "functions:vms_docs_admin_menu",
@@ -188283,7 +188347,6 @@
         "functions:vms_enqueue_public_style_stack",
         "functions:vms_enqueue_style_asset",
         "functions:vms_enqueue_tour_assets",
-        "functions:vms_ensure_page_exists",
         "functions:vms_entitlements_extract_image_url_from_raw_entitlement",
         "functions:vms_entitlements_find_config_entitlement",
         "functions:vms_entitlements_find_raw_config_entitlement",
@@ -189099,7 +189162,6 @@
         "functions:vms_holidays_sanitize_percent",
         "functions:vms_holidays_validate_manual_fields",
         "functions:vms_i18n_runtime",
-        "functions:vms_install_public_pages",
         "functions:vms_integrity_calendar_unpublished_applies_for_status",
         "functions:vms_integrity_list_event_plans_with_calendar_issues",
         "functions:vms_integrity_list_event_plans_with_venue_issues",
@@ -189110,7 +189172,6 @@
         "functions:vms_integrity_schedule_daily_scan",
         "functions:vms_is_owned_cron_hook",
         "functions:vms_is_public_frontend_request",
-        "functions:vms_is_safe_legacy_square_cleanup_context",
         "functions:vms_is_vendor_tax_profile_complete",
         "functions:vms_is_venue_closed_on_date",
         "functions:vms_json_decode_associative",
@@ -189119,18 +189180,6 @@
         "functions:vms_json_top_level_token",
         "functions:vms_keys_map_registry",
         "functions:vms_label",
-        "functions:vms_legacy_square_nightly_sync_action_scheduler_phase",
-        "functions:vms_legacy_square_nightly_sync_action_scheduler_remaining_rows",
-        "functions:vms_legacy_square_nightly_sync_action_scheduler_statuses",
-        "functions:vms_legacy_square_nightly_sync_action_scheduler_store",
-        "functions:vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
-        "functions:vms_legacy_square_nightly_sync_call_wp_unschedule_hook",
-        "functions:vms_legacy_square_nightly_sync_cleanup_marker_key",
-        "functions:vms_legacy_square_nightly_sync_collect_cron_entries",
-        "functions:vms_legacy_square_nightly_sync_hook_name",
-        "functions:vms_legacy_square_nightly_sync_is_wp_error",
-        "functions:vms_legacy_square_nightly_sync_query_action_ids",
-        "functions:vms_legacy_square_nightly_sync_supports_wp_error_flag",
         "functions:vms_lineup_schedule_enrich_entries",
         "functions:vms_lineup_schedule_format_time_label",
         "functions:vms_lineup_schedule_make_row_id",
@@ -189144,14 +189193,9 @@
         "functions:vms_map_plan_status",
         "functions:vms_maybe_apply_band_comp_defaults_to_plan",
         "functions:vms_maybe_autoset_event_plan_title",
-        "functions:vms_maybe_cleanup_legacy_square_nightly_sync_hook",
-        "functions:vms_maybe_migrate_activated_legacy_plugin_basename",
         "functions:vms_meta_key",
         "functions:vms_meta_keys",
         "functions:vms_meta_keys_export",
-        "functions:vms_migrate_legacy_plugin_basename",
-        "functions:vms_migrate_legacy_plugin_basename_values",
-        "functions:vms_migrate_registered_legacy_plugin_basenames",
         "functions:vms_module_is_enabled",
         "functions:vms_module_is_licensed",
         "functions:vms_module_is_registered",
@@ -189311,10 +189355,6 @@
         "functions:vms_payables_sanitize_amount",
         "functions:vms_payment_statuses",
         "functions:vms_phone_to_tel_href",
-        "functions:vms_plugin_basename_compatibility_pair",
-        "functions:vms_plugin_basename_compatibility_pairs",
-        "functions:vms_plugin_basename_from_file",
-        "functions:vms_plugin_lifecycle_basename",
         "functions:vms_plugin_main_file",
         "functions:vms_plugin_root_path",
         "functions:vms_portal_notice",
@@ -189404,7 +189444,6 @@
         "functions:vms_public_event_sidebar_track_context_after",
         "functions:vms_public_event_sidebar_track_context_before",
         "functions:vms_public_event_sidebar_wrap_module",
-        "functions:vms_public_page_is_managed",
         "functions:vms_publish_event_to_calendar",
         "functions:vms_publish_products_from_plan",
         "functions:vms_queue_admin_diagnostic",
@@ -189417,13 +189456,11 @@
         "functions:vms_rating_submitted_value",
         "functions:vms_read_limited_stream",
         "functions:vms_rebuild_event_plan_lineup_indexes",
-        "functions:vms_recognized_plugin_lifecycle_basenames",
         "functions:vms_record_operational_issue",
         "functions:vms_register_admin_page",
         "functions:vms_register_event_credit_cpt",
         "functions:vms_register_event_plan_cpt",
         "functions:vms_register_feedback_response_cpt",
-        "functions:vms_register_legacy_plugin_basename_compatibility",
         "functions:vms_register_module",
         "functions:vms_register_rating_cpt",
         "functions:vms_register_tour",
@@ -189567,8 +189604,6 @@
         "functions:vms_rest_due_dates_obligations",
         "functions:vms_rest_due_dates_uncomplete",
         "functions:vms_resync_event_to_calendar",
-        "functions:vms_retired_square_nightly_sync_callback",
-        "functions:vms_run_legacy_square_nightly_sync_cleanup",
         "functions:vms_run_live_refunds_now_request",
         "functions:vms_safe_label",
         "functions:vms_sanitize_settings",
@@ -192015,6 +192050,14 @@
             "global_slots": 41,
             "token_sites": 194,
             "plugin_check_rows": 57
+        },
+        "current_B3": {
+            "baseline_unique_functions": 4521,
+            "baseline_declaration_sites": 4541,
+            "migrated_unique_functions": 35,
+            "migrated_declaration_sites": 35,
+            "remaining_legacy_unique_functions": 4486,
+            "remaining_legacy_declaration_sites": 4506
         }
     },
     "completed_batches": {
@@ -195832,6 +195875,468 @@
                 }
             ],
             "b3_procedural_functions_renamed": 0
+        },
+        "B3": {
+            "status": "in_progress",
+            "scope": "all frozen plugin-owned procedural PHP functions; direct rename with no public-package legacy wrappers",
+            "counts": {
+                "baseline_unique_functions": 4521,
+                "baseline_declaration_sites": 4541,
+                "migrated_unique_functions": 35,
+                "migrated_declaration_sites": 35,
+                "remaining_legacy_unique_functions": 4486,
+                "remaining_legacy_declaration_sites": 4506
+            },
+            "prohibited_global_ratchet": {
+                "before": 4521,
+                "after": 4486,
+                "reduction": 35
+            },
+            "wave_status": {
+                "W1": {
+                    "migrated_unique_functions": 35,
+                    "total_unique_functions": 35,
+                    "status": "complete"
+                },
+                "W2": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 66,
+                    "status": "pending"
+                },
+                "W3": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 457,
+                    "status": "pending"
+                },
+                "W4": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 640,
+                    "status": "pending"
+                },
+                "W5": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 616,
+                    "status": "pending"
+                },
+                "W6": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 533,
+                    "status": "pending"
+                },
+                "W7": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 419,
+                    "status": "pending"
+                },
+                "W8": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 524,
+                    "status": "pending"
+                },
+                "W9": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 441,
+                    "status": "pending"
+                },
+                "W10": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 428,
+                    "status": "pending"
+                },
+                "W11": {
+                    "migrated_unique_functions": 0,
+                    "total_unique_functions": 362,
+                    "status": "pending"
+                }
+            },
+            "symbol_map": [
+                {
+                    "legacy_identifier": "vms_activate_plugin",
+                    "canonical_identifier": "bvmgr_activate_plugin",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 7
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_action_scheduler",
+                    "canonical_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 489
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_hook",
+                    "canonical_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_hook",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 597
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron",
+                    "canonical_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 283
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
+                    "canonical_identifier": "bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 238
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_deactivate_plugin",
+                    "canonical_identifier": "bvmgr_deactivate_plugin",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 64
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_ensure_page_exists",
+                    "canonical_identifier": "bvmgr_ensure_page_exists",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 674
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_install_public_pages",
+                    "canonical_identifier": "bvmgr_install_public_pages",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 736
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_is_safe_legacy_square_cleanup_context",
+                    "canonical_identifier": "bvmgr_is_safe_legacy_square_cleanup_context",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 106
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_phase",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_phase",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 402
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_remaining_rows",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_remaining_rows",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 466
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_statuses",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_statuses",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 341
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_action_scheduler_store",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_action_scheduler_store",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 322
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_call_wp_clear_scheduled_hook",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 215
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_call_wp_unschedule_hook",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_call_wp_unschedule_hook",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 196
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_cleanup_marker_key",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_cleanup_marker_key",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 88
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_collect_cron_entries",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_collect_cron_entries",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 148
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_hook_name",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_hook_name",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 81
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_is_wp_error",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_is_wp_error",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 125
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_query_action_ids",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_query_action_ids",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 374
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_legacy_square_nightly_sync_supports_wp_error_flag",
+                    "canonical_identifier": "bvmgr_legacy_square_nightly_sync_supports_wp_error_flag",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 132
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_maybe_cleanup_legacy_square_nightly_sync_hook",
+                    "canonical_identifier": "bvmgr_maybe_cleanup_legacy_square_nightly_sync_hook",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 625
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_maybe_migrate_activated_legacy_plugin_basename",
+                    "canonical_identifier": "bvmgr_maybe_migrate_activated_legacy_plugin_basename",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 137
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_migrate_legacy_plugin_basename",
+                    "canonical_identifier": "bvmgr_migrate_legacy_plugin_basename",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 83
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_migrate_legacy_plugin_basename_values",
+                    "canonical_identifier": "bvmgr_migrate_legacy_plugin_basename_values",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 38
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_migrate_registered_legacy_plugin_basenames",
+                    "canonical_identifier": "bvmgr_migrate_registered_legacy_plugin_basenames",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 128
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_plugin_basename_compatibility_pair",
+                    "canonical_identifier": "bvmgr_plugin_basename_compatibility_pair",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 17
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_plugin_basename_compatibility_pairs",
+                    "canonical_identifier": "bvmgr_plugin_basename_compatibility_pairs",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 116
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_plugin_basename_from_file",
+                    "canonical_identifier": "bvmgr_plugin_basename_from_file",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 5
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_plugin_lifecycle_basename",
+                    "canonical_identifier": "bvmgr_plugin_lifecycle_basename",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 170
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_public_page_is_managed",
+                    "canonical_identifier": "bvmgr_public_page_is_managed",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 653
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_recognized_plugin_lifecycle_basenames",
+                    "canonical_identifier": "bvmgr_recognized_plugin_lifecycle_basenames",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 184
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_register_legacy_plugin_basename_compatibility",
+                    "canonical_identifier": "bvmgr_register_legacy_plugin_basename_compatibility",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/plugin-basename-compat.php",
+                            "line": 150
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_retired_square_nightly_sync_callback",
+                    "canonical_identifier": "bvmgr_retired_square_nightly_sync_callback",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 95
+                        }
+                    ]
+                },
+                {
+                    "legacy_identifier": "vms_run_legacy_square_nightly_sync_cleanup",
+                    "canonical_identifier": "bvmgr_run_legacy_square_nightly_sync_cleanup",
+                    "wave": "W1",
+                    "declaration_sites": [
+                        {
+                            "file": "includes/activation.php",
+                            "line": 613
+                        }
+                    ]
+                }
+            ],
+            "legacy_wrappers": 0
         }
     },
     "public_extension_apis": [

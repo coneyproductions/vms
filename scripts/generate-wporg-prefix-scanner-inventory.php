@@ -14,7 +14,7 @@ $options = array(
 );
 
 foreach (array_slice($argv, 1) as $argument) {
-	if (in_array($argument, array('--check', '--write', '--print', '--gate'), true)) {
+		if (in_array($argument, array('--check', '--write', '--print', '--gate', '--refresh-b3'), true)) {
 		$options['mode'] = $argument;
 		continue;
 	}
@@ -35,6 +35,7 @@ $usage = static function (): void {
 		'  php scripts/generate-wporg-prefix-scanner-inventory.php --check',
 		'  php scripts/generate-wporg-prefix-scanner-inventory.php --write|--print --strict-json=PATH --historical-baseline=PATH --source-commit=SHA --package-sha256=SHA256',
 		'  php scripts/generate-wporg-prefix-scanner-inventory.php --gate --strict-json=PATH',
+		'  php scripts/generate-wporg-prefix-scanner-inventory.php --refresh-b3',
 	)) . PHP_EOL);
 };
 
@@ -45,6 +46,16 @@ try {
 		$inventory = BVMGR_WPORG_Prefix_Scanner_Inventory::loadJsonFile($artifactPath);
 		BVMGR_WPORG_Prefix_Scanner_Inventory::validateArtifact($root, $inventory, $manifest);
 		echo "Prefix scanner inventory is internally consistent.\n";
+		exit(0);
+	}
+	if ($mode === '--refresh-b3') {
+		$inventory = BVMGR_WPORG_Prefix_Scanner_Inventory::loadJsonFile($artifactPath);
+		$progress = BVMGR_WPORG_Prefix_Scanner_Inventory::loadJsonFile($root . '/' . BVMGR_WPORG_Prefix_B3::PROGRESS_PATH);
+		$inventory = BVMGR_WPORG_Prefix_Scanner_Inventory::refreshB3($root, $inventory, $manifest, $progress);
+		if (file_put_contents($artifactPath, BVMGR_WPORG_Prefix_Scanner_Inventory::render($inventory)) === false) {
+			throw new RuntimeException('Unable to refresh ' . BVMGR_WPORG_Prefix_Scanner_Inventory::ARTIFACT_PATH . '.');
+		}
+		echo 'Refreshed ' . BVMGR_WPORG_Prefix_Scanner_Inventory::ARTIFACT_PATH . " for B3.\n";
 		exit(0);
 	}
 

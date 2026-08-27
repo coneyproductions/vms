@@ -66,3 +66,17 @@ The W2 gate additionally requires fresh disposable provenance for all five add-o
 B3 is complete only when the progress ratchet reports 4,521 migrated unique functions, 4,541 migrated declaration sites, zero remaining prohibited `vms_*` function declarations, zero stale or forward function references, and zero unexpected scanner rows. Final acceptance also requires a clean strict packaged Plugin Check result with warnings/errors non-increasing from the B2.5 baseline, real activation/deactivation/reactivation lifecycle proof, required plugin-load/runtime smokes, five-add-on disposable integration proof, unchanged installed/live tree hashes, and the remediation ledger evidence.
 
 This phase does not authorize B4–B8 work, pushing, deployment, packaging for distribution, tagging, WordPress.org submission, or a reviewer reply.
+
+## Wave checkpoint record
+
+### W1 — activation and plugin-basename pilot
+
+Status: verified, pending isolated commit.
+
+- Exact cutover: `35` unique functions / `35` declaration sites / no duplicate family; all declarations and all frozen direct-call and exact function-literal references moved atomically.
+- Ratchet: `35` migrated / `4,486` legacy functions remaining; scanner B3 rows `4,541 -> 4,506`; no stale/forward reference, unexpected finding, unmapped finding, or wrapper.
+- Focused behavior: B2 foundation, plugin identity, activation public-page ownership, retired Square cleanup, runtime stubs, and the compatibility self-test pass.
+- Disposable package: `/private/tmp/bvm-wporg-b3-w1-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `fbe187297234a4a3da309b21b6af910950fdac817f8335814d5fa52525f98225`. The package build passed after staging `374` files, linting `271` PHP files, and checking `55` JavaScript files; release regressions were run separately because three default tests require an explicit WordPress root.
+- Real lifecycle: the exact dev ZIP passed the VMS-only disposable dependency matrix, activation, deactivation, reactivation, repeated activation, baseline upgrade, interrupted-migration resume, fixture preservation, and uninstall preservation. Report SHA-256: `afd9ff4c0b1ce90a368564996b1677e169951582f50870795b3af306e6481098`; `WARN` is limited to captured PHP/dependency deprecations.
+- Strict packaged scan: `5,239` total = historical `125` errors + `5,114` phase-aware warnings. B3 function rows are exactly `4,506`; B7 `182`; method-scope `420`; external/core `6`. The migration-aware gate passes with exactly `35` authoritative B3 findings removed and zero unexpected/unmapped rows. Normalized JSON SHA-256: `ee65a3b1a7c7ac1f428f867d920b489958a31629dcd472d88ea691fdd3d8b54f`.
+- Untouched boundaries: `docs/wporg-prefix-b3-untouched-tree-baseline.json` freezes reproducible content hashes for the installed/live core and all five installed add-ons. No installed/live source was modified.

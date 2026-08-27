@@ -30,14 +30,14 @@ add_action('admin_post_vms_repair_pages', function () {
         $existing = get_page_by_path($spec['slug'], OBJECT, 'page');
         $was_trashed = ($existing && $existing->post_status === 'trash');
 
-        if (!function_exists('vms_ensure_page_exists')) {
+        if (!function_exists('bvmgr_ensure_page_exists')) {
             // Bail gracefully: can't ensure without helper
             break;
         }
 
         $spec['managed_key'] = sanitize_key((string) $key);
         $spec['repair_existing'] = true;
-        $page_id = (int) vms_ensure_page_exists($spec);
+        $page_id = (int) bvmgr_ensure_page_exists($spec);
 
         if ($page_id > 0) {
             update_option('vms_page_' . sanitize_key($key), $page_id);

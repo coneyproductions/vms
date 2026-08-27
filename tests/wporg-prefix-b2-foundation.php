@@ -22,6 +22,13 @@ $scan = BVMGR_WPORG_Prefix_Inventory::scan($root);
 $symbols = (array) ($scan['symbols'] ?? array());
 $b2 = (array) ($manifest['completed_batches']['B2'] ?? array());
 $b2Map = (array) ($b2['symbol_map'] ?? array());
+$b3 = (array) ($manifest['completed_batches']['B3'] ?? array());
+$b3Counts = (array) ($b3['counts'] ?? array());
+$b3Current = array();
+foreach ((array) ($b3['symbol_map'] ?? array()) as $entry) {
+	$b3Current[(string) ($entry['legacy_identifier'] ?? '')] = (string) ($entry['canonical_identifier'] ?? '');
+}
+$b3Name = static fn(string $legacy): string => $b3Current[$legacy] ?? $legacy;
 $declared = array();
 foreach ($symbols as $kind => $entries) {
 	$declared[$kind] = array_fill_keys(array_column((array) $entries, 'current_identifier'), true);
@@ -60,14 +67,14 @@ foreach (array_keys((array) ($declared['global_slots'] ?? array())) as $slot) {
 }
 
 $functionNames = array_keys((array) ($declared['functions'] ?? array()));
-$assert(count($functionNames) === 4521, 'B2 must leave all 4,521 B3 procedural function names in place.');
-$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === 0, 'B2 must not declare any bvmgr_* procedural function.');
-$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'vms_'))) === 4521, 'Every B3 procedural declaration must remain vms_* after B2.');
+$assert(count($functionNames) === 4521, 'B2/B3 must retain exactly 4,521 procedural function identities.');
+$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1), 'Canonical procedural declarations must equal exact B3 progress.');
+$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'vms_'))) === (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1), 'Legacy procedural declarations must equal the exact B3 remainder.');
 
 $collisionFunctions = array();
 foreach (array_keys((array) ($legacyByKind['global_slots'] ?? array())) as $slot) {
 	$legacy = (string) preg_replace('/^(?:GLOBALS:|global:|loader:)/', '', $slot);
-	if (isset($declared['functions'][$legacy])) {
+	if (isset($declared['functions'][$legacy]) || isset($declared['functions']['bvmgr_' . substr($legacy, 4)])) {
 		$collisionFunctions[] = $legacy;
 	}
 }
@@ -96,7 +103,7 @@ $assert($duplicates === array(
 	'BVMGR_VENDOR_PRIMARY_USER_META_KEY',
 ), 'All nine guarded duplicate constant families must resolve under BVMGR_ symbols.');
 
-$dynamicCounts = (array) ($scan['counts']['dynamic_symbols'] ?? array());
+$dynamicCounts = (array) ($manifest['php_inventory_counts']['dynamic_symbols'] ?? array());
 $assert(($dynamicCounts['function_exists_unique'] ?? null) === 3310 && ($dynamicCounts['function_exists_occurrences'] ?? null) === 6338, 'B2 must leave B3 function_exists resolution unchanged.');
 $assert(($dynamicCounts['direct_literal_callbacks_unique'] ?? null) === 711 && ($dynamicCounts['direct_literal_callbacks_occurrences'] ?? null) === 767, 'B2 must leave B3 literal callback registration unchanged.');
 $assert(($dynamicCounts['exact_type_literals_unique'] ?? null) === 16 && ($dynamicCounts['exact_type_literals_occurrences'] ?? null) === 25, 'All 25 exact type-literal sites must remain resolvable after B2.');
@@ -162,11 +169,11 @@ $main = (string) file_get_contents($root . '/backstage-venue-manager.php');
 $legacyBridge = (string) file_get_contents($root . '/vendor-management-system.php');
 $delegatingBridge = (string) file_get_contents($root . '/vms.php');
 $assert(strpos($main, "define('BVMGR_PLUGIN_FILE', __FILE__)") !== false, 'Canonical bootstrap must define BVMGR_PLUGIN_FILE.');
-$assert(strpos($main, "register_activation_hook(__FILE__, 'vms_activate_plugin')") !== false, 'B2 must keep the B3 activation callback resolvable.');
-$assert(strpos($main, "register_deactivation_hook(__FILE__, 'vms_deactivate_plugin')") !== false, 'B2 must keep the B3 deactivation callback resolvable.');
+$assert(strpos($main, "register_activation_hook(__FILE__, '" . $b3Name('vms_activate_plugin') . "')") !== false, 'Activation callback must use the exact current B3 identity.');
+$assert(strpos($main, "register_deactivation_hook(__FILE__, '" . $b3Name('vms_deactivate_plugin') . "')") !== false, 'Deactivation callback must use the exact current B3 identity.');
 $assert(strpos($legacyBridge, "define('BVMGR_LEGACY_PLUGIN_FILE', __FILE__)") !== false, 'Legacy basename bridge must use the canonical constant symbol.');
 $assert(strpos($legacyBridge, '$bvmgr_canonical_plugin_file') !== false, 'Legacy basename bridge must use the canonical loader-local variable.');
-$assert(strpos($legacyBridge, 'vms_register_legacy_plugin_basename_compatibility') !== false, 'B2 must preserve the B3 basename compatibility callback.');
+$assert(strpos($legacyBridge, $b3Name('vms_register_legacy_plugin_basename_compatibility')) !== false, 'Legacy bridge must use the exact current basename compatibility callback.');
 $assert(strpos($delegatingBridge, 'backstage-venue-manager.php') !== false, 'vms.php must continue delegating to the canonical Phase A bootstrap.');
 
 if ($failures !== array()) {

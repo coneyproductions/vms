@@ -27,7 +27,7 @@ define('BVMGR_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once BVMGR_PLUGIN_PATH . 'includes/plugin-basename-compat.php';
 require_once BVMGR_PLUGIN_PATH . 'includes/runtime-guards.php';
 require_once BVMGR_PLUGIN_PATH . 'includes/activation.php';
-register_activation_hook(__FILE__, 'vms_activate_plugin');
-register_deactivation_hook(__FILE__, 'vms_deactivate_plugin');
+register_activation_hook(__FILE__, 'bvmgr_activate_plugin');
+register_deactivation_hook(__FILE__, 'bvmgr_deactivate_plugin');
 
 require_once BVMGR_PLUGIN_PATH . 'includes/bootstrap.php';

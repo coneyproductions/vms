@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/wporg-prefix-b3.php';
+
 /**
  * Deterministic reconciliation for packaged PrefixAllGlobals findings.
  *
@@ -215,9 +217,34 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 			throw new RuntimeException('Prefix scanner inventory was not generated from the current semantic manifest.');
 		}
 		$findings = (array) ($artifact['authoritative_prefix_findings'] ?? array());
-		self::validateFunctionFindings($findings, $manifest);
+		self::validateFunctionFindings($root, $findings, $manifest);
 		self::validateHookFindingCount($findings, $manifest);
 		self::validateMigrationGate($artifact, $manifest);
+	}
+
+	/** Refresh only hybrid B3 state while preserving the immutable B2.5 rows. */
+	public static function refreshB3(string $root, array $artifact, array $manifest, array $progress): array
+	{
+		$root = self::root($root);
+		self::validateArtifactStructure($root, $artifact, $manifest);
+		if (($progress['artifact'] ?? '') !== 'wporg-prefix-b3-progress' || ($progress['status'] ?? '') !== 'PASS') {
+			throw new RuntimeException('Scanner inventory requires a passing B3 progress artifact.');
+		}
+		$artifact['source']['manifest_sha256'] = hash('sha256', self::encode($manifest));
+		$artifact['b3_progress'] = array(
+			'function_map_sha256' => (string) ($progress['function_map_sha256'] ?? ''),
+			'counts' => (array) ($progress['counts'] ?? array()),
+			'status' => (string) ($progress['status'] ?? ''),
+		);
+		$active = self::activeFindings((array) ($artifact['authoritative_prefix_findings'] ?? array()), $manifest);
+		$artifact['current_expected_prefix_findings'] = array(
+			'count' => count($active),
+			'finding_ids_sha256' => hash('sha256', self::encode(array_column($active, 'finding_id'))),
+			'category_counts' => self::countsBy($active, 'category'),
+		);
+		$artifact['migration_gate'] = self::gateSummary($active, $manifest, array(), array());
+		self::validateArtifact($root, $artifact, $manifest);
+		return $artifact;
 	}
 
 	/**
@@ -532,13 +559,18 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 	 * @param array<int,array<string,mixed>> $findings
 	 * @param array<string,mixed>            $manifest
 	 */
-	private static function validateFunctionFindings(array $findings, array $manifest): void
+	private static function validateFunctionFindings(string $root, array $findings, array $manifest): void
 	{
 		$sites = array();
-		foreach ((array) ($manifest['symbols']['functions'] ?? array()) as $function) {
+		$mapPath = $root . '/' . BVMGR_WPORG_Prefix_B3::MAP_PATH;
+		$functions = is_file($mapPath)
+			? (array) (BVMGR_WPORG_Prefix_B3::loadJson($mapPath)['mappings'] ?? array())
+			: (array) ($manifest['symbols']['functions'] ?? array());
+		foreach ($functions as $function) {
+			$identifier = (string) ($function['legacy_identifier'] ?? $function['current_identifier'] ?? '');
 			foreach ((array) ($function['declaration_sites'] ?? array()) as $site) {
 				$sites[] = array(
-					'identifier' => (string) ($function['current_identifier'] ?? ''),
+					'identifier' => $identifier,
 					'file' => (string) ($site['file'] ?? ''),
 					'line' => (int) ($site['line'] ?? 0),
 				);
@@ -622,8 +654,9 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 	 */
 	private static function validateMigrationGate(array $artifact, array $manifest): void
 	{
+		$active = self::activeFindings((array) ($artifact['authoritative_prefix_findings'] ?? array()), $manifest);
 		$expected = self::gateSummary(
-			(array) ($artifact['authoritative_prefix_findings'] ?? array()),
+			$active,
 			$manifest,
 			array(),
 			array()
@@ -631,6 +664,24 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 		if (($artifact['migration_gate'] ?? array()) !== $expected) {
 			throw new RuntimeException('Migration-aware scanner gate summary is stale.');
 		}
+		if (isset($artifact['b3_progress'])) {
+			$currentExpected = array(
+				'count' => count($active),
+				'finding_ids_sha256' => hash('sha256', self::encode(array_column($active, 'finding_id'))),
+				'category_counts' => self::countsBy($active, 'category'),
+			);
+			if (($artifact['current_expected_prefix_findings'] ?? array()) !== $currentExpected) {
+				throw new RuntimeException('Current expected scanner finding summary is stale for B3 progress.');
+			}
+		}
+	}
+
+	private static function activeFindings(array $findings, array $manifest): array
+	{
+		$currentFunctions = array_fill_keys(array_column((array) ($manifest['symbols']['functions'] ?? array()), 'current_identifier'), true);
+		return array_values(array_filter($findings, static function (array $finding) use ($currentFunctions): bool {
+			return ($finding['category'] ?? '') !== self::CATEGORY_B3 || isset($currentFunctions[(string) ($finding['identifier'] ?? '')]);
+		}));
 	}
 
 	/**

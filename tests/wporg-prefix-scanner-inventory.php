@@ -29,6 +29,12 @@ try {
 		static fn(array $category): bool => ($category['id'] ?? '') === 'hooks'
 	));
 	$semanticHookSites = (int) ($hookCategory[0]['semantic_inventory']['total'] ?? -1);
+	$currentFunctionNames = array_fill_keys(array_column((array) ($manifest['symbols']['functions'] ?? array()), 'current_identifier'), true);
+	$activeFindings = array_values(array_filter($findings, static function (array $finding) use ($currentFunctionNames): bool {
+		return ($finding['category'] ?? '') !== BVMGR_WPORG_Prefix_Scanner_Inventory::CATEGORY_B3
+			|| isset($currentFunctionNames[(string) ($finding['identifier'] ?? '')]);
+	}));
+	$remainingB3Sites = count(array_filter($activeFindings, static fn(array $finding): bool => ($finding['category'] ?? '') === BVMGR_WPORG_Prefix_Scanner_Inventory::CATEGORY_B3));
 
 	$assert(
 		($categoryCounts[BVMGR_WPORG_Prefix_Scanner_Inventory::CATEGORY_B3] ?? null) === $functionSites,
@@ -77,7 +83,7 @@ try {
 	);
 
 	$strictRows = $historical;
-	foreach ($findings as $finding) {
+	foreach ($activeFindings as $finding) {
 		$strictRows[] = array_intersect_key($finding, array_flip(array('file', 'line', 'column', 'type', 'code', 'message', 'docs')));
 	}
 	$baselineGate = BVMGR_WPORG_Prefix_Scanner_Inventory::gate($root, $inventory, $strictRows, $manifest);
@@ -95,7 +101,8 @@ try {
 	$withoutOneB3 = array_values($withoutOneB3);
 	$progressGate = BVMGR_WPORG_Prefix_Scanner_Inventory::gate($root, $inventory, $withoutOneB3, $manifest);
 	$assert(($progressGate['status'] ?? '') === 'PASS', 'Removing a mapped B3 finding must count as monotonic migration progress.');
-	$assert(($progressGate['removed_authoritative_findings'] ?? 0) === 1, 'Monotonic gate must report the removed B3 finding.');
+	$alreadyMigratedSites = (int) ($manifest['completed_batches']['B3']['counts']['migrated_declaration_sites'] ?? 0);
+	$assert(($progressGate['removed_authoritative_findings'] ?? 0) === $alreadyMigratedSites + 1, 'Monotonic gate must report prior B3 progress plus the one newly removed finding.');
 
 	$unknownGlobalRows = $strictRows;
 	$unknownGlobalRows[] = array(
@@ -115,7 +122,7 @@ try {
 	$completedB3Manifest['completed_batches']['B3'] = array('status' => 'complete');
 	$completedB3Gate = BVMGR_WPORG_Prefix_Scanner_Inventory::gate($root, $inventory, $strictRows, $completedB3Manifest);
 	$assert(($completedB3Gate['status'] ?? '') === 'FAIL', 'B3 findings must fail after B3 is marked complete.');
-	$assert(count((array) ($completedB3Gate['completed_batch_residuals'] ?? array())) === $functionSites, 'All remaining B3 rows must be reported after B3 completion.');
+	$assert(count((array) ($completedB3Gate['completed_batch_residuals'] ?? array())) === $remainingB3Sites, 'All currently remaining B3 rows must be reported after B3 completion.');
 } catch (Throwable $exception) {
 	$failures[] = $exception->getMessage();
 }

@@ -192,10 +192,10 @@ require dirname(__DIR__) . '/includes/activation.php';
 
 vms_legacy_square_cleanup_assert(
 	isset($GLOBALS['vms_test_actions']['vms_square_nightly_sync'][0])
-	&& $GLOBALS['vms_test_actions']['vms_square_nightly_sync'][0] === 'vms_retired_square_nightly_sync_callback',
+	&& $GLOBALS['vms_test_actions']['vms_square_nightly_sync'][0] === 'bvmgr_retired_square_nightly_sync_callback',
 	'The retired Square nightly sync hook should register a no-op callback.'
 );
-vms_retired_square_nightly_sync_callback();
+bvmgr_retired_square_nightly_sync_callback();
 
 $GLOBALS['vms_test_wp_cron'] = array(
 	100 => array(
@@ -210,7 +210,7 @@ $GLOBALS['vms_test_wp_cron'] = array(
 );
 $GLOBALS['vms_test_unschedule_hook_calls'] = array();
 $GLOBALS['vms_test_cleared_hooks'] = array();
-$cronPreferred = vms_cleanup_legacy_square_nightly_sync_wp_cron(vms_legacy_square_nightly_sync_hook_name());
+$cronPreferred = bvmgr_cleanup_legacy_square_nightly_sync_wp_cron(bvmgr_legacy_square_nightly_sync_hook_name());
 vms_legacy_square_cleanup_assert($cronPreferred['method'] === 'wp_unschedule_hook', 'The preferred WP-Cron cleanup should use wp_unschedule_hook when available.');
 vms_legacy_square_cleanup_assert(!empty($cronPreferred['complete']), 'The preferred WP-Cron cleanup should complete when wp_unschedule_hook succeeds.');
 vms_legacy_square_cleanup_assert($cronPreferred['found'] === 2 && $cronPreferred['cleared'] === 2, 'The preferred WP-Cron cleanup should remove all retired-hook argument variants.');
@@ -233,7 +233,7 @@ $GLOBALS['vms_test_wp_cron'] = array(
 );
 $GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_unschedule_hook_calls'] = array();
-$cronPreferredFalse = vms_run_legacy_square_nightly_sync_cleanup(array(
+$cronPreferredFalse = bvmgr_run_legacy_square_nightly_sync_cleanup(array(
 	'action_scheduler_store' => new VmsLegacySquareCleanupFakeStore(array()),
 	'wp_unschedule_hook_callback' => static function (string $hook) {
 		$GLOBALS['vms_test_unschedule_hook_calls'][] = $hook;
@@ -245,7 +245,7 @@ vms_legacy_square_cleanup_assert(empty($cronPreferredFalse['complete']), 'Overal
 vms_legacy_square_cleanup_assert($cronPreferredFalse['cron']['remaining'] === 2, 'A false wp_unschedule_hook result should leave retired-hook cron entries detectable.');
 vms_legacy_square_cleanup_assert($cronPreferredFalse['cron']['failed_calls'] === 1, 'A false wp_unschedule_hook result should be recorded as a failed cleanup call.');
 vms_legacy_square_cleanup_assert($cronPreferredFalse['cron']['failure_codes'] === array('wp_unschedule_hook_returned_false'), 'A false wp_unschedule_hook result should preserve its failure code.');
-vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()]), 'A false wp_unschedule_hook result must not persist the cleanup marker.');
+vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()]), 'A false wp_unschedule_hook result must not persist the cleanup marker.');
 vms_legacy_square_cleanup_assert(isset($GLOBALS['vms_test_wp_cron'][150]['vms_square_nightly_sync']), 'A false wp_unschedule_hook result should not make remaining retired-hook cron entries look cleared.');
 vms_legacy_square_cleanup_assert(isset($GLOBALS['vms_test_wp_cron'][150]['vms_other_hook']), 'A false wp_unschedule_hook result should leave unrelated cron hooks untouched.');
 
@@ -261,7 +261,7 @@ $GLOBALS['vms_test_wp_cron'] = array(
 	),
 );
 $GLOBALS['vms_test_options'] = array();
-$cronPreferredError = vms_run_legacy_square_nightly_sync_cleanup(array(
+$cronPreferredError = bvmgr_run_legacy_square_nightly_sync_cleanup(array(
 	'action_scheduler_store' => new VmsLegacySquareCleanupFakeStore(array()),
 	'wp_unschedule_hook_callback' => static function (string $hook) {
 		unset($hook);
@@ -272,7 +272,7 @@ vms_legacy_square_cleanup_assert(empty($cronPreferredError['cron']['complete']),
 vms_legacy_square_cleanup_assert(empty($cronPreferredError['complete']), 'Overall cleanup should remain incomplete when wp_unschedule_hook returns WP_Error.');
 vms_legacy_square_cleanup_assert($cronPreferredError['cron']['remaining'] === 2, 'A WP_Error wp_unschedule_hook result should leave retired-hook cron entries detectable.');
 vms_legacy_square_cleanup_assert($cronPreferredError['cron']['failure_codes'] === array('wp_unschedule_hook_wp_error'), 'A WP_Error wp_unschedule_hook result should preserve its failure code.');
-vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()]), 'A WP_Error wp_unschedule_hook result must not persist the cleanup marker.');
+vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()]), 'A WP_Error wp_unschedule_hook result must not persist the cleanup marker.');
 vms_legacy_square_cleanup_assert(isset($GLOBALS['vms_test_wp_cron'][175]['vms_other_hook']), 'A WP_Error wp_unschedule_hook result should leave unrelated cron hooks untouched.');
 
 $GLOBALS['vms_test_wp_cron'] = array(
@@ -287,7 +287,7 @@ $GLOBALS['vms_test_wp_cron'] = array(
 	),
 );
 $GLOBALS['vms_test_cleared_hooks'] = array();
-$cronFallback = vms_cleanup_legacy_square_nightly_sync_wp_cron_fallback(vms_legacy_square_nightly_sync_hook_name());
+$cronFallback = bvmgr_cleanup_legacy_square_nightly_sync_wp_cron_fallback(bvmgr_legacy_square_nightly_sync_hook_name());
 vms_legacy_square_cleanup_assert($cronFallback['found'] === 2, 'Fallback WP-Cron cleanup should detect both empty-arg and non-empty-arg legacy entries.');
 vms_legacy_square_cleanup_assert($cronFallback['cleared'] === 2, 'Fallback WP-Cron cleanup should clear every legacy argument variant.');
 vms_legacy_square_cleanup_assert(!empty($cronFallback['complete']) && $cronFallback['remaining'] === 0, 'Fallback WP-Cron cleanup should verify that no retired-hook cron entries remain.');
@@ -320,7 +320,7 @@ $GLOBALS['vms_test_wp_cron'] = array(
 	),
 );
 $GLOBALS['vms_test_cleared_hooks'] = array();
-$cronFallbackFailure = vms_cleanup_legacy_square_nightly_sync_wp_cron(vms_legacy_square_nightly_sync_hook_name(), array(
+$cronFallbackFailure = bvmgr_cleanup_legacy_square_nightly_sync_wp_cron(bvmgr_legacy_square_nightly_sync_hook_name(), array(
 	'force_wp_cron_fallback' => true,
 	'wp_clear_scheduled_hook_callback' => $failingFallbackCallback,
 ));
@@ -344,14 +344,14 @@ $GLOBALS['vms_test_wp_cron'] = array(
 		),
 	),
 );
-$cronFallbackOverallFailure = vms_run_legacy_square_nightly_sync_cleanup(array(
+$cronFallbackOverallFailure = bvmgr_run_legacy_square_nightly_sync_cleanup(array(
 	'action_scheduler_store' => new VmsLegacySquareCleanupFakeStore(array()),
 	'force_wp_cron_fallback' => true,
 	'wp_clear_scheduled_hook_callback' => $failingFallbackCallback,
 ));
 vms_legacy_square_cleanup_assert(empty($cronFallbackOverallFailure['complete']), 'Overall cleanup should remain incomplete when a fallback clear call fails.');
 vms_legacy_square_cleanup_assert(empty($cronFallbackOverallFailure['cron']['complete']), 'Overall cleanup should preserve incomplete fallback WP-Cron status.');
-vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()]), 'A failed fallback clear must not persist the cleanup marker.');
+vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()]), 'A failed fallback clear must not persist the cleanup marker.');
 
 $disposableStore = new VmsLegacySquareCleanupFakeStore(array(
 	11 => array('hook' => 'vms_square_nightly_sync', 'status' => 'pending'),
@@ -363,7 +363,7 @@ $disposableStore = new VmsLegacySquareCleanupFakeStore(array(
 $GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_wp_cron'] = array();
-$cleanupComplete = vms_run_legacy_square_nightly_sync_cleanup(array(
+$cleanupComplete = bvmgr_run_legacy_square_nightly_sync_cleanup(array(
 	'action_scheduler_store' => $disposableStore,
 ));
 vms_legacy_square_cleanup_assert(!empty($cleanupComplete['complete']), 'Legacy Square cleanup should complete when exact-hook cron and Action Scheduler cleanup both succeed.');
@@ -377,7 +377,7 @@ vms_legacy_square_cleanup_assert($cleanupComplete['action_scheduler']['post_canc
 vms_legacy_square_cleanup_assert($cleanupComplete['action_scheduler']['remaining_found'] === 0, 'Legacy Square cleanup should verify that no retired-hook Action Scheduler rows remain after a completed pass.');
 vms_legacy_square_cleanup_assert(!isset($disposableStore->actions[11]) && !isset($disposableStore->actions[12]) && !isset($disposableStore->actions[13]), 'Legacy Square cleanup should remove all disposable retired-hook Action Scheduler records.');
 vms_legacy_square_cleanup_assert(isset($disposableStore->actions[21]) && isset($disposableStore->actions[22]), 'Legacy Square cleanup should not touch unrelated Action Scheduler hooks.');
-vms_legacy_square_cleanup_assert(($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()] ?? '') === '1', 'Legacy Square cleanup should persist its completion marker only after full cleanup succeeds.');
+vms_legacy_square_cleanup_assert(($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()] ?? '') === '1', 'Legacy Square cleanup should persist its completion marker only after full cleanup succeeds.');
 
 $queryNullStore = new VmsLegacySquareCleanupFakeStore(
 	array(
@@ -390,13 +390,13 @@ $queryNullStore = new VmsLegacySquareCleanupFakeStore(
 );
 $GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_wp_cron'] = array();
-$cleanupQueryNull = vms_run_legacy_square_nightly_sync_cleanup(array(
+$cleanupQueryNull = bvmgr_run_legacy_square_nightly_sync_cleanup(array(
 	'action_scheduler_store' => $queryNullStore,
 ));
 vms_legacy_square_cleanup_assert(empty($cleanupQueryNull['action_scheduler']['complete']), 'Action Scheduler cleanup should remain incomplete when query_actions returns null.');
 vms_legacy_square_cleanup_assert(empty($cleanupQueryNull['complete']), 'Overall cleanup should remain incomplete when query_actions returns null.');
 vms_legacy_square_cleanup_assert(!empty($cleanupQueryNull['action_scheduler']['query_failed']), 'Action Scheduler cleanup should report query failure when query_actions returns null.');
-vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()]), 'A null Action Scheduler query result must not persist the cleanup marker.');
+vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()]), 'A null Action Scheduler query result must not persist the cleanup marker.');
 vms_legacy_square_cleanup_assert(isset($queryNullStore->actions[41]) && isset($queryNullStore->actions[51]), 'A null Action Scheduler query result should leave targeted and unrelated actions untouched.');
 
 $queryFalseStore = new VmsLegacySquareCleanupFakeStore(
@@ -410,20 +410,20 @@ $queryFalseStore = new VmsLegacySquareCleanupFakeStore(
 );
 $GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_wp_cron'] = array();
-$cleanupQueryFalse = vms_run_legacy_square_nightly_sync_cleanup(array(
+$cleanupQueryFalse = bvmgr_run_legacy_square_nightly_sync_cleanup(array(
 	'action_scheduler_store' => $queryFalseStore,
 ));
 vms_legacy_square_cleanup_assert(empty($cleanupQueryFalse['action_scheduler']['complete']), 'Action Scheduler cleanup should remain incomplete when query_actions returns false.');
 vms_legacy_square_cleanup_assert(empty($cleanupQueryFalse['complete']), 'Overall cleanup should remain incomplete when query_actions returns false.');
 vms_legacy_square_cleanup_assert(!empty($cleanupQueryFalse['action_scheduler']['query_failed']), 'Action Scheduler cleanup should report query failure when query_actions returns false.');
-vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()]), 'A false Action Scheduler query result must not persist the cleanup marker.');
+vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()]), 'A false Action Scheduler query result must not persist the cleanup marker.');
 vms_legacy_square_cleanup_assert(isset($queryFalseStore->actions[61]) && isset($queryFalseStore->actions[71]), 'A false Action Scheduler query result should leave targeted and unrelated actions untouched.');
 
 $GLOBALS['vms_test_options'] = array();
-$cleanupUnavailable = vms_run_legacy_square_nightly_sync_cleanup();
+$cleanupUnavailable = bvmgr_run_legacy_square_nightly_sync_cleanup();
 vms_legacy_square_cleanup_assert(empty($cleanupUnavailable['complete']), 'Legacy Square cleanup should remain incomplete when Action Scheduler is unavailable.');
 vms_legacy_square_cleanup_assert(empty($cleanupUnavailable['action_scheduler']['available']), 'Legacy Square cleanup should report Action Scheduler unavailable when no store is available.');
-vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()]), 'Legacy Square cleanup should not set the completion marker when Action Scheduler is unavailable.');
+vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()]), 'Legacy Square cleanup should not set the completion marker when Action Scheduler is unavailable.');
 
 $limitedStore = new VmsLegacySquareCleanupFakeStore(array(
 	31 => array('hook' => 'vms_square_nightly_sync', 'status' => 'failed'),
@@ -431,20 +431,20 @@ $limitedStore = new VmsLegacySquareCleanupFakeStore(array(
 	33 => array('hook' => 'vms_square_nightly_sync', 'status' => 'failed'),
 ));
 $GLOBALS['vms_test_options'] = array();
-$cleanupLimited = vms_run_legacy_square_nightly_sync_cleanup(array(
+$cleanupLimited = bvmgr_run_legacy_square_nightly_sync_cleanup(array(
 	'action_scheduler_store' => $limitedStore,
 	'batch_size' => 2,
 	'max_batches' => 1,
 ));
 vms_legacy_square_cleanup_assert(empty($cleanupLimited['complete']), 'Legacy Square cleanup should remain incomplete when the batch limit is reached.');
 vms_legacy_square_cleanup_assert(!empty($cleanupLimited['action_scheduler']['batch_limit_reached']), 'Legacy Square cleanup should report when the Action Scheduler batch limit is reached.');
-vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][vms_legacy_square_nightly_sync_cleanup_marker_key()]), 'Legacy Square cleanup should not set the completion marker when cleanup remains incomplete.');
+vms_legacy_square_cleanup_assert(!isset($GLOBALS['vms_test_options'][bvmgr_legacy_square_nightly_sync_cleanup_marker_key()]), 'Legacy Square cleanup should not set the completion marker when cleanup remains incomplete.');
 
 $idempotentStore = new VmsLegacySquareCleanupFakeStore(array());
-$idempotentFirst = vms_cleanup_legacy_square_nightly_sync_action_scheduler(vms_legacy_square_nightly_sync_hook_name(), array(
+$idempotentFirst = bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler(bvmgr_legacy_square_nightly_sync_hook_name(), array(
 	'action_scheduler_store' => $idempotentStore,
 ));
-$idempotentSecond = vms_cleanup_legacy_square_nightly_sync_action_scheduler(vms_legacy_square_nightly_sync_hook_name(), array(
+$idempotentSecond = bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler(bvmgr_legacy_square_nightly_sync_hook_name(), array(
 	'action_scheduler_store' => $idempotentStore,
 ));
 vms_legacy_square_cleanup_assert(!empty($idempotentFirst['complete']) && !empty($idempotentSecond['complete']), 'Repeated completed Action Scheduler cleanup should stay complete.');

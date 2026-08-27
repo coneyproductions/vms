@@ -2313,8 +2313,8 @@ if (!function_exists('vms_resource_fingerprint_track_plugin_lifecycle')) {
 	function vms_resource_fingerprint_track_plugin_lifecycle(string $flag, string $plugin_file): void
 	{
 		$plugin_file = trim($plugin_file);
-		$recognized_plugin_files = function_exists('vms_recognized_plugin_lifecycle_basenames')
-			? vms_recognized_plugin_lifecycle_basenames()
+		$recognized_plugin_files = function_exists('bvmgr_recognized_plugin_lifecycle_basenames')
+			? bvmgr_recognized_plugin_lifecycle_basenames()
 			: array(
 				'backstage-venue-manager/backstage-venue-manager.php',
 				'backstage-venue-manager/vendor-management-system.php',
