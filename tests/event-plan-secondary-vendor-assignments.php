@@ -339,8 +339,8 @@ try {
 		: array('ok' => true);
 	$assert(empty($foodInterest['ok']), 'ADD should not treat a filled Food Vendor slot as open just because another vendor type still has capacity.');
 
-	$assert(function_exists('vms_vendor_type_label') && vms_vendor_type_label('band') === 'Music Vendor', 'The band vendor type should display as Music Vendor.');
-	$assert(function_exists('vms_vendor_type_label') && vms_vendor_type_label('food_truck') === 'Food Vendor', 'The food_truck vendor type should display as Food Vendor.');
+	$assert(function_exists('bvmgr_vendor_type_label') && bvmgr_vendor_type_label('band') === 'Music Vendor', 'The band vendor type should display as Music Vendor.');
+	$assert(function_exists('bvmgr_vendor_type_label') && bvmgr_vendor_type_label('food_truck') === 'Food Vendor', 'The food_truck vendor type should display as Food Vendor.');
 
 	fwrite(STDOUT, "event plan secondary vendor assignments regression: PASS\n");
 } catch (Throwable $e) {

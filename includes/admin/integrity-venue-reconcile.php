@@ -10,8 +10,8 @@ if (!defined('ABSPATH')) exit;
  *   without silently auto-publishing anything.
  */
 
-add_action('admin_post_vms_integrity_venue_links_action', 'vms_handle_integrity_venue_links_action');
-function vms_handle_integrity_venue_links_action(): void
+add_action('admin_post_vms_integrity_venue_links_action', 'bvmgr_handle_integrity_venue_links_action');
+function bvmgr_handle_integrity_venue_links_action(): void
 {
   if (!current_user_can('manage_options')) {
     wp_die('Insufficient permissions.');
@@ -97,7 +97,7 @@ function vms_handle_integrity_venue_links_action(): void
 }
 
 
-function vms_render_integrity_venue_reconcile_notice(): void
+function bvmgr_render_integrity_venue_reconcile_notice(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity notice state only affects admin messaging.
   $msg = bvmgr_request_read_key($_GET, 'vms_msg');
@@ -113,12 +113,12 @@ function vms_render_integrity_venue_reconcile_notice(): void
   }
 }
 
-function vms_render_integrity_venue_reconcile_page_intro(): void
+function bvmgr_render_integrity_venue_reconcile_page_intro(): void
 {
   echo '<p class="description">Review Event Plans that reference Venues in the Trash, missing Venues, or Venues that are not published. This is intentionally review-first and does not auto-publish restored Venues.</p>';
 }
 
-function vms_render_integrity_venue_reconcile_page(): void
+function bvmgr_render_integrity_venue_reconcile_page(): void
 {
   if (!current_user_can('manage_options')) {
     wp_die('Insufficient permissions.');
@@ -139,27 +139,27 @@ function vms_render_integrity_venue_reconcile_page(): void
         'title' => __('Integrity: Venue Links', 'backstage-venue-manager'),
         'actions_html' => $actions_html,
         'content_class' => 'vms-admin-shell__content--integrity',
-        'rich_notices_callback' => 'vms_render_integrity_venue_reconcile_notice',
+        'rich_notices_callback' => 'bvmgr_render_integrity_venue_reconcile_notice',
       ),
-      'vms_render_integrity_venue_reconcile_page_content'
+      'bvmgr_render_integrity_venue_reconcile_page_content'
     );
     return;
   }
 
   echo '<div class="wrap"><h1>' . esc_html__('Integrity: Venue Links', 'backstage-venue-manager') . '</h1>';
-  vms_render_integrity_venue_reconcile_page_intro();
-  vms_render_integrity_venue_reconcile_notice();
-  vms_render_integrity_venue_reconcile_page_sections();
+  bvmgr_render_integrity_venue_reconcile_page_intro();
+  bvmgr_render_integrity_venue_reconcile_notice();
+  bvmgr_render_integrity_venue_reconcile_page_sections();
   echo '</div>';
 }
 
-function vms_render_integrity_venue_reconcile_page_content(): void
+function bvmgr_render_integrity_venue_reconcile_page_content(): void
 {
-  vms_render_integrity_venue_reconcile_page_intro();
-  vms_render_integrity_venue_reconcile_page_sections();
+  bvmgr_render_integrity_venue_reconcile_page_intro();
+  bvmgr_render_integrity_venue_reconcile_page_sections();
 }
 
-function vms_render_integrity_venue_reconcile_page_sections(): void
+function bvmgr_render_integrity_venue_reconcile_page_sections(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity filters only bound the diagnostic result size.
   $limit = bvmgr_request_read_absint($_GET, 'limit');

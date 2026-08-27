@@ -1199,8 +1199,8 @@ function vms_field_availability_date_dispatch_enabled()
 
 function vms_field_vendor_doc_submission_notifications()
 {
-  $settings = function_exists('vms_vendor_submission_alert_settings')
-    ? vms_vendor_submission_alert_settings()
+  $settings = function_exists('bvmgr_vendor_submission_alert_settings')
+    ? bvmgr_vendor_submission_alert_settings()
     : array(
         'vendor_doc_submission_notify_enabled' => 1,
         'vendor_doc_submission_notify_target' => 'site_admin',
@@ -1215,8 +1215,8 @@ function vms_field_vendor_doc_submission_notifications()
   $role = isset($settings['vendor_doc_submission_notify_role']) ? sanitize_key((string) $settings['vendor_doc_submission_notify_role']) : '';
   $capability = isset($settings['vendor_doc_submission_notify_capability']) ? sanitize_key((string) $settings['vendor_doc_submission_notify_capability']) : '';
 
-  $target_options = function_exists('vms_vendor_submission_recipient_mode_options')
-    ? vms_vendor_submission_recipient_mode_options()
+  $target_options = function_exists('bvmgr_vendor_submission_recipient_mode_options')
+    ? bvmgr_vendor_submission_recipient_mode_options()
     : array(
         'site_admin' => __('Site admin email', 'backstage-venue-manager'),
         'user' => __('Specific WordPress user', 'backstage-venue-manager'),

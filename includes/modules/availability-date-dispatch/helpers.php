@@ -154,11 +154,11 @@ if (!function_exists('vms_add_dispatch_type_options')) {
 				continue;
 			}
 
-			$slug = function_exists('vms_vendor_type_canonical_slug_for_term')
-				? vms_vendor_type_canonical_slug_for_term($term)
+			$slug = function_exists('bvmgr_vendor_type_canonical_slug_for_term')
+				? bvmgr_vendor_type_canonical_slug_for_term($term)
 				: sanitize_title((string) $term->slug);
-			$label = function_exists('vms_vendor_type_label')
-				? (string) vms_vendor_type_label($slug !== '' ? $slug : (string) $term->slug)
+			$label = function_exists('bvmgr_vendor_type_label')
+				? (string) bvmgr_vendor_type_label($slug !== '' ? $slug : (string) $term->slug)
 				: (string) $term->name;
 			if ($slug === '' || trim($label) === '') {
 				continue;
@@ -174,8 +174,8 @@ if (!function_exists('vms_add_dispatch_type_options')) {
 if (!function_exists('vms_add_dispatch_type_label')) {
 	function vms_add_dispatch_type_label(string $slug): string
 	{
-		$slug = function_exists('vms_vendor_type_normalize_slug')
-			? (string) vms_vendor_type_normalize_slug($slug)
+		$slug = function_exists('bvmgr_vendor_type_normalize_slug')
+			? (string) bvmgr_vendor_type_normalize_slug($slug)
 			: (function_exists('bvmgr_event_plan_normalize_secondary_vendor_type_slug')
 				? (string) bvmgr_event_plan_normalize_secondary_vendor_type_slug($slug)
 				: sanitize_title($slug));
@@ -267,8 +267,8 @@ if (!function_exists('vms_add_dispatch_secondary_group_rows')) {
 	{
 		$rows = array();
 		foreach ($assignments as $type_slug => $assignment) {
-			$type_slug = function_exists('vms_vendor_type_normalize_slug')
-				? vms_vendor_type_normalize_slug((string) $type_slug)
+			$type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
+				? bvmgr_vendor_type_normalize_slug((string) $type_slug)
 				: sanitize_title((string) $type_slug);
 			if ($type_slug === '') {
 				continue;
@@ -564,8 +564,8 @@ if (!function_exists('vms_add_dispatch_default_vendor_type')) {
 
 		if ($target_mode === 'secondary') {
 			foreach ((array) ($context['missing_secondary_types'] ?? array()) as $candidate_type) {
-				$secondary_type = function_exists('vms_vendor_type_normalize_slug')
-					? vms_vendor_type_normalize_slug((string) $candidate_type)
+				$secondary_type = function_exists('bvmgr_vendor_type_normalize_slug')
+					? bvmgr_vendor_type_normalize_slug((string) $candidate_type)
 					: sanitize_title((string) $candidate_type);
 				if (isset($options[$secondary_type])) {
 					return $secondary_type;
@@ -573,8 +573,8 @@ if (!function_exists('vms_add_dispatch_default_vendor_type')) {
 			}
 
 			if (!empty($context['secondary_vendor_type'])) {
-				$secondary_type = function_exists('vms_vendor_type_normalize_slug')
-					? vms_vendor_type_normalize_slug((string) $context['secondary_vendor_type'])
+				$secondary_type = function_exists('bvmgr_vendor_type_normalize_slug')
+					? bvmgr_vendor_type_normalize_slug((string) $context['secondary_vendor_type'])
 					: sanitize_title((string) $context['secondary_vendor_type']);
 				if (isset($options[$secondary_type])) {
 					return $secondary_type;
@@ -599,8 +599,8 @@ if (!function_exists('vms_add_dispatch_default_message')) {
 	function vms_add_dispatch_default_message(array $context, array $builder_args): string
 	{
 		$target_mode = sanitize_key((string) ($builder_args['target_mode'] ?? 'secondary'));
-		$vendor_type = function_exists('vms_vendor_type_normalize_slug')
-			? vms_vendor_type_normalize_slug((string) ($builder_args['vendor_type'] ?? ''))
+		$vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+			? bvmgr_vendor_type_normalize_slug((string) ($builder_args['vendor_type'] ?? ''))
 			: sanitize_key(str_replace('-', '_', (string) ($builder_args['vendor_type'] ?? '')));
 		$role_label = $target_mode === 'primary'
 			? __('primary vendor', 'backstage-venue-manager')
@@ -673,8 +673,8 @@ if (!function_exists('vms_add_dispatch_get_event_plan_context')) {
 			return !empty($row['is_open']);
 		}));
 		$missing_secondary_types = array_values(array_unique(array_filter(array_map(static function (array $row): string {
-			return function_exists('vms_vendor_type_normalize_slug')
-				? vms_vendor_type_normalize_slug((string) ($row['type_slug'] ?? ''))
+			return function_exists('bvmgr_vendor_type_normalize_slug')
+				? bvmgr_vendor_type_normalize_slug((string) ($row['type_slug'] ?? ''))
 				: sanitize_key(str_replace('-', '_', (string) ($row['type_slug'] ?? '')));
 		}, $missing_secondary_groups))));
 
@@ -754,8 +754,8 @@ if (!function_exists('vms_add_dispatch_parse_builder_args')) {
 			$target_mode = $context ? vms_add_dispatch_default_target_mode($context) : 'secondary';
 		}
 
-		$vendor_type = function_exists('vms_vendor_type_normalize_slug')
-			? vms_vendor_type_normalize_slug((string) ($source['vendor_type'] ?? ''))
+		$vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+			? bvmgr_vendor_type_normalize_slug((string) ($source['vendor_type'] ?? ''))
 			: sanitize_key(str_replace('-', '_', (string) ($source['vendor_type'] ?? '')));
 		$options = vms_add_dispatch_type_options();
 		if ($vendor_type === '' || !isset($options[$vendor_type])) {
@@ -823,8 +823,8 @@ if (!function_exists('vms_add_dispatch_vendor_email')) {
 		}
 
 		$user_ids = array();
-		if (function_exists('vms_vendor_user_links_get_by_vendor')) {
-			foreach ((array) vms_vendor_user_links_get_by_vendor($vendor_id, false) as $row) {
+		if (function_exists('bvmgr_vendor_user_links_get_by_vendor')) {
+			foreach ((array) bvmgr_vendor_user_links_get_by_vendor($vendor_id, false) as $row) {
 				$user_id = absint($row['user_id'] ?? 0);
 				if ($user_id > 0) {
 					$user_ids[] = $user_id;
@@ -883,8 +883,8 @@ if (!function_exists('vms_add_dispatch_collect_recipient_candidates')) {
 
 		$event_plan_id = (int) ($context['event_plan_id'] ?? 0);
 		$event_date = (string) ($context['event_date'] ?? '');
-		$vendor_type = function_exists('vms_vendor_type_normalize_slug')
-			? vms_vendor_type_normalize_slug((string) ($builder_args['vendor_type'] ?? ''))
+		$vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+			? bvmgr_vendor_type_normalize_slug((string) ($builder_args['vendor_type'] ?? ''))
 			: sanitize_key(str_replace('-', '_', (string) ($builder_args['vendor_type'] ?? '')));
 		if ($event_plan_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date) || $vendor_type === '') {
 			return array();
@@ -1813,8 +1813,8 @@ if (!function_exists('vms_add_dispatch_resolve_vendor_interest_target')) {
 
 		$missing = array_map('sanitize_key', (array) ($context['missing_slots'] ?? array()));
 		$missing_secondary_types = array_values(array_unique(array_filter(array_map(static function ($type_slug): string {
-			return function_exists('vms_vendor_type_normalize_slug')
-				? vms_vendor_type_normalize_slug((string) $type_slug)
+			return function_exists('bvmgr_vendor_type_normalize_slug')
+				? bvmgr_vendor_type_normalize_slug((string) $type_slug)
 				: sanitize_title((string) $type_slug);
 		}, (array) ($context['missing_secondary_types'] ?? array())))));
 
@@ -2296,8 +2296,8 @@ if (!function_exists('vms_add_dispatch_assign_vendor_to_plan')) {
 	{
 		$labels = array();
 		foreach ($type_slugs as $type_slug) {
-			$type_slug = function_exists('vms_vendor_type_normalize_slug')
-				? (string) vms_vendor_type_normalize_slug((string) $type_slug)
+			$type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
+				? (string) bvmgr_vendor_type_normalize_slug((string) $type_slug)
 				: sanitize_key((string) $type_slug);
 			if ($type_slug === '') {
 				continue;
@@ -2337,13 +2337,13 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 		}
 
 		$target_mode = sanitize_key((string) ($request['target_mode'] ?? 'secondary'));
-		$original_type = function_exists('vms_vendor_type_normalize_slug')
-			? vms_vendor_type_normalize_slug((string) ($request['vendor_type'] ?? ''))
+		$original_type = function_exists('bvmgr_vendor_type_normalize_slug')
+			? bvmgr_vendor_type_normalize_slug((string) ($request['vendor_type'] ?? ''))
 			: sanitize_key(str_replace('-', '_', (string) ($request['vendor_type'] ?? '')));
 		$current_types = vms_add_dispatch_vendor_type_slugs($vendor_id);
 		$current_types = array_values(array_unique(array_filter(array_map(static function ($type_slug): string {
-			return function_exists('vms_vendor_type_normalize_slug')
-				? (string) vms_vendor_type_normalize_slug((string) $type_slug)
+			return function_exists('bvmgr_vendor_type_normalize_slug')
+				? (string) bvmgr_vendor_type_normalize_slug((string) $type_slug)
 				: sanitize_key((string) $type_slug);
 		}, $current_types))));
 		$additional_options = function_exists('bvmgr_event_plan_additional_vendor_type_options')
@@ -2379,8 +2379,8 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 		if ($default_type === '' && !empty($eligible_types)) {
 			$default_type = (string) $eligible_types[0];
 		}
-		$selected_type = function_exists('vms_vendor_type_normalize_slug')
-			? (string) vms_vendor_type_normalize_slug($selected_type)
+		$selected_type = function_exists('bvmgr_vendor_type_normalize_slug')
+			? (string) bvmgr_vendor_type_normalize_slug($selected_type)
 			: sanitize_key($selected_type);
 		if ($selected_type === '' || !in_array($selected_type, $eligible_types, true)) {
 			$selected_type = $default_type;
@@ -2498,8 +2498,8 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 		$event_plan_id = (int) ($review['event_plan_id'] ?? 0);
 		$vendor_id = (int) ($review['vendor_id'] ?? 0);
 		$target_mode = sanitize_key((string) ($review['target_mode'] ?? 'secondary'));
-		$vendor_type = function_exists('vms_vendor_type_normalize_slug')
-			? vms_vendor_type_normalize_slug($target_type)
+		$vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+			? bvmgr_vendor_type_normalize_slug($target_type)
 			: sanitize_key($target_type);
 
 		if ($event_plan_id <= 0 || get_post_type($event_plan_id) !== 'vms_event_plan') {

@@ -832,11 +832,11 @@ if (!function_exists('bvmgr_private_w9_user_can_download')) {
 		$user_id = get_current_user_id();
 		$post_type = get_post_type($post_id);
 		if ($post_type === 'vms_vendor') {
-			if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $post_id)) {
+			if (function_exists('bvmgr_user_can_access_vendor') && bvmgr_user_can_access_vendor($user_id, $post_id)) {
 				return true;
 			}
-			if (function_exists('vms_get_active_vendor_ids_for_user')) {
-				$vendor_ids = array_map('absint', (array) vms_get_active_vendor_ids_for_user($user_id));
+			if (function_exists('bvmgr_get_active_vendor_ids_for_user')) {
+				$vendor_ids = array_map('absint', (array) bvmgr_get_active_vendor_ids_for_user($user_id));
 				return in_array($post_id, $vendor_ids, true);
 			}
 		}

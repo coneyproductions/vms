@@ -1255,8 +1255,8 @@ foreach ($iterator as $file) {
 $noticesCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedMatches);
 $richNoticesCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedRichMatches);
 $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
-$calendarRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]vms_render_integrity_calendar_reconcile_notice[\'"]~', $allIncludeSource, $unusedCalendarRichMatches);
-$venueRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]vms_render_integrity_venue_reconcile_notice[\'"]~', $allIncludeSource, $unusedVenueRichMatches);
+$calendarRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]bvmgr_render_integrity_calendar_reconcile_notice[\'"]~', $allIncludeSource, $unusedCalendarRichMatches);
+$venueRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]bvmgr_render_integrity_venue_reconcile_notice[\'"]~', $allIncludeSource, $unusedVenueRichMatches);
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
@@ -1363,14 +1363,14 @@ $assert($GLOBALS['vms_test_rich_notice_callback_calls'] === 1, 'Empty rich expli
 $assert(strpos($richShellEmptyOutput, 'vms-shell-notice') === false, 'Empty rich explicit notice output should render nothing in the notice region.');
 $assert(strpos($richShellEmptyOutput, 'Silent body') !== false, 'Empty rich explicit notice output should not block ordinary content rendering.');
 
-$assert(strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_notice(): void') !== false, 'Venue Reconciliation should expose a dedicated rich notice callback.');
-$venueNoticeStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_notice(): void');
-$venueNoticeEnd = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_intro(): void');
-$venuePageStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page(): void');
-$venuePageEnd = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_content(): void');
-$venueContentStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_content(): void');
-$venueContentEnd = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_sections(): void');
-$venueSectionsStart = strpos($venueReconcileSource, 'function vms_render_integrity_venue_reconcile_page_sections(): void');
+$assert(strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_notice(): void') !== false, 'Venue Reconciliation should expose a dedicated rich notice callback.');
+$venueNoticeStart = strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_notice(): void');
+$venueNoticeEnd = strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_page_intro(): void');
+$venuePageStart = strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_page(): void');
+$venuePageEnd = strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_page_content(): void');
+$venueContentStart = strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_page_content(): void');
+$venueContentEnd = strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_page_sections(): void');
+$venueSectionsStart = strpos($venueReconcileSource, 'function bvmgr_render_integrity_venue_reconcile_page_sections(): void');
 $assert($venueNoticeStart !== false && $venueNoticeEnd !== false && $venueNoticeEnd > $venueNoticeStart, 'Venue Reconciliation rich notice callback body should be locatable.');
 $assert($venuePageStart !== false && $venuePageEnd !== false && $venuePageEnd > $venuePageStart, 'Venue Reconciliation page renderer body should be locatable.');
 $assert($venueContentStart !== false && $venueContentEnd !== false && $venueContentEnd > $venueContentStart, 'Venue Reconciliation content callback body should be locatable.');
@@ -1379,15 +1379,15 @@ $venueNoticeSource = substr($venueReconcileSource, (int) $venueNoticeStart, (int
 $venuePageSource = substr($venueReconcileSource, (int) $venuePageStart, (int) $venuePageEnd - (int) $venuePageStart);
 $venueContentSource = substr($venueReconcileSource, (int) $venueContentStart, (int) $venueContentEnd - (int) $venueContentStart);
 $venueSectionsSource = substr($venueReconcileSource, (int) $venueSectionsStart);
-$assert(strpos($venuePageSource, "'rich_notices_callback' => 'vms_render_integrity_venue_reconcile_notice'") !== false, 'Venue Reconciliation shell call should route the rich notice family through the dedicated rich callback.');
+$assert(strpos($venuePageSource, "'rich_notices_callback' => 'bvmgr_render_integrity_venue_reconcile_notice'") !== false, 'Venue Reconciliation shell call should route the rich notice family through the dedicated rich callback.');
 $assert(strpos($venuePageSource, "'notices_callback' =>") === false, 'Venue Reconciliation should not reuse the simple explicit notice callback path.');
 $venueFallbackHeadingPos = strpos($venuePageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Integrity: Venue Links', 'backstage-venue-manager') . '</h1>';");
-$venueFallbackIntroPos = strpos($venuePageSource, 'vms_render_integrity_venue_reconcile_page_intro();');
-$venueFallbackNoticePos = strpos($venuePageSource, 'vms_render_integrity_venue_reconcile_notice();');
-$venueFallbackSectionsPos = strpos($venuePageSource, 'vms_render_integrity_venue_reconcile_page_sections();');
+$venueFallbackIntroPos = strpos($venuePageSource, 'bvmgr_render_integrity_venue_reconcile_page_intro();');
+$venueFallbackNoticePos = strpos($venuePageSource, 'bvmgr_render_integrity_venue_reconcile_notice();');
+$venueFallbackSectionsPos = strpos($venuePageSource, 'bvmgr_render_integrity_venue_reconcile_page_sections();');
 $assert($venueFallbackHeadingPos !== false && $venueFallbackIntroPos !== false && $venueFallbackNoticePos !== false && $venueFallbackSectionsPos !== false && $venueFallbackHeadingPos < $venueFallbackIntroPos && $venueFallbackIntroPos < $venueFallbackNoticePos && $venueFallbackNoticePos < $venueFallbackSectionsPos, 'Venue Reconciliation no-shell fallback should preserve heading, intro, notice, then ordinary content ordering.');
 $assert(strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_intro') === false, 'Venue Reconciliation should use the dedicated intro helper name consistently.');
-$assert(strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_page_intro();') !== false && strpos($venueContentSource, 'vms_render_integrity_venue_reconcile_page_sections();') !== false, 'Venue Reconciliation content callback should render the intro and ordinary page sections.');
+$assert(strpos($venueContentSource, 'bvmgr_render_integrity_venue_reconcile_page_intro();') !== false && strpos($venueContentSource, 'bvmgr_render_integrity_venue_reconcile_page_sections();') !== false, 'Venue Reconciliation content callback should render the intro and ordinary page sections.');
 $assert(strpos($venueContentSource, 'vms_msg') === false && strpos($venueContentSource, 'vms_changed') === false, 'Venue Reconciliation content callback should no longer read the moved notice query parameters.');
 $assert(strpos($venueContentSource, 'Confirmation required.') === false && strpos($venueContentSource, 'Nothing selected.') === false && strpos($venueContentSource, 'Action complete.') === false, 'Venue Reconciliation content callback should no longer emit the moved rich notice family.');
 $assert(
@@ -1412,7 +1412,7 @@ $_GET = array(
 	'vms_msg' => 'confirm_required',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueConfirmNotice = (string) ob_get_clean();
 $assert($venueConfirmNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Venue Reconciliation rich notice callback should preserve the confirmation-required fragment.');
 $assert(wp_kses($venueConfirmNotice, bvmgr_admin_ui_rich_explicit_notice_allowed_html()) === $venueConfirmNotice, 'The rich explicit notice allowlist should admit the confirmation-required Venue Reconciliation notice unchanged.');
@@ -1421,7 +1421,7 @@ $_GET = array(
 	'vms_msg' => 'nothing_selected',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueNothingSelectedNotice = (string) ob_get_clean();
 $assert($venueNothingSelectedNotice === '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>', 'Venue Reconciliation rich notice callback should preserve the nothing-selected fragment.');
 
@@ -1430,7 +1430,7 @@ $_GET = array(
 	'vms_changed' => '9<script>alert(1)</script>',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueDoneNotice = (string) ob_get_clean();
 $assert($venueDoneNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 9</p></div>', 'Venue Reconciliation rich notice callback should preserve the success fragment with integer-normalized changed counts.');
 $assert(strpos($venueDoneNotice, '<script') === false, 'Venue Reconciliation changed counts should not become markup.');
@@ -1440,13 +1440,13 @@ $_GET = array(
 	'vms_msg' => 'done',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueDoneMissingCountNotice = (string) ob_get_clean();
 $assert($venueDoneMissingCountNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 0</p></div>', 'Venue Reconciliation rich notice callback should default missing changed counts to zero.');
 
 $_GET = array();
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueMissingNotice = (string) ob_get_clean();
 $assert($venueMissingNotice === '', 'Venue Reconciliation rich notice callback should stay silent when vms_msg is absent.');
 
@@ -1454,7 +1454,7 @@ $_GET = array(
 	'vms_msg' => '',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueEmptyNotice = (string) ob_get_clean();
 $assert($venueEmptyNotice === '', 'Venue Reconciliation rich notice callback should stay silent when vms_msg is empty.');
 
@@ -1462,7 +1462,7 @@ $_GET = array(
 	'vms_msg' => 'not_real',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueUnknownNotice = (string) ob_get_clean();
 $assert($venueUnknownNotice === '', 'Venue Reconciliation rich notice callback should stay silent for unknown vms_msg values.');
 
@@ -1470,7 +1470,7 @@ $_GET = array(
 	'vms_msg' => 'Confirm_Required!!!',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_notice();
+bvmgr_render_integrity_venue_reconcile_notice();
 $venueNormalizedNotice = (string) ob_get_clean();
 $assert($venueNormalizedNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Venue Reconciliation rich notice callback should preserve sanitize_key() normalization when malformed input collapses into a known slug.');
 
@@ -1500,7 +1500,7 @@ $_GET = array(
 	'limit' => '25',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_page();
+bvmgr_render_integrity_venue_reconcile_page();
 $venueShellPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_integrity_venue_issue_calls'] === 1, 'Venue Reconciliation shell render should resolve issue rows exactly once.');
 $assert($GLOBALS['vms_test_integrity_venue_issue_limits'] === array(25), 'Venue Reconciliation shell render should preserve the integer-normalized limit parameter.');
@@ -1518,21 +1518,21 @@ $_GET = array(
 	'vms_msg' => 'confirm_required',
 );
 ob_start();
-vms_render_integrity_venue_reconcile_page_content();
+bvmgr_render_integrity_venue_reconcile_page_content();
 $venueContentOnly = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_integrity_venue_issue_calls'] === 1, 'Venue Reconciliation content callback should still resolve issue rows exactly once.');
 $assert($GLOBALS['vms_test_integrity_venue_get_posts_calls'] === 1, 'Venue Reconciliation content callback should still resolve replacement venues exactly once.');
 $assert(strpos($venueContentOnly, 'Review Event Plans that reference Venues in the Trash') !== false, 'Venue Reconciliation content callback should still render the intro copy.');
 $assert(strpos($venueContentOnly, 'Confirmation required.') === false, 'Venue Reconciliation content callback should no longer emit the moved rich notice directly.');
 
-$assert(strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_notice(): void') !== false, 'Calendar Reconciliation should expose a dedicated rich notice callback.');
-$calendarNoticeStart = strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_notice(): void');
-$calendarNoticeEnd = strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_page_intro(): void');
-$calendarPageStart = strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_page(): void');
-$calendarPageEnd = strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_page_content(): void');
-$calendarContentStart = strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_page_content(): void');
-$calendarContentEnd = strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_page_sections(): void');
-$calendarSectionsStart = strpos($calendarReconcileSource, 'function vms_render_integrity_calendar_reconcile_page_sections(): void');
+$assert(strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_notice(): void') !== false, 'Calendar Reconciliation should expose a dedicated rich notice callback.');
+$calendarNoticeStart = strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_notice(): void');
+$calendarNoticeEnd = strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_page_intro(): void');
+$calendarPageStart = strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_page(): void');
+$calendarPageEnd = strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_page_content(): void');
+$calendarContentStart = strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_page_content(): void');
+$calendarContentEnd = strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_page_sections(): void');
+$calendarSectionsStart = strpos($calendarReconcileSource, 'function bvmgr_render_integrity_calendar_reconcile_page_sections(): void');
 $assert($calendarNoticeStart !== false && $calendarNoticeEnd !== false && $calendarNoticeEnd > $calendarNoticeStart, 'Calendar Reconciliation rich notice callback body should be locatable.');
 $assert($calendarPageStart !== false && $calendarPageEnd !== false && $calendarPageEnd > $calendarPageStart, 'Calendar Reconciliation page renderer body should be locatable.');
 $assert($calendarContentStart !== false && $calendarContentEnd !== false && $calendarContentEnd > $calendarContentStart, 'Calendar Reconciliation content callback body should be locatable.');
@@ -1549,15 +1549,15 @@ if (isset($calendarWriterStatusMatches[1]) && is_array($calendarWriterStatusMatc
 }
 $assert($calendarWriterStatuses === array('confirm_required', 'done', 'nothing_selected'), 'Calendar Reconciliation writer status vocabulary should remain limited to confirm_required, nothing_selected, and done.');
 $assert(strpos($calendarReconcileSource, 'restore_calendar_events') !== false && strpos($calendarReconcileSource, 'clear_plan_calendar_links') !== false && strpos($calendarReconcileSource, 'relink_plan_calendar_links') !== false && strpos($calendarReconcileSource, 'clear_calendar_integrity_flag') !== false && strpos($calendarReconcileSource, 'suppress_calendar_unpublished_warning') !== false && strpos($calendarReconcileSource, 'unsuppress_calendar_unpublished_warning') !== false, 'Calendar Reconciliation should preserve the full existing action-handler vocabulary.');
-$assert(strpos($calendarPageSource, "'rich_notices_callback' => 'vms_render_integrity_calendar_reconcile_notice'") !== false, 'Calendar Reconciliation shell call should route the rich notice family through the existing rich callback path.');
+$assert(strpos($calendarPageSource, "'rich_notices_callback' => 'bvmgr_render_integrity_calendar_reconcile_notice'") !== false, 'Calendar Reconciliation shell call should route the rich notice family through the existing rich callback path.');
 $assert(strpos($calendarPageSource, "'notices_callback' =>") === false, 'Calendar Reconciliation should not route the family through the simple explicit notice callback path.');
-$assert(strpos($venuePageSource, "'rich_notices_callback' => 'vms_render_integrity_venue_reconcile_notice'") !== false, 'Venue Reconciliation should remain wired through the existing rich callback path unchanged.');
+$assert(strpos($venuePageSource, "'rich_notices_callback' => 'bvmgr_render_integrity_venue_reconcile_notice'") !== false, 'Venue Reconciliation should remain wired through the existing rich callback path unchanged.');
 $calendarFallbackHeadingPos = strpos($calendarPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Integrity: Calendar Links', 'backstage-venue-manager') . '</h1>';");
-$calendarFallbackIntroPos = strpos($calendarPageSource, 'vms_render_integrity_calendar_reconcile_page_intro();');
-$calendarFallbackNoticePos = strpos($calendarPageSource, 'vms_render_integrity_calendar_reconcile_notice();');
-$calendarFallbackSectionsPos = strpos($calendarPageSource, 'vms_render_integrity_calendar_reconcile_page_sections();');
+$calendarFallbackIntroPos = strpos($calendarPageSource, 'bvmgr_render_integrity_calendar_reconcile_page_intro();');
+$calendarFallbackNoticePos = strpos($calendarPageSource, 'bvmgr_render_integrity_calendar_reconcile_notice();');
+$calendarFallbackSectionsPos = strpos($calendarPageSource, 'bvmgr_render_integrity_calendar_reconcile_page_sections();');
 $assert($calendarFallbackHeadingPos !== false && $calendarFallbackIntroPos !== false && $calendarFallbackNoticePos !== false && $calendarFallbackSectionsPos !== false && $calendarFallbackHeadingPos < $calendarFallbackIntroPos && $calendarFallbackIntroPos < $calendarFallbackNoticePos && $calendarFallbackNoticePos < $calendarFallbackSectionsPos, 'Calendar Reconciliation no-shell fallback should preserve heading, intro, notice, then ordinary content ordering.');
-$assert(strpos($calendarContentSource, 'vms_render_integrity_calendar_reconcile_page_intro();') !== false && strpos($calendarContentSource, 'vms_render_integrity_calendar_reconcile_page_sections();') !== false, 'Calendar Reconciliation content callback should render the intro and ordinary page sections.');
+$assert(strpos($calendarContentSource, 'bvmgr_render_integrity_calendar_reconcile_page_intro();') !== false && strpos($calendarContentSource, 'bvmgr_render_integrity_calendar_reconcile_page_sections();') !== false, 'Calendar Reconciliation content callback should render the intro and ordinary page sections.');
 $assert(strpos($calendarContentSource, 'vms_msg') === false && strpos($calendarContentSource, 'vms_changed') === false, 'Calendar Reconciliation content callback should no longer read the moved notice query parameters.');
 $assert(strpos($calendarContentSource, 'Confirmation required.') === false && strpos($calendarContentSource, 'Nothing selected.') === false && strpos($calendarContentSource, 'Action complete.') === false, 'Calendar Reconciliation content callback should no longer emit the moved rich notice family.');
 $assert(
@@ -1582,7 +1582,7 @@ $_GET = array(
 	'vms_msg' => 'confirm_required',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarConfirmNotice = (string) ob_get_clean();
 $assert($calendarConfirmNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Calendar Reconciliation rich notice callback should preserve the confirmation-required fragment.');
 $assert(wp_kses($calendarConfirmNotice, bvmgr_admin_ui_rich_explicit_notice_allowed_html()) === $calendarConfirmNotice, 'The rich explicit notice allowlist should admit the confirmation-required Calendar Reconciliation notice unchanged.');
@@ -1591,7 +1591,7 @@ $_GET = array(
 	'vms_msg' => 'nothing_selected',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarNothingSelectedNotice = (string) ob_get_clean();
 $assert($calendarNothingSelectedNotice === '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>', 'Calendar Reconciliation rich notice callback should preserve the nothing-selected fragment.');
 
@@ -1600,7 +1600,7 @@ $_GET = array(
 	'vms_changed' => '14<script>alert(1)</script>',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarDoneNotice = (string) ob_get_clean();
 $assert($calendarDoneNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 14</p></div>', 'Calendar Reconciliation rich notice callback should preserve the success fragment with integer-normalized changed counts.');
 $assert(strpos($calendarDoneNotice, '<script') === false, 'Calendar Reconciliation changed counts should not become markup.');
@@ -1610,13 +1610,13 @@ $_GET = array(
 	'vms_msg' => 'done',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarDoneMissingCountNotice = (string) ob_get_clean();
 $assert($calendarDoneMissingCountNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 0</p></div>', 'Calendar Reconciliation rich notice callback should default missing changed counts to zero.');
 
 $_GET = array();
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarMissingNotice = (string) ob_get_clean();
 $assert($calendarMissingNotice === '', 'Calendar Reconciliation rich notice callback should stay silent when vms_msg is absent.');
 
@@ -1624,7 +1624,7 @@ $_GET = array(
 	'vms_msg' => '',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarEmptyNotice = (string) ob_get_clean();
 $assert($calendarEmptyNotice === '', 'Calendar Reconciliation rich notice callback should stay silent when vms_msg is empty.');
 
@@ -1632,7 +1632,7 @@ $_GET = array(
 	'vms_msg' => 'not_real',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarUnknownNotice = (string) ob_get_clean();
 $assert($calendarUnknownNotice === '', 'Calendar Reconciliation rich notice callback should stay silent for unknown vms_msg values.');
 
@@ -1640,7 +1640,7 @@ $_GET = array(
 	'vms_msg' => 'Confirm_Required!!!',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_notice();
+bvmgr_render_integrity_calendar_reconcile_notice();
 $calendarNormalizedNotice = (string) ob_get_clean();
 $assert($calendarNormalizedNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Calendar Reconciliation rich notice callback should preserve sanitize_key() normalization when malformed input collapses into a known slug.');
 
@@ -1668,7 +1668,7 @@ $_GET = array(
 	'limit' => '18',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_page();
+bvmgr_render_integrity_calendar_reconcile_page();
 $calendarShellPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_integrity_calendar_issue_calls'] === 1, 'Calendar Reconciliation shell render should resolve issue rows exactly once.');
 $assert($GLOBALS['vms_test_integrity_calendar_issue_limits'] === array(18), 'Calendar Reconciliation shell render should preserve the integer-normalized limit parameter.');
@@ -1686,7 +1686,7 @@ $_GET = array(
 	'vms_msg' => 'confirm_required',
 );
 ob_start();
-vms_render_integrity_calendar_reconcile_page_content();
+bvmgr_render_integrity_calendar_reconcile_page_content();
 $calendarContentOnly = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_integrity_calendar_issue_calls'] === 1, 'Calendar Reconciliation content callback should still resolve issue rows exactly once.');
 $assert($GLOBALS['vms_test_integrity_calendar_get_posts_calls'] === 1, 'Calendar Reconciliation content callback should still resolve suppressed warning IDs exactly once.');

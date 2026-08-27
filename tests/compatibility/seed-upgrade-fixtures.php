@@ -281,8 +281,8 @@ update_post_meta($qualifiedProductId, $verifiedProgramMetaKey, 'veteran');
 update_post_meta($qualifiedProductId, $allowedProgramsMetaKey, array('veteran'));
 update_post_meta($qualifiedProductId, $claimTypeMetaKey, 'event_ticket_eligibility');
 
-if (function_exists('vms_vendor_user_link_upsert')) {
-	vms_vendor_user_link_upsert(
+if (function_exists('bvmgr_vendor_user_link_upsert')) {
+	bvmgr_vendor_user_link_upsert(
 		$vendorId,
 		$userId,
 		array(

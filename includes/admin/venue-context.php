@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) exit;
  *  2) Settings: vms_settings[default_venue_id]
  *  3) first available venue by title
  */
-function vms_get_current_venue_id()
+function bvmgr_get_current_venue_id()
 {
     $user_id = (int) get_current_user_id();
 
@@ -56,7 +56,7 @@ function vms_get_current_venue_id()
 
 
 
-function vms_set_current_venue_id(int $venue_id): void
+function bvmgr_set_current_venue_id(int $venue_id): void
 {
     $user_id = (int) get_current_user_id();
 
@@ -74,7 +74,7 @@ function vms_set_current_venue_id(int $venue_id): void
  * Render a reusable venue selector form (admin-only).
  * Include this at the top of VMS admin pages.
  */
-function vms_render_current_venue_selector(): void
+function bvmgr_render_current_venue_selector(): void
 {
     if (!current_user_can('manage_options')) {
         return;

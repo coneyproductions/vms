@@ -414,8 +414,8 @@ if (!function_exists('vms_sch_get_all_venue_ids')) {
     }
 }
 
-if (!function_exists('vms_render_current_venue_selector')) {
-    function vms_render_current_venue_selector(): void
+if (!function_exists('bvmgr_render_current_venue_selector')) {
+    function bvmgr_render_current_venue_selector(): void
     {
         echo '<div class="vms-test-current-venue-selector"></div>';
     }

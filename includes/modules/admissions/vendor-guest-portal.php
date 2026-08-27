@@ -766,7 +766,7 @@ if (!function_exists('vms_admission_vendor_guest_event_plan_can_vendor_manage'))
 		if ($event_plan_id <= 0 || $vendor_id <= 0 || $user_id <= 0) {
 			return false;
 		}
-		if (function_exists('vms_user_can_access_vendor') && !vms_user_can_access_vendor($user_id, $vendor_id)) {
+		if (function_exists('bvmgr_user_can_access_vendor') && !bvmgr_user_can_access_vendor($user_id, $vendor_id)) {
 			return false;
 		}
 		if (!in_array($vendor_id, vms_admission_get_event_vendor_ids($event_plan_id), true)) {

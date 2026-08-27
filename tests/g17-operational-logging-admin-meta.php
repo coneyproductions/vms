@@ -719,7 +719,7 @@ function user_can(WP_User $user, string $capability): bool
 }
 
 eval(g17b_extract_function($g17b_sources['mirror']['helpers'], 'bvmgr_vendor_tax_profile_missing_items'));
-eval(g17b_extract_function($g17b_sources['mirror']['vendor_list'], 'vms_admin_vendor_list_get_meta_scalar'));
+eval(g17b_extract_function($g17b_sources['mirror']['vendor_list'], 'bvmgr_admin_vendor_list_get_meta_scalar'));
 foreach (array(
 	'vms_approvals_queue_notice_transient_key',
 	'vms_approvals_queue_log',
@@ -769,7 +769,7 @@ g17b_assert(strpos(serialize($GLOBALS['g17b_events']), 'secret-meta') === false,
 
 $GLOBALS['g17b_meta'][88]['secret-vendor-meta-key'] = (object) array('secret-vendor-meta-value' => true);
 $GLOBALS['g17b_events'] = array();
-g17b_same('', vms_admin_vendor_list_get_meta_scalar(88, 'secret-vendor-meta-key'), 'Vendor-list invalid meta must retain blank-value fallback');
+g17b_same('', bvmgr_admin_vendor_list_get_meta_scalar(88, 'secret-vendor-meta-key'), 'Vendor-list invalid meta must retain blank-value fallback');
 g17b_same(
 	array(
 		'event_code' => 'vendor_list_meta_shape_invalid',

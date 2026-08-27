@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_vendor_submission_alert_default_settings')) {
-    function vms_vendor_submission_alert_default_settings(): array
+if (!function_exists('bvmgr_vendor_submission_alert_default_settings')) {
+    function bvmgr_vendor_submission_alert_default_settings(): array
     {
         return array(
             'vendor_doc_submission_notify_enabled' => 1,
@@ -15,10 +15,10 @@ if (!function_exists('vms_vendor_submission_alert_default_settings')) {
     }
 }
 
-if (!function_exists('vms_vendor_submission_alert_settings')) {
-    function vms_vendor_submission_alert_settings(): array
+if (!function_exists('bvmgr_vendor_submission_alert_settings')) {
+    function bvmgr_vendor_submission_alert_settings(): array
     {
-        $defaults = vms_vendor_submission_alert_default_settings();
+        $defaults = bvmgr_vendor_submission_alert_default_settings();
         $raw = (array) get_option('vms_settings', array());
 
         $settings = array(
@@ -47,8 +47,8 @@ if (!function_exists('vms_vendor_submission_alert_settings')) {
     }
 }
 
-if (!function_exists('vms_vendor_submission_recipient_mode_options')) {
-    function vms_vendor_submission_recipient_mode_options(): array
+if (!function_exists('bvmgr_vendor_submission_recipient_mode_options')) {
+    function bvmgr_vendor_submission_recipient_mode_options(): array
     {
         return array(
             'site_admin' => __('Site admin email', 'backstage-venue-manager'),
@@ -60,8 +60,8 @@ if (!function_exists('vms_vendor_submission_recipient_mode_options')) {
     }
 }
 
-if (!function_exists('vms_vendor_submission_context_labels')) {
-    function vms_vendor_submission_context_labels(): array
+if (!function_exists('bvmgr_vendor_submission_context_labels')) {
+    function bvmgr_vendor_submission_context_labels(): array
     {
         return array(
             'tech_docs' => __('Tech docs upload', 'backstage-venue-manager'),
@@ -72,19 +72,19 @@ if (!function_exists('vms_vendor_submission_context_labels')) {
     }
 }
 
-if (!function_exists('vms_vendor_submission_context_is_document')) {
-    function vms_vendor_submission_context_is_document(string $context): bool
+if (!function_exists('bvmgr_vendor_submission_context_is_document')) {
+    function bvmgr_vendor_submission_context_is_document(string $context): bool
     {
         $context = sanitize_key($context);
-        return isset(vms_vendor_submission_context_labels()[$context]);
+        return isset(bvmgr_vendor_submission_context_labels()[$context]);
     }
 }
 
-if (!function_exists('vms_vendor_submission_context_label')) {
-    function vms_vendor_submission_context_label(string $context): string
+if (!function_exists('bvmgr_vendor_submission_context_label')) {
+    function bvmgr_vendor_submission_context_label(string $context): string
     {
         $context = sanitize_key($context);
-        $labels = vms_vendor_submission_context_labels();
+        $labels = bvmgr_vendor_submission_context_labels();
         if (isset($labels[$context])) {
             return (string) $labels[$context];
         }
@@ -96,14 +96,14 @@ if (!function_exists('vms_vendor_submission_context_label')) {
     }
 }
 
-if (!function_exists('vms_vendor_submission_resolve_recipients')) {
+if (!function_exists('bvmgr_vendor_submission_resolve_recipients')) {
     /**
      * @return array<int,array<string,mixed>>
      */
-    function vms_vendor_submission_resolve_recipients(array $settings = array()): array
+    function bvmgr_vendor_submission_resolve_recipients(array $settings = array()): array
     {
         if (empty($settings)) {
-            $settings = vms_vendor_submission_alert_settings();
+            $settings = bvmgr_vendor_submission_alert_settings();
         }
 
         $mode = sanitize_key((string) ($settings['vendor_doc_submission_notify_target'] ?? 'site_admin'));
@@ -184,12 +184,12 @@ if (!function_exists('vms_vendor_submission_resolve_recipients')) {
     }
 }
 
-if (!function_exists('vms_vendor_submission_build_notification_payload')) {
+if (!function_exists('bvmgr_vendor_submission_build_notification_payload')) {
     /**
      * @param array<string,mixed> $meta
      * @return array<string,mixed>
      */
-    function vms_vendor_submission_build_notification_payload(int $vendor_id, string $context, array $meta = array()): array
+    function bvmgr_vendor_submission_build_notification_payload(int $vendor_id, string $context, array $meta = array()): array
     {
         $vendor_id = absint($vendor_id);
         $context = sanitize_key($context);
@@ -224,7 +224,7 @@ if (!function_exists('vms_vendor_submission_build_notification_payload')) {
             'vendor_id' => $vendor_id,
             'vendor_name' => $vendor_name,
             'context' => $context,
-            'context_label' => vms_vendor_submission_context_label($context),
+            'context_label' => bvmgr_vendor_submission_context_label($context),
             'submitted_by_user_id' => $submitted_by_user_id,
             'submitted_by_label' => $submitted_by_label,
             'submitted_at' => $submitted_at,
@@ -236,20 +236,20 @@ if (!function_exists('vms_vendor_submission_build_notification_payload')) {
     }
 }
 
-if (!function_exists('vms_vendor_submission_dispatch_alert')) {
+if (!function_exists('bvmgr_vendor_submission_dispatch_alert')) {
     /**
      * @param array<string,mixed> $meta
      */
-    function vms_vendor_submission_dispatch_alert(int $vendor_id, string $context, array $meta = array()): void
+    function bvmgr_vendor_submission_dispatch_alert(int $vendor_id, string $context, array $meta = array()): void
     {
         $vendor_id = absint($vendor_id);
         $context = sanitize_key($context);
-        if ($vendor_id <= 0 || !vms_vendor_submission_context_is_document($context)) {
+        if ($vendor_id <= 0 || !bvmgr_vendor_submission_context_is_document($context)) {
             return;
         }
 
-        $settings = vms_vendor_submission_alert_settings();
-        $payload = vms_vendor_submission_build_notification_payload($vendor_id, $context, $meta);
+        $settings = bvmgr_vendor_submission_alert_settings();
+        $payload = bvmgr_vendor_submission_build_notification_payload($vendor_id, $context, $meta);
         $event_key = 'vendor_document_submission';
 
         if (empty($settings['vendor_doc_submission_notify_enabled'])) {
@@ -270,7 +270,7 @@ if (!function_exists('vms_vendor_submission_dispatch_alert')) {
             return;
         }
 
-        $recipients = vms_vendor_submission_resolve_recipients($settings);
+        $recipients = bvmgr_vendor_submission_resolve_recipients($settings);
         if (empty($recipients)) {
             if (function_exists('vms_notify_insert_log')) {
                 vms_notify_insert_log(array(

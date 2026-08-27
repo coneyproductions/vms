@@ -637,7 +637,7 @@ function taxonomy_exists(string $taxonomy): bool
 	return $taxonomy === 'vms_vendor_type';
 }
 
-function vms_vendor_type_select_options(): array
+function bvmgr_vendor_type_select_options(): array
 {
 	return ($GLOBALS['g16b_vendor_mode'] ?? '') === 'ensure'
 		? array('band' => 'Music Vendor', 'food_truck' => 'Food Vendor')
@@ -690,7 +690,7 @@ function get_terms(array $args): array
 		: array();
 }
 
-function vms_vendor_type_canonical_slug_for_term(WP_Term $term): string
+function bvmgr_vendor_type_canonical_slug_for_term(WP_Term $term): string
 {
 	unset($term);
 	return 'band';
@@ -756,8 +756,8 @@ function update_option(string $key, $value, bool $autoload = false): bool
 
 function g16b_vendor_behavior(string $source): void
 {
-	$ensure_block = g16b_extract_guarded_function($source, 'vms_vendor_type_ensure_default_terms');
-	$canonicalize_block = g16b_extract_guarded_function($source, 'vms_vendor_type_maybe_canonicalize_terms');
+	$ensure_block = g16b_extract_guarded_function($source, 'bvmgr_vendor_type_ensure_default_terms');
+	$canonicalize_block = g16b_extract_guarded_function($source, 'bvmgr_vendor_type_maybe_canonicalize_terms');
 	eval($ensure_block);
 	eval($canonicalize_block);
 
@@ -777,7 +777,7 @@ function g16b_vendor_behavior(string $source): void
 
 	$GLOBALS['g16b_vendor_mode'] = 'ensure';
 	g16b_reset_capture(false);
-	vms_vendor_type_ensure_default_terms();
+	bvmgr_vendor_type_ensure_default_terms();
 	g16b_same(
 		array('insert:band', 'record:vendor_type_default_term_ensure_failed', 'insert:food_truck'),
 		$GLOBALS['g16b_trace'],
@@ -802,7 +802,7 @@ function g16b_vendor_behavior(string $source): void
 	$GLOBALS['g16b_vendor_mode'] = 'canonicalize';
 	g16b_reset_capture(false);
 	unset($GLOBALS['g16b_option_update']);
-	vms_vendor_type_maybe_canonicalize_terms();
+	bvmgr_vendor_type_maybe_canonicalize_terms();
 	g16b_same(
 		array('delete:99', 'record:vendor_type_duplicate_term_delete_failed', 'option:vms_vendor_type_canonicalized_v1'),
 		$GLOBALS['g16b_trace'],

@@ -20,15 +20,15 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_vendor_defaults',
         __('Pay Structure + Booking Defaults', 'backstage-venue-manager'),
-        'vms_render_vendor_defaults_metabox',
+        'bvmgr_render_vendor_defaults_metabox',
         'vms_vendor',
         'normal',
         'default'
     );
 });
 
-if (!function_exists('vms_vendor_defaults_admin_screen_is_target')) {
-    function vms_vendor_defaults_admin_screen_is_target($screen): bool
+if (!function_exists('bvmgr_vendor_defaults_admin_screen_is_target')) {
+    function bvmgr_vendor_defaults_admin_screen_is_target($screen): bool
     {
         if (!is_object($screen)) {
             return false;
@@ -42,11 +42,11 @@ if (!function_exists('vms_vendor_defaults_admin_screen_is_target')) {
     }
 }
 
-if (!function_exists('vms_vendor_defaults_admin_enqueue_assets')) {
-    function vms_vendor_defaults_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_vendor_defaults_admin_enqueue_assets')) {
+    function bvmgr_vendor_defaults_admin_enqueue_assets(): void
     {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!vms_vendor_defaults_admin_screen_is_target($screen)) {
+        if (!bvmgr_vendor_defaults_admin_screen_is_target($screen)) {
             return;
         }
 
@@ -118,7 +118,7 @@ if (!function_exists('vms_vendor_defaults_admin_enqueue_assets')) {
         );
     }
 }
-add_action('admin_enqueue_scripts', 'vms_vendor_defaults_admin_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_vendor_defaults_admin_enqueue_assets', 50);
 
 /**
  * Save handler
@@ -496,7 +496,7 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
 /**
  * Render metabox
  */
-function vms_render_vendor_defaults_metabox($post)
+function bvmgr_render_vendor_defaults_metabox($post)
 {
     wp_nonce_field('vms_save_vendor_defaults', 'vms_vendor_defaults_nonce');
     $vk = function ($field, $fallback) {

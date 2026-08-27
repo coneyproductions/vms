@@ -18,8 +18,8 @@ if (!function_exists('bvmgr_event_plan_secondary_vendor_assignment_meta_key')) {
 if (!function_exists('bvmgr_event_plan_normalize_secondary_vendor_type_slug')) {
 	function bvmgr_event_plan_normalize_secondary_vendor_type_slug(string $type_slug): string
 	{
-		return function_exists('vms_vendor_type_normalize_slug')
-			? (string) vms_vendor_type_normalize_slug($type_slug)
+		return function_exists('bvmgr_vendor_type_normalize_slug')
+			? (string) bvmgr_vendor_type_normalize_slug($type_slug)
 			: sanitize_title($type_slug);
 	}
 }
@@ -29,8 +29,8 @@ if (!function_exists('bvmgr_event_plan_secondary_vendor_type_options')) {
 	{
 		$options = array();
 
-		if (function_exists('vms_vendor_type_select_options')) {
-			foreach ((array) vms_vendor_type_select_options() as $slug => $label) {
+		if (function_exists('bvmgr_vendor_type_select_options')) {
+			foreach ((array) bvmgr_vendor_type_select_options() as $slug => $label) {
 				$slug = bvmgr_event_plan_normalize_secondary_vendor_type_slug((string) $slug);
 				$label = trim((string) $label);
 				if ($slug === '' || $label === '') {
@@ -229,8 +229,8 @@ if (!function_exists('bvmgr_event_plan_normalize_secondary_vendor_ids')) {
 			}
 
 			if ($type_slug !== '') {
-				$matches_type = function_exists('vms_vendor_has_type')
-					? vms_vendor_has_type($vendor_id, $type_slug)
+				$matches_type = function_exists('bvmgr_vendor_has_type')
+					? bvmgr_vendor_has_type($vendor_id, $type_slug)
 					: (function_exists('has_term') ? has_term($type_slug, 'vms_vendor_type', $vendor_id) : true);
 				if (!$matches_type) {
 					continue;
@@ -425,8 +425,8 @@ if (!function_exists('bvmgr_event_plan_secondary_vendor_over_capacity_rows')) {
 			}
 
 			$label = trim((string) ($type_options[$type_slug] ?? ''));
-			if ($label === '' && function_exists('vms_vendor_type_label')) {
-				$label = trim((string) vms_vendor_type_label($type_slug));
+			if ($label === '' && function_exists('bvmgr_vendor_type_label')) {
+				$label = trim((string) bvmgr_vendor_type_label($type_slug));
 			}
 			if ($label === '') {
 				$label = ucwords(str_replace(array('_', '-'), ' ', $type_slug));

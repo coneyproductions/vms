@@ -290,7 +290,7 @@ $assert(str_contains($vendorPortalSource, 'require_once $bvmgr_vendor_tax_profil
 $assert(is_file($root . '/includes/portal/vendor-tax-profile.php'), 'Vendor taxonomy/profile loader target must remain present.');
 
 $vendorApplicationsSource = (string) file_get_contents($root . '/includes/vendor-applications.php');
-$assert(substr_count($vendorApplicationsSource, 'foreach (vms_vendor_app_cpt_slugs() as $bvmgr_vendor_application_post_type)') === 3, 'All three top-level vendor application post-type registration loops must use the canonical variable.');
+$assert(substr_count($vendorApplicationsSource, 'foreach (bvmgr_vendor_app_cpt_slugs() as $bvmgr_vendor_application_post_type)') === 3, 'All three top-level vendor application post-type registration loops must use the canonical variable.');
 $assert(str_contains($vendorApplicationsSource, "'manage_' . \$bvmgr_vendor_application_post_type . '_posts_columns'"), 'Vendor application columns hook value must remain unchanged.');
 $assert(str_contains($vendorApplicationsSource, "'manage_' . \$bvmgr_vendor_application_post_type . '_posts_custom_column'"), 'Vendor application custom-column hook value must remain unchanged.');
 $assert(str_contains($vendorApplicationsSource, "'views_edit-' . \$bvmgr_vendor_application_post_type"), 'Vendor application views hook value must remain unchanged.');

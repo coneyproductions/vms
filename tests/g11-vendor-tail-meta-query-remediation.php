@@ -69,12 +69,12 @@ function g11_project_g15_payables_dates(string $source): string
 	$source = str_replace($current_bill, $historical_bill, $source, $bill_count);
 	g11_same(1, $bill_count, 'Payables bill fallback projection must reverse exactly one statement.');
 
-	$current_add_days = g11_extract_function($source, 'vms_payables_add_days');
+	$current_add_days = g11_extract_function($source, 'bvmgr_payables_add_days');
 	g11_same(1, substr_count($current_add_days, "new DateTimeImmutable(\$ymd . ' 00:00:00', \$utc)"), 'Current Payables add-days must construct with explicit UTC.');
 	g11_same(1, substr_count($current_add_days, '$date = $date->setTimezone($utc);'), 'Current Payables add-days must re-normalize embedded timezone tokens to UTC.');
 	g11_same(0, preg_match_all('/(?<![A-Za-z0-9_])date\(/', $current_add_days), 'Current Payables add-days must not retain native date().');
 	$historical_add_days = <<<'PHP'
-function vms_payables_add_days(string $ymd, int $days): string
+function bvmgr_payables_add_days(string $ymd, int $days): string
 {
     $ymd  = trim((string) $ymd);
     $days = (int) $days;
@@ -196,12 +196,12 @@ $relative_paths = array(
 	'vendor_category' => 'includes/taxonomies/vendor-category.php',
 );
 $function_names = array(
-	'vendors' => 'vms_vendor_delete_revert_event_plans',
+	'vendors' => 'bvmgr_vendor_delete_revert_event_plans',
 	'payables' => 'bvmgr_payables_build_bills_for_export',
-	'onboarding' => 'vms_vendor_booking_onboarding_daily_runner',
-	'tax_export' => 'vms_vendor_tax_export_csv_adminpost',
+	'onboarding' => 'bvmgr_vendor_booking_onboarding_daily_runner',
+	'tax_export' => 'bvmgr_vendor_tax_export_csv_adminpost',
 	'profiles' => 'vms_vendor_profiles_find_next_upcoming_event',
-	'vendor_category' => 'vms_vendor_categories_get_related_event_plan_ids',
+	'vendor_category' => 'bvmgr_vendor_categories_get_related_event_plan_ids',
 );
 $mirror_sources = array();
 $shadow_sources = array();
@@ -435,7 +435,7 @@ foreach (array('vendors', 'vendor_category') as $divergent_source) {
 $vendor_lines = preg_split('/\R/', $mirror_sources['vendors']);
 g11_assert(is_array($vendor_lines), 'Deferred Vendors source lines should split.');
 g11_same(1, substr_count($mirror_sources['payables'], "        \$ymd = gmdate('Ymd');"), 'Remediated Payables bill fallback must remain exact.');
-$payables_add_days = g11_extract_function($mirror_sources['payables'], 'vms_payables_add_days');
+$payables_add_days = g11_extract_function($mirror_sources['payables'], 'bvmgr_payables_add_days');
 g11_contains("new DateTimeImmutable(\$ymd . ' 00:00:00', \$utc)", $payables_add_days, 'Remediated Payables add-days constructor changed.');
 g11_contains('$date = $date->setTimezone($utc);', $payables_add_days, 'Remediated Payables UTC re-normalization changed.');
 g11_assert(strpos($payables_add_days, 'phpcs:') === false, 'Remediated Payables add-days must remain unsuppressed.');
@@ -602,7 +602,7 @@ function bvmgr_event_plan_allowed_statuses(string $context, array $args): array
 	return $GLOBALS['g11_allowed_statuses'];
 }
 
-function vms_vendor_booking_onboarding_get_settings(): array
+function bvmgr_vendor_booking_onboarding_get_settings(): array
 {
 	return $GLOBALS['g11_onboarding_settings'];
 }
@@ -613,23 +613,23 @@ function bvmgr_event_plan_get_status(int $plan_id, string $context): string
 	return $GLOBALS['g11_plan_statuses'][$plan_id] ?? '';
 }
 
-function vms_vendor_booking_onboarding_should_process_status(string $status, array $settings): bool
+function bvmgr_vendor_booking_onboarding_should_process_status(string $status, array $settings): bool
 {
 	unset($settings);
 	return in_array($status, $GLOBALS['g11_process_statuses'], true);
 }
 
-function vms_vendor_booking_onboarding_plan_targets(int $plan_id): array
+function bvmgr_vendor_booking_onboarding_plan_targets(int $plan_id): array
 {
 	return $GLOBALS['g11_plan_targets'][$plan_id] ?? array();
 }
 
-function vms_vendor_booking_onboarding_get_vendor_plan_status(int $plan_id, int $vendor_id): array
+function bvmgr_vendor_booking_onboarding_get_vendor_plan_status(int $plan_id, int $vendor_id): array
 {
 	return $GLOBALS['g11_vendor_plan_statuses'][$plan_id][$vendor_id] ?? array();
 }
 
-function vms_vendor_booking_onboarding_send_reminder(int $plan_id, int $vendor_id): array
+function bvmgr_vendor_booking_onboarding_send_reminder(int $plan_id, int $vendor_id): array
 {
 	$GLOBALS['g11_reminders'][] = compact('plan_id', 'vendor_id');
 	return array('success' => true);
@@ -732,17 +732,17 @@ eval(g11_extract_function($mirror_sources['profiles'], $function_names['profiles
 eval(g11_extract_function($mirror_sources['vendor_category'], $function_names['vendor_category']));
 
 g11_reset_runtime();
-vms_vendor_delete_revert_event_plans(0);
+bvmgr_vendor_delete_revert_event_plans(0);
 g11_same(array(), $GLOBALS['g11_get_posts_calls'], 'Invalid Vendor deletion must not query.');
 $GLOBALS['g11_posts'][7] = new WP_Post(7, 'post');
-vms_vendor_delete_revert_event_plans(7);
+bvmgr_vendor_delete_revert_event_plans(7);
 g11_same(array(), $GLOBALS['g11_get_posts_calls'], 'Non-Vendor deletion must not query.');
 
 g11_reset_runtime();
 $GLOBALS['g11_posts'][7] = new WP_Post(7, 'vms_vendor');
 $GLOBALS['g11_titles'][7] = '<b>Headliner</b>';
 $GLOBALS['g11_get_posts_queue'] = array(false, false);
-vms_vendor_delete_revert_event_plans(7);
+bvmgr_vendor_delete_revert_event_plans(7);
 $vendor_primary_args = array(
 	'post_type' => 'vms_event_plan',
 	'post_status' => 'any',
@@ -773,7 +773,7 @@ $GLOBALS['g11_meta'] = array(
 	102 => array('_vms_band_vendor_id' => 0, '_vms_secondary_vendor_ids' => array(7, 9), '_vms_integrity_issue' => ''),
 );
 $GLOBALS['g11_get_posts_queue'] = array(array(101), array(102, 101, 0));
-vms_vendor_delete_revert_event_plans(7);
+bvmgr_vendor_delete_revert_event_plans(7);
 g11_same(array(101), $GLOBALS['g11_get_posts_calls'][0]['result'], 'Vendor deletion primary result capture changed.');
 g11_same(array(102, 101, 0), $GLOBALS['g11_get_posts_calls'][1]['result'], 'Vendor deletion secondary result capture changed.');
 g11_same(array(array('plan_id' => 101, 'vendor_id' => 7, 'vendor_title' => 'Headliner')), $GLOBALS['g11_primary_flags'], 'Primary Vendor deletion flag behavior changed.');
@@ -816,13 +816,13 @@ g11_same(array('Plan #201 is missing a venue link; skipped.'), $payables_result[
 g11_same(array(), $payables_result['bills'], 'Payables missing-venue result must not create bills.');
 
 g11_reset_runtime();
-vms_vendor_booking_onboarding_daily_runner();
+bvmgr_vendor_booking_onboarding_daily_runner();
 g11_same(array(), $GLOBALS['g11_get_posts_calls'], 'Disabled onboarding runner must not query.');
 
 g11_reset_runtime();
 $GLOBALS['g11_onboarding_settings'] = array('enabled' => true, 'video_soft_requirement' => true, 'reminder_after_days' => 3, 'reminder_before_days' => 2);
 $GLOBALS['g11_get_posts_queue'][] = false;
-vms_vendor_booking_onboarding_daily_runner();
+bvmgr_vendor_booking_onboarding_daily_runner();
 $onboarding_args = $GLOBALS['g11_get_posts_calls'][0]['args'];
 $onboarding_start = new DateTimeImmutable($onboarding_args['meta_query'][0]['value'][0], new DateTimeZone('UTC'));
 $onboarding_end = new DateTimeImmutable($onboarding_args['meta_query'][0]['value'][1], new DateTimeZone('UTC'));
@@ -856,7 +856,7 @@ $GLOBALS['g11_vendor_plan_statuses'][301][401] = array(
 	'initial_sent_at_gmt' => gmdate('Y-m-d H:i:s', $GLOBALS['g11_now_ts'] - (5 * DAY_IN_SECONDS)),
 	'last_reminder_at_gmt' => '',
 );
-vms_vendor_booking_onboarding_daily_runner();
+bvmgr_vendor_booking_onboarding_daily_runner();
 g11_same(array(0, 301, 302), $GLOBALS['g11_get_posts_calls'][0]['result'], 'Onboarding query result capture changed.');
 g11_same(array(array('plan_id' => 301, 'vendor_id' => 401)), $GLOBALS['g11_reminders'], 'Onboarding due-reminder behavior changed.');
 
@@ -864,7 +864,7 @@ g11_reset_runtime();
 $GLOBALS['g11_can_manage'] = false;
 $denied = false;
 try {
-	vms_vendor_tax_export_csv_adminpost();
+	bvmgr_vendor_tax_export_csv_adminpost();
 } catch (RuntimeException $exception) {
 	$denied = $exception->getMessage() === 'Permission denied.';
 }
@@ -874,7 +874,7 @@ g11_same(array(), $GLOBALS['g11_get_posts_calls'], 'Denied tax export must not q
 g11_reset_runtime();
 $GLOBALS['g11_get_posts_queue'][] = false;
 ob_start();
-vms_vendor_tax_export_csv_adminpost();
+bvmgr_vendor_tax_export_csv_adminpost();
 $tax_failure_output = (string) ob_get_clean();
 $tax_args = array(
 	'post_type' => 'vms_vendor',
@@ -896,7 +896,7 @@ $GLOBALS['g11_get_posts_queue'][] = array(0, 501);
 $GLOBALS['g11_titles'][501] = 'Vendor Five';
 $GLOBALS['g11_meta'][501]['_vms_vendor_tax_profile_completed_at'] = 1723075200;
 ob_start();
-vms_vendor_tax_export_csv_adminpost();
+bvmgr_vendor_tax_export_csv_adminpost();
 $tax_output = (string) ob_get_clean();
 g11_same(array(0, 501), $GLOBALS['g11_get_posts_calls'][0]['result'], 'Tax export query result capture changed.');
 g11_contains('Vendor Five', $tax_output, 'Tax export should retain valid Vendor rows.');
@@ -960,12 +960,12 @@ g11_same(
 );
 
 g11_reset_runtime();
-g11_same(array(), vms_vendor_categories_get_related_event_plan_ids(0), 'Invalid Vendor category lookup must remain empty.');
+g11_same(array(), bvmgr_vendor_categories_get_related_event_plan_ids(0), 'Invalid Vendor category lookup must remain empty.');
 g11_same(array(), $GLOBALS['g11_get_posts_calls'], 'Invalid Vendor category lookup must not query.');
 
 g11_reset_runtime();
 $GLOBALS['g11_get_posts_queue'] = array(false, false);
-$category_failure = vms_vendor_categories_get_related_event_plan_ids(7);
+$category_failure = bvmgr_vendor_categories_get_related_event_plan_ids(7);
 $category_primary_args = array(
 	'post_type' => 'vms_event_plan',
 	'post_status' => 'any',
@@ -986,7 +986,7 @@ g11_same(array(), $category_failure, 'Vendor category query failures must fail c
 
 g11_reset_runtime();
 $GLOBALS['g11_get_posts_queue'] = array(array(801, 802), array(802, 0, 803));
-$category_result = vms_vendor_categories_get_related_event_plan_ids(7);
+$category_result = bvmgr_vendor_categories_get_related_event_plan_ids(7);
 g11_same(array(801, 802), $GLOBALS['g11_get_posts_calls'][0]['result'], 'Vendor category primary result capture changed.');
 g11_same(array(802, 0, 803), $GLOBALS['g11_get_posts_calls'][1]['result'], 'Vendor category secondary result capture changed.');
 g11_same(array(801, 802, 803), $category_result, 'Vendor category merged result changed.');

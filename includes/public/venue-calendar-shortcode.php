@@ -952,8 +952,8 @@ if (!function_exists('vms_public_calendar_status_badge')) {
 	function vms_public_calendar_status_badge(string $status): string
 	{
 		$status = $status !== '' ? $status : 'draft';
-		if (function_exists('vms_cal_status_badge')) {
-			return (string) vms_cal_status_badge($status);
+		if (function_exists('bvmgr_cal_status_badge')) {
+			return (string) bvmgr_cal_status_badge($status);
 		}
 
 		$label = strtoupper($status);

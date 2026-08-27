@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
 require_once __DIR__ . '/../../core/registry/meta-keys.php';
 require_once __DIR__ . '/../../core/registry/constants.php';
 
-function vms_vendor_tax_filter_ui()
+function bvmgr_vendor_tax_filter_ui()
 {
 	global $typenow;
 	if ($typenow !== BVMGR_CPT_VENDOR) return;
@@ -25,9 +25,9 @@ function vms_vendor_tax_filter_ui()
 	echo '<option value="incomplete"' . selected($current, 'incomplete', false) . '>Tax Incomplete</option>';
 	echo '</select>';
 }
-add_action('restrict_manage_posts', 'vms_vendor_tax_filter_ui');
+add_action('restrict_manage_posts', 'bvmgr_vendor_tax_filter_ui');
 
-function vms_vendor_tax_filter_query($query)
+function bvmgr_vendor_tax_filter_query($query)
 {
 	if (!is_admin() || !$query->is_main_query()) return;
 
@@ -51,4 +51,4 @@ function vms_vendor_tax_filter_query($query)
 		));
 	}
 }
-add_action('pre_get_posts', 'vms_vendor_tax_filter_query');
+add_action('pre_get_posts', 'bvmgr_vendor_tax_filter_query');

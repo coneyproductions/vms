@@ -41,7 +41,7 @@ function bvmgr_activate_plugin(): void
 		'vms_tasks_schedule_nightly_generator',
 		'vms_email_followups_schedule_cron',
 		'bvmgr_calendar_ticket_counts_schedule_cron',
-		'vms_vendor_booking_onboarding_schedule_event',
+		'bvmgr_vendor_booking_onboarding_schedule_event',
 		'vms_notify_ensure_digest_cron',
 		'bvmgr_ticket_integrity_maybe_schedule_cron',
 		'bvmgr_integrity_schedule_daily_scan',

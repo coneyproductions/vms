@@ -207,7 +207,7 @@ function post_type_exists(string $post_type): bool
 	return (bool) $GLOBALS['g13_tail_post_type_exists'];
 }
 
-function vms_vendor_app_meta_key(string $field): string
+function bvmgr_vendor_app_meta_key(string $field): string
 {
 	return $field === 'confirmation_state' ? '_vms_app_confirmation_state' : '';
 }

@@ -290,22 +290,22 @@ vms_contains('ON DUPLICATE KEY UPDATE', $source, 'Upserts must retain duplicate-
 vms_contains('is_primary  = IF(VALUES(is_primary)=1, 1, is_primary)', $source, 'Upserts must not demote an existing primary implicitly.');
 
 $functions = array(
-	'vms_vendor_user_links_table',
-	'vms_vendor_user_links_table_exists',
-	'vms_vendor_user_link_normalize_role',
-	'vms_vendor_user_link_normalize_status',
-	'vms_vendor_user_links_get_by_user',
-	'vms_vendor_user_links_get_by_user_legacy',
-	'vms_get_active_vendor_ids_for_user',
-	'vms_user_can_access_vendor',
-	'vms_vendor_user_links_set_primary_for_user',
-	'vms_vendor_user_links_get_by_vendor',
-	'vms_vendor_user_link_exists',
-	'vms_vendor_user_link_vendor_email_meta_keys',
-	'vms_vendor_user_link_find_vendor_matches_for_email',
-	'vms_vendor_user_link_upsert',
-	'vms_vendor_user_link_update',
-	'vms_vendor_user_link_delete',
+	'bvmgr_vendor_user_links_table',
+	'bvmgr_vendor_user_links_table_exists',
+	'bvmgr_vendor_user_link_normalize_role',
+	'bvmgr_vendor_user_link_normalize_status',
+	'bvmgr_vendor_user_links_get_by_user',
+	'bvmgr_vendor_user_links_get_by_user_legacy',
+	'bvmgr_get_active_vendor_ids_for_user',
+	'bvmgr_user_can_access_vendor',
+	'bvmgr_vendor_user_links_set_primary_for_user',
+	'bvmgr_vendor_user_links_get_by_vendor',
+	'bvmgr_vendor_user_link_exists',
+	'bvmgr_vendor_user_link_vendor_email_meta_keys',
+	'bvmgr_vendor_user_link_find_vendor_matches_for_email',
+	'bvmgr_vendor_user_link_upsert',
+	'bvmgr_vendor_user_link_update',
+	'bvmgr_vendor_user_link_delete',
 );
 foreach ($functions as $function) {
 	eval(vms_extract_function($source, $function));
@@ -317,7 +317,7 @@ $table = 'wp_vms_vendor_user_links';
 
 vms_reset($wpdb);
 $wpdb->get_var_queue[] = $table;
-vms_same(true, vms_vendor_user_links_table_exists(), 'The exact repository table should be recognized.');
+vms_same(true, bvmgr_vendor_user_links_table_exists(), 'The exact repository table should be recognized.');
 $prepare = vms_last_prepare($wpdb);
 vms_same('SHOW TABLES LIKE %s', $prepare['query'], 'The schema probe should prepare its LIKE value.');
 vms_same(array('wp\\_vms\\_vendor\\_user\\_links'), $prepare['args'], 'The schema probe should pass its escaped table name as a value.');
@@ -328,7 +328,7 @@ $wpdb->get_var_queue[] = $table;
 $wpdb->get_results_queue[] = array(
 	array('vendor_id' => '41', 'user_role' => 'owner', 'link_status' => 'active', 'is_primary' => '1'),
 );
-$rows = vms_vendor_user_links_get_by_user(22, false);
+$rows = bvmgr_vendor_user_links_get_by_user(22, false);
 vms_same(
 	array(array('vendor_id' => 41, 'user_role' => 'owner', 'link_status' => 'active', 'is_primary' => 1)),
 	$rows,
@@ -348,7 +348,7 @@ $wpdb->get_var_queue[] = $table;
 $wpdb->get_results_queue[] = array(
 	array('vendor_id' => '42', 'user_role' => 'viewer', 'link_status' => 'disabled', 'is_primary' => '0'),
 );
-$rows = vms_vendor_user_links_get_by_user(22, true);
+$rows = bvmgr_vendor_user_links_get_by_user(22, true);
 vms_same('disabled', $rows[0]['link_status'] ?? '', 'Inactive-inclusive user reads should preserve disabled rows.');
 $prepare = vms_last_prepare($wpdb);
 vms_same(array($table, 22), $prepare['args'], 'Inactive-inclusive user reads should omit the active-status argument.');
@@ -358,7 +358,7 @@ vms_reset($wpdb);
 $wpdb->get_var_queue[] = null;
 $GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 91;
 WP_Query::$queue[] = array(91, 92, 91);
-$rows = vms_vendor_user_links_get_by_user(22, false);
+$rows = bvmgr_vendor_user_links_get_by_user(22, false);
 vms_same(array(91, 92), array_column($rows, 'vendor_id'), 'Missing-table user reads should preserve and deduplicate legacy pointers.');
 $legacy = WP_Query::$calls[0] ?? array();
 vms_same('vms_vendor', $legacy['post_type'] ?? '', 'Legacy user fallback should query vendor posts.');
@@ -370,7 +370,7 @@ $wpdb->get_var_queue[] = $table;
 $wpdb->get_results_queue[] = array(
 	array('user_id' => '22', 'user_role' => 'manager', 'link_status' => 'active'),
 );
-$rows = vms_vendor_user_links_get_by_vendor(41, false);
+$rows = bvmgr_vendor_user_links_get_by_vendor(41, false);
 vms_same(
 	array(array('user_id' => 22, 'user_role' => 'manager', 'link_status' => 'active')),
 	$rows,
@@ -386,7 +386,7 @@ $wpdb->get_var_queue[] = $table;
 $wpdb->get_results_queue[] = array(
 	array('user_id' => '23', 'user_role' => 'viewer', 'link_status' => 'disabled'),
 );
-$rows = vms_vendor_user_links_get_by_vendor(41, true);
+$rows = bvmgr_vendor_user_links_get_by_vendor(41, true);
 vms_same('disabled', $rows[0]['link_status'] ?? '', 'Inactive-inclusive vendor reads should preserve disabled rows.');
 $prepare = vms_last_prepare($wpdb);
 vms_same(array($table, 41), $prepare['args'], 'Inactive-inclusive vendor reads should omit the active-status argument.');
@@ -397,7 +397,7 @@ $wpdb->get_var_queue[] = null;
 $GLOBALS['vms_post_meta'][41][BVMGR_VENDOR_PRIMARY_USER_META_KEY] = 22;
 vms_same(
 	array(array('user_id' => 22, 'user_role' => 'primary_contact', 'link_status' => 'active')),
-	vms_vendor_user_links_get_by_vendor(41),
+	bvmgr_vendor_user_links_get_by_vendor(41),
 	'Missing-table vendor reads should preserve the primary-contact fallback.'
 );
 
@@ -405,7 +405,7 @@ vms_reset($wpdb);
 WP_Query::$queue[] = array(44, 44, 45);
 vms_same(
 	array(44, 45),
-	vms_vendor_user_link_find_vendor_matches_for_email(' Manager@Example.com '),
+	bvmgr_vendor_user_link_find_vendor_matches_for_email(' Manager@Example.com '),
 	'Email matching should sanitize input and deduplicate vendor IDs.'
 );
 $email_query = WP_Query::$calls[0] ?? array();
@@ -419,7 +419,7 @@ $wpdb->get_results_queue[] = array(
 	array('vendor_id' => 41, 'user_role' => 'owner', 'link_status' => 'active', 'is_primary' => 0),
 );
 $wpdb->query_queue = array(1, 1);
-vms_same(true, vms_vendor_user_links_set_primary_for_user(22, 41, 7), 'Authorized primary reassignment should succeed.');
+vms_same(true, bvmgr_vendor_user_links_set_primary_for_user(22, 41, 7), 'Authorized primary reassignment should succeed.');
 vms_same(
 	array('update_user_meta', 'query', 'query'),
 	vms_event_kinds(),
@@ -444,7 +444,7 @@ vms_no_placeholders($primary_prepares[1]['sql'], 'Primary set should be fully pr
 vms_reset($wpdb);
 $wpdb->get_var_queue[] = $table;
 $wpdb->get_results_queue[] = array();
-vms_same(false, vms_vendor_user_links_set_primary_for_user(22, 41, 7), 'Primary reassignment should reject a user without an active link.');
+vms_same(false, bvmgr_vendor_user_links_set_primary_for_user(22, 41, 7), 'Primary reassignment should reject a user without an active link.');
 vms_same(array(), vms_event_kinds(), 'Unauthorized primary reassignment should not mutate pointers or rows.');
 
 vms_reset($wpdb);
@@ -454,7 +454,7 @@ $wpdb->get_results_queue[] = array();
 $wpdb->query_queue[] = 1;
 vms_same(
 	true,
-	vms_vendor_user_link_upsert(77, 22, array('role' => 'unknown', 'status' => 'active', 'source' => 'test'), 9),
+	bvmgr_vendor_user_link_upsert(77, 22, array('role' => 'unknown', 'status' => 'active', 'source' => 'test'), 9),
 	'Repository upsert should report successful execution.'
 );
 $prepare = vms_last_prepare($wpdb);
@@ -476,13 +476,13 @@ $GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 99;
 $wpdb->get_var_queue = array($table, $table);
 $wpdb->get_results_queue[] = array();
 $wpdb->query_queue[] = false;
-vms_same(false, vms_vendor_user_link_upsert(77, 22, array(), 9), 'Failed repository upsert should report failure.');
+vms_same(false, bvmgr_vendor_user_link_upsert(77, 22, array(), 9), 'Failed repository upsert should report failure.');
 vms_same(array('query'), vms_event_kinds(), 'Failed repository upsert should not update legacy vendor metadata or dispatch creation.');
 
 vms_reset($wpdb);
 $GLOBALS['vms_user_meta'][22][BVMGR_USER_PRIMARY_VENDOR_META_KEY] = 99;
 $wpdb->get_var_queue = array(null, null);
-vms_same(true, vms_vendor_user_link_upsert(77, 22, array(), 9), 'Missing-table upsert should retain the legacy fallback.');
+vms_same(true, bvmgr_vendor_user_link_upsert(77, 22, array(), 9), 'Missing-table upsert should retain the legacy fallback.');
 vms_same(22, $GLOBALS['vms_post_meta'][77][BVMGR_VENDOR_PRIMARY_USER_META_KEY] ?? 0, 'Legacy fallback should seed the empty vendor primary-user pointer.');
 vms_same(array('update_post_meta', 'action'), vms_event_kinds(), 'Legacy fallback should update the vendor pointer before creation notification.');
 
@@ -491,7 +491,7 @@ $wpdb->get_var_queue[] = $table;
 $wpdb->update_queue[] = 1;
 vms_same(
 	true,
-	vms_vendor_user_link_update(77, 22, array('role' => 'owner', 'status' => 'disabled'), 9),
+	bvmgr_vendor_user_link_update(77, 22, array('role' => 'owner', 'status' => 'disabled'), 9),
 	'Repository update should report wpdb success.'
 );
 $update = vms_last_call($wpdb, 'update');
@@ -515,7 +515,7 @@ $wpdb->get_results_queue = array(
 );
 $wpdb->delete_queue[] = 1;
 $wpdb->query_queue = array(1, 1);
-vms_same(true, vms_vendor_user_link_delete(77, 22, 5), 'Repository delete should remove the link and promote a remaining active vendor.');
+vms_same(true, bvmgr_vendor_user_link_delete(77, 22, 5), 'Repository delete should remove the link and promote a remaining active vendor.');
 vms_same(
 	array('delete_post_meta', 'delete_user_meta', 'delete', 'update_user_meta', 'query', 'query'),
 	vms_event_kinds(),

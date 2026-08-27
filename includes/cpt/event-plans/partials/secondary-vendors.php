@@ -276,8 +276,8 @@ $render_secondary_vendor_select = static function (array $group, int $selected_i
 $render_secondary_vendor_group = static function (array $group, int $group_index) use ($post, $secondary_group_type_options, $secondary_mode_options, $type_pool_map, $render_secondary_vendor_select, $render_secondary_vendor_group_summary): void {
 	$type_slug = sanitize_key((string) ($group['type_slug'] ?? ''));
 	$type_name = trim((string) ($group['type_name'] ?? ''));
-	if ($type_name === '' && $type_slug !== '' && function_exists('vms_vendor_type_label')) {
-		$type_name = (string) vms_vendor_type_label($type_slug);
+	if ($type_name === '' && $type_slug !== '' && function_exists('bvmgr_vendor_type_label')) {
+		$type_name = (string) bvmgr_vendor_type_label($type_slug);
 	}
 	$mode = sanitize_key((string) ($group['mode'] ?? 'standard'));
 	$slot_limit_display = isset($group['slot_limit_display']) ? (string) $group['slot_limit_display'] : '';

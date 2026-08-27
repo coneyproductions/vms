@@ -192,7 +192,7 @@ add_action('admin_menu', function () {
     __('Vendor Command Center', 'backstage-venue-manager'),
     $capability,
     'vms-vendor-command-center',
-    'vms_render_vendor_command_center_page'
+    'bvmgr_render_vendor_command_center_page'
   );
 
   add_submenu_page(
@@ -322,27 +322,27 @@ add_action('admin_menu', function () {
   }
 
   // Integrity: Venue link reconciliation (review-first)
-  if (function_exists('vms_render_integrity_venue_reconcile_page')) {
+  if (function_exists('bvmgr_render_integrity_venue_reconcile_page')) {
     add_submenu_page(
       $parent_slug,
       __('Integrity: Venue Links', 'backstage-venue-manager'),
       __('Integrity: Venue Links', 'backstage-venue-manager'),
       $capability,
       'vms-integrity-venue-links',
-      'vms_render_integrity_venue_reconcile_page'
+      'bvmgr_render_integrity_venue_reconcile_page'
     );
   }
   
 
   // Integrity: Calendar link reconciliation (review-first)
-  if (function_exists('vms_render_integrity_calendar_reconcile_page')) {
+  if (function_exists('bvmgr_render_integrity_calendar_reconcile_page')) {
     add_submenu_page(
       $parent_slug,
       __('Integrity: Calendar Links', 'backstage-venue-manager'),
       __('Integrity: Calendar Links', 'backstage-venue-manager'),
       $capability,
       'vms-integrity-calendar-links',
-      'vms_render_integrity_calendar_reconcile_page'
+      'bvmgr_render_integrity_calendar_reconcile_page'
     );
   }
 add_submenu_page(

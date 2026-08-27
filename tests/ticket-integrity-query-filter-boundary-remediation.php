@@ -453,7 +453,7 @@ $daily_report_source = vms_test_read_file($daily_report_path);
 $live_monitor_source = vms_test_read_file($live_monitor_path);
 $build_targets_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket_integrity_build_targets');
 $scan_all_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket_integrity_scan_all');
-$vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'vms_vendor_type_maybe_canonicalize_terms');
+$vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'bvmgr_vendor_type_maybe_canonicalize_terms');
 
 $live_monitor_projection = vms_test_project_g16_monitor_logging($live_monitor_source);
 $live_monitor_projection_removals = 0;
@@ -535,13 +535,13 @@ vms_test_assert_contains(
 	'Vendor-type canonicalization should remain scoped to the registered vendor-type taxonomy.'
 );
 vms_test_assert_contains(
-	"add_action('init', 'vms_vendor_type_maybe_canonicalize_terms', 22);",
+	"add_action('init', 'bvmgr_vendor_type_maybe_canonicalize_terms', 22);",
 	$vendor_type_source,
 	'Vendor-type canonicalization should remain registered on init at priority 22 with the default accepted-argument count.'
 );
 vms_test_assert_same(
 	1,
-	vms_test_count_pattern("/add_action\(\s*'init'\s*,\s*'vms_vendor_type_maybe_canonicalize_terms'\s*,\s*22\s*\);/", $vendor_type_source),
+	vms_test_count_pattern("/add_action\(\s*'init'\s*,\s*'bvmgr_vendor_type_maybe_canonicalize_terms'\s*,\s*22\s*\);/", $vendor_type_source),
 	'Vendor-type canonicalization should have exactly one init hook registration.'
 );
 vms_test_assert_not_contains(

@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
 require_once __DIR__ . '/../../core/registry/meta-keys.php';
 require_once __DIR__ . '/../../core/registry/constants.php';
 
-function vms_admin_vendor_tax_columns_add($cols)
+function bvmgr_admin_vendor_tax_columns_add($cols)
 {
 	$new = array();
 
@@ -36,9 +36,9 @@ function vms_admin_vendor_tax_columns_add($cols)
 
 	return $new;
 }
-add_filter('manage_edit-' . BVMGR_CPT_VENDOR . '_columns', 'vms_admin_vendor_tax_columns_add', 20);
+add_filter('manage_edit-' . BVMGR_CPT_VENDOR . '_columns', 'bvmgr_admin_vendor_tax_columns_add', 20);
 
-function vms_admin_vendor_tax_columns_render($col, $post_id)
+function bvmgr_admin_vendor_tax_columns_render($col, $post_id)
 {
 	if (get_post_type($post_id) !== BVMGR_CPT_VENDOR) return;
 
@@ -83,4 +83,4 @@ function vms_admin_vendor_tax_columns_render($col, $post_id)
 		return;
 	}
 }
-add_action('manage_' . BVMGR_CPT_VENDOR . '_posts_custom_column', 'vms_admin_vendor_tax_columns_render', 10, 2);
+add_action('manage_' . BVMGR_CPT_VENDOR . '_posts_custom_column', 'bvmgr_admin_vendor_tax_columns_render', 10, 2);

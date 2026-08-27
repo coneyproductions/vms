@@ -134,7 +134,7 @@ Status: committed at `7482df66ab0b3b6995239fb06030f1d03e7b2750`.
 
 ### W6 — ticket integrity, forensics, mutation, Square, and revenue
 
-Status: verified for the isolated W6 commit.
+Status: committed at `1f244034e42ba1993c534e8f83e01d5cb1ae3d06`.
 
 - Exact cutover: `533` unique functions / `533` declaration sites moved atomically; W6 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
 - Ratchet: cumulative B3 progress is `2,347 / 4,521` functions and `2,359 / 4,541` declaration sites; `2,174` legacy functions / `2,182` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
@@ -143,4 +143,15 @@ Status: verified for the isolated W6 commit.
 - Disposable package: `/private/tmp/bvm-wporg-b3-w6-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `7e674bec1564059d937dc37a86a2f11ecb444fe1cb42cbe123cfef529ce5a420`; the build staged `374` files, linted `271` PHP files, syntax-checked `55` JavaScript files, and passed package integrity.
 - Supported-stack smoke: the exact W6 ZIP completed activation and authenticated/public smoke requests with the supported WooCommerce/TEC/Event Tickets stack without a plugin fatal or duplicate scheduled-work owner. Report SHA-256: `105a99df44bf03152ed5f153bc7b4b9152f60d8c71ad2e21d7f86ce7faad82d2`; `WARN` is limited to dependency/PHP deprecations.
 - Strict packaged scan: `2,915` total = historical `125` errors + `2,790` warnings, categorized exactly as B3 `2,182`, B7 `182`, method scope `420`, and external/core `6`. The gate records `2,359` authoritative B3 findings removed and no regression. Strict JSON SHA-256: `a1f7e12e4a7076a11b788fd8546c73aa2b1a9126b32f8706f30b68239563fb29`.
+- Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### W7 — vendor/venue applications, onboarding, registry, taxonomies, and admin
+
+Status: verified for the isolated W7 commit.
+
+- Exact cutover: `419` unique functions / `419` declaration sites moved atomically; W7 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
+- Ratchet: cumulative B3 progress is `2,766 / 4,521` functions and `2,778 / 4,541` declaration sites; `1,755` legacy functions / `1,763` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
+- Literal authority: seven executable shell/array-map/activation callback sites moved; ten vendor filters and the existing response-email form field remain legacy contracts.
+- Focused verification: Vendor Application inline JavaScript and admin CSS, confirmation output, Vendor ICS safe fetch, secondary-vendor lazy-load/save continuity, Administrator shell output, authorization/input, schedule notices, runtime stubs, changed-PHP lint, diff checks, and all primary B3/B2/B2.5/add-on/identity/release gates pass. Live-parity/projection, immutable-hash, historical-artifact, and explicit-WordPress-root tests remain excluded rather than weakened.
+- Checkpoint sequencing: W7 is committed on its independent green focused gate; the next exact-ZIP package/strict/runtime checkpoint follows W8's adjacent public portal/calendar wave.
 - Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

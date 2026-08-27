@@ -457,8 +457,8 @@ if (!function_exists('vms_calendar_vendor_type_label')) {
 			return __('Other', 'backstage-venue-manager');
 		}
 
-		if (function_exists('vms_vendor_type_label')) {
-			$label = trim((string) vms_vendor_type_label($type_slug));
+		if (function_exists('bvmgr_vendor_type_label')) {
+			$label = trim((string) bvmgr_vendor_type_label($type_slug));
 			if ($label !== '') {
 				return $label;
 			}

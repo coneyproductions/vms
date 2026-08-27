@@ -185,6 +185,23 @@
         {"legacy_identifier":"vms_ticket_integrity_watch_publish_transition","file":"includes/ticketing/ticket-integrity-cron.php","line":662,"decision":"retain","reason":"performance telemetry source label"},
         {"legacy_identifier":"vms_ticket_integrity_watch_ticketing_meta","file":"includes/ticketing/ticket-integrity-cron.php","line":691,"decision":"retain","reason":"performance telemetry source label"},
         {"legacy_identifier":"vms_ticket_inventory_forensics_normalize_log_row","file":"includes/ticketing/ticket-inventory-forensics.php","line":1632,"decision":"rename","reason":"array_map callable"},
-        {"legacy_identifier":"vms_ticket_mutation_audit_normalize_log_row","file":"includes/ticketing/ticket-mutation-audit.php","line":1271,"decision":"rename","reason":"array_map callable"}
+        {"legacy_identifier":"vms_ticket_mutation_audit_normalize_log_row","file":"includes/ticketing/ticket-mutation-audit.php","line":1271,"decision":"rename","reason":"array_map callable"},
+        {"legacy_identifier":"vms_render_integrity_calendar_reconcile_notice","file":"includes/admin/integrity-calendar-reconcile.php","line":198,"decision":"rename","reason":"shell rich-notices callable argument"},
+        {"legacy_identifier":"vms_render_integrity_calendar_reconcile_page_content","file":"includes/admin/integrity-calendar-reconcile.php","line":200,"decision":"rename","reason":"shell content callable argument"},
+        {"legacy_identifier":"vms_render_integrity_venue_reconcile_notice","file":"includes/admin/integrity-venue-reconcile.php","line":142,"decision":"rename","reason":"shell rich-notices callable argument"},
+        {"legacy_identifier":"vms_render_integrity_venue_reconcile_page_content","file":"includes/admin/integrity-venue-reconcile.php","line":144,"decision":"rename","reason":"shell content callable argument"},
+        {"legacy_identifier":"vms_render_vendor_command_center_page_content","file":"includes/admin/vendor-command-center.php","line":1414,"decision":"rename","reason":"shell content callable argument"},
+        {"legacy_identifier":"vms_vendor_app_confirmation_bypass_enabled","file":"includes/core/vendor-application-confirmation.php","line":16,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_app_confirmation_endpoint_slug","file":"includes/core/vendor-application-confirmation.php","line":109,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_app_normalize_vendor_type","file":"includes/vendor-applications.php","line":3024,"decision":"rename","reason":"array_map callable"},
+        {"legacy_identifier":"vms_vendor_app_selectable_vendor_types","file":"includes/vendor-applications.php","line":375,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_app_send_response_email","file":"includes/vendor-applications.php","line":1824,"decision":"retain","reason":"form request field contract"},
+        {"legacy_identifier":"vms_vendor_apply_turnstile_secret_key","file":"includes/vendor-applications.php","line":2163,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_apply_turnstile_site_key","file":"includes/vendor-applications.php","line":2113,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_booking_onboarding_schedule_event","file":"includes/activation.php","line":44,"decision":"rename","reason":"activation bootstrap callable registry"},
+        {"legacy_identifier":"vms_vendor_type_registry","file":"includes/taxonomies/vendor-type.php","line":34,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_user_link_notification_enabled","file":"includes/core/vendor-user-links.php","line":447,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_user_link_notification_recipients","file":"includes/core/vendor-user-links.php","line":644,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_vendor_user_link_request_notification_enabled","file":"includes/core/vendor-user-links.php","line":461,"decision":"retain","reason":"WordPress filter hook"}
     ]
 }

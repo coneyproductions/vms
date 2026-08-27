@@ -27,9 +27,9 @@ if (!defined('BVMGR_VENUE_CPT')) {
     define('BVMGR_VENUE_CPT', 'vms_venue');
 }
 
-add_action('init', 'vms_register_venue_cpt');
+add_action('init', 'bvmgr_register_venue_cpt');
 
-function vms_register_venue_cpt()
+function bvmgr_register_venue_cpt()
 {
 
     $labels = array(
@@ -63,8 +63,8 @@ function vms_register_venue_cpt()
 }
 
 
-if (!function_exists('vms_venue_meta_key')) {
-    function vms_venue_meta_key(string $field, string $fallback = ''): string
+if (!function_exists('bvmgr_venue_meta_key')) {
+    function bvmgr_venue_meta_key(string $field, string $fallback = ''): string
     {
         if (function_exists('bvmgr_meta_key')) {
             $key = (string) bvmgr_meta_key('venue', $field);
@@ -77,13 +77,13 @@ if (!function_exists('vms_venue_meta_key')) {
     }
 }
 
-if (!function_exists('vms_get_venue_location_data')) {
+if (!function_exists('bvmgr_get_venue_location_data')) {
     /**
      * Return normalized venue location data used by Meta Ads, social tools, and TEC venue sync.
      *
      * @return array<string,string>
      */
-    function vms_get_venue_location_data(int $venue_id): array
+    function bvmgr_get_venue_location_data(int $venue_id): array
     {
         $venue_id = absint($venue_id);
         if ($venue_id <= 0) {
@@ -100,14 +100,14 @@ if (!function_exists('vms_get_venue_location_data')) {
         }
 
         $data = array(
-            'address' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('address', '_vms_address'), true)),
-            'address_2' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('address_2', '_vms_address_2'), true)),
-            'city' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('city', '_vms_city'), true)),
-            'state' => strtoupper(trim((string) get_post_meta($venue_id, vms_venue_meta_key('state', '_vms_state'), true))),
-            'zip' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('zip', '_vms_zip'), true)),
-            'country' => strtoupper(trim((string) get_post_meta($venue_id, vms_venue_meta_key('country', '_vms_country'), true))),
-            'latitude' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('latitude', '_vms_latitude'), true)),
-            'longitude' => trim((string) get_post_meta($venue_id, vms_venue_meta_key('longitude', '_vms_longitude'), true)),
+            'address' => trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('address', '_vms_address'), true)),
+            'address_2' => trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('address_2', '_vms_address_2'), true)),
+            'city' => trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('city', '_vms_city'), true)),
+            'state' => strtoupper(trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('state', '_vms_state'), true))),
+            'zip' => trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('zip', '_vms_zip'), true)),
+            'country' => strtoupper(trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('country', '_vms_country'), true))),
+            'latitude' => trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('latitude', '_vms_latitude'), true)),
+            'longitude' => trim((string) get_post_meta($venue_id, bvmgr_venue_meta_key('longitude', '_vms_longitude'), true)),
         );
 
         if ($data['country'] === '') {
@@ -118,24 +118,24 @@ if (!function_exists('vms_get_venue_location_data')) {
     }
 }
 
-if (!function_exists('vms_venue_submitted_nonce')) {
-    function vms_venue_submitted_nonce(string $key): string
+if (!function_exists('bvmgr_venue_submitted_nonce')) {
+    function bvmgr_venue_submitted_nonce(string $key): string
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted venue nonce is required before local verification.
         return bvmgr_request_read_text_field($_POST, $key);
     }
 }
 
-if (!function_exists('vms_venue_notice_request_post_id')) {
-    function vms_venue_notice_request_post_id(): int
+if (!function_exists('bvmgr_venue_notice_request_post_id')) {
+    function bvmgr_venue_notice_request_post_id(): int
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue notice state only affects admin feedback.
         return bvmgr_request_read_absint($_GET, 'post');
     }
 }
 
-if (!function_exists('vms_sync_tec_venue_from_vms_venue')) {
-    function vms_sync_tec_venue_from_vms_venue(int $vms_venue_id, int $tec_venue_id = 0): int
+if (!function_exists('bvmgr_sync_tec_venue_from_vms_venue')) {
+    function bvmgr_sync_tec_venue_from_vms_venue(int $vms_venue_id, int $tec_venue_id = 0): int
     {
         $vms_venue_id = absint($vms_venue_id);
         $tec_venue_id = absint($tec_venue_id);
@@ -145,7 +145,7 @@ if (!function_exists('vms_sync_tec_venue_from_vms_venue')) {
         }
 
         if ($tec_venue_id <= 0) {
-            $tec_venue_id = (int) get_post_meta($vms_venue_id, vms_venue_meta_key('tec_venue_id', '_vms_tec_venue_id'), true);
+            $tec_venue_id = (int) get_post_meta($vms_venue_id, bvmgr_venue_meta_key('tec_venue_id', '_vms_tec_venue_id'), true);
         }
 
         if ($tec_venue_id <= 0 || !get_post_status($tec_venue_id)) {
@@ -160,7 +160,7 @@ if (!function_exists('vms_sync_tec_venue_from_vms_venue')) {
             ));
         }
 
-        $location = vms_get_venue_location_data($vms_venue_id);
+        $location = bvmgr_get_venue_location_data($vms_venue_id);
         $meta_map = array(
             '_VenueAddress' => (string) ($location['address'] ?? ''),
             '_VenueCity' => (string) ($location['city'] ?? ''),
@@ -193,19 +193,19 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_location',
         __('Venue Location', 'backstage-venue-manager'),
-        'vms_render_venue_location_box',
+        'bvmgr_render_venue_location_box',
         'vms_venue',
         'normal',
         'high'
     );
 });
 
-function vms_render_venue_location_box($post)
+function bvmgr_render_venue_location_box($post)
 {
     wp_nonce_field('vms_save_venue_location', 'vms_venue_location_nonce');
 
-    $location = function_exists('vms_get_venue_location_data')
-        ? vms_get_venue_location_data((int) $post->ID)
+    $location = function_exists('bvmgr_get_venue_location_data')
+        ? bvmgr_get_venue_location_data((int) $post->ID)
         : array(
             'address' => '',
             'address_2' => '',
@@ -279,7 +279,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = vms_venue_submitted_nonce('vms_venue_location_nonce');
+    $nonce = bvmgr_venue_submitted_nonce('vms_venue_location_nonce');
     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_location')) {
         return;
     }
@@ -312,14 +312,14 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     $longitude = preg_match('/^-?\d{1,3}(?:\.\d+)?$/', $longitude) ? $longitude : '';
 
     $updates = array(
-        vms_venue_meta_key('address', '_vms_address') => $address,
-        vms_venue_meta_key('address_2', '_vms_address_2') => $address_2,
-        vms_venue_meta_key('city', '_vms_city') => $city,
-        vms_venue_meta_key('state', '_vms_state') => $state,
-        vms_venue_meta_key('zip', '_vms_zip') => $zip,
-        vms_venue_meta_key('country', '_vms_country') => $country,
-        vms_venue_meta_key('latitude', '_vms_latitude') => $latitude,
-        vms_venue_meta_key('longitude', '_vms_longitude') => $longitude,
+        bvmgr_venue_meta_key('address', '_vms_address') => $address,
+        bvmgr_venue_meta_key('address_2', '_vms_address_2') => $address_2,
+        bvmgr_venue_meta_key('city', '_vms_city') => $city,
+        bvmgr_venue_meta_key('state', '_vms_state') => $state,
+        bvmgr_venue_meta_key('zip', '_vms_zip') => $zip,
+        bvmgr_venue_meta_key('country', '_vms_country') => $country,
+        bvmgr_venue_meta_key('latitude', '_vms_latitude') => $latitude,
+        bvmgr_venue_meta_key('longitude', '_vms_longitude') => $longitude,
     );
 
     foreach ($updates as $meta_key => $meta_value) {
@@ -330,8 +330,8 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
         }
     }
 
-    if (function_exists('vms_sync_tec_venue_from_vms_venue')) {
-        vms_sync_tec_venue_from_vms_venue((int) $post_id);
+    if (function_exists('bvmgr_sync_tec_venue_from_vms_venue')) {
+        bvmgr_sync_tec_venue_from_vms_venue((int) $post_id);
     }
 }, 18, 2);
 
@@ -346,14 +346,14 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_default_times',
         __('Default Event Times', 'backstage-venue-manager'),
-        'vms_render_venue_default_times_box',
+        'bvmgr_render_venue_default_times_box',
         'vms_venue',
         'side',
         'default'
     );
 });
 
-function vms_render_venue_default_times_box($post) {
+function bvmgr_render_venue_default_times_box($post) {
     wp_nonce_field('vms_save_venue_default_times', 'vms_venue_default_times_nonce');
 
     $start = (string) get_post_meta($post->ID, '_vms_default_start_time', true);
@@ -429,14 +429,14 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_schedule',
         __('Venue Schedule', 'backstage-venue-manager'),
-        'vms_render_venue_schedule_box',
+        'bvmgr_render_venue_schedule_box',
         'vms_venue',
         'normal',
         'default'
     );
 });
 
-function vms_render_venue_schedule_box($post)
+function bvmgr_render_venue_schedule_box($post)
 {
     wp_nonce_field('vms_save_venue_schedule', 'vms_venue_schedule_nonce');
 
@@ -547,7 +547,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = vms_venue_submitted_nonce('vms_venue_schedule_nonce');
+    $nonce = bvmgr_venue_submitted_nonce('vms_venue_schedule_nonce');
     if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_schedule')) {
         return;
     }
@@ -611,7 +611,7 @@ add_filter('wp_insert_post_data', function ($data, $postarr) {
     $open_days_raw = null;
     $submitted_open_days = array();
     $has_submitted_open_days = false;
-    $schedule_nonce = vms_venue_submitted_nonce('vms_venue_schedule_nonce');
+    $schedule_nonce = bvmgr_venue_submitted_nonce('vms_venue_schedule_nonce');
     $has_verified_schedule_request = ($schedule_nonce !== '' && wp_verify_nonce($schedule_nonce, 'vms_save_venue_schedule'));
 
     if ($has_verified_schedule_request) {
@@ -668,7 +668,7 @@ add_action('admin_notices', function () {
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if (!$screen || $screen->base !== 'post' || $screen->post_type !== 'vms_venue') return;
 
-    $post_id = vms_venue_notice_request_post_id();
+    $post_id = bvmgr_venue_notice_request_post_id();
     if ($post_id <= 0) return;
 
     $key = 'vms_venue_schedule_notice_' . $post_id;
@@ -728,7 +728,7 @@ add_action('untrash_post', function ($post_id) {
 }, 5);
 
 add_action('admin_notices', function () {
-    $post_id = vms_venue_notice_request_post_id();
+    $post_id = bvmgr_venue_notice_request_post_id();
     if ($post_id <= 0) return;
     if (get_post_type($post_id) !== 'vms_venue') return;
 

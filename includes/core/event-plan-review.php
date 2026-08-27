@@ -612,15 +612,15 @@ if (!function_exists('bvmgr_event_plan_review_vendor_label')) {
 if (!function_exists('bvmgr_event_plan_review_term_label')) {
     function bvmgr_event_plan_review_term_label(string $slug): string
     {
-        $slug = function_exists('vms_vendor_type_normalize_slug')
-            ? vms_vendor_type_normalize_slug($slug)
+        $slug = function_exists('bvmgr_vendor_type_normalize_slug')
+            ? bvmgr_vendor_type_normalize_slug($slug)
             : sanitize_key($slug);
         if ($slug === '') {
             return __('Not set', 'backstage-venue-manager');
         }
 
-        $term = function_exists('vms_vendor_type_get_term')
-            ? vms_vendor_type_get_term($slug)
+        $term = function_exists('bvmgr_vendor_type_get_term')
+            ? bvmgr_vendor_type_get_term($slug)
             : get_term_by('slug', $slug, 'vms_vendor_type');
         if ($term instanceof WP_Term) {
             return (string) $term->name;

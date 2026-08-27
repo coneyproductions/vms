@@ -480,8 +480,8 @@ if (!function_exists('bvmgr_event_plan_create_rescheduled_draft')) {
         }
 
         $new_post_id = 0;
-        if (function_exists('vms_duplicate_post_with_meta_and_terms')) {
-            $new_post_id = (int) vms_duplicate_post_with_meta_and_terms($source_post_id, array(
+        if (function_exists('bvmgr_duplicate_post_with_meta_and_terms')) {
+            $new_post_id = (int) bvmgr_duplicate_post_with_meta_and_terms($source_post_id, array(
                 'post_status' => 'draft',
                 'post_title'  => $title,
                 'post_author' => get_current_user_id(),
@@ -2737,8 +2737,8 @@ class BVMGR_Admin_Event_Plans
             $plan_id,
             $cache_key,
             static function () use ($vendor_id, $type_slug): bool {
-                if (function_exists('vms_vendor_has_type')) {
-                    return (bool) vms_vendor_has_type($vendor_id, $type_slug);
+                if (function_exists('bvmgr_vendor_has_type')) {
+                    return (bool) bvmgr_vendor_has_type($vendor_id, $type_slug);
                 }
 
                 if (function_exists('has_term')) {
@@ -2787,8 +2787,8 @@ class BVMGR_Admin_Event_Plans
                         continue;
                     }
 
-                    $slug = function_exists('vms_vendor_type_canonical_slug_for_term')
-                        ? vms_vendor_type_canonical_slug_for_term($term)
+                    $slug = function_exists('bvmgr_vendor_type_canonical_slug_for_term')
+                        ? bvmgr_vendor_type_canonical_slug_for_term($term)
                         : sanitize_key((string) $term->slug);
                     if ($slug === '') {
                         continue;
@@ -2928,8 +2928,8 @@ class BVMGR_Admin_Event_Plans
                     ? (string) bvmgr_event_plan_legacy_secondary_vendor_type_from_assignments($secondary_vendor_assignments)
                     : (string) $read_meta($secondary_type_key, '');
                 if ($secondary_vendor_type !== '') {
-                    $secondary_vendor_type = function_exists('vms_vendor_type_normalize_slug')
-                        ? (string) vms_vendor_type_normalize_slug($secondary_vendor_type)
+                    $secondary_vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+                        ? (string) bvmgr_vendor_type_normalize_slug($secondary_vendor_type)
                         : sanitize_title($secondary_vendor_type);
                 }
 
@@ -3445,8 +3445,8 @@ class BVMGR_Admin_Event_Plans
                         continue;
                     }
 
-                    $secondary_type_options[$current_type_slug] = function_exists('vms_vendor_type_label')
-                        ? (string) vms_vendor_type_label($current_type_slug)
+                    $secondary_type_options[$current_type_slug] = function_exists('bvmgr_vendor_type_label')
+                        ? (string) bvmgr_vendor_type_label($current_type_slug)
                         : ucwords(str_replace(array('_', '-'), ' ', $current_type_slug));
                 }
 
@@ -3559,8 +3559,8 @@ class BVMGR_Admin_Event_Plans
 
                     $type_name = trim((string) ($secondary_type_options[$type_slug] ?? ''));
                     if ($type_name === '') {
-                        $type_name = function_exists('vms_vendor_type_label')
-                            ? (string) vms_vendor_type_label($type_slug)
+                        $type_name = function_exists('bvmgr_vendor_type_label')
+                            ? (string) bvmgr_vendor_type_label($type_slug)
                             : ucwords(str_replace(array('_', '-'), ' ', $type_slug));
                     }
 
@@ -7601,8 +7601,8 @@ class BVMGR_Admin_Event_Plans
         $venue_id_saved = (int) get_post_meta($post->ID, '_vms_venue_id', true);
 
         $venue_id_ui = 0;
-        if ($venue_id_saved <= 0 && function_exists('vms_get_current_venue_id')) {
-            $venue_id_ui = (int) vms_get_current_venue_id();
+        if ($venue_id_saved <= 0 && function_exists('bvmgr_get_current_venue_id')) {
+            $venue_id_ui = (int) bvmgr_get_current_venue_id();
         }
 
         // ----------------------------
@@ -7925,8 +7925,8 @@ class BVMGR_Admin_Event_Plans
             ? bvmgr_event_plan_perf_span_start('event_plan_secondary_vendor_lookup', (int) $post->ID, array('section' => 'secondary_vendor_lookup'))
             : '';
         try {
-            $secondary_vendor_type = function_exists('vms_vendor_type_normalize_slug')
-                ? vms_vendor_type_normalize_slug((string) get_post_meta($post->ID, $k_secondary_type, true))
+            $secondary_vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+                ? bvmgr_vendor_type_normalize_slug((string) get_post_meta($post->ID, $k_secondary_type, true))
                 : sanitize_title((string) get_post_meta($post->ID, $k_secondary_type, true));
 
             $secondary_vendor_ids = get_post_meta($post->ID, $k_secondary_ids, true);
@@ -7937,15 +7937,15 @@ class BVMGR_Admin_Event_Plans
 
         if ($post->post_status === 'auto-draft') {
             if ($secondary_vendor_type === '' && isset($admin_get['vms_secondary_vendor_type'])) {
-                $secondary_vendor_type = function_exists('vms_vendor_type_normalize_slug')
-                    ? vms_vendor_type_normalize_slug((string) $admin_get['vms_secondary_vendor_type'])
+                $secondary_vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+                    ? bvmgr_vendor_type_normalize_slug((string) $admin_get['vms_secondary_vendor_type'])
                     : sanitize_title((string) $admin_get['vms_secondary_vendor_type']);
             }
             if ($secondary_vendor_type === '' && isset($admin_get['vms_prefill_vendor_mode'], $admin_get['vms_prefill_vendor_type'])) {
                 $qs_prefill_mode = sanitize_key((string) $admin_get['vms_prefill_vendor_mode']);
                 if ($qs_prefill_mode === 'secondary') {
-                    $secondary_vendor_type = function_exists('vms_vendor_type_normalize_slug')
-                        ? vms_vendor_type_normalize_slug((string) $admin_get['vms_prefill_vendor_type'])
+                    $secondary_vendor_type = function_exists('bvmgr_vendor_type_normalize_slug')
+                        ? bvmgr_vendor_type_normalize_slug((string) $admin_get['vms_prefill_vendor_type'])
                         : sanitize_title((string) $admin_get['vms_prefill_vendor_type']);
                 }
             }
@@ -8358,12 +8358,12 @@ class BVMGR_Admin_Event_Plans
                     if ($prefill_mode === 'secondary') {
                         $prefill_type_label = '';
                         if (isset($admin_get['vms_prefill_vendor_type'])) {
-                            $prefill_type_slug = function_exists('vms_vendor_type_normalize_slug')
-                                ? vms_vendor_type_normalize_slug((string) $admin_get['vms_prefill_vendor_type'])
+                            $prefill_type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
+                                ? bvmgr_vendor_type_normalize_slug((string) $admin_get['vms_prefill_vendor_type'])
                                 : sanitize_title((string) $admin_get['vms_prefill_vendor_type']);
                             if ($prefill_type_slug !== '') {
-                                $prefill_type_term = function_exists('vms_vendor_type_get_term')
-                                    ? vms_vendor_type_get_term($prefill_type_slug)
+                                $prefill_type_term = function_exists('bvmgr_vendor_type_get_term')
+                                    ? bvmgr_vendor_type_get_term($prefill_type_slug)
                                     : get_term_by('slug', $prefill_type_slug, 'vms_vendor_type');
                                 if ($prefill_type_term instanceof WP_Term) {
                                     $prefill_type_label = (string) $prefill_type_term->name;
@@ -12273,8 +12273,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
 		if (!function_exists('bvmgr_event_plan_normalize_secondary_vendor_type_slug')) {
 			function bvmgr_event_plan_normalize_secondary_vendor_type_slug(string $type_slug): string
 			{
-				return function_exists('vms_vendor_type_normalize_slug')
-					? vms_vendor_type_normalize_slug($type_slug)
+				return function_exists('bvmgr_vendor_type_normalize_slug')
+					? bvmgr_vendor_type_normalize_slug($type_slug)
 					: sanitize_title($type_slug);
 			}
 		}
@@ -12390,8 +12390,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     }
 
                     if ($type_slug !== '') {
-                        $matches_type = function_exists('vms_vendor_has_type')
-                            ? vms_vendor_has_type($vendor_id, $type_slug)
+                        $matches_type = function_exists('bvmgr_vendor_has_type')
+                            ? bvmgr_vendor_has_type($vendor_id, $type_slug)
                             : (function_exists('has_term') ? has_term($type_slug, 'vms_vendor_type', $vendor_id) : true);
                         if (!$matches_type) {
                             continue;
@@ -12607,8 +12607,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $k_secondary_unq     = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_unqualified') : '_vms_secondary_vendor_unqualified';
                 $k_secondary_unq_ids = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_unqualified_ids') : '_vms_secondary_vendor_unqualified_ids';
 
-                $type_slug = function_exists('vms_vendor_type_normalize_slug')
-                    ? vms_vendor_type_normalize_slug($type_slug)
+                $type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
+                    ? bvmgr_vendor_type_normalize_slug($type_slug)
                     : sanitize_title($type_slug);
                 if ($type_slug !== '') {
                     update_post_meta($post_id, $k_secondary_type, $type_slug);
@@ -12646,8 +12646,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     }
 
                     if ($type_slug !== '') {
-                        $matches_type = function_exists('vms_vendor_has_type')
-                            ? vms_vendor_has_type($vendor_id, $type_slug)
+                        $matches_type = function_exists('bvmgr_vendor_has_type')
+                            ? bvmgr_vendor_has_type($vendor_id, $type_slug)
                             : (function_exists('has_term') ? has_term($type_slug, 'vms_vendor_type', $vendor_id) : true);
                         if (!$matches_type) {
                             continue;
@@ -15142,14 +15142,14 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     'vendor_id' => $band_id,
                     'source' => 'primary',
                     'source_label' => __('Primary Vendor', 'backstage-venue-manager'),
-                    'type_slug' => function_exists('vms_vendor_primary_type_slug') ? vms_vendor_primary_type_slug($band_id) : '',
+                    'type_slug' => function_exists('bvmgr_vendor_primary_type_slug') ? bvmgr_vendor_primary_type_slug($band_id) : '',
                 );
             }
 
             foreach ($secondary_assignments as $type_slug => $assignment) {
                 $type_slug = sanitize_title((string) $type_slug);
-                $source_label = function_exists('vms_vendor_type_label')
-                    ? (string) vms_vendor_type_label($type_slug)
+                $source_label = function_exists('bvmgr_vendor_type_label')
+                    ? (string) bvmgr_vendor_type_label($type_slug)
                     : ucwords(str_replace(array('_', '-'), ' ', $type_slug));
                 foreach ((array) ($assignment['vendor_ids'] ?? array()) as $secondary_id) {
                     $secondary_id = absint($secondary_id);
@@ -15173,16 +15173,16 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 }
 
                 $type_slug = sanitize_title((string) ($vendor_row['type_slug'] ?? ''));
-                if ($type_slug === '' && function_exists('vms_vendor_primary_type_slug')) {
-                    $type_slug = vms_vendor_primary_type_slug($vendor_id);
+                if ($type_slug === '' && function_exists('bvmgr_vendor_primary_type_slug')) {
+                    $type_slug = bvmgr_vendor_primary_type_slug($vendor_id);
                 }
 
-                $category_label = function_exists('vms_vendor_category_label_for_type')
-                    ? vms_vendor_category_label_for_type($type_slug)
+                $category_label = function_exists('bvmgr_vendor_category_label_for_type')
+                    ? bvmgr_vendor_category_label_for_type($type_slug)
                     : __('Category', 'backstage-venue-manager');
 
-                $terms = function_exists('vms_vendor_get_category_terms')
-                    ? vms_vendor_get_category_terms($vendor_id)
+                $terms = function_exists('bvmgr_vendor_get_category_terms')
+                    ? bvmgr_vendor_get_category_terms($vendor_id)
                     : wp_get_post_terms($vendor_id, 'vms_vendor_category');
                 if (is_wp_error($terms) || !is_array($terms)) {
                     $terms = array();
@@ -15410,8 +15410,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
             $existing = (int) get_post_meta($vms_venue_id, $key, true);
             if ($existing > 0 && get_post_status($existing)) {
-                if (function_exists('vms_sync_tec_venue_from_vms_venue')) {
-                    vms_sync_tec_venue_from_vms_venue($vms_venue_id, $existing);
+                if (function_exists('bvmgr_sync_tec_venue_from_vms_venue')) {
+                    bvmgr_sync_tec_venue_from_vms_venue($vms_venue_id, $existing);
                 }
                 return $existing;
             }
@@ -15419,8 +15419,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
             $name = (string) get_the_title($vms_venue_id);
             if ($name === '') return 0;
 
-            $location = function_exists('vms_get_venue_location_data')
-                ? vms_get_venue_location_data($vms_venue_id)
+            $location = function_exists('bvmgr_get_venue_location_data')
+                ? bvmgr_get_venue_location_data($vms_venue_id)
                 : array();
 
             $create_args = array(
@@ -15448,8 +15448,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
             if ($created && !is_wp_error($created)) {
                 $created = (int) $created;
                 update_post_meta($vms_venue_id, $key, $created);
-                if (function_exists('vms_sync_tec_venue_from_vms_venue')) {
-                    vms_sync_tec_venue_from_vms_venue($vms_venue_id, $created);
+                if (function_exists('bvmgr_sync_tec_venue_from_vms_venue')) {
+                    bvmgr_sync_tec_venue_from_vms_venue($vms_venue_id, $created);
                 }
                 return $created;
             }

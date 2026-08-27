@@ -184,37 +184,37 @@ function get_current_user_id(): int
 	return 17;
 }
 
-function vms_vendor_app_meta_key(string $name): string
+function bvmgr_vendor_app_meta_key(string $name): string
 {
 	return '_vms_app_' . sanitize_key($name);
 }
 
-function vms_vendor_app_cpt_slugs(): array
+function bvmgr_vendor_app_cpt_slugs(): array
 {
 	return array('vms_vendor_application');
 }
 
-function vms_vendor_app_generate_raw_confirmation_token(): string
+function bvmgr_vendor_app_generate_raw_confirmation_token(): string
 {
 	return 'raw-confirmation-token';
 }
 
-function vms_vendor_app_hash_confirmation_token(string $raw): string
+function bvmgr_vendor_app_hash_confirmation_token(string $raw): string
 {
 	return hash('sha256', 'test|' . trim($raw));
 }
 
-function vms_vendor_app_get_confirmation_email(int $app_id): string
+function bvmgr_vendor_app_get_confirmation_email(int $app_id): string
 {
 	return sanitize_email((string) ($GLOBALS['vms_app_emails'][$app_id] ?? ''));
 }
 
-function vms_vendor_app_confirmation_window_seconds(): int
+function bvmgr_vendor_app_confirmation_window_seconds(): int
 {
 	return 172800;
 }
 
-function vms_vendor_app_confirmation_endpoint_url(array $args = array()): string
+function bvmgr_vendor_app_confirmation_endpoint_url(array $args = array()): string
 {
 	return 'https://example.test/availability-dispatch/confirm?' . http_build_query($args);
 }
@@ -275,23 +275,23 @@ function wp_strip_all_tags(string $text): string
 	return strip_tags($text);
 }
 
-function vms_vendor_app_get_status(int $app_id): string
+function bvmgr_vendor_app_get_status(int $app_id): string
 {
 	return (string) ($GLOBALS['vms_statuses'][$app_id] ?? 'pending');
 }
 
-function vms_vendor_app_get_confirmation_state(int $app_id): string
+function bvmgr_vendor_app_get_confirmation_state(int $app_id): string
 {
 	return (string) ($GLOBALS['vms_states'][$app_id] ?? 'unconfirmed');
 }
 
-function vms_vendor_app_confirmation_attempt_rate_limited(string $raw_token): bool
+function bvmgr_vendor_app_confirmation_attempt_rate_limited(string $raw_token): bool
 {
 	unset($raw_token);
 	return (bool) ($GLOBALS['vms_rate_limited'] ?? false);
 }
 
-function vms_vendor_app_note_confirmation_attempt_failure(string $raw_token): void
+function bvmgr_vendor_app_note_confirmation_attempt_failure(string $raw_token): void
 {
 	vms_test_event('attempt_failure', array('raw_token' => $raw_token));
 }
@@ -302,29 +302,29 @@ function get_user_by(string $field, string $value)
 	return $GLOBALS['vms_existing_user'] ?? false;
 }
 
-function vms_vendor_app_resolve_or_create_user_for_email(int $app_id, string $email)
+function bvmgr_vendor_app_resolve_or_create_user_for_email(int $app_id, string $email)
 {
 	unset($app_id, $email);
 	return $GLOBALS['vms_resolved_user'] ?? new WP_User();
 }
 
-function vms_vendor_app_mark_review_ready(int $app_id, string $source, int $user_id): void
+function bvmgr_vendor_app_mark_review_ready(int $app_id, string $source, int $user_id): void
 {
 	vms_test_event('review_ready', compact('app_id', 'source', 'user_id'));
 }
 
-function vms_vendor_app_maybe_notify_review_ready(int $app_id): bool
+function bvmgr_vendor_app_maybe_notify_review_ready(int $app_id): bool
 {
 	vms_test_event('notify_ready', compact('app_id'));
 	return true;
 }
 
-function vms_vendor_app_clear_confirmation_attempt_failures(string $raw_token): void
+function bvmgr_vendor_app_clear_confirmation_attempt_failures(string $raw_token): void
 {
 	vms_test_event('clear_attempts', compact('raw_token'));
 }
 
-function vms_vendor_app_confirmation_reset_url(): string
+function bvmgr_vendor_app_confirmation_reset_url(): string
 {
 	return 'https://example.test/reset-password/';
 }
@@ -427,18 +427,18 @@ $live_source = (string) file_get_contents(dirname(__DIR__, 3) . '/vms/includes/c
 vms_assert($source !== '' && $live_source !== '', 'Mirror and shadow-live confirmation sources should be readable.');
 
 $owned_functions = array(
-	'vms_vendor_app_find_application_by_public_lookup_key',
-	'vms_vendor_app_get_latest_confirmation_token_row',
-	'vms_vendor_app_get_latest_open_confirmation_token_row',
-	'vms_vendor_app_get_confirmation_token_row_by_hash',
-	'vms_vendor_app_invalidate_confirmation_token',
-	'vms_vendor_app_invalidate_open_confirmation_tokens',
-	'vms_vendor_app_create_confirmation_token',
-	'vms_vendor_app_mark_confirmation_token_sent',
-	'vms_vendor_app_mark_confirmation_token_consumed',
-	'vms_vendor_app_find_duplicate_open_application',
-	'vms_vendor_app_find_recent_application_for_user',
-	'vms_vendor_app_expire_stale_confirmations',
+	'bvmgr_vendor_app_find_application_by_public_lookup_key',
+	'bvmgr_vendor_app_get_latest_confirmation_token_row',
+	'bvmgr_vendor_app_get_latest_open_confirmation_token_row',
+	'bvmgr_vendor_app_get_confirmation_token_row_by_hash',
+	'bvmgr_vendor_app_invalidate_confirmation_token',
+	'bvmgr_vendor_app_invalidate_open_confirmation_tokens',
+	'bvmgr_vendor_app_create_confirmation_token',
+	'bvmgr_vendor_app_mark_confirmation_token_sent',
+	'bvmgr_vendor_app_mark_confirmation_token_consumed',
+	'bvmgr_vendor_app_find_duplicate_open_application',
+	'bvmgr_vendor_app_find_recent_application_for_user',
+	'bvmgr_vendor_app_expire_stale_confirmations',
 );
 foreach ($owned_functions as $function) {
 	vms_same(
@@ -448,8 +448,8 @@ foreach ($owned_functions as $function) {
 	);
 }
 vms_same(
-	vms_extract_function($source, 'vms_vendor_app_send_review_ready_admin_notification'),
-	vms_extract_function($live_source, 'vms_vendor_app_send_review_ready_admin_notification'),
+	vms_extract_function($source, 'bvmgr_vendor_app_send_review_ready_admin_notification'),
+	vms_extract_function($live_source, 'bvmgr_vendor_app_send_review_ready_admin_notification'),
 	'G16 review-ready mail failure boundary should remain mirror/shadow-live identical.'
 );
 
@@ -470,7 +470,7 @@ vms_same(1, substr_count($source, "bvmgr_record_operational_issue('vendor_app_re
 vms_contains("'post_id'     => \$app_id", $source, 'The mail-failure event should retain only the safe application identity.');
 vms_assert(strpos($source, "error_log('[VMS] vendor-apply: review-ready admin notification failed") === false, 'The historical raw server-log sink should be absent.');
 vms_assert(strpos($source, 'phpcs:disable') === false && strpos($source, 'phpcs:ignoreFile') === false, 'Repository remediation should not use blanket suppression.');
-foreach (array('FROM {$table}', '"UPDATE " . vms_vendor_app_confirm_tokens_table()', '$wpdb->get_row($wpdb->prepare($sql') as $unsafe) {
+foreach (array('FROM {$table}', '"UPDATE " . bvmgr_vendor_app_confirm_tokens_table()', '$wpdb->get_row($wpdb->prepare($sql') as $unsafe) {
 	vms_assert(strpos($source, $unsafe) === false, 'Legacy scanner target should be absent: ' . $unsafe);
 }
 vms_contains('FROM %i', $source, 'Custom-table reads should prepare table identifiers.');
@@ -478,10 +478,10 @@ vms_contains('UPDATE %i', $source, 'Open-token invalidation should prepare its t
 
 $runtime_functions = array_merge(
 	array(
-		'vms_vendor_app_confirm_tokens_table',
-		'vms_vendor_app_normalize_dedupe_business_name',
-		'vms_vendor_app_validate_confirmation_token',
-		'vms_vendor_app_process_confirmation',
+		'bvmgr_vendor_app_confirm_tokens_table',
+		'bvmgr_vendor_app_normalize_dedupe_business_name',
+		'bvmgr_vendor_app_validate_confirmation_token',
+		'bvmgr_vendor_app_process_confirmation',
 	),
 	$owned_functions
 );
@@ -495,7 +495,7 @@ $table = 'wp_vms_vendor_app_confirm_tokens';
 
 vms_reset($wpdb);
 $wpdb->get_row_queue[] = array('id' => '31', 'application_id' => '19');
-$row = vms_vendor_app_get_latest_confirmation_token_row(19);
+$row = bvmgr_vendor_app_get_latest_confirmation_token_row(19);
 vms_same(array('id' => '31', 'application_id' => '19'), $row, 'Latest-token lookup should return the repository row.');
 $prepare = vms_last_prepare($wpdb);
 vms_contains('FROM %i', $prepare['query'], 'Latest-token lookup should prepare the table identifier.');
@@ -505,14 +505,14 @@ vms_no_placeholders(vms_last_call($wpdb, 'get_row')['sql'], 'Latest-token lookup
 
 vms_reset($wpdb);
 $wpdb->get_row_queue[] = false;
-vms_same(null, vms_vendor_app_get_latest_confirmation_token_row(19), 'A failed latest-token read should normalize to null.');
+vms_same(null, bvmgr_vendor_app_get_latest_confirmation_token_row(19), 'A failed latest-token read should normalize to null.');
 vms_reset($wpdb);
-vms_same(null, vms_vendor_app_get_latest_confirmation_token_row(0), 'Invalid application IDs should fail closed without a query.');
+vms_same(null, bvmgr_vendor_app_get_latest_confirmation_token_row(0), 'Invalid application IDs should fail closed without a query.');
 vms_same(array(), $wpdb->calls, 'Invalid latest-token lookup should not touch the repository.');
 
 vms_reset($wpdb);
 $wpdb->get_row_queue[] = array('id' => 32);
-vms_same(array('id' => 32), vms_vendor_app_get_latest_open_confirmation_token_row(19, false), 'Open-token lookup should return its row.');
+vms_same(array('id' => 32), bvmgr_vendor_app_get_latest_open_confirmation_token_row(19, false), 'Open-token lookup should return its row.');
 $prepare = vms_last_prepare($wpdb);
 vms_same(array($table, 19), $prepare['args'], 'Open-token lookup should prepare table and application ID.');
 vms_contains('consumed_at IS NULL', $prepare['query'], 'Open-token lookup should exclude consumed rows.');
@@ -521,7 +521,7 @@ vms_assert(strpos($prepare['query'], 'expires_at >=') === false, 'Non-expiry-gat
 
 vms_reset($wpdb);
 $wpdb->get_row_queue[] = array('id' => 33);
-vms_same(array('id' => 33), vms_vendor_app_get_latest_open_confirmation_token_row(19, true), 'Unexpired open-token lookup should return its row.');
+vms_same(array('id' => 33), bvmgr_vendor_app_get_latest_open_confirmation_token_row(19, true), 'Unexpired open-token lookup should return its row.');
 $prepare = vms_last_prepare($wpdb);
 vms_same(array($table, 19, '2026-08-07 21:15:00'), $prepare['args'], 'Expiry-gated lookup should prepare table, application, and current UTC time.');
 vms_contains('expires_at >= %s', $prepare['query'], 'Expiry-gated lookup should preserve its expiry predicate.');
@@ -529,18 +529,18 @@ vms_no_placeholders(vms_last_call($wpdb, 'get_row')['sql'], 'Expiry-gated lookup
 
 vms_reset($wpdb);
 $wpdb->get_row_queue[] = array('id' => 34, 'token_hash' => 'abc');
-vms_same(array('id' => 34, 'token_hash' => 'abc'), vms_vendor_app_get_confirmation_token_row_by_hash(' abc '), 'Hash lookup should trim and return its row.');
+vms_same(array('id' => 34, 'token_hash' => 'abc'), bvmgr_vendor_app_get_confirmation_token_row_by_hash(' abc '), 'Hash lookup should trim and return its row.');
 $prepare = vms_last_prepare($wpdb);
 vms_same(array($table, 'abc'), $prepare['args'], 'Hash lookup should prepare table and normalized hash.');
 vms_contains('WHERE token_hash = %s', $prepare['query'], 'Hash lookup should preserve exact-match semantics.');
 vms_no_placeholders(vms_last_call($wpdb, 'get_row')['sql'], 'Hash lookup should execute prepared SQL.');
 vms_reset($wpdb);
-vms_same(null, vms_vendor_app_get_confirmation_token_row_by_hash('  '), 'Empty token hashes should fail closed without a query.');
+vms_same(null, bvmgr_vendor_app_get_confirmation_token_row_by_hash('  '), 'Empty token hashes should fail closed without a query.');
 vms_same(array(), $wpdb->calls, 'Empty hash lookup should not touch the repository.');
 
 vms_reset($wpdb);
 $wpdb->update_queue[] = false;
-vms_same(null, vms_vendor_app_invalidate_confirmation_token(55, 'Admin rotation!'), 'Single-token invalidation should retain its void result even when wpdb reports failure.');
+vms_same(null, bvmgr_vendor_app_invalidate_confirmation_token(55, 'Admin rotation!'), 'Single-token invalidation should retain its void result even when wpdb reports failure.');
 $update = vms_last_call($wpdb, 'update');
 vms_same($table, $update['table'], 'Single-token invalidation should target the confirmation repository.');
 vms_same(
@@ -553,7 +553,7 @@ vms_same(array('%d', '%s', '%s'), $update['where_format'], 'Single-token invalid
 
 vms_reset($wpdb);
 $wpdb->query_queue[] = false;
-vms_same(null, vms_vendor_app_invalidate_open_confirmation_tokens(19, 'Confirmed!'), 'Bulk invalidation should retain its void result when wpdb reports failure.');
+vms_same(null, bvmgr_vendor_app_invalidate_open_confirmation_tokens(19, 'Confirmed!'), 'Bulk invalidation should retain its void result when wpdb reports failure.');
 $prepare = vms_last_prepare($wpdb);
 vms_same(array($table, '2026-08-07 21:15:00', 'confirmed', 19), $prepare['args'], 'Bulk invalidation should prepare table, timestamp, reason, and application.');
 vms_contains('UPDATE %i', $prepare['query'], 'Bulk invalidation should prepare its table identifier.');
@@ -563,7 +563,7 @@ vms_no_placeholders(vms_last_call($wpdb, 'query')['sql'], 'Bulk invalidation sho
 vms_reset($wpdb);
 vms_same(
 	'vms_vendor_app_confirm_app_missing',
-	vms_error_code(vms_vendor_app_create_confirmation_token(0)),
+	vms_error_code(bvmgr_vendor_app_create_confirmation_token(0)),
 	'Token creation should reject a missing application without mutation.'
 );
 vms_same(array(), $GLOBALS['vms_events'], 'Invalid token creation should not mutate repository state.');
@@ -571,7 +571,7 @@ vms_same(array(), $GLOBALS['vms_events'], 'Invalid token creation should not mut
 vms_reset($wpdb);
 vms_same(
 	'vms_vendor_app_confirm_email_invalid',
-	vms_error_code(vms_vendor_app_create_confirmation_token(19, array('email' => 'not-an-email'))),
+	vms_error_code(bvmgr_vendor_app_create_confirmation_token(19, array('email' => 'not-an-email'))),
 	'Token creation should reject an invalid email without rotating tokens.'
 );
 vms_same(array(), $GLOBALS['vms_events'], 'Invalid-email token creation should not mutate repository state.');
@@ -580,7 +580,7 @@ vms_reset($wpdb);
 $wpdb->insert_id = 902;
 $wpdb->query_queue[] = 1;
 $wpdb->insert_queue[] = 1;
-$created = vms_vendor_app_create_confirmation_token(
+$created = bvmgr_vendor_app_create_confirmation_token(
 	19,
 	array('email' => ' Vendor@Example.test ', 'invalidate_reason' => 'resend', 'created_by_user_id' => 44)
 );
@@ -593,7 +593,7 @@ $insert = vms_last_call($wpdb, 'insert');
 vms_same($table, $insert['table'], 'Token creation should insert into the confirmation repository.');
 vms_same(19, $insert['data']['application_id'], 'Token creation should persist the application ID.');
 vms_same('vendor@example.test', $insert['data']['email'], 'Token creation should normalize the stored email.');
-vms_same(vms_vendor_app_hash_confirmation_token('raw-confirmation-token'), $insert['data']['token_hash'], 'Token creation should store only the token hash.');
+vms_same(bvmgr_vendor_app_hash_confirmation_token('raw-confirmation-token'), $insert['data']['token_hash'], 'Token creation should store only the token hash.');
 vms_same(44, $insert['data']['created_by_user_id'], 'Token creation should persist the normalized actor.');
 vms_same(null, $insert['data']['consumed_at'], 'New token rows should remain unconsumed.');
 vms_same(13, count($insert['format']), 'Token creation should retain format coverage for every inserted column.');
@@ -601,12 +601,12 @@ vms_same(13, count($insert['format']), 'Token creation should retain format cove
 vms_reset($wpdb);
 $wpdb->query_queue[] = 1;
 $wpdb->insert_queue[] = false;
-$failed = vms_vendor_app_create_confirmation_token(19, array('email' => 'vendor@example.test'));
+$failed = bvmgr_vendor_app_create_confirmation_token(19, array('email' => 'vendor@example.test'));
 vms_same('vms_vendor_app_confirm_token_create_failed', vms_error_code($failed), 'Failed repository insertion should return the existing creation error.');
 vms_same(array('query', 'insert'), array_column($GLOBALS['vms_events'], 'kind'), 'Failed insertion should still occur only after prior-token invalidation.');
 
 vms_reset($wpdb);
-vms_same(null, vms_vendor_app_mark_confirmation_token_sent(61), 'Sent-state mutation should retain its void result.');
+vms_same(null, bvmgr_vendor_app_mark_confirmation_token_sent(61), 'Sent-state mutation should retain its void result.');
 $update = vms_last_call($wpdb, 'update');
 vms_same(array('sent_at' => '2026-08-07 21:15:00'), $update['data'], 'Sent-state mutation should persist the current UTC time.');
 vms_same(array('id' => 61), $update['where'], 'Sent-state mutation should scope the token ID.');
@@ -615,7 +615,7 @@ vms_same(array('%d'), $update['where_format'], 'Sent-state mutation should retai
 
 vms_reset($wpdb);
 $wpdb->update_queue[] = false;
-vms_same(null, vms_vendor_app_mark_confirmation_token_consumed(62, -9), 'Consumption should retain its void result when wpdb reports failure.');
+vms_same(null, bvmgr_vendor_app_mark_confirmation_token_consumed(62, -9), 'Consumption should retain its void result when wpdb reports failure.');
 $update = vms_last_call($wpdb, 'update');
 vms_same($table, $update['table'], 'Consumption should update the confirmation repository.');
 vms_same(
@@ -640,7 +640,7 @@ $wpdb->get_row_queue[] = array(
 	'invalidated_at' => null,
 	'expires_at' => '2999-01-01 00:00:00',
 );
-$used = vms_vendor_app_validate_confirmation_token('used-token');
+$used = bvmgr_vendor_app_validate_confirmation_token('used-token');
 vms_same('vms_vendor_app_confirm_token_used', vms_error_code($used), 'Validation should reject an already consumed token.');
 vms_same(array(), $GLOBALS['vms_events'], 'Consumed-token validation should not mutate application or token state.');
 
@@ -653,7 +653,7 @@ $wpdb->get_row_queue[] = array(
 	'invalidated_at' => null,
 	'expires_at' => '2000-01-01 00:00:00',
 );
-$expired = vms_vendor_app_validate_confirmation_token('expired-token');
+$expired = bvmgr_vendor_app_validate_confirmation_token('expired-token');
 vms_same('vms_vendor_app_confirm_token_expired', vms_error_code($expired), 'Validation should reject an expired token.');
 vms_same('expired', $GLOBALS['vms_post_meta'][19]['_vms_app_confirmation_state'] ?? '', 'Expired validation should preserve the application-state transition.');
 vms_same(array('update_post_meta'), array_column($GLOBALS['vms_events'], 'kind'), 'Expired validation should only mutate application confirmation state.');
@@ -668,7 +668,7 @@ $wpdb->get_row_queue[] = array(
 	'expires_at' => '2999-01-01 00:00:00',
 );
 $GLOBALS['vms_resolved_user'] = new WP_User(88, 'vendor@example.test');
-$processed = vms_vendor_app_process_confirmation('valid-token');
+$processed = bvmgr_vendor_app_process_confirmation('valid-token');
 vms_assert(is_array($processed), 'Valid confirmation processing should return the existing success payload.');
 vms_same(19, $processed['app_id'] ?? 0, 'Confirmation processing should preserve application ID.');
 vms_same(88, $processed['user_id'] ?? 0, 'Confirmation processing should preserve resolved user ID.');
@@ -684,13 +684,13 @@ vms_same(array($table, '2026-08-07 21:15:00', 'confirmed', 19), $prepare['args']
 
 vms_reset($wpdb);
 $wpdb->get_row_queue[] = null;
-$invalid = vms_vendor_app_process_confirmation('unknown-token');
+$invalid = bvmgr_vendor_app_process_confirmation('unknown-token');
 vms_same('vms_vendor_app_confirm_token_invalid', vms_error_code($invalid), 'Unknown tokens should retain the invalid-token result.');
 vms_same(array('attempt_failure'), array_column($GLOBALS['vms_events'], 'kind'), 'Unknown-token processing should record failure without consuming or invalidating rows.');
 
 vms_reset($wpdb);
 $GLOBALS['vms_get_posts_queue'][] = array(81);
-vms_same(81, vms_vendor_app_find_application_by_public_lookup_key(' lookup-key '), 'Public lookup should return the first matching application ID.');
+vms_same(81, bvmgr_vendor_app_find_application_by_public_lookup_key(' lookup-key '), 'Public lookup should return the first matching application ID.');
 $args = $GLOBALS['vms_get_posts_calls'][0] ?? array();
 vms_same(1, $args['posts_per_page'] ?? 0, 'Public lookup should remain bounded to one application.');
 vms_same('_vms_app_public_lookup_key', $args['meta_query'][0]['key'] ?? '', 'Public lookup should retain its metadata key.');
@@ -702,7 +702,7 @@ $GLOBALS['vms_get_posts_queue'][] = array(82);
 $GLOBALS['vms_titles'][82] = 'The Vendor Co';
 $GLOBALS['vms_statuses'][82] = 'pending';
 $GLOBALS['vms_states'][82] = 'unconfirmed';
-$duplicate = vms_vendor_app_find_duplicate_open_application('vendor@example.test', ' The   Vendor Co ');
+$duplicate = bvmgr_vendor_app_find_duplicate_open_application('vendor@example.test', ' The   Vendor Co ');
 vms_same('unconfirmed', $duplicate['duplicate_kind'] ?? '', 'Duplicate lookup should preserve unconfirmed classification.');
 vms_same(82, $duplicate['app_id'] ?? 0, 'Duplicate lookup should return the matched application.');
 $args = $GLOBALS['vms_get_posts_calls'][0] ?? array();
@@ -714,7 +714,7 @@ $GLOBALS['vms_users'][22] = new WP_User(22, 'vendor@example.test');
 $GLOBALS['vms_get_posts_queue'][] = array(83);
 $GLOBALS['vms_statuses'][83] = 'pending';
 $GLOBALS['vms_states'][83] = 'confirmed';
-$recent = vms_vendor_app_find_recent_application_for_user(22);
+$recent = bvmgr_vendor_app_find_recent_application_for_user(22);
 vms_same('pending_review', $recent['kind'] ?? '', 'Recent-application lookup should preserve pending-review classification.');
 vms_same(83, $recent['app_id'] ?? 0, 'Recent-application lookup should return the matched application.');
 $args = $GLOBALS['vms_get_posts_calls'][0] ?? array();
@@ -722,7 +722,7 @@ vms_same('vendor@example.test', $args['meta_query'][0]['value'] ?? '', 'Recent-a
 
 vms_reset($wpdb);
 $GLOBALS['vms_get_posts_queue'][] = array(84, 85);
-vms_vendor_app_expire_stale_confirmations();
+bvmgr_vendor_app_expire_stale_confirmations();
 vms_same(
 	array('set_transient', 'update_post_meta', 'update_post_meta'),
 	array_column($GLOBALS['vms_events'], 'kind'),
@@ -738,7 +738,7 @@ vms_same('DATETIME', $args['meta_query'][1]['type'] ?? '', 'Expiry sweep should 
 
 vms_reset($wpdb);
 $GLOBALS['vms_transients']['vms_vendor_app_expire_stale_confirmations_lock'] = '1';
-vms_vendor_app_expire_stale_confirmations();
+bvmgr_vendor_app_expire_stale_confirmations();
 vms_same(array(), $GLOBALS['vms_get_posts_calls'], 'An active expiry lock should prevent another candidate query.');
 vms_same(array(), $GLOBALS['vms_events'], 'An active expiry lock should prevent mutations.');
 

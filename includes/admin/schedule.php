@@ -207,8 +207,8 @@ function vms_handle_create_event_plan(): void
 
     // Prefer explicit venue_id from the calendar link; fallback to current selected venue.
     $venue_id = bvmgr_request_read_absint($_GET, 'venue_id');
-    if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
-        $venue_id = (int) vms_get_current_venue_id();
+    if ($venue_id <= 0 && function_exists('bvmgr_get_current_venue_id')) {
+        $venue_id = (int) bvmgr_get_current_venue_id();
     }
     if ($venue_id <= 0) {
         wp_die('Select a venue first.');
@@ -444,8 +444,8 @@ function vms_render_schedule_page_content(): void
     // Multi-venue installs: if no current venue has ever been selected and no default venue exists,
     // fall back deterministically to the first available venue (by title), matching the dropdown selector.
     // This prevents a confusing blank schedule where the selector shows a venue but the page still thinks none is selected.
-    if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
-        $fallback_first = (int) vms_get_current_venue_id();
+    if ($venue_id <= 0 && function_exists('bvmgr_get_current_venue_id')) {
+        $fallback_first = (int) bvmgr_get_current_venue_id();
         if (vms_sch_is_valid_venue_post_id((int) $fallback_first)) {
             $venue_id = $fallback_first;
             update_user_meta($user_id, $sch_venue_meta_key, (string) $venue_id);
@@ -511,8 +511,8 @@ function vms_render_schedule_page_content(): void
 
     echo '<div class="vms-admin-schedule-content">';
 
-    if (function_exists('vms_render_current_venue_selector')) {
-        vms_render_current_venue_selector();
+    if (function_exists('bvmgr_render_current_venue_selector')) {
+        bvmgr_render_current_venue_selector();
     }
 
     $base_url = remove_query_arg(array('view', 'scope'));

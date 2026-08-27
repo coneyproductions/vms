@@ -1,12 +1,12 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-add_action('init', 'vms_register_vendor_cpt');
+add_action('init', 'bvmgr_register_vendor_cpt');
 
 // Integrity guard: if a vendor is deleted, any published/ready Event Plans pointing at that vendor
 // are reverted to Draft and flagged for review.
-add_action('before_delete_post', 'vms_vendor_delete_revert_event_plans', 10, 2);
-function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): void
+add_action('before_delete_post', 'bvmgr_vendor_delete_revert_event_plans', 10, 2);
+function bvmgr_vendor_delete_revert_event_plans(int $vendor_id, $post = null): void
 {
     if ($vendor_id <= 0) return;
 
@@ -140,7 +140,7 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
 
 
 
-function vms_register_vendor_cpt()
+function bvmgr_register_vendor_cpt()
 {
     $labels = array(
         'name'               => __('Vendors', 'backstage-venue-manager'),
@@ -172,16 +172,16 @@ function vms_register_vendor_cpt()
     register_post_type('vms_vendor', $args);
 }
 
-if (!function_exists('vms_vendor_has_public_profile_type')) {
-    function vms_vendor_has_public_profile_type(int $vendor_id): bool
+if (!function_exists('bvmgr_vendor_has_public_profile_type')) {
+    function bvmgr_vendor_has_public_profile_type(int $vendor_id): bool
     {
         $vendor_id = absint($vendor_id);
         if ($vendor_id <= 0) {
             return false;
         }
 
-        if (function_exists('vms_vendor_primary_type_slug')) {
-            return trim((string) vms_vendor_primary_type_slug($vendor_id)) !== '';
+        if (function_exists('bvmgr_vendor_primary_type_slug')) {
+            return trim((string) bvmgr_vendor_primary_type_slug($vendor_id)) !== '';
         }
 
         $terms = get_the_terms($vendor_id, 'vms_vendor_type');
@@ -189,8 +189,8 @@ if (!function_exists('vms_vendor_has_public_profile_type')) {
     }
 }
 
-if (!function_exists('vms_vendor_availability_snapshot_month')) {
-    function vms_vendor_availability_snapshot_month(): string
+if (!function_exists('bvmgr_vendor_availability_snapshot_month')) {
+    function bvmgr_vendor_availability_snapshot_month(): string
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only availability snapshot month only changes which calendar view is displayed.
         return bvmgr_request_read_text_field($_GET, 'vms_vendor_month');
@@ -343,7 +343,7 @@ class BVMGR_Admin_Vendors
         $show_loc = get_post_meta($post_id, $k_show_loc, true);
 
         $enabled_bool = ($enabled === '1' || $enabled === 1 || $enabled === true || $enabled === 'yes' || $enabled === 'on');
-        $has_vendor_type = vms_vendor_has_public_profile_type($post_id);
+        $has_vendor_type = bvmgr_vendor_has_public_profile_type($post_id);
 
         $profile_url = function_exists('bvmgr_vendor_profile_url') ? bvmgr_vendor_profile_url($post_id) : '';
 
@@ -415,7 +415,7 @@ class BVMGR_Admin_Vendors
     public function render_vendor_availability_snapshot_meta_box($post)
     {
         $post_id = (int) $post->ID;
-        $month = vms_vendor_availability_snapshot_month();
+        $month = bvmgr_vendor_availability_snapshot_month();
 
         if (function_exists('vms_render_vendor_availability_vendor_profile_calendar')) {
             vms_render_vendor_availability_vendor_profile_calendar($post_id, $month);
@@ -484,7 +484,7 @@ class BVMGR_Admin_Vendors
             $k_show_loc = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
 
             $enabled  = isset($_POST['vms_public_profile_enabled']) ? '1' : '0';
-            if ($enabled === '1' && !vms_vendor_has_public_profile_type($post_id)) {
+            if ($enabled === '1' && !bvmgr_vendor_has_public_profile_type($post_id)) {
                 $enabled = '0';
                 if (function_exists('bvmgr_add_admin_notice')) {
                     bvmgr_add_admin_notice(__('Public profiles require a Vendor Type. Assign a Vendor Type before enabling this public profile.', 'backstage-venue-manager'), 'error');

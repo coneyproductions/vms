@@ -18,8 +18,8 @@ if (!defined('ABSPATH')) exit;
  * - copies meta except a small denylist
  */
 
-add_filter('post_row_actions', 'vms_add_duplicate_venue_row_action', 10, 2);
-function vms_add_duplicate_venue_row_action(array $actions, WP_Post $post): array
+add_filter('post_row_actions', 'bvmgr_add_duplicate_venue_row_action', 10, 2);
+function bvmgr_add_duplicate_venue_row_action(array $actions, WP_Post $post): array
 {
     if (!is_admin()) return $actions;
 
@@ -41,8 +41,8 @@ function vms_add_duplicate_venue_row_action(array $actions, WP_Post $post): arra
     return $actions;
 }
 
-add_action('admin_init', 'vms_handle_duplicate_venue_action');
-function vms_handle_duplicate_venue_action(): void
+add_action('admin_init', 'bvmgr_handle_duplicate_venue_action');
+function bvmgr_handle_duplicate_venue_action(): void
 {
     if (!is_admin()) return;
 
@@ -64,7 +64,7 @@ function vms_handle_duplicate_venue_action(): void
         wp_die('Not allowed.');
     }
 
-    $new_id = vms_duplicate_post_with_meta_and_terms($source_id, array(
+    $new_id = bvmgr_duplicate_post_with_meta_and_terms($source_id, array(
         'post_status' => 'draft',
         'post_title'  => $source->post_title . ' (Copy)',
     ));
@@ -84,7 +84,7 @@ function vms_handle_duplicate_venue_action(): void
 }
 
 
-function vms_duplicate_post_with_meta_and_terms(int $source_id, array $override_args = array()): int
+function bvmgr_duplicate_post_with_meta_and_terms(int $source_id, array $override_args = array()): int
 {
     $source = get_post($source_id);
     if (!$source) return 0;

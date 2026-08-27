@@ -182,7 +182,7 @@ function wp_timezone(): DateTimeZone
 	return new DateTimeZone('America/Chicago');
 }
 
-function vms_vendor_command_center_terms_days(): int
+function bvmgr_vendor_command_center_terms_days(): int
 {
 	return 30;
 }
@@ -398,8 +398,8 @@ $owned_function_map = array(
 	'includes/admin/event-feedback.php' => array('bvmgr_feedback_recent_event_plans'),
 	'includes/admin/settings-page.php' => array('vms_handle_sync_entitlement_images', 'vms_ticketing_stock_reconcile_scan'),
 	'includes/admin/settings/class-vms-settings-tours.php' => array('handle_reset_current_user'),
-	'includes/admin/vendor-command-center.php' => array('vms_vendor_command_center_collect_plan_maps'),
-	'includes/admin/venue-duplicate-templates.php' => array('vms_render_create_from_template_panel'),
+	'includes/admin/vendor-command-center.php' => array('bvmgr_vendor_command_center_collect_plan_maps'),
+	'includes/admin/venue-duplicate-templates.php' => array('bvmgr_render_create_from_template_panel'),
 );
 foreach ($owned_function_map as $relative_file => $functions) {
 	foreach ($functions as $function) {
@@ -476,8 +476,8 @@ foreach (array(
 	'bvmgr_event_command_center_get_plan_ids',
 	'bvmgr_feedback_recent_event_plans',
 	'vms_ticketing_stock_reconcile_scan',
-	'vms_vendor_command_center_collect_plan_maps',
-	'vms_render_create_from_template_panel',
+	'bvmgr_vendor_command_center_collect_plan_maps',
+	'bvmgr_render_create_from_template_panel',
 ) as $function) {
 	$function_file = '';
 	foreach ($owned_function_map as $relative_file => $functions) {
@@ -599,7 +599,7 @@ g13_same(array('wc-processing', 'wc-completed'), $express_args['status'], 'Expre
 // The vendor map remains a finite temporal enumeration even though it intentionally has no count cap.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array());
-g13_same(array('next_map' => array(), 'payables_map' => array()), vms_vendor_command_center_collect_plan_maps(), 'Empty vendor map result shape changed.');
+g13_same(array('next_map' => array(), 'payables_map' => array()), bvmgr_vendor_command_center_collect_plan_maps(), 'Empty vendor map result shape changed.');
 $vendor_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(-1, $vendor_args['posts_per_page'], 'Vendor map completeness changed.');
 g13_same('_vms_event_date', $vendor_args['meta_key'], 'Vendor map ordering key changed.');
@@ -611,7 +611,7 @@ g13_same(485, (int) $vendor_start->diff($vendor_end)->days, 'Vendor map finite 4
 // Venue templates remain a complete plugin-marker selector on the authorized Add Venue screen.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array());
-vms_render_create_from_template_panel(new WP_Post(0, 'auto-draft'));
+bvmgr_render_create_from_template_panel(new WP_Post(0, 'auto-draft'));
 $venue_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(-1, $venue_args['posts_per_page'], 'Venue template enumeration changed.');
 g13_same(BVMGR_VENUE_TEMPLATE_META_KEY, $venue_args['meta_key'], 'Venue template marker key changed.');

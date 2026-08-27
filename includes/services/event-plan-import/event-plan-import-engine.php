@@ -733,14 +733,14 @@ if (!function_exists('bvmgr_event_plan_import_vendor_has_type')) {
 	function bvmgr_event_plan_import_vendor_has_type(int $vendor_id, string $type_slug): bool
 	{
 		$vendor_id = absint($vendor_id);
-		$type_slug = function_exists('vms_vendor_type_normalize_slug')
-			? vms_vendor_type_normalize_slug($type_slug)
+		$type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
+			? bvmgr_vendor_type_normalize_slug($type_slug)
 			: sanitize_title($type_slug);
 		if ($vendor_id <= 0 || $type_slug === '') {
 			return false;
 		}
 
-		return function_exists('vms_vendor_has_type') ? vms_vendor_has_type($vendor_id, $type_slug) : (function_exists('has_term') ? has_term($type_slug, 'vms_vendor_type', $vendor_id) : false);
+		return function_exists('bvmgr_vendor_has_type') ? bvmgr_vendor_has_type($vendor_id, $type_slug) : (function_exists('has_term') ? has_term($type_slug, 'vms_vendor_type', $vendor_id) : false);
 	}
 }
 
@@ -1949,8 +1949,8 @@ if (!function_exists('bvmgr_event_plan_import_update_secondary_meta')) {
 		$k_secondary_unq = bvmgr_event_plan_import_meta_key('secondary_vendor_unqualified', '_vms_secondary_vendor_unqualified');
 		$k_secondary_unq_ids = bvmgr_event_plan_import_meta_key('secondary_vendor_unqualified_ids', '_vms_secondary_vendor_unqualified_ids');
 
-		$type_slug = function_exists('vms_vendor_type_normalize_slug')
-			? vms_vendor_type_normalize_slug($type_slug)
+		$type_slug = function_exists('bvmgr_vendor_type_normalize_slug')
+			? bvmgr_vendor_type_normalize_slug($type_slug)
 			: sanitize_title($type_slug);
 
 		if (function_exists('bvmgr_event_plan_write_secondary_vendor_assignments')) {

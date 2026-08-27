@@ -30,15 +30,15 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_comp_package_details',
         __('Comp Package Details', 'backstage-venue-manager'),
-        'vms_render_comp_package_meta_box',
+        'bvmgr_render_comp_package_meta_box',
         'vms_comp_package',
         'normal',
         'default'
     );
 });
 
-if (!function_exists('vms_comp_package_admin_screen_is_target')) {
-    function vms_comp_package_admin_screen_is_target($screen): bool
+if (!function_exists('bvmgr_comp_package_admin_screen_is_target')) {
+    function bvmgr_comp_package_admin_screen_is_target($screen): bool
     {
         if (!is_object($screen)) {
             return false;
@@ -52,11 +52,11 @@ if (!function_exists('vms_comp_package_admin_screen_is_target')) {
     }
 }
 
-if (!function_exists('vms_comp_package_admin_enqueue_assets')) {
-    function vms_comp_package_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_comp_package_admin_enqueue_assets')) {
+    function bvmgr_comp_package_admin_enqueue_assets(): void
     {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!vms_comp_package_admin_screen_is_target($screen)) {
+        if (!bvmgr_comp_package_admin_screen_is_target($screen)) {
             return;
         }
 
@@ -84,9 +84,9 @@ if (!function_exists('vms_comp_package_admin_enqueue_assets')) {
         );
     }
 }
-add_action('admin_enqueue_scripts', 'vms_comp_package_admin_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_comp_package_admin_enqueue_assets', 50);
 
-function vms_render_comp_package_meta_box($post)
+function bvmgr_render_comp_package_meta_box($post)
 {
     wp_nonce_field('vms_save_comp_package', 'vms_comp_package_nonce');
 

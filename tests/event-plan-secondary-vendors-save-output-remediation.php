@@ -515,8 +515,8 @@ try {
 			return (string) ($postTypes[$post_id] ?? '');
 		}
 	}
-	if (!function_exists('vms_vendor_primary_type_slug')) {
-		function vms_vendor_primary_type_slug(int $vendor_id): string
+	if (!function_exists('bvmgr_vendor_primary_type_slug')) {
+		function bvmgr_vendor_primary_type_slug(int $vendor_id): string
 		{
 			$typeSlugs = isset($GLOBALS['vms_secondary_vendor_test_primary_type_slugs']) && is_array($GLOBALS['vms_secondary_vendor_test_primary_type_slugs'])
 				? $GLOBALS['vms_secondary_vendor_test_primary_type_slugs']
@@ -524,8 +524,8 @@ try {
 			return (string) ($typeSlugs[$vendor_id] ?? '');
 		}
 	}
-	if (!function_exists('vms_vendor_type_label')) {
-		function vms_vendor_type_label(string $type_slug): string
+	if (!function_exists('bvmgr_vendor_type_label')) {
+		function bvmgr_vendor_type_label(string $type_slug): string
 		{
 			$labels = array(
 				'food_vendor' => 'Food Vendor',
@@ -535,8 +535,8 @@ try {
 			return (string) ($labels[$type_slug] ?? ucwords(str_replace(array('_', '-'), ' ', $type_slug)));
 		}
 	}
-	if (!function_exists('vms_vendor_category_label_for_type')) {
-		function vms_vendor_category_label_for_type(string $type_slug): string
+	if (!function_exists('bvmgr_vendor_category_label_for_type')) {
+		function bvmgr_vendor_category_label_for_type(string $type_slug): string
 		{
 			$labels = isset($GLOBALS['vms_secondary_vendor_test_category_labels']) && is_array($GLOBALS['vms_secondary_vendor_test_category_labels'])
 				? $GLOBALS['vms_secondary_vendor_test_category_labels']
@@ -544,8 +544,8 @@ try {
 			return (string) ($labels[$type_slug] ?? 'Category');
 		}
 	}
-	if (!function_exists('vms_vendor_get_category_terms')) {
-		function vms_vendor_get_category_terms(int $vendor_id): array
+	if (!function_exists('bvmgr_vendor_get_category_terms')) {
+		function bvmgr_vendor_get_category_terms(int $vendor_id): array
 		{
 			$terms = isset($GLOBALS['vms_secondary_vendor_test_terms']) && is_array($GLOBALS['vms_secondary_vendor_test_terms'])
 				? $GLOBALS['vms_secondary_vendor_test_terms']

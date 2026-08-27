@@ -625,8 +625,8 @@ if (!function_exists('vms_get_vendor_availability_for_date')) {
 if (!function_exists('vms_vendor_availability_next_item_map')) {
     function vms_vendor_availability_next_item_map(): array
     {
-        if (function_exists('vms_vendor_command_center_collect_plan_maps')) {
-            $maps = (array) vms_vendor_command_center_collect_plan_maps();
+        if (function_exists('bvmgr_vendor_command_center_collect_plan_maps')) {
+            $maps = (array) bvmgr_vendor_command_center_collect_plan_maps();
             $next = isset($maps['next_map']) && is_array($maps['next_map']) ? $maps['next_map'] : array();
             return $next;
         }
@@ -735,8 +735,8 @@ if (!function_exists('vms_vendor_availability_day_summary')) {
 if (!function_exists('vms_vendor_availability_pill')) {
     function vms_vendor_availability_pill(string $label, string $tone = 'neutral', string $title = ''): string
     {
-        if (function_exists('vms_vendor_command_center_pill')) {
-            return vms_vendor_command_center_pill($label, $tone, $title);
+        if (function_exists('bvmgr_vendor_command_center_pill')) {
+            return bvmgr_vendor_command_center_pill($label, $tone, $title);
         }
 
         $classes = 'vms-vcc-pill vms-vcc-pill--' . sanitize_html_class($tone);

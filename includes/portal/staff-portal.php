@@ -2405,10 +2405,10 @@ function vms_staff_portal_render_availability_manual($staff_id)
                 $preferred = 'ics';
                 if ($ics_url === '') {
                     echo wp_kses(vms_staff_portal_notice_html('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
-                } elseif (!function_exists('vms_vendor_ics_sync_now')) {
+                } elseif (!function_exists('bvmgr_vendor_ics_sync_now')) {
                     echo wp_kses(vms_staff_portal_notice_html('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')), vms_staff_portal_safe_html_allowed_html());
                 } else {
-                    $result = (array) vms_vendor_ics_sync_now($staff_id, $active_dates);
+                    $result = (array) bvmgr_vendor_ics_sync_now($staff_id, $active_dates);
                     if (!empty($result['ok'])) {
                         $ics_last = time();
                         update_post_meta($staff_id, '_vms_ics_last_sync', $ics_last);

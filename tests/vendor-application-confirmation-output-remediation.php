@@ -220,22 +220,22 @@ if (!function_exists('wp_nonce_field')) {
 	}
 }
 
-if (!function_exists('vms_vendor_app_get_confirmation_state')) {
-	function vms_vendor_app_get_confirmation_state(int $app_id): string
+if (!function_exists('bvmgr_vendor_app_get_confirmation_state')) {
+	function bvmgr_vendor_app_get_confirmation_state(int $app_id): string
 	{
 		return $GLOBALS['vms_test_confirmation_state'] ?? 'unconfirmed';
 	}
 }
 
-if (!function_exists('vms_vendor_app_get_public_lookup_key')) {
-	function vms_vendor_app_get_public_lookup_key(int $app_id): string
+if (!function_exists('bvmgr_vendor_app_get_public_lookup_key')) {
+	function bvmgr_vendor_app_get_public_lookup_key(int $app_id): string
 	{
 		return (string) ($GLOBALS['vms_test_public_lookup_key'] ?? 'lookup-key');
 	}
 }
 
-if (!function_exists('vms_vendor_app_get_application_page_url')) {
-	function vms_vendor_app_get_application_page_url(): string
+if (!function_exists('bvmgr_vendor_app_get_application_page_url')) {
+	function bvmgr_vendor_app_get_application_page_url(): string
 	{
 		return 'https://example.test/vendor-application/';
 	}
@@ -248,8 +248,8 @@ if (!function_exists('vms_vendor_portal_page_url')) {
 	}
 }
 
-if (!function_exists('vms_vendor_apply_render_notice')) {
-	function vms_vendor_apply_render_notice(string $type, string $headline, string $body = ''): string
+if (!function_exists('bvmgr_vendor_apply_render_notice')) {
+	function bvmgr_vendor_apply_render_notice(string $type, string $headline, string $body = ''): string
 	{
 		$type = ($type === 'success' || $type === 'warning') ? $type : 'error';
 		$html = '<div class="vms-notice vms-notice-' . esc_attr($type) . ' vms-vendor-apply-notice">';
@@ -262,8 +262,8 @@ if (!function_exists('vms_vendor_apply_render_notice')) {
 	}
 }
 
-if (!function_exists('vms_vendor_app_statuses')) {
-	function vms_vendor_app_statuses(): array
+if (!function_exists('bvmgr_vendor_app_statuses')) {
+	function bvmgr_vendor_app_statuses(): array
 	{
 		return array(
 			'pending' => 'Pending',
@@ -273,15 +273,15 @@ if (!function_exists('vms_vendor_app_statuses')) {
 	}
 }
 
-if (!function_exists('vms_vendor_app_get_status')) {
-	function vms_vendor_app_get_status(int $app_id): string
+if (!function_exists('bvmgr_vendor_app_get_status')) {
+	function bvmgr_vendor_app_get_status(int $app_id): string
 	{
 		return $GLOBALS['vms_test_app_status'] ?? 'pending';
 	}
 }
 
-if (!function_exists('vms_vendor_app_find_recent_application_for_user')) {
-	function vms_vendor_app_find_recent_application_for_user(int $user_id): array
+if (!function_exists('bvmgr_vendor_app_find_recent_application_for_user')) {
+	function bvmgr_vendor_app_find_recent_application_for_user(int $user_id): array
 	{
 		return $GLOBALS['vms_test_recent_application'] ?? array(
 			'kind' => 'unconfirmed',
@@ -413,18 +413,18 @@ $expectedAllowedHtml = array(
 	),
 	'strong' => array(),
 );
-$assert(vms_vendor_app_confirmation_allowed_html() === $expectedAllowedHtml, 'Vendor application confirmation allowlist should contain only the intended confirmation fragment tags and attributes.');
+$assert(bvmgr_vendor_app_confirmation_allowed_html() === $expectedAllowedHtml, 'Vendor application confirmation allowlist should contain only the intended confirmation fragment tags and attributes.');
 
 $GLOBALS['vms_test_confirmation_state'] = 'unconfirmed';
 $GLOBALS['vms_test_public_lookup_key'] = 'lookup-key"><script>alert(1)</script>';
-$form = vms_vendor_app_render_resend_confirmation_form(123, 'https://example.test/vendor-application/?vms_app=confirm_pending', 'Resend <script>alert(1)</script>');
+$form = bvmgr_vendor_app_render_resend_confirmation_form(123, 'https://example.test/vendor-application/?vms_app=confirm_pending', 'Resend <script>alert(1)</script>');
 $assert(strpos($form, '<form class="vms-vendor-apply-confirmation__resend" method="post" action="https://example.test/wp-admin/admin-post.php">') !== false, 'Resend form should keep its form tag, class, method, and action.');
 $assert(strpos($form, 'name="action" value="vms_vendor_app_resend_confirmation"') !== false, 'Resend form should keep the admin-post action input.');
 $assert(strpos($form, 'name="vms_app_ref" value="lookup-key&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"') !== false, 'Application reference should remain attribute-escaped text.');
 $assert(strpos($form, 'Resend &lt;script&gt;alert(1)&lt;/script&gt;') !== false, 'Button label should render as escaped text.');
 $assert(strpos($form, '<script') === false && strpos($form, 'onclick=') === false, 'Resend form should not allow executable markup.');
 
-$pending = vms_vendor_apply_render_confirmation_pending_screen(123, array('notice' => 'resent'));
+$pending = bvmgr_vendor_apply_render_confirmation_pending_screen(123, array('notice' => 'resent'));
 $assert(strpos($pending, '<section class="vms-vendor-apply-confirmation">') !== false, 'Pending confirmation screen should keep the confirmation section.');
 $assert(strpos($pending, 'We sent a new confirmation link to the email address on the application.') !== false, 'Pending confirmation screen should preserve the resent notice copy.');
 $assert(strpos($pending, '<ol class="vms-vendor-apply-confirmation__steps">') !== false, 'Pending confirmation screen should keep the ordered steps.');
@@ -433,7 +433,7 @@ $assert(strpos($pending, 'href="https://example.test/vendor-application/"') !== 
 $assert(strpos($pending, 'href="https://example.test/vendor-portal/"') !== false, 'Pending confirmation screen should keep the portal link.');
 
 $GLOBALS['vms_test_app_status'] = 'pending';
-$existing = vms_vendor_apply_render_existing_status_screen(123, 'approved');
+$existing = bvmgr_vendor_apply_render_existing_status_screen(123, 'approved');
 $assert(strpos($existing, 'We already have an approved application for this business.') !== false, 'Existing status screen should preserve approved duplicate copy.');
 $assert(strpos($existing, '<a class="button" href="https://example.test/vendor-portal/">Open Vendor Portal</a>') !== false, 'Existing status screen should keep the portal action link.');
 
@@ -443,30 +443,30 @@ $GLOBALS['vms_test_recent_application'] = array(
 	'status' => 'pending',
 	'confirmation_state' => 'unconfirmed',
 );
-$panel = vms_vendor_app_render_portal_applicant_panel(456, 'https://example.test/vendor-portal/');
+$panel = bvmgr_vendor_app_render_portal_applicant_panel(456, 'https://example.test/vendor-portal/');
 $assert(strpos($panel, '<div class="vms-portal-auth-wrap">') !== false, 'Portal applicant panel should keep its wrapper fragment.');
 $assert(strpos($panel, 'Application awaiting confirmation') !== false, 'Portal applicant panel should preserve the awaiting-confirmation copy.');
 $assert(strpos($panel, '<form class="vms-vendor-apply-confirmation__resend"') !== false, 'Portal applicant panel should keep the resend form fragment.');
 
 $unsafe = '<section class="ok" onclick="evil()" id="bad" data-x="1"><h2 style="color:red">Title</h2><p class="copy" onload="evil()">Copy</p><a class="button" href="javascript:alert(1)" target="_blank" rel="noopener">Bad link</a><form class="f" method="post" action="javascript:alert(1)" enctype="multipart/form-data"><input type="hidden" name="x" value="y" onclick="evil()" style="color:red"></form><script>alert(1)</script><iframe src="x"></iframe><object data="x"></object><embed src="x"></embed></section>';
-$filtered = wp_kses($unsafe, vms_vendor_app_confirmation_allowed_html());
+$filtered = wp_kses($unsafe, bvmgr_vendor_app_confirmation_allowed_html());
 foreach (array('<script', '<iframe', '<object', '<embed', 'onclick=', 'onload=', 'style=', ' id=', 'data-x=', 'target=', 'rel=', 'enctype=', 'javascript:') as $forbidden) {
 	$assert(strpos($filtered, $forbidden) === false, 'Confirmation allowlist should reject unsupported markup or attributes: ' . $forbidden);
 }
 $assert(strpos($filtered, '<section class="ok"><h2>Title</h2><p class="copy">Copy</p><a class="button">Bad link</a><form class="f" method="post"><input type="hidden" name="x" value="y"></form>alert(1)</section>') !== false, 'Allowed confirmation tags should remain while unsafe attributes and protocols are stripped.');
 
-$assert(strpos($source, 'function vms_vendor_app_render_confirmation_shell(string $title, string $content): void') !== false, 'Confirmation shell renderer should remain the isolated browser output owner.');
-$assert(strpos($source, 'echo wp_kses($content, vms_vendor_app_confirmation_allowed_html());') !== false, 'Confirmation shell should contract only the confirmation content fragment before output.');
+$assert(strpos($source, 'function bvmgr_vendor_app_render_confirmation_shell(string $title, string $content): void') !== false, 'Confirmation shell renderer should remain the isolated browser output owner.');
+$assert(strpos($source, 'echo wp_kses($content, bvmgr_vendor_app_confirmation_allowed_html());') !== false, 'Confirmation shell should contract only the confirmation content fragment before output.');
 $assert(strpos($source, 'echo $content;') === false, 'Confirmation shell should not directly echo the content fragment.');
 $assert(strpos($source, "echo '<html ' . get_language_attributes() . '>';") === false, 'Confirmation shell should not echo raw language attributes.');
 $assert(strpos($source, 'language_attributes();') !== false, 'Confirmation shell should emit WordPress language attributes through the dedicated API.');
 
-$assert(substr_count($source, 'return wp_kses((string) ob_get_clean(), vms_vendor_app_confirmation_allowed_html());') === 4, 'Each confirmation/applicant fragment return should apply the dedicated contract.');
-$assert(substr_count($source, 'echo wp_kses(vms_vendor_app_render_resend_confirmation_form(') === 2, 'Every embedded resend-form output should apply the dedicated contract.');
-$assert(strpos($source, 'echo vms_vendor_app_render_resend_confirmation_form(') === false, 'Resend form fragments should not be embedded without the confirmation contract.');
+$assert(substr_count($source, 'return wp_kses((string) ob_get_clean(), bvmgr_vendor_app_confirmation_allowed_html());') === 4, 'Each confirmation/applicant fragment return should apply the dedicated contract.');
+$assert(substr_count($source, 'echo wp_kses(bvmgr_vendor_app_render_resend_confirmation_form(') === 2, 'Every embedded resend-form output should apply the dedicated contract.');
+$assert(strpos($source, 'echo bvmgr_vendor_app_render_resend_confirmation_form(') === false, 'Resend form fragments should not be embedded without the confirmation contract.');
 $assert(strpos($source, 'wp_kses_post(') === false, 'Confirmation output should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $source), 'Confirmation output should not use the broad post allowlist.');
-$assert(!preg_match('~esc_html\s*\(\s*(?:\$content|vms_vendor_app_render_resend_confirmation_form|vms_vendor_apply_render_confirmation_pending_screen)~', $source), 'Completed confirmation HTML fragments should not be escaped wholesale as text.');
+$assert(!preg_match('~esc_html\s*\(\s*(?:\$content|bvmgr_vendor_app_render_resend_confirmation_form|bvmgr_vendor_apply_render_confirmation_pending_screen)~', $source), 'Completed confirmation HTML fragments should not be escaped wholesale as text.');
 $assert(!preg_match('~wp_kses\s*\(\s*(?:wp_head\s*\(|wp_footer\s*\(|get_language_attributes\s*\(|ob_get_clean\s*\(\s*\)\s*,\s*wp_kses_allowed_html)~', $source), 'Theme, WordPress shell, and unrelated output should not be filtered through the confirmation contract.');
 
 foreach (array(

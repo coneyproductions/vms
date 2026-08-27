@@ -88,9 +88,9 @@ foreach ($scriptMatches as $scriptMatch) {
 $_GET = array();
 $_POST = array();
 $resetScripts();
-$html = vms_vendor_apply_shortcode();
+$html = bvmgr_vendor_apply_shortcode();
 
-$assert(function_exists('vms_vendor_apply_turnstile_is_configured') && vms_vendor_apply_turnstile_is_configured(), 'Vendor Applications form should treat Turnstile as configured only when both keys exist.');
+$assert(function_exists('bvmgr_vendor_apply_turnstile_is_configured') && bvmgr_vendor_apply_turnstile_is_configured(), 'Vendor Applications form should treat Turnstile as configured only when both keys exist.');
 $assert(isset($GLOBALS['vms_test_scripts']['vms-vendor-apply']), 'Vendor Applications form should enqueue the migrated vms-vendor-apply asset.');
 $assert(($GLOBALS['vms_test_scripts']['vms-vendor-apply']['src'] ?? '') === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/js/vms-vendor-apply.js', 'Vendor Applications asset should use the expected asset URL helper output.');
 $assert(isset($GLOBALS['vms_test_scripts']['cf-turnstile']), 'Vendor Applications form should keep the existing Turnstile asset enqueued when both keys are configured.');
@@ -114,7 +114,7 @@ $assert(is_array($variantMap) && isset($variantMap['default'], $variantMap['band
 $_GET = array('vms_app' => 'success');
 $_POST = array();
 $resetScripts();
-$successHtml = vms_vendor_apply_shortcode();
+$successHtml = bvmgr_vendor_apply_shortcode();
 $assert(!isset($GLOBALS['vms_test_scripts']['vms-vendor-apply']), 'Vendor Applications asset should not be enqueued when the shortcode returns the confirmation screen instead of the form.');
 $assert(strpos($successHtml, 'vms-vendor-apply-confirmation') !== false, 'Vendor Applications success path should still return the confirmation screen.');
 $assert(strpos($successHtml, 'id="vms-vendor-apply-variant-map"') === false, 'Vendor Applications success path should not render form-only JSON configuration.');

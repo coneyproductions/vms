@@ -497,8 +497,8 @@ function bvmgr_vendor_avatar_from_logo($url, $id_or_email, $args)
 
     // Only override for vendor users that are linked to a vendor profile
     $vendor_id = 0;
-    if (function_exists('vms_get_primary_vendor_id_for_user')) {
-        $vendor_id = vms_get_primary_vendor_id_for_user((int) $user->ID);
+    if (function_exists('bvmgr_get_primary_vendor_id_for_user')) {
+        $vendor_id = bvmgr_get_primary_vendor_id_for_user((int) $user->ID);
     } else {
         $vendor_id = (int) get_user_meta($user->ID, '_vms_vendor_id', true);
     }
@@ -3662,8 +3662,8 @@ function bvmgr_vendor_render_updates_column($column, $post_id)
 
     $last_gmt = get_post_meta($post_id, '_vms_vendor_profile_last_updated_gmt', true);
     $last_context = sanitize_key((string) get_post_meta($post_id, '_vms_vendor_profile_last_update_context', true));
-    $context_label = function_exists('vms_vendor_submission_context_label')
-        ? vms_vendor_submission_context_label($last_context)
+    $context_label = function_exists('bvmgr_vendor_submission_context_label')
+        ? bvmgr_vendor_submission_context_label($last_context)
         : ($last_context !== '' ? ucwords(str_replace(array('-', '_'), ' ', $last_context)) : '');
     $time_ago = '';
 
@@ -3718,8 +3718,8 @@ function bvmgr_vendor_change_tracking_metabox_cb($post)
     $updated_gmt = get_post_meta($vendor_id, '_vms_vendor_profile_last_updated_gmt', true);
     $updated_by  = (int) get_post_meta($vendor_id, '_vms_vendor_profile_last_updated_by', true);
     $update_context = sanitize_key((string) get_post_meta($vendor_id, '_vms_vendor_profile_last_update_context', true));
-    $update_context_label = function_exists('vms_vendor_submission_context_label')
-        ? vms_vendor_submission_context_label($update_context)
+    $update_context_label = function_exists('bvmgr_vendor_submission_context_label')
+        ? bvmgr_vendor_submission_context_label($update_context)
         : ($update_context !== '' ? ucwords(str_replace(array('-', '_'), ' ', $update_context)) : '');
 
     $reviewed_gmt = get_post_meta($vendor_id, '_vms_vendor_profile_last_reviewed_gmt', true);
@@ -4393,7 +4393,7 @@ if (!function_exists('bvmgr_vendor_profile_is_enabled')) {
             return false;
         }
 
-        if (function_exists('vms_vendor_has_public_profile_type') && !vms_vendor_has_public_profile_type($vendor_id)) {
+        if (function_exists('bvmgr_vendor_has_public_profile_type') && !bvmgr_vendor_has_public_profile_type($vendor_id)) {
             return false;
         }
 

@@ -670,8 +670,8 @@ if (!function_exists('vms_approvals_queue_verification_summary')) {
 if (!function_exists('vms_approvals_queue_vendor_pending_count')) {
 	function vms_approvals_queue_vendor_pending_count(): int
 	{
-		if (function_exists('vms_vendor_app_count_pending')) {
-			return max(0, absint(vms_vendor_app_count_pending()));
+		if (function_exists('bvmgr_vendor_app_count_pending')) {
+			return max(0, absint(bvmgr_vendor_app_count_pending()));
 		}
 		return 0;
 	}
@@ -706,12 +706,12 @@ if (!function_exists('vms_approvals_queue_vendor_summary')) {
 				array(
 					'relation' => 'OR',
 					array(
-						'key' => function_exists('vms_vendor_app_meta_key') ? (vms_vendor_app_meta_key('confirmation_state') ?: '_vms_app_confirmation_state') : '_vms_app_confirmation_state',
+						'key' => function_exists('bvmgr_vendor_app_meta_key') ? (bvmgr_vendor_app_meta_key('confirmation_state') ?: '_vms_app_confirmation_state') : '_vms_app_confirmation_state',
 						'value' => 'confirmed',
 						'compare' => '=',
 					),
 					array(
-						'key' => function_exists('vms_vendor_app_meta_key') ? (vms_vendor_app_meta_key('confirmation_state') ?: '_vms_app_confirmation_state') : '_vms_app_confirmation_state',
+						'key' => function_exists('bvmgr_vendor_app_meta_key') ? (bvmgr_vendor_app_meta_key('confirmation_state') ?: '_vms_app_confirmation_state') : '_vms_app_confirmation_state',
 						'compare' => 'NOT EXISTS',
 					),
 				),

@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
 require_once __DIR__ . '/../../core/registry/meta-keys.php';
 require_once __DIR__ . '/../../core/registry/constants.php';
 
-function vms_vendor_tax_export_button()
+function bvmgr_vendor_tax_export_button()
 {
 	global $typenow;
 	if ($typenow !== BVMGR_CPT_VENDOR) return;
@@ -25,9 +25,9 @@ function vms_vendor_tax_export_button()
 
 	echo '<a class="button vms-vendor-tax-export-btn" href="' . esc_url($url) . '">Export 1099-ready CSV</a>';
 }
-add_action('restrict_manage_posts', 'vms_vendor_tax_export_button', 20);
+add_action('restrict_manage_posts', 'bvmgr_vendor_tax_export_button', 20);
 
-function vms_vendor_tax_export_csv_adminpost()
+function bvmgr_vendor_tax_export_csv_adminpost()
 {
 	if (!current_user_can('manage_options')) wp_die('Permission denied.');
 	check_admin_referer('vms_vendor_tax_export_csv');
@@ -123,4 +123,4 @@ function vms_vendor_tax_export_csv_adminpost()
 	fclose($out);
 	exit;
 }
-add_action('admin_post_vms_vendor_tax_export_csv', 'vms_vendor_tax_export_csv_adminpost');
+add_action('admin_post_vms_vendor_tax_export_csv', 'bvmgr_vendor_tax_export_csv_adminpost');

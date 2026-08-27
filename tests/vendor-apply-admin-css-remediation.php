@@ -143,13 +143,13 @@ $assert(strpos($vendorApplicationsSource, "admin_head-edit.php") === false, 'Ven
 $assert(strpos($vendorApplicationsSource, '<style') === false, 'Vendor Applications should not print inline style tags.');
 $assert(strpos($vendorApplicationsSource, '<span class="vms-status-pill ') !== false, 'Vendor Applications should keep the status-pill markup.');
 
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_app_status_pill_class'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_app_status_pill_class'));
 
-$assert(vms_vendor_app_status_pill_class('pending') === 'vms-pill-yellow', 'Pending applications should keep the yellow pill class.');
-$assert(vms_vendor_app_status_pill_class('holding') === 'vms-pill-blue', 'Holding applications should keep the blue pill class.');
-$assert(vms_vendor_app_status_pill_class('approved') === 'vms-pill-green', 'Approved applications should keep the green pill class.');
-$assert(vms_vendor_app_status_pill_class('rejected') === 'vms-pill-red', 'Rejected applications should keep the red pill class.');
-$assert(vms_vendor_app_status_pill_class('unknown') === 'vms-pill-grey', 'Fallback applications should keep the grey pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('pending') === 'vms-pill-yellow', 'Pending applications should keep the yellow pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('holding') === 'vms-pill-blue', 'Holding applications should keep the blue pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('approved') === 'vms-pill-green', 'Approved applications should keep the green pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('rejected') === 'vms-pill-red', 'Rejected applications should keep the red pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('unknown') === 'vms-pill-grey', 'Fallback applications should keep the grey pill class.');
 
 $requiredCssSnippets = array(
 	'body.post-type-vms_vendor_app .vms-status-pill',

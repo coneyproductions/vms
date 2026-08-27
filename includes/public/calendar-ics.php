@@ -115,22 +115,22 @@ if (!function_exists('vms_calendar_ics_vendor_id_for_request')) {
 		}
 		$requested = absint($requested_raw);
 		if ($requested > 0) {
-			if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $requested)) {
+			if (function_exists('bvmgr_user_can_access_vendor') && bvmgr_user_can_access_vendor($user_id, $requested)) {
 				return $requested;
 			}
-			if (function_exists('vms_get_active_vendor_ids_for_user')) {
-				$active = array_values(array_unique(array_map('absint', (array) vms_get_active_vendor_ids_for_user($user_id))));
+			if (function_exists('bvmgr_get_active_vendor_ids_for_user')) {
+				$active = array_values(array_unique(array_map('absint', (array) bvmgr_get_active_vendor_ids_for_user($user_id))));
 				if (in_array($requested, $active, true)) {
 					return $requested;
 				}
 			}
 		}
 
-		if (function_exists('vms_get_primary_vendor_id_for_user')) {
-			return absint(vms_get_primary_vendor_id_for_user($user_id));
+		if (function_exists('bvmgr_get_primary_vendor_id_for_user')) {
+			return absint(bvmgr_get_primary_vendor_id_for_user($user_id));
 		}
-		if (function_exists('vms_get_vendor_id_for_current_user')) {
-			return absint(vms_get_vendor_id_for_current_user());
+		if (function_exists('bvmgr_get_vendor_id_for_current_user')) {
+			return absint(bvmgr_get_vendor_id_for_current_user());
 		}
 		return 0;
 	}

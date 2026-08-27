@@ -13,7 +13,7 @@ defined('ABSPATH') || exit;
  * Convert a money-ish string into a float.
  * Accepts: "125", "125.00", "$1,250.50", " 1 250.50 "
  */
-function vms_payables_sanitize_amount($raw): float
+function bvmgr_payables_sanitize_amount($raw): float
 {
     $raw = is_scalar($raw) ? (string) $raw : '';
     $raw = trim($raw);
@@ -38,7 +38,7 @@ function vms_payables_sanitize_amount($raw): float
  * 2) Vendor legal name (_vms_payee_legal_name)
  * 3) Vendor post_title
  */
-function vms_payables_resolve_vendor_payee_name(int $vendor_id): string
+function bvmgr_payables_resolve_vendor_payee_name(int $vendor_id): string
 {
     $vendor_id = (int) $vendor_id;
     if ($vendor_id <= 0) {
@@ -71,7 +71,7 @@ function vms_payables_resolve_vendor_payee_name(int $vendor_id): string
  * Format (v1):
  *   VMS-{venue_slug}-{YYYYMMDD}-{vendor_id}
  */
-function vms_payables_build_bill_no(string $event_date, int $venue_id, int $vendor_id): string
+function bvmgr_payables_build_bill_no(string $event_date, int $venue_id, int $vendor_id): string
 {
     $venue_id  = (int) $venue_id;
     $vendor_id = (int) $vendor_id;
@@ -98,7 +98,7 @@ function vms_payables_build_bill_no(string $event_date, int $venue_id, int $vend
 /**
  * Add days to a YYYY-MM-DD date. Returns YYYY-MM-DD or '' on failure.
  */
-function vms_payables_add_days(string $ymd, int $days): string
+function bvmgr_payables_add_days(string $ymd, int $days): string
 {
     $ymd  = trim((string) $ymd);
     $days = (int) $days;
@@ -239,14 +239,14 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
     $bills = [];
 
     $append_line = static function (array &$bills, int $plan_id, int $venue_id, string $event_date, int $vendor_id, float $amount, string $structure, string $description, bool $payment_blocked, bool $tax_missing, bool $bypass_active, string $bypass_until, int $terms_days) {
-        $supplier = vms_payables_resolve_vendor_payee_name($vendor_id);
+        $supplier = bvmgr_payables_resolve_vendor_payee_name($vendor_id);
         if ($supplier === '') {
             return false;
         }
 
-        $bill_no   = vms_payables_build_bill_no($event_date, $venue_id, $vendor_id);
+        $bill_no   = bvmgr_payables_build_bill_no($event_date, $venue_id, $vendor_id);
         $bill_date = $event_date;
-        $due_date  = ($terms_days !== 0) ? vms_payables_add_days($event_date, $terms_days) : $event_date;
+        $due_date  = ($terms_days !== 0) ? bvmgr_payables_add_days($event_date, $terms_days) : $event_date;
         $key = $vendor_id . '|' . $venue_id . '|' . $event_date;
 
         if (!isset($bills[$key])) {
@@ -314,11 +314,11 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
             $payment_blocked = ($tax_missing && !$bypass_active);
 
             if ($payment_blocked && empty($include_tax_incomplete)) {
-                $vendor_label = vms_payables_resolve_vendor_payee_name($vendor_id);
+                $vendor_label = bvmgr_payables_resolve_vendor_payee_name($vendor_id);
                 $warnings[] = "Excluded bill for '" . $vendor_label . "' (tax profile incomplete). Payments/exports are blocked until resolved or bypass set.";
             } else {
                 $structure = trim((string) get_post_meta($plan_id, $k_struct, true));
-                $amount = vms_payables_sanitize_amount(get_post_meta($plan_id, $k_flat, true));
+                $amount = bvmgr_payables_sanitize_amount(get_post_meta($plan_id, $k_flat, true));
 
                 if ($amount <= 0.0 && !$include_zero) {
                     $guaranteed_structures = array('flat_fee', 'flat_fee_door_split', 'attendance_bonus');
@@ -361,7 +361,7 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
                 continue;
             }
 
-            $support_amount = vms_payables_sanitize_amount($entry['guaranteed_fee'] ?? '');
+            $support_amount = bvmgr_payables_sanitize_amount($entry['guaranteed_fee'] ?? '');
             if ($support_amount <= 0.0 && !$include_zero) {
                 $warnings[] = 'Plan #' . $plan_id . ' supporting lineup entry #' . ($entry_index + 1) . ' has $0 guaranteed fee; skipped.';
                 continue;
@@ -380,7 +380,7 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
             }
             $support_payment_blocked = ($support_tax_missing && !$support_bypass_active);
             if ($support_payment_blocked && empty($include_tax_incomplete)) {
-                $vendor_label = vms_payables_resolve_vendor_payee_name($support_vendor_id);
+                $vendor_label = bvmgr_payables_resolve_vendor_payee_name($support_vendor_id);
                 $warnings[] = "Excluded bill for '" . $vendor_label . "' (tax profile incomplete). Payments/exports are blocked until resolved or bypass set.";
                 continue;
             }

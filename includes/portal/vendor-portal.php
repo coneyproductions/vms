@@ -192,8 +192,8 @@ if (!function_exists('vms_vendor_portal_page_url')) {
 if (!function_exists('vms_vendor_portal_application_page_url')) {
     function vms_vendor_portal_application_page_url(array $query_args = array()): string
     {
-        if (function_exists('vms_vendor_app_get_application_page_url')) {
-            return (string) vms_vendor_app_get_application_page_url($query_args);
+        if (function_exists('bvmgr_vendor_app_get_application_page_url')) {
+            return (string) bvmgr_vendor_app_get_application_page_url($query_args);
         }
 
         $url = home_url('/vendor-application/');
@@ -221,11 +221,11 @@ if (!function_exists('vms_vendor_portal_user_has_active_links')) {
     function vms_vendor_portal_user_has_active_links(int $user_id): bool
     {
         $user_id = (int) $user_id;
-        if ($user_id <= 0 || !function_exists('vms_get_active_vendor_ids_for_user')) {
+        if ($user_id <= 0 || !function_exists('bvmgr_get_active_vendor_ids_for_user')) {
             return false;
         }
 
-        return !empty(vms_get_active_vendor_ids_for_user($user_id));
+        return !empty(bvmgr_get_active_vendor_ids_for_user($user_id));
     }
 }
 
@@ -408,9 +408,9 @@ if (!function_exists('vms_vendor_flag_vendor_update')) {
             }
         }
 
-        if ($context !== '' && function_exists('vms_vendor_submission_dispatch_alert') && function_exists('vms_vendor_submission_context_is_document') && vms_vendor_submission_context_is_document($context)) {
+        if ($context !== '' && function_exists('bvmgr_vendor_submission_dispatch_alert') && function_exists('bvmgr_vendor_submission_context_is_document') && bvmgr_vendor_submission_context_is_document($context)) {
             $meta['submitted_by_user_id'] = $user_id;
-            vms_vendor_submission_dispatch_alert($vendor_id, $context, $meta);
+            bvmgr_vendor_submission_dispatch_alert($vendor_id, $context, $meta);
         }
     }
 }
@@ -3543,8 +3543,8 @@ if (!function_exists('vms_vendor_portal_render_headliner_promo_video_card')) {
         }
         echo '</p>';
 
-        if (function_exists('vms_vendor_booking_onboarding_get_vendor_plan_status')) {
-            $booking_status = (array) vms_vendor_booking_onboarding_get_vendor_plan_status($plan_id, $vendor_id);
+        if (function_exists('bvmgr_vendor_booking_onboarding_get_vendor_plan_status')) {
+            $booking_status = (array) bvmgr_vendor_booking_onboarding_get_vendor_plan_status($plan_id, $vendor_id);
             if (!empty($booking_status['video_required'])) {
                 echo '<p class="vms-muted vms-m0">';
                 echo esc_html((string) ($booking_status['video_label'] ?? __('Video needed', 'backstage-venue-manager')));
@@ -3652,10 +3652,10 @@ if (!function_exists('vms_vendor_portal_can_manage_headliner_promo_video')) {
         if (current_user_can('edit_post', $plan_id)) {
             return true;
         }
-        if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $vendor_id)) {
+        if (function_exists('bvmgr_user_can_access_vendor') && bvmgr_user_can_access_vendor($user_id, $vendor_id)) {
             return true;
         }
-        $linked_vendor_ids = function_exists('vms_get_active_vendor_ids_for_user') ? (array) vms_get_active_vendor_ids_for_user($user_id) : array();
+        $linked_vendor_ids = function_exists('bvmgr_get_active_vendor_ids_for_user') ? (array) bvmgr_get_active_vendor_ids_for_user($user_id) : array();
         return in_array($vendor_id, array_map('absint', $linked_vendor_ids), true);
     }
 }
@@ -4359,8 +4359,8 @@ if (!function_exists('vms_vendor_portal_handle_interest_submit')) {
         $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/?tab=availability'));
 
         $can_access = false;
-        if (function_exists('vms_user_can_access_vendor')) {
-            $can_access = vms_user_can_access_vendor($user_id, $vendor_id);
+        if (function_exists('bvmgr_user_can_access_vendor')) {
+            $can_access = bvmgr_user_can_access_vendor($user_id, $vendor_id);
         }
         if (!$can_access) {
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to submit interest for that vendor.', 'backstage-venue-manager')));
@@ -4407,8 +4407,8 @@ if (!function_exists('vms_vendor_portal_handle_interest_withdraw')) {
         $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/?tab=availability'));
 
         $can_access = false;
-        if (function_exists('vms_user_can_access_vendor')) {
-            $can_access = vms_user_can_access_vendor($user_id, $vendor_id);
+        if (function_exists('bvmgr_user_can_access_vendor')) {
+            $can_access = bvmgr_user_can_access_vendor($user_id, $vendor_id);
         }
         if (!$can_access) {
             vms_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to update that request.', 'backstage-venue-manager')));
@@ -4453,8 +4453,8 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
         $return_url = vms_vendor_portal_post_return_url(home_url('/vendor-portal/'));
         $user = get_userdata($user_id);
         $user_email = $user instanceof WP_User ? sanitize_email((string) $user->user_email) : '';
-        $matched_vendor_ids = function_exists('vms_vendor_user_link_find_vendor_matches_for_email')
-            ? (array) vms_vendor_user_link_find_vendor_matches_for_email($user_email)
+        $matched_vendor_ids = function_exists('bvmgr_vendor_user_link_find_vendor_matches_for_email')
+            ? (array) bvmgr_vendor_user_link_find_vendor_matches_for_email($user_email)
             : array();
 
         if ($vendor_id <= 0 || !in_array($vendor_id, $matched_vendor_ids, true)) {
@@ -4466,7 +4466,7 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
             exit;
         }
 
-        if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $vendor_id)) {
+        if (function_exists('bvmgr_user_can_access_vendor') && bvmgr_user_can_access_vendor($user_id, $vendor_id)) {
             vms_vendor_portal_set_flash($user_id, array(
                 'type' => 'success',
                 'message' => __('Your account is already linked to that vendor profile.', 'backstage-venue-manager'),
@@ -4475,8 +4475,8 @@ if (!function_exists('vms_vendor_portal_handle_link_request_submit')) {
             exit;
         }
 
-        $created = function_exists('vms_vendor_user_link_store_request')
-            ? vms_vendor_user_link_store_request($user_id, $vendor_id, array('source' => 'vendor_portal'))
+        $created = function_exists('bvmgr_vendor_user_link_store_request')
+            ? bvmgr_vendor_user_link_store_request($user_id, $vendor_id, array('source' => 'vendor_portal'))
             : false;
 
         if ($created) {
@@ -4514,11 +4514,11 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
 
         $user = get_userdata($user_id);
         $user_email = $user instanceof WP_User ? sanitize_email((string) $user->user_email) : '';
-        $matched_vendor_ids = ($user_email !== '' && function_exists('vms_vendor_user_link_find_vendor_matches_for_email'))
-            ? (array) vms_vendor_user_link_find_vendor_matches_for_email($user_email)
+        $matched_vendor_ids = ($user_email !== '' && function_exists('bvmgr_vendor_user_link_find_vendor_matches_for_email'))
+            ? (array) bvmgr_vendor_user_link_find_vendor_matches_for_email($user_email)
             : array();
-        $pending_requests = function_exists('vms_vendor_user_link_get_requests_for_user')
-            ? (array) vms_vendor_user_link_get_requests_for_user($user_id)
+        $pending_requests = function_exists('bvmgr_vendor_user_link_get_requests_for_user')
+            ? (array) bvmgr_vendor_user_link_get_requests_for_user($user_id)
             : array();
 
         $candidate_vendor_ids = array();
@@ -4562,8 +4562,8 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
                     $vendor_title = sprintf(__('Vendor #%d', 'backstage-venue-manager'), $candidate_vendor_id);
                 }
 
-                $vendor_type = function_exists('vms_vendor_user_link_vendor_type_label')
-                    ? (string) vms_vendor_user_link_vendor_type_label($candidate_vendor_id)
+                $vendor_type = function_exists('bvmgr_vendor_user_link_vendor_type_label')
+                    ? (string) bvmgr_vendor_user_link_vendor_type_label($candidate_vendor_id)
                     : '';
                 $pending_row = isset($pending_requests[$candidate_vendor_id]) && is_array($pending_requests[$candidate_vendor_id])
                     ? $pending_requests[$candidate_vendor_id]
@@ -4732,15 +4732,15 @@ function vms_vendor_portal_shortcode($atts = []): string
         $vendor_id = $preview_vendor_id;
         $vendor_ids = array($vendor_id);
     } else {
-        if (function_exists('vms_get_active_vendor_ids_for_user')) {
-            $vendor_ids = vms_get_active_vendor_ids_for_user($user_id);
+        if (function_exists('bvmgr_get_active_vendor_ids_for_user')) {
+            $vendor_ids = bvmgr_get_active_vendor_ids_for_user($user_id);
         }
 
         // If a vendor_id was requested, honor it only if the user is linked to that vendor.
         if ($requested_vendor_id > 0) {
             $can = false;
-            if (function_exists('vms_user_can_access_vendor')) {
-                $can = vms_user_can_access_vendor($user_id, $requested_vendor_id);
+            if (function_exists('bvmgr_user_can_access_vendor')) {
+                $can = bvmgr_user_can_access_vendor($user_id, $requested_vendor_id);
             } else {
                 $can = in_array($requested_vendor_id, $vendor_ids, true);
             }
@@ -4749,8 +4749,8 @@ function vms_vendor_portal_shortcode($atts = []): string
                 $vendor_id = $requested_vendor_id;
 
                 // Persist as the user's primary vendor pointer (convenience for future portal loads).
-                if (function_exists('vms_vendor_user_links_set_primary_for_user')) {
-                    vms_vendor_user_links_set_primary_for_user($user_id, $vendor_id, $user_id);
+                if (function_exists('bvmgr_vendor_user_links_set_primary_for_user')) {
+                    bvmgr_vendor_user_links_set_primary_for_user($user_id, $vendor_id, $user_id);
                 } else {
                     update_user_meta($user_id, '_vms_vendor_id', $vendor_id);
                 }
@@ -4759,8 +4759,8 @@ function vms_vendor_portal_shortcode($atts = []): string
 
         // Otherwise, fall back to the user's primary/default vendor.
         if ($vendor_id <= 0) {
-            if (function_exists('vms_get_primary_vendor_id_for_user')) {
-                $vendor_id = vms_get_primary_vendor_id_for_user($user_id);
+            if (function_exists('bvmgr_get_primary_vendor_id_for_user')) {
+                $vendor_id = bvmgr_get_primary_vendor_id_for_user($user_id);
             } else {
                 $vendor_id = (int) get_user_meta($user_id, '_vms_vendor_id', true);
             }
@@ -4768,8 +4768,8 @@ function vms_vendor_portal_shortcode($atts = []): string
     }
 
     if ($vendor_id <= 0) {
-        if (function_exists('vms_vendor_app_render_portal_applicant_panel')) {
-            $applicant_panel = (string) vms_vendor_app_render_portal_applicant_panel($user_id, (string) $base_url);
+        if (function_exists('bvmgr_vendor_app_render_portal_applicant_panel')) {
+            $applicant_panel = (string) bvmgr_vendor_app_render_portal_applicant_panel($user_id, (string) $base_url);
             if ($applicant_panel !== '') {
                 return $applicant_panel;
             }
@@ -4874,8 +4874,8 @@ function vms_vendor_portal_shortcode($atts = []): string
     echo '<a class="' . ($active_tab === 'tech' ? 'is-active' : '') . '" href="' . esc_url($url_tech) . '">' . esc_html__('Tech Docs', 'backstage-venue-manager') . '</a>';
     do_action('vms_vendor_portal_nav_links', $active_tab, $portal_context);
     if (!$is_preview) {
-        $apply_url = function_exists('vms_vendor_app_get_application_page_url')
-            ? vms_vendor_app_get_application_page_url(array('vms_from_portal' => '1'))
+        $apply_url = function_exists('bvmgr_vendor_app_get_application_page_url')
+            ? bvmgr_vendor_app_get_application_page_url(array('vms_from_portal' => '1'))
             : home_url('/vendor-application/?vms_from_portal=1');
         echo '<a href="' . esc_url($apply_url) . '">' . esc_html__('Add a Business', 'backstage-venue-manager') . '</a>';
     }
@@ -5417,10 +5417,10 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
                     if (empty($ics_url)) {
                         echo wp_kses_post(bvmgr_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')));
-                    } elseif (!function_exists('vms_vendor_ics_sync_now')) {
+                    } elseif (!function_exists('bvmgr_vendor_ics_sync_now')) {
                         echo wp_kses_post(bvmgr_portal_notice('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')));
                     } else {
-                        $result = vms_vendor_ics_sync_now($vendor_id, $active_dates);
+                        $result = bvmgr_vendor_ics_sync_now($vendor_id, $active_dates);
 
                         if (!empty($result['ok'])) {
 
@@ -6823,11 +6823,11 @@ if (!function_exists('vms_vendor_portal_user_can_download_tech_doc')) {
         }
 
         $user_id = get_current_user_id();
-        if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $vendor_id)) {
+        if (function_exists('bvmgr_user_can_access_vendor') && bvmgr_user_can_access_vendor($user_id, $vendor_id)) {
             return true;
         }
-        if (function_exists('vms_get_active_vendor_ids_for_user')) {
-            $vendor_ids = array_map('absint', (array) vms_get_active_vendor_ids_for_user($user_id));
+        if (function_exists('bvmgr_get_active_vendor_ids_for_user')) {
+            $vendor_ids = array_map('absint', (array) bvmgr_get_active_vendor_ids_for_user($user_id));
             if (in_array($vendor_id, $vendor_ids, true)) {
                 return true;
             }

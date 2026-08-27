@@ -253,15 +253,15 @@ try {
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'dashboard', 'post_type' => 'post');
-    vms_comp_package_admin_enqueue_assets();
-    vms_vendor_defaults_admin_enqueue_assets();
+    bvmgr_comp_package_admin_enqueue_assets();
+    bvmgr_vendor_defaults_admin_enqueue_assets();
     $assert($GLOBALS['vms_test_scripts'] === array(), 'Shared compensation asset should not enqueue on unrelated admin screens.');
     $assert($GLOBALS['vms_test_localized_scripts'] === array(), 'Shared compensation asset should not localize config on unrelated admin screens.');
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post', 'post_type' => 'vms_comp_package');
-    vms_comp_package_admin_enqueue_assets();
-    vms_vendor_defaults_admin_enqueue_assets();
+    bvmgr_comp_package_admin_enqueue_assets();
+    bvmgr_vendor_defaults_admin_enqueue_assets();
     $assert(isset($GLOBALS['vms_test_scripts']['vms-compensation-admin']), 'Comp Package screen should enqueue the shared compensation asset.');
     $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js', 'Comp Package screen should use the expected compensation asset path.');
     $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['ver'] ?? '') === 'test-asset-version', 'Comp Package screen should use the asset-version helper fallback pattern.');
@@ -272,8 +272,8 @@ try {
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post-new', 'post_type' => 'vms_vendor');
-    vms_comp_package_admin_enqueue_assets();
-    vms_vendor_defaults_admin_enqueue_assets();
+    bvmgr_comp_package_admin_enqueue_assets();
+    bvmgr_vendor_defaults_admin_enqueue_assets();
     $assert(isset($GLOBALS['vms_test_scripts']['vms-compensation-admin']), 'Vendor screen should enqueue the shared compensation asset.');
     $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['name'] ?? '') === 'vmsVendorDefaultsAdmin', 'Vendor screen should localize only the vendor-defaults strings.');
     $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['data']['strings']['selectedTemplateTitle'] ?? '') === 'Selected Template', 'Vendor screen should pass the vendor-defaults preview strings through inert config.');
