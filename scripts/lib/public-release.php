@@ -462,6 +462,12 @@ final class VMS_Public_Release_Tooling
 	{
 		return array(
 			array(
+				'id' => 'wporg-prefix-b3-guardrails',
+				'label' => 'WordPress.org B3 frozen function map, dependency waves, and exact resolution gate',
+				'path' => 'tests/wporg-prefix-b3-guardrails.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'wporg-prefix-scanner-inventory',
 				'label' => 'WordPress.org prefix scanner inventory and migration-aware gate',
 				'path' => 'tests/wporg-prefix-scanner-inventory.php',

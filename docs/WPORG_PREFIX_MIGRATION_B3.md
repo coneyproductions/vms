@@ -1,0 +1,68 @@
+# WordPress.org Prefix Migration — Phase B3
+
+Status: authorized and in progress  
+Authorized baseline: `634211d1d5bbd250fc13b19d02f39acd4a4bc96b`  
+Branch: `codex/wporg-reviewer-identity-alignment`  
+Scope: plugin-owned procedural PHP functions only
+
+## Controlling artifacts
+
+The immutable mapping authority is `docs/wporg-prefix-b3-function-map.json`. It freezes all 4,521 `vms_*` function identities, their 4,541 declaration sites, the 20 exact two-site duplicate families, public-extension classification, known-add-on consumers, B2.5 scanner rows, and dynamic literal/callback sites. Every target is the unique, collision-free `bvmgr_<suffix>` counterpart.
+
+The supporting control artifacts are:
+
+- `docs/wporg-prefix-b3-dependency-graph.json`: direct-call and exact function-literal relationships derived from the frozen map.
+- `docs/wporg-prefix-b3-waves.json`: exact, deterministic membership for all 11 waves.
+- `docs/wporg-prefix-b3-progress.json`: regenerated hybrid-state ratchet after each wave.
+
+These artifacts are generated and verified by `scripts/generate-wporg-prefix-b3.php` and `tests/wporg-prefix-b3-guardrails.php`. The frozen map cannot be overwritten by the generator.
+
+## Non-negotiable invariants
+
+- Rename only the 4,521 frozen plugin-owned procedural functions from `vms_*` to `bvmgr_*`.
+- Do not introduce legacy wrappers, aliases, trampolines, or dual declarations.
+- Keep both declaration sites of every duplicate family in one wave.
+- Update all frozen direct-call and exact function-name literal references for a selected symbol across public PHP in the same wave.
+- Preserve hooks, option/meta/transient keys, database identifiers, REST routes and namespaces, action/filter names, AJAX actions, shortcode tags, script/style handles, nonce actions, filenames, class names, constants, and other retained contracts unless separately authorized.
+- Keep authorization, authentication, capability, nonce, escaping, sanitization, REST/AJAX, and public behavior unchanged.
+- Cut over all five known add-ons together in W2 using disposable copies only. Installed/local-live copies remain untouched.
+- Stop on a mapping collision, unresolved dynamic reference, split duplicate, stale/forward reference, add-on mismatch, failed focused test, strict packaged scan regression, or installed-tree hash drift.
+
+## Numbered execution plan
+
+| Wave | Dependency domain | Functions | Sites | Duplicate families |
+|---|---|---:|---:|---:|
+| W1 | Activation and plugin-basename pilot | 35 | 35 | 0 |
+| W2 | Atomic five-add-on and public-extension API boundary | 66 | 68 | 2 |
+| W3 | Shared runtime, registries, admin UI, docs, and tours | 457 | 460 | 3 |
+| W4 | Event Plan editor, review, import, performance, cancellation, and feedback | 640 | 647 | 7 |
+| W5 | Ticketing runtime, rules, claims, and verifications | 616 | 616 | 0 |
+| W6 | Ticket integrity, forensics, mutation, Square, and revenue | 533 | 533 | 0 |
+| W7 | Vendor and venue applications, onboarding, registry, taxonomies, and admin | 419 | 419 | 0 |
+| W8 | Portals, availability, calendar, and public vendor profiles | 524 | 524 | 0 |
+| W9 | Staffing, staff tasks, schedule, season, and due dates | 441 | 445 | 4 |
+| W10 | Admissions, pass claims, email, status notices, and public event details | 428 | 428 | 0 |
+| W11 | Settings, reporting, social, tax bypass, and remaining admin | 362 | 366 | 4 |
+| **Total** |  | **4,521** | **4,541** | **20** |
+
+`docs/wporg-prefix-b3-waves.json` is the exact membership authority. It lists every function, declaration file, duplicate family, focused test group, and aggregated cross-wave dependency. W2 is selected semantically as the exact union of 55 known-add-on-consumed functions and 12 public-extension function APIs, with one overlap, rather than as whole-file ownership.
+
+## Per-wave gate
+
+Each wave is mechanically transformed from its frozen function list, reviewed as a narrow diff, and must pass before its isolated commit:
+
+1. PHP syntax for every changed PHP file and `git diff --check`.
+2. `php scripts/generate-wporg-prefix-b3.php --write-progress` and `php tests/wporg-prefix-b3-guardrails.php`.
+3. Phase-aware manifest/scanner regeneration and their guardrails.
+4. The wave's focused runtime/behavior tests from `docs/wporg-prefix-b3-waves.json`.
+5. Existing identity, runtime-stub, release-compatibility, and public-release pipeline regressions.
+6. A strict packaged scanner/Plugin Check checkpoint at high-risk boundaries and the final gate.
+7. Verification that protected and installed/live trees retain their recorded baseline hashes.
+
+The W2 gate additionally requires fresh disposable provenance for all five add-ons and an explicit harness whose core and add-on roots resolve only inside the disposable workspace.
+
+## Final acceptance
+
+B3 is complete only when the progress ratchet reports 4,521 migrated unique functions, 4,541 migrated declaration sites, zero remaining prohibited `vms_*` function declarations, zero stale or forward function references, and zero unexpected scanner rows. Final acceptance also requires a clean strict packaged Plugin Check result with warnings/errors non-increasing from the B2.5 baseline, real activation/deactivation/reactivation lifecycle proof, required plugin-load/runtime smokes, five-add-on disposable integration proof, unchanged installed/live tree hashes, and the remediation ledger evidence.
+
+This phase does not authorize B4–B8 work, pushing, deployment, packaging for distribution, tagging, WordPress.org submission, or a reviewer reply.
