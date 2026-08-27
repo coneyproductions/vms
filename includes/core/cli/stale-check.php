@@ -463,7 +463,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 
 			$issues = array();
 			if (!$has_validate_fn) {
-				$issues[] = 'vms_validate_event_plan missing';
+				$issues[] = 'bvmgr_validate_event_plan missing';
 			}
 			if (!$has_venue_guard) {
 				$issues[] = 'season-aware venue close guard missing';
@@ -750,14 +750,14 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				$issues[] = 'vms-ticketing-front.js missing or unreadable';
 			}
 
-			$has_success_clear_helper = (strpos($rules_code, 'function vms_ticketing_v2_clear_success_notices(): void') !== false);
-			$has_request_guard_helper = (strpos($rules_code, 'function vms_ticketing_v2_request_is_add_to_cart(): bool') !== false);
-			$has_cart_empty_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_cart_is_empty(): bool') !== false);
-			$has_prune_helper = (strpos($rules_code, 'function vms_ticketing_v2_prune_stale_success_notices(): void') !== false);
-			$has_template_redirect_hook = (strpos($rules_code, "add_action('template_redirect', 'vms_ticketing_v2_prune_stale_success_notices', 5);") !== false);
-			$has_request_guard_use = (strpos($rules_code, 'if (vms_ticketing_v2_request_is_add_to_cart()) {') !== false);
-			$has_cart_empty_use = (strpos($rules_code, 'if (!vms_ticketing_v2_session_cart_is_empty()) {') !== false);
-			$has_success_clear_uses = (substr_count($rules_code, 'vms_ticketing_v2_clear_success_notices();') >= 3);
+			$has_success_clear_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_clear_success_notices(): void') !== false);
+			$has_request_guard_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_request_is_add_to_cart(): bool') !== false);
+			$has_cart_empty_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_cart_is_empty(): bool') !== false);
+			$has_prune_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_prune_stale_success_notices(): void') !== false);
+			$has_template_redirect_hook = (strpos($rules_code, "add_action('template_redirect', 'bvmgr_ticketing_v2_prune_stale_success_notices', 5);") !== false);
+			$has_request_guard_use = (strpos($rules_code, 'if (bvmgr_ticketing_v2_request_is_add_to_cart()) {') !== false);
+			$has_cart_empty_use = (strpos($rules_code, 'if (!bvmgr_ticketing_v2_session_cart_is_empty()) {') !== false);
+			$has_success_clear_uses = (substr_count($rules_code, 'bvmgr_ticketing_v2_clear_success_notices();') >= 3);
 			$has_legacy_clear = (strpos($rules_code, 'wc_clear_notices()') !== false);
 			$has_js_clean_helper = (strpos($js_code, 'function cleanWooParamsInAddressBar()') !== false);
 			$has_js_clean_call = (strpos($js_code, 'cleanWooParamsInAddressBar();') !== false);
@@ -859,13 +859,13 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				$issues[] = 'vms-ticketing-front.js missing or unreadable';
 			}
 
-			$has_hint_key_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_ga_hint_key(): string') !== false);
-			$has_hint_seed_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string $source = \'\'): void') !== false);
-			$has_hint_clear_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_clear_ga_hint(int $plan_id = 0): void') !== false);
-			$has_effective_ga_helper = (strpos($rules_code, 'function vms_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_qty): int') !== false);
-			$has_effective_ga_use = (substr_count($rules_code, '$ga_qty = vms_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);') >= 2);
-			$has_hint_seed_use = (strpos($rules_code, 'vms_ticketing_v2_session_seed_ga_hint($hint_plan_id, $ga_qty_hint, \'silent_add_payload\');') !== false);
-			$has_hint_clear_use = (substr_count($rules_code, 'vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);') >= 2);
+			$has_hint_key_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_ga_hint_key(): string') !== false);
+			$has_hint_seed_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string $source = \'\'): void') !== false);
+			$has_hint_clear_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_clear_ga_hint(int $plan_id = 0): void') !== false);
+			$has_effective_ga_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_qty): int') !== false);
+			$has_effective_ga_use = (substr_count($rules_code, '$ga_qty = bvmgr_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);') >= 2);
+			$has_hint_seed_use = (strpos($rules_code, 'bvmgr_ticketing_v2_session_seed_ga_hint($hint_plan_id, $ga_qty_hint, \'silent_add_payload\');') !== false);
+			$has_hint_clear_use = (substr_count($rules_code, 'bvmgr_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);') >= 2);
 
 			$has_ticket_qty_helper = (strpos($js_code, 'function detectSelectedTicketsQty(addonsWrap) {') !== false);
 			$has_pending_plan_capture = (strpos($js_code, 'eventPlanId: eventPlanId,') !== false);
@@ -974,15 +974,15 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 					$issues[] = 'event-plans.php missing or unreadable';
 				}
 
-				$has_helper = (strpos($event_plan_code, 'function vms_tec_resolve_featured_image_arg(') !== false);
-				$has_helper_call = (strpos($event_plan_code, 'vms_tec_resolve_featured_image_arg($plan_thumb_id, $existing_tec_thumb_id, $vendor_thumb_id)') !== false);
+				$has_helper = (strpos($event_plan_code, 'function bvmgr_tec_resolve_featured_image_arg(') !== false);
+				$has_helper_call = (strpos($event_plan_code, 'bvmgr_tec_resolve_featured_image_arg($plan_thumb_id, $existing_tec_thumb_id, $vendor_thumb_id)') !== false);
 				$has_helper_plan_branch = (strpos($event_plan_code, 'if ($plan_thumb_id > 0) {') !== false);
 				$has_helper_existing_branch = (strpos($event_plan_code, 'if ($existing_tec_thumb_id > 0) {') !== false);
 				$has_helper_vendor_branch = (strpos($event_plan_code, 'if ($vendor_thumb_id > 0) {') !== false);
-				$post_existing_count = substr_count($event_plan_code, '$args = vms_build_tec_event_args($post_id, $existing_tec_id);');
+				$post_existing_count = substr_count($event_plan_code, '$args = bvmgr_build_tec_event_args($post_id, $existing_tec_id);');
 				$has_publish_builder = ($post_existing_count >= 1);
 				$has_resync_builder = ($post_existing_count >= 2);
-				$has_extras_builder = (strpos($event_plan_code, '$args = vms_build_tec_event_args($plan_id, $tec_event_id);') !== false);
+				$has_extras_builder = (strpos($event_plan_code, '$args = bvmgr_build_tec_event_args($plan_id, $tec_event_id);') !== false);
 
 				if (!$has_helper) {
 					$issues[] = 'featured-image resolver helper missing';

@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_social_resolve_provider_key')) {
-	function vms_social_resolve_provider_key(string $platform): string
+if (!function_exists('bvmgr_social_resolve_provider_key')) {
+	function bvmgr_social_resolve_provider_key(string $platform): string
 	{
 		$platform = sanitize_key($platform);
 		if (in_array($platform, array('facebook', 'instagram'), true)) {
@@ -59,7 +59,7 @@ if (!function_exists('bvmgr_social_get_providers')) {
 if (!function_exists('bvmgr_social_get_provider')) {
 	function bvmgr_social_get_provider(string $platform): ?BVMGR_Social_Provider_Interface
 	{
-		$key = vms_social_resolve_provider_key($platform);
+		$key = bvmgr_social_resolve_provider_key($platform);
 		$providers = bvmgr_social_get_providers();
 		return isset($providers[$key]) ? $providers[$key] : null;
 	}

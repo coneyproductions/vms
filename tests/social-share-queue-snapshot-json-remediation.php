@@ -146,7 +146,7 @@ function vms_test_run_queue_case(array $overrides): array
 	);
 
 	$warningBefore = vms_test_warning_count();
-	vms_social_queue_process_item($row);
+	bvmgr_social_queue_process_item($row);
 	$warningAfter = vms_test_warning_count();
 
 	$updates = $GLOBALS['vms_test_queue_updates'];
@@ -339,8 +339,8 @@ if (!class_exists('VMS_Test_Social_Queue_Provider')) {
 	}
 }
 
-if (!function_exists('vms_social_queue_render_for_row')) {
-	function vms_social_queue_render_for_row(array $row): array
+if (!function_exists('bvmgr_social_queue_render_for_row')) {
+	function bvmgr_social_queue_render_for_row(array $row): array
 	{
 		unset($row);
 		return (array) $GLOBALS['vms_test_render_result'];
@@ -355,8 +355,8 @@ if (!function_exists('bvmgr_social_get_provider')) {
 	}
 }
 
-if (!function_exists('vms_social_queue_update')) {
-	function vms_social_queue_update(int $queueId, array $data): void
+if (!function_exists('bvmgr_social_queue_update')) {
+	function bvmgr_social_queue_update(int $queueId, array $data): void
 	{
 		$GLOBALS['vms_test_queue_updates'][] = array(
 			'queue_id' => $queueId,
@@ -365,8 +365,8 @@ if (!function_exists('vms_social_queue_update')) {
 	}
 }
 
-if (!function_exists('vms_social_audit_log')) {
-	function vms_social_audit_log(string $action, array $details, int $queueId, string $platform, int $userId): void
+if (!function_exists('bvmgr_social_audit_log')) {
+	function bvmgr_social_audit_log(string $action, array $details, int $queueId, string $platform, int $userId): void
 	{
 		$GLOBALS['vms_test_audit_logs'][] = array(
 			'action' => $action,
@@ -378,8 +378,8 @@ if (!function_exists('vms_social_audit_log')) {
 	}
 }
 
-if (!function_exists('vms_social_venue_map_for_platform')) {
-	function vms_social_venue_map_for_platform(int $venueId, string $platform): array
+if (!function_exists('bvmgr_social_venue_map_for_platform')) {
+	function bvmgr_social_venue_map_for_platform(int $venueId, string $platform): array
 	{
 		$GLOBALS['vms_test_map_calls'][] = array(
 			'venue_id' => $venueId,
@@ -389,8 +389,8 @@ if (!function_exists('vms_social_venue_map_for_platform')) {
 	}
 }
 
-if (!function_exists('vms_social_get_settings')) {
-	function vms_social_get_settings(): array
+if (!function_exists('bvmgr_social_get_settings')) {
+	function bvmgr_social_get_settings(): array
 	{
 		return array('max_attempts' => 5);
 	}
@@ -433,15 +433,15 @@ if (!function_exists('wp_generate_uuid4')) {
 	}
 }
 
-if (!function_exists('vms_social_sanitize_details')) {
-	function vms_social_sanitize_details($value)
+if (!function_exists('bvmgr_social_sanitize_details')) {
+	function bvmgr_social_sanitize_details($value)
 	{
 		return $value;
 	}
 }
 
-if (!function_exists('vms_social_account_set_auth_state')) {
-	function vms_social_account_set_auth_state(int $accountId, string $state, array $details): void
+if (!function_exists('bvmgr_social_account_set_auth_state')) {
+	function bvmgr_social_account_set_auth_state(int $accountId, string $state, array $details): void
 	{
 		$GLOBALS['vms_test_auth_state_calls'][] = array(
 			'account_id' => $accountId,
@@ -451,8 +451,8 @@ if (!function_exists('vms_social_account_set_auth_state')) {
 	}
 }
 
-if (!function_exists('vms_social_next_attempt_utc')) {
-	function vms_social_next_attempt_utc(int $attempt): string
+if (!function_exists('bvmgr_social_next_attempt_utc')) {
+	function bvmgr_social_next_attempt_utc(int $attempt): string
 	{
 		unset($attempt);
 		return '2099-01-01 00:00:00';
@@ -484,26 +484,26 @@ $queueRepoSource = vms_test_read_file($queueRepoPath);
 $eventPanelSource = vms_test_read_file($eventPanelPath);
 $helperSection = vms_test_extract_section(
 	$runnerSource,
-	"if (!function_exists('vms_social_queue_decode_payload_snapshot')) {",
-	"if (!function_exists('vms_social_queue_process_item')) {"
+	"if (!function_exists('bvmgr_social_queue_decode_payload_snapshot')) {",
+	"if (!function_exists('bvmgr_social_queue_process_item')) {"
 );
 $runnerSection = vms_test_extract_section(
 	$runnerSource,
-	"if (!function_exists('vms_social_queue_process_item')) {",
-	"if (!function_exists('vms_social_process_queue')) {"
+	"if (!function_exists('bvmgr_social_queue_process_item')) {",
+	"if (!function_exists('bvmgr_social_process_queue')) {"
 );
 
 require $runnerPath;
 
-vms_test_assert_true(function_exists('vms_social_queue_decode_payload_snapshot'), 'Snapshot helper should exist.');
-vms_test_assert_true(function_exists('vms_social_queue_process_item'), 'Queue runner should exist.');
-vms_test_assert_contains('vms_social_queue_decode_payload_snapshot(', $runnerSection, 'Runner should use the snapshot helper.');
+vms_test_assert_true(function_exists('bvmgr_social_queue_decode_payload_snapshot'), 'Snapshot helper should exist.');
+vms_test_assert_true(function_exists('bvmgr_social_queue_process_item'), 'Queue runner should exist.');
+vms_test_assert_contains('bvmgr_social_queue_decode_payload_snapshot(', $runnerSection, 'Runner should use the snapshot helper.');
 vms_test_assert_same(0, substr_count($runnerSection, 'json_decode('), 'Runner body should not use raw json_decode().');
 vms_test_assert_same(1, substr_count($helperSection, 'json_decode('), 'Helper should retain exactly one raw json_decode().');
 vms_test_assert_same(1, substr_count($runnerSource, 'json_decode('), 'Queue runner file should contain exactly one raw json_decode().');
 vms_test_assert_same(1, substr_count($runnerSection, 'bvmgr_social_get_provider('), 'Exactly one canonical provider lookup should remain in the runner.');
 
-$snapshotStatePos = strpos($runnerSection, '$snapshot_state = vms_social_queue_decode_payload_snapshot');
+$snapshotStatePos = strpos($runnerSection, '$snapshot_state = bvmgr_social_queue_decode_payload_snapshot');
 $providerLookupPos = strpos($runnerSection, '$provider = bvmgr_social_get_provider');
 vms_test_assert_true($snapshotStatePos !== false && $providerLookupPos !== false && $snapshotStatePos < $providerLookupPos, 'Provider lookup should occur after snapshot validation begins.');
 vms_test_assert_true(
@@ -511,7 +511,7 @@ vms_test_assert_true(
 	'Invalid or unknown snapshot branch should return before provider lookup.'
 );
 vms_test_assert_true($liveRunnerSource !== '', 'Installed/live queue-runner must remain readable while B3 leaves that tree untouched.');
-vms_test_assert_true(strpos($queueRepoSource, 'vms_social_queue_decode_payload_snapshot') === false, 'queue-repo should not reference the snapshot helper.');
+vms_test_assert_true(strpos($queueRepoSource, 'bvmgr_social_queue_decode_payload_snapshot') === false, 'queue-repo should not reference the snapshot helper.');
 vms_test_assert_true(strpos($queueRepoSource, 'queue_snapshot_') === false, 'queue-repo should remain outside this snapshot slice.');
 vms_test_assert_contains("json_decode((string) (\$account['meta_json'] ?? ''), true);", $queueRepoSource, 'meta_json decode should remain in queue-repo.');
 vms_test_assert_contains("'payload_snapshot_json' => array(", $eventPanelSource, 'Queued snapshot writer should remain array-backed.');
@@ -520,15 +520,15 @@ vms_test_assert_contains("'account_id' => is_array(\$map) ? (int) (\$map['accoun
 vms_test_assert_contains("'event_title' => (string) (\$context['event_title'] ?? '')", $eventPanelSource, 'Queued snapshot writer should preserve event_title.');
 vms_test_assert_contains("'payload_snapshot_json' => wp_json_encode(\$rendered)", $runnerSource, 'Rendered-preview writer should remain unchanged.');
 vms_test_assert_contains("'rendered' => \$rendered", $runnerSource, 'Provider-result writer should preserve rendered payload.');
-vms_test_assert_contains("'provider_payload' => vms_social_sanitize_details(\$provider_payload)", $runnerSource, 'Provider-result writer should preserve sanitized provider payload.');
-vms_test_assert_contains("'provider_result' => vms_social_sanitize_details(\$result)", $runnerSource, 'Provider-result writer should preserve sanitized provider result.');
+vms_test_assert_contains("'provider_payload' => bvmgr_social_sanitize_details(\$provider_payload)", $runnerSource, 'Provider-result writer should preserve sanitized provider payload.');
+vms_test_assert_contains("'provider_result' => bvmgr_social_sanitize_details(\$result)", $runnerSource, 'Provider-result writer should preserve sanitized provider result.');
 
 $providerFiles = glob($providerDir . '/*.php');
 vms_test_assert_true(is_array($providerFiles) && $providerFiles !== array(), 'Provider adapter files should exist.');
 foreach ($providerFiles as $providerFile) {
 	$providerSource = vms_test_read_file($providerFile);
 	vms_test_assert_true(strpos($providerSource, 'queue_snapshot_') === false, 'Provider adapter should not contain queue snapshot remediation markers: ' . basename($providerFile));
-	vms_test_assert_true(strpos($providerSource, 'vms_social_queue_decode_payload_snapshot') === false, 'Provider adapter should not reference the snapshot helper: ' . basename($providerFile));
+	vms_test_assert_true(strpos($providerSource, 'bvmgr_social_queue_decode_payload_snapshot') === false, 'Provider adapter should not reference the snapshot helper: ' . basename($providerFile));
 }
 
 $helperCases = array(
@@ -724,7 +724,7 @@ $helperCases = array(
 
 foreach ($helperCases as $label => $case) {
 	$warningBefore = vms_test_warning_count();
-	$result = vms_social_queue_decode_payload_snapshot($case['raw']);
+	$result = bvmgr_social_queue_decode_payload_snapshot($case['raw']);
 	$warningAfter = vms_test_warning_count();
 
 	vms_test_assert_same($case['schema'], $result['schema'] ?? null, "Unexpected schema for helper case {$label}.");
@@ -741,7 +741,7 @@ foreach ($helperCases as $label => $case) {
 	}
 }
 
-$providerResultSnapshot = vms_social_queue_decode_payload_snapshot('{"rendered":{"caption":"Caption"},"provider_payload":{"nested":{"media":["hero"],"flags":{"published":false}}},"provider_result":{"status":"queued","ids":[1,2]}}');
+$providerResultSnapshot = bvmgr_social_queue_decode_payload_snapshot('{"rendered":{"caption":"Caption"},"provider_payload":{"nested":{"media":["hero"],"flags":{"published":false}}},"provider_result":{"status":"queued","ids":[1,2]}}');
 vms_test_assert_same('hero', $providerResultSnapshot['snapshot']['provider_payload']['nested']['media'][0] ?? null, 'Nested provider payload should remain intact.');
 vms_test_assert_same(false, $providerResultSnapshot['snapshot']['provider_payload']['nested']['flags']['published'] ?? null, 'Nested provider payload flags should remain intact.');
 

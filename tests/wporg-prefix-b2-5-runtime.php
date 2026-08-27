@@ -298,7 +298,7 @@ $assert(str_contains($vendorApplicationsSource, "'views_edit-' . \$bvmgr_vendor_
 $socialQueueSource = (string) file_get_contents($root . '/includes/social-share/queue-runner.php');
 $assert(str_contains($socialQueueSource, "\$bvmgr_social_cron_hook = defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue';"), 'Social queue runner must retain the canonical constant and legacy physical cron-hook fallback value.');
 $assert(str_contains($socialQueueSource, 'add_action($bvmgr_social_cron_hook, function (): void {'), 'Social queue runner must register the unchanged queue callback under the resolved hook.');
-$assert(str_contains($socialQueueSource, 'vms_social_process_queue(20)'), 'Social queue runner batch size and processing call must remain unchanged.');
+$assert(str_contains($socialQueueSource, 'bvmgr_social_process_queue(20)'), 'Social queue runner batch size and processing call must remain unchanged.');
 
 if ($failures !== array()) {
 	fwrite(STDERR, "B2.5 runtime correction failures:\n- " . implode("\n- ", $failures) . "\n");

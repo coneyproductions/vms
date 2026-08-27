@@ -124,21 +124,21 @@ function bvmgr_meta_key(string $scope, string $field): string
 	return $field === 'date' ? '_vms_event_date' : '_vms_' . $field;
 }
 
-function vms_budget_calculator_event_plan_date_key(): string
+function bvmgr_budget_calculator_event_plan_date_key(): string
 {
 	return '_vms_event_date';
 }
 
-function vms_budget_calculator_event_plan_status_key(): string
+function bvmgr_budget_calculator_event_plan_status_key(): string
 {
 	return '_vms_event_plan_status';
 }
 
-function vms_budget_calculator_ensure_inclusion_helpers(): void
+function bvmgr_budget_calculator_ensure_inclusion_helpers(): void
 {
 }
 
-function vms_budget_calculator_is_valid_ymd(string $value): bool
+function bvmgr_budget_calculator_is_valid_ymd(string $value): bool
 {
 	return preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1;
 }
@@ -393,10 +393,10 @@ foreach (array_diff($relative_files, array('includes/admin/budget-calculator.php
 
 $owned_chunks = array();
 $owned_function_map = array(
-	'includes/admin/budget-calculator.php' => array('vms_budget_calculator_collect_event_plans_for_year'),
+	'includes/admin/budget-calculator.php' => array('bvmgr_budget_calculator_collect_event_plans_for_year'),
 	'includes/admin/event-command-center.php' => array('bvmgr_event_command_center_get_plan_ids'),
 	'includes/admin/event-feedback.php' => array('bvmgr_feedback_recent_event_plans'),
-	'includes/admin/settings-page.php' => array('vms_handle_sync_entitlement_images', 'vms_ticketing_stock_reconcile_scan'),
+	'includes/admin/settings-page.php' => array('bvmgr_handle_sync_entitlement_images', 'bvmgr_ticketing_stock_reconcile_scan'),
 	'includes/admin/settings/class-vms-settings-tours.php' => array('handle_reset_current_user'),
 	'includes/admin/vendor-command-center.php' => array('bvmgr_vendor_command_center_collect_plan_maps'),
 	'includes/admin/venue-duplicate-templates.php' => array('bvmgr_render_create_from_template_panel'),
@@ -465,17 +465,17 @@ g13_same(0, substr_count($mirror_sources['includes/admin/settings-page.php'], 'e
 g13_contains("bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must prefer the PhaseB adapter.');
 g13_contains("bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must retain the foundation fallback.');
 g13_contains('implode(\'\', $website_rows)', $mirror_sources['includes/admin/event-feedback.php'], 'The neighboring feedback output finding should remain present.');
-g13_contains('echo vms_express_bar_action_form(', $mirror_sources['includes/admin/express-bar.php'], 'The neighboring Express Bar output findings should remain present.');
+g13_contains('echo bvmgr_express_bar_action_form(', $mirror_sources['includes/admin/express-bar.php'], 'The neighboring Express Bar output findings should remain present.');
 g13_contains('echo $content_html;', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings content output finding should remain present.');
-g13_contains('echo vms_settings_page_ticketing_stock_notice_placeholder();', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings placeholder output finding should remain present.');
+g13_contains('echo bvmgr_settings_page_ticketing_stock_notice_placeholder();', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings placeholder output finding should remain present.');
 g13_same(0, substr_count($all_runtime_source, 'WordPress.PHP.DevelopmentFunctions.error_log_error_log'), 'The G16 settings remediation must not add a logging suppression.');
 g13_same(0, substr_count($all_runtime_source, 'WordPress.Security.EscapeOutput.OutputNotEscaped'), 'The neighboring output findings must remain unsuppressed.');
 
 foreach (array(
-	'vms_budget_calculator_collect_event_plans_for_year',
+	'bvmgr_budget_calculator_collect_event_plans_for_year',
 	'bvmgr_event_command_center_get_plan_ids',
 	'bvmgr_feedback_recent_event_plans',
-	'vms_ticketing_stock_reconcile_scan',
+	'bvmgr_ticketing_stock_reconcile_scan',
 	'bvmgr_vendor_command_center_collect_plan_maps',
 	'bvmgr_render_create_from_template_panel',
 ) as $function) {
@@ -497,7 +497,7 @@ $GLOBALS['g13_meta'] = array(
 	41 => array('_vms_event_date' => '2026-01-12', '_vms_venue_id' => 9),
 	42 => array('_vms_event_date' => '2026-09-08', '_vms_venue_id' => 10),
 );
-$budget_rows = vms_budget_calculator_collect_event_plans_for_year(2026, true);
+$budget_rows = bvmgr_budget_calculator_collect_event_plans_for_year(2026, true);
 g13_same(array(41, 42), array_column($budget_rows, 'plan_id'), 'Budget report result ordering changed.');
 g13_same(1, count($GLOBALS['g13_get_posts_calls']), 'A nonempty bounded budget lookup should not invoke fallback.');
 $budget_args = $GLOBALS['g13_get_posts_calls'][0];
@@ -513,7 +513,7 @@ $GLOBALS['g13_meta'] = array(
 	52 => array('_vms_event_date' => '2025-12-31', '_vms_venue_id' => 12),
 	53 => array('_vms_event_date' => 'legacy-date', '_vms_venue_id' => 13),
 );
-$fallback_rows = vms_budget_calculator_collect_event_plans_for_year(2026, false);
+$fallback_rows = bvmgr_budget_calculator_collect_event_plans_for_year(2026, false);
 g13_same(array(51), array_column($fallback_rows, 'plan_id'), 'Budget fallback PHP year/date filtering changed.');
 g13_same(2, count($GLOBALS['g13_get_posts_calls']), 'Empty bounded lookup should invoke exactly one legacy fallback.');
 g13_same(array(), $GLOBALS['g13_get_posts_calls'][1]['meta_query'], 'Budget fallback must still remove the meta join.');
@@ -541,7 +541,7 @@ g13_same('DESC', $feedback_args['order'], 'Feedback selector order changed.');
 // Settings candidate scans retain complete enumeration and exact plugin-owned marker relations.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array());
-$stock_summary = vms_ticketing_stock_reconcile_scan(false);
+$stock_summary = bvmgr_ticketing_stock_reconcile_scan(false);
 g13_same('preview', $stock_summary['mode'], 'Stock preview mode changed.');
 g13_same(0, $stock_summary['checked'], 'Empty stock preview result changed.');
 $stock_args = $GLOBALS['g13_get_posts_calls'][0];

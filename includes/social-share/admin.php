@@ -1,11 +1,11 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_social_admin_url')) {
+if (!function_exists('bvmgr_social_admin_url')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_social_admin_url(array $args = array()): string
+	function bvmgr_social_admin_url(array $args = array()): string
 	{
 		$base = admin_url('admin.php?page=vms-social-sharing');
 		if (empty($args)) {
@@ -15,8 +15,8 @@ if (!function_exists('vms_social_admin_url')) {
 	}
 }
 
-if (!function_exists('vms_social_admin_query_arg')) {
-	function vms_social_admin_query_arg(string $key): string
+if (!function_exists('bvmgr_social_admin_query_arg')) {
+	function bvmgr_social_admin_query_arg(string $key): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Social Share admin routing, tabs, and filters only change admin display state.
 		if (!isset($_GET[$key])) {
@@ -28,11 +28,11 @@ if (!function_exists('vms_social_admin_query_arg')) {
 	}
 }
 
-if (!function_exists('vms_social_admin_tabs')) {
+if (!function_exists('bvmgr_social_admin_tabs')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_social_admin_tabs(): array
+	function bvmgr_social_admin_tabs(): array
 	{
 		return array(
 			'overview' => __('Overview', 'backstage-venue-manager'),
@@ -46,30 +46,30 @@ if (!function_exists('vms_social_admin_tabs')) {
 	}
 }
 
-if (!function_exists('vms_social_admin_current_tab')) {
-	function vms_social_admin_current_tab(): string
+if (!function_exists('bvmgr_social_admin_current_tab')) {
+	function bvmgr_social_admin_current_tab(): string
 	{
-		$tabs = vms_social_admin_tabs();
-		$tab = sanitize_key(vms_social_admin_query_arg('tab'));
+		$tabs = bvmgr_social_admin_tabs();
+		$tab = sanitize_key(bvmgr_social_admin_query_arg('tab'));
 		return isset($tabs[$tab]) ? $tab : 'overview';
 	}
 }
 
-if (!function_exists('vms_social_supported_platforms')) {
+if (!function_exists('bvmgr_social_supported_platforms')) {
 	/**
 	 * @return array<int,string>
 	 */
-	function vms_social_supported_platforms(): array
+	function bvmgr_social_supported_platforms(): array
 	{
 		return array('facebook', 'instagram', 'linkedin', 'x', 'mock', 'webhook', 'meta');
 	}
 }
 
-if (!function_exists('vms_social_venue_choices')) {
+if (!function_exists('bvmgr_social_venue_choices')) {
 	/**
 	 * @return array<int,WP_Post>
 	 */
-	function vms_social_venue_choices(): array
+	function bvmgr_social_venue_choices(): array
 	{
 		$posts = get_posts(array(
 			'post_type' => 'vms_venue',
@@ -82,11 +82,11 @@ if (!function_exists('vms_social_venue_choices')) {
 	}
 }
 
-if (!function_exists('vms_social_enqueue_admin_assets')) {
-	function vms_social_enqueue_admin_assets(string $hook_suffix = ''): void
+if (!function_exists('bvmgr_social_enqueue_admin_assets')) {
+	function bvmgr_social_enqueue_admin_assets(string $hook_suffix = ''): void
 	{
-		$page = sanitize_key(vms_social_admin_query_arg('page'));
-		$post_type = sanitize_key(vms_social_admin_query_arg('post_type'));
+		$page = sanitize_key(bvmgr_social_admin_query_arg('page'));
+		$post_type = sanitize_key(bvmgr_social_admin_query_arg('post_type'));
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 		if (is_object($screen) && isset($screen->post_type) && $post_type === '') {
 			$post_type = sanitize_key((string) $screen->post_type);
@@ -107,15 +107,15 @@ if (!function_exists('vms_social_enqueue_admin_assets')) {
 		);
 	}
 }
-add_action('admin_enqueue_scripts', 'vms_social_enqueue_admin_assets', 30);
+add_action('admin_enqueue_scripts', 'bvmgr_social_enqueue_admin_assets', 30);
 
-if (!function_exists('vms_social_register_admin_menu')) {
-	function vms_social_register_admin_menu(): void
+if (!function_exists('bvmgr_social_register_admin_menu')) {
+	function bvmgr_social_register_admin_menu(): void
 	{
 		$primary_parent = 'vms-dashboard';
-		$primary_cap = vms_social_manage_capability();
+		$primary_cap = bvmgr_social_manage_capability();
 		$fallback_parent = 'edit.php?post_type=vms_event_plan';
-		$fallback_cap = vms_social_operator_capability();
+		$fallback_cap = bvmgr_social_operator_capability();
 
 		add_submenu_page(
 			$primary_parent,
@@ -123,7 +123,7 @@ if (!function_exists('vms_social_register_admin_menu')) {
 			__('Social Sharing', 'backstage-venue-manager'),
 			$primary_cap,
 			'vms-social-sharing',
-			'vms_social_render_admin_page'
+			'bvmgr_social_render_admin_page'
 		);
 
 		// Operator parity path for accounts without manage_options/VMS top-level menu visibility.
@@ -134,17 +134,17 @@ if (!function_exists('vms_social_register_admin_menu')) {
 				__('Social Sharing', 'backstage-venue-manager'),
 				$fallback_cap,
 				'vms-social-sharing',
-				'vms_social_render_admin_page'
+				'bvmgr_social_render_admin_page'
 			);
 		}
 	}
 }
-add_action('admin_menu', 'vms_social_register_admin_menu', 45);
+add_action('admin_menu', 'bvmgr_social_register_admin_menu', 45);
 
-if (!function_exists('vms_social_redirect_with_notice')) {
-	function vms_social_redirect_with_notice(string $tab, string $notice, string $type = 'success'): void
+if (!function_exists('bvmgr_social_redirect_with_notice')) {
+	function bvmgr_social_redirect_with_notice(string $tab, string $notice, string $type = 'success'): void
 	{
-		$url = vms_social_admin_url(array(
+		$url = bvmgr_social_admin_url(array(
 			'tab' => $tab,
 			'vms_social_notice' => rawurlencode($notice),
 			'vms_social_notice_type' => sanitize_key($type),
@@ -154,81 +154,81 @@ if (!function_exists('vms_social_redirect_with_notice')) {
 	}
 }
 
-if (!function_exists('vms_social_render_notices')) {
-	function vms_social_render_notices(): void
+if (!function_exists('bvmgr_social_render_notices')) {
+	function bvmgr_social_render_notices(): void
 	{
-		$notice = sanitize_text_field(vms_social_admin_query_arg('vms_social_notice'));
+		$notice = sanitize_text_field(bvmgr_social_admin_query_arg('vms_social_notice'));
 		if ($notice === '') {
 			return;
 		}
-		$type = sanitize_key(vms_social_admin_query_arg('vms_social_notice_type'));
+		$type = sanitize_key(bvmgr_social_admin_query_arg('vms_social_notice_type'));
 		$class = in_array($type, array('error', 'warning', 'success', 'info'), true) ? $type : 'success';
 		echo '<div class="notice notice-' . esc_attr($class) . ' is-dismissible"><p>' . esc_html($notice) . '</p></div>';
 	}
 }
 
-if (!function_exists('vms_social_render_admin_page')) {
-	function vms_social_render_admin_page(): void
+if (!function_exists('bvmgr_social_render_admin_page')) {
+	function bvmgr_social_render_admin_page(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 
 		if (function_exists('bvmgr_admin_ui_render_shell')) {
 			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Social Sharing', 'backstage-venue-manager'),
-					'notices_callback' => 'vms_social_render_notices',
+					'notices_callback' => 'bvmgr_social_render_notices',
 				),
-				'vms_social_render_admin_page_content'
+				'bvmgr_social_render_admin_page_content'
 			);
 			return;
 		}
 
 		echo '<div class="wrap vms-social-admin">';
 		echo '<h1>' . esc_html__('Social Sharing', 'backstage-venue-manager') . '</h1>';
-		vms_social_render_notices();
-		vms_social_render_admin_page_content();
+		bvmgr_social_render_notices();
+		bvmgr_social_render_admin_page_content();
 		echo '</div>';
 	}
 }
 
-if (!function_exists('vms_social_render_admin_page_content')) {
-	function vms_social_render_admin_page_content(): void
+if (!function_exists('bvmgr_social_render_admin_page_content')) {
+	function bvmgr_social_render_admin_page_content(): void
 	{
-		vms_social_require_manage_capability();
-		$tab = vms_social_admin_current_tab();
-		$tabs = vms_social_admin_tabs();
+		bvmgr_social_require_manage_capability();
+		$tab = bvmgr_social_admin_current_tab();
+		$tabs = bvmgr_social_admin_tabs();
 		echo '<div class="vms-social-admin">';
 
 		echo '<nav class="nav-tab-wrapper">';
 		foreach ($tabs as $key => $label) {
 			$class = ($tab === $key) ? 'nav-tab nav-tab-active' : 'nav-tab';
-			echo '<a class="' . esc_attr($class) . '" href="' . esc_url(vms_social_admin_url(array('tab' => $key))) . '">' . esc_html($label) . '</a>';
+			echo '<a class="' . esc_attr($class) . '" href="' . esc_url(bvmgr_social_admin_url(array('tab' => $key))) . '">' . esc_html($label) . '</a>';
 		}
 		echo '</nav>';
 
 		echo '<div class="vms-social-panel">';
 		switch ($tab) {
 			case 'settings':
-				vms_social_render_settings_tab();
+				bvmgr_social_render_settings_tab();
 				break;
 			case 'accounts':
-				vms_social_render_accounts_tab();
+				bvmgr_social_render_accounts_tab();
 				break;
 			case 'venue_map':
-				vms_social_render_venue_map_tab();
+				bvmgr_social_render_venue_map_tab();
 				break;
 			case 'templates':
-				vms_social_render_templates_tab();
+				bvmgr_social_render_templates_tab();
 				break;
 			case 'queue':
-				vms_social_render_queue_tab();
+				bvmgr_social_render_queue_tab();
 				break;
 			case 'logs':
-				vms_social_render_logs_tab();
+				bvmgr_social_render_logs_tab();
 				break;
 			case 'overview':
 			default:
-				vms_social_render_overview_tab();
+				bvmgr_social_render_overview_tab();
 				break;
 		}
 		echo '</div>';
@@ -236,10 +236,10 @@ if (!function_exists('vms_social_render_admin_page_content')) {
 	}
 }
 
-if (!function_exists('vms_social_render_overview_tab')) {
-	function vms_social_render_overview_tab(): void
+if (!function_exists('bvmgr_social_render_overview_tab')) {
+	function bvmgr_social_render_overview_tab(): void
 	{
-		$settings = vms_social_get_settings();
+		$settings = bvmgr_social_get_settings();
 		$providers = bvmgr_social_get_providers();
 		$next = wp_next_scheduled(defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue');
 
@@ -278,10 +278,10 @@ if (!function_exists('vms_social_render_overview_tab')) {
 	}
 }
 
-if (!function_exists('vms_social_render_settings_tab')) {
-	function vms_social_render_settings_tab(): void
+if (!function_exists('bvmgr_social_render_settings_tab')) {
+	function bvmgr_social_render_settings_tab(): void
 	{
-		$settings = vms_social_get_settings();
+		$settings = bvmgr_social_get_settings();
 		echo '<h2>' . esc_html__('Global Settings', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
 		wp_nonce_field('vms_social_save_settings');
@@ -296,10 +296,10 @@ if (!function_exists('vms_social_render_settings_tab')) {
 	}
 }
 
-if (!function_exists('vms_social_render_accounts_tab')) {
-	function vms_social_render_accounts_tab(): void
+if (!function_exists('bvmgr_social_render_accounts_tab')) {
+	function bvmgr_social_render_accounts_tab(): void
 	{
-		$accounts = vms_social_account_rows();
+		$accounts = bvmgr_social_account_rows();
 		echo '<h2>' . esc_html__('Accounts', 'backstage-venue-manager') . '</h2>';
 		echo '<table class="widefat striped"><thead><tr>';
 		echo '<th>' . esc_html__('ID', 'backstage-venue-manager') . '</th><th>' . esc_html__('Platform', 'backstage-venue-manager') . '</th><th>' . esc_html__('Label', 'backstage-venue-manager') . '</th><th>' . esc_html__('Auth State', 'backstage-venue-manager') . '</th><th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
@@ -333,7 +333,7 @@ if (!function_exists('vms_social_render_accounts_tab')) {
 		echo '<input type="hidden" name="action" value="vms_social_save_account" />';
 		echo '<input type="hidden" name="tab" value="accounts" />';
 		echo '<p><label>' . esc_html__('Platform', 'backstage-venue-manager') . ' <select name="platform">';
-		foreach (vms_social_supported_platforms() as $platform) {
+		foreach (bvmgr_social_supported_platforms() as $platform) {
 			echo '<option value="' . esc_attr($platform) . '">' . esc_html($platform) . '</option>';
 		}
 		echo '</select></label></p>';
@@ -345,13 +345,13 @@ if (!function_exists('vms_social_render_accounts_tab')) {
 	}
 }
 
-if (!function_exists('vms_social_render_venue_map_tab')) {
-	function vms_social_render_venue_map_tab(): void
+if (!function_exists('bvmgr_social_render_venue_map_tab')) {
+	function bvmgr_social_render_venue_map_tab(): void
 	{
-		$rows = vms_social_venue_map_rows();
-		$venues = vms_social_venue_choices();
-		$accounts = vms_social_account_rows();
-		$templates = vms_social_templates_all();
+		$rows = bvmgr_social_venue_map_rows();
+		$venues = bvmgr_social_venue_choices();
+		$accounts = bvmgr_social_account_rows();
+		$templates = bvmgr_social_templates_all();
 
 		echo '<h2>' . esc_html__('Venue Mapping', 'backstage-venue-manager') . '</h2>';
 		echo '<table class="widefat striped"><thead><tr>';
@@ -396,7 +396,7 @@ if (!function_exists('vms_social_render_venue_map_tab')) {
 		}
 		echo '</select></label></p>';
 		echo '<p><label>' . esc_html__('Platform', 'backstage-venue-manager') . ' <select name="platform">';
-		foreach (vms_social_supported_platforms() as $platform) {
+		foreach (bvmgr_social_supported_platforms() as $platform) {
 			echo '<option value="' . esc_attr($platform) . '">' . esc_html($platform) . '</option>';
 		}
 		echo '</select></label></p>';
@@ -419,10 +419,10 @@ if (!function_exists('vms_social_render_venue_map_tab')) {
 	}
 }
 
-if (!function_exists('vms_social_render_templates_tab')) {
-	function vms_social_render_templates_tab(): void
+if (!function_exists('bvmgr_social_render_templates_tab')) {
+	function bvmgr_social_render_templates_tab(): void
 	{
-		$templates = vms_social_templates_all();
+		$templates = bvmgr_social_templates_all();
 		echo '<h2>' . esc_html__('Templates', 'backstage-venue-manager') . '</h2>';
 		echo '<table class="widefat striped"><thead><tr>';
 		echo '<th>ID</th><th>' . esc_html__('Platform', 'backstage-venue-manager') . '</th><th>' . esc_html__('Name', 'backstage-venue-manager') . '</th><th>' . esc_html__('Default', 'backstage-venue-manager') . '</th><th>' . esc_html__('Preview', 'backstage-venue-manager') . '</th><th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
@@ -436,7 +436,7 @@ if (!function_exists('vms_social_render_templates_tab')) {
 				echo '<td><code>' . esc_html((string) $tpl['platform']) . '</code></td>';
 				echo '<td>' . esc_html((string) $tpl['name']) . '</td>';
 				echo '<td>' . (!empty($tpl['is_default']) ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
-				echo '<td><code>' . esc_html(vms_social_trim_preview((string) $tpl['body'], 120)) . '</code></td>';
+				echo '<td><code>' . esc_html(bvmgr_social_trim_preview((string) $tpl['body'], 120)) . '</code></td>';
 				echo '<td>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" onsubmit="return window.confirm(\'' . esc_js(__('Delete this template?', 'backstage-venue-manager')) . '\');">';
 				wp_nonce_field('vms_social_delete_template');
@@ -457,7 +457,7 @@ if (!function_exists('vms_social_render_templates_tab')) {
 		echo '<input type="hidden" name="action" value="vms_social_save_template" />';
 		echo '<input type="hidden" name="tab" value="templates" />';
 		echo '<p><label>' . esc_html__('Platform', 'backstage-venue-manager') . ' <select name="platform">';
-		foreach (vms_social_supported_platforms() as $platform) {
+		foreach (bvmgr_social_supported_platforms() as $platform) {
 			echo '<option value="' . esc_attr($platform) . '">' . esc_html($platform) . '</option>';
 		}
 		echo '</select></label></p>';
@@ -469,19 +469,19 @@ if (!function_exists('vms_social_render_templates_tab')) {
 	}
 }
 
-if (!function_exists('vms_social_render_queue_tab')) {
-	function vms_social_render_queue_tab(): void
+if (!function_exists('bvmgr_social_render_queue_tab')) {
+	function bvmgr_social_render_queue_tab(): void
 	{
-		$status = sanitize_key(vms_social_admin_query_arg('status'));
-		$platform = sanitize_key(vms_social_admin_query_arg('platform'));
-		$rows = vms_social_queue_list(array('status' => $status, 'platform' => $platform), 200);
+		$status = sanitize_key(bvmgr_social_admin_query_arg('status'));
+		$platform = sanitize_key(bvmgr_social_admin_query_arg('platform'));
+		$rows = bvmgr_social_queue_list(array('status' => $status, 'platform' => $platform), 200);
 
 		echo '<h2>' . esc_html__('Queue', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="get" action="' . esc_url(admin_url('admin.php')) . '" class="vms-social-queue-filters">';
 		echo '<input type="hidden" name="page" value="vms-social-sharing" />';
 		echo '<input type="hidden" name="tab" value="queue" />';
 		echo '<label>' . esc_html__('Status', 'backstage-venue-manager') . ' <select name="status"><option value="">' . esc_html__('All', 'backstage-venue-manager') . '</option>';
-		foreach (vms_social_queue_statuses() as $s) {
+		foreach (bvmgr_social_queue_statuses() as $s) {
 			echo '<option value="' . esc_attr($s) . '" ' . selected($status, $s, false) . '>' . esc_html($s) . '</option>';
 		}
 		echo '</select></label> ';
@@ -527,11 +527,11 @@ if (!function_exists('vms_social_render_queue_tab')) {
 	}
 }
 
-if (!function_exists('vms_social_render_logs_tab')) {
-	function vms_social_render_logs_tab(): void
+if (!function_exists('bvmgr_social_render_logs_tab')) {
+	function bvmgr_social_render_logs_tab(): void
 	{
-		$search = sanitize_text_field(vms_social_admin_query_arg('log_search'));
-		$rows = vms_social_audit_recent(200, $search);
+		$search = sanitize_text_field(bvmgr_social_admin_query_arg('log_search'));
+		$rows = bvmgr_social_audit_recent(200, $search);
 		echo '<h2>' . esc_html__('Audit Logs', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="get" action="' . esc_url(admin_url('admin.php')) . '">';
 		echo '<input type="hidden" name="page" value="vms-social-sharing" />';
@@ -553,7 +553,7 @@ if (!function_exists('vms_social_render_logs_tab')) {
 				echo '<td><code>' . esc_html((string) $row['action']) . '</code></td>';
 				echo '<td>' . (int) $row['queue_id'] . '</td>';
 				echo '<td>' . esc_html((string) $row['platform']) . '</td>';
-				echo '<td><code>' . esc_html(vms_social_trim_preview((string) $row['details_json'], 180)) . '</code></td>';
+				echo '<td><code>' . esc_html(bvmgr_social_trim_preview((string) $row['details_json'], 180)) . '</code></td>';
 				echo '</tr>';
 			}
 		}
@@ -561,27 +561,27 @@ if (!function_exists('vms_social_render_logs_tab')) {
 	}
 }
 
-if (!function_exists('vms_social_handle_save_settings')) {
-	function vms_social_handle_save_settings(): void
+if (!function_exists('bvmgr_social_handle_save_settings')) {
+	function bvmgr_social_handle_save_settings(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_save_settings');
-		$settings = vms_social_update_settings(array(
+		$settings = bvmgr_social_update_settings(array(
 			'enabled' => isset($_POST['enabled']) ? 1 : 0,
 			'kill_switch' => isset($_POST['kill_switch']) ? 1 : 0,
 			'utm_enabled' => isset($_POST['utm_enabled']) ? 1 : 0,
 			'max_attempts' => absint(wp_unslash((string) ($_POST['max_attempts'] ?? 5))),
 		));
-		vms_social_audit_log('settings_change', $settings, 0, '', get_current_user_id());
-		vms_social_redirect_with_notice('settings', __('Settings saved.', 'backstage-venue-manager'));
+		bvmgr_social_audit_log('settings_change', $settings, 0, '', get_current_user_id());
+		bvmgr_social_redirect_with_notice('settings', __('Settings saved.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_save_settings', 'vms_social_handle_save_settings');
+add_action('admin_post_vms_social_save_settings', 'bvmgr_social_handle_save_settings');
 
-if (!function_exists('vms_social_handle_save_account')) {
-	function vms_social_handle_save_account(): void
+if (!function_exists('bvmgr_social_handle_save_account')) {
+	function bvmgr_social_handle_save_account(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_save_account');
 
 		$platform = sanitize_key(wp_unslash((string) ($_POST['platform'] ?? '')));
@@ -592,7 +592,7 @@ if (!function_exists('vms_social_handle_save_account')) {
 			$token_json['signing_secret'] = sanitize_text_field(wp_unslash((string) ($_POST['signing_secret'] ?? '')));
 		}
 
-		$id = vms_social_account_save(array(
+		$id = bvmgr_social_account_save(array(
 			'platform' => $platform,
 			'label' => $label,
 			'auth_state' => 'connected',
@@ -600,33 +600,33 @@ if (!function_exists('vms_social_handle_save_account')) {
 			'meta_json' => array(),
 		));
 
-		vms_social_audit_log('connect', array('account_id' => $id, 'platform' => $platform), 0, $platform, get_current_user_id());
-		vms_social_redirect_with_notice('accounts', __('Account saved.', 'backstage-venue-manager'));
+		bvmgr_social_audit_log('connect', array('account_id' => $id, 'platform' => $platform), 0, $platform, get_current_user_id());
+		bvmgr_social_redirect_with_notice('accounts', __('Account saved.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_save_account', 'vms_social_handle_save_account');
+add_action('admin_post_vms_social_save_account', 'bvmgr_social_handle_save_account');
 
-if (!function_exists('vms_social_handle_delete_account')) {
-	function vms_social_handle_delete_account(): void
+if (!function_exists('bvmgr_social_handle_delete_account')) {
+	function bvmgr_social_handle_delete_account(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_delete_account');
 		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
-			vms_social_account_delete($id);
-			vms_social_audit_log('disconnect', array('account_id' => $id), 0, '', get_current_user_id());
+			bvmgr_social_account_delete($id);
+			bvmgr_social_audit_log('disconnect', array('account_id' => $id), 0, '', get_current_user_id());
 		}
-		vms_social_redirect_with_notice('accounts', __('Account deleted.', 'backstage-venue-manager'));
+		bvmgr_social_redirect_with_notice('accounts', __('Account deleted.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_delete_account', 'vms_social_handle_delete_account');
+add_action('admin_post_vms_social_delete_account', 'bvmgr_social_handle_delete_account');
 
-if (!function_exists('vms_social_handle_save_venue_map')) {
-	function vms_social_handle_save_venue_map(): void
+if (!function_exists('bvmgr_social_handle_save_venue_map')) {
+	function bvmgr_social_handle_save_venue_map(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_save_venue_map');
-		$id = vms_social_venue_map_save(array(
+		$id = bvmgr_social_venue_map_save(array(
 			'venue_id' => absint(wp_unslash((string) ($_POST['venue_id'] ?? 0))),
 			'platform' => sanitize_key(wp_unslash((string) ($_POST['platform'] ?? ''))),
 			'account_id' => absint(wp_unslash((string) ($_POST['account_id'] ?? 0))),
@@ -634,29 +634,29 @@ if (!function_exists('vms_social_handle_save_venue_map')) {
 			'default_template_id' => absint(wp_unslash((string) ($_POST['default_template_id'] ?? 0))),
 			'is_enabled' => isset($_POST['is_enabled']) ? 1 : 0,
 		));
-		vms_social_audit_log('settings_change', array('venue_map_id' => $id), 0, '', get_current_user_id());
-		vms_social_redirect_with_notice('venue_map', __('Venue mapping saved.', 'backstage-venue-manager'));
+		bvmgr_social_audit_log('settings_change', array('venue_map_id' => $id), 0, '', get_current_user_id());
+		bvmgr_social_redirect_with_notice('venue_map', __('Venue mapping saved.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_save_venue_map', 'vms_social_handle_save_venue_map');
+add_action('admin_post_vms_social_save_venue_map', 'bvmgr_social_handle_save_venue_map');
 
-if (!function_exists('vms_social_handle_delete_venue_map')) {
-	function vms_social_handle_delete_venue_map(): void
+if (!function_exists('bvmgr_social_handle_delete_venue_map')) {
+	function bvmgr_social_handle_delete_venue_map(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_delete_venue_map');
 		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
-			vms_social_venue_map_delete($id);
-			vms_social_audit_log('settings_change', array('venue_map_deleted' => $id), 0, '', get_current_user_id());
+			bvmgr_social_venue_map_delete($id);
+			bvmgr_social_audit_log('settings_change', array('venue_map_deleted' => $id), 0, '', get_current_user_id());
 		}
-		vms_social_redirect_with_notice('venue_map', __('Venue mapping deleted.', 'backstage-venue-manager'));
+		bvmgr_social_redirect_with_notice('venue_map', __('Venue mapping deleted.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_delete_venue_map', 'vms_social_handle_delete_venue_map');
+add_action('admin_post_vms_social_delete_venue_map', 'bvmgr_social_handle_delete_venue_map');
 
-if (!function_exists('vms_social_template_body_from_post')) {
-	function vms_social_template_body_from_post(array $source): string
+if (!function_exists('bvmgr_social_template_body_from_post')) {
+	function bvmgr_social_template_body_from_post(array $source): string
 	{
 		if (!array_key_exists('body', $source) || !is_scalar($source['body'])) {
 			return '';
@@ -667,90 +667,90 @@ if (!function_exists('vms_social_template_body_from_post')) {
 	}
 }
 
-if (!function_exists('vms_social_handle_save_template')) {
-	function vms_social_handle_save_template(): void
+if (!function_exists('bvmgr_social_handle_save_template')) {
+	function bvmgr_social_handle_save_template(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_save_template');
 
-		$id = vms_social_template_save(array(
+		$id = bvmgr_social_template_save(array(
 			'platform' => bvmgr_request_read_key($_POST, 'platform'),
 			'name' => bvmgr_request_read_text_field($_POST, 'name'),
-			'body' => vms_social_template_body_from_post($_POST),
+			'body' => bvmgr_social_template_body_from_post($_POST),
 			'is_default' => isset($_POST['is_default']) ? 1 : 0,
 			'settings_json' => array(),
 		));
-		vms_social_audit_log('settings_change', array('template_id' => $id), 0, '', get_current_user_id());
-		vms_social_redirect_with_notice('templates', __('Template saved.', 'backstage-venue-manager'));
+		bvmgr_social_audit_log('settings_change', array('template_id' => $id), 0, '', get_current_user_id());
+		bvmgr_social_redirect_with_notice('templates', __('Template saved.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_save_template', 'vms_social_handle_save_template');
+add_action('admin_post_vms_social_save_template', 'bvmgr_social_handle_save_template');
 
-if (!function_exists('vms_social_handle_delete_template')) {
-	function vms_social_handle_delete_template(): void
+if (!function_exists('bvmgr_social_handle_delete_template')) {
+	function bvmgr_social_handle_delete_template(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_delete_template');
 		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
-			vms_social_template_delete($id);
-			vms_social_audit_log('settings_change', array('template_deleted' => $id), 0, '', get_current_user_id());
+			bvmgr_social_template_delete($id);
+			bvmgr_social_audit_log('settings_change', array('template_deleted' => $id), 0, '', get_current_user_id());
 		}
-		vms_social_redirect_with_notice('templates', __('Template deleted.', 'backstage-venue-manager'));
+		bvmgr_social_redirect_with_notice('templates', __('Template deleted.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_delete_template', 'vms_social_handle_delete_template');
+add_action('admin_post_vms_social_delete_template', 'bvmgr_social_handle_delete_template');
 
-if (!function_exists('vms_social_handle_queue_retry')) {
-	function vms_social_handle_queue_retry(): void
+if (!function_exists('bvmgr_social_handle_queue_retry')) {
+	function bvmgr_social_handle_queue_retry(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_queue_retry');
 		$queue_id = absint(wp_unslash((string) ($_POST['queue_id'] ?? 0)));
 		$event_plan_id = absint(wp_unslash((string) ($_POST['event_plan_id'] ?? 0)));
 		if ($queue_id > 0) {
-			vms_social_queue_retry($queue_id);
-			vms_social_audit_log('retry', array('queue_id' => $queue_id), $queue_id, '', get_current_user_id());
+			bvmgr_social_queue_retry($queue_id);
+			bvmgr_social_audit_log('retry', array('queue_id' => $queue_id), $queue_id, '', get_current_user_id());
 		}
-		if ($event_plan_id > 0 && function_exists('vms_social_redirect_event_edit')) {
-			vms_social_redirect_event_edit($event_plan_id, __('Queue item set to retry.', 'backstage-venue-manager'), 'success');
+		if ($event_plan_id > 0 && function_exists('bvmgr_social_redirect_event_edit')) {
+			bvmgr_social_redirect_event_edit($event_plan_id, __('Queue item set to retry.', 'backstage-venue-manager'), 'success');
 		}
-		vms_social_redirect_with_notice('queue', __('Queue item set to retry.', 'backstage-venue-manager'));
+		bvmgr_social_redirect_with_notice('queue', __('Queue item set to retry.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_queue_retry', 'vms_social_handle_queue_retry');
+add_action('admin_post_vms_social_queue_retry', 'bvmgr_social_handle_queue_retry');
 
-if (!function_exists('vms_social_handle_queue_cancel')) {
-	function vms_social_handle_queue_cancel(): void
+if (!function_exists('bvmgr_social_handle_queue_cancel')) {
+	function bvmgr_social_handle_queue_cancel(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_queue_cancel');
 		$queue_id = absint(wp_unslash((string) ($_POST['queue_id'] ?? 0)));
 		$event_plan_id = absint(wp_unslash((string) ($_POST['event_plan_id'] ?? 0)));
 		if ($queue_id > 0) {
-			vms_social_queue_cancel($queue_id);
-			vms_social_audit_log('cancel', array('queue_id' => $queue_id), $queue_id, '', get_current_user_id());
+			bvmgr_social_queue_cancel($queue_id);
+			bvmgr_social_audit_log('cancel', array('queue_id' => $queue_id), $queue_id, '', get_current_user_id());
 		}
-		if ($event_plan_id > 0 && function_exists('vms_social_redirect_event_edit')) {
-			vms_social_redirect_event_edit($event_plan_id, __('Queue item canceled.', 'backstage-venue-manager'), 'success');
+		if ($event_plan_id > 0 && function_exists('bvmgr_social_redirect_event_edit')) {
+			bvmgr_social_redirect_event_edit($event_plan_id, __('Queue item canceled.', 'backstage-venue-manager'), 'success');
 		}
-		vms_social_redirect_with_notice('queue', __('Queue item canceled.', 'backstage-venue-manager'));
+		bvmgr_social_redirect_with_notice('queue', __('Queue item canceled.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_social_queue_cancel', 'vms_social_handle_queue_cancel');
+add_action('admin_post_vms_social_queue_cancel', 'bvmgr_social_handle_queue_cancel');
 
-if (!function_exists('vms_social_handle_run_queue_now')) {
-	function vms_social_handle_run_queue_now(): void
+if (!function_exists('bvmgr_social_handle_run_queue_now')) {
+	function bvmgr_social_handle_run_queue_now(): void
 	{
-		vms_social_require_manage_capability();
+		bvmgr_social_require_manage_capability();
 		check_admin_referer('vms_social_run_queue_now');
-		$summary = vms_social_process_queue(50);
+		$summary = bvmgr_social_process_queue(50);
 		$message = sprintf(
 			/* translators: 1: processed count */
 			__('Queue run complete. Processed %d item(s).', 'backstage-venue-manager'),
 			(int) ($summary['processed'] ?? 0)
 		);
-		vms_social_redirect_with_notice('overview', $message);
+		bvmgr_social_redirect_with_notice('overview', $message);
 	}
 }
-add_action('admin_post_vms_social_run_queue_now', 'vms_social_handle_run_queue_now');
+add_action('admin_post_vms_social_run_queue_now', 'bvmgr_social_handle_run_queue_now');

@@ -1,23 +1,23 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_social_crypto_secret')) {
-	function vms_social_crypto_secret(): string
+if (!function_exists('bvmgr_social_crypto_secret')) {
+	function bvmgr_social_crypto_secret(): string
 	{
 		$material = wp_salt('auth') . '|' . wp_salt('secure_auth') . '|vms_social_tokens';
 		return hash('sha256', $material, true);
 	}
 }
 
-if (!function_exists('vms_social_encrypt_string')) {
-	function vms_social_encrypt_string(string $plaintext): string
+if (!function_exists('bvmgr_social_encrypt_string')) {
+	function bvmgr_social_encrypt_string(string $plaintext): string
 	{
 		$plaintext = (string) $plaintext;
 		if ($plaintext === '') {
 			return '';
 		}
 
-		$key = vms_social_crypto_secret();
+		$key = bvmgr_social_crypto_secret();
 
 		if (function_exists('sodium_crypto_secretbox')) {
 			$nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
@@ -50,8 +50,8 @@ if (!function_exists('vms_social_encrypt_string')) {
 	}
 }
 
-if (!function_exists('vms_social_decrypt_string')) {
-	function vms_social_decrypt_string(string $encoded): string
+if (!function_exists('bvmgr_social_decrypt_string')) {
+	function bvmgr_social_decrypt_string(string $encoded): string
 	{
 		$encoded = trim((string) $encoded);
 		if ($encoded === '') {
@@ -68,7 +68,7 @@ if (!function_exists('vms_social_decrypt_string')) {
 			return '';
 		}
 
-		$key = vms_social_crypto_secret();
+		$key = bvmgr_social_crypto_secret();
 		$alg = isset($data['alg']) ? (string) $data['alg'] : '';
 
 		if ($alg === 'sodium_secretbox' && function_exists('sodium_crypto_secretbox_open')) {
@@ -96,21 +96,21 @@ if (!function_exists('vms_social_decrypt_string')) {
 	}
 }
 
-if (!function_exists('vms_social_encrypt_json')) {
-	function vms_social_encrypt_json(array $payload): string
+if (!function_exists('bvmgr_social_encrypt_json')) {
+	function bvmgr_social_encrypt_json(array $payload): string
 	{
 		$json = wp_json_encode($payload);
 		if (!is_string($json) || $json === '') {
 			return '';
 		}
-		return vms_social_encrypt_string($json);
+		return bvmgr_social_encrypt_string($json);
 	}
 }
 
-if (!function_exists('vms_social_decrypt_json')) {
-	function vms_social_decrypt_json(string $blob): array
+if (!function_exists('bvmgr_social_decrypt_json')) {
+	function bvmgr_social_decrypt_json(string $blob): array
 	{
-		$json = vms_social_decrypt_string($blob);
+		$json = bvmgr_social_decrypt_string($blob);
 		if ($json === '') {
 			return array();
 		}

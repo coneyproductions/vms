@@ -409,7 +409,7 @@ function bvmgr_vendor_app_confirmation_state_label(string $state): string
 	return ucfirst($state);
 }
 
-function vms_approvals_queue_record_transition(string $queue, int $object_id, string $from_status, string $to_status): void
+function bvmgr_approvals_queue_record_transition(string $queue, int $object_id, string $from_status, string $to_status): void
 {
 	$GLOBALS['vms_test_transition_log'][] = array(
 		'queue' => $queue,

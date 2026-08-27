@@ -116,10 +116,10 @@ function g16a_restore_group_a_baseline(string $relative, string $source): string
 		),
 		'includes/core/goals-forecast.php' => array(
 			'goals_legacy_issue' => "error_log('[VMS Goals] ' . \$message);",
-			'goals_provider_hard_error_check_failed' => "vms_goals_log('Hard-error check failed (square): ' . \$e->getMessage());",
-			'goals_provider_call_failed' => "vms_goals_log('Provider call failed (square): ' . \$e->getMessage());",
-			'goals_actuals_refresh_failed' => "vms_goals_log('Actuals refresh failed for event ' . \$event_plan_id . ': ' . \$msg);",
-			'goals_progress_capped' => "vms_goals_log('Goal progress evaluation capped at ' . \$max_events . ' events for performance.');",
+			'goals_provider_hard_error_check_failed' => "bvmgr_goals_log('Hard-error check failed (square): ' . \$e->getMessage());",
+			'goals_provider_call_failed' => "bvmgr_goals_log('Provider call failed (square): ' . \$e->getMessage());",
+			'goals_actuals_refresh_failed' => "bvmgr_goals_log('Actuals refresh failed for event ' . \$event_plan_id . ': ' . \$msg);",
+			'goals_progress_capped' => "bvmgr_goals_log('Goal progress evaluation capped at ' . \$max_events . ' events for performance.');",
 		),
 	);
 	g16a_assert(isset($maps[$relative]), 'Unknown Group A projection target: ' . $relative);
@@ -404,15 +404,15 @@ function bvmgr_vendor_app_is_review_ready(int $app_id): bool { unset($app_id); r
 function current_time(string $type): string { unset($type); return '2026-08-08 12:00:00'; }
 
 function vms_square_actuals_has_hard_errors(array $raw): bool { unset($raw); throw new RuntimeException($GLOBALS['g16a_exception_message'], 731); }
-function vms_pos_provider_detect(): array { return array('square' => array('slug' => 'square')); }
-function vms_goals_get_settings(): array { return array('enabled_actuals_providers' => array('square'), 'default_trailing_window_events' => 2); }
+function bvmgr_pos_provider_detect(): array { return array('square' => array('slug' => 'square')); }
+function bvmgr_goals_get_settings(): array { return array('enabled_actuals_providers' => array('square'), 'default_trailing_window_events' => 2); }
 function vms_square_get_event_actuals(int $event_plan_id, array $args): array { unset($event_plan_id, $args); throw new RuntimeException($GLOBALS['g16a_exception_message'], 732); }
-function vms_goals_normalize_provider_actuals(string $provider, array $raw): array { return array('ok' => true, 'provider' => $provider, 'raw' => $raw); }
-function vms_goals_get_event_ids_in_period(string $start, string $end, int $limit): array { unset($start, $end, $limit); return range(1001, 1026); }
+function bvmgr_goals_normalize_provider_actuals(string $provider, array $raw): array { return array('ok' => true, 'provider' => $provider, 'raw' => $raw); }
+function bvmgr_goals_get_event_ids_in_period(string $start, string $end, int $limit): array { unset($start, $end, $limit); return range(1001, 1026); }
 function wp_timezone(): DateTimeZone { return new DateTimeZone('UTC'); }
 function wp_date(string $format, $timestamp = null, $timezone = null): string { unset($format, $timestamp, $timezone); return '2026-08-08'; }
-function vms_goals_get_event_pnl(int $event_id, array $args): array { unset($event_id, $args); return array(); }
-function vms_goals_metric_value_from_pnl(string $metric, array $pnl): int { unset($metric, $pnl); return 0; }
+function bvmgr_goals_get_event_pnl(int $event_id, array $args): array { unset($event_id, $args); return array(); }
+function bvmgr_goals_metric_value_from_pnl(string $metric, array $pnl): int { unset($metric, $pnl); return 0; }
 
 function g16a_reset_runtime(): void
 {
@@ -470,11 +470,11 @@ foreach (array(
 	array('includes/vendor-applications.php', 'bvmgr_vendor_apply_verify_turnstile'),
 	array('includes/core/vendor-application-confirmation.php', 'bvmgr_vendor_app_send_review_ready_admin_notification'),
 	array('includes/core/vendor-application-confirmation.php', 'bvmgr_vendor_app_maybe_notify_review_ready'),
-	array('includes/core/goals-forecast.php', 'vms_goals_log'),
-	array('includes/core/goals-forecast.php', 'vms_goals_provider_has_hard_errors'),
-	array('includes/core/goals-forecast.php', 'vms_pos_get_event_actuals'),
-	array('includes/core/goals-forecast.php', 'vms_goals_refresh_event_actuals'),
-	array('includes/core/goals-forecast.php', 'vms_goals_compute_goal_progress'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_log'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_provider_has_hard_errors'),
+	array('includes/core/goals-forecast.php', 'bvmgr_pos_get_event_actuals'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_refresh_event_actuals'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_compute_goal_progress'),
 ) as $target) {
 	eval(g16a_extract_function($g16a_sources['mirror'][$target[0]], $target[1]));
 }
@@ -627,19 +627,19 @@ g16a_same(true, bvmgr_vendor_app_maybe_notify_review_ready(94), 'Existing review
 g16a_same(array(), $GLOBALS['g16a_mail_calls'], 'Existing review-ready marker must prevent a retry.');
 
 g16a_reset_runtime();
-vms_goals_log($GLOBALS['g16a_exception_message']);
+bvmgr_goals_log($GLOBALS['g16a_exception_message']);
 g16a_same('goals_legacy_issue', g16a_last_issue()['event_code'], 'Goals compatibility shim event changed.');
 g16a_same(array('service' => 'goals_forecast', 'operation' => 'legacy_log', 'status' => 'reported'), g16a_last_issue()['context'], 'Goals compatibility shim context changed.');
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Goals compatibility shim');
 
 g16a_reset_runtime();
-g16a_same(false, vms_goals_provider_has_hard_errors('square', array(), array()), 'Caught hard-error check exception must retain the fallback result.');
+g16a_same(false, bvmgr_goals_provider_has_hard_errors('square', array(), array()), 'Caught hard-error check exception must retain the fallback result.');
 g16a_same('goals_provider_hard_error_check_failed', g16a_last_issue()['event_code'], 'Goals hard-error check event changed.');
 g16a_same(731, (int) (g16a_last_issue()['error']['error_code'] ?? 0), 'Goals hard-error exception code changed.');
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Goals hard-error check');
 
 g16a_reset_runtime();
-$g16a_provider_result = vms_pos_get_event_actuals(101, array('mode' => 'refresh'));
+$g16a_provider_result = bvmgr_pos_get_event_actuals(101, array('mode' => 'refresh'));
 g16a_same(false, $g16a_provider_result['ok'], 'Provider exception must retain its false result.');
 g16a_same('square', $g16a_provider_result['provider'], 'Provider exception must retain its provider result.');
 g16a_same('Square provider error: ' . $GLOBALS['g16a_exception_message'], $g16a_provider_result['errors'][0], 'Privileged caller-visible provider error must remain unchanged.');
@@ -647,17 +647,17 @@ g16a_same('goals_provider_call_failed', g16a_last_issue()['event_code'], 'Goals 
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Goals provider call');
 
 g16a_reset_runtime();
-$g16a_refresh_result = vms_goals_refresh_event_actuals(102, array('mode' => 'refresh'));
+$g16a_refresh_result = bvmgr_goals_refresh_event_actuals(102, array('mode' => 'refresh'));
 g16a_same(false, $g16a_refresh_result['ok'], 'Failed actuals refresh must retain false.');
 g16a_same('Square provider error: ' . $GLOBALS['g16a_exception_message'], $g16a_refresh_result['message'], 'Privileged refresh result must retain its raw caller-visible message.');
 g16a_same(array('goals_provider_call_failed', 'goals_actuals_refresh_failed'), array_map(static fn(array $entry): string => (string) ($entry['flags']['operational_issue'][0]['event_code'] ?? ''), $GLOBALS['g16a_entries']), 'Failed refresh must retain exact producer ordering.');
 foreach ($GLOBALS['g16a_entries'] as $entry) {
 	g16a_assert_entry_redacted($entry, 'Goals actuals refresh');
 }
-g16a_same(array('ok' => false, 'message' => 'Invalid event plan id.'), vms_goals_refresh_event_actuals(0), 'Invalid refresh target result changed.');
+g16a_same(array('ok' => false, 'message' => 'Invalid event plan id.'), bvmgr_goals_refresh_event_actuals(0), 'Invalid refresh target result changed.');
 
 g16a_reset_runtime();
-$g16a_progress = vms_goals_compute_goal_progress(array(
+$g16a_progress = bvmgr_goals_compute_goal_progress(array(
 	'id' => 111,
 	'metric' => 'true_profit',
 	'target_cents' => 2500,

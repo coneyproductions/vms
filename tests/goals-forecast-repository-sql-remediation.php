@@ -160,7 +160,7 @@ function bvmgr_event_plan_should_include(int $id, string $context, array $args):
 	unset($context, $args);
 	return !in_array($id, $GLOBALS['vms_goal_excluded_ids'] ?? array(), true);
 }
-function vms_goals_get_event_pnl(int $id, array $args = array()): array
+function bvmgr_goals_get_event_pnl(int $id, array $args = array()): array
 {
 	unset($args);
 	return $GLOBALS['vms_goal_pnl'][$id] ?? array();
@@ -243,16 +243,16 @@ require $source_path;
 
 // Invalid repository IDs fail closed without database activity.
 goal_reset($wpdb);
-goal_same(array(), vms_goals_get_goal(0), 'Goal get should reject zero IDs.');
-goal_same(false, vms_goals_delete_goal(0), 'Goal delete should reject zero IDs.');
-goal_same(false, vms_goals_set_active_goal(0), 'Goal activation should reject zero IDs.');
+goal_same(array(), bvmgr_goals_get_goal(0), 'Goal get should reject zero IDs.');
+goal_same(false, bvmgr_goals_delete_goal(0), 'Goal delete should reject zero IDs.');
+goal_same(false, bvmgr_goals_set_active_goal(0), 'Goal activation should reject zero IDs.');
 goal_same(array(), $wpdb->log, 'Invalid IDs must not touch the database.');
 
 // Table identity and list reads preserve schema gating, ordering, results, and freshness.
-goal_same('wp_vms_goals', vms_goals_table_name(), 'Goal table name should retain the WordPress prefix contract.');
+goal_same('wp_vms_goals', bvmgr_goals_table_name(), 'Goal table name should retain the WordPress prefix contract.');
 goal_reset($wpdb);
 $wpdb->get_var_queue[] = null;
-goal_same(array(), vms_goals_list(), 'Missing goals table should return an empty list.');
+goal_same(array(), bvmgr_goals_list(), 'Missing goals table should return an empty list.');
 goal_same(array('prepare', 'get_var'), goal_kinds($wpdb), 'Missing-table list should stop after the fresh schema probe.');
 
 goal_reset($wpdb);
@@ -261,8 +261,8 @@ $wpdb->get_results_queue = array(
 	array(array('id' => 9, 'is_active' => 1)),
 	array(array('id' => 10, 'is_active' => 0)),
 );
-goal_same(array(array('id' => 9, 'is_active' => 1)), vms_goals_list(), 'Goal list should preserve first database result.');
-goal_same(array(array('id' => 10, 'is_active' => 0)), vms_goals_list(), 'Repeated goal list should preserve fresh database result.');
+goal_same(array(array('id' => 9, 'is_active' => 1)), bvmgr_goals_list(), 'Goal list should preserve first database result.');
+goal_same(array(array('id' => 10, 'is_active' => 0)), bvmgr_goals_list(), 'Repeated goal list should preserve fresh database result.');
 $get_var_count = count(array_filter($wpdb->log, static function (array $call): bool { return ($call['kind'] ?? '') === 'get_var'; }));
 $get_results_count = count(array_filter($wpdb->log, static function (array $call): bool { return ($call['kind'] ?? '') === 'get_results'; }));
 goal_same(2, $get_var_count, 'Repeated lists should recheck current schema rather than retain a stale table cache.');
@@ -277,7 +277,7 @@ goal_same(
 
 goal_reset($wpdb);
 $wpdb->get_row_queue[] = array('id' => 12, 'name' => 'Goal 12');
-goal_same(array('id' => 12, 'name' => 'Goal 12'), vms_goals_get_goal(12), 'Goal get should preserve row results.');
+goal_same(array('id' => 12, 'name' => 'Goal 12'), bvmgr_goals_get_goal(12), 'Goal get should preserve row results.');
 $prepare = goal_last_prepare($wpdb);
 goal_same(array('wp_vms_goals', 12), $prepare['args'], 'Goal get should prepare table and ID.');
 goal_contains('WHERE id = 12 LIMIT 1', $prepare['final'], 'Goal get should preserve its bounded lookup.');
@@ -285,7 +285,7 @@ goal_contains('WHERE id = 12 LIMIT 1', $prepare['final'], 'Goal get should prese
 goal_reset($wpdb);
 $wpdb->get_var_queue[] = 'wp_vms_goals';
 $wpdb->get_row_queue[] = array('id' => 13, 'is_active' => 1);
-goal_same(array('id' => 13, 'is_active' => 1), vms_goals_get_active_goal(), 'Active-goal read should preserve row results.');
+goal_same(array('id' => 13, 'is_active' => 1), bvmgr_goals_get_active_goal(), 'Active-goal read should preserve row results.');
 $prepare = goal_last_prepare($wpdb);
 goal_same(array('wp_vms_goals'), $prepare['args'], 'Active-goal read should prepare the table identifier.');
 goal_contains('WHERE is_active = 1 ORDER BY updated_at_utc DESC, id DESC LIMIT 1', $prepare['final'], 'Active-goal read should preserve single/latest ordering.');
@@ -295,7 +295,7 @@ goal_reset($wpdb);
 $wpdb->get_var_queue[] = null;
 goal_same(
 	array('ok' => false, 'message' => 'Goals table is unavailable.'),
-	vms_goals_save_goal(goal_input(), 22),
+	bvmgr_goals_save_goal(goal_input(), 22),
 	'Goal save should preserve unavailable-table failure.'
 );
 
@@ -304,7 +304,7 @@ $wpdb->get_var_queue[] = 'wp_vms_goals';
 $wpdb->update_queue[] = false;
 goal_same(
 	array('ok' => false, 'message' => 'Failed to update goal.'),
-	vms_goals_save_goal(goal_input(), 22),
+	bvmgr_goals_save_goal(goal_input(), 22),
 	'Goal update should preserve wpdb failure.'
 );
 
@@ -313,7 +313,7 @@ goal_reset($wpdb);
 $wpdb->get_var_queue[] = 'wp_vms_goals';
 $wpdb->update_queue[] = 0;
 $wpdb->query_queue[] = 1;
-$saved = vms_goals_save_goal(goal_input(true), 22);
+$saved = bvmgr_goals_save_goal(goal_input(true), 22);
 goal_same(array('ok' => true, 'goal_id' => 22, 'message' => 'Goal saved.'), $saved, 'Zero-row update should remain a successful save.');
 goal_same(array('prepare', 'get_var', 'update', 'prepare', 'query'), goal_kinds($wpdb), 'Active goal update should write the selected goal before clearing other active rows.');
 $update = goal_last_call($wpdb, 'update');
@@ -332,7 +332,7 @@ $wpdb->get_var_queue[] = 'wp_vms_goals';
 $wpdb->insert_queue[] = false;
 goal_same(
 	array('ok' => false, 'message' => 'Failed to create goal.'),
-	vms_goals_save_goal(goal_input(), 0),
+	bvmgr_goals_save_goal(goal_input(), 0),
 	'Goal creation should preserve wpdb failure.'
 );
 
@@ -343,7 +343,7 @@ $wpdb->insert_queue[] = 1;
 $wpdb->query_queue[] = 1;
 goal_same(
 	array('ok' => true, 'goal_id' => 44, 'message' => 'Goal saved.'),
-	vms_goals_save_goal(goal_input(true), 0),
+	bvmgr_goals_save_goal(goal_input(true), 0),
 	'Goal creation should return insert identity.'
 );
 goal_same(array('prepare', 'get_var', 'insert', 'prepare', 'query'), goal_kinds($wpdb), 'Active creation should insert before clearing every other active row.');
@@ -354,21 +354,21 @@ goal_same(count($insert['data']), count($insert['format']), 'Goal creation shoul
 // Delete and activate preserve ID, mutation ordering, and false-vs-zero semantics.
 goal_reset($wpdb);
 $wpdb->delete_queue[] = false;
-goal_same(false, vms_goals_delete_goal(5), 'Goal delete should preserve wpdb failure.');
+goal_same(false, bvmgr_goals_delete_goal(5), 'Goal delete should preserve wpdb failure.');
 $wpdb->delete_queue[] = 0;
-goal_same(true, vms_goals_delete_goal(5), 'Zero-row goal delete should remain a successful repository operation.');
+goal_same(true, bvmgr_goals_delete_goal(5), 'Zero-row goal delete should remain a successful repository operation.');
 goal_same(array('id' => 5), goal_last_call($wpdb, 'delete')['where'], 'Goal delete should retain exact ID boundary.');
 
 goal_reset($wpdb);
 $wpdb->get_var_queue[] = null;
-goal_same(false, vms_goals_set_active_goal(6), 'Goal activation should fail when schema is unavailable.');
+goal_same(false, bvmgr_goals_set_active_goal(6), 'Goal activation should fail when schema is unavailable.');
 goal_same(array('prepare', 'get_var'), goal_kinds($wpdb), 'Unavailable activation should not mutate rows.');
 
 goal_reset($wpdb);
 $wpdb->get_var_queue[] = 'wp_vms_goals';
 $wpdb->query_queue[] = 1;
 $wpdb->update_queue[] = 0;
-goal_same(true, vms_goals_set_active_goal(6), 'Zero-row selected-goal update should remain successful.');
+goal_same(true, bvmgr_goals_set_active_goal(6), 'Zero-row selected-goal update should remain successful.');
 goal_same(array('prepare', 'get_var', 'prepare', 'query', 'update'), goal_kinds($wpdb), 'Goal activation should clear prior active flags before activating the selected goal.');
 $clear_prepare = goal_last_prepare($wpdb);
 goal_same(array('wp_vms_goals'), $clear_prepare['args'], 'Goal activation reset should prepare the table identifier.');
@@ -381,7 +381,7 @@ goal_reset($wpdb);
 $wpdb->get_var_queue[] = 'wp_vms_goals';
 $wpdb->query_queue[] = 1;
 $wpdb->update_queue[] = false;
-goal_same(false, vms_goals_set_active_goal(6), 'Goal activation should preserve selected-row wpdb failure.');
+goal_same(false, bvmgr_goals_set_active_goal(6), 'Goal activation should preserve selected-row wpdb failure.');
 
 // Event-period selection retains bounded canonical date-meta ordering and inclusion filtering.
 goal_reset($wpdb);
@@ -389,7 +389,7 @@ WP_Query::$queue[] = array(101, 102, 103, 104);
 $GLOBALS['vms_goal_excluded_ids'] = array(104);
 goal_same(
 	array(101, 102, 103),
-	vms_goals_get_event_ids_in_period('2026-08-01', '2026-09-01', 12),
+	bvmgr_goals_get_event_ids_in_period('2026-08-01', '2026-09-01', 12),
 	'Event-period query should preserve IDs and financial inclusion filtering.'
 );
 $query_args = WP_Query::$calls[0];
@@ -420,7 +420,7 @@ $GLOBALS['vms_goal_pnl'] = array(
 	101 => array('true_profit_cents' => 1000),
 	102 => array('true_profit_cents' => 3000),
 );
-$progress = vms_goals_compute_goal_progress(
+$progress = bvmgr_goals_compute_goal_progress(
 	array(
 		'metric' => 'true_profit',
 		'target_cents' => 10000,

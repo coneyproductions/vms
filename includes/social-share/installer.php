@@ -1,63 +1,63 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_social_now_mysql_utc')) {
-	function vms_social_now_mysql_utc(): string
+if (!function_exists('bvmgr_social_now_mysql_utc')) {
+	function bvmgr_social_now_mysql_utc(): string
 	{
 		return current_time('mysql', true);
 	}
 }
 
-if (!function_exists('vms_social_table')) {
-	function vms_social_table(string $suffix): string
+if (!function_exists('bvmgr_social_table')) {
+	function bvmgr_social_table(string $suffix): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . $suffix;
 	}
 }
 
-if (!function_exists('vms_social_table_accounts')) {
-	function vms_social_table_accounts(): string
+if (!function_exists('bvmgr_social_table_accounts')) {
+	function bvmgr_social_table_accounts(): string
 	{
 		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX : 'vms_social_accounts';
-		return vms_social_table($suffix);
+		return bvmgr_social_table($suffix);
 	}
 }
 
-if (!function_exists('vms_social_table_venue_map')) {
-	function vms_social_table_venue_map(): string
+if (!function_exists('bvmgr_social_table_venue_map')) {
+	function bvmgr_social_table_venue_map(): string
 	{
 		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX : 'vms_social_venue_map';
-		return vms_social_table($suffix);
+		return bvmgr_social_table($suffix);
 	}
 }
 
-if (!function_exists('vms_social_table_templates')) {
-	function vms_social_table_templates(): string
+if (!function_exists('bvmgr_social_table_templates')) {
+	function bvmgr_social_table_templates(): string
 	{
 		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX : 'vms_social_templates';
-		return vms_social_table($suffix);
+		return bvmgr_social_table($suffix);
 	}
 }
 
-if (!function_exists('vms_social_table_queue')) {
-	function vms_social_table_queue(): string
+if (!function_exists('bvmgr_social_table_queue')) {
+	function bvmgr_social_table_queue(): string
 	{
 		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_QUEUE_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_QUEUE_SUFFIX : 'vms_social_queue';
-		return vms_social_table($suffix);
+		return bvmgr_social_table($suffix);
 	}
 }
 
-if (!function_exists('vms_social_table_audit')) {
-	function vms_social_table_audit(): string
+if (!function_exists('bvmgr_social_table_audit')) {
+	function bvmgr_social_table_audit(): string
 	{
 		$suffix = defined('BVMGR_DB_TABLE_SOCIAL_AUDIT_SUFFIX') ? (string) BVMGR_DB_TABLE_SOCIAL_AUDIT_SUFFIX : 'vms_social_audit';
-		return vms_social_table($suffix);
+		return bvmgr_social_table($suffix);
 	}
 }
 
-if (!function_exists('vms_social_default_settings')) {
-	function vms_social_default_settings(): array
+if (!function_exists('bvmgr_social_default_settings')) {
+	function bvmgr_social_default_settings(): array
 	{
 		return array(
 			'enabled' => 0,
@@ -68,14 +68,14 @@ if (!function_exists('vms_social_default_settings')) {
 	}
 }
 
-if (!function_exists('vms_social_get_settings')) {
-	function vms_social_get_settings(): array
+if (!function_exists('bvmgr_social_get_settings')) {
+	function bvmgr_social_get_settings(): array
 	{
 		$key = defined('BVMGR_OPT_SOCIAL_SETTINGS_V1') ? (string) BVMGR_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
 		$raw = get_option($key, array());
 		$raw = is_array($raw) ? $raw : array();
 
-		$settings = wp_parse_args($raw, vms_social_default_settings());
+		$settings = wp_parse_args($raw, bvmgr_social_default_settings());
 		$settings['enabled'] = empty($settings['enabled']) ? 0 : 1;
 		$settings['kill_switch'] = empty($settings['kill_switch']) ? 0 : 1;
 		$settings['utm_enabled'] = empty($settings['utm_enabled']) ? 0 : 1;
@@ -85,10 +85,10 @@ if (!function_exists('vms_social_get_settings')) {
 	}
 }
 
-if (!function_exists('vms_social_update_settings')) {
-	function vms_social_update_settings(array $incoming): array
+if (!function_exists('bvmgr_social_update_settings')) {
+	function bvmgr_social_update_settings(array $incoming): array
 	{
-		$settings = vms_social_get_settings();
+		$settings = bvmgr_social_get_settings();
 		$next = array(
 			'enabled' => empty($incoming['enabled']) ? 0 : 1,
 			'kill_switch' => empty($incoming['kill_switch']) ? 0 : 1,
@@ -101,24 +101,24 @@ if (!function_exists('vms_social_update_settings')) {
 	}
 }
 
-if (!function_exists('vms_social_is_enabled')) {
-	function vms_social_is_enabled(): bool
+if (!function_exists('bvmgr_social_is_enabled')) {
+	function bvmgr_social_is_enabled(): bool
 	{
-		$settings = vms_social_get_settings();
+		$settings = bvmgr_social_get_settings();
 		return !empty($settings['enabled']);
 	}
 }
 
-if (!function_exists('vms_social_kill_switch_active')) {
-	function vms_social_kill_switch_active(): bool
+if (!function_exists('bvmgr_social_kill_switch_active')) {
+	function bvmgr_social_kill_switch_active(): bool
 	{
-		$settings = vms_social_get_settings();
+		$settings = bvmgr_social_get_settings();
 		return !empty($settings['kill_switch']);
 	}
 }
 
-if (!function_exists('vms_social_db_maybe_install')) {
-	function vms_social_db_maybe_install(): void
+if (!function_exists('bvmgr_social_db_maybe_install')) {
+	function bvmgr_social_db_maybe_install(): void
 	{
 		$schema_key = defined('BVMGR_OPT_SOCIAL_DB_SCHEMA_VERSION') ? (string) BVMGR_OPT_SOCIAL_DB_SCHEMA_VERSION : 'vms_social_db_schema_version';
 		$target_version = defined('BVMGR_SOCIAL_DB_SCHEMA_VERSION') ? (string) BVMGR_SOCIAL_DB_SCHEMA_VERSION : 'social_v1';
@@ -131,11 +131,11 @@ if (!function_exists('vms_social_db_maybe_install')) {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 
-		$accounts = vms_social_table_accounts();
-		$venue_map = vms_social_table_venue_map();
-		$templates = vms_social_table_templates();
-		$queue = vms_social_table_queue();
-		$audit = vms_social_table_audit();
+		$accounts = bvmgr_social_table_accounts();
+		$venue_map = bvmgr_social_table_venue_map();
+		$templates = bvmgr_social_table_templates();
+		$queue = bvmgr_social_table_queue();
+		$audit = bvmgr_social_table_audit();
 
 		$sql_accounts = "CREATE TABLE {$accounts} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -228,29 +228,29 @@ if (!function_exists('vms_social_db_maybe_install')) {
 		dbDelta($sql_queue);
 		dbDelta($sql_audit);
 
-		vms_social_seed_default_templates();
+		bvmgr_social_seed_default_templates();
 		update_option($schema_key, $target_version, false);
 
 		$settings_key = defined('BVMGR_OPT_SOCIAL_SETTINGS_V1') ? (string) BVMGR_OPT_SOCIAL_SETTINGS_V1 : 'vms_social_settings_v1';
 		if (get_option($settings_key, null) === null) {
-			update_option($settings_key, vms_social_default_settings(), false);
+			update_option($settings_key, bvmgr_social_default_settings(), false);
 		}
 	}
 }
-add_action('plugins_loaded', 'vms_social_db_maybe_install', 8);
+add_action('plugins_loaded', 'bvmgr_social_db_maybe_install', 8);
 
-if (!function_exists('vms_social_seed_default_templates')) {
-	function vms_social_seed_default_templates(): void
+if (!function_exists('bvmgr_social_seed_default_templates')) {
+	function bvmgr_social_seed_default_templates(): void
 	{
 		global $wpdb;
-		$table = vms_social_table_templates();
+		$table = bvmgr_social_table_templates();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template seeding must inspect current plugin-owned rows once during installation before deciding whether defaults are needed.
 		$count = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i', $table));
 		if ($count > 0) {
 			return;
 		}
 
-		$now = vms_social_now_mysql_utc();
+		$now = bvmgr_social_now_mysql_utc();
 		$seed = array(
 			array(
 				'platform' => 'facebook',

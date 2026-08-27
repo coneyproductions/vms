@@ -11,7 +11,7 @@ if (!function_exists('bvmgr_admin_render_season_dates_page')) {
 
     echo '<div class="wrap">';
     echo '<h1>Season Dates</h1>';
-    echo '<p>Season Dates page renderer is missing. Expected function <code>vms_render_season_dates_page()</code>.</p>';
+    echo '<p>Season Dates page renderer is missing. Expected function <code>bvmgr_render_season_dates_page()</code>.</p>';
     echo '</div>';
   }
 }
@@ -154,14 +154,14 @@ add_action('admin_menu', function () {
   );
 
   // Budget Forecast Calculator (decision-support)
-  if (function_exists('vms_render_budget_calculator_page')) {
+  if (function_exists('bvmgr_render_budget_calculator_page')) {
     add_submenu_page(
       $parent_slug,
       __('Budget Calculator', 'backstage-venue-manager'),
       __('Budget Calculator', 'backstage-venue-manager'),
       $capability,
       'vms-budget-calculator',
-      'vms_render_budget_calculator_page'
+      'bvmgr_render_budget_calculator_page'
     );
   }
 
@@ -288,14 +288,14 @@ add_action('admin_menu', function () {
     'bvmgr_admin_holidays_page'
   );
 
-  if (function_exists('vms_render_settings_page')) {
+  if (function_exists('bvmgr_render_settings_page')) {
     add_submenu_page(
       $parent_slug,
       __('Settings', 'backstage-venue-manager'),
       __('Settings', 'backstage-venue-manager'),
       $capability,
       'vms-settings',
-      'vms_render_settings_page'
+      'bvmgr_render_settings_page'
     );
   }
 
@@ -532,8 +532,8 @@ function bvmgr_render_dashboard_page_content(): void
   echo '<p class="description">' . wp_kses_post(sprintf(__('Manage guided tour defaults and reset progress in <a href=\"%s\">Guided Tours settings</a>.', 'backstage-venue-manager'), esc_url($guided_tours_url))) . '</p>';
   echo '</div>';
 
-  if (function_exists('vms_approvals_queue_render_dashboard_card')) {
-    vms_approvals_queue_render_dashboard_card();
+  if (function_exists('bvmgr_approvals_queue_render_dashboard_card')) {
+    bvmgr_approvals_queue_render_dashboard_card();
   }
 
   if (function_exists('bvmgr_add_dispatch_render_dashboard_card')) {

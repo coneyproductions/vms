@@ -9,8 +9,8 @@ defined('ABSPATH') || exit;
  * - Operators still need to identify which event a product belongs to
  */
 
-add_filter('manage_edit-product_columns', 'vms_ticketing_v2_add_product_event_columns', 20, 1);
-function vms_ticketing_v2_add_product_event_columns(array $cols): array
+add_filter('manage_edit-product_columns', 'bvmgr_ticketing_v2_add_product_event_columns', 20, 1);
+function bvmgr_ticketing_v2_add_product_event_columns(array $cols): array
 {
     $out = array();
     $inserted = false;
@@ -34,8 +34,8 @@ function vms_ticketing_v2_add_product_event_columns(array $cols): array
     return $out;
 }
 
-add_action('manage_product_posts_custom_column', 'vms_ticketing_v2_render_product_event_columns', 20, 2);
-function vms_ticketing_v2_render_product_event_columns(string $column, int $post_id): void
+add_action('manage_product_posts_custom_column', 'bvmgr_ticketing_v2_render_product_event_columns', 20, 2);
+function bvmgr_ticketing_v2_render_product_event_columns(string $column, int $post_id): void
 {
     if (!in_array($column, array('vms_event', 'vms_event_date', 'vms_square_mirror'), true)) {
         return;

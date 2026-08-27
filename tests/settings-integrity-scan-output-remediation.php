@@ -635,21 +635,21 @@ $reset_state = static function (): void {
 	$GLOBALS['vms_test_scan_all_result'] = array();
 	$_GET = array();
 	$_POST = array();
-	vms_get_settings_page_integrity_scan_result_context(true);
+	bvmgr_get_settings_page_integrity_scan_result_context(true);
 };
 
-$assert(strpos($settingsSource, "add_action('admin_post_vms_integrity_scan', 'vms_handle_integrity_scan');") !== false, 'Settings source should preserve the admin-post registration.');
+$assert(strpos($settingsSource, "add_action('admin_post_vms_integrity_scan', 'bvmgr_handle_integrity_scan');") !== false, 'Settings source should preserve the admin-post registration.');
 $assert(isset($GLOBALS['vms_test_actions']['admin_post_vms_integrity_scan'][10]), 'Settings should register the integrity scan admin-post action at priority 10.');
-$assertSame('vms_handle_integrity_scan', $GLOBALS['vms_test_actions']['admin_post_vms_integrity_scan'][10][0], 'Settings should preserve the integrity scan handler callback.');
+$assertSame('bvmgr_handle_integrity_scan', $GLOBALS['vms_test_actions']['admin_post_vms_integrity_scan'][10][0], 'Settings should preserve the integrity scan handler callback.');
 $assert(strpos($settingsSource, "isset(\$_POST['mode']) ? sanitize_key((string) \$_POST['mode']) : 'all';") !== false, 'Integrity scan handler should preserve mode normalization without widening the request contract.');
 $assert(strpos($settingsSource, "isset(\$_POST['limit']) ? (int) \$_POST['limit'] : 500;") !== false, 'Integrity scan handler should preserve limit normalization and default.');
 $assert(strpos($settingsSource, "check_admin_referer('vms_integrity_scan');") !== false, 'Integrity scan handler should preserve the nonce action.');
 $assert(strpos($settingsSource, "wp_nonce_field('vms_integrity_scan');") !== false, 'Integrity scan controls should preserve the nonce field action.');
 $assert(strpos($settingsSource, "name=\"action\" value=\"vms_integrity_scan\"") !== false, 'Integrity scan controls should preserve the admin-post action field.');
-$assert(strpos($settingsSource, 'function vms_build_settings_page_integrity_scan_result_context(') !== false, 'Settings should expose a dedicated integrity-scan context builder.');
-$assert(strpos($settingsSource, 'function vms_render_settings_page_integrity_scan_result(') !== false, 'Settings should expose a dedicated integrity-scan renderer.');
+$assert(strpos($settingsSource, 'function bvmgr_build_settings_page_integrity_scan_result_context(') !== false, 'Settings should expose a dedicated integrity-scan context builder.');
+$assert(strpos($settingsSource, 'function bvmgr_render_settings_page_integrity_scan_result(') !== false, 'Settings should expose a dedicated integrity-scan renderer.');
 $assert(strpos($settingsSource, 'function vms_render_settings_page_result(') === false, 'Settings should not introduce a generic result renderer.');
-$assert(strpos($settingsSource, "vms_render_settings_page_integrity_scan_result(vms_get_settings_page_integrity_scan_result_context());") !== false, 'Settings content should route integrity results through the dedicated page-local renderer.');
+$assert(strpos($settingsSource, "bvmgr_render_settings_page_integrity_scan_result(bvmgr_get_settings_page_integrity_scan_result_context());") !== false, 'Settings content should route integrity results through the dedicated page-local renderer.');
 $assert(strpos($settingsSource, '<div class="vms-settings-integrity-scan-result">') !== false, 'Settings should wrap the integrity result in a page-local family container.');
 $assert(strpos($settingsSource, "echo '<div class=\"notice notice-success\"><p><strong>Integrity scan complete.</strong> Mode: '") === false, 'Settings content should no longer inline the old top-level captured notice block.');
 $assert(strpos($settingsSource, '<strong>Entitlement image sync complete.</strong>') !== false, 'Settings should preserve the separate entitlement image-sync family.');
@@ -675,7 +675,7 @@ $assertSame(
 $reset_state();
 $GLOBALS['vms_test_current_user_can'] = false;
 try {
-	vms_handle_integrity_scan();
+	bvmgr_handle_integrity_scan();
 	throw new RuntimeException('Expected permission failure was not thrown.');
 } catch (RuntimeException $e) {
 	$assertSame('Insufficient permissions.', $e->getMessage(), 'Integrity scan handler should preserve the capability failure message.');
@@ -688,7 +688,7 @@ $assertSame(array(), $GLOBALS['vms_test_redirects'], 'Integrity scan handler sho
 $reset_state();
 $GLOBALS['vms_test_referer_fail'] = true;
 try {
-	vms_handle_integrity_scan();
+	bvmgr_handle_integrity_scan();
 	throw new RuntimeException('Expected nonce failure was not thrown.');
 } catch (RuntimeException $e) {
 	$assertSame('Nonce check failed.', $e->getMessage(), 'Integrity scan handler should preserve nonce failure ordering.');
@@ -737,7 +737,7 @@ foreach ($handler_cases as $case) {
 	$GLOBALS['vms_test_scan_event_result'] = $case['expected_mode'] === 'events' ? $case['result'] : array();
 	$GLOBALS['vms_test_scan_all_result'] = $case['expected_mode'] === 'all' ? $case['result'] : array();
 
-	vms_handle_integrity_scan();
+	bvmgr_handle_integrity_scan();
 
 	$assertSame(array('vms_integrity_scan'), $GLOBALS['vms_test_referer_actions'], 'Integrity scan handler should verify the same nonce action for every mode.');
 	$assertSame(array(array('mode' => $case['expected_mode'], 'limit' => $case['expected_limit'])), $GLOBALS['vms_test_scan_calls'], 'Integrity scan handler should preserve mode dispatch and limit clamping.');
@@ -751,7 +751,7 @@ foreach ($handler_cases as $case) {
 	$assertSame(array('https://example.test/wp-admin/admin.php?page=vms-settings&vms_scan_done=1'), $GLOBALS['vms_test_redirects'], 'Integrity scan handler should preserve the redirect destination and marker.');
 }
 
-$composite_context = vms_build_settings_page_integrity_scan_result_context(
+$composite_context = bvmgr_build_settings_page_integrity_scan_result_context(
 	array(
 		'ts' => 1735689600,
 		'mode' => 'all',
@@ -800,7 +800,7 @@ $assertSame('', $composite_context['sections'][1]['action']['target'], 'Integrit
 $assertSame('', $composite_context['sections'][1]['action']['rel'], 'Integrity scan context builder should preserve the absence of a venue reconcile rel attribute.');
 $assertSame(true, $composite_context['sections'][2]['action']['visible'], 'Integrity scan context builder should preserve the calendar reconcile action visibility.');
 
-$single_context = vms_build_settings_page_integrity_scan_result_context(
+$single_context = bvmgr_build_settings_page_integrity_scan_result_context(
 	array(
 		'ts' => 1735689600,
 		'mode' => 'events',
@@ -821,11 +821,11 @@ $assertSame('single', $single_context['status'], 'Integrity scan context builder
 $assertSame(500, $single_context['limit'], 'Integrity scan context builder should preserve the existing minimum/default limit behavior.');
 $assertSame('{"checked":4,"flagged_calendar_event_unlinked":7,"flagged_missing_calendar_event":8,"flagged_trashed_calendar_event":9,"flagged_calendar_event_unpublished":10,"cleared_calendar_event_refs":11,"forced_draft":12}', $single_context['single_result_json'], 'Integrity scan context builder should normalize single-mode diagnostic values into a finite JSON string.');
 
-$missing_context = vms_build_settings_page_integrity_scan_result_context(false, true);
+$missing_context = bvmgr_build_settings_page_integrity_scan_result_context(false, true);
 $assertSame(false, $missing_context['show'], 'Integrity scan context builder should stay silent when the transient is missing.');
 $assertSame('missing', $missing_context['status'], 'Integrity scan context builder should classify missing stored results.');
 
-$invalid_context = vms_build_settings_page_integrity_scan_result_context(
+$invalid_context = bvmgr_build_settings_page_integrity_scan_result_context(
 	array(
 		'ts' => 1735689600,
 		'mode' => 'all',
@@ -852,7 +852,7 @@ $renderer_context = array(
 	'sections' => $composite_context['sections'],
 );
 ob_start();
-vms_render_settings_page_integrity_scan_result($renderer_context);
+bvmgr_render_settings_page_integrity_scan_result($renderer_context);
 $rendered_composite = (string) ob_get_clean();
 $assertSame(
 	'<div class="vms-settings-integrity-scan-result"><div class="notice notice-success"><p><strong>Integrity scan complete.</strong> Mode: all &nbsp;|&nbsp; Limit: 500 &nbsp;|&nbsp; 2025-01-01 00:00</p><p><strong>Event Plans (Vendor links):</strong> Checked 4, Missing 1, Trashed 2, Secondary missing 3, Secondary trashed 4, Forced draft 5</p><p><strong>Event Plans (Venue links):</strong> Checked 6, Missing 7, Trashed 8, Unpublished 9, Cleared refs 10, Forced draft 11 &nbsp;|&nbsp; <a class="button button-secondary" href="https://example.test/wp-admin/admin.php?page=vms-integrity-venue-links">Review trashed venue links</a></p><p><strong>Event Plans (Calendar):</strong> Checked 12, Unlinked 13, Missing 14, Trashed 15, Unpublished 16, Cleared refs 17, Forced draft 18 &nbsp;|&nbsp; <a class="button button-secondary" href="https://example.test/wp-admin/admin.php?page=vms-integrity-calendar-links">Review calendar links</a></p></div></div>',
@@ -875,7 +875,7 @@ $assertSame(0, $GLOBALS['vms_test_transient_get_calls'], 'Integrity scan rendere
 $assertSame(array(), $GLOBALS['vms_test_scan_calls'], 'Integrity scan renderer should not perform scan calls.');
 
 ob_start();
-vms_render_settings_page_integrity_scan_result($single_context);
+bvmgr_render_settings_page_integrity_scan_result($single_context);
 $rendered_single = (string) ob_get_clean();
 $assertSame(
 	'<div class="vms-settings-integrity-scan-result"><div class="notice notice-success"><p><strong>Integrity scan complete.</strong> Mode: events &nbsp;|&nbsp; Limit: 500 &nbsp;|&nbsp; 2025-01-01 00:00</p><p><strong>Results:</strong> {&quot;checked&quot;:4,&quot;flagged_calendar_event_unlinked&quot;:7,&quot;flagged_missing_calendar_event&quot;:8,&quot;flagged_trashed_calendar_event&quot;:9,&quot;flagged_calendar_event_unpublished&quot;:10,&quot;cleared_calendar_event_refs&quot;:11,&quot;forced_draft&quot;:12}</p></div></div>',
@@ -884,7 +884,7 @@ $assertSame(
 );
 
 ob_start();
-vms_render_settings_page_integrity_scan_result($missing_context);
+bvmgr_render_settings_page_integrity_scan_result($missing_context);
 $rendered_missing = (string) ob_get_clean();
 $assertSame('', $rendered_missing, 'Integrity scan renderer should stay silent when the normalized context is not displayable.');
 
@@ -902,9 +902,9 @@ $GLOBALS['vms_test_transients']['vms_integrity_scan_last'] = array(
 		'events' => array('checked' => 1, 'flagged_calendar_event_unlinked' => 1, 'flagged_missing_calendar_event' => 0, 'flagged_trashed_calendar_event' => 0, 'flagged_calendar_event_unpublished' => 0, 'cleared_calendar_event_refs' => 0, 'forced_draft' => 0),
 	),
 );
-vms_get_settings_page_integrity_scan_result_context(true);
+bvmgr_get_settings_page_integrity_scan_result_context(true);
 ob_start();
-vms_render_settings_page_content();
+bvmgr_render_settings_page_content();
 $content_html = (string) ob_get_clean();
 $captured_notices_html = '';
 $remaining_content_html = bvmgr_admin_ui_extract_notice_markup($content_html, $captured_notices_html);
@@ -930,9 +930,9 @@ $GLOBALS['vms_test_transients']['vms_integrity_scan_last'] = array(
 		'events' => array('checked' => 1, 'flagged_calendar_event_unlinked' => 1, 'flagged_missing_calendar_event' => 0, 'flagged_trashed_calendar_event' => 0, 'flagged_calendar_event_unpublished' => 0, 'cleared_calendar_event_refs' => 0, 'forced_draft' => 0),
 	),
 );
-vms_get_settings_page_integrity_scan_result_context(true);
+bvmgr_get_settings_page_integrity_scan_result_context(true);
 ob_start();
-vms_render_settings_page();
+bvmgr_render_settings_page();
 $shell_page = (string) ob_get_clean();
 $assert(strpos($shell_page, 'below-h2 vms-shell-notice"><p><strong>Integrity scan complete.') === false, 'Integrity scan output should no longer depend on the shell captured-notice region.');
 $assert(strpos($shell_page, '<div class="vms-settings-integrity-scan-result"><div class="notice notice-success">') !== false, 'Integrity scan output should render through the page-local Settings content path.');
@@ -959,7 +959,7 @@ $GLOBALS['vms_test_transients']['vms_entitlement_image_sync_last'] = array(
 	),
 );
 ob_start();
-vms_render_settings_page_content();
+bvmgr_render_settings_page_content();
 $img_sync_content = (string) ob_get_clean();
 $img_sync_captured = '';
 $img_sync_remaining = bvmgr_admin_ui_extract_notice_markup($img_sync_content, $img_sync_captured);
@@ -970,7 +970,7 @@ $_GET = array(
 	'vms_notice' => 'default_venue_set',
 );
 ob_start();
-vms_render_settings_page_notices();
+bvmgr_render_settings_page_notices();
 $default_venue_notice = (string) ob_get_clean();
 $assertSame('<div class="notice notice-success"><p>Default venue updated.</p></div>', $default_venue_notice, 'Default-venue notice should remain unchanged.');
 

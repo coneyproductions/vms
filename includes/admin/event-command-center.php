@@ -756,8 +756,8 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
     function bvmgr_event_command_center_get_ticket_snapshot(int $plan_id): array
     {
         $reporting_truth = bvmgr_event_command_center_get_ticket_reporting_truth($plan_id);
-        $ticket_stats = function_exists('vms_goals_get_ticket_stats')
-            ? (array) vms_goals_get_ticket_stats($plan_id)
+        $ticket_stats = function_exists('bvmgr_goals_get_ticket_stats')
+            ? (array) bvmgr_goals_get_ticket_stats($plan_id)
             : array('qty_sold' => 0, 'revenue_cents' => 0);
 
         $sold = !empty($reporting_truth['available'])
@@ -860,8 +860,8 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
 if (!function_exists('bvmgr_event_command_center_get_financial_snapshot')) {
     function bvmgr_event_command_center_get_financial_snapshot(int $plan_id): array
     {
-        $manual_actuals = function_exists('vms_goals_get_manual_event_actual_totals')
-            ? (array) vms_goals_get_manual_event_actual_totals($plan_id)
+        $manual_actuals = function_exists('bvmgr_goals_get_manual_event_actual_totals')
+            ? (array) bvmgr_goals_get_manual_event_actual_totals($plan_id)
             : array();
         $has_actuals = false;
         foreach ($manual_actuals as $value) {
@@ -872,19 +872,19 @@ if (!function_exists('bvmgr_event_command_center_get_financial_snapshot')) {
         }
 
         $mode = $has_actuals ? 'true' : 'forecast';
-        $pnl = function_exists('vms_goals_get_event_pnl')
-            ? (array) vms_goals_get_event_pnl($plan_id, array('headcount_mode' => $mode, 'include_overhead' => false))
+        $pnl = function_exists('bvmgr_goals_get_event_pnl')
+            ? (array) bvmgr_goals_get_event_pnl($plan_id, array('headcount_mode' => $mode, 'include_overhead' => false))
             : array();
 
         $vendor_cost_cents = $has_actuals
             ? max(0, (int) ($manual_actuals['direct_costs_cents'] ?? 0))
-            : (function_exists('vms_goals_get_default_direct_costs_cents') ? max(0, (int) vms_goals_get_default_direct_costs_cents($plan_id)) : 0);
+            : (function_exists('bvmgr_goals_get_default_direct_costs_cents') ? max(0, (int) bvmgr_goals_get_default_direct_costs_cents($plan_id)) : 0);
         $labor_cost_cents = function_exists('bvmgr_event_profitability_get_labor_cost_cents')
             ? max(0, (int) bvmgr_event_profitability_get_labor_cost_cents($plan_id))
             : 0;
         $processing_cents = $has_actuals
             ? max(0, (int) ($manual_actuals['processing_fees_cents'] ?? 0))
-            : (function_exists('vms_goals_get_default_processing_fees_cents') ? max(0, (int) vms_goals_get_default_processing_fees_cents($plan_id)) : 0);
+            : (function_exists('bvmgr_goals_get_default_processing_fees_cents') ? max(0, (int) bvmgr_goals_get_default_processing_fees_cents($plan_id)) : 0);
         $gross_cents = max(0, (int) ($pnl['gross_revenue_cents'] ?? 0));
         $margin_cents = $gross_cents - $vendor_cost_cents - $labor_cost_cents - $processing_cents;
 

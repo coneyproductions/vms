@@ -464,8 +464,8 @@ if (!function_exists('wp_create_nonce')) {
 	}
 }
 
-if (!function_exists('vms_settings_page_help_button_allowed_html')) {
-	function vms_settings_page_help_button_allowed_html(): array
+if (!function_exists('bvmgr_settings_page_help_button_allowed_html')) {
+	function bvmgr_settings_page_help_button_allowed_html(): array
 	{
 		return array(
 			'button' => array(
@@ -478,16 +478,16 @@ if (!function_exists('vms_settings_page_help_button_allowed_html')) {
 	}
 }
 
-if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
-	function vms_settings_calendar_vendor_type_rows(array $maps = array()): array
+if (!function_exists('bvmgr_settings_calendar_vendor_type_rows')) {
+	function bvmgr_settings_calendar_vendor_type_rows(array $maps = array()): array
 	{
 		unset($maps);
 		return array();
 	}
 }
 
-if (!function_exists('vms_settings_calendar_icon_choices')) {
-	function vms_settings_calendar_icon_choices(): array
+if (!function_exists('bvmgr_settings_calendar_icon_choices')) {
+	function bvmgr_settings_calendar_icon_choices(): array
 	{
 		return array();
 	}
@@ -1264,10 +1264,10 @@ $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback
 $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notices~', $emailFollowupsSource, $unusedEmailFollowupsMatches);
 $eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
 $ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
-$settingsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_render_settings_page_notice_bar[\'"]~', $settingsSource, $unusedSettingsMatches);
+$settingsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_render_settings_page_notice_bar[\'"]~', $settingsSource, $unusedSettingsMatches);
 $passClaimsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_pass_claims_render_admin_notices[\'"]~', $passClaimsSource, $unusedPassClaimsMatches);
 $eventPlanImportNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportSource, $unusedEventPlanImportMatches);
-$socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
+$socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
 	'admin/event-command-center.php',
 	'admin/integrity-calendar-reconcile.php',
@@ -1693,46 +1693,46 @@ $assert($GLOBALS['vms_test_integrity_calendar_get_posts_calls'] === 1, 'Calendar
 $assert(strpos($calendarContentOnly, 'Review Event Plans that reference missing, trashed, or unpublished TEC events') !== false, 'Calendar Reconciliation content callback should still render the intro copy.');
 $assert(strpos($calendarContentOnly, 'Confirmation required.') === false, 'Calendar Reconciliation content callback should no longer emit the moved rich notice directly.');
 
-$assert(strpos($settingsSource, 'function vms_render_settings_page_notices(): void') !== false, 'Settings should expose a dedicated explicit notice callback for the fixed default-venue redirect notice.');
-$settingsNoticeStart = strpos($settingsSource, 'function vms_render_settings_page_notices(): void');
-$settingsNoticeEnd = strpos($settingsSource, 'function vms_render_settings_page()');
+$assert(strpos($settingsSource, 'function bvmgr_render_settings_page_notices(): void') !== false, 'Settings should expose a dedicated explicit notice callback for the fixed default-venue redirect notice.');
+$settingsNoticeStart = strpos($settingsSource, 'function bvmgr_render_settings_page_notices(): void');
+$settingsNoticeEnd = strpos($settingsSource, 'function bvmgr_render_settings_page()');
 $assert($settingsNoticeStart !== false && $settingsNoticeEnd !== false && $settingsNoticeEnd > $settingsNoticeStart, 'Settings explicit notice callback body should be locatable.');
 $settingsNoticeSource = substr($settingsSource, (int) $settingsNoticeStart, (int) $settingsNoticeEnd - (int) $settingsNoticeStart);
-$settingsPageStart = strpos($settingsSource, 'function vms_render_settings_page()');
-$settingsPageEnd = strpos($settingsSource, 'function vms_render_settings_page_content(');
+$settingsPageStart = strpos($settingsSource, 'function bvmgr_render_settings_page()');
+$settingsPageEnd = strpos($settingsSource, 'function bvmgr_render_settings_page_content(');
 $assert($settingsPageStart !== false && $settingsPageEnd !== false && $settingsPageEnd > $settingsPageStart, 'Settings page renderer body should be locatable.');
 $settingsPageSource = substr($settingsSource, (int) $settingsPageStart, (int) $settingsPageEnd - (int) $settingsPageStart);
-$settingsContentStart = strpos($settingsSource, 'function vms_render_settings_page_content(');
-$settingsContentEnd = strpos($settingsSource, 'function vms_settings_page_ticketing_stock_notice_placeholder(): string');
+$settingsContentStart = strpos($settingsSource, 'function bvmgr_render_settings_page_content(');
+$settingsContentEnd = strpos($settingsSource, 'function bvmgr_settings_page_ticketing_stock_notice_placeholder(): string');
 $assert($settingsContentStart !== false && $settingsContentEnd !== false && $settingsContentEnd > $settingsContentStart, 'Settings content callback body should be locatable.');
 $settingsContentSource = substr($settingsSource, (int) $settingsContentStart, (int) $settingsContentEnd - (int) $settingsContentStart);
-$settingsStateStart = strpos($settingsSource, 'function vms_get_settings_page_ticketing_stock_notice_state(bool $refresh = false): array');
-$settingsStateEnd = strpos($settingsSource, 'function vms_render_settings_page_notice_bar(): void');
+$settingsStateStart = strpos($settingsSource, 'function bvmgr_get_settings_page_ticketing_stock_notice_state(bool $refresh = false): array');
+$settingsStateEnd = strpos($settingsSource, 'function bvmgr_render_settings_page_notice_bar(): void');
 $assert($settingsStateStart !== false && $settingsStateEnd !== false && $settingsStateEnd > $settingsStateStart, 'Settings ticketing stock notice-state resolver should be locatable.');
 $settingsStateSource = substr($settingsSource, (int) $settingsStateStart, (int) $settingsStateEnd - (int) $settingsStateStart);
-$settingsNoticeBarStart = strpos($settingsSource, 'function vms_render_settings_page_notice_bar(): void');
-$settingsNoticeBarEnd = strpos($settingsSource, 'function vms_get_settings_page_ticketing_stock_notice_markup(): string');
+$settingsNoticeBarStart = strpos($settingsSource, 'function bvmgr_render_settings_page_notice_bar(): void');
+$settingsNoticeBarEnd = strpos($settingsSource, 'function bvmgr_get_settings_page_ticketing_stock_notice_markup(): string');
 $assert($settingsNoticeBarStart !== false && $settingsNoticeBarEnd !== false && $settingsNoticeBarEnd > $settingsNoticeBarStart, 'Settings composed notice bar should be locatable.');
 $settingsNoticeBarSource = substr($settingsSource, (int) $settingsNoticeBarStart, (int) $settingsNoticeBarEnd - (int) $settingsNoticeBarStart);
-$settingsTicketingNoticeStart = strpos($settingsSource, 'function vms_render_settings_page_ticketing_stock_notices(array $ticketing_stock_notice_state): void');
-$settingsTicketingNoticeEnd = strpos($settingsSource, 'function vms_settings_page_integrity_scan_normalize_count(');
+$settingsTicketingNoticeStart = strpos($settingsSource, 'function bvmgr_render_settings_page_ticketing_stock_notices(array $ticketing_stock_notice_state): void');
+$settingsTicketingNoticeEnd = strpos($settingsSource, 'function bvmgr_settings_page_integrity_scan_normalize_count(');
 $assert($settingsTicketingNoticeStart !== false && $settingsTicketingNoticeEnd !== false && $settingsTicketingNoticeEnd > $settingsTicketingNoticeStart, 'Settings ticketing stock notice renderer should be locatable.');
 $settingsTicketingNoticeSource = substr($settingsSource, (int) $settingsTicketingNoticeStart, (int) $settingsTicketingNoticeEnd - (int) $settingsTicketingNoticeStart);
-$assert(strpos($settingsPageSource, "'notices_callback' => 'vms_render_settings_page_notice_bar'") !== false, 'Settings shell call should route the default-venue and ticketing-stock notice families through the composed explicit notice callback.');
+$assert(strpos($settingsPageSource, "'notices_callback' => 'bvmgr_render_settings_page_notice_bar'") !== false, 'Settings shell call should route the default-venue and ticketing-stock notice families through the composed explicit notice callback.');
 $assert(strpos($settingsPageSource, "'rich_notices_callback' =>") === false, 'Settings should remain on the simple explicit notice sink only for this pass.');
 $assert(strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';") !== false, 'Settings no-shell fallback heading should remain locatable.');
 $settingsFallbackHeadingPos = strpos($settingsPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';");
-$settingsFallbackNoticePos = strpos($settingsPageSource, 'vms_render_settings_page_notices();');
-$settingsFallbackBufferPos = strpos($settingsPageSource, 'vms_render_settings_page_content(true);');
-$settingsFallbackReplacePos = strpos($settingsPageSource, 'vms_get_settings_page_ticketing_stock_notice_markup()');
+$settingsFallbackNoticePos = strpos($settingsPageSource, 'bvmgr_render_settings_page_notices();');
+$settingsFallbackBufferPos = strpos($settingsPageSource, 'bvmgr_render_settings_page_content(true);');
+$settingsFallbackReplacePos = strpos($settingsPageSource, 'bvmgr_get_settings_page_ticketing_stock_notice_markup()');
 $assert($settingsFallbackHeadingPos !== false && $settingsFallbackNoticePos !== false && $settingsFallbackBufferPos !== false && $settingsFallbackReplacePos !== false && $settingsFallbackHeadingPos < $settingsFallbackNoticePos && $settingsFallbackNoticePos < $settingsFallbackBufferPos && $settingsFallbackBufferPos < $settingsFallbackReplacePos, 'Settings no-shell fallback should preserve the fixed redirect notice before the buffered content pass and replace the stock-notice placeholder at its historical mid-page position.');
-$assert(strpos($settingsPageSource, 'vms_get_settings_page_ticketing_stock_notice_state(true);') !== false, 'Settings page renderer should resolve the ticketing stock notice state once before composing shell or fallback output.');
+$assert(strpos($settingsPageSource, 'bvmgr_get_settings_page_ticketing_stock_notice_state(true);') !== false, 'Settings page renderer should resolve the ticketing stock notice state once before composing shell or fallback output.');
 $assert(strpos($settingsContentSource, 'default_venue_set') === false, 'Settings content callback should no longer emit the moved fixed redirect notice directly.');
 $assert(strpos($settingsContentSource, 'Default venue updated.') === false, 'Settings content callback should no longer contain the moved fixed redirect notice copy.');
 $assert(strpos($settingsContentSource, 'Ticketing stock preview ready:') === false && strpos($settingsContentSource, 'Ticketing stock reconcile complete:') === false, 'Settings content callback should no longer emit the moved ticketing stock notice family directly.');
-$assert(strpos($settingsContentSource, "get_transient('vms_ticketing_stock_reconcile_last')") === false && strpos($settingsContentSource, 'vms_ticketing_stock_preview_transient_key(') === false, 'Settings content callback should no longer perform direct transient reads for the moved ticketing stock notice family.');
-$assert(strpos($settingsContentSource, 'vms_get_settings_page_ticketing_stock_notice_state()') !== false, 'Settings content callback should reuse the resolved ticketing stock notice state.');
-$assert(strpos($settingsContentSource, 'vms_settings_page_ticketing_stock_notice_placeholder()') !== false, 'Settings content callback should preserve the historical no-shell insertion point with a page-local placeholder.');
+$assert(strpos($settingsContentSource, "get_transient('vms_ticketing_stock_reconcile_last')") === false && strpos($settingsContentSource, 'bvmgr_ticketing_stock_preview_transient_key(') === false, 'Settings content callback should no longer perform direct transient reads for the moved ticketing stock notice family.');
+$assert(strpos($settingsContentSource, 'bvmgr_get_settings_page_ticketing_stock_notice_state()') !== false, 'Settings content callback should reuse the resolved ticketing stock notice state.');
+$assert(strpos($settingsContentSource, 'bvmgr_settings_page_ticketing_stock_notice_placeholder()') !== false, 'Settings content callback should preserve the historical no-shell insertion point with a page-local placeholder.');
 $assert(strpos($settingsSource, "return '<!-- vms-settings-ticketing-stock-notice -->';") !== false, 'Settings should define a dedicated placeholder marker for fallback ticketing stock notice replacement.');
 $assert(
 	strpos($settingsNoticeSource, "isset(\$_GET['vms_notice']) && (string) \$_GET['vms_notice'] === 'default_venue_set'") !== false
@@ -1744,7 +1744,7 @@ $assert(strpos($settingsNoticeSource, 'Default venue updated.') !== false, 'Sett
 $assert(strpos($settingsNoticeSource, '<strong>') === false && strpos($settingsNoticeSource, '<a ') === false && strpos($settingsNoticeSource, '<button') === false && strpos($settingsNoticeSource, '<span') === false, 'Settings explicit notice callback should stay within the simple fragment contract.');
 $assert(strpos($settingsNoticeSource, 'get_option(') === false && strpos($settingsNoticeSource, 'get_transient(') === false && strpos($settingsNoticeSource, 'set_transient(') === false && strpos($settingsNoticeSource, 'delete_transient(') === false, 'Settings explicit notice callback should not introduce provider or storage reads or mutations.');
 $assert(strpos($settingsNoticeSource, 'apply_filters(') === false && strpos($settingsNoticeSource, 'do_action(') === false && strpos($settingsNoticeSource, 'settings_errors(') === false && strpos($settingsNoticeSource, 'add_settings_error(') === false, 'Settings explicit notice callback should remain page-local and outside Settings API notice ownership.');
-$assert(strpos($settingsNoticeBarSource, 'vms_render_settings_page_notices();') !== false && strpos($settingsNoticeBarSource, 'vms_render_settings_page_ticketing_stock_notices(vms_get_settings_page_ticketing_stock_notice_state());') !== false, 'Settings composed notice bar should preserve the default-venue notice before the ticketing stock family.');
+$assert(strpos($settingsNoticeBarSource, 'bvmgr_render_settings_page_notices();') !== false && strpos($settingsNoticeBarSource, 'bvmgr_render_settings_page_ticketing_stock_notices(bvmgr_get_settings_page_ticketing_stock_notice_state());') !== false, 'Settings composed notice bar should preserve the default-venue notice before the ticketing stock family.');
 $assert(strpos($settingsNoticeBarSource, 'get_transient(') === false && strpos($settingsNoticeBarSource, 'set_transient(') === false && strpos($settingsNoticeBarSource, 'delete_transient(') === false, 'Settings composed notice bar should not perform direct storage reads or mutations.');
 $assert(
 	(
@@ -1757,7 +1757,7 @@ $assert(
 	),
 	'Settings ticketing stock notice-state resolver should preserve the preview and commit query-flag vocabulary.'
 );
-$assert(strpos($settingsStateSource, 'vms_ticketing_stock_preview_transient_key(get_current_user_id())') !== false && strpos($settingsStateSource, "get_transient('vms_ticketing_stock_reconcile_last')") !== false, 'Settings ticketing stock notice-state resolver should preserve the per-user preview transient lookup and the global commit transient lookup.');
+$assert(strpos($settingsStateSource, 'bvmgr_ticketing_stock_preview_transient_key(get_current_user_id())') !== false && strpos($settingsStateSource, "get_transient('vms_ticketing_stock_reconcile_last')") !== false, 'Settings ticketing stock notice-state resolver should preserve the per-user preview transient lookup and the global commit transient lookup.');
 $assert(strpos($settingsStateSource, 'set_transient(') === false && strpos($settingsStateSource, 'delete_transient(') === false, 'Settings ticketing stock notice-state resolver should not mutate storage.');
 $assert(strpos($settingsTicketingNoticeSource, "esc_html(sprintf('Ticketing stock preview ready: checked=%d would_update=%d skipped=%d errors=%d'") !== false, 'Settings ticketing stock notice renderer should preserve the preview message template.');
 $assert(strpos($settingsTicketingNoticeSource, "esc_html(sprintf('Ticketing stock reconcile complete: checked=%d updated=%d skipped=%d errors=%d'") !== false, 'Settings ticketing stock notice renderer should preserve the commit message template.');
@@ -1768,7 +1768,7 @@ $assert(strpos($settingsSource, 'settings_errors(') === false && strpos($setting
 $assert(strpos($settingsSource, 'vms-settings-default-venue-alert') !== false, 'Settings page should preserve the richer nested default-venue alert family in ordinary content.');
 $assert(strpos($settingsSource, '<strong>Entitlement image sync complete.</strong>') !== false, 'Settings page should preserve the richer entitlement-image-sync notice family in ordinary content.');
 $assert(
-	strpos($settingsSource, 'vms_render_settings_page_integrity_scan_result(vms_get_settings_page_integrity_scan_result_context());') !== false
+	strpos($settingsSource, 'bvmgr_render_settings_page_integrity_scan_result(bvmgr_get_settings_page_integrity_scan_result_context());') !== false
 	&& strpos($settingsSource, '<div class="vms-settings-integrity-scan-result">') !== false
 	&& strpos($settingsSource, "'summary_title' => 'Integrity scan complete.'") !== false,
 	'Settings page should preserve the richer integrity-scan notice family in ordinary content through the dedicated page-local renderer.'
@@ -1802,7 +1802,7 @@ $_GET = array(
 	'vms_notice' => 'default_venue_set',
 );
 ob_start();
-vms_render_settings_page_notices();
+bvmgr_render_settings_page_notices();
 $settingsDefaultVenueNotice = (string) ob_get_clean();
 $assert(
 	$settingsDefaultVenueNotice === '<div class="notice notice-success"><p>Default venue updated.</p></div>',
@@ -1815,7 +1815,7 @@ $assert(
 
 $_GET = array();
 ob_start();
-vms_render_settings_page_notices();
+bvmgr_render_settings_page_notices();
 $settingsMissingNotice = (string) ob_get_clean();
 $assert($settingsMissingNotice === '', 'Settings explicit notice callback should stay silent when the redirect-status flag is absent.');
 
@@ -1823,7 +1823,7 @@ $_GET = array(
 	'vms_notice' => '',
 );
 ob_start();
-vms_render_settings_page_notices();
+bvmgr_render_settings_page_notices();
 $settingsEmptyNotice = (string) ob_get_clean();
 $assert($settingsEmptyNotice === '', 'Settings explicit notice callback should stay silent when the redirect-status flag is empty.');
 
@@ -1831,7 +1831,7 @@ $_GET = array(
 	'vms_notice' => 'not_real',
 );
 ob_start();
-vms_render_settings_page_notices();
+bvmgr_render_settings_page_notices();
 $settingsUnknownNotice = (string) ob_get_clean();
 $assert($settingsUnknownNotice === '', 'Settings explicit notice callback should stay silent for unknown redirect-status values.');
 
@@ -1839,11 +1839,11 @@ $_GET = array(
 	'vms_notice' => '<strong>default_venue_set</strong>',
 );
 ob_start();
-vms_render_settings_page_notices();
+bvmgr_render_settings_page_notices();
 $settingsMalformedNotice = (string) ob_get_clean();
 $assert($settingsMalformedNotice === '', 'Settings explicit notice callback should stay silent for malformed redirect-status values that do not exactly match the fixed slug.');
 
-$settingsPreviewKey = vms_ticketing_stock_preview_transient_key(7);
+$settingsPreviewKey = bvmgr_ticketing_stock_preview_transient_key(7);
 $resetSettingsTicketingStockNoticeState = static function (array $transients = array()): void {
 	$GLOBALS['vms_test_transients'] = $transients;
 	$GLOBALS['vms_test_transient_get_calls'] = 0;
@@ -1856,32 +1856,32 @@ $resetSettingsTicketingStockNoticeState = static function (array $transients = a
 $renderSettingsTicketingStockNotices = static function (array $query, array $transients) use ($resetSettingsTicketingStockNoticeState): string {
 	$_GET = $query;
 	$resetSettingsTicketingStockNoticeState($transients);
-	$state = vms_get_settings_page_ticketing_stock_notice_state(true);
+	$state = bvmgr_get_settings_page_ticketing_stock_notice_state(true);
 	ob_start();
-	vms_render_settings_page_ticketing_stock_notices($state);
+	bvmgr_render_settings_page_ticketing_stock_notices($state);
 	return (string) ob_get_clean();
 };
 $renderSettingsNoticeBar = static function (array $query, array $transients) use ($resetSettingsTicketingStockNoticeState): string {
 	$_GET = $query;
 	$resetSettingsTicketingStockNoticeState($transients);
-	vms_get_settings_page_ticketing_stock_notice_state(true);
+	bvmgr_get_settings_page_ticketing_stock_notice_state(true);
 	ob_start();
-	vms_render_settings_page_notice_bar();
+	bvmgr_render_settings_page_notice_bar();
 	return (string) ob_get_clean();
 };
 $renderSettingsFallbackPage = static function (array $query, array $transients) use ($resetSettingsTicketingStockNoticeState): string {
 	$_GET = $query;
 	$resetSettingsTicketingStockNoticeState($transients);
-	vms_get_settings_page_ticketing_stock_notice_state(true);
+	bvmgr_get_settings_page_ticketing_stock_notice_state(true);
 	ob_start();
 	echo '<div class="wrap"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';
-	vms_render_settings_page_notices();
+	bvmgr_render_settings_page_notices();
 	ob_start();
-	vms_render_settings_page_content(true);
+	bvmgr_render_settings_page_content(true);
 	$fallbackContentHtml = (string) ob_get_clean();
 	$fallbackContentHtml = str_replace(
-		vms_settings_page_ticketing_stock_notice_placeholder(),
-		vms_get_settings_page_ticketing_stock_notice_markup(),
+		bvmgr_settings_page_ticketing_stock_notice_placeholder(),
+		bvmgr_get_settings_page_ticketing_stock_notice_markup(),
 		$fallbackContentHtml
 	);
 	echo $fallbackContentHtml;
@@ -1892,7 +1892,7 @@ $renderSettingsShellPage = static function (array $query, array $transients) use
 	$_GET = $query;
 	$resetSettingsTicketingStockNoticeState($transients);
 	ob_start();
-	vms_render_settings_page();
+	bvmgr_render_settings_page();
 	return (string) ob_get_clean();
 };
 
@@ -2093,12 +2093,12 @@ $resetSettingsTicketingStockNoticeState(
 		),
 	)
 );
-vms_get_settings_page_ticketing_stock_notice_state(true);
+bvmgr_get_settings_page_ticketing_stock_notice_state(true);
 ob_start();
-vms_render_settings_page_content();
+bvmgr_render_settings_page_content();
 $settingsContentWithoutTicketingNotice = (string) ob_get_clean();
 $assert(strpos($settingsContentWithoutTicketingNotice, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1') === false, 'Settings content callback should no longer emit the moved ticketing stock preview notice directly.');
-$assert(strpos($settingsContentWithoutTicketingNotice, vms_settings_page_ticketing_stock_notice_placeholder()) === false, 'Settings content callback should stay placeholder-free during normal shell rendering.');
+$assert(strpos($settingsContentWithoutTicketingNotice, bvmgr_settings_page_ticketing_stock_notice_placeholder()) === false, 'Settings content callback should stay placeholder-free during normal shell rendering.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_get_keys'] === array($settingsPreviewKey), 'Settings content callback should still resolve the preview transient exactly once while omitting the moved notice.');
 
 $_GET = array(
@@ -2114,12 +2114,12 @@ $resetSettingsTicketingStockNoticeState(
 		),
 	)
 );
-vms_get_settings_page_ticketing_stock_notice_state(true);
+bvmgr_get_settings_page_ticketing_stock_notice_state(true);
 ob_start();
-vms_render_settings_page_content(true);
+bvmgr_render_settings_page_content(true);
 $settingsContentWithTicketingPlaceholder = (string) ob_get_clean();
-$assert(strpos($settingsContentWithTicketingPlaceholder, vms_settings_page_ticketing_stock_notice_placeholder()) !== false, 'Settings fallback content pass should preserve the dedicated ticketing stock notice placeholder.');
-$assert(strpos($settingsContentWithTicketingPlaceholder, vms_settings_page_ticketing_stock_notice_placeholder()) < strpos($settingsContentWithTicketingPlaceholder, 'Ticketing inventory tools'), 'Settings fallback placeholder should remain at the historical stock-notice insertion point before the inventory tools heading.');
+$assert(strpos($settingsContentWithTicketingPlaceholder, bvmgr_settings_page_ticketing_stock_notice_placeholder()) !== false, 'Settings fallback content pass should preserve the dedicated ticketing stock notice placeholder.');
+$assert(strpos($settingsContentWithTicketingPlaceholder, bvmgr_settings_page_ticketing_stock_notice_placeholder()) < strpos($settingsContentWithTicketingPlaceholder, 'Ticketing inventory tools'), 'Settings fallback placeholder should remain at the historical stock-notice insertion point before the inventory tools heading.');
 $assert(strpos($settingsContentWithTicketingPlaceholder, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1') === false, 'Settings fallback content pass should still omit the moved ticketing stock preview notice before placeholder replacement.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_get_keys'] === array($settingsPreviewKey), 'Settings fallback content pass should still resolve the preview transient exactly once.');
 
@@ -2142,7 +2142,7 @@ $assert(strpos($settingsShellPage, '<div class="notice notice-info below-h2 vms-
 $assert(substr_count($settingsShellPage, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1') === 1, 'Settings shell render should emit the ticketing stock preview notice exactly once after the content-path emission is removed.');
 $assert(strpos($settingsShellPage, 'Default venue updated.') < strpos($settingsShellPage, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1'), 'Settings shell render should preserve the default-venue notice before the ticketing stock preview notice.');
 $assert(strpos($settingsShellPage, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1') < strpos($settingsShellPage, 'Ticketing inventory tools'), 'Settings shell render should preserve notice-before-content ordering for the moved ticketing stock family.');
-$assert(strpos($settingsShellPage, vms_settings_page_ticketing_stock_notice_placeholder()) === false, 'Settings shell render should not leak the no-shell ticketing stock placeholder into ordinary output.');
+$assert(strpos($settingsShellPage, bvmgr_settings_page_ticketing_stock_notice_placeholder()) === false, 'Settings shell render should not leak the no-shell ticketing stock placeholder into ordinary output.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_get_keys'] === array($settingsPreviewKey), 'Settings shell render should preserve the existing single preview transient lookup.');
 $assert($GLOBALS['vms_test_transient_set_calls'] === 0 && $GLOBALS['vms_test_transient_delete_calls'] === 0, 'Settings shell render should not introduce transient writes or deletes while routing the ticketing stock family through the explicit sink.');
 
@@ -2164,7 +2164,7 @@ $assert(strpos($settingsFallbackPage, '<div class="notice notice-success"><p>Def
 $assert(strpos($settingsFallbackPage, '<div class="notice notice-info"><p>Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1</p></div>') !== false, 'Settings fallback composition should preserve the ticketing stock preview notice fragment.');
 $assert(strpos($settingsFallbackPage, 'Enable ticketing features by default for new Event Plans') < strpos($settingsFallbackPage, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1'), 'Settings fallback composition should preserve the historical mid-page position of the ticketing stock preview notice after the ticketing settings controls.');
 $assert(strpos($settingsFallbackPage, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1') < strpos($settingsFallbackPage, 'Ticketing inventory tools'), 'Settings fallback composition should preserve the historical stock-notice position before the inventory tools heading.');
-$assert(strpos($settingsFallbackPage, vms_settings_page_ticketing_stock_notice_placeholder()) === false, 'Settings fallback composition should fully replace the dedicated ticketing stock placeholder.');
+$assert(strpos($settingsFallbackPage, bvmgr_settings_page_ticketing_stock_notice_placeholder()) === false, 'Settings fallback composition should fully replace the dedicated ticketing stock placeholder.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_get_keys'] === array($settingsPreviewKey), 'Settings fallback composition should preserve the existing single preview transient lookup.');
 $assert(strpos($statusSource, 'function bvmgr_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
 $assert(substr_count($statusSource, "'notices_callback' => 'bvmgr_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
@@ -2465,36 +2465,36 @@ $assert(strpos($staffNonemptyPage, 'No staff certifications are waiting for revi
 $assert(strpos($staffNonemptyPage, 'Jamie Queue') !== false && strpos($staffNonemptyPage, 'Food Handler') !== false, 'Staff Certifications page renderer should keep using the resolved dataset for nonempty page content.');
 $assert(strpos($staffNonemptyPage, '>1</strong> certification needs review') !== false, 'Staff Certifications nonempty summary should still use the same resolved dataset count.');
 
-$assert(strpos($socialSource, 'function vms_social_render_notices(): void') !== false, 'Social Sharing should expose a dedicated explicit notice callback.');
-$assert(substr_count($socialSource, "'notices_callback' => 'vms_social_render_notices'") === 1, 'Social Sharing shell call should supply its explicit notice callback exactly once.');
-$socialNoticeStart = strpos($socialSource, 'function vms_social_render_notices(): void');
-$socialNoticeEnd = strpos($socialSource, "if (!function_exists('vms_social_render_admin_page'))");
+$assert(strpos($socialSource, 'function bvmgr_social_render_notices(): void') !== false, 'Social Sharing should expose a dedicated explicit notice callback.');
+$assert(substr_count($socialSource, "'notices_callback' => 'bvmgr_social_render_notices'") === 1, 'Social Sharing shell call should supply its explicit notice callback exactly once.');
+$socialNoticeStart = strpos($socialSource, 'function bvmgr_social_render_notices(): void');
+$socialNoticeEnd = strpos($socialSource, "if (!function_exists('bvmgr_social_render_admin_page'))");
 $assert($socialNoticeStart !== false && $socialNoticeEnd !== false && $socialNoticeEnd > $socialNoticeStart, 'Social Sharing explicit notice callback body should be locatable.');
 $socialNoticeSource = substr($socialSource, (int) $socialNoticeStart, (int) $socialNoticeEnd - (int) $socialNoticeStart);
-$socialPageStart = strpos($socialSource, 'function vms_social_render_admin_page(): void');
-$socialPageEnd = strpos($socialSource, "if (!function_exists('vms_social_render_admin_page_content'))");
+$socialPageStart = strpos($socialSource, 'function bvmgr_social_render_admin_page(): void');
+$socialPageEnd = strpos($socialSource, "if (!function_exists('bvmgr_social_render_admin_page_content'))");
 $assert($socialPageStart !== false && $socialPageEnd !== false && $socialPageEnd > $socialPageStart, 'Social Sharing page renderer body should be locatable.');
 $socialPageSource = substr($socialSource, (int) $socialPageStart, (int) $socialPageEnd - (int) $socialPageStart);
-$socialContentStart = strpos($socialSource, 'function vms_social_render_admin_page_content(): void');
-$socialContentEnd = strpos($socialSource, "if (!function_exists('vms_social_render_overview_tab'))");
+$socialContentStart = strpos($socialSource, 'function bvmgr_social_render_admin_page_content(): void');
+$socialContentEnd = strpos($socialSource, "if (!function_exists('bvmgr_social_render_overview_tab'))");
 $assert($socialContentStart !== false && $socialContentEnd !== false && $socialContentEnd > $socialContentStart, 'Social Sharing content callback body should be locatable.');
 $socialContentSource = substr($socialSource, (int) $socialContentStart, (int) $socialContentEnd - (int) $socialContentStart);
-$assert(strpos($socialNoticeSource, 'sanitize_text_field(vms_social_admin_query_arg(\'vms_social_notice\'))') !== false, 'Social Sharing explicit notice callback should preserve the sanitized notice message source.');
-$assert(strpos($socialNoticeSource, 'sanitize_key(vms_social_admin_query_arg(\'vms_social_notice_type\'))') !== false, 'Social Sharing explicit notice callback should preserve the sanitized notice type source.');
+$assert(strpos($socialNoticeSource, 'sanitize_text_field(bvmgr_social_admin_query_arg(\'vms_social_notice\'))') !== false, 'Social Sharing explicit notice callback should preserve the sanitized notice message source.');
+$assert(strpos($socialNoticeSource, 'sanitize_key(bvmgr_social_admin_query_arg(\'vms_social_notice_type\'))') !== false, 'Social Sharing explicit notice callback should preserve the sanitized notice type source.');
 $assert(strpos($socialNoticeSource, "array('error', 'warning', 'success', 'info')") !== false, 'Social Sharing explicit notice callback should preserve the existing notice type allowlist.');
 $assert(strpos($socialNoticeSource, '<div class="notice notice-') !== false && strpos($socialNoticeSource, 'is-dismissible') !== false, 'Social Sharing explicit notice callback should preserve the dismissible notice class family.');
 $assert(strpos($socialNoticeSource, 'esc_attr($class)') !== false && strpos($socialNoticeSource, 'esc_html($notice)') !== false, 'Social Sharing explicit notice callback should preserve contextual escaping.');
 $assert(strpos($socialNoticeSource, '<strong>') === false && strpos($socialNoticeSource, '<a ') === false && strpos($socialNoticeSource, '<button') === false && strpos($socialNoticeSource, '<span') === false, 'Social Sharing explicit notice callback should stay within the simple fragment contract.');
-$assert(strpos($socialPageSource, "'notices_callback' => 'vms_social_render_notices'") !== false, 'Social Sharing page renderer should pass the explicit notice callback through the Administrator shell.');
-$assert(strpos($socialPageSource, "echo '<h1>'") !== false && strpos($socialPageSource, 'vms_social_render_notices();') !== false, 'Social Sharing no-shell fallback should preserve the pre-content notice ordering.');
-$assert(strpos($socialContentSource, 'vms_social_render_notices();') === false, 'Social Sharing content callback should no longer emit the moved page-local notice family.');
+$assert(strpos($socialPageSource, "'notices_callback' => 'bvmgr_social_render_notices'") !== false, 'Social Sharing page renderer should pass the explicit notice callback through the Administrator shell.');
+$assert(strpos($socialPageSource, "echo '<h1>'") !== false && strpos($socialPageSource, 'bvmgr_social_render_notices();') !== false, 'Social Sharing no-shell fallback should preserve the pre-content notice ordering.');
+$assert(strpos($socialContentSource, 'bvmgr_social_render_notices();') === false, 'Social Sharing content callback should no longer emit the moved page-local notice family.');
 
 $_GET = array(
 	'vms_social_notice' => 'Accounts synced.',
 	'vms_social_notice_type' => 'warning',
 );
 ob_start();
-vms_social_render_notices();
+bvmgr_social_render_notices();
 $socialWarningNotice = (string) ob_get_clean();
 $assert(
 	$socialWarningNotice === '<div class="notice notice-warning is-dismissible"><p>Accounts synced.</p></div>',
@@ -2510,7 +2510,7 @@ $_GET = array(
 	'vms_social_notice_type' => 'danger',
 );
 ob_start();
-vms_social_render_notices();
+bvmgr_social_render_notices();
 $socialFallbackNotice = (string) ob_get_clean();
 $assert(
 	$socialFallbackNotice === '<div class="notice notice-success is-dismissible"><p>Queue run complete.</p></div>',
@@ -2522,7 +2522,7 @@ $_GET = array(
 	'vms_social_notice_type' => 'info',
 );
 ob_start();
-vms_social_render_notices();
+bvmgr_social_render_notices();
 $socialNoNotice = (string) ob_get_clean();
 $assert($socialNoNotice === '', 'Social Sharing explicit notice callback should stay silent when no notice text is present.');
 

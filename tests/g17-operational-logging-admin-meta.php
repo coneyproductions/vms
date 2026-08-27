@@ -207,9 +207,9 @@ HISTORICAL,
 		'',
 		'Approvals historical logger doc reconstruction failed'
 	);
-	$current_logger = g17b_extract_function($source, 'vms_approvals_queue_log');
+	$current_logger = g17b_extract_function($source, 'bvmgr_approvals_queue_log');
 	$historical_logger = <<<'HISTORICAL'
-function vms_approvals_queue_log(string $message, array $context = array()): void
+function bvmgr_approvals_queue_log(string $message, array $context = array()): void
 	{
 		$line = '[VMS Approvals] ' . trim($message);
 		if (!empty($context)) {
@@ -226,7 +226,7 @@ HISTORICAL;
 	$call_replacements = array(
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'approvals_provider_url_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -237,7 +237,7 @@ vms_approvals_queue_log(
 				);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'Provider screen URL callback failed.',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -248,7 +248,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'approvals_provider_pending_callback_missing',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -258,7 +258,7 @@ vms_approvals_queue_log(
 			);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'Provider missing pending_count_callback.',
 				array('provider' => (string) ($provider['id'] ?? ''))
 			);
@@ -266,7 +266,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'approvals_provider_pending_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -277,7 +277,7 @@ vms_approvals_queue_log(
 				);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'Provider count callback returned WP_Error.',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -288,7 +288,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'approvals_provider_pending_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -299,7 +299,7 @@ vms_approvals_queue_log(
 			);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'Provider count callback threw an exception.',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -310,7 +310,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'approvals_provider_summary_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -321,7 +321,7 @@ vms_approvals_queue_log(
 			);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'Provider summary callback threw an exception.',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -332,7 +332,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'approvals_provider_url_missing',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -342,7 +342,7 @@ vms_approvals_queue_log(
 				);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'Provider screen URL is empty.',
 					array('provider' => (string) ($provider['id'] ?? ''))
 				);
@@ -356,13 +356,13 @@ HISTORICAL,
 	return g17b_replace_once(
 		$source,
 		<<<'CURRENT'
-		update_option(vms_approvals_queue_audit_option_key(), $existing, false);
+		update_option(bvmgr_approvals_queue_audit_option_key(), $existing, false);
 	}
 CURRENT,
 		<<<'HISTORICAL'
-		update_option(vms_approvals_queue_audit_option_key(), $existing, false);
+		update_option(bvmgr_approvals_queue_audit_option_key(), $existing, false);
 
-		vms_approvals_queue_log(
+		bvmgr_approvals_queue_log(
 			'Status transition recorded.',
 			array(
 				'queue_id' => $queue_id,
@@ -467,7 +467,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 	}
 
 	$approvals = $g17b_sources[$tree]['approvals'];
-	$logger = g17b_extract_function($approvals, 'vms_approvals_queue_log');
+	$logger = g17b_extract_function($approvals, 'bvmgr_approvals_queue_log');
 	g17b_same(1, substr_count($logger, 'bvmgr_record_operational_issue('), $tree . ' approvals wrapper must invoke the adapter once');
 	g17b_same(1, substr_count($logger, "array('provider', 'operation', 'status')"), $tree . ' approvals wrapper allowlist changed');
 	foreach (array('message', 'queue_id', 'item_id', 'actor_id', 'from_status', 'to_status', 'wp_json_encode') as $forbidden) {
@@ -485,7 +485,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 	}
 	g17b_same(0, substr_count($approvals, '->getMessage()'), $tree . ' approvals must not serialize Throwable messages');
 	g17b_same(0, substr_count($approvals, '->get_error_message()'), $tree . ' approvals must not serialize WP_Error messages');
-	g17b_same(0, substr_count(g17b_extract_function($approvals, 'vms_approvals_queue_record_transition'), 'vms_approvals_queue_log('), $tree . ' successful transitions must not duplicate the durable audit');
+	g17b_same(0, substr_count(g17b_extract_function($approvals, 'bvmgr_approvals_queue_record_transition'), 'bvmgr_approvals_queue_log('), $tree . ' successful transitions must not duplicate the durable audit');
 
 	$tours = $g17b_sources[$tree]['tours'];
 	g17b_same(0, substr_count($tours, '$this->debug('), $tree . ' Tours debug calls remain');
@@ -503,12 +503,12 @@ g17b_same($g17b_sources['mirror']['vendor_list'], $g17b_sources['shadow']['vendo
 foreach (array(
 	'helpers' => array('bvmgr_vendor_tax_profile_missing_items'),
 	'approvals' => array(
-		'vms_approvals_queue_log',
-		'vms_approvals_queue_provider_url',
-		'vms_approvals_queue_provider_pending_count',
-		'vms_approvals_queue_provider_summary_items',
-		'vms_approvals_queue_collect_snapshot',
-		'vms_approvals_queue_record_transition',
+		'bvmgr_approvals_queue_log',
+		'bvmgr_approvals_queue_provider_url',
+		'bvmgr_approvals_queue_provider_pending_count',
+		'bvmgr_approvals_queue_provider_summary_items',
+		'bvmgr_approvals_queue_collect_snapshot',
+		'bvmgr_approvals_queue_record_transition',
 	),
 	'menu' => array('bvmgr_admin_render_season_dates_page'),
 ) as $key => $functions) {
@@ -701,12 +701,12 @@ function bvmgr_record_operational_issue(string $event_code, array $context = arr
 	return false;
 }
 
-function vms_approvals_queue_get_providers(): array
+function bvmgr_approvals_queue_get_providers(): array
 {
 	return $GLOBALS['g17b_provider_rows'];
 }
 
-function vms_approvals_queue_user_can_provider(array $provider): bool
+function bvmgr_approvals_queue_user_can_provider(array $provider): bool
 {
 	unset($provider);
 	return true;
@@ -721,15 +721,15 @@ function user_can(WP_User $user, string $capability): bool
 eval(g17b_extract_function($g17b_sources['mirror']['helpers'], 'bvmgr_vendor_tax_profile_missing_items'));
 eval(g17b_extract_function($g17b_sources['mirror']['vendor_list'], 'bvmgr_admin_vendor_list_get_meta_scalar'));
 foreach (array(
-	'vms_approvals_queue_notice_transient_key',
-	'vms_approvals_queue_log',
-	'vms_approvals_queue_add_admin_notice',
-	'vms_approvals_queue_provider_url',
-	'vms_approvals_queue_provider_pending_count',
-	'vms_approvals_queue_provider_summary_items',
-	'vms_approvals_queue_collect_snapshot',
-	'vms_approvals_queue_audit_option_key',
-	'vms_approvals_queue_record_transition',
+	'bvmgr_approvals_queue_notice_transient_key',
+	'bvmgr_approvals_queue_log',
+	'bvmgr_approvals_queue_add_admin_notice',
+	'bvmgr_approvals_queue_provider_url',
+	'bvmgr_approvals_queue_provider_pending_count',
+	'bvmgr_approvals_queue_provider_summary_items',
+	'bvmgr_approvals_queue_collect_snapshot',
+	'bvmgr_approvals_queue_audit_option_key',
+	'bvmgr_approvals_queue_record_transition',
 ) as $function) {
 	eval(g17b_extract_function($g17b_sources['mirror']['approvals'], $function));
 }
@@ -786,7 +786,7 @@ g17b_same(
 g17b_assert(strpos(serialize($GLOBALS['g17b_events']), 'secret-vendor-meta') === false, 'Vendor-list runtime event leaked a meta key/value sentinel');
 
 $GLOBALS['g17b_events'] = array();
-g17b_same(0, vms_approvals_queue_provider_pending_count(array('id' => 'Provider Unsafe!', 'pending_count_callback' => null)), 'Missing approvals callback result changed');
+g17b_same(0, bvmgr_approvals_queue_provider_pending_count(array('id' => 'Provider Unsafe!', 'pending_count_callback' => null)), 'Missing approvals callback result changed');
 g17b_same(
 	array(
 		'event_code' => 'approvals_provider_pending_callback_missing',
@@ -801,7 +801,7 @@ $g17b_wp_error = new WP_Error('provider_failed', 'secret WP_Error message');
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	0,
-	vms_approvals_queue_provider_pending_count(
+	bvmgr_approvals_queue_provider_pending_count(
 		array(
 			'id' => 'provider_one',
 			'pending_count_callback' => static fn() => $g17b_wp_error,
@@ -816,7 +816,7 @@ g17b_same('warning', $GLOBALS['g17b_transients']['vms_approvals_notice_42'][0]['
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	0,
-	vms_approvals_queue_provider_pending_count(
+	bvmgr_approvals_queue_provider_pending_count(
 		array(
 			'id' => 'provider_two',
 			'pending_count_callback' => static function (): int {
@@ -833,7 +833,7 @@ g17b_same(2, count($GLOBALS['g17b_transients']['vms_approvals_notice_42'] ?? arr
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	'https://example.test/fallback',
-	vms_approvals_queue_provider_url(
+	bvmgr_approvals_queue_provider_url(
 		array(
 			'id' => 'provider_three',
 			'screen_url' => 'https://example.test/fallback',
@@ -850,7 +850,7 @@ g17b_assert(($GLOBALS['g17b_events'][0]['error'] ?? null) instanceof RuntimeExce
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	array(),
-	vms_approvals_queue_provider_summary_items(
+	bvmgr_approvals_queue_provider_summary_items(
 		array(
 			'id' => 'provider_four',
 			'summary_callback' => static function (): array {
@@ -872,14 +872,14 @@ $GLOBALS['g17b_provider_rows'] = array(
 	),
 );
 $GLOBALS['g17b_events'] = array();
-$g17b_snapshot = vms_approvals_queue_collect_snapshot(false);
+$g17b_snapshot = bvmgr_approvals_queue_collect_snapshot(false);
 g17b_same('', $g17b_snapshot['providers'][0]['screen_url'] ?? null, 'Empty approvals URL result changed');
 g17b_same('approvals_provider_url_missing', $GLOBALS['g17b_events'][0]['event_code'] ?? '', 'Empty approvals URL event changed');
 g17b_same(array('provider' => 'provider_empty_url', 'operation' => 'resolve_url', 'status' => 'missing'), $GLOBALS['g17b_events'][0]['context'] ?? null, 'Empty approvals URL context changed');
 
 $GLOBALS['g17b_options']['vms_approvals_audit_log'] = array();
 $GLOBALS['g17b_events'] = array();
-vms_approvals_queue_record_transition('Vendor Queue!', 901, 'pending', 'approved', array('note' => 'Approved safely'));
+bvmgr_approvals_queue_record_transition('Vendor Queue!', 901, 'pending', 'approved', array('note' => 'Approved safely'));
 g17b_same(0, count($GLOBALS['g17b_events']), 'Successful transition must not emit a duplicate operational event');
 g17b_same(
 	array(

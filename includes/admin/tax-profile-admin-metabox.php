@@ -15,7 +15,7 @@ add_action('add_meta_boxes', function () {
         add_meta_box(
             'vms_tax_profile_admin_box',
             __('Tax Profile (Admin)', 'backstage-venue-manager'),
-            'vms_render_tax_profile_admin_metabox',
+            'bvmgr_render_tax_profile_admin_metabox',
             $screen,
             'normal',
             'default' 
@@ -129,7 +129,7 @@ add_action('save_post', function ($post_id, $post) {
 
 }, 20, 2);
 
-function vms_render_tax_profile_admin_metabox($post)
+function bvmgr_render_tax_profile_admin_metabox($post)
 {
     $id = (int) $post->ID;
     $is_staff_employee = false;

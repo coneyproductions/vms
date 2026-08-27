@@ -3038,8 +3038,8 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
         $server_upload_bytes = function_exists('wp_max_upload_size') ? (int) wp_max_upload_size() : $effective_upload_bytes;
         $results_count = count((array) $requests);
         $help_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.approvals.credentials" data-vms-tour="approvals.credentials.help">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-        if (function_exists('vms_approvals_queue_render_help_button')) {
-            $help_button = vms_approvals_queue_render_help_button(
+        if (function_exists('bvmgr_approvals_queue_render_help_button')) {
+            $help_button = bvmgr_approvals_queue_render_help_button(
                 'vms.approvals.credentials',
                 'approvals.credentials.help',
                 __('Start Guided Tour', 'backstage-venue-manager')
@@ -3400,8 +3400,8 @@ if (!function_exists('bvmgr_ticketing_verification_handle_decision')) {
 
         bvmgr_ticketing_verification_delete_proof_asset_for_request($request_id);
 
-        if (function_exists('vms_approvals_queue_record_transition')) {
-            vms_approvals_queue_record_transition(
+        if (function_exists('bvmgr_approvals_queue_record_transition')) {
+            bvmgr_approvals_queue_record_transition(
                 'credential_access',
                 (int) $request_id,
                 $from_status,

@@ -2,19 +2,19 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_approvals_queue_notice_transient_key')) {
-	function vms_approvals_queue_notice_transient_key(int $user_id): string
+if (!function_exists('bvmgr_approvals_queue_notice_transient_key')) {
+	function bvmgr_approvals_queue_notice_transient_key(int $user_id): string
 	{
 		return 'vms_approvals_notice_' . max(0, $user_id);
 	}
 }
 
-if (!function_exists('vms_approvals_queue_log')) {
+if (!function_exists('bvmgr_approvals_queue_log')) {
 	/**
 	 * @param array<string,mixed> $context
 	 * @param mixed               $error
 	 */
-	function vms_approvals_queue_log(string $event_code, array $context = array(), $error = null): void
+	function bvmgr_approvals_queue_log(string $event_code, array $context = array(), $error = null): void
 	{
 		if (!function_exists('bvmgr_record_operational_issue')) {
 			return;
@@ -37,15 +37,15 @@ if (!function_exists('vms_approvals_queue_log')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_add_admin_notice')) {
-	function vms_approvals_queue_add_admin_notice(string $message, string $type = 'warning'): void
+if (!function_exists('bvmgr_approvals_queue_add_admin_notice')) {
+	function bvmgr_approvals_queue_add_admin_notice(string $message, string $type = 'warning'): void
 	{
 		$user_id = get_current_user_id();
 		if ($user_id <= 0) {
 			return;
 		}
 
-		$key = vms_approvals_queue_notice_transient_key((int) $user_id);
+		$key = bvmgr_approvals_queue_notice_transient_key((int) $user_id);
 		$rows = get_transient($key);
 		if (!is_array($rows)) {
 			$rows = array();
@@ -61,15 +61,15 @@ if (!function_exists('vms_approvals_queue_add_admin_notice')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_render_admin_notices')) {
-	function vms_approvals_queue_render_admin_notices(): void
+if (!function_exists('bvmgr_approvals_queue_render_admin_notices')) {
+	function bvmgr_approvals_queue_render_admin_notices(): void
 	{
 		$user_id = get_current_user_id();
 		if ($user_id <= 0) {
 			return;
 		}
 
-		$key = vms_approvals_queue_notice_transient_key((int) $user_id);
+		$key = bvmgr_approvals_queue_notice_transient_key((int) $user_id);
 		$rows = get_transient($key);
 		if (!is_array($rows) || empty($rows)) {
 			return;
@@ -99,13 +99,13 @@ if (!function_exists('vms_approvals_queue_render_admin_notices')) {
 		}
 	}
 }
-add_action('admin_notices', 'vms_approvals_queue_render_admin_notices', 9);
+add_action('admin_notices', 'bvmgr_approvals_queue_render_admin_notices', 9);
 
-if (!function_exists('vms_approvals_queue_register_provider')) {
+if (!function_exists('bvmgr_approvals_queue_register_provider')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_approvals_queue_register_provider(string $provider_id, array $args): void
+	function bvmgr_approvals_queue_register_provider(string $provider_id, array $args): void
 	{
 		$provider_id = sanitize_key($provider_id);
 		if ($provider_id === '') {
@@ -152,12 +152,12 @@ if (!function_exists('vms_approvals_queue_register_provider')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_normalize_filtered_provider')) {
+if (!function_exists('bvmgr_approvals_queue_normalize_filtered_provider')) {
 	/**
 	 * @param mixed $provider
 	 * @return array<string,mixed>|null
 	 */
-	function vms_approvals_queue_normalize_filtered_provider(string $provider_id, $provider): ?array
+	function bvmgr_approvals_queue_normalize_filtered_provider(string $provider_id, $provider): ?array
 	{
 		$provider_id = sanitize_key($provider_id);
 		if ($provider_id === '' || !is_array($provider)) {
@@ -176,11 +176,11 @@ if (!function_exists('vms_approvals_queue_normalize_filtered_provider')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_get_providers')) {
+if (!function_exists('bvmgr_approvals_queue_get_providers')) {
 	/**
 	 * @return array<string,array<string,mixed>>
 	 */
-	function vms_approvals_queue_get_providers(): array
+	function bvmgr_approvals_queue_get_providers(): array
 	{
 		$providers = isset($GLOBALS['bvmgr_approvals_queue_providers']) && is_array($GLOBALS['bvmgr_approvals_queue_providers'])
 			? $GLOBALS['bvmgr_approvals_queue_providers']
@@ -197,7 +197,7 @@ if (!function_exists('vms_approvals_queue_get_providers')) {
 			if ($id === '' && is_array($provider) && isset($provider['id'])) {
 				$id = (string) $provider['id'];
 			}
-			$row = vms_approvals_queue_normalize_filtered_provider($id, $provider);
+			$row = bvmgr_approvals_queue_normalize_filtered_provider($id, $provider);
 			if ($row === null) {
 				continue;
 			}
@@ -216,11 +216,11 @@ if (!function_exists('vms_approvals_queue_get_providers')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_user_can_provider')) {
+if (!function_exists('bvmgr_approvals_queue_user_can_provider')) {
 	/**
 	 * @param array<string,mixed> $provider
 	 */
-	function vms_approvals_queue_user_can_provider(array $provider): bool
+	function bvmgr_approvals_queue_user_can_provider(array $provider): bool
 	{
 		$capability = sanitize_key((string) ($provider['capability'] ?? ''));
 		if ($capability === '') {
@@ -230,11 +230,11 @@ if (!function_exists('vms_approvals_queue_user_can_provider')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_provider_url')) {
+if (!function_exists('bvmgr_approvals_queue_provider_url')) {
 	/**
 	 * @param array<string,mixed> $provider
 	 */
-	function vms_approvals_queue_provider_url(array $provider): string
+	function bvmgr_approvals_queue_provider_url(array $provider): string
 	{
 		if (!empty($provider['screen_url_callback']) && is_callable($provider['screen_url_callback'])) {
 			try {
@@ -243,7 +243,7 @@ if (!function_exists('vms_approvals_queue_provider_url')) {
 					return esc_url_raw($resolved);
 				}
 			} catch (Throwable $e) {
-				vms_approvals_queue_log(
+				bvmgr_approvals_queue_log(
 					'approvals_provider_url_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -259,15 +259,15 @@ if (!function_exists('vms_approvals_queue_provider_url')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_provider_pending_count')) {
+if (!function_exists('bvmgr_approvals_queue_provider_pending_count')) {
 	/**
 	 * @param array<string,mixed> $provider
 	 */
-	function vms_approvals_queue_provider_pending_count(array $provider): int
+	function bvmgr_approvals_queue_provider_pending_count(array $provider): int
 	{
 		$callback = $provider['pending_count_callback'] ?? null;
 		if (!is_callable($callback)) {
-			vms_approvals_queue_log(
+			bvmgr_approvals_queue_log(
 				'approvals_provider_pending_callback_missing',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -281,7 +281,7 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 		try {
 			$value = call_user_func($callback, $provider);
 			if (is_wp_error($value)) {
-				vms_approvals_queue_log(
+				bvmgr_approvals_queue_log(
 					'approvals_provider_pending_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -290,7 +290,7 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 					),
 					$value
 				);
-				vms_approvals_queue_add_admin_notice(
+				bvmgr_approvals_queue_add_admin_notice(
 					__('Approvals count refresh failed for one queue. Check logs for details.', 'backstage-venue-manager'),
 					'warning'
 				);
@@ -299,7 +299,7 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 
 			return max(0, absint($value));
 		} catch (Throwable $e) {
-			vms_approvals_queue_log(
+			bvmgr_approvals_queue_log(
 				'approvals_provider_pending_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -308,7 +308,7 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 				),
 				$e
 			);
-			vms_approvals_queue_add_admin_notice(
+			bvmgr_approvals_queue_add_admin_notice(
 				__('Approvals count refresh failed for one queue. Check logs for details.', 'backstage-venue-manager'),
 				'warning'
 			);
@@ -318,12 +318,12 @@ if (!function_exists('vms_approvals_queue_provider_pending_count')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_provider_summary_items')) {
+if (!function_exists('bvmgr_approvals_queue_provider_summary_items')) {
 	/**
 	 * @param array<string,mixed> $provider
 	 * @return array<int,array<string,string>>
 	 */
-	function vms_approvals_queue_provider_summary_items(array $provider): array
+	function bvmgr_approvals_queue_provider_summary_items(array $provider): array
 	{
 		$callback = $provider['summary_callback'] ?? null;
 		if (!is_callable($callback)) {
@@ -352,7 +352,7 @@ if (!function_exists('vms_approvals_queue_provider_summary_items')) {
 			}
 			return array_slice($items, 0, 5);
 		} catch (Throwable $e) {
-			vms_approvals_queue_log(
+			bvmgr_approvals_queue_log(
 				'approvals_provider_summary_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -366,11 +366,11 @@ if (!function_exists('vms_approvals_queue_provider_summary_items')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_collect_snapshot')) {
+if (!function_exists('bvmgr_approvals_queue_collect_snapshot')) {
 	/**
 	 * @return array{generated_at:string,total_pending:int,providers:array<int,array<string,mixed>>}
 	 */
-	function vms_approvals_queue_collect_snapshot(bool $capability_aware = true): array
+	function bvmgr_approvals_queue_collect_snapshot(bool $capability_aware = true): array
 	{
 		static $cache = array();
 
@@ -385,15 +385,15 @@ if (!function_exists('vms_approvals_queue_collect_snapshot')) {
 			'providers' => array(),
 		);
 
-		foreach (vms_approvals_queue_get_providers() as $provider) {
-			if ($capability_aware && !vms_approvals_queue_user_can_provider($provider)) {
+		foreach (bvmgr_approvals_queue_get_providers() as $provider) {
+			if ($capability_aware && !bvmgr_approvals_queue_user_can_provider($provider)) {
 				continue;
 			}
 
-			$pending_count = vms_approvals_queue_provider_pending_count($provider);
-			$screen_url = vms_approvals_queue_provider_url($provider);
+			$pending_count = bvmgr_approvals_queue_provider_pending_count($provider);
+			$screen_url = bvmgr_approvals_queue_provider_url($provider);
 			if ($screen_url === '') {
-				vms_approvals_queue_log(
+				bvmgr_approvals_queue_log(
 					'approvals_provider_url_missing',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -405,7 +405,7 @@ if (!function_exists('vms_approvals_queue_collect_snapshot')) {
 
 			$summary_items = array();
 			if ($pending_count > 0) {
-				$summary_items = vms_approvals_queue_provider_summary_items($provider);
+				$summary_items = bvmgr_approvals_queue_provider_summary_items($provider);
 			}
 
 			$row = array(
@@ -430,11 +430,11 @@ if (!function_exists('vms_approvals_queue_collect_snapshot')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_current_user_can_any_provider')) {
-	function vms_approvals_queue_current_user_can_any_provider(): bool
+if (!function_exists('bvmgr_approvals_queue_current_user_can_any_provider')) {
+	function bvmgr_approvals_queue_current_user_can_any_provider(): bool
 	{
-		foreach (vms_approvals_queue_get_providers() as $provider) {
-			if (vms_approvals_queue_user_can_provider($provider)) {
+		foreach (bvmgr_approvals_queue_get_providers() as $provider) {
+			if (bvmgr_approvals_queue_user_can_provider($provider)) {
 				return true;
 			}
 		}
@@ -442,8 +442,8 @@ if (!function_exists('vms_approvals_queue_current_user_can_any_provider')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_badge_html')) {
-	function vms_approvals_queue_badge_html(int $count): string
+if (!function_exists('bvmgr_approvals_queue_badge_html')) {
+	function bvmgr_approvals_queue_badge_html(int $count): string
 	{
 		$count = max(0, absint($count));
 		if ($count <= 0) {
@@ -454,8 +454,8 @@ if (!function_exists('vms_approvals_queue_badge_html')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_strip_badge_markup')) {
-	function vms_approvals_queue_strip_badge_markup(string $label): string
+if (!function_exists('bvmgr_approvals_queue_strip_badge_markup')) {
+	function bvmgr_approvals_queue_strip_badge_markup(string $label): string
 	{
 		$label = preg_replace('/\s*<span class="awaiting-mod[^>]*>.*?<\/span>\s*/', '', $label);
 		if (!is_string($label)) {
@@ -465,11 +465,11 @@ if (!function_exists('vms_approvals_queue_strip_badge_markup')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_update_menu_entry')) {
-	function vms_approvals_queue_update_menu_entry(array $entry, string $label, int $pending_count = 0): array
+if (!function_exists('bvmgr_approvals_queue_update_menu_entry')) {
+	function bvmgr_approvals_queue_update_menu_entry(array $entry, string $label, int $pending_count = 0): array
 	{
-		$text = vms_approvals_queue_strip_badge_markup((string) $label);
-		$entry[0] = $text . vms_approvals_queue_badge_html($pending_count);
+		$text = bvmgr_approvals_queue_strip_badge_markup((string) $label);
+		$entry[0] = $text . bvmgr_approvals_queue_badge_html($pending_count);
 		if (isset($entry[3])) {
 			$entry[3] = $text;
 		}
@@ -477,19 +477,19 @@ if (!function_exists('vms_approvals_queue_update_menu_entry')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
-	function vms_approvals_queue_apply_menu_badges(): void
+if (!function_exists('bvmgr_approvals_queue_apply_menu_badges')) {
+	function bvmgr_approvals_queue_apply_menu_badges(): void
 	{
 		if (!is_admin()) {
 			return;
 		}
-		if (!vms_approvals_queue_current_user_can_any_provider()) {
+		if (!bvmgr_approvals_queue_current_user_can_any_provider()) {
 			return;
 		}
 
 		global $menu, $submenu;
 
-		$snapshot = vms_approvals_queue_collect_snapshot(true);
+		$snapshot = bvmgr_approvals_queue_collect_snapshot(true);
 		$total_pending = max(0, (int) ($snapshot['total_pending'] ?? 0));
 
 		// Top-level Backstage Venue Manager badge.
@@ -498,7 +498,7 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 				if (!is_array($item) || (string) ($item[2] ?? '') !== 'vms-dashboard') {
 					continue;
 				}
-				$menu[$index] = vms_approvals_queue_update_menu_entry(
+				$menu[$index] = bvmgr_approvals_queue_update_menu_entry(
 					$item,
 					__('Backstage Venue Manager', 'backstage-venue-manager'),
 					$total_pending
@@ -534,7 +534,7 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 			}
 
 			if ($slug === 'vms-approvals') {
-				$submenu['vms-dashboard'][$index] = vms_approvals_queue_update_menu_entry(
+				$submenu['vms-dashboard'][$index] = bvmgr_approvals_queue_update_menu_entry(
 					$item,
 					__('Approvals', 'backstage-venue-manager'),
 					$total_pending
@@ -547,7 +547,7 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 					continue;
 				}
 
-				$submenu['vms-dashboard'][$index] = vms_approvals_queue_update_menu_entry(
+				$submenu['vms-dashboard'][$index] = bvmgr_approvals_queue_update_menu_entry(
 					$item,
 					(string) ($provider_labels[$provider_id] ?? ''),
 					(int) ($provider_counts[$provider_id] ?? 0)
@@ -557,13 +557,13 @@ if (!function_exists('vms_approvals_queue_apply_menu_badges')) {
 		}
 	}
 }
-add_action('admin_menu', 'vms_approvals_queue_apply_menu_badges', 1200);
-add_action('admin_head', 'vms_approvals_queue_apply_menu_badges', 20);
+add_action('admin_menu', 'bvmgr_approvals_queue_apply_menu_badges', 1200);
+add_action('admin_head', 'bvmgr_approvals_queue_apply_menu_badges', 20);
 
-if (!function_exists('vms_approvals_queue_register_menu')) {
-	function vms_approvals_queue_register_menu(): void
+if (!function_exists('bvmgr_approvals_queue_register_menu')) {
+	function bvmgr_approvals_queue_register_menu(): void
 	{
-		if (!vms_approvals_queue_current_user_can_any_provider()) {
+		if (!bvmgr_approvals_queue_current_user_can_any_provider()) {
 			return;
 		}
 
@@ -573,14 +573,14 @@ if (!function_exists('vms_approvals_queue_register_menu')) {
 			__('Approvals', 'backstage-venue-manager'),
 			'read',
 			'vms-approvals',
-			'vms_approvals_queue_render_page'
+			'bvmgr_approvals_queue_render_page'
 		);
 	}
 }
-add_action('admin_menu', 'vms_approvals_queue_register_menu', 32);
+add_action('admin_menu', 'bvmgr_approvals_queue_register_menu', 32);
 
-if (!function_exists('vms_approvals_queue_default_vendor_post_type')) {
-	function vms_approvals_queue_default_vendor_post_type(): string
+if (!function_exists('bvmgr_approvals_queue_default_vendor_post_type')) {
+	function bvmgr_approvals_queue_default_vendor_post_type(): string
 	{
 		$post_type = '';
 		if (function_exists('bvmgr_admin_ui_vendor_application_post_type')) {
@@ -596,8 +596,8 @@ if (!function_exists('vms_approvals_queue_default_vendor_post_type')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_verification_pending_count')) {
-	function vms_approvals_queue_verification_pending_count(): int
+if (!function_exists('bvmgr_approvals_queue_verification_pending_count')) {
+	function bvmgr_approvals_queue_verification_pending_count(): int
 	{
 		if (!function_exists('bvmgr_ticketing_verification_request_post_types')) {
 			return 0;
@@ -614,11 +614,11 @@ if (!function_exists('vms_approvals_queue_verification_pending_count')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_verification_summary')) {
+if (!function_exists('bvmgr_approvals_queue_verification_summary')) {
 	/**
 	 * @return array<int,array<string,string>>
 	 */
-	function vms_approvals_queue_verification_summary(): array
+	function bvmgr_approvals_queue_verification_summary(): array
 	{
 		if (!function_exists('bvmgr_ticketing_verification_request_post_types')) {
 			return array();
@@ -667,8 +667,8 @@ if (!function_exists('vms_approvals_queue_verification_summary')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_vendor_pending_count')) {
-	function vms_approvals_queue_vendor_pending_count(): int
+if (!function_exists('bvmgr_approvals_queue_vendor_pending_count')) {
+	function bvmgr_approvals_queue_vendor_pending_count(): int
 	{
 		if (function_exists('bvmgr_vendor_app_count_pending')) {
 			return max(0, absint(bvmgr_vendor_app_count_pending()));
@@ -677,13 +677,13 @@ if (!function_exists('vms_approvals_queue_vendor_pending_count')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_vendor_summary')) {
+if (!function_exists('bvmgr_approvals_queue_vendor_summary')) {
 	/**
 	 * @return array<int,array<string,string>>
 	 */
-	function vms_approvals_queue_vendor_summary(): array
+	function bvmgr_approvals_queue_vendor_summary(): array
 	{
-		$post_type = vms_approvals_queue_default_vendor_post_type();
+		$post_type = bvmgr_approvals_queue_default_vendor_post_type();
 		if ($post_type === '' || !post_type_exists($post_type)) {
 			return array();
 		}
@@ -741,14 +741,14 @@ if (!function_exists('vms_approvals_queue_vendor_summary')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_register_default_providers')) {
-	function vms_approvals_queue_register_default_providers(): void
+if (!function_exists('bvmgr_approvals_queue_register_default_providers')) {
+	function bvmgr_approvals_queue_register_default_providers(): void
 	{
 		$verification_cap = function_exists('bvmgr_ticketing_verification_manage_capability')
 			? (string) bvmgr_ticketing_verification_manage_capability()
 			: 'manage_options';
 
-		vms_approvals_queue_register_provider(
+		bvmgr_approvals_queue_register_provider(
 			'credential_access',
 			array(
 				'label' => __('Credential / Special Ticket Access Applications', 'backstage-venue-manager'),
@@ -756,8 +756,8 @@ if (!function_exists('vms_approvals_queue_register_default_providers')) {
 				'section_label' => __('Credential / Special Ticket Access Applications', 'backstage-venue-manager'),
 				'description' => __('Review submissions for veteran, teacher, and other verified-eligibility ticket programs.', 'backstage-venue-manager'),
 				'capability' => $verification_cap,
-				'pending_count_callback' => 'vms_approvals_queue_verification_pending_count',
-				'summary_callback' => 'vms_approvals_queue_verification_summary',
+				'pending_count_callback' => 'bvmgr_approvals_queue_verification_pending_count',
+				'summary_callback' => 'bvmgr_approvals_queue_verification_summary',
 				'screen_url_callback' => static function (): string {
 					return (string) add_query_arg(
 						array(
@@ -772,10 +772,10 @@ if (!function_exists('vms_approvals_queue_register_default_providers')) {
 			)
 		);
 
-		$vendor_post_type = vms_approvals_queue_default_vendor_post_type();
+		$vendor_post_type = bvmgr_approvals_queue_default_vendor_post_type();
 		$vendor_screen_slug = 'edit.php?post_type=' . $vendor_post_type;
 
-		vms_approvals_queue_register_provider(
+		bvmgr_approvals_queue_register_provider(
 			'vendor_applications',
 			array(
 				'label' => __('Vendor Applications', 'backstage-venue-manager'),
@@ -783,8 +783,8 @@ if (!function_exists('vms_approvals_queue_register_default_providers')) {
 				'section_label' => __('Vendor Applications', 'backstage-venue-manager'),
 				'description' => __('Approve or reject incoming vendor submissions before they move into active vendor records.', 'backstage-venue-manager'),
 				'capability' => 'edit_posts',
-				'pending_count_callback' => 'vms_approvals_queue_vendor_pending_count',
-				'summary_callback' => 'vms_approvals_queue_vendor_summary',
+				'pending_count_callback' => 'bvmgr_approvals_queue_vendor_pending_count',
+				'summary_callback' => 'bvmgr_approvals_queue_vendor_summary',
 				'screen_url_callback' => static function () use ($vendor_screen_slug): string {
 					return admin_url($vendor_screen_slug);
 				},
@@ -798,20 +798,20 @@ if (!function_exists('vms_approvals_queue_register_default_providers')) {
 		);
 	}
 }
-add_action('init', 'vms_approvals_queue_register_default_providers', 40);
+add_action('init', 'bvmgr_approvals_queue_register_default_providers', 40);
 
-if (!function_exists('vms_approvals_queue_audit_option_key')) {
-	function vms_approvals_queue_audit_option_key(): string
+if (!function_exists('bvmgr_approvals_queue_audit_option_key')) {
+	function bvmgr_approvals_queue_audit_option_key(): string
 	{
 		return 'vms_approvals_audit_log';
 	}
 }
 
-if (!function_exists('vms_approvals_queue_record_transition')) {
+if (!function_exists('bvmgr_approvals_queue_record_transition')) {
 	/**
 	 * @param array<string,mixed> $context
 	 */
-	function vms_approvals_queue_record_transition(string $queue_id, int $item_id, string $from_status, string $to_status, array $context = array()): void
+	function bvmgr_approvals_queue_record_transition(string $queue_id, int $item_id, string $from_status, string $to_status, array $context = array()): void
 	{
 		$queue_id = sanitize_key($queue_id);
 		$item_id = absint($item_id);
@@ -831,24 +831,24 @@ if (!function_exists('vms_approvals_queue_record_transition')) {
 			'note' => sanitize_text_field((string) ($context['note'] ?? '')),
 		);
 
-		$existing = get_option(vms_approvals_queue_audit_option_key(), array());
+		$existing = get_option(bvmgr_approvals_queue_audit_option_key(), array());
 		if (!is_array($existing)) {
 			$existing = array();
 		}
 		$existing[] = $entry;
 		$existing = array_values(array_slice($existing, -300, 300, true));
-		update_option(vms_approvals_queue_audit_option_key(), $existing, false);
+		update_option(bvmgr_approvals_queue_audit_option_key(), $existing, false);
 	}
 }
 
-if (!function_exists('vms_approvals_queue_recent_audit_entries')) {
+if (!function_exists('bvmgr_approvals_queue_recent_audit_entries')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_approvals_queue_recent_audit_entries(int $limit = 12): array
+	function bvmgr_approvals_queue_recent_audit_entries(int $limit = 12): array
 	{
 		$limit = max(1, min(50, absint($limit)));
-		$existing = get_option(vms_approvals_queue_audit_option_key(), array());
+		$existing = get_option(bvmgr_approvals_queue_audit_option_key(), array());
 		if (!is_array($existing) || empty($existing)) {
 			return array();
 		}
@@ -856,8 +856,8 @@ if (!function_exists('vms_approvals_queue_recent_audit_entries')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_render_help_button')) {
-	function vms_approvals_queue_render_help_button(string $tour_id, string $anchor, string $label): string
+if (!function_exists('bvmgr_approvals_queue_render_help_button')) {
+	function bvmgr_approvals_queue_render_help_button(string $tour_id, string $anchor, string $label): string
 	{
 		$button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="' . esc_attr($tour_id) . '" data-vms-tour="' . esc_attr($anchor) . '">' . esc_html($label) . '</button>';
 		if (function_exists('bvmgr_render_help_button')) {
@@ -874,11 +874,11 @@ if (!function_exists('vms_approvals_queue_render_help_button')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_allowed_help_html')) {
+if (!function_exists('bvmgr_approvals_queue_allowed_help_html')) {
 	/**
 	 * @return array<string,array<string,bool>>
 	 */
-	function vms_approvals_queue_allowed_help_html(): array
+	function bvmgr_approvals_queue_allowed_help_html(): array
 	{
 		return array(
 			'button' => array(
@@ -907,18 +907,18 @@ if (!function_exists('vms_approvals_queue_allowed_help_html')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_render_page')) {
-	function vms_approvals_queue_render_page(): void
+if (!function_exists('bvmgr_approvals_queue_render_page')) {
+	function bvmgr_approvals_queue_render_page(): void
 	{
-		if (!vms_approvals_queue_current_user_can_any_provider()) {
+		if (!bvmgr_approvals_queue_current_user_can_any_provider()) {
 			wp_die(esc_html__('You do not have permission to access approvals.', 'backstage-venue-manager'));
 		}
 
-		$snapshot = vms_approvals_queue_collect_snapshot(true);
+		$snapshot = bvmgr_approvals_queue_collect_snapshot(true);
 		$total_pending = max(0, (int) ($snapshot['total_pending'] ?? 0));
 		$providers = (array) ($snapshot['providers'] ?? array());
-		$audit_rows = vms_approvals_queue_recent_audit_entries(10);
-		$help_button = vms_approvals_queue_render_help_button(
+		$audit_rows = bvmgr_approvals_queue_recent_audit_entries(10);
+		$help_button = bvmgr_approvals_queue_render_help_button(
 			'vms.approvals.queue',
 			'approvals.queue.help',
 			__('Start Guided Tour', 'backstage-venue-manager')
@@ -927,7 +927,7 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 		echo '<div class="wrap vms-approvals-page" data-vms-tour="approvals.queue.root">';
 		echo '<h1>' . esc_html__('Approvals', 'backstage-venue-manager') . '</h1>';
 		echo '<p class="description">' . esc_html__('Use this queue first whenever pending badges appear. It consolidates approval work across credential and vendor workflows so submissions are not missed.', 'backstage-venue-manager') . '</p>';
-		echo '<p data-vms-tour="approvals.queue.help">' . wp_kses($help_button, vms_approvals_queue_allowed_help_html()) . '</p>';
+		echo '<p data-vms-tour="approvals.queue.help">' . wp_kses($help_button, bvmgr_approvals_queue_allowed_help_html()) . '</p>';
 
 		echo '<section class="vms-approvals-overview" data-vms-tour="approvals.queue.total">';
 		echo '<h2>' . esc_html__('Pending Review Items', 'backstage-venue-manager') . '</h2>';
@@ -1032,14 +1032,14 @@ if (!function_exists('vms_approvals_queue_render_page')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_render_dashboard_card')) {
-	function vms_approvals_queue_render_dashboard_card(): void
+if (!function_exists('bvmgr_approvals_queue_render_dashboard_card')) {
+	function bvmgr_approvals_queue_render_dashboard_card(): void
 	{
-		if (!vms_approvals_queue_current_user_can_any_provider()) {
+		if (!bvmgr_approvals_queue_current_user_can_any_provider()) {
 			return;
 		}
 
-		$snapshot = vms_approvals_queue_collect_snapshot(true);
+		$snapshot = bvmgr_approvals_queue_collect_snapshot(true);
 		$providers = (array) ($snapshot['providers'] ?? array());
 		if (empty($providers)) {
 			return;
@@ -1071,8 +1071,8 @@ if (!function_exists('vms_approvals_queue_render_dashboard_card')) {
 	}
 }
 
-if (!function_exists('vms_approvals_queue_print_styles')) {
-	function vms_approvals_queue_print_styles(): void
+if (!function_exists('bvmgr_approvals_queue_print_styles')) {
+	function bvmgr_approvals_queue_print_styles(): void
 	{
 		if (!is_admin()) {
 			return;
@@ -1106,10 +1106,10 @@ if (!function_exists('vms_approvals_queue_print_styles')) {
 		echo '</style>';
 	}
 }
-add_action('admin_head', 'vms_approvals_queue_print_styles', 30);
+add_action('admin_head', 'bvmgr_approvals_queue_print_styles', 30);
 
-if (!function_exists('vms_approvals_queue_render_vendor_list_tour_launcher')) {
-	function vms_approvals_queue_render_vendor_list_tour_launcher(): void
+if (!function_exists('bvmgr_approvals_queue_render_vendor_list_tour_launcher')) {
+	function bvmgr_approvals_queue_render_vendor_list_tour_launcher(): void
 	{
 		if (!is_admin()) {
 			return;
@@ -1121,24 +1121,24 @@ if (!function_exists('vms_approvals_queue_render_vendor_list_tour_launcher')) {
 			return;
 		}
 
-		$button = vms_approvals_queue_render_help_button(
+		$button = bvmgr_approvals_queue_render_help_button(
 			'vms.approvals.vendor_applications',
 			'approvals.vendor.help',
 			__('Start Guided Tour', 'backstage-venue-manager')
 		);
 		echo '<div class="notice notice-info" data-vms-tour="approvals.vendor.help"><p><strong>' . esc_html__('Vendor approvals live on this table.', 'backstage-venue-manager') . '</strong> ';
 		echo esc_html__('Review pending applications promptly so approved vendors are not blocked from onboarding workflows.', 'backstage-venue-manager');
-		echo '</p><p>' . wp_kses($button, vms_approvals_queue_allowed_help_html()) . '</p></div>';
+		echo '</p><p>' . wp_kses($button, bvmgr_approvals_queue_allowed_help_html()) . '</p></div>';
 	}
 }
-add_action('all_admin_notices', 'vms_approvals_queue_render_vendor_list_tour_launcher', 50);
+add_action('all_admin_notices', 'bvmgr_approvals_queue_render_vendor_list_tour_launcher', 50);
 
-if (!function_exists('vms_approvals_queue_register_tours')) {
+if (!function_exists('bvmgr_approvals_queue_register_tours')) {
 	/**
 	 * @param array<int,array<string,mixed>> $tours
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_approvals_queue_register_tours(array $tours): array
+	function bvmgr_approvals_queue_register_tours(array $tours): array
 	{
 		$audience = array(
 			'capabilities_any' => array('manage_options'),
@@ -1325,4 +1325,4 @@ if (!function_exists('vms_approvals_queue_register_tours')) {
 		return $tours;
 	}
 }
-add_filter('vms_tours_register', 'vms_approvals_queue_register_tours');
+add_filter('vms_tours_register', 'bvmgr_approvals_queue_register_tours');

@@ -102,7 +102,11 @@ try {
 	$progressGate = BVMGR_WPORG_Prefix_Scanner_Inventory::gate($root, $inventory, $withoutOneB3, $manifest);
 	$assert(($progressGate['status'] ?? '') === 'PASS', 'Removing a mapped B3 finding must count as monotonic migration progress.');
 	$alreadyMigratedSites = (int) ($manifest['completed_batches']['B3']['counts']['migrated_declaration_sites'] ?? 0);
-	$assert(($progressGate['removed_authoritative_findings'] ?? 0) === $alreadyMigratedSites + 1, 'Monotonic gate must report prior B3 progress plus the one newly removed finding.');
+	if ($remainingB3Sites > 0) {
+		$assert(($progressGate['removed_authoritative_findings'] ?? 0) === $alreadyMigratedSites + 1, 'Monotonic gate must report prior B3 progress plus the one newly removed finding.');
+	} else {
+		$assert(($progressGate['removed_authoritative_findings'] ?? 0) === $alreadyMigratedSites, 'Completed B3 gate must preserve the exact terminal removed-finding count.');
+	}
 
 	$unknownGlobalRows = $strictRows;
 	$unknownGlobalRows[] = array(
@@ -121,7 +125,7 @@ try {
 	$completedB3Manifest = $manifest;
 	$completedB3Manifest['completed_batches']['B3'] = array('status' => 'complete');
 	$completedB3Gate = BVMGR_WPORG_Prefix_Scanner_Inventory::gate($root, $inventory, $strictRows, $completedB3Manifest);
-	$assert(($completedB3Gate['status'] ?? '') === 'FAIL', 'B3 findings must fail after B3 is marked complete.');
+	$assert(($completedB3Gate['status'] ?? '') === ($remainingB3Sites > 0 ? 'FAIL' : 'PASS'), 'B3 completion gate status must reflect whether any B3 findings remain.');
 	$assert(count((array) ($completedB3Gate['completed_batch_residuals'] ?? array())) === $remainingB3Sites, 'All currently remaining B3 rows must be reported after B3 completion.');
 } catch (Throwable $exception) {
 	$failures[] = $exception->getMessage();

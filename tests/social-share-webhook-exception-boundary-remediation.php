@@ -259,7 +259,7 @@ function wp_json_encode($value)
 /**
  * @return array<string,mixed>
  */
-function vms_social_account_token_json(int $account_id): array
+function bvmgr_social_account_token_json(int $account_id): array
 {
 	$tokens = $GLOBALS['vms_test_tokens'] ?? array();
 	return is_array($tokens[$account_id] ?? null) ? $tokens[$account_id] : array();
@@ -332,7 +332,7 @@ function sanitize_key($value): string
  * @param mixed $snapshot
  * @return array<string,mixed>
  */
-function vms_social_queue_decode_payload_snapshot($snapshot): array
+function bvmgr_social_queue_decode_payload_snapshot($snapshot): array
 {
 	unset($snapshot);
 	return $GLOBALS['vms_test_snapshot_state'];
@@ -342,7 +342,7 @@ function vms_social_queue_decode_payload_snapshot($snapshot): array
  * @param array<string,mixed> $row
  * @return array<string,mixed>
  */
-function vms_social_queue_render_for_row(array $row): array
+function bvmgr_social_queue_render_for_row(array $row): array
 {
 	unset($row);
 	return $GLOBALS['vms_test_render_result'];
@@ -351,7 +351,7 @@ function vms_social_queue_render_for_row(array $row): array
 /**
  * @return array<string,mixed>|null
  */
-function vms_social_venue_map_for_platform(int $venue_id, string $platform): ?array
+function bvmgr_social_venue_map_for_platform(int $venue_id, string $platform): ?array
 {
 	unset($venue_id, $platform);
 	return null;
@@ -369,7 +369,7 @@ function bvmgr_social_get_provider(string $platform)
 /**
  * @param array<string,mixed> $data
  */
-function vms_social_queue_update(int $queue_id, array $data): void
+function bvmgr_social_queue_update(int $queue_id, array $data): void
 {
 	$GLOBALS['vms_test_queue_updates'][] = array(
 		'queue_id' => $queue_id,
@@ -380,7 +380,7 @@ function vms_social_queue_update(int $queue_id, array $data): void
 /**
  * @param array<string,mixed> $details
  */
-function vms_social_audit_log(string $action, array $details = array(), int $queue_id = 0, string $platform = '', ?int $actor_user_id = null): void
+function bvmgr_social_audit_log(string $action, array $details = array(), int $queue_id = 0, string $platform = '', ?int $actor_user_id = null): void
 {
 	$GLOBALS['vms_test_audit_logs'][] = array(
 		'action' => $action,
@@ -394,7 +394,7 @@ function vms_social_audit_log(string $action, array $details = array(), int $que
 /**
  * @param array<string,mixed> $meta_patch
  */
-function vms_social_account_set_auth_state(int $account_id, string $auth_state, array $meta_patch = array()): void
+function bvmgr_social_account_set_auth_state(int $account_id, string $auth_state, array $meta_patch = array()): void
 {
 	$GLOBALS['vms_test_auth_state_calls'][] = array(
 		'account_id' => $account_id,
@@ -406,12 +406,12 @@ function vms_social_account_set_auth_state(int $account_id, string $auth_state, 
 /**
  * @return array<string,int>
  */
-function vms_social_get_settings(): array
+function bvmgr_social_get_settings(): array
 {
 	return array('max_attempts' => 5);
 }
 
-function vms_social_next_attempt_utc(int $attempt): string
+function bvmgr_social_next_attempt_utc(int $attempt): string
 {
 	unset($attempt);
 	return '2099-01-01 00:00:00';
@@ -421,7 +421,7 @@ function vms_social_next_attempt_utc(int $attempt): string
  * @param mixed $value
  * @return mixed
  */
-function vms_social_sanitize_details($value)
+function bvmgr_social_sanitize_details($value)
 {
 	return $value;
 }
@@ -485,7 +485,7 @@ try {
 	);
 
 	require_once $webhookPath;
-	eval(vms_test_extract_function($queueRunnerSource, 'vms_social_queue_process_item'));
+	eval(vms_test_extract_function($queueRunnerSource, 'bvmgr_social_queue_process_item'));
 
 	$GLOBALS['vms_test_tokens'][7] = array(
 		'webhook_url' => 'https://hooks.example.test/publish?token=secret-query-token',
@@ -560,7 +560,7 @@ try {
 		'signing_secret' => 'secret-signing-value',
 	);
 	$GLOBALS['vms_test_wp_remote_response'] = new WP_Error('http_request_failed', '<strong>Temporary outage</strong> & retry');
-	vms_social_queue_process_item(vms_test_seed_queue_row(101));
+	bvmgr_social_queue_process_item(vms_test_seed_queue_row(101));
 	$queueUpdate = vms_test_last_queue_update();
 	vms_test_assert_same('failed', $queueUpdate['status'] ?? null, 'Queue runner should preserve the failed status for retryable webhook transport errors.');
 	vms_test_assert_same(1, $queueUpdate['attempts'] ?? null, 'Queue runner should increment attempts for webhook failures.');
@@ -584,7 +584,7 @@ try {
 		'response' => array('code' => 403),
 		'body' => '<html>denied</html>',
 	);
-	vms_social_queue_process_item(vms_test_seed_queue_row(202));
+	bvmgr_social_queue_process_item(vms_test_seed_queue_row(202));
 	$authUpdate = vms_test_last_queue_update();
 	vms_test_assert_same('failed', $authUpdate['status'] ?? null, 'Queue runner should preserve the failed status for webhook auth failures.');
 	vms_test_assert_same(1, $authUpdate['attempts'] ?? null, 'Queue runner should increment attempts for webhook auth failures.');

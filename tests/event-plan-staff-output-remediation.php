@@ -110,7 +110,7 @@ try {
 		'get_terms(',
 		'bvmgr_staffing_staff_candidate_status_for_role(',
 		'bvmgr_vendor_tax_profile_missing_items(',
-		'vms_get_tax_bypass_status(',
+		'bvmgr_get_tax_bypass_status(',
 		'get_the_title(',
 		'wp_kses_post(',
 		'wp_kses(',

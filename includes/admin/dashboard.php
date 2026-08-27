@@ -84,8 +84,8 @@ function bvmgr_dashboard_render_today_week_block(): void
       <h2>Financial Snapshot</h2>
       <div class="vms-panel-body" data-panel="financial">Loading…</div>
     </section>
-    <?php if (function_exists('vms_goals_render_dashboard_panel')) : ?>
-      <?php vms_goals_render_dashboard_panel(); ?>
+    <?php if (function_exists('bvmgr_goals_render_dashboard_panel')) : ?>
+      <?php bvmgr_goals_render_dashboard_panel(); ?>
     <?php endif; ?>
     <?php if (class_exists('BVMGR_Tours') && is_callable(array('BVMGR_Tours', 'render_dashboard_tile'))) : ?>
       <?php BVMGR_Tours::render_dashboard_tile(); ?>

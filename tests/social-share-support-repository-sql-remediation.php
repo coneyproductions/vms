@@ -310,7 +310,7 @@ require $paths['event_panel'];
 // Existing template rows short-circuit seeding after one fully prepared identifier count.
 social_reset($db);
 $db->get_var_queue = array(2);
-vms_social_seed_default_templates();
+bvmgr_social_seed_default_templates();
 social_same(array('prepare', 'get_var'), array_column($db->log, 'kind'), 'Existing templates should prevent every seed insert.');
 $prepare = social_last_prepare($db);
 social_same('SELECT COUNT(*) FROM %i', $prepare['query'], 'Installer count SQL shape changed.');
@@ -320,7 +320,7 @@ social_same('SELECT COUNT(*) FROM `wp_vms_social_templates`', $prepare['sql'], '
 // Empty installations retain the exact four-row seed order, defaults, formats, and timestamp.
 social_reset($db);
 $db->get_var_queue = array(0);
-vms_social_seed_default_templates();
+bvmgr_social_seed_default_templates();
 $inserts = social_calls($db, 'insert');
 social_same(4, count($inserts), 'Empty installations should seed exactly four templates.');
 social_same(array('facebook', 'linkedin', 'x', 'mock'), array_column(array_column($inserts, 'data'), 'platform'), 'Default template seed ordering changed.');
@@ -334,7 +334,7 @@ foreach ($inserts as $insert) {
 
 // Audit writes retain sanitization/redaction and the existing insert shape.
 social_reset($db);
-vms_social_audit_log('Publish Now!', array('client_secret' => 'hidden', 'result' => ' ok '), 0, 'Web Hook!');
+bvmgr_social_audit_log('Publish Now!', array('client_secret' => 'hidden', 'result' => ' ok '), 0, 'Web Hook!');
 $audit_insert = social_calls($db, 'insert')[0];
 social_same('wp_vms_social_audit', $audit_insert['table'], 'Audit writes should retain their plugin-owned table.');
 social_same(array('%d', '%s', '%d', '%s', '%s', '%s'), $audit_insert['format'], 'Audit insert formats changed.');
@@ -348,14 +348,14 @@ social_same(array('client_secret' => '[redacted]', 'result' => 'ok'), $audit_det
 // Both audit-history branches retain search fields, ordering, limits, prepare arguments, and fresh reads.
 social_reset($db);
 $db->get_results_queue = array(array(array('id' => 3)));
-social_same(array(array('id' => 3)), vms_social_audit_recent(0, ''), 'Unfiltered audit results changed.');
+social_same(array(array('id' => 3)), bvmgr_social_audit_recent(0, ''), 'Unfiltered audit results changed.');
 $prepare = social_last_prepare($db);
 social_same('SELECT * FROM %i ORDER BY id DESC LIMIT %d', $prepare['query'], 'Unfiltered audit query changed.');
 social_same(array('wp_vms_social_audit', 1), $prepare['args'], 'Unfiltered audit prepare arguments changed.');
 
 social_reset($db);
 $db->get_results_queue = array(array(array('id' => 4)));
-social_same(array(array('id' => 4)), vms_social_audit_recent(999, ' Need_100% '), 'Filtered audit results changed.');
+social_same(array(array('id' => 4)), bvmgr_social_audit_recent(999, ' Need_100% '), 'Filtered audit results changed.');
 $prepare = social_last_prepare($db);
 $like = '%Need\\_100\\%%';
 social_same(
@@ -370,26 +370,26 @@ social_contains(' ORDER BY id DESC LIMIT 500', $prepare['sql'], 'Filtered audit 
 
 social_reset($db);
 $db->get_results_queue = array(array(array('id' => 5)), array(array('id' => 6)));
-social_same(5, vms_social_audit_recent(10)[0]['id'], 'First audit read changed.');
-social_same(6, vms_social_audit_recent(10)[0]['id'], 'Repeated audit reads should remain request-fresh.');
+social_same(5, bvmgr_social_audit_recent(10)[0]['id'], 'First audit read changed.');
+social_same(6, bvmgr_social_audit_recent(10)[0]['id'], 'Repeated audit reads should remain request-fresh.');
 social_same(2, count(social_calls($db, 'get_results')), 'Audit history must not acquire persistent or request caching.');
 
 // Template reads preserve invalid-ID failure, exact selection, default ordering, and fresh repository state.
 social_reset($db);
-social_same(null, vms_social_template_get(0), 'Invalid template IDs should still fail closed.');
+social_same(null, bvmgr_social_template_get(0), 'Invalid template IDs should still fail closed.');
 social_same(array(), $db->log, 'Invalid template IDs should not query the database.');
 
 social_reset($db);
 $db->get_row_queue = array(array('id' => 9, 'platform' => 'facebook'));
-social_same(array('id' => 9, 'platform' => 'facebook'), vms_social_template_get(9), 'Template ID read result changed.');
+social_same(array('id' => 9, 'platform' => 'facebook'), bvmgr_social_template_get(9), 'Template ID read result changed.');
 $prepare = social_last_prepare($db);
 social_same('SELECT * FROM %i WHERE id = %d', $prepare['query'], 'Template ID query changed.');
 social_same(array('wp_vms_social_templates', 9), $prepare['args'], 'Template ID prepare arguments changed.');
 
 social_reset($db);
 $db->get_row_queue = array(array('id' => 7), array('id' => 8));
-social_same(7, vms_social_template_default_for_platform('Linked In!')['id'], 'First default-template read changed.');
-social_same(8, vms_social_template_default_for_platform('Linked In!')['id'], 'Repeated default-template reads should remain current.');
+social_same(7, bvmgr_social_template_default_for_platform('Linked In!')['id'], 'First default-template read changed.');
+social_same(8, bvmgr_social_template_default_for_platform('Linked In!')['id'], 'Repeated default-template reads should remain current.');
 foreach ($db->prepares as $prepare) {
 	social_same(
 		'SELECT * FROM %i WHERE platform = %s ORDER BY is_default DESC, id ASC LIMIT 1',
@@ -402,15 +402,15 @@ social_same(2, count(social_calls($db, 'get_row')), 'Template reads must not acq
 
 social_reset($db);
 $db->get_row_queue = array(null, array('id' => 12, 'platform' => 'x'));
-social_same(12, vms_social_template_for_platform('x', 99)['id'], 'Missing requested templates should retain default fallback selection.');
+social_same(12, bvmgr_social_template_for_platform('x', 99)['id'], 'Missing requested templates should retain default fallback selection.');
 social_same(array('wp_vms_social_templates', 99), $db->prepares[0]['args'], 'Requested-template lookup order changed.');
 social_same(array('wp_vms_social_templates', 'x'), $db->prepares[1]['args'], 'Default-template fallback order changed.');
 
 // Posted-queue checks preserve exact status semantics, boolean results, prepare order, and request-fresh reads.
 social_reset($db);
 $db->get_var_queue = array(0, 2);
-social_same(false, vms_social_event_has_posted_queue(71), 'Zero posted rows should remain false.');
-social_same(true, vms_social_event_has_posted_queue(71), 'Positive posted rows should remain true.');
+social_same(false, bvmgr_social_event_has_posted_queue(71), 'Zero posted rows should remain false.');
+social_same(true, bvmgr_social_event_has_posted_queue(71), 'Positive posted rows should remain true.');
 foreach ($db->prepares as $prepare) {
 	social_same(
 		"SELECT COUNT(*) FROM %i WHERE event_plan_id = %d AND status = 'posted'",
@@ -480,8 +480,8 @@ foreach ($expected_annotations as $file => $codes) {
 $combined_source = implode("\n", $sources);
 social_same(0, substr_count($combined_source, 'PluginCheck.Security.DirectDB.UnescapedDBParameter'), 'Prepared %i identifiers must eliminate UnescapedDBParameter without suppression.');
 social_same(0, substr_count($combined_source, 'WordPress.DB.PreparedSQL.InterpolatedNotPrepared'), 'Prepared %i identifiers must eliminate interpolation findings without suppression.');
-$audit_log_source = social_extract_function($sources['audit'], 'vms_social_audit_log');
-$seed_source = social_extract_function($sources['installer'], 'vms_social_seed_default_templates');
+$audit_log_source = social_extract_function($sources['audit'], 'bvmgr_social_audit_log');
+$seed_source = social_extract_function($sources['installer'], 'bvmgr_social_seed_default_templates');
 social_same(0, substr_count($audit_log_source, 'WordPress.DB.DirectDatabaseQuery.NoCaching'), 'Audit inserts should receive DirectQuery-only annotation.');
 social_same(1, substr_count($audit_log_source, 'WordPress.DB.DirectDatabaseQuery.DirectQuery'), 'Audit insert should have one DirectQuery annotation.');
 social_same(1, substr_count($seed_source, 'WordPress.DB.DirectDatabaseQuery.NoCaching'), 'Only the installer count should have NoCaching annotation.');
@@ -507,18 +507,18 @@ $shadow_event_source = (string) file_get_contents($shadow_root . '/includes/soci
 social_check($shadow_event_source !== '', 'Shadow event-panel source should be readable.');
 social_check(hash('sha256', $sources['event_panel']) !== hash('sha256', $shadow_event_source), 'Intentional whole-file event-panel divergence should remain preserved.');
 social_same(
-	social_extract_function($sources['event_panel'], 'vms_social_event_has_posted_queue'),
-	social_extract_function($shadow_event_source, 'vms_social_event_has_posted_queue'),
+	social_extract_function($sources['event_panel'], 'bvmgr_social_event_has_posted_queue'),
+	social_extract_function($shadow_event_source, 'bvmgr_social_event_has_posted_queue'),
 	'Owned posted-queue function should retain mirror/shadow parity.'
 );
 social_same(
 	'e78ef742e9e2efbe3b786e56150d8cc4c506b4f4cc85a25ea7720db0a38c69a3',
-	hash('sha256', social_without_function($sources['event_panel'], 'vms_social_event_has_posted_queue')),
+	hash('sha256', social_without_function($sources['event_panel'], 'bvmgr_social_event_has_posted_queue')),
 	'Mirror event-panel projection outside the owned function changed.'
 );
 social_same(
 	'f6ffef88e5886ba8fdb36ea1f7399dc6c2cdb80cd04c58940f79bf9ecb95544e',
-	hash('sha256', social_without_function($shadow_event_source, 'vms_social_event_has_posted_queue')),
+	hash('sha256', social_without_function($shadow_event_source, 'bvmgr_social_event_has_posted_queue')),
 	'Shadow event-panel projection outside the owned function changed.'
 );
 

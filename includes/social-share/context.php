@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_social_event_meta_key')) {
-	function vms_social_event_meta_key(string $field, string $fallback): string
+if (!function_exists('bvmgr_social_event_meta_key')) {
+	function bvmgr_social_event_meta_key(string $field, string $fallback): string
 	{
 		if (function_exists('bvmgr_meta_key')) {
 			$key = (string) bvmgr_meta_key('event_plan', $field);
@@ -14,8 +14,8 @@ if (!function_exists('vms_social_event_meta_key')) {
 	}
 }
 
-if (!function_exists('vms_social_normalize_whitespace')) {
-	function vms_social_normalize_whitespace(string $input): string
+if (!function_exists('bvmgr_social_normalize_whitespace')) {
+	function bvmgr_social_normalize_whitespace(string $input): string
 	{
 		$input = preg_replace('/[\r\t ]+/', ' ', $input);
 		$input = preg_replace('/ *\n+ */', "\n", (string) $input);
@@ -23,8 +23,8 @@ if (!function_exists('vms_social_normalize_whitespace')) {
 	}
 }
 
-if (!function_exists('vms_social_trim_preview')) {
-	function vms_social_trim_preview(string $text, int $width = 180): string
+if (!function_exists('bvmgr_social_trim_preview')) {
+	function bvmgr_social_trim_preview(string $text, int $width = 180): string
 	{
 		$text = (string) $text;
 		$width = max(10, $width);
@@ -38,8 +38,8 @@ if (!function_exists('vms_social_trim_preview')) {
 	}
 }
 
-if (!function_exists('vms_social_format_local_date')) {
-	function vms_social_format_local_date(string $ymd): string
+if (!function_exists('bvmgr_social_format_local_date')) {
+	function bvmgr_social_format_local_date(string $ymd): string
 	{
 		$ymd = trim($ymd);
 		if ($ymd === '') {
@@ -53,8 +53,8 @@ if (!function_exists('vms_social_format_local_date')) {
 	}
 }
 
-if (!function_exists('vms_social_format_local_time')) {
-	function vms_social_format_local_time(string $hhmm): string
+if (!function_exists('bvmgr_social_format_local_time')) {
+	function bvmgr_social_format_local_time(string $hhmm): string
 	{
 		$hhmm = trim($hhmm);
 		if ($hhmm === '') {
@@ -71,8 +71,8 @@ if (!function_exists('vms_social_format_local_time')) {
 	}
 }
 
-if (!function_exists('vms_social_get_venue_location')) {
-	function vms_social_get_venue_location(int $venue_id): array
+if (!function_exists('bvmgr_social_get_venue_location')) {
+	function bvmgr_social_get_venue_location(int $venue_id): array
 	{
 		if ($venue_id <= 0) {
 			return array('name' => '', 'city' => '', 'state' => '');
@@ -97,8 +97,8 @@ if (!function_exists('vms_social_get_venue_location')) {
 	}
 }
 
-if (!function_exists('vms_social_resolve_ticket_url')) {
-	function vms_social_resolve_ticket_url(int $event_plan_id): string
+if (!function_exists('bvmgr_social_resolve_ticket_url')) {
+	function bvmgr_social_resolve_ticket_url(int $event_plan_id): string
 	{
 		if ($event_plan_id <= 0) {
 			return '';
@@ -111,8 +111,8 @@ if (!function_exists('vms_social_resolve_ticket_url')) {
 			}
 		}
 
-		$tec_url_key = vms_social_event_meta_key('tec_event_url', '_vms_tec_event_url');
-		$tec_id_key = vms_social_event_meta_key('tec_event_id', '_vms_tec_event_id');
+		$tec_url_key = bvmgr_social_event_meta_key('tec_event_url', '_vms_tec_event_url');
+		$tec_id_key = bvmgr_social_event_meta_key('tec_event_id', '_vms_tec_event_id');
 		$tec_url = esc_url_raw((string) get_post_meta($event_plan_id, $tec_url_key, true));
 		if ($tec_url !== '') {
 			return $tec_url;
@@ -135,15 +135,15 @@ if (!function_exists('vms_social_resolve_ticket_url')) {
 	}
 }
 
-if (!function_exists('vms_social_get_performer_names')) {
-	function vms_social_get_performer_names(int $event_plan_id): string
+if (!function_exists('bvmgr_social_get_performer_names')) {
+	function bvmgr_social_get_performer_names(int $event_plan_id): string
 	{
 		if ($event_plan_id <= 0) {
 			return '';
 		}
 
 		$names = array();
-		$band_key = vms_social_event_meta_key('band_vendor_id', '_vms_band_vendor_id');
+		$band_key = bvmgr_social_event_meta_key('band_vendor_id', '_vms_band_vendor_id');
 		$band_id = (int) get_post_meta($event_plan_id, $band_key, true);
 		if ($band_id > 0) {
 			$title = (string) get_the_title($band_id);
@@ -152,7 +152,7 @@ if (!function_exists('vms_social_get_performer_names')) {
 			}
 		}
 
-		$secondary_key = vms_social_event_meta_key('secondary_vendor_ids', '_vms_secondary_vendor_ids');
+		$secondary_key = bvmgr_social_event_meta_key('secondary_vendor_ids', '_vms_secondary_vendor_ids');
 		$secondary = get_post_meta($event_plan_id, $secondary_key, true);
 		if (is_array($secondary)) {
 			foreach ($secondary as $vendor_id) {
@@ -168,11 +168,11 @@ if (!function_exists('vms_social_get_performer_names')) {
 	}
 }
 
-if (!function_exists('vms_social_event_plan_context')) {
+if (!function_exists('bvmgr_social_event_plan_context')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function vms_social_event_plan_context(int $event_plan_id): array
+	function bvmgr_social_event_plan_context(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$post = $event_plan_id > 0 ? get_post($event_plan_id) : null;
@@ -180,16 +180,16 @@ if (!function_exists('vms_social_event_plan_context')) {
 			return array();
 		}
 
-		$date_key = vms_social_event_meta_key('date', '_vms_event_date');
-		$venue_key = vms_social_event_meta_key('venue_id', '_vms_venue_id');
-		$status_key = vms_social_event_meta_key('status', '_vms_event_plan_status');
+		$date_key = bvmgr_social_event_meta_key('date', '_vms_event_date');
+		$venue_key = bvmgr_social_event_meta_key('venue_id', '_vms_venue_id');
+		$status_key = bvmgr_social_event_meta_key('status', '_vms_event_plan_status');
 
 		$event_date_raw = (string) get_post_meta($event_plan_id, $date_key, true);
 		$start_time_raw = (string) get_post_meta($event_plan_id, '_vms_start_time', true);
 		$end_time_raw = (string) get_post_meta($event_plan_id, '_vms_end_time', true);
 		$venue_id = (int) get_post_meta($event_plan_id, $venue_key, true);
 		$status = sanitize_key((string) get_post_meta($event_plan_id, $status_key, true));
-		$venue = vms_social_get_venue_location($venue_id);
+		$venue = bvmgr_social_get_venue_location($venue_id);
 
 		$featured_image_url = '';
 		$thumbnail_id = (int) get_post_thumbnail_id($event_plan_id);
@@ -205,7 +205,7 @@ if (!function_exists('vms_social_event_plan_context')) {
 			$price_text = 'From $' . number_format_i18n((float) $from_price, 2);
 		}
 
-		$ticket_url = vms_social_resolve_ticket_url($event_plan_id);
+		$ticket_url = bvmgr_social_resolve_ticket_url($event_plan_id);
 		$event_url = get_permalink($event_plan_id);
 		$event_url = $event_url ? esc_url_raw((string) $event_url) : '';
 
@@ -214,11 +214,11 @@ if (!function_exists('vms_social_event_plan_context')) {
 			'event_title' => (string) get_the_title($event_plan_id),
 			'event_status' => $status !== '' ? $status : 'draft',
 			'event_date_raw' => $event_date_raw,
-			'event_date' => vms_social_format_local_date($event_date_raw),
+			'event_date' => bvmgr_social_format_local_date($event_date_raw),
 			'start_time_raw' => $start_time_raw,
 			'end_time_raw' => $end_time_raw,
-			'start_time' => vms_social_format_local_time($start_time_raw),
-			'end_time' => vms_social_format_local_time($end_time_raw),
+			'start_time' => bvmgr_social_format_local_time($start_time_raw),
+			'end_time' => bvmgr_social_format_local_time($end_time_raw),
 			'venue_id' => $venue_id,
 			'venue_name' => (string) ($venue['name'] ?? ''),
 			'venue_city' => (string) ($venue['city'] ?? ''),
@@ -226,23 +226,23 @@ if (!function_exists('vms_social_event_plan_context')) {
 			'ticket_url' => $ticket_url,
 			'event_url' => $event_url,
 			'featured_image_url' => esc_url_raw($featured_image_url),
-			'performer_names' => vms_social_get_performer_names($event_plan_id),
+			'performer_names' => bvmgr_social_get_performer_names($event_plan_id),
 			'price_text' => $price_text,
 			'hashtags' => '',
 		);
 	}
 }
 
-if (!function_exists('vms_social_context_from_queue_row')) {
+if (!function_exists('bvmgr_social_context_from_queue_row')) {
 	/**
 	 * @param array<string,mixed> $queue_row
 	 * @return array<string,mixed>
 	 */
-	function vms_social_context_from_queue_row(array $queue_row): array
+	function bvmgr_social_context_from_queue_row(array $queue_row): array
 	{
 		$event_plan_id = (int) ($queue_row['event_plan_id'] ?? 0);
 		if ($event_plan_id > 0) {
-			return vms_social_event_plan_context($event_plan_id);
+			return bvmgr_social_event_plan_context($event_plan_id);
 		}
 
 		$tec_event_id = (int) ($queue_row['tec_event_id'] ?? 0);

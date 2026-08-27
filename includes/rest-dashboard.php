@@ -507,8 +507,8 @@ function bvmgr_dashboard_build_bills_response(array $args): array
         if ($band_vendor_id > 0 && function_exists('bvmgr_is_vendor_tax_profile_complete')) {
           $tax_missing = !bvmgr_is_vendor_tax_profile_complete((int) $band_vendor_id);
         }
-        if ($band_vendor_id > 0 && function_exists('vms_get_tax_bypass_status')) {
-          $st = (array) vms_get_tax_bypass_status((int) $band_vendor_id);
+        if ($band_vendor_id > 0 && function_exists('bvmgr_get_tax_bypass_status')) {
+          $st = (array) bvmgr_get_tax_bypass_status((int) $band_vendor_id);
           $tax_bypass_active = !empty($st['is_active']);
           $tax_bypass_until = isset($st['until']) ? (string) $st['until'] : '';
         }
@@ -1066,8 +1066,8 @@ function bvmgr_dashboard_flatten_plans_by_date(
         $tax_missing = !bvmgr_is_vendor_tax_profile_complete($vendor_id);
       }
 
-      if ($vendor_id > 0 && function_exists('vms_get_tax_bypass_status')) {
-        $st_bypass = (array) vms_get_tax_bypass_status($vendor_id);
+      if ($vendor_id > 0 && function_exists('bvmgr_get_tax_bypass_status')) {
+        $st_bypass = (array) bvmgr_get_tax_bypass_status($vendor_id);
         $tax_bypass_active = !empty($st_bypass['is_active']);
         $tax_bypass_until  = isset($st_bypass['until']) ? (string) $st_bypass['until'] : '';
       }

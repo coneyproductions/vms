@@ -218,7 +218,7 @@ eval(vms_t5_extract_function($sources['rules_v2'], 'bvmgr_ticketing_v2_read_form
 eval(vms_t5_extract_function($sources['vendor_guest'], 'bvmgr_admission_vendor_guest_rules_from_post'));
 eval(vms_t5_extract_function($sources['vendor_guest'], 'bvmgr_admission_vendor_guest_flag_value'));
 eval(vms_t5_extract_function($sources['vendor_guest'], 'bvmgr_admission_vendor_guest_absint_value'));
-eval(vms_t5_extract_function($sources['social_admin'], 'vms_social_template_body_from_post'));
+eval(vms_t5_extract_function($sources['social_admin'], 'bvmgr_social_template_body_from_post'));
 eval(vms_t5_extract_function($sources['vendor_category'], 'bvmgr_vendor_type_category_label_from_post'));
 eval(vms_t5_extract_function($sources['ticket_integrity'], 'bvmgr_ticket_integrity_plan_save_request_action'));
 
@@ -273,8 +273,8 @@ vms_t5_assert_same(42, bvmgr_admission_vendor_guest_absint_value('42'), 'Vendor 
 vms_t5_assert_same(0, bvmgr_admission_vendor_guest_absint_value('-42'), 'Vendor Guest allotments should reject negative strings instead of flipping sign.');
 vms_t5_assert_same(0, bvmgr_admission_vendor_guest_absint_value(array('42')), 'Vendor Guest allotments should reject arrays.');
 
-vms_t5_assert_same("Line 1\n{{event_title}}\\n", vms_social_template_body_from_post(array('body' => "Line 1\n{{event_title}}\\\\n")), 'Social template body should preserve text, newlines, and tokens after unslashing.');
-vms_t5_assert_same('', vms_social_template_body_from_post(array('body' => array('bad'))), 'Social template body should reject array-shaped values.');
+vms_t5_assert_same("Line 1\n{{event_title}}\\n", bvmgr_social_template_body_from_post(array('body' => "Line 1\n{{event_title}}\\\\n")), 'Social template body should preserve text, newlines, and tokens after unslashing.');
+vms_t5_assert_same('', bvmgr_social_template_body_from_post(array('body' => array('bad'))), 'Social template body should reject array-shaped values.');
 vms_t5_assert_same('Genre Label', bvmgr_vendor_type_category_label_from_post(array('vms_vendor_type_category_label' => ' Genre\\ Label ')), 'Vendor category labels should use scalar text normalization.');
 vms_t5_assert_same('', bvmgr_vendor_type_category_label_from_post(array('vms_vendor_type_category_label' => array('bad'))), 'Vendor category labels should reject arrays.');
 vms_t5_assert_same('publish_now', bvmgr_ticket_integrity_plan_save_request_action(array('vms_event_plan_action' => 'Publish_Now')), 'Ticket Integrity action should preserve key normalization.');

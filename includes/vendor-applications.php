@@ -1237,7 +1237,7 @@ add_action('admin_menu', 'bvmgr_vendor_applications_add_pending_bubble', 999);
 function bvmgr_vendor_applications_add_pending_bubble(): void
 {
     // Phase-in: centralized approvals framework owns badge rendering.
-    if (function_exists('vms_approvals_queue_collect_snapshot')) {
+    if (function_exists('bvmgr_approvals_queue_collect_snapshot')) {
         return;
     }
 
@@ -1855,8 +1855,8 @@ if (!function_exists('bvmgr_vendor_applications_handle_edit_screen_decision')) {
         update_post_meta($post_id, '_vms_app_last_operator_decision_at', current_time('mysql'));
         update_post_meta($post_id, '_vms_app_last_operator_decision_by', (int) get_current_user_id());
 
-        if (function_exists('vms_approvals_queue_record_transition') && $from_status !== $decision) {
-            vms_approvals_queue_record_transition('vendor_applications', $post_id, $from_status, $decision);
+        if (function_exists('bvmgr_approvals_queue_record_transition') && $from_status !== $decision) {
+            bvmgr_approvals_queue_record_transition('vendor_applications', $post_id, $from_status, $decision);
         }
 
         if ($decision === 'approved' && $block_approved_email) {
@@ -1928,8 +1928,8 @@ function bvmgr_vendor_applications_handle_approve(): void
     }
 
     bvmgr_vendor_app_set_status($app_id, 'approved');
-    if (function_exists('vms_approvals_queue_record_transition')) {
-        vms_approvals_queue_record_transition('vendor_applications', $app_id, $from_status, 'approved');
+    if (function_exists('bvmgr_approvals_queue_record_transition')) {
+        bvmgr_approvals_queue_record_transition('vendor_applications', $app_id, $from_status, 'approved');
     }
 
     wp_safe_redirect(admin_url('edit.php?post_type=' . BVMGR_VENDOR_APP_CPT));
@@ -1957,8 +1957,8 @@ function bvmgr_vendor_applications_handle_reject(): void
     $from_status = bvmgr_vendor_app_get_status($app_id);
 
     bvmgr_vendor_app_set_status($app_id, 'rejected');
-    if (function_exists('vms_approvals_queue_record_transition')) {
-        vms_approvals_queue_record_transition('vendor_applications', $app_id, $from_status, 'rejected');
+    if (function_exists('bvmgr_approvals_queue_record_transition')) {
+        bvmgr_approvals_queue_record_transition('vendor_applications', $app_id, $from_status, 'rejected');
     }
 
     wp_safe_redirect(admin_url('edit.php?post_type=' . BVMGR_VENDOR_APP_CPT));

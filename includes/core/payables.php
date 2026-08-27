@@ -305,8 +305,8 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
 
             $bypass_active = false;
             $bypass_until = '';
-            if (function_exists('vms_get_tax_bypass_status')) {
-                $st = (array) vms_get_tax_bypass_status((int) $vendor_id);
+            if (function_exists('bvmgr_get_tax_bypass_status')) {
+                $st = (array) bvmgr_get_tax_bypass_status((int) $vendor_id);
                 $bypass_active = !empty($st['is_active']);
                 $bypass_until = isset($st['until']) ? (string) $st['until'] : '';
             }
@@ -373,8 +373,8 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
             }
             $support_bypass_active = false;
             $support_bypass_until = '';
-            if (function_exists('vms_get_tax_bypass_status')) {
-                $support_st = (array) vms_get_tax_bypass_status((int) $support_vendor_id);
+            if (function_exists('bvmgr_get_tax_bypass_status')) {
+                $support_st = (array) bvmgr_get_tax_bypass_status((int) $support_vendor_id);
                 $support_bypass_active = !empty($support_st['is_active']);
                 $support_bypass_until = isset($support_st['until']) ? (string) $support_st['until'] : '';
             }

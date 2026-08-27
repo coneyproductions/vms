@@ -2667,8 +2667,8 @@ class BVMGR_Admin_Event_Plans
                 $missing = function_exists('bvmgr_vendor_tax_profile_missing_items')
                     ? (array) bvmgr_vendor_tax_profile_missing_items($vendor_id)
                     : array();
-                $bypass = function_exists('vms_get_tax_bypass_status')
-                    ? (array) vms_get_tax_bypass_status($vendor_id)
+                $bypass = function_exists('bvmgr_get_tax_bypass_status')
+                    ? (array) bvmgr_get_tax_bypass_status($vendor_id)
                     : array();
 
                 return array(
@@ -6097,8 +6097,8 @@ class BVMGR_Admin_Event_Plans
 
             $bypass_active = false;
             $bypass_until = '';
-            if (function_exists('vms_get_tax_bypass_status')) {
-                $b = (array) vms_get_tax_bypass_status($sid);
+            if (function_exists('bvmgr_get_tax_bypass_status')) {
+                $b = (array) bvmgr_get_tax_bypass_status($sid);
                 $bypass_active = !empty($b['is_active']);
                 $bypass_until = isset($b['until']) ? (string) $b['until'] : '';
             }
@@ -6759,8 +6759,8 @@ class BVMGR_Admin_Event_Plans
 
         $bypass_active = false;
         $bypass_until = '';
-        if (function_exists('vms_get_tax_bypass_status')) {
-            $bypass_status = (array) vms_get_tax_bypass_status($staff_id);
+        if (function_exists('bvmgr_get_tax_bypass_status')) {
+            $bypass_status = (array) bvmgr_get_tax_bypass_status($staff_id);
             $bypass_active = !empty($bypass_status['is_active']);
             $bypass_until = isset($bypass_status['until']) ? (string) $bypass_status['until'] : '';
         }
@@ -11053,7 +11053,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                             break;
                         }
                         if (!function_exists('bvmgr_apply_comp_package_to_plan')) {
-                            bvmgr_add_admin_notice(__('Package apply helper is missing (vms_apply_comp_package_to_plan).', 'backstage-venue-manager'), 'error');
+                            bvmgr_add_admin_notice(__('Package apply helper is missing (bvmgr_apply_comp_package_to_plan).', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
@@ -11708,7 +11708,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
             if ($band_id > 0) {
                 $missing = function_exists('bvmgr_vendor_tax_profile_missing_items') ? (array) bvmgr_vendor_tax_profile_missing_items($band_id) : array();
                 if (!empty($missing)) {
-                    if (function_exists('vms_tax_bypass_is_active') && vms_tax_bypass_is_active($band_id)) {
+                    if (function_exists('bvmgr_tax_bypass_is_active') && bvmgr_tax_bypass_is_active($band_id)) {
                         if (function_exists('bvmgr_add_admin_notice')) {
                             bvmgr_add_admin_notice(
                                 sprintf(
@@ -11748,7 +11748,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
                         $missing = function_exists('bvmgr_vendor_tax_profile_missing_items') ? (array) bvmgr_vendor_tax_profile_missing_items($sid) : array();
                         if (!empty($missing)) {
-                            if (function_exists('vms_tax_bypass_is_active') && vms_tax_bypass_is_active($sid)) {
+                            if (function_exists('bvmgr_tax_bypass_is_active') && bvmgr_tax_bypass_is_active($sid)) {
                                 if (function_exists('bvmgr_add_admin_notice')) {
                                     bvmgr_add_admin_notice(
                                         sprintf(
@@ -13927,7 +13927,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $tax_missing = !bvmgr_is_vendor_tax_profile_complete($vendor_id);
             }
 
-            $st_bypass = function_exists('vms_get_tax_bypass_status') ? (array) vms_get_tax_bypass_status($vendor_id) : array();
+            $st_bypass = function_exists('bvmgr_get_tax_bypass_status') ? (array) bvmgr_get_tax_bypass_status($vendor_id) : array();
             $bypass_active = !empty($st_bypass['is_active']);
             $bypass_until  = isset($st_bypass['until']) ? (string) $st_bypass['until'] : '';
 

@@ -19,7 +19,7 @@ add_action('wp_ajax_vms_tax_bypass_set', function () {
   }
 
   $pt = get_post_type($post_id);
-  if (!in_array($pt, vms_tax_bypass_supported_post_types(), true)) {
+  if (!in_array($pt, bvmgr_tax_bypass_supported_post_types(), true)) {
     wp_send_json_error(['message' => 'Unsupported post type'], 400);
   }
 
@@ -30,7 +30,7 @@ add_action('wp_ajax_vms_tax_bypass_set', function () {
     wp_send_json_error(['message' => 'Reason required'], 400);
   }
 
-  $st = vms_tax_bypass_apply($post_id, true, $until, $reason);
+  $st = bvmgr_tax_bypass_apply($post_id, true, $until, $reason);
 
   wp_send_json_success(['status' => $st]);
 });
@@ -48,11 +48,11 @@ add_action('wp_ajax_vms_tax_bypass_clear', function () {
   }
 
   $pt = get_post_type($post_id);
-  if (!in_array($pt, vms_tax_bypass_supported_post_types(), true)) {
+  if (!in_array($pt, bvmgr_tax_bypass_supported_post_types(), true)) {
     wp_send_json_error(['message' => 'Unsupported post type'], 400);
   }
 
-  $st = vms_tax_bypass_apply($post_id, false);
+  $st = bvmgr_tax_bypass_apply($post_id, false);
 
   wp_send_json_success(['status' => $st]);
 });

@@ -169,7 +169,7 @@ foreach (array('bvmgr_entitlements_sync_image_log', 'bvmgr_entitlements_sync_pro
 foreach (array('bvmgr_ticket_integrity_fatal_operation', 'bvmgr_ticket_integrity_fatal_source_scope', 'bvmgr_ticket_integrity_fatal_operational_context', 'bvmgr_ticket_integrity_fatal_guard_shutdown') as $name) {
 	g16c_same(g16c_extract_function($g16c_sources['mirror']['ticket'], $name), g16c_extract_function($g16c_sources['shadow']['ticket'], $name), 'Ticket owned parity failed: ' . $name);
 }
-g16c_same(g16c_extract_function($g16c_sources['mirror']['settings'], 'vms_handle_sync_entitlement_images'), g16c_extract_function($g16c_sources['shadow']['settings'], 'vms_handle_sync_entitlement_images'), 'Settings owned handler parity failed.');
+g16c_same(g16c_extract_function($g16c_sources['mirror']['settings'], 'bvmgr_handle_sync_entitlement_images'), g16c_extract_function($g16c_sources['shadow']['settings'], 'bvmgr_handle_sync_entitlement_images'), 'Settings owned handler parity failed.');
 
 $g16c_phase = $g16c_sources['mirror']['phase'];
 g16c_same(6, substr_count($g16c_phase, 'bvmgr_entitlements_sync_image_log('), 'PhaseB must contain the wrapper definition and five internal producers.');
@@ -186,7 +186,7 @@ foreach (array(
 g16c_same(1, preg_match('/\x27entitlement_image_sync_product_save_failed\x27.{0,700}\$e\s*\n\s*\);/s', $g16c_phase), 'Caught Throwable must travel only through the adapter error argument.');
 g16c_same(0, substr_count(g16c_extract_function($g16c_phase, 'bvmgr_entitlements_sync_image_log'), "'message'"), 'PhaseB wrapper must never put a raw message in context.');
 
-$g16c_settings_handler = g16c_extract_function($g16c_sources['mirror']['settings'], 'vms_handle_sync_entitlement_images');
+$g16c_settings_handler = g16c_extract_function($g16c_sources['mirror']['settings'], 'bvmgr_handle_sync_entitlement_images');
 g16c_assert(strpos($g16c_settings_handler, "bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'") !== false, 'Settings must prefer the PhaseB wrapper.');
 g16c_assert(strpos($g16c_settings_handler, "bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed'") !== false, 'Settings must fall back to the foundation adapter.');
 g16c_assert(strpos($g16c_settings_handler, "'count' => (int) \$summary['errors']") !== false, 'Settings must retain only the bounded error count.');
@@ -704,7 +704,7 @@ function wp_safe_redirect($url): bool
 final class G16CSettingsExit extends RuntimeException {}
 
 $g16c_settings_eval = $g16c_settings_handler;
-$g16c_settings_eval = g16c_replace_once($g16c_settings_eval, 'function vms_handle_sync_entitlement_images(', 'function g16c_handle_sync_entitlement_images(', 'Settings runtime rename failed.');
+$g16c_settings_eval = g16c_replace_once($g16c_settings_eval, 'function bvmgr_handle_sync_entitlement_images(', 'function g16c_handle_sync_entitlement_images(', 'Settings runtime rename failed.');
 $g16c_settings_eval = g16c_replace_once($g16c_settings_eval, "function_exists('bvmgr_entitlements_sync_image_log')", 'false', 'Settings PhaseB-unavailable injection failed.');
 $g16c_settings_eval = g16c_replace_once($g16c_settings_eval, 'exit;', 'throw new G16CSettingsExit();', 'Settings exit capture failed.');
 eval($g16c_settings_eval);

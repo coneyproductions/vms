@@ -856,8 +856,8 @@ if (!function_exists('bvmgr_vendor_command_center_collect_plan_maps')) {
                     $tax_missing = !bvmgr_is_vendor_tax_profile_complete($pay_vendor_id);
                 }
                 $tax_bypass_active = false;
-                if (function_exists('vms_get_tax_bypass_status')) {
-                    $bypass = (array) vms_get_tax_bypass_status($pay_vendor_id);
+                if (function_exists('bvmgr_get_tax_bypass_status')) {
+                    $bypass = (array) bvmgr_get_tax_bypass_status($pay_vendor_id);
                     $tax_bypass_active = !empty($bypass['is_active']);
                 }
                 if ($tax_missing && !$tax_bypass_active) {
